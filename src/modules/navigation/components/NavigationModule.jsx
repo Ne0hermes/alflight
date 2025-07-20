@@ -193,7 +193,7 @@ export const NavigationModule = () => {
             </h4>
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(2, 1fr)', 
+              gridTemplateColumns: 'repeat(3, 1fr)', 
               gap: '12px', 
               fontSize: '14px' 
             }}>
@@ -213,12 +213,6 @@ export const NavigationModule = () => {
                 <p style={{ margin: '0', color: '#6b7280' }}>Carburant requis</p>
                 <p style={{ margin: '0', fontSize: '18px', fontWeight: 'bold' }}>
                   {navigationResults.fuelRequired} L
-                </p>
-              </div>
-              <div>
-                <p style={{ margin: '0', color: '#6b7280' }}>Avec réserve</p>
-                <p style={{ margin: '0', fontSize: '18px', fontWeight: 'bold' }}>
-                  {navigationResults.fuelWithReserve} L
                 </p>
               </div>
             </div>

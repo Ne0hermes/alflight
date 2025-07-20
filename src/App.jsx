@@ -3,8 +3,9 @@ import { FlightSystemProvider, useFlightSystem } from './context/FlightSystemCon
 import { TabButton } from './components/ui/TabButton';
 import { NavigationModule } from './modules/navigation/components/NavigationModule';
 import { WeightBalanceModule } from './modules/weightBalance/components/WeightBalanceModule';
-import { AircraftManagerModule } from './modules/aircraft/components/AircraftManagerModule';  // Nouveau import
-import { Navigation, Scale, Settings } from 'lucide-react';
+import { AircraftManagerModule } from './modules/aircraft/components/AircraftManagerModule';
+import { FuelBalanceModule } from './modules/fuel/components/FuelBalanceModule';
+import { Navigation, Scale, Settings, Fuel } from 'lucide-react';
 
 // Composant principal
 const FlightSystemUI = () => {
@@ -45,6 +46,12 @@ const FlightSystemUI = () => {
             label="Masse et Centrage"
           />
           <TabButton
+            active={activeTab === 'fuel'}
+            onClick={() => setActiveTab('fuel')}
+            icon={Fuel}
+            label="Bilan Carburant"
+          />
+          <TabButton
             active={activeTab === 'aircraft'}
             onClick={() => setActiveTab('aircraft')}
             icon={Settings}
@@ -60,6 +67,7 @@ const FlightSystemUI = () => {
         }}>
           {activeTab === 'navigation' && <NavigationModule />}
           {activeTab === 'weight-balance' && <WeightBalanceModule />}
+          {activeTab === 'fuel' && <FuelBalanceModule />}
           {activeTab === 'aircraft' && <AircraftManagerModule />}
         </div>
       </div>

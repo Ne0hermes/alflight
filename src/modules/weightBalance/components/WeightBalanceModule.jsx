@@ -1,7 +1,6 @@
 import React from 'react';
 import { useFlightSystem } from '../../../context/FlightSystemContext';
 import { LoadInput } from '../../../components/ui/LoadInput';
-import { AlertCircle, CheckCircle } from 'lucide-react';
 
 export const WeightBalanceModule = () => {
   const { 
@@ -10,43 +9,11 @@ export const WeightBalanceModule = () => {
     setLoads, 
     navigationResults,
     currentCalculation,
-    isWithinLimits,
-    fuelRequiredForTrip,
-    fuelSufficient
+    isWithinLimits
   } = useFlightSystem();
 
   return (
     <div>
-      {/* Alerte carburant pour le voyage */}
-      {fuelRequiredForTrip > 0 && (
-        <div style={{ 
-          marginBottom: '16px', 
-          padding: '16px', 
-          backgroundColor: fuelSufficient ? '#f0fdf4' : '#fef2f2', 
-          border: `2px solid ${fuelSufficient ? '#10b981' : '#ef4444'}`, 
-          borderRadius: '8px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px'
-        }}>
-          {fuelSufficient ? (
-            <CheckCircle style={{ color: '#10b981' }} size={20} />
-          ) : (
-            <AlertCircle style={{ color: '#ef4444' }} size={20} />
-          )}
-          <div>
-            <p style={{ margin: '0', fontSize: '14px', fontWeight: '600' }}>
-              {fuelSufficient ? '✅ Carburant suffisant' : '⚠️ Carburant insuffisant'}
-            </p>
-            <p style={{ margin: '0', fontSize: '12px', color: '#6b7280' }}>
-              Requis pour le voyage: {fuelRequiredForTrip} L • 
-              Carburant total disponible: {loads.fuel + loads.reserve} L
-              {!fuelSufficient && ` • Manque: ${fuelRequiredForTrip - (loads.fuel + loads.reserve)} L`}
-            </p>
-          </div>
-        </div>
-      )}
-
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
         {/* Panel de chargement */}
         <div>
@@ -96,51 +63,6 @@ export const WeightBalanceModule = () => {
               onChange={(v) => setLoads({...loads, auxiliary: v})}
               max={selectedAircraft?.maxAuxiliaryWeight}
             />
-            
-            {/* Section carburant */}
-            <div style={{ 
-              padding: '16px', 
-              backgroundColor: '#eff6ff', 
-              borderRadius: '8px', 
-              border: '2px solid #3b82f6' 
-            }}>
-              <h4 style={{ 
-                margin: '0 0 12px 0', 
-                fontSize: '16px', 
-                fontWeight: '600', 
-                color: '#1e40af' 
-              }}>
-                ⛽ Carburant
-              </h4>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <LoadInput
-                  label={`Carburant utilisable (max ${selectedAircraft?.fuelCapacity || 0} L)`}
-                  value={loads.fuel}
-                  onChange={(v) => setLoads({...loads, fuel: v})}
-                  max={selectedAircraft?.fuelCapacity}
-                />
-                <LoadInput
-                  label="Réserve carburant (L)"
-                  value={loads.reserve}
-                  onChange={(v) => setLoads({...loads, reserve: v})}
-                />
-                
-                <div style={{ 
-                  padding: '8px', 
-                  backgroundColor: 'white', 
-                  borderRadius: '4px', 
-                  fontSize: '14px' 
-                }}>
-                  <p style={{ margin: '0', fontWeight: '600' }}>
-                    Total carburant: {loads.fuel + loads.reserve} L
-                  </p>
-                  <p style={{ margin: '0', color: '#6b7280' }}>
-                    Poids: {currentCalculation.fuelWeight?.toFixed(1) || 0} kg
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
         
@@ -178,11 +100,6 @@ export const WeightBalanceModule = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px' }}>
               <span style={{ color: '#6b7280' }}>Masse à vide</span>
               <span style={{ fontWeight: '500' }}>{selectedAircraft?.emptyWeight || 0} kg</span>
-            </div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px' }}>
-              <span style={{ color: '#6b7280' }}>Carburant total</span>
-              <span style={{ fontWeight: '500' }}>{currentCalculation.fuelWeight?.toFixed(1) || 0} kg</span>
             </div>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px' }}>
