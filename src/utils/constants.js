@@ -16,7 +16,7 @@ export const DEFAULT_AIRCRAFT = {
   fuelCapacity: 148,
   fuelCapacityGal: 39.1,
   fuelConsumption: 26,
-  fuelConsumptionGph: 6.9,
+  fuelConsumptionGph: 5,
   emptyWeight: 870,
   minTakeoffWeight: 1000,
   maxTakeoffWeight: 1310,
