@@ -5,7 +5,7 @@ import { NavigationModule } from './modules/navigation/components/NavigationModu
 import { WeightBalanceModule } from './modules/weightBalance/components/WeightBalanceModule';
 import { AircraftManagerModule } from './modules/aircraft/components/AircraftManagerModule';
 import { FuelBalanceModule } from './modules/fuel/components/FuelBalanceModule';
-import { Navigation, Scale, Settings, Fuel } from 'lucide-react';
+import { Navigation, Scale, Settings, Fuel, Map } from 'lucide-react';
 
 // Composant principal
 const FlightSystemUI = () => {
