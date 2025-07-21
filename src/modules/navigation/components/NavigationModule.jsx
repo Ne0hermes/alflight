@@ -1,7 +1,7 @@
 import React from 'react';
 import { useFlightSystem } from '../../../context/FlightSystemContext';
 import { LoadInput } from '../../../components/ui/LoadInput';
-import { Plus, Trash2, MapPin, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, MapPin, ChevronRight, Sun, Moon, Navigation2, Home } from 'lucide-react';
 
 export const NavigationModule = () => {
   const { 
@@ -13,6 +13,8 @@ export const NavigationModule = () => {
     flightParams, 
     setFlightParams, 
     navigationResults,
+    flightType,
+    setFlightType
   } = useFlightSystem();
 
   const addWaypoint = () => {
@@ -37,6 +39,181 @@ export const NavigationModule = () => {
 
   return (
     <div>
+      {/* Type de vol */}
+      <div style={{ 
+        marginBottom: '24px',
+        padding: '16px',
+        backgroundColor: '#fef3c7',
+        border: '2px solid #f59e0b',
+        borderRadius: '8px'
+      }}>
+        <h3 style={{ 
+          fontSize: '18px', 
+          fontWeight: '600', 
+          color: '#92400e', 
+          marginBottom: '12px' 
+        }}>
+          🛩️ Type de Vol
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+          {/* Période */}
+          <div>
+            <label style={{ 
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: '14px', 
+              color: '#6b7280', 
+              marginBottom: '4px'
+            }}>
+              {flightType?.period === 'jour' ? <Sun size={16} /> : <Moon size={16} />}
+              Période
+            </label>
+            <select
+              style={{ 
+                width: '100%', 
+                padding: '8px 12px', 
+                border: '1px solid #d1d5db', 
+                borderRadius: '6px',
+                backgroundColor: 'white'
+              }}
+              value={flightType?.period || 'jour'}
+              onChange={(e) => setFlightType({...flightType, period: e.target.value})}
+            >
+              <option value="jour">Jour</option>
+              <option value="nuit">Nuit</option>
+            </select>
+          </div>
+
+          {/* Règles de vol */}
+          <div>
+            <label style={{ 
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: '14px', 
+              color: '#6b7280', 
+              marginBottom: '4px'
+            }}>
+              {flightType?.rules === 'VFR' ? '🌤️' : '🛫'}
+              Règles de vol
+            </label>
+            <select
+              style={{ 
+                width: '100%', 
+                padding: '8px 12px', 
+                border: '1px solid #d1d5db', 
+                borderRadius: '6px',
+                backgroundColor: 'white'
+              }}
+              value={flightType?.rules || 'VFR'}
+              onChange={(e) => setFlightType({...flightType, rules: e.target.value})}
+            >
+              <option value="VFR">VFR</option>
+              <option value="IFR">IFR</option>
+            </select>
+          </div>
+
+          {/* Catégorie */}
+          <div>
+            <label style={{ 
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: '14px', 
+              color: '#6b7280', 
+              marginBottom: '4px'
+            }}>
+              {flightType?.category === 'local' ? <Home size={16} /> : <Navigation2 size={16} />}
+              Catégorie
+            </label>
+            <select
+              style={{ 
+                width: '100%', 
+                padding: '8px 12px', 
+                border: '1px solid #d1d5db', 
+                borderRadius: '6px',
+                backgroundColor: 'white'
+              }}
+              value={flightType?.category || 'navigation'}
+              onChange={(e) => setFlightType({...flightType, category: e.target.value})}
+            >
+              <option value="local">Vol Local</option>
+              <option value="navigation">Navigation</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Réglementation applicable */}
+        <div style={{ 
+          marginTop: '16px',
+          padding: '12px',
+          backgroundColor: '#fbbf24',
+          borderRadius: '6px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <div style={{ 
+            flexShrink: 0,
+            width: '40px',
+            height: '40px',
+            backgroundColor: '#f59e0b',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <span style={{ fontSize: '20px' }}>📋</span>
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ 
+              margin: '0',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#78350f'
+            }}>
+              Réserve réglementaire : {navigationResults?.regulationReserveMinutes || 0} minutes
+            </p>
+            <p style={{ 
+              margin: '4px 0 0 0',
+              fontSize: '13px',
+              color: '#92400e'
+            }}>
+              {flightType?.period === 'nuit' 
+                ? 'Vol de NUIT : 45 minutes de réserve' 
+                : flightType?.category === 'local' 
+                  ? 'Vol LOCAL de JOUR : 10 minutes de réserve'
+                  : 'Vol de NAVIGATION de JOUR : 30 minutes de réserve'
+              }
+            </p>
+            {selectedAircraft && (
+              <p style={{ 
+                margin: '4px 0 0 0',
+                fontSize: '13px',
+                color: '#92400e',
+                fontWeight: '600'
+              }}>
+                Volume carburant requis : {navigationResults?.regulationReserveLiters || 0} L 
+                <span style={{ fontWeight: '400', fontSize: '12px' }}>
+                  {' '}(basé sur {selectedAircraft.fuelConsumption} L/h)
+                </span>
+              </p>
+            )}
+            {flightType?.rules === 'IFR' && (
+              <p style={{ 
+                margin: '4px 0 0 0',
+                fontSize: '12px',
+                color: '#78350f',
+                fontStyle: 'italic'
+              }}>
+                ⚠️ Vol IFR : +15 minutes supplémentaires ajoutées à la réserve de base
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Sélection d'avion */}
       <div style={{ marginBottom: '24px' }}>
         <div style={{ 
@@ -191,9 +368,12 @@ export const NavigationModule = () => {
             }}>
               📊 Résultats du calcul
             </h4>
+            <div style={{ marginBottom: '12px', fontSize: '14px', color: '#6b7280' }}>
+              Vol {flightType?.rules || 'VFR'} de {flightType?.category || 'navigation'} - {flightType?.period || 'jour'}
+            </div>
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(3, 1fr)', 
+              gridTemplateColumns: 'repeat(2, 1fr)', 
               gap: '12px', 
               fontSize: '14px' 
             }}>
@@ -210,11 +390,29 @@ export const NavigationModule = () => {
                 </p>
               </div>
               <div>
-                <p style={{ margin: '0', color: '#6b7280' }}>Carburant requis</p>
+                <p style={{ margin: '0', color: '#6b7280' }}>Carburant vol</p>
                 <p style={{ margin: '0', fontSize: '18px', fontWeight: 'bold' }}>
                   {navigationResults.fuelRequired} L
                 </p>
               </div>
+              <div>
+                <p style={{ margin: '0', color: '#6b7280' }}>Total avec réserve</p>
+                <p style={{ margin: '0', fontSize: '18px', fontWeight: 'bold', color: '#059669' }}>
+                  {navigationResults.fuelWithReserve || 0} L
+                </p>
+              </div>
+            </div>
+            <div style={{ 
+              marginTop: '12px',
+              padding: '8px',
+              backgroundColor: '#e0f2fe',
+              borderRadius: '4px',
+              fontSize: '12px',
+              color: '#0c4a6e'
+            }}>
+              <p style={{ margin: '0', fontWeight: '600' }}>
+                💡 Détail : {navigationResults.fuelRequired} L (vol) + {navigationResults.regulationReserveLiters || 0} L (réserve {navigationResults.regulationReserveMinutes || 0} min) = {navigationResults.fuelWithReserve || 0} L total
+              </p>
             </div>
           </div>
         </div>

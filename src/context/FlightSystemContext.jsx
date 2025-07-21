@@ -57,12 +57,12 @@ export const FlightSystemProvider = ({ children }) => {
     currentCalculation.cg <= aircraftManager.selectedAircraft.weightBalance.cgLimits.aft &&
     currentCalculation.totalWeight <= aircraftManager.selectedAircraft.maxTakeoffWeight : false;
 
-  // Valeur du contexte
+  // Valeur du contexte - inclure toutes les propriétés du hook navigation
   const value = {
     activeTab,
     setActiveTab,
     ...aircraftManager,
-    ...navigation,
+    ...navigation,  // Ceci inclut maintenant flightType et setFlightType
     loads,
     setLoads,
     currentCalculation,
