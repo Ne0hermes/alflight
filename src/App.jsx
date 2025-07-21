@@ -5,6 +5,7 @@ import { NavigationModule } from './modules/navigation/components/NavigationModu
 import { WeightBalanceModule } from './modules/weightBalance/components/WeightBalanceModule';
 import { AircraftManagerModule } from './modules/aircraft/components/AircraftManagerModule';
 import { FuelBalanceModule } from './modules/fuel/components/FuelBalanceModule';
+import { VACModule } from './modules/vac/components/VACModule';
 import { Navigation, Scale, Settings, Fuel, Map } from 'lucide-react';
 
 // Composant principal
@@ -57,6 +58,12 @@ const FlightSystemUI = () => {
             icon={Settings}
             label="Gestion Avions"
           />
+          <TabButton
+            active={activeTab === 'vac'}
+            onClick={() => setActiveTab('vac')}
+            icon={Map}
+            label="Cartes VAC"
+          />
         </div>
         
         {/* Contenu des modules */}
@@ -69,6 +76,7 @@ const FlightSystemUI = () => {
           {activeTab === 'weight-balance' && <WeightBalanceModule />}
           {activeTab === 'fuel' && <FuelBalanceModule />}
           {activeTab === 'aircraft' && <AircraftManagerModule />}
+          {activeTab === 'vac' && <VACModule />}
         </div>
       </div>
     </div>

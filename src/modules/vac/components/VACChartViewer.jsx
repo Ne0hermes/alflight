@@ -1,26 +1,24 @@
 // src/modules/vac/components/VACChartViewer.jsx
 import React, { useState, useEffect } from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
 import { useVACStore } from '../store/vacStore';
 import { ZoomIn, ZoomOut, RotateCw, Download, Printer, ChevronLeft, ChevronRight } from 'lucide-react';
-import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
-import 'react-pdf/dist/esm/Page/TextLayer.css';
-
-// Configuration de PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 export const VACChartViewer = ({ chart }) => {
   const { getChartPDF } = useVACStore();
-  const [pdfData, setPdfData] = useState(null);
-  const [numPages, setNumPages] = useState(null);
-  const [pageNumber, setPageNumber] = useState(1);
-  const [scale, setScale] = useState(1.0);
-  const [rotation, setRotation] = useState(0);
+  const [pdfUrl, setPdfUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [scale, setScale] = useState(100);
+  const [rotation, setRotation] = useState(0);
 
   useEffect(() => {
     loadPDF();
+    return () => {
+      // Nettoyer l'URL quand le composant est démonté
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+      }
+    };
   }, [chart.id]);
 
   const loadPDF = async () => {
@@ -30,7 +28,7 @@ export const VACChartViewer = ({ chart }) => {
       const blob = await getChartPDF(chart.id);
       if (blob) {
         const url = URL.createObjectURL(blob);
-        setPdfData(url);
+        setPdfUrl(url);
       } else {
         setError('Carte non trouvée dans le cache');
       }
@@ -42,22 +40,10 @@ export const VACChartViewer = ({ chart }) => {
     }
   };
 
-  const onDocumentLoadSuccess = ({ numPages }) => {
-    setNumPages(numPages);
-    setPageNumber(1);
-  };
-
-  const changePage = (offset) => {
-    setPageNumber(prevPageNumber => {
-      const newPageNumber = prevPageNumber + offset;
-      return Math.min(Math.max(1, newPageNumber), numPages);
-    });
-  };
-
   const handleZoom = (delta) => {
     setScale(prevScale => {
       const newScale = prevScale + delta;
-      return Math.min(Math.max(0.5, newScale), 3.0);
+      return Math.min(Math.max(50, newScale), 300);
     });
   };
 
@@ -66,8 +52,8 @@ export const VACChartViewer = ({ chart }) => {
   };
 
   const handlePrint = () => {
-    if (pdfData) {
-      const printWindow = window.open(pdfData);
+    if (pdfUrl) {
+      const printWindow = window.open(pdfUrl);
       if (printWindow) {
         printWindow.print();
       }
@@ -75,9 +61,9 @@ export const VACChartViewer = ({ chart }) => {
   };
 
   const handleDownload = () => {
-    if (pdfData) {
+    if (pdfUrl) {
       const link = document.createElement('a');
-      link.href = pdfData;
+      link.href = pdfUrl;
       link.download = `${chart.airportIcao}_${chart.type}_${chart.version}.pdf`;
       link.click();
     }
@@ -139,7 +125,7 @@ export const VACChartViewer = ({ chart }) => {
           }} />
           <p style={{ color: '#6b7280' }}>Chargement de la carte...</p>
         </div>
-        <style jsx>{`
+        <style>{`
           @keyframes spin {
             to { transform: rotate(360deg); }
           }
@@ -169,43 +155,12 @@ export const VACChartViewer = ({ chart }) => {
           <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#1f2937' }}>
             {chart.airportIcao} - {chart.type} (v{chart.version})
           </h3>
-          
-          {/* Navigation pages */}
-          {numPages > 1 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <button
-                onClick={() => changePage(-1)}
-                disabled={pageNumber <= 1}
-                style={{
-                  ...buttonStyle,
-                  opacity: pageNumber <= 1 ? 0.5 : 1,
-                  cursor: pageNumber <= 1 ? 'not-allowed' : 'pointer'
-                }}
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <span style={{ fontSize: '14px', color: '#6b7280' }}>
-                Page {pageNumber} / {numPages}
-              </span>
-              <button
-                onClick={() => changePage(1)}
-                disabled={pageNumber >= numPages}
-                style={{
-                  ...buttonStyle,
-                  opacity: pageNumber >= numPages ? 0.5 : 1,
-                  cursor: pageNumber >= numPages ? 'not-allowed' : 'pointer'
-                }}
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          )}
         </div>
 
         <div style={{ display: 'flex', gap: '8px' }}>
           {/* Zoom */}
           <button
-            onClick={() => handleZoom(-0.1)}
+            onClick={() => handleZoom(-10)}
             style={buttonStyle}
             title="Zoom arrière"
           >
@@ -219,10 +174,10 @@ export const VACChartViewer = ({ chart }) => {
             minWidth: '60px',
             textAlign: 'center'
           }}>
-            {Math.round(scale * 100)}%
+            {scale}%
           </span>
           <button
-            onClick={() => handleZoom(0.1)}
+            onClick={() => handleZoom(10)}
             style={buttonStyle}
             title="Zoom avant"
           >
@@ -262,28 +217,22 @@ export const VACChartViewer = ({ chart }) => {
 
       {/* PDF Viewer */}
       <div style={viewerStyle}>
-        {pdfData && (
-          <Document
-            file={pdfData}
-            onLoadSuccess={onDocumentLoadSuccess}
-            loading={
-              <div style={{ color: '#6b7280' }}>Chargement du document...</div>
-            }
-            error={
-              <div style={{ color: '#ef4444' }}>Erreur de chargement du PDF</div>
-            }
-          >
-            <Page
-              pageNumber={pageNumber}
-              scale={scale}
-              rotate={rotation}
-              renderTextLayer={true}
-              renderAnnotationLayer={true}
-              loading={
-                <div style={{ color: '#6b7280' }}>Chargement de la page...</div>
-              }
-            />
-          </Document>
+        {pdfUrl && (
+          <iframe
+            src={pdfUrl}
+            style={{
+              width: '100%',
+              height: '100%',
+              maxWidth: '1000px',
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px',
+              backgroundColor: 'white',
+              transform: `scale(${scale / 100}) rotate(${rotation}deg)`,
+              transformOrigin: 'center',
+              transition: 'transform 0.3s'
+            }}
+            title={`${chart.airportIcao} VAC Chart`}
+          />
         )}
       </div>
 

@@ -42,7 +42,7 @@ export const VACModule = () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, []);
+  }, [loadChartsList, checkStorageQuota]);
 
   // Filtrer les cartes par aéroport
   const filteredCharts = Array.from(charts.values()).filter(chart => {
@@ -76,7 +76,7 @@ export const VACModule = () => {
   };
 
   return (
-    <div style={{ display: 'flex', height: '100%', position: 'relative' }}>
+    <div style={{ display: 'flex', height: '600px', position: 'relative' }}>
       {/* Sidebar avec liste des cartes */}
       <div style={{ 
         width: '350px', 
