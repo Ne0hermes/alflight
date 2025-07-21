@@ -1,6 +1,7 @@
 import React from 'react';
 import { useFlightSystem } from '../../../context/FlightSystemContext';
 import { LoadInput } from '../../../components/ui/LoadInput';
+import { FUEL_DENSITIES } from '../../../utils/constants';
 
 export const WeightBalanceModule = () => {
   const { 
@@ -60,7 +61,7 @@ export const WeightBalanceModule = () => {
 
   // Fonction pour obtenir la limite avant à une masse donnée
   const getForwardLimitAtWeight = (weight) => {
-    if (!selectedAircraft) return selectedAircraft?.weightBalance.cgLimits.forward || 0;
+    if (!selectedAircraft) return 0;
     
     const wb = selectedAircraft.weightBalance;
     const forwardVariable = wb.cgLimits.forwardVariable;
@@ -185,12 +186,14 @@ export const WeightBalanceModule = () => {
     loads.rearLeft * selectedAircraft.weightBalance.rearLeftSeatArm +
     loads.rearRight * selectedAircraft.weightBalance.rearRightSeatArm +
     loads.baggage * selectedAircraft.weightBalance.baggageArm +
-    loads.auxiliary * selectedAircraft.weightBalance.auxiliaryArm : 0;
+    loads.auxiliary * selectedAircraft.weightBalance.auxiliaryArm +
+    loads.fuel * selectedAircraft.weightBalance.fuelArm : 0;
 
   // Déterminer si c'est dans les limites
   const isWithinLimits = selectedAircraft ? 
     currentCalculation.cg >= getForwardLimitAtWeight(currentCalculation.totalWeight) && 
     currentCalculation.cg <= selectedAircraft.weightBalance.cgLimits.aft &&
+    currentCalculation.totalWeight >= selectedAircraft.minTakeoffWeight &&
     currentCalculation.totalWeight <= selectedAircraft.maxTakeoffWeight : false;
 
   return (
@@ -298,6 +301,202 @@ export const WeightBalanceModule = () => {
             armLabel="Rangement auxiliaire"
           />
         </div>
+
+        {/* Section Carburant détaillée */}
+        {selectedAircraft && (
+          <div style={{ marginTop: '24px' }}>
+            <h4 style={{ 
+              fontSize: '16px', 
+              fontWeight: '600', 
+              color: '#1f2937', 
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              ⛽ Scénarios de carburant
+            </h4>
+            
+            {/* Carburant plein */}
+            <div style={{ 
+              padding: '12px', 
+              backgroundColor: '#dbeafe', 
+              borderRadius: '8px',
+              marginBottom: '12px',
+              border: '1px solid #3b82f6'
+            }}>
+              <div style={{ fontSize: '14px', fontWeight: '600', color: '#1e40af', marginBottom: '8px' }}>
+                🛫 Fuel Mass Fulltank (Réservoirs pleins)
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', fontSize: '13px' }}>
+                <div>
+                  <span style={{ color: '#6b7280' }}>Masse:</span>
+                  <div style={{ fontWeight: '600', color: '#1e40af' }}>
+                    {(selectedAircraft.fuelCapacity * FUEL_DENSITIES[selectedAircraft.fuelType]).toFixed(1)} kg
+                  </div>
+                </div>
+                <div>
+                  <span style={{ color: '#6b7280' }}>Bras:</span>
+                  <div style={{ fontWeight: '600', color: '#1e40af' }}>
+                    {selectedAircraft.weightBalance.fuelArm.toFixed(2)} m
+                  </div>
+                </div>
+                <div>
+                  <span style={{ color: '#6b7280' }}>Moment:</span>
+                  <div style={{ fontWeight: '600', color: '#1e40af' }}>
+                    {calculateMoment(
+                      selectedAircraft.fuelCapacity * FUEL_DENSITIES[selectedAircraft.fuelType], 
+                      selectedAircraft.weightBalance.fuelArm
+                    )} kg.m
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Carburant au décollage (CRM) */}
+            <div style={{ 
+              padding: '12px', 
+              backgroundColor: '#d1fae5', 
+              borderRadius: '8px',
+              marginBottom: '12px',
+              border: '1px solid #10b981'
+            }}>
+              <div style={{ fontSize: '14px', fontWeight: '600', color: '#065f46', marginBottom: '8px' }}>
+                ✈️ Mass Fuel T/O (Bloc CRM au décollage)
+              </div>
+              <div style={{ marginBottom: '12px' }}>
+                <LoadInput
+                  label="Masse carburant au décollage (kg)"
+                  value={loads.fuel}
+                  onChange={(v) => setLoads({...loads, fuel: v})}
+                  max={selectedAircraft.fuelCapacity * FUEL_DENSITIES[selectedAircraft.fuelType]}
+                />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', fontSize: '13px' }}>
+                <div>
+                  <span style={{ color: '#6b7280' }}>Masse:</span>
+                  <div style={{ fontWeight: '600', color: '#065f46' }}>
+                    {loads.fuel} kg
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                    ({(loads.fuel / FUEL_DENSITIES[selectedAircraft.fuelType || 'AVGAS 100LL']).toFixed(1)} L)
+                  </div>
+                </div>
+                <div>
+                  <span style={{ color: '#6b7280' }}>Bras:</span>
+                  <div style={{ fontWeight: '600', color: '#065f46' }}>
+                    {selectedAircraft.weightBalance.fuelArm.toFixed(2)} m
+                  </div>
+                </div>
+                <div>
+                  <span style={{ color: '#6b7280' }}>Moment:</span>
+                  <div style={{ fontWeight: '600', color: '#065f46' }}>
+                    {calculateMoment(loads.fuel, selectedAircraft.weightBalance.fuelArm)} kg.m
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+                <button
+                  onClick={() => setLoads({...loads, fuel: Math.round(selectedAircraft.fuelCapacity * FUEL_DENSITIES[selectedAircraft.fuelType])})}
+                  style={{
+                    padding: '6px 12px',
+                    backgroundColor: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  ⛽ Réservoirs pleins
+                </button>
+                <button
+                  onClick={() => {
+                    if (navigationResults && selectedAircraft) {
+                      const fuelLiters = navigationResults.fuelWithReserve || 0;
+                      const fuelMass = fuelLiters * FUEL_DENSITIES[selectedAircraft.fuelType];
+                      setLoads({...loads, fuel: Math.round(fuelMass)});
+                    }
+                  }}
+                  disabled={!navigationResults}
+                  style={{
+                    padding: '6px 12px',
+                    backgroundColor: navigationResults ? '#10b981' : '#e5e7eb',
+                    color: navigationResults ? 'white' : '#9ca3af',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    cursor: navigationResults ? 'pointer' : 'not-allowed'
+                  }}
+                >
+                  📊 Selon navigation
+                </button>
+              </div>
+            </div>
+
+            {/* Carburant minimum à l'atterrissage */}
+            {navigationResults && (
+              <div style={{ 
+                padding: '12px', 
+                backgroundColor: '#fef3c7', 
+                borderRadius: '8px',
+                marginBottom: '12px',
+                border: '1px solid #f59e0b'
+              }}>
+                <div style={{ fontSize: '14px', fontWeight: '600', color: '#92400e', marginBottom: '8px' }}>
+                  🛬 Minimum Mass Fuel LDG (CRM - Bilan Carb)
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', fontSize: '13px' }}>
+                  <div>
+                    <span style={{ color: '#6b7280' }}>Masse:</span>
+                    <div style={{ fontWeight: '600', color: '#92400e' }}>
+                      {(navigationResults.regulationReserveLiters * FUEL_DENSITIES[selectedAircraft.fuelType]).toFixed(1)} kg
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                      ({navigationResults.regulationReserveLiters} L réserve)
+                    </div>
+                  </div>
+                  <div>
+                    <span style={{ color: '#6b7280' }}>Bras:</span>
+                    <div style={{ fontWeight: '600', color: '#92400e' }}>
+                      {selectedAircraft.weightBalance.fuelArm.toFixed(2)} m
+                    </div>
+                  </div>
+                  <div>
+                    <span style={{ color: '#6b7280' }}>Moment:</span>
+                    <div style={{ fontWeight: '600', color: '#92400e' }}>
+                      {calculateMoment(
+                        navigationResults.regulationReserveLiters * FUEL_DENSITIES[selectedAircraft.fuelType], 
+                        selectedAircraft.weightBalance.fuelArm
+                      )} kg.m
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Note d'information */}
+            <div style={{ 
+              padding: '12px',
+              backgroundColor: '#e0f2fe',
+              borderRadius: '6px',
+              fontSize: '12px',
+              color: '#0c4a6e'
+            }}>
+              <p style={{ margin: '0', fontWeight: '600' }}>
+                💡 Information carburant :
+              </p>
+              <p style={{ margin: '4px 0 0 0' }}>
+                • Densité {selectedAircraft.fuelType} : {FUEL_DENSITIES[selectedAircraft.fuelType]} kg/L<br/>
+                • Capacité totale : {selectedAircraft.fuelCapacity} L = {(selectedAircraft.fuelCapacity * FUEL_DENSITIES[selectedAircraft.fuelType]).toFixed(1)} kg<br/>
+                • Le bras de levier du carburant est constant : {selectedAircraft.weightBalance.fuelArm} m<br/>
+                • <strong>Fulltank</strong> : Configuration réservoirs pleins<br/>
+                • <strong>T/O (CRM)</strong> : Carburant réel au décollage selon votre planification<br/>
+                • <strong>LDG minimum</strong> : Réserve finale réglementaire à l'atterrissage
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Tableau récapitulatif des moments */}
@@ -390,6 +589,14 @@ export const WeightBalanceModule = () => {
                       </td>
                     </tr>
                   )}
+                  <tr style={{ borderTop: '1px solid #e5e7eb' }}>
+                    <td style={{ padding: '6px 0', fontWeight: '600', color: '#059669' }}>Carburant T/O</td>
+                    <td style={{ textAlign: 'right', padding: '6px 0', fontWeight: '600', color: '#059669' }}>{loads.fuel}</td>
+                    <td style={{ textAlign: 'right', padding: '6px 0', fontWeight: '600', color: '#059669' }}>{selectedAircraft.weightBalance.fuelArm.toFixed(2)}</td>
+                    <td style={{ textAlign: 'right', padding: '6px 0', fontWeight: '600', color: '#059669' }}>
+                      {calculateMoment(loads.fuel, selectedAircraft.weightBalance.fuelArm)}
+                    </td>
+                  </tr>
                 </>
               )}
             </tbody>
@@ -488,6 +695,111 @@ export const WeightBalanceModule = () => {
             </div>
           </div>
         </div>
+
+        {/* Scénarios de centrage */}
+        {selectedAircraft && (
+          <div style={{ marginBottom: '16px' }}>
+            <h4 style={{ 
+              fontSize: '16px', 
+              fontWeight: '600', 
+              color: '#1f2937', 
+              marginBottom: '12px' 
+            }}>
+              🔄 Scénarios de centrage
+            </h4>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+              {/* Scénario actuel */}
+              <div style={{ 
+                padding: '12px', 
+                backgroundColor: '#dbeafe', 
+                borderRadius: '6px',
+                border: '1px solid #3b82f6'
+              }}>
+                <h5 style={{ fontSize: '13px', fontWeight: '600', color: '#1e40af', marginBottom: '8px' }}>
+                  Configuration actuelle
+                </h5>
+                <div style={{ fontSize: '12px', color: '#1e40af' }}>
+                  <p style={{ margin: '0 0 4px 0' }}>
+                    Masse: <strong>{currentCalculation.totalWeight.toFixed(0)} kg</strong>
+                  </p>
+                  <p style={{ margin: '0 0 4px 0' }}>
+                    CG: <strong>{currentCalculation.cg.toFixed(2)} m</strong>
+                  </p>
+                  <p style={{ margin: '0' }}>
+                    Carburant: <strong>{loads.fuel} kg</strong>
+                  </p>
+                </div>
+              </div>
+
+              {/* Scénario sans carburant */}
+              <div style={{ 
+                padding: '12px', 
+                backgroundColor: '#fee2e2', 
+                borderRadius: '6px',
+                border: '1px solid #ef4444'
+              }}>
+                <h5 style={{ fontSize: '13px', fontWeight: '600', color: '#dc2626', marginBottom: '8px' }}>
+                  Sans carburant (ZFW)
+                </h5>
+                {(() => {
+                  const zfWeight = currentCalculation.totalWeight - loads.fuel;
+                  const zfMoment = totalMoment - (loads.fuel * selectedAircraft.weightBalance.fuelArm);
+                  const zfCG = zfWeight > 0 ? zfMoment / zfWeight : 0;
+                  
+                  return (
+                    <div style={{ fontSize: '12px', color: '#dc2626' }}>
+                      <p style={{ margin: '0 0 4px 0' }}>
+                        Masse: <strong>{zfWeight.toFixed(0)} kg</strong>
+                      </p>
+                      <p style={{ margin: '0 0 4px 0' }}>
+                        CG: <strong>{zfCG.toFixed(2)} m</strong>
+                      </p>
+                      <p style={{ margin: '0' }}>
+                        Moment: <strong>{zfMoment.toFixed(0)} kg.m</strong>
+                      </p>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Scénario réserve minimum */}
+              {navigationResults && (
+                <div style={{ 
+                  padding: '12px', 
+                  backgroundColor: '#fef3c7', 
+                  borderRadius: '6px',
+                  border: '1px solid #f59e0b'
+                }}>
+                  <h5 style={{ fontSize: '13px', fontWeight: '600', color: '#92400e', marginBottom: '8px' }}>
+                    À la réserve finale
+                  </h5>
+                  {(() => {
+                    const reserveFuel = navigationResults.regulationReserveLiters * FUEL_DENSITIES[selectedAircraft.fuelType];
+                    const ldgWeight = currentCalculation.totalWeight - loads.fuel + reserveFuel;
+                    const ldgMoment = totalMoment - (loads.fuel * selectedAircraft.weightBalance.fuelArm) + 
+                                     (reserveFuel * selectedAircraft.weightBalance.fuelArm);
+                    const ldgCG = ldgWeight > 0 ? ldgMoment / ldgWeight : 0;
+                    
+                    return (
+                      <div style={{ fontSize: '12px', color: '#92400e' }}>
+                        <p style={{ margin: '0 0 4px 0' }}>
+                          Masse: <strong>{ldgWeight.toFixed(0)} kg</strong>
+                        </p>
+                        <p style={{ margin: '0 0 4px 0' }}>
+                          CG: <strong>{ldgCG.toFixed(2)} m</strong>
+                        </p>
+                        <p style={{ margin: '0' }}>
+                          Carburant: <strong>{reserveFuel.toFixed(0)} kg</strong>
+                        </p>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Limites */}
         {selectedAircraft && (
