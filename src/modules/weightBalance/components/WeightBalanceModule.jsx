@@ -8,8 +8,7 @@ export const WeightBalanceModule = () => {
     loads, 
     setLoads, 
     navigationResults,
-    currentCalculation,
-    getForwardLimitAtWeight
+    currentCalculation
   } = useFlightSystem();
 
   // Fonction pour calculer le moment d'un élément
@@ -57,59 +56,6 @@ export const WeightBalanceModule = () => {
         </div>
       </div>
     );
-  };
-
-  // Fonction pour créer l'enveloppe de centrage avec limites variables
-  const createEnvelopePoints = () => {
-    if (!selectedAircraft) return '';
-    
-    const wb = selectedAircraft.weightBalance;
-    const minWeight = selectedAircraft.minTakeoffWeight;
-    const maxWeight = selectedAircraft.maxTakeoffWeight;
-    
-    // Vérifier s'il y a des limites avant variables
-    const hasForwardVariable = wb.cgLimits.forwardVariable && wb.cgLimits.forwardVariable.length > 0;
-    
-    if (!hasForwardVariable) {
-      // Enveloppe rectangulaire simple
-      const points = [
-        { weight: minWeight, cg: wb.cgLimits.forward },
-        { weight: maxWeight, cg: wb.cgLimits.forward },
-        { weight: maxWeight, cg: wb.cgLimits.aft },
-        { weight: minWeight, cg: wb.cgLimits.aft },
-      ];
-      
-      return points.map(p => `${50 + (p.cg * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500},${350 - (p.weight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300}`).join(' ');
-    }
-    
-    // Enveloppe avec limites avant variables
-    const forwardPoints = [...wb.cgLimits.forwardVariable]
-      .sort((a, b) => a.weight - b.weight);
-    
-    // Ajouter les points extrêmes si nécessaire
-    if (forwardPoints[0].weight > minWeight) {
-      forwardPoints.unshift({ weight: minWeight, cg: wb.cgLimits.forward });
-    }
-    if (forwardPoints[forwardPoints.length - 1].weight < maxWeight) {
-      forwardPoints.push({ weight: maxWeight, cg: wb.cgLimits.forward });
-    }
-    
-    // Construire l'enveloppe complète
-    const envelopePoints = [];
-    
-    // Côté avant (montée)
-    forwardPoints.forEach(p => {
-      envelopePoints.push({ weight: p.weight, cg: p.cg });
-    });
-    
-    // Côté arrière (descente)
-    envelopePoints.push({ weight: maxWeight, cg: wb.cgLimits.aft });
-    envelopePoints.push({ weight: minWeight, cg: wb.cgLimits.aft });
-    
-    // Convertir en coordonnées SVG
-    return envelopePoints.map(p => 
-      `${50 + (p.cg * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500},${350 - (p.weight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300}`
-    ).join(' ');
   };
 
   // Fonction pour obtenir la limite avant à une masse donnée
@@ -178,6 +124,59 @@ export const WeightBalanceModule = () => {
 
   const scales = getScales();
 
+  // Fonction pour créer l'enveloppe de centrage avec limites variables
+  const createEnvelopePoints = () => {
+    if (!selectedAircraft || !scales) return '';
+    
+    const wb = selectedAircraft.weightBalance;
+    const minWeight = selectedAircraft.minTakeoffWeight;
+    const maxWeight = selectedAircraft.maxTakeoffWeight;
+    
+    // Vérifier s'il y a des limites avant variables
+    const hasForwardVariable = wb.cgLimits.forwardVariable && wb.cgLimits.forwardVariable.length > 0;
+    
+    if (!hasForwardVariable) {
+      // Enveloppe rectangulaire simple
+      const points = [
+        { weight: minWeight, cg: wb.cgLimits.forward },
+        { weight: maxWeight, cg: wb.cgLimits.forward },
+        { weight: maxWeight, cg: wb.cgLimits.aft },
+        { weight: minWeight, cg: wb.cgLimits.aft },
+      ];
+      
+      return points.map(p => `${50 + (p.cg * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500},${350 - (p.weight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300}`).join(' ');
+    }
+    
+    // Enveloppe avec limites avant variables
+    const forwardPoints = [...wb.cgLimits.forwardVariable]
+      .sort((a, b) => a.weight - b.weight);
+    
+    // Ajouter les points extrêmes si nécessaire
+    if (forwardPoints[0].weight > minWeight) {
+      forwardPoints.unshift({ weight: minWeight, cg: wb.cgLimits.forward });
+    }
+    if (forwardPoints[forwardPoints.length - 1].weight < maxWeight) {
+      forwardPoints.push({ weight: maxWeight, cg: wb.cgLimits.forward });
+    }
+    
+    // Construire l'enveloppe complète
+    const envelopePoints = [];
+    
+    // Côté avant (montée)
+    forwardPoints.forEach(p => {
+      envelopePoints.push({ weight: p.weight, cg: p.cg });
+    });
+    
+    // Côté arrière (descente)
+    envelopePoints.push({ weight: maxWeight, cg: wb.cgLimits.aft });
+    envelopePoints.push({ weight: minWeight, cg: wb.cgLimits.aft });
+    
+    // Convertir en coordonnées SVG
+    return envelopePoints.map(p => 
+      `${50 + (p.cg * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500},${350 - (p.weight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300}`
+    ).join(' ');
+  };
+
   // Calcul du moment total
   const totalMoment = selectedAircraft ? 
     selectedAircraft.emptyWeight * selectedAircraft.weightBalance.emptyWeightArm +
@@ -187,6 +186,12 @@ export const WeightBalanceModule = () => {
     loads.rearRight * selectedAircraft.weightBalance.rearRightSeatArm +
     loads.baggage * selectedAircraft.weightBalance.baggageArm +
     loads.auxiliary * selectedAircraft.weightBalance.auxiliaryArm : 0;
+
+  // Déterminer si c'est dans les limites
+  const isWithinLimits = selectedAircraft ? 
+    currentCalculation.cg >= selectedAircraft.weightBalance.cgLimits.forward && 
+    currentCalculation.cg <= selectedAircraft.weightBalance.cgLimits.aft &&
+    currentCalculation.totalWeight <= selectedAircraft.maxTakeoffWeight : false;
 
   return (
     <div>
