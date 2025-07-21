@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useFlightSystem } from '../../../context/FlightSystemContext';
 import { Edit, Trash2, FileText, Plus } from 'lucide-react';
+import { AircraftForm } from './AircraftForm';
 
 export const AircraftManagerModule = () => {
   const { aircraftList, selectedAircraft, setSelectedAircraft, dispatch } = useFlightSystem();
   const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
+  const [showForm, setShowForm] = useState(false);
+  const [editingAircraft, setEditingAircraft] = useState(null);
 
   const showNotification = (message, type = 'success') => {
     setNotification({ show: true, message, type });
@@ -18,6 +21,30 @@ export const AircraftManagerModule = () => {
     } else if (aircraftList.length === 1) {
       showNotification('Impossible de supprimer le dernier avion', 'error');
     }
+  };
+
+  const handleAdd = () => {
+    setEditingAircraft(null);
+    setShowForm(true);
+  };
+
+  const handleEdit = (aircraft) => {
+    setEditingAircraft(aircraft);
+    setShowForm(true);
+  };
+
+  const handleSave = (aircraftData) => {
+    if (editingAircraft) {
+      dispatch({ type: 'UPDATE_AIRCRAFT', payload: aircraftData });
+      showNotification('Avion modifié avec succès', 'success');
+    } else {
+      dispatch({ type: 'ADD_AIRCRAFT', payload: aircraftData });
+      showNotification('Avion ajouté avec succès', 'success');
+      // Sélectionner automatiquement le nouvel avion
+      setSelectedAircraft(aircraftData);
+    }
+    setShowForm(false);
+    setEditingAircraft(null);
   };
 
   const exportAircraft = () => {
@@ -192,23 +219,7 @@ export const AircraftManagerModule = () => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      showNotification(`Détails de ${aircraft.registration} (fonctionnalité à implémenter)`, 'success');
-                    }}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: '#6b7280',
-                      cursor: 'pointer',
-                      padding: '4px'
-                    }}
-                    title="Voir les détails"
-                  >
-                    <FileText size={18} />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      showNotification(`Modification de ${aircraft.registration} (fonctionnalité à implémenter)`, 'success');
+                      handleEdit(aircraft);
                     }}
                     style={{
                       background: 'none',
@@ -249,7 +260,7 @@ export const AircraftManagerModule = () => {
       {/* Actions */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
         <button
-          onClick={() => showNotification('Ajout d\'avion (fonctionnalité à implémenter)', 'success')}
+          onClick={handleAdd}
           style={{
             flex: 1,
             backgroundColor: '#10b981',
@@ -341,9 +352,21 @@ export const AircraftManagerModule = () => {
           marginTop: '12px', 
           marginBottom: '0' 
         }}>
-          💾 Les modifications sont stockées en mémoire pendant la session
+          💡 Les données sont sauvegardées automatiquement dans le navigateur
         </p>
       </div>
+
+      {/* Formulaire d'ajout/modification */}
+      {showForm && (
+        <AircraftForm
+          aircraft={editingAircraft}
+          onSave={handleSave}
+          onClose={() => {
+            setShowForm(false);
+            setEditingAircraft(null);
+          }}
+        />
+      )}
     </div>
   );
 };
