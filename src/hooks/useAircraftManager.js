@@ -13,7 +13,23 @@ const loadFromStorage = () => {
       const parsed = JSON.parse(stored);
       // Vérifier que c'est un tableau valide
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        // Migration : ajouter forwardVariable aux anciens avions
+        const migrated = parsed.map(aircraft => {
+          if (!aircraft.weightBalance?.cgLimits?.forwardVariable) {
+            return {
+              ...aircraft,
+              weightBalance: {
+                ...aircraft.weightBalance,
+                cgLimits: {
+                  ...aircraft.weightBalance?.cgLimits,
+                  forwardVariable: []
+                }
+              }
+            };
+          }
+          return aircraft;
+        });
+        return migrated;
       }
     }
   } catch (error) {

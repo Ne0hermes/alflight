@@ -86,7 +86,7 @@ export const useVACStore = create(
         }));
 
         try {
-          // Simuler le téléchargement
+          // Simuler le téléchargement (pas d'appel API réel)
           await new Promise(resolve => setTimeout(resolve, 2000));
 
           // Mettre à jour les métadonnées

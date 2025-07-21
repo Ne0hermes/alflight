@@ -189,7 +189,7 @@ export const WeightBalanceModule = () => {
 
   // Déterminer si c'est dans les limites
   const isWithinLimits = selectedAircraft ? 
-    currentCalculation.cg >= selectedAircraft.weightBalance.cgLimits.forward && 
+    currentCalculation.cg >= getForwardLimitAtWeight(currentCalculation.totalWeight) && 
     currentCalculation.cg <= selectedAircraft.weightBalance.cgLimits.aft &&
     currentCalculation.totalWeight <= selectedAircraft.maxTakeoffWeight : false;
 

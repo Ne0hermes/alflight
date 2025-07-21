@@ -32,7 +32,15 @@ export const DEFAULT_AIRCRAFT = {
     auxiliaryArm: 3.70,
     fuelArm: 2.40,
     emptyWeightArm: 2.30,
-    cgLimits: { forward: 2.05, aft: 2.45, forwardVariable: [] }
+    cgLimits: { 
+      forward: 2.05, 
+      aft: 2.45, 
+      forwardVariable: [
+        { weight: 1000, cg: 2.00 },
+        { weight: 1100, cg: 2.05 },
+        { weight: 1310, cg: 2.05 }
+      ]
+    }
   },
   config: {
     maxTakeoffWeight: 1310,
@@ -85,7 +93,15 @@ export const DEFAULT_AIRCRAFT_LIST = [
       auxiliaryArm: 3.80,
       fuelArm: 2.40,
       emptyWeightArm: 2.30,
-      cgLimits: { forward: 2.00, aft: 2.40, forwardVariable: [] }
+      cgLimits: { 
+        forward: 2.00, 
+        aft: 2.40, 
+        forwardVariable: [
+          { weight: 900, cg: 1.95 },
+          { weight: 1000, cg: 2.00 },
+          { weight: 1157, cg: 2.00 }
+        ]
+      }
     },
     config: {
       maxTakeoffWeight: 1157,

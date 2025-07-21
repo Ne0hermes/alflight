@@ -1,6 +1,6 @@
 // src/modules/vac/components/VACModule.jsx
 import React, { useEffect, useState } from 'react';
-import { useVACStore } from '../store/vacStore';
+import { useVACStore } from '../store/vacStore.js';  // IMPORTANT: .js à la fin
 import { Search, Download, Trash2, CheckCircle, AlertCircle, HardDrive, Cloud, Map } from 'lucide-react';
 import { VACChartViewer } from './VACChartViewer';
 import { VACDataValidator } from './VACDataValidator';

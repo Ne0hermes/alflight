@@ -63,12 +63,11 @@ export default defineConfig({
     })
   ],
   server: {
-    // Configuration proxy pour l'API de développement
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
         changeOrigin: true,
       }
     }
-  }
+}
 });
