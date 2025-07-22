@@ -42,6 +42,35 @@ export const FlightSystemProvider = ({ children }) => {
     fuel: 100         // Carburant
   });
   
+  // État pour le carburant (déplacé depuis FuelBalanceModule)
+  const [fuelData, setFuelData] = useState({
+    roulage: { gal: 1.0, ltr: 1.0 * 3.78541 },
+    trip: { gal: 0, ltr: 0 },
+    contingency: { gal: 1, ltr: 1 * 3.78541 },
+    alternate: { gal: 2.0, ltr: 2.0 * 3.78541 },
+    finalReserve: { gal: 0, ltr: 0 },
+    additional: { gal: 0, ltr: 0 },
+    extra: { gal: 0, ltr: 0 }
+  });
+  
+  const [crmFuel, setCrmFuel] = useState({ gal: 0, ltr: 0 });
+  
+  // Mettre à jour automatiquement la réserve finale selon la réglementation
+  useEffect(() => {
+    if (navigationResults && navigationResults.regulationReserveLiters !== undefined) {
+      const regulationReserveLiters = navigationResults.regulationReserveLiters || 0;
+      const regulationReserveGallons = regulationReserveLiters / 3.78541;
+      
+      setFuelData(prev => ({
+        ...prev,
+        finalReserve: {
+          gal: regulationReserveGallons,
+          ltr: regulationReserveLiters
+        }
+      }));
+    }
+  }, [navigationResults?.regulationReserveLiters]);
+  
   // Calculer le carburant à partir des résultats de navigation
   useEffect(() => {
     if (navigationResults && selectedAircraft) {
@@ -161,7 +190,13 @@ export const FlightSystemProvider = ({ children }) => {
     // Masse et centrage
     loads,
     setLoads,
-    currentCalculation
+    currentCalculation,
+    
+    // Carburant
+    fuelData,
+    setFuelData,
+    crmFuel,
+    setCrmFuel
   };
   
   return (
