@@ -1023,7 +1023,7 @@ export const WeightBalanceModule = () => {
             border: '1px solid #e5e7eb',
             padding: '24px'
           }}>
-            <svg
+<svg
               viewBox="0 0 600 400"
               style={{ width: '100%', maxWidth: '800px', height: 'auto', margin: '0 auto', display: 'block' }}
             >
@@ -1044,10 +1044,10 @@ export const WeightBalanceModule = () => {
               <path d="M 45 55 L 50 50 L 55 55" fill="none" stroke="#374151" strokeWidth="2" />
               
               {/* Labels des axes */}
-              <text x="300" y="390" textAnchor="middle" fontSize="14" fill="#374151">
+              <text x="300" y="390" textAnchor="middle" fontSize="12" fill="#374151">
                 Centre de Gravité (mm)
               </text>
-              <text x="25" y="200" textAnchor="middle" fontSize="14" fill="#374151" transform="rotate(-90 25 200)">
+              <text x="25" y="200" textAnchor="middle" fontSize="12" fill="#374151" transform="rotate(-90 25 200)">
                 Masse (kg)
               </text>
               
@@ -1058,7 +1058,7 @@ export const WeightBalanceModule = () => {
                 return (
                   <g key={`x-${i}`}>
                     <line x1={x} y1="345" x2={x} y2="355" stroke="#374151" strokeWidth="1" />
-                    <text x={x} y="370" textAnchor="middle" fontSize="12" fill="#6b7280">
+                    <text x={x} y="370" textAnchor="middle" fontSize="10" fill="#6b7280">
                       {cgValue.toFixed(0)}
                     </text>
                   </g>
@@ -1072,7 +1072,7 @@ export const WeightBalanceModule = () => {
                 return (
                   <g key={`y-${i}`}>
                     <line x1="45" y1={y} x2="55" y2={y} stroke="#374151" strokeWidth="1" />
-                    <text x="35" y={y + 5} textAnchor="end" fontSize="12" fill="#6b7280">
+                    <text x="35" y={y + 5} textAnchor="end" fontSize="10" fill="#6b7280">
                       {weightValue.toFixed(0)}
                     </text>
                   </g>
@@ -1088,10 +1088,10 @@ export const WeightBalanceModule = () => {
                 strokeWidth="2"
               />
               
-              {/* Points limites de l'enveloppe avec labels */}
+              {/* Labels des limites de l'enveloppe (sans les points) */}
               {selectedAircraft.weightBalance.cgLimits.forward && selectedAircraft.weightBalance.cgLimits.aft && (
                 <>
-                  {/* Points de limite avant - peuvent être multiples si limites variables */}
+                  {/* Labels de limite avant - peuvent être multiples si limites variables */}
                   {(() => {
                     const wb = selectedAircraft.weightBalance;
                     const forwardPoints = [];
@@ -1122,40 +1122,23 @@ export const WeightBalanceModule = () => {
                     
                     return forwardPoints.map((point, index) => (
                       <g key={`forward-${index}`}>
-                        <circle
-                          cx={50 + (point.cg * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500}
-                          cy={350 - (point.weight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300}
-                          r="5"
-                          fill="#3b82f6"
-                          stroke="white"
-                          strokeWidth="2"
-                        />
-                        <rect
-                          x={50 + (point.cg * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500 - 50}
-                          y={350 - (point.weight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300 - 25}
-                          width="45"
-                          height="30"
-                          fill="white"
-                          fillOpacity="0.9"
-                          rx="3"
-                        />
                         <text
-                          x={50 + (point.cg * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500 - 28}
+                          x={50 + (point.cg * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500}
                           y={350 - (point.weight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300 - 8}
                           textAnchor="middle"
-                          fontSize="11"
-                          fill="#1e40af"
-                          fontWeight="600"
+                          fontSize="9"
+                          fill="#6b7280"
+                          fontWeight="500"
                         >
                           {point.weight}kg
                         </text>
                         <text
-                          x={50 + (point.cg * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500 - 28}
-                          y={350 - (point.weight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300 + 6}
+                          x={50 + (point.cg * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500}
+                          y={350 - (point.weight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300 + 4}
                           textAnchor="middle"
-                          fontSize="11"
-                          fill="#1e40af"
-                          fontWeight="600"
+                          fontSize="9"
+                          fill="#6b7280"
+                          fontWeight="500"
                         >
                           {(point.cg * 1000).toFixed(0)}mm
                         </text>
@@ -1163,82 +1146,48 @@ export const WeightBalanceModule = () => {
                     ));
                   })()}
                   
-                  {/* Points de limite arrière - toujours seulement deux */}
+                  {/* Labels de limite arrière - toujours seulement deux */}
                   <g>
-                    <circle
-                      cx={50 + (selectedAircraft.weightBalance.cgLimits.aft * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500}
-                      cy={350 - (selectedAircraft.minTakeoffWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300}
-                      r="5"
-                      fill="#3b82f6"
-                      stroke="white"
-                      strokeWidth="2"
-                    />
-                    <rect
-                      x={50 + (selectedAircraft.weightBalance.cgLimits.aft * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500 + 5}
-                      y={350 - (selectedAircraft.minTakeoffWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300 - 25}
-                      width="45"
-                      height="30"
-                      fill="white"
-                      fillOpacity="0.9"
-                      rx="3"
-                    />
                     <text
-                      x={50 + (selectedAircraft.weightBalance.cgLimits.aft * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500 + 28}
+                      x={50 + (selectedAircraft.weightBalance.cgLimits.aft * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500}
                       y={350 - (selectedAircraft.minTakeoffWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300 - 8}
                       textAnchor="middle"
-                      fontSize="11"
-                      fill="#1e40af"
-                      fontWeight="600"
+                      fontSize="9"
+                      fill="#6b7280"
+                      fontWeight="500"
                     >
                       {selectedAircraft.minTakeoffWeight}kg
                     </text>
                     <text
-                      x={50 + (selectedAircraft.weightBalance.cgLimits.aft * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500 + 28}
-                      y={350 - (selectedAircraft.minTakeoffWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300 + 6}
+                      x={50 + (selectedAircraft.weightBalance.cgLimits.aft * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500}
+                      y={350 - (selectedAircraft.minTakeoffWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300 + 4}
                       textAnchor="middle"
-                      fontSize="11"
-                      fill="#1e40af"
-                      fontWeight="600"
+                      fontSize="9"
+                      fill="#6b7280"
+                      fontWeight="500"
                     >
                       {(selectedAircraft.weightBalance.cgLimits.aft * 1000).toFixed(0)}mm
                     </text>
                   </g>
                   
                   <g>
-                    <circle
-                      cx={50 + (selectedAircraft.weightBalance.cgLimits.aft * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500}
-                      cy={350 - (selectedAircraft.maxTakeoffWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300}
-                      r="5"
-                      fill="#3b82f6"
-                      stroke="white"
-                      strokeWidth="2"
-                    />
-                    <rect
-                      x={50 + (selectedAircraft.weightBalance.cgLimits.aft * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500 + 5}
-                      y={350 - (selectedAircraft.maxTakeoffWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300 + 5}
-                      width="45"
-                      height="30"
-                      fill="white"
-                      fillOpacity="0.9"
-                      rx="3"
-                    />
                     <text
-                      x={50 + (selectedAircraft.weightBalance.cgLimits.aft * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500 + 28}
-                      y={350 - (selectedAircraft.maxTakeoffWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300 + 22}
+                      x={50 + (selectedAircraft.weightBalance.cgLimits.aft * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500}
+                      y={350 - (selectedAircraft.maxTakeoffWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300}
                       textAnchor="middle"
-                      fontSize="11"
-                      fill="#1e40af"
-                      fontWeight="600"
+                      fontSize="9"
+                      fill="#6b7280"
+                      fontWeight="500"
                     >
                       {selectedAircraft.maxTakeoffWeight}kg
                     </text>
                     <text
-                      x={50 + (selectedAircraft.weightBalance.cgLimits.aft * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500 + 28}
-                      y={350 - (selectedAircraft.maxTakeoffWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300 + 36}
+                      x={50 + (selectedAircraft.weightBalance.cgLimits.aft * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500}
+                      y={350 - (selectedAircraft.maxTakeoffWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300 + 12}
                       textAnchor="middle"
-                      fontSize="11"
-                      fill="#1e40af"
-                      fontWeight="600"
+                      fontSize="9"
+                      fill="#6b7280"
+                      fontWeight="500"
                     >
                       {(selectedAircraft.weightBalance.cgLimits.aft * 1000).toFixed(0)}mm
                     </text>
@@ -1259,7 +1208,7 @@ export const WeightBalanceModule = () => {
               <text
                 x="555"
                 y={350 - (selectedAircraft.maxTakeoffWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300 + 5}
-                fontSize="12"
+                fontSize="10"
                 fill="#ef4444"
               >
                 MTOW
@@ -1280,7 +1229,7 @@ export const WeightBalanceModule = () => {
                   <text
                     x="555"
                     y={350 - (selectedAircraft.maxLandingWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300 + 5}
-                    fontSize="12"
+                    fontSize="10"
                     fill="#f59e0b"
                   >
                     MLW
@@ -1307,7 +1256,7 @@ export const WeightBalanceModule = () => {
                     x={50 + (selectedAircraft.weightBalance.cgLimits.forward * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500}
                     y="60"
                     textAnchor="middle"
-                    fontSize="10"
+                    fontSize="9"
                     fill="#3b82f6"
                   >
                     CG avant
@@ -1332,7 +1281,7 @@ export const WeightBalanceModule = () => {
                     x={50 + (selectedAircraft.weightBalance.cgLimits.aft * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500}
                     y="60"
                     textAnchor="middle"
-                    fontSize="10"
+                    fontSize="9"
                     fill="#3b82f6"
                   >
                     CG arrière
@@ -1340,188 +1289,258 @@ export const WeightBalanceModule = () => {
                 </>
               )}
               
-              {/* Point actuel */}
-              {currentCalculation.cg && currentCalculation.totalWeight && (
-                <g>
-                  {/* Fond blanc pour les labels */}
-                  <rect
-                    x={50 + (currentCalculation.cg * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500 - 35}
-                    y={350 - (currentCalculation.totalWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300 - 35}
-                    width="70"
-                    height="30"
-                    fill="white"
-                    fillOpacity="0.95"
-                    rx="4"
-                  />
-                  <rect
-                    x={50 + (currentCalculation.cg * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500 - 35}
-                    y={350 - (currentCalculation.totalWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300 + 12}
-                    width="70"
-                    height="20"
-                    fill="white"
-                    fillOpacity="0.95"
-                    rx="4"
-                  />
-                  
-                  {/* Point actuel */}
-                  <circle
-                    cx={50 + (currentCalculation.cg * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500}
-                    cy={350 - (currentCalculation.totalWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300}
-                    r="10"
-                    fill={isWithinLimits ? '#10b981' : '#ef4444'}
-                    stroke="white"
-                    strokeWidth="3"
-                  />
-                  
-                  {/* Labels */}
-                  <text
-                    x={50 + (currentCalculation.cg * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500}
-                    y={350 - (currentCalculation.totalWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300 - 15}
-                    textAnchor="middle"
-                    fontSize="13"
-                    fontWeight="bold"
-                    fill={isWithinLimits ? '#065f46' : '#dc2626'}
-                  >
-                    {currentCalculation.totalWeight.toFixed(0)} kg
-                  </text>
-                  <text
-                    x={50 + (currentCalculation.cg * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500}
-                    y={350 - (currentCalculation.totalWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300 + 25}
-                    textAnchor="middle"
-                    fontSize="13"
-                    fontWeight="bold"
-                    fill={isWithinLimits ? '#065f46' : '#dc2626'}
-                  >
-                    {(currentCalculation.cg * 1000).toFixed(0)} mm
-                  </text>
-                </g>
-              )}
-              
-              {/* Point à l'atterrissage */}
-              {crmFuel.ltr > 0 && fuelData && currentCalculation.cg && currentCalculation.totalWeight && (() => {
-                const totalFuelBalance = Object.values(fuelData).reduce((sum, fuel) => sum + (fuel?.ltr || 0), 0);
-                const remainingFuelLiters = Math.max(0, crmFuel.ltr - totalFuelBalance);
-                const remainingFuelMass = remainingFuelLiters * FUEL_DENSITIES[selectedAircraft.fuelType];
+              {/* 4 Points spécifiques avec lignes de connexion */}
+              {currentCalculation.cg && currentCalculation.totalWeight && selectedAircraft && (() => {
+                // Calcul des 4 points
+                const fuelDensity = FUEL_DENSITIES[selectedAircraft.fuelType];
                 
-                const ldgWeight = currentCalculation.totalWeight - loads.fuel + remainingFuelMass;
-                const ldgMoment = totalMoment - (loads.fuel * selectedAircraft.weightBalance.fuelArm) + 
-                                 (remainingFuelMass * selectedAircraft.weightBalance.fuelArm);
-                const ldgCG = ldgWeight > 0 ? ldgMoment / ldgWeight : 0;
+                // 1. Fulltank (réservoirs pleins)
+                const fulltankFuelMass = selectedAircraft.fuelCapacity * fuelDensity;
+                const fulltankWeight = currentCalculation.totalWeight - loads.fuel + fulltankFuelMass;
+                const fulltankMoment = totalMoment - (loads.fuel * selectedAircraft.weightBalance.fuelArm) + 
+                                      (fulltankFuelMass * selectedAircraft.weightBalance.fuelArm);
+                const fulltankCG = fulltankWeight > 0 ? fulltankMoment / fulltankWeight : 0;
                 
-                const isLdgWithinLimits = 
-                  ldgCG >= getForwardLimitAtWeight(ldgWeight) && 
-                  ldgCG <= selectedAircraft.weightBalance.cgLimits.aft &&
-                  ldgWeight >= selectedAircraft.minTakeoffWeight &&
-                  ldgWeight <= selectedAircraft.maxLandingWeight;
+                // 2. T/O CRM (décollage avec carburant CRM) - c'est le point actuel
+                const toCrmWeight = currentCalculation.totalWeight;
+                const toCrmCG = currentCalculation.cg;
+                
+                // 3. ZFW (sans carburant)
+                const zfwWeight = currentCalculation.totalWeight - loads.fuel;
+                const zfwMoment = totalMoment - (loads.fuel * selectedAircraft.weightBalance.fuelArm);
+                const zfwCG = zfwWeight > 0 ? zfwMoment / zfwWeight : 0;
+                
+                // 4. Landing (si CRM défini)
+                let landingWeight = zfwWeight;
+                let landingCG = zfwCG;
+                if (crmFuel.ltr > 0 && fuelData) {
+                  const totalFuelBalance = Object.values(fuelData).reduce((sum, fuel) => sum + (fuel?.ltr || 0), 0);
+                  const remainingFuelLiters = Math.max(0, crmFuel.ltr - totalFuelBalance);
+                  const remainingFuelMass = remainingFuelLiters * fuelDensity;
+                  landingWeight = zfwWeight + remainingFuelMass;
+                  const landingMoment = zfwMoment + (remainingFuelMass * selectedAircraft.weightBalance.fuelArm);
+                  landingCG = landingWeight > 0 ? landingMoment / landingWeight : 0;
+                }
+                
+                // Convertir en coordonnées SVG
+                const fulltankX = 50 + (fulltankCG * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500;
+                const fulltankY = 350 - (fulltankWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300;
+                
+                const toCrmX = 50 + (toCrmCG * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500;
+                const toCrmY = 350 - (toCrmWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300;
+                
+                const zfwX = 50 + (zfwCG * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500;
+                const zfwY = 350 - (zfwWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300;
+                
+                const landingX = 50 + (landingCG * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500;
+                const landingY = 350 - (landingWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300;
                 
                 return (
                   <g>
-                    {/* Ligne pointillée reliant les deux points */}
-                    <line
-                      x1={50 + (currentCalculation.cg * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500}
-                      y1={350 - (currentCalculation.totalWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300}
-                      x2={50 + (ldgCG * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500}
-                      y2={350 - (ldgWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300}
-                      stroke="#f59e0b"
+                    {/* Lignes de connexion */}
+                    <polyline
+                      points={`${fulltankX},${fulltankY} ${toCrmX},${toCrmY} ${landingX},${landingY} ${zfwX},${zfwY}`}
+                      fill="none"
+                      stroke="#6b7280"
                       strokeWidth="2"
                       strokeDasharray="5,5"
-                      opacity="0.7"
+                      opacity="0.6"
                     />
                     
-                    {/* Fond blanc pour les labels */}
-                    <rect
-                      x={50 + (ldgCG * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500 - 35}
-                      y={350 - (ldgWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300 - 35}
-                      width="70"
-                      height="30"
-                      fill="white"
-                      fillOpacity="0.95"
-                      rx="4"
-                    />
-                    <rect
-                      x={50 + (ldgCG * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500 - 35}
-                      y={350 - (ldgWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300 + 12}
-                      width="70"
-                      height="20"
-                      fill="white"
-                      fillOpacity="0.95"
-                      rx="4"
-                    />
+                    {/* 1. Point Fulltank */}
+                    <g>
+                      <circle
+                        cx={fulltankX}
+                        cy={fulltankY}
+                        r="6"
+                        fill="#3b82f6"
+                        stroke="white"
+                        strokeWidth="2"
+                      />
+                      {/* Trait de report */}
+                      <line
+                        x1={fulltankX}
+                        y1={fulltankY}
+                        x2={fulltankX - 40}
+                        y2={fulltankY - 30}
+                        stroke="#3b82f6"
+                        strokeWidth="1"
+                      />
+                      <text
+                        x={fulltankX - 45}
+                        y={fulltankY - 35}
+                        textAnchor="end"
+                        fontSize="10"
+                        fill="#3b82f6"
+                        fontWeight="600"
+                      >
+                        FULLTANK
+                      </text>
+                      <text
+                        x={fulltankX - 45}
+                        y={fulltankY - 25}
+                        textAnchor="end"
+                        fontSize="9"
+                        fill="#6b7280"
+                      >
+                        {fulltankWeight.toFixed(0)}kg / {(fulltankCG * 1000).toFixed(0)}mm
+                      </text>
+                    </g>
                     
-                    {/* Point à l'atterrissage */}
-                    <circle
-                      cx={50 + (ldgCG * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500}
-                      cy={350 - (ldgWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300}
-                      r="8"
-                      fill={isLdgWithinLimits ? '#f59e0b' : '#ef4444'}
-                      stroke="white"
-                      strokeWidth="2"
-                    />
+                    {/* 2. Point T/O CRM */}
+                    <g>
+                      <circle
+                        cx={toCrmX}
+                        cy={toCrmY}
+                        r="6"
+                        fill="#10b981"
+                        stroke="white"
+                        strokeWidth="2"
+                      />
+                      {/* Trait de report */}
+                      <line
+                        x1={toCrmX}
+                        y1={toCrmY}
+                        x2={toCrmX + 40}
+                        y2={toCrmY - 30}
+                        stroke="#10b981"
+                        strokeWidth="1"
+                      />
+                      <text
+                        x={toCrmX + 45}
+                        y={toCrmY - 35}
+                        textAnchor="start"
+                        fontSize="10"
+                        fill="#10b981"
+                        fontWeight="600"
+                      >
+                        T/O CRM
+                      </text>
+                      <text
+                        x={toCrmX + 45}
+                        y={toCrmY - 25}
+                        textAnchor="start"
+                        fontSize="9"
+                        fill="#6b7280"
+                      >
+                        {toCrmWeight.toFixed(0)}kg / {(toCrmCG * 1000).toFixed(0)}mm
+                      </text>
+                    </g>
                     
-                    {/* Labels */}
-                    <text
-                      x={50 + (ldgCG * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500}
-                      y={350 - (ldgWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300 - 15}
-                      textAnchor="middle"
-                      fontSize="11"
-                      fontWeight="bold"
-                      fill={isLdgWithinLimits ? '#92400e' : '#dc2626'}
-                    >
-                      LDG {ldgWeight.toFixed(0)} kg
-                    </text>
-                    <text
-                      x={50 + (ldgCG * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500}
-                      y={350 - (ldgWeight - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300 + 25}
-                      textAnchor="middle"
-                      fontSize="11"
-                      fontWeight="bold"
-                      fill={isLdgWithinLimits ? '#92400e' : '#dc2626'}
-                    >
-                      {(ldgCG * 1000).toFixed(0)} mm
-                    </text>
+                    {/* 3. Point ZFW */}
+                    <g>
+                      <circle
+                        cx={zfwX}
+                        cy={zfwY}
+                        r="6"
+                        fill="#ef4444"
+                        stroke="white"
+                        strokeWidth="2"
+                      />
+                      {/* Trait de report */}
+                      <line
+                        x1={zfwX}
+                        y1={zfwY}
+                        x2={zfwX - 40}
+                        y2={zfwY + 30}
+                        stroke="#ef4444"
+                        strokeWidth="1"
+                      />
+                      <text
+                        x={zfwX - 45}
+                        y={zfwY + 35}
+                        textAnchor="end"
+                        fontSize="10"
+                        fill="#ef4444"
+                        fontWeight="600"
+                      >
+                        ZFW
+                      </text>
+                      <text
+                        x={zfwX - 45}
+                        y={zfwY + 45}
+                        textAnchor="end"
+                        fontSize="9"
+                        fill="#6b7280"
+                      >
+                        {zfwWeight.toFixed(0)}kg / {(zfwCG * 1000).toFixed(0)}mm
+                      </text>
+                    </g>
+                    
+                    {/* 4. Point Landing */}
+                    <g>
+                      <circle
+                        cx={landingX}
+                        cy={landingY}
+                        r="6"
+                        fill="#f59e0b"
+                        stroke="white"
+                        strokeWidth="2"
+                      />
+                      {/* Trait de report */}
+                      <line
+                        x1={landingX}
+                        y1={landingY}
+                        x2={landingX + 40}
+                        y2={landingY + 30}
+                        stroke="#f59e0b"
+                        strokeWidth="1"
+                      />
+                      <text
+                        x={landingX + 45}
+                        y={landingY + 35}
+                        textAnchor="start"
+                        fontSize="10"
+                        fill="#f59e0b"
+                        fontWeight="600"
+                      >
+                        LANDING
+                      </text>
+                      <text
+                        x={landingX + 45}
+                        y={landingY + 45}
+                        textAnchor="start"
+                        fontSize="9"
+                        fill="#6b7280"
+                      >
+                        {landingWeight.toFixed(0)}kg / {(landingCG * 1000).toFixed(0)}mm
+                      </text>
+                    </g>
                   </g>
                 );
               })()}
               
               {/* Zone de titre du graphique */}
-              <text x="300" y="25" textAnchor="middle" fontSize="16" fontWeight="600" fill="#1f2937">
+              <text x="300" y="25" textAnchor="middle" fontSize="14" fontWeight="600" fill="#1f2937">
                 Diagramme de Masse et Centrage
               </text>
-              <text x="300" y="45" textAnchor="middle" fontSize="13" fill="#6b7280">
+              <text x="300" y="45" textAnchor="middle" fontSize="11" fill="#6b7280">
                 {selectedAircraft.registration} - {selectedAircraft.model}
               </text>
             </svg>
             
             {/* Informations supplémentaires */}
-            <div style={{ 
-              marginTop: '16px',
-              display: 'grid',
-              gridTemplateColumns: '1fr',
-              gap: '16px'
-            }}>
-              <div style={{ 
-                padding: '16px', 
-                backgroundColor: '#f9fafb', 
-                borderRadius: '6px'
-              }}>
-                <h5 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px', color: '#1f2937' }}>
-                  💡 Guide de lecture du graphique
-                </h5>
-                <div style={{ fontSize: '13px', color: '#6b7280' }}>
+<div style={{ fontSize: '13px', color: '#6b7280' }}>
                   <p style={{ margin: '0 0 8px 0' }}>
-                    • Les <span style={{ color: '#3b82f6', fontWeight: '600' }}>points bleus avec étiquettes blanches</span> indiquent les limites de l'enveloppe autorisée (masse en kg, CG en mm)
+                    • Les <span style={{ color: '#6b7280', fontWeight: '600' }}>valeurs en gris</span> indiquent les limites de l'enveloppe autorisée (masse en kg, CG en mm)
                   </p>
                   <p style={{ margin: '0 0 8px 0' }}>
-                    • Le <span style={{ color: '#10b981', fontWeight: '600' }}>point vert</span> représente la position actuelle de votre avion selon le chargement
+                    • Le <span style={{ color: '#3b82f6', fontWeight: '600' }}>point bleu (FULLTANK)</span> représente la configuration avec réservoirs pleins
                   </p>
                   <p style={{ margin: '0 0 8px 0' }}>
-                    • Le <span style={{ color: '#f59e0b', fontWeight: '600' }}>point orange (LDG)</span> représente la position prévue à l'atterrissage (CRM - Bilan Carburant)
+                    • Le <span style={{ color: '#10b981', fontWeight: '600' }}>point vert (T/O CRM)</span> représente la masse et centrage au décollage avec le carburant CRM
                   </p>
                   <p style={{ margin: '0 0 8px 0' }}>
-                    • La <span style={{ color: '#f59e0b', fontWeight: '600' }}>ligne pointillée orange</span> relie la position au décollage à la position à l'atterrissage
+                    • Le <span style={{ color: '#f59e0b', fontWeight: '600' }}>point orange (LANDING)</span> représente la position prévue à l'atterrissage
                   </p>
                   <p style={{ margin: '0 0 8px 0' }}>
-                    • Le <span style={{ color: '#ef4444', fontWeight: '600' }}>point rouge</span> indique un dépassement des limites de centrage ou de masse
+                    • Le <span style={{ color: '#ef4444', fontWeight: '600' }}>point rouge (ZFW)</span> représente la configuration sans carburant (Zero Fuel Weight)
+                  </p>
+                  <p style={{ margin: '0 0 8px 0' }}>
+                    • La <span style={{ color: '#6b7280', fontWeight: '600' }}>ligne pointillée grise</span> relie les 4 points pour montrer l'évolution du centrage
+                  </p>
+                  <p style={{ margin: '0 0 8px 0' }}>
+                    • Les <span style={{ fontWeight: '600' }}>traits de report</span> améliorent la lisibilité en évitant les chevauchements
                   </p>
                   {selectedAircraft?.weightBalance?.cgLimits?.forwardVariable?.length > 0 ? (
                     <p style={{ margin: '0 0 8px 0' }}>
