@@ -1,11 +1,13 @@
 // src/modules/vac/components/VACModule.jsx
 import React, { useEffect, useState } from 'react';
+import { useFlightSystem } from '../../../context/FlightSystemContext';
 import { useVACStore } from '../store/vacStore';
-import { Search, Download, Trash2, CheckCircle, AlertCircle, HardDrive, Cloud, Map } from 'lucide-react';
+import { Search, Download, Trash2, CheckCircle, AlertCircle, HardDrive, Cloud, Map, Navigation } from 'lucide-react';
 import { VACChartViewer } from './VACChartViewer';
 import { VACDataValidator } from './VACDataValidator';
 
 export const VACModule = () => {
+  const { waypoints } = useFlightSystem();
   const {
     charts,
     airports,
@@ -26,6 +28,19 @@ export const VACModule = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedChart, setSelectedChart] = useState(null);
   const [showValidator, setShowValidator] = useState(false);
+  const [navigationAirports, setNavigationAirports] = useState([]);
+
+  // Extraire les codes OACI des waypoints de navigation
+  const departureIcao = waypoints[0]?.name;
+  const arrivalIcao = waypoints[waypoints.length - 1]?.name;
+
+  // Synchroniser avec les aéroports de navigation
+  useEffect(() => {
+    const airports = [];
+    if (departureIcao) airports.push(departureIcao);
+    if (arrivalIcao && arrivalIcao !== departureIcao) airports.push(arrivalIcao);
+    setNavigationAirports(airports);
+  }, [departureIcao, arrivalIcao]);
 
   useEffect(() => {
     loadChartsList();
@@ -46,14 +61,21 @@ export const VACModule = () => {
 
   // Filtrer les cartes par aéroport
   const filteredCharts = Array.from(charts.values()).filter(chart => {
+    // Priorité 1 : Aéroports de navigation
+    if (navigationAirports.length > 0 && !searchQuery && !selectedAirport) {
+      return navigationAirports.includes(chart.airportIcao);
+    }
+    // Priorité 2 : Aéroport sélectionné
     if (selectedAirport) {
       return chart.airportIcao === selectedAirport;
     }
+    // Priorité 3 : Recherche manuelle
     if (searchQuery) {
       return chart.airportIcao.includes(searchQuery.toUpperCase()) ||
              chart.airportName.toLowerCase().includes(searchQuery.toLowerCase());
     }
-    return true;
+    // Par défaut : afficher les aéroports de navigation
+    return navigationAirports.includes(chart.airportIcao);
   });
 
   // Calculer l'utilisation du stockage
@@ -105,6 +127,45 @@ export const VACModule = () => {
           </div>
 
           {/* Barre de recherche */}
+          {navigationAirports.length > 0 && (
+            <div style={{ 
+              marginBottom: '12px',
+              padding: '8px',
+              backgroundColor: '#eff6ff',
+              borderRadius: '6px',
+              fontSize: '12px',
+              color: '#1e40af',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <Navigation size={14} />
+              <span>
+                Aéroports de navigation : <strong>{navigationAirports.join(' → ')}</strong>
+              </span>
+              {(searchQuery || selectedAirport) && (
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    selectAirport(null);
+                  }}
+                  style={{
+                    marginLeft: 'auto',
+                    padding: '2px 8px',
+                    backgroundColor: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Retour navigation
+                </button>
+              )}
+            </div>
+          )}
+          
           <div style={{ position: 'relative' }}>
             <Search size={16} style={{ 
               position: 'absolute', 
@@ -168,17 +229,19 @@ export const VACModule = () => {
                   padding: '12px 16px',
                   borderBottom: '1px solid #e5e7eb',
                   cursor: 'pointer',
-                  backgroundColor: selectedChart?.id === chart.id ? '#eff6ff' : 'transparent',
+                  backgroundColor: selectedChart?.id === chart.id ? '#eff6ff' : 
+                                 navigationAirports.includes(chart.airportIcao) ? '#f0fdf4' : 'transparent',
+                  borderLeft: navigationAirports.includes(chart.airportIcao) ? '4px solid #10b981' : 'none',
                   transition: 'background-color 0.2s'
                 }}
                 onClick={() => setSelectedChart(chart)}
                 onMouseEnter={(e) => {
-                  if (selectedChart?.id !== chart.id) {
+                  if (selectedChart?.id !== chart.id && !navigationAirports.includes(chart.airportIcao)) {
                     e.currentTarget.style.backgroundColor = '#f3f4f6';
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (selectedChart?.id !== chart.id) {
+                  if (selectedChart?.id !== chart.id && !navigationAirports.includes(chart.airportIcao)) {
                     e.currentTarget.style.backgroundColor = 'transparent';
                   }
                 }}
@@ -189,9 +252,28 @@ export const VACModule = () => {
                       margin: '0 0 4px 0', 
                       fontSize: '16px', 
                       fontWeight: '600',
-                      color: '#1f2937'
+                      color: '#1f2937',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
                     }}>
                       {chart.airportIcao} - {chart.airportName}
+                      {navigationAirports.includes(chart.airportIcao) && (
+                        <span style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '2px 8px',
+                          backgroundColor: '#d1fae5',
+                          color: '#065f46',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          fontWeight: '500'
+                        }}>
+                          <Navigation size={12} />
+                          {chart.airportIcao === departureIcao ? 'Départ' : 'Arrivée'}
+                        </span>
+                      )}
                     </h4>
                     <div style={{ fontSize: '12px', color: '#6b7280' }}>
                       <p style={{ margin: '0 0 2px 0' }}>
@@ -365,6 +447,15 @@ export const VACModule = () => {
               <p style={{ fontSize: '14px' }}>
                 Téléchargez les cartes pour un accès hors ligne
               </p>
+              {navigationAirports.length > 0 && (
+                <p style={{ 
+                  fontSize: '14px', 
+                  marginTop: '16px',
+                  color: '#10b981'
+                }}>
+                  Les cartes des aéroports de votre navigation sont affichées en priorité
+                </p>
+              )}
             </div>
           </div>
         )}

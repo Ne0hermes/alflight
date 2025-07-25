@@ -610,51 +610,55 @@ export const FuelBalanceModule = () => {
           Carburant CRM (Constaté à bord)
         </h3>
         
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr', gap: '16px', alignItems: 'center' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>
-              Gallons
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              value={crmFuel.gal.toFixed(1)}
-              onChange={(e) => handleCrmChange('gal', e.target.value)}
-              style={{ 
-                width: '100%', 
-                padding: '8px 12px', 
-                textAlign: 'center', 
-                border: '1px solid #d1d5db', 
-                borderRadius: '6px',
-                fontSize: '16px',
-                fontWeight: '500'
-              }}
-              placeholder="0.0"
-            />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Ligne 1 : Inputs */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>
+                Gallons
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                value={crmFuel.gal.toFixed(1)}
+                onChange={(e) => handleCrmChange('gal', e.target.value)}
+                style={{ 
+                  width: '100%', 
+                  padding: '8px 12px', 
+                  textAlign: 'center', 
+                  border: '1px solid #d1d5db', 
+                  borderRadius: '6px',
+                  fontSize: '16px',
+                  fontWeight: '500'
+                }}
+                placeholder="0.0"
+              />
+            </div>
+            
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>
+                Litres
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                value={crmFuel.ltr.toFixed(1)}
+                onChange={(e) => handleCrmChange('ltr', e.target.value)}
+                style={{ 
+                  width: '100%', 
+                  padding: '8px 12px', 
+                  textAlign: 'center', 
+                  border: '1px solid #d1d5db', 
+                  borderRadius: '6px',
+                  fontSize: '16px',
+                  fontWeight: '500'
+                }}
+                placeholder="0.0"
+              />
+            </div>
           </div>
           
-          <div>
-            <label style={{ display: 'block', fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>
-              Litres
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              value={crmFuel.ltr.toFixed(1)}
-              onChange={(e) => handleCrmChange('ltr', e.target.value)}
-              style={{ 
-                width: '100%', 
-                padding: '8px 12px', 
-                textAlign: 'center', 
-                border: '1px solid #d1d5db', 
-                borderRadius: '6px',
-                fontSize: '16px',
-                fontWeight: '500'
-              }}
-              placeholder="0.0"
-            />
-          </div>
-          
+          {/* Ligne 2 : Statut */}
           <div style={{
             padding: '16px',
             backgroundColor: isCrmSufficient() ? '#f0fdf4' : '#fef2f2',
@@ -667,7 +671,7 @@ export const FuelBalanceModule = () => {
               ) : (
                 <AlertTriangle style={{ width: '24px', height: '24px', color: '#ef4444', flexShrink: 0 }} />
               )}
-              <div>
+              <div style={{ flex: 1 }}>
                 <p style={{ 
                   margin: '0',
                   fontSize: '16px',
@@ -688,6 +692,31 @@ export const FuelBalanceModule = () => {
                 </p>
               </div>
             </div>
+          </div>
+          
+          {/* Information supplémentaire */}
+          <div style={{
+            padding: '12px',
+            backgroundColor: '#e0f2fe',
+            borderRadius: '6px',
+            fontSize: '13px',
+            color: '#0c4a6e'
+          }}>
+            <p style={{ margin: '0', fontWeight: '600' }}>
+              ℹ️ Qu'est-ce que le CRM ?
+            </p>
+            <p style={{ margin: '6px 0 0 0' }}>
+              Le CRM (Crew Resource Management) représente la quantité de carburant réellement constatée à bord 
+              avant le vol.
+            </p>
+            <p style={{ margin: '6px 0 0 0' }}>
+              📝 <strong>Instructions :</strong> Entrez la quantité de carburant constatée à bord. 
+              Le système compare automatiquement cette valeur avec le carburant total requis.
+            </p>
+            <p style={{ margin: '6px 0 0 0' }}>
+              ⚖️ <strong>Utilisation :</strong> Cette valeur sera automatiquement utilisée dans l'onglet "Masse et Centrage" pour 
+              calculer la position du centre de gravité.
+            </p>
           </div>
         </div>
       </div>
@@ -738,49 +767,54 @@ export const FuelBalanceModule = () => {
       </div>
 
       {/* Boutons d'action */}
-      <div style={{ marginTop: '24px', display: 'flex', gap: '16px', justifyContent: 'center' }}>
-        <button
-          onClick={resetToDefault}
-          style={{
-            padding: '10px 24px',
-            backgroundColor: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: '14px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            transition: 'background-color 0.2s'
-          }}
-          onMouseEnter={(e) => e.target.style.backgroundColor = '#2563eb'}
-          onMouseLeave={(e) => e.target.style.backgroundColor = '#3b82f6'}
-        >
-          ↻ Valeurs par défaut
-        </button>
-        <button
-          onClick={clearAll}
-          style={{
-            padding: '10px 24px',
-            backgroundColor: '#ef4444',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: '14px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            transition: 'background-color 0.2s'
-          }}
-          onMouseEnter={(e) => e.target.style.backgroundColor = '#dc2626'}
-          onMouseLeave={(e) => e.target.style.backgroundColor = '#ef4444'}
-        >
-          ✕ Tout effacer
-        </button>
+      <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={resetToDefault}
+            style={{
+              padding: '10px 24px',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = '#2563eb'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = '#3b82f6'}
+          >
+            ↻ Valeurs par défaut
+          </button>
+          <button
+            onClick={clearAll}
+            style={{
+              padding: '10px 24px',
+              backgroundColor: '#ef4444',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = '#dc2626'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = '#ef4444'}
+          >
+            ✕ Tout effacer
+          </button>
+        </div>
+        <p style={{ fontSize: '12px', color: '#6b7280', margin: '0', fontStyle: 'italic' }}>
+          Note : Ces boutons n'affectent que les valeurs manuelles. Les valeurs automatiques restent calculées.
+        </p>
       </div>
 
       {/* Instructions */}
@@ -799,9 +833,6 @@ export const FuelBalanceModule = () => {
               <strong>Contingency Fuel :</strong> Calculé automatiquement à 5% du trip fuel (minimum 1 gallon).
               <br/>
               <strong>Final Reserve :</strong> Calculée automatiquement selon la réglementation du type de vol.
-              <br/><br/>
-              <strong>Carburant CRM :</strong> Entrez la quantité de carburant constatée à bord. 
-              Le système compare automatiquement cette valeur avec le carburant total requis.
               {selectedAircraft && (
                 <span style={{ display: 'block', marginTop: '8px', fontWeight: '500' }}>
                   Calculs basés sur : {selectedAircraft.registration} - 
