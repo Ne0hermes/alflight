@@ -1,6 +1,6 @@
 // src/modules/aircraft/components/AircraftForm.jsx
 import React, { useState, useEffect } from 'react';
-import { X, Save, Plane, Fuel, Scale, Settings } from 'lucide-react';
+import { X, Save, Plane, Fuel, Scale, Settings, AlertTriangle } from 'lucide-react';
 
 export const AircraftForm = ({ aircraft, onSave, onClose }) => {
   // État initial basé sur l'avion existant ou valeurs par défaut
@@ -17,7 +17,7 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
     fuelConsumption: 30,
     fuelConsumptionGph: 7.9,
     emptyWeight: 200,
-    minTakeoffWeight: 250,
+
     maxTakeoffWeight: 1150,
     maxLandingWeight: 1150,
     maxBaggageWeight: 60,
@@ -39,6 +39,9 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
       }
     }
   });
+
+  // État pour les erreurs
+  const [errors, setErrors] = useState({});
 
   // Facteurs de conversion
   const LTR_TO_GAL = 0.264172;
@@ -62,7 +65,7 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
         fuelConsumption: aircraft.fuelConsumption || 30,
         fuelConsumptionGph: aircraft.fuelConsumptionGph || 7.9,
         emptyWeight: aircraft.emptyWeight || 700,
-        minTakeoffWeight: aircraft.minTakeoffWeight || 850,
+
         maxTakeoffWeight: aircraft.maxTakeoffWeight || 1150,
         maxLandingWeight: aircraft.maxLandingWeight || 1150,
         maxBaggageWeight: aircraft.maxBaggageWeight || 60,
@@ -86,6 +89,113 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
       });
     }
   }, [aircraft]);
+
+  // Fonction pour calculer automatiquement la masse min décollage
+  const getMinTakeoffWeight = () => {
+    return formData.emptyWeight + 75; // Masse vide + 1 pilote minimum (75kg)
+  };
+
+  // Fonction de validation complète
+  const validateForm = () => {
+    const newErrors = {};
+    const minTakeoffWeight = getMinTakeoffWeight();
+
+    // Validation immatriculation
+    if (!formData.registration) {
+      newErrors.registration = "L'immatriculation est obligatoire";
+    } else if (!/^[A-Z]-[A-Z0-9]{4}$/.test(formData.registration)) {
+      newErrors.registration = "Format invalide (ex: F-ABCD)";
+    }
+
+    // Validation modèle
+    if (!formData.model) {
+      newErrors.model = "Le modèle d'avion est obligatoire";
+    }
+
+    // Validation des performances
+    if (formData.cruiseSpeed <= 0) {
+      newErrors.cruiseSpeed = "La vitesse de croisière doit être positive";
+    }
+    if (formData.serviceCeiling <= 0) {
+      newErrors.serviceCeiling = "Le plafond pratique doit être positif";
+    }
+
+    // Validation carburant
+    if (formData.fuelCapacity <= 0) {
+      newErrors.fuelCapacity = "La capacité carburant doit être positive";
+    }
+    if (formData.fuelConsumption <= 0) {
+      newErrors.fuelConsumption = "La consommation doit être positive";
+    }
+
+    // Validation des masses
+    if (formData.emptyWeight <= 0) {
+      newErrors.emptyWeight = "La masse à vide doit être positive";
+    }
+    if (formData.maxTakeoffWeight <= minTakeoffWeight) {
+      newErrors.maxTakeoffWeight = `La MTOW doit être > masse min décollage (${minTakeoffWeight} kg)`;
+    }
+    if (formData.maxLandingWeight > formData.maxTakeoffWeight) {
+      newErrors.maxLandingWeight = "La masse max atterrissage doit être ≤ MTOW";
+    }
+    if (formData.maxBaggageWeight < 0) {
+      newErrors.maxBaggageWeight = "La masse max bagages ne peut pas être négative";
+    }
+    if (formData.maxAuxiliaryWeight < 0) {
+      newErrors.maxAuxiliaryWeight = "La masse max auxiliaire ne peut pas être négative";
+    }
+
+    // Validation des bras de levier
+    const wb = formData.weightBalance;
+    if (wb.frontLeftSeatArm <= 0) newErrors.frontLeftSeatArm = "Le bras de levier doit être positif";
+    if (wb.frontRightSeatArm <= 0) newErrors.frontRightSeatArm = "Le bras de levier doit être positif";
+    if (wb.rearLeftSeatArm <= 0) newErrors.rearLeftSeatArm = "Le bras de levier doit être positif";
+    if (wb.rearRightSeatArm <= 0) newErrors.rearRightSeatArm = "Le bras de levier doit être positif";
+    if (wb.baggageArm <= 0) newErrors.baggageArm = "Le bras de levier doit être positif";
+    if (wb.auxiliaryArm <= 0) newErrors.auxiliaryArm = "Le bras de levier doit être positif";
+    if (wb.fuelArm <= 0) newErrors.fuelArm = "Le bras de levier doit être positif";
+    if (wb.emptyWeightArm <= 0) newErrors.emptyWeightArm = "Le bras de levier doit être positif";
+
+    // Validation des limites CG
+    if (wb.cgLimits.forward <= 0) {
+      newErrors.cgForward = "La limite CG avant doit être positive";
+    }
+    if (wb.cgLimits.aft <= wb.cgLimits.forward) {
+      newErrors.cgAft = "La limite CG arrière doit être > limite avant";
+    }
+
+    // Calculer les limites dynamiques pour la validation
+    const maxAftLimit = wb.cgLimits.aftVariable && wb.cgLimits.aftVariable.length > 0 
+      ? Math.max(...wb.cgLimits.aftVariable.map(p => p.cg), wb.cgLimits.aft)
+      : wb.cgLimits.aft;
+    
+    const minForwardLimit = wb.cgLimits.forwardVariable && wb.cgLimits.forwardVariable.length > 0
+      ? Math.min(...wb.cgLimits.forwardVariable.map(p => p.cg), wb.cgLimits.forward)  
+      : wb.cgLimits.forward;
+
+    // Validation des points variables avant
+    wb.cgLimits.forwardVariable?.forEach((point, index) => {
+      if (!point.weight || point.weight < minTakeoffWeight || point.weight > formData.maxTakeoffWeight) {
+        newErrors[`forwardVariable_${index}_weight`] = `Masse invalide (${minTakeoffWeight}-${formData.maxTakeoffWeight} kg)`;
+      }
+      if (!point.cg || point.cg <= 0 || point.cg >= maxAftLimit) {
+        newErrors[`forwardVariable_${index}_cg`] = `CG invalide (0-${maxAftLimit.toFixed(2)} m)`;
+      }
+    });
+
+    // Validation des points variables arrière
+    wb.cgLimits.aftVariable?.forEach((point, index) => {
+      if (!point.weight || point.weight < minTakeoffWeight || point.weight > formData.maxTakeoffWeight) {
+        newErrors[`aftVariable_${index}_weight`] = `Masse invalide (${minTakeoffWeight}-${formData.maxTakeoffWeight} kg)`;
+      }
+      if (!point.cg || point.cg <= minForwardLimit || point.cg > 5) {
+        newErrors[`aftVariable_${index}_cg`] = `CG invalide (${minForwardLimit.toFixed(2)}-5 m)`;
+      }
+    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   // Gestion des changements dans le formulaire
   const handleChange = (field, value) => {
@@ -153,15 +263,20 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
       
       setFormData(prev => ({ ...prev, ...updates }));
     }
+
+    // Effacer l'erreur pour ce champ s'il y en avait une
+    if (errors[field]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   // Validation du formulaire
   const isValid = () => {
-    return formData.registration && 
-           formData.model && 
-           formData.maxTakeoffWeight >= formData.emptyWeight &&
-           formData.maxLandingWeight <= formData.maxTakeoffWeight &&
-           formData.minTakeoffWeight >= formData.emptyWeight;
+    return validateForm();
   };
 
   // Sauvegarde
@@ -183,7 +298,7 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
         // Ajouter la config si elle n'existe pas
         config: aircraft?.config || {
           maxTakeoffWeight: formData.maxTakeoffWeight,
-          minTakeoffWeight: formData.minTakeoffWeight,
+          minTakeoffWeight: getMinTakeoffWeight(),
           maxLandingWeight: formData.maxLandingWeight,
           emptyWeight: formData.emptyWeight,
           fuelCapacity: formData.fuelCapacity,
@@ -220,6 +335,12 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
     fontSize: '14px'
   };
 
+  const inputErrorStyle = {
+    ...inputStyle,
+    border: '2px solid #ef4444',
+    backgroundColor: '#fef2f2'
+  };
+
   const labelStyle = {
     display: 'block',
     fontSize: '14px',
@@ -230,6 +351,18 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
   const fieldStyle = {
     marginBottom: '12px'
   };
+
+  const errorStyle = {
+    color: '#ef4444',
+    fontSize: '12px',
+    marginTop: '4px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px'
+  };
+
+  // Compter le nombre d'erreurs total
+  const errorCount = Object.keys(errors).length;
 
   return (
     <div style={{
@@ -279,36 +412,95 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
           </button>
         </div>
 
+        {/* Affichage des erreurs globales */}
+        {errorCount > 0 && (
+          <div style={{
+            margin: '24px',
+            padding: '16px',
+            backgroundColor: '#fef2f2',
+            borderRadius: '8px',
+            border: '2px solid #fecaca'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              marginBottom: '12px'
+            }}>
+              <AlertTriangle size={20} style={{ color: '#ef4444' }} />
+              <h3 style={{ 
+                fontSize: '16px', 
+                fontWeight: '600', 
+                color: '#dc2626', 
+                margin: 0 
+              }}>
+                {errorCount} erreur{errorCount > 1 ? 's' : ''} {errorCount > 1 ? 'empêchent' : 'empêche'} l'enregistrement
+              </h3>
+            </div>
+            <p style={{ 
+              fontSize: '14px', 
+              color: '#991b1b', 
+              margin: '0 0 8px 0' 
+            }}>
+              Veuillez corriger les champs marqués en rouge ci-dessous :
+            </p>
+            <ul style={{ 
+              fontSize: '13px', 
+              color: '#991b1b', 
+              margin: 0, 
+              paddingLeft: '20px' 
+            }}>
+              {Object.entries(errors).map(([field, message]) => (
+                <li key={field} style={{ marginBottom: '4px' }}>
+                  <strong>{message}</strong>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* Formulaire */}
         <form onSubmit={handleSubmit} style={{ padding: '24px' }}>
           {/* Informations générales */}
           <div style={sectionStyle}>
             <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Plane size={20} />
-              Informations générales
+              Informations générales (General Information)
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
-                <label style={labelStyle}>Immatriculation *</label>
+                <label style={labelStyle}>Immatriculation (Registration) *</label>
                 <input
                   type="text"
                   value={formData.registration}
                   onChange={(e) => handleChange('registration', e.target.value.toUpperCase())}
-                  style={inputStyle}
+                  style={errors.registration ? inputErrorStyle : inputStyle}
                   placeholder="F-ABCD"
                   required
                 />
+                {errors.registration && (
+                  <div style={errorStyle}>
+                    <AlertTriangle size={14} />
+                    {errors.registration}
+                  </div>
+                )}
               </div>
               <div>
-                <label style={labelStyle}>Modèle *</label>
+                <label style={labelStyle}>Modèle (Aircraft Model) *</label>
                 <input
                   type="text"
                   value={formData.model}
                   onChange={(e) => handleChange('model', e.target.value)}
-                  style={inputStyle}
+                  style={errors.model ? inputErrorStyle : inputStyle}
                   placeholder="Cessna 172"
                   required
                 />
+                {errors.model && (
+                  <div style={errorStyle}>
+                    <AlertTriangle size={14} />
+                    {errors.model}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -317,20 +509,26 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
           <div style={sectionStyle}>
             <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Settings size={20} />
-              Performances
+              Performances (Performance)
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
               <div>
-                <label style={labelStyle}>Vitesse de croisière (km/h)</label>
+                <label style={labelStyle}>Vitesse de croisière (Cruise Speed - km/h)</label>
                 <input
                   type="number"
                   value={formData.cruiseSpeed}
                   onChange={(e) => handleChange('cruiseSpeed', parseFloat(e.target.value) || 0)}
-                  style={inputStyle}
+                  style={errors.cruiseSpeed ? inputErrorStyle : inputStyle}
                 />
+                {errors.cruiseSpeed && (
+                  <div style={errorStyle}>
+                    <AlertTriangle size={14} />
+                    {errors.cruiseSpeed}
+                  </div>
+                )}
               </div>
               <div>
-                <label style={labelStyle}>Vitesse de croisière (kt)</label>
+                <label style={labelStyle}>Vitesse de croisière (Cruise Speed - kt)</label>
                 <input
                   type="number"
                   value={formData.cruiseSpeedKt}
@@ -339,13 +537,19 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
                 />
               </div>
               <div>
-                <label style={labelStyle}>Plafond pratique (ft)</label>
+                <label style={labelStyle}>Plafond pratique (Service Ceiling - ft)</label>
                 <input
                   type="number"
                   value={formData.serviceCeiling}
                   onChange={(e) => handleChange('serviceCeiling', parseInt(e.target.value) || 0)}
-                  style={inputStyle}
+                  style={errors.serviceCeiling ? inputErrorStyle : inputStyle}
                 />
+                {errors.serviceCeiling && (
+                  <div style={errorStyle}>
+                    <AlertTriangle size={14} />
+                    {errors.serviceCeiling}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -354,11 +558,11 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
           <div style={sectionStyle}>
             <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Fuel size={20} />
-              Carburant
+              Carburant (Fuel)
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
               <div>
-                <label style={labelStyle}>Type de carburant</label>
+                <label style={labelStyle}>Type de carburant (Fuel Type)</label>
                 <select
                   value={formData.fuelType}
                   onChange={(e) => handleChange('fuelType', e.target.value)}
@@ -370,16 +574,22 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
                 </select>
               </div>
               <div>
-                <label style={labelStyle}>Capacité (L)</label>
+                <label style={labelStyle}>Capacité (Fuel Capacity - L)</label>
                 <input
                   type="number"
                   value={formData.fuelCapacity}
                   onChange={(e) => handleChange('fuelCapacity', parseFloat(e.target.value) || 0)}
-                  style={inputStyle}
+                  style={errors.fuelCapacity ? inputErrorStyle : inputStyle}
                 />
+                {errors.fuelCapacity && (
+                  <div style={errorStyle}>
+                    <AlertTriangle size={14} />
+                    {errors.fuelCapacity}
+                  </div>
+                )}
               </div>
               <div>
-                <label style={labelStyle}>Capacité (Gal)</label>
+                <label style={labelStyle}>Capacité (Fuel Capacity - Gal)</label>
                 <input
                   type="number"
                   value={formData.fuelCapacityGal}
@@ -389,16 +599,22 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
                 />
               </div>
               <div>
-                <label style={labelStyle}>Consommation (L/h)</label>
+                <label style={labelStyle}>Consommation (Fuel Consumption - L/h)</label>
                 <input
                   type="number"
                   value={formData.fuelConsumption}
                   onChange={(e) => handleChange('fuelConsumption', parseFloat(e.target.value) || 0)}
-                  style={inputStyle}
+                  style={errors.fuelConsumption ? inputErrorStyle : inputStyle}
                 />
+                {errors.fuelConsumption && (
+                  <div style={errorStyle}>
+                    <AlertTriangle size={14} />
+                    {errors.fuelConsumption}
+                  </div>
+                )}
               </div>
               <div>
-                <label style={labelStyle}>Consommation (Gal/h)</label>
+                <label style={labelStyle}>Consommation (Fuel Consumption - Gal/h)</label>
                 <input
                   type="number"
                   value={formData.fuelConsumptionGph}
@@ -414,64 +630,87 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
           <div style={sectionStyle}>
             <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Scale size={20} />
-              Masses
+              Masses (Weight & Balance)
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
               <div>
-                <label style={labelStyle}>Masse à vide (kg)</label>
+                <label style={labelStyle}>Masse à vide (Empty Weight - kg)</label>
                 <input
                   type="number"
                   value={formData.emptyWeight}
                   onChange={(e) => handleChange('emptyWeight', parseInt(e.target.value) || 0)}
-                  style={inputStyle}
+                  style={errors.emptyWeight ? inputErrorStyle : inputStyle}
                   min="50"
                 />
+                {errors.emptyWeight && (
+                  <div style={errorStyle}>
+                    <AlertTriangle size={14} />
+                    {errors.emptyWeight}
+                  </div>
+                )}
+                <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                  💡 Masse min décollage : {getMinTakeoffWeight()} kg (masse vide + 75 kg)
+                </div>
               </div>
               <div>
-                <label style={labelStyle}>Masse min décollage (kg)</label>
-                <input
-                  type="number"
-                  value={formData.minTakeoffWeight}
-                  onChange={(e) => handleChange('minTakeoffWeight', parseInt(e.target.value) || 0)}
-                  style={inputStyle}
-                  min="250"
-                />
-              </div>
-              <div>
-                <label style={labelStyle}>MTOW (kg)</label>
+                <label style={labelStyle}>MTOW (Max Takeoff Weight - kg)</label>
                 <input
                   type="number"
                   value={formData.maxTakeoffWeight}
                   onChange={(e) => handleChange('maxTakeoffWeight', parseInt(e.target.value) || 0)}
-                  style={inputStyle}
+                  style={errors.maxTakeoffWeight ? inputErrorStyle : inputStyle}
                 />
+                {errors.maxTakeoffWeight && (
+                  <div style={errorStyle}>
+                    <AlertTriangle size={14} />
+                    {errors.maxTakeoffWeight}
+                  </div>
+                )}
               </div>
               <div>
-                <label style={labelStyle}>Masse max atterrissage (kg)</label>
+                <label style={labelStyle}>Masse max atterrissage (Max Landing Weight - kg)</label>
                 <input
                   type="number"
                   value={formData.maxLandingWeight}
                   onChange={(e) => handleChange('maxLandingWeight', parseInt(e.target.value) || 0)}
-                  style={inputStyle}
+                  style={errors.maxLandingWeight ? inputErrorStyle : inputStyle}
                 />
+                {errors.maxLandingWeight && (
+                  <div style={errorStyle}>
+                    <AlertTriangle size={14} />
+                    {errors.maxLandingWeight}
+                  </div>
+                )}
               </div>
               <div>
-                <label style={labelStyle}>Max bagages (kg)</label>
+                <label style={labelStyle}>Max bagages (Max Baggage Weight - kg)</label>
                 <input
                   type="number"
                   value={formData.maxBaggageWeight}
                   onChange={(e) => handleChange('maxBaggageWeight', parseInt(e.target.value) || 0)}
-                  style={inputStyle}
+                  style={errors.maxBaggageWeight ? inputErrorStyle : inputStyle}
                 />
+                {errors.maxBaggageWeight && (
+                  <div style={errorStyle}>
+                    <AlertTriangle size={14} />
+                    {errors.maxBaggageWeight}
+                  </div>
+                )}
               </div>
               <div>
-                <label style={labelStyle}>Max auxiliaire (kg)</label>
+                <label style={labelStyle}>Max auxiliaire (Max Auxiliary Weight - kg)</label>
                 <input
                   type="number"
                   value={formData.maxAuxiliaryWeight}
                   onChange={(e) => handleChange('maxAuxiliaryWeight', parseInt(e.target.value) || 0)}
-                  style={inputStyle}
+                  style={errors.maxAuxiliaryWeight ? inputErrorStyle : inputStyle}
                 />
+                {errors.maxAuxiliaryWeight && (
+                  <div style={errorStyle}>
+                    <AlertTriangle size={14} />
+                    {errors.maxAuxiliaryWeight}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -479,88 +718,136 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
           {/* Bras de levier */}
           <div style={sectionStyle}>
             <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px' }}>
-              📐 Bras de levier (m)
+              📐 Bras de levier (Arms)
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
               <div>
-                <label style={labelStyle}>Siège avant gauche</label>
+                <label style={labelStyle}>Siège avant gauche (Front Left Seat Arm)</label>
                 <input
                   type="number"
                   value={formData.weightBalance.frontLeftSeatArm}
                   onChange={(e) => handleChange('weightBalance.frontLeftSeatArm', parseFloat(e.target.value) || 0)}
-                  style={inputStyle}
+                  style={errors.frontLeftSeatArm ? inputErrorStyle : inputStyle}
                   step="0.01"
                 />
+                {errors.frontLeftSeatArm && (
+                  <div style={errorStyle}>
+                    <AlertTriangle size={14} />
+                    {errors.frontLeftSeatArm}
+                  </div>
+                )}
               </div>
               <div>
-                <label style={labelStyle}>Siège avant droit</label>
+                <label style={labelStyle}>Siège avant droit (Front Right Seat Arm)</label>
                 <input
                   type="number"
                   value={formData.weightBalance.frontRightSeatArm}
                   onChange={(e) => handleChange('weightBalance.frontRightSeatArm', parseFloat(e.target.value) || 0)}
-                  style={inputStyle}
+                  style={errors.frontRightSeatArm ? inputErrorStyle : inputStyle}
                   step="0.01"
                 />
+                {errors.frontRightSeatArm && (
+                  <div style={errorStyle}>
+                    <AlertTriangle size={14} />
+                    {errors.frontRightSeatArm}
+                  </div>
+                )}
               </div>
               <div>
-                <label style={labelStyle}>Siège arrière gauche</label>
+                <label style={labelStyle}>Siège arrière gauche (Rear Left Seat Arm)</label>
                 <input
                   type="number"
                   value={formData.weightBalance.rearLeftSeatArm}
                   onChange={(e) => handleChange('weightBalance.rearLeftSeatArm', parseFloat(e.target.value) || 0)}
-                  style={inputStyle}
+                  style={errors.rearLeftSeatArm ? inputErrorStyle : inputStyle}
                   step="0.01"
                 />
+                {errors.rearLeftSeatArm && (
+                  <div style={errorStyle}>
+                    <AlertTriangle size={14} />
+                    {errors.rearLeftSeatArm}
+                  </div>
+                )}
               </div>
               <div>
-                <label style={labelStyle}>Siège arrière droit</label>
+                <label style={labelStyle}>Siège arrière droit (Rear Right Seat Arm)</label>
                 <input
                   type="number"
                   value={formData.weightBalance.rearRightSeatArm}
                   onChange={(e) => handleChange('weightBalance.rearRightSeatArm', parseFloat(e.target.value) || 0)}
-                  style={inputStyle}
+                  style={errors.rearRightSeatArm ? inputErrorStyle : inputStyle}
                   step="0.01"
                 />
+                {errors.rearRightSeatArm && (
+                  <div style={errorStyle}>
+                    <AlertTriangle size={14} />
+                    {errors.rearRightSeatArm}
+                  </div>
+                )}
               </div>
               <div>
-                <label style={labelStyle}>Bagages</label>
+                <label style={labelStyle}>Bagages (Baggage Arm)</label>
                 <input
                   type="number"
                   value={formData.weightBalance.baggageArm}
                   onChange={(e) => handleChange('weightBalance.baggageArm', parseFloat(e.target.value) || 0)}
-                  style={inputStyle}
+                  style={errors.baggageArm ? inputErrorStyle : inputStyle}
                   step="0.01"
                 />
+                {errors.baggageArm && (
+                  <div style={errorStyle}>
+                    <AlertTriangle size={14} />
+                    {errors.baggageArm}
+                  </div>
+                )}
               </div>
               <div>
-                <label style={labelStyle}>Auxiliaire</label>
+                <label style={labelStyle}>Auxiliaire (Auxiliary Arm)</label>
                 <input
                   type="number"
                   value={formData.weightBalance.auxiliaryArm}
                   onChange={(e) => handleChange('weightBalance.auxiliaryArm', parseFloat(e.target.value) || 0)}
-                  style={inputStyle}
+                  style={errors.auxiliaryArm ? inputErrorStyle : inputStyle}
                   step="0.01"
                 />
+                {errors.auxiliaryArm && (
+                  <div style={errorStyle}>
+                    <AlertTriangle size={14} />
+                    {errors.auxiliaryArm}
+                  </div>
+                )}
               </div>
               <div>
-                <label style={labelStyle}>Carburant</label>
+                <label style={labelStyle}>Carburant (Fuel Arm)</label>
                 <input
                   type="number"
                   value={formData.weightBalance.fuelArm}
                   onChange={(e) => handleChange('weightBalance.fuelArm', parseFloat(e.target.value) || 0)}
-                  style={inputStyle}
+                  style={errors.fuelArm ? inputErrorStyle : inputStyle}
                   step="0.01"
                 />
+                {errors.fuelArm && (
+                  <div style={errorStyle}>
+                    <AlertTriangle size={14} />
+                    {errors.fuelArm}
+                  </div>
+                )}
               </div>
               <div>
-                <label style={labelStyle}>Masse à vide</label>
+                <label style={labelStyle}>Masse à vide (Empty Weight Arm)</label>
                 <input
                   type="number"
                   value={formData.weightBalance.emptyWeightArm}
                   onChange={(e) => handleChange('weightBalance.emptyWeightArm', parseFloat(e.target.value) || 0)}
-                  style={inputStyle}
+                  style={errors.emptyWeightArm ? inputErrorStyle : inputStyle}
                   step="0.01"
                 />
+                {errors.emptyWeightArm && (
+                  <div style={errorStyle}>
+                    <AlertTriangle size={14} />
+                    {errors.emptyWeightArm}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -568,7 +855,7 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
           {/* Limites CG */}
           <div style={sectionStyle}>
             <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px' }}>
-              ⚖️ Limites de centrage (m)
+              ⚖️ Limites de centrage (CG Limits)
             </h3>
             
             {/* Note explicative */}
@@ -595,7 +882,7 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
             {/* Limites avant variables */}
             <div style={{ marginTop: '24px' }}>
               <h4 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#4b5563' }}>
-                📊 Limites avant variables
+                📊 Limites avant variables (Forward Variable Limits)
               </h4>
               <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>
                 Définissez des limites CG avant différentes selon la masse pour créer une enveloppe non rectangulaire
@@ -626,7 +913,7 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
                           order: displayIndex
                         }}>
                           <div style={fieldStyle}>
-                            <label style={{ ...labelStyle, fontSize: '12px' }}>Masse (kg)</label>
+                            <label style={{ ...labelStyle, fontSize: '12px' }}>Masse (Weight - kg)</label>
                             <input
                               type="number"
                               value={point.weight || ''}
@@ -635,13 +922,19 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
                                 newPoints[index] = { ...newPoints[index], weight: parseInt(e.target.value) || 0 };
                                 handleChange('weightBalance.cgLimits.forwardVariable', newPoints);
                               }}
-                              style={{ ...inputStyle, fontSize: '14px' }}
-                              min={formData.minTakeoffWeight}
+                              style={errors[`forwardVariable_${index}_weight`] ? inputErrorStyle : { ...inputStyle, fontSize: '14px' }}
+                              min={getMinTakeoffWeight()}
                               max={formData.maxTakeoffWeight}
                             />
+                            {errors[`forwardVariable_${index}_weight`] && (
+                              <div style={errorStyle}>
+                                <AlertTriangle size={12} />
+                                {errors[`forwardVariable_${index}_weight`]}
+                              </div>
+                            )}
                           </div>
                           <div style={fieldStyle}>
-                            <label style={{ ...labelStyle, fontSize: '12px' }}>Limite CG (m)</label>
+                            <label style={{ ...labelStyle, fontSize: '12px' }}>Limite CG avant (Forward CG Limit - m)</label>
                             <input
                               type="number"
                               value={point.cg || ''}
@@ -650,11 +943,19 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
                                 newPoints[index] = { ...newPoints[index], cg: parseFloat(e.target.value) || 0 };
                                 handleChange('weightBalance.cgLimits.forwardVariable', newPoints);
                               }}
-                              style={{ ...inputStyle, fontSize: '14px' }}
+                              style={errors[`forwardVariable_${index}_cg`] ? inputErrorStyle : { ...inputStyle, fontSize: '14px' }}
                               step="0.01"
                               min="0"
-                              max={formData.weightBalance.cgLimits.aft}
+                              max={formData.weightBalance.cgLimits.aftVariable && formData.weightBalance.cgLimits.aftVariable.length > 0 
+                                ? Math.max(...formData.weightBalance.cgLimits.aftVariable.map(p => p.cg), formData.weightBalance.cgLimits.aft)
+                                : formData.weightBalance.cgLimits.aft}
                             />
+                            {errors[`forwardVariable_${index}_cg`] && (
+                              <div style={errorStyle}>
+                                <AlertTriangle size={12} />
+                                {errors[`forwardVariable_${index}_cg`]}
+                              </div>
+                            )}
                           </div>
                           <button
                             type="button"
@@ -686,7 +987,7 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
                   const currentPoints = formData.weightBalance.cgLimits.forwardVariable || [];
                   const newWeight = currentPoints.length > 0 
                     ? Math.max(...currentPoints.map(p => p.weight)) + 50
-                    : formData.minTakeoffWeight;
+                    : getMinTakeoffWeight();
                   
                   const newPoint = { 
                     weight: Math.min(newWeight, formData.maxTakeoffWeight), 
@@ -707,132 +1008,12 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
               >
                 + Ajouter un point de limite variable
               </button>
-
-              {formData.weightBalance.cgLimits.forwardVariable && formData.weightBalance.cgLimits.forwardVariable.length > 0 && (
-                <div style={{ 
-                  marginTop: '16px',
-                  padding: '12px',
-                  backgroundColor: '#eff6ff',
-                  borderRadius: '6px',
-                  fontSize: '13px',
-                  color: '#1e40af'
-                }}>
-                  <p style={{ margin: '0', fontWeight: '600' }}>
-                    💡 Info : L'enveloppe de centrage sera automatiquement adaptée
-                  </p>
-                  <p style={{ margin: '4px 0 0 0' }}>
-                    Les points seront triés par masse et interpolés pour créer une limite avant progressive
-                  </p>
-                  
-                  {/* Mini aperçu de l'enveloppe */}
-                  {(formData.weightBalance.cgLimits.forwardVariable?.length > 0 || 
-                    formData.weightBalance.cgLimits.aftVariable?.length > 0) && (
-                    <div style={{ marginTop: '12px' }}>
-                      <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '300px', height: '150px', border: '1px solid #e5e7eb', borderRadius: '6px', backgroundColor: 'white' }}>
-                        {/* Axes */}
-                        <line x1="30" y1="170" x2="270" y2="170" stroke="#374151" strokeWidth="1" />
-                        <line x1="30" y1="30" x2="30" y2="170" stroke="#374151" strokeWidth="1" />
-                        
-                        {/* Labels */}
-                        <text x="150" y="190" textAnchor="middle" fontSize="10" fill="#6b7280">CG</text>
-                        <text x="10" y="100" textAnchor="middle" fontSize="10" fill="#6b7280" transform="rotate(-90 10 100)">Masse</text>
-                        
-                        {/* Enveloppe */}
-                        {(() => {
-                          const forwardPoints = formData.weightBalance.cgLimits.forwardVariable || [];
-                          const aftPoints = formData.weightBalance.cgLimits.aftVariable || [];
-                          
-                          // Trier les points
-                          const sortedForward = [...forwardPoints].sort((a, b) => a.weight - b.weight);
-                          const sortedAft = [...aftPoints].sort((a, b) => a.weight - b.weight);
-                          
-                          // Calculer les échelles
-                          const allCGs = [
-                            formData.weightBalance.cgLimits.forward,
-                            formData.weightBalance.cgLimits.aft,
-                            ...sortedForward.map(p => p.cg),
-                            ...sortedAft.map(p => p.cg)
-                          ];
-                          const cgMin = Math.min(...allCGs) - 0.05;
-                          const cgMax = Math.max(...allCGs) + 0.05;
-                          const weightMin = formData.minTakeoffWeight;
-                          const weightMax = formData.maxTakeoffWeight;
-                          
-                          // Construire l'enveloppe
-                          const points = [];
-                          
-                          // Côté avant
-                          if (sortedForward.length === 0 || sortedForward[0].weight > weightMin) {
-                            points.push({ weight: weightMin, cg: formData.weightBalance.cgLimits.forward });
-                          }
-                          points.push(...sortedForward);
-                          if (sortedForward.length === 0 || sortedForward[sortedForward.length - 1].weight < weightMax) {
-                            points.push({ weight: weightMax, cg: formData.weightBalance.cgLimits.forward });
-                          }
-                          
-                          // Côté arrière (en ordre inverse)
-                          if (sortedAft.length === 0 || sortedAft[sortedAft.length - 1].weight < weightMax) {
-                            points.push({ weight: weightMax, cg: formData.weightBalance.cgLimits.aft });
-                          }
-                          if (sortedAft.length > 0) {
-                            for (let i = sortedAft.length - 1; i >= 0; i--) {
-                              points.push(sortedAft[i]);
-                            }
-                          }
-                          if (sortedAft.length === 0 || sortedAft[0].weight > weightMin) {
-                            points.push({ weight: weightMin, cg: formData.weightBalance.cgLimits.aft });
-                          }
-                          
-                          // Convertir en coordonnées SVG
-                          const svgPoints = points.map(p => 
-                            `${30 + (p.cg - cgMin) / (cgMax - cgMin) * 240},${170 - (p.weight - weightMin) / (weightMax - weightMin) * 140}`
-                          ).join(' ');
-                          
-                          return (
-                            <>
-                              <polygon points={svgPoints} fill="#dbeafe" fillOpacity="0.5" stroke="#3b82f6" strokeWidth="2" />
-                              {/* Points avant */}
-                              {sortedForward.map((point, i) => (
-                                <circle
-                                  key={`f-${i}`}
-                                  cx={30 + (point.cg - cgMin) / (cgMax - cgMin) * 240}
-                                  cy={170 - (point.weight - weightMin) / (weightMax - weightMin) * 140}
-                                  r="4"
-                                  fill="#3b82f6"
-                                  stroke="white"
-                                  strokeWidth="1"
-                                />
-                              ))}
-                              {/* Points arrière */}
-                              {sortedAft.map((point, i) => (
-                                <circle
-                                  key={`a-${i}`}
-                                  cx={30 + (point.cg - cgMin) / (cgMax - cgMin) * 240}
-                                  cy={170 - (point.weight - weightMin) / (weightMax - weightMin) * 140}
-                                  r="4"
-                                  fill="#ef4444"
-                                  stroke="white"
-                                  strokeWidth="1"
-                                />
-                              ))}
-                            </>
-                          );
-                        })()}
-                      </svg>
-                      <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: '#6b7280' }}>
-                        • Points <span style={{ color: '#3b82f6', fontWeight: '600' }}>bleus</span> : limites avant variables<br/>
-                        • Points <span style={{ color: '#ef4444', fontWeight: '600' }}>rouges</span> : limites arrière variables
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
 
             {/* Limites arrière variables */}
             <div style={{ marginTop: '24px' }}>
               <h4 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#4b5563' }}>
-                📊 Limites arrière variables
+                📊 Limites arrière variables (Aft Variable Limits)
               </h4>
               <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>
                 Définissez des limites CG arrière différentes selon la masse
@@ -863,7 +1044,7 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
                           order: displayIndex
                         }}>
                           <div style={fieldStyle}>
-                            <label style={{ ...labelStyle, fontSize: '12px' }}>Masse (kg)</label>
+                            <label style={{ ...labelStyle, fontSize: '12px' }}>Masse (Weight - kg)</label>
                             <input
                               type="number"
                               value={point.weight || ''}
@@ -872,13 +1053,19 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
                                 newPoints[index] = { ...newPoints[index], weight: parseInt(e.target.value) || 0 };
                                 handleChange('weightBalance.cgLimits.aftVariable', newPoints);
                               }}
-                              style={{ ...inputStyle, fontSize: '14px' }}
-                              min={formData.minTakeoffWeight}
+                              style={errors[`aftVariable_${index}_weight`] ? inputErrorStyle : { ...inputStyle, fontSize: '14px' }}
+                              min={getMinTakeoffWeight()}
                               max={formData.maxTakeoffWeight}
                             />
+                            {errors[`aftVariable_${index}_weight`] && (
+                              <div style={errorStyle}>
+                                <AlertTriangle size={12} />
+                                {errors[`aftVariable_${index}_weight`]}
+                              </div>
+                            )}
                           </div>
                           <div style={fieldStyle}>
-                            <label style={{ ...labelStyle, fontSize: '12px' }}>Limite CG (m)</label>
+                            <label style={{ ...labelStyle, fontSize: '12px' }}>Limite CG arrière (Aft CG Limit - m)</label>
                             <input
                               type="number"
                               value={point.cg || ''}
@@ -887,11 +1074,19 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
                                 newPoints[index] = { ...newPoints[index], cg: parseFloat(e.target.value) || 0 };
                                 handleChange('weightBalance.cgLimits.aftVariable', newPoints);
                               }}
-                              style={{ ...inputStyle, fontSize: '14px' }}
+                              style={errors[`aftVariable_${index}_cg`] ? inputErrorStyle : { ...inputStyle, fontSize: '14px' }}
                               step="0.01"
-                              min={formData.weightBalance.cgLimits.forward}
+                              min={formData.weightBalance.cgLimits.forwardVariable && formData.weightBalance.cgLimits.forwardVariable.length > 0
+                                ? Math.min(...formData.weightBalance.cgLimits.forwardVariable.map(p => p.cg), formData.weightBalance.cgLimits.forward)
+                                : formData.weightBalance.cgLimits.forward}
                               max="5"
                             />
+                            {errors[`aftVariable_${index}_cg`] && (
+                              <div style={errorStyle}>
+                                <AlertTriangle size={12} />
+                                {errors[`aftVariable_${index}_cg`]}
+                              </div>
+                            )}
                           </div>
                           <button
                             type="button"
@@ -923,7 +1118,7 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
                   const currentPoints = formData.weightBalance.cgLimits.aftVariable || [];
                   const newWeight = currentPoints.length > 0 
                     ? Math.max(...currentPoints.map(p => p.weight)) + 50
-                    : formData.minTakeoffWeight;
+                    : getMinTakeoffWeight();
                   
                   const newPoint = { 
                     weight: Math.min(newWeight, formData.maxTakeoffWeight), 
@@ -963,6 +1158,125 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
                 </div>
               )}
             </div>
+
+            {/* Graphique de l'enveloppe */}
+            {(formData.weightBalance.cgLimits.forwardVariable?.length > 0 || 
+              formData.weightBalance.cgLimits.aftVariable?.length > 0) && (
+              <div style={{ 
+                marginTop: '32px',
+                padding: '16px',
+                backgroundColor: '#eff6ff',
+                borderRadius: '8px',
+                fontSize: '13px',
+                color: '#1e40af'
+              }}>
+                <p style={{ margin: '0 0 12px 0', fontWeight: '600' }}>
+                  💡 Aperçu de l'enveloppe de centrage :
+                </p>
+                <p style={{ margin: '4px 0 16px 0' }}>
+                  L'enveloppe sera automatiquement adaptée avec interpolation entre les points définis
+                </p>
+                
+                {/* Mini aperçu de l'enveloppe */}
+                <div style={{ marginTop: '12px' }}>
+                  <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '300px', height: '150px', border: '1px solid #e5e7eb', borderRadius: '6px', backgroundColor: 'white' }}>
+                    {/* Axes */}
+                    <line x1="30" y1="170" x2="270" y2="170" stroke="#374151" strokeWidth="1" />
+                    <line x1="30" y1="30" x2="30" y2="170" stroke="#374151" strokeWidth="1" />
+                    
+                    {/* Labels */}
+                    <text x="150" y="190" textAnchor="middle" fontSize="10" fill="#6b7280">CG (m)</text>
+                    <text x="10" y="100" textAnchor="middle" fontSize="10" fill="#6b7280" transform="rotate(-90 10 100)">Masse (kg)</text>
+                    
+                    {/* Enveloppe */}
+                    {(() => {
+                      const forwardPoints = formData.weightBalance.cgLimits.forwardVariable || [];
+                      const aftPoints = formData.weightBalance.cgLimits.aftVariable || [];
+                      
+                      // Trier les points
+                      const sortedForward = [...forwardPoints].sort((a, b) => a.weight - b.weight);
+                      const sortedAft = [...aftPoints].sort((a, b) => a.weight - b.weight);
+                      
+                      // Calculer les échelles
+                      const allCGs = [
+                        formData.weightBalance.cgLimits.forward,
+                        formData.weightBalance.cgLimits.aft,
+                        ...sortedForward.map(p => p.cg),
+                        ...sortedAft.map(p => p.cg)
+                      ];
+                      const cgMin = Math.min(...allCGs) - 0.05;
+                      const cgMax = Math.max(...allCGs) + 0.05;
+                      const weightMin = getMinTakeoffWeight();
+                      const weightMax = formData.maxTakeoffWeight;
+                      
+                      // Construire l'enveloppe
+                      const points = [];
+                      
+                      // Côté avant
+                      if (sortedForward.length === 0 || sortedForward[0].weight > weightMin) {
+                        points.push({ weight: weightMin, cg: formData.weightBalance.cgLimits.forward });
+                      }
+                      points.push(...sortedForward);
+                      if (sortedForward.length === 0 || sortedForward[sortedForward.length - 1].weight < weightMax) {
+                        points.push({ weight: weightMax, cg: formData.weightBalance.cgLimits.forward });
+                      }
+                      
+                      // Côté arrière (en ordre inverse)
+                      if (sortedAft.length === 0 || sortedAft[sortedAft.length - 1].weight < weightMax) {
+                        points.push({ weight: weightMax, cg: formData.weightBalance.cgLimits.aft });
+                      }
+                      if (sortedAft.length > 0) {
+                        for (let i = sortedAft.length - 1; i >= 0; i--) {
+                          points.push(sortedAft[i]);
+                        }
+                      }
+                      if (sortedAft.length === 0 || sortedAft[0].weight > weightMin) {
+                        points.push({ weight: weightMin, cg: formData.weightBalance.cgLimits.aft });
+                      }
+                      
+                      // Convertir en coordonnées SVG
+                      const svgPoints = points.map(p => 
+                        `${30 + (p.cg - cgMin) / (cgMax - cgMin) * 240},${170 - (p.weight - weightMin) / (weightMax - weightMin) * 140}`
+                      ).join(' ');
+                      
+                      return (
+                        <>
+                          <polygon points={svgPoints} fill="#dbeafe" fillOpacity="0.5" stroke="#3b82f6" strokeWidth="2" />
+                          {/* Points avant */}
+                          {sortedForward.map((point, i) => (
+                            <circle
+                              key={`f-${i}`}
+                              cx={30 + (point.cg - cgMin) / (cgMax - cgMin) * 240}
+                              cy={170 - (point.weight - weightMin) / (weightMax - weightMin) * 140}
+                              r="4"
+                              fill="#3b82f6"
+                              stroke="white"
+                              strokeWidth="1"
+                            />
+                          ))}
+                          {/* Points arrière */}
+                          {sortedAft.map((point, i) => (
+                            <circle
+                              key={`a-${i}`}
+                              cx={30 + (point.cg - cgMin) / (cgMax - cgMin) * 240}
+                              cy={170 - (point.weight - weightMin) / (weightMax - weightMin) * 140}
+                              r="4"
+                              fill="#ef4444"
+                              stroke="white"
+                              strokeWidth="1"
+                            />
+                          ))}
+                        </>
+                      );
+                    })()}
+                  </svg>
+                  <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: '#6b7280' }}>
+                    • Points <span style={{ color: '#3b82f6', fontWeight: '600' }}>bleus</span> : limites avant variables (forward variable limits)<br/>
+                    • Points <span style={{ color: '#ef4444', fontWeight: '600' }}>rouges</span> : limites arrière variables (aft variable limits)
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Boutons d'action */}
@@ -992,23 +1306,25 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
             </button>
             <button
               type="submit"
-              disabled={!isValid()}
+              disabled={errorCount > 0}
               style={{
                 padding: '10px 24px',
-                backgroundColor: isValid() ? '#10b981' : '#e5e7eb',
-                color: isValid() ? 'white' : '#9ca3af',
+                backgroundColor: errorCount > 0 ? '#ef4444' : '#10b981',
+                color: 'white',
                 border: 'none',
                 borderRadius: '6px',
                 fontSize: '16px',
                 fontWeight: '500',
-                cursor: isValid() ? 'pointer' : 'not-allowed',
+                cursor: errorCount > 0 ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: '8px',
+                opacity: errorCount > 0 ? 0.7 : 1
               }}
+              title={errorCount > 0 ? `${errorCount} erreur${errorCount > 1 ? 's' : ''} à corriger` : ''}
             >
               <Save size={20} />
-              {aircraft ? 'Enregistrer les modifications' : 'Ajouter l\'avion'}
+              {errorCount > 0 ? `${errorCount} erreur${errorCount > 1 ? 's' : ''} à corriger` : (aircraft ? 'Enregistrer les modifications' : 'Ajouter l\'avion')}
             </button>
           </div>
         </form>

@@ -17,7 +17,7 @@ export const FuelBalanceModule = () => {
   const defaultValues = {
     roulage: { gal: 1.0, ltr: 1.0 * GAL_TO_LTR },
     trip: { gal: 0, ltr: 0 },
-    contingency: { gal: 1, ltr: 1 * GAL_TO_LTR }, // 5% du trip fuel, minimum 1 gal (à calculer manuellement)
+    contingency: { gal: 1, ltr: 1 * GAL_TO_LTR }, // 5% du trip fuel, minimum 1 gal (calculé automatiquement)
     alternate: { gal: 2.0, ltr: 2.0 * GAL_TO_LTR },
     finalReserve: { gal: regulationReserveGallons, ltr: regulationReserveLiters },
     additional: { gal: 0, ltr: 0 },
@@ -37,18 +37,41 @@ export const FuelBalanceModule = () => {
 
   // Mettre à jour automatiquement la réserve finale selon la réglementation
   useEffect(() => {
-    setFuelData(prev => ({
-      ...prev,
-      finalReserve: {
-        gal: regulationReserveGallons,
-        ltr: regulationReserveLiters
-      }
-    }));
-  }, [regulationReserveLiters, regulationReserveGallons]);
+    if (navigationResults && navigationResults.regulationReserveLiters !== undefined) {
+      const regulationReserveLiters = navigationResults.regulationReserveLiters || 0;
+      const regulationReserveGallons = regulationReserveLiters / 3.78541;
+      
+      setFuelData(prev => ({
+        ...prev,
+        finalReserve: {
+          gal: regulationReserveGallons,
+          ltr: regulationReserveLiters
+        }
+      }));
+    }
+  }, [navigationResults?.regulationReserveLiters]);
+  
+  // Mettre à jour automatiquement le contingency fuel (5% du trip fuel, minimum 1 gal)
+  useEffect(() => {
+    if (navigationResults && navigationResults.fuelRequired !== undefined) {
+      const tripFuelLiters = navigationResults.fuelRequired || 0;
+      const tripFuelGallons = tripFuelLiters / 3.78541;
+      const contingencyGallons = Math.max(1, tripFuelGallons * 0.05);
+      const contingencyLiters = contingencyGallons * 3.78541;
+      
+      setFuelData(prev => ({
+        ...prev,
+        contingency: {
+          gal: contingencyGallons,
+          ltr: contingencyLiters
+        }
+      }));
+    }
+  }, [navigationResults?.fuelRequired]);
 
   const handleInputChange = (fuelType, inputUnit, value) => {
-    // Ne pas permettre la modification de la réserve finale
-    if (fuelType === 'finalReserve') return;
+    // Ne pas permettre la modification de la réserve finale et du contingency fuel
+    if (fuelType === 'finalReserve' || fuelType === 'contingency') return;
     
     const numValue = parseFloat(value) || 0;
     
@@ -136,7 +159,7 @@ export const FuelBalanceModule = () => {
   const fuelTypes = [
     { key: 'roulage', label: 'Roulage', description: 'Taxi et attente', color: '#dbeafe' },
     { key: 'trip', label: 'Trip Fuel', description: 'Trajet prévu', color: '#d1fae5' },
-    { key: 'contingency', label: 'Contingency Fuel', description: '5% du trip fuel (min. 1 gal)', color: '#fef3c7' },
+    { key: 'contingency', label: 'Contingency Fuel', description: '5% du trip fuel (min. 1 gal)', color: '#fef3c7', readonly: true },
     { key: 'alternate', label: 'Alternate Fuel', description: 'Vers aérodrome de dégagement', color: '#fed7aa' },
     { key: 'finalReserve', label: 'Final Reserve', description: '', color: '#fee2e2', readonly: true },
     { key: 'additional', label: 'Additional Fuel', description: 'Météo, ATC, etc.', color: '#e9d5ff' },
@@ -145,10 +168,14 @@ export const FuelBalanceModule = () => {
 
   // Fonctions pour réinitialiser les valeurs
   const resetToDefault = () => {
+    const tripFuelLiters = navigationResults?.fuelRequired || 0;
+    const tripFuelGallons = tripFuelLiters / GAL_TO_LTR;
+    const contingencyGallons = Math.max(1, tripFuelGallons * 0.05);
+    
     setFuelData({
       roulage: { gal: 1.0, ltr: 1.0 * GAL_TO_LTR },
       trip: { gal: 0, ltr: 0 },
-      contingency: { gal: 1, ltr: 1 * GAL_TO_LTR },
+      contingency: { gal: contingencyGallons, ltr: contingencyGallons * GAL_TO_LTR },
       alternate: { gal: 2.0, ltr: 2.0 * GAL_TO_LTR },
       finalReserve: { gal: regulationReserveGallons, ltr: regulationReserveLiters },
       additional: { gal: 0, ltr: 0 },
@@ -158,10 +185,14 @@ export const FuelBalanceModule = () => {
   };
 
   const clearAll = () => {
+    const tripFuelLiters = navigationResults?.fuelRequired || 0;
+    const tripFuelGallons = tripFuelLiters / GAL_TO_LTR;
+    const contingencyGallons = Math.max(1, tripFuelGallons * 0.05);
+    
     setFuelData({
       roulage: { gal: 0, ltr: 0 },
       trip: { gal: 0, ltr: 0 },
-      contingency: { gal: 0, ltr: 0 },
+      contingency: { gal: contingencyGallons, ltr: contingencyGallons * GAL_TO_LTR },
       alternate: { gal: 0, ltr: 0 },
       finalReserve: { gal: regulationReserveGallons, ltr: regulationReserveLiters },
       additional: { gal: 0, ltr: 0 },
@@ -762,7 +793,10 @@ export const FuelBalanceModule = () => {
             <p style={{ fontSize: '14px', color: '#1d4ed8', margin: '0' }}>
               Saisissez les valeurs directement dans le tableau en gallons ou en litres. 
               La conversion automatique se fait en temps réel. Les pourcentages et totaux sont calculés instantanément.
-              La réserve finale (Final Reserve) est calculée automatiquement selon la réglementation du type de vol défini dans l'onglet Navigation.
+              <br/><br/>
+              <strong>Contingency Fuel :</strong> Calculé automatiquement à 5% du trip fuel (minimum 1 gallon) selon les standards de l'aviation civile.
+              <br/>
+              <strong>Final Reserve :</strong> Calculée automatiquement selon la réglementation du type de vol défini dans l'onglet Navigation.
               <br/><br/>
               <strong>Carburant CRM :</strong> Entrez la quantité de carburant constatée à bord (donnée du Crew Resource Management). 
               Le système compare automatiquement cette valeur avec le carburant total requis et indique si la quantité est suffisante ou non.
