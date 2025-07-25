@@ -63,7 +63,7 @@ export const WeightBalanceModule = () => {
 
   // Fonction pour obtenir la limite avant à une masse donnée
   const getForwardLimitAtWeight = (weight) => {
-    if (!selectedAircraft) return 0;
+    if (!selectedAircraft || !weight) return 0;
     
     const wb = selectedAircraft.weightBalance;
     const forwardVariable = wb.cgLimits.forwardVariable;
@@ -191,8 +191,8 @@ export const WeightBalanceModule = () => {
     loads.auxiliary * selectedAircraft.weightBalance.auxiliaryArm +
     loads.fuel * selectedAircraft.weightBalance.fuelArm : 0;
 
-  // Déterminer si c'est dans les limites
-  const isWithinLimits = selectedAircraft ? 
+  // Déterminer si c'est dans les limites - CORRIGÉ
+  const isWithinLimits = selectedAircraft && currentCalculation.totalWeight && currentCalculation.cg ? 
     currentCalculation.cg >= getForwardLimitAtWeight(currentCalculation.totalWeight) && 
     currentCalculation.cg <= selectedAircraft.weightBalance.cgLimits.aft &&
     currentCalculation.totalWeight >= selectedAircraft.minTakeoffWeight &&
@@ -383,7 +383,7 @@ export const WeightBalanceModule = () => {
                 </p>
               </div>
               
-              {crmFuel.ltr > 0 ? (
+              {crmFuel?.ltr > 0 ? (
                 <div style={{ 
                   padding: '12px',
                   backgroundColor: '#059669',
@@ -491,7 +491,7 @@ export const WeightBalanceModule = () => {
             </div>
 
             {/* Carburant minimum à l'atterrissage */}
-            {crmFuel.ltr > 0 && (
+            {crmFuel?.ltr > 0 && (
               <div style={{ 
                 padding: '12px', 
                 backgroundColor: '#fef3c7', 
@@ -604,7 +604,7 @@ export const WeightBalanceModule = () => {
                 • <strong>LDG (CRM - Bilan)</strong> : Carburant restant à l'atterrissage = CRM - Total consommé du Bilan Carburant
               </p>
               
-              {crmFuel.ltr > 0 && fuelData && (
+              {crmFuel?.ltr > 0 && fuelData && (
                 <div style={{ 
                   marginTop: '12px',
                   padding: '8px',
@@ -743,7 +743,7 @@ export const WeightBalanceModule = () => {
                 </td>
               </tr>
               {/* Ligne atterrissage si CRM défini */}
-              {crmFuel.ltr > 0 && fuelData && (
+              {crmFuel?.ltr > 0 && fuelData && (
                 <tr style={{ borderTop: '1px solid #e5e7eb', backgroundColor: '#fef3c7' }}>
                   <td style={{ padding: '8px 0', fontWeight: '600', color: '#92400e' }}>À L'ATTERRISSAGE</td>
                   <td style={{ textAlign: 'right', padding: '8px 0', fontWeight: '600', color: '#92400e' }}>
@@ -850,8 +850,9 @@ export const WeightBalanceModule = () => {
               <span style={{ 
                 fontSize: '20px', 
                 fontWeight: 'bold',
-                color: (selectedAircraft && (currentCalculation.cg < selectedAircraft.weightBalance.cgLimits.forward || 
-                       currentCalculation.cg > selectedAircraft.weightBalance.cgLimits.aft)) ? '#ef4444' : '#1f2937'
+                color: (selectedAircraft && currentCalculation.cg && currentCalculation.totalWeight && 
+                       (currentCalculation.cg < getForwardLimitAtWeight(currentCalculation.totalWeight) || 
+                        currentCalculation.cg > selectedAircraft.weightBalance.cgLimits.aft)) ? '#ef4444' : '#1f2937'
               }}>
                 {currentCalculation.cg?.toFixed(2) || 0} m
               </span>
@@ -887,10 +888,10 @@ export const WeightBalanceModule = () => {
                 </h5>
                 <div style={{ fontSize: '12px', color: '#1e40af' }}>
                   <p style={{ margin: '0 0 4px 0' }}>
-                    Masse: <strong>{currentCalculation.totalWeight.toFixed(0)} kg</strong>
+                    Masse: <strong>{currentCalculation.totalWeight?.toFixed(0) || 0} kg</strong>
                   </p>
                   <p style={{ margin: '0 0 4px 0' }}>
-                    CG: <strong>{currentCalculation.cg.toFixed(2)} m</strong>
+                    CG: <strong>{currentCalculation.cg?.toFixed(2) || 0} m</strong>
                   </p>
                   <p style={{ margin: '0' }}>
                     Carburant: <strong>{loads.fuel} kg</strong>
@@ -909,7 +910,7 @@ export const WeightBalanceModule = () => {
                   Sans carburant (ZFW)
                 </h5>
                 {(() => {
-                  const zfWeight = currentCalculation.totalWeight - loads.fuel;
+                  const zfWeight = (currentCalculation.totalWeight || 0) - loads.fuel;
                   const zfMoment = totalMoment - (loads.fuel * selectedAircraft.weightBalance.fuelArm);
                   const zfCG = zfWeight > 0 ? zfMoment / zfWeight : 0;
                   
@@ -930,7 +931,7 @@ export const WeightBalanceModule = () => {
               </div>
 
               {/* Scénario réserve minimum */}
-              {crmFuel.ltr > 0 && fuelData && (
+              {crmFuel?.ltr > 0 && fuelData && (
                 <div style={{ 
                   padding: '12px', 
                   backgroundColor: '#fef3c7', 
@@ -945,7 +946,7 @@ export const WeightBalanceModule = () => {
                     const remainingFuelLiters = Math.max(0, crmFuel.ltr - totalFuelBalance);
                     const remainingFuelMass = remainingFuelLiters * FUEL_DENSITIES[selectedAircraft.fuelType];
                     
-                    const ldgWeight = currentCalculation.totalWeight - loads.fuel + remainingFuelMass;
+                    const ldgWeight = (currentCalculation.totalWeight || 0) - loads.fuel + remainingFuelMass;
                     const ldgMoment = totalMoment - (loads.fuel * selectedAircraft.weightBalance.fuelArm) + 
                                      (remainingFuelMass * selectedAircraft.weightBalance.fuelArm);
                     const ldgCG = ldgWeight > 0 ? ldgMoment / ldgWeight : 0;
@@ -990,7 +991,7 @@ export const WeightBalanceModule = () => {
                 Avant: {selectedAircraft.weightBalance.cgLimits.forwardVariable?.length > 0 ? (
                   <>
                     <span style={{ color: '#3b82f6', fontWeight: '600' }}>Variable</span>
-                    <span style={{ fontSize: '12px', color: '#6b7280' }}> (actuellement {getForwardLimitAtWeight(currentCalculation.totalWeight).toFixed(2)}m)</span>
+                    <span style={{ fontSize: '12px', color: '#6b7280' }}> (actuellement {getForwardLimitAtWeight(currentCalculation.totalWeight || 0).toFixed(2)}m)</span>
                   </>
                 ) : (
                   <>{selectedAircraft.weightBalance.cgLimits.forward} m ({(selectedAircraft.weightBalance.cgLimits.forward * 1000).toFixed(0)} mm)</>
@@ -1023,7 +1024,7 @@ export const WeightBalanceModule = () => {
             border: '1px solid #e5e7eb',
             padding: '24px'
           }}>
-<svg
+            <svg
               viewBox="0 0 600 400"
               style={{ width: '100%', maxWidth: '800px', height: 'auto', margin: '0 auto', display: 'block' }}
             >
@@ -1313,7 +1314,7 @@ export const WeightBalanceModule = () => {
                 // 4. Landing (si CRM défini)
                 let landingWeight = zfwWeight;
                 let landingCG = zfwCG;
-                if (crmFuel.ltr > 0 && fuelData) {
+                if (crmFuel?.ltr > 0 && fuelData) {
                   const totalFuelBalance = Object.values(fuelData).reduce((sum, fuel) => sum + (fuel?.ltr || 0), 0);
                   const remainingFuelLiters = Math.max(0, crmFuel.ltr - totalFuelBalance);
                   const remainingFuelMass = remainingFuelLiters * fuelDensity;
@@ -1520,46 +1521,49 @@ export const WeightBalanceModule = () => {
             </svg>
             
             {/* Informations supplémentaires */}
-<div style={{ fontSize: '13px', color: '#6b7280' }}>
+            <div style={{ marginTop: '16px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+              <h4 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px', color: '#1f2937' }}>
+                📘 Guide de lecture du diagramme
+              </h4>
+              <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                <p style={{ margin: '0 0 8px 0' }}>
+                  • Les <span style={{ color: '#6b7280', fontWeight: '600' }}>valeurs en gris</span> indiquent les limites de l'enveloppe autorisée (masse en kg, CG en mm)
+                </p>
+                <p style={{ margin: '0 0 8px 0' }}>
+                  • Le <span style={{ color: '#3b82f6', fontWeight: '600' }}>point bleu (FULLTANK)</span> représente la configuration avec réservoirs pleins
+                </p>
+                <p style={{ margin: '0 0 8px 0' }}>
+                  • Le <span style={{ color: '#10b981', fontWeight: '600' }}>point vert (T/O CRM)</span> représente la masse et centrage au décollage avec le carburant CRM
+                </p>
+                <p style={{ margin: '0 0 8px 0' }}>
+                  • Le <span style={{ color: '#f59e0b', fontWeight: '600' }}>point orange (LANDING)</span> représente la position prévue à l'atterrissage
+                </p>
+                <p style={{ margin: '0 0 8px 0' }}>
+                  • Le <span style={{ color: '#ef4444', fontWeight: '600' }}>point rouge (ZFW)</span> représente la configuration sans carburant (Zero Fuel Weight)
+                </p>
+                <p style={{ margin: '0 0 8px 0' }}>
+                  • La <span style={{ color: '#6b7280', fontWeight: '600' }}>ligne pointillée grise</span> relie les 4 points pour montrer l'évolution du centrage
+                </p>
+                <p style={{ margin: '0 0 8px 0' }}>
+                  • Les <span style={{ fontWeight: '600' }}>traits de report</span> améliorent la lisibilité en évitant les chevauchements
+                </p>
+                {selectedAircraft?.weightBalance?.cgLimits?.forwardVariable?.length > 0 ? (
                   <p style={{ margin: '0 0 8px 0' }}>
-                    • Les <span style={{ color: '#6b7280', fontWeight: '600' }}>valeurs en gris</span> indiquent les limites de l'enveloppe autorisée (masse en kg, CG en mm)
+                    • L'<span style={{ color: '#3b82f6', fontWeight: '600' }}>enveloppe bleue non rectangulaire</span> montre des limites avant variables selon la masse
                   </p>
+                ) : (
                   <p style={{ margin: '0 0 8px 0' }}>
-                    • Le <span style={{ color: '#3b82f6', fontWeight: '600' }}>point bleu (FULLTANK)</span> représente la configuration avec réservoirs pleins
+                    • Les <span style={{ color: '#3b82f6', fontWeight: '600' }}>lignes verticales pointillées</span> marquent les limites CG avant et arrière
                   </p>
-                  <p style={{ margin: '0 0 8px 0' }}>
-                    • Le <span style={{ color: '#10b981', fontWeight: '600' }}>point vert (T/O CRM)</span> représente la masse et centrage au décollage avec le carburant CRM
+                )}
+                <p style={{ margin: '0' }}>
+                  • La <span style={{ color: '#ef4444', fontWeight: '600' }}>ligne horizontale rouge pointillée</span> indique la masse maximale au décollage (MTOW)
+                </p>
+                {selectedAircraft?.maxLandingWeight !== selectedAircraft?.maxTakeoffWeight && (
+                  <p style={{ margin: '8px 0 0 0' }}>
+                    • La <span style={{ color: '#f59e0b', fontWeight: '600' }}>ligne horizontale orange pointillée</span> indique la masse maximale à l'atterrissage (MLW)
                   </p>
-                  <p style={{ margin: '0 0 8px 0' }}>
-                    • Le <span style={{ color: '#f59e0b', fontWeight: '600' }}>point orange (LANDING)</span> représente la position prévue à l'atterrissage
-                  </p>
-                  <p style={{ margin: '0 0 8px 0' }}>
-                    • Le <span style={{ color: '#ef4444', fontWeight: '600' }}>point rouge (ZFW)</span> représente la configuration sans carburant (Zero Fuel Weight)
-                  </p>
-                  <p style={{ margin: '0 0 8px 0' }}>
-                    • La <span style={{ color: '#6b7280', fontWeight: '600' }}>ligne pointillée grise</span> relie les 4 points pour montrer l'évolution du centrage
-                  </p>
-                  <p style={{ margin: '0 0 8px 0' }}>
-                    • Les <span style={{ fontWeight: '600' }}>traits de report</span> améliorent la lisibilité en évitant les chevauchements
-                  </p>
-                  {selectedAircraft?.weightBalance?.cgLimits?.forwardVariable?.length > 0 ? (
-                    <p style={{ margin: '0 0 8px 0' }}>
-                      • L'<span style={{ color: '#3b82f6', fontWeight: '600' }}>enveloppe bleue non rectangulaire</span> montre des limites avant variables selon la masse
-                    </p>
-                  ) : (
-                    <p style={{ margin: '0 0 8px 0' }}>
-                      • Les <span style={{ color: '#3b82f6', fontWeight: '600' }}>lignes verticales pointillées</span> marquent les limites CG avant et arrière
-                    </p>
-                  )}
-                  <p style={{ margin: '0' }}>
-                    • La <span style={{ color: '#ef4444', fontWeight: '600' }}>ligne horizontale rouge pointillée</span> indique la masse maximale au décollage (MTOW)
-                  </p>
-                  {selectedAircraft?.maxLandingWeight !== selectedAircraft?.maxTakeoffWeight && (
-                    <p style={{ margin: '8px 0 0 0' }}>
-                      • La <span style={{ color: '#f59e0b', fontWeight: '600' }}>ligne horizontale orange pointillée</span> indique la masse maximale à l'atterrissage (MLW)
-                    </p>
-                  )}
-                </div>
+                )}
               </div>
             </div>
           </div>

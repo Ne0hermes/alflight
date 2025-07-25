@@ -16,8 +16,8 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
     fuelCapacityGal: 39.6,
     fuelConsumption: 30,
     fuelConsumptionGph: 7.9,
-    emptyWeight: 700,
-    minTakeoffWeight: 850,
+    emptyWeight: 200,
+    minTakeoffWeight: 250,
     maxTakeoffWeight: 1150,
     maxLandingWeight: 1150,
     maxBaggageWeight: 60,
@@ -34,7 +34,8 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
       cgLimits: { 
         forward: 2.05, 
         aft: 2.45,
-        forwardVariable: []
+        forwardVariable: [],
+        aftVariable: []
       }
     }
   });
@@ -78,7 +79,8 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
           cgLimits: {
             forward: aircraft.weightBalance?.cgLimits?.forward || 2.05,
             aft: aircraft.weightBalance?.cgLimits?.aft || 2.45,
-            forwardVariable: aircraft.weightBalance?.cgLimits?.forwardVariable || []
+            forwardVariable: aircraft.weightBalance?.cgLimits?.forwardVariable || [],
+            aftVariable: aircraft.weightBalance?.cgLimits?.aftVariable || []
           }
         }
       });
@@ -87,15 +89,16 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
 
   // Gestion des changements dans le formulaire
   const handleChange = (field, value) => {
-    if (field === 'weightBalance.cgLimits.forwardVariable') {
-      // Cas spécial pour forwardVariable qui est un tableau
+    if (field === 'weightBalance.cgLimits.forwardVariable' || field === 'weightBalance.cgLimits.aftVariable') {
+      // Cas spécial pour forwardVariable et aftVariable qui sont des tableaux
+      const variableType = field.split('.').pop(); // 'forwardVariable' ou 'aftVariable'
       setFormData(prev => ({
         ...prev,
         weightBalance: {
           ...prev.weightBalance,
           cgLimits: {
             ...prev.weightBalance.cgLimits,
-            forwardVariable: value
+            [variableType]: value
           }
         }
       }));
@@ -168,12 +171,13 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
       const dataToSave = {
         ...formData,
         id: aircraft?.id || `aircraft-${Date.now()}`,
-        // S'assurer que forwardVariable existe toujours
+        // S'assurer que forwardVariable et aftVariable existent toujours
         weightBalance: {
           ...formData.weightBalance,
           cgLimits: {
             ...formData.weightBalance.cgLimits,
-            forwardVariable: formData.weightBalance.cgLimits.forwardVariable || []
+            forwardVariable: formData.weightBalance.cgLimits.forwardVariable || [],
+            aftVariable: formData.weightBalance.cgLimits.aftVariable || []
           }
         },
         // Ajouter la config si elle n'existe pas
@@ -221,6 +225,10 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
     fontSize: '14px',
     color: '#6b7280',
     marginBottom: '4px'
+  };
+
+  const fieldStyle = {
+    marginBottom: '12px'
   };
 
   return (
@@ -416,6 +424,7 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
                   value={formData.emptyWeight}
                   onChange={(e) => handleChange('emptyWeight', parseInt(e.target.value) || 0)}
                   style={inputStyle}
+                  min="50"
                 />
               </div>
               <div>
@@ -425,6 +434,7 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
                   value={formData.minTakeoffWeight}
                   onChange={(e) => handleChange('minTakeoffWeight', parseInt(e.target.value) || 0)}
                   style={inputStyle}
+                  min="250"
                 />
               </div>
               <div>
@@ -560,9 +570,31 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
             <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px' }}>
               ⚖️ Limites de centrage (m)
             </h3>
+            
+            {/* Note explicative */}
+            <div style={{ 
+              marginBottom: '16px',
+              padding: '12px',
+              backgroundColor: '#f0f9ff',
+              borderRadius: '6px',
+              fontSize: '12px',
+              color: '#0c4a6e',
+              border: '1px solid #bae6fd'
+            }}>
+              <p style={{ margin: '0', fontWeight: '600' }}>
+                📚 Configuration de l'enveloppe de centrage :
+              </p>
+              <p style={{ margin: '4px 0 0 0' }}>
+                • <strong>Limites de base</strong> : Définissent les limites CG à la masse minimale de décollage<br/>
+                • <strong>Limites variables</strong> : Permettent de créer une enveloppe non-rectangulaire avec des limites différentes selon la masse<br/>
+                • Sans points variables, l'enveloppe sera rectangulaire (limites constantes pour toutes les masses)<br/>
+                • Avec points variables, l'enveloppe suivra l'interpolation entre les points définis
+              </p>
+            </div>
+            
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
               <div>
-                <label style={labelStyle}>Limite avant de base</label>
+                <label style={labelStyle}>Limite avant de base (masse min)</label>
                 <input
                   type="number"
                   value={formData.weightBalance.cgLimits.forward}
@@ -572,7 +604,7 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
                 />
               </div>
               <div>
-                <label style={labelStyle}>Limite arrière</label>
+                <label style={labelStyle}>Limite arrière de base (masse min)</label>
                 <input
                   type="number"
                   value={formData.weightBalance.cgLimits.aft}
@@ -593,12 +625,17 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
               </p>
               
               {formData.weightBalance.cgLimits.forwardVariable && formData.weightBalance.cgLimits.forwardVariable.length > 0 ? (
-                <div style={{ marginBottom: '12px' }}>
+                <div style={{ marginBottom: '12px', display: 'flex', flexDirection: 'column' }}>
                   {formData.weightBalance.cgLimits.forwardVariable
-                    .sort((a, b) => a.weight - b.weight)
                     .map((point, index) => {
-                      // Trouver l'index original pour la modification
-                      const originalIndex = formData.weightBalance.cgLimits.forwardVariable.findIndex(p => p === point);
+                      // Créer une copie triée pour l'affichage uniquement
+                      const sortedPoints = [...formData.weightBalance.cgLimits.forwardVariable]
+                        .map((p, i) => ({ ...p, originalIndex: i }))
+                        .sort((a, b) => a.weight - b.weight);
+                      
+                      // Trouver la position d'affichage de ce point
+                      const displayIndex = sortedPoints.findIndex(p => p.originalIndex === index);
+                      
                       return (
                         <div key={index} style={{ 
                           display: 'grid', 
@@ -608,16 +645,17 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
                           padding: '12px',
                           backgroundColor: 'white',
                           borderRadius: '6px',
-                          border: '1px solid #e5e7eb'
+                          border: '1px solid #e5e7eb',
+                          order: displayIndex
                         }}>
-                          <div>
+                          <div style={fieldStyle}>
                             <label style={{ ...labelStyle, fontSize: '12px' }}>Masse (kg)</label>
                             <input
                               type="number"
                               value={point.weight || ''}
                               onChange={(e) => {
                                 const newPoints = [...formData.weightBalance.cgLimits.forwardVariable];
-                                newPoints[originalIndex] = { ...point, weight: parseInt(e.target.value) || 0 };
+                                newPoints[index] = { ...newPoints[index], weight: parseInt(e.target.value) || 0 };
                                 handleChange('weightBalance.cgLimits.forwardVariable', newPoints);
                               }}
                               style={{ ...inputStyle, fontSize: '14px' }}
@@ -625,14 +663,14 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
                               max={formData.maxTakeoffWeight}
                             />
                           </div>
-                          <div>
+                          <div style={fieldStyle}>
                             <label style={{ ...labelStyle, fontSize: '12px' }}>Limite CG (m)</label>
                             <input
                               type="number"
                               value={point.cg || ''}
                               onChange={(e) => {
                                 const newPoints = [...formData.weightBalance.cgLimits.forwardVariable];
-                                newPoints[originalIndex] = { ...point, cg: parseFloat(e.target.value) || 0 };
+                                newPoints[index] = { ...newPoints[index], cg: parseFloat(e.target.value) || 0 };
                                 handleChange('weightBalance.cgLimits.forwardVariable', newPoints);
                               }}
                               style={{ ...inputStyle, fontSize: '14px' }}
@@ -644,7 +682,7 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
                           <button
                             type="button"
                             onClick={() => {
-                              const newPoints = formData.weightBalance.cgLimits.forwardVariable.filter((_, i) => i !== originalIndex);
+                              const newPoints = formData.weightBalance.cgLimits.forwardVariable.filter((_, i) => i !== index);
                               handleChange('weightBalance.cgLimits.forwardVariable', newPoints);
                             }}
                             style={{
@@ -671,15 +709,14 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
                   const currentPoints = formData.weightBalance.cgLimits.forwardVariable || [];
                   const newWeight = currentPoints.length > 0 
                     ? Math.max(...currentPoints.map(p => p.weight)) + 50
-                    : formData.minTakeoffWeight + 100;
+                    : formData.minTakeoffWeight;
                   
                   const newPoint = { 
                     weight: Math.min(newWeight, formData.maxTakeoffWeight), 
                     cg: formData.weightBalance.cgLimits.forward 
                   };
                   
-                  const newPoints = [...currentPoints, newPoint];
-                  handleChange('weightBalance.cgLimits.forwardVariable', newPoints);
+                  handleChange('weightBalance.cgLimits.forwardVariable', [...currentPoints, newPoint]);
                 }}
                 style={{
                   padding: '8px 16px',
@@ -711,72 +748,241 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
                   </p>
                   
                   {/* Mini aperçu de l'enveloppe */}
-                  <div style={{ marginTop: '12px' }}>
-                    <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '300px', height: '150px', border: '1px solid #e5e7eb', borderRadius: '6px', backgroundColor: 'white' }}>
-                      {/* Axes */}
-                      <line x1="30" y1="170" x2="270" y2="170" stroke="#374151" strokeWidth="1" />
-                      <line x1="30" y1="30" x2="30" y2="170" stroke="#374151" strokeWidth="1" />
+                  {(formData.weightBalance.cgLimits.forwardVariable?.length > 0 || 
+                    formData.weightBalance.cgLimits.aftVariable?.length > 0) && (
+                    <div style={{ marginTop: '12px' }}>
+                      <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '300px', height: '150px', border: '1px solid #e5e7eb', borderRadius: '6px', backgroundColor: 'white' }}>
+                        {/* Axes */}
+                        <line x1="30" y1="170" x2="270" y2="170" stroke="#374151" strokeWidth="1" />
+                        <line x1="30" y1="30" x2="30" y2="170" stroke="#374151" strokeWidth="1" />
+                        
+                        {/* Labels */}
+                        <text x="150" y="190" textAnchor="middle" fontSize="10" fill="#6b7280">CG</text>
+                        <text x="10" y="100" textAnchor="middle" fontSize="10" fill="#6b7280" transform="rotate(-90 10 100)">Masse</text>
+                        
+                        {/* Enveloppe */}
+                        {(() => {
+                          const forwardPoints = formData.weightBalance.cgLimits.forwardVariable || [];
+                          const aftPoints = formData.weightBalance.cgLimits.aftVariable || [];
+                          
+                          // Trier les points
+                          const sortedForward = [...forwardPoints].sort((a, b) => a.weight - b.weight);
+                          const sortedAft = [...aftPoints].sort((a, b) => a.weight - b.weight);
+                          
+                          // Calculer les échelles
+                          const allCGs = [
+                            formData.weightBalance.cgLimits.forward,
+                            formData.weightBalance.cgLimits.aft,
+                            ...sortedForward.map(p => p.cg),
+                            ...sortedAft.map(p => p.cg)
+                          ];
+                          const cgMin = Math.min(...allCGs) - 0.05;
+                          const cgMax = Math.max(...allCGs) + 0.05;
+                          const weightMin = formData.minTakeoffWeight;
+                          const weightMax = formData.maxTakeoffWeight;
+                          
+                          // Construire l'enveloppe
+                          const points = [];
+                          
+                          // Côté avant
+                          if (sortedForward.length === 0 || sortedForward[0].weight > weightMin) {
+                            points.push({ weight: weightMin, cg: formData.weightBalance.cgLimits.forward });
+                          }
+                          points.push(...sortedForward);
+                          if (sortedForward.length === 0 || sortedForward[sortedForward.length - 1].weight < weightMax) {
+                            points.push({ weight: weightMax, cg: formData.weightBalance.cgLimits.forward });
+                          }
+                          
+                          // Côté arrière (en ordre inverse)
+                          if (sortedAft.length === 0 || sortedAft[sortedAft.length - 1].weight < weightMax) {
+                            points.push({ weight: weightMax, cg: formData.weightBalance.cgLimits.aft });
+                          }
+                          if (sortedAft.length > 0) {
+                            for (let i = sortedAft.length - 1; i >= 0; i--) {
+                              points.push(sortedAft[i]);
+                            }
+                          }
+                          if (sortedAft.length === 0 || sortedAft[0].weight > weightMin) {
+                            points.push({ weight: weightMin, cg: formData.weightBalance.cgLimits.aft });
+                          }
+                          
+                          // Convertir en coordonnées SVG
+                          const svgPoints = points.map(p => 
+                            `${30 + (p.cg - cgMin) / (cgMax - cgMin) * 240},${170 - (p.weight - weightMin) / (weightMax - weightMin) * 140}`
+                          ).join(' ');
+                          
+                          return (
+                            <>
+                              <polygon points={svgPoints} fill="#dbeafe" fillOpacity="0.5" stroke="#3b82f6" strokeWidth="2" />
+                              {/* Points avant */}
+                              {sortedForward.map((point, i) => (
+                                <circle
+                                  key={`f-${i}`}
+                                  cx={30 + (point.cg - cgMin) / (cgMax - cgMin) * 240}
+                                  cy={170 - (point.weight - weightMin) / (weightMax - weightMin) * 140}
+                                  r="4"
+                                  fill="#3b82f6"
+                                  stroke="white"
+                                  strokeWidth="1"
+                                />
+                              ))}
+                              {/* Points arrière */}
+                              {sortedAft.map((point, i) => (
+                                <circle
+                                  key={`a-${i}`}
+                                  cx={30 + (point.cg - cgMin) / (cgMax - cgMin) * 240}
+                                  cy={170 - (point.weight - weightMin) / (weightMax - weightMin) * 140}
+                                  r="4"
+                                  fill="#ef4444"
+                                  stroke="white"
+                                  strokeWidth="1"
+                                />
+                              ))}
+                            </>
+                          );
+                        })()}
+                      </svg>
+                      <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: '#6b7280' }}>
+                        • Points <span style={{ color: '#3b82f6', fontWeight: '600' }}>bleus</span> : limites avant variables<br/>
+                        • Points <span style={{ color: '#ef4444', fontWeight: '600' }}>rouges</span> : limites arrière variables
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Limites arrière variables */}
+            <div style={{ marginTop: '24px' }}>
+              <h4 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#4b5563' }}>
+                📊 Limites arrière variables (optionnel)
+              </h4>
+              <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>
+                Définissez des limites CG arrière différentes selon la masse
+              </p>
+              
+              {formData.weightBalance.cgLimits.aftVariable && formData.weightBalance.cgLimits.aftVariable.length > 0 ? (
+                <div style={{ marginBottom: '12px', display: 'flex', flexDirection: 'column' }}>
+                  {formData.weightBalance.cgLimits.aftVariable
+                    .map((point, index) => {
+                      // Créer une copie triée pour l'affichage uniquement
+                      const sortedPoints = [...formData.weightBalance.cgLimits.aftVariable]
+                        .map((p, i) => ({ ...p, originalIndex: i }))
+                        .sort((a, b) => a.weight - b.weight);
                       
-                      {/* Labels */}
-                      <text x="150" y="190" textAnchor="middle" fontSize="10" fill="#6b7280">CG</text>
-                      <text x="10" y="100" textAnchor="middle" fontSize="10" fill="#6b7280" transform="rotate(-90 10 100)">Masse</text>
+                      // Trouver la position d'affichage de ce point
+                      const displayIndex = sortedPoints.findIndex(p => p.originalIndex === index);
                       
-                      {/* Enveloppe */}
-                      {(() => {
-                        const sortedPoints = [...formData.weightBalance.cgLimits.forwardVariable].sort((a, b) => a.weight - b.weight);
-                        if (sortedPoints.length === 0) return null;
-                        
-                        // Calculer les échelles
-                        const cgMin = Math.min(formData.weightBalance.cgLimits.forward, ...sortedPoints.map(p => p.cg)) - 0.05;
-                        const cgMax = formData.weightBalance.cgLimits.aft + 0.05;
-                        const weightMin = formData.minTakeoffWeight;
-                        const weightMax = formData.maxTakeoffWeight;
-                        
-                        // Points de l'enveloppe
-                        const points = [];
-                        
-                        // Ajouter le point min si nécessaire
-                        if (sortedPoints[0].weight > weightMin) {
-                          points.push({ weight: weightMin, cg: formData.weightBalance.cgLimits.forward });
-                        }
-                        
-                        // Ajouter les points variables
-                        points.push(...sortedPoints);
-                        
-                        // Ajouter le point max si nécessaire
-                        if (sortedPoints[sortedPoints.length - 1].weight < weightMax) {
-                          points.push({ weight: weightMax, cg: formData.weightBalance.cgLimits.forward });
-                        }
-                        
-                        // Ajouter les points arrière
-                        points.push({ weight: weightMax, cg: formData.weightBalance.cgLimits.aft });
-                        points.push({ weight: weightMin, cg: formData.weightBalance.cgLimits.aft });
-                        
-                        // Convertir en coordonnées SVG
-                        const svgPoints = points.map(p => 
-                          `${30 + (p.cg - cgMin) / (cgMax - cgMin) * 240},${170 - (p.weight - weightMin) / (weightMax - weightMin) * 140}`
-                        ).join(' ');
-                        
-                        return (
-                          <>
-                            <polygon points={svgPoints} fill="#dbeafe" fillOpacity="0.5" stroke="#3b82f6" strokeWidth="2" />
-                            {/* Points */}
-                            {sortedPoints.map((point, i) => (
-                              <circle
-                                key={i}
-                                cx={30 + (point.cg - cgMin) / (cgMax - cgMin) * 240}
-                                cy={170 - (point.weight - weightMin) / (weightMax - weightMin) * 140}
-                                r="4"
-                                fill="#3b82f6"
-                                stroke="white"
-                                strokeWidth="1"
-                              />
-                            ))}
-                          </>
-                        );
-                      })()}
-                    </svg>
-                  </div>
+                      return (
+                        <div key={index} style={{ 
+                          display: 'grid', 
+                          gridTemplateColumns: '1fr 1fr auto', 
+                          gap: '12px',
+                          marginBottom: '8px',
+                          padding: '12px',
+                          backgroundColor: 'white',
+                          borderRadius: '6px',
+                          border: '1px solid #e5e7eb',
+                          order: displayIndex
+                        }}>
+                          <div style={fieldStyle}>
+                            <label style={{ ...labelStyle, fontSize: '12px' }}>Masse (kg)</label>
+                            <input
+                              type="number"
+                              value={point.weight || ''}
+                              onChange={(e) => {
+                                const newPoints = [...formData.weightBalance.cgLimits.aftVariable];
+                                newPoints[index] = { ...newPoints[index], weight: parseInt(e.target.value) || 0 };
+                                handleChange('weightBalance.cgLimits.aftVariable', newPoints);
+                              }}
+                              style={{ ...inputStyle, fontSize: '14px' }}
+                              min={formData.minTakeoffWeight}
+                              max={formData.maxTakeoffWeight}
+                            />
+                          </div>
+                          <div style={fieldStyle}>
+                            <label style={{ ...labelStyle, fontSize: '12px' }}>Limite CG (m)</label>
+                            <input
+                              type="number"
+                              value={point.cg || ''}
+                              onChange={(e) => {
+                                const newPoints = [...formData.weightBalance.cgLimits.aftVariable];
+                                newPoints[index] = { ...newPoints[index], cg: parseFloat(e.target.value) || 0 };
+                                handleChange('weightBalance.cgLimits.aftVariable', newPoints);
+                              }}
+                              style={{ ...inputStyle, fontSize: '14px' }}
+                              step="0.01"
+                              min={formData.weightBalance.cgLimits.forward}
+                              max="5"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newPoints = formData.weightBalance.cgLimits.aftVariable.filter((_, i) => i !== index);
+                              handleChange('weightBalance.cgLimits.aftVariable', newPoints);
+                            }}
+                            style={{
+                              alignSelf: 'flex-end',
+                              padding: '8px',
+                              backgroundColor: '#ef4444',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      );
+                    })}
+                </div>
+              ) : null}
+              
+              <button
+                type="button"
+                onClick={() => {
+                  const currentPoints = formData.weightBalance.cgLimits.aftVariable || [];
+                  const newWeight = currentPoints.length > 0 
+                    ? Math.max(...currentPoints.map(p => p.weight)) + 50
+                    : formData.minTakeoffWeight;
+                  
+                  const newPoint = { 
+                    weight: Math.min(newWeight, formData.maxTakeoffWeight), 
+                    cg: formData.weightBalance.cgLimits.aft 
+                  };
+                  
+                  handleChange('weightBalance.cgLimits.aftVariable', [...currentPoints, newPoint]);
+                }}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  cursor: 'pointer'
+                }}
+              >
+                + Ajouter un point de limite arrière variable
+              </button>
+
+              {formData.weightBalance.cgLimits.aftVariable && formData.weightBalance.cgLimits.aftVariable.length > 0 && (
+                <div style={{ 
+                  marginTop: '16px',
+                  padding: '12px',
+                  backgroundColor: '#fee2e2',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  color: '#991b1b'
+                }}>
+                  <p style={{ margin: '0', fontWeight: '600' }}>
+                    💡 Info : Les limites arrière variables sont définies
+                  </p>
+                  <p style={{ margin: '4px 0 0 0' }}>
+                    L'enveloppe suivra l'interpolation entre les points pour créer une limite arrière progressive
+                  </p>
                 </div>
               )}
             </div>
