@@ -1,31 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Fuel, Calculator, Plane, Clock, Navigation, Lock, Home, Navigation2, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Fuel, Calculator, Plane, Clock, Navigation, Lock, Home, Navigation2, AlertTriangle, CheckCircle, Zap } from 'lucide-react';
 import { useFlightSystem } from '../../../context/FlightSystemContext';
 
 export const FuelBalanceModule = () => {
-  // Récupération de l'avion sélectionné et des données de navigation depuis le contexte
-  const { selectedAircraft, navigationResults, flightType } = useFlightSystem();
+  // 🔗 UTILISATION DES DONNÉES CENTRALISÉES DU CONTEXTE
+  const { 
+    selectedAircraft, 
+    navigationResults, 
+    flightType,
+    fuelData,
+    setFuelData,
+    crmFuel,
+    setCrmFuel
+  } = useFlightSystem();
   
   // Facteur de conversion: 1 gallon US = 3.78541 litres
   const GAL_TO_LTR = 3.78541;
-  
-  // Utiliser la réserve réglementaire calculée depuis le module navigation
-  const regulationReserveLiters = navigationResults?.regulationReserveLiters || 0;
-  const regulationReserveGallons = regulationReserveLiters / GAL_TO_LTR;
-  
-  // Valeurs par défaut réalistes pour un vol type
-  const defaultValues = {
-    roulage: { gal: 1.0, ltr: 1.0 * GAL_TO_LTR },
-    trip: { gal: 0, ltr: 0 },
-    contingency: { gal: 1, ltr: 1 * GAL_TO_LTR }, // 5% du trip fuel, minimum 1 gal (calculé automatiquement)
-    alternate: { gal: 2.0, ltr: 2.0 * GAL_TO_LTR },
-    finalReserve: { gal: regulationReserveGallons, ltr: regulationReserveLiters },
-    additional: { gal: 0, ltr: 0 },
-    extra: { gal: 0, ltr: 0 }
-  };
-
-  const [fuelData, setFuelData] = useState(defaultValues);
-  const [crmFuel, setCrmFuel] = useState({ gal: 0, ltr: 0 });
 
   const convertValue = (value, fromUnit) => {
     if (fromUnit === 'gal') {
@@ -35,43 +25,10 @@ export const FuelBalanceModule = () => {
     }
   };
 
-  // Mettre à jour automatiquement la réserve finale selon la réglementation
-  useEffect(() => {
-    if (navigationResults && navigationResults.regulationReserveLiters !== undefined) {
-      const regulationReserveLiters = navigationResults.regulationReserveLiters || 0;
-      const regulationReserveGallons = regulationReserveLiters / 3.78541;
-      
-      setFuelData(prev => ({
-        ...prev,
-        finalReserve: {
-          gal: regulationReserveGallons,
-          ltr: regulationReserveLiters
-        }
-      }));
-    }
-  }, [navigationResults?.regulationReserveLiters]);
-  
-  // Mettre à jour automatiquement le contingency fuel (5% du trip fuel, minimum 1 gal)
-  useEffect(() => {
-    if (navigationResults && navigationResults.fuelRequired !== undefined) {
-      const tripFuelLiters = navigationResults.fuelRequired || 0;
-      const tripFuelGallons = tripFuelLiters / 3.78541;
-      const contingencyGallons = Math.max(1, tripFuelGallons * 0.05);
-      const contingencyLiters = contingencyGallons * 3.78541;
-      
-      setFuelData(prev => ({
-        ...prev,
-        contingency: {
-          gal: contingencyGallons,
-          ltr: contingencyLiters
-        }
-      }));
-    }
-  }, [navigationResults?.fuelRequired]);
-
   const handleInputChange = (fuelType, inputUnit, value) => {
-    // Ne pas permettre la modification de la réserve finale et du contingency fuel
-    if (fuelType === 'finalReserve' || fuelType === 'contingency') return;
+    // 🔒 VERROUILLAGE DES VALEURS AUTOMATIQUES
+    // Ne pas permettre la modification des valeurs automatiques
+    if (fuelType === 'finalReserve' || fuelType === 'contingency' || fuelType === 'trip') return;
     
     const numValue = parseFloat(value) || 0;
     
@@ -145,6 +102,15 @@ export const FuelBalanceModule = () => {
     return desc;
   };
 
+  // Déterminer la description du trip fuel
+  const getTripDescription = () => {
+    if (!navigationResults || !navigationResults.fuelRequired) {
+      return 'Calculé depuis Navigation (aucune route définie)';
+    }
+    
+    return `Calculé depuis Navigation (${navigationResults.totalDistance || 0} Nm en ${Math.round(navigationResults.totalTime || 0)} min)`;
+  };
+
   // Vérifier si le carburant CRM est suffisant
   const isCrmSufficient = () => {
     const totalRequired = calculateTotal('ltr');
@@ -158,7 +124,14 @@ export const FuelBalanceModule = () => {
 
   const fuelTypes = [
     { key: 'roulage', label: 'Roulage', description: 'Taxi et attente', color: '#dbeafe' },
-    { key: 'trip', label: 'Trip Fuel', description: 'Trajet prévu', color: '#d1fae5' },
+    { 
+      key: 'trip', 
+      label: 'Trip Fuel', 
+      description: getTripDescription(), 
+      color: '#d1fae5', 
+      readonly: true, // 🔒 NOUVEAU : Trip fuel verrouillé
+      automatic: true // 🚀 NOUVEAU : Indicateur automatique
+    },
     { key: 'contingency', label: 'Contingency Fuel', description: '5% du trip fuel (min. 1 gal)', color: '#fef3c7', readonly: true },
     { key: 'alternate', label: 'Alternate Fuel', description: 'Vers aérodrome de dégagement', color: '#fed7aa' },
     { key: 'finalReserve', label: 'Final Reserve', description: '', color: '#fee2e2', readonly: true },
@@ -168,41 +141,62 @@ export const FuelBalanceModule = () => {
 
   // Fonctions pour réinitialiser les valeurs
   const resetToDefault = () => {
-    const tripFuelLiters = navigationResults?.fuelRequired || 0;
-    const tripFuelGallons = tripFuelLiters / GAL_TO_LTR;
-    const contingencyGallons = Math.max(1, tripFuelGallons * 0.05);
-    
-    setFuelData({
+    setFuelData(prev => ({
+      ...prev,
       roulage: { gal: 1.0, ltr: 1.0 * GAL_TO_LTR },
-      trip: { gal: 0, ltr: 0 },
-      contingency: { gal: contingencyGallons, ltr: contingencyGallons * GAL_TO_LTR },
       alternate: { gal: 2.0, ltr: 2.0 * GAL_TO_LTR },
-      finalReserve: { gal: regulationReserveGallons, ltr: regulationReserveLiters },
       additional: { gal: 0, ltr: 0 },
       extra: { gal: 0, ltr: 0 }
-    });
+      // trip, contingency et finalReserve restent automatiques
+    }));
     setCrmFuel({ gal: 0, ltr: 0 });
   };
 
   const clearAll = () => {
-    const tripFuelLiters = navigationResults?.fuelRequired || 0;
-    const tripFuelGallons = tripFuelLiters / GAL_TO_LTR;
-    const contingencyGallons = Math.max(1, tripFuelGallons * 0.05);
-    
-    setFuelData({
+    setFuelData(prev => ({
+      ...prev,
       roulage: { gal: 0, ltr: 0 },
-      trip: { gal: 0, ltr: 0 },
-      contingency: { gal: contingencyGallons, ltr: contingencyGallons * GAL_TO_LTR },
       alternate: { gal: 0, ltr: 0 },
-      finalReserve: { gal: regulationReserveGallons, ltr: regulationReserveLiters },
       additional: { gal: 0, ltr: 0 },
       extra: { gal: 0, ltr: 0 }
-    });
+      // trip, contingency et finalReserve restent automatiques
+    }));
     setCrmFuel({ gal: 0, ltr: 0 });
   };
 
   return (
     <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px', backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
+      {/* 🚀 NOUVELLE ALERTE AUTOMATISATION */}
+      {navigationResults?.fuelRequired > 0 && (
+        <div style={{ 
+          marginBottom: '24px', 
+          padding: '16px', 
+          backgroundColor: '#f0fdf4', 
+          border: '2px solid #10b981', 
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <div style={{ flexShrink: 0 }}>
+            <div style={{ width: '32px', height: '32px', backgroundColor: '#d1fae5', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Zap style={{ width: '16px', height: '16px', color: '#10b981' }} />
+            </div>
+          </div>
+          <div>
+            <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#065f46', margin: '0 0 4px 0' }}>
+              🚀 Automatisation activée
+            </h3>
+            <p style={{ fontSize: '14px', color: '#047857', margin: '0' }}>
+              Le <strong>Trip Fuel</strong> ({fuelData.trip.ltr.toFixed(1)} L), 
+              le <strong>Contingency Fuel</strong> ({fuelData.contingency.ltr.toFixed(1)} L) et 
+              la <strong>Final Reserve</strong> ({fuelData.finalReserve.ltr.toFixed(1)} L) 
+              sont calculés automatiquement depuis l'onglet Navigation.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Alerte si aucun type de vol défini */}
       {!flightType && (
         <div style={{ 
@@ -389,6 +383,7 @@ export const FuelBalanceModule = () => {
                           <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                             {fuelType.label}
                             {fuelType.readonly && <Lock style={{ width: '12px', height: '12px', color: '#6b7280' }} />}
+                            {fuelType.automatic && <Zap style={{ width: '12px', height: '12px', color: '#10b981' }} />}
                           </span>
                           <span style={{ fontSize: '12px', fontWeight: '400', color: '#6b7280' }}>
                             {fuelType.key === 'finalReserve' ? getReserveDescription() : fuelType.description}
@@ -421,12 +416,16 @@ export const FuelBalanceModule = () => {
                         <span style={{ 
                           fontSize: '10px', 
                           fontWeight: 'bold', 
-                          color: '#6b7280',
-                          backgroundColor: '#e5e7eb',
+                          color: fuelType.automatic ? '#10b981' : '#6b7280',
+                          backgroundColor: fuelType.automatic ? '#d1fae5' : '#e5e7eb',
                           padding: '2px 6px',
                           borderRadius: '4px',
-                          whiteSpace: 'nowrap'
+                          whiteSpace: 'nowrap',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '2px'
                         }}>
+                          {fuelType.automatic && <Zap style={{ width: '8px', height: '8px' }} />}
                           AUTO
                         </span>
                       )}
@@ -456,12 +455,16 @@ export const FuelBalanceModule = () => {
                         <span style={{ 
                           fontSize: '10px', 
                           fontWeight: 'bold', 
-                          color: '#6b7280',
-                          backgroundColor: '#e5e7eb',
+                          color: fuelType.automatic ? '#10b981' : '#6b7280',
+                          backgroundColor: fuelType.automatic ? '#d1fae5' : '#e5e7eb',
                           padding: '2px 6px',
                           borderRadius: '4px',
-                          whiteSpace: 'nowrap'
+                          whiteSpace: 'nowrap',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '2px'
                         }}>
+                          {fuelType.automatic && <Zap style={{ width: '8px', height: '8px' }} />}
                           AUTO
                         </span>
                       )}
@@ -781,28 +784,27 @@ export const FuelBalanceModule = () => {
       </div>
 
       {/* Instructions */}
-      <div style={{ marginTop: '32px', backgroundColor: '#dbeafe', border: '1px solid #3b82f6', borderRadius: '8px', padding: '16px' }}>
+      <div style={{ marginTop: '32px', backgroundColor: '#f0fdf4', border: '1px solid #10b981', borderRadius: '8px', padding: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start' }}>
           <div style={{ flexShrink: 0 }}>
-            <div style={{ width: '32px', height: '32px', backgroundColor: '#bfdbfe', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ color: '#2563eb', fontWeight: '600', fontSize: '14px' }}>ℹ</span>
+            <div style={{ width: '32px', height: '32px', backgroundColor: '#d1fae5', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Zap style={{ color: '#10b981', width: '16px', height: '16px' }} />
             </div>
           </div>
           <div style={{ marginLeft: '12px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: '500', color: '#1e40af', marginBottom: '4px', margin: '0' }}>Instructions d'utilisation</h3>
-            <p style={{ fontSize: '14px', color: '#1d4ed8', margin: '0' }}>
-              Saisissez les valeurs directement dans le tableau en gallons ou en litres. 
-              La conversion automatique se fait en temps réel. Les pourcentages et totaux sont calculés instantanément.
-              <br/><br/>
-              <strong>Contingency Fuel :</strong> Calculé automatiquement à 5% du trip fuel (minimum 1 gallon) selon les standards de l'aviation civile.
+            <h3 style={{ fontSize: '14px', fontWeight: '500', color: '#065f46', marginBottom: '4px', margin: '0' }}>🚀 Automatisation activée</h3>
+            <p style={{ fontSize: '14px', color: '#047857', margin: '0' }}>
+              <strong>Trip Fuel :</strong> Calculé automatiquement depuis l'onglet Navigation (distance × consommation).
               <br/>
-              <strong>Final Reserve :</strong> Calculée automatiquement selon la réglementation du type de vol défini dans l'onglet Navigation.
+              <strong>Contingency Fuel :</strong> Calculé automatiquement à 5% du trip fuel (minimum 1 gallon).
+              <br/>
+              <strong>Final Reserve :</strong> Calculée automatiquement selon la réglementation du type de vol.
               <br/><br/>
-              <strong>Carburant CRM :</strong> Entrez la quantité de carburant constatée à bord (donnée du Crew Resource Management). 
-              Le système compare automatiquement cette valeur avec le carburant total requis et indique si la quantité est suffisante ou non.
+              <strong>Carburant CRM :</strong> Entrez la quantité de carburant constatée à bord. 
+              Le système compare automatiquement cette valeur avec le carburant total requis.
               {selectedAircraft && (
                 <span style={{ display: 'block', marginTop: '8px', fontWeight: '500' }}>
-                  Les calculs de temps et distance sont basés sur : {selectedAircraft.registration} - 
+                  Calculs basés sur : {selectedAircraft.registration} - 
                   Consommation: {selectedAircraft.fuelConsumption} L/h - Vitesse: {selectedAircraft.cruiseSpeedKt} kt
                 </span>
               )}

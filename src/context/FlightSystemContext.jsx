@@ -55,6 +55,22 @@ export const FlightSystemProvider = ({ children }) => {
   
   const [crmFuel, setCrmFuel] = useState({ gal: 0, ltr: 0 });
   
+  // 🚀 AUTOMATISATION DU TRIP FUEL - Nouvelle fonctionnalité
+  useEffect(() => {
+    if (navigationResults && navigationResults.fuelRequired !== undefined) {
+      const tripFuelLiters = navigationResults.fuelRequired || 0;
+      const tripFuelGallons = tripFuelLiters / 3.78541;
+      
+      setFuelData(prev => ({
+        ...prev,
+        trip: {
+          gal: tripFuelGallons,
+          ltr: tripFuelLiters
+        }
+      }));
+    }
+  }, [navigationResults?.fuelRequired]);
+  
   // Mettre à jour automatiquement la réserve finale selon la réglementation
   useEffect(() => {
     if (navigationResults && navigationResults.regulationReserveLiters !== undefined) {
@@ -71,10 +87,52 @@ export const FlightSystemProvider = ({ children }) => {
     }
   }, [navigationResults?.regulationReserveLiters]);
   
-  // Calculer le carburant à partir des résultats de navigation
+  // Mettre à jour automatiquement le contingency fuel (5% du trip fuel, minimum 1 gal)
   useEffect(() => {
-    if (navigationResults && selectedAircraft) {
-      // Utiliser le carburant total avec réserve
+    if (navigationResults && navigationResults.fuelRequired !== undefined) {
+      const tripFuelLiters = navigationResults.fuelRequired || 0;
+      const tripFuelGallons = tripFuelLiters / 3.78541;
+      const contingencyGallons = Math.max(1, tripFuelGallons * 0.05);
+      const contingencyLiters = contingencyGallons * 3.78541;
+      
+      setFuelData(prev => ({
+        ...prev,
+        contingency: {
+          gal: contingencyGallons,
+          ltr: contingencyLiters
+        }
+      }));
+    }
+  }, [navigationResults?.fuelRequired]);
+  
+  // 🔗 SYNCHRONISATION AUTOMATIQUE AVEC LE CENTRAGE
+  // Mettre à jour automatiquement le carburant CRM basé sur le total du bilan
+  useEffect(() => {
+    const totalFuelLiters = Object.values(fuelData).reduce((sum, fuel) => sum + (fuel?.ltr || 0), 0);
+    const totalFuelGallons = totalFuelLiters / 3.78541;
+    
+    // Mettre à jour le CRM automatiquement si pas encore défini manuellement
+    if (crmFuel.ltr === 0 && totalFuelLiters > 0) {
+      setCrmFuel({
+        ltr: totalFuelLiters,
+        gal: totalFuelGallons
+      });
+    }
+  }, [fuelData]);
+  
+  // Calculer le carburant à partir des résultats de navigation pour le centrage
+  useEffect(() => {
+    if (crmFuel.ltr > 0 && selectedAircraft) {
+      // Utiliser le CRM défini plutôt que navigationResults
+      const fuelDensity = FUEL_DENSITIES[selectedAircraft.fuelType] || 0.72;
+      const fuelMass = crmFuel.ltr * fuelDensity;
+      
+      setLoads(prev => ({
+        ...prev,
+        fuel: Math.round(fuelMass)
+      }));
+    } else if (navigationResults && selectedAircraft) {
+      // Fallback sur navigationResults si pas de CRM
       const fuelRequiredLiters = navigationResults.fuelWithReserve || 0;
       const fuelDensity = FUEL_DENSITIES[selectedAircraft.fuelType] || 0.72;
       const fuelMass = fuelRequiredLiters * fuelDensity;
@@ -84,7 +142,7 @@ export const FlightSystemProvider = ({ children }) => {
         fuel: Math.round(fuelMass)
       }));
     }
-  }, [navigationResults, selectedAircraft]);
+  }, [crmFuel, navigationResults, selectedAircraft]);
   
   // Calculs masse et centrage
   const currentCalculation = useMemo(() => {
@@ -192,7 +250,7 @@ export const FlightSystemProvider = ({ children }) => {
     setLoads,
     currentCalculation,
     
-    // Carburant
+    // Carburant - Maintenant centralisé et automatisé
     fuelData,
     setFuelData,
     crmFuel,

@@ -210,6 +210,19 @@ export const NavigationModule = () => {
                 ⚠️ Vol IFR : +15 minutes supplémentaires ajoutées à la réserve de base
               </p>
             )}
+            {/* ✅ NOUVELLE NOTE EXPLICATIVE */}
+            <p style={{ 
+              margin: '8px 0 0 0',
+              fontSize: '12px',
+              color: '#065f46',
+              fontWeight: '600',
+              backgroundColor: '#d1fae5',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              display: 'inline-block'
+            }}>
+              💡 Cette réserve sera automatiquement ajoutée dans l'onglet "Bilan Carburant"
+            </p>
           </div>
         </div>
       </div>
@@ -355,7 +368,7 @@ export const NavigationModule = () => {
             </button>
           </div>
 
-          {/* Résultats */}
+          {/* 🔧 RÉSULTATS SIMPLIFIÉS - Plus de calcul de réserve */}
           <div style={{ 
             padding: '16px', 
             backgroundColor: '#eff6ff', 
@@ -373,7 +386,7 @@ export const NavigationModule = () => {
             </div>
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(2, 1fr)', 
+              gridTemplateColumns: 'repeat(3, 1fr)', 
               gap: '12px', 
               fontSize: '14px' 
             }}>
@@ -390,28 +403,27 @@ export const NavigationModule = () => {
                 </p>
               </div>
               <div>
-                <p style={{ margin: '0', color: '#6b7280' }}>Carburant vol</p>
-                <p style={{ margin: '0', fontSize: '18px', fontWeight: 'bold' }}>
+                <p style={{ margin: '0', color: '#6b7280' }}>Trip Fuel</p>
+                <p style={{ margin: '0', fontSize: '18px', fontWeight: 'bold', color: '#059669' }}>
                   {navigationResults.fuelRequired} L
                 </p>
               </div>
-              <div>
-                <p style={{ margin: '0', color: '#6b7280' }}>Total avec réserve</p>
-                <p style={{ margin: '0', fontSize: '18px', fontWeight: 'bold', color: '#059669' }}>
-                  {navigationResults.fuelWithReserve || 0} L
-                </p>
-              </div>
             </div>
+            {/* ✅ NOUVELLE NOTE EXPLICATIVE */}
             <div style={{ 
               marginTop: '12px',
               padding: '8px',
-              backgroundColor: '#e0f2fe',
+              backgroundColor: '#d1fae5',
               borderRadius: '4px',
               fontSize: '12px',
-              color: '#0c4a6e'
+              color: '#047857'
             }}>
               <p style={{ margin: '0', fontWeight: '600' }}>
-                💡 Détail : {navigationResults.fuelRequired} L (vol) + {navigationResults.regulationReserveLiters || 0} L (réserve {navigationResults.regulationReserveMinutes || 0} min) = {navigationResults.fuelWithReserve || 0} L total
+                🚀 Automatisation activée
+              </p>
+              <p style={{ margin: '4px 0 0 0' }}>
+                Le <strong>Trip Fuel</strong> ({navigationResults.fuelRequired} L) sera automatiquement reporté dans l'onglet "Bilan Carburant".
+                La réserve réglementaire ({navigationResults.regulationReserveLiters || 0} L) sera ajoutée dans la "Final Reserve".
               </p>
             </div>
           </div>
