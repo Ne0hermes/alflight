@@ -585,40 +585,17 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
                 📚 Configuration de l'enveloppe de centrage :
               </p>
               <p style={{ margin: '4px 0 0 0' }}>
-                • <strong>Limites de base</strong> : Définissent les limites CG à la masse minimale de décollage<br/>
-                • <strong>Limites variables</strong> : Permettent de créer une enveloppe non-rectangulaire avec des limites différentes selon la masse<br/>
-                • Sans points variables, l'enveloppe sera rectangulaire (limites constantes pour toutes les masses)<br/>
-                • Avec points variables, l'enveloppe suivra l'interpolation entre les points définis
+                • Pour les <strong>limites avant</strong> et <strong>arrière</strong>, toutes les valeurs (minimale, intermédiaire et maximale) doivent être remplies manuellement<br/>
+                • Si votre avion a des <strong>limites intermédiaires</strong> (enveloppe non-rectangulaire), ajoutez-les en cliquant sur "Ajouter un point"<br/>
+                • Si votre avion n'a <strong>pas de limites intermédiaires</strong> (enveloppe rectangulaire), ajoutez simplement les limites min et max avec la même valeur CG<br/>
+                • <strong>Exemple</strong> : Pour une limite avant constante de 2.05m, ajoutez deux points : (masse min, 2.05m) et (masse max, 2.05m)
               </p>
-            </div>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-              <div>
-                <label style={labelStyle}>Limite avant de base (masse min)</label>
-                <input
-                  type="number"
-                  value={formData.weightBalance.cgLimits.forward}
-                  onChange={(e) => handleChange('weightBalance.cgLimits.forward', parseFloat(e.target.value) || 0)}
-                  style={inputStyle}
-                  step="0.01"
-                />
-              </div>
-              <div>
-                <label style={labelStyle}>Limite arrière de base (masse min)</label>
-                <input
-                  type="number"
-                  value={formData.weightBalance.cgLimits.aft}
-                  onChange={(e) => handleChange('weightBalance.cgLimits.aft', parseFloat(e.target.value) || 0)}
-                  style={inputStyle}
-                  step="0.01"
-                />
-              </div>
             </div>
 
             {/* Limites avant variables */}
             <div style={{ marginTop: '24px' }}>
               <h4 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#4b5563' }}>
-                📊 Limites avant variables (optionnel)
+                📊 Limites avant variables
               </h4>
               <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>
                 Définissez des limites CG avant différentes selon la masse pour créer une enveloppe non rectangulaire
@@ -855,7 +832,7 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
             {/* Limites arrière variables */}
             <div style={{ marginTop: '24px' }}>
               <h4 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#4b5563' }}>
-                📊 Limites arrière variables (optionnel)
+                📊 Limites arrière variables
               </h4>
               <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>
                 Définissez des limites CG arrière différentes selon la masse
