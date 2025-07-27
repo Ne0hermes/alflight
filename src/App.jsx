@@ -6,7 +6,8 @@ import { WeightBalanceModule } from './modules/weightBalance/components/WeightBa
 import { AircraftManagerModule } from './modules/aircraft/components/AircraftManagerModule';
 import { FuelBalanceModule } from './modules/fuel/components/FuelBalanceModule';
 import { VACModule } from './modules/vac/components/VACModule';
-import { Navigation, Scale, Settings, Fuel, Map } from 'lucide-react';
+import { WeatherModule } from './modules/weather/components/WeatherModule';
+import { Navigation, Scale, Settings, Fuel, Map, Cloud } from 'lucide-react';
 
 // Composant principal
 const FlightSystemUI = () => {
@@ -41,6 +42,12 @@ const FlightSystemUI = () => {
             label="Navigation"
           />
           <TabButton
+            active={activeTab === 'weather'}
+            onClick={() => setActiveTab('weather')}
+            icon={Cloud}
+            label="Météo"
+          />
+          <TabButton
             active={activeTab === 'weight-balance'}
             onClick={() => setActiveTab('weight-balance')}
             icon={Scale}
@@ -73,6 +80,7 @@ const FlightSystemUI = () => {
           borderRadius: '8px'
         }}>
           {activeTab === 'navigation' && <NavigationModule />}
+          {activeTab === 'weather' && <WeatherModule />}
           {activeTab === 'weight-balance' && <WeightBalanceModule />}
           {activeTab === 'fuel' && <FuelBalanceModule />}
           {activeTab === 'aircraft' && <AircraftManagerModule />}

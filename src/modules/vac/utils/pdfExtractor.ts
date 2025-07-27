@@ -1,9 +1,12 @@
-// src/modules/vac/utils/pdfExtractor.ts
-import * as pdfjsLib from 'pdfjs-dist';
-import { ChartData, RunwayData, FrequencyData, ILSData } from '../types';
+// src/modules/vac/utils/pdfExtractor.js
+// Version mise à jour pour la dernière version de pdfjs-dist
 
-// Configuration PDF.js
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Configuration PDF.js pour la dernière version
+const pdfjsLib = window.pdfjsLib || require('pdfjs-dist/build/pdf');
+const pdfjsWorker = require('pdfjs-dist/build/pdf.worker.entry');
+
+// Configuration du worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 // Patterns de reconnaissance pour l'aviation
 const PATTERNS = {
@@ -30,29 +33,30 @@ const KEYWORDS = {
 };
 
 export class VACPDFExtractor {
-  private static instance: VACPDFExtractor;
+  static instance = null;
   
-  static getInstance(): VACPDFExtractor {
+  static getInstance() {
     if (!this.instance) {
       this.instance = new VACPDFExtractor();
     }
     return this.instance;
   }
 
-  async extractFromBlob(blob: Blob): Promise<Partial<ChartData['extractedData']>> {
+  async extractFromBlob(blob) {
     try {
       const arrayBuffer = await blob.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+      const pdf = await loadingTask.promise;
       
       let fullText = '';
-      const textByPage: string[] = [];
+      const textByPage = [];
       
       // Extraire le texte de toutes les pages
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
         const pageText = textContent.items
-          .map((item: any) => item.str)
+          .map((item) => item.str)
           .join(' ');
         
         textByPage.push(pageText);
@@ -60,7 +64,7 @@ export class VACPDFExtractor {
       }
       
       // Analyser le texte extrait
-      const extractedData: Partial<ChartData['extractedData']> = {
+      const extractedData = {
         runways: this.extractRunways(fullText),
         frequencies: this.extractFrequencies(fullText),
         ils: this.extractILS(fullText),
@@ -76,8 +80,8 @@ export class VACPDFExtractor {
     }
   }
 
-  private extractRunways(text: string): RunwayData[] {
-    const runways: RunwayData[] = [];
+  extractRunways(text) {
+    const runways = [];
     const runwayMatches = text.match(PATTERNS.runway) || [];
     
     // Rechercher les détails pour chaque piste trouvée
@@ -110,8 +114,8 @@ export class VACPDFExtractor {
     return this.deduplicateRunways(runways);
   }
 
-  private extractFrequencies(text: string): FrequencyData[] {
-    const frequencies: FrequencyData[] = [];
+  extractFrequencies(text) {
+    const frequencies = [];
     
     // Rechercher les fréquences avec leur contexte
     KEYWORDS.frequencies.forEach(keyword => {
@@ -134,7 +138,7 @@ export class VACPDFExtractor {
         const hours = hoursMatch ? hoursMatch[0] : undefined;
         
         frequencies.push({
-          type: type as any,
+          type,
           frequency: freq,
           hours,
           phone
@@ -145,8 +149,8 @@ export class VACPDFExtractor {
     return this.deduplicateFrequencies(frequencies);
   }
 
-  private extractILS(text: string): ILSData[] {
-    const ilsData: ILSData[] = [];
+  extractILS(text) {
+    const ilsData = [];
     
     // Pattern pour ILS avec identifiant
     const ilsPattern = /ILS[^\\n]*?(\d{2}[LCR]?)[^\\n]*?(1(?:08|09|10|11)\.\d{1,2})[^\\n]*?([A-Z]{2,3})/gi;
@@ -157,7 +161,7 @@ export class VACPDFExtractor {
       
       // Déterminer la catégorie ILS
       const categoryMatch = match[0].match(/CAT\s*([I]{1,3})/i);
-      const category = categoryMatch ? categoryMatch[1] as any : 'I';
+      const category = categoryMatch ? categoryMatch[1] : 'I';
       
       ilsData.push({
         runway,
@@ -170,7 +174,7 @@ export class VACPDFExtractor {
     return ilsData;
   }
 
-  private extractMinima(text: string): { circling: number; straight: number } | undefined {
+  extractMinima(text) {
     // Rechercher les minima de circling et d'approche directe
     const circlingMatch = text.match(/(?:CIRCLING|MDH)[^\\n]*?(\d{3,4})/i);
     const straightMatch = text.match(/(?:STRAIGHT|MDA|DA)[^\\n]*?(\d{3,4})/i);
@@ -183,14 +187,14 @@ export class VACPDFExtractor {
     };
   }
 
-  private extractPatternAltitude(text: string): number | undefined {
+  extractPatternAltitude(text) {
     // Rechercher l'altitude du circuit
     const patternMatch = text.match(/(?:CIRCUIT|PATTERN|TFC)[^\\n]*?(\d{3,4})\s*(?:ft|FT)/i);
     return patternMatch ? parseInt(patternMatch[1]) : undefined;
   }
 
-  private extractRemarks(text: string): string[] {
-    const remarks: string[] = [];
+  extractRemarks(text) {
+    const remarks = [];
     
     // Rechercher la section remarques
     const remarksMatch = text.match(/(?:REMARKS?|NOTES?|ATTENTION)[^\\n]*\\n([^\\n]+(?:\\n[^\\n]+)*)/i);
@@ -204,7 +208,7 @@ export class VACPDFExtractor {
   }
 
   // Méthodes utilitaires
-  private detectSurface(context: string): string {
+  detectSurface(context) {
     if (/ASPH|ASPHALTE|BITUME/i.test(context)) return 'ASPH';
     if (/GRASS|HERBE|GAZON/i.test(context)) return 'GRASS';
     if (/CONCRETE|BÉTON|BETON/i.test(context)) return 'CONC';
@@ -212,7 +216,7 @@ export class VACPDFExtractor {
     return 'UNKN';
   }
 
-  private detectFrequencyType(context: string): string {
+  detectFrequencyType(context) {
     if (/TWR|TOWER|TOUR/i.test(context)) return 'TWR';
     if (/GND|GROUND|SOL/i.test(context)) return 'GND';
     if (/ATIS/i.test(context)) return 'ATIS';
@@ -220,12 +224,12 @@ export class VACPDFExtractor {
     return 'INFO';
   }
 
-  private cleanPhoneNumber(phone: string): string {
+  cleanPhoneNumber(phone) {
     return phone.replace(/[\s\-.()]/g, '').replace(/^0/, '+33');
   }
 
-  private deduplicateRunways(runways: RunwayData[]): RunwayData[] {
-    const unique = new Map<string, RunwayData>();
+  deduplicateRunways(runways) {
+    const unique = new Map();
     runways.forEach(rwy => {
       const existing = unique.get(rwy.identifier);
       if (!existing || (rwy.length > existing.length)) {
@@ -235,8 +239,8 @@ export class VACPDFExtractor {
     return Array.from(unique.values());
   }
 
-  private deduplicateFrequencies(frequencies: FrequencyData[]): FrequencyData[] {
-    const unique = new Map<string, FrequencyData>();
+  deduplicateFrequencies(frequencies) {
+    const unique = new Map();
     frequencies.forEach(freq => {
       const key = `${freq.type}-${freq.frequency}`;
       if (!unique.has(key)) {
