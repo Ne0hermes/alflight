@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useFlightSystem } from '../../../context/FlightSystemContext';
+import { useFlightSystem } from '@context/FlightSystemContext';
 import { Edit, Trash2, FileText, Plus } from 'lucide-react';
 import { AircraftForm } from './AircraftForm';
 

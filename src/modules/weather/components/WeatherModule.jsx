@@ -1,6 +1,6 @@
 // src/modules/weather/components/WeatherModule.jsx
 import React, { useEffect, useState } from 'react';
-import { useFlightSystem } from '../../../context/FlightSystemContext';
+import { useFlightSystem } from '@context/FlightSystemContext';
 import { useWeatherStore } from '../store/weatherStore';
 import { Cloud, Wind, Eye, Droplets, Gauge, Navigation, RefreshCw, Settings, AlertTriangle, MapPin } from 'lucide-react';
 

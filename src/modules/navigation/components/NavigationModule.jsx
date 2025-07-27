@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFlightSystem } from '../../../context/FlightSystemContext';
+import { useFlightSystem } from '@context/FlightSystemContext';
 import { LoadInput } from '../../../components/ui/LoadInput';
 import { Plus, Trash2, MapPin, ChevronRight, Sun, Moon, Navigation2, Home } from 'lucide-react';
 

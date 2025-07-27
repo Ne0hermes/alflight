@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFlightSystem } from '../../../context/FlightSystemContext';
+import { useFlightSystem } from '@context/FlightSystemContext';
 import { LoadInput } from '../../../components/ui/LoadInput';
 import { FUEL_DENSITIES } from '../../../utils/constants';
 
@@ -10,7 +10,7 @@ export const WeightBalanceModule = () => {
     setLoads, 
     navigationResults,
     currentCalculation,
-    crmFuel,
+    fobFuel,
     fuelData
   } = useFlightSystem();
 
@@ -387,13 +387,13 @@ export const WeightBalanceModule = () => {
                 </td>
               </tr>
               {/* Ligne atterrissage si CRM défini */}
-              {crmFuel?.ltr > 0 && fuelData && (
+              {fobFuel?.ltr > 0 && fuelData && (
                 <tr style={{ borderTop: '1px solid #e5e7eb', backgroundColor: '#fef3c7' }}>
                   <td style={{ padding: '8px 0', fontWeight: '600', color: '#92400e' }}>À L'ATTERRISSAGE</td>
                   <td style={{ textAlign: 'right', padding: '8px 0', fontWeight: '600', color: '#92400e' }}>
                     {(() => {
                       const totalFuelBalance = Object.values(fuelData).reduce((sum, fuel) => sum + (fuel?.ltr || 0), 0);
-                      const remainingFuelLiters = Math.max(0, crmFuel.ltr - totalFuelBalance);
+                      const remainingFuelLiters = Math.max(0, fobFuel.ltr - totalFuelBalance);
                       const remainingFuelMass = remainingFuelLiters * FUEL_DENSITIES[selectedAircraft.fuelType];
                       const ldgWeight = currentCalculation.totalWeight - loads.fuel + remainingFuelMass;
                       return ldgWeight.toFixed(1);
@@ -402,7 +402,7 @@ export const WeightBalanceModule = () => {
                   <td style={{ textAlign: 'right', padding: '8px 0', fontWeight: '600', color: '#92400e' }}>
                     {(() => {
                       const totalFuelBalance = Object.values(fuelData).reduce((sum, fuel) => sum + (fuel?.ltr || 0), 0);
-                      const remainingFuelLiters = Math.max(0, crmFuel.ltr - totalFuelBalance);
+                      const remainingFuelLiters = Math.max(0, fobFuel.ltr - totalFuelBalance);
                       const remainingFuelMass = remainingFuelLiters * FUEL_DENSITIES[selectedAircraft.fuelType];
                       const ldgMoment = totalMoment - (loads.fuel * selectedAircraft.weightBalance.fuelArm) + 
                                        (remainingFuelMass * selectedAircraft.weightBalance.fuelArm);
@@ -414,7 +414,7 @@ export const WeightBalanceModule = () => {
                   <td style={{ textAlign: 'right', padding: '8px 0', fontWeight: '600', color: '#92400e' }}>
                     {(() => {
                       const totalFuelBalance = Object.values(fuelData).reduce((sum, fuel) => sum + (fuel?.ltr || 0), 0);
-                      const remainingFuelLiters = Math.max(0, crmFuel.ltr - totalFuelBalance);
+                      const remainingFuelLiters = Math.max(0, fobFuel.ltr - totalFuelBalance);
                       const remainingFuelMass = remainingFuelLiters * FUEL_DENSITIES[selectedAircraft.fuelType];
                       const ldgMoment = totalMoment - (loads.fuel * selectedAircraft.weightBalance.fuelArm) + 
                                        (remainingFuelMass * selectedAircraft.weightBalance.fuelArm);
@@ -479,7 +479,7 @@ export const WeightBalanceModule = () => {
           </div>
 
           {/* Notification CRM */}
-          {crmFuel?.ltr > 0 ? (
+          {fobFuel?.ltr > 0 ? (
             <div style={{ 
               padding: '12px',
               backgroundColor: '#059669',
@@ -591,9 +591,9 @@ export const WeightBalanceModule = () => {
               let landingCG = 0;
               let remainingFuelMass = 0;
               
-              if (crmFuel?.ltr > 0 && fuelData) {
+              if (fobFuel?.ltr > 0 && fuelData) {
                 const totalFuelBalance = Object.values(fuelData).reduce((sum, fuel) => sum + (fuel?.ltr || 0), 0);
-                const remainingFuelLiters = Math.max(0, crmFuel.ltr - totalFuelBalance);
+                const remainingFuelLiters = Math.max(0, fobFuel.ltr - totalFuelBalance);
                 remainingFuelMass = remainingFuelLiters * fuelDensity;
                 landingWeight = currentCalculation.totalWeight - loads.fuel + remainingFuelMass;
                 const landingMoment = totalMoment - (loads.fuel * selectedAircraft.weightBalance.fuelArm) + 
@@ -625,11 +625,11 @@ export const WeightBalanceModule = () => {
                     </p>
                     <p style={{ margin: '0' }}>
                       Carburant: <strong>{remainingFuelMass.toFixed(0)} kg</strong>
-                      {crmFuel?.ltr > 0 ? ' (CRM - Bilan)' : ' (ZFW)'}
+                      {fobFuel?.ltr > 0 ? ' (CRM - Bilan)' : ' (ZFW)'}
                     </p>
-                    {crmFuel?.ltr > 0 && fuelData && (() => {
+                    {fobFuel?.ltr > 0 && fuelData && (() => {
                       const totalFuelBalance = Object.values(fuelData).reduce((sum, fuel) => sum + (fuel?.ltr || 0), 0);
-                      const remainingFuelLiters = Math.max(0, crmFuel.ltr - totalFuelBalance);
+                      const remainingFuelLiters = Math.max(0, fobFuel.ltr - totalFuelBalance);
                       return remainingFuelLiters < (navigationResults?.regulationReserveLiters || 0) && (
                         <p style={{ margin: '4px 0 0 0', color: '#dc2626', fontWeight: '600', fontSize: '11px' }}>
                           ⚠️ Sous réserve réglementaire
@@ -1002,9 +1002,9 @@ export const WeightBalanceModule = () => {
                 // 4. Landing (si CRM défini)
                 let landingWeight = zfwWeight;
                 let landingCG = zfwCG;
-                if (crmFuel?.ltr > 0 && fuelData) {
+                if (fobFuel?.ltr > 0 && fuelData) {
                   const totalFuelBalance = Object.values(fuelData).reduce((sum, fuel) => sum + (fuel?.ltr || 0), 0);
-                  const remainingFuelLiters = Math.max(0, crmFuel.ltr - totalFuelBalance);
+                  const remainingFuelLiters = Math.max(0, fobFuel.ltr - totalFuelBalance);
                   const remainingFuelMass = remainingFuelLiters * fuelDensity;
                   landingWeight = zfwWeight + remainingFuelMass;
                   const landingMoment = zfwMoment + (remainingFuelMass * selectedAircraft.weightBalance.fuelArm);
@@ -1272,7 +1272,7 @@ export const WeightBalanceModule = () => {
                     • <strong>LDG (CRM - Bilan)</strong> : Carburant restant à l'atterrissage = CRM - Total consommé du Bilan Carburant
                   </p>
                   
-                  {crmFuel?.ltr > 0 && fuelData && (
+                  {fobFuel?.ltr > 0 && fuelData && (
                     <div style={{ 
                       marginTop: '12px',
                       padding: '8px',
@@ -1285,9 +1285,9 @@ export const WeightBalanceModule = () => {
                         📊 Calcul carburant atterrissage :
                       </p>
                       <p style={{ margin: '4px 0 0 0', fontWeight: '400' }}>
-                        CRM: {crmFuel.ltr.toFixed(1)} L - 
+                        CRM: {fobFuel.ltr.toFixed(1)} L - 
                         Bilan total: {Object.values(fuelData).reduce((sum, fuel) => sum + (fuel?.ltr || 0), 0).toFixed(1)} L = 
-                        Restant: {Math.max(0, crmFuel.ltr - Object.values(fuelData).reduce((sum, fuel) => sum + (fuel?.ltr || 0), 0)).toFixed(1)} L
+                        Restant: {Math.max(0, fobFuel.ltr - Object.values(fuelData).reduce((sum, fuel) => sum + (fuel?.ltr || 0), 0)).toFixed(1)} L
                       </p>
                     </div>
                   )}

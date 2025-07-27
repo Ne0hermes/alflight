@@ -1,9 +1,9 @@
 // src/context/FlightSystemContext.jsx
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { useAircraftManager } from '../hooks/useAircraftManager';
-import { useNavigation } from '../hooks/useNavigation';
-import { NavigationCalculations } from '../utils/calculations';
-import { FUEL_DENSITIES } from '../utils/constants';
+import { useAircraftManager } from '@hooks/useAircraftManager';
+import { useNavigation } from '@hooks/useNavigation';
+import { NavigationCalculations } from '@utils/calculations';
+import { FUEL_DENSITIES } from '@utils/constants';
 
 const FlightSystemContext = createContext(null);
 
@@ -42,7 +42,7 @@ export const FlightSystemProvider = ({ children }) => {
     fuel: 100         // Carburant
   });
   
-  // État pour le carburant (déplacé depuis FuelBalanceModule)
+  // État pour le carburant
   const [fuelData, setFuelData] = useState({
     roulage: { gal: 1.0, ltr: 1.0 * 3.78541 },
     trip: { gal: 0, ltr: 0 },
@@ -53,9 +53,10 @@ export const FlightSystemProvider = ({ children }) => {
     extra: { gal: 0, ltr: 0 }
   });
   
-  const [crmFuel, setCrmFuel] = useState({ gal: 0, ltr: 0 });
+  // FOB (Fuel On Board) au lieu de CRM
+  const [fobFuel, setFobFuel] = useState({ gal: 0, ltr: 0 });
   
-  // 🚀 AUTOMATISATION DU TRIP FUEL - Nouvelle fonctionnalité
+  // 🚀 AUTOMATISATION DU TRIP FUEL
   useEffect(() => {
     if (navigationResults && navigationResults.fuelRequired !== undefined) {
       const tripFuelLiters = navigationResults.fuelRequired || 0;
@@ -106,14 +107,14 @@ export const FlightSystemProvider = ({ children }) => {
   }, [navigationResults?.fuelRequired]);
   
   // 🔗 SYNCHRONISATION AUTOMATIQUE AVEC LE CENTRAGE
-  // Mettre à jour automatiquement le carburant CRM basé sur le total du bilan
+  // Mettre à jour automatiquement le carburant FOB basé sur le total du bilan
   useEffect(() => {
     const totalFuelLiters = Object.values(fuelData).reduce((sum, fuel) => sum + (fuel?.ltr || 0), 0);
     const totalFuelGallons = totalFuelLiters / 3.78541;
     
-    // Mettre à jour le CRM automatiquement si pas encore défini manuellement
-    if (crmFuel.ltr === 0 && totalFuelLiters > 0) {
-      setCrmFuel({
+    // Mettre à jour le FOB automatiquement si pas encore défini manuellement
+    if (fobFuel.ltr === 0 && totalFuelLiters > 0) {
+      setFobFuel({
         ltr: totalFuelLiters,
         gal: totalFuelGallons
       });
@@ -122,17 +123,17 @@ export const FlightSystemProvider = ({ children }) => {
   
   // Calculer le carburant à partir des résultats de navigation pour le centrage
   useEffect(() => {
-    if (crmFuel.ltr > 0 && selectedAircraft) {
-      // Utiliser le CRM défini plutôt que navigationResults
+    if (fobFuel.ltr > 0 && selectedAircraft) {
+      // Utiliser le FOB défini plutôt que navigationResults
       const fuelDensity = FUEL_DENSITIES[selectedAircraft.fuelType] || 0.72;
-      const fuelMass = crmFuel.ltr * fuelDensity;
+      const fuelMass = fobFuel.ltr * fuelDensity;
       
       setLoads(prev => ({
         ...prev,
         fuel: Math.round(fuelMass)
       }));
     } else if (navigationResults && selectedAircraft) {
-      // Fallback sur navigationResults si pas de CRM
+      // Fallback sur navigationResults si pas de FOB
       const fuelRequiredLiters = navigationResults.fuelWithReserve || 0;
       const fuelDensity = FUEL_DENSITIES[selectedAircraft.fuelType] || 0.72;
       const fuelMass = fuelRequiredLiters * fuelDensity;
@@ -142,7 +143,7 @@ export const FlightSystemProvider = ({ children }) => {
         fuel: Math.round(fuelMass)
       }));
     }
-  }, [crmFuel, navigationResults, selectedAircraft]);
+  }, [fobFuel, navigationResults, selectedAircraft]);
   
   // Calculs masse et centrage
   const currentCalculation = useMemo(() => {
@@ -250,11 +251,11 @@ export const FlightSystemProvider = ({ children }) => {
     setLoads,
     currentCalculation,
     
-    // Carburant - Maintenant centralisé et automatisé
+    // Carburant - Avec FOB au lieu de CRM
     fuelData,
     setFuelData,
-    crmFuel,
-    setCrmFuel
+    fobFuel,
+    setFobFuel
   };
   
   return (

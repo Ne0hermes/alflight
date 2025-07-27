@@ -6,8 +6,8 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 export const useVACStore = create(
   persist(
     (set, get) => ({
-      // État initial
-      charts: new Map(),
+      // État initial - Utilisation d'objets au lieu de Maps
+      charts: {},  // { chartId: chartData }
       airports: [],
       selectedAirport: null,
       downloadQueue: [],
@@ -19,7 +19,6 @@ export const useVACStore = create(
       // Charger la liste des cartes disponibles
       loadChartsList: async () => {
         try {
-          // En production, remplacer par l'API réelle
           const mockCharts = [
             {
               id: 'LFPG-VAC-2024-01',
@@ -65,12 +64,12 @@ export const useVACStore = create(
             }
           ];
 
-          const chartsMap = new Map();
+          const chartsObject = {};
           mockCharts.forEach(chart => {
-            chartsMap.set(chart.id, chart);
+            chartsObject[chart.id] = chart;
           });
 
-          set({ charts: chartsMap });
+          set({ charts: chartsObject });
         } catch (error) {
           console.error('Erreur chargement des cartes:', error);
         }
@@ -78,7 +77,7 @@ export const useVACStore = create(
 
       // Télécharger une carte
       downloadChart: async (chartId) => {
-        const chart = get().charts.get(chartId);
+        const chart = get().charts[chartId];
         if (!chart) return;
 
         set(state => ({
@@ -86,7 +85,7 @@ export const useVACStore = create(
         }));
 
         try {
-          // Simuler le téléchargement (pas d'appel API réel)
+          // Simuler le téléchargement
           await new Promise(resolve => setTimeout(resolve, 2000));
 
           // Mettre à jour les métadonnées
@@ -95,7 +94,7 @@ export const useVACStore = create(
             isDownloaded: true,
             downloadDate: new Date(),
             lastAccessed: new Date(),
-            extractionStatus: 'completed', // Important pour afficher le bouton
+            extractionStatus: 'completed',
             extractedData: {
               runways: [
                 { identifier: '09L', qfu: 90, length: 2700, width: 45, surface: 'ASPH' },
@@ -110,16 +109,14 @@ export const useVACStore = create(
             }
           };
 
-          set(state => {
-            const newCharts = new Map(state.charts);
-            newCharts.set(chartId, updatedChart);
-            return {
-              charts: newCharts,
-              downloadQueue: state.downloadQueue.filter(id => id !== chartId)
-            };
-          });
+          set(state => ({
+            charts: {
+              ...state.charts,
+              [chartId]: updatedChart
+            },
+            downloadQueue: state.downloadQueue.filter(id => id !== chartId)
+          }));
 
-          // Log pour debug
           console.log('Chart downloaded:', updatedChart);
         } catch (error) {
           console.error('Erreur téléchargement:', error);
@@ -132,15 +129,14 @@ export const useVACStore = create(
       // Supprimer une carte
       deleteChart: async (chartId) => {
         set(state => {
-          const newCharts = new Map(state.charts);
-          newCharts.delete(chartId);
+          const newCharts = { ...state.charts };
+          delete newCharts[chartId];
           return { charts: newCharts };
         });
       },
 
       // Récupérer le PDF d'une carte (simulé)
       getChartPDF: async (chartId) => {
-        // En production, récupérer depuis IndexedDB
         // Pour la démo, créer un blob factice
         const response = await fetch('data:application/pdf;base64,JVBERi0xLjcKCjEgMCBvYmogICUgZW50cnkgcG9pbnQKPDwKICAvVHlwZSAvQ2F0YWxvZwogIC9QYWdlcyAyIDAgUgo+PgplbmRvYmoKCjIgMCBvYmoKPDwKICAvVHlwZSAvUGFnZXMKICAvTWVkaWFCb3ggWyAwIDAgMjAwIDIwMCBdCiAgL0NvdW50IDEKICAvS2lkcyBbIDMgMCBSIF0KPj4KZW5kb2JqCgozIDAgb2JqCjw8CiAgL1R5cGUgL1BhZ2UKICAvUGFyZW50IDIgMCBSCiAgL1Jlc291cmNlcyA8PAogICAgL0ZvbnQgPDwKICAgICAgL0YxIDQgMCBSIAogICAgPj4KICA+PgogIC9Db250ZW50cyA1IDAgUgo+PgplbmRvYmoKCjQgMCBvYmoKPDwKICAvVHlwZSAvRm9udAogIC9TdWJ0eXBlIC9UeXBlMQogIC9CYXNlRm9udCAvVGltZXMtUm9tYW4KPj4KZW5kb2JqCgo1IDAgb2JqICAlIHBhZ2UgY29udGVudAo8PAogIC9MZW5ndGggNDQKPj4Kc3RyZWFtCkJUCjcwIDUwIFRECi9GMSAxMiBUZgooSGVsbG8sIHdvcmxkISkgVGoKRVQKZW5kc3RyZWFtCmVuZG9iagoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDEwIDAwMDAwIG4gCjAwMDAwMDAwNzkgMDAwMDAgbiAKMDAwMDAwMDE3MyAwMDAwMCBuIAowMDAwMDAwMzAxIDAwMDAwIG4gCjAwMDAwMDAzODAgMDAwMDAgbiAKdHJhaWxlcgo8PAogIC9TaXplIDYKICAvUm9vdCAxIDAgUgo+PgpzdGFydHhyZWYKNDkyCiUlRU9G');
         const blob = await response.blob();
@@ -150,7 +146,7 @@ export const useVACStore = create(
       // Mettre à jour les données extraites
       updateExtractedData: (chartId, data) => {
         set(state => {
-          const chart = state.charts.get(chartId);
+          const chart = state.charts[chartId];
           if (!chart) return state;
 
           const updatedChart = {
@@ -162,16 +158,18 @@ export const useVACStore = create(
             extractionStatus: 'completed'
           };
 
-          const newCharts = new Map(state.charts);
-          newCharts.set(chartId, updatedChart);
-          
-          return { charts: newCharts };
+          return {
+            charts: {
+              ...state.charts,
+              [chartId]: updatedChart
+            }
+          };
         });
       },
 
       // Valider une donnée extraite
       validateExtractedData: (chartId, field, value) => {
-        const chart = get().charts.get(chartId);
+        const chart = get().charts[chartId];
         if (!chart || !chart.extractedData) return;
 
         console.log(`Validation: ${field} = ${value} pour ${chartId}`);
@@ -184,21 +182,21 @@ export const useVACStore = create(
       // Rechercher des aéroports
       searchAirports: (query) => {
         const { charts } = get();
-        const airports = new Map();
+        const airports = {};
         
-        charts.forEach(chart => {
-          if (!airports.has(chart.airportIcao)) {
-            airports.set(chart.airportIcao, {
+        Object.values(charts).forEach(chart => {
+          if (!airports[chart.airportIcao]) {
+            airports[chart.airportIcao] = {
               id: chart.airportIcao,
               icao: chart.airportIcao,
               name: chart.airportName,
               coordinates: { lat: 0, lon: 0 }
-            });
+            };
           }
         });
 
         const searchLower = query.toLowerCase();
-        return Array.from(airports.values()).filter(airport =>
+        return Object.values(airports).filter(airport =>
           airport.icao.toLowerCase().includes(searchLower) ||
           airport.name.toLowerCase().includes(searchLower)
         );
@@ -214,7 +212,6 @@ export const useVACStore = create(
         const { charts } = get();
         const now = new Date();
         
-        // Simuler la synchronisation
         console.log('Synchronisation des cartes...');
         
         set({ lastSync: now });
@@ -234,7 +231,7 @@ export const useVACStore = create(
       // Vider le cache
       clearCache: async () => {
         set({
-          charts: new Map(),
+          charts: {},
           lastSync: null,
           storageUsed: 0
         });
@@ -245,7 +242,20 @@ export const useVACStore = create(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         selectedAirport: state.selectedAirport,
-        lastSync: state.lastSync
+        lastSync: state.lastSync,
+        // Sauvegarder uniquement les charts téléchargées
+        charts: Object.fromEntries(
+          Object.entries(state.charts)
+            .filter(([_, chart]) => chart.isDownloaded)
+            .map(([id, chart]) => [id, {
+              ...chart,
+              // Convertir les dates en strings pour la sérialisation
+              effectiveDate: chart.effectiveDate?.toISOString(),
+              expiryDate: chart.expiryDate?.toISOString(),
+              downloadDate: chart.downloadDate?.toISOString(),
+              lastAccessed: chart.lastAccessed?.toISOString()
+            }])
+        )
       })
     }
   )
