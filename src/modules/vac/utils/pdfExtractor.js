@@ -1,17 +1,9 @@
 // src/modules/vac/utils/pdfExtractor.js
-// Version corrigée pour la dernière version de pdfjs-dist
-
 // Configuration PDF.js selon l'environnement
-let pdfjsLib;
-if (typeof window !== 'undefined' && window.pdfjsLib) {
-  // Environnement browser
-  pdfjsLib = window.pdfjsLib;
-} else {
-  // Environnement Node.js
-  pdfjsLib = require('pdfjs-dist/build/pdf');
-  const pdfjsWorker = require('pdfjs-dist/build/pdf.worker.entry');
-  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
-}
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Configuration du worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 // Patterns de reconnaissance pour l'aviation
 const PATTERNS = {
@@ -157,7 +149,7 @@ export class VACPDFExtractor {
   extractILS(text) {
     const ilsData = [];
     
-    // Pattern pour ILS avec identifiant - Correction du double échappement
+    // Pattern pour ILS avec identifiant
     const ilsPattern = /ILS[^\n]*?(\d{2}[LCR]?)[^\n]*?(1(?:08|09|10|11)\.\d{1,2})[^\n]*?([A-Z]{2,3})/gi;
     const matches = [...text.matchAll(ilsPattern)];
     
@@ -201,7 +193,7 @@ export class VACPDFExtractor {
   extractRemarks(text) {
     const remarks = [];
     
-    // Rechercher la section remarques - Correction du double échappement
+    // Rechercher la section remarques
     const remarksMatch = text.match(/(?:REMARKS?|NOTES?|ATTENTION)[^\n]*\n([^\n]+(?:\n[^\n]+)*)/i);
     if (remarksMatch) {
       const remarksText = remarksMatch[1];

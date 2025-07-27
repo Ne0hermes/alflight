@@ -60,7 +60,7 @@ export const VACModule = () => {
   }, [loadChartsList, checkStorageQuota]);
 
   // Filtrer les cartes par aéroport
-  const filteredCharts = Array.from(charts.values()).filter(chart => {
+  const filteredCharts = Object.values(charts).filter(chart => {
     // Priorité 1 : Aéroports de navigation
     if (navigationAirports.length > 0 && !searchQuery && !selectedAirport) {
       return navigationAirports.includes(chart.airportIcao);

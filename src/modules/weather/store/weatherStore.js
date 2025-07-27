@@ -22,11 +22,12 @@ const AIRPORT_COORDINATES = {
   'LFPT': { lat: 48.7333, lon: 2.3833, name: 'Pontoise' }
 };
 
-export const useWeatherStore = create((set, get) => ({
-  // État
-  airportWeather: new Map(), // ICAO -> données météo
+// Store utilisant des objets simples pour éviter les problèmes de sérialisation avec Maps
+const useWeatherStoreBase = create((set, get) => ({
+  // État - Utilisation d'objets simples
+  _airportWeatherData: {}, // ICAO -> données météo
   routeWeather: [], // Points météo le long de la route
-  windsAloft: new Map(), // Position -> vents en altitude
+  _windsAloftData: {}, // Position -> vents en altitude
   selectedAirport: null,
   loading: false,
   error: null,
@@ -53,11 +54,14 @@ export const useWeatherStore = create((set, get) => ({
       const weather = await weatherService.getAirportWeather(icaoCode, coordinates);
       
       set(state => ({
-        airportWeather: new Map(state.airportWeather).set(icaoCode, {
-          ...weather,
-          coordinates,
-          lastUpdate: new Date()
-        }),
+        _airportWeatherData: {
+          ...state._airportWeatherData,
+          [icaoCode]: {
+            ...weather,
+            coordinates,
+            lastUpdate: new Date()
+          }
+        },
         loading: false,
         lastUpdate: new Date()
       }));
@@ -101,16 +105,17 @@ export const useWeatherStore = create((set, get) => ({
         })
       );
 
-      set(state => ({
-        windsAloft: new Map(
-          windData.map(data => [
-            `${data.position.lat}_${data.position.lon}_FL${data.flightLevel}`,
-            data
-          ])
-        ),
+      const windsAloftData = {};
+      windData.forEach(data => {
+        const key = `${data.position.lat}_${data.position.lon}_FL${data.flightLevel}`;
+        windsAloftData[key] = data;
+      });
+
+      set({
+        _windsAloftData: windsAloftData,
         loading: false,
         lastUpdate: new Date()
-      }));
+      });
 
       return windData;
     } catch (error) {
@@ -202,13 +207,13 @@ export const useWeatherStore = create((set, get) => ({
 
   // Obtenir la météo d'un aéroport
   getAirportWeather: (icaoCode) => {
-    return get().airportWeather.get(icaoCode);
+    return get()._airportWeatherData[icaoCode];
   },
 
   // Obtenir les vents pour une position et un niveau
   getWindsAt: (lat, lon, flightLevel) => {
     const key = `${lat}_${lon}_FL${flightLevel}`;
-    return get().windsAloft.get(key);
+    return get()._windsAloftData[key];
   },
 
   // Vérifier si les données sont périmées (> 30 min)
@@ -222,9 +227,9 @@ export const useWeatherStore = create((set, get) => ({
   // Effacer les données
   clearWeatherData: () => {
     set({
-      airportWeather: new Map(),
+      _airportWeatherData: {},
       routeWeather: [],
-      windsAloft: new Map(),
+      _windsAloftData: {},
       selectedAirport: null,
       error: null,
       lastUpdate: null
@@ -245,3 +250,15 @@ export const useWeatherStore = create((set, get) => ({
     return `${temp}°C, Vent ${windDir}°/${windSpeed}kt, Vis ${visibility}km`;
   }
 }));
+
+// Hook personnalisé qui expose les Maps
+export const useWeatherStore = () => {
+  const store = useWeatherStoreBase();
+  
+  // Convertir les objets en Maps pour l'utilisation dans les composants
+  return {
+    ...store,
+    airportWeather: new Map(Object.entries(store._airportWeatherData || {})),
+    windsAloft: new Map(Object.entries(store._windsAloftData || {}))
+  };
+};

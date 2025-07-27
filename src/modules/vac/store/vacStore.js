@@ -256,7 +256,22 @@ export const useVACStore = create(
               lastAccessed: chart.lastAccessed?.toISOString()
             }])
         )
-      })
+      }),
+      // Réhydrater les dates lors du chargement
+      onRehydrateStorage: () => (state) => {
+        if (state && state.charts) {
+          Object.keys(state.charts).forEach(id => {
+            const chart = state.charts[id];
+            if (chart.effectiveDate) chart.effectiveDate = new Date(chart.effectiveDate);
+            if (chart.expiryDate) chart.expiryDate = new Date(chart.expiryDate);
+            if (chart.downloadDate) chart.downloadDate = new Date(chart.downloadDate);
+            if (chart.lastAccessed) chart.lastAccessed = new Date(chart.lastAccessed);
+          });
+        }
+        if (state && state.lastSync) {
+          state.lastSync = new Date(state.lastSync);
+        }
+      }
     }
   )
 );

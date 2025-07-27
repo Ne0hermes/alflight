@@ -5,11 +5,11 @@ import { useWeatherStore } from '../store/weatherStore';
 import { Cloud, Wind, Eye, Droplets, Gauge, Navigation, RefreshCw, Settings, AlertTriangle, MapPin } from 'lucide-react';
 
 export const WeatherModule = () => {
-  const { waypoints, flightParams, selectedAircraft } = useFlightSystem();
+  const { waypoints = [], flightParams = { altitude: 0, trueAirspeed: 0 }, selectedAircraft } = useFlightSystem();
   const { 
-    airportWeather,
-    routeWeather,
-    windsAloft,
+    airportWeather = new Map(),
+    routeWeather = [],
+    windsAloft = new Map(),
     loading,
     error,
     lastUpdate,
