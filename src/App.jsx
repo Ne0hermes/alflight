@@ -1,4 +1,3 @@
-// src/App.jsx - Version complète avec module météo intégré
 import React from 'react';
 import { FlightSystemProvider, useFlightSystem } from './context/FlightSystemContext';
 import { TabButton } from './components/ui/TabButton';
@@ -7,8 +6,7 @@ import { WeightBalanceModule } from './modules/weightBalance/components/WeightBa
 import { AircraftManagerModule } from './modules/aircraft/components/AircraftManagerModule';
 import { FuelBalanceModule } from './modules/fuel/components/FuelBalanceModule';
 import { VACModule } from './modules/vac/components/VACModule';
-import { WeatherModule } from './modules/weather/components/WeatherModule';
-import { Navigation, Scale, Settings, Fuel, Map, Cloud } from 'lucide-react';
+import { Navigation, Scale, Settings, Fuel, Map } from 'lucide-react';
 
 // Composant principal
 const FlightSystemUI = () => {
@@ -34,20 +32,13 @@ const FlightSystemUI = () => {
         <div style={{ 
           display: 'flex', 
           gap: '8px', 
-          marginBottom: '20px',
-          flexWrap: 'wrap'
+          marginBottom: '20px' 
         }}>
           <TabButton
             active={activeTab === 'navigation'}
             onClick={() => setActiveTab('navigation')}
             icon={Navigation}
             label="Navigation"
-          />
-          <TabButton
-            active={activeTab === 'weather'}
-            onClick={() => setActiveTab('weather')}
-            icon={Cloud}
-            label="Météo"
           />
           <TabButton
             active={activeTab === 'weight-balance'}
@@ -79,11 +70,9 @@ const FlightSystemUI = () => {
         <div style={{ 
           backgroundColor: 'white', 
           padding: '24px', 
-          borderRadius: '8px',
-          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+          borderRadius: '8px'
         }}>
           {activeTab === 'navigation' && <NavigationModule />}
-          {activeTab === 'weather' && <WeatherModule />}
           {activeTab === 'weight-balance' && <WeightBalanceModule />}
           {activeTab === 'fuel' && <FuelBalanceModule />}
           {activeTab === 'aircraft' && <AircraftManagerModule />}
