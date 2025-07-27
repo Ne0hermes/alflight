@@ -1,12 +1,17 @@
 // src/modules/vac/utils/pdfExtractor.js
-// Version mise à jour pour la dernière version de pdfjs-dist
+// Version corrigée pour la dernière version de pdfjs-dist
 
-// Configuration PDF.js pour la dernière version
-const pdfjsLib = window.pdfjsLib || require('pdfjs-dist/build/pdf');
-const pdfjsWorker = require('pdfjs-dist/build/pdf.worker.entry');
-
-// Configuration du worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+// Configuration PDF.js selon l'environnement
+let pdfjsLib;
+if (typeof window !== 'undefined' && window.pdfjsLib) {
+  // Environnement browser
+  pdfjsLib = window.pdfjsLib;
+} else {
+  // Environnement Node.js
+  pdfjsLib = require('pdfjs-dist/build/pdf');
+  const pdfjsWorker = require('pdfjs-dist/build/pdf.worker.entry');
+  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+}
 
 // Patterns de reconnaissance pour l'aviation
 const PATTERNS = {
@@ -152,8 +157,8 @@ export class VACPDFExtractor {
   extractILS(text) {
     const ilsData = [];
     
-    // Pattern pour ILS avec identifiant
-    const ilsPattern = /ILS[^\\n]*?(\d{2}[LCR]?)[^\\n]*?(1(?:08|09|10|11)\.\d{1,2})[^\\n]*?([A-Z]{2,3})/gi;
+    // Pattern pour ILS avec identifiant - Correction du double échappement
+    const ilsPattern = /ILS[^\n]*?(\d{2}[LCR]?)[^\n]*?(1(?:08|09|10|11)\.\d{1,2})[^\n]*?([A-Z]{2,3})/gi;
     const matches = [...text.matchAll(ilsPattern)];
     
     matches.forEach(match => {
@@ -176,8 +181,8 @@ export class VACPDFExtractor {
 
   extractMinima(text) {
     // Rechercher les minima de circling et d'approche directe
-    const circlingMatch = text.match(/(?:CIRCLING|MDH)[^\\n]*?(\d{3,4})/i);
-    const straightMatch = text.match(/(?:STRAIGHT|MDA|DA)[^\\n]*?(\d{3,4})/i);
+    const circlingMatch = text.match(/(?:CIRCLING|MDH)[^\n]*?(\d{3,4})/i);
+    const straightMatch = text.match(/(?:STRAIGHT|MDA|DA)[^\n]*?(\d{3,4})/i);
     
     if (!circlingMatch && !straightMatch) return undefined;
     
@@ -189,19 +194,19 @@ export class VACPDFExtractor {
 
   extractPatternAltitude(text) {
     // Rechercher l'altitude du circuit
-    const patternMatch = text.match(/(?:CIRCUIT|PATTERN|TFC)[^\\n]*?(\d{3,4})\s*(?:ft|FT)/i);
+    const patternMatch = text.match(/(?:CIRCUIT|PATTERN|TFC)[^\n]*?(\d{3,4})\s*(?:ft|FT)/i);
     return patternMatch ? parseInt(patternMatch[1]) : undefined;
   }
 
   extractRemarks(text) {
     const remarks = [];
     
-    // Rechercher la section remarques
-    const remarksMatch = text.match(/(?:REMARKS?|NOTES?|ATTENTION)[^\\n]*\\n([^\\n]+(?:\\n[^\\n]+)*)/i);
+    // Rechercher la section remarques - Correction du double échappement
+    const remarksMatch = text.match(/(?:REMARKS?|NOTES?|ATTENTION)[^\n]*\n([^\n]+(?:\n[^\n]+)*)/i);
     if (remarksMatch) {
       const remarksText = remarksMatch[1];
       // Diviser en lignes et nettoyer
-      remarks.push(...remarksText.split(/\\n/).filter(line => line.trim().length > 10));
+      remarks.push(...remarksText.split(/\n/).filter(line => line.trim().length > 10));
     }
     
     return remarks.slice(0, 5); // Limiter à 5 remarques
