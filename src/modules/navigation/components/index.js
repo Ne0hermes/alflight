@@ -1,2 +1,3 @@
-export { NavigationModule } from './components/NavigationModule';
-export { PerformanceCalculator } from './components/PerformanceCalculator';
+// src/modules/navigation/components/index.js
+export { NavigationModule } from './NavigationModule';
+export { PerformanceCalculator } from './PerformanceCalculator';

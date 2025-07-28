@@ -1,7 +1,8 @@
 import React from 'react';
-import { useFlightSystem } from '@context/FlightSystemContext';
+import { useFlightSystem } from '../../../context/FlightSystemContext';
 import { LoadInput } from '../../../components/ui/LoadInput';
 import { Plus, Trash2, MapPin, ChevronRight, Sun, Moon, Navigation2, Home } from 'lucide-react';
+import { PerformanceCalculator } from './PerformanceCalculator';
 
 export const NavigationModule = () => {
   const { 
@@ -487,6 +488,9 @@ export const NavigationModule = () => {
           </div>
         </div>
       </div>
+
+      {/* Section Performances de décollage et atterrissage */}
+      <PerformanceCalculator />
     </div>
   );
 };

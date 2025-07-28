@@ -1,7 +1,7 @@
 // src/modules/navigation/components/PerformanceCalculator.jsx
 import React, { useEffect, useState } from 'react';
 import { Plane, Thermometer, Mountain, AlertTriangle, CheckCircle, TrendingUp, TrendingDown, Wind } from 'lucide-react';
-import { useFlightSystem } from '@context/FlightSystemContext';
+import { useFlightSystem } from '../../../context/FlightSystemContext';
 import { useVACStore } from '../../vac/store/vacStore';
 import { useWeatherStore } from '../../weather/store/weatherStore';
 import { getAirportElevation } from '../../../data/airportElevations';
@@ -358,17 +358,17 @@ export const PerformanceCalculator = () => {
                         <div style={{ fontSize: '12px', color: '#dc2626', marginLeft: '24px' }}>
                           {warning.exceedsTakeoff && (
                             <p style={{ margin: '2px 0' }}>
-                              • Distance de décollage insuffisante (TOD: {perfData.takeoffDistance} m > {warning.runway.length} m)
+                              • Distance de décollage insuffisante (TOD: {perfData.takeoffDistance} m &gt; {warning.runway.length} m)
                             </p>
                           )}
                           {warning.exceedsAccelStop && (
                             <p style={{ margin: '2px 0' }}>
-                              • Distance accélération-arrêt insuffisante (ASD: {perfData.accelerateStopDistance} m > {warning.runway.length} m)
+                              • Distance accélération-arrêt insuffisante (ASD: {perfData.accelerateStopDistance} m &gt; {warning.runway.length} m)
                             </p>
                           )}
                           {warning.exceedsLanding && (
                             <p style={{ margin: '2px 0' }}>
-                              • Distance d'atterrissage insuffisante (LD: {perfData.landingDistance} m > {warning.runway.length} m)
+                              • Distance d'atterrissage insuffisante (LD: {perfData.landingDistance} m &gt; {warning.runway.length} m)
                             </p>
                           )}
                         </div>
