@@ -2,7 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { useFlightSystem } from '@context/FlightSystemContext';
 import { useWeatherStore } from '../store/weatherStore';
-import { Cloud, Wind, Eye, Droplets, Gauge, Navigation, RefreshCw, Settings, AlertTriangle, MapPin } from 'lucide-react';
+import { weatherService } from '../services/weatherService';
+import { Cloud, Wind, Eye, Droplets, Gauge, Navigation, RefreshCw, Settings, AlertTriangle, MapPin, CheckCircle } from 'lucide-react';
 
 export const WeatherModule = () => {
   const { waypoints = [], flightParams = { altitude: 0, trueAirspeed: 0 }, selectedAircraft } = useFlightSystem();
@@ -71,6 +72,84 @@ export const WeatherModule = () => {
     });
   };
 
+  // Fonction pour détecter les phénomènes météo significatifs
+  const detectWeatherPhenomena = (weatherData) => {
+    if (!weatherData || !weatherData.current) return [];
+    
+    const phenomena = [];
+    const { current } = weatherData;
+    const temp = current.temperature - 273.15;
+    const visibility = current.visibility;
+    const cloudCover = current.cloudCover;
+    const precipitation = current.precipitation || 0;
+    const humidity = current.humidity;
+    const windSpeed = Math.sqrt(current.windU ** 2 + current.windV ** 2) * 1.94384;
+    
+    // Cumulonimbus (CB) - forte couverture nuageuse + précipitations
+    if (cloudCover > 75 && precipitation > 0.5) {
+      phenomena.push({ code: 'CB', description: 'Cumulonimbus', severity: 'danger' });
+    }
+    
+    // Towering Cumulus (TCU) - couverture importante
+    else if (cloudCover > 60 && cloudCover <= 75) {
+      phenomena.push({ code: 'TCU', description: 'Towering Cumulus', severity: 'warning' });
+    }
+    
+    // Thunderstorm (TS) - CB + conditions orageuses
+    if (phenomena.some(p => p.code === 'CB') && precipitation > 2) {
+      phenomena.push({ code: 'TS', description: 'Orage', severity: 'danger' });
+    }
+    
+    // Rain (RA) / Snow (SN) / Freezing Rain (FZRA)
+    if (precipitation > 0) {
+      if (temp > 0) {
+        if (precipitation > 0.5) {
+          phenomena.push({ code: 'RA', description: 'Pluie', severity: 'caution' });
+        } else {
+          phenomena.push({ code: 'DZ', description: 'Bruine', severity: 'info' });
+        }
+        
+        // Freezing rain conditions
+        if (temp < 3 && temp > -2) {
+          phenomena.push({ code: 'FZRA', description: 'Pluie verglaçante', severity: 'danger' });
+        }
+      } else {
+        phenomena.push({ code: 'SN', description: 'Neige', severity: 'warning' });
+      }
+    }
+    
+    // Showers (SH) - précipitations intermittentes
+    if (precipitation > 0 && precipitation < 0.5 && cloudCover < 50) {
+      phenomena.push({ code: 'SH', description: 'Averses', severity: 'caution' });
+    }
+    
+    // Fog (FG) / Mist (BR) / Haze (HZ)
+    if (visibility < 1000) {
+      phenomena.push({ code: 'FG', description: 'Brouillard', severity: 'danger' });
+    } else if (visibility < 5000) {
+      if (humidity > 80) {
+        phenomena.push({ code: 'BR', description: 'Brume', severity: 'warning' });
+      } else {
+        phenomena.push({ code: 'HZ', description: 'Brume sèche', severity: 'caution' });
+      }
+    }
+    
+    // Strong winds
+    if (windSpeed > 25) {
+      phenomena.push({ code: 'WS', description: 'Vent fort', severity: 'warning' });
+    }
+    
+    // Gusts (if wind variations significant - simplified)
+    if (windSpeed > 15) {
+      const gustFactor = 1.5;
+      if (windSpeed * gustFactor > windSpeed + 10) {
+        phenomena.push({ code: 'G', description: 'Rafales', severity: 'caution' });
+      }
+    }
+    
+    return phenomena;
+  };
+
   // Composant pour afficher la météo d'un aéroport
   const AirportWeatherCard = ({ icaoCode, label }) => {
     const weather = airportWeather.get(icaoCode);
@@ -93,11 +172,15 @@ export const WeatherModule = () => {
 
     const { current, metar, taf, coordinates } = weather;
     const temp = Math.round(current.temperature - 273.15);
+    const dewpoint = weatherService.calculateDewpoint(current.temperature, current.humidity);
     const pressure = Math.round(current.pressure / 100);
     const windDir = Math.round(Math.atan2(-current.windU, -current.windV) * 180 / Math.PI + 180);
     const windSpeed = Math.round(Math.sqrt(current.windU ** 2 + current.windV ** 2) * 1.94384);
     const visibility = Math.round(current.visibility / 1000);
     const cloudCover = Math.round(current.cloudCover);
+    
+    // Détecter les phénomènes météo
+    const phenomena = detectWeatherPhenomena(weather);
 
     return (
       <div style={{ 
@@ -159,7 +242,7 @@ export const WeatherModule = () => {
 
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(2, 1fr)', 
+          gridTemplateColumns: 'repeat(3, 1fr)', 
           gap: '12px',
           marginBottom: '16px'
         }}>
@@ -173,11 +256,92 @@ export const WeatherModule = () => {
 
           <div style={{ textAlign: 'center', padding: '12px', backgroundColor: '#f9fafb', borderRadius: '6px' }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '4px' }}>
+              <Droplets size={24} style={{ color: '#06b6d4' }} />
+            </div>
+            <p style={{ fontSize: '20px', fontWeight: '600', color: '#1f2937' }}>{dewpoint}°C</p>
+            <p style={{ fontSize: '12px', color: '#6b7280' }}>Point de rosée</p>
+          </div>
+
+          <div style={{ textAlign: 'center', padding: '12px', backgroundColor: '#f9fafb', borderRadius: '6px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '4px' }}>
               <Cloud size={24} style={{ color: '#6b7280' }} />
             </div>
             <p style={{ fontSize: '20px', fontWeight: '600', color: '#1f2937' }}>{cloudCover}%</p>
             <p style={{ fontSize: '12px', color: '#6b7280' }}>Couverture</p>
           </div>
+        </div>
+        
+        {/* Phénomènes météo significatifs */}
+        <div style={{ 
+          marginBottom: '16px',
+          padding: '12px',
+          backgroundColor: phenomena.length > 0 ? 
+            (phenomena.some(p => p.severity === 'danger') ? '#fee2e2' :
+             phenomena.some(p => p.severity === 'warning') ? '#fef3c7' :
+             phenomena.some(p => p.severity === 'caution') ? '#e0f2fe' : '#f0fdf4') :
+            '#f0fdf4',
+          borderRadius: '6px',
+          border: `1px solid ${
+            phenomena.length > 0 ?
+              (phenomena.some(p => p.severity === 'danger') ? '#fecaca' :
+               phenomena.some(p => p.severity === 'warning') ? '#fde68a' :
+               phenomena.some(p => p.severity === 'caution') ? '#bae6fd' : '#bbf7d0') :
+              '#bbf7d0'
+          }`
+        }}>
+          <h4 style={{ 
+            fontSize: '14px', 
+            fontWeight: '600', 
+            color: phenomena.length > 0 ?
+              (phenomena.some(p => p.severity === 'danger') ? '#dc2626' :
+               phenomena.some(p => p.severity === 'warning') ? '#d97706' :
+               phenomena.some(p => p.severity === 'caution') ? '#0369a1' : '#059669') :
+              '#059669',
+            marginBottom: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            {phenomena.length > 0 ? (
+              <AlertTriangle size={16} />
+            ) : (
+              <CheckCircle size={16} />
+            )}
+            Phénomènes significatifs
+          </h4>
+          
+          {phenomena.length > 0 ? (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {phenomena.map((pheno, index) => (
+                <span key={index} style={{ 
+                  padding: '4px 8px',
+                  backgroundColor: 'white',
+                  borderRadius: '4px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  color: pheno.severity === 'danger' ? '#dc2626' :
+                         pheno.severity === 'warning' ? '#d97706' :
+                         pheno.severity === 'caution' ? '#0369a1' : '#059669',
+                  border: `1px solid ${
+                    pheno.severity === 'danger' ? '#fecaca' :
+                    pheno.severity === 'warning' ? '#fde68a' :
+                    pheno.severity === 'caution' ? '#bae6fd' : '#bbf7d0'
+                  }`
+                }}>
+                  {pheno.code} - {pheno.description}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p style={{ 
+              margin: 0,
+              fontSize: '16px',
+              fontWeight: '600',
+              color: '#059669'
+            }}>
+              RAS - Rien à signaler
+            </p>
+          )}
         </div>
 
         {/* METAR */}

@@ -243,11 +243,12 @@ const useWeatherStoreBase = create((set, get) => ({
     
     const { current } = weatherData;
     const temp = Math.round(current.temperature - 273.15);
+    const dewpoint = weatherService.calculateDewpoint(current.temperature, current.humidity);
     const windDir = weatherService.calculateWindDirection(current.windU, current.windV);
     const windSpeed = weatherService.calculateWindSpeed(current.windU, current.windV);
     const visibility = Math.round(current.visibility / 1000); // m vers km
     
-    return `${temp}°C, Vent ${windDir}°/${windSpeed}kt, Vis ${visibility}km`;
+    return `${temp}°C (Td ${dewpoint}°C), Vent ${windDir}°/${windSpeed}kt, Vis ${visibility}km`;
   }
 }));
 

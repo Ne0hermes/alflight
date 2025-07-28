@@ -526,3 +526,26 @@ class WeatherService {
 
 // Export d'une instance unique
 export const weatherService = new WeatherService();
+
+// Store Zustand pour gérer l'état global de la météo (optionnel)
+export const useWeatherStore = create((set, get) => ({
+  apiKey: null,
+  currentWeather: null,
+  forecasts: {},
+  
+  // Actions
+  setApiKey: (key) => set({ apiKey: key }),
+  
+  updateWeather: (icao, weather) => set((state) => ({
+    currentWeather: { ...state.currentWeather, [icao]: weather }
+  })),
+  
+  updateForecast: (icao, forecast) => set((state) => ({
+    forecasts: { ...state.forecasts, [icao]: forecast }
+  })),
+  
+  clearWeatherData: () => set({
+    currentWeather: null,
+    forecasts: {}
+  })
+}));
