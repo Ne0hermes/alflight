@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useFlightSystem } from '@context/FlightSystemContext';
 import { useWeatherStore } from '../store/weatherStore';
 import { weatherService } from '../services/weatherService';
+import { MeteoCharts } from './RouteWeatherChart';
 import { Cloud, Wind, Eye, Droplets, Gauge, Navigation, RefreshCw, Settings, AlertTriangle, MapPin, CheckCircle } from 'lucide-react';
 
 export const WeatherModule = () => {

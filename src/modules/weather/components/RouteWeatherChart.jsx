@@ -517,7 +517,7 @@ export const MeteoCharts = ({ selectedAltitude = 0 }) => {
             <li><strong>Nuages</strong> : FEW (1-2/8), SCT (3-4/8), BKN (5-7/8), OVC (8/8)</li>
             <li><strong>Turbulence</strong> : TURB MOD (modérée), TURB SEV (sévère)</li>
             <li><strong>Givrage</strong> : ICE MOD (modéré), ICE SEV (sévère)</li>
-            <li><strong>Visibilité</strong> : Zones hachurées pour vis < 5km</li>
+            <li><strong>Visibilité</strong> : Zones hachurées pour vis &lt; 5km</li>
           </ul>
         ) : (
           <ul style={{ margin: '8px 0 0 20px', paddingLeft: '0' }}>
@@ -525,7 +525,7 @@ export const MeteoCharts = ({ selectedAltitude = 0 }) => {
             <li><strong>Pennant</strong> : 50 kt | <strong>Barbule longue</strong> : 10 kt | <strong>Barbule courte</strong> : 5 kt</li>
             <li><strong>Températures</strong> : En degrés Celsius, négatives en altitude</li>
             <li><strong>Isothermes</strong> : Lignes d'égale température</li>
-            <li><strong>Jet Stream</strong> : Flèches doubles pour vents > 80 kt</li>
+            <li><strong>Jet Stream</strong> : Flèches doubles pour vents &gt; 80 kt</li>
           </ul>
         )}
         <p style={{ margin: '8px 0 0 0', fontStyle: 'italic' }}>
