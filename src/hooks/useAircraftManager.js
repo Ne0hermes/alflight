@@ -13,21 +13,38 @@ const loadFromStorage = () => {
       const parsed = JSON.parse(stored);
       // Vérifier que c'est un tableau valide
       if (Array.isArray(parsed) && parsed.length > 0) {
-        // Migration : ajouter forwardVariable aux anciens avions
+        // Migration : ajouter forwardVariable et performances aux anciens avions
         const migrated = parsed.map(aircraft => {
+          let updated = aircraft;
+          
+          // Migration forwardVariable
           if (!aircraft.weightBalance?.cgLimits?.forwardVariable) {
-            return {
-              ...aircraft,
+            updated = {
+              ...updated,
               weightBalance: {
-                ...aircraft.weightBalance,
+                ...updated.weightBalance,
                 cgLimits: {
-                  ...aircraft.weightBalance?.cgLimits,
+                  ...updated.weightBalance?.cgLimits,
                   forwardVariable: []
                 }
               }
             };
           }
-          return aircraft;
+          
+          // Migration performances
+          if (!aircraft.performances) {
+            updated = {
+              ...updated,
+              performances: {
+                takeoffDistance: 385,
+                accelerateStopDistance: 450,
+                landingDistance: 630,
+                landingDistanceFlapsUp: 800
+              }
+            };
+          }
+          
+          return updated;
         });
         return migrated;
       }

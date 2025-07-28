@@ -145,6 +145,11 @@ export const AircraftManagerModule = () => {
                 Carburant: {selectedAircraft.fuelType} • 
                 Capacité: {selectedAircraft.fuelCapacity} L
               </p>
+              {selectedAircraft.performances && (
+                <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#3b82f6' }}>
+                  📊 Perfs: TOD {selectedAircraft.performances.takeoffDistance}m / LD {selectedAircraft.performances.landingDistance}m
+                </p>
+              )}
             </div>
             <div style={{ fontSize: '14px', color: '#6b7280' }}>
               <p style={{ margin: '0 0 4px 0' }}>Vitesse: {selectedAircraft.cruiseSpeedKt} kt</p>
@@ -214,6 +219,23 @@ export const AircraftManagerModule = () => {
                     <div>MTOW: {aircraft.maxTakeoffWeight} kg</div>
                     <div>Facteur: {aircraft.cruiseTimePerNm} min/Nm</div>
                   </div>
+                  {aircraft.performances && (
+                    <div style={{ 
+                      marginTop: '8px',
+                      paddingTop: '8px',
+                      borderTop: '1px solid #e5e7eb',
+                      fontSize: '13px', 
+                      color: '#6b7280',
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(2, 1fr)',
+                      gap: '8px'
+                    }}>
+                      <div>📊 TOD: {aircraft.performances.takeoffDistance}m</div>
+                      <div>📊 ASD: {aircraft.performances.accelerateStopDistance}m</div>
+                      <div>📊 LD: {aircraft.performances.landingDistance}m</div>
+                      <div>📊 LD UP: {aircraft.performances.landingDistanceFlapsUp}m</div>
+                    </div>
+                  )}
                 </div>
                 <div style={{ display: 'flex', gap: '8px', marginLeft: '16px' }}>
                   <button

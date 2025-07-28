@@ -23,6 +23,12 @@ export const DEFAULT_AIRCRAFT = {
   maxLandingWeight: 1280,
   maxBaggageWeight: 100,
   maxAuxiliaryWeight: 20,
+  performances: {
+    takeoffDistance: 385,
+    accelerateStopDistance: 450,
+    landingDistance: 630,
+    landingDistanceFlapsUp: 800
+  },
   weightBalance: {
     frontLeftSeatArm: 2.00,
     frontRightSeatArm: 2.00,
@@ -84,6 +90,12 @@ export const DEFAULT_AIRCRAFT_LIST = [
     maxLandingWeight: 1157,
     maxBaggageWeight: 54,
     maxAuxiliaryWeight: 10,
+    performances: {
+      takeoffDistance: 365,
+      accelerateStopDistance: 420,
+      landingDistance: 520,
+      landingDistanceFlapsUp: 680
+    },
     weightBalance: {
       frontLeftSeatArm: 1.95,
       frontRightSeatArm: 1.95,

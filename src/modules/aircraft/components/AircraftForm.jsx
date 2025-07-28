@@ -1,6 +1,6 @@
 // src/modules/aircraft/components/AircraftForm.jsx
 import React, { useState, useEffect } from 'react';
-import { X, Save, Plane, Fuel, Scale, Settings, AlertTriangle } from 'lucide-react';
+import { X, Save, Plane, Fuel, Scale, Settings, AlertTriangle, Info, TrendingUp } from 'lucide-react';
 
 export const AircraftForm = ({ aircraft, onSave, onClose }) => {
   // État initial basé sur l'avion existant ou valeurs par défaut
@@ -37,6 +37,13 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
         forwardVariable: [],
         aftVariable: []
       }
+    },
+    // Nouvelles données de performances
+    performances: {
+      takeoffDistance: 385,  // Distance de décollage (TOD) en mètres
+      accelerateStopDistance: 450,  // Distance accélération-arrêt (ASD) en mètres
+      landingDistance: 630,  // Distance atterrissage (LD) en mètres
+      landingDistanceFlapsUp: 800  // Distance atterrissage volets UP en mètres
     }
   });
 
@@ -85,6 +92,12 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
             forwardVariable: aircraft.weightBalance?.cgLimits?.forwardVariable || [],
             aftVariable: aircraft.weightBalance?.cgLimits?.aftVariable || []
           }
+        },
+        performances: {
+          takeoffDistance: aircraft.performances?.takeoffDistance || 385,
+          accelerateStopDistance: aircraft.performances?.accelerateStopDistance || 450,
+          landingDistance: aircraft.performances?.landingDistance || 630,
+          landingDistanceFlapsUp: aircraft.performances?.landingDistanceFlapsUp || 800
         }
       });
     }
@@ -164,6 +177,24 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
       newErrors.cgAft = "La limite CG arrière doit être > limite avant";
     }
 
+    // Validation des performances
+    if (formData.performances.takeoffDistance <= 0) {
+      newErrors.takeoffDistance = "La distance de décollage doit être positive";
+    }
+    if (formData.performances.accelerateStopDistance <= 0) {
+      newErrors.accelerateStopDistance = "La distance accélération-arrêt doit être positive";
+    }
+    if (formData.performances.landingDistance <= 0) {
+      newErrors.landingDistance = "La distance d'atterrissage doit être positive";
+    }
+    if (formData.performances.landingDistanceFlapsUp <= 0) {
+      newErrors.landingDistanceFlapsUp = "La distance d'atterrissage volets UP doit être positive";
+    }
+    // Validation logique : la distance d'atterrissage volets UP doit être supérieure à celle avec volets
+    if (formData.performances.landingDistanceFlapsUp <= formData.performances.landingDistance) {
+      newErrors.landingDistanceFlapsUp = "La distance volets UP doit être supérieure à celle avec volets";
+    }
+
     // Calculer les limites dynamiques pour la validation
     const maxAftLimit = wb.cgLimits.aftVariable && wb.cgLimits.aftVariable.length > 0 
       ? Math.max(...wb.cgLimits.aftVariable.map(p => p.cg), wb.cgLimits.aft)
@@ -213,9 +244,19 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
         }
       }));
     } else if (field.includes('.')) {
-      // Gestion des champs imbriqués (ex: weightBalance.frontLeftSeatArm)
-      const [parent, child, subchild] = field.split('.');
-      if (subchild) {
+      // Gestion des champs imbriqués (ex: weightBalance.frontLeftSeatArm, performances.takeoffDistance)
+      const parts = field.split('.');
+      if (parts.length === 2) {
+        const [parent, child] = parts;
+        setFormData(prev => ({
+          ...prev,
+          [parent]: {
+            ...prev[parent],
+            [child]: value
+          }
+        }));
+      } else if (parts.length === 3) {
+        const [parent, child, subchild] = parts;
         setFormData(prev => ({
           ...prev,
           [parent]: {
@@ -224,14 +265,6 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
               ...prev[parent][child],
               [subchild]: value
             }
-          }
-        }));
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          [parent]: {
-            ...prev[parent],
-            [child]: value
           }
         }));
       }
@@ -295,6 +328,10 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
             aftVariable: formData.weightBalance.cgLimits.aftVariable || []
           }
         },
+        // S'assurer que les performances sont incluses
+        performances: {
+          ...formData.performances
+        },
         // Ajouter la config si elle n'existe pas
         config: aircraft?.config || {
           maxTakeoffWeight: formData.maxTakeoffWeight,
@@ -304,12 +341,14 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
           fuelCapacity: formData.fuelCapacity,
           fuelDensity: formData.fuelType === 'JET A-1' ? 0.84 : 0.72,
           takeoff: {
-            baseDistance: 385, altitudeFactor: 0.10, tempFactor: 0.015,
+            baseDistance: formData.performances.takeoffDistance, // Utiliser la valeur saisie
+            altitudeFactor: 0.10, tempFactor: 0.015,
             weightFactor: -0.008, windInterval: 10, headwindFactor: -0.10,
             tailwindFactor: 0.15, wetRunwayFactor: 1.15, slopeFactor: 0.10, groundRatio: 0.60
           },
           landing: {
-            baseDistance: 630, altitudeFactor: 0.05, tempFactor: 0.010,
+            baseDistance: formData.performances.landingDistance, // Utiliser la valeur saisie
+            altitudeFactor: 0.05, tempFactor: 0.010,
             weightFactor: -0.005, windInterval: 10, headwindFactor: -0.08,
             tailwindFactor: 0.13, wetRunwayFactor: 1.43, slopeFactor: 0.05, groundRatio: 0.60
           }
@@ -452,7 +491,15 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
             }}>
               {Object.entries(errors).map(([field, message]) => (
                 <li key={field} style={{ marginBottom: '4px' }}>
-                  <strong>{message}</strong>
+                  <strong>
+                    {field.includes('takeoffDistance') ? 'Distance de décollage' :
+                     field.includes('accelerateStopDistance') ? 'Distance accélération-arrêt' :
+                     field.includes('landingDistance') && !field.includes('FlapsUp') ? "Distance d'atterrissage" :
+                     field.includes('landingDistanceFlapsUp') ? "Distance d'atterrissage volets UP" :
+                     field.includes('forwardVariable') ? 'Limite avant variable' :
+                     field.includes('aftVariable') ? 'Limite arrière variable' :
+                     field.charAt(0).toUpperCase() + field.slice(1)
+                    } :</strong> {message}
                 </li>
               ))}
             </ul>
@@ -1277,6 +1324,152 @@ export const AircraftForm = ({ aircraft, onSave, onClose }) => {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Section Performances de vol */}
+          <div style={sectionStyle}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <TrendingUp size={20} />
+              Performances de vol (Flight Performance)
+            </h3>
+            
+            {/* Note explicative */}
+            <div style={{ 
+              marginBottom: '16px',
+              padding: '12px',
+              backgroundColor: '#e0f2fe',
+              borderRadius: '6px',
+              fontSize: '12px',
+              color: '#0c4a6e',
+              border: '1px solid #bae6fd'
+            }}>
+              <p style={{ margin: '0', fontWeight: '600' }}>
+                📚 Configuration des performances de référence :
+              </p>
+              <p style={{ margin: '4px 0 0 0' }}>
+                Ces valeurs correspondent aux <strong>performances standard</strong> de l'avion dans les conditions ISA au niveau de la mer.<br/>
+                Elles serviront de base pour les calculs d'abaques avec corrections (altitude, température, vent, piste).
+              </p>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              {/* Distance de décollage */}
+              <div>
+                <label style={labelStyle}>
+                  Distance de décollage - TOD (Take-off Distance Over 50ft) *
+                </label>
+                <input
+                  type="number"
+                  value={formData.performances.takeoffDistance}
+                  onChange={(e) => handleChange('performances.takeoffDistance', parseInt(e.target.value) || 0)}
+                  style={errors.takeoffDistance ? inputErrorStyle : inputStyle}
+                  placeholder="385"
+                  min="1"
+                />
+                {errors.takeoffDistance && (
+                  <div style={errorStyle}>
+                    <AlertTriangle size={14} />
+                    {errors.takeoffDistance}
+                  </div>
+                )}
+                <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Info size={10} /> Distance totale nécessaire pour décoller et passer un obstacle de 50ft (15m)
+                </div>
+              </div>
+              
+              {/* Distance accélération-arrêt */}
+              <div>
+                <label style={labelStyle}>
+                  Distance accélération-arrêt - ASD (Accelerate-Stop Distance) *
+                </label>
+                <input
+                  type="number"
+                  value={formData.performances.accelerateStopDistance}
+                  onChange={(e) => handleChange('performances.accelerateStopDistance', parseInt(e.target.value) || 0)}
+                  style={errors.accelerateStopDistance ? inputErrorStyle : inputStyle}
+                  placeholder="450"
+                  min="1"
+                />
+                {errors.accelerateStopDistance && (
+                  <div style={errorStyle}>
+                    <AlertTriangle size={14} />
+                    {errors.accelerateStopDistance}
+                  </div>
+                )}
+                <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Info size={10} /> Distance pour accélérer jusqu'à V1 puis s'arrêter en cas d'interruption
+                </div>
+              </div>
+              
+              {/* Distance d'atterrissage */}
+              <div>
+                <label style={labelStyle}>
+                  Distance d'atterrissage - LD (Landing Distance / Flaps LDG) *
+                </label>
+                <input
+                  type="number"
+                  value={formData.performances.landingDistance}
+                  onChange={(e) => handleChange('performances.landingDistance', parseInt(e.target.value) || 0)}
+                  style={errors.landingDistance ? inputErrorStyle : inputStyle}
+                  placeholder="630"
+                  min="1"
+                />
+                {errors.landingDistance && (
+                  <div style={errorStyle}>
+                    <AlertTriangle size={14} />
+                    {errors.landingDistance}
+                  </div>
+                )}
+                <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Info size={10} /> Distance depuis 50ft jusqu'à l'arrêt complet avec volets en position atterrissage
+                </div>
+              </div>
+              
+              {/* Distance d'atterrissage volets UP */}
+              <div>
+                <label style={labelStyle}>
+                  Distance d'atterrissage volets UP (Landing Distance / Flaps UP) *
+                </label>
+                <input
+                  type="number"
+                  value={formData.performances.landingDistanceFlapsUp}
+                  onChange={(e) => handleChange('performances.landingDistanceFlapsUp', parseInt(e.target.value) || 0)}
+                  style={errors.landingDistanceFlapsUp ? inputErrorStyle : inputStyle}
+                  placeholder="800"
+                  min="1"
+                />
+                {errors.landingDistanceFlapsUp && (
+                  <div style={errorStyle}>
+                    <AlertTriangle size={14} />
+                    {errors.landingDistanceFlapsUp}
+                  </div>
+                )}
+                <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Info size={10} /> Distance d'atterrissage sans volets (configuration d'urgence)
+                </div>
+              </div>
+            </div>
+            
+            {/* Informations supplémentaires */}
+            <div style={{ 
+              marginTop: '16px',
+              padding: '12px',
+              backgroundColor: '#fef3c7',
+              borderRadius: '6px',
+              fontSize: '12px',
+              color: '#92400e'
+            }}>
+              <p style={{ margin: '0', fontWeight: '600' }}>
+                ⚠️ Important :
+              </p>
+              <ul style={{ margin: '8px 0 0 20px', paddingLeft: '0' }}>
+                <li>Toutes les distances sont exprimées en <strong>mètres (m)</strong></li>
+                <li>Ces valeurs correspondent aux conditions <strong>ISA standard</strong> (15°C au niveau de la mer)</li>
+                <li>Masse de référence : <strong>MTOW</strong> pour le décollage, <strong>MLW</strong> pour l'atterrissage</li>
+                <li>Piste : sèche, en dur, sans pente, sans vent</li>
+                <li>Consultez le manuel de vol pour les valeurs exactes de votre appareil</li>
+              </ul>
+            </div>
           </div>
 
           {/* Boutons d'action */}
