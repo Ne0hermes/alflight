@@ -1,6 +1,7 @@
 // src/modules/weather/store/weatherStore.js
 import { create } from 'zustand';
 import { weatherService } from '../services/weatherService';
+import { useMemo } from 'react';
 
 // Coordonnées des principaux aéroports français
 const AIRPORT_COORDINATES = {
@@ -252,14 +253,24 @@ const useWeatherStoreBase = create((set, get) => ({
   }
 }));
 
-// Hook personnalisé qui expose les Maps
+// Hook personnalisé qui expose les Maps avec mémorisation
 export const useWeatherStore = () => {
   const store = useWeatherStoreBase();
   
-  // Convertir les objets en Maps pour l'utilisation dans les composants
+  // Mémoriser les Maps pour éviter les re-rendus
+  const airportWeather = useMemo(
+    () => new Map(Object.entries(store._airportWeatherData || {})),
+    [store._airportWeatherData]
+  );
+  
+  const windsAloft = useMemo(
+    () => new Map(Object.entries(store._windsAloftData || {})),
+    [store._windsAloftData]
+  );
+  
   return {
     ...store,
-    airportWeather: new Map(Object.entries(store._airportWeatherData || {})),
-    windsAloft: new Map(Object.entries(store._windsAloftData || {}))
+    airportWeather,
+    windsAloft
   };
 };
