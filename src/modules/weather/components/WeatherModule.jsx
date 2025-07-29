@@ -716,6 +716,9 @@ export const WeatherModule = () => {
           <li>Consultez toujours les bulletins météo officiels avant le vol</li>
         </ul>
       </div>
+
+      {/* Cartes météorologiques TEMSI et WINTEM */}
+      <MeteoCharts selectedAltitude={flightParams.altitude} />
     </div>
   );
 };
