@@ -1,4 +1,7 @@
 // src/core/stores/navigationStore.js
+import { create } from 'zustand';
+import { immer } from 'zustand/middleware/immer';
+
 export const useNavigationStore = create(
   immer((set, get) => ({
     // État

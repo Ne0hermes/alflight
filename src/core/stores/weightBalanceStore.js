@@ -1,4 +1,7 @@
 // src/core/stores/weightBalanceStore.js
+import { create } from 'zustand';
+import { immer } from 'zustand/middleware/immer';
+
 export const useWeightBalanceStore = create(
   immer((set, get) => ({
     // État

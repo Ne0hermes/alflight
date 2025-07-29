@@ -50,11 +50,14 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@components': path.resolve(__dirname, './src/components'),
-      '@context': path.resolve(__dirname, './src/context'),
+      '@core': path.resolve(__dirname, './src/core'),
+      '@features': path.resolve(__dirname, './src/features'),
+      '@shared': path.resolve(__dirname, './src/shared'),
+      '@utils': path.resolve(__dirname, './src/utils'),
+      '@data': path.resolve(__dirname, './src/data'),
       '@hooks': path.resolve(__dirname, './src/hooks'),
-      '@modules': path.resolve(__dirname, './src/modules'),
-      '@utils': path.resolve(__dirname, './src/utils')
+      '@context': path.resolve(__dirname, './src/old/context'),
+      '@modules': path.resolve(__dirname, './src/old/modules')
     }
   },
   server: {

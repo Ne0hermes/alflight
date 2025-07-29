@@ -1,4 +1,7 @@
 // src/core/stores/fuelStore.js
+import { create } from 'zustand';
+import { immer } from 'zustand/middleware/immer';
+
 export const useFuelStore = create(
   immer((set, get) => ({
     // État
