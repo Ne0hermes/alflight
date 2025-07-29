@@ -132,7 +132,18 @@ const WeatherCard = memo(({ icao, label }) => {
   if (isLoading) {
     return (
       <div style={sx.combine(sx.components.card.base, sx.flex.center, { minHeight: '120px' })}>
-        <div style={sx.text.secondary}>Chargement {icao}...</div>
+        <div style={sx.text.center}>
+          <div style={{
+            width: 40,
+            height: 40,
+            border: '3px solid #e5e7eb',
+            borderTopColor: '#3b82f6',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 12px'
+          }} />
+          <p style={sx.text.secondary}>Chargement météo {icao}...</p>
+        </div>
       </div>
     );
   }
@@ -214,51 +225,58 @@ const WeatherCard = memo(({ icao, label }) => {
       
       {/* Données METAR décodées */}
       {metar && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-          {/* Vent */}
-          <div style={sx.combine(sx.flex.col, sx.spacing.gap(1))}>
-            <div style={sx.combine(sx.flex.start, sx.text.secondary, sx.text.sm)}>
-              <Wind size={16} />
-              <span style={sx.spacing.ml(1)}>Vent</span>
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+            {/* Vent */}
+            <div style={sx.combine(sx.flex.col, sx.spacing.gap(1))}>
+              <div style={sx.combine(sx.flex.start, sx.text.secondary, sx.text.sm)}>
+                <Wind size={16} />
+                <span style={sx.spacing.ml(1)}>Vent</span>
+              </div>
+              <p style={sx.text.bold}>
+                {metar.wind.direction === 'Calme' || metar.wind.direction === 'Variable' ? 
+                  metar.wind.direction : 
+                  `${metar.wind.direction}° / ${metar.wind.speed}kt`}
+                {metar.wind.gust && <span style={{ color: '#f59e0b' }}> G{metar.wind.gust}kt</span>}
+              </p>
             </div>
-            <p style={sx.text.bold}>
-              {metar.wind.direction === 'Calme' ? 'Calme' : 
-                `${metar.wind.direction}° / ${metar.wind.speed}kt`}
-              {metar.wind.gust && <span style={{ color: '#f59e0b' }}> G{metar.wind.gust}kt</span>}
-            </p>
-          </div>
-          
-          {/* Visibilité */}
-          <div style={sx.combine(sx.flex.col, sx.spacing.gap(1))}>
-            <div style={sx.combine(sx.flex.start, sx.text.secondary, sx.text.sm)}>
-              <Eye size={16} />
-              <span style={sx.spacing.ml(1)}>Visibilité</span>
+            
+            {/* Visibilité */}
+            <div style={sx.combine(sx.flex.col, sx.spacing.gap(1))}>
+              <div style={sx.combine(sx.flex.start, sx.text.secondary, sx.text.sm)}>
+                <Eye size={16} />
+                <span style={sx.spacing.ml(1)}>Visibilité</span>
+              </div>
+              <p style={sx.text.bold}>
+                {metar.visibility === 'CAVOK' ? 'CAVOK' : 
+                  typeof metar.visibility === 'number' ? `${metar.visibility}m` : metar.visibility}
+              </p>
             </div>
-            <p style={sx.text.bold}>
-              {metar.visibility === 'CAVOK' ? 'CAVOK' : metar.visibility}
-            </p>
-          </div>
-          
-          {/* Température */}
-          <div style={sx.combine(sx.flex.col, sx.spacing.gap(1))}>
-            <div style={sx.combine(sx.flex.start, sx.text.secondary, sx.text.sm)}>
-              <Thermometer size={16} />
-              <span style={sx.spacing.ml(1)}>Temp/Rosée</span>
+            
+            {/* Température */}
+            <div style={sx.combine(sx.flex.col, sx.spacing.gap(1))}>
+              <div style={sx.combine(sx.flex.start, sx.text.secondary, sx.text.sm)}>
+                <Thermometer size={16} />
+                <span style={sx.spacing.ml(1)}>Temp/Rosée</span>
+              </div>
+              <p style={sx.text.bold}>
+                {metar.temperature !== null ? `${metar.temperature}°C` : 'N/A'} / 
+                {metar.dewpoint !== null ? ` ${metar.dewpoint}°C` : ' N/A'}
+              </p>
             </div>
-            <p style={sx.text.bold}>
-              {metar.temperature}°C / {metar.dewpoint}°C
-            </p>
-          </div>
-          
-          {/* Pression */}
-          <div style={sx.combine(sx.flex.col, sx.spacing.gap(1))}>
-            <div style={sx.combine(sx.flex.start, sx.text.secondary, sx.text.sm)}>
-              <Gauge size={16} />
-              <span style={sx.spacing.ml(1)}>QNH</span>
+            
+            {/* Pression */}
+            <div style={sx.combine(sx.flex.col, sx.spacing.gap(1))}>
+              <div style={sx.combine(sx.flex.start, sx.text.secondary, sx.text.sm)}>
+                <Gauge size={16} />
+                <span style={sx.spacing.ml(1)}>QNH</span>
+              </div>
+              <p style={sx.text.bold}>
+                {metar.pressure !== null ? `${metar.pressure} hPa` : 'N/A'}
+              </p>
             </div>
-            <p style={sx.text.bold}>{metar.pressure} hPa</p>
           </div>
-        </div>
+        </>
       )}
       
       {/* Nuages */}
@@ -322,8 +340,8 @@ const WeatherCard = memo(({ icao, label }) => {
 
 // Composant pour afficher toutes les stations
 const AllWeatherStations = memo(() => {
-  const weatherData = useWeatherStore(state => state.weatherData);
-  const stations = Array.from(weatherData.keys()).sort();
+  const weatherData = useWeatherStore(state => state.weatherData || {});
+  const stations = Object.keys(weatherData).sort();
   
   if (stations.length === 0) {
     return (
