@@ -1,4 +1,4 @@
-import { useVACStore } from '../modules/vac/store/vacStore';
+import { useVACStore } from '../old/modules/vac/store/vacStore';
 
 export const useAirportCoordinates = () => {
   const { charts } = useVACStore();

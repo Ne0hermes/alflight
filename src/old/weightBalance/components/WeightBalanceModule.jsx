@@ -1,7 +1,7 @@
 import React from 'react';
 import { useFlightSystem } from '@context/FlightSystemContext';
 import { LoadInput } from '../../components/ui/LoadInput';
-import { FUEL_DENSITIES } from '../../../../utils/constants';
+import { FUEL_DENSITIES } from '../../../utils/constants';
 
 // Styles constants
 const S = {

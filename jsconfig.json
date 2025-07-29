@@ -6,7 +6,7 @@
       "@components/*": ["./src/components/*"],
       "@context/*": ["./src/context/*"],
       "@hooks/*": ["./src/hooks/*"],
-      "@modules/*": ["./src/modules/*"],
+      "@modules/*": ["src/old/modules/*"],
       "@utils/*": ["./src/utils/*"]
     }
   },

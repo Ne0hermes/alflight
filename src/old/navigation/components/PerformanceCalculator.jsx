@@ -2,9 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { Plane, Thermometer, Mountain, AlertTriangle, CheckCircle, TrendingUp, TrendingDown, Wind } from 'lucide-react';
 import { useFlightSystem } from '../../../context/FlightSystemContext';
-import { useVACStore } from '../../vac/store/vacStore';
-import { useWeatherStore } from '../../weather/store/weatherStore';
-import { getAirportElevation } from '../../../../data/airportElevations';
+import { useVACStore } from '../../modules/vac/store/vacStore';
+import { useWeatherStore } from '../../modules/weather/store/weatherStore';
+import { getAirportElevation } from '../../../data/airportElevations';
 
 export const PerformanceCalculator = () => {
   const { selectedAircraft, waypoints } = useFlightSystem();
