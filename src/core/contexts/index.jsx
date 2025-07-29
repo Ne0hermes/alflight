@@ -64,18 +64,25 @@ export const NavigationProvider = memo(({ children }) => {
   const store = useNavigationStore();
   const { selectedAircraft } = useAircraft();
   
+  // Méthodes de calcul mémorisées
+  const calculateTotalDistance = useCallback(() => store.calculateTotalDistance(), [store.calculateTotalDistance]);
+  const calculateFlightTime = useCallback((speed) => store.calculateFlightTime(speed), [store.calculateFlightTime]);
+  const calculateFuelRequired = useCallback((consumption) => store.calculateFuelRequired(consumption), [store.calculateFuelRequired]);
+  const getRegulationReserveMinutes = useCallback(() => store.getRegulationReserveMinutes(), [store.getRegulationReserveMinutes]);
+  const getRegulationReserveLiters = useCallback((consumption) => store.getRegulationReserveLiters(consumption), [store.getRegulationReserveLiters]);
+  
   // Calculs mémorisés
   const navigationResults = useMemo(() => {
     if (!selectedAircraft || !store.waypoints.length) return null;
     
     return {
-      totalDistance: store.calculateTotalDistance(),
-      totalTime: store.calculateFlightTime(selectedAircraft.cruiseSpeedKt),
-      fuelRequired: store.calculateFuelRequired(selectedAircraft.fuelConsumption),
-      regulationReserveMinutes: store.getRegulationReserveMinutes(),
-      regulationReserveLiters: store.getRegulationReserveLiters(selectedAircraft.fuelConsumption)
+      totalDistance: calculateTotalDistance(),
+      totalTime: calculateFlightTime(selectedAircraft.cruiseSpeedKt),
+      fuelRequired: calculateFuelRequired(selectedAircraft.fuelConsumption),
+      regulationReserveMinutes: getRegulationReserveMinutes(),
+      regulationReserveLiters: getRegulationReserveLiters(selectedAircraft.fuelConsumption)
     };
-  }, [selectedAircraft, store.waypoints, store.flightType, store]);
+  }, [selectedAircraft, store.waypoints, store.flightType, calculateTotalDistance, calculateFlightTime, calculateFuelRequired, getRegulationReserveMinutes, getRegulationReserveLiters]);
 
   const value = useMemo(() => ({
     waypoints: store.waypoints,
@@ -85,7 +92,7 @@ export const NavigationProvider = memo(({ children }) => {
     flightType: store.flightType,
     setFlightType: store.setFlightType,
     navigationResults
-  }), [store, navigationResults]);
+  }), [store.waypoints, store.setWaypoints, store.flightParams, store.setFlightParams, store.flightType, store.setFlightType, navigationResults]);
 
   return <NavigationContext.Provider value={value}>{children}</NavigationContext.Provider>;
 });
@@ -100,14 +107,14 @@ export const FuelProvider = memo(({ children }) => {
     if (navigationResults?.fuelRequired) {
       store.updateTripFuel(navigationResults.fuelRequired);
     }
-  }, [navigationResults?.fuelRequired, store]);
+  }, [navigationResults?.fuelRequired, store.updateTripFuel]);
   
   // Auto-sync de la réserve finale
   React.useEffect(() => {
     if (navigationResults?.regulationReserveLiters) {
       store.updateFinalReserve(navigationResults.regulationReserveLiters);
     }
-  }, [navigationResults?.regulationReserveLiters, store]);
+  }, [navigationResults?.regulationReserveLiters, store.updateFinalReserve]);
 
   const value = useMemo(() => ({
     fuelData: store.fuelData,
@@ -132,14 +139,14 @@ export const WeightBalanceProvider = memo(({ children }) => {
       const fuelDensity = selectedAircraft.fuelType === 'JET A-1' ? 0.84 : 0.72;
       store.updateFuelLoad(fobFuel.ltr, fuelDensity);
     }
-  }, [selectedAircraft, fobFuel?.ltr, store]);
+  }, [selectedAircraft, fobFuel?.ltr, store.updateFuelLoad]);
   
   // Calculs mémorisés avec dépendances minimales
   const calculations = useMemo(() => {
     if (!selectedAircraft) return null;
     
     return store.calculateWeightBalance(selectedAircraft, fobFuel);
-  }, [selectedAircraft, store.loads, fobFuel, store]);
+  }, [selectedAircraft, store.loads, fobFuel, store.calculateWeightBalance]);
 
   const value = useMemo(() => ({
     loads: store.loads,

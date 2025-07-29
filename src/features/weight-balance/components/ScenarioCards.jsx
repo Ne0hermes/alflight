@@ -1,4 +1,7 @@
 // src/features/weight-balance/components/ScenarioCards.jsx
+import React, { memo, useMemo } from 'react';
+import { sx } from '@shared/styles/styleSystem';
+
 export const ScenarioCards = memo(({ scenarios, fobFuel, fuelData }) => {
   const cards = useMemo(() => [
     {
@@ -125,9 +128,6 @@ const scenarioStyles = {
 };
 
 // Export des display names
-WeightBalanceTable.displayName = 'WeightBalanceTable';
-TableRow.displayName = 'TableRow';
-FormulaInfo.displayName = 'FormulaInfo';
 ScenarioCards.displayName = 'ScenarioCards';
 ScenarioCard.displayName = 'ScenarioCard';
 CRMInfo.displayName = 'CRMInfo';

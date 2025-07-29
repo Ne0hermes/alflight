@@ -195,3 +195,5 @@ WeightBalanceModule.displayName = 'WeightBalanceModule';
 LoadingSection.displayName = 'LoadingSection';
 LoadInputWithInfo.displayName = 'LoadInputWithInfo';
 EmptyState.displayName = 'EmptyState';
+
+export default WeightBalanceModule;

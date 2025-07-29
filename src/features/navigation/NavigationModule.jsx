@@ -1,3 +1,4 @@
+
 // src/features/navigation/NavigationModule.jsx
 import React, { memo, useState, useEffect, useCallback } from 'react';
 import { useNavigation, useAircraft } from '@core/contexts';

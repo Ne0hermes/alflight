@@ -1,12 +1,26 @@
-import { useVACStore } from '../old/modules/vac/store/vacStore';
+// src/hooks/useAirportCoordinates.js
+import { FRENCH_AIRPORTS_COORDINATES } from '@data/airportElevations';
 
 export const useAirportCoordinates = () => {
-  const { charts } = useVACStore();
+  // Pour l'instant, utilisons une implémentation simple basée sur les données statiques
+  const charts = {}; // Placeholder pour les futures cartes VAC
 
-  const getCoordinatesByICAO = icao => {
+  const getCoordinatesByICAO = (icao) => {
     if (!icao) return null;
     const u = icao.toUpperCase();
     
+    // Vérifier d'abord dans les données statiques
+    if (FRENCH_AIRPORTS_COORDINATES[u]) {
+      const airport = FRENCH_AIRPORTS_COORDINATES[u];
+      return {
+        lat: airport.lat,
+        lon: airport.lon,
+        name: airport.name,
+        source: 'static'
+      };
+    }
+    
+    // Future implémentation pour les cartes VAC téléchargées
     for (const c of Object.values(charts)) {
       if (c.airportIcao === u) {
         if (c.isDownloaded && c.extractedData?.coordinates) {
@@ -20,35 +34,35 @@ export const useAirportCoordinates = () => {
     return null;
   };
 
-  const getMultipleCoordinates = codes => {
+  const getMultipleCoordinates = (codes) => {
     const coords = {};
-    codes.forEach(c => { const co = getCoordinatesByICAO(c); if (co) coords[c] = co; });
+    codes.forEach(c => { 
+      const co = getCoordinatesByICAO(c); 
+      if (co) coords[c] = co; 
+    });
     return coords;
   };
 
   const getAllAvailableCoordinates = () => {
     const coords = {};
-    Object.values(charts).forEach(c => { const co = getCoordinatesByICAO(c.airportIcao); if (co) coords[c.airportIcao] = co; });
+    
+    // Ajouter les coordonnées statiques
+    Object.keys(FRENCH_AIRPORTS_COORDINATES).forEach(icao => {
+      const co = getCoordinatesByICAO(icao);
+      if (co) coords[icao] = co;
+    });
+    
+    // Ajouter les coordonnées des cartes VAC (future implémentation)
+    Object.values(charts).forEach(c => { 
+      const co = getCoordinatesByICAO(c.airportIcao); 
+      if (co) coords[c.airportIcao] = co; 
+    });
+    
     return coords;
   };
 
   return { getCoordinatesByICAO, getMultipleCoordinates, getAllAvailableCoordinates };
 };
 
-export const FRENCH_AIRPORTS_COORDINATES = {
-  LFPG: { lat: 49.012779, lon: 2.550000, name: 'Paris Charles de Gaulle' },
-  LFPO: { lat: 48.723333, lon: 2.379444, name: 'Paris Orly' },
-  LFPB: { lat: 48.969444, lon: 2.441667, name: 'Paris Le Bourget' },
-  LFPT: { lat: 48.751111, lon: 2.106111, name: 'Pontoise' },
-  LFPN: { lat: 48.596111, lon: 2.518056, name: 'Toussus-le-Noble' },
-  LFML: { lat: 43.435556, lon: 5.213889, name: 'Marseille Provence' },
-  LFLL: { lat: 45.726389, lon: 5.090833, name: 'Lyon Saint-Exupéry' },
-  LFBO: { lat: 43.629167, lon: 1.363333, name: 'Toulouse Blagnac' },
-  LFMN: { lat: 43.658333, lon: 7.215556, name: 'Nice Côte d\'Azur' },
-  LFBD: { lat: 44.828333, lon: -0.715556, name: 'Bordeaux Mérignac' },
-  LFRS: { lat: 44.407778, lon: -0.956111, name: 'Nantes Atlantique' },
-  LFRB: { lat: 48.447778, lon: -4.418333, name: 'Brest Bretagne' },
-  LFST: { lat: 48.538333, lon: 7.628056, name: 'Strasbourg' },
-  LFLC: { lat: 45.786111, lon: 3.169167, name: 'Clermont-Ferrand' },
-  LFRK: { lat: 49.650833, lon: -1.470278, name: 'Caen Carpiquet' }
-};
+// Exporter les données pour compatibilité
+export { FRENCH_AIRPORTS_COORDINATES } from '@data/airportElevations';

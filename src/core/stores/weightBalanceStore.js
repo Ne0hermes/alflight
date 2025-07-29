@@ -34,6 +34,17 @@ export const useWeightBalanceStore = create(
       
       const loads = get().loads;
       const wb = aircraft.weightBalance;
+
+    // Mise à jour automatique du poids du carburant si fobFuel est fourni
+      if (fobFuel?.ltr) {
+        const fuelDensity = aircraft.fuelType === 'JET A-1' ? 0.84 : 0.72;
+        const fuelWeight = parseFloat((fobFuel.ltr * fuelDensity).toFixed(1));
+        if (loads.fuel !== fuelWeight) {
+          set(state => {
+            state.loads.fuel = fuelWeight;
+          });
+        }
+      }
       
       // Calcul du poids total
       const totalWeight = 

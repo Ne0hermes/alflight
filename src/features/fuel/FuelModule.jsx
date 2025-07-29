@@ -118,7 +118,7 @@ export const FuelModule = memo(() => {
 
   const fuelTypes = [
     { key: 'roulage', label: 'Roulage', description: 'Taxi et attente' },
-    { key: 'trip', label: 'Trip Fuel', description: `Calculé depuis Navigation (${navigationResults?.totalDistance || 0} NM)`, readonly: true, automatic: true },
+    { key: 'trip', label: 'Trip Fuel', description: `Calculé depuis Navigation (${Math.round(navigationResults?.totalDistance || 0)} NM)`, readonly: true, automatic: true },
     { key: 'contingency', label: 'Contingency', description: '5% du trip (min 1 gal)', readonly: true },
     { key: 'alternate', label: 'Alternate', description: 'Vers dégagement' },
     { key: 'finalReserve', label: 'Final Reserve', description: getReserveDescription(), readonly: true },
