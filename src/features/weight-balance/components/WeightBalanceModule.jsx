@@ -1,19 +1,20 @@
-// src/features/weight-balance/WeightBalanceModule.jsx
+// src/features/weight-balance/components/WeightBalanceModule.jsx
 import React, { memo, useMemo, useCallback } from 'react';
-import { useAircraft, useFuel, useWeightBalance } from '@core/contexts';
+import { useAircraft, useFuel, useWeightBalance, useNavigation } from '@core/contexts';
+import { LoadInput } from './LoadInput';
+import { WeightBalanceChart } from './WeightBalanceChart';
+import { WeightBalanceTable } from './WeightBalanceTable';
+import { ScenarioCards } from './ScenarioCards';
+import { WeightBalanceInfo } from './WeightBalanceInfo';
+import { calculateScenarios } from '../utils/calculations';
 import { sx } from '@shared/styles/styleSystem';
-import { LoadInput } from './components/LoadInput';
-import { WeightBalanceChart } from './components/WeightBalanceChart';
-import { WeightBalanceTable } from './components/WeightBalanceTable';
-import { ScenarioCards } from './components/ScenarioCards';
-import { WeightBalanceInfo } from './components/WeightBalanceInfo';
-import { calculateScenarios } from './utils/calculations';
 
 // Composant principal optimisé
 export const WeightBalanceModule = memo(() => {
   const { selectedAircraft } = useAircraft();
   const { fobFuel, fuelData } = useFuel();
   const { loads, setLoads, calculations } = useWeightBalance();
+  const { navigationResults } = useNavigation();
 
   // Calcul des scénarios mémorisé
   const scenarios = useMemo(() => {

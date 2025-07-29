@@ -8,7 +8,7 @@ import { sx } from '@shared/styles/styleSystem';
 
 // Lazy loading des modules
 const NavigationModule = lazy(() => import('@features/navigation/NavigationModule'));
-const WeightBalanceModule = lazy(() => import('@features/weight-balance/WeightBalanceModule'));
+const WeightBalanceModule = lazy(() => import('@features/weight-balance'));
 const FuelModule = lazy(() => import('@features/fuel/FuelModule'));
 const AircraftModule = lazy(() => import('@features/aircraft/AircraftModule'));
 const WeatherModule = lazy(() => import('@features/weather/WeatherModule'));

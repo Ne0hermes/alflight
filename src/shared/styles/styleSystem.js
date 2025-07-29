@@ -141,14 +141,26 @@ class StyleSystem {
     }));
   }
 
-  get spacing() {
+  
+ get spacing() {
     return this.create('spacing', (theme) => ({
+      // Padding
       p: (size) => ({ padding: theme.spacing[size] }),
       px: (size) => ({ paddingLeft: theme.spacing[size], paddingRight: theme.spacing[size] }),
       py: (size) => ({ paddingTop: theme.spacing[size], paddingBottom: theme.spacing[size] }),
+      pt: (size) => ({ paddingTop: theme.spacing[size] }),
+      pr: (size) => ({ paddingRight: theme.spacing[size] }),
+      pb: (size) => ({ paddingBottom: theme.spacing[size] }),
+      pl: (size) => ({ paddingLeft: theme.spacing[size] }),
+      // Margin
       m: (size) => ({ margin: theme.spacing[size] }),
       mx: (size) => ({ marginLeft: theme.spacing[size], marginRight: theme.spacing[size] }),
       my: (size) => ({ marginTop: theme.spacing[size], marginBottom: theme.spacing[size] }),
+      mt: (size) => ({ marginTop: theme.spacing[size] }),
+      mr: (size) => ({ marginRight: theme.spacing[size] }),
+      mb: (size) => ({ marginBottom: theme.spacing[size] }),
+      ml: (size) => ({ marginLeft: theme.spacing[size] }),
+      // Gap
       gap: (size) => ({ gap: theme.spacing[size] })
     }));
   }

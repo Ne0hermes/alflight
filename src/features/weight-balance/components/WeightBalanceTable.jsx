@@ -36,7 +36,41 @@ export const WeightBalanceTable = memo(({ aircraft, loads, calculations }) => {
       });
     }
     
-    // ... autres charges similaires
+    if (loads.rearLeft > 0) {
+      items.push({
+        label: 'Passager arrière gauche',
+        mass: loads.rearLeft,
+        arm: wb.rearLeftSeatArm,
+        moment: (loads.rearLeft * wb.rearLeftSeatArm).toFixed(1)
+      });
+    }
+    
+    if (loads.rearRight > 0) {
+      items.push({
+        label: 'Passager arrière droit',
+        mass: loads.rearRight,
+        arm: wb.rearRightSeatArm,
+        moment: (loads.rearRight * wb.rearRightSeatArm).toFixed(1)
+      });
+    }
+    
+    if (loads.baggage > 0) {
+      items.push({
+        label: 'Bagages',
+        mass: loads.baggage,
+        arm: wb.baggageArm,
+        moment: (loads.baggage * wb.baggageArm).toFixed(1)
+      });
+    }
+    
+    if (loads.auxiliary > 0) {
+      items.push({
+        label: 'Rangement auxiliaire',
+        mass: loads.auxiliary,
+        arm: wb.auxiliaryArm,
+        moment: (loads.auxiliary * wb.auxiliaryArm).toFixed(1)
+      });
+    }
     
     return items;
   }, [aircraft, loads, wb]);
@@ -167,3 +201,8 @@ const styles = {
     color: sx.theme.colors.success[600]
   }
 };
+
+// Export display names
+WeightBalanceTable.displayName = 'WeightBalanceTable';
+TableRow.displayName = 'TableRow';
+FormulaInfo.displayName = 'FormulaInfo';

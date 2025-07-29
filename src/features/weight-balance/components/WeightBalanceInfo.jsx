@@ -22,7 +22,7 @@ export const WeightBalanceInfo = memo(({ aircraft, fobFuel, fuelData }) => {
       {/* Guide de lecture */}
       <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mb(3))}>
         <div>
-          <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
+          <p style={sx.combine(sx.text.sm, sx.text.bold, { marginBottom: '8px' })}>
             📘 Guide de lecture du diagramme
           </p>
           <ul style={{ margin: 0, paddingLeft: '20px' }}>
@@ -45,7 +45,7 @@ export const WeightBalanceInfo = memo(({ aircraft, fobFuel, fuelData }) => {
       {/* Informations carburant */}
       <div style={sx.combine(sx.components.alert.base, sx.components.alert.info)}>
         <div>
-          <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
+          <p style={sx.combine(sx.text.sm, sx.text.bold, { marginBottom: '8px' })}>
             ⛽ Informations carburant
           </p>
           <div style={sx.text.sm}>
