@@ -1,102 +1,178 @@
-import React from 'react';
-import { FlightSystemProvider, useFlightSystem } from './context/FlightSystemContext';
-import { TabButton } from './components/ui/TabButton';
-import { NavigationModule } from './modules/navigation/components/NavigationModule';
-import { WeightBalanceModule } from './modules/weightBalance/components/WeightBalanceModule';
-import { AircraftManagerModule } from './modules/aircraft/components/AircraftManagerModule';
-import { FuelBalanceModule } from './modules/fuel/components/FuelBalanceModule';
-import { VACModule } from './modules/vac/components/VACModule';
-import { WeatherModule } from './modules/weather/components/WeatherModule';
-import { Navigation, Scale, Settings, Fuel, Map, Cloud } from 'lucide-react';
+// src/App.jsx
+import React, { lazy, Suspense, memo, useState, useCallback, useMemo } from 'react';
+import { FlightSystemProviders } from '@core/contexts';
+import { TabNavigation } from '@shared/components/TabNavigation';
+import { LoadingSpinner } from '@shared/components/LoadingSpinner';
+import { ErrorBoundary } from '@shared/components/ErrorBoundary';
+import { sx } from '@shared/styles/styleSystem';
 
-// Composant principal
-const FlightSystemUI = () => {
-  const { activeTab, setActiveTab } = useFlightSystem();
+// Lazy loading des modules pour optimiser le bundle initial
+const NavigationModule = lazy(() => import('@features/navigation/NavigationModule'));
+const WeightBalanceModule = lazy(() => import('@features/weight-balance/WeightBalanceModule'));
+const FuelModule = lazy(() => import('@features/fuel/FuelModule'));
+const AircraftModule = lazy(() => import('@features/aircraft/AircraftModule'));
+const WeatherModule = lazy(() => import('@features/weather/WeatherModule'));
+const VACModule = lazy(() => import('@features/vac/VACModule'));
 
+// Configuration des onglets
+const TAB_CONFIG = [
+  { id: 'navigation', label: 'Navigation', icon: 'Navigation', component: NavigationModule },
+  { id: 'weather', label: 'Météo', icon: 'Cloud', component: WeatherModule },
+  { id: 'weight-balance', label: 'Masse et Centrage', icon: 'Scale', component: WeightBalanceModule },
+  { id: 'fuel', label: 'Bilan Carburant', icon: 'Fuel', component: FuelModule },
+  { id: 'aircraft', label: 'Gestion Avions', icon: 'Settings', component: AircraftModule },
+  { id: 'vac', label: 'Cartes VAC', icon: 'Map', component: VACModule }
+];
+
+// Composant principal optimisé
+const FlightSystemUI = memo(() => {
+  const [activeTab, setActiveTab] = useState('navigation');
+  
+  // Mémorisation du composant actif
+  const ActiveComponent = useMemo(() => {
+    const tab = TAB_CONFIG.find(t => t.id === activeTab);
+    return tab?.component || null;
+  }, [activeTab]);
+  
+  // Handler mémorisé pour le changement d'onglet
+  const handleTabChange = useCallback((tabId) => {
+    setActiveTab(tabId);
+  }, []);
+  
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      backgroundColor: '#f9fafb', 
-      padding: '20px' 
-    }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <h1 style={{ 
-          fontSize: '2rem', 
-          fontWeight: 'bold', 
-          color: '#1f2937',
-          marginBottom: '20px'
-        }}>
-          ✈️ Système de Gestion de Vol
-        </h1>
+    <div style={styles.container}>
+      <div style={styles.wrapper}>
+        {/* Header */}
+        <header style={styles.header}>
+          <h1 style={styles.title}>
+            ✈️ Système de Gestion de Vol
+          </h1>
+          <AppVersion />
+        </header>
         
-        {/* Onglets */}
-        <div style={{ 
-          display: 'flex', 
-          gap: '8px', 
-          marginBottom: '20px' 
-        }}>
-          <TabButton
-            active={activeTab === 'navigation'}
-            onClick={() => setActiveTab('navigation')}
-            icon={Navigation}
-            label="Navigation"
-          />
-          <TabButton
-            active={activeTab === 'weather'}
-            onClick={() => setActiveTab('weather')}
-            icon={Cloud}
-            label="Météo"
-          />
-          <TabButton
-            active={activeTab === 'weight-balance'}
-            onClick={() => setActiveTab('weight-balance')}
-            icon={Scale}
-            label="Masse et Centrage"
-          />
-          <TabButton
-            active={activeTab === 'fuel'}
-            onClick={() => setActiveTab('fuel')}
-            icon={Fuel}
-            label="Bilan Carburant"
-          />
-          <TabButton
-            active={activeTab === 'aircraft'}
-            onClick={() => setActiveTab('aircraft')}
-            icon={Settings}
-            label="Gestion Avions"
-          />
-          <TabButton
-            active={activeTab === 'vac'}
-            onClick={() => setActiveTab('vac')}
-            icon={Map}
-            label="Cartes VAC"
-          />
-        </div>
+        {/* Navigation par onglets */}
+        <TabNavigation
+          tabs={TAB_CONFIG}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+        />
         
-        {/* Contenu des modules */}
-        <div style={{ 
-          backgroundColor: 'white', 
-          padding: '24px', 
-          borderRadius: '8px'
-        }}>
-          {activeTab === 'navigation' && <NavigationModule />}
-          {activeTab === 'weather' && <WeatherModule />}
-          {activeTab === 'weight-balance' && <WeightBalanceModule />}
-          {activeTab === 'fuel' && <FuelBalanceModule />}
-          {activeTab === 'aircraft' && <AircraftManagerModule />}
-          {activeTab === 'vac' && <VACModule />}
-        </div>
+        {/* Contenu du module actif */}
+        <main style={styles.content}>
+          <ErrorBoundary fallback={<ErrorFallback />}>
+            <Suspense fallback={<ModuleLoader />}>
+              {ActiveComponent && <ActiveComponent />}
+            </Suspense>
+          </ErrorBoundary>
+        </main>
       </div>
     </div>
   );
-};
+});
 
+// Version de l'app mémorisée
+const AppVersion = memo(() => (
+  <div style={styles.version}>
+    v2.0.0 - Optimisé
+  </div>
+));
+
+// Composant de chargement des modules
+const ModuleLoader = memo(() => (
+  <div style={styles.loader}>
+    <LoadingSpinner size="large" />
+    <p style={styles.loaderText}>Chargement du module...</p>
+  </div>
+));
+
+// Composant d'erreur
+const ErrorFallback = memo(() => (
+  <div style={styles.error}>
+    <h2 style={styles.errorTitle}>⚠️ Une erreur est survenue</h2>
+    <p style={styles.errorText}>
+      Impossible de charger le module. Veuillez rafraîchir la page.
+    </p>
+    <button 
+      onClick={() => window.location.reload()} 
+      style={sx.combine(sx.components.button.base, sx.components.button.primary)}
+    >
+      Rafraîchir
+    </button>
+  </div>
+));
+
+// Application principale avec providers
 function App() {
   return (
-    <FlightSystemProvider>
+    <FlightSystemProviders>
       <FlightSystemUI />
-    </FlightSystemProvider>
+    </FlightSystemProviders>
   );
 }
+
+// Styles statiques (pas de recréation à chaque render)
+const styles = {
+  container: {
+    minHeight: '100vh',
+    backgroundColor: sx.theme.colors.gray[50],
+    padding: sx.theme.spacing[5]
+  },
+  wrapper: {
+    maxWidth: '1200px',
+    margin: '0 auto'
+  },
+  header: {
+    ...sx.flex.between,
+    marginBottom: sx.theme.spacing[5]
+  },
+  title: {
+    fontSize: sx.theme.fontSize['3xl'],
+    fontWeight: sx.theme.fontWeight.bold,
+    color: sx.theme.colors.gray[900],
+    margin: 0
+  },
+  version: {
+    fontSize: sx.theme.fontSize.sm,
+    color: sx.theme.colors.gray[500]
+  },
+  content: {
+    backgroundColor: '#ffffff',
+    borderRadius: sx.theme.borderRadius.lg,
+    padding: sx.theme.spacing[6],
+    boxShadow: sx.theme.shadow.base
+  },
+  loader: {
+    ...sx.flex.col,
+    ...sx.flex.center,
+    padding: sx.theme.spacing[10]
+  },
+  loaderText: {
+    marginTop: sx.theme.spacing[4],
+    color: sx.theme.colors.gray[600],
+    fontSize: sx.theme.fontSize.sm
+  },
+  error: {
+    ...sx.flex.col,
+    ...sx.flex.center,
+    padding: sx.theme.spacing[10],
+    textAlign: 'center'
+  },
+  errorTitle: {
+    fontSize: sx.theme.fontSize.xl,
+    color: sx.theme.colors.danger[700],
+    marginBottom: sx.theme.spacing[2]
+  },
+  errorText: {
+    color: sx.theme.colors.gray[600],
+    marginBottom: sx.theme.spacing[4]
+  }
+};
+
+// Export avec displayName pour le debug
+App.displayName = 'App';
+FlightSystemUI.displayName = 'FlightSystemUI';
+AppVersion.displayName = 'AppVersion';
+ModuleLoader.displayName = 'ModuleLoader';
+ErrorFallback.displayName = 'ErrorFallback';
 
 export default App;
