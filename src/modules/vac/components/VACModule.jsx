@@ -1,462 +1,419 @@
-// src/modules/vac/components/VACModule.jsx
 import React, { useEffect, useState } from 'react';
 import { useFlightSystem } from '../../../context/FlightSystemContext';
 import { useVACStore } from '../store/vacStore';
-import { Search, Download, Trash2, CheckCircle, AlertCircle, HardDrive, Cloud, Map, Navigation } from 'lucide-react';
-import { VACChartViewer } from './VACChartViewer';
-import { VACDataValidator } from './VACDataValidator';
+import { 
+  Search, 
+  Download, 
+  Trash2, 
+  CheckCircle, 
+  AlertCircle, 
+  HardDrive, 
+  Cloud, 
+  Map, 
+  Navigation,
+  FileText,
+  Calendar,
+  Info
+} from 'lucide-react';
 
-export const VACModule = () => {
-  const { waypoints } = useFlightSystem();
-  const {
-    charts,
-    airports,
-    selectedAirport,
-    downloadQueue,
-    isOnline,
-    storageUsed,
-    storageQuota,
-    loadChartsList,
-    downloadChart,
-    deleteChart,
-    searchAirports,
-    selectAirport,
-    syncCharts,
-    checkStorageQuota
-  } = useVACStore();
+const styles = {
+  container: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '24px',
+    padding: '24px',
+    backgroundColor: '#f5f5f5',
+    minHeight: '100vh'
+  },
+  section: {
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    padding: '20px',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+  },
+  title: {
+    fontSize: '24px',
+    fontWeight: 'bold',
+    marginBottom: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  },
+  subtitle: {
+    fontSize: '18px',
+    fontWeight: '600',
+    marginBottom: '16px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  },
+  searchBox: {
+    display: 'flex',
+    gap: '12px',
+    marginBottom: '20px'
+  },
+  input: {
+    flex: 1,
+    padding: '10px 16px',
+    border: '1px solid #ddd',
+    borderRadius: '6px',
+    fontSize: '14px'
+  },
+  button: {
+    padding: '10px 20px',
+    backgroundColor: '#0066cc',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '14px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    transition: 'background-color 0.2s'
+  },
+  buttonSecondary: {
+    padding: '8px 16px',
+    backgroundColor: '#6c757d',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '14px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px'
+  },
+  buttonDanger: {
+    padding: '8px 16px',
+    backgroundColor: '#dc3545',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '14px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px'
+  },
+  chartsList: {
+    display: 'grid',
+    gap: '12px'
+  },
+  chartItem: {
+    padding: '16px',
+    border: '1px solid #e9ecef',
+    borderRadius: '8px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa'
+  },
+  chartInfo: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px'
+  },
+  chartTitle: {
+    fontSize: '16px',
+    fontWeight: '600',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  },
+  chartMeta: {
+    fontSize: '13px',
+    color: '#666',
+    display: 'flex',
+    gap: '16px'
+  },
+  chartActions: {
+    display: 'flex',
+    gap: '8px'
+  },
+  statusBadge: {
+    padding: '2px 8px',
+    borderRadius: '12px',
+    fontSize: '12px',
+    fontWeight: '500'
+  },
+  localStatus: {
+    backgroundColor: '#d4edda',
+    color: '#155724'
+  },
+  cloudStatus: {
+    backgroundColor: '#cfe2ff',
+    color: '#084298'
+  },
+  emptyState: {
+    textAlign: 'center',
+    padding: '60px 20px',
+    color: '#666'
+  },
+  infoBox: {
+    backgroundColor: '#e7f3ff',
+    border: '1px solid #b6d4fe',
+    borderRadius: '6px',
+    padding: '12px',
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '8px',
+    marginBottom: '20px'
+  }
+};
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedChart, setSelectedChart] = useState(null);
-  const [showValidator, setShowValidator] = useState(false);
-  const [navigationAirports, setNavigationAirports] = useState([]);
+// Données simulées pour les cartes VAC
+const mockVACData = {
+  'LFPG': {
+    icao: 'LFPG',
+    name: 'Paris Charles de Gaulle',
+    charts: [
+      { id: 'vac-1', type: 'VAC', date: '2024-03-15', version: '24/03' },
+      { id: 'iac-1', type: 'IAC', date: '2024-03-15', version: '24/03' }
+    ]
+  },
+  'LFPO': {
+    icao: 'LFPO',
+    name: 'Paris Orly',
+    charts: [
+      { id: 'vac-2', type: 'VAC', date: '2024-02-01', version: '24/02' },
+      { id: 'iac-2', type: 'IAC', date: '2024-02-01', version: '24/02' }
+    ]
+  },
+  'LFPB': {
+    icao: 'LFPB',
+    name: 'Paris Le Bourget',
+    charts: [
+      { id: 'vac-3', type: 'VAC', date: '2024-01-15', version: '24/01' }
+    ]
+  }
+};
 
-  // Extraire les codes OACI des waypoints de navigation
-  const departureIcao = waypoints[0]?.name;
-  const arrivalIcao = waypoints[waypoints.length - 1]?.name;
-
-  // Synchroniser avec les aéroports de navigation
-  useEffect(() => {
-    const airports = [];
-    if (departureIcao) airports.push(departureIcao);
-    if (arrivalIcao && arrivalIcao !== departureIcao) airports.push(arrivalIcao);
-    setNavigationAirports(airports);
-  }, [departureIcao, arrivalIcao]);
-
-  useEffect(() => {
-    loadChartsList();
-    checkStorageQuota();
-    
-    // Écouter les changements de connexion
-    const handleOnline = () => useVACStore.setState({ isOnline: true });
-    const handleOffline = () => useVACStore.setState({ isOnline: false });
-    
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [loadChartsList, checkStorageQuota]);
-
-  // Filtrer les cartes par aéroport
-  const filteredCharts = Object.values(charts).filter(chart => {
-    // Priorité 1 : Aéroports de navigation
-    if (navigationAirports.length > 0 && !searchQuery && !selectedAirport) {
-      return navigationAirports.includes(chart.airportIcao);
+// Composant pour afficher une carte VAC
+const ChartItem = ({ chart, airport, onDownload, onDelete, isLocal }) => {
+  const getChartIcon = (type) => {
+    switch (type) {
+      case 'VAC': return <Map size={16} />;
+      case 'IAC': return <Navigation size={16} />;
+      default: return <FileText size={16} />;
     }
-    // Priorité 2 : Aéroport sélectionné
-    if (selectedAirport) {
-      return chart.airportIcao === selectedAirport;
-    }
-    // Priorité 3 : Recherche manuelle
-    if (searchQuery) {
-      return chart.airportIcao.includes(searchQuery.toUpperCase()) ||
-             chart.airportName.toLowerCase().includes(searchQuery.toLowerCase());
-    }
-    // Par défaut : afficher les aéroports de navigation
-    return navigationAirports.includes(chart.airportIcao);
-  });
-
-  // Calculer l'utilisation du stockage
-  const storagePercentage = storageQuota > 0 ? (storageUsed / storageQuota) * 100 : 0;
-
-  const formatBytes = (bytes) => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
   };
 
   return (
-    <div style={{ display: 'flex', height: '600px', position: 'relative' }}>
-      {/* Sidebar avec liste des cartes */}
-      <div style={{ 
-        width: '350px', 
-        borderRight: '1px solid #e5e7eb',
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: '#f9fafb'
-      }}>
-        {/* Header */}
-        <div style={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-            <Map size={24} style={{ color: '#3b82f6' }} />
-            <h2 style={{ fontSize: '20px', fontWeight: '600', margin: 0 }}>
-              Cartes VAC
-            </h2>
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
-              {isOnline ? (
-                <Cloud size={16} style={{ color: '#10b981' }} />
-              ) : (
-                <HardDrive size={16} style={{ color: '#f59e0b' }} />
-              )}
-              <span style={{ fontSize: '12px', color: '#6b7280' }}>
-                {isOnline ? 'En ligne' : 'Hors ligne'}
-              </span>
-            </div>
-          </div>
-
-          {/* Barre de recherche */}
-          {navigationAirports.length > 0 && (
-            <div style={{ 
-              marginBottom: '12px',
-              padding: '8px',
-              backgroundColor: '#eff6ff',
-              borderRadius: '6px',
-              fontSize: '12px',
-              color: '#1e40af',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <Navigation size={14} />
-              <span>
-                Aéroports de navigation : <strong>{navigationAirports.join(' → ')}</strong>
-              </span>
-              {(searchQuery || selectedAirport) && (
-                <button
-                  onClick={() => {
-                    setSearchQuery('');
-                    selectAirport(null);
-                  }}
-                  style={{
-                    marginLeft: 'auto',
-                    padding: '2px 8px',
-                    backgroundColor: '#3b82f6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontSize: '11px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Retour navigation
-                </button>
-              )}
-            </div>
-          )}
-          
-          <div style={{ position: 'relative' }}>
-            <Search size={16} style={{ 
-              position: 'absolute', 
-              left: '12px', 
-              top: '50%', 
-              transform: 'translateY(-50%)',
-              color: '#6b7280'
-            }} />
-            <input
-              type="text"
-              placeholder="Rechercher un aéroport..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px 12px 8px 36px',
-                border: '1px solid #d1d5db',
-                borderRadius: '6px',
-                fontSize: '14px'
-              }}
-            />
-          </div>
-
-          {/* Stockage */}
-          <div style={{ marginTop: '12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
-              <span style={{ color: '#6b7280' }}>Stockage utilisé</span>
-              <span style={{ color: '#374151' }}>
-                {formatBytes(storageUsed)} / {formatBytes(storageQuota)}
-              </span>
-            </div>
-            <div style={{ 
-              width: '100%', 
-              height: '4px', 
-              backgroundColor: '#e5e7eb',
-              borderRadius: '2px',
-              overflow: 'hidden'
-            }}>
-              <div style={{ 
-                width: `${storagePercentage}%`,
-                height: '100%',
-                backgroundColor: storagePercentage > 80 ? '#ef4444' : '#3b82f6',
-                transition: 'width 0.3s'
-              }} />
-            </div>
-          </div>
+    <div style={styles.chartItem}>
+      <div style={styles.chartInfo}>
+        <div style={styles.chartTitle}>
+          {getChartIcon(chart.type)}
+          {airport.name} - {chart.type}
         </div>
-
-        {/* Liste des cartes */}
-        <div style={{ flex: 1, overflow: 'auto' }}>
-          {filteredCharts.length === 0 ? (
-            <div style={{ padding: '32px', textAlign: 'center', color: '#6b7280' }}>
-              <Map size={48} style={{ margin: '0 auto 16px', opacity: 0.3 }} />
-              <p>Aucune carte trouvée</p>
-            </div>
-          ) : (
-            filteredCharts.map(chart => (
-              <div
-                key={chart.id}
-                style={{
-                  padding: '12px 16px',
-                  borderBottom: '1px solid #e5e7eb',
-                  cursor: 'pointer',
-                  backgroundColor: selectedChart?.id === chart.id ? '#eff6ff' : 
-                                 navigationAirports.includes(chart.airportIcao) ? '#f0fdf4' : 'transparent',
-                  borderLeft: navigationAirports.includes(chart.airportIcao) ? '4px solid #10b981' : 'none',
-                  transition: 'background-color 0.2s'
-                }}
-                onClick={() => setSelectedChart(chart)}
-                onMouseEnter={(e) => {
-                  if (selectedChart?.id !== chart.id && !navigationAirports.includes(chart.airportIcao)) {
-                    e.currentTarget.style.backgroundColor = '#f3f4f6';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (selectedChart?.id !== chart.id && !navigationAirports.includes(chart.airportIcao)) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                  <div style={{ flex: 1 }}>
-                    <h4 style={{ 
-                      margin: '0 0 4px 0', 
-                      fontSize: '16px', 
-                      fontWeight: '600',
-                      color: '#1f2937',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px'
-                    }}>
-                      {chart.airportIcao} - {chart.airportName}
-                      {navigationAirports.includes(chart.airportIcao) && (
-                        <span style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          padding: '2px 8px',
-                          backgroundColor: '#d1fae5',
-                          color: '#065f46',
-                          borderRadius: '4px',
-                          fontSize: '11px',
-                          fontWeight: '500'
-                        }}>
-                          <Navigation size={12} />
-                          {chart.airportIcao === departureIcao ? 'Départ' : 'Arrivée'}
-                        </span>
-                      )}
-                    </h4>
-                    <div style={{ fontSize: '12px', color: '#6b7280' }}>
-                      <p style={{ margin: '0 0 2px 0' }}>
-                        Type: {chart.type} | Version: {chart.version}
-                      </p>
-                      <p style={{ margin: '0' }}>
-                        Valide: {formatDate(chart.effectiveDate)} - {formatDate(chart.expiryDate)}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' }}>
-                    {chart.isDownloaded ? (
-                      <>
-                        <CheckCircle size={16} style={{ color: '#10b981' }} />
-                        {chart.extractionStatus === 'completed' && (
-                          <span style={{ 
-                            fontSize: '10px', 
-                            padding: '2px 6px',
-                            backgroundColor: '#d1fae5',
-                            color: '#065f46',
-                            borderRadius: '4px'
-                          }}>
-                            Données extraites
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      <Download size={16} style={{ color: '#6b7280' }} />
-                    )}
-                    {chart.isOutdated && (
-                      <AlertCircle size={16} style={{ color: '#f59e0b' }} />
-                    )}
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
-                  {!chart.isDownloaded ? (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        downloadChart(chart.id);
-                      }}
-                      disabled={downloadQueue.includes(chart.id) || !isOnline}
-                      style={{
-                        padding: '4px 12px',
-                        fontSize: '12px',
-                        backgroundColor: '#3b82f6',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: downloadQueue.includes(chart.id) || !isOnline ? 'not-allowed' : 'pointer',
-                        opacity: downloadQueue.includes(chart.id) || !isOnline ? 0.5 : 1
-                      }}
-                    >
-                      {downloadQueue.includes(chart.id) ? 'Téléchargement...' : 'Télécharger'}
-                    </button>
-                  ) : (
-                    <>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedChart(chart);
-                        }}
-                        style={{
-                          padding: '4px 12px',
-                          fontSize: '12px',
-                          backgroundColor: '#3b82f6',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Afficher
-                      </button>
-                      {chart.extractionStatus === 'completed' && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedChart(chart);
-                            setShowValidator(true);
-                          }}
-                          style={{
-                            padding: '4px 12px',
-                            fontSize: '12px',
-                            backgroundColor: '#10b981',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          Valider données
-                        </button>
-                      )}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (window.confirm('Supprimer cette carte ?')) {
-                            deleteChart(chart.id);
-                          }
-                        }}
-                        style={{
-                          padding: '4px 8px',
-                          fontSize: '12px',
-                          backgroundColor: '#ef4444',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
+        <div style={styles.chartMeta}>
+          <span>
+            <Calendar size={14} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
+            {new Date(chart.date).toLocaleDateString()}
+          </span>
+          <span>Version: {chart.version}</span>
+          <span style={{ ...styles.statusBadge, ...(isLocal ? styles.localStatus : styles.cloudStatus) }}>
+            {isLocal ? <HardDrive size={12} /> : <Cloud size={12} />}
+            {isLocal ? ' Local' : ' Cloud'}
+          </span>
         </div>
-
-        {/* Actions globales */}
-        <div style={{ padding: '16px', borderTop: '1px solid #e5e7eb' }}>
-          <button
-            onClick={syncCharts}
-            disabled={!isOnline}
-            style={{
-              width: '100%',
-              padding: '8px',
-              backgroundColor: isOnline ? '#3b82f6' : '#e5e7eb',
-              color: isOnline ? 'white' : '#9ca3af',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '14px',
-              fontWeight: '500',
-              cursor: isOnline ? 'pointer' : 'not-allowed'
-            }}
+      </div>
+      
+      <div style={styles.chartActions}>
+        {!isLocal && (
+          <button 
+            style={styles.buttonSecondary}
+            onClick={() => onDownload(airport.icao, chart.id)}
           >
-            Synchroniser les cartes
+            <Download size={16} />
+            Télécharger
+          </button>
+        )}
+        {isLocal && (
+          <button 
+            style={styles.buttonDanger}
+            onClick={() => onDelete(chart.id)}
+          >
+            <Trash2 size={16} />
+            Supprimer
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Composant principal VAC
+export const VACModule = () => {
+  const { flightPlan } = useFlightSystem();
+  const { charts, downloadChart, deleteChart, searchCharts } = useVACStore();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Recherche automatique basée sur le plan de vol
+  useEffect(() => {
+    if (flightPlan?.departure || flightPlan?.arrival) {
+      const airports = [flightPlan.departure, flightPlan.arrival].filter(Boolean);
+      airports.forEach(icao => {
+        if (mockVACData[icao] && !charts.some(c => c.airport === icao)) {
+          handleSearch(icao);
+        }
+      });
+    }
+  }, [flightPlan, charts]);
+
+  const handleSearch = async (query) => {
+    const searchTerm = query || searchQuery;
+    if (!searchTerm) return;
+
+    setLoading(true);
+    try {
+      // Simulation de recherche
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      const results = mockVACData[searchTerm.toUpperCase()];
+      if (results) {
+        setSearchResults(results);
+      } else {
+        setSearchResults({ notFound: true, query: searchTerm });
+      }
+    } catch (error) {
+      console.error('Erreur de recherche:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDownload = async (icao, chartId) => {
+    try {
+      await downloadChart(icao, chartId);
+      // Simuler le téléchargement
+      console.log(`Téléchargement de ${chartId} pour ${icao}`);
+    } catch (error) {
+      console.error('Erreur de téléchargement:', error);
+    }
+  };
+
+  const handleDelete = async (chartId) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette carte ?')) {
+      try {
+        await deleteChart(chartId);
+        console.log(`Suppression de ${chartId}`);
+      } catch (error) {
+        console.error('Erreur de suppression:', error);
+      }
+    }
+  };
+
+  return (
+    <div style={styles.container}>
+      <div style={styles.section}>
+        <h2 style={styles.title}>
+          <Map size={24} />
+          Module Cartes VAC
+        </h2>
+        
+        <div style={styles.infoBox}>
+          <Info size={20} color="#0066cc" />
+          <div>
+            <strong>Cartes Visual Approach Charts (VAC)</strong>
+            <div style={{ fontSize: '13px', marginTop: '4px' }}>
+              Recherchez et téléchargez les cartes d'approche à vue pour vos aéroports.
+              Les cartes sont automatiquement suggérées selon votre plan de vol.
+            </div>
+          </div>
+        </div>
+
+        <div style={styles.searchBox}>
+          <input
+            type="text"
+            style={styles.input}
+            placeholder="Rechercher un aéroport (code ICAO)"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value.toUpperCase())}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            maxLength={4}
+          />
+          <button 
+            style={styles.button}
+            onClick={() => handleSearch()}
+            disabled={loading}
+          >
+            <Search size={16} />
+            {loading ? 'Recherche...' : 'Rechercher'}
           </button>
         </div>
       </div>
 
-      {/* Zone principale */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        {selectedChart && selectedChart.isDownloaded ? (
-          showValidator ? (
-            <VACDataValidator 
-              chart={selectedChart} 
-              onClose={() => setShowValidator(false)} 
-            />
-          ) : (
-            <VACChartViewer chart={selectedChart} />
-          )
+      {searchResults && !searchResults.notFound && (
+        <div style={styles.section}>
+          <h3 style={styles.subtitle}>
+            <Cloud size={20} />
+            Cartes disponibles - {searchResults.name}
+          </h3>
+          <div style={styles.chartsList}>
+            {searchResults.charts.map(chart => (
+              <ChartItem
+                key={chart.id}
+                chart={chart}
+                airport={searchResults}
+                onDownload={handleDownload}
+                onDelete={handleDelete}
+                isLocal={charts.some(c => c.id === chart.id)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {searchResults?.notFound && (
+        <div style={styles.section}>
+          <div style={styles.emptyState}>
+            <AlertCircle size={48} color="#666" />
+            <h3 style={{ marginTop: '16px' }}>Aucune carte trouvée</h3>
+            <p style={{ marginTop: '8px' }}>
+              Aucune carte VAC disponible pour "{searchResults.query}"
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div style={styles.section}>
+        <h3 style={styles.subtitle}>
+          <HardDrive size={20} />
+          Cartes téléchargées
+        </h3>
+        
+        {charts.length > 0 ? (
+          <div style={styles.chartsList}>
+            {charts.map(chart => {
+              const airport = mockVACData[chart.airport] || { 
+                name: chart.airport, 
+                icao: chart.airport 
+              };
+              return (
+                <ChartItem
+                  key={chart.id}
+                  chart={chart}
+                  airport={airport}
+                  onDownload={handleDownload}
+                  onDelete={handleDelete}
+                  isLocal={true}
+                />
+              );
+            })}
+          </div>
         ) : (
-          <div style={{ 
-            flex: 1, 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            color: '#6b7280'
-          }}>
-            <div style={{ textAlign: 'center' }}>
-              <Map size={64} style={{ margin: '0 auto 16px', opacity: 0.3 }} />
-              <p style={{ fontSize: '18px', marginBottom: '8px' }}>
-                Sélectionnez une carte à afficher
-              </p>
-              <p style={{ fontSize: '14px' }}>
-                Téléchargez les cartes pour un accès hors ligne
-              </p>
-              {navigationAirports.length > 0 && (
-                <p style={{ 
-                  fontSize: '14px', 
-                  marginTop: '16px',
-                  color: '#10b981'
-                }}>
-                  Les cartes des aéroports de votre navigation sont affichées en priorité
-                </p>
-              )}
-            </div>
+          <div style={styles.emptyState}>
+            <HardDrive size={48} color="#666" />
+            <h3 style={{ marginTop: '16px' }}>Aucune carte téléchargée</h3>
+            <p style={{ marginTop: '8px' }}>
+              Recherchez et téléchargez des cartes VAC pour les consulter hors ligne
+            </p>
           </div>
         )}
       </div>

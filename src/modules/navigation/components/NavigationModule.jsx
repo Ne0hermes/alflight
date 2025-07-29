@@ -1,137 +1,197 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { 
+  Navigation2, 
+  Plane, 
+  MapPin, 
+  Clock, 
+  Users, 
+  Fuel, 
+  AlertCircle,
+  Home,
+  Calculator,
+  Map,
+  FileText
+} from 'lucide-react';
 import { useFlightSystem } from '../../../context/FlightSystemContext';
-import { LoadInput } from '../../../components/ui/LoadInput';
-import { Plus, Trash2, MapPin, Sun, Moon, Navigation2, Home, CheckCircle } from 'lucide-react';
+import { useAirportCoordinates } from '../../../hooks/useAirportCoordinates';
 import { PerformanceCalculator } from './PerformanceCalculator';
 import { RouteMap } from './RouteMap';
-import { useAirportCoordinates } from '../../vac/hooks/useAirportCoordinates';
 
-// Styles extraits
 const styles = {
-  warningBox: {
-    marginBottom: '24px',
-    padding: '16px',
-    backgroundColor: '#fef3c7',
-    border: '2px solid #f59e0b',
-    borderRadius: '8px'
+  container: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '24px',
+    padding: '24px',
+    backgroundColor: '#f5f5f5',
+    minHeight: '100vh'
   },
-  sectionTitle: {
-    fontSize: '18px', 
-    fontWeight: '600', 
-    color: '#92400e', 
-    marginBottom: '12px'
+  section: {
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    padding: '20px',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
   },
-  grid3: {
+  title: {
+    fontSize: '24px',
+    fontWeight: 'bold',
+    marginBottom: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  },
+  subtitle: {
+    fontSize: '18px',
+    fontWeight: '600',
+    marginBottom: '16px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  },
+  grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '16px'
-  },
-  select: {
-    width: '100%', 
-    padding: '8px 12px', 
-    border: '1px solid #d1d5db', 
-    borderRadius: '6px',
-    backgroundColor: 'white'
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '16px',
+    marginBottom: '16px'
   },
   label: {
     display: 'flex',
     alignItems: 'center',
     gap: '4px',
-    fontSize: '14px', 
-    color: '#6b7280', 
-    marginBottom: '4px'
+    fontSize: '14px',
+    fontWeight: '500',
+    marginBottom: '4px',
+    color: '#666'
   },
-  infoBox: {
-    marginTop: '16px',
-    padding: '12px',
-    backgroundColor: '#fbbf24',
+  input: {
+    width: '100%',
+    padding: '8px 12px',
+    border: '1px solid #ddd',
     borderRadius: '6px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px'
+    fontSize: '14px',
+    transition: 'border-color 0.2s',
+    ':hover': {
+      borderColor: '#999'
+    },
+    ':focus': {
+      outline: 'none',
+      borderColor: '#0066cc'
+    }
   },
-  badge: {
-    padding: '4px 12px', 
-    borderRadius: '9999px', 
-    fontSize: '12px', 
-    fontWeight: '600'
+  select: {
+    width: '100%',
+    padding: '8px 12px',
+    border: '1px solid #ddd',
+    borderRadius: '6px',
+    fontSize: '14px',
+    backgroundColor: 'white',
+    cursor: 'pointer'
   },
-  waypoint: {
-    display: 'flex', 
-    alignItems: 'center', 
-    gap: '12px', 
-    padding: '12px', 
-    backgroundColor: '#f9fafb', 
-    borderRadius: '8px',
-    marginBottom: '8px'
-  },
-  successText: {
-    margin: '4px 0 0 0', 
-    fontSize: '11px', 
-    color: '#10b981',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '4px'
-  },
-  resultBox: {
-    padding: '16px', 
-    backgroundColor: '#eff6ff', 
-    borderRadius: '8px'
-  },
-  resultGrid: {
-    display: 'grid', 
-    gridTemplateColumns: 'repeat(3, 1fr)', 
-    gap: '12px', 
-    fontSize: '14px'
-  },
-  automationNote: {
-    marginTop: '12px',
-    padding: '8px',
-    backgroundColor: '#d1fae5',
-    borderRadius: '4px',
-    fontSize: '12px',
-    color: '#047857'
-  },
-  addButton: {
-    width: '100%', 
-    padding: '12px', 
-    border: '2px dashed #d1d5db', 
-    borderRadius: '8px', 
-    backgroundColor: 'transparent',
-    color: '#6b7280',
+  button: {
+    padding: '10px 20px',
+    backgroundColor: '#0066cc',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '14px',
+    fontWeight: '500',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: '8px',
+    transition: 'background-color 0.2s',
+    ':hover': {
+      backgroundColor: '#0052a3'
+    }
+  },
+  warningBox: {
+    backgroundColor: '#fff3cd',
+    border: '1px solid #ffeaa7',
+    borderRadius: '6px',
+    padding: '12px',
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '8px',
+    marginTop: '16px'
+  },
+  results: {
+    marginTop: '20px',
+    padding: '16px',
+    backgroundColor: '#f8f9fa',
+    borderRadius: '8px',
+    border: '1px solid #e9ecef'
+  },
+  resultItem: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    padding: '8px 0',
+    borderBottom: '1px solid #e9ecef'
+  },
+  tabs: {
+    display: 'flex',
+    gap: '8px',
+    marginBottom: '20px',
+    borderBottom: '2px solid #e9ecef'
+  },
+  tab: {
+    padding: '10px 20px',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '500',
+    color: '#666',
+    borderBottomWidth: '2px',
+    borderBottomStyle: 'solid',
+    borderBottomColor: 'transparent',
+    marginBottom: '-2px',
+    transition: 'all 0.2s',
+    display: 'flex',
+    alignItems: 'center',
     gap: '8px'
+  },
+  activeTab: {
+    color: '#0066cc',
+    borderBottomColor: '#0066cc'
   }
 };
 
-// Composants extraits
-const FlightTypeSelector = ({ flightType, setFlightType }) => (
-  <div style={styles.warningBox}>
-    <h3 style={styles.sectionTitle}>🛩️ Type de Vol</h3>
-    <div style={styles.grid3}>
-      <SelectField
-        label="Période"
-        icon={flightType?.period === 'jour' ? <Sun size={16} /> : <Moon size={16} />}
-        value={flightType?.period || 'jour'}
-        onChange={(e) => setFlightType({...flightType, period: e.target.value})}
-        options={[
-          { value: 'jour', label: 'Jour' },
-          { value: 'nuit', label: 'Nuit' }
-        ]}
-      />
-      <SelectField
-        label="Règles de vol"
-        icon={flightType?.rules === 'VFR' ? '🌤️' : '🛫'}
-        value={flightType?.rules || 'VFR'}
-        onChange={(e) => setFlightType({...flightType, rules: e.target.value})}
-        options={[
-          { value: 'VFR', label: 'VFR' },
-          { value: 'IFR', label: 'IFR' }
-        ]}
-      />
+// Composant pour les informations de réserve carburant
+const ReserveInfo = ({ flightType, navigationResults }) => {
+  if (!navigationResults || !navigationResults.fuelCalculation) return null;
+
+  const { reserves } = navigationResults.fuelCalculation;
+  const isLocal = flightType?.category === 'local';
+
+  return (
+    <div style={styles.warningBox}>
+      <AlertCircle size={20} color="#856404" />
+      <div>
+        <strong>Réserves réglementaires :</strong>
+        <ul style={{ margin: '4px 0 0 20px', fontSize: '13px' }}>
+          {isLocal ? (
+            <li>Réserve finale : 20 minutes de vol</li>
+          ) : (
+            <>
+              <li>Réserve de route : {reserves.routeReserve} gallons (10% du carburant étape)</li>
+              <li>Réserve finale : {reserves.finalReserve} gallons (30 min)</li>
+              <li>Réserve dégagement : {reserves.alternateReserve} gallons</li>
+            </>
+          )}
+        </ul>
+      </div>
+    </div>
+  );
+};
+
+// Composant pour la sélection du type de vol
+const FlightTypeSelector = ({ flightType, setFlightType, navigationResults }) => (
+  <div style={styles.section}>
+    <h3 style={styles.subtitle}>
+      <Plane size={20} />
+      Type de Vol
+    </h3>
+    <div style={styles.grid}>
       <SelectField
         label="Catégorie"
         icon={flightType?.category === 'local' ? <Home size={16} /> : <Navigation2 size={16} />}
@@ -147,6 +207,7 @@ const FlightTypeSelector = ({ flightType, setFlightType }) => (
   </div>
 );
 
+// Composant générique pour les champs de sélection
 const SelectField = ({ label, icon, value, onChange, options }) => (
   <div>
     <label style={styles.label}>
@@ -161,295 +222,311 @@ const SelectField = ({ label, icon, value, onChange, options }) => (
   </div>
 );
 
-const ReserveInfo = ({ flightType, navigationResults, selectedAircraft }) => {
-  const getReserveText = () => {
-    if (!flightType) return '';
-    let text = flightType.period === 'nuit' 
-      ? 'Vol de NUIT : 45 minutes de réserve' 
-      : flightType.category === 'local' 
-        ? 'Vol LOCAL de JOUR : 10 minutes de réserve'
-        : 'Vol de NAVIGATION de JOUR : 30 minutes de réserve';
-    
-    if (flightType.rules === 'IFR') text = `${text} + IFR (15 min)`;
-    return text;
+// Composant générique pour les champs de saisie
+const InputField = ({ label, icon, ...props }) => (
+  <div>
+    <label style={styles.label}>
+      {icon}
+      {label}
+    </label>
+    <input style={styles.input} {...props} />
+  </div>
+);
+
+// Composant pour la saisie des données de vol
+const FlightDataInput = ({ flightData, setFlightData, onCalculate, loading }) => {
+  const { profile } = useFlightSystem();
+  
+  const handleChange = (field, value) => {
+    setFlightData(prev => ({ ...prev, [field]: value }));
   };
 
   return (
-    <div style={styles.infoBox}>
-      <div style={{ flexShrink: 0, width: '40px', height: '40px', backgroundColor: '#f59e0b', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontSize: '20px' }}>📋</span>
+    <div style={styles.section}>
+      <h3 style={styles.subtitle}>
+        <MapPin size={20} />
+        Données de Vol
+      </h3>
+      
+      <div style={styles.grid}>
+        <InputField
+          label="Départ (ICAO)"
+          icon={<MapPin size={16} />}
+          type="text"
+          placeholder="LFPG"
+          value={flightData.departure}
+          onChange={(e) => handleChange('departure', e.target.value.toUpperCase())}
+        />
+        
+        <InputField
+          label="Arrivée (ICAO)"
+          icon={<MapPin size={16} />}
+          type="text"
+          placeholder="LFPO"
+          value={flightData.arrival}
+          onChange={(e) => handleChange('arrival', e.target.value.toUpperCase())}
+        />
+        
+        <InputField
+          label="Altitude (ft)"
+          icon={<Navigation2 size={16} />}
+          type="number"
+          placeholder="5500"
+          value={flightData.altitude}
+          onChange={(e) => handleChange('altitude', e.target.value)}
+        />
+        
+        <SelectField
+          label="Puissance"
+          icon={<Fuel size={16} />}
+          value={flightData.powerSetting}
+          onChange={(e) => handleChange('powerSetting', e.target.value)}
+          options={[
+            { value: '65', label: '65% - Économique' },
+            { value: '75', label: '75% - Standard' },
+            { value: 'max', label: 'Max - Performance' }
+          ]}
+        />
       </div>
-      <div style={{ flex: 1 }}>
-        <p style={{ margin: '0', fontSize: '14px', fontWeight: '600', color: '#78350f' }}>
-          Réserve réglementaire : {navigationResults?.regulationReserveMinutes || 0} minutes
-        </p>
-        <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#92400e' }}>
-          {getReserveText()}
-        </p>
-        {selectedAircraft && (
-          <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#92400e', fontWeight: '600' }}>
-            Volume carburant requis : {navigationResults?.regulationReserveLiters || 0} L 
-            <span style={{ fontWeight: '400', fontSize: '12px' }}>
-              {' '}(basé sur {selectedAircraft.fuelConsumption} L/h)
-            </span>
-          </p>
-        )}
-        <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#065f46', fontWeight: '600', backgroundColor: '#d1fae5', padding: '4px 8px', borderRadius: '4px', display: 'inline-block' }}>
-          💡 Cette réserve sera automatiquement ajoutée dans l'onglet "Bilan Carburant"
-        </p>
+
+      <div style={styles.grid}>
+        <InputField
+          label="Distance (NM)"
+          icon={<Navigation2 size={16} />}
+          type="number"
+          placeholder="120"
+          value={flightData.distance}
+          onChange={(e) => handleChange('distance', e.target.value)}
+        />
+        
+        <InputField
+          label="Passagers"
+          icon={<Users size={16} />}
+          type="number"
+          placeholder="3"
+          value={flightData.passengers}
+          onChange={(e) => handleChange('passengers', e.target.value)}
+        />
+        
+        <InputField
+          label="Bagages (lbs)"
+          icon={<Users size={16} />}
+          type="number"
+          placeholder="100"
+          value={flightData.baggage}
+          onChange={(e) => handleChange('baggage', e.target.value)}
+        />
+        
+        <InputField
+          label="Durée estimée (min)"
+          icon={<Clock size={16} />}
+          type="number"
+          placeholder="60"
+          value={flightData.estimatedDuration}
+          onChange={(e) => handleChange('estimatedDuration', e.target.value)}
+        />
+      </div>
+
+      <button 
+        style={styles.button} 
+        onClick={onCalculate}
+        disabled={loading}
+      >
+        <Calculator size={16} />
+        {loading ? 'Calcul en cours...' : 'Calculer'}
+      </button>
+    </div>
+  );
+};
+
+// Composant pour afficher les résultats
+const NavigationResults = ({ results }) => {
+  if (!results) return null;
+
+  const { fuelCalculation, weightBalance, performance } = results;
+
+  return (
+    <div style={styles.section}>
+      <h3 style={styles.subtitle}>
+        <FileText size={20} />
+        Résultats de Navigation
+      </h3>
+
+      <div style={styles.results}>
+        <h4>Carburant</h4>
+        <div style={styles.resultItem}>
+          <span>Consommation totale :</span>
+          <strong>{fuelCalculation.totalFuel.toFixed(1)} gallons</strong>
+        </div>
+        <div style={styles.resultItem}>
+          <span>Carburant minimum requis :</span>
+          <strong>{fuelCalculation.minimumFuel.toFixed(1)} gallons</strong>
+        </div>
+        <div style={styles.resultItem}>
+          <span>Autonomie avec plein :</span>
+          <strong>{fuelCalculation.endurance.toFixed(1)} heures</strong>
+        </div>
+      </div>
+
+      <div style={styles.results}>
+        <h4>Masse et Centrage</h4>
+        <div style={styles.resultItem}>
+          <span>Masse au décollage :</span>
+          <strong>{weightBalance.totalWeight.toFixed(0)} lbs</strong>
+        </div>
+        <div style={styles.resultItem}>
+          <span>Centrage :</span>
+          <strong style={{ color: weightBalance.isWithinCG ? 'green' : 'red' }}>
+            {weightBalance.cg.toFixed(1)} pouces {!weightBalance.isWithinCG && '⚠️'}
+          </strong>
+        </div>
+      </div>
+
+      <div style={styles.results}>
+        <h4>Performances</h4>
+        <div style={styles.resultItem}>
+          <span>Distance de décollage :</span>
+          <strong>{performance.takeoffDistance.toFixed(0)} ft</strong>
+        </div>
+        <div style={styles.resultItem}>
+          <span>Taux de montée :</span>
+          <strong>{performance.climbRate.toFixed(0)} ft/min</strong>
+        </div>
+        <div style={styles.resultItem}>
+          <span>Vitesse de croisière :</span>
+          <strong>{performance.cruiseSpeed.toFixed(0)} kts</strong>
+        </div>
       </div>
     </div>
   );
 };
 
-const AircraftSelector = ({ selectedAircraft, setSelectedAircraft, aircraftList }) => (
-  <div style={{ marginBottom: '24px' }}>
-    <div style={{ backgroundColor: '#dbeafe', border: '2px solid #3b82f6', borderRadius: '8px', padding: '16px' }}>
-      <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1e40af', marginBottom: '12px' }}>
-        ✈️ Sélection de l'avion
-      </h3>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-        <div>
-          <label style={{ display: 'block', fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>
-            Avion pour ce vol
-          </label>
-          <select
-            style={styles.select}
-            value={selectedAircraft?.id || ''}
-            onChange={(e) => setSelectedAircraft(aircraftList.find(a => a.id === e.target.value))}
-          >
-            {aircraftList.map(aircraft => (
-              <option key={aircraft.id} value={aircraft.id}>
-                {aircraft.registration} - {aircraft.model}
-              </option>
-            ))}
-          </select>
-        </div>
-        {selectedAircraft && <AircraftInfo aircraft={selectedAircraft} />}
-      </div>
-    </div>
-  </div>
-);
-
-const AircraftInfo = ({ aircraft }) => (
-  <div style={{ fontSize: '14px' }}>
-    <p style={{ margin: '0 0 4px 0' }}>
-      <span style={{ color: '#6b7280' }}>Carburant:</span>{' '}
-      <span style={{ fontWeight: '500' }}>{aircraft.fuelType}</span>
-    </p>
-    <p style={{ margin: '0 0 4px 0' }}>
-      <span style={{ color: '#6b7280' }}>Vitesse:</span>{' '}
-      <span style={{ fontWeight: '500' }}>{aircraft.cruiseSpeedKt} kt</span>
-    </p>
-    <p style={{ margin: '0' }}>
-      <span style={{ color: '#6b7280' }}>Consommation:</span>{' '}
-      <span style={{ fontWeight: '500' }}>{aircraft.fuelConsumption} L/h</span>
-    </p>
-  </div>
-);
-
-const WaypointItem = ({ waypoint, index, total, onNameChange, onRemove, coords }) => (
-  <div style={styles.waypoint}>
-    <MapPin size={20} style={{ color: waypoint.type === 'departure' ? '#10b981' : '#ef4444' }} />
-    <div style={{ flex: 1 }}>
-      <input
-        type="text"
-        value={waypoint.name}
-        onChange={(e) => onNameChange(e.target.value)}
-        style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px' }}
-        placeholder="Code OACI"
-      />
-      {coords && (
-        <p style={styles.successText}>
-          <CheckCircle size={12} />
-          {coords.lat.toFixed(4)}°, {coords.lon.toFixed(4)}°
-          <span style={{ color: '#6b7280', marginLeft: '4px' }}>(depuis VAC)</span>
-        </p>
-      )}
-    </div>
-    {index > 0 && index < total - 1 && (
-      <button onClick={onRemove} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>
-        <Trash2 size={16} />
-      </button>
-    )}
-  </div>
-);
-
-const ResultsDisplay = ({ navigationResults, flightType }) => (
-  <div style={styles.resultBox}>
-    <h4 style={{ fontWeight: '600', color: '#1e40af', marginBottom: '12px' }}>
-      📊 Résultats du calcul
-    </h4>
-    <div style={{ marginBottom: '12px', fontSize: '14px', color: '#6b7280' }}>
-      Vol {flightType?.rules || 'VFR'} de {flightType?.category || 'navigation'} - {flightType?.period || 'jour'}
-    </div>
-    <div style={styles.resultGrid}>
-      <ResultItem label="Distance totale" value={`${navigationResults.totalDistance} Nm`} />
-      <ResultItem label="Temps estimé" value={`${Math.round(navigationResults.totalTime)} min`} />
-      <ResultItem label="Trip Fuel" value={`${navigationResults.fuelRequired} L`} color="#059669" />
-    </div>
-    <div style={styles.automationNote}>
-      <p style={{ margin: '0', fontWeight: '600' }}>🚀 Automatisation activée</p>
-      <p style={{ margin: '4px 0 0 0' }}>
-        Le <strong>Trip Fuel</strong> ({navigationResults.fuelRequired} L) sera automatiquement reporté dans l'onglet "Bilan Carburant".
-        La réserve réglementaire ({navigationResults.regulationReserveLiters || 0} L) sera ajoutée dans la "Final Reserve".
-      </p>
-    </div>
-  </div>
-);
-
-const ResultItem = ({ label, value, color }) => (
-  <div>
-    <p style={{ margin: '0', color: '#6b7280' }}>{label}</p>
-    <p style={{ margin: '0', fontSize: '18px', fontWeight: 'bold', color: color || '#1f2937' }}>
-      {value}
-    </p>
-  </div>
-);
-
-// Composant principal optimisé
+// Composant principal
 export const NavigationModule = () => {
-  const { 
-    selectedAircraft, 
-    setSelectedAircraft, 
-    aircraftList,
-    waypoints, 
-    setWaypoints, 
-    flightParams, 
-    setFlightParams, 
-    navigationResults,
-    flightType,
-    setFlightType
-  } = useFlightSystem();
+  const { profile } = useFlightSystem();
+  const [activeTab, setActiveTab] = useState('planning');
+  const [loading, setLoading] = useState(false);
+  const [flightType, setFlightType] = useState({ category: 'navigation' });
+  const [flightData, setFlightData] = useState({
+    departure: '',
+    arrival: '',
+    alternate: '',
+    altitude: '',
+    powerSetting: '75',
+    distance: '',
+    passengers: '1',
+    baggage: '0',
+    estimatedDuration: ''
+  });
+  const [navigationResults, setNavigationResults] = useState(null);
 
-  const { getCoordinatesByICAO } = useAirportCoordinates();
+  // Hook pour récupérer les coordonnées des aéroports
+  const departureCoords = useAirportCoordinates(flightData.departure);
+  const arrivalCoords = useAirportCoordinates(flightData.arrival);
 
-  // Enrichir automatiquement les waypoints
-  React.useEffect(() => {
-    const enrichedWaypoints = waypoints.map(wp => {
-      if (wp.name && (!wp.lat || !wp.lon)) {
-        const coords = getCoordinatesByICAO(wp.name);
-        return coords ? { ...wp, lat: coords.lat, lon: coords.lon } : wp;
-      }
-      return wp;
-    });
+  const calculateNavigation = async () => {
+    setLoading(true);
+    try {
+      // Simulation du calcul
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-    const hasNewCoords = enrichedWaypoints.some((wp, index) => 
-      wp.lat !== waypoints[index].lat || wp.lon !== waypoints[index].lon
-    );
+      const fuelConsumption = profile?.performance?.cruise?.fuelFlow || 8.5;
+      const duration = parseFloat(flightData.estimatedDuration) || 60;
+      const baseFuel = (duration / 60) * fuelConsumption;
 
-    if (hasNewCoords) {
-      setWaypoints(enrichedWaypoints);
+      const results = {
+        fuelCalculation: {
+          totalFuel: baseFuel * 1.3,
+          minimumFuel: baseFuel * 1.15,
+          endurance: 53 / fuelConsumption,
+          reserves: {
+            routeReserve: baseFuel * 0.1,
+            finalReserve: fuelConsumption * 0.5,
+            alternateReserve: fuelConsumption * 0.75
+          }
+        },
+        weightBalance: {
+          totalWeight: 2300 + (parseFloat(flightData.passengers) || 1) * 170 + 
+                       (parseFloat(flightData.baggage) || 0),
+          cg: 40.5,
+          isWithinCG: true
+        },
+        performance: {
+          takeoffDistance: 1200,
+          climbRate: 700,
+          cruiseSpeed: 115
+        }
+      };
+
+      setNavigationResults(results);
+    } catch (error) {
+      console.error('Erreur de calcul:', error);
+    } finally {
+      setLoading(false);
     }
-  }, [waypoints.map(wp => wp.name).join(','), getCoordinatesByICAO]);
-
-  const addWaypoint = () => {
-    const newId = Math.max(...waypoints.map(w => w.id)) + 1;
-    const lastWp = waypoints[waypoints.length - 1];
-    setWaypoints([
-      ...waypoints.slice(0, -1),
-      { id: newId, name: '', type: 'waypoint', lat: lastWp.lat, lon: lastWp.lon },
-      lastWp
-    ]);
   };
 
-  const removeWaypoint = (index) => setWaypoints(waypoints.filter((_, i) => i !== index));
-  const updateWaypoint = (index, name) => {
-    const updated = [...waypoints];
-    updated[index].name = name;
-    setWaypoints(updated);
-  };
+  const tabs = [
+    { id: 'planning', label: 'Planification', icon: <Navigation2 size={16} /> },
+    { id: 'performance', label: 'Performances', icon: <Calculator size={16} /> },
+    { id: 'map', label: 'Carte', icon: <Map size={16} /> }
+  ];
 
   return (
-    <div>
-      {/* Type de vol */}
-      <FlightTypeSelector 
-        flightType={flightType} 
-        setFlightType={setFlightType}
-        navigationResults={navigationResults}
-        selectedAircraft={selectedAircraft}
-      />
-
-      {/* Sélection d'avion */}
-      <AircraftSelector 
-        selectedAircraft={selectedAircraft}
-        setSelectedAircraft={setSelectedAircraft}
-        aircraftList={aircraftList}
-      />
-
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
-        {/* Route */}
-        <div>
-          <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '16px' }}>
-            📍 Planification de route
-          </h3>
-          
-          <div style={{ marginBottom: '16px' }}>
-            {waypoints.map((wp, index) => (
-              <WaypointItem
-                key={wp.id}
-                waypoint={wp}
-                index={index}
-                total={waypoints.length}
-                onNameChange={(name) => updateWaypoint(index, name)}
-                onRemove={() => removeWaypoint(index)}
-                coords={wp.lat && wp.lon ? { lat: wp.lat, lon: wp.lon } : null}
-              />
-            ))}
-            
-            <button onClick={addWaypoint} style={styles.addButton}>
-              <Plus size={16} />
-              Ajouter un waypoint
+    <div style={styles.container}>
+      <div style={styles.section}>
+        <h2 style={styles.title}>
+          <Navigation2 size={24} />
+          Module Navigation
+        </h2>
+        
+        <div style={styles.tabs}>
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              style={{
+                ...styles.tab,
+                ...(activeTab === tab.id ? styles.activeTab : {})
+              }}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.icon}
+              {tab.label}
             </button>
-          </div>
-
-          <ResultsDisplay navigationResults={navigationResults} flightType={flightType} />
-        </div>
-
-        {/* Paramètres de vol */}
-        <div>
-          <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '16px' }}>
-            ⚙️ Paramètres de vol
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <LoadInput
-              label="Altitude de croisière (ft)"
-              value={flightParams.altitude}
-              onChange={(v) => setFlightParams({...flightParams, altitude: v})}
-            />
-            <LoadInput
-              label="Vitesse vraie (kt)"
-              value={flightParams.trueAirspeed}
-              onChange={(v) => setFlightParams({...flightParams, trueAirspeed: v})}
-            />
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>
-                💨 Vent
-              </label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                <input 
-                  type="number" 
-                  style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px' }}
-                  placeholder="Direction °"
-                  value={flightParams.windDirection}
-                  onChange={(e) => setFlightParams({...flightParams, windDirection: parseInt(e.target.value) || 0})}
-                />
-                <input 
-                  type="number" 
-                  style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px' }}
-                  placeholder="Vitesse kt"
-                  value={flightParams.windSpeed}
-                  onChange={(e) => setFlightParams({...flightParams, windSpeed: parseInt(e.target.value) || 0})}
-                />
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Performances et Carte */}
-      <PerformanceCalculator />
-      <RouteMap waypoints={waypoints} />
+      {activeTab === 'planning' && (
+        <>
+          <FlightTypeSelector 
+            flightType={flightType} 
+            setFlightType={setFlightType}
+            navigationResults={navigationResults}
+          />
+          
+          <FlightDataInput
+            flightData={flightData}
+            setFlightData={setFlightData}
+            onCalculate={calculateNavigation}
+            loading={loading}
+          />
+          
+          <NavigationResults results={navigationResults} />
+        </>
+      )}
+
+      {activeTab === 'performance' && (
+        <PerformanceCalculator flightData={flightData} />
+      )}
+
+      {activeTab === 'map' && (
+        <RouteMap 
+          departure={departureCoords}
+          arrival={arrivalCoords}
+          flightData={flightData}
+        />
+      )}
     </div>
   );
 };
