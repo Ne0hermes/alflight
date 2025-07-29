@@ -53,6 +53,7 @@ export default defineConfig({
       '@core': path.resolve(__dirname, './src/core'),
       '@features': path.resolve(__dirname, './src/features'),
       '@shared': path.resolve(__dirname, './src/shared'),
+      '@services': path.resolve(__dirname, './src/services'),  // ← Ajout de l'alias services
       '@utils': path.resolve(__dirname, './src/utils'),
       '@data': path.resolve(__dirname, './src/data'),
       '@hooks': path.resolve(__dirname, './src/hooks'),
