@@ -4,6 +4,7 @@ import { useAircraftStore } from '../stores/aircraftStore';
 import { useNavigationStore } from '../stores/navigationStore';
 import { useFuelStore } from '../stores/fuelStore';
 import { useWeightBalanceStore } from '../stores/weightBalanceStore';
+import { useWeatherStore } from '../stores/weatherStore';
 
 // Contexte pour les données d'avion uniquement
 const AircraftContext = createContext();
@@ -34,6 +35,14 @@ const WeightBalanceContext = createContext();
 export const useWeightBalance = () => {
   const context = useContext(WeightBalanceContext);
   if (!context) throw new Error('useWeightBalance must be used within WeightBalanceProvider');
+  return context;
+};
+
+// Contexte pour la météo
+const WeatherContext = createContext();
+export const useWeather = () => {
+  const context = useContext(WeatherContext);
+  if (!context) throw new Error('useWeather must be used within WeatherProvider');
   return context;
 };
 
@@ -75,12 +84,18 @@ export const NavigationProvider = memo(({ children }) => {
   const navigationResults = useMemo(() => {
     if (!selectedAircraft || !store.waypoints.length) return null;
     
+    const totalDistance = calculateTotalDistance();
+    const totalTime = calculateFlightTime(selectedAircraft.cruiseSpeedKt);
+    const fuelRequired = calculateFuelRequired(selectedAircraft.fuelConsumption);
+    const regulationReserveMinutes = getRegulationReserveMinutes();
+    const regulationReserveLiters = getRegulationReserveLiters(selectedAircraft.fuelConsumption);
+    
     return {
-      totalDistance: calculateTotalDistance(),
-      totalTime: calculateFlightTime(selectedAircraft.cruiseSpeedKt),
-      fuelRequired: calculateFuelRequired(selectedAircraft.fuelConsumption),
-      regulationReserveMinutes: getRegulationReserveMinutes(),
-      regulationReserveLiters: getRegulationReserveLiters(selectedAircraft.fuelConsumption)
+      totalDistance: parseFloat(totalDistance.toFixed(1)),
+      totalTime: totalTime,
+      fuelRequired: parseFloat(fuelRequired.toFixed(1)),
+      regulationReserveMinutes: regulationReserveMinutes,
+      regulationReserveLiters: parseFloat(regulationReserveLiters.toFixed(1))
     };
   }, [selectedAircraft, store.waypoints, store.flightType, calculateTotalDistance, calculateFlightTime, calculateFuelRequired, getRegulationReserveMinutes, getRegulationReserveLiters]);
 
@@ -158,6 +173,38 @@ export const WeightBalanceProvider = memo(({ children }) => {
   return <WeightBalanceContext.Provider value={value}>{children}</WeightBalanceContext.Provider>;
 });
 
+export const WeatherProvider = memo(({ children }) => {
+  const store = useWeatherStore();
+  
+  const value = useMemo(() => ({
+    weatherData: store.weatherData,
+    loading: store.loading,
+    errors: store.errors,
+    fetchWeather: store.fetchWeather,
+    fetchMultiple: store.fetchMultiple,
+    clearWeather: store.clearWeather,
+    clearAll: store.clearAll,
+    getWeatherByIcao: store.getWeatherByIcao,
+    isLoading: store.isLoading,
+    getError: store.getError,
+    needsRefresh: store.needsRefresh
+  }), [
+    store.weatherData,
+    store.loading,
+    store.errors,
+    store.fetchWeather,
+    store.fetchMultiple,
+    store.clearWeather,
+    store.clearAll,
+    store.getWeatherByIcao,
+    store.isLoading,
+    store.getError,
+    store.needsRefresh
+  ]);
+
+  return <WeatherContext.Provider value={value}>{children}</WeatherContext.Provider>;
+});
+
 // Provider racine qui combine tous les contextes
 export const FlightSystemProviders = memo(({ children }) => {
   return (
@@ -165,7 +212,9 @@ export const FlightSystemProviders = memo(({ children }) => {
       <NavigationProvider>
         <FuelProvider>
           <WeightBalanceProvider>
-            {children}
+            <WeatherProvider>
+              {children}
+            </WeatherProvider>
           </WeightBalanceProvider>
         </FuelProvider>
       </NavigationProvider>
@@ -179,11 +228,13 @@ export const useFlightSystem = () => {
   const navigation = useNavigation();
   const fuel = useFuel();
   const weightBalance = useWeightBalance();
+  const weather = useWeather();
   
   return useMemo(() => ({
     ...aircraft,
     ...navigation,
     ...fuel,
-    ...weightBalance
-  }), [aircraft, navigation, fuel, weightBalance]);
+    ...weightBalance,
+    ...weather
+  }), [aircraft, navigation, fuel, weightBalance, weather]);
 };

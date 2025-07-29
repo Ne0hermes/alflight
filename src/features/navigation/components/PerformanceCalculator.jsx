@@ -2,12 +2,14 @@
 import React, { memo, useState, useEffect } from 'react';
 import { Plane, Thermometer, Mountain, AlertTriangle, CheckCircle, TrendingUp, TrendingDown, Wind } from 'lucide-react';
 import { useAircraft, useNavigation } from '@core/contexts';
+import { useWeatherStore } from '@core/stores/weatherStore';
 import { getAirportElevation } from '@data/airportElevations';
 import { sx } from '@shared/styles/styleSystem';
 
 export const PerformanceCalculator = memo(() => {
   const { selectedAircraft } = useAircraft();
   const { waypoints } = useNavigation();
+  const weatherData = useWeatherStore(state => state.weatherData);
   
   const [performances, setPerformances] = useState({
     departure: null,
@@ -50,7 +52,7 @@ export const PerformanceCalculator = memo(() => {
     };
   };
 
-  // Calculs simplifiés sans weather store
+  // Calculs avec intégration météo
   useEffect(() => {
     if (!selectedAircraft?.performances || !departureIcao || !arrivalIcao) return;
 
@@ -59,31 +61,56 @@ export const PerformanceCalculator = memo(() => {
       arrival: null
     };
 
-    // Pour l'instant, utiliser une température standard
-    const standardTemp = 15; // °C
-
     // Traitement aérodrome de départ
+    const depWeather = weatherData.get(departureIcao);
     const depAltitude = getAirportElevation(departureIcao);
-    results.departure = {
-      icao: departureIcao,
-      altitude: depAltitude,
-      temperature: standardTemp,
-      runways: [], // À implémenter avec les cartes VAC
-      ...calculateCorrectedPerformances(selectedAircraft.performances, depAltitude, standardTemp)
-    };
+    
+    if (depWeather?.metar?.decoded) {
+      const tempC = depWeather.metar.decoded.temperature;
+      results.departure = {
+        icao: departureIcao,
+        altitude: depAltitude,
+        temperature: tempC,
+        weather: depWeather.metar.decoded,
+        ...calculateCorrectedPerformances(selectedAircraft.performances, depAltitude, tempC)
+      };
+    } else {
+      // Utiliser température standard si pas de météo
+      results.departure = {
+        icao: departureIcao,
+        altitude: depAltitude,
+        temperature: 15,
+        weather: null,
+        ...calculateCorrectedPerformances(selectedAircraft.performances, depAltitude, 15)
+      };
+    }
 
     // Traitement aérodrome d'arrivée
+    const arrWeather = weatherData.get(arrivalIcao);
     const arrAltitude = getAirportElevation(arrivalIcao);
-    results.arrival = {
-      icao: arrivalIcao,
-      altitude: arrAltitude,
-      temperature: standardTemp,
-      runways: [], // À implémenter avec les cartes VAC
-      ...calculateCorrectedPerformances(selectedAircraft.performances, arrAltitude, standardTemp)
-    };
+    
+    if (arrWeather?.metar?.decoded) {
+      const tempC = arrWeather.metar.decoded.temperature;
+      results.arrival = {
+        icao: arrivalIcao,
+        altitude: arrAltitude,
+        temperature: tempC,
+        weather: arrWeather.metar.decoded,
+        ...calculateCorrectedPerformances(selectedAircraft.performances, arrAltitude, tempC)
+      };
+    } else {
+      // Utiliser température standard si pas de météo
+      results.arrival = {
+        icao: arrivalIcao,
+        altitude: arrAltitude,
+        temperature: 15,
+        weather: null,
+        ...calculateCorrectedPerformances(selectedAircraft.performances, arrAltitude, 15)
+      };
+    }
 
     setPerformances(results);
-  }, [selectedAircraft, departureIcao, arrivalIcao]);
+  }, [selectedAircraft, departureIcao, arrivalIcao, weatherData]);
 
   // Composant pour afficher les performances d'un aérodrome
   const AirportPerformance = ({ airport, perfData, type }) => {
@@ -98,12 +125,12 @@ export const PerformanceCalculator = memo(() => {
       );
     }
 
-    const hasRunwayData = perfData.runways && perfData.runways.length > 0;
+    const hasWeather = perfData.weather !== null;
 
     return (
       <div style={sx.combine(
         sx.components.card.base,
-        sx.border[hasRunwayData ? 'success' : 'warning']
+        sx.border[hasWeather ? 'success' : 'warning']
       )}>
         {/* En-tête */}
         <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(2), sx.flex.start, sx.spacing.gap(2))}>
@@ -114,9 +141,32 @@ export const PerformanceCalculator = memo(() => {
         {/* Conditions */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '12px' }}>
           <InfoCard icon={Mountain} label="Altitude" value={`${perfData.altitude} ft`} />
-          <InfoCard icon={Thermometer} label="Température" value={`${perfData.temperature}°C`} subvalue={`ISA ${perfData.deltaT > 0 ? '+' : ''}${perfData.deltaT.toFixed(0)}°`} />
+          <InfoCard 
+            icon={Thermometer} 
+            label="Température" 
+            value={`${perfData.temperature}°C`} 
+            subvalue={`ISA ${perfData.deltaT > 0 ? '+' : ''}${perfData.deltaT.toFixed(0)}°`}
+            highlight={hasWeather}
+          />
           <InfoCard icon={Wind} label="Facteur" value={`×${perfData.correctionFactor.toFixed(2)}`} />
         </div>
+
+        {/* Données météo si disponibles */}
+        {hasWeather && perfData.weather && (
+          <div style={sx.combine(sx.spacing.mb(3), sx.spacing.p(3), sx.bg.gray, sx.rounded.md)}>
+            <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
+              🌤️ Conditions météo actuelles
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', fontSize: '13px' }}>
+              <p>• Vent : {perfData.weather.wind.direction}° / {perfData.weather.wind.speed}kt
+                {perfData.weather.wind.gust && <span style={{ color: '#f59e0b' }}> G{perfData.weather.wind.gust}kt</span>}
+              </p>
+              <p>• Visibilité : {perfData.weather.visibility}</p>
+              <p>• QNH : {perfData.weather.pressure} hPa</p>
+              <p>• Point de rosée : {perfData.weather.dewpoint}°C</p>
+            </div>
+          </div>
+        )}
 
         {/* Performances */}
         <div style={sx.spacing.mb(3)}>
@@ -139,22 +189,36 @@ export const PerformanceCalculator = memo(() => {
           </div>
         </div>
 
-        {/* Note */}
+        {/* Note sur la source des données */}
+        {!hasWeather && (
+          <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning)}>
+            <p style={sx.text.sm}>
+              ⚠️ Température ISA standard utilisée. Chargez la météo dans l'onglet "Météo" pour des calculs précis.
+            </p>
+          </div>
+        )}
+
+        {/* Note sur les corrections */}
         <div style={sx.combine(sx.components.alert.base, sx.components.alert.info)}>
           <p style={sx.text.sm}>
             <strong>ℹ️ Corrections appliquées :</strong><br />
             • Altitude : +{((perfData.altitude / 1000) * 0.1 * 100).toFixed(0)}%<br />
             • Température : {perfData.deltaT > 0 ? '+' : ''}{(perfData.deltaT / 10 * 0.1 * 100).toFixed(0)}%
+            {hasWeather && <><br />• Source : Météo réelle (METAR)</>}
           </p>
         </div>
       </div>
     );
   };
 
-  const InfoCard = ({ icon: Icon, label, value, subvalue }) => (
-    <div style={sx.combine(sx.components.card.base, sx.spacing.p(2))}>
+  const InfoCard = ({ icon: Icon, label, value, subvalue, highlight }) => (
+    <div style={sx.combine(
+      sx.components.card.base, 
+      sx.spacing.p(2),
+      highlight && { backgroundColor: '#ecfdf5', borderColor: '#10b981' }
+    )}>
       <div style={sx.combine(sx.flex.start, sx.spacing.gap(2))}>
-        <Icon size={16} style={{ color: sx.theme.colors.gray[500] }} />
+        <Icon size={16} style={{ color: highlight ? '#10b981' : sx.theme.colors.gray[500] }} />
         <div>
           <p style={sx.combine(sx.text.xs, sx.text.secondary)}>{label}</p>
           <p style={sx.combine(sx.text.base, sx.text.bold)}>
