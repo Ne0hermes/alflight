@@ -27,5 +27,12 @@ dist-ssr
 .env
 .env.local
 .env.production
+.env.development
 
-# Ne jamais commiter les clés API !
+# Fichiers de configuration avec clés API
+config/api-keys.js
+src/config/secrets.js
+
+# Backup files
+*.backup
+*.bak
