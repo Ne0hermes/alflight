@@ -1,8 +1,10 @@
 import React from 'react';
 import { useFlightSystem } from '../../../context/FlightSystemContext';
 import { LoadInput } from '../../../components/ui/LoadInput';
-import { Plus, Trash2, MapPin, ChevronRight, Sun, Moon, Navigation2, Home } from 'lucide-react';
+import { Plus, Trash2, MapPin, ChevronRight, Sun, Moon, Navigation2, Home, CheckCircle } from 'lucide-react';
 import { PerformanceCalculator } from './PerformanceCalculator';
+import { RouteMap } from './RouteMap';
+import { useAirportCoordinates } from '../../vac/hooks/useAirportCoordinates';
 
 export const NavigationModule = () => {
   const { 
@@ -17,6 +19,34 @@ export const NavigationModule = () => {
     flightType,
     setFlightType
   } = useFlightSystem();
+
+  const { getCoordinatesByICAO } = useAirportCoordinates();
+
+  // Enrichir automatiquement les waypoints avec les coordonnées depuis VAC
+  React.useEffect(() => {
+    const enrichedWaypoints = waypoints.map(wp => {
+      if (wp.name && (!wp.lat || !wp.lon)) {
+        const coords = getCoordinatesByICAO(wp.name);
+        if (coords) {
+          return {
+            ...wp,
+            lat: coords.lat,
+            lon: coords.lon
+          };
+        }
+      }
+      return wp;
+    });
+
+    // Vérifier si des coordonnées ont été ajoutées
+    const hasNewCoords = enrichedWaypoints.some((wp, index) => 
+      wp.lat !== waypoints[index].lat || wp.lon !== waypoints[index].lon
+    );
+
+    if (hasNewCoords) {
+      setWaypoints(enrichedWaypoints);
+    }
+  }, [waypoints.map(wp => wp.name).join(','), getCoordinatesByICAO]); // Dépendance sur les noms uniquement
 
   const addWaypoint = () => {
     const newId = Math.max(...waypoints.map(w => w.id)) + 1;
@@ -331,6 +361,22 @@ export const NavigationModule = () => {
                     }}
                     placeholder="Code OACI"
                   />
+                  {wp.lat && wp.lon && (
+                    <p style={{ 
+                      margin: '4px 0 0 0', 
+                      fontSize: '11px', 
+                      color: '#10b981',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}>
+                      <CheckCircle size={12} />
+                      {wp.lat.toFixed(4)}°, {wp.lon.toFixed(4)}°
+                      <span style={{ color: '#6b7280', marginLeft: '4px' }}>
+                        (depuis VAC)
+                      </span>
+                    </p>
+                  )}
                 </div>
                 {index > 0 && index < waypoints.length - 1 && (
                   <button 
@@ -491,6 +537,9 @@ export const NavigationModule = () => {
 
       {/* Section Performances de décollage et atterrissage */}
       <PerformanceCalculator />
+
+      {/* Carte de la route */}
+      <RouteMap waypoints={waypoints} />
     </div>
   );
 };
