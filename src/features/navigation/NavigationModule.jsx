@@ -1,18 +1,26 @@
-
 // src/features/navigation/NavigationModule.jsx
 import React, { memo, useState, useEffect, useCallback } from 'react';
 import { useNavigation, useAircraft } from '@core/contexts';
-import { MapPin, Plus, Trash2, Navigation2, Home, Sun, Moon } from 'lucide-react';
+import { MapPin, Plus, Trash2, Navigation2, Home, Sun, Moon, Map, List } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useAirportCoordinates } from '@hooks/useAirportCoordinates';
+import { NavigationMap } from './components/NavigationMap';
 
 export const NavigationModule = memo(() => {
   const { selectedAircraft } = useAircraft();
   const { waypoints, setWaypoints, flightParams, setFlightParams, flightType, setFlightType, navigationResults } = useNavigation();
+  const [viewMode, setViewMode] = useState('list'); // 'list' ou 'map'
   
   const handleWaypointChange = useCallback((index, field, value) => {
     const updated = [...waypoints];
     updated[index] = { ...updated[index], [field]: value };
+    setWaypoints(updated);
+  }, [waypoints, setWaypoints]);
+
+  const handleWaypointUpdate = useCallback((waypointId, updates) => {
+    const updated = waypoints.map(wp => 
+      wp.id === waypointId ? { ...wp, ...updates } : wp
+    );
     setWaypoints(updated);
   }, [waypoints, setWaypoints]);
 
@@ -110,59 +118,115 @@ export const NavigationModule = memo(() => {
         </div>
       </section>
 
-      {/* Points de navigation */}
+      {/* Points de navigation avec bascule vue */}
       <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
-        <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4))}>
-          🗺️ Points de navigation
-        </h3>
-        
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {waypoints.map((waypoint, index) => (
-            <div key={waypoint.id} style={sx.combine(sx.components.card.base, sx.flex.between)}>
-              <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 2fr 2fr', gap: '12px' }}>
-                <input
-                  type="text"
-                  placeholder="ICAO"
-                  value={waypoint.name}
-                  onChange={(e) => handleICAOChange(index, e.target.value)}
-                  style={sx.components.input.base}
-                />
-                <input
-                  type="number"
-                  placeholder="Latitude"
-                  value={waypoint.lat}
-                  onChange={(e) => handleWaypointChange(index, 'lat', parseFloat(e.target.value))}
-                  style={sx.components.input.base}
-                  step="0.0001"
-                />
-                <input
-                  type="number"
-                  placeholder="Longitude"
-                  value={waypoint.lon}
-                  onChange={(e) => handleWaypointChange(index, 'lon', parseFloat(e.target.value))}
-                  style={sx.components.input.base}
-                  step="0.0001"
-                />
-              </div>
-              {waypoints.length > 2 && (
-                <button
-                  onClick={() => removeWaypoint(waypoint.id)}
-                  style={sx.combine(sx.components.button.base, sx.components.button.danger, sx.spacing.ml(3))}
-                >
-                  <Trash2 size={16} />
-                </button>
+        <div style={sx.combine(sx.flex.between, sx.spacing.mb(4))}>
+          <h3 style={sx.combine(sx.text.lg, sx.text.bold)}>
+            🗺️ Points de navigation
+          </h3>
+          
+          {/* Boutons de bascule */}
+          <div style={sx.combine(sx.flex.row, sx.spacing.gap(2))}>
+            <button
+              onClick={() => setViewMode('list')}
+              style={sx.combine(
+                sx.components.button.base,
+                viewMode === 'list' ? sx.components.button.primary : sx.components.button.secondary
               )}
-            </div>
-          ))}
+            >
+              <List size={16} />
+              Liste
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              style={sx.combine(
+                sx.components.button.base,
+                viewMode === 'map' ? sx.components.button.primary : sx.components.button.secondary
+              )}
+            >
+              <Map size={16} />
+              Carte
+            </button>
+          </div>
         </div>
         
-        <button
-          onClick={addWaypoint}
-          style={sx.combine(sx.components.button.base, sx.components.button.primary, sx.spacing.mt(3))}
-        >
-          <Plus size={16} />
-          Ajouter un point
-        </button>
+        {/* Vue Liste */}
+        {viewMode === 'list' && (
+          <>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {waypoints.map((waypoint, index) => (
+                <div key={waypoint.id} style={sx.combine(sx.components.card.base, sx.flex.between)}>
+                  <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 2fr 2fr', gap: '12px' }}>
+                    <input
+                      type="text"
+                      placeholder="ICAO"
+                      value={waypoint.name}
+                      onChange={(e) => handleICAOChange(index, e.target.value)}
+                      style={sx.components.input.base}
+                    />
+                    <input
+                      type="number"
+                      placeholder="Latitude"
+                      value={waypoint.lat}
+                      onChange={(e) => handleWaypointChange(index, 'lat', parseFloat(e.target.value))}
+                      style={sx.components.input.base}
+                      step="0.0001"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Longitude"
+                      value={waypoint.lon}
+                      onChange={(e) => handleWaypointChange(index, 'lon', parseFloat(e.target.value))}
+                      style={sx.components.input.base}
+                      step="0.0001"
+                    />
+                  </div>
+                  {waypoints.length > 2 && (
+                    <button
+                      onClick={() => removeWaypoint(waypoint.id)}
+                      style={sx.combine(sx.components.button.base, sx.components.button.danger, sx.spacing.ml(3))}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            
+            <button
+              onClick={addWaypoint}
+              style={sx.combine(sx.components.button.base, sx.components.button.primary, sx.spacing.mt(3))}
+            >
+              <Plus size={16} />
+              Ajouter un point
+            </button>
+          </>
+        )}
+        
+        {/* Vue Carte */}
+        {viewMode === 'map' && (
+          <div>
+            <NavigationMap 
+              waypoints={waypoints}
+              onWaypointUpdate={handleWaypointUpdate}
+              selectedAircraft={selectedAircraft}
+            />
+            
+            <div style={sx.combine(sx.flex.between, sx.spacing.mt(3))}>
+              <button
+                onClick={addWaypoint}
+                style={sx.combine(sx.components.button.base, sx.components.button.primary)}
+              >
+                <Plus size={16} />
+                Ajouter un point
+              </button>
+              
+              <div style={sx.combine(sx.text.sm, sx.text.secondary)}>
+                💡 Glissez les marqueurs sur la carte pour ajuster les positions
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Résultats */}
