@@ -1,9 +1,10 @@
 // src/hooks/useAirportCoordinates.js
 import { FRENCH_AIRPORTS_COORDINATES } from '@data/airportElevations';
+import { useVACStore } from '@core/stores/vacStore';
 
 export const useAirportCoordinates = () => {
-  // Pour l'instant, utilisons une implémentation simple basée sur les données statiques
-  const charts = {}; // Placeholder pour les futures cartes VAC
+  // Récupérer les cartes VAC depuis le store
+  const charts = useVACStore(state => state.charts);
 
   const getCoordinatesByICAO = (icao) => {
     if (!icao) return null;
@@ -20,7 +21,7 @@ export const useAirportCoordinates = () => {
       };
     }
     
-    // Future implémentation pour les cartes VAC téléchargées
+    // Vérifier dans les cartes VAC téléchargées
     for (const c of Object.values(charts)) {
       if (c.airportIcao === u) {
         if (c.isDownloaded && c.extractedData?.coordinates) {
@@ -52,7 +53,7 @@ export const useAirportCoordinates = () => {
       if (co) coords[icao] = co;
     });
     
-    // Ajouter les coordonnées des cartes VAC (future implémentation)
+    // Ajouter les coordonnées des cartes VAC
     Object.values(charts).forEach(c => { 
       const co = getCoordinatesByICAO(c.airportIcao); 
       if (co) coords[c.airportIcao] = co; 

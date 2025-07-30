@@ -2,8 +2,11 @@
 import React, { memo, useEffect, useRef, useState, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, Popup, ZoomControl, LayersControl } from 'react-leaflet';
 import L from 'leaflet';
-import { MapPin, Navigation, AlertTriangle, Info } from 'lucide-react';
+import { MapPin, Navigation, AlertTriangle, Info, Map } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
+
+// Import des styles Leaflet
+import 'leaflet/dist/leaflet.css';
 
 // Correction du problème d'icônes Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -44,6 +47,7 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(!apiKey);
   const [tempApiKey, setTempApiKey] = useState('');
   const [mapReady, setMapReady] = useState(false);
+  const [showPlaceholder, setShowPlaceholder] = useState(true); // Pour afficher le placeholder
   const mapRef = useRef(null);
 
   // Centre par défaut (France)
@@ -118,10 +122,24 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
     }
   }, []);
 
-  // URL de la couche OACI IGN
-  const oaciLayerUrl = apiKey 
-    ? `https://wxs.ign.fr/${apiKey}/geoportail/wmts?layer=SCANEXPRESS_OACI&style=normal&tilematrixset=PM&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image/jpeg&TileMatrix={z}&TileRow={y}&TileCol={x}`
-    : null;
+  // URL de la couche OACI IGN - Format corrigé
+  const getOaciLayerUrl = (apiKey) => {
+    if (!apiKey) return null;
+    
+    return `https://wxs.ign.fr/${apiKey}/geoportail/wmts?` +
+      `SERVICE=WMTS&` +
+      `REQUEST=GetTile&` +
+      `VERSION=1.0.0&` +
+      `LAYER=GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-OACI&` +
+      `STYLE=normal&` +
+      `TILEMATRIXSET=PM&` +
+      `TILEMATRIX={z}&` +
+      `TILEROW={y}&` +
+      `TILECOL={x}&` +
+      `FORMAT=image/jpeg`;
+  };
+
+  const oaciLayerUrl = getOaciLayerUrl(apiKey);
 
   // Attribution IGN
   const ignAttribution = '&copy; <a href="https://www.ign.fr/" target="_blank">IGN</a> - Carte OACI';
@@ -149,7 +167,8 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
                 <ol style={sx.combine(sx.text.sm, sx.spacing.ml(4))}>
                   <li>Inscrivez-vous sur <a href="https://geoservices.ign.fr/inscription" target="_blank" style={{ color: '#3b82f6' }}>geoservices.ign.fr</a></li>
                   <li>Créez une nouvelle clé API</li>
-                  <li>Activez le service "Cartes SCAN Express OACI"</li>
+                  <li>Dans les services, activez "Cartes SCAN Express Standard" et "Cartes SCAN Express OACI"</li>
+                  <li>Copiez la clé et collez-la ci-dessous</li>
                 </ol>
               </div>
             </div>
@@ -187,167 +206,179 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
 
       {/* Carte */}
       <div style={styles.mapContainer}>
-        <MapContainer
-          ref={mapRef}
-          center={mapCenter}
-          zoom={mapZoom}
-          style={styles.map}
-          whenReady={() => setMapReady(true)}
-          zoomControl={false}
-        >
-          <ZoomControl position="topright" />
-          
-          <LayersControl position="topright">
-            {/* Couche OACI IGN (si clé disponible) */}
-            {oaciLayerUrl && (
-              <LayersControl.BaseLayer checked name="Carte OACI (IGN)">
-                <TileLayer
-                  url={oaciLayerUrl}
-                  attribution={ignAttribution}
-                  tileSize={256}
-                  minZoom={6}
-                  maxZoom={12}
-                />
-              </LayersControl.BaseLayer>
-            )}
-            
-            {/* Couche OpenStreetMap (fallback) */}
-            <LayersControl.BaseLayer checked={!oaciLayerUrl} name="OpenStreetMap">
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              />
-            </LayersControl.BaseLayer>
-
-            {/* Couche satellite (optionnelle) */}
-            <LayersControl.BaseLayer name="Vue satellite">
-              <TileLayer
-                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                attribution="&copy; Esri"
-              />
-            </LayersControl.BaseLayer>
-
-            {/* Overlay : espaces aériens (exemple) */}
-            <LayersControl.Overlay name="Espaces aériens">
-              <TileLayer
-                url="https://tiles.openaip.net/geowebcache/service/tms/1.0.0/openaip_basemap@EPSG%3A900913@png/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://www.openaip.net">OpenAIP</a>'
-                opacity={0.5}
-                tms={true}
-              />
-            </LayersControl.Overlay>
-          </LayersControl>
-
-          {/* Route */}
-          {route.length > 1 && (
-            <Polyline
-              positions={route}
-              color="#3b82f6"
-              weight={3}
-              opacity={0.8}
-              dashArray="10, 5"
-            />
-          )}
-
-          {/* Waypoints */}
-          {waypoints.map((waypoint, index) => {
-            if (!waypoint.lat || !waypoint.lon) return null;
-
-            const icon = index === 0 
-              ? WAYPOINT_ICONS.departure 
-              : index === waypoints.length - 1 
-              ? WAYPOINT_ICONS.arrival 
-              : WAYPOINT_ICONS.waypoint;
-
-            return (
-              <Marker
-                key={waypoint.id}
-                position={[waypoint.lat, waypoint.lon]}
-                icon={icon}
-                draggable={onWaypointUpdate ? true : false}
-                eventHandlers={{
-                  dragend: (e) => {
-                    if (onWaypointUpdate) {
-                      const newPos = e.target.getLatLng();
-                      onWaypointUpdate(waypoint.id, {
-                        lat: newPos.lat,
-                        lon: newPos.lng
-                      });
-                    }
-                  }
-                }}
+        {/* PLACEHOLDER TEMPORAIRE */}
+        {showPlaceholder ? (
+          <div style={styles.placeholderContainer}>
+            <div style={styles.placeholderContent}>
+              <Map size={60} color="#3b82f6" />
+              <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1f2937', margin: '16px 0' }}>
+                CARTE IGN ICI
+              </h2>
+              <p style={{ color: '#6b7280', marginBottom: '24px' }}>
+                Placeholder temporaire pour la carte IGN OACI
+              </p>
+              <button
+                onClick={() => setShowPlaceholder(false)}
+                style={sx.combine(sx.components.button.base, sx.components.button.primary)}
               >
-                <Popup>
-                  <div style={{ minWidth: '150px' }}>
-                    <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(2))}>
-                      {waypoint.name || `Point ${index + 1}`}
-                    </h4>
-                    <p style={sx.text.sm}>
-                      Lat: {waypoint.lat.toFixed(4)}°<br />
-                      Lon: {waypoint.lon.toFixed(4)}°
-                    </p>
-                    {index > 0 && route[index] && route[index - 1] && (
-                      <p style={sx.combine(sx.text.sm, sx.spacing.mt(2))}>
-                        Distance depuis précédent:<br />
-                        <strong>
-                          {(L.latLng(route[index - 1]).distanceTo(L.latLng(route[index])) / 1852).toFixed(1)} NM
-                        </strong>
-                      </p>
-                    )}
-                  </div>
-                </Popup>
-              </Marker>
-            );
-          })}
-        </MapContainer>
-
-        {/* Panneau d'information */}
-        {mapReady && route.length > 0 && (
-          <div style={styles.infoPanel}>
-            <div style={styles.infoPanelContent}>
-              <h4 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-                <Navigation size={16} style={{ marginRight: '4px' }} />
-                Information de vol
-              </h4>
-              <div style={sx.text.xs}>
-                <p>Distance totale : <strong>{totalDistance} NM</strong></p>
-                <p>Waypoints : <strong>{waypoints.length}</strong></p>
-                {selectedAircraft && (
-                  <>
-                    <p>Temps estimé : <strong>{(totalDistance / selectedAircraft.cruiseSpeedKt).toFixed(1)} h</strong></p>
-                    <p>Carburant : <strong>{(totalDistance / selectedAircraft.cruiseSpeedKt * selectedAircraft.fuelConsumption).toFixed(1)} L</strong></p>
-                  </>
-                )}
-              </div>
+                Afficher la carte Leaflet
+              </button>
+              <button
+                onClick={() => setShowApiKeyDialog(true)}
+                style={sx.combine(sx.components.button.base, sx.components.button.secondary, sx.spacing.ml(2))}
+              >
+                Configurer IGN
+              </button>
+            </div>
+            
+            {/* Informations de debug */}
+            <div style={styles.debugInfo}>
+              <h4 style={{ fontWeight: 'bold', marginBottom: '8px' }}>Debug Info:</h4>
+              <p>Clé API: {apiKey ? '✅ Configurée' : '❌ Non configurée'}</p>
+              <p>Waypoints: {waypoints.length}</p>
+              <p>Route calculée: {route.length > 0 ? '✅ Oui' : '❌ Non'}</p>
+              {apiKey && <p style={{ fontSize: '11px', wordBreak: 'break-all' }}>URL: {oaciLayerUrl}</p>}
             </div>
           </div>
+        ) : (
+          <>
+            <MapContainer
+              ref={mapRef}
+              center={mapCenter}
+              zoom={mapZoom}
+              style={styles.map}
+              whenReady={() => setMapReady(true)}
+              zoomControl={false}
+            >
+              <ZoomControl position="topright" />
+              
+              <LayersControl position="topright">
+                {/* Couche OACI IGN (si clé disponible) */}
+                {oaciLayerUrl && (
+                  <LayersControl.BaseLayer checked name="Carte OACI (IGN)">
+                    <TileLayer
+                      url={oaciLayerUrl}
+                      attribution={ignAttribution}
+                      tileSize={256}
+                      minZoom={6}
+                      maxZoom={12}
+                    />
+                  </LayersControl.BaseLayer>
+                )}
+                
+                {/* Couche OpenStreetMap (fallback) */}
+                <LayersControl.BaseLayer checked={!oaciLayerUrl} name="OpenStreetMap">
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                  />
+                </LayersControl.BaseLayer>
+
+                {/* Couche satellite (optionnelle) */}
+                <LayersControl.BaseLayer name="Vue satellite">
+                  <TileLayer
+                    url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                    attribution="&copy; Esri"
+                  />
+                </LayersControl.BaseLayer>
+              </LayersControl>
+
+              {/* Route */}
+              {route.length > 1 && (
+                <Polyline
+                  positions={route}
+                  color="#3b82f6"
+                  weight={3}
+                  opacity={0.8}
+                  dashArray="10, 5"
+                />
+              )}
+
+              {/* Waypoints */}
+              {waypoints.map((waypoint, index) => {
+                if (!waypoint.lat || !waypoint.lon) return null;
+
+                const icon = index === 0 
+                  ? WAYPOINT_ICONS.departure 
+                  : index === waypoints.length - 1 
+                  ? WAYPOINT_ICONS.arrival 
+                  : WAYPOINT_ICONS.waypoint;
+
+                return (
+                  <Marker
+                    key={waypoint.id}
+                    position={[waypoint.lat, waypoint.lon]}
+                    icon={icon}
+                    draggable={onWaypointUpdate ? true : false}
+                    eventHandlers={{
+                      dragend: (e) => {
+                        if (onWaypointUpdate) {
+                          const newPos = e.target.getLatLng();
+                          onWaypointUpdate(waypoint.id, {
+                            lat: newPos.lat,
+                            lon: newPos.lng
+                          });
+                        }
+                      }
+                    }}
+                  >
+                    <Popup>
+                      <div style={{ minWidth: '150px' }}>
+                        <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(2))}>
+                          {waypoint.name || `Point ${index + 1}`}
+                        </h4>
+                        <p style={sx.text.sm}>
+                          Lat: {waypoint.lat.toFixed(4)}°<br />
+                          Lon: {waypoint.lon.toFixed(4)}°
+                        </p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              })}
+            </MapContainer>
+
+            {/* Panneau d'information */}
+            {mapReady && route.length > 0 && (
+              <div style={styles.infoPanel}>
+                <div style={styles.infoPanelContent}>
+                  <h4 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
+                    <Navigation size={16} style={{ marginRight: '4px' }} />
+                    Information de vol
+                  </h4>
+                  <div style={sx.text.xs}>
+                    <p>Distance totale : <strong>{totalDistance} NM</strong></p>
+                    <p>Waypoints : <strong>{waypoints.length}</strong></p>
+                    {selectedAircraft && (
+                      <>
+                        <p>Temps estimé : <strong>{(totalDistance / selectedAircraft.cruiseSpeedKt).toFixed(1)} h</strong></p>
+                        <p>Carburant : <strong>{(totalDistance / selectedAircraft.cruiseSpeedKt * selectedAircraft.fuelConsumption).toFixed(1)} L</strong></p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Boutons de contrôle */}
+            <button
+              onClick={() => setShowApiKeyDialog(true)}
+              style={styles.configButton}
+              title="Configurer la clé API IGN"
+            >
+              ⚙️
+            </button>
+            
+            <button
+              onClick={() => setShowPlaceholder(true)}
+              style={{ ...styles.configButton, top: '60px' }}
+              title="Afficher le placeholder"
+            >
+              📍
+            </button>
+          </>
         )}
-
-        {/* Bouton de configuration */}
-        <button
-          onClick={() => setShowApiKeyDialog(true)}
-          style={styles.configButton}
-          title="Configurer la clé API IGN"
-        >
-          ⚙️
-        </button>
       </div>
-
-      {/* CSS pour les animations */}
-      <style jsx>{`
-        .custom-waypoint-icon {
-          background: transparent !important;
-          border: none !important;
-        }
-        
-        .leaflet-container {
-          font-family: inherit;
-        }
-        
-        .leaflet-popup-content {
-          margin: 12px;
-        }
-      `}</style>
     </>
   );
 });
@@ -364,6 +395,31 @@ const styles = {
   map: {
     width: '100%',
     height: '100%'
+  },
+  placeholderContainer: {
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f3f4f6',
+    position: 'relative'
+  },
+  placeholderContent: {
+    textAlign: 'center',
+    padding: '32px'
+  },
+  debugInfo: {
+    position: 'absolute',
+    bottom: '16px',
+    left: '16px',
+    backgroundColor: 'white',
+    padding: '16px',
+    borderRadius: '8px',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+    fontSize: '12px',
+    maxWidth: '300px'
   },
   apiKeyDialog: {
     position: 'fixed',
@@ -413,11 +469,7 @@ const styles = {
     justifyContent: 'center',
     fontSize: '18px',
     zIndex: 400,
-    transition: 'all 0.2s',
-    '&:hover': {
-      backgroundColor: '#f3f4f6',
-      borderColor: '#3b82f6'
-    }
+    transition: 'all 0.2s'
   }
 };
 
