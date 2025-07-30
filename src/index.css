@@ -1,5 +1,8 @@
 /* Global styles for the Flight Management System */
 
+/* Import Leaflet CSS */
+@import 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+
 /* CSS Reset */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -72,9 +75,43 @@ button:active {
   transform: translateY(0);
 }
 
+/* Leaflet specific overrides */
+.leaflet-container {
+  font-family: inherit;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+}
+
+.leaflet-popup-tip {
+  margin-top: -1px;
+}
+
+/* Custom waypoint icons */
+.custom-waypoint-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Map controls styling */
+.leaflet-control-layers {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.leaflet-control-zoom a {
+  border-radius: 4px;
+  margin: 2px;
+}
+
 /* Print styles */
 @media print {
   body {
     background: white;
+  }
+  
+  .leaflet-control-container {
+    display: none;
   }
 }
