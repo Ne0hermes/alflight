@@ -93,7 +93,7 @@ export const useVACStore = create(
               ...state.charts[upperIcao],
               isDownloaded: true,
               downloadDate: Date.now(),
-              fileSize: (Math.random() * 5 + 1).toFixed(2), // MB
+              fileSize: parseFloat((Math.random() * 5 + 1).toFixed(2)),
               extractedData: simulatedData
             };
             delete state.downloading[upperIcao];
@@ -196,18 +196,18 @@ function getSimulatedElevation(icao) {
 function getSimulatedRunways(icao) {
   const runways = {
     'LFPN': [
-      { identifier: '07/25', qfu: 070, length: 1100, width: 30, surface: 'Revêtue' }
+      { identifier: '07/25', qfu: 70, length: 1100, width: 30, surface: 'Revêtue' }
     ],
     'LFPT': [
-      { identifier: '05/23', qfu: 050, length: 1650, width: 45, surface: 'Revêtue' },
+      { identifier: '05/23', qfu: 50, length: 1650, width: 45, surface: 'Revêtue' },
       { identifier: '12/30', qfu: 120, length: 950, width: 100, surface: 'Herbe' }
     ],
     'LFST': [
-      { identifier: '05/23', qfu: 046, length: 2400, width: 45, surface: 'Revêtue' }
+      { identifier: '05/23', qfu: 46, length: 2400, width: 45, surface: 'Revêtue' }
     ],
     'LFPG': [
-      { identifier: '09L/27R', qfu: 087, length: 2700, width: 45, surface: 'Revêtue' },
-      { identifier: '09R/27L', qfu: 087, length: 4200, width: 60, surface: 'Revêtue' }
+      { identifier: '09L/27R', qfu: 87, length: 2700, width: 45, surface: 'Revêtue' },
+      { identifier: '09R/27L', qfu: 87, length: 4200, width: 60, surface: 'Revêtue' }
     ]
   };
   return runways[icao] || [];
