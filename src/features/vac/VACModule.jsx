@@ -70,7 +70,11 @@ export const VACModule = memo(() => {
   const stats = {
     total: Object.keys(charts).length,
     downloaded: downloadedCharts.length,
-    totalSize: downloadedCharts.reduce((sum, c) => sum + (c.fileSize || 0), 0),
+    totalSize: downloadedCharts.reduce((sum, c) => {
+      const size = c.fileSize;
+      const numericSize = typeof size === 'string' ? parseFloat(size) : (size || 0);
+      return sum + (isNaN(numericSize) ? 0 : numericSize);
+    }, 0),
     navigation: navigationIcaos.filter(icao => charts[icao]?.isDownloaded).length
   };
   
