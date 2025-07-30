@@ -1,2 +1,2 @@
 // src/features/fuel/index.js
-export { FuelModule as default } from './FuelModule';
+export { default } from './FuelModule';

@@ -7,12 +7,13 @@ import { ErrorBoundary } from '@shared/components/ErrorBoundary';
 import { sx } from '@shared/styles/styleSystem';
 
 // Lazy loading des modules
-const NavigationModule = lazy(() => import('@features/navigation/NavigationModule'));
+// Lazy loading des modules
+const NavigationModule = lazy(() => import('@features/navigation'));
 const WeightBalanceModule = lazy(() => import('@features/weight-balance'));
-const FuelModule = lazy(() => import('@features/fuel/FuelModule'));
-const AircraftModule = lazy(() => import('@features/aircraft/AircraftModule'));
-const WeatherModule = lazy(() => import('@features/weather/WeatherModule'));
-const VACModule = lazy(() => import('@features/vac/VACModule'));
+const FuelModule = lazy(() => import('@features/fuel'));
+const AircraftModule = lazy(() => import('@features/aircraft'));
+const WeatherModule = lazy(() => import('@features/weather'));
+const VACModule = lazy(() => import('@features/vac'));
 
 // Configuration des onglets
 const TAB_CONFIG = [

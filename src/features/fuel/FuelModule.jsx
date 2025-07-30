@@ -1,6 +1,9 @@
 // src/features/fuel/FuelModule.jsx
+
 import React, { memo } from 'react';
 import { useFuel, useAircraft, useNavigation } from '@core/contexts';
+import { useNavigationResults } from '@hooks/useNavigationResults';
+import { useFuelSync } from '@hooks/useFuelSync';
 import { Fuel, AlertTriangle, CheckCircle } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 
