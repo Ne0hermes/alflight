@@ -1,8 +1,8 @@
 // src/services/vacPdfExtractor.js
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
-import pdfjsWorker from 'pdfjs-dist/legacy/build/pdf.worker.entry';
+import * as pdfjsLib from 'pdfjs-dist';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+// Configuration du worker via CDN
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 export class SIAVACExtractor {
   constructor() {
