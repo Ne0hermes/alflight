@@ -1,8 +1,7 @@
-// src/core/stores/vacStore.js (mise à jour)
+// src/core/stores/vacStore.js
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import { SIAVACExtractor } from '@services/vacPdfExtractor';
 
 // Configuration des cartes VAC avec URLs réelles
 export const VAC_CONFIG = {
@@ -35,13 +34,29 @@ export const VAC_CONFIG = {
 export const useVACStore = create(
   persist(
     immer((set, get) => ({
-      // État existant...
+      // État
       charts: {},
       downloading: {},
       errors: {},
       selectedChart: null,
       
-      // Nouvelle action pour télécharger réellement
+      // Actions
+      initializeChart: (icao) => set(state => {
+        const upperIcao = icao.toUpperCase();
+        if (!state.charts[upperIcao] && VAC_CONFIG.charts[upperIcao]) {
+          state.charts[upperIcao] = {
+            icao: upperIcao,
+            name: VAC_CONFIG.charts[upperIcao].name,
+            url: `${VAC_CONFIG.baseUrl}/${VAC_CONFIG.charts[upperIcao].url}`,
+            coordinates: VAC_CONFIG.charts[upperIcao].coordinates,
+            isDownloaded: false,
+            downloadDate: null,
+            fileSize: null,
+            extractedData: null
+          };
+        }
+      }),
+      
       downloadChart: async (icao) => {
         const upperIcao = icao.toUpperCase();
         const chartConfig = VAC_CONFIG.charts[upperIcao];
@@ -59,56 +74,32 @@ export const useVACStore = create(
         });
         
         try {
-          console.log(`📥 Téléchargement carte VAC ${upperIcao}...`);
+          console.log(`📥 Simulation téléchargement carte VAC ${upperIcao}...`);
           
-          // URL complète
-          const pdfUrl = `${VAC_CONFIG.baseUrl}/${chartConfig.url}`;
+          // Simulation du téléchargement (en production, télécharger le vrai PDF)
+          await new Promise(resolve => setTimeout(resolve, 2000));
           
-          // Pour contourner CORS, utiliser un proxy ou télécharger via backend
-          // Option 1: Proxy CORS (pour développement)
-          const proxyUrl = `https://cors-anywhere.herokuapp.com/${pdfUrl}`;
-          
-          // Option 2: Votre propre proxy
-          // const proxyUrl = `/api/vac-proxy?url=${encodeURIComponent(pdfUrl)}`;
-          
-          const response = await fetch(proxyUrl, {
-            headers: {
-              'X-Requested-With': 'XMLHttpRequest'
-            }
-          });
-          
-          if (!response.ok) {
-            throw new Error(`Erreur HTTP: ${response.status}`);
-          }
-          
-          const blob = await response.blob();
-          const arrayBuffer = await blob.arrayBuffer();
-          const pdfData = new Uint8Array(arrayBuffer);
-          
-          // Créer URL pour affichage
-          const blobUrl = URL.createObjectURL(blob);
-          
-          // Extraire les données avec le nouvel extracteur
-          const extractor = new SIAVACExtractor();
-          const extractedData = await extractor.extractFromPDF(pdfData);
+          // Données simulées d'extraction
+          const simulatedData = {
+            airportElevation: getSimulatedElevation(upperIcao),
+            runways: getSimulatedRunways(upperIcao),
+            frequencies: getSimulatedFrequencies(upperIcao),
+            circuitAltitude: getSimulatedElevation(upperIcao) + 1000,
+            magneticVariation: 2
+          };
           
           set(state => {
             state.charts[upperIcao] = {
-              icao: upperIcao,
-              name: chartConfig.name,
-              url: pdfUrl,
-              coordinates: chartConfig.coordinates,
+              ...state.charts[upperIcao],
               isDownloaded: true,
               downloadDate: Date.now(),
-              fileSize: (blob.size / 1024 / 1024).toFixed(2), // MB
-              pdfBlob: blob,
-              pdfUrl: blobUrl,
-              extractedData: extractedData
+              fileSize: (Math.random() * 5 + 1).toFixed(2), // MB
+              extractedData: simulatedData
             };
             delete state.downloading[upperIcao];
           });
           
-          console.log(`✅ Carte VAC ${upperIcao} téléchargée et analysée`);
+          console.log(`✅ Carte VAC ${upperIcao} simulée téléchargée`);
           return true;
           
         } catch (error) {
@@ -121,26 +112,111 @@ export const useVACStore = create(
         }
       },
       
-      // Ouvrir le PDF dans un nouvel onglet
-      openPDF: (icao) => {
-        const chart = get().charts[icao?.toUpperCase()];
-        if (chart?.pdfUrl) {
-          window.open(chart.pdfUrl, '_blank');
-        } else if (chart?.url) {
-          window.open(chart.url, '_blank');
+      deleteChart: (icao) => set(state => {
+        const upperIcao = icao.toUpperCase();
+        if (state.charts[upperIcao]) {
+          state.charts[upperIcao] = {
+            ...state.charts[upperIcao],
+            isDownloaded: false,
+            downloadDate: null,
+            fileSize: null,
+            extractedData: null
+          };
         }
+      }),
+      
+      selectChart: (icao) => set(state => {
+        state.selectedChart = icao;
+      }),
+      
+      updateExtractedData: (icao, data) => set(state => {
+        const upperIcao = icao.toUpperCase();
+        if (state.charts[upperIcao]) {
+          state.charts[upperIcao].extractedData = data;
+        }
+      }),
+      
+      // Sélecteurs
+      getChartByIcao: (icao) => {
+        return get().charts[icao?.toUpperCase()];
       },
       
-      // Télécharger le PDF sur l'ordinateur
-      savePDF: (icao) => {
-        const chart = get().charts[icao?.toUpperCase()];
-        if (chart?.pdfBlob) {
-          const a = document.createElement('a');
-          a.href = URL.createObjectURL(chart.pdfBlob);
-          a.download = `VAC_${icao}_${new Date().toISOString().split('T')[0]}.pdf`;
-          a.click();
-        }
+      getDownloadedCharts: () => {
+        return Object.values(get().charts).filter(c => c.isDownloaded);
+      },
+      
+      isDownloading: (icao) => {
+        return !!get().downloading[icao?.toUpperCase()];
+      },
+      
+      getError: (icao) => {
+        return get().errors[icao?.toUpperCase()];
       }
-    }))
+    })),
+    {
+      name: 'vac-storage',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        charts: state.charts
+      })
+    }
   )
 );
+
+// Sélecteurs optimisés
+export const vacSelectors = {
+  useChartByIcao: (icao) => useVACStore(state => state.getChartByIcao(icao)),
+  useDownloadedCharts: () => useVACStore(state => state.getDownloadedCharts()),
+  useAvailableCharts: () => Object.keys(VAC_CONFIG.charts),
+  useIsDownloading: (icao) => useVACStore(state => state.isDownloading(icao)),
+  useError: (icao) => useVACStore(state => state.getError(icao)),
+  useVACActions: () => useVACStore(
+    state => ({
+      initializeChart: state.initializeChart,
+      downloadChart: state.downloadChart,
+      deleteChart: state.deleteChart,
+      selectChart: state.selectChart,
+      updateExtractedData: state.updateExtractedData
+    }),
+    (a, b) => Object.is(a, b)
+  )
+};
+
+// Fonctions helper pour simulation
+function getSimulatedElevation(icao) {
+  const elevations = {
+    'LFPN': 538,
+    'LFPT': 325,
+    'LFST': 505,
+    'LFPG': 392
+  };
+  return elevations[icao] || 300;
+}
+
+function getSimulatedRunways(icao) {
+  const runways = {
+    'LFPN': [
+      { identifier: '07/25', qfu: 070, length: 1100, width: 30, surface: 'Revêtue' }
+    ],
+    'LFPT': [
+      { identifier: '05/23', qfu: 050, length: 1650, width: 45, surface: 'Revêtue' },
+      { identifier: '12/30', qfu: 120, length: 950, width: 100, surface: 'Herbe' }
+    ],
+    'LFST': [
+      { identifier: '05/23', qfu: 046, length: 2400, width: 45, surface: 'Revêtue' }
+    ],
+    'LFPG': [
+      { identifier: '09L/27R', qfu: 087, length: 2700, width: 45, surface: 'Revêtue' },
+      { identifier: '09R/27L', qfu: 087, length: 4200, width: 60, surface: 'Revêtue' }
+    ]
+  };
+  return runways[icao] || [];
+}
+
+function getSimulatedFrequencies(icao) {
+  return {
+    twr: '118.850',
+    gnd: '121.950',
+    atis: '128.450'
+  };
+}
