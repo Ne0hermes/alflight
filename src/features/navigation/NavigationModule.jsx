@@ -5,6 +5,7 @@ import { MapPin, Plus, Trash2, Navigation2, Home, Sun, Moon, Map, List } from 'l
 import { sx } from '@shared/styles/styleSystem';
 import { useAirportCoordinates } from '@hooks/useAirportCoordinates';
 import { NavigationMap } from './components/NavigationMap';
+import { PerformanceCalculator } from './components/PerformanceCalculator';
 
 export const NavigationModule = memo(() => {
   const { selectedAircraft } = useAircraft();
@@ -266,6 +267,11 @@ export const NavigationModule = memo(() => {
             </div>
           </div>
         </section>
+      )}
+      
+      {/* Calculateur de performances */}
+      {selectedAircraft && waypoints.length >= 2 && (
+        <PerformanceCalculator />
       )}
     </div>
   );
