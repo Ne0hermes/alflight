@@ -4,8 +4,10 @@ import { useNavigation, useAircraft } from '@core/contexts';
 import { MapPin, Plus, Trash2, Navigation2, Home, Sun, Moon, Map, List } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useAirportCoordinates } from '@hooks/useAirportCoordinates';
+import { useOpenAIPStore } from '@core/stores/openAIPStore';
 import { NavigationMap } from './components/NavigationMap';
 import { PerformanceCalculator } from './components/PerformanceCalculator';
+import { AirportSelector } from './components/AirportSelector';
 
 export const NavigationModule = memo(() => {
   const { selectedAircraft } = useAircraft();
