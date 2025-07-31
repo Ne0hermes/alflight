@@ -1,10 +1,12 @@
 // src/App.jsx
-import React, { lazy, Suspense, memo, useState, useCallback, useMemo } from 'react';
+import React, { lazy, Suspense, memo, useState, useCallback, useMemo, useEffect } from 'react';
 import { FlightSystemProviders } from '@core/contexts';
 import { TabNavigation } from '@shared/components/TabNavigation';
 import { LoadingSpinner } from '@shared/components/LoadingSpinner';
 import { ErrorBoundary } from '@shared/components/ErrorBoundary';
 import { sx } from '@shared/styles/styleSystem';
+import { useOpenAIPStore } from '@core/stores/openAIPStore';
+import { OpenAIPStatus } from '@shared/components/OpenAIPStatus';
 
 // Lazy loading des modules
 // Lazy loading des modules

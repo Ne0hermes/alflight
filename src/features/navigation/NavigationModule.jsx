@@ -1,35 +1,39 @@
 // src/features/navigation/NavigationModule.jsx
-import React, { memo, useState, useCallback } from 'react';
-import { MapPin, Plus, Trash2, Navigation2, Home, Sun, Moon, Map, List } from 'lucide-react';
+import React, { memo, useState, useCallback, useEffect } from 'react';
+import { MapPin, Plus, Trash2, Navigation2, Home, Sun, Moon, Map, List, Loader, AlertCircle } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 
-// Import des contextes
+// Import des contextes et hooks
 import { useNavigation, useAircraft } from '@core/contexts';
 import { useNavigationResults } from '@hooks/useNavigationResults';
-import { useAirportCoordinates } from '@hooks/useAirportCoordinates';
+import { useOpenAIPStore, openAIPSelectors } from '@core/stores/openAIPStore';
 
 // Import des composants locaux
 import { NavigationMap } from './components/NavigationMap';
 import { PerformanceCalculator } from './components/PerformanceCalculator';
 import { AirportSelector } from './components/AirportSelector';
+import { ReportingPointsSelector } from './components/ReportingPointsSelector';
 
 const NavigationModule = () => {
   const { selectedAircraft } = useAircraft();
   const { waypoints, setWaypoints, flightParams, setFlightParams, flightType, setFlightType } = useNavigation();
   const navigationResults = useNavigationResults();
-  const { getCoordinatesByICAO } = useAirportCoordinates();
+  
+  // OpenAIP Store
+  const { loadAirports } = useOpenAIPStore();
+  const loading = openAIPSelectors.useLoading();
+  const errors = openAIPSelectors.useErrors();
   
   const [viewMode, setViewMode] = useState('list'); // 'list' ou 'map'
-  const [showAirportSelector, setShowAirportSelector] = useState(false);
-  const [airportSelectorIndex, setAirportSelectorIndex] = useState(null);
+  const [showReportingPoints, setShowReportingPoints] = useState(false);
+  const [selectedWaypointId, setSelectedWaypointId] = useState(null);
+
+  // Charger les aérodromes au montage
+  useEffect(() => {
+    loadAirports('FR');
+  }, [loadAirports]);
 
   // Handlers pour les waypoints
-  const handleWaypointChange = useCallback((index, field, value) => {
-    const updated = [...waypoints];
-    updated[index] = { ...updated[index], [field]: value };
-    setWaypoints(updated);
-  }, [waypoints, setWaypoints]);
-
   const handleWaypointUpdate = useCallback((waypointId, updates) => {
     const updated = waypoints.map(wp => 
       wp.id === waypointId ? { ...wp, ...updates } : wp
@@ -37,42 +41,35 @@ const NavigationModule = () => {
     setWaypoints(updated);
   }, [waypoints, setWaypoints]);
 
+  const handleAirportSelect = useCallback((waypointId, airport) => {
+    if (airport) {
+      handleWaypointUpdate(waypointId, {
+        name: airport.icao,
+        lat: airport.coordinates.lat,
+        lon: airport.coordinates.lon,
+        elevation: airport.elevation,
+        airportName: airport.name
+      });
+    }
+  }, [handleWaypointUpdate]);
+
   const addWaypoint = useCallback(() => {
-    setWaypoints([...waypoints, {
+    const newWaypoint = {
       id: Date.now(),
       name: '',
       type: 'waypoint',
-      lat: 0,
-      lon: 0
-    }]);
+      lat: null,
+      lon: null,
+      elevation: null,
+      airportName: ''
+    };
+    setWaypoints([...waypoints, newWaypoint]);
   }, [waypoints, setWaypoints]);
 
   const removeWaypoint = useCallback((id) => {
     if (waypoints.length <= 2) return; // Garder au moins départ et arrivée
     setWaypoints(waypoints.filter(wp => wp.id !== id));
   }, [waypoints, setWaypoints]);
-
-  const handleICAOChange = useCallback((index, icao) => {
-    handleWaypointChange(index, 'name', icao.toUpperCase());
-    
-    // Chercher les coordonnées
-    const coords = getCoordinatesByICAO(icao);
-    if (coords) {
-      handleWaypointChange(index, 'lat', coords.lat);
-      handleWaypointChange(index, 'lon', coords.lon);
-    }
-  }, [handleWaypointChange, getCoordinatesByICAO]);
-
-  // Handler pour la sélection d'aéroport via le sélecteur
-  const handleAirportSelect = useCallback((airport) => {
-    if (airportSelectorIndex !== null && airport) {
-      handleWaypointChange(airportSelectorIndex, 'name', airport.icao);
-      handleWaypointChange(airportSelectorIndex, 'lat', airport.coordinates.lat);
-      handleWaypointChange(airportSelectorIndex, 'lon', airport.coordinates.lon);
-    }
-    setShowAirportSelector(false);
-    setAirportSelectorIndex(null);
-  }, [airportSelectorIndex, handleWaypointChange]);
 
   // Calcul de la réserve carburant affichée
   const getReserveInfo = () => {
@@ -98,6 +95,26 @@ const NavigationModule = () => {
         <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning, sx.spacing.mb(4))}>
           <p style={sx.text.sm}>
             Sélectionnez un avion dans l'onglet "Gestion Avions" pour activer les calculs
+          </p>
+        </div>
+      )}
+
+      {/* Alerte de chargement OpenAIP */}
+      {loading.airports && (
+        <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mb(4))}>
+          <Loader size={20} style={{ animation: 'spin 1s linear infinite' }} />
+          <p style={sx.text.sm}>
+            Chargement des données aéronautiques OpenAIP...
+          </p>
+        </div>
+      )}
+
+      {/* Erreur de chargement */}
+      {errors.airports && (
+        <div style={sx.combine(sx.components.alert.base, sx.components.alert.danger, sx.spacing.mb(4))}>
+          <AlertCircle size={20} />
+          <p style={sx.text.sm}>
+            Erreur de chargement des données : {errors.airports}
           </p>
         </div>
       )}
@@ -171,6 +188,17 @@ const NavigationModule = () => {
           {/* Boutons de bascule vue */}
           <div style={sx.combine(sx.flex.row, sx.spacing.gap(2))}>
             <button
+              onClick={() => setShowReportingPoints(!showReportingPoints)}
+              style={sx.combine(
+                sx.components.button.base,
+                sx.components.button.secondary
+              )}
+              title="Points de report VFR"
+            >
+              <Navigation2 size={16} />
+              Points VFR
+            </button>
+            <button
               onClick={() => setViewMode('list')}
               style={sx.combine(
                 sx.components.button.base,
@@ -193,70 +221,23 @@ const NavigationModule = () => {
           </div>
         </div>
         
-        {/* Vue Liste */}
+        {/* Vue Liste avec sélecteurs OpenAIP */}
         {viewMode === 'list' && (
           <>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {waypoints.map((waypoint, index) => (
-                <div key={waypoint.id} style={sx.combine(sx.components.card.base, sx.flex.between)}>
-                  <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 2fr 2fr auto', gap: '12px', alignItems: 'center' }}>
-                    <div style={{ position: 'relative' }}>
-                      <input
-                        type="text"
-                        placeholder="ICAO"
-                        value={waypoint.name}
-                        onChange={(e) => handleICAOChange(index, e.target.value)}
-                        style={sx.components.input.base}
-                      />
-                      <span style={{
-                        position: 'absolute',
-                        left: '8px',
-                        top: '-8px',
-                        fontSize: '10px',
-                        backgroundColor: 'white',
-                        padding: '0 4px',
-                        color: index === 0 ? '#10b981' : index === waypoints.length - 1 ? '#f59e0b' : '#3b82f6'
-                      }}>
-                        {index === 0 ? 'Départ' : index === waypoints.length - 1 ? 'Arrivée' : `Étape ${index}`}
-                      </span>
-                    </div>
-                    <input
-                      type="number"
-                      placeholder="Latitude"
-                      value={waypoint.lat || ''}
-                      onChange={(e) => handleWaypointChange(index, 'lat', parseFloat(e.target.value) || 0)}
-                      style={sx.components.input.base}
-                      step="0.0001"
-                    />
-                    <input
-                      type="number"
-                      placeholder="Longitude"
-                      value={waypoint.lon || ''}
-                      onChange={(e) => handleWaypointChange(index, 'lon', parseFloat(e.target.value) || 0)}
-                      style={sx.components.input.base}
-                      step="0.0001"
-                    />
-                    <button
-                      onClick={() => {
-                        setAirportSelectorIndex(index);
-                        setShowAirportSelector(true);
-                      }}
-                      style={sx.combine(sx.components.button.base, sx.components.button.secondary, { padding: '8px' })}
-                      title="Rechercher un aérodrome"
-                    >
-                      <MapPin size={16} />
-                    </button>
-                  </div>
-                  {waypoints.length > 2 && (
-                    <button
-                      onClick={() => removeWaypoint(waypoint.id)}
-                      style={sx.combine(sx.components.button.base, sx.components.button.danger, { padding: '8px', marginLeft: '12px' })}
-                      title="Supprimer ce point"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  )}
-                </div>
+                <WaypointCard
+                  key={waypoint.id}
+                  waypoint={waypoint}
+                  index={index}
+                  totalWaypoints={waypoints.length}
+                  onSelect={(airport) => handleAirportSelect(waypoint.id, airport)}
+                  onRemove={() => removeWaypoint(waypoint.id)}
+                  onShowReportingPoints={() => {
+                    setSelectedWaypointId(waypoint.id);
+                    setShowReportingPoints(true);
+                  }}
+                />
               ))}
             </div>
             
@@ -295,6 +276,21 @@ const NavigationModule = () => {
           </div>
         )}
       </section>
+
+      {/* Points de report VFR */}
+      {showReportingPoints && selectedWaypointId && (
+        <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
+          <ReportingPointsSelector
+            airportIcao={waypoints.find(w => w.id === selectedWaypointId)?.name}
+            selectedPoints={[]}
+            onPointsChange={(points) => {
+              // Logique pour ajouter des points de report
+              console.log('Points de report sélectionnés:', points);
+            }}
+            maxPoints={5}
+          />
+        </section>
+      )}
 
       {/* Résultats de navigation */}
       {selectedAircraft && navigationResults && (
@@ -351,63 +347,97 @@ const NavigationModule = () => {
       {selectedAircraft && waypoints.length >= 2 && waypoints[0].name && waypoints[waypoints.length - 1].name && (
         <PerformanceCalculator />
       )}
-
-      {/* Modal Sélecteur d'aéroport */}
-      {showAirportSelector && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            padding: '24px',
-            maxWidth: '600px',
-            width: '90%',
-            maxHeight: '80vh',
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column'
-          }}>
-            <h3 style={sx.combine(sx.text.xl, sx.text.bold, sx.spacing.mb(4))}>
-              Sélectionner un aérodrome
-            </h3>
-            
-            <div style={{ flex: 1, overflow: 'hidden' }}>
-              <AirportSelector
-                label=""
-                value={null}
-                onChange={handleAirportSelect}
-                placeholder="Rechercher par code ICAO, nom ou ville..."
-              />
-            </div>
-            
-            <div style={sx.combine(sx.flex.end, sx.spacing.mt(4))}>
-              <button
-                onClick={() => {
-                  setShowAirportSelector(false);
-                  setAirportSelectorIndex(null);
-                }}
-                style={sx.combine(sx.components.button.base, sx.components.button.secondary)}
-              >
-                Annuler
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
 
+// Composant pour une carte de waypoint
+const WaypointCard = memo(({ waypoint, index, totalWaypoints, onSelect, onRemove, onShowReportingPoints }) => {
+  const isFirst = index === 0;
+  const isLast = index === totalWaypoints - 1;
+  const canDelete = totalWaypoints > 2;
+  
+  const getLabel = () => {
+    if (isFirst) return { text: 'Départ', color: '#10b981' };
+    if (isLast) return { text: 'Arrivée', color: '#f59e0b' };
+    return { text: `Étape ${index}`, color: '#3b82f6' };
+  };
+  
+  const label = getLabel();
+  
+  return (
+    <div style={sx.combine(
+      sx.components.card.base,
+      { borderColor: label.color, borderWidth: '2px' }
+    )}>
+      {/* En-tête avec label */}
+      <div style={sx.combine(sx.flex.between, sx.spacing.mb(3))}>
+        <span style={{
+          fontSize: '12px',
+          fontWeight: '600',
+          color: label.color,
+          backgroundColor: label.color + '20',
+          padding: '4px 12px',
+          borderRadius: '4px'
+        }}>
+          {label.text}
+        </span>
+        
+        {canDelete && (
+          <button
+            onClick={onRemove}
+            style={sx.combine(sx.components.button.base, sx.components.button.danger, { padding: '6px' })}
+            title="Supprimer ce point"
+          >
+            <Trash2 size={14} />
+          </button>
+        )}
+      </div>
+      
+      {/* Sélecteur d'aérodrome */}
+      <AirportSelector
+        label="Aérodrome"
+        value={waypoint.name ? { 
+          icao: waypoint.name, 
+          name: waypoint.airportName || waypoint.name,
+          coordinates: { lat: waypoint.lat, lon: waypoint.lon }
+        } : null}
+        onChange={onSelect}
+        placeholder="Rechercher un aérodrome..."
+        excludeIcao={null}
+      />
+      
+      {/* Informations du waypoint */}
+      {waypoint.lat && waypoint.lon && (
+        <div style={sx.combine(sx.spacing.mt(3), sx.text.sm, sx.text.secondary)}>
+          <div style={sx.combine(sx.flex.row, sx.spacing.gap(4))}>
+            <span>📍 {waypoint.lat.toFixed(4)}°, {waypoint.lon.toFixed(4)}°</span>
+            {waypoint.elevation && <span>⛰️ {waypoint.elevation} ft</span>}
+          </div>
+          
+          {/* Bouton pour les points de report VFR */}
+          {waypoint.name && waypoint.name.match(/^LF[A-Z]{2}$/) && (
+            <button
+              onClick={onShowReportingPoints}
+              style={sx.combine(
+                sx.components.button.base,
+                sx.components.button.secondary,
+                sx.spacing.mt(2),
+                { fontSize: '12px', padding: '6px 12px' }
+              )}
+            >
+              <Navigation2 size={14} />
+              Points de report VFR
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+});
+
+// Export avec displayName
 NavigationModule.displayName = 'NavigationModule';
+WaypointCard.displayName = 'WaypointCard';
 
 export default NavigationModule;
