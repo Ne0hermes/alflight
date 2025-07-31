@@ -1220,8 +1220,7 @@ const CGEnvelopeMini = memo(({ envelope }) => {
   const width = 200;
   const height = 100;
   const margin = { top: 5, right: 5, bottom: 5, left: 5 };
-  const chartWidth = width - margin.left - margin.right;
-  const chartHeight = height - margin.top - margin.bottom;
+  
   
   const xScale = (cg) => ((cg - minCG) / (maxCG - minCG)) * chartWidth;
   const yScale = (weight) => chartHeight - ((weight - minWeight) / (maxWeight - minWeight)) * chartHeight;
