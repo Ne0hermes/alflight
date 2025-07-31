@@ -29,30 +29,50 @@ export const weatherAPI = {
         throw new Error(`Erreur API: ${response.status}`);
       }
 
-      const data = await response.json();
-      console.log(`✅ METAR reçu pour ${icao}`);
-      
-      // Formatage des données pour l'application
-      return {
-        raw: data.raw || 'METAR non disponible',
-        decoded: {
-          station: data.station || icao,
-          time: data.time?.dt || new Date().toISOString(),
-          wind: {
-            direction: data.wind_direction?.value || (data.wind_speed?.value === 0 ? 'Calme' : 'Variable'),
-            speed: data.wind_speed?.value || 0,
-            gust: data.wind_gust?.value || null
-          },
-          visibility: data.visibility?.value || 9999,
-          clouds: (data.clouds || []).map(c => ({
-            type: c.type || 'Unknown',
-            altitude: (c.altitude || 0) * 100
-          })),
-          temperature: data.temperature?.value ?? null,
-          dewpoint: data.dewpoint?.value ?? null,
-          pressure: data.altimeter ? Math.round(data.altimeter.value * 33.8639) : null // Conversion inHg vers hPa
-        }
-      };
+      // Vérifier que la réponse n'est pas vide
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        console.warn(`⚠️ Réponse non-JSON pour METAR ${icao}, utilisation des données simulées`);
+        return this.getMockMETAR(icao);
+      }
+
+      // Vérifier la taille de la réponse
+      const text = await response.text();
+      if (!text || text.trim() === '') {
+        console.warn(`⚠️ Réponse vide pour METAR ${icao}, utilisation des données simulées`);
+        return this.getMockMETAR(icao);
+      }
+
+      // Parser le JSON
+      try {
+        const data = JSON.parse(text);
+        console.log(`✅ METAR reçu pour ${icao}`);
+        
+        // Formatage des données pour l'application
+        return {
+          raw: data.raw || 'METAR non disponible',
+          decoded: {
+            station: data.station || icao,
+            time: data.time?.dt || new Date().toISOString(),
+            wind: {
+              direction: data.wind_direction?.value || (data.wind_speed?.value === 0 ? 'Calme' : 'Variable'),
+              speed: data.wind_speed?.value || 0,
+              gust: data.wind_gust?.value || null
+            },
+            visibility: data.visibility?.value || 9999,
+            clouds: (data.clouds || []).map(c => ({
+              type: c.type || 'Unknown',
+              altitude: (c.altitude || 0) * 100
+            })),
+            temperature: data.temperature?.value ?? null,
+            dewpoint: data.dewpoint?.value ?? null,
+            pressure: data.altimeter ? Math.round(data.altimeter.value * 33.8639) : null // Conversion inHg vers hPa
+          }
+        };
+      } catch (parseError) {
+        console.warn(`⚠️ Impossible de parser le METAR pour ${icao}:`, parseError);
+        return this.getMockMETAR(icao);
+      }
     } catch (error) {
       console.error(`❌ Erreur METAR ${icao}:`, error);
       
@@ -78,13 +98,33 @@ export const weatherAPI = {
         throw new Error(`Erreur API: ${response.status}`);
       }
 
-      const data = await response.json();
-      console.log(`✅ TAF reçu pour ${icao}`);
-      
-      return {
-        raw: data.raw || 'TAF non disponible',
-        decoded: data
-      };
+      // Vérifier que la réponse n'est pas vide
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        console.warn(`⚠️ Réponse non-JSON pour TAF ${icao}`);
+        return null;
+      }
+
+      // Vérifier la taille de la réponse
+      const text = await response.text();
+      if (!text || text.trim() === '') {
+        console.warn(`⚠️ Réponse vide pour TAF ${icao}`);
+        return null;
+      }
+
+      // Parser le JSON
+      try {
+        const data = JSON.parse(text);
+        console.log(`✅ TAF reçu pour ${icao}`);
+        
+        return {
+          raw: data.raw || 'TAF non disponible',
+          decoded: data
+        };
+      } catch (parseError) {
+        console.warn(`⚠️ Impossible de parser le TAF pour ${icao}:`, parseError);
+        return null;
+      }
     } catch (error) {
       console.error(`❌ Erreur TAF ${icao}:`, error);
       return null;
@@ -115,6 +155,18 @@ export const weatherAPI = {
       LFBO: {
         raw: `METAR LFBO ${new Date().toISOString().slice(0,10).replace(/-/g,'')}0800Z 31008KT 9999 FEW040 22/14 Q1011 NOSIG`,
         temp: 22, dewpoint: 14, wind: { dir: 310, speed: 8 }, pressure: 1011
+      },
+      LFST: {
+        raw: `METAR LFST ${new Date().toISOString().slice(0,10).replace(/-/g,'')}0800Z 05010KT 9999 SCT030 16/10 Q1014 NOSIG`,
+        temp: 16, dewpoint: 10, wind: { dir: 50, speed: 10 }, pressure: 1014
+      },
+      LFPB: {
+        raw: `METAR LFPB ${new Date().toISOString().slice(0,10).replace(/-/g,'')}0800Z 24008KT CAVOK 19/11 Q1013 NOSIG`,
+        temp: 19, dewpoint: 11, wind: { dir: 240, speed: 8 }, pressure: 1013
+      },
+      LFML: {
+        raw: `METAR LFML ${new Date().toISOString().slice(0,10).replace(/-/g,'')}0800Z 32015KT 9999 FEW025 24/16 Q1010 NOSIG`,
+        temp: 24, dewpoint: 16, wind: { dir: 320, speed: 15 }, pressure: 1010
       }
     };
 
@@ -170,7 +222,8 @@ export const weatherAPI = {
   checkAPIStatus() {
     console.log('✅ API Météo AVWX configurée');
     console.log('🔑 Clé API active');
-    console.log('⚠️ Note: Cette clé est partagée et a des limites');
+    console.log('⚠️ Note: Cette clé est partagée et a des limites (850 requêtes/jour)');
+    console.log('⚠️ TAF non disponible pour tous les petits aérodromes');
     console.log('💡 Pour votre propre clé gratuite: https://avwx.rest/account');
   }
 };
