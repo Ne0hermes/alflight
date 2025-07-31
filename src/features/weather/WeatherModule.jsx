@@ -182,10 +182,16 @@ const WeatherCard = memo(({ icao, label }) => {
   const isOld = Date.now() - weather.timestamp > 60 * 60 * 1000; // Plus d'une heure
   
   return (
-    <div style={sx.combine(
-      sx.components.card.base,
-      { borderColor: label === 'Départ' ? '#10b981' : label === 'Arrivée' ? '#f59e0b' : '#3b82f6' }
-    )}>
+<div style={sx.combine(
+  sx.components.card.base,
+  { 
+    border: `2px solid ${
+      label === 'Départ' ? '#10b981' : 
+      label === 'Arrivée' ? '#f59e0b' : 
+      '#3b82f6'
+    }` 
+  }
+)}>
       {/* En-tête */}
       <div style={sx.combine(sx.flex.between, sx.spacing.mb(3))}>
         <div>
