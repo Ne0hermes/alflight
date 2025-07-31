@@ -308,10 +308,10 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       maxBaggageLest: aircraft?.limitations?.maxBaggageLest || ''
     },
     cgEnvelope: aircraft?.cgEnvelope || [
-      { weight: '', forwardLimit: '', aftLimit: '' },
-      { weight: '', forwardLimit: '', aftLimit: '' },
-      { weight: '', forwardLimit: '', aftLimit: '' },
-      { weight: '', forwardLimit: '', aftLimit: '' }
+      { weight: '700', forwardLimit: '2050', aftLimit: '2350' },
+      { weight: '900', forwardLimit: '2080', aftLimit: '2350' },
+      { weight: '1100', forwardLimit: '2120', aftLimit: '2350' },
+      { weight: '1150', forwardLimit: '2150', aftLimit: '2350' }
     ]
   });
 
@@ -416,6 +416,11 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
     sx.spacing.mb(1),
     { display: 'flex', alignItems: 'center' }
   );
+
+  // Log pour vérifier les données de l'enveloppe
+  console.log('FormData cgEnvelope:', formData.cgEnvelope);
+  const validEnvelopePoints = formData.cgEnvelope.filter(p => p.weight && p.forwardLimit && p.aftLimit);
+  console.log('Valid envelope points:', validEnvelopePoints);
 
   return (
     <form onSubmit={handleSubmit}>
@@ -774,59 +779,121 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
 
         {/* Enveloppe de centrage */}
         <div>
-          <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), { display: 'flex', alignItems: 'center' })}>
-            Enveloppe de centrage
-            <InfoIcon tooltip="Définissez les limites avant et arrière du CG en fonction de la masse pour créer l'enveloppe de centrage" />
+          <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), { display: 'flex', alignItems: 'center', justifyContent: 'space-between' })}>
+            <span style={{ display: 'flex', alignItems: 'center' }}>
+              Enveloppe de centrage
+              <InfoIcon tooltip="Définissez les limites avant et arrière du CG en fonction de la masse pour créer l'enveloppe de centrage" />
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setFormData(prev => ({
+                  ...prev,
+                  cgEnvelope: [
+                    { weight: '700', forwardLimit: '2050', aftLimit: '2350' },
+                    { weight: '900', forwardLimit: '2080', aftLimit: '2350' },
+                    { weight: '1100', forwardLimit: '2120', aftLimit: '2350' },
+                    { weight: '1150', forwardLimit: '2150', aftLimit: '2350' }
+                  ]
+                }));
+              }}
+              style={sx.combine(sx.components.button.base, sx.components.button.secondary, { fontSize: '12px', padding: '4px 8px' })}
+            >
+              Valeurs d'exemple
+            </button>
           </h4>
+          <div style={{
+            backgroundColor: '#FEF3C7',
+            border: '1px solid #FCD34D',
+            borderRadius: '6px',
+            padding: '10px',
+            marginBottom: '12px',
+            fontSize: '13px',
+            color: '#92400E'
+          }}>
+            <strong>Note :</strong> Les valeurs pré-remplies sont des exemples typiques pour un avion léger. 
+            Remplacez-les par les données exactes du manuel de vol de votre avion.
+            <br />
+            <strong>Numérotation :</strong> Les points sont numérotés automatiquement par ordre de masse croissante dans le graphique. 
+            Un point n'apparaît dans le graphique que s'il a les 3 valeurs remplies.
+          </div>
           <div style={{ display: 'grid', gap: '12px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: formData.cgEnvelope.length > 2 ? '1fr 1fr 1fr auto' : '1fr 1fr 1fr', gap: '16px', fontWeight: 'bold', fontSize: '14px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: formData.cgEnvelope.length > 2 ? 'auto 1fr 1fr 1fr auto' : 'auto 1fr 1fr 1fr', gap: '16px', fontWeight: 'bold', fontSize: '14px' }}>
+              <div>#</div>
               <div>Masse ({massUnit})</div>
               <div>Limite avant (mm)</div>
               <div>Limite arrière (mm)</div>
               {formData.cgEnvelope.length > 2 && <div></div>}
             </div>
-            {formData.cgEnvelope.map((point, index) => (
-              <div key={index} style={{ display: 'grid', gridTemplateColumns: formData.cgEnvelope.length > 2 ? '1fr 1fr 1fr auto' : '1fr 1fr 1fr', gap: '16px', alignItems: 'center' }}>
-                <input
-                  type="number"
-                  value={point.weight}
-                  onChange={(e) => handleChange('cgEnvelope', ['weight', e.target.value], index)}
-                  placeholder={index === 0 ? "700" : index === 1 ? "900" : index === 2 ? "1100" : "1150"}
-                  min="0"
-                  style={sx.components.input.base}
-                />
-                <input
-                  type="number"
-                  value={point.forwardLimit}
-                  onChange={(e) => handleChange('cgEnvelope', ['forwardLimit', e.target.value], index)}
-                  placeholder={index === 0 ? "2050" : index === 1 ? "2080" : index === 2 ? "2120" : "2150"}
-                  min="0"
-                  style={sx.components.input.base}
-                />
-                <input
-                  type="number"
-                  value={point.aftLimit}
-                  onChange={(e) => handleChange('cgEnvelope', ['aftLimit', e.target.value], index)}
-                  placeholder="2350"
-                  min="0"
-                  style={sx.components.input.base}
-                />
-                {formData.cgEnvelope.length > 2 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFormData(prev => ({
-                        ...prev,
-                        cgEnvelope: prev.cgEnvelope.filter((_, i) => i !== index)
-                      }));
-                    }}
-                    style={sx.combine(sx.components.button.base, sx.components.button.danger, { padding: '8px' })}
+            {formData.cgEnvelope.map((point, index) => {
+              // Calculer la position réelle du point dans l'enveloppe triée pour l'affichage
+              const sortedIndex = formData.cgEnvelope
+                .map((p, i) => ({ ...p, originalIndex: i }))
+                .filter(p => p.weight && p.forwardLimit && p.aftLimit)
+                .sort((a, b) => Number(a.weight) - Number(b.weight))
+                .findIndex(p => p.originalIndex === index);
+              
+              return (
+                <div key={index} style={{ display: 'grid', gridTemplateColumns: formData.cgEnvelope.length > 2 ? 'auto 1fr 1fr 1fr auto' : 'auto 1fr 1fr 1fr', gap: '16px', alignItems: 'center' }}>
+                  <div style={{ 
+                    width: '24px', 
+                    height: '24px', 
+                    borderRadius: '50%', 
+                    backgroundColor: point.weight && point.forwardLimit && point.aftLimit ? '#3B82F6' : '#E5E7EB',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    cursor: 'help',
+                    position: 'relative'
+                  }}
+                  title={sortedIndex >= 0 ? `Point n°${sortedIndex + 1} dans le graphique` : 'Point incomplet'}
                   >
-                    <Trash2 size={16} />
-                  </button>
-                )}
-              </div>
-            ))}
+                    {sortedIndex >= 0 ? sortedIndex + 1 : '-'}
+                  </div>
+                  <input
+                    type="number"
+                    value={point.weight}
+                    onChange={(e) => handleChange('cgEnvelope', ['weight', e.target.value], index)}
+                    placeholder={index === 0 ? "700" : index === 1 ? "900" : index === 2 ? "1100" : "1150"}
+                    min="0"
+                    style={sx.components.input.base}
+                  />
+                  <input
+                    type="number"
+                    value={point.forwardLimit}
+                    onChange={(e) => handleChange('cgEnvelope', ['forwardLimit', e.target.value], index)}
+                    placeholder={index === 0 ? "2050" : index === 1 ? "2080" : index === 2 ? "2120" : "2150"}
+                    min="0"
+                    style={sx.components.input.base}
+                  />
+                  <input
+                    type="number"
+                    value={point.aftLimit}
+                    onChange={(e) => handleChange('cgEnvelope', ['aftLimit', e.target.value], index)}
+                    placeholder="2350"
+                    min="0"
+                    style={sx.components.input.base}
+                  />
+                  {formData.cgEnvelope.length > 2 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData(prev => ({
+                          ...prev,
+                          cgEnvelope: prev.cgEnvelope.filter((_, i) => i !== index)
+                        }));
+                      }}
+                      style={sx.combine(sx.components.button.base, sx.components.button.danger, { padding: '8px' })}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
             <button
               type="button"
               onClick={() => {
@@ -841,17 +908,17 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             </button>
           </div>
           
-          {/* Graphique de l'enveloppe */}
+          {/* Message d'information sur l'enveloppe */}
           <div style={{ marginTop: '16px', padding: '8px', backgroundColor: '#F3F4F6', borderRadius: '4px', fontSize: '12px', color: '#6B7280' }}>
-            <div>Points valides pour le graphique : {formData.cgEnvelope.filter(p => p.weight && p.forwardLimit && p.aftLimit).length}</div>
-            <div style={{ marginTop: '4px' }}>
-              Données entrées :
-              {formData.cgEnvelope.map((p, i) => (
-                <div key={i} style={{ marginLeft: '12px' }}>
-                  {i+1}. Masse: {p.weight || '-'}, Avant: {p.forwardLimit || '-'}, Arrière: {p.aftLimit || '-'}
-                </div>
-              ))}
-            </div>
+            {formData.cgEnvelope.filter(p => p.weight && p.forwardLimit && p.aftLimit).length < 2 ? (
+              <div style={{ textAlign: 'center', color: '#EF4444' }}>
+                ⚠️ Au moins 2 points complets sont nécessaires pour afficher le graphique
+              </div>
+            ) : (
+              <div style={{ color: '#10B981' }}>
+                ✓ {formData.cgEnvelope.filter(p => p.weight && p.forwardLimit && p.aftLimit).length} points valides - Le graphique est affiché ci-dessous
+              </div>
+            )}
           </div>
           {formData.cgEnvelope.filter(p => p.weight && p.forwardLimit && p.aftLimit).length >= 2 && (
             <div style={{ marginTop: '20px', padding: '16px', backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
@@ -864,12 +931,8 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                   massUnit={massUnit}
                 />
               </div>
-              {/* Test SVG simple pour vérifier que les SVG fonctionnent */}
-              <div style={{ marginTop: '8px', fontSize: '12px', color: '#6B7280' }}>
-                Test SVG: 
-                <svg width="50" height="20" style={{ marginLeft: '8px', verticalAlign: 'middle' }}>
-                  <rect x="0" y="0" width="50" height="20" fill="#3B82F6" />
-                </svg>
+              <div style={{ marginTop: '8px', fontSize: '11px', color: '#6B7280', textAlign: 'center' }}>
+                Les numéros sur les points correspondent aux lignes du tableau ci-dessus (triées par masse croissante)
               </div>
             </div>
           )}
@@ -901,11 +964,11 @@ AircraftForm.displayName = 'AircraftForm';
 // Composant pour afficher le graphique de l'enveloppe de centrage
 const CGEnvelopeChart = memo(({ envelope, massUnit }) => {
   try {
-    console.log('CGEnvelopeChart - envelope:', envelope);
+    console.log('CGEnvelopeChart - envelope reçue:', envelope);
     
     // Trier les points par masse croissante
     const sortedEnvelope = [...envelope].sort((a, b) => Number(a.weight) - Number(b.weight));
-    console.log('CGEnvelopeChart - sortedEnvelope:', sortedEnvelope);
+    console.log('CGEnvelopeChart - enveloppe triée:', sortedEnvelope);
     
     // Trouver les min/max pour l'échelle
     const weights = sortedEnvelope.map(p => Number(p.weight));
@@ -916,185 +979,222 @@ const CGEnvelopeChart = memo(({ envelope, massUnit }) => {
     const minCG = Math.min(...allCGValues) * 0.98;
     const maxCG = Math.max(...allCGValues) * 1.02;
     
-    console.log('CGEnvelopeChart - scales:', { minWeight, maxWeight, minCG, maxCG });
+    console.log('CGEnvelopeChart - échelles:', { minWeight, maxWeight, minCG, maxCG });
     
     // Vérifier que les valeurs sont valides
     if (!isFinite(minWeight) || !isFinite(maxWeight) || !isFinite(minCG) || !isFinite(maxCG)) {
-      console.error('CGEnvelopeChart - Invalid scale values');
+      console.error('CGEnvelopeChart - Valeurs d\'échelle invalides');
       return <div>Données invalides pour le graphique</div>;
     }
   
-  // Dimensions du graphique
-  const width = 400;
-  const height = 300;
-  const margin = { top: 20, right: 30, bottom: 50, left: 60 };
-  const chartWidth = width - margin.left - margin.right;
-  const chartHeight = height - margin.top - margin.bottom;
-  
-  // Échelles
-  const xScale = (cg) => ((cg - minCG) / (maxCG - minCG)) * chartWidth;
-  const yScale = (weight) => chartHeight - ((weight - minWeight) / (maxWeight - minWeight)) * chartHeight;
-  
-  // Créer le path pour l'enveloppe
-  const forwardPath = sortedEnvelope
-    .map((p, i) => `${i === 0 ? 'M' : 'L'} ${xScale(Number(p.forwardLimit))},${yScale(Number(p.weight))}`)
-    .join(' ');
-  
-  // Pour le chemin arrière, on doit parcourir dans l'ordre inverse
-  const aftPath = [...sortedEnvelope]
-    .reverse()
-    .map((p) => `L ${xScale(Number(p.aftLimit))},${yScale(Number(p.weight))}`)
-    .join(' ');
-  
-  const envelopePath = `${forwardPath} ${aftPath} Z`;
-  console.log('CGEnvelopeChart - envelopePath:', envelopePath);
-  
-  // Points originaux pour le dessin des cercles
-  const originalSortedEnvelope = [...sortedEnvelope];
-  
-  // Grille
-  const gridLinesY = 5;
-  const gridLinesX = 6;
-  
-  return (
-    <svg width={width} height={height} style={{ backgroundColor: '#FAFAFA', border: '1px solid #E5E7EB' }}>
-      <g transform={`translate(${margin.left},${margin.top})`}>
-        {/* Grille horizontale */}
-        {Array.from({ length: gridLinesY }).map((_, i) => {
-          const y = (chartHeight / (gridLinesY - 1)) * i;
-          const weight = minWeight + ((maxWeight - minWeight) / (gridLinesY - 1)) * (gridLinesY - 1 - i);
-          return (
-            <g key={`grid-y-${i}`}>
-              <line
-                x1={0}
-                y1={y}
-                x2={chartWidth}
-                y2={y}
-                stroke="#E5E7EB"
-                strokeDasharray={i === gridLinesY - 1 ? "0" : "2,2"}
-              />
-              <text
-                x={-5}
-                y={y}
-                textAnchor="end"
-                alignmentBaseline="middle"
-                fontSize="11"
-                fill="#6B7280"
-              >
-                {Math.round(weight)}
-              </text>
+    // Dimensions du graphique
+    const width = 400;
+    const height = 300;
+    const margin = { top: 20, right: 30, bottom: 50, left: 60 };
+    const chartWidth = width - margin.left - margin.right;
+    const chartHeight = height - margin.top - margin.bottom;
+    
+    // Échelles
+    const xScale = (cg) => ((cg - minCG) / (maxCG - minCG)) * chartWidth;
+    const yScale = (weight) => chartHeight - ((weight - minWeight) / (maxWeight - minWeight)) * chartHeight;
+    
+    // Créer le path pour l'enveloppe
+    const forwardPath = sortedEnvelope
+      .map((p, i) => `${i === 0 ? 'M' : 'L'} ${xScale(Number(p.forwardLimit))},${yScale(Number(p.weight))}`)
+      .join(' ');
+    
+    // Pour le chemin arrière, on doit parcourir dans l'ordre inverse
+    const aftPath = [...sortedEnvelope]
+      .reverse()
+      .map((p) => `L ${xScale(Number(p.aftLimit))},${yScale(Number(p.weight))}`)
+      .join(' ');
+    
+    const envelopePath = `${forwardPath} ${aftPath} Z`;
+    console.log('CGEnvelopeChart - chemin de l\'enveloppe:', envelopePath);
+    
+    // Points originaux pour le dessin des cercles
+    const originalSortedEnvelope = [...sortedEnvelope];
+    
+    // Grille
+    const gridLinesY = 5;
+    const gridLinesX = 6;
+    
+    return (
+      <svg width={width} height={height} style={{ backgroundColor: '#FAFAFA', border: '1px solid #E5E7EB' }}>
+        <g transform={`translate(${margin.left},${margin.top})`}>
+          {/* Grille horizontale */}
+          {Array.from({ length: gridLinesY }).map((_, i) => {
+            const y = (chartHeight / (gridLinesY - 1)) * i;
+            const weight = minWeight + ((maxWeight - minWeight) / (gridLinesY - 1)) * (gridLinesY - 1 - i);
+            return (
+              <g key={`grid-y-${i}`}>
+                <line
+                  x1={0}
+                  y1={y}
+                  x2={chartWidth}
+                  y2={y}
+                  stroke="#E5E7EB"
+                  strokeDasharray={i === gridLinesY - 1 ? "0" : "2,2"}
+                />
+                <text
+                  x={-5}
+                  y={y}
+                  textAnchor="end"
+                  alignmentBaseline="middle"
+                  fontSize="11"
+                  fill="#6B7280"
+                >
+                  {Math.round(weight)}
+                </text>
+              </g>
+            );
+          })}
+          
+          {/* Grille verticale */}
+          {Array.from({ length: gridLinesX }).map((_, i) => {
+            const x = (chartWidth / (gridLinesX - 1)) * i;
+            const cg = minCG + ((maxCG - minCG) / (gridLinesX - 1)) * i;
+            return (
+              <g key={`grid-x-${i}`}>
+                <line
+                  x1={x}
+                  y1={0}
+                  x2={x}
+                  y2={chartHeight}
+                  stroke="#E5E7EB"
+                  strokeDasharray={i === 0 ? "0" : "2,2"}
+                />
+                <text
+                  x={x}
+                  y={chartHeight + 15}
+                  textAnchor="middle"
+                  fontSize="11"
+                  fill="#6B7280"
+                >
+                  {Math.round(cg)}
+                </text>
+              </g>
+            );
+          })}
+          
+          {/* Enveloppe */}
+          <path
+            d={envelopePath}
+            fill="#3B82F6"
+            fillOpacity="0.2"
+            stroke="#3B82F6"
+            strokeWidth="2"
+          />
+          
+          {/* Points de l'enveloppe avec labels */}
+          {originalSortedEnvelope.map((point, i) => (
+            <g key={`points-${i}`}>
+              {/* Groupe pour le point avant */}
+              <g>
+                <circle
+                  cx={xScale(Number(point.forwardLimit))}
+                  cy={yScale(Number(point.weight))}
+                  r="5"
+                  fill="#3B82F6"
+                  stroke="white"
+                  strokeWidth="1"
+                />
+                <text
+                  x={xScale(Number(point.forwardLimit))}
+                  y={yScale(Number(point.weight))}
+                  fontSize="11"
+                  fill="white"
+                  textAnchor="middle"
+                  alignmentBaseline="middle"
+                  fontWeight="bold"
+                >
+                  {i + 1}
+                </text>
+                {/* Label de masse pour le premier et dernier point */}
+                {(i === 0 || i === originalSortedEnvelope.length - 1) && (
+                  <text
+                    x={xScale(Number(point.forwardLimit))}
+                    y={yScale(Number(point.weight)) - 12}
+                    fontSize="10"
+                    fill="#374151"
+                    textAnchor="middle"
+                    fontWeight="normal"
+                  >
+                    {Math.round(Number(point.weight))} {massUnit}
+                  </text>
+                )}
+              </g>
+              
+              {/* Groupe pour le point arrière */}
+              <g>
+                <circle
+                  cx={xScale(Number(point.aftLimit))}
+                  cy={yScale(Number(point.weight))}
+                  r="5"
+                  fill="#3B82F6"
+                  stroke="white"
+                  strokeWidth="1"
+                />
+                <text
+                  x={xScale(Number(point.aftLimit))}
+                  y={yScale(Number(point.weight))}
+                  fontSize="11"
+                  fill="white"
+                  textAnchor="middle"
+                  alignmentBaseline="middle"
+                  fontWeight="bold"
+                >
+                  {i + 1}
+                </text>
+              </g>
             </g>
-          );
-        })}
+          ))}
+          
+          {/* Axes */}
+          <line
+            x1={0}
+            y1={chartHeight}
+            x2={chartWidth}
+            y2={chartHeight}
+            stroke="#374151"
+            strokeWidth="2"
+          />
+          <line
+            x1={0}
+            y1={0}
+            x2={0}
+            y2={chartHeight}
+            stroke="#374151"
+            strokeWidth="2"
+          />
+        </g>
         
-        {/* Grille verticale */}
-        {Array.from({ length: gridLinesX }).map((_, i) => {
-          const x = (chartWidth / (gridLinesX - 1)) * i;
-          const cg = minCG + ((maxCG - minCG) / (gridLinesX - 1)) * i;
-          return (
-            <g key={`grid-x-${i}`}>
-              <line
-                x1={x}
-                y1={0}
-                x2={x}
-                y2={chartHeight}
-                stroke="#E5E7EB"
-                strokeDasharray={i === 0 ? "0" : "2,2"}
-              />
-              <text
-                x={x}
-                y={chartHeight + 15}
-                textAnchor="middle"
-                fontSize="11"
-                fill="#6B7280"
-              >
-                {Math.round(cg)}
-              </text>
-            </g>
-          );
-        })}
-        
-        {/* Enveloppe */}
-        <path
-          d={envelopePath}
-          fill="#3B82F6"
-          fillOpacity="0.2"
-          stroke="#3B82F6"
-          strokeWidth="2"
-        />
-        
-        {/* Points de l'enveloppe */}
-        {originalSortedEnvelope.map((point, i) => (
-          <g key={`points-${i}`}>
-            <circle
-              cx={xScale(Number(point.forwardLimit))}
-              cy={yScale(Number(point.weight))}
-              r="4"
-              fill="#3B82F6"
-            />
-            <circle
-              cx={xScale(Number(point.aftLimit))}
-              cy={yScale(Number(point.weight))}
-              r="4"
-              fill="#3B82F6"
-            />
-            <text
-              x={xScale(Number(point.forwardLimit))}
-              y={yScale(Number(point.weight)) - 8}
-              fontSize="10"
-              fill="#1F2937"
-              textAnchor="middle"
-            >
-              {i + 1}
-            </text>
-          </g>
-        ))}
-        
-        {/* Axes */}
-        <line
-          x1={0}
-          y1={chartHeight}
-          x2={chartWidth}
-          y2={chartHeight}
-          stroke="#374151"
-          strokeWidth="2"
-        />
-        <line
-          x1={0}
-          y1={0}
-          x2={0}
-          y2={chartHeight}
-          stroke="#374151"
-          strokeWidth="2"
-        />
-      </g>
-      
-      {/* Labels des axes */}
-      <text
-        x={width / 2}
-        y={height - 5}
-        textAnchor="middle"
-        fontSize="12"
-        fill="#374151"
-        fontWeight="bold"
-      >
-        Centre de gravité (mm)
-      </text>
-      <text
-        x={15}
-        y={height / 2}
-        textAnchor="middle"
-        fontSize="12"
-        fill="#374151"
-        fontWeight="bold"
-        transform={`rotate(-90, 15, ${height / 2})`}
-      >
-        Masse ({massUnit})
-      </text>
-    </svg>
-  );
+        {/* Labels des axes */}
+        <text
+          x={width / 2}
+          y={height - 5}
+          textAnchor="middle"
+          fontSize="12"
+          fill="#374151"
+          fontWeight="bold"
+        >
+          Centre de gravité (mm)
+        </text>
+        <text
+          x={15}
+          y={height / 2}
+          textAnchor="middle"
+          fontSize="12"
+          fill="#374151"
+          fontWeight="bold"
+          transform={`rotate(-90, 15, ${height / 2})`}
+        >
+          Masse ({massUnit})
+        </text>
+      </svg>
+    );
   } catch (error) {
-    console.error('CGEnvelopeChart - Error:', error);
+    console.error('CGEnvelopeChart - Erreur:', error);
     return (
       <div style={{ padding: '20px', textAlign: 'center', color: '#EF4444' }}>
         Erreur lors de l'affichage du graphique: {error.message}
