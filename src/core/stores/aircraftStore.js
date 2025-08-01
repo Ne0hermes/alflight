@@ -1,7 +1,6 @@
 // src/core/stores/aircraftStore.js
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { DEFAULT_AIRCRAFT_LIST } from '@utils/constants';
 
@@ -9,54 +8,80 @@ import { DEFAULT_AIRCRAFT_LIST } from '@utils/constants';
 export const useAircraftStore = create(
   subscribeWithSelector(
     persist(
-      immer((set, get) => ({
+      (set, get) => ({
         // État
         aircraftList: DEFAULT_AIRCRAFT_LIST,
         selectedAircraftId: DEFAULT_AIRCRAFT_LIST[0]?.id || null,
         
-        // Sélecteurs dérivés (calculés automatiquement)
-        get selectedAircraft() {
-          const id = get().selectedAircraftId;
-          return get().aircraftList.find(a => a.id === id) || null;
+        // Actions atomiques
+        setSelectedAircraft: (aircraft) => {
+          console.log('🏪 AircraftStore - setSelectedAircraft called with:', aircraft);
+          const currentId = get().selectedAircraftId;
+          console.log('🏪 AircraftStore - Previous selectedAircraftId:', currentId);
+          
+          set({ selectedAircraftId: aircraft?.id || null });
+          
+          // Vérifier immédiatement après le set
+          setTimeout(() => {
+            const newState = get();
+            console.log('🏪 AircraftStore - New state after set:', {
+              selectedAircraftId: newState.selectedAircraftId,
+              selectedAircraft: newState.selectedAircraft
+            });
+          }, 0);
         },
         
-        // Actions atomiques
-        setSelectedAircraft: (aircraft) => set(state => {
-          state.selectedAircraftId = aircraft?.id || null;
-        }),
-        
-        addAircraft: (aircraft) => set(state => {
-          state.aircraftList.push({
+        addAircraft: (aircraft) => set((state) => ({
+          aircraftList: [...state.aircraftList, {
             ...aircraft,
             id: aircraft.id || `aircraft-${Date.now()}`
-          });
-        }),
+          }]
+        })),
         
-        updateAircraft: (aircraft) => set(state => {
+        updateAircraft: (aircraft) => set((state) => {
           const index = state.aircraftList.findIndex(a => a.id === aircraft.id);
           if (index !== -1) {
-            state.aircraftList[index] = aircraft;
+            const newList = [...state.aircraftList];
+            newList[index] = aircraft;
+            return { aircraftList: newList };
           }
+          return state;
         }),
         
-        deleteAircraft: (id) => set(state => {
-          state.aircraftList = state.aircraftList.filter(a => a.id !== id);
+        deleteAircraft: (id) => set((state) => {
+          const newList = state.aircraftList.filter(a => a.id !== id);
           // Si l'avion supprimé était sélectionné, sélectionner le premier
           if (state.selectedAircraftId === id) {
-            state.selectedAircraftId = state.aircraftList[0]?.id || null;
+            return {
+              aircraftList: newList,
+              selectedAircraftId: newList[0]?.id || null
+            };
           }
+          return { aircraftList: newList };
         }),
         
-        importAircraftList: (list) => set(state => {
-          state.aircraftList = list;
-          state.selectedAircraftId = list[0]?.id || null;
+        importAircraftList: (list) => set({
+          aircraftList: list,
+          selectedAircraftId: list[0]?.id || null
         }),
         
-        resetToDefault: () => set(state => {
-          state.aircraftList = DEFAULT_AIRCRAFT_LIST;
-          state.selectedAircraftId = DEFAULT_AIRCRAFT_LIST[0]?.id || null;
-        })
-      })),
+        resetToDefault: () => set({
+          aircraftList: DEFAULT_AIRCRAFT_LIST,
+          selectedAircraftId: DEFAULT_AIRCRAFT_LIST[0]?.id || null
+        }),
+        
+        // Getter calculé
+        get selectedAircraft() {
+          const state = get();
+          const id = state.selectedAircraftId;
+          const aircraft = state.aircraftList.find(a => a.id === id) || null;
+          console.log('🏪 AircraftStore - Getter selectedAircraft called:', {
+            id,
+            aircraft: aircraft?.registration
+          });
+          return aircraft;
+        }
+      }),
       {
         name: 'aircraft-storage',
         storage: createJSONStorage(() => localStorage),
@@ -75,7 +100,13 @@ export const aircraftSelectors = {
   useAircraftList: () => useAircraftStore(state => state.aircraftList),
   
   // Sélecteur pour l'avion sélectionné
-  useSelectedAircraft: () => useAircraftStore(state => state.selectedAircraft),
+  useSelectedAircraft: () => useAircraftStore(state => {
+    const id = state.selectedAircraftId;
+    return state.aircraftList.find(a => a.id === id) || null;
+  }),
+  
+  // Sélecteur pour l'ID de l'avion sélectionné
+  useSelectedAircraftId: () => useAircraftStore(state => state.selectedAircraftId),
   
   // Sélecteur pour un avion spécifique
   useAircraftById: (id) => useAircraftStore(
