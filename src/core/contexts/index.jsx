@@ -48,22 +48,39 @@ export const useWeather = () => {
 
 // Providers optimisés avec mémorisation
 export const AircraftProvider = memo(({ children }) => {
-  const store = useAircraftStore();
+  const aircraftList = useAircraftStore(state => state.aircraftList);
+  const selectedAircraftId = useAircraftStore(state => state.selectedAircraftId);
+  const selectedAircraft = useAircraftStore(state => {
+    const id = state.selectedAircraftId;
+    return state.aircraftList.find(a => a.id === id) || null;
+  });
+  const setSelectedAircraft = useAircraftStore(state => state.setSelectedAircraft);
+  const updateAircraft = useAircraftStore(state => state.updateAircraft);
+  const deleteAircraft = useAircraftStore(state => state.deleteAircraft);
+  const addAircraft = useAircraftStore(state => state.addAircraft);
+  
+  // Debug: vérifier que le store est bien initialisé
+  console.log('🚀 AircraftProvider - Render with:', {
+    aircraftListLength: aircraftList?.length,
+    selectedAircraftId: selectedAircraftId,
+    selectedAircraft: selectedAircraft?.registration,
+    setSelectedAircraftType: typeof setSelectedAircraft
+  });
   
   const value = useMemo(() => ({
-    aircraftList: store.aircraftList,
-    selectedAircraft: store.selectedAircraft,
-    setSelectedAircraft: store.setSelectedAircraft,
-    updateAircraft: store.updateAircraft,
-    deleteAircraft: store.deleteAircraft,
-    addAircraft: store.addAircraft
+    aircraftList,
+    selectedAircraft,
+    setSelectedAircraft,
+    updateAircraft,
+    deleteAircraft,
+    addAircraft
   }), [
-    store.aircraftList,
-    store.selectedAircraft,
-    store.setSelectedAircraft,
-    store.updateAircraft,
-    store.deleteAircraft,
-    store.addAircraft
+    aircraftList,
+    selectedAircraft,
+    setSelectedAircraft,
+    updateAircraft,
+    deleteAircraft,
+    addAircraft
   ]);
 
   return <AircraftContext.Provider value={value}>{children}</AircraftContext.Provider>;
