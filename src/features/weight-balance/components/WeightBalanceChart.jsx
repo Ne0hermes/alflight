@@ -1,4 +1,5 @@
 // src/features/weight-balance/components/WeightBalanceChart.jsx
+// ========================================
 import React, { memo, useMemo } from 'react';
 import { sx } from '@shared/styles/styleSystem';
 
@@ -33,8 +34,14 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
     };
   }, [aircraft, wb]);
 
-  const toSvgX = (cg) => 50 + (cg * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500;
-  const toSvgY = (w) => 350 - (w - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300;
+  const toSvgX = (cg) => {
+    const cgValue = isNaN(cg) ? 0 : cg;
+    return 50 + (cgValue * 1000 - scales.cgMin) / (scales.cgMax - scales.cgMin) * 500;
+  };
+  const toSvgY = (w) => {
+    const weightValue = isNaN(w) ? 0 : w;
+    return 350 - (weightValue - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300;
+  };
 
   // Fonction pour vérifier si un point est dans l'enveloppe
   const isPointWithinEnvelope = (weight, cg) => {
@@ -83,9 +90,12 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
 
   // Vérifier que TOUS les scénarios sont dans les limites
   const allScenariosWithinLimits = useMemo(() => {
+    if (!scenarios) return false;
+    
     const scenariosToCheck = ['fulltank', 'toCrm', 'landing', 'zfw'];
     return scenariosToCheck.every(key => {
       const scenario = scenarios[key];
+      if (!scenario || isNaN(scenario.w) || isNaN(scenario.cg)) return false;
       return isPointWithinEnvelope(scenario.w, scenario.cg);
     });
   }, [scenarios]);
@@ -132,8 +142,9 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
   const createScenarioPath = () => {
     const points = ['fulltank', 'toCrm', 'landing', 'zfw']
       .map(key => scenarios[key])
+      .filter(s => s && !isNaN(s.cg) && !isNaN(s.w))
       .map(s => `${toSvgX(s.cg)},${toSvgY(s.w)}`);
-    return `M ${points.join(' L ')}`;
+    return points.length > 1 ? `M ${points.join(' L ')}` : '';
   };
 
   return (
@@ -276,17 +287,23 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
           })}
           
           {/* Ligne reliant les scénarios */}
-          <path 
-            d={createScenarioPath()} 
-            fill="none" 
-            stroke="#9ca3af" 
-            strokeWidth="1.5" 
-            strokeDasharray="5,5"
-          />
+          {createScenarioPath() && (
+            <path 
+              d={createScenarioPath()} 
+              fill="none" 
+              stroke="#9ca3af" 
+              strokeWidth="1.5" 
+              strokeDasharray="5,5"
+            />
+          )}
           
           {/* Points des scénarios avec traits de déport */}
           {scenarioConfig.map(({ key, label, color }) => {
             const scenario = scenarios[key];
+            if (!scenario || isNaN(scenario.cg) || isNaN(scenario.w)) {
+              return null;
+            }
+            
             const x = toSvgX(scenario.cg);
             const y = toSvgY(scenario.w);
             
@@ -379,7 +396,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
             <text fontSize="9" fill="#6b7280" fontWeight="600">Légende:</text>
             {scenarioConfig.map((config, index) => {
               const scenario = scenarios[config.key];
-              const isInLimits = isPointWithinEnvelope(scenario.w, scenario.cg);
+              const isInLimits = scenario && !isNaN(scenario.w) && !isNaN(scenario.cg) && isPointWithinEnvelope(scenario.w, scenario.cg);
               
               return (
                 <g key={`legend-${config.key}`} transform={`translate(${80 + index * 120}, 0)`}>

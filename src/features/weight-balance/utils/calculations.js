@@ -6,16 +6,22 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
   const wb = aircraft.weightBalance;
   const fuelDensity = aircraft.fuelType === 'JET A-1' ? 0.84 : 0.72;
   
+  // Valeurs par défaut pour éviter les NaN
+  const safeTotalWeight = calculations.totalWeight || 0;
+  const safeTotalMoment = calculations.totalMoment || 0;
+  const safeFuel = loads.fuel || 0;
+  const safeCG = calculations.cg || 0;
+  
   // Calcul du carburant restant
   const fuelBalance = fuelData ? Object.values(fuelData).reduce((sum, f) => sum + (f?.ltr || 0), 0) : 0;
   const remainingFuelL = Math.max(0, (fobFuel?.ltr || 0) - fuelBalance);
   const remainingFuelKg = remainingFuelL * fuelDensity;
   
   // Poids sans carburant
-  const zeroFuelWeight = calculations.totalWeight - loads.fuel;
+  const zeroFuelWeight = Math.max(0, safeTotalWeight - safeFuel);
   
   // Moment sans carburant
-  const zeroFuelMoment = calculations.totalMoment - (loads.fuel * wb.fuelArm);
+  const zeroFuelMoment = safeTotalMoment - (safeFuel * wb.fuelArm);
   
   // Scénario 1: FULLTANK
   const fulltankFuelKg = aircraft.fuelCapacity * fuelDensity;
@@ -24,9 +30,9 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
   const fulltankCG = fulltankWeight > 0 ? fulltankMoment / fulltankWeight : 0;
   
   // Scénario 2: T/O CRM (actuel)
-  const toCrmWeight = calculations.totalWeight;
-  const toCrmCG = calculations.cg;
-  const toCrmFuel = loads.fuel;
+  const toCrmWeight = safeTotalWeight;
+  const toCrmCG = safeCG;
+  const toCrmFuel = safeFuel;
   
   // Scénario 3: LANDING
   const landingFuelKg = fobFuel?.ltr > 0 ? remainingFuelKg : 0;
@@ -39,23 +45,23 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
   
   return {
     fulltank: {
-      w: fulltankWeight,
-      cg: fulltankCG,
-      fuel: fulltankFuelKg
+      w: fulltankWeight || 0,
+      cg: fulltankCG || 0,
+      fuel: fulltankFuelKg || 0
     },
     toCrm: {
-      w: toCrmWeight,
-      cg: toCrmCG,
-      fuel: toCrmFuel
+      w: toCrmWeight || 0,
+      cg: toCrmCG || 0,
+      fuel: toCrmFuel || 0
     },
     landing: {
-      w: landingWeight,
-      cg: landingCG,
-      fuel: landingFuelKg
+      w: landingWeight || 0,
+      cg: landingCG || 0,
+      fuel: landingFuelKg || 0
     },
     zfw: {
-      w: zeroFuelWeight,
-      cg: zfwCG,
+      w: zeroFuelWeight || 0,
+      cg: zfwCG || 0,
       fuel: 0
     }
   };

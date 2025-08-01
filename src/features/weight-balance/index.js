@@ -1,4 +1,5 @@
 // src/features/weight-balance/index.js
+// ========================================
 export { default } from './components/WeightBalanceModule';
 export { WeightBalanceTable } from './components/WeightBalanceTable';
 export { ScenarioCards } from './components/ScenarioCards';
