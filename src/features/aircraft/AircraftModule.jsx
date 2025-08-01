@@ -1,5 +1,5 @@
 // src/features/aircraft/AircraftModule.jsx
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { useAircraft } from '@core/contexts';
 import { Plus, Edit2, Trash2, Download, Upload, Info } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
@@ -57,22 +57,78 @@ const InfoIcon = memo(({ tooltip }) => {
 InfoIcon.displayName = 'InfoIcon';
 
 export const AircraftModule = memo(() => {
-  const { aircraftList, selectedAircraft, setSelectedAircraft, addAircraft, updateAircraft, deleteAircraft } = useAircraft();
+  const aircraftContext = useAircraft();
+  
+  // DEBUG: Afficher le contexte complet
+  console.log('🔍 AircraftModule - Full Context:', aircraftContext);
+  
+  // Vérifier si le contexte est valide
+  if (!aircraftContext) {
+    console.error('❌ AircraftModule - useAircraft returned null/undefined');
+    return (
+      <div style={{ padding: '20px', backgroundColor: '#FEF2F2', border: '1px solid #F87171', borderRadius: '8px' }}>
+        <h3 style={{ color: '#B91C1C', marginBottom: '10px' }}>Erreur: Contexte Aircraft non disponible</h3>
+        <p style={{ color: '#DC2626' }}>Vérifiez que AircraftProvider enveloppe bien votre application.</p>
+      </div>
+    );
+  }
+  
+  const { aircraftList, selectedAircraft, setSelectedAircraft, addAircraft, updateAircraft, deleteAircraft } = aircraftContext;
+  
+  // DEBUG: Afficher l'état actuel
+  console.log('✈️ AircraftModule - aircraftList:', aircraftList);
+  console.log('✅ AircraftModule - selectedAircraft:', selectedAircraft);
+  console.log('📊 AircraftModule - aircraftList length:', aircraftList?.length || 0);
+  
+  // State local pour forcer le re-render
+  const [renderKey, setRenderKey] = useState(0);
+  
+  // Effet pour détecter les changements de selectedAircraft
+  useEffect(() => {
+    console.log('🔄 AircraftModule - useEffect triggered, selectedAircraft changed:', selectedAircraft);
+    // Forcer un re-render
+    setRenderKey(prev => prev + 1);
+  }, [selectedAircraft]);
+  
   const [showForm, setShowForm] = useState(false);
   const [editingAircraft, setEditingAircraft] = useState(null);
 
+  const handleSelectAircraft = async (aircraft) => {
+    console.log('🎯 AircraftModule - Selecting aircraft:', aircraft);
+    console.log('🔧 AircraftModule - Aircraft ID:', aircraft.id);
+    console.log('📝 AircraftModule - Aircraft Registration:', aircraft.registration);
+    console.log('🔍 AircraftModule - Current selectedAircraft before:', selectedAircraft);
+    
+    try {
+      await setSelectedAircraft(aircraft);
+      console.log('✅ AircraftModule - Aircraft selected successfully');
+      
+      // Vérifier après un court délai
+      setTimeout(() => {
+        console.log('⏱️ AircraftModule - Checking selectedAircraft after 100ms:', aircraftContext.selectedAircraft);
+      }, 100);
+      
+    } catch (error) {
+      console.error('❌ AircraftModule - Error selecting aircraft:', error);
+    }
+  };
+
   const handleEdit = (aircraft) => {
+    console.log('✏️ AircraftModule - Editing aircraft:', aircraft);
     setEditingAircraft(aircraft);
     setShowForm(true);
   };
 
   const handleDelete = (id) => {
+    console.log('🗑️ AircraftModule - Attempting to delete aircraft:', id);
     if (window.confirm('Êtes-vous sûr de supprimer cet avion ?')) {
       deleteAircraft(id);
+      console.log('✅ AircraftModule - Aircraft deleted:', id);
     }
   };
 
   const handleExport = () => {
+    console.log('📤 AircraftModule - Exporting aircraft list');
     const dataStr = JSON.stringify(aircraftList, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
     const exportFileDefaultName = `aircraft-${new Date().toISOString().split('T')[0]}.json`;
@@ -81,35 +137,50 @@ export const AircraftModule = memo(() => {
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportFileDefaultName);
     linkElement.click();
+    console.log('✅ AircraftModule - Export completed');
   };
 
   const handleImport = (event) => {
+    console.log('📥 AircraftModule - Importing aircraft');
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
           const importedData = JSON.parse(e.target.result);
+          console.log('📋 AircraftModule - Imported data:', importedData);
+          
           if (Array.isArray(importedData)) {
             if (window.confirm(`Voulez-vous importer ${importedData.length} avion(s) ?`)) {
               importedData.forEach(aircraft => {
                 addAircraft(aircraft);
               });
               alert('Import réussi !');
+              console.log('✅ AircraftModule - Import successful');
             }
           } else {
             alert('Format de fichier invalide');
+            console.error('❌ AircraftModule - Invalid file format');
           }
         } catch (error) {
           alert('Erreur lors de l\'import : ' + error.message);
+          console.error('❌ AircraftModule - Import error:', error);
         }
       };
       reader.readAsText(file);
     }
   };
 
+  // Fonction pour tester manuellement la sélection
+  window.debugSelectAircraft = (index) => {
+    if (aircraftList && aircraftList[index]) {
+      console.log('🧪 DEBUG - Manually selecting aircraft at index:', index);
+      handleSelectAircraft(aircraftList[index]);
+    }
+  };
+
   return (
-    <div>
+    <div key={renderKey}>
       <div style={sx.combine(sx.flex.between, sx.spacing.mb(4))}>
         <h3 style={sx.combine(sx.text.lg, sx.text.bold)}>
           ✈️ Gestion des avions
@@ -134,6 +205,7 @@ export const AircraftModule = memo(() => {
           </button>
           <button
             onClick={() => {
+              console.log('➕ AircraftModule - Opening new aircraft form');
               setEditingAircraft(null);
               setShowForm(true);
             }}
@@ -145,78 +217,162 @@ export const AircraftModule = memo(() => {
         </div>
       </div>
 
+      {/* Section de débogage - VISIBLE UNIQUEMENT EN DEV */}
+      <div style={{ 
+        marginBottom: '16px', 
+        padding: '12px', 
+        backgroundColor: '#F3F4F6', 
+        borderRadius: '8px',
+        border: '1px solid #E5E7EB'
+      }}>
+        <h4 style={{ margin: 0, marginBottom: '8px', fontSize: '14px', color: '#374151' }}>
+          🔧 Debug Info:
+        </h4>
+        <div style={{ fontSize: '12px', color: '#6B7280', lineHeight: '1.6' }}>
+          <p style={{ margin: '4px 0' }}>
+            • Nombre d'avions: <strong>{aircraftList?.length || 0}</strong>
+          </p>
+          <p style={{ margin: '4px 0' }}>
+            • Avion sélectionné: <strong>
+              {selectedAircraft 
+                ? `${selectedAircraft.registration} (ID: ${selectedAircraft.id})` 
+                : 'Aucun'}
+            </strong>
+          </p>
+          <p style={{ margin: '4px 0' }}>
+            • État du contexte: <strong style={{ color: aircraftContext ? '#10B981' : '#EF4444' }}>
+              {aircraftContext ? 'Connecté' : 'Déconnecté'}
+            </strong>
+          </p>
+          <p style={{ margin: '4px 0' }}>
+            • Render key: <strong>{renderKey}</strong>
+          </p>
+          <p style={{ margin: '4px 0', fontSize: '11px', color: '#9CA3AF' }}>
+            Console: window.debugSelectAircraft(0) pour sélectionner le premier avion
+          </p>
+        </div>
+      </div>
+
       {/* Liste des avions */}
       <div style={{ display: 'grid', gap: '12px' }}>
-        {aircraftList.map(aircraft => (
-          <div
-            key={aircraft.id}
-            style={sx.combine(
-              sx.components.card.base,
-              aircraft.id === selectedAircraft?.id && {
-                borderColor: '#3182CE',
-                backgroundColor: '#EBF8FF'
-              }
-            )}
-          >
-            <div style={sx.flex.between}>
-              <div 
-                style={{ flex: 1, cursor: 'pointer' }}
-                onClick={() => setSelectedAircraft(aircraft)}
+        {aircraftList && aircraftList.length > 0 ? (
+          aircraftList.map((aircraft, index) => {
+            const isSelected = selectedAircraft && selectedAircraft.id === aircraft.id;
+            
+            console.log(`🔍 Rendering aircraft ${index}:`, {
+              aircraftId: aircraft.id,
+              selectedId: selectedAircraft?.id,
+              isSelected: isSelected,
+              strictEquality: selectedAircraft?.id === aircraft.id,
+              typeOfAircraftId: typeof aircraft.id,
+              typeOfSelectedId: typeof selectedAircraft?.id
+            });
+            
+            return (
+              <div
+                key={aircraft.id}
+                style={{
+                  padding: '16px',
+                  borderRadius: '8px',
+                  border: isSelected ? '2px solid #3182CE' : '1px solid #E5E7EB',
+                  backgroundColor: isSelected ? '#EBF8FF' : 'white',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease-in-out',
+                  marginBottom: '8px',
+                  boxShadow: isSelected ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : 'none'
+                }}
+                onClick={(e) => {
+                  console.log(`🖱️ AircraftModule - Card clicked for aircraft index ${index}`);
+                  if (e.target.closest('button')) {
+                    console.log('⚠️ AircraftModule - Click on button, stopping propagation');
+                    return;
+                  }
+                  handleSelectAircraft(aircraft);
+                }}
               >
-                <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(1))}>
-                  {aircraft.registration} - {aircraft.model}
-                  {aircraft.id === selectedAircraft?.id && (
-                    <span style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.ml(2))}>
-                      (sélectionné)
-                    </span>
-                  )}
-                </h4>
-                <div style={sx.combine(sx.text.sm, sx.text.secondary)}>
-                  <p>Carburant: {aircraft.fuelType} • Capacité: {aircraft.fuelCapacity}L</p>
-                  <p>Vitesse: {aircraft.cruiseSpeedKt}kt • Conso: {aircraft.fuelConsumption}L/h</p>
-                  <p>MTOW: {aircraft.maxTakeoffWeight}kg</p>
-                  {aircraft.masses?.emptyMass && (
-                    <p style={{ color: '#3182CE' }}>
-                      ⚖️ Masse à vide: {aircraft.masses.emptyMass}kg • MLM: {aircraft.limitations?.maxLandingMass || 'N/A'}kg
-                    </p>
-                  )}
-                  {aircraft.armLengths?.emptyMassArm && (
-                    <p style={{ color: '#7C3AED' }}>
-                      📏 Bras masse à vide: {aircraft.armLengths.emptyMassArm}mm • Carburant: {aircraft.armLengths.fuelArm}mm
-                    </p>
-                  )}
-                  {aircraft.cgEnvelope && aircraft.cgEnvelope.length > 0 && (
-                    <p style={{ color: '#EC4899' }}>
-                      📈 Enveloppe CG: {aircraft.cgEnvelope.length} points définis
-                    </p>
-                  )}
-                </div>
-                {/* Mini graphique de l'enveloppe pour l'avion sélectionné */}
-                {aircraft.id === selectedAircraft?.id && aircraft.cgEnvelope && aircraft.cgEnvelope.length >= 2 && (
-                  <div style={{ marginTop: '12px' }}>
-                    <CGEnvelopeMini envelope={aircraft.cgEnvelope} />
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <div style={{ flex: 1 }}>
+                    <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '4px' }}>
+                      {aircraft.registration} - {aircraft.model}
+                      {isSelected && (
+                        <span style={{ fontSize: '14px', color: '#6B7280', marginLeft: '8px' }}>
+                          (sélectionné)
+                        </span>
+                      )}
+                    </h4>
+                    <div style={{ fontSize: '14px', color: '#6B7280' }}>
+                      <p>Carburant: {aircraft.fuelType} • Capacité: {aircraft.fuelCapacity}L</p>
+                      <p>Vitesse: {aircraft.cruiseSpeed || aircraft.cruiseSpeedKt}kt • Conso: {aircraft.fuelConsumption}L/h</p>
+                      <p>MTOW: {aircraft.maxTakeoffWeight}kg</p>
+                      {aircraft.masses?.emptyMass && (
+                        <p style={{ color: '#3182CE' }}>
+                          ⚖️ Masse à vide: {aircraft.masses.emptyMass}kg • MLM: {aircraft.limitations?.maxLandingMass || 'N/A'}kg
+                        </p>
+                      )}
+                      {aircraft.armLengths?.emptyMassArm && (
+                        <p style={{ color: '#7C3AED' }}>
+                          📏 Bras masse à vide: {aircraft.armLengths.emptyMassArm}mm • Carburant: {aircraft.armLengths.fuelArm}mm
+                        </p>
+                      )}
+                      {aircraft.cgEnvelope && aircraft.cgEnvelope.length > 0 && (
+                        <p style={{ color: '#EC4899' }}>
+                          📈 Enveloppe CG: {aircraft.cgEnvelope.length} points définis
+                        </p>
+                      )}
+                      {/* Debug info spécifique à cet avion */}
+                      <p style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '4px' }}>
+                        ID: {aircraft.id} | Index: {index} | Selected: {isSelected ? 'YES' : 'NO'}
+                      </p>
+                    </div>
+                    {/* Mini graphique de l'enveloppe pour l'avion sélectionné */}
+                    {isSelected && aircraft.cgEnvelope && aircraft.cgEnvelope.length >= 2 && (
+                      <div style={{ marginTop: '12px' }}>
+                        <CGEnvelopeMini envelope={aircraft.cgEnvelope} />
+                      </div>
+                    )}
                   </div>
-                )}
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('✏️ AircraftModule - Edit button clicked');
+                        handleEdit(aircraft);
+                      }}
+                      style={sx.combine(sx.components.button.base, sx.components.button.secondary, { padding: '8px' })}
+                      title="Modifier"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                    {aircraftList.length > 1 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('🗑️ AircraftModule - Delete button clicked');
+                          handleDelete(aircraft.id);
+                        }}
+                        style={sx.combine(sx.components.button.base, sx.components.button.danger, { padding: '8px' })}
+                        title="Supprimer"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div style={sx.combine(sx.flex.row, sx.spacing.gap(1))}>
-                <button
-                  onClick={() => handleEdit(aircraft)}
-                  style={sx.combine(sx.components.button.base, sx.components.button.secondary, { padding: '8px' })}
-                >
-                  <Edit2 size={16} />
-                </button>
-                {aircraftList.length > 1 && (
-                  <button
-                    onClick={() => handleDelete(aircraft.id)}
-                    style={sx.combine(sx.components.button.base, sx.components.button.danger, { padding: '8px' })}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                )}
-              </div>
-            </div>
+            );
+          })
+        ) : (
+          <div style={{ 
+            padding: '40px', 
+            textAlign: 'center', 
+            backgroundColor: 'white', 
+            borderRadius: '8px', 
+            border: '1px solid #E5E7EB' 
+          }}>
+            <p style={{ marginBottom: '16px', fontSize: '16px', color: '#6B7280' }}>Aucun avion enregistré.</p>
+            <p style={{ color: '#6B7280' }}>Cliquez sur "Nouvel avion" pour commencer.</p>
           </div>
-        ))}
+        )}
       </div>
 
       {/* Modal formulaire */}
@@ -249,15 +405,19 @@ export const AircraftModule = memo(() => {
             <AircraftForm
               aircraft={editingAircraft}
               onSubmit={(formData) => {
+                console.log('💾 AircraftModule - Form submitted with data:', formData);
                 if (editingAircraft) {
                   updateAircraft(editingAircraft.id, formData);
+                  console.log('✅ AircraftModule - Aircraft updated');
                 } else {
                   addAircraft(formData);
+                  console.log('✅ AircraftModule - New aircraft added');
                 }
                 setShowForm(false);
                 setEditingAircraft(null);
               }}
               onCancel={() => {
+                console.log('❌ AircraftModule - Form cancelled');
                 setShowForm(false);
                 setEditingAircraft(null);
               }}
@@ -273,9 +433,7 @@ AircraftModule.displayName = 'AircraftModule';
 
 // Composant de formulaire pour ajouter/modifier un avion
 const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
-  // TODO: Récupérer l'unité depuis le contexte utilisateur
-  // const { massUnit } = useUserPreferences();
-  const massUnit = 'kg'; // ou 'lbs' selon les préférences utilisateur
+  const massUnit = 'kg';
 
   const [formData, setFormData] = useState({
     registration: aircraft?.registration || '',
@@ -352,13 +510,11 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Validation basique
     if (!formData.registration || !formData.model) {
       alert('L\'immatriculation et le modèle sont obligatoires');
       return;
     }
 
-    // Conversion des valeurs numériques
     const processedData = {
       ...formData,
       fuelCapacity: Number(formData.fuelCapacity),
@@ -416,11 +572,6 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
     sx.spacing.mb(1),
     { display: 'flex', alignItems: 'center' }
   );
-
-  // Log pour vérifier les données de l'enveloppe
-  console.log('FormData cgEnvelope:', formData.cgEnvelope);
-  const validEnvelopePoints = formData.cgEnvelope.filter(p => p.weight && p.forwardLimit && p.aftLimit);
-  console.log('Valid envelope points:', validEnvelopePoints);
 
   return (
     <form onSubmit={handleSubmit}>
@@ -641,7 +792,6 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             Bras de levier (mm)
           </h4>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-            {/* Première ligne */}
             <div>
               <label style={labelStyle}>
                 Masse à vide
@@ -670,8 +820,6 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                 style={inputStyle}
               />
             </div>
-            
-            {/* Deuxième ligne */}
             <div>
               <label style={labelStyle}>
                 Siège avant gauche
@@ -700,8 +848,6 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                 style={inputStyle}
               />
             </div>
-            
-            {/* Troisième ligne */}
             <div>
               <label style={labelStyle}>
                 Siège arrière gauche
@@ -730,8 +876,6 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                 style={inputStyle}
               />
             </div>
-            
-            {/* Compartiments bagages */}
             <div>
               <label style={labelStyle}>
                 Compartiment standard
@@ -826,7 +970,6 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
               {formData.cgEnvelope.length > 2 && <div></div>}
             </div>
             {formData.cgEnvelope.map((point, index) => {
-              // Calculer la position réelle du point dans l'enveloppe triée pour l'affichage
               const sortedIndex = formData.cgEnvelope
                 .map((p, i) => ({ ...p, originalIndex: i }))
                 .filter(p => p.weight && p.forwardLimit && p.aftLimit)
@@ -908,7 +1051,6 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             </button>
           </div>
           
-          {/* Message d'information sur l'enveloppe */}
           <div style={{ marginTop: '16px', padding: '8px', backgroundColor: '#F3F4F6', borderRadius: '4px', fontSize: '12px', color: '#6B7280' }}>
             {formData.cgEnvelope.filter(p => p.weight && p.forwardLimit && p.aftLimit).length < 2 ? (
               <div style={{ textAlign: 'center', color: '#EF4444' }}>
@@ -939,7 +1081,6 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
         </div>
       </div>
 
-      {/* Boutons d'action */}
       <div style={sx.combine(sx.flex.end, sx.spacing.gap(2), sx.spacing.mt(4))}>
         <button
           type="button"
@@ -964,13 +1105,7 @@ AircraftForm.displayName = 'AircraftForm';
 // Composant pour afficher le graphique de l'enveloppe de centrage
 const CGEnvelopeChart = memo(({ envelope, massUnit }) => {
   try {
-    console.log('CGEnvelopeChart - envelope reçue:', envelope);
-    
-    // Trier les points par masse croissante
     const sortedEnvelope = [...envelope].sort((a, b) => Number(a.weight) - Number(b.weight));
-    console.log('CGEnvelopeChart - enveloppe triée:', sortedEnvelope);
-    
-    // Trouver les min/max pour l'échelle
     const weights = sortedEnvelope.map(p => Number(p.weight));
     const allCGValues = sortedEnvelope.flatMap(p => [Number(p.forwardLimit), Number(p.aftLimit)]);
     
@@ -979,43 +1114,30 @@ const CGEnvelopeChart = memo(({ envelope, massUnit }) => {
     const minCG = Math.min(...allCGValues) * 0.98;
     const maxCG = Math.max(...allCGValues) * 1.02;
     
-    console.log('CGEnvelopeChart - échelles:', { minWeight, maxWeight, minCG, maxCG });
-    
-    // Vérifier que les valeurs sont valides
     if (!isFinite(minWeight) || !isFinite(maxWeight) || !isFinite(minCG) || !isFinite(maxCG)) {
-      console.error('CGEnvelopeChart - Valeurs d\'échelle invalides');
       return <div>Données invalides pour le graphique</div>;
     }
   
-    // Dimensions du graphique
     const width = 400;
     const height = 300;
     const margin = { top: 20, right: 30, bottom: 50, left: 60 };
     const chartWidth = width - margin.left - margin.right;
     const chartHeight = height - margin.top - margin.bottom;
     
-    // Échelles
     const xScale = (cg) => ((cg - minCG) / (maxCG - minCG)) * chartWidth;
     const yScale = (weight) => chartHeight - ((weight - minWeight) / (maxWeight - minWeight)) * chartHeight;
     
-    // Créer le path pour l'enveloppe
     const forwardPath = sortedEnvelope
       .map((p, i) => `${i === 0 ? 'M' : 'L'} ${xScale(Number(p.forwardLimit))},${yScale(Number(p.weight))}`)
       .join(' ');
     
-    // Pour le chemin arrière, on doit parcourir dans l'ordre inverse
     const aftPath = [...sortedEnvelope]
       .reverse()
       .map((p) => `L ${xScale(Number(p.aftLimit))},${yScale(Number(p.weight))}`)
       .join(' ');
     
     const envelopePath = `${forwardPath} ${aftPath} Z`;
-    console.log('CGEnvelopeChart - chemin de l\'enveloppe:', envelopePath);
     
-    // Points originaux pour le dessin des cercles
-    const originalSortedEnvelope = [...sortedEnvelope];
-    
-    // Grille
     const gridLinesY = 5;
     const gridLinesX = 6;
     
@@ -1086,10 +1208,9 @@ const CGEnvelopeChart = memo(({ envelope, massUnit }) => {
             strokeWidth="2"
           />
           
-          {/* Points de l'enveloppe avec labels */}
-          {originalSortedEnvelope.map((point, i) => (
+          {/* Points de l'enveloppe */}
+          {sortedEnvelope.map((point, i) => (
             <g key={`points-${i}`}>
-              {/* Groupe pour le point avant */}
               <g>
                 <circle
                   cx={xScale(Number(point.forwardLimit))}
@@ -1110,8 +1231,7 @@ const CGEnvelopeChart = memo(({ envelope, massUnit }) => {
                 >
                   {i + 1}
                 </text>
-                {/* Label de masse pour le premier et dernier point */}
-                {(i === 0 || i === originalSortedEnvelope.length - 1) && (
+                {(i === 0 || i === sortedEnvelope.length - 1) && (
                   <text
                     x={xScale(Number(point.forwardLimit))}
                     y={yScale(Number(point.weight)) - 12}
@@ -1125,7 +1245,6 @@ const CGEnvelopeChart = memo(({ envelope, massUnit }) => {
                 )}
               </g>
               
-              {/* Groupe pour le point arrière */}
               <g>
                 <circle
                   cx={xScale(Number(point.aftLimit))}
@@ -1205,7 +1324,7 @@ const CGEnvelopeChart = memo(({ envelope, massUnit }) => {
 
 CGEnvelopeChart.displayName = 'CGEnvelopeChart';
 
-// Version miniature du graphique pour l'affichage dans les cartes
+// Version miniature du graphique
 const CGEnvelopeMini = memo(({ envelope }) => {
   const sortedEnvelope = [...envelope].sort((a, b) => Number(a.weight) - Number(b.weight));
   
@@ -1220,7 +1339,8 @@ const CGEnvelopeMini = memo(({ envelope }) => {
   const width = 200;
   const height = 100;
   const margin = { top: 5, right: 5, bottom: 5, left: 5 };
-  
+  const chartWidth = width - margin.left - margin.right;
+  const chartHeight = height - margin.top - margin.bottom;
   
   const xScale = (cg) => ((cg - minCG) / (maxCG - minCG)) * chartWidth;
   const yScale = (weight) => chartHeight - ((weight - minWeight) / (maxWeight - minWeight)) * chartHeight;
@@ -1229,7 +1349,6 @@ const CGEnvelopeMini = memo(({ envelope }) => {
     .map((p, i) => `${i === 0 ? 'M' : 'L'} ${xScale(Number(p.forwardLimit))},${yScale(Number(p.weight))}`)
     .join(' ');
   
-  // Pour le chemin arrière, on doit parcourir dans l'ordre inverse
   const aftPath = [...sortedEnvelope]
     .reverse()
     .map((p) => `L ${xScale(Number(p.aftLimit))},${yScale(Number(p.weight))}`)
