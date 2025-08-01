@@ -33,6 +33,15 @@ export const LoadInput = memo(({ label, value, onChange, max, highlight = false 
     }
   };
 
+  const handleBlur = () => {
+    // S'assurer que la valeur finale est bien propagée
+    const finalValue = localValue === '' ? 0 : parseFloat(localValue);
+    if (!isNaN(finalValue) && finalValue !== value) {
+      console.log(`LoadInput ${label} - onBlur calling onChange with:`, finalValue);
+      onChange(finalValue);
+    }
+  };
+
   return (
     <div>
       <label style={sx.combine(sx.components.label.base, sx.spacing.mb(1))}>
@@ -42,6 +51,7 @@ export const LoadInput = memo(({ label, value, onChange, max, highlight = false 
         type="number"
         value={localValue}
         onChange={handleChange}
+        onBlur={handleBlur}
         max={max}
         style={inputStyle}
         step="1"

@@ -13,29 +13,26 @@ import { sx } from '@shared/styles/styleSystem';
 export const WeightBalanceModule = memo(() => {
   const { selectedAircraft } = useAircraft();
   const { fobFuel, fuelData } = useFuel();
-  const { loads, setLoads, calculations } = useWeightBalance();
+  const { loads, updateLoad, calculations } = useWeightBalance();
   const { navigationResults } = useNavigation();
 
   // Log pour déboguer
   console.log('Current loads state:', loads);
+  console.log('Current calculations:', calculations);
 
   // Calcul des scénarios mémorisé
   const scenarios = useMemo(() => {
-    if (!selectedAircraft || !calculations || !calculations.totalWeight || !calculations.totalMoment) {
+    if (!selectedAircraft || !calculations || typeof calculations.totalWeight !== 'number' || typeof calculations.totalMoment !== 'number') {
       return null;
     }
     return calculateScenarios(selectedAircraft, calculations, loads, fobFuel, fuelData);
   }, [selectedAircraft, calculations, loads, fobFuel, fuelData]);
 
-  // Handlers mémorisés
+  // Handler mémorisé pour updateLoad
   const handleLoadChange = useCallback((type, value) => {
     console.log(`WeightBalanceModule - Changing ${type} to:`, value);
-    setLoads(prev => {
-      const newLoads = { ...prev, [type]: value };
-      console.log('WeightBalanceModule - New loads state will be:', newLoads);
-      return newLoads;
-    });
-  }, [setLoads]);
+    updateLoad(type, value);
+  }, [updateLoad]);
 
   if (!selectedAircraft) {
     return <EmptyState />;

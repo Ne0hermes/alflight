@@ -172,19 +172,23 @@ export const WeightBalanceProvider = memo(({ children }) => {
     }
   }, [selectedAircraft, fobFuel?.ltr, store.updateFuelLoad]);
   
-  // Calculs mémorisés avec dépendances minimales
+  // Extraire les valeurs individuelles des loads pour les dépendances
+  const { frontLeft, frontRight, rearLeft, rearRight, baggage, auxiliary, fuel } = store.loads;
+  
+  // Calculs mémorisés avec dépendances correctes
   const calculations = useMemo(() => {
     if (!selectedAircraft) return null;
     
     return store.calculateWeightBalance(selectedAircraft, fobFuel);
-  }, [selectedAircraft, store.loads, fobFuel, store.calculateWeightBalance]);
+  }, [selectedAircraft, frontLeft, frontRight, rearLeft, rearRight, baggage, auxiliary, fuel, fobFuel, store.calculateWeightBalance]);
 
   const value = useMemo(() => ({
     loads: store.loads,
     setLoads: store.setLoads,
+    updateLoad: store.updateLoad,
     calculations,
     isWithinLimits: calculations?.isWithinLimits || false
-  }), [store.loads, store.setLoads, calculations]);
+  }), [store.loads, store.setLoads, store.updateLoad, calculations]);
 
   return <WeightBalanceContext.Provider value={value}>{children}</WeightBalanceContext.Provider>;
 });

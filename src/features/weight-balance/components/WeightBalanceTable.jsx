@@ -5,6 +5,9 @@ import { sx } from '@shared/styles/styleSystem';
 export const WeightBalanceTable = memo(({ aircraft, loads, calculations }) => {
   const wb = aircraft.weightBalance;
   
+  console.log('WeightBalanceTable - Current loads:', loads);
+  console.log('WeightBalanceTable - Current calculations:', calculations);
+  
   // Données du tableau mémorisées
   const tableData = useMemo(() => {
     const items = [];
@@ -75,6 +78,43 @@ export const WeightBalanceTable = memo(({ aircraft, loads, calculations }) => {
     return items;
   }, [aircraft, loads, wb]);
   
+  // Calculer les totaux manuellement pour vérification
+  const manualTotals = useMemo(() => {
+    let totalWeight = aircraft.emptyWeight;
+    let totalMoment = aircraft.emptyWeight * wb.emptyWeightArm;
+    
+    totalWeight += (loads.frontLeft || 0);
+    totalMoment += (loads.frontLeft || 0) * wb.frontLeftSeatArm;
+    
+    totalWeight += (loads.frontRight || 0);
+    totalMoment += (loads.frontRight || 0) * wb.frontRightSeatArm;
+    
+    totalWeight += (loads.rearLeft || 0);
+    totalMoment += (loads.rearLeft || 0) * wb.rearLeftSeatArm;
+    
+    totalWeight += (loads.rearRight || 0);
+    totalMoment += (loads.rearRight || 0) * wb.rearRightSeatArm;
+    
+    totalWeight += (loads.baggage || 0);
+    totalMoment += (loads.baggage || 0) * wb.baggageArm;
+    
+    totalWeight += (loads.auxiliary || 0);
+    totalMoment += (loads.auxiliary || 0) * wb.auxiliaryArm;
+    
+    totalWeight += (loads.fuel || 0);
+    totalMoment += (loads.fuel || 0) * wb.fuelArm;
+    
+    const cg = totalWeight > 0 ? totalMoment / totalWeight : 0;
+    
+    return {
+      totalWeight: totalWeight.toFixed(1),
+      totalMoment: totalMoment.toFixed(1),
+      cg: cg.toFixed(3)
+    };
+  }, [aircraft, loads, wb]);
+  
+  console.log('WeightBalanceTable - Manual calculations:', manualTotals);
+  
   return (
     <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
       <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(3))}>
@@ -113,19 +153,42 @@ export const WeightBalanceTable = memo(({ aircraft, loads, calculations }) => {
           <tr style={styles.totalRow}>
             <td style={styles.totalCell}>TOTAL</td>
             <td style={sx.combine(styles.totalCell, styles.rightAlign)}>
-              {calculations?.totalWeight && !isNaN(calculations.totalWeight) ? calculations.totalWeight.toFixed(1) : '0.0'}
+              {manualTotals.totalWeight}
             </td>
             <td style={sx.combine(styles.totalCell, styles.rightAlign)}>
-              {calculations?.cg && !isNaN(calculations.cg) ? calculations.cg.toFixed(2) : '0.00'}
+              {manualTotals.cg}
             </td>
             <td style={sx.combine(styles.totalCell, styles.rightAlign, styles.totalMoment)}>
-              {calculations?.totalMoment && !isNaN(calculations.totalMoment) ? calculations.totalMoment.toFixed(1) : '0.0'}
+              {manualTotals.totalMoment}
             </td>
           </tr>
         </tfoot>
       </table>
       
-      <FormulaInfo cg={calculations?.cg} totalMoment={calculations?.totalMoment} totalWeight={calculations?.totalWeight} />
+      <FormulaInfo cg={manualTotals.cg} totalMoment={manualTotals.totalMoment} totalWeight={manualTotals.totalWeight} />
+      
+      {/* Section de débogage temporaire */}
+      <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#FEF3C7', borderRadius: '8px', fontSize: '12px' }}>
+        <h5 style={{ marginBottom: '8px', fontWeight: 'bold' }}>🔍 Debug - Comparaison des calculs:</h5>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div>
+            <strong>Calculs manuels (tableau):</strong>
+            <ul style={{ margin: 0, paddingLeft: '20px' }}>
+              <li>Poids total: {manualTotals.totalWeight} kg</li>
+              <li>Moment total: {manualTotals.totalMoment} kg.m</li>
+              <li>CG: {manualTotals.cg} m</li>
+            </ul>
+          </div>
+          <div>
+            <strong>Calculs du store:</strong>
+            <ul style={{ margin: 0, paddingLeft: '20px' }}>
+              <li>Poids total: {calculations?.totalWeight || 'N/A'} kg</li>
+              <li>Moment total: {calculations?.totalMoment || 'N/A'} kg.m</li>
+              <li>CG: {calculations?.cg || 'N/A'} m</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </section>
   );
 });
@@ -142,10 +205,6 @@ const TableRow = memo(({ label, mass, arm, moment }) => (
 
 // Info formule mémorisée
 const FormulaInfo = memo(({ cg, totalMoment, totalWeight }) => {
-  const safeCG = cg && !isNaN(cg) ? cg.toFixed(3) : '0.000';
-  const safeMoment = totalMoment && !isNaN(totalMoment) ? totalMoment.toFixed(1) : '0.0';
-  const safeWeight = totalWeight && !isNaN(totalWeight) ? totalWeight.toFixed(1) : '1.0';
-  
   return (
     <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mt(3))}>
       <div>
@@ -153,7 +212,7 @@ const FormulaInfo = memo(({ cg, totalMoment, totalWeight }) => {
           💡 Formule du Centre de Gravité:
         </p>
         <p style={sx.text.sm}>
-          CG = Moment total ÷ Masse totale = {safeMoment} ÷ {safeWeight} = {safeCG} m
+          CG = Moment total ÷ Masse totale = {totalMoment} ÷ {totalWeight} = {cg} m
         </p>
       </div>
     </div>
