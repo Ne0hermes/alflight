@@ -47,6 +47,29 @@ export const weatherAPI = {
       try {
         const data = JSON.parse(text);
         console.log(`✅ METAR reçu pour ${icao}`);
+        console.log('Altimeter data:', data.altimeter); // Debug log
+        
+        // Déterminer la pression correctement
+        let pressure = null;
+        if (data.altimeter) {
+          // AVWX peut retourner la pression en différents formats
+          if (data.altimeter.value > 2000) {
+            // Si > 2000, c'est probablement en Pa ou en centièmes de inHg
+            if (data.altimeter.value > 30000) {
+              // Probablement en Pa, convertir en hPa
+              pressure = Math.round(data.altimeter.value / 100);
+            } else {
+              // Probablement en centièmes de inHg (ex: 2992 = 29.92 inHg)
+              pressure = Math.round((data.altimeter.value / 100) * 33.8639);
+            }
+          } else if (data.altimeter.value > 100) {
+            // Probablement déjà en hPa
+            pressure = Math.round(data.altimeter.value);
+          } else {
+            // Probablement en inHg (ex: 29.92)
+            pressure = Math.round(data.altimeter.value * 33.8639);
+          }
+        }
         
         // Formatage des données pour l'application
         return {
@@ -66,7 +89,7 @@ export const weatherAPI = {
             })),
             temperature: data.temperature?.value ?? null,
             dewpoint: data.dewpoint?.value ?? null,
-            pressure: data.altimeter ? Math.round(data.altimeter.value * 33.8639) : null // Conversion inHg vers hPa
+            pressure: pressure
           }
         };
       } catch (parseError) {
