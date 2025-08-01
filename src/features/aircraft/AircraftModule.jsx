@@ -50,32 +50,6 @@ const InfoIcon = memo(({ tooltip }) => {
             borderTop: '4px solid #1F2937',
           }} />
         </div>
-        <div style={{ marginTop: '8px' }}>
-          <button
-            onClick={() => {
-              console.log('🔬 Testing direct store access...');
-              const store = useAircraftStore.getState();
-              console.log('🔬 Store state:', store);
-              console.log('🔬 Store setSelectedAircraft:', store.setSelectedAircraft);
-              if (aircraftList.length > 1) {
-                const targetAircraft = selectedAircraft?.id === aircraftList[0].id ? aircraftList[1] : aircraftList[0];
-                console.log('🔬 Switching to:', targetAircraft);
-                store.setSelectedAircraft(targetAircraft);
-              }
-            }}
-            style={{
-              padding: '4px 8px',
-              fontSize: '11px',
-              backgroundColor: '#10B981',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            Test Direct Store Selection
-          </button>
-        </div>
       )}
     </span>
   );
@@ -273,6 +247,32 @@ export const AircraftModule = memo(() => {
           <p style={{ margin: '4px 0', fontSize: '11px', color: '#9CA3AF' }}>
             Console: window.debugStoreSelect(1) pour sélectionner directement via le store
           </p>
+        </div>
+        <div style={{ marginTop: '8px' }}>
+          <button
+            onClick={() => {
+              console.log('🔬 Testing direct store access...');
+              const store = useAircraftStore.getState();
+              console.log('🔬 Store state:', store);
+              console.log('🔬 Store setSelectedAircraft:', store.setSelectedAircraft);
+              if (aircraftList.length > 1) {
+                const targetAircraft = selectedAircraft?.id === aircraftList[0].id ? aircraftList[1] : aircraftList[0];
+                console.log('🔬 Switching to:', targetAircraft);
+                store.setSelectedAircraft(targetAircraft);
+              }
+            }}
+            style={{
+              padding: '4px 8px',
+              fontSize: '11px',
+              backgroundColor: '#10B981',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Test Direct Store Selection
+          </button>
         </div>
       </div>
 
@@ -1374,7 +1374,6 @@ const CGEnvelopeMini = memo(({ envelope }) => {
   
   const aftPath = [...sortedEnvelope]
     .reverse()
-    .map((p) => `L ${xScale(Number(p.aftLimit))},${yScale(Number(p.weight))}`)
     .map((p) => `L ${xScale(Number(p.aftLimit))},${yScale(Number(p.weight))}`)
     .join(' ');
   
