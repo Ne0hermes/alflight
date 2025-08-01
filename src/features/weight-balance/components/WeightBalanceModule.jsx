@@ -16,15 +16,25 @@ export const WeightBalanceModule = memo(() => {
   const { loads, setLoads, calculations } = useWeightBalance();
   const { navigationResults } = useNavigation();
 
+  // Log pour déboguer
+  console.log('Current loads state:', loads);
+
   // Calcul des scénarios mémorisé
   const scenarios = useMemo(() => {
-    if (!selectedAircraft || !calculations) return null;
+    if (!selectedAircraft || !calculations || !calculations.totalWeight || !calculations.totalMoment) {
+      return null;
+    }
     return calculateScenarios(selectedAircraft, calculations, loads, fobFuel, fuelData);
   }, [selectedAircraft, calculations, loads, fobFuel, fuelData]);
 
   // Handlers mémorisés
   const handleLoadChange = useCallback((type, value) => {
-    setLoads(prev => ({ ...prev, [type]: value }));
+    console.log(`WeightBalanceModule - Changing ${type} to:`, value);
+    setLoads(prev => {
+      const newLoads = { ...prev, [type]: value };
+      console.log('WeightBalanceModule - New loads state will be:', newLoads);
+      return newLoads;
+    });
   }, [setLoads]);
 
   if (!selectedAircraft) {
@@ -77,6 +87,16 @@ export const WeightBalanceModule = memo(() => {
 const LoadingSection = memo(({ loads, aircraft, onLoadChange }) => {
   const wb = aircraft.weightBalance;
   
+  // S'assurer que toutes les valeurs sont numériques
+  const safeLoads = {
+    frontLeft: loads.frontLeft || 0,
+    frontRight: loads.frontRight || 0,
+    rearLeft: loads.rearLeft || 0,
+    rearRight: loads.rearRight || 0,
+    baggage: loads.baggage || 0,
+    auxiliary: loads.auxiliary || 0
+  };
+  
   return (
     <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
       <h3 style={sx.combine(sx.text['lg'], sx.text.bold, sx.spacing.mb(4))}>
@@ -88,14 +108,14 @@ const LoadingSection = memo(({ loads, aircraft, onLoadChange }) => {
         <div style={styles.grid2}>
           <LoadInputWithInfo
             label="👨‍✈️ Siège avant gauche (Pilote)"
-            value={loads.frontLeft}
+            value={safeLoads.frontLeft}
             onChange={(v) => onLoadChange('frontLeft', v)}
             arm={wb.frontLeftSeatArm}
             loadKey="frontLeft"
           />
           <LoadInputWithInfo
             label="🧑‍🤝‍🧑 Siège avant droit"
-            value={loads.frontRight}
+            value={safeLoads.frontRight}
             onChange={(v) => onLoadChange('frontRight', v)}
             arm={wb.frontRightSeatArm}
             loadKey="frontRight"
@@ -106,14 +126,14 @@ const LoadingSection = memo(({ loads, aircraft, onLoadChange }) => {
         <div style={styles.grid2}>
           <LoadInputWithInfo
             label="👥 Siège arrière gauche"
-            value={loads.rearLeft}
+            value={safeLoads.rearLeft}
             onChange={(v) => onLoadChange('rearLeft', v)}
             arm={wb.rearLeftSeatArm}
             loadKey="rearLeft"
           />
           <LoadInputWithInfo
             label="👥 Siège arrière droit"
-            value={loads.rearRight}
+            value={safeLoads.rearRight}
             onChange={(v) => onLoadChange('rearRight', v)}
             arm={wb.rearRightSeatArm}
             loadKey="rearRight"
@@ -124,7 +144,7 @@ const LoadingSection = memo(({ loads, aircraft, onLoadChange }) => {
         <div style={styles.grid2}>
           <LoadInputWithInfo
             label={`🎒 Bagages (max ${aircraft.maxBaggageWeight} kg)`}
-            value={loads.baggage}
+            value={safeLoads.baggage}
             onChange={(v) => onLoadChange('baggage', v)}
             arm={wb.baggageArm}
             max={aircraft.maxBaggageWeight}
@@ -132,7 +152,7 @@ const LoadingSection = memo(({ loads, aircraft, onLoadChange }) => {
           />
           <LoadInputWithInfo
             label={`📦 Rangement annexe (max ${aircraft.maxAuxiliaryWeight} kg)`}
-            value={loads.auxiliary}
+            value={safeLoads.auxiliary}
             onChange={(v) => onLoadChange('auxiliary', v)}
             arm={wb.auxiliaryArm}
             max={aircraft.maxAuxiliaryWeight}
@@ -146,8 +166,9 @@ const LoadingSection = memo(({ loads, aircraft, onLoadChange }) => {
 
 // Composant optimisé pour chaque input de charge
 const LoadInputWithInfo = memo(({ label, value, onChange, arm, max, loadKey }) => {
-  // Mémorisation du moment
-  const moment = useMemo(() => (value * arm).toFixed(1), [value, arm]);
+  // Mémorisation du moment avec vérification
+  const displayValue = value || 0;
+  const moment = useMemo(() => (displayValue * arm).toFixed(1), [displayValue, arm]);
   
   return (
     <div style={sx.components.card.base}>

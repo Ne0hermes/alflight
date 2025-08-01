@@ -99,13 +99,13 @@ export const WeightBalanceTable = memo(({ aircraft, loads, calculations }) => {
           <tr style={styles.fuelRow}>
             <td style={styles.cell}>Carburant CRM</td>
             <td style={sx.combine(styles.cell, styles.rightAlign, styles.fuelText)}>
-              {loads.fuel}
+              {loads.fuel || 0}
             </td>
             <td style={sx.combine(styles.cell, styles.rightAlign, styles.fuelText)}>
               {wb.fuelArm.toFixed(2)}
             </td>
             <td style={sx.combine(styles.cell, styles.rightAlign, styles.fuelText)}>
-              {(loads.fuel * wb.fuelArm).toFixed(1)}
+              {((loads.fuel || 0) * wb.fuelArm).toFixed(1)}
             </td>
           </tr>
         </tbody>
@@ -113,13 +113,13 @@ export const WeightBalanceTable = memo(({ aircraft, loads, calculations }) => {
           <tr style={styles.totalRow}>
             <td style={styles.totalCell}>TOTAL</td>
             <td style={sx.combine(styles.totalCell, styles.rightAlign)}>
-              {calculations?.totalWeight.toFixed(1) || '0.0'}
+              {calculations?.totalWeight && !isNaN(calculations.totalWeight) ? calculations.totalWeight.toFixed(1) : '0.0'}
             </td>
             <td style={sx.combine(styles.totalCell, styles.rightAlign)}>
-              {calculations?.cg.toFixed(2) || '0.00'}
+              {calculations?.cg && !isNaN(calculations.cg) ? calculations.cg.toFixed(2) : '0.00'}
             </td>
             <td style={sx.combine(styles.totalCell, styles.rightAlign, styles.totalMoment)}>
-              {calculations?.totalMoment.toFixed(1) || '0.0'}
+              {calculations?.totalMoment && !isNaN(calculations.totalMoment) ? calculations.totalMoment.toFixed(1) : '0.0'}
             </td>
           </tr>
         </tfoot>
@@ -141,18 +141,24 @@ const TableRow = memo(({ label, mass, arm, moment }) => (
 ));
 
 // Info formule mémorisée
-const FormulaInfo = memo(({ cg, totalMoment, totalWeight }) => (
-  <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mt(3))}>
-    <div>
-      <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(1))}>
-        💡 Formule du Centre de Gravité:
-      </p>
-      <p style={sx.text.sm}>
-        CG = Moment total ÷ Masse totale = {totalMoment?.toFixed(1) || '0'} ÷ {totalWeight?.toFixed(1) || '1'} = {cg?.toFixed(3) || '0'} m
-      </p>
+const FormulaInfo = memo(({ cg, totalMoment, totalWeight }) => {
+  const safeCG = cg && !isNaN(cg) ? cg.toFixed(3) : '0.000';
+  const safeMoment = totalMoment && !isNaN(totalMoment) ? totalMoment.toFixed(1) : '0.0';
+  const safeWeight = totalWeight && !isNaN(totalWeight) ? totalWeight.toFixed(1) : '1.0';
+  
+  return (
+    <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mt(3))}>
+      <div>
+        <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(1))}>
+          💡 Formule du Centre de Gravité:
+        </p>
+        <p style={sx.text.sm}>
+          CG = Moment total ÷ Masse totale = {safeMoment} ÷ {safeWeight} = {safeCG} m
+        </p>
+      </div>
     </div>
-  </div>
-));
+  );
+});
 
 // Styles statiques
 const styles = {

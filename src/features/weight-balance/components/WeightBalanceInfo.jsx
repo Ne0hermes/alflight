@@ -1,4 +1,5 @@
 // src/features/weight-balance/components/WeightBalanceInfo.jsx
+// ========================================
 import React, { memo } from 'react';
 import { sx } from '@shared/styles/styleSystem';
 import { FUEL_DENSITIES } from '@utils/constants';
