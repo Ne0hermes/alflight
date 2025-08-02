@@ -516,6 +516,9 @@ export const RunwayAnalyzer = memo(({ icao }) => {
   if (!runwayAnalysis || runwayAnalysis.length === 0) {
     return null;
   }
+  
+  // CAS SPÉCIAL : VENT CALME OU VARIABLE
+  if (windSpeed === 0 || windDirection === null) {
     return (
       <div style={sx.combine(sx.components.card.base, { borderLeft: '4px solid #f59e0b' })}>
         <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), sx.flex.start)}>
@@ -597,26 +600,7 @@ export const RunwayAnalyzer = memo(({ icao }) => {
     );
   }
   
-  // Analyser les pistes
-  const runwayAnalysis = analyzeRunways(runways, windDirection, windSpeed);
-  
-  console.log('🎯 Analyse du vent pour toutes les pistes:', {
-    windDirection,
-    windSpeed,
-    runwayCount: runwayAnalysis.length,
-    results: runwayAnalysis.map(r => ({
-      name: r.name,
-      heading: r.heading,
-      headwind: r.headwind,
-      crosswind: r.crosswind,
-      angleDiff: r.angleDiff
-    }))
-  });
-  
-  if (!runwayAnalysis || runwayAnalysis.length === 0) {
-    return null;
-  }
-  
+  // CAS NORMAL : VENT PRÉSENT
   return (
     <div style={sx.combine(sx.components.card.base, { borderLeft: '4px solid #f59e0b' })}>
       <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), sx.flex.start)}>
@@ -647,48 +631,6 @@ export const RunwayAnalyzer = memo(({ icao }) => {
             {metar.wind && metar.wind.gust && <span style={{ color: '#f59e0b' }}> (rafales {metar.wind.gust}kt)</span>}
           </span>
         </div>
-      </div>
-      
-      {/* Message spécial si vent calme */}
-      {(windSpeed === 0 || windDirection === null) && (
-        <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mb(3))}>
-          <Info size={16} />
-          <p style={sx.text.sm}>
-            Vent calme ou variable - Toutes les pistes sont utilisables selon la procédure locale
-          </p>
-        </div>
-      )}
-      
-      {/* Test avec valeurs forcées - À retirer */}
-      <div style={{
-        backgroundColor: '#fee2e2',
-        border: '1px solid #fca5a5',
-        borderRadius: '4px',
-        padding: '8px',
-        marginBottom: '12px',
-        fontSize: '11px'
-      }}>
-        <strong>⚡ Test calcul avec valeurs forcées (340°/11kt sur piste 12):</strong><br/>
-        {(() => {
-          const testResult = calculateCrosswind(340, 11, 120);
-          return `Headwind: ${testResult.headwind}kt, Crosswind: ${testResult.crosswind}kt`;
-        })()}
-      </div>
-      
-      {/* Debug temporaire - À retirer une fois le problème résolu */}
-      <div style={{
-        backgroundColor: '#f0f9ff',
-        border: '1px solid #bae6fd',
-        borderRadius: '4px',
-        padding: '8px',
-        marginBottom: '12px',
-        fontSize: '11px'
-      }}>
-        <strong>🔍 Debug météo:</strong><br/>
-        • Données brutes: {JSON.stringify(metar.wind)}<br/>
-        • Direction parsée: {windDirection}° (type: {typeof windDirection})<br/>
-        • Vitesse parsée: {windSpeed}kt (type: {typeof windSpeed})<br/>
-        • Nombre de pistes analysées: {runwayAnalysis ? runwayAnalysis.length : 0}
       </div>
       
       {/* Piste recommandée ou avertissement */}
