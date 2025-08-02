@@ -4,17 +4,16 @@ import { useNavigation, useAircraft } from '@core/contexts';
 
 export const useNavigationResults = () => {
   const { selectedAircraft } = useAircraft();
+  const { waypoints, flightType } = useNavigation();
   const { 
-    waypoints, 
-    flightType,
-    calculateTotalDistance,
-    calculateFlightTime,
+    calculateTotalDistance, 
+    calculateFlightTime, 
     calculateFuelRequired,
     getRegulationReserveMinutes,
     getRegulationReserveLiters
   } = useNavigation();
   
-  const navigationResults = useMemo(() => {
+  return useMemo(() => {
     if (!selectedAircraft || !waypoints.length) return null;
     
     const totalDistance = calculateTotalDistance();
@@ -25,12 +24,19 @@ export const useNavigationResults = () => {
     
     return {
       totalDistance: parseFloat(totalDistance.toFixed(1)),
-      totalTime: Math.round(totalTime * 60), // Convertir en minutes
+      totalTime: Math.round(totalTime * 60), // Conversion en minutes
       fuelRequired: parseFloat(fuelRequired.toFixed(1)),
       regulationReserveMinutes: regulationReserveMinutes,
       regulationReserveLiters: parseFloat(regulationReserveLiters.toFixed(1))
     };
-  }, [selectedAircraft, waypoints, flightType, calculateTotalDistance, calculateFlightTime, calculateFuelRequired, getRegulationReserveMinutes, getRegulationReserveLiters]);
-  
-  return navigationResults;
+  }, [
+    selectedAircraft, 
+    waypoints, 
+    flightType,
+    calculateTotalDistance,
+    calculateFlightTime,
+    calculateFuelRequired,
+    getRegulationReserveMinutes,
+    getRegulationReserveLiters
+  ]);
 };

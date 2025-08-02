@@ -1,6 +1,6 @@
 // src/features/navigation/NavigationModule.jsx
 import React, { memo, useState, useCallback, useEffect } from 'react';
-import { MapPin, Plus, Trash2, Navigation2, Home, Sun, Moon, Map, List, Loader, AlertCircle } from 'lucide-react';
+import { MapPin, Plus, Trash2, Navigation2, Home, Sun, Moon, List, Loader, AlertCircle } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 
 // Import des contextes et hooks
@@ -24,7 +24,6 @@ const NavigationModule = () => {
   const loading = openAIPSelectors.useLoading();
   const errors = openAIPSelectors.useErrors();
   
-  const [viewMode, setViewMode] = useState('list'); // 'list' ou 'map'
   const [showReportingPoints, setShowReportingPoints] = useState(false);
   const [selectedWaypointId, setSelectedWaypointId] = useState(null);
 
@@ -185,96 +184,62 @@ const NavigationModule = () => {
             🗺️ Points de navigation
           </h3>
           
-          {/* Boutons de bascule vue */}
-          <div style={sx.combine(sx.flex.row, sx.spacing.gap(2))}>
-            <button
-              onClick={() => setShowReportingPoints(!showReportingPoints)}
-              style={sx.combine(
-                sx.components.button.base,
-                sx.components.button.secondary
-              )}
-              title="Points de report VFR"
-            >
-              <Navigation2 size={16} />
-              Points VFR
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              style={sx.combine(
-                sx.components.button.base,
-                viewMode === 'list' ? sx.components.button.primary : sx.components.button.secondary
-              )}
-            >
-              <List size={16} />
-              Liste
-            </button>
-            <button
-              onClick={() => setViewMode('map')}
-              style={sx.combine(
-                sx.components.button.base,
-                viewMode === 'map' ? sx.components.button.primary : sx.components.button.secondary
-              )}
-            >
-              <Map size={16} />
-              Carte
-            </button>
-          </div>
+          {/* Bouton pour les points VFR */}
+          <button
+            onClick={() => setShowReportingPoints(!showReportingPoints)}
+            style={sx.combine(
+              sx.components.button.base,
+              sx.components.button.secondary
+            )}
+            title="Points de report VFR"
+          >
+            <Navigation2 size={16} />
+            Points VFR
+          </button>
         </div>
         
-        {/* Vue Liste avec sélecteurs OpenAIP */}
-        {viewMode === 'list' && (
-          <>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {waypoints.map((waypoint, index) => (
-                <WaypointCard
-                  key={waypoint.id}
-                  waypoint={waypoint}
-                  index={index}
-                  totalWaypoints={waypoints.length}
-                  onSelect={(airport) => handleAirportSelect(waypoint.id, airport)}
-                  onRemove={() => removeWaypoint(waypoint.id)}
-                  onShowReportingPoints={() => {
-                    setSelectedWaypointId(waypoint.id);
-                    setShowReportingPoints(true);
-                  }}
-                />
-              ))}
-            </div>
-            
-            <button
-              onClick={addWaypoint}
-              style={sx.combine(sx.components.button.base, sx.components.button.primary, sx.spacing.mt(3))}
-            >
-              <Plus size={16} />
-              Ajouter un point
-            </button>
-          </>
-        )}
-        
-        {/* Vue Carte */}
-        {viewMode === 'map' && (
-          <div>
-            <NavigationMap 
-              waypoints={waypoints}
-              onWaypointUpdate={handleWaypointUpdate}
-              selectedAircraft={selectedAircraft}
+        {/* Liste des waypoints */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {waypoints.map((waypoint, index) => (
+            <WaypointCard
+              key={waypoint.id}
+              waypoint={waypoint}
+              index={index}
+              totalWaypoints={waypoints.length}
+              onSelect={(airport) => handleAirportSelect(waypoint.id, airport)}
+              onRemove={() => removeWaypoint(waypoint.id)}
+              onShowReportingPoints={() => {
+                setSelectedWaypointId(waypoint.id);
+                setShowReportingPoints(true);
+              }}
             />
-            
-            <div style={sx.combine(sx.flex.between, sx.spacing.mt(3))}>
-              <button
-                onClick={addWaypoint}
-                style={sx.combine(sx.components.button.base, sx.components.button.primary)}
-              >
-                <Plus size={16} />
-                Ajouter un point
-              </button>
-              
-              <div style={sx.combine(sx.text.sm, sx.text.secondary)}>
-                💡 Glissez les marqueurs sur la carte pour ajuster les positions
-              </div>
-            </div>
-          </div>
-        )}
+          ))}
+        </div>
+        
+        <button
+          onClick={addWaypoint}
+          style={sx.combine(sx.components.button.base, sx.components.button.primary, sx.spacing.mt(3))}
+        >
+          <Plus size={16} />
+          Ajouter un point
+        </button>
+      </section>
+
+      {/* Section Carte de navigation */}
+      <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
+        <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4))}>
+          🗺️ Carte de navigation
+        </h3>
+        
+        <NavigationMap 
+          waypoints={waypoints}
+          onWaypointUpdate={handleWaypointUpdate}
+          selectedAircraft={selectedAircraft}
+        />
+        
+        <div style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mt(3))}>
+          💡 Glissez les marqueurs sur la carte pour ajuster les positions des waypoints
+        </div>
       </section>
 
       {/* Points de report VFR */}

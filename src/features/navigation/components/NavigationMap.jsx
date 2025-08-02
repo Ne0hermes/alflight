@@ -1,6 +1,6 @@
 // src/features/navigation/components/NavigationMap.jsx
 import React, { memo, useEffect, useRef, useState, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Polyline, Popup, ZoomControl, LayersControl } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Polyline, Popup, ZoomControl, LayersControl, LayerGroup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { MapPin, Navigation, AlertTriangle, Info, Map } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
@@ -42,56 +42,105 @@ const WAYPOINT_ICONS = {
   alternate: createIcon('#ef4444', 'ALT')
 };
 
+// Composant pour gérer les changements de vue
+const MapViewController = ({ waypoints, setZoomWarning }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (!waypoints || waypoints.length === 0) return;
+    
+    const validWaypoints = waypoints.filter(w => w.lat && w.lon);
+    if (validWaypoints.length === 0) return;
+    
+    try {
+      if (validWaypoints.length === 1) {
+        // Un seul waypoint : centrer dessus
+        map.setView([validWaypoints[0].lat, validWaypoints[0].lon], 10);
+        setZoomWarning(false);
+      } else {
+        // Plusieurs waypoints : ajuster la vue pour tous les voir
+        const bounds = L.latLngBounds(validWaypoints.map(w => [w.lat, w.lon]));
+        
+        // Calculer la distance maximale pour anticiper le zoom
+        let maxDistance = 0;
+        for (let i = 0; i < validWaypoints.length - 1; i++) {
+          for (let j = i + 1; j < validWaypoints.length; j++) {
+            const dist = L.latLng(validWaypoints[i].lat, validWaypoints[i].lon)
+              .distanceTo(L.latLng(validWaypoints[j].lat, validWaypoints[j].lon));
+            maxDistance = Math.max(maxDistance, dist);
+          }
+        }
+        
+        // Si la distance est très grande, avertir l'utilisateur
+        const distanceKm = maxDistance / 1000;
+        if (distanceKm > 1000) {
+          setZoomWarning(true);
+          console.log('⚠️ Distance très importante:', distanceKm.toFixed(0), 'km');
+        } else {
+          setZoomWarning(false);
+        }
+        
+        // IMPORTANT: Limiter le zoom pour rester dans les limites OpenAIP
+        map.fitBounds(bounds, { 
+          padding: [50, 50],
+          maxZoom: 12,  // Pas trop près
+          minZoom: 5    // Pas trop loin (OpenAIP minimum = 4)
+        });
+        
+        // Vérifier et ajuster le zoom si nécessaire
+        setTimeout(() => {
+          const currentZoom = map.getZoom();
+          console.log('🔍 Zoom actuel:', currentZoom);
+          
+          // Si le zoom est trop faible pour OpenAIP, le remonter
+          if (currentZoom < 5) {
+            console.log('⚠️ Zoom trop faible pour OpenAIP, ajustement à 5');
+            map.setZoom(5);
+          }
+          // Si le zoom est trop fort pour OpenAIP, le baisser
+          else if (currentZoom > 12) {
+            console.log('⚠️ Zoom trop fort pour OpenAIP, ajustement à 12');
+            map.setZoom(12);
+          }
+        }, 300);
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'ajustement de la vue:', error);
+    }
+  }, [waypoints, map, setZoomWarning]);
+  
+  return null;
+};
+
 export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircraft }) => {
   const [mapReady, setMapReady] = useState(false);
+  const [zoomWarning, setZoomWarning] = useState(false);
   const mapRef = useRef(null);
   
   // Clé API OpenAIP fournie
   const openAIPToken = '2717b9196e8100ee2456e09b82b5b08e';
 
-  // Centre par défaut (France)
+  // Centre par défaut (France) avec zoom sûr pour OpenAIP
   const defaultCenter = [46.603354, 1.888334];
-  const defaultZoom = 6;
+  const defaultZoom = 6; // Zoom sûr pour OpenAIP (entre 5 et 12)
 
-  // Calcul du centre et du zoom basé sur les waypoints
-  const { mapCenter, mapZoom } = useMemo(() => {
-    if (!waypoints || waypoints.length === 0) {
-      return { mapCenter: defaultCenter, mapZoom: defaultZoom };
-    }
-
+  // Calcul du centre initial (utilisé uniquement à l'initialisation)
+  const initialCenter = useMemo(() => {
     const validWaypoints = waypoints.filter(w => w.lat && w.lon);
     if (validWaypoints.length === 0) {
-      return { mapCenter: defaultCenter, mapZoom: defaultZoom };
+      return defaultCenter;
     }
-
-    const lats = validWaypoints.map(w => w.lat);
-    const lons = validWaypoints.map(w => w.lon);
-
+    
+    // Si un seul waypoint, centrer dessus
     if (validWaypoints.length === 1) {
-      return { mapCenter: [validWaypoints[0].lat, validWaypoints[0].lon], mapZoom: 12 };
+      return [validWaypoints[0].lat, validWaypoints[0].lon];
     }
-
+    
+    // Sinon, calculer le centre entre tous les waypoints
     const bounds = L.latLngBounds(validWaypoints.map(w => [w.lat, w.lon]));
     const center = bounds.getCenter();
-
-    // Calculer le zoom approprié
-    const maxLat = Math.max(...lats);
-    const minLat = Math.min(...lats);
-    const maxLon = Math.max(...lons);
-    const minLon = Math.min(...lons);
-    
-    const latDiff = maxLat - minLat;
-    const lonDiff = maxLon - minLon;
-    const maxDiff = Math.max(latDiff, lonDiff);
-
-    let zoom = 10;
-    if (maxDiff > 5) zoom = 6;
-    else if (maxDiff > 2) zoom = 7;
-    else if (maxDiff > 1) zoom = 8;
-    else if (maxDiff > 0.5) zoom = 9;
-
-    return { mapCenter: [center.lat, center.lng], mapZoom: zoom };
-  }, [waypoints]);
+    return [center.lat, center.lng];
+  }, []); // Calcul uniquement à l'initialisation
 
   // Créer la route entre les waypoints
   const route = useMemo(() => {
@@ -109,7 +158,6 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
   }, [route]);
 
   // Configuration des cartes
-  // OpenAIP avec token
   const openAIPLayerUrl = `https://api.tiles.openaip.net/api/data/openaip/{z}/{x}/{y}.png?apiKey=${openAIPToken}`;
   const openAIPAirspaceUrl = `https://api.tiles.openaip.net/api/data/airspace/{z}/{x}/{y}.png?apiKey=${openAIPToken}`;
   const openAIPAirportUrl = `https://api.tiles.openaip.net/api/data/airport/{z}/{x}/{y}.png?apiKey=${openAIPToken}`;
@@ -125,49 +173,84 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
   // Debug
   useEffect(() => {
     console.log('🗺️ NavigationMap monté');
-    console.log('📍 Centre:', mapCenter, 'Zoom:', mapZoom);
-    console.log('✈️ Waypoints:', waypoints.length);
+    console.log('📍 Centre initial:', initialCenter);
+    console.log('✈️ Waypoints valides:', waypoints.filter(w => w.lat && w.lon).length);
     console.log('🔑 Token OpenAIP:', openAIPToken ? 'Configuré' : 'Manquant');
-  }, [mapCenter, mapZoom, waypoints, openAIPToken]);
+  }, [initialCenter, waypoints, openAIPToken]);
 
   return (
     <div style={styles.mapContainer}>
+      {/* Avertissement pour les distances importantes */}
+      {zoomWarning && (
+        <div style={styles.zoomWarning}>
+          <AlertTriangle size={16} />
+          <span style={{ marginLeft: '8px' }}>
+            Distance importante détectée. Si la carte OpenAIP ne s'affiche pas correctement, 
+            basculez sur "OpenStreetMap" avec le sélecteur en haut à droite.
+          </span>
+        </div>
+      )}
+      
       <MapContainer
         ref={mapRef}
-        center={mapCenter}
-        zoom={mapZoom}
+        center={initialCenter}
+        zoom={6} // Toujours commencer avec un zoom sûr pour OpenAIP
+        minZoom={3} // Permettre un zoom arrière minimal
+        maxZoom={15} // Permettre un zoom avant maximal
         style={styles.map}
         whenReady={(map) => {
           console.log('✅ Carte prête');
           setMapReady(true);
+          
           // Forcer le redimensionnement
           setTimeout(() => {
             map.target.invalidateSize();
           }, 100);
+          
+          // Écouter les changements de zoom
+          map.target.on('zoomend', () => {
+            const currentZoom = map.target.getZoom();
+            console.log('🔍 Changement de zoom:', currentZoom);
+            
+            // Avertir si on sort des limites OpenAIP
+            if (currentZoom < 5 || currentZoom > 12) {
+              console.log('⚠️ Zoom hors limites OpenAIP (5-12)');
+            }
+          });
         }}
         zoomControl={false}
       >
         <ZoomControl position="topright" />
         
+        {/* Composant pour gérer les changements de vue */}
+        <MapViewController waypoints={waypoints} setZoomWarning={setZoomWarning} />
+        
         <LayersControl position="topright">
-          {/* Couche OpenAIP (principale) */}
-          <LayersControl.BaseLayer checked name="Carte OpenAIP">
-            <TileLayer
-              url={openAIPLayerUrl}
-              attribution={openAIPAttribution}
-              tileSize={256}
-              minZoom={4}
-              maxZoom={14}
-              opacity={1}
-              eventHandlers={{
-                load: () => console.log('✅ Tiles OpenAIP chargées'),
-                error: (e) => console.error('❌ Erreur tiles OpenAIP:', e)
-              }}
-            />
+          {/* Groupe de cartes de base */}
+          
+          {/* OpenStreetMap comme base fiable */}
+          <LayersControl.BaseLayer checked name="OpenStreetMap + OpenAIP">
+            <LayerGroup>
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                maxZoom={19}
+              />
+              {/* Superposer OpenAIP si disponible */}
+              <TileLayer
+                url={openAIPLayerUrl}
+                attribution={openAIPAttribution}
+                tileSize={256}
+                minZoom={5}
+                maxZoom={12}
+                opacity={0.7}
+                errorTileUrl=""
+              />
+            </LayerGroup>
           </LayersControl.BaseLayer>
           
-          {/* OpenStreetMap comme alternative */}
-          <LayersControl.BaseLayer name="OpenStreetMap">
+          {/* OpenStreetMap seul */}
+          <LayersControl.BaseLayer name="OpenStreetMap seul">
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -209,8 +292,8 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
               url={openAIPAirspaceUrl}
               attribution=""
               tileSize={256}
-              minZoom={4}
-              maxZoom={14}
+              minZoom={5}
+              maxZoom={12}
               opacity={0.7}
             />
           </LayersControl.Overlay>
@@ -221,8 +304,8 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
               url={openAIPAirportUrl}
               attribution=""
               tileSize={256}
-              minZoom={4}
-              maxZoom={14}
+              minZoom={5}
+              maxZoom={12}
               opacity={0.8}
             />
           </LayersControl.Overlay>
@@ -298,7 +381,7 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
             </h4>
             <div style={sx.text.xs}>
               <p>Distance totale : <strong>{totalDistance} NM</strong></p>
-              <p>Waypoints : <strong>{waypoints.length}</strong></p>
+              <p>Waypoints : <strong>{waypoints.filter(w => w.lat && w.lon).length}</strong></p>
               {selectedAircraft && (
                 <>
                   <p>Temps estimé : <strong>{(totalDistance / selectedAircraft.cruiseSpeedKt).toFixed(1)} h</strong></p>
@@ -340,6 +423,22 @@ const styles = {
   map: {
     width: '100%',
     height: '100%'
+  },
+  zoomWarning: {
+    position: 'absolute',
+    top: '16px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    backgroundColor: '#fef3c7',
+    color: '#92400e',
+    padding: '8px 16px',
+    borderRadius: '6px',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+    zIndex: 500,
+    display: 'flex',
+    alignItems: 'center',
+    fontSize: '14px',
+    maxWidth: '80%'
   },
   infoPanel: {
     position: 'absolute',
