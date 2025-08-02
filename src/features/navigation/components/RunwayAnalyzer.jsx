@@ -11,103 +11,124 @@ import { useAircraft } from '@core/contexts';
 const normalizeSurfaceType = (surface) => {
   if (!surface) return 'UNKNOWN';
   
-  const surfaceUpper = surface.toUpperCase();
+  // Normaliser les caractères spéciaux et accents AVANT de convertir en majuscules
+  const normalizedSurface = surface
+    .normalize('NFD') // Décompose les caractères accentués
+    .replace(/[\u0300-\u036f]/g, '') // Supprime les accents
+    .toUpperCase()
+    .trim(); // Enlever les espaces en début/fin
   
-  // Mapping des différentes appellations vers nos codes standards
+  // Garder aussi la version originale en majuscules pour certains tests
+  const surfaceUpper = surface.toUpperCase().trim();
+  
+  // Debug pour les surfaces revêtues
+  if (surface.toLowerCase().includes('revêt')) {
+    console.log(`🔍 Debug normalisation pour "${surface}":`, {
+      original: surface,
+      normalized: normalizedSurface,
+      containsREVETUE: normalizedSurface.includes('REVETUE'),
+      containsREVETU: normalizedSurface.includes('REVETU')
+    });
+  }
+  
+  // TERRE/NON REVÊTU - VÉRIFIER EN PREMIER pour éviter les faux positifs
+  if (normalizedSurface.includes('NON REVETUE') ||
+      normalizedSurface.includes('NON REVETU') ||
+      surfaceUpper.includes('NON REVÊTUE') ||
+      surfaceUpper.includes('NON REVÊTU') ||
+      normalizedSurface.includes('UNPAVED') || 
+      normalizedSurface.includes('TERRE') || 
+      normalizedSurface.includes('DIRT') ||
+      normalizedSurface.includes('EARTH') ||
+      normalizedSurface.includes('CLAY') ||
+      normalizedSurface.includes('MUD') ||
+      normalizedSurface.includes('SOIL') ||
+      normalizedSurface.includes('ARGILE') ||
+      normalizedSurface.includes('BOUE') ||
+      normalizedSurface.includes('NATUREL')) {
+    return 'UNPAVED';
+  }
+  
   // ASPHALTE (inclut toutes les surfaces revêtues sauf béton)
-  if (surfaceUpper.includes('ASPH') || 
-      surfaceUpper.includes('BITUM') || 
-      surfaceUpper.includes('ASPHALTE') ||
-      surfaceUpper === 'ASPHALT' ||
-      surfaceUpper.includes('ENROBE') ||
-      surfaceUpper.includes('REVETUE') ||
-      surfaceUpper.includes('REVÊTUE') ||
-      surfaceUpper.includes('REVETU') ||
+  // Tester APRÈS avoir exclu "NON REVÊTUE"
+  if (normalizedSurface.includes('ASPH') || 
+      normalizedSurface.includes('BITUM') || 
+      normalizedSurface.includes('ASPHALTE') ||
+      normalizedSurface === 'ASPHALT' ||
+      normalizedSurface.includes('ENROBE') ||
+      normalizedSurface.includes('REVETUE') ||
+      normalizedSurface.includes('REVETU') ||
+      normalizedSurface === 'REVETUE' || // Test exact aussi
+      surfaceUpper.includes('REVÊTUE') || // Test aussi avec accent au cas où
       surfaceUpper.includes('REVÊTU') ||
-      surfaceUpper === 'PAVED' ||
-      surfaceUpper.includes('TARMAC') ||
-      surfaceUpper.includes('MACADAM') ||
-      surfaceUpper.includes('GOUDRON')) {
+      normalizedSurface === 'PAVED' ||
+      normalizedSurface.includes('TARMAC') ||
+      normalizedSurface.includes('MACADAM') ||
+      normalizedSurface.includes('GOUDRON')) {
+    console.log(`✅ Surface "${surface}" normalisée en ASPH`);
     return 'ASPH';
   }
   
   // BÉTON
-  if (surfaceUpper.includes('CONC') || 
-      surfaceUpper.includes('BÉTON') || 
-      surfaceUpper.includes('BETON') ||
-      surfaceUpper === 'CONCRETE' ||
-      surfaceUpper.includes('CEMENT') ||
-      surfaceUpper.includes('CIMENT')) {
+  if (normalizedSurface.includes('CONC') || 
+      normalizedSurface.includes('BETON') ||
+      normalizedSurface === 'CONCRETE' ||
+      normalizedSurface.includes('CEMENT') ||
+      normalizedSurface.includes('CIMENT')) {
     return 'CONC';
   }
   
   // HERBE
-  if (surfaceUpper.includes('GRASS') || 
-      surfaceUpper.includes('HERBE') || 
-      surfaceUpper.includes('GAZON') ||
-      surfaceUpper === 'TURF' ||
-      surfaceUpper.includes('PELOUSE')) {
+  if (normalizedSurface.includes('GRASS') || 
+      normalizedSurface.includes('HERBE') || 
+      normalizedSurface.includes('GAZON') ||
+      normalizedSurface === 'TURF' ||
+      normalizedSurface.includes('PELOUSE')) {
     return 'GRASS';
   }
   
   // GRAVIER
-  if (surfaceUpper.includes('GRAV') || 
-      surfaceUpper.includes('GRAVEL') ||
-      surfaceUpper.includes('GRAVIER') ||
-      surfaceUpper.includes('CRUSHED') ||
-      surfaceUpper.includes('PIERRAILLE') ||
-      surfaceUpper.includes('CAILLOU')) {
+  if (normalizedSurface.includes('GRAV') || 
+      normalizedSurface.includes('GRAVEL') ||
+      normalizedSurface.includes('GRAVIER') ||
+      normalizedSurface.includes('CRUSHED') ||
+      normalizedSurface.includes('PIERRAILLE') ||
+      normalizedSurface.includes('CAILLOU')) {
     return 'GRVL';
   }
   
-  // TERRE/NON REVÊTU
-  if (surfaceUpper.includes('UNPAVED') || 
-      surfaceUpper.includes('TERRE') || 
-      surfaceUpper.includes('DIRT') ||
-      surfaceUpper.includes('EARTH') ||
-      surfaceUpper.includes('CLAY') ||
-      surfaceUpper.includes('MUD') ||
-      surfaceUpper.includes('SOIL') ||
-      surfaceUpper.includes('ARGILE') ||
-      surfaceUpper.includes('BOUE') ||
-      surfaceUpper === 'NON REVETUE' ||
-      surfaceUpper === 'NON REVÊTUE' ||
-      surfaceUpper.includes('NATUREL')) {
-    return 'UNPAVED';
-  }
-  
   // SABLE
-  if (surfaceUpper.includes('SAND') || 
-      surfaceUpper.includes('SABLE') ||
-      surfaceUpper.includes('BEACH') ||
-      surfaceUpper.includes('PLAGE')) {
+  if (normalizedSurface.includes('SAND') || 
+      normalizedSurface.includes('SABLE') ||
+      normalizedSurface.includes('BEACH') ||
+      normalizedSurface.includes('PLAGE')) {
     return 'SAND';
   }
   
   // NEIGE
-  if (surfaceUpper.includes('SNOW') || 
-      surfaceUpper.includes('NEIGE') ||
-      surfaceUpper.includes('ICE') ||
-      surfaceUpper.includes('GLACE') ||
-      surfaceUpper.includes('GLACIER')) {
+  if (normalizedSurface.includes('SNOW') || 
+      normalizedSurface.includes('NEIGE') ||
+      normalizedSurface.includes('ICE') ||
+      normalizedSurface.includes('GLACE') ||
+      normalizedSurface.includes('GLACIER')) {
     return 'SNOW';
   }
   
   // EAU
-  if (surfaceUpper.includes('WATER') || 
-      surfaceUpper.includes('EAU') ||
-      surfaceUpper.includes('SEA') ||
-      surfaceUpper.includes('MER') ||
-      surfaceUpper.includes('LAKE') ||
-      surfaceUpper.includes('LAC') ||
-      surfaceUpper.includes('RIVER') ||
-      surfaceUpper.includes('RIVIERE') ||
-      surfaceUpper.includes('RIVIÈRE')) {
+  if (normalizedSurface.includes('WATER') || 
+      normalizedSurface.includes('EAU') ||
+      normalizedSurface.includes('SEA') ||
+      normalizedSurface.includes('MER') ||
+      normalizedSurface.includes('LAKE') ||
+      normalizedSurface.includes('LAC') ||
+      normalizedSurface.includes('RIVER') ||
+      normalizedSurface.includes('RIVIERE') ||
+      surfaceUpper.includes('RIVIÈRE')) { // Garder ce test avec accent
     return 'WATER';
   }
   
   // Si on arrive ici, la surface n'est pas reconnue
-  console.warn(`⚠️ Surface non reconnue: "${surface}"`);
+  console.warn(`⚠️ Surface non reconnue: "${surface}" (normalisée: "${normalizedSurface}")`);
   return 'UNKNOWN';
 };
 
@@ -131,11 +152,15 @@ const getSurfaceName = (code) => {
 const checkRunwayCompatibility = (runway, aircraft) => {
   // Si pas d'avion sélectionné, on ne peut pas vérifier la compatibilité
   if (!aircraft) {
+    console.log('⚠️ checkRunwayCompatibility: Aucun avion sélectionné');
     return { 
       isCompatible: null, 
       reason: 'Aucun avion sélectionné' 
     };
   }
+  
+  // Debug : afficher les surfaces compatibles de l'avion
+  console.log(`🛩️ Surfaces compatibles de ${aircraft.registration}:`, aircraft.compatibleRunwaySurfaces);
   
   // Si l'avion n'a pas de surfaces compatibles définies ou si la liste est vide
   // cela signifie qu'il ne peut opérer sur AUCUNE surface
@@ -155,7 +180,8 @@ const checkRunwayCompatibility = (runway, aircraft) => {
     surfacesAvion: aircraft.compatibleRunwaySurfaces,
     avionRegistration: aircraft.registration,
     avionContientASPH: aircraft.compatibleRunwaySurfaces.includes('ASPH'),
-    avionContientCONC: aircraft.compatibleRunwaySurfaces.includes('CONC')
+    avionContientCONC: aircraft.compatibleRunwaySurfaces.includes('CONC'),
+    testRevetue: runway.surface ? runway.surface.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().includes('REVETUE') : false
   });
   
   if (normalizedSurface === 'UNKNOWN') {
@@ -295,20 +321,30 @@ const calculateCrosswind = (windDirection, windSpeed, runwayHeading) => {
 const diagnosticRunwayCompatibility = (runway, aircraft) => {
   console.group(`🔍 DIAGNOSTIC Compatibilité ${runway.name}`);
   console.log('1. Surface originale de la piste:', runway.surface);
-  console.log('2. Surface normalisée:', normalizeSurfaceType(runway.surface));
-  console.log('3. Surfaces compatibles de l\'avion:', aircraft?.compatibleRunwaySurfaces);
-  console.log('4. L\'avion contient ASPH?', aircraft?.compatibleRunwaySurfaces?.includes('ASPH'));
-  console.log('5. L\'avion contient CONC?', aircraft?.compatibleRunwaySurfaces?.includes('CONC'));
+  
+  // Test de normalisation détaillé
+  const normalized = runway.surface
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase();
+  
+  console.log('2. Surface normalisée (sans accents):', normalized);
+  console.log('3. Surface normalisée par la fonction:', normalizeSurfaceType(runway.surface));
+  console.log('4. Surfaces compatibles de l\'avion:', aircraft?.compatibleRunwaySurfaces);
+  console.log('5. L\'avion contient ASPH?', aircraft?.compatibleRunwaySurfaces?.includes('ASPH'));
+  console.log('6. L\'avion contient CONC?', aircraft?.compatibleRunwaySurfaces?.includes('CONC'));
   
   if (runway.surface) {
-    const testTerms = ['revêtue', 'REVÊTUE', 'revetue', 'REVETUE', 'paved', 'PAVED'];
-    testTerms.forEach(term => {
-      console.log(`   - Surface contient "${term}"?`, runway.surface.toUpperCase().includes(term.toUpperCase()));
-    });
+    console.log('7. Tests détaillés de la chaîne:');
+    console.log('   - Contient "REVÊTUE"?', runway.surface.toUpperCase().includes('REVÊTUE'));
+    console.log('   - Contient "REVETUE" (après normalisation)?', normalized.includes('REVETUE'));
+    console.log('   - Longueur originale:', runway.surface.length);
+    console.log('   - Longueur normalisée:', normalized.length);
+    console.log('   - Codes de caractères:', Array.from(runway.surface).map(c => c.charCodeAt(0)));
   }
   
   const result = checkRunwayCompatibility(runway, aircraft);
-  console.log('6. Résultat final:', result);
+  console.log('8. Résultat final:', result);
   console.groupEnd();
   
   return result;
@@ -321,6 +357,14 @@ export const RunwayAnalyzer = memo(({ icao }) => {
   
   // Récupérer l'avion sélectionné
   const { selectedAircraft } = useAircraft();
+  
+  // Debug de l'avion sélectionné
+  console.log(`🛩️ RunwayAnalyzer - Avion sélectionné:`, {
+    exists: !!selectedAircraft,
+    registration: selectedAircraft?.registration,
+    compatibleSurfaces: selectedAircraft?.compatibleRunwaySurfaces,
+    surfaceCount: selectedAircraft?.compatibleRunwaySurfaces?.length || 0
+  });
   
   // Récupérer les données VAC
   const vacChart = vacSelectors.useChartByIcao(icao);
@@ -494,6 +538,12 @@ export const RunwayAnalyzer = memo(({ icao }) => {
         : { crosswind: 0, headwind: 0, angleDiff: 0 };
       
       const compatibility = checkRunwayCompatibility(runway, selectedAircraft);
+      
+      // Debug détaillé pour les pistes avec surface "Revêtue"
+      if (runway.surface && runway.surface.toLowerCase().includes('revêt')) {
+        console.log(`📋 Debug spécial pour piste ${runway.name} avec surface "${runway.surface}"`);
+        diagnosticRunwayCompatibility(runway, selectedAircraft);
+      }
       
       console.log(`  Piste ${runway.name}: surface=${runway.surface}, compatible=${compatibility.isCompatible}, raison="${compatibility.reason}"`);
       
