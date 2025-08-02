@@ -1,12 +1,13 @@
 // src/features/navigation/NavigationModule.jsx
 import React, { memo, useState, useCallback, useEffect } from 'react';
-import { MapPin, Plus, Trash2, Navigation2, Home, Sun, Moon, List, Loader, AlertCircle, AlertTriangle } from 'lucide-react';
+import { MapPin, Plus, Trash2, Navigation2, Home, Sun, Moon, List, Loader, AlertCircle, AlertTriangle, Wind, Plane } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 
 // Import des contextes et hooks
 import { useNavigation, useAircraft } from '@core/contexts';
 import { useNavigationResults } from '@hooks/useNavigationResults';
 import { useOpenAIPStore, openAIPSelectors } from '@core/stores/openAIPStore';
+import { useWeatherStore, weatherSelectors } from '@core/stores/weatherStore';
 
 // Import des composants locaux
 import { NavigationMap } from './components/NavigationMap';
@@ -14,6 +15,7 @@ import { AirportSelector } from './components/AirportSelector';
 import { ReportingPointsSelector } from './components/ReportingPointsSelector';
 import { AirspaceAnalyzer } from './components/AirspaceAnalyzer';
 import { TechnicalLog } from './components/TechnicalLog';
+import { RunwayAnalyzer } from './components/RunwayAnalyzer';
 
 const NavigationModule = () => {
   const { selectedAircraft } = useAircraft();
@@ -128,6 +130,10 @@ const NavigationModule = () => {
 
   const reserveInfo = getReserveInfo();
   const altitudeSuggestions = getAltitudeSuggestions();
+
+  // Obtenir l'aérodrome d'arrivée
+  const arrivalAirport = waypoints.length > 0 ? waypoints[waypoints.length - 1] : null;
+  const arrivalIcao = arrivalAirport?.name && arrivalAirport.name.match(/^[A-Z]{4}$/) ? arrivalAirport.name : null;
 
   return (
     <div>
@@ -267,6 +273,13 @@ const NavigationModule = () => {
               </p>
             </div>
           </div>
+        </section>
+      )}
+
+      {/* Analyse des pistes d'arrivée */}
+      {arrivalIcao && (
+        <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
+          <RunwayAnalyzer icao={arrivalIcao} />
         </section>
       )}
 
