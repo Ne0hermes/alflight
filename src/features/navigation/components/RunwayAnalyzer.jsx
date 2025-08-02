@@ -14,31 +14,100 @@ const normalizeSurfaceType = (surface) => {
   const surfaceUpper = surface.toUpperCase();
   
   // Mapping des différentes appellations vers nos codes standards
-  if (surfaceUpper.includes('ASPH') || surfaceUpper.includes('BITUM') || surfaceUpper.includes('ASPHALTE')) {
+  // ASPHALTE (inclut toutes les surfaces revêtues sauf béton)
+  if (surfaceUpper.includes('ASPH') || 
+      surfaceUpper.includes('BITUM') || 
+      surfaceUpper.includes('ASPHALTE') ||
+      surfaceUpper === 'ASPHALT' ||
+      surfaceUpper.includes('ENROBE') ||
+      surfaceUpper.includes('REVETUE') ||
+      surfaceUpper.includes('REVÊTUE') ||
+      surfaceUpper.includes('REVETU') ||
+      surfaceUpper.includes('REVÊTU') ||
+      surfaceUpper === 'PAVED' ||
+      surfaceUpper.includes('TARMAC') ||
+      surfaceUpper.includes('MACADAM') ||
+      surfaceUpper.includes('GOUDRON')) {
     return 'ASPH';
   }
-  if (surfaceUpper.includes('CONC') || surfaceUpper.includes('BÉTON') || surfaceUpper.includes('BETON')) {
+  
+  // BÉTON
+  if (surfaceUpper.includes('CONC') || 
+      surfaceUpper.includes('BÉTON') || 
+      surfaceUpper.includes('BETON') ||
+      surfaceUpper === 'CONCRETE' ||
+      surfaceUpper.includes('CEMENT') ||
+      surfaceUpper.includes('CIMENT')) {
     return 'CONC';
   }
-  if (surfaceUpper.includes('GRASS') || surfaceUpper.includes('HERBE') || surfaceUpper.includes('GAZON')) {
+  
+  // HERBE
+  if (surfaceUpper.includes('GRASS') || 
+      surfaceUpper.includes('HERBE') || 
+      surfaceUpper.includes('GAZON') ||
+      surfaceUpper === 'TURF' ||
+      surfaceUpper.includes('PELOUSE')) {
     return 'GRASS';
   }
-  if (surfaceUpper.includes('GRAV') || surfaceUpper.includes('GRAVEL')) {
+  
+  // GRAVIER
+  if (surfaceUpper.includes('GRAV') || 
+      surfaceUpper.includes('GRAVEL') ||
+      surfaceUpper.includes('GRAVIER') ||
+      surfaceUpper.includes('CRUSHED') ||
+      surfaceUpper.includes('PIERRAILLE') ||
+      surfaceUpper.includes('CAILLOU')) {
     return 'GRVL';
   }
-  if (surfaceUpper.includes('UNPAVED') || surfaceUpper.includes('TERRE') || surfaceUpper.includes('DIRT')) {
+  
+  // TERRE/NON REVÊTU
+  if (surfaceUpper.includes('UNPAVED') || 
+      surfaceUpper.includes('TERRE') || 
+      surfaceUpper.includes('DIRT') ||
+      surfaceUpper.includes('EARTH') ||
+      surfaceUpper.includes('CLAY') ||
+      surfaceUpper.includes('MUD') ||
+      surfaceUpper.includes('SOIL') ||
+      surfaceUpper.includes('ARGILE') ||
+      surfaceUpper.includes('BOUE') ||
+      surfaceUpper === 'NON REVETUE' ||
+      surfaceUpper === 'NON REVÊTUE' ||
+      surfaceUpper.includes('NATUREL')) {
     return 'UNPAVED';
   }
-  if (surfaceUpper.includes('SAND') || surfaceUpper.includes('SABLE')) {
+  
+  // SABLE
+  if (surfaceUpper.includes('SAND') || 
+      surfaceUpper.includes('SABLE') ||
+      surfaceUpper.includes('BEACH') ||
+      surfaceUpper.includes('PLAGE')) {
     return 'SAND';
   }
-  if (surfaceUpper.includes('SNOW') || surfaceUpper.includes('NEIGE')) {
+  
+  // NEIGE
+  if (surfaceUpper.includes('SNOW') || 
+      surfaceUpper.includes('NEIGE') ||
+      surfaceUpper.includes('ICE') ||
+      surfaceUpper.includes('GLACE') ||
+      surfaceUpper.includes('GLACIER')) {
     return 'SNOW';
   }
-  if (surfaceUpper.includes('WATER') || surfaceUpper.includes('EAU')) {
+  
+  // EAU
+  if (surfaceUpper.includes('WATER') || 
+      surfaceUpper.includes('EAU') ||
+      surfaceUpper.includes('SEA') ||
+      surfaceUpper.includes('MER') ||
+      surfaceUpper.includes('LAKE') ||
+      surfaceUpper.includes('LAC') ||
+      surfaceUpper.includes('RIVER') ||
+      surfaceUpper.includes('RIVIERE') ||
+      surfaceUpper.includes('RIVIÈRE')) {
     return 'WATER';
   }
   
+  // Si on arrive ici, la surface n'est pas reconnue
+  console.warn(`⚠️ Surface non reconnue: "${surface}"`);
   return 'UNKNOWN';
 };
 
@@ -60,38 +129,81 @@ const getSurfaceName = (code) => {
 
 // Fonction pour vérifier la compatibilité d'une piste avec l'avion
 const checkRunwayCompatibility = (runway, aircraft) => {
-  if (!aircraft || !aircraft.compatibleRunwaySurfaces) {
-    return { isCompatible: true, reason: 'Pas de restrictions définies' };
+  // Si pas d'avion sélectionné, on ne peut pas vérifier la compatibilité
+  if (!aircraft) {
+    return { 
+      isCompatible: null, 
+      reason: 'Aucun avion sélectionné' 
+    };
+  }
+  
+  // Si l'avion n'a pas de surfaces compatibles définies ou si la liste est vide
+  // cela signifie qu'il ne peut opérer sur AUCUNE surface
+  if (!aircraft.compatibleRunwaySurfaces || aircraft.compatibleRunwaySurfaces.length === 0) {
+    console.warn(`⚠️ Avion ${aircraft.registration} n'a aucune surface compatible définie`);
+    return { 
+      isCompatible: false, 
+      reason: 'Aucune surface compatible définie pour cet avion' 
+    };
   }
   
   const normalizedSurface = normalizeSurfaceType(runway.surface);
   
+  console.log(`🔍 Vérification compatibilité piste ${runway.name}:`, {
+    surfaceOriginale: runway.surface,
+    surfaceNormalisée: normalizedSurface,
+    surfacesAvion: aircraft.compatibleRunwaySurfaces,
+    avionRegistration: aircraft.registration,
+    avionContientASPH: aircraft.compatibleRunwaySurfaces.includes('ASPH'),
+    avionContientCONC: aircraft.compatibleRunwaySurfaces.includes('CONC')
+  });
+  
   if (normalizedSurface === 'UNKNOWN') {
+    console.error(`❌ Type de surface non reconnu pour la piste ${runway.name}: "${runway.surface}"`);
     return { 
       isCompatible: null, 
-      reason: 'Type de surface inconnu',
+      reason: `Type de surface inconnu: "${runway.surface}"`,
       surface: runway.surface 
     };
   }
   
   const isCompatible = aircraft.compatibleRunwaySurfaces.includes(normalizedSurface);
   
+  console.log(`✈️ Compatibilité ${runway.name} avec ${aircraft.registration}: ${isCompatible ? '✅ OUI' : '❌ NON'} (${normalizedSurface} ${isCompatible ? 'dans' : 'pas dans'} [${aircraft.compatibleRunwaySurfaces.join(', ')}])`);
+  
   return {
     isCompatible,
     reason: isCompatible 
       ? `Compatible avec ${getSurfaceName(normalizedSurface)}` 
-      : `Avion non compatible avec ${getSurfaceName(normalizedSurface)}`,
+      : `Avion non compatible avec ${getSurfaceName(normalizedSurface)} (piste: ${runway.surface})`,
     surface: normalizedSurface
   };
 };
 
 // Données de secours pour quelques aérodromes majeurs (si VAC non disponible)
 const FALLBACK_RUNWAYS = {
-  'LFPG': [{ name: '08L', length: 2700 }, { name: '26R', length: 2700 }, { name: '08R', length: 4200 }, { name: '26L', length: 4200 }],
-  'LFPO': [{ name: '06', length: 3320 }, { name: '24', length: 3320 }, { name: '08', length: 2400 }, { name: '26', length: 2400 }],
-  'LFLL': [{ name: '18L', length: 4000 }, { name: '36R', length: 4000 }, { name: '18R', length: 2670 }, { name: '36L', length: 2670 }],
+  'LFPG': [
+    { name: '08L', length: 2700, surface: 'ASPH' }, 
+    { name: '26R', length: 2700, surface: 'ASPH' }, 
+    { name: '08R', length: 4200, surface: 'ASPH' }, 
+    { name: '26L', length: 4200, surface: 'ASPH' }
+  ],
+  'LFPO': [
+    { name: '06', length: 3320, surface: 'ASPH' }, 
+    { name: '24', length: 3320, surface: 'ASPH' }, 
+    { name: '08', length: 2400, surface: 'CONC' }, 
+    { name: '26', length: 2400, surface: 'CONC' }
+  ],
+  'LFLL': [
+    { name: '18L', length: 4000, surface: 'CONC' }, 
+    { name: '36R', length: 4000, surface: 'CONC' }, 
+    { name: '18R', length: 2670, surface: 'ASPH' }, 
+    { name: '36L', length: 2670, surface: 'ASPH' }
+  ],
   // Ajouter quelques aéroports majeurs uniquement
 };
+
+// Fonction pour calculer la différence entre deux angles (en degrés)
 const angleDifference = (angle1, angle2) => {
   // Vérifier que les angles sont valides
   if (angle1 === null || angle1 === undefined || angle2 === null || angle2 === undefined ||
@@ -179,12 +291,27 @@ const calculateCrosswind = (windDirection, windSpeed, runwayHeading) => {
   }
 };
 
-// Fonction pour calculer la différence entre deux angles (en degrés)
-const FALLBACK_RUNWAYS = {
-  'LFPG': [{ name: '08L', length: 2700 }, { name: '26R', length: 2700 }, { name: '08R', length: 4200 }, { name: '26L', length: 4200 }],
-  'LFPO': [{ name: '06', length: 3320 }, { name: '24', length: 3320 }, { name: '08', length: 2400 }, { name: '26', length: 2400 }],
-  'LFLL': [{ name: '18L', length: 4000 }, { name: '36R', length: 4000 }, { name: '18R', length: 2670 }, { name: '36L', length: 2670 }],
-  // Ajouter quelques aéroports majeurs uniquement
+// Fonction de diagnostic (pour debug)
+const diagnosticRunwayCompatibility = (runway, aircraft) => {
+  console.group(`🔍 DIAGNOSTIC Compatibilité ${runway.name}`);
+  console.log('1. Surface originale de la piste:', runway.surface);
+  console.log('2. Surface normalisée:', normalizeSurfaceType(runway.surface));
+  console.log('3. Surfaces compatibles de l\'avion:', aircraft?.compatibleRunwaySurfaces);
+  console.log('4. L\'avion contient ASPH?', aircraft?.compatibleRunwaySurfaces?.includes('ASPH'));
+  console.log('5. L\'avion contient CONC?', aircraft?.compatibleRunwaySurfaces?.includes('CONC'));
+  
+  if (runway.surface) {
+    const testTerms = ['revêtue', 'REVÊTUE', 'revetue', 'REVETUE', 'paved', 'PAVED'];
+    testTerms.forEach(term => {
+      console.log(`   - Surface contient "${term}"?`, runway.surface.toUpperCase().includes(term.toUpperCase()));
+    });
+  }
+  
+  const result = checkRunwayCompatibility(runway, aircraft);
+  console.log('6. Résultat final:', result);
+  console.groupEnd();
+  
+  return result;
 };
 
 export const RunwayAnalyzer = memo(({ icao }) => {
@@ -289,7 +416,24 @@ export const RunwayAnalyzer = memo(({ icao }) => {
     }
     // Priorité 2 : Données OpenAIP
     else if (airport.runways && airport.runways.length > 0) {
-      runways = airport.runways;
+      // Adapter les données OpenAIP au format attendu
+      runways = airport.runways.map(rwy => {
+        // OpenAIP peut avoir la surface dans différents formats
+        let surface = rwy.surface || rwy.surfaceType || rwy.type || '';
+        
+        // Si toujours pas de surface et c'est un aérodrome important, supposer asphalte
+        if (!surface && airport.type !== 'small_airport') {
+          surface = 'ASPH';
+        }
+        
+        return {
+          name: rwy.name || rwy.identifier || rwy.designator || 'Unknown',
+          length: rwy.length || rwy.dimensions?.length || 0,
+          width: rwy.width || rwy.dimensions?.width || 0,
+          surface: surface,
+          qfu: rwy.qfu || rwy.heading || (parseInt((rwy.name || '0').replace(/[LCR]/g, '')) * 10)
+        };
+      });
       dataSource = 'openaip';
     }
     // Priorité 3 : Base de données de secours
@@ -341,6 +485,8 @@ export const RunwayAnalyzer = memo(({ icao }) => {
   const runwayAnalysis = useMemo(() => {
     if (!runways || runways.length === 0) return [];
     
+    console.log(`📊 Début de l'analyse des pistes pour ${icao} avec avion ${selectedAircraft?.registration || 'non sélectionné'}`);
+    
     return runways.map(runway => {
       const heading = runway.qfu || parseInt(runway.name.replace(/[LCR]/g, '')) * 10;
       const windAnalysis = windDirection !== null && windSpeed > 0 
@@ -348,6 +494,8 @@ export const RunwayAnalyzer = memo(({ icao }) => {
         : { crosswind: 0, headwind: 0, angleDiff: 0 };
       
       const compatibility = checkRunwayCompatibility(runway, selectedAircraft);
+      
+      console.log(`  Piste ${runway.name}: surface=${runway.surface}, compatible=${compatibility.isCompatible}, raison="${compatibility.reason}"`);
       
       return {
         ...runway,
@@ -367,7 +515,17 @@ export const RunwayAnalyzer = memo(({ icao }) => {
     fallbackData: FALLBACK_RUNWAYS[icao],
     finalRunways: runways,
     dataSource,
-    aircraftSurfaces: selectedAircraft?.compatibleRunwaySurfaces
+    aircraft: selectedAircraft ? {
+      registration: selectedAircraft.registration,
+      compatibleSurfaces: selectedAircraft.compatibleRunwaySurfaces,
+      hasSurfaces: selectedAircraft.compatibleRunwaySurfaces && selectedAircraft.compatibleRunwaySurfaces.length > 0
+    } : null
+  });
+  
+  // Debug détaillé des surfaces de pistes
+  console.log('📋 Détail des surfaces de pistes:');
+  runways.forEach((runway, index) => {
+    console.log(`  ${index + 1}. Piste ${runway.name}: surface="${runway.surface || 'non définie'}"`);
   });
   
   // Debug supplémentaire pour les données VAC
