@@ -2,7 +2,7 @@
 import React, { memo, useState, useEffect } from 'react';
 import { useAircraft } from '@core/contexts';
 import { useAircraftStore } from '@core/stores/aircraftStore';
-import { Plus, Edit2, Trash2, Download, Upload, Info } from 'lucide-react';
+import { Plus, Edit2, Trash2, Download, Upload, Info, AlertTriangle } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 
 // Composant pour l'aide contextuelle
@@ -342,6 +342,26 @@ export const AircraftModule = memo(() => {
                           📈 Enveloppe CG: {aircraft.cgEnvelope.length} points définis
                         </p>
                       )}
+                      {/* Types de pistes compatibles */}
+                      {aircraft.compatibleRunwaySurfaces && aircraft.compatibleRunwaySurfaces.length > 0 && (
+                        <p style={{ color: '#059669', fontSize: '13px', marginTop: '4px' }}>
+                          🛬 Pistes compatibles: {(() => {
+                            const surfaceMap = {
+                              'ASPH': 'Asphalte',
+                              'CONC': 'Béton',
+                              'GRASS': 'Herbe',
+                              'GRVL': 'Gravier',
+                              'UNPAVED': 'Terre',
+                              'SAND': 'Sable',
+                              'SNOW': 'Neige',
+                              'WATER': 'Eau'
+                            };
+                            return aircraft.compatibleRunwaySurfaces
+                              .map(s => surfaceMap[s] || s)
+                              .join(', ');
+                          })()}
+                        </p>
+                      )}
                       {/* Debug info spécifique à cet avion */}
                       <p style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '4px' }}>
                         ID: {aircraft.id} | Index: {index} | Selected: {isSelected ? 'YES' : 'NO'}
@@ -466,6 +486,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
     cruiseSpeedKt: aircraft?.cruiseSpeedKt || '',
     fuelConsumption: aircraft?.fuelConsumption || '',
     maxTakeoffWeight: aircraft?.maxTakeoffWeight || '',
+    compatibleRunwaySurfaces: aircraft?.compatibleRunwaySurfaces || ['ASPH', 'CONC'], // Par défaut: asphalte et béton
     masses: {
       emptyMass: aircraft?.masses?.emptyMass || '',
       minTakeoffMass: aircraft?.masses?.minTakeoffMass || '',
@@ -510,6 +531,24 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
           cgEnvelope: newEnvelope
         };
       });
+    } else if (field === 'compatibleRunwaySurfaces') {
+      // Gestion des surfaces compatibles (toggle)
+      setFormData(prev => {
+        const surfaces = prev.compatibleRunwaySurfaces || [];
+        if (surfaces.includes(value)) {
+          // Retirer la surface
+          return {
+            ...prev,
+            compatibleRunwaySurfaces: surfaces.filter(s => s !== value)
+          };
+        } else {
+          // Ajouter la surface
+          return {
+            ...prev,
+            compatibleRunwaySurfaces: [...surfaces, value]
+          };
+        }
+      });
     } else if (field.includes('.')) {
       const parts = field.split('.');
       if (parts.length === 2) {
@@ -537,6 +576,11 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       alert('L\'immatriculation et le modèle sont obligatoires');
       return;
     }
+    
+    if (!formData.compatibleRunwaySurfaces || formData.compatibleRunwaySurfaces.length === 0) {
+      alert('Vous devez sélectionner au moins un type de piste compatible');
+      return;
+    }
 
     const processedData = {
       ...formData,
@@ -544,6 +588,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       cruiseSpeedKt: Number(formData.cruiseSpeedKt),
       fuelConsumption: Number(formData.fuelConsumption),
       maxTakeoffWeight: Number(formData.maxTakeoffWeight),
+      compatibleRunwaySurfaces: formData.compatibleRunwaySurfaces || ['ASPH', 'CONC'],
       masses: Object.values(formData.masses).some(v => v)
         ? {
             emptyMass: Number(formData.masses.emptyMass) || 0,
@@ -685,6 +730,82 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
               />
             </div>
           </div>
+        </div>
+
+        {/* Types de pistes compatibles */}
+        <div>
+          <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
+            Types de pistes compatibles
+          </h4>
+          <div style={{
+            backgroundColor: '#EBF8FF',
+            border: '1px solid #90CDF4',
+            borderRadius: '8px',
+            padding: '12px',
+            marginBottom: '16px'
+          }}>
+            <p style={sx.combine(sx.text.sm, { color: '#2B6CB0' })}>
+              🛬 Sélectionnez tous les types de surfaces sur lesquels cet avion peut opérer en sécurité
+            </p>
+          </div>
+          
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(2, 1fr)', 
+            gap: '12px',
+            backgroundColor: '#F9FAFB',
+            padding: '16px',
+            borderRadius: '8px',
+            border: '1px solid #E5E7EB'
+          }}>
+            {[
+              { code: 'ASPH', name: 'Asphalte/Bitume', icon: '🛣️' },
+              { code: 'CONC', name: 'Béton', icon: '🏗️' },
+              { code: 'GRASS', name: 'Herbe', icon: '🌱' },
+              { code: 'GRVL', name: 'Gravier', icon: '🪨' },
+              { code: 'UNPAVED', name: 'Terre/Non revêtu', icon: '🏜️' },
+              { code: 'SAND', name: 'Sable', icon: '🏖️' },
+              { code: 'SNOW', name: 'Neige', icon: '❄️' },
+              { code: 'WATER', name: 'Eau (hydravion)', icon: '💧' }
+            ].map(surface => (
+              <label
+                key={surface.code}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '12px',
+                  backgroundColor: formData.compatibleRunwaySurfaces?.includes(surface.code) ? '#DBEAFE' : 'white',
+                  border: `2px solid ${formData.compatibleRunwaySurfaces?.includes(surface.code) ? '#3B82F6' : '#E5E7EB'}`,
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    borderColor: '#3B82F6',
+                    backgroundColor: '#F0F9FF'
+                  }
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={formData.compatibleRunwaySurfaces?.includes(surface.code) || false}
+                  onChange={() => handleChange('compatibleRunwaySurfaces', surface.code)}
+                  style={{ marginRight: '8px' }}
+                />
+                <span style={{ marginRight: '8px', fontSize: '18px' }}>{surface.icon}</span>
+                <span style={sx.text.sm}>{surface.name}</span>
+              </label>
+            ))}
+          </div>
+          
+          {/* Avertissement si aucune surface sélectionnée */}
+          {(!formData.compatibleRunwaySurfaces || formData.compatibleRunwaySurfaces.length === 0) && (
+            <div style={sx.combine(sx.components.alert.base, sx.components.alert.danger, sx.spacing.mt(2))}>
+              <AlertTriangle size={16} />
+              <p style={sx.text.sm}>
+                ⚠️ Attention : Aucun type de piste sélectionné. L'avion doit être compatible avec au moins un type de surface.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Masses structurelles */}
