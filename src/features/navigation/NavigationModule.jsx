@@ -2,6 +2,7 @@
 import React, { memo, useState, useCallback, useEffect } from 'react';
 import { MapPin, Plus, Trash2, Navigation2, Home, Sun, Moon, List, Loader, AlertCircle, AlertTriangle, Wind, Plane } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
+import { useAlternatesForNavigation } from '@features/alternates';
 
 // Import des contextes et hooks
 import { useNavigation, useAircraft } from '@core/contexts';
@@ -21,6 +22,8 @@ const NavigationModule = () => {
   const { selectedAircraft } = useAircraft();
   const { waypoints, setWaypoints, flightParams, setFlightParams, flightType, setFlightType } = useNavigation();
   const navigationResults = useNavigationResults();
+  const { alternates, hasAlternates, addAlternateAsWaypoint } = useAlternatesForNavigation();
+  
   
   // OpenAIP Store
   const { loadAirports } = useOpenAIPStore();
@@ -334,7 +337,7 @@ const NavigationModule = () => {
       {/* Section Carte de navigation */}
       <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
         <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4))}>
-          🗺️ Carte de navigation
+          🗺️ Carte de navigation & Rayon d'action
         </h3>
         
         <NavigationMap 
@@ -344,7 +347,8 @@ const NavigationModule = () => {
         />
         
         <div style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mt(3))}>
-          💡 Glissez les marqueurs sur la carte pour ajuster les positions des waypoints
+          💡 Glissez les marqueurs sur la carte pour ajuster les positions des waypoints. 
+          Utilisez le bouton "Afficher rayon" pour visualiser votre rayon d'action basé sur le carburant disponible.
         </div>
       </section>
 

@@ -4,8 +4,9 @@ import React, { memo } from 'react';
 import { useFuel, useAircraft, useNavigation } from '@core/contexts';
 import { useNavigationResults } from '@hooks/useNavigationResults';
 import { useFuelSync } from '@hooks/useFuelSync';
-import { Fuel, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Fuel, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
+import { useAlternatesForFuel } from '@features/alternates';
 
 const FuelRow = memo(({ type, label, description, fuel, onChange, readonly = false, automatic = false, totalGal }) => {
   const GAL_TO_LTR = 3.78541;
@@ -81,6 +82,7 @@ export const FuelModule = memo(() => {
   const { selectedAircraft } = useAircraft();
   const { navigationResults, flightType } = useNavigation();
   const { fuelData, setFuelData, fobFuel, setFobFuel, calculateTotal, isFobSufficient } = useFuel();
+  const { alternateFuelRequired, alternatesCount } = useAlternatesForFuel();
 
   const handleFuelChange = (type, values) => {
     if (type === 'trip' || type === 'contingency' || type === 'finalReserve') return;
@@ -248,6 +250,16 @@ export const FuelModule = memo(() => {
               </div>
             </>
           )}
+        </div>
+
+        {/* Note sur le rayon d'action */}
+        <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mt(3))}>
+          <Info size={16} />
+          <p style={sx.text.sm}>
+            💡 Pour visualiser votre rayon d'action, consultez la carte dans l'onglet Navigation. 
+            Le bouton "Afficher rayon" affichera les cercles de distance maximale et aller-retour 
+            basés sur votre carburant utilisable.
+          </p>
         </div>
       </div>
     </div>

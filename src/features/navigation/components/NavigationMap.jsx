@@ -1,9 +1,10 @@
 // src/features/navigation/components/NavigationMap.jsx
 import React, { memo, useEffect, useRef, useState, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Polyline, Popup, ZoomControl, LayersControl, LayerGroup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Polyline, Popup, ZoomControl, LayersControl, LayerGroup, useMap, Circle, Polygon } from 'react-leaflet';
 import L from 'leaflet';
-import { MapPin, Navigation, AlertTriangle, Info, Map } from 'lucide-react';
+import { MapPin, Navigation, AlertTriangle, Info, Map, Fuel } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
+import { useFuel } from '@core/contexts';
 
 // Import des styles Leaflet - TRÈS IMPORTANT
 import 'leaflet/dist/leaflet.css';
@@ -116,11 +117,264 @@ const MapViewController = ({ waypoints, setZoomWarning }) => {
   return null;
 };
 
+// Composant pour afficher les cercles de rayon d'action
+const RangeCircles = memo(({ center, selectedAircraft, showRange }) => {
+  const { fobFuel, fuelData } = useFuel();
+  
+  // Debug logs
+  console.log('🎯 RangeCircles Debug:', {
+    showRange,
+    center,
+    selectedAircraft: !!selectedAircraft,
+    fobFuel,
+    fuelData: fuelData?.finalReserve,
+    hasCenter: !!center,
+    hasFuelConsumption: selectedAircraft?.fuelConsumption,
+    hasCruiseSpeed: selectedAircraft?.cruiseSpeedKt
+  });
+  
+  if (!showRange || !center || !selectedAircraft) {
+    console.log('❌ RangeCircles: Conditions de base non remplies');
+    return null;
+  }
+  
+  if (!selectedAircraft.fuelConsumption || !selectedAircraft.cruiseSpeedKt) {
+    console.log('❌ RangeCircles: Données avion manquantes');
+    return null;
+  }
+  
+  if (!fobFuel || !fuelData || !fuelData.finalReserve) {
+    console.log('❌ RangeCircles: Données carburant manquantes');
+    return null;
+  }
+  
+  // Calcul du rayon d'action
+  const usableFuelLtr = fobFuel.ltr - fuelData.finalReserve.ltr;
+  
+  console.log('⛽ Calcul carburant:', {
+    fobLtr: fobFuel.ltr,
+    finalReserveLtr: fuelData.finalReserve.ltr,
+    usableFuelLtr
+  });
+  
+  if (usableFuelLtr <= 0) {
+    console.log('❌ RangeCircles: Carburant utilisable insuffisant');
+    return null;
+  }
+  
+  const enduranceHours = usableFuelLtr / selectedAircraft.fuelConsumption;
+  const maxRangeNM = enduranceHours * selectedAircraft.cruiseSpeedKt;
+  const roundTripRangeNM = (maxRangeNM / 2) * 0.9; // Avec marge de 10%
+  
+  // Conversion NM vers mètres pour Leaflet
+  const NM_TO_METERS = 1852;
+  const maxRangeMeters = maxRangeNM * NM_TO_METERS;
+  const roundTripRangeMeters = roundTripRangeNM * NM_TO_METERS;
+  
+  console.log('📏 Calcul distances:', {
+    enduranceHours,
+    maxRangeNM,
+    roundTripRangeNM,
+    maxRangeMeters,
+    roundTripRangeMeters
+  });
+  
+  // S'assurer que les coordonnées sont des nombres valides
+  const lat = parseFloat(center.lat);
+  const lon = parseFloat(center.lon);
+  
+  if (isNaN(lat) || isNaN(lon)) {
+    console.error('❌ Coordonnées invalides:', { lat, lon });
+    return null;
+  }
+  
+  // Fonction pour calculer un point sur le cercle à un angle donné
+  const calculatePointOnCircle = (centerLat, centerLon, radiusMeters, angleDegrees) => {
+    const R = 6371000; // Rayon de la Terre en mètres
+    const angleRad = (angleDegrees * Math.PI) / 180;
+    const lat1Rad = (centerLat * Math.PI) / 180;
+    const lon1Rad = (centerLon * Math.PI) / 180;
+    const d = radiusMeters;
+    
+    const lat2Rad = Math.asin(
+      Math.sin(lat1Rad) * Math.cos(d / R) +
+      Math.cos(lat1Rad) * Math.sin(d / R) * Math.cos(angleRad)
+    );
+    
+    const lon2Rad = lon1Rad + Math.atan2(
+      Math.sin(angleRad) * Math.sin(d / R) * Math.cos(lat1Rad),
+      Math.cos(d / R) - Math.sin(lat1Rad) * Math.sin(lat2Rad)
+    );
+    
+    return {
+      lat: (lat2Rad * 180) / Math.PI,
+      lon: (lon2Rad * 180) / Math.PI
+    };
+  };
+  
+  // Fonction pour créer une pointe de flèche
+  const createArrowhead = (startLat, startLon, endLat, endLon, color) => {
+    // Calculer l'angle de la ligne
+    const angle = Math.atan2(endLon - startLon, endLat - startLat);
+    const arrowLength = 0.01; // Longueur de la pointe en degrés
+    const arrowAngle = Math.PI / 6; // 30 degrés
+    
+    // Points de la pointe de flèche
+    const point1 = {
+      lat: endLat - arrowLength * Math.cos(angle - arrowAngle),
+      lon: endLon - arrowLength * Math.sin(angle - arrowAngle)
+    };
+    
+    const point2 = {
+      lat: endLat - arrowLength * Math.cos(angle + arrowAngle),
+      lon: endLon - arrowLength * Math.sin(angle + arrowAngle)
+    };
+    
+    return (
+      <Polygon
+        positions={[[endLat, endLon], [point1.lat, point1.lon], [point2.lat, point2.lon]]}
+        pathOptions={{
+          color: color,
+          fillColor: color,
+          fillOpacity: 1,
+          weight: 0
+        }}
+      />
+    );
+  };
+  
+  // Calculer les points pour les flèches (angle de 45° pour ne pas gêner la route)
+  const maxRangePoint = calculatePointOnCircle(lat, lon, maxRangeMeters, 45);
+  const roundTripPoint = calculatePointOnCircle(lat, lon, roundTripRangeMeters, 45);
+  
+  // Créer des icônes personnalisées pour les étiquettes de distance
+  const createDistanceLabel = (distanceNM, distanceKm, color) => {
+    return L.divIcon({
+      className: 'distance-label',
+      html: `
+        <div style="
+          background-color: white;
+          border: 2px solid ${color};
+          border-radius: 6px;
+          padding: 4px 8px;
+          font-size: 12px;
+          font-weight: bold;
+          color: ${color};
+          white-space: nowrap;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        ">
+          ↔️ ${Math.round(distanceNM)} NM / ${Math.round(distanceKm)} km
+        </div>
+      `,
+      iconSize: [140, 30],
+      iconAnchor: [70, 15]
+    });
+  };
+  
+  return (
+    <>
+      {/* Cercle extérieur - Distance maximale aller simple */}
+      <Circle
+        center={[lat, lon]}
+        radius={maxRangeMeters}
+        pathOptions={{
+          color: '#3b82f6',
+          fillColor: '#3b82f6',
+          fillOpacity: 0.05,
+          weight: 2,
+          dashArray: '10, 5'
+        }}
+      >
+        <Popup>
+          <div style={{ minWidth: '200px' }}>
+            <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(2))}>
+              🛫 Distance maximale
+            </h4>
+            <p style={sx.text.sm}>
+              <strong>{Math.round(maxRangeNM)} NM</strong> ({Math.round(maxRangeNM * 1.852)} km)
+            </p>
+            <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
+              Aller simple - Autonomie {enduranceHours.toFixed(1)}h
+            </p>
+          </div>
+        </Popup>
+      </Circle>
+      
+      {/* Flèche pour le cercle extérieur */}
+      <Polyline
+        positions={[[lat, lon], [maxRangePoint.lat, maxRangePoint.lon]]}
+        pathOptions={{
+          color: '#3b82f6',
+          weight: 2,
+          opacity: 0.8
+        }}
+      />
+      {createArrowhead(lat, lon, maxRangePoint.lat, maxRangePoint.lon, '#3b82f6')}
+      
+      {/* Étiquette distance maximale */}
+      <Marker
+        position={[maxRangePoint.lat, maxRangePoint.lon]}
+        icon={createDistanceLabel(maxRangeNM, maxRangeNM * 1.852, '#3b82f6')}
+        interactive={false}
+      />
+      
+      {/* Cercle intérieur - Rayon aller-retour */}
+      <Circle
+        center={[lat, lon]}
+        radius={roundTripRangeMeters}
+        pathOptions={{
+          color: '#10b981',
+          fillColor: '#10b981',
+          fillOpacity: 0.1,
+          weight: 3
+        }}
+      >
+        <Popup>
+          <div style={{ minWidth: '200px' }}>
+            <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(2))}>
+              🔄 Rayon aller-retour
+            </h4>
+            <p style={sx.text.sm}>
+              <strong>{Math.round(roundTripRangeNM)} NM</strong> ({Math.round(roundTripRangeNM * 1.852)} km)
+            </p>
+            <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
+              Avec marge de sécurité 10%
+            </p>
+          </div>
+        </Popup>
+      </Circle>
+      
+      {/* Flèche pour le cercle intérieur */}
+      <Polyline
+        positions={[[lat, lon], [roundTripPoint.lat, roundTripPoint.lon]]}
+        pathOptions={{
+          color: '#10b981',
+          weight: 3,
+          opacity: 0.8
+        }}
+      />
+      {createArrowhead(lat, lon, roundTripPoint.lat, roundTripPoint.lon, '#10b981')}
+      
+      {/* Étiquette rayon aller-retour */}
+      <Marker
+        position={[roundTripPoint.lat, roundTripPoint.lon]}
+        icon={createDistanceLabel(roundTripRangeNM, roundTripRangeNM * 1.852, '#10b981')}
+        interactive={false}
+      />
+    </>
+  );
+});
+
 export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircraft }) => {
   const [mapReady, setMapReady] = useState(false);
   const [zoomWarning, setZoomWarning] = useState(false);
+  const [showRange, setShowRange] = useState(false);
   const mapRef = useRef(null);
   const [mapKey, setMapKey] = useState(Date.now()); // Clé unique pour forcer la réinitialisation
+  
+  // Hook pour accéder aux données carburant
+  const { fobFuel, fuelData } = useFuel();
   
   // Clé API OpenAIP fournie
   const openAIPToken = '2717b9196e8100ee2456e09b82b5b08e';
@@ -190,7 +444,8 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
     console.log('📍 Centre initial:', initialCenter);
     console.log('✈️ Waypoints valides:', waypoints.filter(w => w.lat && w.lon).length);
     console.log('🔑 Token OpenAIP:', openAIPToken ? 'Configuré' : 'Manquant');
-  }, [initialCenter, waypoints, openAIPToken, mapKey]);
+    console.log('⛽ Données carburant disponibles:', { fobFuel: !!fobFuel, fuelData: !!fuelData });
+  }, [initialCenter, waypoints, openAIPToken, mapKey, fobFuel, fuelData]);
 
   return (
     <div style={styles.mapContainer}>
@@ -343,6 +598,15 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
           />
         )}
 
+        {/* Cercles de rayon d'action - AVANT les marqueurs pour qu'ils soient en dessous */}
+        {mapReady && waypoints.length > 0 && waypoints[0].lat && waypoints[0].lon && (
+          <RangeCircles 
+            center={{ lat: waypoints[0].lat, lon: waypoints[0].lon }} 
+            selectedAircraft={selectedAircraft}
+            showRange={showRange}
+          />
+        )}
+
         {/* Waypoints */}
         {waypoints.map((waypoint, index) => {
           if (!waypoint.lat || !waypoint.lon) return null;
@@ -414,6 +678,84 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
         </div>
       )}
       
+      {/* Panneau de contrôle du rayon d'action */}
+      {selectedAircraft && waypoints.length > 0 && waypoints[0].lat && waypoints[0].lon && (
+        <div style={styles.rangePanel}>
+          <div style={styles.rangePanelContent}>
+            <button
+              onClick={() => {
+                console.log('🔘 Bouton rayon cliqué, état actuel:', showRange, '-> nouveau:', !showRange);
+                setShowRange(!showRange);
+              }}
+              style={sx.combine(
+                sx.components.button.base,
+                showRange ? sx.components.button.primary : sx.components.button.secondary,
+                { width: '100%', fontSize: '13px', padding: '8px 12px' }
+              )}
+            >
+              <Fuel size={16} />
+              {showRange ? 'Masquer rayon' : 'Afficher rayon'}
+            </button>
+            
+            {showRange && (
+              <div style={sx.combine(sx.spacing.mt(2), sx.text.xs)}>
+                {(!fobFuel || !fuelData || !fuelData.finalReserve) ? (
+                  <div style={{ color: '#f59e0b', marginTop: '4px' }}>
+                    <p style={sx.text.bold}>⚠️ Configuration requise</p>
+                    <p style={{ marginTop: '4px' }}>
+                      Veuillez d'abord configurer le bilan carburant dans l'onglet "Bilan Carburant"
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <p style={sx.text.secondary}>Carburant utilisable :</p>
+                    <p style={sx.text.bold}>
+                      {(fobFuel.ltr - fuelData.finalReserve.ltr).toFixed(1)} L
+                    </p>
+                    {(() => {
+                      const usableFuel = fobFuel.ltr - fuelData.finalReserve.ltr;
+                      console.log('📊 Panneau - Calcul carburant:', {
+                        fobLtr: fobFuel.ltr,
+                        finalReserveLtr: fuelData.finalReserve.ltr,
+                        usableFuel
+                      });
+                      
+                      if (usableFuel <= 0) {
+                        return (
+                          <p style={{ color: '#dc2626', marginTop: '4px' }}>
+                            ⚠️ Insuffisant
+                          </p>
+                        );
+                      }
+                      const endurance = usableFuel / selectedAircraft.fuelConsumption;
+                      const maxRange = endurance * selectedAircraft.cruiseSpeedKt;
+                      const roundTripRange = (maxRange / 2) * 0.9;
+                      
+                      console.log('📊 Panneau - Calcul distances:', {
+                        endurance,
+                        maxRange,
+                        roundTripRange
+                      });
+                      
+                      return (
+                        <>
+                          <p style={sx.combine(sx.spacing.mt(1))}>
+                            <span style={{ color: '#3b82f6' }}>🔵</span> Max: {Math.round(maxRange)} NM
+                          </p>
+                          <p>
+                            <span style={{ color: '#10b981' }}>🟢</span> A/R: {Math.round(roundTripRange)} NM
+                          </p>
+                        </>
+                      );
+                    })()}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      
       {/* Légende des couches */}
       <div style={styles.legendPanel}>
         <div style={styles.legendContent}>
@@ -473,6 +815,19 @@ const styles = {
   infoPanelContent: {
     padding: '12px 16px'
   },
+  rangePanel: {
+    position: 'absolute',
+    bottom: '16px',
+    right: '16px',
+    backgroundColor: 'white',
+    borderRadius: '8px',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+    zIndex: 400,
+    width: '200px'
+  },
+  rangePanelContent: {
+    padding: '12px'
+  },
   legendPanel: {
     position: 'absolute',
     top: '16px',
@@ -488,5 +843,6 @@ const styles = {
 };
 
 NavigationMap.displayName = 'NavigationMap';
+RangeCircles.displayName = 'RangeCircles';
 
 export default NavigationMap;
