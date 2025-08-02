@@ -15,12 +15,14 @@ const WeightBalanceModule = lazy(() => import('@features/weight-balance'));
 const FuelModule = lazy(() => import('@features/fuel'));
 const AircraftModule = lazy(() => import('@features/aircraft'));
 const WeatherModule = lazy(() => import('@features/weather'));
+const PerformanceModule = lazy(() => import('@features/performance'));
 const VACModule = lazy(() => import('@features/vac'));
 
 // Configuration des onglets
 const TAB_CONFIG = [
   { id: 'navigation', label: 'Navigation', icon: 'Navigation', component: NavigationModule },
   { id: 'weather', label: 'Météo', icon: 'Cloud', component: WeatherModule },
+  { id: 'performance', label: 'Performances', icon: 'TrendingUp', component: PerformanceModule },
   { id: 'weight-balance', label: 'Masse et Centrage', icon: 'Scale', component: WeightBalanceModule },
   { id: 'fuel', label: 'Bilan Carburant', icon: 'Fuel', component: FuelModule },
   { id: 'aircraft', label: 'Gestion Avions', icon: 'Settings', component: AircraftModule },
