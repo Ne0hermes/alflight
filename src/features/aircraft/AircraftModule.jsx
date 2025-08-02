@@ -103,6 +103,7 @@ export const AircraftModule = memo(() => {
 
   const handleEdit = (aircraft) => {
     console.log('✏️ AircraftModule - Editing aircraft:', aircraft);
+    console.log('✏️ AircraftModule - Aircraft surfaces:', aircraft.compatibleRunwaySurfaces);
     setEditingAircraft(aircraft);
     setShowForm(true);
   };
@@ -176,6 +177,132 @@ export const AircraftModule = memo(() => {
     }
   };
 
+  // Test de création d'un avion de debug
+  window.debugCreateTestAircraft = () => {
+    const testAircraft = {
+      registration: 'DEBUG-TEST',
+      model: 'Test Aircraft',
+      fuelType: 'AVGAS',
+      fuelCapacity: 100,
+      cruiseSpeedKt: 100,
+      fuelConsumption: 10,
+      maxTakeoffWeight: 1000,
+      compatibleRunwaySurfaces: ['ASPH', 'CONC', 'GRASS']
+    };
+    console.log('🧪 Creating test aircraft with surfaces:', testAircraft.compatibleRunwaySurfaces);
+    addAircraft(testAircraft);
+  };
+
+  // Fonction pour forcer la mise à jour des surfaces d'un avion
+  window.debugUpdateAircraftSurfaces = (index, surfaces) => {
+    try {
+      if (!aircraftList || !aircraftList[index]) {
+        console.error('❌ Avion non trouvé à l\'index:', index);
+        return;
+      }
+      
+      // Valider que surfaces est un tableau
+      if (!Array.isArray(surfaces)) {
+        console.error('❌ Les surfaces doivent être un tableau, reçu:', typeof surfaces);
+        return;
+      }
+      
+      const aircraft = aircraftList[index];
+      const updated = {
+        ...aircraft,
+        compatibleRunwaySurfaces: surfaces,
+        // S'assurer que les autres champs obligatoires sont présents
+        cruiseSpeed: aircraft.cruiseSpeed || aircraft.cruiseSpeedKt || 100,
+        cruiseSpeedKt: aircraft.cruiseSpeedKt || aircraft.cruiseSpeed || 100
+      };
+      
+      console.log('🔧 Updating aircraft surfaces:', {
+        aircraft: aircraft.registration,
+        oldSurfaces: aircraft.compatibleRunwaySurfaces,
+        newSurfaces: surfaces,
+        fullUpdate: updated
+      });
+      
+      updateAircraft(updated);
+      console.log('✅ Surfaces mises à jour avec succès');
+    } catch (error) {
+      console.error('❌ Erreur lors de la mise à jour des surfaces:', error);
+    }
+  };
+
+  // Fonction pour afficher l'état complet d'un avion
+  window.debugShowAircraft = (index) => {
+    if (aircraftList && aircraftList[index]) {
+      const aircraft = aircraftList[index];
+      console.group(`✈️ État complet de l'avion ${aircraft.registration}`);
+      console.log('Données brutes:', aircraft);
+      console.log('Surfaces compatibles:', aircraft.compatibleRunwaySurfaces);
+      console.log('Type de compatibleRunwaySurfaces:', typeof aircraft.compatibleRunwaySurfaces);
+      console.log('Est un tableau?', Array.isArray(aircraft.compatibleRunwaySurfaces));
+      if (aircraft.compatibleRunwaySurfaces) {
+        console.log('Contenu des surfaces:');
+        aircraft.compatibleRunwaySurfaces.forEach((s, i) => {
+          console.log(`  [${i}]: "${s}" (type: ${typeof s})`);
+        });
+      }
+      console.groupEnd();
+    } else {
+      console.error('❌ Avion non trouvé à l\'index:', index);
+    }
+  };
+
+  // Fonction pour tester la sauvegarde
+  window.debugTestSave = () => {
+    console.group('🧪 Test de sauvegarde');
+    
+    const testData = {
+      registration: 'TEST-SAVE',
+      model: 'Test Save Model',
+      fuelType: 'AVGAS',
+      fuelCapacity: 100,
+      cruiseSpeed: 120,
+      cruiseSpeedKt: 120,
+      fuelConsumption: 30,
+      maxTakeoffWeight: 1000,
+      compatibleRunwaySurfaces: ['ASPH', 'CONC', 'GRASS']
+    };
+    
+    console.log('📋 Données de test:', testData);
+    
+    try {
+      addAircraft(testData);
+      console.log('✅ Sauvegarde réussie');
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde:', error);
+      console.error('Stack trace:', error.stack);
+    }
+    
+    console.groupEnd();
+  };
+
+  // Fonction pour migrer tous les avions sans surfaces compatibles
+  window.debugMigrateAllAircraft = () => {
+    console.group('🔄 Migration des avions');
+    let migratedCount = 0;
+    
+    aircraftList.forEach((aircraft, index) => {
+      if (!aircraft.compatibleRunwaySurfaces || aircraft.compatibleRunwaySurfaces.length === 0) {
+        console.log(`📌 Migration de ${aircraft.registration}...`);
+        const updated = {
+          ...aircraft,
+          compatibleRunwaySurfaces: ['ASPH', 'CONC'], // Valeurs par défaut
+          cruiseSpeed: aircraft.cruiseSpeed || aircraft.cruiseSpeedKt || 100,
+          cruiseSpeedKt: aircraft.cruiseSpeedKt || aircraft.cruiseSpeed || 100
+        };
+        updateAircraft(updated);
+        migratedCount++;
+      }
+    });
+    
+    console.log(`✅ Migration terminée: ${migratedCount} avion(s) mis à jour`);
+    console.groupEnd();
+  };
+
   return (
     <div>
       <div style={sx.combine(sx.flex.between, sx.spacing.mb(4))}>
@@ -225,6 +352,37 @@ export const AircraftModule = memo(() => {
         <h4 style={{ margin: 0, marginBottom: '8px', fontSize: '14px', color: '#374151' }}>
           🔧 Debug Info:
         </h4>
+        
+        {/* Alerte si des avions n'ont pas de surfaces compatibles */}
+        {aircraftList.some(a => !a.compatibleRunwaySurfaces || a.compatibleRunwaySurfaces.length === 0) && (
+          <div style={{
+            backgroundColor: '#fef3c7',
+            border: '1px solid #fbbf24',
+            borderRadius: '6px',
+            padding: '8px',
+            marginBottom: '8px',
+            fontSize: '12px'
+          }}>
+            <strong>⚠️ Attention :</strong> Certains avions n'ont pas de surfaces compatibles définies.
+            <br/>
+            <button
+              onClick={() => window.debugMigrateAllAircraft()}
+              style={{
+                marginTop: '4px',
+                padding: '4px 8px',
+                fontSize: '11px',
+                backgroundColor: '#f59e0b',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Migrer tous les avions
+            </button>
+          </div>
+        )}
+        
         <div style={{ fontSize: '12px', color: '#6B7280', lineHeight: '1.6' }}>
           <p style={{ margin: '4px 0' }}>
             • Nombre d'avions: <strong>{aircraftList?.length || 0}</strong>
@@ -246,6 +404,21 @@ export const AircraftModule = memo(() => {
           </p>
           <p style={{ margin: '4px 0', fontSize: '11px', color: '#9CA3AF' }}>
             Console: window.debugStoreSelect(1) pour sélectionner directement via le store
+          </p>
+          <p style={{ margin: '4px 0', fontSize: '11px', color: '#9CA3AF' }}>
+            Console: window.debugCreateTestAircraft() pour créer un avion de test
+          </p>
+          <p style={{ margin: '4px 0', fontSize: '11px', color: '#9CA3AF' }}>
+            Console: window.debugUpdateAircraftSurfaces(0, ['ASPH', 'GRASS']) pour forcer les surfaces
+          </p>
+          <p style={{ margin: '4px 0', fontSize: '11px', color: '#9CA3AF' }}>
+            Console: window.debugShowAircraft(0) pour voir l'état complet d'un avion
+          </p>
+          <p style={{ margin: '4px 0', fontSize: '11px', color: '#9CA3AF' }}>
+            Console: window.debugMigrateAllAircraft() pour migrer tous les avions sans surfaces
+          </p>
+          <p style={{ margin: '4px 0', fontSize: '11px', color: '#9CA3AF' }}>
+            Console: window.debugTestSave() pour tester la sauvegarde
           </p>
         </div>
         <div style={{ marginTop: '8px' }}>
@@ -327,6 +500,12 @@ export const AircraftModule = memo(() => {
                       <p>Carburant: {aircraft.fuelType} • Capacité: {aircraft.fuelCapacity}L</p>
                       <p>Vitesse: {aircraft.cruiseSpeed || aircraft.cruiseSpeedKt}kt • Conso: {aircraft.fuelConsumption}L/h</p>
                       <p>MTOW: {aircraft.maxTakeoffWeight}kg</p>
+                      {/* DEBUG: Afficher les surfaces compatibles */}
+                      <p style={{ color: '#059669', fontSize: '12px' }}>
+                        🛬 Surfaces compatibles: {aircraft.compatibleRunwaySurfaces && Array.isArray(aircraft.compatibleRunwaySurfaces) && aircraft.compatibleRunwaySurfaces.length > 0 ? 
+                          `[${aircraft.compatibleRunwaySurfaces.join(', ')}]` : 
+                          <span style={{ color: '#dc2626' }}>Non définies ⚠️</span>}
+                      </p>
                       {aircraft.masses?.emptyMass && (
                         <p style={{ color: '#3182CE' }}>
                           ⚖️ Masse à vide: {aircraft.masses.emptyMass}kg • MLM: {aircraft.limitations?.maxLandingMass || 'N/A'}kg
@@ -449,15 +628,25 @@ export const AircraftModule = memo(() => {
               aircraft={editingAircraft}
               onSubmit={(formData) => {
                 console.log('💾 AircraftModule - Form submitted with data:', formData);
-                if (editingAircraft) {
-                  updateAircraft({...formData, id: editingAircraft.id});
-                  console.log('✅ AircraftModule - Aircraft updated');
-                } else {
-                  addAircraft(formData);
-                  console.log('✅ AircraftModule - New aircraft added');
+                console.log('💾 AircraftModule - Surfaces compatibles:', formData.compatibleRunwaySurfaces);
+                
+                try {
+                  if (editingAircraft) {
+                    const updatedAircraft = {...formData, id: editingAircraft.id};
+                    console.log('💾 AircraftModule - Updating aircraft:', updatedAircraft);
+                    updateAircraft(updatedAircraft);
+                    console.log('✅ AircraftModule - Aircraft updated');
+                  } else {
+                    console.log('💾 AircraftModule - Adding new aircraft');
+                    addAircraft(formData);
+                    console.log('✅ AircraftModule - New aircraft added');
+                  }
+                  setShowForm(false);
+                  setEditingAircraft(null);
+                } catch (error) {
+                  console.error('❌ AircraftModule - Erreur lors de la sauvegarde:', error);
+                  alert(`Erreur lors de la sauvegarde: ${error.message}`);
                 }
-                setShowForm(false);
-                setEditingAircraft(null);
               }}
               onCancel={() => {
                 console.log('❌ AircraftModule - Form cancelled');
@@ -478,15 +667,28 @@ AircraftModule.displayName = 'AircraftModule';
 const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
   const massUnit = 'kg';
 
+  // DEBUG : Afficher l'avion reçu en props
+  console.log('🛩️ AircraftForm - aircraft reçu:', aircraft);
+  console.log('🛩️ AircraftForm - surfaces compatibles de l\'avion:', aircraft?.compatibleRunwaySurfaces);
+
+  // Valider et normaliser les surfaces compatibles
+  const getValidSurfaces = (surfaces) => {
+    if (!surfaces) return ['ASPH', 'CONC'];
+    if (!Array.isArray(surfaces)) return ['ASPH', 'CONC'];
+    if (surfaces.length === 0) return ['ASPH', 'CONC'];
+    // S'assurer que toutes les surfaces sont des chaînes valides
+    return surfaces.filter(s => typeof s === 'string' && s.trim().length > 0);
+  };
+
   const [formData, setFormData] = useState({
     registration: aircraft?.registration || '',
     model: aircraft?.model || '',
     fuelType: aircraft?.fuelType || 'AVGAS',
     fuelCapacity: aircraft?.fuelCapacity || '',
-    cruiseSpeedKt: aircraft?.cruiseSpeedKt || '',
+    cruiseSpeedKt: aircraft?.cruiseSpeedKt || aircraft?.cruiseSpeed || '',
     fuelConsumption: aircraft?.fuelConsumption || '',
     maxTakeoffWeight: aircraft?.maxTakeoffWeight || '',
-    compatibleRunwaySurfaces: aircraft?.compatibleRunwaySurfaces || ['ASPH', 'CONC'], // Par défaut: asphalte et béton
+    compatibleRunwaySurfaces: getValidSurfaces(aircraft?.compatibleRunwaySurfaces), // Valider les surfaces
     masses: {
       emptyMass: aircraft?.masses?.emptyMass || '',
       minTakeoffMass: aircraft?.masses?.minTakeoffMass || '',
@@ -533,21 +735,27 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       });
     } else if (field === 'compatibleRunwaySurfaces') {
       // Gestion des surfaces compatibles (toggle)
+      console.log('🔄 Toggle surface:', value);
+      console.log('🔄 Surfaces actuelles:', formData.compatibleRunwaySurfaces);
+      
       setFormData(prev => {
         const surfaces = prev.compatibleRunwaySurfaces || [];
+        let newSurfaces;
+        
         if (surfaces.includes(value)) {
           // Retirer la surface
-          return {
-            ...prev,
-            compatibleRunwaySurfaces: surfaces.filter(s => s !== value)
-          };
+          newSurfaces = surfaces.filter(s => s !== value);
         } else {
           // Ajouter la surface
-          return {
-            ...prev,
-            compatibleRunwaySurfaces: [...surfaces, value]
-          };
+          newSurfaces = [...surfaces, value];
         }
+        
+        console.log('🔄 Nouvelles surfaces:', newSurfaces);
+        
+        return {
+          ...prev,
+          compatibleRunwaySurfaces: newSurfaces
+        };
       });
     } else if (field.includes('.')) {
       const parts = field.split('.');
@@ -577,56 +785,83 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       return;
     }
     
+    // Valider que l'immatriculation n'a pas de caractères spéciaux problématiques
+    if (!/^[A-Za-z0-9\-]+$/.test(formData.registration)) {
+      alert('L\'immatriculation ne peut contenir que des lettres, chiffres et tirets');
+      return;
+    }
+    
     if (!formData.compatibleRunwaySurfaces || formData.compatibleRunwaySurfaces.length === 0) {
       alert('Vous devez sélectionner au moins un type de piste compatible');
       return;
     }
 
+    // DEBUG : Afficher les surfaces compatibles avant de sauvegarder
+    console.log('🛩️ Surfaces compatibles sélectionnées:', formData.compatibleRunwaySurfaces);
+
+    // Fonction helper pour valider et convertir les nombres
+    const toValidNumber = (value, defaultValue = 0) => {
+      const num = Number(value);
+      return isNaN(num) ? defaultValue : num;
+    };
+
     const processedData = {
       ...formData,
-      fuelCapacity: Number(formData.fuelCapacity),
-      cruiseSpeedKt: Number(formData.cruiseSpeedKt),
-      fuelConsumption: Number(formData.fuelConsumption),
-      maxTakeoffWeight: Number(formData.maxTakeoffWeight),
+      fuelCapacity: toValidNumber(formData.fuelCapacity, 0),
+      cruiseSpeed: toValidNumber(formData.cruiseSpeedKt, 0), // Ajouter cruiseSpeed pour compatibilité
+      cruiseSpeedKt: toValidNumber(formData.cruiseSpeedKt, 0),
+      fuelConsumption: toValidNumber(formData.fuelConsumption, 0),
+      maxTakeoffWeight: toValidNumber(formData.maxTakeoffWeight, 0),
       compatibleRunwaySurfaces: formData.compatibleRunwaySurfaces || ['ASPH', 'CONC'],
       masses: Object.values(formData.masses).some(v => v)
         ? {
-            emptyMass: Number(formData.masses.emptyMass) || 0,
-            minTakeoffMass: Number(formData.masses.minTakeoffMass) || 0,
-            baseFactor: Number(formData.masses.baseFactor) || 0,
-            maxBaggageTube: Number(formData.masses.maxBaggageTube) || 0,
-            maxAftBaggageExtension: Number(formData.masses.maxAftBaggageExtension) || 0
+            emptyMass: toValidNumber(formData.masses.emptyMass, 0),
+            minTakeoffMass: toValidNumber(formData.masses.minTakeoffMass, 0),
+            baseFactor: toValidNumber(formData.masses.baseFactor, 0),
+            maxBaggageTube: toValidNumber(formData.masses.maxBaggageTube, 0),
+            maxAftBaggageExtension: toValidNumber(formData.masses.maxAftBaggageExtension, 0)
           }
-        : null,
+        : undefined, // Mettre undefined au lieu de null
       armLengths: Object.values(formData.armLengths).some(v => v)
         ? {
-            emptyMassArm: Number(formData.armLengths.emptyMassArm) || 0,
-            fuelArm: Number(formData.armLengths.fuelArm) || 0,
-            frontSeat1Arm: Number(formData.armLengths.frontSeat1Arm) || 0,
-            frontSeat2Arm: Number(formData.armLengths.frontSeat2Arm) || 0,
-            rearSeat1Arm: Number(formData.armLengths.rearSeat1Arm) || 0,
-            rearSeat2Arm: Number(formData.armLengths.rearSeat2Arm) || 0,
-            standardBaggageArm: Number(formData.armLengths.standardBaggageArm) || 0,
-            baggageTubeArm: Number(formData.armLengths.baggageTubeArm) || 0,
-            aftBaggageExtensionArm: Number(formData.armLengths.aftBaggageExtensionArm) || 0
+            emptyMassArm: toValidNumber(formData.armLengths.emptyMassArm, 0),
+            fuelArm: toValidNumber(formData.armLengths.fuelArm, 0),
+            frontSeat1Arm: toValidNumber(formData.armLengths.frontSeat1Arm, 0),
+            frontSeat2Arm: toValidNumber(formData.armLengths.frontSeat2Arm, 0),
+            rearSeat1Arm: toValidNumber(formData.armLengths.rearSeat1Arm, 0),
+            rearSeat2Arm: toValidNumber(formData.armLengths.rearSeat2Arm, 0),
+            standardBaggageArm: toValidNumber(formData.armLengths.standardBaggageArm, 0),
+            baggageTubeArm: toValidNumber(formData.armLengths.baggageTubeArm, 0),
+            aftBaggageExtensionArm: toValidNumber(formData.armLengths.aftBaggageExtensionArm, 0)
           }
-        : null,
+        : undefined, // Mettre undefined au lieu de null
       limitations: Object.values(formData.limitations).some(v => v)
         ? {
-            maxLandingMass: Number(formData.limitations.maxLandingMass) || 0,
-            maxBaggageLest: Number(formData.limitations.maxBaggageLest) || 0
+            maxLandingMass: toValidNumber(formData.limitations.maxLandingMass, 0),
+            maxBaggageLest: toValidNumber(formData.limitations.maxBaggageLest, 0)
           }
-        : null,
-      cgEnvelope: formData.cgEnvelope
-        .filter(point => point.weight && (point.forwardLimit || point.aftLimit))
-        .map(point => ({
-          weight: Number(point.weight) || 0,
-          forwardLimit: Number(point.forwardLimit) || 0,
-          aftLimit: Number(point.aftLimit) || 0
-        }))
+        : undefined, // Mettre undefined au lieu de null
+      cgEnvelope: formData.cgEnvelope && formData.cgEnvelope.length > 0
+        ? formData.cgEnvelope
+          .filter(point => point.weight && (point.forwardLimit || point.aftLimit))
+          .map(point => ({
+            weight: toValidNumber(point.weight, 0),
+            forwardLimit: toValidNumber(point.forwardLimit, 0),
+            aftLimit: toValidNumber(point.aftLimit, 0)
+          }))
+        : []
     };
 
-    onSubmit(processedData);
+    // DEBUG : Afficher les données complètes avant de sauvegarder
+    console.log('💾 AircraftForm - processedData complet:', processedData);
+    console.log('💾 AircraftForm - compatibleRunwaySurfaces dans processedData:', processedData.compatibleRunwaySurfaces);
+
+    try {
+      onSubmit(processedData);
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde:', error);
+      alert(`Erreur lors de la sauvegarde: ${error.message}`);
+    }
   };
 
   const inputStyle = sx.combine(
