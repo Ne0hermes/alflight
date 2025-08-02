@@ -1,6 +1,6 @@
 // src/features/navigation/NavigationModule.jsx
 import React, { memo, useState, useCallback, useEffect } from 'react';
-import { MapPin, Plus, Trash2, Navigation2, Home, Sun, Moon, List, Loader, AlertCircle } from 'lucide-react';
+import { MapPin, Plus, Trash2, Navigation2, Home, Sun, Moon, List, Loader, AlertCircle, AlertTriangle } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 
 // Import des contextes et hooks
@@ -13,6 +13,7 @@ import { NavigationMap } from './components/NavigationMap';
 import { AirportSelector } from './components/AirportSelector';
 import { ReportingPointsSelector } from './components/ReportingPointsSelector';
 import { AirspaceAnalyzer } from './components/AirspaceAnalyzer';
+import { TechnicalLog } from './components/TechnicalLog';
 
 const NavigationModule = () => {
   const { selectedAircraft } = useAircraft();
@@ -26,6 +27,7 @@ const NavigationModule = () => {
   
   const [showReportingPoints, setShowReportingPoints] = useState(false);
   const [selectedWaypointId, setSelectedWaypointId] = useState(null);
+  const [plannedAltitude, setPlannedAltitude] = useState(3000); // Altitude par défaut en pieds
 
   // Charger les aérodromes au montage
   useEffect(() => {
@@ -85,7 +87,47 @@ const NavigationModule = () => {
     };
   };
 
+  // Suggestions d'altitude basées sur les règles
+  const getAltitudeSuggestions = () => {
+    const isVFR = flightType.rules === 'VFR';
+    const suggestions = [];
+    
+    if (isVFR) {
+      // Règles VFR : altitudes impaires + 500 vers l'Est (0-179°), paires + 500 vers l'Ouest (180-359°)
+      suggestions.push(
+        { altitude: 2500, description: "VFR bas niveau" },
+        { altitude: 3500, description: "VFR Est (0-179°)" },
+        { altitude: 4500, description: "VFR Ouest (180-359°)" },
+        { altitude: 5500, description: "VFR Est (0-179°)" },
+        { altitude: 6500, description: "VFR Ouest (180-359°)" }
+      );
+    } else {
+      // Règles IFR : altitudes en milliers pairs/impairs selon direction
+      suggestions.push(
+        { altitude: 3000, description: "IFR Ouest (180-359°)" },
+        { altitude: 4000, description: "IFR Est (0-179°)" },
+        { altitude: 5000, description: "IFR Ouest (180-359°)" },
+        { altitude: 6000, description: "IFR Est (0-179°)" },
+        { altitude: 7000, description: "IFR Ouest (180-359°)" }
+      );
+    }
+    
+    return suggestions;
+  };
+
+  // Handler pour l'altitude
+  const handleAltitudeChange = (value) => {
+    // Accepter uniquement les nombres
+    const numValue = parseInt(value);
+    if (!isNaN(numValue) && numValue >= 0 && numValue <= 45000) {
+      setPlannedAltitude(numValue);
+    } else if (value === '') {
+      setPlannedAltitude(0);
+    }
+  };
+
   const reserveInfo = getReserveInfo();
+  const altitudeSuggestions = getAltitudeSuggestions();
 
   return (
     <div>
@@ -177,6 +219,57 @@ const NavigationModule = () => {
         </div>
       </section>
 
+      {/* Résultats de navigation */}
+      {selectedAircraft && navigationResults && (
+        <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
+          <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4))}>
+            📊 Résultats de navigation
+          </h3>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+            <div style={sx.components.card.base}>
+              <h4 style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>Distance totale</h4>
+              <p style={sx.combine(sx.text['2xl'], sx.text.bold, sx.text.primary)}>
+                {navigationResults.totalDistance} NM
+              </p>
+              <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                ≈ {(navigationResults.totalDistance * 1.852).toFixed(0)} km
+              </p>
+            </div>
+            
+            <div style={sx.components.card.base}>
+              <h4 style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>Temps de vol</h4>
+              <p style={sx.combine(sx.text['2xl'], sx.text.bold, sx.text.primary)}>
+                {Math.floor(navigationResults.totalTime / 60)}h{String(navigationResults.totalTime % 60).padStart(2, '0')}
+              </p>
+              <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                @ {selectedAircraft.cruiseSpeedKt} kt
+              </p>
+            </div>
+            
+            <div style={sx.components.card.base}>
+              <h4 style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>Carburant nécessaire</h4>
+              <p style={sx.combine(sx.text['2xl'], sx.text.bold, sx.text.primary)}>
+                {navigationResults.fuelRequired} L
+              </p>
+              <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                ≈ {(navigationResults.fuelRequired / 3.78541).toFixed(1)} gal
+              </p>
+            </div>
+            
+            <div style={sx.components.card.base}>
+              <h4 style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>Réserve finale</h4>
+              <p style={sx.combine(sx.text['2xl'], sx.text.bold, sx.text.primary)}>
+                {navigationResults.regulationReserveLiters} L
+              </p>
+              <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                {navigationResults.regulationReserveMinutes} min
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Section Points de navigation */}
       <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
         <div style={sx.combine(sx.flex.between, sx.spacing.mb(4))}>
@@ -257,63 +350,23 @@ const NavigationModule = () => {
         </section>
       )}
 
-      {/* Résultats de navigation */}
+      {/* Analyse des espaces aériens */}
       {selectedAircraft && navigationResults && (
-        <>
-          <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
-            <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4))}>
-              📊 Résultats de navigation
-            </h3>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-              <div style={sx.components.card.base}>
-                <h4 style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>Distance totale</h4>
-                <p style={sx.combine(sx.text['2xl'], sx.text.bold, sx.text.primary)}>
-                  {navigationResults.totalDistance} NM
-                </p>
-                <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
-                  ≈ {(navigationResults.totalDistance * 1.852).toFixed(0)} km
-                </p>
-              </div>
-              
-              <div style={sx.components.card.base}>
-                <h4 style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>Temps de vol</h4>
-                <p style={sx.combine(sx.text['2xl'], sx.text.bold, sx.text.primary)}>
-                  {Math.floor(navigationResults.totalTime / 60)}h{String(navigationResults.totalTime % 60).padStart(2, '0')}
-                </p>
-                <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
-                  @ {selectedAircraft.cruiseSpeedKt} kt
-                </p>
-              </div>
-              
-              <div style={sx.components.card.base}>
-                <h4 style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>Carburant nécessaire</h4>
-                <p style={sx.combine(sx.text['2xl'], sx.text.bold, sx.text.primary)}>
-                  {navigationResults.fuelRequired} L
-                </p>
-                <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
-                  ≈ {(navigationResults.fuelRequired / 3.78541).toFixed(1)} gal
-                </p>
-              </div>
-              
-              <div style={sx.components.card.base}>
-                <h4 style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>Réserve finale</h4>
-                <p style={sx.combine(sx.text['2xl'], sx.text.bold, sx.text.primary)}>
-                  {navigationResults.regulationReserveLiters} L
-                </p>
-                <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
-                  {navigationResults.regulationReserveMinutes} min
-                </p>
-              </div>
-            </div>
-          </section>
-          
-          {/* Analyse des espaces aériens - NOUVELLE SECTION */}
-          <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
-            <AirspaceAnalyzer waypoints={waypoints} />
-          </section>
-        </>
+        <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
+          <AirspaceAnalyzer 
+            waypoints={waypoints} 
+            plannedAltitude={plannedAltitude}
+            onAltitudeChange={setPlannedAltitude}
+            flightTypeRules={flightType.rules}
+            altitudeSuggestions={altitudeSuggestions}
+          />
+        </section>
       )}
+
+      {/* Log technique */}
+      <section style={sx.combine(sx.components.section.base)}>
+        <TechnicalLog selectedAircraft={selectedAircraft} />
+      </section>
     </div>
   );
 };

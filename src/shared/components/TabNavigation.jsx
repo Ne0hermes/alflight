@@ -1,11 +1,12 @@
 // src/shared/components/TabNavigation.jsx
 import React, { memo } from 'react';
-import { Navigation, Cloud, Scale, Fuel, Settings, Map } from 'lucide-react';
+import { Navigation, Cloud, Scale, Fuel, Settings, Map, TrendingUp } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 
 const ICONS = {
   Navigation: Navigation,
   Cloud: Cloud,
+  TrendingUp: TrendingUp,
   Scale: Scale,
   Fuel: Fuel,
   Settings: Settings,
@@ -28,7 +29,7 @@ export const TabNavigation = memo(({ tabs, activeTab, onTabChange }) => {
               isActive && styles.activeTab
             )}
           >
-            <Icon size={16} />
+            {Icon && <Icon size={16} />}
             {tab.label}
           </button>
         );

@@ -47,7 +47,7 @@ const MapViewController = ({ waypoints, setZoomWarning }) => {
   const map = useMap();
   
   useEffect(() => {
-    if (!waypoints || waypoints.length === 0) return;
+    if (!map || !waypoints || waypoints.length === 0) return;
     
     const validWaypoints = waypoints.filter(w => w.lat && w.lon);
     if (validWaypoints.length === 0) return;
@@ -89,18 +89,22 @@ const MapViewController = ({ waypoints, setZoomWarning }) => {
         
         // Vérifier et ajuster le zoom si nécessaire
         setTimeout(() => {
-          const currentZoom = map.getZoom();
-          console.log('🔍 Zoom actuel:', currentZoom);
-          
-          // Si le zoom est trop faible pour OpenAIP, le remonter
-          if (currentZoom < 5) {
-            console.log('⚠️ Zoom trop faible pour OpenAIP, ajustement à 5');
-            map.setZoom(5);
-          }
-          // Si le zoom est trop fort pour OpenAIP, le baisser
-          else if (currentZoom > 12) {
-            console.log('⚠️ Zoom trop fort pour OpenAIP, ajustement à 12');
-            map.setZoom(12);
+          try {
+            const currentZoom = map.getZoom();
+            console.log('🔍 Zoom actuel:', currentZoom);
+            
+            // Si le zoom est trop faible pour OpenAIP, le remonter
+            if (currentZoom < 5) {
+              console.log('⚠️ Zoom trop faible pour OpenAIP, ajustement à 5');
+              map.setZoom(5);
+            }
+            // Si le zoom est trop fort pour OpenAIP, le baisser
+            else if (currentZoom > 12) {
+              console.log('⚠️ Zoom trop fort pour OpenAIP, ajustement à 12');
+              map.setZoom(12);
+            }
+          } catch (error) {
+            console.warn('Erreur lors de l\'ajustement du zoom:', error);
           }
         }, 300);
       }
@@ -116,6 +120,7 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
   const [mapReady, setMapReady] = useState(false);
   const [zoomWarning, setZoomWarning] = useState(false);
   const mapRef = useRef(null);
+  const [mapKey, setMapKey] = useState(Date.now()); // Clé unique pour forcer la réinitialisation
   
   // Clé API OpenAIP fournie
   const openAIPToken = '2717b9196e8100ee2456e09b82b5b08e';
@@ -123,6 +128,15 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
   // Centre par défaut (France) avec zoom sûr pour OpenAIP
   const defaultCenter = [46.603354, 1.888334];
   const defaultZoom = 6; // Zoom sûr pour OpenAIP (entre 5 et 12)
+
+  // Nettoyer la carte au démontage
+  useEffect(() => {
+    return () => {
+      if (mapRef.current) {
+        mapRef.current = null;
+      }
+    };
+  }, []);
 
   // Calcul du centre initial (utilisé uniquement à l'initialisation)
   const initialCenter = useMemo(() => {
@@ -172,11 +186,11 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
 
   // Debug
   useEffect(() => {
-    console.log('🗺️ NavigationMap monté');
+    console.log('🗺️ NavigationMap monté avec clé:', mapKey);
     console.log('📍 Centre initial:', initialCenter);
     console.log('✈️ Waypoints valides:', waypoints.filter(w => w.lat && w.lon).length);
     console.log('🔑 Token OpenAIP:', openAIPToken ? 'Configuré' : 'Manquant');
-  }, [initialCenter, waypoints, openAIPToken]);
+  }, [initialCenter, waypoints, openAIPToken, mapKey]);
 
   return (
     <div style={styles.mapContainer}>
@@ -192,6 +206,7 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
       )}
       
       <MapContainer
+        key={mapKey} // Clé unique pour forcer la réinitialisation
         ref={mapRef}
         center={initialCenter}
         zoom={6} // Toujours commencer avec un zoom sûr pour OpenAIP
@@ -203,20 +218,26 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
           setMapReady(true);
           
           // Forcer le redimensionnement
-          setTimeout(() => {
-            map.target.invalidateSize();
-          }, 100);
-          
-          // Écouter les changements de zoom
-          map.target.on('zoomend', () => {
-            const currentZoom = map.target.getZoom();
-            console.log('🔍 Changement de zoom:', currentZoom);
+          if (map && map.target) {
+            setTimeout(() => {
+              try {
+                map.target.invalidateSize();
+              } catch (error) {
+                console.warn('Erreur lors du redimensionnement de la carte:', error);
+              }
+            }, 100);
             
-            // Avertir si on sort des limites OpenAIP
-            if (currentZoom < 5 || currentZoom > 12) {
-              console.log('⚠️ Zoom hors limites OpenAIP (5-12)');
-            }
-          });
+            // Écouter les changements de zoom
+            map.target.on('zoomend', () => {
+              const currentZoom = map.target.getZoom();
+              console.log('🔍 Changement de zoom:', currentZoom);
+              
+              // Avertir si on sort des limites OpenAIP
+              if (currentZoom < 5 || currentZoom > 12) {
+                console.log('⚠️ Zoom hors limites OpenAIP (5-12)');
+              }
+            });
+          }
         }}
         zoomControl={false}
       >
