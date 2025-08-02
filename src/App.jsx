@@ -9,7 +9,6 @@ import { useOpenAIPStore } from '@core/stores/openAIPStore';
 import { OpenAIPStatus } from '@shared/components/OpenAIPStatus';
 
 // Lazy loading des modules
-// Lazy loading des modules
 const NavigationModule = lazy(() => import('@features/navigation'));
 const WeightBalanceModule = lazy(() => import('@features/weight-balance'));
 const FuelModule = lazy(() => import('@features/fuel'));
@@ -17,10 +16,12 @@ const AircraftModule = lazy(() => import('@features/aircraft'));
 const WeatherModule = lazy(() => import('@features/weather'));
 const PerformanceModule = lazy(() => import('@features/performance'));
 const VACModule = lazy(() => import('@features/vac'));
+const AlternatesModule = lazy(() => import('@features/alternates'));
 
 // Configuration des onglets
 const TAB_CONFIG = [
   { id: 'navigation', label: 'Navigation', icon: 'Navigation', component: NavigationModule },
+  { id: 'alternates', label: 'Déroutements', icon: 'Plane', component: AlternatesModule },
   { id: 'weather', label: 'Météo', icon: 'Cloud', component: WeatherModule },
   { id: 'performance', label: 'Performances', icon: 'TrendingUp', component: PerformanceModule },
   { id: 'weight-balance', label: 'Masse et Centrage', icon: 'Scale', component: WeightBalanceModule },
