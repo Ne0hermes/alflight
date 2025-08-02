@@ -8,3 +8,5 @@ export { NavigationMap } from './components/NavigationMap';
 export { AirportSelector } from './components/AirportSelector';
 export { ReportingPointsSelector } from './components/ReportingPointsSelector';
 export { AirspaceAnalyzer } from './components/AirspaceAnalyzer';
+export { TechnicalLog } from './components/TechnicalLog';
+export { RunwayAnalyzer } from './components/RunwayAnalyzer';
