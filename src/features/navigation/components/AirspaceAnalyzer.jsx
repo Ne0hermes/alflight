@@ -1,6 +1,6 @@
 // src/features/navigation/components/AirspaceAnalyzer.jsx
-import React, { memo, useMemo } from 'react';
-import { Radio, Plane, AlertTriangle, ArrowRight, Layers, Navigation } from 'lucide-react';
+import React, { memo, useMemo, useState } from 'react';
+import { Radio, Plane, AlertTriangle, ArrowRight, Layers, Navigation, ChevronDown, ChevronRight, Shield, Clock, Gauge } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { FRENCH_AIRSPACES } from '@data/frenchAirspaces';
 
@@ -44,7 +44,20 @@ const calculateDistance = (point1, point2) => {
   return R * c;
 };
 
-export const AirspaceAnalyzer = memo(({ waypoints }) => {
+export const AirspaceAnalyzer = memo(({ waypoints, plannedAltitude = 3000, onAltitudeChange, flightTypeRules, altitudeSuggestions = [] }) => {
+  const [expandedSections, setExpandedSections] = useState({
+    timeline: true,
+    frequencies: true,
+    summary: true
+  });
+
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
   // Analyser les espaces traversés
   const airspaceAnalysis = useMemo(() => {
     if (!waypoints || waypoints.length < 2) return null;
@@ -137,182 +150,513 @@ export const AirspaceAnalyzer = memo(({ waypoints }) => {
     };
   }, [waypoints]);
   
+  // Fonction pour convertir l'altitude en pieds
+  const parseAltitude = (altitudeStr) => {
+    if (!altitudeStr) return 0;
+    
+    // FL (Flight Level)
+    if (altitudeStr.startsWith('FL')) {
+      return parseInt(altitudeStr.substring(2)) * 100;
+    }
+    
+    // Altitude en pieds
+    const match = altitudeStr.match(/(\d+)\s*ft/i);
+    if (match) {
+      return parseInt(match[1]);
+    }
+    
+    // SFC (Surface)
+    if (altitudeStr === 'SFC' || altitudeStr === 'GND') {
+      return 0;
+    }
+    
+    // AMSL (Above Mean Sea Level) - supposer pieds
+    if (altitudeStr.includes('AMSL')) {
+      return parseInt(altitudeStr.replace(/\D/g, ''));
+    }
+    
+    return parseInt(altitudeStr) || 0;
+  };
+  
+  // Vérifier les conflits d'altitude
+  const checkAltitudeConflicts = (airspace) => {
+    const floor = parseAltitude(airspace.floor);
+    const ceiling = parseAltitude(airspace.ceiling);
+    
+    if (plannedAltitude >= floor && plannedAltitude <= ceiling) {
+      return {
+        hasConflict: true,
+        message: `Vol prévu à ${plannedAltitude}ft dans l'espace (${airspace.floor} → ${airspace.ceiling})`,
+        severity: airspace.type === 'R' || airspace.type === 'P' ? 'danger' : 'warning'
+      };
+    }
+    
+    if (plannedAltitude > ceiling) {
+      return {
+        hasConflict: false,
+        message: `Vol au-dessus de l'espace (plafond: ${airspace.ceiling})`,
+        severity: 'info'
+      };
+    }
+    
+    if (plannedAltitude < floor) {
+      return {
+        hasConflict: false,
+        message: `Vol en-dessous de l'espace (plancher: ${airspace.floor})`,
+        severity: 'info'
+      };
+    }
+    
+    return { hasConflict: false };
+  };
+  
   if (!airspaceAnalysis || airspaceAnalysis.airspaces.length === 0) {
     return (
-      <div style={sx.combine(sx.components.alert.base, sx.components.alert.info)}>
-        <Navigation size={16} />
-        <p style={sx.text.sm}>
-          Aucun espace aérien contrôlé détecté sur cette route.
-          Vol en espace G (non contrôlé) - Fréquence auto-info recommandée.
-        </p>
+      <div>
+        <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
+          <Layers size={16} style={{ marginRight: '8px' }} />
+          Analyse des espaces aériens
+        </h4>
+        
+        {/* Configuration du vol */}
+        {onAltitudeChange && (
+          <div style={sx.combine(sx.components.card.base, sx.spacing.mb(4))}>
+            <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(3))}>
+              <Gauge size={14} style={{ marginRight: '6px' }} />
+              Configuration du vol
+            </h5>
+            
+            <label style={sx.components.label.base}>
+              ⬆️ Altitude de vol prévue
+            </label>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <input
+                type="text"
+                value={plannedAltitude === 0 ? '' : plannedAltitude}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  const numValue = parseInt(value);
+                  if (!isNaN(numValue) && numValue >= 0 && numValue <= 45000) {
+                    onAltitudeChange(numValue);
+                  } else if (value === '') {
+                    onAltitudeChange(0);
+                  }
+                }}
+                placeholder="0"
+                style={sx.combine(sx.components.input.base, { width: '150px' })}
+              />
+              <span style={sx.text.sm}>pieds (ft)</span>
+              <span style={sx.combine(sx.text.sm, sx.text.secondary)}>
+                ≈ FL{Math.round(plannedAltitude / 100)}
+              </span>
+            </div>
+            
+            {/* Suggestions d'altitude */}
+            {altitudeSuggestions && altitudeSuggestions.length > 0 && (
+              <div style={sx.combine(sx.spacing.mt(2), sx.text.xs, sx.text.secondary)}>
+                <strong>Suggestions {flightTypeRules || 'VFR'} :</strong>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
+                  {altitudeSuggestions.map(suggestion => (
+                    <button
+                      key={suggestion.altitude}
+                      onClick={() => onAltitudeChange(suggestion.altitude)}
+                      style={{
+                        padding: '4px 8px',
+                        backgroundColor: plannedAltitude === suggestion.altitude ? '#3b82f6' : '#e5e7eb',
+                        color: plannedAltitude === suggestion.altitude ? 'white' : '#374151',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '11px',
+                        transition: 'all 0.2s'
+                      }}
+                      title={suggestion.description}
+                    >
+                      {suggestion.altitude} ft
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        
+        <div style={sx.combine(sx.components.alert.base, sx.components.alert.info)}>
+          <Navigation size={16} />
+          <p style={sx.text.sm}>
+            Aucun espace aérien contrôlé détecté sur cette route.
+            Vol en espace G (non contrôlé) - Fréquence auto-info recommandée.
+          </p>
+        </div>
       </div>
     );
   }
   
+  // Vérifier s'il y a des conflits d'altitude
+  const altitudeConflicts = airspaceAnalysis.airspaces
+    .map(airspace => ({
+      airspace,
+      conflict: checkAltitudeConflicts(airspace)
+    }))
+    .filter(item => item.conflict.hasConflict);
+  
+  // Statistiques pour le résumé
+  const stats = {
+    totalAirspaces: airspaceAnalysis.airspaces.length,
+    ctrCount: airspaceAnalysis.airspaces.filter(a => a.type === 'CTR').length,
+    tmaCount: airspaceAnalysis.airspaces.filter(a => a.type === 'TMA').length,
+    restrictedCount: airspaceAnalysis.airspaces.filter(a => a.type === 'R' || a.type === 'P').length,
+    conflicts: altitudeConflicts.length
+  };
+  
   return (
     <div>
-      <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
+      <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(4))}>
         <Layers size={16} style={{ marginRight: '8px' }} />
-        Analyse des espaces aériens traversés
+        Analyse des espaces aériens
       </h4>
       
-      {/* Résumé */}
-      <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mb(4))}>
-        <p style={sx.text.sm}>
-          <strong>{airspaceAnalysis.airspaces.length}</strong> espaces aériens identifiés sur 
-          <strong> {airspaceAnalysis.totalDistance.toFixed(1)} NM</strong>
-        </p>
-      </div>
+      {/* Configuration du vol */}
+      {onAltitudeChange && (
+        <div style={sx.combine(sx.components.card.base, sx.spacing.mb(4), { backgroundColor: '#f8fafc' })}>
+          <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(3))}>
+            <Gauge size={14} style={{ marginRight: '6px' }} />
+            Configuration du vol
+          </h5>
+          
+          <label style={sx.components.label.base}>
+            ⬆️ Altitude de vol prévue
+          </label>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <input
+              type="text"
+              value={plannedAltitude === 0 ? '' : plannedAltitude}
+              onChange={(e) => {
+                const value = e.target.value;
+                const numValue = parseInt(value);
+                if (!isNaN(numValue) && numValue >= 0 && numValue <= 45000) {
+                  onAltitudeChange(numValue);
+                } else if (value === '') {
+                  onAltitudeChange(0);
+                }
+              }}
+              placeholder="0"
+              style={sx.combine(sx.components.input.base, { width: '150px' })}
+            />
+            <span style={sx.text.sm}>pieds (ft)</span>
+            <span style={sx.combine(sx.text.sm, sx.text.secondary)}>
+              ≈ FL{Math.round(plannedAltitude / 100)}
+            </span>
+          </div>
+          
+          {/* Suggestions d'altitude */}
+          {altitudeSuggestions && altitudeSuggestions.length > 0 && (
+            <div style={sx.combine(sx.spacing.mt(2), sx.text.xs, sx.text.secondary)}>
+              <strong>Suggestions {flightTypeRules || 'VFR'} :</strong>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
+                {altitudeSuggestions.map(suggestion => (
+                  <button
+                    key={suggestion.altitude}
+                    onClick={() => onAltitudeChange(suggestion.altitude)}
+                    style={{
+                      padding: '4px 8px',
+                      backgroundColor: plannedAltitude === suggestion.altitude ? '#3b82f6' : '#e5e7eb',
+                      color: plannedAltitude === suggestion.altitude ? 'white' : '#374151',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '11px',
+                      transition: 'all 0.2s'
+                    }}
+                    title={suggestion.description}
+                  >
+                    {suggestion.altitude} ft
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       
-      {/* Timeline des espaces */}
-      <div style={styles.timeline}>
-        {/* Départ */}
-        <div style={styles.timelineItem}>
-          <div style={styles.timelineIcon}>
-            <Plane size={16} style={{ color: '#10b981' }} />
-          </div>
-          <div style={styles.timelineContent}>
-            <div style={sx.text.bold}>Départ : {airspaceAnalysis.departure.name}</div>
-            <div style={sx.text.sm}>0 NM</div>
-          </div>
+      {/* Vue d'ensemble */}
+      <div style={sx.combine(sx.components.card.base, sx.spacing.mb(4))}>
+        <div 
+          style={styles.sectionHeader}
+          onClick={() => toggleSection('summary')}
+        >
+          <h5 style={sx.combine(sx.text.sm, sx.text.bold, { display: 'flex', alignItems: 'center' })}>
+            {expandedSections.summary ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            <Shield size={14} style={{ marginLeft: '8px', marginRight: '6px' }} />
+            Vue d'ensemble
+          </h5>
+          {altitudeConflicts.length > 0 && (
+            <span style={styles.conflictBadge}>
+              {altitudeConflicts.length} conflit{altitudeConflicts.length > 1 ? 's' : ''}
+            </span>
+          )}
         </div>
         
-        {/* Espaces traversés */}
-        {airspaceAnalysis.airspaces.map((airspace, index) => (
-          <div key={airspace.id}>
-            {/* Changement d'espace */}
-            <div style={styles.changeIndicator}>
-              <ArrowRight size={16} />
+        {expandedSections.summary && (
+          <div style={{ marginTop: '16px' }}>
+            {/* Statistiques */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '16px' }}>
+              <div style={styles.statCard}>
+                <div style={sx.text.xs}>Distance totale</div>
+                <div style={sx.combine(sx.text.lg, sx.text.bold)}>{airspaceAnalysis.totalDistance.toFixed(1)} NM</div>
+              </div>
+              <div style={styles.statCard}>
+                <div style={sx.text.xs}>Espaces traversés</div>
+                <div style={sx.combine(sx.text.lg, sx.text.bold)}>{stats.totalAirspaces}</div>
+              </div>
+              <div style={styles.statCard}>
+                <div style={sx.text.xs}>CTR/TMA</div>
+                <div style={sx.combine(sx.text.lg, sx.text.bold)}>{stats.ctrCount + stats.tmaCount}</div>
+              </div>
+              <div style={styles.statCard}>
+                <div style={sx.text.xs}>Zones R/P</div>
+                <div style={sx.combine(sx.text.lg, sx.text.bold, stats.restrictedCount > 0 && { color: '#f59e0b' })}>
+                  {stats.restrictedCount}
+                </div>
+              </div>
+            </div>
+            
+            {/* Avertissements d'altitude */}
+            {altitudeConflicts.length > 0 && (
+              <div style={sx.combine(sx.components.alert.base, sx.components.alert.danger)}>
+                <AlertTriangle size={16} />
+                <div>
+                  <p style={sx.combine(sx.text.sm, sx.text.bold)}>
+                    ⚠️ Conflits d'altitude détectés !
+                  </p>
+                  <ul style={sx.combine(sx.text.sm, sx.spacing.mt(2))}>
+                    {altitudeConflicts.map(({ airspace, conflict }) => (
+                      <li key={airspace.id} style={sx.spacing.mb(1)}>
+                        <strong>{airspace.name}</strong>: {conflict.message}
+                        {(airspace.type === 'R' || airspace.type === 'P') && (
+                          <span style={{ color: '#dc2626', fontWeight: 'bold' }}>
+                            {' '}(Zone {airspace.type === 'R' ? 'réglementée' : 'interdite'} - Autorisation requise)
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      
+      {/* Timeline de vol */}
+      <div style={sx.combine(sx.components.card.base, sx.spacing.mb(4))}>
+        <div 
+          style={styles.sectionHeader}
+          onClick={() => toggleSection('timeline')}
+        >
+          <h5 style={sx.combine(sx.text.sm, sx.text.bold, { display: 'flex', alignItems: 'center' })}>
+            {expandedSections.timeline ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            <Clock size={14} style={{ marginLeft: '8px', marginRight: '6px' }} />
+            Séquence de vol
+          </h5>
+        </div>
+        
+        {expandedSections.timeline && (
+          <div style={styles.timeline}>
+            {/* Départ */}
+            <div style={styles.timelineItem}>
+              <div style={styles.timelineIcon}>
+                <Plane size={16} style={{ color: '#10b981' }} />
+              </div>
+              <div style={styles.timelineContent}>
+                <div style={sx.text.bold}>Départ : {airspaceAnalysis.departure.name}</div>
+                <div style={sx.text.sm}>0 NM</div>
+              </div>
+            </div>
+            
+            {/* Espaces traversés */}
+            {airspaceAnalysis.airspaces.map((airspace, index) => (
+              <div key={airspace.id}>
+                {/* Indicateur de distance */}
+                <div style={styles.distanceIndicator}>
+                  <ArrowRight size={14} />
+                  <span style={sx.text.xs}>
+                    {airspace.entryDistance.toFixed(1)} NM
+                  </span>
+                </div>
+                
+                <div style={styles.timelineItem}>
+                  <div style={sx.combine(
+                    styles.timelineIcon,
+                    airspace.type === 'R' || airspace.type === 'P' 
+                      ? { backgroundColor: '#fef3c7' }
+                      : airspace.type === 'CTR'
+                      ? { backgroundColor: '#dbeafe' }
+                      : airspace.type === 'TMA'
+                      ? { backgroundColor: '#e0e7ff' }
+                      : airspace.type === 'SIV'
+                      ? { backgroundColor: '#dcfce7' }
+                      : { backgroundColor: '#f3f4f6' }
+                  )}>
+                    {airspace.type === 'CTR' && <Radio size={16} style={{ color: '#2563eb' }} />}
+                    {airspace.type === 'TMA' && <Layers size={16} style={{ color: '#4f46e5' }} />}
+                    {(airspace.type === 'R' || airspace.type === 'P') && 
+                      <AlertTriangle size={16} style={{ color: '#f59e0b' }} />}
+                    {airspace.type === 'SIV' && <Navigation size={16} style={{ color: '#16a34a' }} />}
+                    {airspace.type === 'FIR' && <Plane size={16} style={{ color: '#6b7280' }} />}
+                  </div>
+                  
+                  <div style={styles.airspaceCard}>
+                    <div style={sx.combine(sx.flex.between, sx.spacing.mb(2))}>
+                      <div>
+                        <div style={sx.text.bold}>{airspace.name}</div>
+                        <div style={sx.combine(sx.text.sm, sx.text.secondary)}>
+                          {airspace.unit}
+                        </div>
+                      </div>
+                      <div style={styles.typeTag(airspace.type)}>
+                        {airspace.type}
+                      </div>
+                    </div>
+                    
+                    {/* Indicateur d'altitude */}
+                    {(() => {
+                      const altCheck = checkAltitudeConflicts(airspace);
+                      return (
+                        <div style={sx.combine(
+                          styles.altitudeIndicator,
+                          altCheck.hasConflict ? styles.altitudeConflict : styles.altitudeOk
+                        )}>
+                          <Plane size={12} />
+                          <span style={sx.text.xs}>
+                            {altCheck.message || `Compatible avec ${plannedAltitude}ft`}
+                          </span>
+                        </div>
+                      );
+                    })()}
+                    
+                    {/* Informations rapides */}
+                    <div style={styles.quickInfo}>
+                      <div style={styles.quickInfoItem}>
+                        <Radio size={12} />
+                        <span>{airspace.frequency} MHz</span>
+                      </div>
+                      <div style={styles.quickInfoItem}>
+                        <Layers size={12} />
+                        <span>{airspace.floor} → {airspace.ceiling}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Alertes spéciales */}
+                    {(airspace.type === 'R' || airspace.type === 'P') && (
+                      <div style={sx.combine(
+                        sx.components.alert.base, 
+                        sx.components.alert.warning,
+                        sx.spacing.mt(2),
+                        { padding: '8px 12px' }
+                      )}>
+                        <AlertTriangle size={12} />
+                        <p style={{ fontSize: '11px' }}>
+                          Zone {airspace.type === 'R' ? 'réglementée' : 'interdite'} - 
+                          {airspace.type === 'R' ? ' Contournement ou autorisation requise' : ' Contournement obligatoire'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {/* Arrivée */}
+            <div style={styles.distanceIndicator}>
+              <ArrowRight size={14} />
               <span style={sx.text.xs}>
-                {airspace.entryDistance.toFixed(1)} NM
+                {airspaceAnalysis.totalDistance.toFixed(1)} NM
               </span>
             </div>
             
             <div style={styles.timelineItem}>
-              <div style={sx.combine(
-                styles.timelineIcon,
-                airspace.type === 'R' || airspace.type === 'P' 
-                  ? { backgroundColor: '#fef3c7' }
-                  : airspace.type === 'CTR'
-                  ? { backgroundColor: '#dbeafe' }
-                  : airspace.type === 'TMA'
-                  ? { backgroundColor: '#e0e7ff' }
-                  : airspace.type === 'SIV'
-                  ? { backgroundColor: '#dcfce7' }
-                  : { backgroundColor: '#f3f4f6' }
-              )}>
-                {airspace.type === 'CTR' && <Radio size={16} style={{ color: '#2563eb' }} />}
-                {airspace.type === 'TMA' && <Layers size={16} style={{ color: '#4f46e5' }} />}
-                {(airspace.type === 'R' || airspace.type === 'P') && 
-                  <AlertTriangle size={16} style={{ color: '#f59e0b' }} />}
-                {airspace.type === 'SIV' && <Navigation size={16} style={{ color: '#16a34a' }} />}
-                {airspace.type === 'FIR' && <Plane size={16} style={{ color: '#6b7280' }} />}
+              <div style={styles.timelineIcon}>
+                <Plane size={16} style={{ color: '#f59e0b' }} />
               </div>
-              
               <div style={styles.timelineContent}>
-                <div style={sx.combine(sx.flex.between, sx.spacing.mb(2))}>
-                  <div>
-                    <div style={sx.text.bold}>{airspace.name}</div>
-                    <div style={sx.combine(sx.text.sm, sx.text.secondary)}>
-                      Type : {airspace.type} - Classe {airspace.class}
-                    </div>
-                  </div>
-                  <div style={styles.typeTag(airspace.type)}>
-                    {airspace.type}
-                  </div>
-                </div>
-                
-                {/* Détails de l'espace */}
-                <div style={styles.airspaceDetails}>
-                  <div style={styles.detailRow}>
-                    <Radio size={14} style={{ color: '#6b7280' }} />
-                    <span><strong>Fréquence :</strong> {airspace.frequency} MHz</span>
-                  </div>
-                  <div style={styles.detailRow}>
-                    <Plane size={14} style={{ color: '#6b7280' }} />
-                    <span><strong>Contact :</strong> {airspace.unit}</span>
-                  </div>
-                  <div style={styles.detailRow}>
-                    <Layers size={14} style={{ color: '#6b7280' }} />
-                    <span><strong>Altitudes :</strong> {airspace.floor} → {airspace.ceiling}</span>
-                  </div>
-                  {airspace.activity && (
-                    <div style={styles.detailRow}>
-                      <AlertTriangle size={14} style={{ color: '#f59e0b' }} />
-                      <span><strong>Activité :</strong> {airspace.activity}</span>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Alertes spéciales */}
-                {(airspace.type === 'R' || airspace.type === 'P') && (
-                  <div style={sx.combine(
-                    sx.components.alert.base, 
-                    sx.components.alert.warning,
-                    sx.spacing.mt(2)
-                  )}>
-                    <AlertTriangle size={14} />
-                    <p style={sx.text.xs}>
-                      Zone {airspace.type === 'R' ? 'réglementée' : 'interdite'} - 
-                      {airspace.type === 'R' ? ' Contournement ou autorisation requise' : ' Contournement obligatoire'}
-                    </p>
-                  </div>
-                )}
+                <div style={sx.text.bold}>Arrivée : {airspaceAnalysis.arrival.name}</div>
+                <div style={sx.text.sm}>{airspaceAnalysis.totalDistance.toFixed(1)} NM</div>
               </div>
             </div>
           </div>
-        ))}
-        
-        {/* Arrivée */}
-        <div style={styles.changeIndicator}>
-          <ArrowRight size={16} />
-          <span style={sx.text.xs}>
-            {airspaceAnalysis.totalDistance.toFixed(1)} NM
-          </span>
-        </div>
-        
-        <div style={styles.timelineItem}>
-          <div style={styles.timelineIcon}>
-            <Plane size={16} style={{ color: '#f59e0b' }} />
-          </div>
-          <div style={styles.timelineContent}>
-            <div style={sx.text.bold}>Arrivée : {airspaceAnalysis.arrival.name}</div>
-            <div style={sx.text.sm}>{airspaceAnalysis.totalDistance.toFixed(1)} NM</div>
-          </div>
-        </div>
+        )}
       </div>
       
-      {/* Résumé des fréquences */}
-      <div style={sx.combine(sx.components.card.base, sx.spacing.mt(4))}>
-        <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(3))}>
-          📻 Séquence radio recommandée
-        </h5>
-        <div style={styles.frequencyList}>
-          {airspaceAnalysis.airspaces.map((airspace, index) => (
-            <div key={airspace.id} style={styles.frequencyItem}>
-              <span style={sx.text.bold}>{index + 1}.</span>
-              <span>{airspace.unit} :</span>
-              <span style={sx.combine(sx.text.bold, { color: '#2563eb' })}>
-                {airspace.frequency}
-              </span>
-            </div>
-          ))}
+      {/* Séquence radio */}
+      <div style={sx.combine(sx.components.card.base, sx.spacing.mb(4))}>
+        <div 
+          style={styles.sectionHeader}
+          onClick={() => toggleSection('frequencies')}
+        >
+          <h5 style={sx.combine(sx.text.sm, sx.text.bold, { display: 'flex', alignItems: 'center' })}>
+            {expandedSections.frequencies ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            <Radio size={14} style={{ marginLeft: '8px', marginRight: '6px' }} />
+            Séquence radio recommandée
+          </h5>
         </div>
+        
+        {expandedSections.frequencies && (
+          <div style={styles.frequencyList}>
+            {airspaceAnalysis.airspaces.map((airspace, index) => (
+              <div key={airspace.id} style={styles.frequencyItem}>
+                <span style={sx.combine(sx.text.bold, { minWidth: '20px' })}>{index + 1}.</span>
+                <span style={{ flex: 1 }}>{airspace.unit}</span>
+                <span style={sx.combine(sx.text.bold, { color: '#2563eb' })}>
+                  {airspace.frequency}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 });
 
 const styles = {
+  sectionHeader: {
+    cursor: 'pointer',
+    padding: '4px',
+    marginBottom: '8px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    transition: 'background-color 0.2s',
+    borderRadius: '4px',
+    '&:hover': {
+      backgroundColor: '#f3f4f6'
+    }
+  },
+  conflictBadge: {
+    backgroundColor: '#ef4444',
+    color: 'white',
+    padding: '2px 8px',
+    borderRadius: '12px',
+    fontSize: '11px',
+    fontWeight: '600'
+  },
+  statCard: {
+    backgroundColor: '#f8fafc',
+    padding: '12px',
+    borderRadius: '6px',
+    textAlign: 'center'
+  },
   timeline: {
     position: 'relative',
-    paddingLeft: '40px'
+    paddingLeft: '40px',
+    marginTop: '16px'
   },
   timelineItem: {
     position: 'relative',
     display: 'flex',
     alignItems: 'flex-start',
-    marginBottom: '24px'
+    marginBottom: '20px'
   },
   timelineIcon: {
     position: 'absolute',
@@ -331,36 +675,63 @@ const styles = {
     flex: 1,
     backgroundColor: 'white',
     borderRadius: '8px',
+    padding: '12px',
+    border: '1px solid #e5e7eb'
+  },
+  airspaceCard: {
+    flex: 1,
+    backgroundColor: 'white',
+    borderRadius: '8px',
     padding: '16px',
     border: '1px solid #e5e7eb',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
   },
-  changeIndicator: {
+  distanceIndicator: {
     position: 'relative',
     left: '-24px',
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
+    gap: '6px',
     color: '#6b7280',
-    margin: '8px 0'
+    margin: '8px 0',
+    fontSize: '12px'
   },
-  airspaceDetails: {
-    backgroundColor: '#f9fafb',
-    borderRadius: '6px',
-    padding: '12px',
-    marginTop: '8px'
+  quickInfo: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: '8px',
+    marginTop: '12px'
   },
-  detailRow: {
+  quickInfoItem: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
-    marginBottom: '6px',
-    fontSize: '13px'
+    gap: '6px',
+    fontSize: '12px',
+    color: '#6b7280'
   },
-  typeTag: (type) => ({
+  altitudeIndicator: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
     padding: '4px 8px',
     borderRadius: '4px',
-    fontSize: '12px',
+    marginBottom: '8px',
+    fontSize: '11px'
+  },
+  altitudeConflict: {
+    backgroundColor: '#fef3c7',
+    color: '#92400e',
+    border: '1px solid #fbbf24'
+  },
+  altitudeOk: {
+    backgroundColor: '#dcfce7',
+    color: '#14532d',
+    border: '1px solid #86efac'
+  },
+  typeTag: (type) => ({
+    padding: '3px 8px',
+    borderRadius: '4px',
+    fontSize: '11px',
     fontWeight: '600',
     backgroundColor: 
       type === 'CTR' ? '#dbeafe' :
@@ -380,16 +751,17 @@ const styles = {
   frequencyList: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '8px'
+    gap: '8px',
+    marginTop: '16px'
   },
   frequencyItem: {
     display: 'flex',
-    gap: '8px',
     alignItems: 'center',
-    padding: '8px',
+    padding: '10px 12px',
     backgroundColor: '#f9fafb',
-    borderRadius: '4px',
-    fontSize: '14px'
+    borderRadius: '6px',
+    fontSize: '14px',
+    borderLeft: '3px solid #3b82f6'
   }
 };
 
