@@ -7,7 +7,7 @@ import { useFuelSync } from '@hooks/useFuelSync';
 import { Fuel, AlertTriangle, CheckCircle } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 
-const FuelRow = memo(({ type, label, description, fuel, onChange, readonly = false, automatic = false }) => {
+const FuelRow = memo(({ type, label, description, fuel, onChange, readonly = false, automatic = false, totalGal }) => {
   const GAL_TO_LTR = 3.78541;
   
   const handleGalChange = (value) => {
@@ -70,7 +70,7 @@ const FuelRow = memo(({ type, label, description, fuel, onChange, readonly = fal
       </td>
       <td style={{ padding: '12px', textAlign: 'center' }}>
         <span style={sx.combine(sx.text.sm, sx.text.bold)}>
-          {((fuel.gal / (fuel.gal || 1)) * 100).toFixed(0)}%
+          {totalGal > 0 ? ((fuel.gal / totalGal) * 100).toFixed(0) : 0}%
         </span>
       </td>
     </tr>
@@ -172,6 +172,7 @@ export const FuelModule = memo(() => {
                 onChange={(values) => handleFuelChange(type.key, values)}
                 readonly={type.readonly}
                 automatic={type.automatic}
+                totalGal={calculateTotal('gal')}
               />
             ))}
           </tbody>

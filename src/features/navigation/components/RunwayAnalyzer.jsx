@@ -1,5 +1,4 @@
-// src/features/navigation/components/RunwayAnalyzer.jsx
-import React, { memo, useEffect, useMemo } from 'react';
+import React, { memo, useEffect, useMemo, useState } from 'react';
 import { Wind, Navigation, AlertTriangle, Plane, RefreshCw, Info, Download, Map, Shield } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useOpenAIPStore, openAIPSelectors } from '@core/stores/openAIPStore';
@@ -148,6 +147,50 @@ const getSurfaceName = (code) => {
   return names[code] || code;
 };
 
+// Fonction pour normaliser les surfaces compatibles de l'avion
+const normalizeAircraftSurfaces = (aircraft) => {
+  if (!aircraft) return null;
+  
+  // Debug complet de l'objet avion
+  console.log('🛩️ DEBUG - Structure complète de l\'avion:', aircraft);
+  
+  // Chercher les surfaces dans différentes propriétés possibles
+  let surfaces = aircraft.compatibleRunwaySurfaces || 
+                 aircraft.compatibleSurfaces || 
+                 aircraft.runwaySurfaces || 
+                 aircraft.surfaces ||
+                 [];
+  
+  // Si c'est une chaîne, la convertir en tableau
+  if (typeof surfaces === 'string') {
+    surfaces = surfaces.split(',').map(s => s.trim());
+  }
+  
+  // Si surfaces est toujours vide, vérifier d'autres propriétés possibles
+  if ((!surfaces || surfaces.length === 0) && aircraft.surface) {
+    surfaces = [aircraft.surface];
+  }
+  
+  console.log('🛩️ Surfaces trouvées avant normalisation:', surfaces);
+  
+  // Normaliser les surfaces
+  const normalizedSurfaces = surfaces.map(surface => {
+    // Si c'est déjà un code normalisé, le garder
+    if (['ASPH', 'CONC', 'GRASS', 'GRVL', 'UNPAVED', 'SAND', 'SNOW', 'WATER'].includes(surface)) {
+      return surface;
+    }
+    // Sinon, normaliser
+    return normalizeSurfaceType(surface);
+  }).filter(s => s !== 'UNKNOWN'); // Filtrer les surfaces inconnues
+  
+  console.log('🛩️ Surfaces après normalisation:', normalizedSurfaces);
+  
+  return {
+    ...aircraft,
+    compatibleRunwaySurfaces: normalizedSurfaces
+  };
+};
+
 // Fonction pour vérifier la compatibilité d'une piste avec l'avion
 const checkRunwayCompatibility = (runway, aircraft) => {
   // Si pas d'avion sélectionné, on ne peut pas vérifier la compatibilité
@@ -159,17 +202,17 @@ const checkRunwayCompatibility = (runway, aircraft) => {
     };
   }
   
+  // Normaliser les surfaces de l'avion
+  const normalizedAircraft = normalizeAircraftSurfaces(aircraft);
+  
   // Debug : afficher les surfaces compatibles de l'avion
-  console.log(`🛩️ Surfaces compatibles de ${aircraft.registration}:`, aircraft.compatibleRunwaySurfaces);
+  console.log(`🛩️ Surfaces compatibles de ${normalizedAircraft.registration}:`, normalizedAircraft.compatibleRunwaySurfaces);
   
   // Si l'avion n'a pas de surfaces compatibles définies ou si la liste est vide
-  // cela signifie qu'il ne peut opérer sur AUCUNE surface
-  if (!aircraft.compatibleRunwaySurfaces || aircraft.compatibleRunwaySurfaces.length === 0) {
-    console.warn(`⚠️ Avion ${aircraft.registration} n'a aucune surface compatible définie`);
-    return { 
-      isCompatible: false, 
-      reason: 'Aucune surface compatible définie pour cet avion' 
-    };
+  // Par défaut, on considère qu'il peut opérer sur asphalte et béton
+  if (!normalizedAircraft.compatibleRunwaySurfaces || normalizedAircraft.compatibleRunwaySurfaces.length === 0) {
+    console.warn(`⚠️ Avion ${normalizedAircraft.registration} n'a aucune surface compatible définie - utilisation des valeurs par défaut`);
+    normalizedAircraft.compatibleRunwaySurfaces = ['ASPH', 'CONC']; // Valeurs par défaut
   }
   
   const normalizedSurface = normalizeSurfaceType(runway.surface);
@@ -177,10 +220,10 @@ const checkRunwayCompatibility = (runway, aircraft) => {
   console.log(`🔍 Vérification compatibilité piste ${runway.name}:`, {
     surfaceOriginale: runway.surface,
     surfaceNormalisée: normalizedSurface,
-    surfacesAvion: aircraft.compatibleRunwaySurfaces,
-    avionRegistration: aircraft.registration,
-    avionContientASPH: aircraft.compatibleRunwaySurfaces.includes('ASPH'),
-    avionContientCONC: aircraft.compatibleRunwaySurfaces.includes('CONC'),
+    surfacesAvion: normalizedAircraft.compatibleRunwaySurfaces,
+    avionRegistration: normalizedAircraft.registration,
+    avionContientASPH: normalizedAircraft.compatibleRunwaySurfaces.includes('ASPH'),
+    avionContientCONC: normalizedAircraft.compatibleRunwaySurfaces.includes('CONC'),
     testRevetue: runway.surface ? runway.surface.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().includes('REVETUE') : false
   });
   
@@ -193,9 +236,9 @@ const checkRunwayCompatibility = (runway, aircraft) => {
     };
   }
   
-  const isCompatible = aircraft.compatibleRunwaySurfaces.includes(normalizedSurface);
+  const isCompatible = normalizedAircraft.compatibleRunwaySurfaces.includes(normalizedSurface);
   
-  console.log(`✈️ Compatibilité ${runway.name} avec ${aircraft.registration}: ${isCompatible ? '✅ OUI' : '❌ NON'} (${normalizedSurface} ${isCompatible ? 'dans' : 'pas dans'} [${aircraft.compatibleRunwaySurfaces.join(', ')}])`);
+  console.log(`✈️ Compatibilité ${runway.name} avec ${normalizedAircraft.registration}: ${isCompatible ? '✅ OUI' : '❌ NON'} (${normalizedSurface} ${isCompatible ? 'dans' : 'pas dans'} [${normalizedAircraft.compatibleRunwaySurfaces.join(', ')}])`);
   
   return {
     isCompatible,
@@ -330,12 +373,15 @@ const diagnosticRunwayCompatibility = (runway, aircraft) => {
   
   console.log('2. Surface normalisée (sans accents):', normalized);
   console.log('3. Surface normalisée par la fonction:', normalizeSurfaceType(runway.surface));
-  console.log('4. Surfaces compatibles de l\'avion:', aircraft?.compatibleRunwaySurfaces);
-  console.log('5. L\'avion contient ASPH?', aircraft?.compatibleRunwaySurfaces?.includes('ASPH'));
-  console.log('6. L\'avion contient CONC?', aircraft?.compatibleRunwaySurfaces?.includes('CONC'));
+  console.log('4. Structure complète de l\'avion:', aircraft);
+  
+  const normalizedAircraft = normalizeAircraftSurfaces(aircraft);
+  console.log('5. Surfaces compatibles après normalisation:', normalizedAircraft?.compatibleRunwaySurfaces);
+  console.log('6. L\'avion contient ASPH?', normalizedAircraft?.compatibleRunwaySurfaces?.includes('ASPH'));
+  console.log('7. L\'avion contient CONC?', normalizedAircraft?.compatibleRunwaySurfaces?.includes('CONC'));
   
   if (runway.surface) {
-    console.log('7. Tests détaillés de la chaîne:');
+    console.log('8. Tests détaillés de la chaîne:');
     console.log('   - Contient "REVÊTUE"?', runway.surface.toUpperCase().includes('REVÊTUE'));
     console.log('   - Contient "REVETUE" (après normalisation)?', normalized.includes('REVETUE'));
     console.log('   - Longueur originale:', runway.surface.length);
@@ -344,7 +390,7 @@ const diagnosticRunwayCompatibility = (runway, aircraft) => {
   }
   
   const result = checkRunwayCompatibility(runway, aircraft);
-  console.log('8. Résultat final:', result);
+  console.log('9. Résultat final:', result);
   console.groupEnd();
   
   return result;
@@ -358,10 +404,14 @@ export const RunwayAnalyzer = memo(({ icao }) => {
   // Récupérer l'avion sélectionné
   const { selectedAircraft } = useAircraft();
   
+  // État pour afficher/masquer les pistes incompatibles
+  const [showIncompatible, setShowIncompatible] = useState(false);
+  
   // Debug de l'avion sélectionné
   console.log(`🛩️ RunwayAnalyzer - Avion sélectionné:`, {
     exists: !!selectedAircraft,
     registration: selectedAircraft?.registration,
+    fullObject: selectedAircraft,
     compatibleSurfaces: selectedAircraft?.compatibleRunwaySurfaces,
     surfaceCount: selectedAircraft?.compatibleRunwaySurfaces?.length || 0
   });
@@ -527,11 +577,11 @@ export const RunwayAnalyzer = memo(({ icao }) => {
   
   // Analyser les pistes (TOUJOURS utiliser useMemo, même si runways est vide)
   const runwayAnalysis = useMemo(() => {
-    if (!runways || runways.length === 0) return [];
+    if (!runways || runways.length === 0) return { compatible: [], incompatible: [] };
     
     console.log(`📊 Début de l'analyse des pistes pour ${icao} avec avion ${selectedAircraft?.registration || 'non sélectionné'}`);
     
-    return runways.map(runway => {
+    const analyzedRunways = runways.map(runway => {
       const heading = runway.qfu || parseInt(runway.name.replace(/[LCR]/g, '')) * 10;
       const windAnalysis = windDirection !== null && windSpeed > 0 
         ? calculateCrosswind(windDirection, windSpeed, heading)
@@ -555,7 +605,18 @@ export const RunwayAnalyzer = memo(({ icao }) => {
         isFavorable: windAnalysis.angleDiff <= 30 && windSpeed > 0,
         score: windAnalysis.headwind - windAnalysis.crosswind
       };
-    }).sort((a, b) => b.score - a.score);
+    });
+    
+    // Séparer les pistes compatibles et incompatibles
+    const compatible = analyzedRunways
+      .filter(r => r.compatibility?.isCompatible !== false)
+      .sort((a, b) => b.score - a.score);
+    
+    const incompatible = analyzedRunways
+      .filter(r => r.compatibility?.isCompatible === false)
+      .sort((a, b) => b.score - a.score);
+    
+    return { compatible, incompatible };
   }, [runways, windDirection, windSpeed, selectedAircraft]);
   
   // Debug - afficher dans la console
@@ -567,6 +628,7 @@ export const RunwayAnalyzer = memo(({ icao }) => {
     dataSource,
     aircraft: selectedAircraft ? {
       registration: selectedAircraft.registration,
+      fullObject: selectedAircraft,
       compatibleSurfaces: selectedAircraft.compatibleRunwaySurfaces,
       hasSurfaces: selectedAircraft.compatibleRunwaySurfaces && selectedAircraft.compatibleRunwaySurfaces.length > 0
     } : null
@@ -586,14 +648,22 @@ export const RunwayAnalyzer = memo(({ icao }) => {
   console.log('🎯 Analyse du vent pour toutes les pistes:', {
     windDirection,
     windSpeed,
-    runwayCount: runwayAnalysis ? runwayAnalysis.length : 0,
-    results: runwayAnalysis ? runwayAnalysis.map(r => ({
-      name: r.name,
-      heading: r.heading,
-      headwind: r.headwind,
-      crosswind: r.crosswind,
-      angleDiff: r.angleDiff
-    })) : []
+    compatibleCount: runwayAnalysis?.compatible?.length || 0,
+    incompatibleCount: runwayAnalysis?.incompatible?.length || 0,
+    results: {
+      compatible: runwayAnalysis?.compatible?.map(r => ({
+        name: r.name,
+        heading: r.heading,
+        headwind: r.headwind,
+        crosswind: r.crosswind,
+        angleDiff: r.angleDiff
+      })) || [],
+      incompatible: runwayAnalysis?.incompatible?.map(r => ({
+        name: r.name,
+        surface: r.surface,
+        reason: r.compatibility?.reason
+      })) || []
+    }
   });
   
   // MAINTENANT on peut faire les returns conditionnels
@@ -906,15 +976,15 @@ export const RunwayAnalyzer = memo(({ icao }) => {
       </h4>
       
       {/* Avertissement général si des incompatibilités sont détectées */}
-      {runwayAnalysis && runwayAnalysis.some(r => r.compatibility && r.compatibility.isCompatible === false) && (
+      {runwayAnalysis?.incompatible?.length > 0 && (
         <div style={sx.combine(sx.components.alert.base, sx.components.alert.danger, sx.spacing.mb(3))}>
           <AlertTriangle size={16} />
           <div>
             <p style={sx.combine(sx.text.sm, sx.text.bold)}>
-              ⚠️ Incompatibilité détectée avec le type de piste
+              ⚠️ {runwayAnalysis.incompatible.length} piste{runwayAnalysis.incompatible.length > 1 ? 's' : ''} incompatible{runwayAnalysis.incompatible.length > 1 ? 's' : ''}
             </p>
             <p style={sx.text.xs}>
-              {selectedAircraft.registration} n'est pas configuré pour opérer sur certaines surfaces disponibles à {icao}
+              {selectedAircraft.registration} n'est pas configuré pour certaines surfaces disponibles à {icao}
             </p>
           </div>
         </div>
@@ -948,12 +1018,12 @@ export const RunwayAnalyzer = memo(({ icao }) => {
       {/* Piste recommandée ou avertissement */}
       {windSpeed > 0 && (
         (() => {
-          // Trouver la meilleure piste compatible
-          const compatibleRunways = runwayAnalysis.filter(r => r.compatibility?.isCompatible !== false);
+          // Utiliser uniquement les pistes compatibles
+          const compatibleRunways = runwayAnalysis.compatible;
           const bestRunway = compatibleRunways[0];
-          const hasIncompatibleRunways = runwayAnalysis.some(r => r.compatibility?.isCompatible === false);
+          const hasIncompatibleRunways = runwayAnalysis.incompatible.length > 0;
           
-          if (!bestRunway) {
+          if (!bestRunway || compatibleRunways.length === 0) {
             return (
               <div style={sx.combine(sx.components.alert.base, sx.components.alert.danger, sx.spacing.mb(3))}>
                 <AlertTriangle size={16} />
@@ -998,15 +1068,6 @@ export const RunwayAnalyzer = memo(({ icao }) => {
                   </div>
                 </div>
               )}
-              
-              {hasIncompatibleRunways && (
-                <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mb(3))}>
-                  <Info size={16} />
-                  <p style={sx.text.sm}>
-                    💡 Note : Certaines pistes ne sont pas compatibles avec votre avion et ne sont pas recommandées
-                  </p>
-                </div>
-              )}
             </>
           );
         })()
@@ -1015,7 +1076,7 @@ export const RunwayAnalyzer = memo(({ icao }) => {
       {/* Analyse détaillée de toutes les pistes */}
       <div>
         <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>
-          Analyse détaillée :
+          Pistes compatibles :
         </p>
         
         {/* Explication de la méthode de calcul */}
@@ -1048,161 +1109,237 @@ export const RunwayAnalyzer = memo(({ icao }) => {
           </div>
         </div>
         
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {runwayAnalysis.map((runway, index) => (
-            <div 
-              key={`${runway.name}-${index}`}
+        {/* Pistes compatibles */}
+        {runwayAnalysis.compatible.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {runwayAnalysis.compatible.map((runway, index) => (
+              <div 
+                key={`${runway.name}-${index}`}
+                style={{
+                  padding: '12px',
+                  backgroundColor: runway.headwind < 0 ? '#fee2e2' : (index === 0 ? '#f0fdf4' : '#f9fafb'),
+                  borderRadius: '6px',
+                  border: runway.headwind < 0 ? '1px solid #fca5a5' : 
+                         (index === 0 ? '1px solid #86efac' : '1px solid #e5e7eb')
+                }}
+              >
+                <div style={sx.combine(sx.flex.between, sx.spacing.mb(2))}>
+                  <div>
+                    <span style={sx.combine(sx.text.base, sx.text.bold)}>
+                      Piste {runway.name}
+                    </span>
+                    <span style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.ml(2))}>
+                      (QFU {runway.heading}°)
+                    </span>
+                    {runway.length && (
+                      <span style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.ml(2))}>
+                        {runway.length}m
+                      </span>
+                    )}
+                    {runway.width && dataSource === 'vac' && (
+                      <span style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.ml(1))}>
+                        × {runway.width}m
+                      </span>
+                    )}
+                    {runway.surface && dataSource === 'vac' && (
+                      <span style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.ml(2))}>
+                        • {runway.surface}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    {/* Indicateur de compatibilité */}
+                    <span style={{
+                      padding: '4px 12px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      backgroundColor: '#dcfce7',
+                      color: '#166534'
+                    }}>
+                      ✅ Compatible
+                    </span>
+                    {!runway.isFavorable && windSpeed > 0 && (
+                      <span style={{
+                        padding: '4px 12px',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        backgroundColor: '#fef3c7',
+                        color: '#92400e'
+                      }}>
+                        ⚠ Écart {runway.angleDiff}°
+                      </span>
+                    )}
+                  </div>
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                  <div style={sx.combine(sx.text.sm)}>
+                    <span style={{ color: runway.headwind >= 0 ? '#16a34a' : '#dc2626' }}>
+                      {runway.headwind >= 0 ? '↑' : '↓'}
+                    </span>
+                    {' '}Vent {runway.headwind >= 0 ? 'de face' : (
+                      <span style={{ color: '#dc2626', fontWeight: 'bold' }}>arrière</span>
+                    )} : 
+                    <strong style={{ color: runway.headwind < 0 ? '#dc2626' : 'inherit' }}>
+                      {' '}{Math.abs(runway.headwind)}kt
+                    </strong>
+                  </div>
+                  {runway.crosswind > 0 && (
+                    <div style={sx.combine(sx.text.sm)}>
+                      <span style={{ color: '#f59e0b' }}>→</span>
+                      {' '}Vent traversier : 
+                      <strong> {runway.crosswind}kt</strong>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Détail du calcul */}
+                <details style={{ marginTop: '8px' }}>
+                  <summary style={{ 
+                    cursor: 'pointer', 
+                    fontSize: '11px', 
+                    color: '#6b7280',
+                    userSelect: 'none'
+                  }}>
+                    Voir le détail du calcul
+                  </summary>
+                  <div style={{
+                    marginTop: '8px',
+                    padding: '8px',
+                    backgroundColor: '#f9fafb',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    lineHeight: '1.5'
+                  }}>
+                    {(() => {
+                      const perfectHeadwindDir = (runway.heading + 180) % 360;
+                      let angleFromPerfect = (windDirection || 0) - perfectHeadwindDir;
+                      if (angleFromPerfect > 180) angleFromPerfect -= 360;
+                      if (angleFromPerfect < -180) angleFromPerfect += 360;
+                      const absAngle = Math.abs(angleFromPerfect);
+                      const ws = windSpeed || 0;
+                      
+                      return (
+                        <>
+                          <div>• Vent de : <strong>{windDirection || 'N/A'}°</strong> à <strong>{ws}kt</strong></div>
+                          <div>• Cap piste : <strong>{runway.heading}°</strong></div>
+                          <div>• Vent de face parfait viendrait du : <strong>{perfectHeadwindDir}°</strong></div>
+                          <div>• Angle avec vent de face parfait : <strong>{absAngle}°</strong></div>
+                          <div style={{ marginTop: '4px' }}>
+                            <strong>Calcul :</strong><br/>
+                            • Vent de face = cos({absAngle}°) × {ws}kt = <strong>{runway.headwind || 0}kt</strong><br/>
+                            • Vent traversier = sin({absAngle}°) × {ws}kt = <strong>{runway.crosswind || 0}kt</strong>
+                          </div>
+                          {runway.headwind < 0 && (
+                            <div style={{ marginTop: '4px', color: '#dc2626' }}>
+                              ⚠️ Angle {'>'} 90° = composante de vent arrière
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                </details>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning, sx.spacing.mb(3))}>
+            <AlertTriangle size={16} />
+            <p style={sx.text.sm}>
+              Aucune piste compatible disponible
+            </p>
+          </div>
+        )}
+        
+        {/* Pistes incompatibles - Section cachable */}
+        {runwayAnalysis.incompatible.length > 0 && (
+          <div style={sx.spacing.mt(4)}>
+            <button
+              onClick={() => setShowIncompatible(!showIncompatible)}
               style={{
-                padding: '12px',
-                backgroundColor: runway.headwind < 0 ? '#fee2e2' : (index === 0 && runway.compatibility?.isCompatible !== false ? '#f0fdf4' : '#f9fafb'),
-                borderRadius: '6px',
-                border: runway.headwind < 0 ? '1px solid #fca5a5' : 
-                       runway.compatibility?.isCompatible === false ? '2px solid #dc2626' :
-                       (index === 0 ? '1px solid #86efac' : '1px solid #e5e7eb')
+                background: 'none',
+                border: 'none',
+                padding: '8px 0',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                color: '#6b7280',
+                fontSize: '14px',
+                fontWeight: '500'
               }}
             >
-              <div style={sx.combine(sx.flex.between, sx.spacing.mb(2))}>
-                <div>
-                  <span style={sx.combine(sx.text.base, sx.text.bold)}>
-                    Piste {runway.name}
-                  </span>
-                  <span style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.ml(2))}>
-                    (QFU {runway.heading}°)
-                  </span>
-                  {runway.length && (
-                    <span style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.ml(2))}>
-                      {runway.length}m
-                    </span>
-                  )}
-                  {runway.width && dataSource === 'vac' && (
-                    <span style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.ml(1))}>
-                      × {runway.width}m
-                    </span>
-                  )}
-                  {runway.surface && dataSource === 'vac' && (
-                    <span style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.ml(2))}>
-                      • {runway.surface}
-                    </span>
-                  )}
-                </div>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  {/* Indicateur de compatibilité */}
-                  {runway.compatibility && (
-                    <span style={{
-                      padding: '4px 12px',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      backgroundColor: 
-                        runway.compatibility.isCompatible === true ? '#dcfce7' :
-                        runway.compatibility.isCompatible === false ? '#fee2e2' :
-                        '#fef3c7',
-                      color: 
-                        runway.compatibility.isCompatible === true ? '#166534' :
-                        runway.compatibility.isCompatible === false ? '#991b1b' :
-                        '#92400e'
-                    }}>
-                      {runway.compatibility.isCompatible === true ? '✅ Compatible' :
-                       runway.compatibility.isCompatible === false ? '❌ Incompatible' :
-                       '❓ Type inconnu'}
-                    </span>
-                  )}
-                  {!runway.isFavorable && windSpeed > 0 && (
-                    <span style={{
-                      padding: '4px 12px',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      backgroundColor: '#fef3c7',
-                      color: '#92400e'
-                    }}>
-                      ⚠ Écart {runway.angleDiff}°
-                    </span>
-                  )}
-                </div>
-              </div>
-              
-              {/* Avertissement détaillé si incompatible */}
-              {runway.compatibility?.isCompatible === false && (
-                <div style={sx.combine(sx.components.alert.base, sx.components.alert.danger, sx.spacing.mb(2), { padding: '8px 12px' })}>
-                  <AlertTriangle size={14} />
-                  <p style={{ fontSize: '12px' }}>
-                    {selectedAircraft.registration} n'est pas configuré pour les pistes en {getSurfaceName(runway.compatibility.surface)}
+              <span style={{
+                display: 'inline-block',
+                transform: showIncompatible ? 'rotate(90deg)' : 'rotate(0deg)',
+                transition: 'transform 0.2s'
+              }}>
+                ▶
+              </span>
+              Pistes incompatibles ({runwayAnalysis.incompatible.length})
+            </button>
+            
+            {showIncompatible && (
+              <div style={{ 
+                marginTop: '12px',
+                padding: '12px',
+                backgroundColor: '#fee2e2',
+                borderRadius: '8px',
+                border: '1px solid #fca5a5'
+              }}>
+                <div style={sx.combine(sx.components.alert.base, sx.components.alert.danger, sx.spacing.mb(3))}>
+                  <AlertTriangle size={16} />
+                  <p style={sx.text.sm}>
+                    Ces pistes ne sont pas compatibles avec {selectedAircraft.registration}
                   </p>
                 </div>
-              )}
-              
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-                <div style={sx.combine(sx.text.sm)}>
-                  <span style={{ color: runway.headwind >= 0 ? '#16a34a' : '#dc2626' }}>
-                    {runway.headwind >= 0 ? '↑' : '↓'}
-                  </span>
-                  {' '}Vent {runway.headwind >= 0 ? 'de face' : (
-                    <span style={{ color: '#dc2626', fontWeight: 'bold' }}>arrière</span>
-                  )} : 
-                  <strong style={{ color: runway.headwind < 0 ? '#dc2626' : 'inherit' }}>
-                    {' '}{Math.abs(runway.headwind)}kt
-                  </strong>
-                </div>
-                {runway.crosswind > 0 && (
-                  <div style={sx.combine(sx.text.sm)}>
-                    <span style={{ color: '#f59e0b' }}>→</span>
-                    {' '}Vent traversier : 
-                    <strong> {runway.crosswind}kt</strong>
-                  </div>
-                )}
-              </div>
-              
-              {/* Détail du calcul */}
-              <details style={{ marginTop: '8px' }}>
-                <summary style={{ 
-                  cursor: 'pointer', 
-                  fontSize: '11px', 
-                  color: '#6b7280',
-                  userSelect: 'none'
-                }}>
-                  Voir le détail du calcul
-                </summary>
-                <div style={{
-                  marginTop: '8px',
-                  padding: '8px',
-                  backgroundColor: '#f9fafb',
-                  borderRadius: '4px',
-                  fontSize: '11px',
-                  lineHeight: '1.5'
-                }}>
-                  {(() => {
-                    const perfectHeadwindDir = (runway.heading + 180) % 360;
-                    let angleFromPerfect = (windDirection || 0) - perfectHeadwindDir;
-                    if (angleFromPerfect > 180) angleFromPerfect -= 360;
-                    if (angleFromPerfect < -180) angleFromPerfect += 360;
-                    const absAngle = Math.abs(angleFromPerfect);
-                    const ws = windSpeed || 0;
-                    
-                    return (
-                      <>
-                        <div>• Vent de : <strong>{windDirection || 'N/A'}°</strong> à <strong>{ws}kt</strong></div>
-                        <div>• Cap piste : <strong>{runway.heading}°</strong></div>
-                        <div>• Vent de face parfait viendrait du : <strong>{perfectHeadwindDir}°</strong></div>
-                        <div>• Angle avec vent de face parfait : <strong>{absAngle}°</strong></div>
-                        <div style={{ marginTop: '4px' }}>
-                          <strong>Calcul :</strong><br/>
-                          • Vent de face = cos({absAngle}°) × {ws}kt = <strong>{runway.headwind || 0}kt</strong><br/>
-                          • Vent traversier = sin({absAngle}°) × {ws}kt = <strong>{runway.crosswind || 0}kt</strong>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {runwayAnalysis.incompatible.map((runway, index) => (
+                    <div 
+                      key={`incomp-${runway.name}-${index}`}
+                      style={{
+                        padding: '12px',
+                        backgroundColor: '#ffffff',
+                        borderRadius: '6px',
+                        border: '2px solid #dc2626',
+                        opacity: 0.8
+                      }}
+                    >
+                      <div style={sx.combine(sx.flex.between, sx.spacing.mb(2))}>
+                        <div>
+                          <span style={sx.combine(sx.text.base, sx.text.bold, { color: '#991b1b' })}>
+                            ❌ Piste {runway.name}
+                          </span>
+                          <span style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.ml(2))}>
+                            (QFU {runway.heading}°)
+                          </span>
+                          {runway.length && (
+                            <span style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.ml(2))}>
+                              {runway.length}m
+                            </span>
+                          )}
+                          {runway.surface && (
+                            <span style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.ml(2))}>
+                              • {runway.surface}
+                            </span>
+                          )}
                         </div>
-                        {runway.headwind < 0 && (
-                          <div style={{ marginTop: '4px', color: '#dc2626' }}>
-                            ⚠️ Angle {'>'} 90° = composante de vent arrière
-                          </div>
-                        )}
-                      </>
-                    );
-                  })()}
+                      </div>
+                      
+                      <p style={{ fontSize: '12px', color: '#991b1b', marginTop: '4px' }}>
+                        {runway.compatibility?.reason || 'Type de surface incompatible'}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-              </details>
-            </div>
-          ))}
-        </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       
       {/* Note sur la source des données */}
