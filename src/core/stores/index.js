@@ -5,3 +5,4 @@ export { useFuelStore } from './fuelStore';
 export { useWeightBalanceStore } from './weightBalanceStore';
 export { useWeatherStore, weatherSelectors } from './weatherStore';
 export { useVACStore, vacSelectors, VAC_CONFIG } from './vacStore';
+export { useOpenAIPStore, openAIPSelectors } from './openAIPStore';
