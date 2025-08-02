@@ -10,9 +10,9 @@ import { useOpenAIPStore, openAIPSelectors } from '@core/stores/openAIPStore';
 
 // Import des composants locaux
 import { NavigationMap } from './components/NavigationMap';
-import { PerformanceCalculator } from './components/PerformanceCalculator';
 import { AirportSelector } from './components/AirportSelector';
 import { ReportingPointsSelector } from './components/ReportingPointsSelector';
+import { AirspaceAnalyzer } from './components/AirspaceAnalyzer';
 
 const NavigationModule = () => {
   const { selectedAircraft } = useAircraft();
@@ -259,58 +259,60 @@ const NavigationModule = () => {
 
       {/* Résultats de navigation */}
       {selectedAircraft && navigationResults && (
-        <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
-          <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4))}>
-            📊 Résultats de navigation
-          </h3>
+        <>
+          <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
+            <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4))}>
+              📊 Résultats de navigation
+            </h3>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+              <div style={sx.components.card.base}>
+                <h4 style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>Distance totale</h4>
+                <p style={sx.combine(sx.text['2xl'], sx.text.bold, sx.text.primary)}>
+                  {navigationResults.totalDistance} NM
+                </p>
+                <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                  ≈ {(navigationResults.totalDistance * 1.852).toFixed(0)} km
+                </p>
+              </div>
+              
+              <div style={sx.components.card.base}>
+                <h4 style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>Temps de vol</h4>
+                <p style={sx.combine(sx.text['2xl'], sx.text.bold, sx.text.primary)}>
+                  {Math.floor(navigationResults.totalTime / 60)}h{String(navigationResults.totalTime % 60).padStart(2, '0')}
+                </p>
+                <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                  @ {selectedAircraft.cruiseSpeedKt} kt
+                </p>
+              </div>
+              
+              <div style={sx.components.card.base}>
+                <h4 style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>Carburant nécessaire</h4>
+                <p style={sx.combine(sx.text['2xl'], sx.text.bold, sx.text.primary)}>
+                  {navigationResults.fuelRequired} L
+                </p>
+                <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                  ≈ {(navigationResults.fuelRequired / 3.78541).toFixed(1)} gal
+                </p>
+              </div>
+              
+              <div style={sx.components.card.base}>
+                <h4 style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>Réserve finale</h4>
+                <p style={sx.combine(sx.text['2xl'], sx.text.bold, sx.text.primary)}>
+                  {navigationResults.regulationReserveLiters} L
+                </p>
+                <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                  {navigationResults.regulationReserveMinutes} min
+                </p>
+              </div>
+            </div>
+          </section>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-            <div style={sx.components.card.base}>
-              <h4 style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>Distance totale</h4>
-              <p style={sx.combine(sx.text['2xl'], sx.text.bold, sx.text.primary)}>
-                {navigationResults.totalDistance} NM
-              </p>
-              <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
-                ≈ {(navigationResults.totalDistance * 1.852).toFixed(0)} km
-              </p>
-            </div>
-            
-            <div style={sx.components.card.base}>
-              <h4 style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>Temps de vol</h4>
-              <p style={sx.combine(sx.text['2xl'], sx.text.bold, sx.text.primary)}>
-                {Math.floor(navigationResults.totalTime / 60)}h{String(navigationResults.totalTime % 60).padStart(2, '0')}
-              </p>
-              <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
-                @ {selectedAircraft.cruiseSpeedKt} kt
-              </p>
-            </div>
-            
-            <div style={sx.components.card.base}>
-              <h4 style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>Carburant nécessaire</h4>
-              <p style={sx.combine(sx.text['2xl'], sx.text.bold, sx.text.primary)}>
-                {navigationResults.fuelRequired} L
-              </p>
-              <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
-                ≈ {(navigationResults.fuelRequired / 3.78541).toFixed(1)} gal
-              </p>
-            </div>
-            
-            <div style={sx.components.card.base}>
-              <h4 style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>Réserve finale</h4>
-              <p style={sx.combine(sx.text['2xl'], sx.text.bold, sx.text.primary)}>
-                {navigationResults.regulationReserveLiters} L
-              </p>
-              <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
-                {navigationResults.regulationReserveMinutes} min
-              </p>
-            </div>
-          </div>
-        </section>
-      )}
-      
-      {/* Calculateur de performances */}
-      {selectedAircraft && waypoints.length >= 2 && waypoints[0].name && waypoints[waypoints.length - 1].name && (
-        <PerformanceCalculator />
+          {/* Analyse des espaces aériens - NOUVELLE SECTION */}
+          <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
+            <AirspaceAnalyzer waypoints={waypoints} />
+          </section>
+        </>
       )}
     </div>
   );

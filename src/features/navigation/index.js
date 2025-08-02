@@ -5,6 +5,6 @@ export { default } from './NavigationModule';
 
 // Export des composants pour utilisation directe si nécessaire
 export { NavigationMap } from './components/NavigationMap';
-export { PerformanceCalculator } from './components/PerformanceCalculator';
 export { AirportSelector } from './components/AirportSelector';
 export { ReportingPointsSelector } from './components/ReportingPointsSelector';
+export { AirspaceAnalyzer } from './components/AirspaceAnalyzer';
