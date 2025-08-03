@@ -1,3 +1,42 @@
+// Dans NavigationModule.jsx, ajoutez ceci juste après les imports :
+
+console.log('🔍 NavigationModule - Vérification des imports');
+console.log('useAlternatesForNavigation type:', typeof useAlternatesForNavigation);
+console.log('useAlternatesForNavigation value:', useAlternatesForNavigation);
+console.log('Is function?', typeof useAlternatesForNavigation === 'function');
+
+// Si c'est undefined, il y a un problème d'import
+if (typeof useAlternatesForNavigation !== 'function') {
+  console.error('❌ useAlternatesForNavigation n\'est pas une fonction !');
+  console.error('Vérifiez l\'export dans @features/alternates');
+}
+
+const NavigationModule = () => {
+  console.log('🔍 NavigationModule - Début du rendu');
+  
+  // Wrapper sécurisé pour le hook
+  let alternatesData = { 
+    alternates: [], 
+    hasAlternates: false, 
+    addAlternateAsWaypoint: () => {} 
+  };
+  
+  try {
+    console.log('🔍 Appel de useAlternatesForNavigation...');
+    const result = useAlternatesForNavigation();
+    console.log('✅ Hook appelé avec succès, résultat:', result);
+    console.log('Type du résultat:', typeof result);
+    console.log('Clés du résultat:', result ? Object.keys(result) : 'null');
+    alternatesData = result;
+  } catch (error) {
+    console.error('❌ Erreur lors de l\'appel du hook:', error);
+    console.error('Stack:', error.stack);
+  }
+  
+  const { alternates, hasAlternates, addAlternateAsWaypoint } = alternatesData;
+  
+  // Reste du code...
+
 // src/features/navigation/NavigationModule.jsx
 import React, { memo, useState, useCallback, useEffect } from 'react';
 import { MapPin, Plus, Trash2, Navigation2, Home, Sun, Moon, List, Loader, AlertCircle, AlertTriangle, Wind, Plane } from 'lucide-react';

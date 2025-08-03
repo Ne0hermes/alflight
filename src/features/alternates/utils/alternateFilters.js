@@ -1,16 +1,14 @@
 // src/features/alternates/utils/alternateFilters.js
 
-import { useWeatherStore } from '@core/stores/weatherStore';
-import { useVACStore } from '@core/stores/vacStore';
-
 /**
  * Filtre les aérodromes candidats selon les critères définis
+ * Version corrigée sans dépendances directes aux stores
  */
-export const filterAlternates = async (candidates, criteria) => {
+export const filterAlternates = async (candidates, criteria, stores = {}) => {
   const filtered = [];
   
   for (const airport of candidates) {
-    const passesFilters = await checkAllCriteria(airport, criteria);
+    const passesFilters = await checkAllCriteria(airport, criteria, stores);
     if (passesFilters) {
       filtered.push(airport);
     }
@@ -22,7 +20,7 @@ export const filterAlternates = async (candidates, criteria) => {
 /**
  * Vérifie tous les critères pour un aérodrome
  */
-const checkAllCriteria = async (airport, criteria) => {
+const checkAllCriteria = async (airport, criteria, stores) => {
   // 1. Vérifier la distance maximale (rayon carburant)
   if (!checkDistanceCriteria(airport, criteria)) {
     return false;
@@ -34,7 +32,7 @@ const checkAllCriteria = async (airport, criteria) => {
   }
   
   // 3. Vérifier la disponibilité VAC si requise
-  if (criteria.requireVAC && !checkVACAvailability(airport)) {
+  if (criteria.requireVAC && !checkVACAvailability(airport, stores.vacStore)) {
     return false;
   }
   
@@ -44,7 +42,7 @@ const checkAllCriteria = async (airport, criteria) => {
   }
   
   // 5. Vérifier la météo
-  const weatherOk = await checkWeatherCriteria(airport, criteria);
+  const weatherOk = await checkWeatherCriteria(airport, criteria, stores.weatherStore);
   if (!weatherOk) {
     return false;
   }
@@ -63,7 +61,12 @@ const checkAllCriteria = async (airport, criteria) => {
 const checkDistanceCriteria = (airport, criteria) => {
   if (!criteria.maxRadiusNM) return true;
   
-  // Calculer la distance depuis le point le plus proche sur la route
+  // La distance est déjà calculée dans le hook principal
+  if (airport.distance !== undefined) {
+    return airport.distance <= criteria.maxRadiusNM;
+  }
+  
+  // Fallback : calculer la distance
   const distanceFromRoute = calculateDistanceFromRoute(
     airport.coordinates,
     criteria.departure,
@@ -91,11 +94,11 @@ const checkRunwayCriteria = (airport, criteria) => {
 /**
  * Vérifie la disponibilité de la carte VAC
  */
-const checkVACAvailability = (airport) => {
-  const { charts } = useVACStore.getState();
+const checkVACAvailability = (airport, vacStore) => {
+  if (!vacStore) return true; // Si pas de store, on ne peut pas vérifier
   
-  // Vérifier si une VAC existe pour cet aérodrome
-  return charts[airport.icao] !== undefined;
+  const charts = vacStore.getState ? vacStore.getState().charts : vacStore.charts;
+  return charts && charts[airport.icao] !== undefined;
 };
 
 /**
@@ -123,20 +126,28 @@ const checkServicesCriteria = (airport, criteria) => {
 /**
  * Vérifie les critères météo
  */
-const checkWeatherCriteria = async (airport, criteria) => {
-  const { fetchWeather, getWeatherByIcao } = useWeatherStore.getState();
+const checkWeatherCriteria = async (airport, criteria, weatherStore) => {
+  if (!weatherStore || !criteria.weatherMinima) return true;
   
-  // Essayer de récupérer la météo
-  let weather = getWeatherByIcao(airport.icao);
+  // Récupérer la météo depuis le store
+  const getWeatherByIcao = weatherStore.getState ? 
+    weatherStore.getState().getWeatherByIcao : 
+    weatherStore.getWeatherByIcao;
+  
+  let weather = getWeatherByIcao ? getWeatherByIcao(airport.icao) : null;
   
   if (!weather) {
-    // Tenter de charger la météo
-    try {
-      await fetchWeather(airport.icao);
-      weather = getWeatherByIcao(airport.icao);
-    } catch (error) {
-      // Si pas de météo disponible, on considère OK par défaut
-      return true;
+    // Si pas de météo et qu'on peut la charger
+    if (weatherStore.fetchWeather) {
+      try {
+        await weatherStore.fetchWeather(airport.icao);
+        weather = getWeatherByIcao ? getWeatherByIcao(airport.icao) : null;
+      } catch (error) {
+        // Si pas de météo disponible, on considère OK par défaut
+        return true;
+      }
+    } else {
+      return true; // Pas de météo disponible
     }
   }
   
@@ -144,6 +155,8 @@ const checkWeatherCriteria = async (airport, criteria) => {
   
   const metar = weather.metar.decoded;
   const minima = criteria.weatherMinima[criteria.flightRules.toLowerCase()];
+  
+  if (!minima) return true;
   
   // Vérifier le plafond
   if (metar.clouds?.length > 0) {
@@ -214,12 +227,9 @@ const hasNightLighting = (airport) => {
 };
 
 /**
- * Calcule la distance d'un point à une route
+ * Calcule la distance d'un point à une route (version simplifiée)
  */
 const calculateDistanceFromRoute = (point, departure, arrival) => {
-  // Calcul simplifié : distance au point le plus proche sur la ligne droite
-  // Pour une précision accrue, implémenter la distance point-segment
-  
   const distToDeparture = calculateDistance(point, departure);
   const distToArrival = calculateDistance(point, arrival);
   

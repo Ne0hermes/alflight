@@ -1,3 +1,53 @@
+// Ajoutez ceci au TOUT DÉBUT de votre App.jsx, avant tous les imports
+
+// Override React.createElement pour capturer l'objet problématique
+const originalCreateElement = window.React ? window.React.createElement : null;
+if (originalCreateElement) {
+  window.React.createElement = function(type, props, ...children) {
+    // Vérifier chaque enfant
+    children.forEach((child, index) => {
+      if (child && typeof child === 'object' && !React.isValidElement(child) && !Array.isArray(child)) {
+        // Vérifier si c'est notre objet problématique
+        const keys = Object.keys(child);
+        if (keys.includes('alternates') && keys.includes('hasAlternates') && keys.includes('addAlternate')) {
+          console.error('🚨🚨🚨 OBJET PROBLÉMATIQUE TROUVÉ 🚨🚨🚨');
+          console.error('Type:', type);
+          console.error('Props:', props);
+          console.error('Child index:', index);
+          console.error('Objet:', child);
+          console.error('Clés:', keys);
+          console.error('Stack trace:');
+          console.trace();
+          
+          // Remplacer par un message d'erreur
+          children[index] = `[ERREUR: Objet avec clés ${keys.join(', ')}]`;
+        }
+      }
+    });
+    
+    return originalCreateElement.apply(this, [type, props, ...children]);
+  };
+}
+
+// Ajouter aussi un listener d'erreur global
+window.addEventListener('error', (event) => {
+  if (event.error?.message?.includes('Objects are not valid as a React child')) {
+    console.error('🎯 Erreur React Child capturée !');
+    
+    // Essayer d'extraire l'objet de l'erreur
+    const match = event.error.message.match(/found: object with keys \{([^}]+)\}/);
+    if (match) {
+      console.error('Clés trouvées:', match[1]);
+      
+      // Si c'est notre objet problématique
+      if (match[1].includes('alternates') && match[1].includes('addAlternate')) {
+        console.error('💡 C\'est l\'objet du store Alternates qui est rendu directement !');
+        console.error('Recherchez où useAlternatesStore() est utilisé dans le JSX');
+      }
+    }
+  }
+}, true);
+
 // src/App.jsx
 import React, { lazy, Suspense, memo, useState, useCallback, useMemo, useEffect } from 'react';
 import { FlightSystemProviders } from '@core/contexts';

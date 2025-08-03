@@ -1,80 +1,75 @@
 // src/core/stores/alternatesStore.js
 import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
 
-const useAlternatesStore = create(
-  devtools(
-    persist(
-      (set, get) => ({
-        // État
-        selectedAlternates: [], // Max 3 aérodromes
-        searchZone: null, // Géométrie de la zone de recherche
-        candidateAlternates: [], // Tous les candidats trouvés
-        scoredAlternates: [], // Candidats avec scores
-        searchConfig: {
-          method: 'triangle', // 'triangle' | 'buffer'
-          bufferDistance: 20, // NM
-          maxAlternates: 3,
-          minRunwayLength: null, // Calculé dynamiquement
-          maxFuelRadius: null, // Calculé depuis le carburant
-        },
-        filters: {
-          requireVAC: true,
-          requireFuel: false,
-          requireATC: false,
-          weatherMinima: {
-            vfr: { ceiling: 1500, visibility: 5000 },
-            ifr: { ceiling: 500, visibility: 1500 }
-          }
-        },
-        
-        // Actions
-        setSearchConfig: (config) => set(state => ({
-          searchConfig: { ...state.searchConfig, ...config }
-        })),
-        
-        setSelectedAlternates: (alternates) => set({ 
-          selectedAlternates: alternates.slice(0, 3) 
-        }),
-        
-        addAlternate: (alternate) => set(state => {
-          if (state.selectedAlternates.length >= 3) return state;
-          return {
-            selectedAlternates: [...state.selectedAlternates, alternate]
-          };
-        }),
-        
-        removeAlternate: (icao) => set(state => ({
-          selectedAlternates: state.selectedAlternates.filter(a => a.icao !== icao)
-        })),
-        
-        setCandidates: (candidates) => set({ candidateAlternates: candidates }),
-        
-        setScoredAlternates: (scored) => set({ scoredAlternates: scored }),
-        
-        setSearchZone: (zone) => set({ searchZone: zone }),
-        
-        // Sélecteurs
-        getTopAlternates: () => {
-          const { scoredAlternates } = get();
-          return scoredAlternates.slice(0, 3);
-        },
-        
-        isAlternateSelected: (icao) => {
-          const { selectedAlternates } = get();
-          return selectedAlternates.some(a => a.icao === icao);
-        }
-      }),
-      {
-        name: 'alternates-storage',
-        partialize: (state) => ({
-          selectedAlternates: state.selectedAlternates,
-          searchConfig: state.searchConfig,
-          filters: state.filters
-        })
-      }
-    )
-  )
-);
-
-export { useAlternatesStore };
+export const useAlternatesStore = create((set, get) => ({
+  // État
+  selectedAlternates: [],
+  candidates: [],
+  scoredAlternates: [],
+  searchZone: null,
+  
+  // Configuration de recherche
+  searchConfig: {
+    method: 'triangle', // 'triangle' | 'buffer'
+    bufferDistance: 20, // NM
+  },
+  
+  // Filtres
+  filters: {
+    requireVAC: false,
+    requireFuel: true,
+    requireATC: false,
+    weatherMinima: {
+      vfr: { ceiling: 1500, visibility: 5000 },
+      ifr: { ceiling: 400, visibility: 1500 }
+    }
+  },
+  
+  // Actions
+  setSelectedAlternates: (alternates) => set({ selectedAlternates: alternates }),
+  
+  addAlternate: (alternate) => set((state) => {
+    if (state.selectedAlternates.length >= 3) {
+      console.warn('Maximum 3 alternates autorisés');
+      return state;
+    }
+    if (state.selectedAlternates.some(alt => alt.icao === alternate.icao)) {
+      return state; // Déjà ajouté
+    }
+    return { selectedAlternates: [...state.selectedAlternates, alternate] };
+  }),
+  
+  removeAlternate: (icao) => set((state) => ({
+    selectedAlternates: state.selectedAlternates.filter(alt => alt.icao !== icao)
+  })),
+  
+  setCandidates: (candidates) => set({ candidates }),
+  
+  setScoredAlternates: (scored) => set({ scoredAlternates: scored }),
+  
+  setSearchZone: (zone) => set({ searchZone: zone }),
+  
+  setSearchConfig: (config) => set((state) => ({
+    searchConfig: { ...state.searchConfig, ...config }
+  })),
+  
+  setFilters: (filters) => set((state) => ({
+    filters: { ...state.filters, ...filters }
+  })),
+  
+  // Sélecteurs
+  getAlternateByIcao: (icao) => {
+    const state = get();
+    return state.selectedAlternates.find(alt => alt.icao === icao) ||
+           state.scoredAlternates.find(alt => alt.icao === icao);
+  },
+  
+  hasMaxAlternates: () => get().selectedAlternates.length >= 3,
+  
+  clearAll: () => set({
+    selectedAlternates: [],
+    candidates: [],
+    scoredAlternates: [],
+    searchZone: null
+  })
+}));
