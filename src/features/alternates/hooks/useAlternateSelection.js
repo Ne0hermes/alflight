@@ -9,10 +9,10 @@ import { useWeatherStore } from '@core/stores/weatherStore';
 import { useVACStore } from '@core/stores/vacStore';
 import { 
   calculateSearchZone, 
-  isAirportInSearchZone, 
-  calculateAlternateScore,
+  isAirportInSearchZone,
   calculateDistanceFromRoute 
 } from '../utils/geometryCalculations';
+import { scoreAlternates } from './useAlternateScoring';
 
 /**
  * Hook principal pour la sélection automatique avancée des aérodromes de déroutement
@@ -150,28 +150,29 @@ export const useAlternateSelection = () => {
       flightType
     };
     
-    const scored = filtered.map(airport => {
-      const scoreData = calculateAlternateScore(airport, context);
-      
-      // Enrichir avec les métadonnées
-      return {
-        ...airport,
-        score: scoreData.total,
-        scoreFactors: scoreData.breakdown,
-        // Services
-        services: {
-          fuel: airport.fuel || false,
-          atc: hasATCService(airport),
-          lighting: hasNightLighting(airport)
-        },
-        // Pistes
-        runways: airport.runways || []
-      };
-    });
+    // Utiliser scoreAlternates qui retourne une liste d'aérodromes scorés
+    const scoredAirports = await scoreAlternates(filtered, context);
+    
+    // Enrichir avec les métadonnées
+    const scored = scoredAirports.map(airport => ({
+      ...airport,
+      // Services
+      services: {
+        fuel: airport.fuel || false,
+        atc: hasATCService(airport),
+        lighting: hasNightLighting(airport)
+      },
+      // Pistes
+      runways: airport.runways || []
+    }));
     
     // 5. Trier par score
     scored.sort((a, b) => b.score - a.score);
     setScoredAlternates(scored);
+    
+    // 6. Sélectionner automatiquement les 3 meilleurs
+    const top3 = scored.slice(0, 3);
+    useAlternatesStore.getState().setSelectedAlternates(top3);
     
     console.log(`✅ ${scored.length} alternates scorés`);
   }, [
