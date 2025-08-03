@@ -1,79 +1,6 @@
 // src/features/alternates/utils/geometryCalculations.js
 
 /**
- * Calcule la zone de recherche pour les alternates
- */
-export const calculateSearchZone = (departure, arrival, method = 'triangle', bufferNM = 20) => {
-  const distance = calculateDistance(departure, arrival);
-  
-  if (method === 'triangle') {
-    return calculateEquilateralTriangle(departure, arrival);
-  } else {
-    return calculateBufferZone(departure, arrival, bufferNM);
-  }
-};
-
-/**
- * Calcule un triangle équilatéral autour de la route
- */
-const calculateEquilateralTriangle = (departure, arrival) => {
-  const midpoint = calculateMidpoint(departure, arrival);
-  const distance = calculateDistance(departure, arrival);
-  const height = (Math.sqrt(3) / 2) * distance;
-  
-  // Calcul du 3ème point du triangle (perpendiculaire à la route)
-  const bearing = calculateBearing(departure, arrival);
-  const perpendicularBearing = (bearing + 90) % 360;
-  
-  const vertex = calculateDestination(midpoint, height / 2, perpendicularBearing);
-  
-  return {
-    type: 'triangle',
-    vertices: [departure, arrival, vertex],
-    area: calculateTriangleArea(departure, arrival, vertex),
-    center: calculateCentroid([departure, arrival, vertex])
-  };
-};
-
-/**
- * Calcule une zone tampon autour de la route
- */
-const calculateBufferZone = (departure, arrival, bufferNM) => {
-  const bearing = calculateBearing(departure, arrival);
-  const distance = calculateDistance(departure, arrival);
-  
-  // Créer un polygone rectangulaire avec coins arrondis
-  const corners = [];
-  
-  // Coins au départ
-  corners.push(calculateDestination(departure, bufferNM, bearing - 90));
-  corners.push(calculateDestination(departure, bufferNM, bearing + 90));
-  
-  // Coins à l'arrivée
-  corners.push(calculateDestination(arrival, bufferNM, bearing + 90));
-  corners.push(calculateDestination(arrival, bufferNM, bearing - 90));
-  
-  return {
-    type: 'buffer',
-    vertices: corners,
-    routeDistance: distance,
-    bufferWidth: bufferNM * 2,
-    center: calculateMidpoint(departure, arrival)
-  };
-};
-
-/**
- * Vérifie si un point est dans la zone de recherche
- */
-export const isPointInSearchZone = (point, zone) => {
-  if (zone.type === 'triangle') {
-    return isPointInTriangle(point, zone.vertices);
-  } else {
-    return isPointInPolygon(point, zone.vertices);
-  }
-};
-
-/**
  * Calcule la distance entre deux points en NM
  */
 const calculateDistance = (point1, point2) => {
@@ -226,16 +153,9 @@ const isPointInPolygon = (point, vertices) => {
 };
 
 /**
- * Conversions degrés <-> radians
- */
-const toRad = (deg) => deg * Math.PI / 180;
-const toDeg = (rad) => rad * 180 / Math.PI;
-
-/**
  * Calcule la distance d'un point à un segment de droite
- * Utile pour calculer la distance d'un aérodrome à la route
  */
-export const calculateDistanceToSegment = (point, start, end) => {
+const calculateDistanceToSegment = (point, start, end) => {
   const A = point.lat - start.lat;
   const B = point.lon - start.lon;
   const C = end.lat - start.lat;
@@ -269,7 +189,7 @@ export const calculateDistanceToSegment = (point, start, end) => {
  * Calcule la position relative d'un point par rapport à une route
  * Retourne 'left', 'right' ou 'on' la route
  */
-export const getPointSideOfRoute = (point, start, end) => {
+const getPointSideOfRoute = (point, start, end) => {
   const d = (point.lon - start.lon) * (end.lat - start.lat) - 
             (point.lat - start.lat) * (end.lon - start.lon);
   
@@ -280,7 +200,7 @@ export const getPointSideOfRoute = (point, start, end) => {
 /**
  * Calcule l'intersection de deux lignes (si elle existe)
  */
-export const calculateLineIntersection = (p1, p2, p3, p4) => {
+const calculateLineIntersection = (p1, p2, p3, p4) => {
   const x1 = p1.lon, y1 = p1.lat;
   const x2 = p2.lon, y2 = p2.lat;
   const x3 = p3.lon, y3 = p3.lat;
@@ -303,6 +223,188 @@ export const calculateLineIntersection = (p1, p2, p3, p4) => {
   }
   
   return null; // Pas d'intersection dans les segments
+};
+
+/**
+ * Conversions degrés <-> radians
+ */
+const toRad = (deg) => deg * Math.PI / 180;
+const toDeg = (rad) => rad * 180 / Math.PI;
+
+/**
+ * Calcule un triangle équilatéral autour de la route
+ */
+const calculateEquilateralTriangle = (departure, arrival) => {
+  const midpoint = calculateMidpoint(departure, arrival);
+  const distance = calculateDistance(departure, arrival);
+  const height = (Math.sqrt(3) / 2) * distance;
+  
+  // Calcul du 3ème point du triangle (perpendiculaire à la route)
+  const bearing = calculateBearing(departure, arrival);
+  const perpendicularBearing = (bearing + 90) % 360;
+  
+  const vertex = calculateDestination(midpoint, height / 2, perpendicularBearing);
+  
+  return {
+    type: 'triangle',
+    vertices: [departure, arrival, vertex],
+    area: calculateTriangleArea(departure, arrival, vertex),
+    center: calculateCentroid([departure, arrival, vertex])
+  };
+};
+
+/**
+ * Calcule une zone tampon autour de la route
+ */
+const calculateBufferZone = (departure, arrival, bufferNM) => {
+  const bearing = calculateBearing(departure, arrival);
+  const distance = calculateDistance(departure, arrival);
+  
+  // Créer un polygone rectangulaire avec coins arrondis
+  const corners = [];
+  
+  // Coins au départ
+  corners.push(calculateDestination(departure, bufferNM, bearing - 90));
+  corners.push(calculateDestination(departure, bufferNM, bearing + 90));
+  
+  // Coins à l'arrivée
+  corners.push(calculateDestination(arrival, bufferNM, bearing + 90));
+  corners.push(calculateDestination(arrival, bufferNM, bearing - 90));
+  
+  return {
+    type: 'buffer',
+    vertices: corners,
+    routeDistance: distance,
+    bufferWidth: bufferNM * 2,
+    center: calculateMidpoint(departure, arrival)
+  };
+};
+
+/**
+ * Identifie les points tournants dans une liste de waypoints
+ */
+const identifyTurnPoints = (waypoints) => {
+  const turnPoints = [];
+  
+  for (let i = 1; i < waypoints.length - 1; i++) {
+    const prev = waypoints[i - 1];
+    const current = waypoints[i];
+    const next = waypoints[i + 1];
+    
+    if (!prev.lat || !current.lat || !next.lat) continue;
+    
+    const bearing1 = calculateBearing(
+      { lat: prev.lat, lon: prev.lon },
+      { lat: current.lat, lon: current.lon }
+    );
+    const bearing2 = calculateBearing(
+      { lat: current.lat, lon: current.lon },
+      { lat: next.lat, lon: next.lon }
+    );
+    
+    const turnAngle = Math.abs((bearing2 - bearing1 + 180) % 360 - 180);
+    
+    if (turnAngle > 30) { // Virage significatif > 30°
+      turnPoints.push({
+        ...current,
+        turnAngle,
+        bufferRadius: turnAngle > 60 ? 10 : 5 // 10 NM pour virages > 60°, 5 NM sinon
+      });
+    }
+  }
+  
+  return turnPoints;
+};
+
+// Exporter individuellement les fonctions principales
+export { 
+  calculateDistance, 
+  calculateBearing, 
+  calculateDestination, 
+  calculateMidpoint,
+  calculateDistanceToSegment
+};
+
+/**
+ * Calcule la zone de recherche pour les alternates
+ */
+export const calculateSearchZone = (departure, arrival, waypoints = [], fuelData = null) => {
+  const distance = calculateDistance(departure, arrival);
+  
+  // Utiliser toujours la méthode triangle équilatéral pour cette application
+  const zone = calculateEquilateralTriangle(departure, arrival);
+  
+  // Ajouter le rayon dynamique basé sur le carburant
+  if (fuelData && fuelData.aircraft && fuelData.fuelRemaining) {
+    const usableFuel = fuelData.fuelRemaining - (fuelData.reserves?.final || 0) - (fuelData.reserves?.alternate || 0);
+    if (usableFuel > 0) {
+      const enduranceHours = usableFuel / fuelData.aircraft.fuelConsumption;
+      const maxRadius = enduranceHours * fuelData.aircraft.cruiseSpeedKt * 0.8; // 80% de marge
+      zone.dynamicRadius = Math.max(15, Math.min(50, maxRadius)); // Entre 15 et 50 NM
+    } else {
+      zone.dynamicRadius = 25; // Valeur par défaut
+    }
+  } else {
+    zone.dynamicRadius = 25; // Valeur par défaut
+  }
+  
+  // Identifier les points tournants si waypoints fournis
+  if (waypoints && waypoints.length > 2) {
+    zone.turnPoints = identifyTurnPoints(waypoints);
+  }
+  
+  return zone;
+};
+
+/**
+ * Vérifie si un aéroport est dans la zone de recherche
+ */
+export const isAirportInSearchZone = (airport, searchZone) => {
+  if (!airport || !searchZone) return { isInZone: false, reason: 'Données manquantes' };
+  
+  const point = airport.coordinates || airport.position || { 
+    lat: airport.lat, 
+    lon: airport.lon || airport.lng 
+  };
+  
+  if (!point.lat || !point.lon) return { isInZone: false, reason: 'Coordonnées invalides' };
+  
+  // Vérifier si dans le triangle principal
+  if (searchZone.vertices && isPointInTriangle(point, searchZone.vertices)) {
+    return { isInZone: true, location: 'triangle' };
+  }
+  
+  // Vérifier si dans les tampons des points tournants
+  if (searchZone.turnPoints) {
+    for (const turnPoint of searchZone.turnPoints) {
+      const distance = calculateDistance(point, turnPoint);
+      if (distance <= turnPoint.bufferRadius) {
+        return { isInZone: true, location: 'turnBuffer', turnPoint: turnPoint.name };
+      }
+    }
+  }
+  
+  // Vérifier si dans la marge de 5 NM
+  if (searchZone.vertices) {
+    for (let i = 0; i < searchZone.vertices.length; i++) {
+      const start = searchZone.vertices[i];
+      const end = searchZone.vertices[(i + 1) % searchZone.vertices.length];
+      const distToSegment = calculateDistanceToSegment(point, start, end);
+      if (distToSegment <= 5) { // 5 NM de marge
+        return { isInZone: true, location: 'margin' };
+      }
+    }
+  }
+  
+  return { isInZone: false, reason: 'Hors zone' };
+};
+
+/**
+ * Calcule la distance d'un point à une route (entre deux points)
+ */
+export const calculateDistanceFromRoute = (point, departure, arrival) => {
+  // Utiliser la fonction existante calculateDistanceToSegment
+  return calculateDistanceToSegment(point, departure, arrival);
 };
 
 /**

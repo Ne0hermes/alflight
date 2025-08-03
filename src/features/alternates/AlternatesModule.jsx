@@ -1,4 +1,4 @@
-// src/features/alternates/AlternatesModuleAdvanced.jsx
+// src/features/alternates/AlternatesModule.jsx
 
 import React, { memo } from 'react';
 import { Navigation2, AlertTriangle, Fuel, Wind, Plane, Info, RefreshCw } from 'lucide-react';
@@ -6,7 +6,7 @@ import { sx } from '@shared/styles/styleSystem';
 import { useAdvancedAlternateSelection } from './hooks/useAdvancedAlternateSelection';
 import { AlternateMap } from './components/AlternateMap';
 
-export const AlternatesModuleAdvanced = memo(() => {
+const AlternatesModule = memo(() => {
   const {
     searchZone,
     selectedAlternates,
@@ -226,7 +226,7 @@ const ScoringExplanation = memo(({ alternates }) => (
           {alt.icao} - {alt.name} (Score total: {(alt.score * 100).toFixed(0)}%)
         </h5>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
-          {Object.entries(alt.scoreBreakdown).map(([criterion, value]) => (
+          {alt.scoreBreakdown && Object.entries(alt.scoreBreakdown).map(([criterion, value]) => (
             <div key={criterion} style={sx.text.xs}>
               <div style={sx.text.muted}>{getCriterionLabel(criterion)}</div>
               <div style={sx.text.bold}>{(value * 100 / getWeight(criterion)).toFixed(0)}%</div>
@@ -325,8 +325,9 @@ const getWeight = (criterion) => {
   return weights[criterion] || 1;
 };
 
-AlternatesModuleAdvanced.displayName = 'AlternatesModuleAdvanced';
+AlternatesModule.displayName = 'AlternatesModule';
 StatCard.displayName = 'StatCard';
 ScoringExplanation.displayName = 'ScoringExplanation';
 
-export default AlternatesModuleAdvanced;
+// Export par défaut pour le lazy loading
+export default AlternatesModule;
