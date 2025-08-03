@@ -1,117 +1,223 @@
 // src/features/alternates/hooks/useAlternateSelection.js
+
 import { useMemo, useCallback, useEffect } from 'react';
 import { useAlternatesStore } from '@core/stores/alternatesStore';
 import { useOpenAIPStore, openAIPSelectors } from '@core/stores/openAIPStore';
-import { useNavigation, useAircraft, useFuel } from '@core/contexts';
+import { useNavigation, useAircraft, useFuel, useWeather } from '@core/contexts';
 import { useNavigationResults } from '@hooks/useNavigationResults';
-import { calculateSearchZone, isPointInSearchZone } from '../utils/geometryCalculations';
-import { filterAlternates } from '../utils/alternateFilters';
-import { scoreAlternates } from './useAlternateScoring';
+import { useWeatherStore } from '@core/stores/weatherStore';
+import { useVACStore } from '@core/stores/vacStore';
+import { 
+  calculateSearchZone, 
+  isAirportInSearchZone, 
+  calculateAlternateScore,
+  calculateDistanceFromRoute 
+} from '../utils/geometryCalculations';
 
+/**
+ * Hook principal pour la sélection automatique avancée des aérodromes de déroutement
+ * Utilise la logique géométrique complète avec triangle équilatéral et scoring multi-critères
+ */
 export const useAlternateSelection = () => {
   const { waypoints, flightType } = useNavigation();
   const { selectedAircraft } = useAircraft();
-  const { calculateTotal } = useFuel();
+  const { fuelData, fobFuel, calculateTotal } = useFuel();
   const navigationResults = useNavigationResults();
+  const weatherStore = useWeatherStore();
+  const vacStore = useVACStore();
   
   const airports = openAIPSelectors.useFilteredAirports();
   const { 
-    searchConfig, 
-    filters,
+    searchConfig,
     setCandidates,
     setScoredAlternates,
     setSearchZone,
     selectedAlternates
   } = useAlternatesStore();
   
-  // Calculer les paramètres dynamiques
+  // Validation des données
+  const isReady = useMemo(() => {
+    return (
+      waypoints.length >= 2 &&
+      waypoints[0].lat && waypoints[0].lon &&
+      waypoints[waypoints.length - 1].lat && waypoints[waypoints.length - 1].lon &&
+      selectedAircraft &&
+      navigationResults
+    );
+  }, [waypoints, selectedAircraft, navigationResults]);
+  
+  // Calcul des données carburant pour le rayon dynamique
+  const fuelDataForRadius = useMemo(() => {
+    if (!selectedAircraft || !fobFuel || !navigationResults) return null;
+    
+    const totalRequired = calculateTotal('ltr');
+    const fuelRemaining = fobFuel.ltr - navigationResults.fuelRequired;
+    
+    return {
+      aircraft: selectedAircraft,
+      fuelRemaining,
+      reserves: {
+        final: navigationResults.regulationReserveLiters,
+        alternate: fuelData.alternate.ltr
+      }
+    };
+  }, [selectedAircraft, fobFuel, navigationResults, calculateTotal, fuelData]);
+  
+  // Calcul de la zone de recherche
+  const searchZone = useMemo(() => {
+    if (!isReady) return null;
+    
+    const departure = {
+      lat: waypoints[0].lat,
+      lon: waypoints[0].lon
+    };
+    const arrival = {
+      lat: waypoints[waypoints.length - 1].lat,
+      lon: waypoints[waypoints.length - 1].lon
+    };
+    
+    return calculateSearchZone(departure, arrival, waypoints, fuelDataForRadius);
+  }, [waypoints, fuelDataForRadius, isReady]);
+  
+  // Paramètres dynamiques
   const dynamicParams = useMemo(() => {
-    if (!selectedAircraft || !navigationResults) return null;
+    if (!selectedAircraft || !navigationResults || !searchZone) return null;
     
-    // Distance d'atterrissage requise (avec marge de sécurité)
     const landingDistance = selectedAircraft.performances?.landingDistance || 500;
-    const requiredRunwayLength = Math.ceil(landingDistance * 1.43); // Facteur 1.43 réglementaire
-    
-    // Rayon max basé sur le carburant
-    const totalFuelL = calculateTotal('ltr');
-    const reserveFuelL = navigationResults.regulationReserveLiters;
-    const availableFuelL = totalFuelL - reserveFuelL;
-    const fuelConsumptionLH = selectedAircraft.fuelConsumption;
-    const cruiseSpeed = selectedAircraft.cruiseSpeedKt;
-    
-    const maxFlightTimeH = availableFuelL / fuelConsumptionLH;
-    const maxRadiusNM = maxFlightTimeH * cruiseSpeed;
+    const requiredRunwayLength = Math.ceil(landingDistance * 1.43);
     
     return {
       requiredRunwayLength,
-      maxRadiusNM,
+      maxRadiusNM: searchZone.dynamicRadius,
       flightRules: flightType.rules,
       isDayFlight: flightType.period === 'jour'
     };
-  }, [selectedAircraft, navigationResults, calculateTotal, flightType]);
+  }, [selectedAircraft, navigationResults, searchZone, flightType]);
   
-  // Calculer la zone de recherche
-  const searchZone = useMemo(() => {
-    if (waypoints.length < 2) return null;
-    
-    const departure = waypoints[0];
-    const arrival = waypoints[waypoints.length - 1];
-    
-    if (!departure.lat || !arrival.lat) return null;
-    
-    return calculateSearchZone(
-      { lat: departure.lat, lon: departure.lon },
-      { lat: arrival.lat, lon: arrival.lon },
-      searchConfig.method,
-      searchConfig.bufferDistance
-    );
-  }, [waypoints, searchConfig]);
-  
-  // Trouver et filtrer les candidats
+  // Fonction de recherche et scoring
   const findAlternates = useCallback(async () => {
-    if (!searchZone || !dynamicParams) return;
+    if (!searchZone || !selectedAircraft || !dynamicParams) return;
+    
+    console.log('🔍 Recherche avancée d\'alternates...');
     
     // 1. Filtrer les aérodromes dans la zone
-    const candidatesInZone = airports.filter(airport => {
-      const point = { lat: airport.coordinates.lat, lon: airport.coordinates.lon };
-      return isPointInSearchZone(point, searchZone);
-    });
+    const candidatesInZone = [];
     
-    // 2. Appliquer les filtres
-    const filtered = await filterAlternates(candidatesInZone, {
-      ...filters,
-      ...dynamicParams,
-      departure: waypoints[0],
-      arrival: waypoints[waypoints.length - 1]
+    for (const airport of airports) {
+      const zoneCheck = isAirportInSearchZone(airport, searchZone);
+      
+      if (zoneCheck.isInZone) {
+        // Enrichir avec les informations de distance
+        candidatesInZone.push({
+          ...airport,
+          distance: calculateDistanceFromRoute(
+            airport.coordinates,
+            { lat: waypoints[0].lat, lon: waypoints[0].lon },
+            { lat: waypoints[waypoints.length - 1].lat, lon: waypoints[waypoints.length - 1].lon }
+          ),
+          position: airport.coordinates,
+          zoneInfo: zoneCheck
+        });
+      }
+    }
+    
+    // 2. Filtrer selon les critères
+    const filtered = candidatesInZone.filter(airport => {
+      // Longueur de piste
+      const hasAdequateRunway = airport.runways?.some(rwy => 
+        (rwy.length || 0) >= dynamicParams.requiredRunwayLength
+      );
+      
+      return hasAdequateRunway;
     });
     
     setCandidates(filtered);
     
-    // 3. Calculer les scores
-    const scored = await scoreAlternates(filtered, {
-      departure: waypoints[0],
-      arrival: waypoints[waypoints.length - 1],
+    // 3. Récupérer la météo
+    await Promise.all(
+      filtered.slice(0, 10).map(airport => 
+        weatherStore.fetchWeather(airport.icao).catch(() => null)
+      )
+    );
+    
+    // 4. Calculer les scores
+    const context = {
+      departure: { lat: waypoints[0].lat, lon: waypoints[0].lon },
+      arrival: { lat: waypoints[waypoints.length - 1].lat, lon: waypoints[waypoints.length - 1].lon },
+      waypoints,
       aircraft: selectedAircraft,
-      flightType,
-      searchZone
+      weather: weatherStore.weatherData,
+      flightType
+    };
+    
+    const scored = filtered.map(airport => {
+      const scoreData = calculateAlternateScore(airport, context);
+      
+      // Enrichir avec les métadonnées
+      return {
+        ...airport,
+        score: scoreData.total,
+        scoreFactors: scoreData.breakdown,
+        // Services
+        services: {
+          fuel: airport.fuel || false,
+          atc: hasATCService(airport),
+          lighting: hasNightLighting(airport)
+        },
+        // Pistes
+        runways: airport.runways || []
+      };
     });
     
+    // 5. Trier par score
+    scored.sort((a, b) => b.score - a.score);
     setScoredAlternates(scored);
-  }, [searchZone, dynamicParams, airports, filters, waypoints, selectedAircraft, flightType]);
+    
+    console.log(`✅ ${scored.length} alternates scorés`);
+  }, [
+    searchZone,
+    airports,
+    selectedAircraft,
+    dynamicParams,
+    waypoints,
+    weatherStore,
+    flightType,
+    setCandidates,
+    setScoredAlternates
+  ]);
   
-  // Mettre à jour automatiquement quand les paramètres changent
+  // Mise à jour automatique
   useEffect(() => {
     if (searchZone) {
       setSearchZone(searchZone);
       findAlternates();
     }
-  }, [searchZone, findAlternates]);
+  }, [searchZone, findAlternates, setSearchZone]);
   
   return {
     searchZone,
     dynamicParams,
     selectedAlternates,
     findAlternates,
-    isReady: !!searchZone && !!dynamicParams
+    isReady
   };
+};
+
+// Fonctions utilitaires
+const hasATCService = (airport) => {
+  if (airport.frequencies) {
+    return airport.frequencies.some(freq => 
+      ['TWR', 'APP', 'AFIS'].includes(freq.type)
+    );
+  }
+  return ['medium_airport', 'large_airport'].includes(airport.type);
+};
+
+const hasNightLighting = (airport) => {
+  if (airport.runways) {
+    return airport.runways.some(rwy => 
+      rwy.lighting || rwy.lights || rwy.hasLighting
+    );
+  }
+  return airport.type !== 'small_airport';
 };
