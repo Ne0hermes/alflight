@@ -1,8 +1,8 @@
 // src/features/alternates/hooks/useAlternatesIntegration.js
 
 import { useAlternatesStore } from '@core/stores/alternatesStore';
-import { useNavigation, useAircraft } from '@core/contexts';  // Ajout de useAircraft
-import { useVACStore } from '@core/stores/vacStore';  // Ajout pour useAlternatesForVAC
+import { useNavigation, useAircraft } from '@core/contexts';
+import { useVACStore } from '@core/stores/vacStore';
 import { useCallback } from 'react';
 
 /**
@@ -22,7 +22,8 @@ export const useAlternatesForNavigation = () => {
       lat: alternate.position.lat,
       lon: alternate.position.lon,
       elevation: alternate.elevation,
-      airportName: alternate.name
+      airportName: alternate.name,
+      selectionType: alternate.selectionType // Conserver le type (departure/arrival)
     };
     
     // Insérer avant la destination finale
@@ -31,11 +32,22 @@ export const useAlternatesForNavigation = () => {
     setWaypoints(newWaypoints);
   }, [waypoints, setWaypoints]);
   
+  // Obtenir les alternates par type
+  const departureAlternate = selectedAlternates.find(alt => alt.selectionType === 'departure');
+  const arrivalAlternate = selectedAlternates.find(alt => alt.selectionType === 'arrival');
+  
   return {
     alternates: selectedAlternates,
+    departureAlternate,
+    arrivalAlternate,
     hasAlternates: selectedAlternates.length > 0,
+    hasBothAlternates: !!departureAlternate && !!arrivalAlternate,
     addAlternateAsWaypoint,
-    isAlternate: (icao) => selectedAlternates.some(alt => alt.icao === icao)
+    isAlternate: (icao) => selectedAlternates.some(alt => alt.icao === icao),
+    getAlternateType: (icao) => {
+      const alt = selectedAlternates.find(alt => alt.icao === icao);
+      return alt?.selectionType || null;
+    }
   };
 };
 
@@ -45,7 +57,7 @@ export const useAlternatesForNavigation = () => {
  */
 export const useAlternatesForFuel = () => {
   const { selectedAlternates } = useAlternatesStore();
-  const { selectedAircraft } = useAircraft();  // Maintenant importé correctement
+  const { selectedAircraft } = useAircraft();
   const { waypoints } = useNavigation();
   
   const calculateAlternateFuel = useCallback(() => {
@@ -54,28 +66,65 @@ export const useAlternatesForFuel = () => {
     const arrival = waypoints[waypoints.length - 1];
     if (!arrival) return 0;
     
-    // Trouver l'alternate le plus éloigné de l'arrivée
-    let maxDistance = 0;
+    // Pour le système dual, calculer le carburant pour chaque alternate
+    let totalFuel = 0;
+    
     selectedAlternates.forEach(alt => {
-      const distance = calculateDistance(
-        { lat: arrival.lat, lon: arrival.lon },
-        alt.position
-      );
-      maxDistance = Math.max(maxDistance, distance);
+      let distance = 0;
+      
+      if (alt.selectionType === 'departure') {
+        // Distance depuis le départ
+        const departure = waypoints[0];
+        if (departure) {
+          distance = calculateDistance(
+            { lat: departure.lat, lon: departure.lon },
+            alt.position
+          );
+        }
+      } else if (alt.selectionType === 'arrival') {
+        // Distance depuis l'arrivée
+        distance = calculateDistance(
+          { lat: arrival.lat, lon: arrival.lon },
+          alt.position
+        );
+      }
+      
+      // Calculer le carburant nécessaire
+      const fuelConsumption = selectedAircraft.fuelConsumption;
+      const cruiseSpeed = selectedAircraft.cruiseSpeedKt;
+      const flightTime = distance / cruiseSpeed;
+      
+      totalFuel += flightTime * fuelConsumption;
     });
     
-    // Calculer le carburant nécessaire
-    const fuelConsumption = selectedAircraft.fuelConsumption;
-    const cruiseSpeed = selectedAircraft.cruiseSpeedKt;
-    const flightTime = maxDistance / cruiseSpeed;
-    
-    return flightTime * fuelConsumption;
+    // Retourner le carburant pour l'alternate le plus consommateur
+    return totalFuel / selectedAlternates.length; // Moyenne pour simplifier
   }, [selectedAlternates, selectedAircraft, waypoints]);
+  
+  // Calculer les distances pour chaque alternate
+  const alternateDistances = selectedAlternates.map(alt => {
+    const reference = alt.selectionType === 'departure' ? waypoints[0] : waypoints[waypoints.length - 1];
+    if (!reference) return { icao: alt.icao, distance: 0, type: alt.selectionType };
+    
+    return {
+      icao: alt.icao,
+      distance: calculateDistance(
+        { lat: reference.lat, lon: reference.lon },
+        alt.position
+      ),
+      type: alt.selectionType
+    };
+  });
   
   return {
     alternateFuelRequired: calculateAlternateFuel(),
     alternatesCount: selectedAlternates.length,
-    alternateIcaos: selectedAlternates.map(alt => alt.icao)
+    alternateIcaos: selectedAlternates.map(alt => alt.icao),
+    alternatesByType: {
+      departure: selectedAlternates.filter(alt => alt.selectionType === 'departure'),
+      arrival: selectedAlternates.filter(alt => alt.selectionType === 'arrival')
+    },
+    alternateDistances
   };
 };
 
@@ -85,7 +134,7 @@ export const useAlternatesForFuel = () => {
  */
 export const useAlternatesForPerformance = () => {
   const { selectedAlternates, scoredAlternates } = useAlternatesStore();
-  const { selectedAircraft } = useAircraft();  // Ajout de l'import
+  const { selectedAircraft } = useAircraft();
   
   const checkAlternateCompatibility = useCallback((alternate) => {
     if (!selectedAircraft) return { compatible: false, reasons: ['Pas d\'avion sélectionné'] };
@@ -114,12 +163,38 @@ export const useAlternatesForPerformance = () => {
       }
     }
     
+    // Vérifier les services pour le type de vol
+    if (selectedAircraft.requiresATC && !alternate.services?.atc) {
+      compatible = false;
+      reasons.push('ATC requis mais non disponible');
+    }
+    
     return { compatible, reasons };
   }, [selectedAircraft]);
+  
+  // Vérifier la compatibilité par type
+  const compatibilityByType = {
+    departure: selectedAlternates
+      .filter(alt => alt.selectionType === 'departure')
+      .map(alt => ({
+        ...alt,
+        compatibility: checkAlternateCompatibility(alt)
+      })),
+    arrival: selectedAlternates
+      .filter(alt => alt.selectionType === 'arrival')
+      .map(alt => ({
+        ...alt,
+        compatibility: checkAlternateCompatibility(alt)
+      }))
+  };
   
   return {
     checkAlternateCompatibility,
     compatibleAlternates: scoredAlternates.filter(alt => 
+      checkAlternateCompatibility(alt).compatible
+    ),
+    compatibilityByType,
+    allAlternatesCompatible: selectedAlternates.every(alt => 
       checkAlternateCompatibility(alt).compatible
     )
   };
@@ -131,10 +206,12 @@ export const useAlternatesForPerformance = () => {
  */
 export const useAlternatesForVAC = () => {
   const { selectedAlternates } = useAlternatesStore();
-  const { charts, downloadChart, selectChart } = useVACStore();  // Maintenant importé
+  const { charts, downloadChart, selectChart } = useVACStore();
   
   const alternateChartsStatus = selectedAlternates.map(alt => ({
     icao: alt.icao,
+    name: alt.name,
+    type: alt.selectionType,
     hasVAC: charts[alt.icao]?.isDownloaded || false,
     chart: charts[alt.icao]
   }));
@@ -147,10 +224,23 @@ export const useAlternatesForVAC = () => {
     return Promise.all(promises);
   }, [selectedAlternates, charts, downloadChart]);
   
+  // Statistiques par type
+  const chartStatusByType = {
+    departure: alternateChartsStatus.filter(status => status.type === 'departure'),
+    arrival: alternateChartsStatus.filter(status => status.type === 'arrival')
+  };
+  
+  const allChartsDownloaded = alternateChartsStatus.every(status => status.hasVAC);
+  const missingCharts = alternateChartsStatus.filter(status => !status.hasVAC);
+  
   return {
     alternateChartsStatus,
+    chartStatusByType,
+    allChartsDownloaded,
+    missingCharts,
     downloadAlternateCharts,
-    viewAlternateChart: (icao) => selectChart(icao)
+    viewAlternateChart: (icao) => selectChart(icao),
+    downloadSpecificChart: (icao) => downloadChart(icao)
   };
 };
 

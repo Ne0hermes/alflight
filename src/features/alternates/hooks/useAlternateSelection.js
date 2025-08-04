@@ -2,7 +2,7 @@
 
 import { useMemo, useCallback, useEffect, useState } from 'react';
 import { useAlternatesStore } from '@core/stores/alternatesStore';
-import { useOpenAIPStore, openAIPSelectors } from '@core/stores/openAIPStore';
+import { useOpenAIPStore } from '@core/stores/openAIPStore';
 import { useNavigation, useAircraft, useFuel, useWeather } from '@core/contexts';
 import { useNavigationResults } from '@hooks/useNavigationResults';
 import { useWeatherStore } from '@core/stores/weatherStore';
@@ -26,6 +26,7 @@ const getMinimalAirports = () => {
       lat: 49.0097,
       lon: 2.5479,
       coordinates: { lat: 49.0097, lon: 2.5479 },
+      position: { lat: 49.0097, lon: 2.5479 },
       elevation: 392,
       runways: [{ length: 4200, width: 60, surface: 'asphalt' }],
       fuel: true,
@@ -39,6 +40,7 @@ const getMinimalAirports = () => {
       lat: 48.7233,
       lon: 2.3794,
       coordinates: { lat: 48.7233, lon: 2.3794 },
+      position: { lat: 48.7233, lon: 2.3794 },
       elevation: 291,
       runways: [{ length: 3650, width: 45, surface: 'asphalt' }],
       fuel: true,
@@ -52,6 +54,7 @@ const getMinimalAirports = () => {
       lat: 43.6294,
       lon: 1.3639,
       coordinates: { lat: 43.6294, lon: 1.3639 },
+      position: { lat: 43.6294, lon: 1.3639 },
       elevation: 499,
       runways: [{ length: 3500, width: 45, surface: 'asphalt' }],
       fuel: true,
@@ -65,6 +68,7 @@ const getMinimalAirports = () => {
       lat: 43.4367,
       lon: 5.2144,
       coordinates: { lat: 43.4367, lon: 5.2144 },
+      position: { lat: 43.4367, lon: 5.2144 },
       elevation: 69,
       runways: [{ length: 3500, width: 45, surface: 'asphalt' }],
       fuel: true,
@@ -78,6 +82,7 @@ const getMinimalAirports = () => {
       lat: 45.7256,
       lon: 5.0811,
       coordinates: { lat: 45.7256, lon: 5.0811 },
+      position: { lat: 45.7256, lon: 5.0811 },
       elevation: 821,
       runways: [{ length: 4000, width: 45, surface: 'asphalt' }],
       fuel: true,
@@ -91,6 +96,7 @@ const getMinimalAirports = () => {
       lat: 44.8283,
       lon: -0.7156,
       coordinates: { lat: 44.8283, lon: -0.7156 },
+      position: { lat: 44.8283, lon: -0.7156 },
       elevation: 162,
       runways: [{ length: 3100, width: 45, surface: 'asphalt' }],
       fuel: true,
@@ -104,6 +110,7 @@ const getMinimalAirports = () => {
       lat: 43.6584,
       lon: 7.2159,
       coordinates: { lat: 43.6584, lon: 7.2159 },
+      position: { lat: 43.6584, lon: 7.2159 },
       elevation: 13,
       runways: [{ length: 2960, width: 45, surface: 'asphalt' }],
       fuel: true,
@@ -117,6 +124,7 @@ const getMinimalAirports = () => {
       lat: 45.3629,
       lon: 5.3294,
       coordinates: { lat: 45.3629, lon: 5.3294 },
+      position: { lat: 45.3629, lon: 5.3294 },
       elevation: 1329,
       runways: [{ length: 3050, width: 45, surface: 'asphalt' }],
       fuel: true,
@@ -130,6 +138,7 @@ const getMinimalAirports = () => {
       lat: 48.5383,
       lon: 7.6283,
       coordinates: { lat: 48.5383, lon: 7.6283 },
+      position: { lat: 48.5383, lon: 7.6283 },
       elevation: 505,
       runways: [{ length: 2400, width: 45, surface: 'asphalt' }],
       fuel: true,
@@ -143,6 +152,7 @@ const getMinimalAirports = () => {
       lat: 47.5896,
       lon: 7.5299,
       coordinates: { lat: 47.5896, lon: 7.5299 },
+      position: { lat: 47.5896, lon: 7.5299 },
       elevation: 885,
       runways: [{ length: 3900, width: 60, surface: 'asphalt' }],
       fuel: true,
@@ -182,10 +192,20 @@ export const useAlternateSelection = () => {
       setIsLoadingAirports(true);
       
       try {
-        // D'abord essayer depuis le store
-        let loadedAirports = openAIPSelectors.useFilteredAirports?.() || [];
+        // Accéder directement au store OpenAIP
+        const openAIPStore = useOpenAIPStore.getState();
+        let loadedAirports = [];
         
-        // Si pas d'aérodromes depuis le store, charger depuis le service
+        // Essayer d'obtenir les aérodromes depuis le store
+        if (openAIPStore.airports && Array.isArray(openAIPStore.airports)) {
+          // Filtrer les aérodromes français
+          loadedAirports = openAIPStore.airports.filter(apt => 
+            apt.icao && apt.icao.startsWith('LF')
+          );
+          console.log(`📊 ${loadedAirports.length} aérodromes trouvés dans le store`);
+        }
+        
+        // Si pas d'aérodromes dans le store, charger depuis le service
         if (!loadedAirports || loadedAirports.length === 0) {
           console.warn('⚠️ Store vide, chargement depuis openAIPService...');
           
@@ -202,20 +222,20 @@ export const useAlternateSelection = () => {
               name: apt.name,
               type: apt.type === 'AIRPORT' ? 'large_airport' : 
                     apt.type === 'AIRFIELD' ? 'small_airport' : 'medium_airport',
-              lat: apt.coordinates.lat,
-              lon: apt.coordinates.lon,
-              coordinates: apt.coordinates,
+              lat: apt.coordinates?.lat || apt.lat,
+              lon: apt.coordinates?.lon || apt.lon || apt.lng,
+              coordinates: apt.coordinates || { lat: apt.lat, lon: apt.lon || apt.lng },
+              position: apt.coordinates || { lat: apt.lat, lon: apt.lon || apt.lng },
               elevation: apt.elevation,
-              runways: [
-                // Données de piste par défaut basées sur le type et l'ICAO
+              runways: apt.runways || [
                 {
                   length: getDefaultRunwayLength(apt.icao, apt.type),
                   width: apt.type === 'AIRPORT' ? 45 : 20,
                   surface: apt.type === 'AIRPORT' ? 'asphalt' : 'grass'
                 }
               ],
-              fuel: apt.type === 'AIRPORT',
-              services: {
+              fuel: apt.fuel || apt.type === 'AIRPORT',
+              services: apt.services || {
                 fuel: apt.type === 'AIRPORT',
                 atc: apt.type === 'AIRPORT',
                 lighting: apt.type === 'AIRPORT'
@@ -226,6 +246,23 @@ export const useAlternateSelection = () => {
             console.error('❌ Erreur import service:', error);
             loadedAirports = getMinimalAirports();
           }
+        } else {
+          // Formater les aérodromes du store pour s'assurer qu'ils ont la bonne structure
+          loadedAirports = loadedAirports.map(apt => ({
+            ...apt,
+            coordinates: apt.coordinates || { lat: apt.lat, lon: apt.lon || apt.lng },
+            position: apt.coordinates || { lat: apt.lat, lon: apt.lon || apt.lng },
+            runways: apt.runways || [{
+              length: getDefaultRunwayLength(apt.icao, apt.type),
+              width: 45,
+              surface: 'asphalt'
+            }],
+            services: apt.services || {
+              fuel: apt.fuel || false,
+              atc: apt.type !== 'small_airport',
+              lighting: apt.type !== 'small_airport'
+            }
+          }));
         }
         
         setAirports(loadedAirports);
@@ -322,7 +359,8 @@ export const useAlternateSelection = () => {
       console.log('🗺️ Zone calculée:', {
         type: zone.type,
         radius: zone.radius?.toFixed(1) + ' NM',
-        area: zone.area?.toFixed(0) + ' NM²'
+        area: zone.area?.toFixed(0) + ' NM²',
+        hasPerpendicular: !!zone.perpendicular
       });
     }
     
@@ -333,14 +371,10 @@ export const useAlternateSelection = () => {
   const dynamicParams = useMemo(() => {
     if (!selectedAircraft || !navigationResults || !searchZone) return null;
     
-    // Utiliser une longueur par défaut plus réaliste si pas de données
-    const landingDistance = selectedAircraft.performances?.landingDistance || 200; // Réduit à 200m !
+    const landingDistance = selectedAircraft.performances?.landingDistance || 200;
     const requiredRunwayLength = Math.ceil(landingDistance * 1.43);
+    const minRunwayLength = 300; // Minimum acceptable
     
-    // Pour les petits avions, être moins restrictif
-    const minRunwayLength = 300; // TEMPORAIRE : Accepter toute piste de plus de 300m !
-    
-    // DEBUG: Afficher les critères
     console.log('🛬 DEBUG - Critères de piste:', {
       landingDistance,
       requiredRunwayLength,
@@ -367,7 +401,6 @@ export const useAlternateSelection = () => {
       return;
     }
     
-    // ÉVITER LES APPELS RÉPÉTÉS
     const isSearching = useAlternatesStore.getState().isSearching;
     if (isSearching) {
       console.log('🔍 Recherche déjà en cours, abandon');
@@ -377,52 +410,20 @@ export const useAlternateSelection = () => {
     try {
       useAlternatesStore.getState().setIsSearching?.(true);
     
-    console.log('🔍 Recherche avancée d\'alternates...');
-    console.log('Zone de recherche:', searchZone);
-    console.log(`Type de zone: ${searchZone.type}, Rayon: ${searchZone.radius?.toFixed(1)} NM`);
-    console.log('Nombre total d\'aérodromes disponibles:', airports?.length || 0);
-    
-    // 1. Filtrer les aérodromes dans la zone
-    const candidatesInZone = [];
-    let testedCount = 0;
-    let debugInfo = { inPill: 0, inTurnBuffer: 0, tooFar: 0 };
-    
-    // DEBUG: Vérifier la structure du premier aérodrome
-    if (airports && airports.length > 0) {
-      console.log('🔍 Structure premier aérodrome:', {
-        icao: airports[0].icao,
-        hasCoordinates: !!airports[0].coordinates,
-        hasPosition: !!airports[0].position,
-        hasLat: !!airports[0].lat,
-        hasLon: !!(airports[0].lon || airports[0].lng),
-        sample: airports[0]
-      });
-    }
-    
-    // OPTION DEBUG : Forcer l'acceptation de TOUS les aérodromes
-    const FORCE_ACCEPT_ALL = false; // Retour au comportement normal avec zone géographique
-    
-    if (FORCE_ACCEPT_ALL) {
-      console.log('⚠️ MODE DEBUG : Acceptation forcée de TOUS les aérodromes');
+      console.log('🔍 Recherche avancée d\'alternates...');
+      console.log('Zone de recherche:', searchZone);
+      console.log(`Type de zone: ${searchZone.type}, Rayon: ${searchZone.radius?.toFixed(1)} NM`);
+      console.log('Nombre total d\'aérodromes disponibles:', airports?.length || 0);
       
-      // Ajouter TOUS les aérodromes comme candidats
-      for (const airport of airports) {
-        candidatesInZone.push({
-          ...airport,
-          distance: 10, // Distance arbitraire pour le debug
-          position: airport.coordinates || airport.position || { lat: airport.lat, lon: airport.lon || airport.lng },
-          zoneInfo: { isInZone: true, location: 'forced', distanceToRoute: 10 }
-        });
-      }
+      // 1. Filtrer les aérodromes dans la zone
+      const candidatesInZone = [];
+      let testedCount = 0;
+      let debugInfo = { inPill: 0, inTurnBuffer: 0, tooFar: 0 };
       
-      console.log(`🎯 ${candidatesInZone.length} aérodromes forcés dans la zone`);
-    } else {
-      // Comportement normal avec vérification de zone
       for (const airport of airports) {
         testedCount++;
         const zoneCheck = isAirportInSearchZone(airport, searchZone);
         
-        // DEBUG DÉTAILLÉ pour les 5 premiers aérodromes
         if (testedCount <= 5) {
           console.log(`🎯 Test zone pour ${airport.icao}:`, {
             position: airport.coordinates || airport.position || { lat: airport.lat, lon: airport.lon || airport.lng },
@@ -433,7 +434,6 @@ export const useAlternateSelection = () => {
         }
         
         if (zoneCheck.isInZone) {
-          // Enrichir avec les informations de distance
           candidatesInZone.push({
             ...airport,
             distance: zoneCheck.distanceToRoute || calculateDistanceFromRoute(
@@ -451,150 +451,133 @@ export const useAlternateSelection = () => {
           debugInfo.tooFar++;
         }
       }
-    }
-    
-    console.log(`Aérodromes testés: ${testedCount}`);
-    console.log(`Dans la zone pilule: ${debugInfo.inPill}`);
-    console.log(`Dans tampons virages: ${debugInfo.inTurnBuffer}`);
-    console.log(`Trop loin: ${debugInfo.tooFar}`);
-    console.log(`Total candidats dans zone: ${candidatesInZone.length}`);
-    
-    // AFFICHER TOUS LES AÉRODROMES DANS LA ZONE
-    if (candidatesInZone.length > 0) {
-      console.log('🗺️ TOUS LES AÉRODROMES DANS LA ZONE DE DÉROUTEMENT:');
-      console.log('================================================');
-      candidatesInZone.forEach((airport, index) => {
-        console.log(`${index + 1}. ${airport.icao} - ${airport.name}`);
-        console.log(`   📍 Position: ${airport.position.lat.toFixed(4)}°, ${airport.position.lon.toFixed(4)}°`);
-        console.log(`   📏 Distance route: ${airport.distance?.toFixed(1)} NM`);
-        console.log(`   🛬 Pistes: ${airport.runways?.length || 0}`);
-        if (airport.runways && airport.runways.length > 0) {
-          airport.runways.forEach((rwy, i) => {
-            console.log(`      Piste ${i+1}: ${rwy.length || '?'}m × ${rwy.width || '?'}m (${rwy.surface || 'N/A'})`);
-          });
+      
+      console.log(`Aérodromes testés: ${testedCount}`);
+      console.log(`Dans la zone pilule: ${debugInfo.inPill}`);
+      console.log(`Dans tampons virages: ${debugInfo.inTurnBuffer}`);
+      console.log(`Trop loin: ${debugInfo.tooFar}`);
+      console.log(`Total candidats dans zone: ${candidatesInZone.length}`);
+      
+      if (candidatesInZone.length > 0) {
+        console.log('🗺️ AÉRODROMES DANS LA ZONE DE DÉROUTEMENT:');
+        candidatesInZone.forEach((airport, index) => {
+          console.log(`${index + 1}. ${airport.icao} - ${airport.name}`);
+          console.log(`   Position: ${airport.position.lat.toFixed(4)}°, ${airport.position.lon.toFixed(4)}°`);
+          console.log(`   Distance route: ${airport.distance?.toFixed(1)} NM`);
+          console.log(`   Côté: ${airport.zoneInfo?.side || 'inconnu'}`);
+        });
+      }
+      
+      // 2. Filtrer selon les critères (accepter tous pour le moment)
+      const filtered = candidatesInZone;
+      
+      console.log(`Après filtrage: ${filtered.length}`);
+      
+      setCandidates(filtered);
+      
+      // 3. MÉTÉO DÉSACTIVÉE TEMPORAIREMENT (erreur 429)
+      console.log('🌤️ Appels météo désactivés temporairement (limite API atteinte)');
+      
+      // 4. Calculer les scores
+      const context = {
+        departure: { lat: waypoints[0].lat, lon: waypoints[0].lon },
+        arrival: { lat: waypoints[waypoints.length - 1].lat, lon: waypoints[waypoints.length - 1].lon },
+        waypoints,
+        aircraft: selectedAircraft,
+        weather: weatherStore.weatherData,
+        flightType
+      };
+      
+      // Utiliser scoreAlternates qui retourne une liste d'aérodromes scorés
+      const scoredAirports = await scoreAlternates(filtered, context);
+      
+      // Enrichir avec les métadonnées et le côté (departure/arrival)
+      const scored = scoredAirports.map(airport => ({
+        ...airport,
+        // S'assurer que la distance est bien définie
+        distance: airport.distance || airport.zoneInfo?.distanceToRoute || 0,
+        // Côté par rapport à la médiatrice
+        side: airport.zoneInfo?.side || 'unknown',
+        // Services
+        services: {
+          fuel: airport.fuel || false,
+          atc: hasATCService(airport),
+          lighting: hasNightLighting(airport)
+        },
+        // Pistes
+        runways: airport.runways || []
+      }));
+      
+      // 5. Séparer les aérodromes par côté
+      const departureSideAirports = scored.filter(apt => apt.side === 'departure');
+      const arrivalSideAirports = scored.filter(apt => apt.side === 'arrival');
+      
+      console.log(`📊 Répartition des aérodromes:`);
+      console.log(`   - Côté départ: ${departureSideAirports.length}`);
+      console.log(`   - Côté arrivée: ${arrivalSideAirports.length}`);
+      
+      // Trier chaque groupe par score
+      departureSideAirports.sort((a, b) => b.score - a.score);
+      arrivalSideAirports.sort((a, b) => b.score - a.score);
+      
+      // Stocker tous les aérodromes scorés
+      setScoredAlternates(scored);
+      
+      // 6. Sélectionner le meilleur de chaque côté
+      const selectedAlternates = [];
+      
+      // Meilleur aérodrome côté départ
+      if (departureSideAirports.length > 0) {
+        const bestDeparture = departureSideAirports[0];
+        bestDeparture.selectionType = 'departure';
+        selectedAlternates.push(bestDeparture);
+        
+        console.log(`✈️ Meilleur déroutement départ: ${bestDeparture.icao} - ${bestDeparture.name}`);
+        console.log(`   Distance: ${bestDeparture.distance?.toFixed(1)} NM, Score: ${(bestDeparture.score * 100).toFixed(0)}%`);
+      }
+      
+      // Meilleur aérodrome côté arrivée
+      if (arrivalSideAirports.length > 0) {
+        const bestArrival = arrivalSideAirports[0];
+        bestArrival.selectionType = 'arrival';
+        selectedAlternates.push(bestArrival);
+        
+        console.log(`✈️ Meilleur déroutement arrivée: ${bestArrival.icao} - ${bestArrival.name}`);
+        console.log(`   Distance: ${bestArrival.distance?.toFixed(1)} NM, Score: ${(bestArrival.score * 100).toFixed(0)}%`);
+      }
+      
+      // Si on n'a qu'un seul côté avec des aérodromes, prendre les 2 meilleurs de ce côté
+      if (selectedAlternates.length === 1) {
+        const sideWithAirports = departureSideAirports.length > 0 ? departureSideAirports : arrivalSideAirports;
+        if (sideWithAirports.length > 1) {
+          const second = sideWithAirports[1];
+          second.selectionType = sideWithAirports === departureSideAirports ? 'departure' : 'arrival';
+          selectedAlternates.push(second);
+          console.log(`➕ Second déroutement du même côté: ${second.icao}`);
         }
-        console.log(`   🏢 Type: ${airport.type}`);
-        console.log(`   📍 Localisation dans zone: ${airport.zoneInfo?.location || 'N/A'}`);
-        console.log('   ---');
-      });
-      console.log('================================================');
-    } else {
-      console.log('❌ AUCUN AÉRODROME TROUVÉ DANS LA ZONE');
-    }
-    
-    // 2. Filtrer selon les critères
-    // TEMPORAIRE : ACCEPTER TOUS LES AÉRODROMES POUR DEBUG
-    const filtered = candidatesInZone.map(airport => {
-      console.log(`🛩️ Analyse ${airport.icao}:`, {
-        runways: airport.runways?.length || 0,
-        longueurPiste: airport.runways?.[0]?.length || 'N/A',
-        type: airport.type,
-        requiredLength: dynamicParams.requiredRunwayLength
-      });
-      return airport;
-    });
-    
-    // const filtered = candidatesInZone.filter(airport => {
-    //   // Code de filtrage désactivé temporairement
-    // });
-    
-    console.log(`Après filtrage piste (min ${dynamicParams.requiredRunwayLength}m): ${filtered.length}`);
-    
-    // AFFICHER LA DIFFÉRENCE ENTRE ZONE ET FILTRÉS
-    if (candidatesInZone.length > filtered.length) {
-      console.log('⚠️ AÉRODROMES EXCLUS PAR LES FILTRES:');
-      const excluded = candidatesInZone.filter(apt => !filtered.includes(apt));
-      excluded.forEach(airport => {
-        console.log(`   ❌ ${airport.icao} - ${airport.name}`);
-        console.log(`      Raison: Piste trop courte ou pas de données`);
-        console.log(`      Pistes: ${airport.runways?.map(r => r.length + 'm').join(', ') || 'Aucune donnée'}`);
-      });
-    }
-    
-    setCandidates(filtered);
-    
-    // 3. MÉTÉO DÉSACTIVÉE TEMPORAIREMENT (erreur 429)
-    console.log('🌤️ Appels météo désactivés temporairement (limite API atteinte)');
-    // await Promise.all(
-    //   filtered.slice(0, 3).map(airport => 
-    //     weatherStore.fetchWeather(airport.icao).catch((err) => {
-    //       console.log(`Météo ${airport.icao} non disponible (normal pour petits aérodromes)`);
-    //       return null;
-    //     })
-    //   )
-    // );
-    
-    // 4. Calculer les scores
-    const context = {
-      departure: { lat: waypoints[0].lat, lon: waypoints[0].lon },
-      arrival: { lat: waypoints[waypoints.length - 1].lat, lon: waypoints[waypoints.length - 1].lon },
-      waypoints,
-      aircraft: selectedAircraft,
-      weather: weatherStore.weatherData,
-      flightType
-    };
-    
-    // Utiliser scoreAlternates qui retourne une liste d'aérodromes scorés
-    const scoredAirports = await scoreAlternates(filtered, context);
-    
-    // Enrichir avec les métadonnées
-    const scored = scoredAirports.map(airport => ({
-      ...airport,
-      // S'assurer que la distance est bien définie
-      distance: airport.distance || airport.zoneInfo?.distanceToRoute || 0,
-      // Services
-      services: {
-        fuel: airport.fuel || false,
-        atc: hasATCService(airport),
-        lighting: hasNightLighting(airport)
-      },
-      // Pistes
-      runways: airport.runways || []
-    }));
-    
-    // 5. Trier par score
-    scored.sort((a, b) => b.score - a.score);
-    setScoredAlternates(scored);
-    
-    // 6. Sélectionner automatiquement les 3 meilleurs
-    const top3 = scored.slice(0, 3);
-    useAlternatesStore.getState().setSelectedAlternates(top3);
-    
-    console.log(`✅ ${scored.length} alternates scorés`);
-    console.log('Top 3 sélectionnés:', top3.map(a => `${a.icao} (${(a.score * 100).toFixed(0)}%)`));
-    
-    // RÉSUMÉ FINAL
-    console.log('📊 RÉSUMÉ FINAL:');
-    console.log(`- Aérodromes testés: ${testedCount}`);
-    console.log(`- Dans la zone: ${candidatesInZone.length}`);
-    console.log(`- Après filtrage: ${filtered.length}`);
-    console.log(`- Après scoring: ${scored.length}`);
-    console.log(`- Sélectionnés: ${top3.length}`);
-    
-    // DIAGNOSTIC SI AUCUN RÉSULTAT
-    if (candidatesInZone.length === 0) {
-      console.log('❌ PROBLÈME: Aucun aérodrome dans la zone');
-      console.log('   Vérifiez:');
-      console.log('   - La zone de recherche est-elle correcte ?');
-      console.log('   - Les coordonnées de départ/arrivée sont-elles bonnes ?');
-      console.log('   - Y a-t-il des aérodromes chargés ?');
-    } else if (filtered.length === 0) {
-      console.log('❌ PROBLÈME: Tous les aérodromes filtrés');
-      console.log('   Les critères sont trop restrictifs');
-      console.log(`   Longueur minimale requise: ${dynamicParams.requiredRunwayLength}m`);
-    } else if (scored.length === 0) {
-      console.log('❌ PROBLÈME: Erreur lors du scoring');
-    }
-    
-    if (top3.length > 0) {
-      console.log('✈️ Alternates sélectionnés:');
-      top3.forEach((alt, i) => {
-        console.log(`  ${i+1}. ${alt.icao} - ${alt.name}`);
-        console.log(`     Distance: ${alt.distance?.toFixed(1)} NM`);
-        console.log(`     Piste: ${alt.runways?.[0]?.length || '?'} m`);
-        console.log(`     Score: ${(alt.score * 100).toFixed(0)}%`);
-      });
-    }
+      }
+      
+      useAlternatesStore.getState().setSelectedAlternates(selectedAlternates);
+      
+      console.log(`✅ ${scored.length} alternates scorés`);
+      
+      // RÉSUMÉ FINAL
+      console.log('📊 RÉSUMÉ FINAL:');
+      console.log(`- Aérodromes testés: ${testedCount}`);
+      console.log(`- Dans la zone: ${candidatesInZone.length}`);
+      console.log(`- Après filtrage: ${filtered.length}`);
+      console.log(`- Après scoring: ${scored.length}`);
+      console.log(`- Sélectionnés: ${selectedAlternates.length}`);
+      
+      if (selectedAlternates.length > 0) {
+        console.log('✈️ Alternates sélectionnés:');
+        selectedAlternates.forEach((alt, i) => {
+          console.log(`  ${i+1}. ${alt.icao} - ${alt.name} (${alt.selectionType})`);
+          console.log(`     Distance route: ${alt.distance?.toFixed(1)} NM`);
+          console.log(`     Piste: ${alt.runways?.[0]?.length || '?'} m`);
+          console.log(`     Score: ${(alt.score * 100).toFixed(0)}%`);
+        });
+      }
     
     } finally {
       // Fin de la recherche
@@ -614,7 +597,6 @@ export const useAlternateSelection = () => {
   
   // Mise à jour automatique à chaque changement de route
   useEffect(() => {
-    // Réinitialiser le flag quand la route change
     if (searchZone) {
       const routeKey = `${waypoints[0]?.lat}-${waypoints[0]?.lon}-${waypoints[waypoints.length-1]?.lat}-${waypoints[waypoints.length-1]?.lon}`;
       const lastRouteKey = useAlternatesStore.getState().lastRouteKey;
@@ -639,7 +621,6 @@ export const useAlternateSelection = () => {
 
 // Fonction pour obtenir une longueur de piste par défaut basée sur l'ICAO
 const getDefaultRunwayLength = (icao, type) => {
-  // Données connues pour certains aérodromes majeurs
   const knownRunways = {
     'LFPG': 4200,
     'LFPO': 3650,

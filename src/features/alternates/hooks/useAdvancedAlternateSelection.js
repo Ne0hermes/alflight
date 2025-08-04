@@ -4,10 +4,11 @@ import { useMemo, useCallback, useEffect } from 'react';
 import { useAlternatesStore } from '@core/stores/alternatesStore';
 import { useAlternateSelection } from './useAlternateSelection';
 import { useVACStore } from '@core/stores/vacStore';
+import { calculateDistance } from '../utils/geometryCalculations';
 
 /**
  * Hook avancé pour la sélection automatique des alternates
- * Fournit toutes les données nécessaires pour l'affichage dans AlternatesModuleAdvanced
+ * Fournit toutes les données nécessaires pour l'affichage dans AlternatesModule
  */
 export const useAdvancedAlternateSelection = () => {
   const { searchZone, dynamicParams, selectedAlternates, findAlternates, isReady } = useAlternateSelection();
@@ -26,6 +27,8 @@ export const useAdvancedAlternateSelection = () => {
   
   // Formater les alternates pour l'affichage
   const formattedAlternates = useMemo(() => {
+    if (!searchZone) return selectedAlternates;
+    
     return selectedAlternates.map((alt, index) => ({
       ...alt,
       displayIndex: index + 1,
@@ -47,9 +50,14 @@ export const useAdvancedAlternateSelection = () => {
       vac: {
         available: !!useVACStore.getState().charts[alt.icao],
         downloaded: useVACStore.getState().charts[alt.icao]?.isDownloaded || false
-      }
+      },
+      // Ajouter les distances depuis départ et arrivée
+      distanceToDeparture: alt.position && searchZone.departure ? 
+        calculateDistance(alt.position, searchZone.departure) : null,
+      distanceToArrival: alt.position && searchZone.arrival ? 
+        calculateDistance(alt.position, searchZone.arrival) : null
     }));
-  }, [selectedAlternates]);
+  }, [selectedAlternates, searchZone]);
   
   // Statistiques pour l'affichage
   const statistics = useMemo(() => ({
@@ -58,7 +66,10 @@ export const useAdvancedAlternateSelection = () => {
     selectedCount: selectedAlternates.length,
     averageScore: selectedAlternates.length > 0 
       ? selectedAlternates.reduce((sum, alt) => sum + (alt.score || 0), 0) / selectedAlternates.length
-      : 0
+      : 0,
+    // Statistiques par côté
+    departureSideCount: selectedAlternates.filter(alt => alt.selectionType === 'departure').length,
+    arrivalSideCount: selectedAlternates.filter(alt => alt.selectionType === 'arrival').length
   }), [scoredAlternates, selectedAlternates]);
   
   // Fonction de rafraîchissement

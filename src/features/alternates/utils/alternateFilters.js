@@ -51,6 +51,11 @@ const checkAllCriteria = async (airport, criteria, stores) => {
     return false;
   }
   
+  // 7. Vérifier le côté (pour système dual)
+  if (!checkSideCriteria(airport, criteria)) {
+    return false;
+  }
+  
   return true;
 };
 
@@ -178,6 +183,21 @@ const checkOperatingHours = (airport, criteria) => {
 };
 
 /**
+ * Vérifie le critère de côté (système dual)
+ */
+const checkSideCriteria = (airport, criteria) => {
+  // Si pas de critère de côté, accepter tout
+  if (!criteria.requiredSide) return true;
+  
+  // Vérifier que l'aérodrome a bien un côté défini
+  if (!airport.side || !airport.zoneInfo?.side) return false;
+  
+  // Vérifier que le côté correspond
+  const airportSide = airport.side || airport.zoneInfo?.side;
+  return airportSide === criteria.requiredSide;
+};
+
+/**
  * Détermine si l'aérodrome a un service ATC
  */
 const hasATCService = (airport) => {
@@ -245,6 +265,7 @@ export const filterUtils = {
   checkServicesCriteria,
   checkWeatherCriteria,
   checkOperatingHours,
+  checkSideCriteria,
   hasATCService,
   hasNightLighting
 };
