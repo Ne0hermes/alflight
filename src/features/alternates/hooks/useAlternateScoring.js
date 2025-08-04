@@ -35,6 +35,7 @@ export const scoreAlternates = async (candidates, context) => {
         ...airport,
         score: totalScore,
         scoreFactors: scores,
+        scoreBreakdown: scores, // Alias pour compatibilité
         rank,
         recommendation: generateRecommendation(airport, scores, rank)
       };
@@ -256,8 +257,8 @@ const calculateStrategicPosition = (airport, context) => {
   let score = 0;
   
   const totalRouteDistance = calculateDistance(context.departure, context.arrival);
-  const distFromDeparture = calculateDistance(context.departure, airport.coordinates);
-  const distFromArrival = calculateDistance(context.arrival, airport.coordinates);
+  const distFromDeparture = calculateDistance(context.departure, airport.coordinates || airport.position);
+  const distFromArrival = calculateDistance(context.arrival, airport.coordinates || airport.position);
   
   // 1. Position par rapport au milieu de route (60% du score)
   const midPointRatio = Math.abs(distFromDeparture - distFromArrival) / totalRouteDistance;
@@ -270,7 +271,7 @@ const calculateStrategicPosition = (airport, context) => {
     
     if (turnPoints.length > 0) {
       const minDistToTurn = Math.min(...turnPoints.map(tp => 
-        calculateDistance(airport.coordinates, { lat: tp.lat, lon: tp.lon })
+        calculateDistance(airport.coordinates || airport.position, { lat: tp.lat, lon: tp.lon })
       ));
       
       const turnProximityScore = Math.max(0, 1 - (minDistToTurn / 30));

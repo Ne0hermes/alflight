@@ -19,5 +19,18 @@ export { AlternateMap } from './components/AlternateMap';
 export { AlternateSelector } from './components/AlternateSelector';
 
 // Export des utilitaires
-export { calculateSearchZone, isAirportInSearchZone } from './utils/geometryCalculations';
-export { scoreAlternates } from './hooks/useAlternateScoring';
+export { 
+  calculateSearchZone, 
+  isAirportInSearchZone,
+  calculateDistance,
+  calculateBearing,
+  calculateDestination,
+  calculateMidpoint,
+  calculateDistanceToSegment,
+  calculatePerpendicular,
+  getSideOfPerpendicular,
+  calculateDistanceFromRoute,
+  geometryUtils
+} from './utils/geometryCalculations';
+export { scoreAlternates, scoringUtils } from './hooks/useAlternateScoring';
+export { filterAlternates, filterUtils } from './utils/alternateFilters';
