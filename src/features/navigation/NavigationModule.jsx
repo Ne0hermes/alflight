@@ -2,28 +2,126 @@
 import React, { memo, useState, useCallback, useEffect } from 'react';
 import { MapPin, Plus, Trash2, Navigation2, Home, Sun, Moon, List, Loader, AlertCircle, AlertTriangle, Wind, Plane } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
-import { useAlternatesForNavigation } from '@features/alternates';
 
 // Import des contextes et hooks
 import { useNavigation, useAircraft } from '@core/contexts';
-import { useNavigationResults } from './hooks/useNavigationResults';
 import { useOpenAIPStore, openAIPSelectors } from '@core/stores/openAIPStore';
 import { useWeatherStore, weatherSelectors } from '@core/stores/weatherStore';
 
-// Import des composants locaux
-import { NavigationMap } from './components/NavigationMap';
-import { AirportSelector } from './components/AirportSelector';
-import { ReportingPointsSelector } from './components/ReportingPointsSelector';
-import { AirspaceAnalyzer } from './components/AirspaceAnalyzer';
-import { TechnicalLog } from './components/TechnicalLog';
-import { RunwayAnalyzer } from './components/RunwayAnalyzer';
+// Import des composants locaux - commentés temporairement
+// import { NavigationMap } from './components/NavigationMap';
+// import { AirportSelector } from './components/AirportSelector';
+// import { ReportingPointsSelector } from './components/ReportingPointsSelector';
+// import { AirspaceAnalyzer } from './components/AirspaceAnalyzer';
+// import { TechnicalLog } from './components/TechnicalLog';
+// import { RunwayAnalyzer } from './components/RunwayAnalyzer';
+
+// Hook temporaire pour remplacer useNavigationResults
+const useNavigationResults = () => {
+  const { waypoints, flightType } = useNavigation();
+  const { selectedAircraft } = useAircraft();
+  
+  if (!selectedAircraft || waypoints.length < 2) return null;
+  
+  // Calculs simplifiés pour test
+  const totalDistance = waypoints.length > 1 ? 100 : 0; // Distance fictive
+  const totalTime = selectedAircraft.cruiseSpeedKt > 0 ? Math.round((totalDistance / selectedAircraft.cruiseSpeedKt) * 60) : 0;
+  const fuelRequired = selectedAircraft.fuelConsumption > 0 ? Math.round((totalTime / 60) * selectedAircraft.fuelConsumption) : 0;
+  
+  // Calcul de la réserve selon le type de vol
+  let regulationReserveMinutes = 30; // Base VFR jour
+  if (flightType.period === 'nuit') regulationReserveMinutes = 45;
+  if (flightType.rules === 'IFR') regulationReserveMinutes += 15;
+  
+  const regulationReserveLiters = Math.round((regulationReserveMinutes / 60) * selectedAircraft.fuelConsumption);
+  
+  return {
+    totalDistance,
+    totalTime,
+    fuelRequired,
+    regulationReserveMinutes,
+    regulationReserveLiters
+  };
+};
+
+// Hook temporaire pour remplacer useAlternatesForNavigation
+const useAlternatesForNavigation = () => {
+  return {
+    alternates: [],
+    hasAlternates: false,
+    addAlternateAsWaypoint: () => {}
+  };
+};
+
+// Composants temporaires pour remplacer les imports manquants
+const NavigationMap = ({ waypoints, onWaypointUpdate, selectedAircraft }) => (
+  <div style={sx.combine(sx.components.card.base, sx.spacing.p(4))}>
+    <p style={sx.text.muted}>Carte de navigation (module en développement)</p>
+  </div>
+);
+
+const AirportSelector = ({ label, value, onChange, placeholder }) => (
+  <div>
+    <label style={sx.components.label.base}>{label}</label>
+    <input 
+      type="text" 
+      placeholder={placeholder}
+      value={value?.icao || ''}
+      style={sx.components.input.base}
+      onChange={(e) => {
+        if (e.target.value.length === 4 && e.target.value.match(/^[A-Z]{4}$/)) {
+          onChange({
+            icao: e.target.value,
+            name: `Aéroport ${e.target.value}`,
+            coordinates: { lat: 48.8566, lon: 2.3522 } // Coordonnées fictives
+          });
+        }
+      }}
+    />
+  </div>
+);
+
+const ReportingPointsSelector = ({ airportIcao }) => (
+  <div style={sx.combine(sx.components.card.base, sx.spacing.p(4))}>
+    <p style={sx.text.muted}>Points de report VFR pour {airportIcao} (module en développement)</p>
+  </div>
+);
+
+const AirspaceAnalyzer = ({ waypoints, plannedAltitude, onAltitudeChange, flightTypeRules, altitudeSuggestions }) => (
+  <div style={sx.combine(sx.components.card.base, sx.spacing.p(4))}>
+    <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(2))}>Analyse des espaces aériens</h4>
+    <p style={sx.text.muted}>Module en développement</p>
+    <div style={sx.spacing.mt(2)}>
+      <label style={sx.components.label.base}>Altitude planifiée (ft)</label>
+      <input 
+        type="number" 
+        value={plannedAltitude}
+        onChange={(e) => onAltitudeChange(e.target.value)}
+        style={sx.components.input.base}
+      />
+    </div>
+  </div>
+);
+
+const TechnicalLog = ({ selectedAircraft }) => (
+  <div style={sx.combine(sx.components.card.base, sx.spacing.p(4))}>
+    <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(2))}>Log technique</h4>
+    <p style={sx.text.muted}>Module en développement</p>
+  </div>
+);
+
+const RunwayAnalyzer = ({ icao }) => (
+  <div style={sx.combine(sx.components.card.base, sx.spacing.p(4))}>
+    <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(2))}>Analyse des pistes - {icao}</h4>
+    <p style={sx.text.muted}>Module en développement</p>
+  </div>
+);
 
 const NavigationModule = () => {
   const { selectedAircraft } = useAircraft();
   const { waypoints, setWaypoints, flightParams, setFlightParams, flightType, setFlightType } = useNavigation();
   const navigationResults = useNavigationResults();
   const { alternates, hasAlternates, addAlternateAsWaypoint } = useAlternatesForNavigation();
-  
   
   // OpenAIP Store
   const { loadAirports } = useOpenAIPStore();
