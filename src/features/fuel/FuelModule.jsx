@@ -1,6 +1,6 @@
 // src/features/fuel/FuelModule.jsx
 
-import React, { memo } from 'react';
+import React, { memo, useEffect } from 'react';
 import { useFuel, useAircraft, useNavigation } from '@core/contexts';
 import { useNavigationResults } from '@/features/navigation/hooks/useNavigationResults';
 import { useFuelSync } from '@hooks/useFuelSync';
@@ -10,6 +10,9 @@ import { useAlternatesForFuel } from '@features/alternates';
 
 const FuelRow = memo(({ type, label, description, fuel, onChange, readonly = false, automatic = false, totalGal }) => {
   const GAL_TO_LTR = 3.78541;
+  
+  // Valeurs par défaut si fuel est undefined
+  const safeFuel = fuel || { gal: 0, ltr: 0 };
   
   const handleGalChange = (value) => {
     const gal = parseFloat(value) || 0;
@@ -44,7 +47,7 @@ const FuelRow = memo(({ type, label, description, fuel, onChange, readonly = fal
       <td style={{ padding: '12px', textAlign: 'center' }}>
         <input
           type="number"
-          value={fuel.gal.toFixed(1)}
+          value={safeFuel.gal.toFixed(1)}
           onChange={(e) => handleGalChange(e.target.value)}
           disabled={readonly}
           style={sx.combine(
@@ -58,7 +61,7 @@ const FuelRow = memo(({ type, label, description, fuel, onChange, readonly = fal
       <td style={{ padding: '12px', textAlign: 'center' }}>
         <input
           type="number"
-          value={fuel.ltr.toFixed(1)}
+          value={safeFuel.ltr.toFixed(1)}
           onChange={(e) => handleLtrChange(e.target.value)}
           disabled={readonly}
           style={sx.combine(
@@ -71,7 +74,7 @@ const FuelRow = memo(({ type, label, description, fuel, onChange, readonly = fal
       </td>
       <td style={{ padding: '12px', textAlign: 'center' }}>
         <span style={sx.combine(sx.text.sm, sx.text.bold)}>
-          {totalGal > 0 ? ((fuel.gal / totalGal) * 100).toFixed(0) : 0}%
+          {totalGal > 0 ? ((safeFuel.gal / totalGal) * 100).toFixed(0) : 0}%
         </span>
       </td>
     </tr>
@@ -82,13 +85,52 @@ export const FuelModule = memo(() => {
   const { selectedAircraft } = useAircraft();
   const { navigationResults, flightType } = useNavigation();
   const { fuelData, setFuelData, fobFuel, setFobFuel, calculateTotal, isFobSufficient } = useFuel();
-  const { alternateFuelRequired, alternatesCount } = useAlternatesForFuel();
+  const { 
+    alternateFuelRequired, 
+    alternateFuelRequiredGal, 
+    alternatesCount, 
+    maxDistanceAlternate,
+    hasAlternates 
+  } = useAlternatesForFuel();
+
+  // S'assurer que fuelData existe avec des valeurs par défaut
+  const safeFuelData = fuelData || {
+    roulage: { gal: 0, ltr: 0 },
+    trip: { gal: 0, ltr: 0 },
+    contingency: { gal: 0, ltr: 0 },
+    alternate: { gal: 0, ltr: 0 },
+    finalReserve: { gal: 0, ltr: 0 },
+    additional: { gal: 0, ltr: 0 },
+    extra: { gal: 0, ltr: 0 }
+  };
+
+  // Mettre à jour automatiquement le carburant alternate quand il change
+  useEffect(() => {
+    if (hasAlternates && alternateFuelRequired > 0) {
+      setFuelData(prev => ({
+        ...prev,
+        alternate: {
+          gal: alternateFuelRequiredGal || 0,
+          ltr: alternateFuelRequired || 0
+        }
+      }));
+    } else if (!hasAlternates) {
+      // Remettre à zéro si aucun alternate sélectionné
+      setFuelData(prev => ({
+        ...prev,
+        alternate: {
+          gal: 0,
+          ltr: 0
+        }
+      }));
+    }
+  }, [alternateFuelRequired, alternateFuelRequiredGal, hasAlternates, setFuelData, selectedAircraft]);
 
   const handleFuelChange = (type, values) => {
-    if (type === 'trip' || type === 'contingency' || type === 'finalReserve') return;
+    if (type === 'trip' || type === 'contingency' || type === 'finalReserve' || type === 'alternate') return;
     
     setFuelData({
-      ...fuelData,
+      ...safeFuelData,
       [type]: values
     });
   };
@@ -108,6 +150,15 @@ export const FuelModule = memo(() => {
     }
   };
 
+  // S'assurer que fobFuel existe
+  const safeFobFuel = fobFuel || { gal: 0, ltr: 0 };
+  
+  // S'assurer que calculateTotal retourne toujours un nombre
+  const safeCalculateTotal = (unit) => {
+    const total = calculateTotal ? calculateTotal(unit) : 0;
+    return typeof total === 'number' ? total : 0;
+  };
+
   const getReserveDescription = () => {
     if (!flightType || !navigationResults) return 'Définir type de vol';
     
@@ -121,11 +172,18 @@ export const FuelModule = memo(() => {
     return desc;
   };
 
+  const getAlternateDescription = () => {
+    if (!hasAlternates) return 'Aucun déroutement sélectionné';
+    if (!maxDistanceAlternate || maxDistanceAlternate.distance === 0) return 'Calcul en cours...';
+    
+    return `Vers ${maxDistanceAlternate.icao} (${maxDistanceAlternate.distance.toFixed(1)} NM)`;
+  };
+
   const fuelTypes = [
     { key: 'roulage', label: 'Roulage', description: 'Taxi et attente' },
     { key: 'trip', label: 'Trip Fuel', description: `Calculé depuis Navigation (${Math.round(navigationResults?.totalDistance || 0)} NM)`, readonly: true, automatic: true },
     { key: 'contingency', label: 'Contingency', description: '5% du trip (min 1 gal)', readonly: true },
-    { key: 'alternate', label: 'Alternate', description: 'Vers dégagement' },
+    { key: 'alternate', label: 'Alternate', description: getAlternateDescription(), readonly: true, automatic: true },
     { key: 'finalReserve', label: 'Final Reserve', description: getReserveDescription(), readonly: true },
     { key: 'additional', label: 'Additional', description: 'Météo, ATC, etc.' },
     { key: 'extra', label: 'Extra', description: 'Discrétion pilote' }
@@ -134,14 +192,16 @@ export const FuelModule = memo(() => {
   return (
     <div>
       {/* Alerte automatisation */}
-      {navigationResults?.fuelRequired > 0 && (
+      {(navigationResults?.fuelRequired > 0 || hasAlternates) && (
         <div style={sx.combine(sx.components.alert.base, sx.components.alert.success, sx.spacing.mb(4))}>
           <div style={sx.flex.col}>
             <p style={sx.combine(sx.text.sm, sx.text.bold)}>
               🚀 Automatisation activée
             </p>
             <p style={sx.text.sm}>
-              Trip, Contingency et Final Reserve calculés automatiquement depuis Navigation
+              {navigationResults?.fuelRequired > 0 && 'Trip, Contingency et Final Reserve calculés depuis Navigation.'}
+              {navigationResults?.fuelRequired > 0 && hasAlternates && ' '}
+              {hasAlternates && `Carburant Alternate calculé pour ${alternatesCount} déroutement${alternatesCount > 1 ? 's' : ''}.`}
             </p>
           </div>
         </div>
@@ -164,28 +224,35 @@ export const FuelModule = memo(() => {
             </tr>
           </thead>
           <tbody>
-            {fuelTypes.map(type => (
-              <FuelRow
-                key={type.key}
-                type={type.key}
-                label={type.label}
-                description={type.description}
-                fuel={fuelData[type.key]}
-                onChange={(values) => handleFuelChange(type.key, values)}
-                readonly={type.readonly}
-                automatic={type.automatic}
-                totalGal={calculateTotal('gal')}
-              />
-            ))}
+            {fuelTypes.map(type => {
+              // S'assurer que la propriété existe dans fuelData
+              const fuelValue = safeFuelData && safeFuelData[type.key] 
+                ? safeFuelData[type.key] 
+                : { gal: 0, ltr: 0 };
+              
+              return (
+                <FuelRow
+                  key={type.key}
+                  type={type.key}
+                  label={type.label}
+                  description={type.description}
+                  fuel={fuelValue}
+                  onChange={(values) => handleFuelChange(type.key, values)}
+                  readonly={type.readonly}
+                  automatic={type.automatic}
+                  totalGal={safeCalculateTotal('gal')}
+                />
+              );
+            })}
           </tbody>
           <tfoot>
             <tr style={{ borderTop: `2px solid ${sx.theme.colors.gray[700]}` }}>
               <td style={{ padding: '12px', fontWeight: 'bold' }}>TOTAL</td>
               <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '18px' }}>
-                {calculateTotal('gal').toFixed(1)}
+                {safeCalculateTotal('gal').toFixed(1)}
               </td>
               <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '18px' }}>
-                {calculateTotal('ltr').toFixed(1)}
+                {safeCalculateTotal('ltr').toFixed(1)}
               </td>
               <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold' }}>
                 100%
@@ -206,7 +273,7 @@ export const FuelModule = memo(() => {
             <label style={sx.components.label.base}>Gallons</label>
             <input
               type="number"
-              value={fobFuel.gal.toFixed(1)}
+              value={safeFobFuel.gal.toFixed(1)}
               onChange={(e) => handleFobChange('gal', e.target.value)}
               style={sx.components.input.base}
               step="0.1"
@@ -216,7 +283,7 @@ export const FuelModule = memo(() => {
             <label style={sx.components.label.base}>Litres</label>
             <input
               type="number"
-              value={fobFuel.ltr.toFixed(1)}
+              value={safeFobFuel.ltr.toFixed(1)}
               onChange={(e) => handleFobChange('ltr', e.target.value)}
               style={sx.components.input.base}
               step="0.1"
@@ -227,15 +294,15 @@ export const FuelModule = memo(() => {
         {/* Statut */}
         <div style={sx.combine(
           sx.components.alert.base,
-          isFobSufficient() ? sx.components.alert.success : sx.components.alert.danger
+          isFobSufficient && isFobSufficient() ? sx.components.alert.success : sx.components.alert.danger
         )}>
-          {isFobSufficient() ? (
+          {isFobSufficient && isFobSufficient() ? (
             <>
               <CheckCircle size={20} />
               <div>
                 <p style={sx.text.bold}>Carburant SUFFISANT</p>
                 <p style={sx.text.sm}>
-                  Excédent: {Math.abs(fobFuel.ltr - calculateTotal('ltr')).toFixed(1)} L
+                  Excédent: {Math.abs(safeFobFuel.ltr - safeCalculateTotal('ltr')).toFixed(1)} L
                 </p>
               </div>
             </>
@@ -245,7 +312,7 @@ export const FuelModule = memo(() => {
               <div>
                 <p style={sx.text.bold}>Carburant INSUFFISANT</p>
                 <p style={sx.text.sm}>
-                  Manque: {Math.abs(fobFuel.ltr - calculateTotal('ltr')).toFixed(1)} L
+                  Manque: {Math.abs(safeFobFuel.ltr - safeCalculateTotal('ltr')).toFixed(1)} L
                 </p>
               </div>
             </>
@@ -261,6 +328,40 @@ export const FuelModule = memo(() => {
             basés sur votre carburant utilisable.
           </p>
         </div>
+
+        {/* Détails des déroutements si sélectionnés */}
+        {hasAlternates && maxDistanceAlternate && (
+          <div style={sx.combine(sx.components.card.base, sx.spacing.mt(4))}>
+            <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(2))}>
+              🛬 Déroutements sélectionnés
+            </h4>
+            <p style={sx.text.sm}>
+              <strong>Aérodrome le plus éloigné :</strong> {maxDistanceAlternate.icao} - {maxDistanceAlternate.name || 'N/A'}
+            </p>
+            <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
+              Distance depuis l'arrivée : {maxDistanceAlternate.distance.toFixed(1)} NM
+            </p>
+            {selectedAircraft && (
+              <>
+                <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
+                  Temps de vol estimé : {(maxDistanceAlternate.distance / (selectedAircraft.cruiseSpeedKt || 100) * 60).toFixed(0)} min
+                  {' '}(+ 30 min approche)
+                </p>
+                <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
+                  Consommation : {selectedAircraft.fuelConsumption || 30} L/h × {((maxDistanceAlternate.distance / (selectedAircraft.cruiseSpeedKt || 100)) + 0.5).toFixed(1)} h
+                  {' '}= {alternateFuelRequired} L
+                </p>
+              </>
+            )}
+            <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mt(2))}>
+              <Info size={14} />
+              <p style={sx.combine(sx.text.xs)}>
+                Le carburant de dégagement est calculé automatiquement pour l'aérodrome le plus éloigné 
+                parmi vos sélections, garantissant ainsi une couverture pour tous les déroutements possibles.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
