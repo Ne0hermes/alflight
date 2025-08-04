@@ -10,4 +10,6 @@ export { ReportingPointsSelector } from './components/ReportingPointsSelector.js
 export { AirspaceAnalyzer } from './components/AirspaceAnalyzer.jsx';
 export { TechnicalLog } from './components/TechnicalLog.jsx';
 export { RunwayAnalyzer } from './components/RunwayAnalyzer.jsx';
-export { useNavigationResults } from './useNavigationResults';
+
+// IMPORTANT: Corriger le chemin vers useNavigationResults
+export { useNavigationResults } from './hooks/useNavigationResults';

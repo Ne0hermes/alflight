@@ -2,7 +2,7 @@
 
 import React, { memo } from 'react';
 import { useFuel, useAircraft, useNavigation } from '@core/contexts';
-import { useNavigationResults } from '@hooks/useNavigationResults';
+import { useNavigationResults } from '@/features/navigation/hooks/useNavigationResults';
 import { useFuelSync } from '@hooks/useFuelSync';
 import { Fuel, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
