@@ -1,6 +1,6 @@
 // src/features/alternates/components/AlternateSelectorDual.jsx
 import React, { memo, useState, useMemo } from 'react';
-import { MapPin, Plane, Navigation, Check, X, Info } from 'lucide-react';
+import { MapPin, Plane, Navigation, Check, X } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { calculateDistance } from '../utils/geometryCalculations';
 
@@ -69,10 +69,10 @@ export const AlternateSelectorDual = memo(({
     }
   };
   
-  // Composant pour afficher un côté
-  const SideSelector = ({ title, airports, selectedAirport, onSelect, side, referencePoint }) => (
+  // Composant pour afficher un côté avec indicateur visuel de sélection
+  const SideSelector = ({ title, airports, selectedAirport, onSelect, side, referencePoint, sideColor }) => (
     <div style={sx.components.card.base}>
-      <h5 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
+      <h5 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), { color: sideColor })}>
         {title} ({airports.length} disponibles)
       </h5>
       
@@ -81,7 +81,7 @@ export const AlternateSelectorDual = memo(({
           Aucun aérodrome trouvé de ce côté
         </p>
       ) : (
-        <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+        <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
           {airports.map((airport, index) => {
             const isSelected = selectedAirport?.icao === airport.icao;
             const distanceFromRef = side === 'departure' 
@@ -98,16 +98,57 @@ export const AlternateSelectorDual = memo(({
                   {
                     padding: '12px',
                     marginBottom: '8px',
-                    border: '1px solid',
-                    borderColor: isSelected ? '#3b82f6' : '#e5e7eb',
+                    border: '2px solid',
+                    borderColor: isSelected ? sideColor : '#e5e7eb',
                     borderRadius: '8px',
-                    backgroundColor: isSelected ? '#eff6ff' : '#ffffff',
+                    backgroundColor: isSelected ? (side === 'departure' ? '#fef2f2' : '#f0fdf4') : '#ffffff',
                     cursor: 'pointer',
-                    transition: 'all 0.2s'
+                    transition: 'all 0.2s',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    '&:hover': {
+                      borderColor: isSelected ? sideColor : `${sideColor}60`,
+                      backgroundColor: isSelected ? (side === 'departure' ? '#fef2f2' : '#f0fdf4') : '#fafafa',
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    }
                   }
                 )}
                 onClick={() => onSelect(airport, side)}
+                onMouseEnter={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.borderColor = `${sideColor}60`;
+                    e.currentTarget.style.backgroundColor = '#fafafa';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.borderColor = '#e5e7eb';
+                    e.currentTarget.style.backgroundColor = '#ffffff';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }
+                }}
               >
+                {/* Indicateur visuel de sélection */}
+                {isSelected && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    backgroundColor: sideColor,
+                    color: 'white',
+                    padding: '4px 12px',
+                    borderBottomLeftRadius: '8px',
+                    fontSize: '11px',
+                    fontWeight: 'bold'
+                  }}>
+                    ✓ SÉLECTIONNÉ
+                  </div>
+                )}
+                
                 <div style={sx.flex.between}>
                   <div style={{ flex: 1 }}>
                     <div style={sx.flex.start}>
@@ -118,11 +159,12 @@ export const AlternateSelectorDual = memo(({
                         width: '24px',
                         height: '24px',
                         borderRadius: '50%',
-                        backgroundColor: side === 'departure' ? '#dc2626' : '#059669',
-                        color: 'white',
+                        backgroundColor: isSelected ? sideColor : `${sideColor}20`,
+                        color: isSelected ? 'white' : sideColor,
                         fontSize: '12px',
                         fontWeight: 'bold',
-                        marginRight: '8px'
+                        marginRight: '8px',
+                        border: isSelected ? 'none' : `1px solid ${sideColor}`
                       }}>
                         {index + 1}
                       </span>
@@ -168,13 +210,25 @@ export const AlternateSelectorDual = memo(({
                   
                   <div style={sx.combine(sx.flex.center, sx.spacing.ml(3))}>
                     {isSelected ? (
-                      <Check size={20} color="#3b82f6" />
+                      <div style={{
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '50%',
+                        backgroundColor: sideColor,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white'
+                      }}>
+                        <Check size={18} />
+                      </div>
                     ) : (
                       <div style={{
-                        width: '20px',
-                        height: '20px',
-                        border: '2px solid #e5e7eb',
-                        borderRadius: '50%'
+                        width: '28px',
+                        height: '28px',
+                        border: `2px solid ${sideColor}30`,
+                        borderRadius: '50%',
+                        backgroundColor: 'white'
                       }} />
                     )}
                   </div>
@@ -189,19 +243,6 @@ export const AlternateSelectorDual = memo(({
   
   return (
     <div>
-      {/* Explication du système */}
-      <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mb(4))}>
-        <Info size={16} />
-        <div style={sx.text.sm}>
-          <p style={sx.text.bold}>Système dual de déroutement</p>
-          <p>La zone est divisée par la médiatrice du segment [départ-arrivée]. 
-             Sélectionnez un aérodrome de chaque côté pour garantir une couverture complète du vol.</p>
-          <p style={sx.spacing.mt(1)}>
-            Distance du vol : <strong>{totalFlightDistance.toFixed(1)} NM</strong>
-          </p>
-        </div>
-      </div>
-      
       {/* Résumé de la sélection */}
       {(selectedDeparture || selectedArrival) && (
         <div style={sx.combine(sx.components.card.base, sx.spacing.mb(4))}>
@@ -250,6 +291,7 @@ export const AlternateSelectorDual = memo(({
           onSelect={handleSelect}
           side="departure"
           referencePoint={searchZone.departure}
+          sideColor="#dc2626"
         />
         
         <SideSelector
@@ -259,6 +301,7 @@ export const AlternateSelectorDual = memo(({
           onSelect={handleSelect}
           side="arrival"
           referencePoint={searchZone.arrival}
+          sideColor="#059669"
         />
       </div>
       
@@ -268,6 +311,7 @@ export const AlternateSelectorDual = memo(({
           📊 Statistiques de répartition
         </h5>
         <div style={sx.text.xs}>
+          <p><strong>Distance du vol :</strong> {totalFlightDistance.toFixed(1)} NM</p>
           <p>Total candidats : {candidates.length}</p>
           <p>Côté départ : {candidatesBySide.departure.length} ({(candidatesBySide.departure.length / candidates.length * 100).toFixed(0)}%)</p>
           <p>Côté arrivée : {candidatesBySide.arrival.length} ({(candidatesBySide.arrival.length / candidates.length * 100).toFixed(0)}%)</p>

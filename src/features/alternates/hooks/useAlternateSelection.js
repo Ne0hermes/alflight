@@ -531,43 +531,15 @@ export const useAlternateSelection = () => {
       // Stocker tous les aérodromes scorés
       setScoredAlternates(scored);
       
-      // 6. Sélectionner le meilleur de chaque côté
-      const selectedAlternatesArray = [];
+      // 6. PAS DE SÉLECTION AUTOMATIQUE - Juste stocker les suggestions
+      console.log(`✅ ${scored.length} alternates suggérés`);
+      console.log(`   - Côté départ: ${departureSideAirports.length} aérodromes`);
+      console.log(`   - Côté arrivée: ${arrivalSideAirports.length} aérodromes`);
       
-      // Meilleur aérodrome côté départ
-      if (departureSideAirports.length > 0) {
-        const bestDeparture = departureSideAirports[0];
-        bestDeparture.selectionType = 'departure';
-        selectedAlternatesArray.push(bestDeparture);
-        
-        console.log(`✈️ Meilleur déroutement départ: ${bestDeparture.icao} - ${bestDeparture.name}`);
-        console.log(`   Distance: ${bestDeparture.distance?.toFixed(1)} NM, Score: ${(bestDeparture.score * 100).toFixed(0)}%`);
-      }
+      // Ne pas sélectionner automatiquement - laisser l'utilisateur choisir
+      // Les alternates scorés sont disponibles dans scoredAlternates du store
       
-      // Meilleur aérodrome côté arrivée
-      if (arrivalSideAirports.length > 0) {
-        const bestArrival = arrivalSideAirports[0];
-        bestArrival.selectionType = 'arrival';
-        selectedAlternatesArray.push(bestArrival);
-        
-        console.log(`✈️ Meilleur déroutement arrivée: ${bestArrival.icao} - ${bestArrival.name}`);
-        console.log(`   Distance: ${bestArrival.distance?.toFixed(1)} NM, Score: ${(bestArrival.score * 100).toFixed(0)}%`);
-      }
-      
-      // Si on n'a qu'un seul côté avec des aérodromes, prendre les 2 meilleurs de ce côté
-      if (selectedAlternatesArray.length === 1) {
-        const sideWithAirports = departureSideAirports.length > 0 ? departureSideAirports : arrivalSideAirports;
-        if (sideWithAirports.length > 1) {
-          const second = sideWithAirports[1];
-          second.selectionType = sideWithAirports === departureSideAirports ? 'departure' : 'arrival';
-          selectedAlternatesArray.push(second);
-          console.log(`➕ Second déroutement du même côté: ${second.icao}`);
-        }
-      }
-      
-      useAlternatesStore.getState().setSelectedAlternates(selectedAlternatesArray);
-      
-      console.log(`✅ ${scored.length} alternates scorés`);
+      console.log(`✅ ${scored.length} alternates scorés et disponibles pour sélection manuelle`);
       
       // RÉSUMÉ FINAL
       console.log('📊 RÉSUMÉ FINAL:');
@@ -575,17 +547,7 @@ export const useAlternateSelection = () => {
       console.log(`- Dans la zone: ${candidatesInZone.length}`);
       console.log(`- Après filtrage: ${filtered.length}`);
       console.log(`- Après scoring: ${scored.length}`);
-      console.log(`- Sélectionnés: ${selectedAlternatesArray.length}`);
-      
-      if (selectedAlternatesArray.length > 0) {
-        console.log('✈️ Alternates sélectionnés:');
-        selectedAlternatesArray.forEach((alt, i) => {
-          console.log(`  ${i+1}. ${alt.icao} - ${alt.name} (${alt.selectionType})`);
-          console.log(`     Distance route: ${alt.distance?.toFixed(1)} NM`);
-          console.log(`     Piste: ${alt.runways?.[0]?.length || '?'} m`);
-          console.log(`     Score: ${(alt.score * 100).toFixed(0)}%`);
-        });
-      }
+      console.log(`- Sélection manuelle requise`);
     
     } finally {
       // Fin de la recherche
@@ -622,10 +584,14 @@ export const useAlternateSelection = () => {
         console.log('🔄 Route modifiée, recalcul automatique des alternates');
         useAlternatesStore.getState().setLastRouteKey?.(routeKey);
         setSearchZone(searchZone);
+        // Effacer les sélections et suggestions précédentes
+        setScoredAlternates([]);
+        useAlternatesStore.getState().setSelectedAlternates([]);
+        // Relancer la recherche
         findAlternates();
       }
     }
-  }, [searchZone, waypoints, findAlternates, setSearchZone, hasSearchedOnce]);
+  }, [searchZone, waypoints, findAlternates, setSearchZone, setScoredAlternates, hasSearchedOnce]);
   
   return {
     searchZone,
