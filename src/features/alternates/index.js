@@ -6,10 +6,12 @@ export { default } from './AlternatesModule.jsx';
 // Export des hooks pour utilisation dans d'autres modules
 export { useAlternateSelection } from './hooks/useAlternateSelection';
 export { useAdvancedAlternateSelection } from './hooks/useAdvancedAlternateSelection';
-export { useAlternatesForNavigation } from './hooks/useAlternatesIntegration';
-export { useAlternatesForFuel } from './hooks/useAlternatesIntegration';
-export { useAlternatesForPerformance } from './hooks/useAlternatesIntegration';
-export { useAlternatesForVAC } from './hooks/useAlternatesIntegration';
+export { 
+  useAlternatesForNavigation,
+  useAlternatesForFuel,
+  useAlternatesForPerformance,
+  useAlternatesForVAC 
+} from './hooks/useAlternatesIntegration';
 
 // Export des composants si nécessaire
 export { AlternateDetails } from './components/AlternateDetails';

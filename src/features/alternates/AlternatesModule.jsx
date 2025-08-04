@@ -1,4 +1,7 @@
 // src/features/alternates/AlternatesModule.jsx
+// VERSION 2 - Module Déroutements avec zone pilule
+
+console.log('🛬 AlternatesModule v2 - Chargement...'); // LOG DE VÉRIFICATION
 
 import React, { memo } from 'react';
 import { Navigation2, AlertTriangle, Fuel, Wind, Plane, Info, RefreshCw } from 'lucide-react';
@@ -7,6 +10,8 @@ import { useAdvancedAlternateSelection } from './hooks/useAdvancedAlternateSelec
 import { AlternateMap } from './components/AlternateMap';
 
 const AlternatesModule = memo(() => {
+  console.log('🛬 AlternatesModule - Rendu du composant'); // LOG DE RENDU
+  
   const {
     searchZone,
     selectedAlternates,
@@ -18,6 +23,8 @@ const AlternatesModule = memo(() => {
     formattedAlternates,
     statistics
   } = useAdvancedAlternateSelection();
+  
+  console.log('🛬 AlternatesModule - État:', { isReady, alternatesCount: selectedAlternates?.length });
   
   if (!isReady) {
     return (
@@ -58,25 +65,25 @@ const AlternatesModule = memo(() => {
               icon={<Navigation2 size={20} />}
               label="Zone principale"
               value="Capsule (pilule)"
-              detail={`Aire: ${Math.round(triangleArea)} NM²`}
+              detail={`Aire: ${Math.round(triangleArea || 0)} NM²`}
             />
             <StatCard
               icon={<Fuel size={20} />}
               label="Rayon dynamique"
-              value={`${dynamicRadius} NM`}
+              value={`${dynamicRadius || 25} NM`}
               detail="Basé sur carburant"
             />
             <StatCard
               icon={<Plane size={20} />}
               label="Points tournants"
-              value={turnPointBuffers.length}
-              detail={turnPointBuffers.length > 0 ? "Avec tampons 5-10 NM" : "Aucun détecté"}
+              value={turnPointBuffers?.length || 0}
+              detail={turnPointBuffers?.length > 0 ? "Avec tampons 5-10 NM" : "Aucun détecté"}
             />
             <StatCard
               icon={<Info size={20} />}
               label="Candidats trouvés"
-              value={statistics.scoredCandidates}
-              detail={`Sur ${statistics.totalCandidates} total`}
+              value={statistics?.scoredCandidates || 0}
+              detail={`Sur ${statistics?.totalCandidates || 0} total`}
             />
           </div>
         </div>
@@ -87,7 +94,7 @@ const AlternatesModule = memo(() => {
             ✅ Aérodromes de déroutement sélectionnés automatiquement
           </h4>
           
-          {formattedAlternates.length === 0 ? (
+          {!formattedAlternates || formattedAlternates.length === 0 ? (
             <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.text.center, sx.spacing.p(4))}>
               Aucun aérodrome trouvé dans la zone de recherche définie
             </p>
@@ -118,7 +125,7 @@ const AlternatesModule = memo(() => {
                       </td>
                       <td style={styles.td}>
                         <strong>{alt.displayName}</strong>
-                        {alt.vac.available && (
+                        {alt.vac?.available && (
                           <span style={styles.vacBadge}>
                             {alt.vac.downloaded ? '📄 VAC' : '⚠️ VAC'}
                           </span>
@@ -151,7 +158,7 @@ const AlternatesModule = memo(() => {
           )}
           
           {/* Détails du scoring */}
-          {formattedAlternates.length > 0 && (
+          {formattedAlternates && formattedAlternates.length > 0 && (
             <details style={sx.spacing.mt(3)}>
               <summary style={styles.summary}>
                 Voir les détails du calcul de score
@@ -165,15 +172,17 @@ const AlternatesModule = memo(() => {
       </section>
       
       {/* Carte avec visualisation */}
-      <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
-        <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(3))}>
-          Visualisation de la zone de recherche
-        </h4>
-        <AlternateMap 
-          searchZone={searchZone}
-          alternates={selectedAlternates}
-        />
-      </section>
+      {searchZone && (
+        <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
+          <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(3))}>
+            Visualisation de la zone de recherche
+          </h4>
+          <AlternateMap 
+            searchZone={searchZone}
+            alternates={selectedAlternates}
+          />
+        </section>
+      )}
       
       {/* Informations détaillées */}
       <section style={sx.components.section.base}>
@@ -223,7 +232,7 @@ const StatCard = memo(({ icon, label, value, detail }) => (
 // Composant pour expliquer le scoring
 const ScoringExplanation = memo(({ alternates }) => (
   <div style={{ display: 'grid', gap: '16px' }}>
-    {alternates.map((alt, index) => (
+    {alternates && alternates.map((alt, index) => (
       <div key={alt.icao} style={sx.spacing.p(3)}>
         <h5 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(2))}>
           {alt.icao} - {alt.name} (Score total: {(alt.score * 100).toFixed(0)}%)
@@ -331,6 +340,8 @@ const getWeight = (criterion) => {
 AlternatesModule.displayName = 'AlternatesModule';
 StatCard.displayName = 'StatCard';
 ScoringExplanation.displayName = 'ScoringExplanation';
+
+console.log('🛬 AlternatesModule v2 - Chargement terminé');
 
 // Export par défaut pour le lazy loading
 export default AlternatesModule;
