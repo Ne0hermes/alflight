@@ -65,7 +65,7 @@ const AlternatesModule = memo(() => {
               icon={<Navigation2 size={20} />}
               label="Zone principale"
               value="Capsule (pilule)"
-              detail={`Aire: ${Math.round(triangleArea || 0)} NM²`}
+              detail={`Rayon: ${dynamicRadius || 25} NM`}
             />
             <StatCard
               icon={<Fuel size={20} />}
