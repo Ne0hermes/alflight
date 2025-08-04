@@ -8,6 +8,7 @@ import { Navigation2, AlertTriangle, Fuel, Wind, Plane, Info, RefreshCw } from '
 import { sx } from '@shared/styles/styleSystem';
 import { useAdvancedAlternateSelection } from './hooks/useAdvancedAlternateSelection';
 import { AlternateMap } from './components/AlternateMap';
+import { useNavigationResults } from '@features/shared-hooks';
 
 const AlternatesModule = memo(() => {
   console.log('🛬 AlternatesModule - Rendu du composant'); // LOG DE RENDU
