@@ -10,8 +10,11 @@ import { useAdvancedAlternateSelection } from './hooks/useAdvancedAlternateSelec
 import { AlternateMap } from './components/AlternateMap';
 import { AlternateSelectorDual } from './components/AlternateSelectorDual';
 import { useNavigationResults } from './hooks/useNavigationResults';
-import { WeatherRateLimitIndicator } from '@components/WeatherRateLimitIndicator';
+import { WeatherRateLimitIndicator } from './components/WeatherRateLimitIndicator';
 import { useAlternatesStore } from '@core/stores/alternatesStore';
+
+
+
 
 
 const AlternatesModule = memo(() => {
