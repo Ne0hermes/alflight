@@ -2,9 +2,7 @@
 import React, { memo, useState, useCallback, useEffect } from 'react';
 import { MapPin, Plus, Trash2, Navigation2, Home, Sun, Moon, List, Loader, AlertCircle, AlertTriangle, Wind, Plane } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
-import { useAlternatesData } from './hooks/useAlternatesData';
-
-
+import { useAlternatesForNavigation } from '@features/alternates';
 
 // Import des contextes et hooks
 import { useNavigation, useAircraft } from '@core/contexts';
@@ -24,9 +22,7 @@ const NavigationModule = () => {
   const { selectedAircraft } = useAircraft();
   const { waypoints, setWaypoints, flightParams, setFlightParams, flightType, setFlightType } = useNavigation();
   const navigationResults = useNavigationResults();
-  
-  // Utilisez le nouveau hook
-  const { alternates, hasAlternates, addAlternateAsWaypoint } = useAlternatesData();
+  const { alternates, hasAlternates, addAlternateAsWaypoint } = useAlternatesForNavigation();
   
   
   // OpenAIP Store
