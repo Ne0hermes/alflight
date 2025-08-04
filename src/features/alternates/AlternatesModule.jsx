@@ -1,10 +1,10 @@
 // src/features/alternates/AlternatesModule.jsx
-// VERSION 4 - Module Déroutements avec système dual et sélection manuelle
+// VERSION 5 - Module Déroutements avec sélection manuelle uniquement et suggestions visuelles
 
-console.log('🛬 AlternatesModule v4 - Chargement...'); // LOG DE VÉRIFICATION
+console.log('🛬 AlternatesModule v5 - Chargement...'); // LOG DE VÉRIFICATION
 
 import React, { memo, useEffect, useState } from 'react';
-import { Navigation2, AlertTriangle, Fuel, Wind, Plane, Info, RefreshCw, Settings } from 'lucide-react';
+import { Navigation2, AlertTriangle, Fuel, Wind, Plane, Info, MapPin, RefreshCw } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useAdvancedAlternateSelection } from './hooks/useAdvancedAlternateSelection';
 import { AlternateMap } from './components/AlternateMap';
@@ -12,10 +12,6 @@ import { AlternateSelectorDual } from './components/AlternateSelectorDual';
 import { useNavigationResults } from './hooks/useNavigationResults';
 import { WeatherRateLimitIndicator } from './components/WeatherRateLimitIndicator';
 import { useAlternatesStore } from '@core/stores/alternatesStore';
-
-
-
-
 
 const AlternatesModule = memo(() => {
   console.log('🛬 AlternatesModule - Rendu du composant'); // LOG DE RENDU
@@ -33,8 +29,9 @@ const AlternatesModule = memo(() => {
   } = useAdvancedAlternateSelection();
   
   const { scoredAlternates, setSelectedAlternates } = useAlternatesStore();
-  const [showSelector, setShowSelector] = useState(false);
   const [manualSelection, setManualSelection] = useState({ departure: null, arrival: null });
+  
+  const [hasSearched, setHasSearched] = useState(false);
   
   // Log détaillé de l'état
   useEffect(() => {
@@ -49,22 +46,36 @@ const AlternatesModule = memo(() => {
         radius: searchZone.radius,
         hasPerpendicular: !!searchZone.perpendicular
       } : null,
-      selectedAlternates: selectedAlternates?.map(alt => ({
-        icao: alt.icao,
-        name: alt.name,
-        side: alt.side,
-        selectionType: alt.selectionType,
-        score: alt.score
-      }))
+      manualSelection
     });
-  }, [isReady, selectedAlternates, scoredAlternates, formattedAlternates, statistics, searchZone]);
+  }, [isReady, selectedAlternates, scoredAlternates, formattedAlternates, statistics, searchZone, manualSelection]);
+  
+  // Déclencher automatiquement la recherche quand les conditions sont remplies
+  useEffect(() => {
+    if (isReady && !hasSearched) {
+      console.log('🚀 Déclenchement automatique de la recherche');
+      setHasSearched(true);
+      refreshAlternates();
+    }
+  }, [isReady, hasSearched, refreshAlternates]);
+  
+  // Réinitialiser hasSearched si la route change
+  useEffect(() => {
+    if (searchZone) {
+      const routeKey = `${searchZone.departure.lat}-${searchZone.departure.lon}-${searchZone.arrival.lat}-${searchZone.arrival.lon}`;
+      const previousKey = useAlternatesStore.getState().lastRouteKey;
+      if (routeKey !== previousKey) {
+        setHasSearched(false);
+      }
+    }
+  }, [searchZone]);
   
   if (!isReady) {
     return (
       <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning)}>
         <AlertTriangle size={16} />
         <p style={sx.text.sm}>
-          Définissez un vol avec départ et arrivée pour activer la sélection automatique des déroutements
+          Définissez un vol avec départ et arrivée pour voir les suggestions de déroutements
         </p>
       </div>
     );
@@ -83,15 +94,13 @@ const AlternatesModule = memo(() => {
       newSelection.push({ ...selection.arrival, selectionType: 'arrival' });
     }
     
-    if (newSelection.length > 0) {
-      setSelectedAlternates(newSelection);
-    }
+    setSelectedAlternates(newSelection);
   };
   
-  // Déterminer quels alternates afficher
-  const displayedAlternates = showSelector && (manualSelection.departure || manualSelection.arrival)
+  // Déterminer quels alternates afficher sur la carte
+  const mapAlternates = (manualSelection.departure || manualSelection.arrival)
     ? [manualSelection.departure, manualSelection.arrival].filter(Boolean)
-    : formattedAlternates;
+    : [];
   
   return (
     <div>
@@ -100,39 +109,10 @@ const AlternatesModule = memo(() => {
       
       {/* En-tête avec résumé et statistiques */}
       <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
-        <div style={sx.combine(sx.flex.between, sx.spacing.mb(4))}>
+        <div style={sx.spacing.mb(4)}>
           <h3 style={sx.combine(sx.text.xl, sx.text.bold)}>
             🛬 Sélection des aérodromes de déroutement
           </h3>
-          <div style={sx.flex.start}>
-            <button
-              onClick={() => setShowSelector(!showSelector)}
-              style={sx.combine(
-                sx.components.button.base, 
-                showSelector ? sx.components.button.primary : sx.components.button.secondary,
-                sx.spacing.mr(2)
-              )}
-            >
-              <Settings size={16} />
-              {showSelector ? 'Sélection auto' : 'Sélection manuelle'}
-            </button>
-            <button
-              onClick={refreshAlternates}
-              style={sx.combine(sx.components.button.base, sx.components.button.secondary, sx.spacing.mr(2))}
-            >
-              <RefreshCw size={16} />
-              Actualiser
-            </button>
-            {selectedAlternates?.length === 0 && (
-              <button
-                onClick={refreshAlternates}
-                style={sx.combine(sx.components.button.base, sx.components.button.primary)}
-              >
-                <Navigation2 size={16} />
-                Lancer la recherche
-              </button>
-            )}
-          </div>
         </div>
         
         {/* Statistiques de recherche */}
@@ -169,202 +149,98 @@ const AlternatesModule = memo(() => {
           </div>
         </div>
         
-        {/* Mode sélection manuelle */}
-        {showSelector && scoredAlternates.length > 0 && (
+        {/* Interface de sélection manuelle avec tous les aérodromes suggérés */}
+        {scoredAlternates && scoredAlternates.length > 0 ? (
           <AlternateSelectorDual
             candidates={scoredAlternates}
             searchZone={searchZone}
             onSelectionChange={handleManualSelection}
             currentSelection={manualSelection}
           />
+        ) : hasSearched ? (
+          <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning)}>
+            <Info size={16} />
+            <p style={sx.text.sm}>
+              Aucun aérodrome trouvé dans la zone de recherche.
+            </p>
+          </div>
+        ) : (
+          <div style={sx.combine(sx.components.card.base, sx.text.center, sx.spacing.p(8))}>
+            <div style={{ 
+              display: 'inline-block',
+              animation: 'spin 2s linear infinite'
+            }}>
+              <RefreshCw size={48} style={{ color: '#3b82f6' }} />
+            </div>
+            <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mt(4), sx.spacing.mb(2))}>
+              Recherche en cours...
+            </h4>
+            <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
+              Analyse de la zone de vol et recherche des aérodromes de déroutement
+            </p>
+            <style>{`
+              @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+              }
+            `}</style>
+          </div>
         )}
         
-        {/* Mode sélection automatique */}
-        {!showSelector && (
-          <>
-            {/* DEBUG: Afficher plus d'infos si pas d'alternates */}
-            {(!displayedAlternates || displayedAlternates.length === 0) && (
-              <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mb(4))}>
-                <Info size={16} />
-                <div>
-                  <p style={sx.text.sm}>
-                    <strong>Diagnostic détaillé :</strong>
+        {/* Résumé de la sélection actuelle */}
+        {(manualSelection.departure || manualSelection.arrival) && (
+          <div style={sx.combine(sx.components.card.base, sx.spacing.mt(4))}>
+            <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
+              ✅ Aérodromes sélectionnés
+            </h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              {manualSelection.departure && (
+                <div style={{
+                  padding: '16px',
+                  border: '2px solid #dc2626',
+                  borderRadius: '8px',
+                  backgroundColor: '#fef2f2'
+                }}>
+                  <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(1))}>
+                    🔴 Déroutement côté départ
                   </p>
-                  <ul style={sx.combine(sx.text.sm, sx.spacing.ml(4))}>
-                    <li>Aérodromes disponibles : {statistics?.totalCandidates || 0}</li>
-                    <li>Aérodromes dans la zone : {statistics?.scoredCandidates || 0}</li>
-                    <li>Zone de recherche : {searchZone ? `${searchZone.type} (${searchZone.radius?.toFixed(0)} NM)` : 'Non définie'}</li>
-                    <li>Rayon dynamique : {dynamicRadius || 'Non calculé'} NM</li>
-                    <li>Alternates sélectionnés automatiquement : {selectedAlternates?.length || 0}</li>
-                    <li>Vérifiez la console (F12) pour plus de détails</li>
-                  </ul>
+                  <p style={sx.text.base}>
+                    <strong>{manualSelection.departure.icao}</strong> - {manualSelection.departure.name}
+                  </p>
+                  <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mt(1))}>
+                    <MapPin size={12} style={{ display: 'inline', marginRight: '4px' }} />
+                    {manualSelection.departure.distanceToDeparture?.toFixed(1) || '?'} NM depuis le départ
+                  </p>
+                  <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
+                    Score: {((manualSelection.departure.score || 0) * 100).toFixed(0)}%
+                  </p>
                 </div>
-              </div>
-            )}
-            
-            {/* Affichage de TOUS les candidats trouvés */}
-            {scoredAlternates && scoredAlternates.length > 0 && (
-              <div style={sx.combine(sx.components.card.base, sx.spacing.mb(4))}>
-                <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
-                  📊 Tous les aérodromes candidats ({scoredAlternates.length})
-                </h4>
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={styles.table}>
-                    <thead>
-                      <tr>
-                        <th style={styles.th}>Aérodrome</th>
-                        <th style={styles.th}>Distance route</th>
-                        <th style={styles.th}>Côté</th>
-                        <th style={styles.th}>Piste</th>
-                        <th style={styles.th}>Services</th>
-                        <th style={styles.th}>Score</th>
-                        <th style={styles.th}>Sélection</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {scoredAlternates.map((alt) => {
-                        const isSelected = selectedAlternates.some(s => s.icao === alt.icao);
-                        return (
-                          <tr key={alt.icao} style={styles.tr}>
-                            <td style={styles.td}>
-                              <strong>{alt.icao}</strong> - {alt.name}
-                            </td>
-                            <td style={styles.td}>{(alt.distance || 0).toFixed(1)} NM</td>
-                            <td style={styles.td}>
-                              <span style={{
-                                padding: '2px 8px',
-                                borderRadius: '4px',
-                                fontSize: '11px',
-                                backgroundColor: alt.side === 'departure' ? '#fee2e2' : '#dcfce7',
-                                color: alt.side === 'departure' ? '#dc2626' : '#059669'
-                              }}>
-                                {alt.side === 'departure' ? 'Départ' : 'Arrivée'}
-                              </span>
-                            </td>
-                            <td style={styles.td}>
-                              {alt.runways?.[0]?.length || '?'}m
-                            </td>
-                            <td style={styles.td}>
-                              {[
-                                alt.services?.fuel && '⛽',
-                                alt.services?.atc && '🗼',
-                                alt.services?.lighting && '💡'
-                              ].filter(Boolean).join(' ') || '-'}
-                            </td>
-                            <td style={styles.td}>
-                              <span style={{
-                                ...styles.scoreBadge,
-                                backgroundColor: getScoreColor(alt.score)
-                              }}>
-                                {((alt.score || 0) * 100).toFixed(0)}%
-                              </span>
-                            </td>
-                            <td style={styles.td}>
-                              {isSelected && '✅ Auto'}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-            
-            {/* Alternates sélectionnés automatiquement */}
-            <div style={sx.components.card.base}>
-              <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
-                ✅ Aérodromes sélectionnés automatiquement (meilleurs de chaque côté)
-              </h4>
+              )}
               
-              {!displayedAlternates || displayedAlternates.length === 0 ? (
-                <div style={sx.spacing.p(4)}>
-                  <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.text.center, sx.spacing.mb(3))}>
-                    Aucun aérodrome sélectionné automatiquement
+              {manualSelection.arrival && (
+                <div style={{
+                  padding: '16px',
+                  border: '2px solid #059669',
+                  borderRadius: '8px',
+                  backgroundColor: '#f0fdf4'
+                }}>
+                  <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(1))}>
+                    🟢 Déroutement côté arrivée
                   </p>
-                  <div style={sx.text.center}>
-                    <button
-                      onClick={refreshAlternates}
-                      style={sx.combine(sx.components.button.base, sx.components.button.primary)}
-                    >
-                      <Navigation2 size={16} />
-                      Lancer une recherche
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={styles.table}>
-                    <thead>
-                      <tr>
-                        <th style={styles.th}>#</th>
-                        <th style={styles.th}>Aérodrome</th>
-                        <th style={styles.th}>Type</th>
-                        <th style={styles.th}>Distance route</th>
-                        <th style={styles.th}>Piste principale</th>
-                        <th style={styles.th}>Services</th>
-                        <th style={styles.th}>Météo</th>
-                        <th style={styles.th}>Score</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {displayedAlternates.map((alt, index) => (
-                        <tr key={alt.icao} style={styles.tr}>
-                          <td style={styles.td}>
-                            <span style={{
-                              ...styles.badge,
-                              backgroundColor: alt.selectionType === 'departure' ? '#dc2626' : '#059669'
-                            }}>
-                              {index + 1}
-                            </span>
-                          </td>
-                          <td style={styles.td}>
-                            <strong>{alt.displayName || `${alt.icao} - ${alt.name}`}</strong>
-                            {alt.vac?.available && (
-                              <span style={styles.vacBadge}>
-                                {alt.vac.downloaded ? '📄 VAC' : '⚠️ VAC'}
-                              </span>
-                            )}
-                          </td>
-                          <td style={styles.td}>
-                            <span style={{
-                              padding: '4px 8px',
-                              borderRadius: '4px',
-                              fontSize: '12px',
-                              fontWeight: 'bold',
-                              backgroundColor: alt.selectionType === 'departure' ? '#fee2e2' : '#dcfce7',
-                              color: alt.selectionType === 'departure' ? '#dc2626' : '#059669'
-                            }}>
-                              {alt.selectionType === 'departure' ? '🔴 Départ' : '🟢 Arrivée'}
-                            </span>
-                          </td>
-                          <td style={styles.td}>{alt.displayDistance || `${(alt.distance || 0).toFixed(1)} NM`}</td>
-                          <td style={styles.td}>{alt.displayRunway || `${alt.runways?.[0]?.length || '?'}m`}</td>
-                          <td style={styles.td}>{alt.displayServices || '-'}</td>
-                          <td style={styles.td}>
-                            <span style={sx.text.xs}>{alt.displayWeather || 'N/A'}</span>
-                          </td>
-                          <td style={styles.td}>
-                            <div style={sx.flex.center}>
-                              <span style={{
-                                ...styles.scoreBadge,
-                                backgroundColor: getScoreColor(alt.score)
-                              }}>
-                                {alt.displayScore || `${((alt.score || 0) * 100).toFixed(0)}%`}
-                              </span>
-                              <span style={sx.combine(sx.text.xs, sx.text.muted, sx.spacing.ml(1))}>
-                                {alt.displayRank || ''}
-                              </span>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <p style={sx.text.base}>
+                    <strong>{manualSelection.arrival.icao}</strong> - {manualSelection.arrival.name}
+                  </p>
+                  <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mt(1))}>
+                    <MapPin size={12} style={{ display: 'inline', marginRight: '4px' }} />
+                    {manualSelection.arrival.distanceToArrival?.toFixed(1) || '?'} NM depuis l'arrivée
+                  </p>
+                  <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
+                    Score: {((manualSelection.arrival.score || 0) * 100).toFixed(0)}%
+                  </p>
                 </div>
               )}
             </div>
-          </>
+          </div>
         )}
       </section>
       
@@ -376,10 +252,10 @@ const AlternatesModule = memo(() => {
           </h4>
           <AlternateMap 
             searchZone={searchZone}
-            alternates={showSelector && (manualSelection.departure || manualSelection.arrival) 
-              ? [manualSelection.departure, manualSelection.arrival].filter(Boolean)
-              : selectedAlternates
-            }
+            alternates={mapAlternates}
+            allCandidates={scoredAlternates}
+            showAllCandidates={true}
+            selectedIcaos={[manualSelection.departure?.icao, manualSelection.arrival?.icao].filter(Boolean)}
           />
         </section>
       )}
@@ -393,7 +269,7 @@ const AlternatesModule = memo(() => {
           <div style={sx.text.sm}>
             <p style={sx.spacing.mb(2)}>
               <strong>Système dual :</strong> La zone est divisée par la médiatrice du segment [départ, arrivée]. 
-              Un aérodrome est sélectionné de chaque côté pour garantir une couverture complète.
+              Vous pouvez sélectionner un aérodrome de chaque côté pour garantir une couverture complète.
             </p>
             <p style={sx.spacing.mb(2)}>
               <strong>Zone de recherche :</strong> Capsule (pilule) autour de la route avec rayon h = (√3/2) × distance + tampons de 5-10 NM autour des points tournants critiques
@@ -430,64 +306,10 @@ const StatCard = memo(({ icon, label, value, detail }) => (
   </div>
 ));
 
-// Styles
-const styles = {
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    fontSize: '14px'
-  },
-  th: {
-    textAlign: 'left',
-    padding: '12px 8px',
-    borderBottom: '2px solid #e5e7eb',
-    fontWeight: 600,
-    color: '#374151'
-  },
-  td: {
-    padding: '12px 8px',
-    borderBottom: '1px solid #f3f4f6'
-  },
-  tr: {
-    '&:hover': {
-      backgroundColor: '#f9fafb'
-    }
-  },
-  badge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '24px',
-    height: '24px',
-    borderRadius: '50%',
-    color: 'white',
-    fontSize: '12px',
-    fontWeight: 'bold'
-  },
-  vacBadge: {
-    marginLeft: '8px',
-    fontSize: '12px'
-  },
-  scoreBadge: {
-    padding: '2px 8px',
-    borderRadius: '4px',
-    color: 'white',
-    fontSize: '12px',
-    fontWeight: 'bold'
-  }
-};
-
-// Fonctions utilitaires
-const getScoreColor = (score) => {
-  if (score >= 0.8) return '#10b981';
-  if (score >= 0.6) return '#f59e0b';
-  return '#ef4444';
-};
-
 AlternatesModule.displayName = 'AlternatesModule';
 StatCard.displayName = 'StatCard';
 
-console.log('🛬 AlternatesModule v4 - Chargement terminé');
+console.log('🛬 AlternatesModule v5 - Chargement terminé');
 
 // Export par défaut pour le lazy loading
 export default AlternatesModule;

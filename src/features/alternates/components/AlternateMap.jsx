@@ -17,8 +17,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// Créer des icônes personnalisées
-const createAlternateIcon = (number, color, selectionType) => {
+// Créer des icônes personnalisées pour les alternates sélectionnés
+const createSelectedAlternateIcon = (number, color, selectionType) => {
   const svgIcon = `
     <svg width="30" height="40" viewBox="0 0 30 40" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M15 0C7.5 0 1 6.5 1 14C1 24.5 15 40 15 40C15 40 29 24.5 29 14C29 6.5 22.5 0 15 0Z" 
@@ -33,11 +33,83 @@ const createAlternateIcon = (number, color, selectionType) => {
     iconSize: [30, 40],
     iconAnchor: [15, 40],
     popupAnchor: [0, -40],
-    className: 'alternate-marker'
+    className: 'alternate-marker-selected'
   });
 };
 
-export const AlternateMap = memo(({ searchZone, alternates = [] }) => {
+// Créer des icônes pour les candidats non sélectionnés
+const createCandidateIcon = (color) => {
+  const svgIcon = `
+    <svg width="20" height="28" viewBox="0 0 20 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M10 0C4.5 0 0 4.5 0 10C0 18 10 28 10 28C10 28 20 18 20 10C20 4.5 15.5 0 10 0Z" 
+            fill="${color}" fill-opacity="0.4" stroke="${color}" stroke-width="1.5"/>
+      <circle cx="10" cy="10" r="4" fill="${color}" fill-opacity="0.8"/>
+    </svg>
+  `;
+
+  return L.divIcon({
+    html: svgIcon,
+    iconSize: [20, 28],
+    iconAnchor: [10, 28],
+    popupAnchor: [0, -28],
+    className: 'alternate-marker-candidate'
+  });
+};
+
+// Créer des icônes pour les points de départ et arrivée
+const createDepartureIcon = () => {
+  const svgIcon = `
+    <svg width="44" height="50" viewBox="0 0 44 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g filter="url(#shadow)">
+        <circle cx="22" cy="22" r="20" fill="#3b82f6" stroke="#ffffff" stroke-width="3"/>
+        <path d="M17 22 L17 12 L29 22 L17 32 Z" fill="#ffffff"/>
+      </g>
+      <rect x="8" y="40" width="28" height="10" rx="2" fill="#3b82f6"/>
+      <text x="22" y="47" text-anchor="middle" font-size="7" font-weight="bold" fill="#ffffff">DÉPART</text>
+      <defs>
+        <filter id="shadow">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+        </filter>
+      </defs>
+    </svg>
+  `;
+
+  return L.divIcon({
+    html: svgIcon,
+    iconSize: [44, 50],
+    iconAnchor: [22, 44],
+    popupAnchor: [0, -44],
+    className: 'departure-marker'
+  });
+};
+
+const createArrivalIcon = () => {
+  const svgIcon = `
+    <svg width="44" height="50" viewBox="0 0 44 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g filter="url(#shadow2)">
+        <circle cx="22" cy="22" r="20" fill="#dc2626" stroke="#ffffff" stroke-width="3"/>
+        <rect x="14" y="14" width="16" height="16" rx="2" fill="#ffffff"/>
+      </g>
+      <rect x="8" y="40" width="28" height="10" rx="2" fill="#dc2626"/>
+      <text x="22" y="47" text-anchor="middle" font-size="7" font-weight="bold" fill="#ffffff">ARRIVÉE</text>
+      <defs>
+        <filter id="shadow2">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+        </filter>
+      </defs>
+    </svg>
+  `;
+
+  return L.divIcon({
+    html: svgIcon,
+    iconSize: [44, 50],
+    iconAnchor: [22, 44],
+    popupAnchor: [0, -44],
+    className: 'arrival-marker'
+  });
+};
+
+export const AlternateMap = memo(({ searchZone, alternates = [], allCandidates = [], showAllCandidates = false, selectedIcaos = [] }) => {
   const { waypoints } = useNavigation();
   
   // Calculer le centre et le zoom
@@ -46,7 +118,8 @@ export const AlternateMap = memo(({ searchZone, alternates = [] }) => {
     
     const allPoints = [
       ...waypoints.filter(w => w.lat && w.lon).map(w => [w.lat, w.lon]),
-      ...alternates.map(a => [a.position.lat, a.position.lon])
+      ...alternates.map(a => [a.position.lat, a.position.lon]),
+      ...allCandidates.map(c => [c.position.lat, c.position.lon])
     ];
     
     if (searchZone.vertices) {
@@ -107,24 +180,16 @@ export const AlternateMap = memo(({ searchZone, alternates = [] }) => {
             
             {/* Médiatrice */}
             {searchZone.perpendicular && (
-              <>
-                <Polyline
-                  positions={[
-                    [searchZone.perpendicular.point1.lat, searchZone.perpendicular.point1.lon],
-                    [searchZone.perpendicular.point2.lat, searchZone.perpendicular.point2.lon]
-                  ]}
-                  color="#8b5cf6"
-                  weight={3}
-                  opacity={0.8}
-                  dashArray="10, 5"
-                />
-                <Marker position={[searchZone.perpendicular.midpoint.lat, searchZone.perpendicular.midpoint.lon]}>
-                  <Popup>
-                    <strong>Point médian</strong><br />
-                    Division départ/arrivée
-                  </Popup>
-                </Marker>
-              </>
+              <Polyline
+                positions={[
+                  [searchZone.perpendicular.point1.lat, searchZone.perpendicular.point1.lon],
+                  [searchZone.perpendicular.point2.lat, searchZone.perpendicular.point2.lon]
+                ]}
+                color="#8b5cf6"
+                weight={3}
+                opacity={0.8}
+                dashArray="10, 5"
+              />
             )}
           </LayerGroup>
         )}
@@ -170,59 +235,172 @@ export const AlternateMap = memo(({ searchZone, alternates = [] }) => {
           />
         ))}
         
-        {/* Route principale */}
+        {/* Route principale avec style amélioré */}
         {waypoints.length >= 2 && (
-          <Polyline
-            positions={waypoints.filter(w => w.lat && w.lon).map(w => [w.lat, w.lon])}
-            color="#1f2937"
-            weight={3}
-            opacity={0.8}
-          />
+          <>
+            {/* Ligne principale */}
+            <Polyline
+              positions={waypoints.filter(w => w.lat && w.lon).map(w => [w.lat, w.lon])}
+              color="#1f2937"
+              weight={4}
+              opacity={0.8}
+            />
+            {/* Points intermédiaires */}
+            {waypoints.slice(1, -1).filter(w => w.lat && w.lon).map((waypoint, index) => (
+              <Circle
+                key={`waypoint-${index}`}
+                center={[waypoint.lat, waypoint.lon]}
+                radius={1000} // 1km
+                color="#6b7280"
+                fillColor="#6b7280"
+                fillOpacity={0.8}
+                weight={2}
+              >
+                <Popup>
+                  <strong>Point de passage</strong><br />
+                  {waypoint.name || waypoint.icao || `WPT ${index + 1}`}
+                </Popup>
+              </Circle>
+            ))}
+          </>
         )}
         
-        {/* Waypoints de départ et arrivée */}
+        {/* Waypoints de départ et arrivée avec icônes personnalisées */}
         {waypoints.length > 0 && waypoints[0].lat && (
-          <Marker position={[waypoints[0].lat, waypoints[0].lon]}>
+          <Marker 
+            position={[waypoints[0].lat, waypoints[0].lon]}
+            icon={createDepartureIcon()}
+            zIndexOffset={2000}
+          >
             <Popup>
-              <strong>🛫 Départ</strong><br />
-              {waypoints[0].name}
+              <div style={{ minWidth: '150px' }}>
+                <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(2), { color: '#3b82f6' })}>
+                  🛫 DÉPART
+                </h4>
+                <p style={sx.text.sm}>
+                  <strong>{waypoints[0].icao || waypoints[0].name}</strong>
+                </p>
+                {waypoints[0].lat && waypoints[0].lon && (
+                  <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
+                    {waypoints[0].lat.toFixed(4)}°, {waypoints[0].lon.toFixed(4)}°
+                  </p>
+                )}
+              </div>
             </Popup>
           </Marker>
         )}
         
         {waypoints.length > 1 && waypoints[waypoints.length - 1].lat && (
-          <Marker position={[waypoints[waypoints.length - 1].lat, waypoints[waypoints.length - 1].lon]}>
+          <Marker 
+            position={[waypoints[waypoints.length - 1].lat, waypoints[waypoints.length - 1].lon]}
+            icon={createArrivalIcon()}
+            zIndexOffset={2000}
+          >
             <Popup>
-              <strong>🛬 Arrivée</strong><br />
-              {waypoints[waypoints.length - 1].name}
+              <div style={{ minWidth: '150px' }}>
+                <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(2), { color: '#dc2626' })}>
+                  🛬 ARRIVÉE
+                </h4>
+                <p style={sx.text.sm}>
+                  <strong>{waypoints[waypoints.length - 1].icao || waypoints[waypoints.length - 1].name}</strong>
+                </p>
+                {waypoints[waypoints.length - 1].lat && waypoints[waypoints.length - 1].lon && (
+                  <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
+                    {waypoints[waypoints.length - 1].lat.toFixed(4)}°, {waypoints[waypoints.length - 1].lon.toFixed(4)}°
+                  </p>
+                )}
+              </div>
             </Popup>
           </Marker>
         )}
         
-        {/* Aérodromes de déroutement */}
+        {/* TOUS LES CANDIDATS NON SÉLECTIONNÉS */}
+        {showAllCandidates && allCandidates.map((candidate) => {
+          // Ne pas afficher si c'est un aérodrome sélectionné
+          if (selectedIcaos.includes(candidate.icao)) return null;
+          
+          const color = candidate.side === 'departure' ? '#dc2626' : '#059669';
+          
+          return (
+            <Marker
+              key={`candidate-${candidate.icao}`}
+              position={[candidate.position.lat, candidate.position.lon]}
+              icon={createCandidateIcon(color)}
+              zIndexOffset={-100} // Mettre en arrière-plan
+            >
+              <Popup>
+                <div style={{ minWidth: '180px' }}>
+                  <h4 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(1))}>
+                    Candidat suggéré
+                  </h4>
+                  <p style={sx.text.xs}>
+                    <strong>{candidate.icao}</strong> - {candidate.name}
+                  </p>
+                  <p style={sx.combine(sx.text.xs, sx.spacing.mt(1))}>
+                    <span style={{
+                      display: 'inline-block',
+                      padding: '2px 6px',
+                      backgroundColor: color + '20',
+                      color: color,
+                      borderRadius: '4px',
+                      fontWeight: 'bold',
+                      marginBottom: '4px'
+                    }}>
+                      {candidate.side === 'departure' ? 'Côté départ' : 'Côté arrivée'}
+                    </span><br />
+                    Distance route : {candidate.distance.toFixed(1)} NM<br />
+                    Score : <strong>{(candidate.score * 100).toFixed(0)}%</strong><br />
+                    Piste : {candidate.runways[0]?.length || '?'}m
+                    {candidate.services?.fuel && ' • ⛽ Fuel'}
+                    {candidate.services?.atc && ' • 🗼 ATC'}
+                  </p>
+                  <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(2), {
+                    backgroundColor: '#f3f4f6',
+                    padding: '4px 8px',
+                    borderRadius: '4px'
+                  })}>
+                    💡 Cliquez dans le panneau de sélection pour choisir cet aérodrome
+                  </p>
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
+        
+        {/* AÉRODROMES SÉLECTIONNÉS (au premier plan) */}
         {alternates.map((alternate, index) => {
           const color = alternate.selectionType === 'departure' ? '#dc2626' : '#059669';
           
           return (
             <Marker
-              key={alternate.icao}
+              key={`selected-${alternate.icao}`}
               position={[alternate.position.lat, alternate.position.lon]}
-              icon={createAlternateIcon(index + 1, color, alternate.selectionType)}
+              icon={createSelectedAlternateIcon(index + 1, color, alternate.selectionType)}
+              zIndexOffset={1000} // Mettre au premier plan
             >
               <Popup>
                 <div style={{ minWidth: '200px' }}>
-                  <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(2))}>
-                    Déroutement #{index + 1}
+                  <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(2), {
+                    color: color,
+                    borderBottom: `2px solid ${color}`,
+                    paddingBottom: '8px'
+                  })}>
+                    ✅ Déroutement sélectionné #{index + 1}
                   </h4>
                   <p style={sx.text.sm}>
                     <strong>{alternate.icao}</strong> - {alternate.name}
                   </p>
                   <p style={sx.combine(sx.text.sm, sx.spacing.mt(1))}>
                     Type : <strong style={{ color }}>{alternate.selectionType === 'departure' ? 'Côté départ' : 'Côté arrivée'}</strong><br />
-                    Distance route : {alternate.distance.toFixed(1)} NM<br />
-                    Score : {(alternate.score * 100).toFixed(0)}%<br />
-                    Piste : {alternate.runways[0]?.length || '?'}m
+                    Distance route : <strong>{alternate.distance.toFixed(1)} NM</strong><br />
+                    Score : <strong>{(alternate.score * 100).toFixed(0)}%</strong><br />
+                    Piste principale : <strong>{alternate.runways[0]?.length || '?'}m</strong>
                   </p>
+                  <div style={sx.combine(sx.text.xs, sx.spacing.mt(2))}>
+                    {alternate.services?.fuel && <span style={styles.serviceTag}>⛽ Carburant</span>}
+                    {alternate.services?.atc && <span style={styles.serviceTag}>🗼 ATC/AFIS</span>}
+                    {alternate.services?.lighting && <span style={styles.serviceTag}>💡 Balisage</span>}
+                  </div>
                 </div>
               </Popup>
             </Marker>
@@ -252,6 +430,87 @@ export const AlternateMap = memo(({ searchZone, alternates = [] }) => {
               <span style={{ color: '#f59e0b' }}>○</span> Tampons points tournants
             </div>
           )}
+          <div style={sx.spacing.mt(2)}>
+            <strong>Points de navigation :</strong>
+          </div>
+          <div style={sx.spacing.mb(1)}>
+            <span style={{
+              display: 'inline-block',
+              width: '20px',
+              height: '20px',
+              borderRadius: '50%',
+              backgroundColor: '#3b82f6',
+              marginRight: '4px',
+              verticalAlign: 'middle',
+              position: 'relative'
+            }}>
+              <span style={{
+                position: 'absolute',
+                top: '5px',
+                left: '5px',
+                width: '0',
+                height: '0',
+                borderTop: '5px solid transparent',
+                borderBottom: '5px solid transparent',
+                borderLeft: '8px solid white'
+              }} />
+            </span>
+            Point de départ
+          </div>
+          <div style={sx.spacing.mb(1)}>
+            <span style={{
+              display: 'inline-block',
+              width: '20px',
+              height: '20px',
+              borderRadius: '50%',
+              backgroundColor: '#dc2626',
+              marginRight: '4px',
+              verticalAlign: 'middle',
+              position: 'relative'
+            }}>
+              <span style={{
+                position: 'absolute',
+                top: '6px',
+                left: '6px',
+                width: '8px',
+                height: '8px',
+                backgroundColor: 'white'
+              }} />
+            </span>
+            Point d'arrivée
+          </div>
+          <div style={sx.spacing.mt(2)}>
+            <strong>Aérodromes candidats :</strong>
+          </div>
+          <div style={sx.spacing.mb(1)}>
+            <span style={{
+              display: 'inline-block',
+              width: '12px',
+              height: '12px',
+              borderRadius: '50%',
+              backgroundColor: '#dc262640',
+              border: '1px solid #dc2626',
+              marginRight: '4px',
+              verticalAlign: 'middle'
+            }} />
+            Suggestions côté départ
+          </div>
+          <div style={sx.spacing.mb(1)}>
+            <span style={{
+              display: 'inline-block',
+              width: '12px',
+              height: '12px',
+              borderRadius: '50%',
+              backgroundColor: '#05966940',
+              border: '1px solid #059669',
+              marginRight: '4px',
+              verticalAlign: 'middle'
+            }} />
+            Suggestions côté arrivée
+          </div>
+          <div style={sx.spacing.mt(2)}>
+            <strong>Aérodromes sélectionnés :</strong>
+          </div>
           <div style={sx.spacing.mb(1)}>
             <span style={{
               display: 'inline-block',
@@ -262,7 +521,7 @@ export const AlternateMap = memo(({ searchZone, alternates = [] }) => {
               marginRight: '4px',
               verticalAlign: 'middle'
             }} />
-            Déroutement côté départ
+            Sélection côté départ
           </div>
           <div style={sx.spacing.mb(1)}>
             <span style={{
@@ -274,9 +533,19 @@ export const AlternateMap = memo(({ searchZone, alternates = [] }) => {
               marginRight: '4px',
               verticalAlign: 'middle'
             }} />
-            Déroutement côté arrivée
+            Sélection côté arrivée
           </div>
         </div>
+      </div>
+      
+      {/* Compteur d'aérodromes */}
+      <div style={styles.counter}>
+        <p style={sx.combine(sx.text.xs, sx.text.bold)}>
+          {allCandidates.length} candidats trouvés
+        </p>
+        <p style={sx.text.xs}>
+          {selectedIcaos.length} sélectionné{selectedIcaos.length > 1 ? 's' : ''}
+        </p>
       </div>
     </div>
   );
@@ -304,6 +573,23 @@ const styles = {
     borderRadius: '8px',
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
     maxWidth: '250px'
+  },
+  counter: {
+    position: 'absolute',
+    top: '16px',
+    left: '16px',
+    backgroundColor: 'white',
+    padding: '8px 12px',
+    borderRadius: '8px',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+  },
+  serviceTag: {
+    display: 'inline-block',
+    padding: '2px 6px',
+    backgroundColor: '#f3f4f6',
+    borderRadius: '4px',
+    marginRight: '4px',
+    marginBottom: '4px'
   }
 };
 
