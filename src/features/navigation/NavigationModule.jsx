@@ -6,7 +6,7 @@ import { useAlternatesForNavigation } from '@features/alternates';
 
 // Import des contextes et hooks
 import { useNavigation, useAircraft } from '@core/contexts';
-import { useNavigationResults } from '@hooks/useNavigationResults';
+import { useNavigationResults } from './hooks/useNavigationResults';
 import { useOpenAIPStore, openAIPSelectors } from '@core/stores/openAIPStore';
 import { useWeatherStore, weatherSelectors } from '@core/stores/weatherStore';
 

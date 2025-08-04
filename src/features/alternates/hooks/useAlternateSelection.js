@@ -4,7 +4,7 @@ import { useMemo, useCallback, useEffect, useState } from 'react';
 import { useAlternatesStore } from '@core/stores/alternatesStore';
 import { useOpenAIPStore } from '@core/stores/openAIPStore';
 import { useNavigation, useAircraft, useFuel, useWeather } from '@core/contexts';
-import { useNavigationResults } from '@hooks/useNavigationResults';
+import { useNavigationResults } from './useNavigationResults';
 import { useWeatherStore } from '@core/stores/weatherStore';
 import { useVACStore } from '@core/stores/vacStore';
 import { 

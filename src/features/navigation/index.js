@@ -10,3 +10,4 @@ export { ReportingPointsSelector } from './components/ReportingPointsSelector.js
 export { AirspaceAnalyzer } from './components/AirspaceAnalyzer.jsx';
 export { TechnicalLog } from './components/TechnicalLog.jsx';
 export { RunwayAnalyzer } from './components/RunwayAnalyzer.jsx';
+export { useNavigationResults } from './useNavigationResults';
