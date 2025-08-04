@@ -12,14 +12,24 @@ import { calculateDistance } from '../utils/geometryCalculations';
  */
 export const useAdvancedAlternateSelection = () => {
   const { searchZone, dynamicParams, selectedAlternates, findAlternates, isReady } = useAlternateSelection();
-  const { scoredAlternates } = useAlternatesStore();
+  const { scoredAlternates, candidates } = useAlternatesStore();
+  
+  // Log de debug
+  useEffect(() => {
+    console.log('🔍 useAdvancedAlternateSelection - État:', {
+      selectedAlternatesCount: selectedAlternates?.length || 0,
+      scoredAlternatesCount: scoredAlternates?.length || 0,
+      candidatesCount: candidates?.length || 0,
+      isReady
+    });
+  }, [selectedAlternates, scoredAlternates, candidates, isReady]);
   
   // Calcul des paramètres d'affichage
   const displayParams = useMemo(() => {
     if (!searchZone || !dynamicParams) return null;
     
     return {
-      dynamicRadius: dynamicParams.maxRadiusNM || 25,
+      dynamicRadius: dynamicParams.maxRadiusNM || searchZone?.radius || 25,
       triangleArea: searchZone.area || 0,
       turnPointBuffers: searchZone.turnPoints || []
     };
@@ -27,73 +37,102 @@ export const useAdvancedAlternateSelection = () => {
   
   // Formater les alternates pour l'affichage
   const formattedAlternates = useMemo(() => {
-    if (!searchZone) return selectedAlternates;
+    if (!selectedAlternates || selectedAlternates.length === 0) {
+      console.log('❌ Pas d\'alternates sélectionnés à formater');
+      return [];
+    }
     
-    return selectedAlternates.map((alt, index) => ({
-      ...alt,
-      displayIndex: index + 1,
-      displayName: `${alt.icao} - ${alt.name}`,
-      displayDistance: `${(alt.distance || 0).toFixed(1)} NM`,
-      displayRunway: alt.runways?.[0] ? 
-        `${alt.runways[0].length || '?'}m × ${alt.runways[0].width || '?'}m` : 
-        'Non disponible',
-      displayServices: [
-        alt.services?.fuel && '⛽',
-        alt.services?.atc && '🗼',
-        alt.services?.lighting && '💡'
-      ].filter(Boolean).join(' ') || 'Aucun',
-      displayWeather: alt.weather?.metar ? 
-        `${alt.weather.metar.decoded.wind?.direction || 'VAR'}° / ${alt.weather.metar.decoded.wind?.speed || 0}kt` :
-        'Non disponible',
-      displayScore: `${Math.round((alt.score || 0) * 100)}%`,
-      displayRank: getRankLabel(alt.score),
-      vac: {
-        available: !!useVACStore.getState().charts[alt.icao],
-        downloaded: useVACStore.getState().charts[alt.icao]?.isDownloaded || false
-      },
-      // Ajouter les distances depuis départ et arrivée
-      distanceToDeparture: alt.position && searchZone.departure ? 
-        calculateDistance(alt.position, searchZone.departure) : null,
-      distanceToArrival: alt.position && searchZone.arrival ? 
-        calculateDistance(alt.position, searchZone.arrival) : null
-    }));
+    console.log('📋 Formatage de', selectedAlternates.length, 'alternates');
+    
+    const formatted = selectedAlternates.map((alt, index) => {
+      // S'assurer que toutes les propriétés requises existent
+      const formatted = {
+        ...alt,
+        displayIndex: index + 1,
+        displayName: `${alt.icao} - ${alt.name}`,
+        displayDistance: `${(alt.distance || 0).toFixed(1)} NM`,
+        displayRunway: alt.runways && alt.runways.length > 0 && alt.runways[0] ? 
+          `${alt.runways[0].length || '?'}m × ${alt.runways[0].width || '?'}m` : 
+          'Non disponible',
+        displayServices: [
+          (alt.services?.fuel || alt.fuel) && '⛽',
+          alt.services?.atc && '🗼',
+          alt.services?.lighting && '💡'
+        ].filter(Boolean).join(' ') || 'Aucun',
+        displayWeather: alt.weather?.metar ? 
+          `${alt.weather.metar.decoded?.wind?.direction || 'VAR'}° / ${alt.weather.metar.decoded?.wind?.speed || 0}kt` :
+          'Non disponible',
+        displayScore: `${Math.round((alt.score || 0) * 100)}%`,
+        displayRank: getRankLabel(alt.score),
+        vac: {
+          available: !!useVACStore.getState().charts[alt.icao],
+          downloaded: useVACStore.getState().charts[alt.icao]?.isDownloaded || false
+        }
+      };
+      
+      // Ajouter les distances depuis départ et arrivée si la zone de recherche est définie
+      if (searchZone && searchZone.departure && searchZone.arrival && alt.position) {
+        formatted.distanceToDeparture = calculateDistance(alt.position, searchZone.departure);
+        formatted.distanceToArrival = calculateDistance(alt.position, searchZone.arrival);
+      }
+      
+      return formatted;
+    });
+    
+    console.log('✅ Alternates formatés:', formatted.map(a => a.icao).join(', '));
+    return formatted;
   }, [selectedAlternates, searchZone]);
   
   // Statistiques pour l'affichage
-  const statistics = useMemo(() => ({
-    totalCandidates: useAlternatesStore.getState().candidates.length,
-    scoredCandidates: scoredAlternates.length,
-    selectedCount: selectedAlternates.length,
-    averageScore: selectedAlternates.length > 0 
-      ? selectedAlternates.reduce((sum, alt) => sum + (alt.score || 0), 0) / selectedAlternates.length
-      : 0,
-    // Statistiques par côté
-    departureSideCount: selectedAlternates.filter(alt => alt.selectionType === 'departure').length,
-    arrivalSideCount: selectedAlternates.filter(alt => alt.selectionType === 'arrival').length
-  }), [scoredAlternates, selectedAlternates]);
+  const statistics = useMemo(() => {
+    const stats = {
+      totalCandidates: candidates?.length || 0,
+      scoredCandidates: scoredAlternates?.length || 0,
+      selectedCount: selectedAlternates?.length || 0,
+      averageScore: selectedAlternates && selectedAlternates.length > 0 
+        ? selectedAlternates.reduce((sum, alt) => sum + (alt.score || 0), 0) / selectedAlternates.length
+        : 0,
+      // Statistiques par côté
+      departureSideCount: selectedAlternates?.filter(alt => alt.selectionType === 'departure').length || 0,
+      arrivalSideCount: selectedAlternates?.filter(alt => alt.selectionType === 'arrival').length || 0
+    };
+    
+    console.log('📊 Statistiques calculées:', stats);
+    return stats;
+  }, [scoredAlternates, selectedAlternates, candidates]);
   
   // Fonction de rafraîchissement
   const refreshAlternates = useCallback(async () => {
+    console.log('🔄 Rafraîchissement des alternates demandé');
     await findAlternates();
   }, [findAlternates]);
   
   // Retourner toutes les données nécessaires pour l'affichage
-  return {
+  const result = {
     searchZone,
     selectedAlternates,
     isReady,
-    dynamicRadius: displayParams?.dynamicRadius || 25,
+    dynamicRadius: displayParams?.dynamicRadius || searchZone?.radius || 25,
     triangleArea: displayParams?.triangleArea || 0,
     turnPointBuffers: displayParams?.turnPointBuffers || [],
     refreshAlternates,
     formattedAlternates,
     statistics
   };
+  
+  console.log('🎯 useAdvancedAlternateSelection - Résultat final:', {
+    hasSearchZone: !!result.searchZone,
+    selectedCount: result.selectedAlternates?.length || 0,
+    formattedCount: result.formattedAlternates?.length || 0,
+    isReady: result.isReady
+  });
+  
+  return result;
 };
 
 // Fonction helper pour obtenir le label de rang
 const getRankLabel = (score) => {
-  if (!score) return 'Non évalué';
+  if (!score && score !== 0) return 'Non évalué';
   if (score >= 0.8) return '⭐ Excellent';
   if (score >= 0.6) return '👍 Bon';
   if (score >= 0.4) return '✅ Acceptable';
