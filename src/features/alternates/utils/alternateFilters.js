@@ -2,7 +2,6 @@
 
 /**
  * Filtre les aérodromes candidats selon les critères définis
- * Version corrigée sans dépendances directes aux stores
  */
 export const filterAlternates = async (candidates, criteria, stores = {}) => {
   const filtered = [];
@@ -61,12 +60,10 @@ const checkAllCriteria = async (airport, criteria, stores) => {
 const checkDistanceCriteria = (airport, criteria) => {
   if (!criteria.maxRadiusNM) return true;
   
-  // La distance est déjà calculée dans le hook principal
   if (airport.distance !== undefined) {
     return airport.distance <= criteria.maxRadiusNM;
   }
   
-  // Fallback : calculer la distance
   const distanceFromRoute = calculateDistanceFromRoute(
     airport.coordinates,
     criteria.departure,
@@ -82,7 +79,6 @@ const checkDistanceCriteria = (airport, criteria) => {
 const checkRunwayCriteria = (airport, criteria) => {
   if (!criteria.requiredRunwayLength) return true;
   
-  // L'aérodrome doit avoir au moins une piste suffisamment longue
   const hasAdequateRunway = airport.runways?.some(runway => {
     const length = runway.length || runway.dimensions?.length || 0;
     return length >= criteria.requiredRunwayLength;
@@ -95,7 +91,7 @@ const checkRunwayCriteria = (airport, criteria) => {
  * Vérifie la disponibilité de la carte VAC
  */
 const checkVACAvailability = (airport, vacStore) => {
-  if (!vacStore) return true; // Si pas de store, on ne peut pas vérifier
+  if (!vacStore) return true;
   
   const charts = vacStore.getState ? vacStore.getState().charts : vacStore.charts;
   return charts && charts[airport.icao] !== undefined;
@@ -105,17 +101,14 @@ const checkVACAvailability = (airport, vacStore) => {
  * Vérifie les services requis
  */
 const checkServicesCriteria = (airport, criteria) => {
-  // Vérifier le carburant si requis
   if (criteria.requireFuel && !airport.fuel) {
     return false;
   }
   
-  // Vérifier l'ATC si requis
   if (criteria.requireATC && !hasATCService(airport)) {
     return false;
   }
   
-  // Pour un vol de nuit, vérifier le balisage
   if (!criteria.isDayFlight && !hasNightLighting(airport)) {
     return false;
   }
@@ -129,7 +122,6 @@ const checkServicesCriteria = (airport, criteria) => {
 const checkWeatherCriteria = async (airport, criteria, weatherStore) => {
   if (!weatherStore || !criteria.weatherMinima) return true;
   
-  // Récupérer la météo depuis le store
   const getWeatherByIcao = weatherStore.getState ? 
     weatherStore.getState().getWeatherByIcao : 
     weatherStore.getWeatherByIcao;
@@ -137,17 +129,15 @@ const checkWeatherCriteria = async (airport, criteria, weatherStore) => {
   let weather = getWeatherByIcao ? getWeatherByIcao(airport.icao) : null;
   
   if (!weather) {
-    // Si pas de météo et qu'on peut la charger
     if (weatherStore.fetchWeather) {
       try {
         await weatherStore.fetchWeather(airport.icao);
         weather = getWeatherByIcao ? getWeatherByIcao(airport.icao) : null;
       } catch (error) {
-        // Si pas de météo disponible, on considère OK par défaut
         return true;
       }
     } else {
-      return true; // Pas de météo disponible
+      return true;
     }
   }
   
@@ -158,7 +148,6 @@ const checkWeatherCriteria = async (airport, criteria, weatherStore) => {
   
   if (!minima) return true;
   
-  // Vérifier le plafond
   if (metar.clouds?.length > 0) {
     const lowestCloud = metar.clouds
       .filter(cloud => cloud.cover === 'BKN' || cloud.cover === 'OVC')
@@ -169,7 +158,6 @@ const checkWeatherCriteria = async (airport, criteria, weatherStore) => {
     }
   }
   
-  // Vérifier la visibilité
   if (metar.visibility && metar.visibility < minima.visibility) {
     return false;
   }
@@ -181,7 +169,6 @@ const checkWeatherCriteria = async (airport, criteria, weatherStore) => {
  * Vérifie les heures d'ouverture
  */
 const checkOperatingHours = (airport, criteria) => {
-  // Si pas d'info sur les heures, on considère ouvert
   if (!airport.operatingHours) return true;
   
   // TODO: Implémenter la vérification des heures d'ouverture
@@ -194,7 +181,6 @@ const checkOperatingHours = (airport, criteria) => {
  * Détermine si l'aérodrome a un service ATC
  */
 const hasATCService = (airport) => {
-  // Vérifier les fréquences TWR ou APP
   if (airport.frequencies) {
     return airport.frequencies.some(freq => 
       freq.type === 'TWR' || 
@@ -203,7 +189,6 @@ const hasATCService = (airport) => {
     );
   }
   
-  // Ou vérifier le type d'aérodrome
   return airport.type === 'medium_airport' || 
          airport.type === 'large_airport';
 };
@@ -212,7 +197,6 @@ const hasATCService = (airport) => {
  * Détermine si l'aérodrome a un balisage nocturne
  */
 const hasNightLighting = (airport) => {
-  // Vérifier si des pistes ont un balisage
   if (airport.runways) {
     return airport.runways.some(runway => 
       runway.lighting === true || 
@@ -221,7 +205,6 @@ const hasNightLighting = (airport) => {
     );
   }
   
-  // Par défaut, les aérodromes moyens et grands ont un balisage
   return airport.type !== 'small_airport' && 
          airport.type !== 'closed';
 };
@@ -233,7 +216,6 @@ const calculateDistanceFromRoute = (point, departure, arrival) => {
   const distToDeparture = calculateDistance(point, departure);
   const distToArrival = calculateDistance(point, arrival);
   
-  // Approximation : prendre la plus petite distance
   return Math.min(distToDeparture, distToArrival);
 };
 
