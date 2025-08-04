@@ -1,5 +1,5 @@
 // src/features/alternates/AlternatesModule.jsx
-// VERSION 2 - Module Déroutements avec zone pilule
+// VERSION 2 - Module Déroutements avec zone pilule et DEBUG
 
 console.log('🛬 AlternatesModule v2 - Chargement...'); // LOG DE VÉRIFICATION
 
@@ -25,7 +25,12 @@ const AlternatesModule = memo(() => {
     statistics
   } = useAdvancedAlternateSelection();
   
-  console.log('🛬 AlternatesModule - État:', { isReady, alternatesCount: selectedAlternates?.length });
+  console.log('🛬 AlternatesModule - État:', { 
+    isReady, 
+    alternatesCount: selectedAlternates?.length,
+    formattedCount: formattedAlternates?.length,
+    statistics 
+  });
   
   if (!isReady) {
     return (
@@ -37,6 +42,14 @@ const AlternatesModule = memo(() => {
       </div>
     );
   }
+  
+  // DEBUG: Afficher les statistiques même si pas d'alternates
+  console.log('🛬 DEBUG - Statistiques complètes:', {
+    totalCandidates: statistics?.totalCandidates,
+    scoredCandidates: statistics?.scoredCandidates,
+    selectedCount: statistics?.selectedCount,
+    formattedAlternates: formattedAlternates
+  });
   
   return (
     <div>
@@ -88,6 +101,24 @@ const AlternatesModule = memo(() => {
             />
           </div>
         </div>
+        
+        {/* DEBUG: Afficher plus d'infos si pas d'alternates */}
+        {(!formattedAlternates || formattedAlternates.length === 0) && (
+          <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mb(4))}>
+            <Info size={16} />
+            <div>
+              <p style={sx.text.sm}>
+                <strong>Diagnostic :</strong>
+              </p>
+              <ul style={sx.combine(sx.text.sm, sx.spacing.ml(4))}>
+                <li>Aérodromes disponibles : {statistics?.totalCandidates || 0}</li>
+                <li>Zone de recherche : {searchZone ? `${searchZone.type} (${searchZone.radius?.toFixed(0)} NM)` : 'Non définie'}</li>
+                <li>Rayon dynamique : {dynamicRadius || 'Non calculé'} NM</li>
+                <li>Vérifiez la console (F12) pour plus de détails</li>
+              </ul>
+            </div>
+          </div>
+        )}
         
         {/* Alternates sélectionnés */}
         <div style={sx.components.card.base}>
