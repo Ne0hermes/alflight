@@ -9,6 +9,65 @@ import { useNavigation } from '@core/contexts';
 // Import des styles Leaflet
 import 'leaflet/dist/leaflet.css';
 
+// Ajoutez ceci temporairement dans AlternateMap.jsx après les imports
+// pour voir les points de la zone pilule
+
+const DebugPillZone = ({ searchZone }) => {
+  if (!searchZone || searchZone.type !== 'pill') return null;
+  
+  return (
+    <>
+      {/* Afficher chaque vertex avec un numéro */}
+      {searchZone.vertices.map((vertex, index) => (
+        <Marker
+          key={index}
+          position={[vertex.lat, vertex.lon]}
+          icon={L.divIcon({
+            html: `<div style="
+              background: ${index === 0 ? 'red' : index === searchZone.vertices.length - 1 ? 'green' : 'blue'};
+              color: white;
+              width: 20px;
+              height: 20px;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 10px;
+              font-weight: bold;
+            ">${index}</div>`,
+            iconSize: [20, 20],
+            className: 'debug-marker'
+          })}
+        >
+          <Popup>
+            <div>
+              Point {index}<br/>
+              {index === 0 && 'DÉBUT'}<br/>
+              {index === searchZone.vertices.length - 1 && 'FIN'}<br/>
+              Lat: {vertex.lat.toFixed(4)}<br/>
+              Lon: {vertex.lon.toFixed(4)}
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+      
+      {/* Afficher le centre de la zone */}
+      <Marker
+        position={[searchZone.center.lat, searchZone.center.lon]}
+        icon={L.divIcon({
+          html: '<div style="background: purple; color: white; padding: 5px; border-radius: 3px;">CENTRE</div>',
+          iconSize: [50, 20],
+          className: 'center-marker'
+        })}
+      />
+    </>
+  );
+};
+
+// Puis dans le JSX, ajoutez après le Polygon de la zone pilule :
+{/* <DebugPillZone searchZone={searchZone} /> */}
+
+
 // Configuration des icônes
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -90,7 +149,31 @@ export const AlternateMap = memo(({ searchZone, alternates = [] }) => {
           </LayersControl.BaseLayer>
         </LayersControl>
         
-        {/* Zone de recherche pilule */}
+        {/* Zone de recherche rectangle */}
+        {searchZone && searchZone.type === 'rectangle' && searchZone.vertices && (
+          <LayerGroup>
+            <Polygon
+              positions={searchZone.vertices.map(v => [v.lat, v.lon])}
+              color="#3b82f6"
+              fillColor="#3b82f6"
+              fillOpacity={0.15}
+              weight={2}
+            />
+            {/* Ligne centrale pour visualiser l'axe de la route */}
+            <Polyline
+              positions={[
+                [searchZone.departure.lat, searchZone.departure.lon],
+                [searchZone.arrival.lat, searchZone.arrival.lon]
+              ]}
+              color="#1f2937"
+              weight={1}
+              opacity={0.5}
+              dashArray="5, 10"
+            />
+          </LayerGroup>
+        )}
+        
+        {/* Zone de recherche pilule (pour compatibilité) */}
         {searchZone && searchZone.type === 'pill' && searchZone.vertices && (
           <LayerGroup>
             <Polygon
@@ -101,7 +184,6 @@ export const AlternateMap = memo(({ searchZone, alternates = [] }) => {
               weight={2}
               smoothFactor={2}
             />
-            {/* Ligne centrale pour visualiser l'axe de la capsule */}
             <Polyline
               positions={[
                 [searchZone.departure.lat, searchZone.departure.lon],
@@ -112,10 +194,9 @@ export const AlternateMap = memo(({ searchZone, alternates = [] }) => {
               opacity={0.3}
               dashArray="3, 6"
             />
-            {/* Cercles aux extrémités pour mieux visualiser */}
             <Circle
               center={[searchZone.departure.lat, searchZone.departure.lon]}
-              radius={searchZone.radius * 1852} // Conversion NM vers mètres
+              radius={searchZone.radius * 1852}
               color="#3b82f6"
               fillOpacity={0}
               weight={1}
@@ -123,7 +204,7 @@ export const AlternateMap = memo(({ searchZone, alternates = [] }) => {
             />
             <Circle
               center={[searchZone.arrival.lat, searchZone.arrival.lon]}
-              radius={searchZone.radius * 1852} // Conversion NM vers mètres
+              radius={searchZone.radius * 1852}
               color="#3b82f6"
               fillOpacity={0}
               weight={1}
@@ -225,7 +306,7 @@ export const AlternateMap = memo(({ searchZone, alternates = [] }) => {
             <span style={{ color: '#1f2937' }}>━━━</span> Route principale
           </div>
           <div style={sx.spacing.mb(1)}>
-            <span style={{ color: '#3b82f6' }}>━━━</span> Zone pilule (h = {searchZone && searchZone.radius ? searchZone.radius.toFixed(0) : '?'} NM)
+            <span style={{ color: '#3b82f6' }}>▭</span> Zone rectangle ({searchZone && searchZone.width ? searchZone.width.toFixed(0) : '?'} NM de large)
           </div>
           {searchZone && searchZone.turnPoints && searchZone.turnPoints.length > 0 && (
             <div style={sx.spacing.mb(1)}>
