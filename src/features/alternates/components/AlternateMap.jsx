@@ -9,64 +9,93 @@ import { useNavigation } from '@core/contexts';
 // Import des styles Leaflet
 import 'leaflet/dist/leaflet.css';
 
-// Ajoutez ceci temporairement dans AlternateMap.jsx après les imports
-// pour voir les points de la zone pilule
-
+// Composant de debug pour visualiser les points de la zone pilule
 const DebugPillZone = ({ searchZone }) => {
   if (!searchZone || searchZone.type !== 'pill') return null;
+  
+  // Diviser les vertices en deux groupes pour mieux visualiser
+  const halfPoint = Math.floor(searchZone.vertices.length / 2);
   
   return (
     <>
       {/* Afficher chaque vertex avec un numéro */}
-      {searchZone.vertices.map((vertex, index) => (
-        <Marker
-          key={index}
-          position={[vertex.lat, vertex.lon]}
-          icon={L.divIcon({
-            html: `<div style="
-              background: ${index === 0 ? 'red' : index === searchZone.vertices.length - 1 ? 'green' : 'blue'};
-              color: white;
-              width: 20px;
-              height: 20px;
-              border-radius: 50%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 10px;
-              font-weight: bold;
-            ">${index}</div>`,
-            iconSize: [20, 20],
-            className: 'debug-marker'
-          })}
-        >
-          <Popup>
-            <div>
-              Point {index}<br/>
-              {index === 0 && 'DÉBUT'}<br/>
-              {index === searchZone.vertices.length - 1 && 'FIN'}<br/>
-              Lat: {vertex.lat.toFixed(4)}<br/>
-              Lon: {vertex.lon.toFixed(4)}
-            </div>
-          </Popup>
-        </Marker>
-      ))}
+      {searchZone.vertices.map((vertex, index) => {
+        let color = 'blue';
+        let label = index.toString();
+        
+        // Colorer différemment les deux demi-cercles
+        if (index === 0) {
+          color = 'red';
+          label = 'START';
+        } else if (index === halfPoint) {
+          color = 'orange';
+          label = 'MID';
+        } else if (index === searchZone.vertices.length - 1) {
+          color = 'green';
+          label = 'END';
+        } else if (index < halfPoint) {
+          color = '#3b82f6'; // Bleu pour le premier demi-cercle
+        } else {
+          color = '#10b981'; // Vert pour le second demi-cercle
+        }
+        
+        return (
+          <Marker
+            key={index}
+            position={[vertex.lat, vertex.lon]}
+            icon={L.divIcon({
+              html: `<div style="
+                background: ${color};
+                color: white;
+                width: ${label.length > 3 ? '40px' : '24px'};
+                height: 24px;
+                border-radius: ${label.length > 3 ? '12px' : '50%'};
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: ${label.length > 3 ? '10px' : '11px'};
+                font-weight: bold;
+                border: 2px solid white;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+              ">${label}</div>`,
+              iconSize: [label.length > 3 ? 40 : 24, 24],
+              className: 'debug-marker'
+            })}
+          >
+            <Popup>
+              <div>
+                Point {index}<br/>
+                {index === 0 && 'DÉBUT du tracé'}<br/>
+                {index === halfPoint && 'MILIEU (transition entre les arcs)'}<br/>
+                {index === searchZone.vertices.length - 1 && 'FIN du tracé'}<br/>
+                Lat: {vertex.lat.toFixed(4)}<br/>
+                Lon: {vertex.lon.toFixed(4)}
+              </div>
+            </Popup>
+          </Marker>
+        );
+      })}
       
-      {/* Afficher le centre de la zone */}
+      {/* Afficher les points de départ et arrivée de la route */}
       <Marker
-        position={[searchZone.center.lat, searchZone.center.lon]}
+        position={[searchZone.departure.lat, searchZone.departure.lon]}
         icon={L.divIcon({
-          html: '<div style="background: purple; color: white; padding: 5px; border-radius: 3px;">CENTRE</div>',
-          iconSize: [50, 20],
+          html: '<div style="background: #dc2626; color: white; padding: 5px 10px; border-radius: 3px; font-weight: bold;">DÉPART</div>',
+          iconSize: [60, 20],
+          className: 'center-marker'
+        })}
+      />
+      <Marker
+        position={[searchZone.arrival.lat, searchZone.arrival.lon]}
+        icon={L.divIcon({
+          html: '<div style="background: #059669; color: white; padding: 5px 10px; border-radius: 3px; font-weight: bold;">ARRIVÉE</div>',
+          iconSize: [60, 20],
           className: 'center-marker'
         })}
       />
     </>
   );
 };
-
-// Puis dans le JSX, ajoutez après le Polygon de la zone pilule :
-{/* <DebugPillZone searchZone={searchZone} /> */}
-
 
 // Configuration des icônes
 delete L.Icon.Default.prototype._getIconUrl;
@@ -182,7 +211,7 @@ export const AlternateMap = memo(({ searchZone, alternates = [] }) => {
               fillColor="#3b82f6"
               fillOpacity={0.15}
               weight={2}
-              smoothFactor={2}
+              smoothFactor={0} // Désactiver le lissage pour voir la vraie forme
             />
             <Polyline
               positions={[
@@ -190,28 +219,15 @@ export const AlternateMap = memo(({ searchZone, alternates = [] }) => {
                 [searchZone.arrival.lat, searchZone.arrival.lon]
               ]}
               color="#1f2937"
-              weight={1}
-              opacity={0.3}
-              dashArray="3, 6"
-            />
-            <Circle
-              center={[searchZone.departure.lat, searchZone.departure.lon]}
-              radius={searchZone.radius * 1852}
-              color="#3b82f6"
-              fillOpacity={0}
-              weight={1}
-              dashArray="3, 3"
-            />
-            <Circle
-              center={[searchZone.arrival.lat, searchZone.arrival.lon]}
-              radius={searchZone.radius * 1852}
-              color="#3b82f6"
-              fillOpacity={0}
-              weight={1}
-              dashArray="3, 3"
+              weight={2}
+              opacity={0.5}
+              dashArray="5, 10"
             />
           </LayerGroup>
         )}
+        
+        {/* Debug - Afficher les points de la zone pilule */}
+        <DebugPillZone searchZone={searchZone} />
         
         {/* Zone de recherche triangle (pour compatibilité) */}
         {searchZone && searchZone.type === 'triangle' && searchZone.vertices && (
@@ -305,9 +321,16 @@ export const AlternateMap = memo(({ searchZone, alternates = [] }) => {
           <div style={sx.spacing.mb(1)}>
             <span style={{ color: '#1f2937' }}>━━━</span> Route principale
           </div>
-          <div style={sx.spacing.mb(1)}>
-            <span style={{ color: '#3b82f6' }}>▭</span> Zone rectangle ({searchZone && searchZone.width ? searchZone.width.toFixed(0) : '?'} NM de large)
-          </div>
+          {searchZone && searchZone.type === 'pill' && (
+            <div style={sx.spacing.mb(1)}>
+              <span style={{ color: '#3b82f6' }}>⬭</span> Zone pilule (rayon {searchZone.radius ? searchZone.radius.toFixed(0) : '?'} NM)
+            </div>
+          )}
+          {searchZone && searchZone.type === 'rectangle' && (
+            <div style={sx.spacing.mb(1)}>
+              <span style={{ color: '#3b82f6' }}>▭</span> Zone rectangle ({searchZone.width ? searchZone.width.toFixed(0) : '?'} NM de large)
+            </div>
+          )}
           {searchZone && searchZone.turnPoints && searchZone.turnPoints.length > 0 && (
             <div style={sx.spacing.mb(1)}>
               <span style={{ color: '#f59e0b' }}>○</span> Tampons points tournants

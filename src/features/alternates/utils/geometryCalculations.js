@@ -238,39 +238,66 @@ const calculatePillZone = (departure, arrival, radiusOverride = null) => {
   console.log(`Zone pilule: distance=${distance.toFixed(1)} NM, rayon=${radius.toFixed(1)} NM`);
   
   const bearing = calculateBearing(departure, arrival);
-  const leftBearing = (bearing + 90) % 360;
-  const rightBearing = (bearing - 90 + 360) % 360;
+  
+  // Calculer les 4 points clés qui définissent les coins de la pilule
+  const departureRight = calculateDestination(departure, radius, (bearing - 90 + 360) % 360);
+  const departureLeft = calculateDestination(departure, radius, (bearing + 90) % 360);
+  const arrivalRight = calculateDestination(arrival, radius, (bearing - 90 + 360) % 360);
+  const arrivalLeft = calculateDestination(arrival, radius, (bearing + 90) % 360);
+  
+  console.log('Points clés de la pilule:');
+  console.log(`- Départ droite: ${departureRight.lat.toFixed(4)}, ${departureRight.lon.toFixed(4)}`);
+  console.log(`- Départ gauche: ${departureLeft.lat.toFixed(4)}, ${departureLeft.lon.toFixed(4)}`);
+  console.log(`- Arrivée gauche: ${arrivalLeft.lat.toFixed(4)}, ${arrivalLeft.lon.toFixed(4)}`);
+  console.log(`- Arrivée droite: ${arrivalRight.lat.toFixed(4)}, ${arrivalRight.lon.toFixed(4)}`);
   
   const vertices = [];
-  const pointsPerArc = 15;
+  const pointsPerArc = 20;
   
-  // 1. DEMI-CERCLE AU DÉPART (de droite vers gauche, 180°)
-  for (let i = 0; i <= pointsPerArc; i++) {
-    const angle = rightBearing + (i / pointsPerArc) * 180;
-    const point = calculateDestination(departure, radius, angle % 360);
-    vertices.push(point);
+  // SEGMENT 1 : Ligne droite du côté droit (départ vers arrivée)
+  vertices.push(departureRight);
+  // Ajouter quelques points intermédiaires pour forcer le tracé de la ligne
+  for (let i = 1; i <= 5; i++) {
+    const ratio = i / 6;
+    vertices.push({
+      lat: departureRight.lat + ratio * (arrivalRight.lat - departureRight.lat),
+      lon: departureRight.lon + ratio * (arrivalRight.lon - departureRight.lon)
+    });
   }
+  vertices.push(arrivalRight);
   
-  // 2. LIGNE DROITE CÔTÉ GAUCHE
-  const arrivalLeft = calculateDestination(arrival, radius, leftBearing);
-  vertices.push(arrivalLeft);
-  
-  // 3. DEMI-CERCLE À L'ARRIVÉE
-  for (let i = 1; i <= pointsPerArc; i++) {
-    const angle = leftBearing + (i / pointsPerArc) * 180;
+  // SEGMENT 2 : Demi-cercle à l'arrivée (droite vers gauche)
+  for (let i = 1; i < pointsPerArc; i++) {
+    const angle = (bearing - 90) + (i / pointsPerArc) * 180;
     const point = calculateDestination(arrival, radius, angle % 360);
     vertices.push(point);
   }
+  vertices.push(arrivalLeft);
   
-  // 4. LIGNE DROITE CÔTÉ DROIT (retour au départ)
-  const departRight = calculateDestination(departure, radius, rightBearing);
-  vertices.push(departRight);
+  // SEGMENT 3 : Ligne droite du côté gauche (arrivée vers départ)
+  for (let i = 1; i <= 5; i++) {
+    const ratio = i / 6;
+    vertices.push({
+      lat: arrivalLeft.lat + ratio * (departureLeft.lat - arrivalLeft.lat),
+      lon: arrivalLeft.lon + ratio * (departureLeft.lon - arrivalLeft.lon)
+    });
+  }
+  vertices.push(departureLeft);
+  
+  // SEGMENT 4 : Demi-cercle au départ (gauche vers droite)
+  for (let i = 1; i < pointsPerArc; i++) {
+    const angle = (bearing + 90) + (i / pointsPerArc) * 180;
+    const point = calculateDestination(departure, radius, angle % 360);
+    vertices.push(point);
+  }
+  // Le polygone se fermera automatiquement vers departureRight
   
   const rectangleArea = distance * (2 * radius);
   const circleArea = Math.PI * radius * radius;
   const totalArea = rectangleArea + circleArea;
   
-  console.log(`Zone pilule créée: ${vertices.length} vertices, forme de capsule`);
+  console.log(`Zone pilule créée: ${vertices.length} vertices`);
+  console.log(`Structure: 2 lignes droites + 2 demi-cercles`);
   
   return {
     type: 'pill',
@@ -446,23 +473,29 @@ export const calculateSearchZone = (departure, arrival, waypoints = [], fuelData
     ...options
   };
   
-  // Calculer le rayon proportionnel à la distance
+  // Calculer le rayon selon la méthode
   let radius;
   
-  if (distance < 20) {
-    radius = Math.max(10, distance * 0.8); // 80% de la distance, min 10 NM
-  } else if (distance < 50) {
-    radius = distance * 0.6; // 60% de la distance  
-  } else if (distance < 100) {
-    radius = distance * 0.4; // 40% de la distance
+  if (config.method === 'pill') {
+    // Pour la zone pilule, utiliser la formule h = (√3/2) × distance
+    radius = (Math.sqrt(3) / 2) * distance;
+    console.log(`Zone pilule: formule h = (√3/2) × d = ${radius.toFixed(1)} NM`);
   } else {
-    radius = Math.min(50, distance * 0.3); // 30% de la distance, max 50 NM
+    // Pour les autres méthodes, calculer le rayon proportionnel à la distance
+    if (distance < 20) {
+      radius = Math.max(10, distance * 0.8); // 80% de la distance, min 10 NM
+    } else if (distance < 50) {
+      radius = distance * 0.6; // 60% de la distance  
+    } else if (distance < 100) {
+      radius = distance * 0.4; // 40% de la distance
+    } else {
+      radius = Math.min(50, distance * 0.3); // 30% de la distance, max 50 NM
+    }
+    console.log(`Distance vol: ${distance.toFixed(1)} NM → Rayon calculé: ${radius.toFixed(1)} NM`);
   }
   
-  console.log(`Distance vol: ${distance.toFixed(1)} NM → Rayon calculé: ${radius.toFixed(1)} NM`);
-  
-  // Ajustement par carburant si disponible
-  if (fuelData && fuelData.aircraft && fuelData.fuelRemaining) {
+  // Ajustement par carburant si disponible (optionnel)
+  if (fuelData && fuelData.aircraft && fuelData.fuelRemaining && config.limitByFuel !== false) {
     const usableFuel = fuelData.fuelRemaining - (fuelData.reserves?.final || 0) - (fuelData.reserves?.alternate || 0);
     if (usableFuel > 0) {
       const enduranceHours = usableFuel / fuelData.aircraft.fuelConsumption;

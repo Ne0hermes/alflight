@@ -83,11 +83,17 @@ export const useAlternateSelection = () => {
   const dynamicParams = useMemo(() => {
     if (!selectedAircraft || !navigationResults || !searchZone) return null;
     
-    const landingDistance = selectedAircraft.performances?.landingDistance || 500;
+    // Utiliser une longueur par défaut plus réaliste si pas de données
+    const landingDistance = selectedAircraft.performances?.landingDistance || 400; // Réduire de 500 à 400
     const requiredRunwayLength = Math.ceil(landingDistance * 1.43);
     
+    // Pour les petits avions, être moins restrictif
+    const minRunwayLength = selectedAircraft.category === 'SEP' ? 
+      Math.min(requiredRunwayLength, 600) : // Pour les monomoteurs, minimum 600m
+      requiredRunwayLength;
+    
     return {
-      requiredRunwayLength,
+      requiredRunwayLength: minRunwayLength,
       maxRadiusNM: searchZone.dynamicRadius,
       flightRules: flightType.rules,
       isDayFlight: flightType.period === 'jour'
@@ -140,9 +146,23 @@ export const useAlternateSelection = () => {
     // 2. Filtrer selon les critères
     const filtered = candidatesInZone.filter(airport => {
       // Longueur de piste
-      const hasAdequateRunway = airport.runways?.some(rwy => 
-        (rwy.length || 0) >= dynamicParams.requiredRunwayLength
-      );
+      const hasAdequateRunway = airport.runways?.some(rwy => {
+        const length = rwy.length || 0;
+        const adequate = length >= dynamicParams.requiredRunwayLength;
+        if (!adequate && candidatesInZone.length < 10) {
+          console.log(`${airport.icao}: piste ${length}m < requis ${dynamicParams.requiredRunwayLength}m`);
+        }
+        return adequate;
+      });
+      
+      // Si pas de données de piste, accepter les aérodromes moyens et grands
+      if (!airport.runways || airport.runways.length === 0) {
+        const acceptByType = ['medium_airport', 'large_airport'].includes(airport.type);
+        if (acceptByType) {
+          console.log(`${airport.icao}: accepté par type (${airport.type})`);
+        }
+        return acceptByType;
+      }
       
       return hasAdequateRunway;
     });
