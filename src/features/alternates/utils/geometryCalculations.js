@@ -153,36 +153,56 @@ const isPointInPolygon = (point, vertices) => {
 };
 
 /**
- * Calcule la distance d'un point à un segment de droite
+ * Calcule la distance d'un point à un segment de grande cercle (orthodromie)
+ * Utilise la méthode cross-track distance pour la navigation aérienne
  */
 const calculateDistanceToSegment = (point, start, end) => {
-  const A = point.lat - start.lat;
-  const B = point.lon - start.lon;
-  const C = end.lat - start.lat;
-  const D = end.lon - start.lon;
-  
-  const dot = A * C + B * D;
-  const lenSq = C * C + D * D;
-  let param = -1;
-  
-  if (lenSq !== 0) {
-    param = dot / lenSq;
+  // Cas spécial : segment de longueur nulle
+  if (start.lat === end.lat && start.lon === end.lon) {
+    return calculateDistance(point, start);
   }
   
-  let xx, yy;
+  const R = 3440.065; // Rayon terre en NM
   
-  if (param < 0) {
-    xx = start.lat;
-    yy = start.lon;
-  } else if (param > 1) {
-    xx = end.lat;
-    yy = end.lon;
-  } else {
-    xx = start.lat + param * C;
-    yy = start.lon + param * D;
+  // Distance du point au départ
+  const distanceToStart = calculateDistance(point, start);
+  
+  // Distance du point à l'arrivée
+  const distanceToEnd = calculateDistance(point, end);
+  
+  // Distance entre départ et arrivée
+  const segmentDistance = calculateDistance(start, end);
+  
+  // Si le segment est très court, utiliser la plus petite distance aux extrémités
+  if (segmentDistance < 0.1) {
+    return Math.min(distanceToStart, distanceToEnd);
   }
   
-  return calculateDistance(point, { lat: xx, lon: yy });
+  // Bearing du départ vers l'arrivée
+  const bearing13 = toRad(calculateBearing(start, end));
+  
+  // Bearing du départ vers le point
+  const bearing12 = toRad(calculateBearing(start, point));
+  
+  // Distance angulaire du départ au point
+  const angularDistance12 = distanceToStart / R;
+  
+  // Calcul de la cross-track distance (distance perpendiculaire à la route)
+  const crossTrackDistance = Math.asin(Math.sin(angularDistance12) * Math.sin(bearing12 - bearing13)) * R;
+  
+  // Distance le long de la route (along-track distance)
+  const alongTrackDistance = Math.acos(Math.cos(angularDistance12) / Math.cos(crossTrackDistance / R)) * R;
+  
+  // Si le point projeté est avant le départ ou après l'arrivée, 
+  // utiliser la distance aux extrémités
+  if (alongTrackDistance < 0) {
+    return distanceToStart;
+  } else if (alongTrackDistance > segmentDistance) {
+    return distanceToEnd;
+  }
+  
+  // Sinon, retourner la distance perpendiculaire (valeur absolue)
+  return Math.abs(crossTrackDistance);
 };
 
 /**
@@ -239,17 +259,94 @@ const calculateEquilateralTriangle = (departure, arrival) => {
   const distance = calculateDistance(departure, arrival);
   const height = (Math.sqrt(3) / 2) * distance;
   
-  // Calcul du 3ème point du triangle (perpendiculaire à la route)
+  // Calcul du 3ème point du triangle équilatéral
+  // Il est à une distance 'height' du milieu de la base, perpendiculairement
   const bearing = calculateBearing(departure, arrival);
   const perpendicularBearing = (bearing + 90) % 360;
   
-  const vertex = calculateDestination(midpoint, height / 2, perpendicularBearing);
+  const vertex = calculateDestination(midpoint, height, perpendicularBearing);
   
   return {
     type: 'triangle',
     vertices: [departure, arrival, vertex],
     area: calculateTriangleArea(departure, arrival, vertex),
     center: calculateCentroid([departure, arrival, vertex])
+  };
+};
+
+/**
+ * Calcule une zone pilule (capsule) autour de la route
+ * Zone définie comme l'ensemble des points à distance ≤ h du segment [P0, P1]
+ * où h = (√3 / 2) * d (hauteur d'un triangle équilatéral de côté d)
+ */
+const calculatePillZone = (departure, arrival, numPoints = 40) => {
+  const distance = calculateDistance(departure, arrival);
+  const radius = (Math.sqrt(3) / 2) * distance; // Rayon de la capsule
+  
+  console.log(`Zone pilule: distance=${distance.toFixed(1)} NM, rayon=${radius.toFixed(1)} NM`);
+  
+  // Cap de la route (direction de navigation)
+  const bearing = calculateBearing(departure, arrival);
+  
+  // Directions perpendiculaires à la route
+  const leftBearing = (bearing + 90) % 360;   // Côté gauche (bâbord)
+  const rightBearing = (bearing - 90 + 360) % 360; // Côté droit (tribord)
+  
+  const vertices = [];
+  
+  // === CONSTRUCTION DU CONTOUR DE LA PILULE ===
+  
+  // 1. CÔTÉ GAUCHE : Du départ vers l'arrivée
+  // Point de départ côté gauche
+  const startLeft = calculateDestination(departure, radius, leftBearing);
+  vertices.push(startLeft);
+  
+  // 2. DEMI-CERCLE À L'ARRIVÉE : Du côté gauche au côté droit
+  // Arc de 180° centré sur le point d'arrivée
+  const pointsPerHalfCircle = Math.floor(numPoints / 2);
+  for (let i = 0; i <= pointsPerHalfCircle; i++) {
+    // Angle de leftBearing à rightBearing (180°)
+    const t = i / pointsPerHalfCircle; // 0 à 1
+    const angle = leftBearing + t * 180;
+    const point = calculateDestination(arrival, radius, angle % 360);
+    vertices.push(point);
+  }
+  
+  // 3. CÔTÉ DROIT : De l'arrivée vers le départ (implicite)
+  // Le dernier point du demi-cercle est déjà le point arrRight
+  
+  // 4. DEMI-CERCLE AU DÉPART : Du côté droit au côté gauche
+  // Arc de 180° centré sur le point de départ
+  for (let i = 0; i <= pointsPerHalfCircle; i++) {
+    // Angle de rightBearing à leftBearing (180°)
+    const t = i / pointsPerHalfCircle; // 0 à 1
+    const angle = rightBearing + t * 180;
+    const point = calculateDestination(departure, radius, angle % 360);
+    vertices.push(point);
+  }
+  
+  // Note: Le dernier point devrait être proche de startLeft, fermant le polygone
+  
+  // Calculer l'aire : rectangle + cercle complet
+  const rectangleArea = distance * (2 * radius);
+  const circleArea = Math.PI * radius * radius;
+  const totalArea = rectangleArea + circleArea;
+  
+  console.log(`Zone créée: ${vertices.length} vertices`);
+  
+  return {
+    type: 'pill',
+    vertices: vertices,
+    area: totalArea,
+    center: calculateMidpoint(departure, arrival),
+    radius: radius,
+    length: distance,
+    departure: departure,
+    arrival: arrival,
+    // Informations supplémentaires pour debug
+    bearing: bearing,
+    leftBearing: leftBearing,
+    rightBearing: rightBearing
   };
 };
 
@@ -331,8 +428,12 @@ export {
 export const calculateSearchZone = (departure, arrival, waypoints = [], fuelData = null) => {
   const distance = calculateDistance(departure, arrival);
   
-  // Utiliser toujours la méthode triangle équilatéral pour cette application
-  const zone = calculateEquilateralTriangle(departure, arrival);
+  console.log(`Calcul zone de recherche - Distance vol: ${distance.toFixed(1)} NM`);
+  
+  // Utiliser la méthode pilule (capsule) au lieu du triangle équilatéral
+  const zone = calculatePillZone(departure, arrival);
+  
+  console.log(`Zone créée - Type: ${zone.type}, Rayon: ${zone.radius?.toFixed(1)} NM, Aire: ${zone.area?.toFixed(0)} NM²`);
   
   // Ajouter le rayon dynamique basé sur le carburant
   if (fuelData && fuelData.aircraft && fuelData.fuelRemaining) {
@@ -351,6 +452,7 @@ export const calculateSearchZone = (departure, arrival, waypoints = [], fuelData
   // Identifier les points tournants si waypoints fournis
   if (waypoints && waypoints.length > 2) {
     zone.turnPoints = identifyTurnPoints(waypoints);
+    console.log(`Points tournants identifiés: ${zone.turnPoints.length}`);
   }
   
   return zone;
@@ -369,29 +471,50 @@ export const isAirportInSearchZone = (airport, searchZone) => {
   
   if (!point.lat || !point.lon) return { isInZone: false, reason: 'Coordonnées invalides' };
   
-  // Vérifier si dans le triangle principal
-  if (searchZone.vertices && isPointInTriangle(point, searchZone.vertices)) {
-    return { isInZone: true, location: 'triangle' };
-  }
-  
-  // Vérifier si dans les tampons des points tournants
-  if (searchZone.turnPoints) {
-    for (const turnPoint of searchZone.turnPoints) {
-      const distance = calculateDistance(point, turnPoint);
-      if (distance <= turnPoint.bufferRadius) {
-        return { isInZone: true, location: 'turnBuffer', turnPoint: turnPoint.name };
+  // Pour une zone pilule : vérifier si le point est à distance ≤ radius du segment
+  if (searchZone.type === 'pill' && searchZone.radius && searchZone.departure && searchZone.arrival) {
+    const distanceToRoute = calculateDistanceToSegment(point, searchZone.departure, searchZone.arrival);
+    
+    if (distanceToRoute <= searchZone.radius) {
+      return { isInZone: true, location: 'pill', distanceToRoute };
+    }
+    
+    // Vérifier aussi les tampons des points tournants pour la zone pilule
+    if (searchZone.turnPoints) {
+      for (const turnPoint of searchZone.turnPoints) {
+        const distance = calculateDistance(point, turnPoint);
+        if (distance <= turnPoint.bufferRadius) {
+          return { isInZone: true, location: 'turnBuffer', turnPoint: turnPoint.name, distanceToRoute };
+        }
       }
     }
+    
+    return { isInZone: false, reason: 'Hors zone pilule', distanceToRoute };
   }
   
-  // Vérifier si dans la marge de 5 NM
-  if (searchZone.vertices) {
+  // Ancien code pour compatibilité avec le triangle (si nécessaire)
+  if (searchZone.type === 'triangle' && searchZone.vertices) {
+    if (isPointInTriangle(point, searchZone.vertices)) {
+      return { isInZone: true, location: 'triangle' };
+    }
+    
+    // Vérifier si dans la marge de 5 NM (pour triangle uniquement)
     for (let i = 0; i < searchZone.vertices.length; i++) {
       const start = searchZone.vertices[i];
       const end = searchZone.vertices[(i + 1) % searchZone.vertices.length];
       const distToSegment = calculateDistanceToSegment(point, start, end);
       if (distToSegment <= 5) { // 5 NM de marge
         return { isInZone: true, location: 'margin' };
+      }
+    }
+  }
+  
+  // Vérifier si dans les tampons des points tournants (pour triangle)
+  if (searchZone.turnPoints && searchZone.type === 'triangle') {
+    for (const turnPoint of searchZone.turnPoints) {
+      const distance = calculateDistance(point, turnPoint);
+      if (distance <= turnPoint.bufferRadius) {
+        return { isInZone: true, location: 'turnBuffer', turnPoint: turnPoint.name };
       }
     }
   }

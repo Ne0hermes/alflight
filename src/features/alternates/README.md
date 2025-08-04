@@ -2,15 +2,15 @@
 
 ## Vue d'ensemble
 
-Le module Alternates implémente une sélection automatique et intelligente des aérodromes de déroutement basée sur une approche géométrique avancée et un scoring multi-critères.
+Le module Alternates implémente une sélection automatique et intelligente des aérodromes de déroutement basée sur une approche géométrique avancée utilisant une zone en forme de pilule (capsule) et un scoring multi-critères.
 
 ## Caractéristiques principales
 
 ### 1. Zone de recherche géométrique
 
-- **Triangle équilatéral inscrit** : La zone principale est un triangle équilatéral dont le côté égale la distance orthodromique entre départ et arrivée
+- **Zone pilule (capsule)** : Zone définie comme l'ensemble des points à distance ≤ h du segment [P0, P1], où h = (√3/2) × distance
 - **Tampons dynamiques** : Zones circulaires de 5-10 NM autour des points tournants critiques (virages > 30°)
-- **Extension de 5 NM** : Les aérodromes jusqu'à 5 NM au-delà des bords sont inclus
+- **Géométrie** : La zone forme une capsule avec deux demi-cercles aux extrémités et deux segments parallèles
 
 ### 2. Rayon de recherche dynamique
 
@@ -61,13 +61,23 @@ src/features/alternates/
 
 ### Algorithmes clés
 
-#### Calcul du triangle équilatéral
+#### Calcul de la zone pilule (capsule)
 ```javascript
 const routeDistance = calculateDistance(departure, arrival);
 const height = routeDistance * Math.sqrt(3) / 2;
-const midpoint = calculateMidpoint(departure, arrival);
-const vertex1 = calculateDestination(midpoint, height, bearing + 90);
-const vertex2 = calculateDestination(midpoint, height, bearing - 90);
+// Zone = ensemble des points à distance ≤ height du segment [departure, arrival]
+// Génération de vertices pour visualisation :
+// - Demi-cercle de rayon height au départ
+// - Demi-cercle de rayon height à l'arrivée
+// - Connexion des deux demi-cercles
+```
+
+#### Vérification d'appartenance à la zone
+```javascript
+const isInPillZone = (point, departure, arrival, radius) => {
+  const distanceToRoute = calculateDistanceToSegment(point, departure, arrival);
+  return distanceToRoute <= radius;
+};
 ```
 
 #### Calcul du rayon dynamique
@@ -122,6 +132,14 @@ function MyComponent() {
 }
 ```
 
+## Avantages de la zone pilule
+
+1. **Couverture uniforme** : Largeur constante tout le long de la route
+2. **Plus intuitive** : Tous les points à égale distance de la route ont la même priorité
+3. **Calcul efficace** : Test simple de distance au segment
+4. **Meilleure couverture** : Aire totale = 2h × d + πh² (plus grande que le triangle)
+5. **Adaptée aux longs vols** : Maintient une zone de recherche cohérente
+
 ## Points d'amélioration futurs
 
 1. **Analyse météo prédictive** : Intégrer les TAF pour prévoir l'évolution
@@ -129,10 +147,12 @@ function MyComponent() {
 3. **Facteurs économiques** : Coût du carburant, taxes d'atterrissage
 4. **Historique** : Apprentissage des préférences utilisateur
 5. **Export** : Génération de fiches alternates PDF
+6. **Multi-zones** : Support de zones composites pour routes complexes
 
 ## Performance
 
 - Calculs géométriques optimisés avec cache
+- Test de distance au segment en O(1)
 - Chargement météo limité aux 10 premiers candidats
 - Scoring parallélisé avec Promise.all
 - Mise à jour différée pour éviter les recalculs
@@ -140,7 +160,15 @@ function MyComponent() {
 ## Conformité réglementaire
 
 Le module respecte les exigences :
+- Zone de recherche en forme de pilule (capsule) avec rayon h = (√3/2) × distance de vol
 - Distance piste × 1.43 (marge réglementaire)
 - Réserves carburant selon type de vol
 - Minima météo VFR/IFR configurables
 - Points tournants critiques identifiés
+
+## Exemples de calcul
+
+Pour un vol de 100 NM :
+- Rayon de la capsule : h = 100 × √3/2 ≈ 86.6 NM
+- Aire totale : ≈ 17,320 NM² (rectangle) + 23,545 NM² (cercle) = 40,865 NM²
+- Zone de recherche très large garantissant de nombreux candidats

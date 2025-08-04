@@ -16,7 +16,7 @@ import { scoreAlternates } from './useAlternateScoring';
 
 /**
  * Hook principal pour la sélection automatique avancée des aérodromes de déroutement
- * Utilise la logique géométrique complète avec triangle équilatéral et scoring multi-critères
+ * Utilise la logique géométrique complète avec zone pilule et scoring multi-critères
  */
 export const useAlternateSelection = () => {
   const { waypoints, flightType } = useNavigation();
@@ -99,27 +99,43 @@ export const useAlternateSelection = () => {
     if (!searchZone || !selectedAircraft || !dynamicParams) return;
     
     console.log('🔍 Recherche avancée d\'alternates...');
+    console.log('Zone de recherche:', searchZone);
+    console.log(`Type de zone: ${searchZone.type}, Rayon: ${searchZone.radius?.toFixed(1)} NM`);
     
     // 1. Filtrer les aérodromes dans la zone
     const candidatesInZone = [];
+    let testedCount = 0;
+    let debugInfo = { inPill: 0, inTurnBuffer: 0, tooFar: 0 };
     
     for (const airport of airports) {
+      testedCount++;
       const zoneCheck = isAirportInSearchZone(airport, searchZone);
       
       if (zoneCheck.isInZone) {
         // Enrichir avec les informations de distance
         candidatesInZone.push({
           ...airport,
-          distance: calculateDistanceFromRoute(
-            airport.coordinates,
+          distance: zoneCheck.distanceToRoute || calculateDistanceFromRoute(
+            airport.coordinates || airport.position || { lat: airport.lat, lon: airport.lon || airport.lng },
             { lat: waypoints[0].lat, lon: waypoints[0].lon },
             { lat: waypoints[waypoints.length - 1].lat, lon: waypoints[waypoints.length - 1].lon }
           ),
-          position: airport.coordinates,
+          position: airport.coordinates || airport.position || { lat: airport.lat, lon: airport.lon || airport.lng },
           zoneInfo: zoneCheck
         });
+        
+        if (zoneCheck.location === 'pill') debugInfo.inPill++;
+        else if (zoneCheck.location === 'turnBuffer') debugInfo.inTurnBuffer++;
+      } else if (zoneCheck.distanceToRoute) {
+        debugInfo.tooFar++;
       }
     }
+    
+    console.log(`Aérodromes testés: ${testedCount}`);
+    console.log(`Dans la zone pilule: ${debugInfo.inPill}`);
+    console.log(`Dans tampons virages: ${debugInfo.inTurnBuffer}`);
+    console.log(`Trop loin: ${debugInfo.tooFar}`);
+    console.log(`Total candidats dans zone: ${candidatesInZone.length}`);
     
     // 2. Filtrer selon les critères
     const filtered = candidatesInZone.filter(airport => {
@@ -131,6 +147,7 @@ export const useAlternateSelection = () => {
       return hasAdequateRunway;
     });
     
+    console.log(`Après filtrage piste (min ${dynamicParams.requiredRunwayLength}m): ${filtered.length}`);
     setCandidates(filtered);
     
     // 3. Récupérer la météo
@@ -156,6 +173,8 @@ export const useAlternateSelection = () => {
     // Enrichir avec les métadonnées
     const scored = scoredAirports.map(airport => ({
       ...airport,
+      // S'assurer que la distance est bien définie
+      distance: airport.distance || airport.zoneInfo?.distanceToRoute || 0,
       // Services
       services: {
         fuel: airport.fuel || false,
