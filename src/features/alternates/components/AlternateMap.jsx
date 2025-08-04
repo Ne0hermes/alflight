@@ -1,6 +1,6 @@
 // src/features/alternates/components/AlternateMap.jsx
 import React, { memo } from 'react';
-import { MapContainer, TileLayer, Marker, Polyline, Polygon, Popup, LayerGroup, LayersControl } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Polyline, Polygon, Popup, LayerGroup, LayersControl, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import { Navigation, MapPin } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
@@ -62,6 +62,9 @@ export const AlternateMap = memo(({ searchZone, alternates = [] }) => {
   // Couleurs pour les alternates
   const alternateColors = ['#3b82f6', '#10b981', '#f59e0b'];
   
+  // Log pour debug
+  console.log('AlternateMap - searchZone:', searchZone);
+  
   return (
     <div style={styles.mapContainer}>
       <MapContainer
@@ -87,8 +90,50 @@ export const AlternateMap = memo(({ searchZone, alternates = [] }) => {
           </LayersControl.BaseLayer>
         </LayersControl>
         
-        {/* Zone de recherche */}
-        {searchZone && searchZone.vertices && (
+        {/* Zone de recherche pilule */}
+        {searchZone && searchZone.type === 'pill' && searchZone.vertices && (
+          <LayerGroup>
+            <Polygon
+              positions={searchZone.vertices.map(v => [v.lat, v.lon])}
+              color="#3b82f6"
+              fillColor="#3b82f6"
+              fillOpacity={0.15}
+              weight={2}
+              smoothFactor={2}
+            />
+            {/* Ligne centrale pour visualiser l'axe de la capsule */}
+            <Polyline
+              positions={[
+                [searchZone.departure.lat, searchZone.departure.lon],
+                [searchZone.arrival.lat, searchZone.arrival.lon]
+              ]}
+              color="#1f2937"
+              weight={1}
+              opacity={0.3}
+              dashArray="3, 6"
+            />
+            {/* Cercles aux extrémités pour mieux visualiser */}
+            <Circle
+              center={[searchZone.departure.lat, searchZone.departure.lon]}
+              radius={searchZone.radius * 1852} // Conversion NM vers mètres
+              color="#3b82f6"
+              fillOpacity={0}
+              weight={1}
+              dashArray="3, 3"
+            />
+            <Circle
+              center={[searchZone.arrival.lat, searchZone.arrival.lon]}
+              radius={searchZone.radius * 1852} // Conversion NM vers mètres
+              color="#3b82f6"
+              fillOpacity={0}
+              weight={1}
+              dashArray="3, 3"
+            />
+          </LayerGroup>
+        )}
+        
+        {/* Zone de recherche triangle (pour compatibilité) */}
+        {searchZone && searchZone.type === 'triangle' && searchZone.vertices && (
           <LayerGroup>
             <Polygon
               positions={searchZone.vertices.map(v => [v.lat, v.lon])}
@@ -100,6 +145,20 @@ export const AlternateMap = memo(({ searchZone, alternates = [] }) => {
             />
           </LayerGroup>
         )}
+        
+        {/* Tampons des points tournants */}
+        {searchZone && searchZone.turnPoints && searchZone.turnPoints.map((turnPoint, idx) => (
+          <Circle
+            key={idx}
+            center={[turnPoint.lat, turnPoint.lon]}
+            radius={turnPoint.bufferRadius * 1852} // Conversion NM vers mètres
+            color="#f59e0b"
+            fillColor="#f59e0b"
+            fillOpacity={0.15}
+            weight={1}
+            dashArray="3, 3"
+          />
+        ))}
         
         {/* Route principale */}
         {waypoints.length >= 2 && (
@@ -166,8 +225,13 @@ export const AlternateMap = memo(({ searchZone, alternates = [] }) => {
             <span style={{ color: '#1f2937' }}>━━━</span> Route principale
           </div>
           <div style={sx.spacing.mb(1)}>
-            <span style={{ color: '#3b82f6' }}>┅┅┅</span> Zone de recherche
+            <span style={{ color: '#3b82f6' }}>━━━</span> Zone pilule (h = {searchZone && searchZone.radius ? searchZone.radius.toFixed(0) : '?'} NM)
           </div>
+          {searchZone && searchZone.turnPoints && searchZone.turnPoints.length > 0 && (
+            <div style={sx.spacing.mb(1)}>
+              <span style={{ color: '#f59e0b' }}>○</span> Tampons points tournants
+            </div>
+          )}
           {alternates.map((alt, idx) => (
             <div key={alt.icao} style={sx.spacing.mb(1)}>
               <span style={{

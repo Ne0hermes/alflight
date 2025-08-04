@@ -57,7 +57,7 @@ const AlternatesModule = memo(() => {
             <StatCard
               icon={<Navigation2 size={20} />}
               label="Zone principale"
-              value="Triangle équilatéral"
+              value="Capsule (pilule)"
               detail={`Aire: ${Math.round(triangleArea)} NM²`}
             />
             <StatCard
@@ -183,7 +183,10 @@ const AlternatesModule = memo(() => {
         <div style={sx.components.card.base}>
           <div style={sx.text.sm}>
             <p style={sx.spacing.mb(2)}>
-              <strong>Zone de recherche :</strong> Triangle équilatéral inscrit dans la route + tampons de 5-10 NM autour des points tournants critiques (virages {'>'} 30°)
+              <strong>Zone de recherche :</strong> Capsule (pilule) autour de la route avec rayon h = (√3/2) × distance + tampons de 5-10 NM autour des points tournants critiques (virages {'>'} 30°)
+            </p>
+            <p style={sx.spacing.mb(2)}>
+              <strong>Géométrie pilule :</strong> L'ensemble des points situés à une distance ≤ h du segment [départ, arrivée], formant une capsule avec deux demi-cercles aux extrémités
             </p>
             <p style={sx.spacing.mb(2)}>
               <strong>Rayon dynamique :</strong> Calculé sur base du carburant résiduel utilisable (FOB - réserves), limité entre 15 et 50 NM
