@@ -540,9 +540,12 @@ export const calculateSearchZone = (departure, arrival, waypoints = [], fuelData
   }
   
   // Ajustement par carburant si disponible (optionnel)
-  if (fuelData && fuelData.aircraft && fuelData.fuelRemaining && config.limitByFuel !== false) {
-    const usableFuel = fuelData.fuelRemaining - (fuelData.reserves?.final || 0) - (fuelData.reserves?.alternate || 0);
-    if (usableFuel > 0) {
+  if (fuelData && fuelData.aircraft && fuelData.fuelRemaining !== undefined && config.limitByFuel !== false) {
+    const finalReserve = fuelData.reserves?.final || 0;
+    const alternateReserve = fuelData.reserves?.alternate || 0;
+    const usableFuel = fuelData.fuelRemaining - finalReserve - alternateReserve;
+    
+    if (usableFuel > 0 && fuelData.aircraft.fuelConsumption && fuelData.aircraft.cruiseSpeedKt) {
       const enduranceHours = usableFuel / fuelData.aircraft.fuelConsumption;
       const fuelRadius = enduranceHours * fuelData.aircraft.cruiseSpeedKt * 0.3;
       const oldRadius = radius;

@@ -322,15 +322,18 @@ export const useAlternateSelection = () => {
   const fuelDataForRadius = useMemo(() => {
     if (!selectedAircraft || !fobFuel || !navigationResults) return null;
     
-    const totalRequired = calculateTotal('ltr');
-    const fuelRemaining = fobFuel.ltr - navigationResults.fuelRequired;
+    // Vérifier que les propriétés existent
+    const fobLiters = fobFuel?.ltr || 0;
+    const fuelRequired = navigationResults?.fuelRequired || 0;
+    const totalRequired = calculateTotal ? calculateTotal('ltr') : 0;
+    const fuelRemaining = fobLiters - fuelRequired;
     
     return {
       aircraft: selectedAircraft,
       fuelRemaining,
       reserves: {
-        final: navigationResults.regulationReserveLiters,
-        alternate: fuelData.alternate.ltr
+        final: navigationResults?.regulationReserveLiters || 0,
+        alternate: fuelData?.alternate?.ltr || 0
       }
     };
   }, [selectedAircraft, fobFuel, navigationResults, calculateTotal, fuelData]);

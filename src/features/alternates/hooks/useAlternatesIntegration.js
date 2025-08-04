@@ -64,67 +64,79 @@ export const useAlternatesForFuel = () => {
     if (!selectedAlternates.length || !selectedAircraft) return 0;
     
     const arrival = waypoints[waypoints.length - 1];
-    if (!arrival) return 0;
+    if (!arrival || !arrival.lat || !arrival.lon) return 0;
     
-    // Pour le système dual, calculer le carburant pour chaque alternate
-    let totalFuel = 0;
+    // Calculer la distance maximale depuis l'arrivée vers les aérodromes de déroutement
+    let maxDistance = 0;
+    let selectedAlternate = null;
     
     selectedAlternates.forEach(alt => {
-      let distance = 0;
+      if (!alt.position || !alt.position.lat || !alt.position.lon) return;
       
-      if (alt.selectionType === 'departure') {
-        // Distance depuis le départ
-        const departure = waypoints[0];
-        if (departure) {
-          distance = calculateDistance(
-            { lat: departure.lat, lon: departure.lon },
-            alt.position
-          );
-        }
-      } else if (alt.selectionType === 'arrival') {
-        // Distance depuis l'arrivée
-        distance = calculateDistance(
-          { lat: arrival.lat, lon: arrival.lon },
-          alt.position
-        );
+      // Calculer la distance depuis l'arrivée (on considère le déroutement depuis la destination)
+      const distance = calculateDistance(
+        { lat: arrival.lat, lon: arrival.lon },
+        alt.position
+      );
+      
+      if (distance > maxDistance) {
+        maxDistance = distance;
+        selectedAlternate = alt;
       }
-      
-      // Calculer le carburant nécessaire
-      const fuelConsumption = selectedAircraft.fuelConsumption;
-      const cruiseSpeed = selectedAircraft.cruiseSpeedKt;
-      const flightTime = distance / cruiseSpeed;
-      
-      totalFuel += flightTime * fuelConsumption;
     });
     
-    // Retourner le carburant pour l'alternate le plus consommateur
-    return totalFuel / selectedAlternates.length; // Moyenne pour simplifier
+    // Si aucune distance valide, retourner 0
+    if (maxDistance === 0) return 0;
+    
+    // Calculer le carburant nécessaire pour la distance maximale
+    const fuelConsumption = selectedAircraft.fuelConsumption || 30; // L/h par défaut
+    const cruiseSpeed = selectedAircraft.cruiseSpeedKt || 100; // kt par défaut
+    const flightTime = maxDistance / cruiseSpeed; // en heures
+    
+    // Ajouter 30 minutes de réserve pour l'approche et l'atterrissage
+    const totalFlightTime = flightTime + 0.5;
+    const fuelRequired = totalFlightTime * fuelConsumption;
+    
+    // Arrondir au litre supérieur
+    return Math.ceil(fuelRequired);
   }, [selectedAlternates, selectedAircraft, waypoints]);
   
-  // Calculer les distances pour chaque alternate
+  // Calculer les distances pour chaque alternate depuis l'arrivée
   const alternateDistances = selectedAlternates.map(alt => {
-    const reference = alt.selectionType === 'departure' ? waypoints[0] : waypoints[waypoints.length - 1];
-    if (!reference) return { icao: alt.icao, distance: 0, type: alt.selectionType };
+    const arrival = waypoints[waypoints.length - 1];
+    if (!arrival || !alt.position) return { icao: alt.icao, distance: 0, type: alt.selectionType };
+    
+    const distance = calculateDistance(
+      { lat: arrival.lat, lon: arrival.lon },
+      alt.position
+    );
     
     return {
       icao: alt.icao,
-      distance: calculateDistance(
-        { lat: reference.lat, lon: reference.lon },
-        alt.position
-      ),
-      type: alt.selectionType
+      distance: distance,
+      type: alt.selectionType,
+      name: alt.name
     };
   });
   
+  // Trouver l'aérodrome le plus éloigné
+  const maxDistanceAlternate = alternateDistances.reduce((max, current) => 
+    current.distance > max.distance ? current : max,
+    { distance: 0 }
+  );
+  
   return {
     alternateFuelRequired: calculateAlternateFuel(),
+    alternateFuelRequiredGal: calculateAlternateFuel() / 3.78541, // Conversion en gallons
     alternatesCount: selectedAlternates.length,
     alternateIcaos: selectedAlternates.map(alt => alt.icao),
     alternatesByType: {
       departure: selectedAlternates.filter(alt => alt.selectionType === 'departure'),
       arrival: selectedAlternates.filter(alt => alt.selectionType === 'arrival')
     },
-    alternateDistances
+    alternateDistances,
+    maxDistanceAlternate,
+    hasAlternates: selectedAlternates.length > 0
   };
 };
 

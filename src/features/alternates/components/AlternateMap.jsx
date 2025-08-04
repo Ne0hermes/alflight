@@ -1,5 +1,5 @@
 // src/features/alternates/components/AlternateMap.jsx
-import React, { memo } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, Polygon, Popup, LayerGroup, LayersControl, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import { Navigation, MapPin } from 'lucide-react';
@@ -111,6 +111,7 @@ const createArrivalIcon = () => {
 
 export const AlternateMap = memo(({ searchZone, alternates = [], allCandidates = [], showAllCandidates = false, selectedIcaos = [] }) => {
   const { waypoints } = useNavigation();
+  const [map, setMap] = useState(null);
   
   // Calculer le centre et le zoom
   const getMapBounds = () => {
@@ -132,14 +133,26 @@ export const AlternateMap = memo(({ searchZone, alternates = [], allCandidates =
   const bounds = getMapBounds();
   const center = bounds ? bounds.getCenter() : [46.603354, 1.888334];
   
+  // Auto-ajuster le zoom quand les bounds changent
+  useEffect(() => {
+    if (map && bounds) {
+      map.fitBounds(bounds, { 
+        padding: [20, 20],
+        maxZoom: 10
+      });
+    }
+  }, [map, bounds]);
+  
   return (
     <div style={styles.mapContainer}>
       <MapContainer
+        ref={setMap}
         center={center}
         zoom={7}
         bounds={bounds}
+        boundsOptions={{ padding: [20, 20], maxZoom: 10 }}
         style={styles.map}
-        zoomControl={false}
+        zoomControl={true}
       >
         <LayersControl position="topright">
           <LayersControl.BaseLayer checked name="OpenStreetMap">
@@ -410,130 +423,43 @@ export const AlternateMap = memo(({ searchZone, alternates = [], allCandidates =
       
       {/* Légende */}
       <div style={styles.legend}>
-        <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
+        <h5 style={sx.combine(sx.text.xs, sx.text.bold, sx.spacing.mb(1))}>
           Légende
         </h5>
-        <div style={sx.text.xs}>
+        <div style={{ fontSize: '10px', lineHeight: '1.4' }}>
           <div style={sx.spacing.mb(1)}>
-            <span style={{ color: '#1f2937' }}>━━━</span> Route principale
-          </div>
-          <div style={sx.spacing.mb(1)}>
-            <span style={{ color: '#8b5cf6' }}>┅┅┅</span> Médiatrice (division départ/arrivée)
+            <span style={{ color: '#1f2937' }}>━━━</span> Route
+            <span style={{ color: '#8b5cf6', marginLeft: '8px' }}>┅┅┅</span> Médiatrice
           </div>
           {searchZone && searchZone.type === 'pill' && (
             <div style={sx.spacing.mb(1)}>
-              <span style={{ color: '#3b82f6' }}>⬭</span> Zone pilule (rayon {searchZone.radius ? searchZone.radius.toFixed(0) : '?'} NM)
+              <span style={{ color: '#3b82f6' }}>⬭</span> Zone pilule ({searchZone.radius ? searchZone.radius.toFixed(0) : '?'} NM)
             </div>
           )}
-          {searchZone && searchZone.turnPoints && searchZone.turnPoints.length > 0 && (
-            <div style={sx.spacing.mb(1)}>
-              <span style={{ color: '#f59e0b' }}>○</span> Tampons points tournants
-            </div>
-          )}
-          <div style={sx.spacing.mt(2)}>
-            <strong>Points de navigation :</strong>
-          </div>
           <div style={sx.spacing.mb(1)}>
             <span style={{
               display: 'inline-block',
-              width: '20px',
-              height: '20px',
-              borderRadius: '50%',
-              backgroundColor: '#3b82f6',
-              marginRight: '4px',
-              verticalAlign: 'middle',
-              position: 'relative'
-            }}>
-              <span style={{
-                position: 'absolute',
-                top: '5px',
-                left: '5px',
-                width: '0',
-                height: '0',
-                borderTop: '5px solid transparent',
-                borderBottom: '5px solid transparent',
-                borderLeft: '8px solid white'
-              }} />
-            </span>
-            Point de départ
-          </div>
-          <div style={sx.spacing.mb(1)}>
-            <span style={{
-              display: 'inline-block',
-              width: '20px',
-              height: '20px',
-              borderRadius: '50%',
-              backgroundColor: '#dc2626',
-              marginRight: '4px',
-              verticalAlign: 'middle',
-              position: 'relative'
-            }}>
-              <span style={{
-                position: 'absolute',
-                top: '6px',
-                left: '6px',
-                width: '8px',
-                height: '8px',
-                backgroundColor: 'white'
-              }} />
-            </span>
-            Point d'arrivée
-          </div>
-          <div style={sx.spacing.mt(2)}>
-            <strong>Aérodromes candidats :</strong>
-          </div>
-          <div style={sx.spacing.mb(1)}>
-            <span style={{
-              display: 'inline-block',
-              width: '12px',
-              height: '12px',
+              width: '10px',
+              height: '10px',
               borderRadius: '50%',
               backgroundColor: '#dc262640',
               border: '1px solid #dc2626',
               marginRight: '4px',
               verticalAlign: 'middle'
             }} />
-            Suggestions côté départ
-          </div>
-          <div style={sx.spacing.mb(1)}>
+            Côté départ
             <span style={{
               display: 'inline-block',
-              width: '12px',
-              height: '12px',
+              width: '10px',
+              height: '10px',
               borderRadius: '50%',
               backgroundColor: '#05966940',
               border: '1px solid #059669',
+              marginLeft: '8px',
               marginRight: '4px',
               verticalAlign: 'middle'
             }} />
-            Suggestions côté arrivée
-          </div>
-          <div style={sx.spacing.mt(2)}>
-            <strong>Aérodromes sélectionnés :</strong>
-          </div>
-          <div style={sx.spacing.mb(1)}>
-            <span style={{
-              display: 'inline-block',
-              width: '16px',
-              height: '16px',
-              borderRadius: '50%',
-              backgroundColor: '#dc2626',
-              marginRight: '4px',
-              verticalAlign: 'middle'
-            }} />
-            Sélection côté départ
-          </div>
-          <div style={sx.spacing.mb(1)}>
-            <span style={{
-              display: 'inline-block',
-              width: '16px',
-              height: '16px',
-              borderRadius: '50%',
-              backgroundColor: '#059669',
-              marginRight: '4px',
-              verticalAlign: 'middle'
-            }} />
-            Sélection côté arrivée
+            Côté arrivée
           </div>
         </div>
       </div>
@@ -555,7 +481,7 @@ const styles = {
   mapContainer: {
     position: 'relative',
     width: '100%',
-    height: '500px',
+    height: '350px',
     borderRadius: '8px',
     overflow: 'hidden',
     border: '1px solid #e5e7eb'
@@ -566,22 +492,23 @@ const styles = {
   },
   legend: {
     position: 'absolute',
-    bottom: '16px',
-    right: '16px',
-    backgroundColor: 'white',
-    padding: '12px 16px',
+    bottom: '12px',
+    right: '12px',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    padding: '10px 14px',
     borderRadius: '8px',
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-    maxWidth: '250px'
+    maxWidth: '220px',
+    fontSize: '11px'
   },
   counter: {
     position: 'absolute',
-    top: '16px',
-    left: '16px',
-    backgroundColor: 'white',
-    padding: '8px 12px',
-    borderRadius: '8px',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+    top: '12px',
+    left: '12px',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    padding: '6px 10px',
+    borderRadius: '6px',
+    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.12)'
   },
   serviceTag: {
     display: 'inline-block',

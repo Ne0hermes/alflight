@@ -149,41 +149,71 @@ const AlternatesModule = memo(() => {
           </div>
         </div>
         
-        {/* Interface de sélection manuelle avec tous les aérodromes suggérés */}
-        {scoredAlternates && scoredAlternates.length > 0 ? (
-          <AlternateSelectorDual
-            candidates={scoredAlternates}
-            searchZone={searchZone}
-            onSelectionChange={handleManualSelection}
-            currentSelection={manualSelection}
-          />
-        ) : hasSearched ? (
-          <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning)}>
-            <Info size={16} />
-            <p style={sx.text.sm}>
-              Aucun aérodrome trouvé dans la zone de recherche.
-            </p>
-          </div>
-        ) : (
-          <div style={sx.combine(sx.components.card.base, sx.text.center, sx.spacing.p(8))}>
-            <div style={{ 
-              display: 'inline-block',
-              animation: 'spin 2s linear infinite'
-            }}>
-              <RefreshCw size={48} style={{ color: '#3b82f6' }} />
+        {/* Conteneur pour la carte et la sélection côte à côte */}
+        {searchZone && (
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: '1fr 1fr',
+            gap: '20px',
+            marginBottom: '24px',
+            alignItems: 'start'
+          }}>
+            {/* Colonne gauche : Carte */}
+            <div style={sx.components.card.base}>
+              <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(3))}>
+                📍 Visualisation de la zone de recherche
+              </h4>
+              <AlternateMap 
+                searchZone={searchZone}
+                alternates={mapAlternates}
+                allCandidates={scoredAlternates}
+                showAllCandidates={true}
+                selectedIcaos={[manualSelection.departure?.icao, manualSelection.arrival?.icao].filter(Boolean)}
+              />
             </div>
-            <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mt(4), sx.spacing.mb(2))}>
-              Recherche en cours...
-            </h4>
-            <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
-              Analyse de la zone de vol et recherche des aérodromes de déroutement
-            </p>
-            <style>{`
-              @keyframes spin {
-                from { transform: rotate(0deg); }
-                to { transform: rotate(360deg); }
-              }
-            `}</style>
+            
+            {/* Colonne droite : Interface de sélection */}
+            <div>
+              <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(3))}>
+                ✈️ Sélection des aérodromes
+              </h4>
+              {scoredAlternates && scoredAlternates.length > 0 ? (
+                <AlternateSelectorDual
+                  candidates={scoredAlternates}
+                  searchZone={searchZone}
+                  onSelectionChange={handleManualSelection}
+                  currentSelection={manualSelection}
+                />
+              ) : hasSearched ? (
+                <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning)}>
+                  <Info size={16} />
+                  <p style={sx.text.sm}>
+                    Aucun aérodrome trouvé dans la zone de recherche.
+                  </p>
+                </div>
+              ) : (
+                <div style={sx.combine(sx.components.card.base, sx.text.center, sx.spacing.p(8))}>
+                  <div style={{ 
+                    display: 'inline-block',
+                    animation: 'spin 2s linear infinite'
+                  }}>
+                    <RefreshCw size={48} style={{ color: '#3b82f6' }} />
+                  </div>
+                  <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mt(4), sx.spacing.mb(2))}>
+                    Recherche en cours...
+                  </h4>
+                  <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
+                    Analyse de la zone de vol et recherche des aérodromes de déroutement
+                  </p>
+                  <style>{`
+                    @keyframes spin {
+                      from { transform: rotate(0deg); }
+                      to { transform: rotate(360deg); }
+                    }
+                  `}</style>
+                </div>
+              )}
+            </div>
           </div>
         )}
         
@@ -243,22 +273,6 @@ const AlternatesModule = memo(() => {
           </div>
         )}
       </section>
-      
-      {/* Carte avec visualisation */}
-      {searchZone && (
-        <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
-          <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(3))}>
-            Visualisation de la zone de recherche
-          </h4>
-          <AlternateMap 
-            searchZone={searchZone}
-            alternates={mapAlternates}
-            allCandidates={scoredAlternates}
-            showAllCandidates={true}
-            selectedIcaos={[manualSelection.departure?.icao, manualSelection.arrival?.icao].filter(Boolean)}
-          />
-        </section>
-      )}
       
       {/* Informations détaillées */}
       <section style={sx.components.section.base}>
