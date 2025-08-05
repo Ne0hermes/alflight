@@ -2,11 +2,10 @@
 
 import React, { memo, useEffect } from 'react';
 import { useFuel, useAircraft, useNavigation } from '@core/contexts';
-import { useNavigationResults } from '@/features/navigation/hooks/useNavigationResults';
-import { useFuelSync } from '@hooks/useFuelSync';
 import { Fuel, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useAlternatesForFuel } from '@features/alternates';
+import { useAutoFuelSync } from '@hooks/useAutoFuelSync';
 
 const FuelRow = memo(({ type, label, description, fuel, onChange, readonly = false, automatic = false, totalGal }) => {
   const GAL_TO_LTR = 3.78541;
@@ -82,6 +81,7 @@ const FuelRow = memo(({ type, label, description, fuel, onChange, readonly = fal
 });
 
 export const FuelModule = memo(() => {
+  useAutoFuelSync();
   const { selectedAircraft } = useAircraft();
   const { navigationResults, flightType } = useNavigation();
   const { fuelData, setFuelData, fobFuel, setFobFuel, calculateTotal, isFobSufficient } = useFuel();
@@ -103,6 +103,83 @@ export const FuelModule = memo(() => {
     additional: { gal: 0, ltr: 0 },
     extra: { gal: 0, ltr: 0 }
   };
+
+  // Synchronisation automatique du carburant depuis la navigation
+  useEffect(() => {
+    if (!navigationResults || !selectedAircraft) {
+      console.log('🚫 Fuel sync: Missing navigationResults or selectedAircraft');
+      return;
+    }
+
+    console.log('🔄 Fuel sync: navigationResults', navigationResults);
+    console.log('🔄 Fuel sync: selectedAircraft', selectedAircraft);
+
+    const GAL_TO_LTR = 3.78541;
+    
+    // Toujours calculer le trip fuel si on a une distance
+    if (navigationResults.totalDistance > 0) {
+      // Si fuelRequired est 0, le calculer manuellement
+      let tripLtr = navigationResults.fuelRequired;
+      
+      if (tripLtr === 0 && selectedAircraft.fuelConsumption > 0) {
+        // Recalculer manuellement
+        const cruiseSpeed = selectedAircraft.cruiseSpeedKt || selectedAircraft.cruiseSpeed || 100;
+        const timeHours = navigationResults.totalDistance / cruiseSpeed;
+        tripLtr = timeHours * selectedAircraft.fuelConsumption;
+        console.log('⚠️ Fuel sync: Recalculated manually:', {
+          distance: navigationResults.totalDistance,
+          speed: cruiseSpeed,
+          timeHours,
+          consumption: selectedAircraft.fuelConsumption,
+          tripLtr
+        });
+      }
+      
+      const tripGal = tripLtr / GAL_TO_LTR;
+      
+      // Calculer contingency (5% du trip, minimum 1 gallon)
+      const contingencyGal = Math.max(1, tripGal * 0.05);
+      const contingencyLtr = contingencyGal * GAL_TO_LTR;
+      
+      // Calculer final reserve
+      const reserveMinutes = navigationResults.regulationReserveMinutes || 30;
+      const reserveHours = reserveMinutes / 60;
+      const reserveLtr = (selectedAircraft.fuelConsumption || 30) * reserveHours;
+      const reserveGal = reserveLtr / GAL_TO_LTR;
+      
+      console.log('🔄 Fuel sync: Updating fuel data:', {
+        trip: { gal: tripGal, ltr: tripLtr },
+        contingency: { gal: contingencyGal, ltr: contingencyLtr },
+        finalReserve: { gal: reserveGal, ltr: reserveLtr }
+      });
+      
+      // Mettre à jour les données
+      setFuelData(prev => ({
+        ...prev,
+        trip: {
+          gal: parseFloat(tripGal.toFixed(1)),
+          ltr: parseFloat(tripLtr.toFixed(1))
+        },
+        contingency: {
+          gal: parseFloat(contingencyGal.toFixed(1)),
+          ltr: parseFloat(contingencyLtr.toFixed(1))
+        },
+        finalReserve: {
+          gal: parseFloat(reserveGal.toFixed(1)),
+          ltr: parseFloat(reserveLtr.toFixed(1))
+        }
+      }));
+    } else {
+      console.log('⚠️ Fuel sync: No distance, resetting to 0');
+      // Réinitialiser si pas de distance
+      setFuelData(prev => ({
+        ...prev,
+        trip: { gal: 0, ltr: 0 },
+        contingency: { gal: 0, ltr: 0 },
+        finalReserve: { gal: 0, ltr: 0 }
+      }));
+    }
+  }, [navigationResults, selectedAircraft, setFuelData]);
 
   // Mettre à jour automatiquement le carburant alternate quand il change
   useEffect(() => {
@@ -191,6 +268,23 @@ export const FuelModule = memo(() => {
 
   return (
     <div>
+      {/* Alerte si l'avion manque de données */}
+      {selectedAircraft && (!selectedAircraft.fuelConsumption || (!selectedAircraft.cruiseSpeedKt && !selectedAircraft.cruiseSpeed)) && (
+        <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning, sx.spacing.mb(4))}>
+          <AlertTriangle size={20} />
+          <div style={sx.flex.col}>
+            <p style={sx.combine(sx.text.sm, sx.text.bold)}>
+              ⚠️ Données avion incomplètes
+            </p>
+            <p style={sx.text.sm}>
+              {!selectedAircraft.fuelConsumption && 'Consommation carburant non définie. '}
+              {(!selectedAircraft.cruiseSpeedKt && !selectedAircraft.cruiseSpeed) && 'Vitesse de croisière non définie. '}
+              Modifiez l'avion dans l'onglet "Gestion Avions".
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Alerte automatisation */}
       {(navigationResults?.fuelRequired > 0 || hasAlternates) && (
         <div style={sx.combine(sx.components.alert.base, sx.components.alert.success, sx.spacing.mb(4))}>
@@ -203,6 +297,27 @@ export const FuelModule = memo(() => {
               {navigationResults?.fuelRequired > 0 && hasAlternates && ' '}
               {hasAlternates && `Carburant Alternate calculé pour ${alternatesCount} déroutement${alternatesCount > 1 ? 's' : ''}.`}
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* DEBUG: Affichage temporaire pour diagnostic */}
+      {navigationResults && (
+        <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mb(4))}>
+          <div style={sx.flex.col}>
+            <p style={sx.combine(sx.text.sm, sx.text.bold)}>🔍 Debug Navigation Results:</p>
+            <p style={sx.combine(sx.text.xs)}>
+              Distance: {navigationResults.totalDistance} NM | 
+              Temps: {navigationResults.totalTime} min | 
+              Fuel Required: {navigationResults.fuelRequired} L
+            </p>
+            {selectedAircraft && (
+              <p style={sx.combine(sx.text.xs)}>
+                Avion: {selectedAircraft.registration} | 
+                Vitesse: {selectedAircraft.cruiseSpeedKt || selectedAircraft.cruiseSpeed || 'N/A'} kt | 
+                Conso: {selectedAircraft.fuelConsumption || 'N/A'} L/h
+              </p>
+            )}
           </div>
         </div>
       )}

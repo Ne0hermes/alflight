@@ -87,18 +87,30 @@ export const AircraftProvider = memo(({ children }) => {
 });
 
 export const NavigationProvider = memo(({ children }) => {
-  const store = useNavigationStore();
+  // Extraire toutes les propriétés et méthodes du store correctement
+  const waypoints = useNavigationStore(state => state.waypoints);
+  const setWaypoints = useNavigationStore(state => state.setWaypoints);
+  const flightParams = useNavigationStore(state => state.flightParams);
+  const setFlightParams = useNavigationStore(state => state.setFlightParams);
+  const flightType = useNavigationStore(state => state.flightType);
+  const setFlightType = useNavigationStore(state => state.setFlightType);
+  const calculateTotalDistance = useNavigationStore(state => state.calculateTotalDistance);
+  const calculateFlightTime = useNavigationStore(state => state.calculateFlightTime);
+  const calculateFuelRequired = useNavigationStore(state => state.calculateFuelRequired);
+  const getRegulationReserveMinutes = useNavigationStore(state => state.getRegulationReserveMinutes);
+  const getRegulationReserveLiters = useNavigationStore(state => state.getRegulationReserveLiters);
+  
   const { selectedAircraft } = useAircraft();
   
   // Calculs mémorisés
   const navigationResults = useMemo(() => {
-    if (!selectedAircraft || !store.waypoints.length) return null;
+    if (!selectedAircraft || !waypoints.length) return null;
     
-    const totalDistance = store.calculateTotalDistance();
-    const totalTime = store.calculateFlightTime(selectedAircraft.cruiseSpeedKt);
-    const fuelRequired = store.calculateFuelRequired(selectedAircraft.fuelConsumption);
-    const regulationReserveMinutes = store.getRegulationReserveMinutes();
-    const regulationReserveLiters = store.getRegulationReserveLiters(selectedAircraft.fuelConsumption);
+    const totalDistance = calculateTotalDistance();
+    const totalTime = calculateFlightTime(selectedAircraft.cruiseSpeedKt);
+    const fuelRequired = calculateFuelRequired(selectedAircraft.fuelConsumption);
+    const regulationReserveMinutes = getRegulationReserveMinutes();
+    const regulationReserveLiters = getRegulationReserveLiters(selectedAircraft.fuelConsumption);
     
     return {
       totalDistance: parseFloat(totalDistance.toFixed(1)),
@@ -107,60 +119,80 @@ export const NavigationProvider = memo(({ children }) => {
       regulationReserveMinutes: regulationReserveMinutes,
       regulationReserveLiters: parseFloat(regulationReserveLiters.toFixed(1))
     };
-  }, [selectedAircraft, store.waypoints, store.flightType, store]);
+  }, [selectedAircraft, waypoints, flightType, calculateTotalDistance, calculateFlightTime, 
+      calculateFuelRequired, getRegulationReserveMinutes, getRegulationReserveLiters]);
 
   const value = useMemo(() => ({
-    waypoints: store.waypoints,
-    setWaypoints: store.setWaypoints,
-    flightParams: store.flightParams,
-    setFlightParams: store.setFlightParams,
-    flightType: store.flightType,
-    setFlightType: store.setFlightType,
+    waypoints,
+    setWaypoints,
+    flightParams,
+    setFlightParams,
+    flightType,
+    setFlightType,
     navigationResults,
-    // Exposer les fonctions de calcul directement depuis le store
-    calculateTotalDistance: store.calculateTotalDistance,
-    calculateFlightTime: store.calculateFlightTime,
-    calculateFuelRequired: store.calculateFuelRequired,
-    getRegulationReserveMinutes: store.getRegulationReserveMinutes,
-    getRegulationReserveLiters: store.getRegulationReserveLiters
-  }), [store, navigationResults]);
+    // Exposer les fonctions de calcul
+    calculateTotalDistance,
+    calculateFlightTime,
+    calculateFuelRequired,
+    getRegulationReserveMinutes,
+    getRegulationReserveLiters
+  }), [waypoints, setWaypoints, flightParams, setFlightParams, flightType, setFlightType,
+      navigationResults, calculateTotalDistance, calculateFlightTime, calculateFuelRequired,
+      getRegulationReserveMinutes, getRegulationReserveLiters]);
 
   return <NavigationContext.Provider value={value}>{children}</NavigationContext.Provider>;
 });
 
 export const FuelProvider = memo(({ children }) => {
-  const store = useFuelStore();
+  // Extraire correctement les propriétés et méthodes du store
+  const fuelData = useFuelStore(state => state.fuelData);
+  const setFuelData = useFuelStore(state => state.setFuelData);
+  const fobFuel = useFuelStore(state => state.fobFuel);
+  const setFobFuel = useFuelStore(state => state.setFobFuel);
+  const calculateTotal = useFuelStore(state => state.calculateTotal);
+  const isFobSufficient = useFuelStore(state => state.isFobSufficient);
+  const updateTripFuel = useFuelStore(state => state.updateTripFuel);
+  const updateFinalReserve = useFuelStore(state => state.updateFinalReserve);
+  
   const { navigationResults } = useNavigation();
   const { selectedAircraft } = useAircraft();
   
   // Auto-sync avec la navigation
   React.useEffect(() => {
     if (navigationResults?.fuelRequired) {
-      store.updateTripFuel(navigationResults.fuelRequired);
+      updateTripFuel(navigationResults.fuelRequired);
     }
-  }, [navigationResults?.fuelRequired, store.updateTripFuel]);
+  }, [navigationResults?.fuelRequired, updateTripFuel]);
   
   // Auto-sync de la réserve finale
   React.useEffect(() => {
     if (navigationResults?.regulationReserveLiters) {
-      store.updateFinalReserve(navigationResults.regulationReserveLiters);
+      updateFinalReserve(navigationResults.regulationReserveLiters);
     }
-  }, [navigationResults?.regulationReserveLiters, store.updateFinalReserve]);
+  }, [navigationResults?.regulationReserveLiters, updateFinalReserve]);
 
   const value = useMemo(() => ({
-    fuelData: store.fuelData,
-    setFuelData: store.setFuelData,
-    fobFuel: store.fobFuel,
-    setFobFuel: store.setFobFuel,
-    calculateTotal: store.calculateTotal,
-    isFobSufficient: store.isFobSufficient
-  }), [store.fuelData, store.setFuelData, store.fobFuel, store.setFobFuel, store.calculateTotal, store.isFobSufficient]);
+    fuelData,
+    setFuelData,
+    fobFuel,
+    setFobFuel,
+    calculateTotal,
+    isFobSufficient,
+    updateTripFuel,
+    updateFinalReserve
+  }), [fuelData, setFuelData, fobFuel, setFobFuel, calculateTotal, isFobSufficient, updateTripFuel, updateFinalReserve]);
 
   return <FuelContext.Provider value={value}>{children}</FuelContext.Provider>;
 });
 
 export const WeightBalanceProvider = memo(({ children }) => {
-  const store = useWeightBalanceStore();
+  // Extraire correctement les propriétés et méthodes du store
+  const loads = useWeightBalanceStore(state => state.loads);
+  const setLoads = useWeightBalanceStore(state => state.setLoads);
+  const updateLoad = useWeightBalanceStore(state => state.updateLoad);
+  const updateFuelLoad = useWeightBalanceStore(state => state.updateFuelLoad);
+  const calculateWeightBalance = useWeightBalanceStore(state => state.calculateWeightBalance);
+  
   const { selectedAircraft } = useAircraft();
   const { fobFuel } = useFuel();
   
@@ -168,58 +200,69 @@ export const WeightBalanceProvider = memo(({ children }) => {
   React.useEffect(() => {
     if (selectedAircraft && fobFuel?.ltr) {
       const fuelDensity = selectedAircraft.fuelType === 'JET A-1' ? 0.84 : 0.72;
-      store.updateFuelLoad(fobFuel.ltr, fuelDensity);
+      updateFuelLoad(fobFuel.ltr, fuelDensity);
     }
-  }, [selectedAircraft, fobFuel?.ltr, store.updateFuelLoad]);
+  }, [selectedAircraft, fobFuel?.ltr, updateFuelLoad]);
   
   // Extraire les valeurs individuelles des loads pour les dépendances
-  const { frontLeft, frontRight, rearLeft, rearRight, baggage, auxiliary, fuel } = store.loads;
+  const { frontLeft, frontRight, rearLeft, rearRight, baggage, auxiliary, fuel } = loads;
   
   // Calculs mémorisés avec dépendances correctes
   const calculations = useMemo(() => {
     if (!selectedAircraft) return null;
     
-    return store.calculateWeightBalance(selectedAircraft, fobFuel);
-  }, [selectedAircraft, frontLeft, frontRight, rearLeft, rearRight, baggage, auxiliary, fuel, fobFuel, store.calculateWeightBalance]);
+    return calculateWeightBalance(selectedAircraft, fobFuel);
+  }, [selectedAircraft, frontLeft, frontRight, rearLeft, rearRight, baggage, auxiliary, fuel, fobFuel, calculateWeightBalance]);
 
   const value = useMemo(() => ({
-    loads: store.loads,
-    setLoads: store.setLoads,
-    updateLoad: store.updateLoad,
+    loads,
+    setLoads,
+    updateLoad,
     calculations,
     isWithinLimits: calculations?.isWithinLimits || false
-  }), [store.loads, store.setLoads, store.updateLoad, calculations]);
+  }), [loads, setLoads, updateLoad, calculations]);
 
   return <WeightBalanceContext.Provider value={value}>{children}</WeightBalanceContext.Provider>;
 });
 
 export const WeatherProvider = memo(({ children }) => {
-  const store = useWeatherStore();
+  // Extraire correctement les propriétés et méthodes du store
+  const weatherData = useWeatherStore(state => state.weatherData);
+  const loading = useWeatherStore(state => state.loading);
+  const errors = useWeatherStore(state => state.errors);
+  const fetchWeather = useWeatherStore(state => state.fetchWeather);
+  const fetchMultiple = useWeatherStore(state => state.fetchMultiple);
+  const clearWeather = useWeatherStore(state => state.clearWeather);
+  const clearAll = useWeatherStore(state => state.clearAll);
+  const getWeatherByIcao = useWeatherStore(state => state.getWeatherByIcao);
+  const isLoading = useWeatherStore(state => state.isLoading);
+  const getError = useWeatherStore(state => state.getError);
+  const needsRefresh = useWeatherStore(state => state.needsRefresh);
   
   const value = useMemo(() => ({
-    weatherData: store.weatherData,
-    loading: store.loading,
-    errors: store.errors,
-    fetchWeather: store.fetchWeather,
-    fetchMultiple: store.fetchMultiple,
-    clearWeather: store.clearWeather,
-    clearAll: store.clearAll,
-    getWeatherByIcao: store.getWeatherByIcao,
-    isLoading: store.isLoading,
-    getError: store.getError,
-    needsRefresh: store.needsRefresh
+    weatherData,
+    loading,
+    errors,
+    fetchWeather,
+    fetchMultiple,
+    clearWeather,
+    clearAll,
+    getWeatherByIcao,
+    isLoading,
+    getError,
+    needsRefresh
   }), [
-    store.weatherData,
-    store.loading,
-    store.errors,
-    store.fetchWeather,
-    store.fetchMultiple,
-    store.clearWeather,
-    store.clearAll,
-    store.getWeatherByIcao,
-    store.isLoading,
-    store.getError,
-    store.needsRefresh
+    weatherData,
+    loading,
+    errors,
+    fetchWeather,
+    fetchMultiple,
+    clearWeather,
+    clearAll,
+    getWeatherByIcao,
+    isLoading,
+    getError,
+    needsRefresh
   ]);
 
   return <WeatherContext.Provider value={value}>{children}</WeatherContext.Provider>;

@@ -8,6 +8,9 @@ import { useNavigation, useAircraft } from '@core/contexts';
 import { useOpenAIPStore, openAIPSelectors } from '@core/stores/openAIPStore';
 import { useWeatherStore, weatherSelectors } from '@core/stores/weatherStore';
 
+// Import du vrai hook useNavigationResults
+import { useNavigationResults } from './hooks/useNavigationResults';
+
 // Import des composants locaux - commentés temporairement
 // import { NavigationMap } from './components/NavigationMap';
 // import { AirportSelector } from './components/AirportSelector';
@@ -15,34 +18,6 @@ import { useWeatherStore, weatherSelectors } from '@core/stores/weatherStore';
 // import { AirspaceAnalyzer } from './components/AirspaceAnalyzer';
 // import { TechnicalLog } from './components/TechnicalLog';
 // import { RunwayAnalyzer } from './components/RunwayAnalyzer';
-
-// Hook temporaire pour remplacer useNavigationResults
-const useNavigationResults = () => {
-  const { waypoints, flightType } = useNavigation();
-  const { selectedAircraft } = useAircraft();
-  
-  if (!selectedAircraft || waypoints.length < 2) return null;
-  
-  // Calculs simplifiés pour test
-  const totalDistance = waypoints.length > 1 ? 100 : 0; // Distance fictive
-  const totalTime = selectedAircraft.cruiseSpeedKt > 0 ? Math.round((totalDistance / selectedAircraft.cruiseSpeedKt) * 60) : 0;
-  const fuelRequired = selectedAircraft.fuelConsumption > 0 ? Math.round((totalTime / 60) * selectedAircraft.fuelConsumption) : 0;
-  
-  // Calcul de la réserve selon le type de vol
-  let regulationReserveMinutes = 30; // Base VFR jour
-  if (flightType.period === 'nuit') regulationReserveMinutes = 45;
-  if (flightType.rules === 'IFR') regulationReserveMinutes += 15;
-  
-  const regulationReserveLiters = Math.round((regulationReserveMinutes / 60) * selectedAircraft.fuelConsumption);
-  
-  return {
-    totalDistance,
-    totalTime,
-    fuelRequired,
-    regulationReserveMinutes,
-    regulationReserveLiters
-  };
-};
 
 // Hook temporaire pour remplacer useAlternatesForNavigation
 const useAlternatesForNavigation = () => {
@@ -63,21 +38,45 @@ const NavigationMap = ({ waypoints, onWaypointUpdate, selectedAircraft }) => (
 const AirportSelector = ({ label, value, onChange, placeholder }) => (
   <div>
     <label style={sx.components.label.base}>{label}</label>
-    <input 
-      type="text" 
-      placeholder={placeholder}
-      value={value?.icao || ''}
-      style={sx.components.input.base}
-      onChange={(e) => {
-        if (e.target.value.length === 4 && e.target.value.match(/^[A-Z]{4}$/)) {
-          onChange({
-            icao: e.target.value,
-            name: `Aéroport ${e.target.value}`,
-            coordinates: { lat: 48.8566, lon: 2.3522 } // Coordonnées fictives
-          });
-        }
-      }}
-    />
+    <div style={sx.flex.col}>
+      <input 
+        type="text" 
+        placeholder={placeholder || "Code OACI (ex: LFPG)"}
+        value={value?.icao || ''}
+        style={sx.components.input.base}
+        onChange={(e) => {
+          const icao = e.target.value.toUpperCase();
+          if (icao.length === 4 && icao.match(/^[A-Z]{4}$/)) {
+            // Quelques aéroports français avec leurs vraies coordonnées pour tester
+            const airports = {
+              'LFPG': { name: 'Paris Charles de Gaulle', lat: 49.0097, lon: 2.5479 },
+              'LFPO': { name: 'Paris Orly', lat: 48.7233, lon: 2.3794 },
+              'LFLL': { name: 'Lyon Saint-Exupéry', lat: 45.7256, lon: 5.0811 },
+              'LFML': { name: 'Marseille Provence', lat: 43.4393, lon: 5.2214 },
+              'LFBO': { name: 'Toulouse Blagnac', lat: 43.6294, lon: 1.3677 },
+              'LFRS': { name: 'Nantes Atlantique', lat: 47.1532, lon: -1.6107 },
+              'LFRB': { name: 'Brest Bretagne', lat: 48.4478, lon: -4.4184 },
+              'LFLS': { name: 'Grenoble Alpes Isère', lat: 45.3629, lon: 5.3294 }
+            };
+            
+            const airport = airports[icao] || {
+              name: `Aéroport ${icao}`,
+              lat: 48.8566 + (Math.random() - 0.5) * 2, // Position aléatoire autour de Paris
+              lon: 2.3522 + (Math.random() - 0.5) * 2
+            };
+            
+            onChange({
+              icao: icao,
+              name: airport.name,
+              coordinates: { lat: airport.lat, lon: airport.lon }
+            });
+          }
+        }}
+      />
+      <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
+        Aéroports disponibles pour test : LFPG, LFPO, LFLL, LFML, LFBO, LFRS, LFRB, LFLS
+      </p>
+    </div>
   </div>
 );
 
@@ -120,7 +119,8 @@ const RunwayAnalyzer = ({ icao }) => (
 const NavigationModule = () => {
   const { selectedAircraft } = useAircraft();
   const { waypoints, setWaypoints, flightParams, setFlightParams, flightType, setFlightType } = useNavigation();
-  const navigationResults = useNavigationResults();
+  // Passer les paramètres au hook
+  const navigationResults = useNavigationResults(waypoints, flightType, selectedAircraft);
   const { alternates, hasAlternates, addAlternateAsWaypoint } = useAlternatesForNavigation();
   
   // OpenAIP Store
