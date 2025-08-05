@@ -1,67 +1,98 @@
 // src/features/navigation/hooks/useNavigationResults.js
 import { useMemo } from 'react';
-import { useNavigation, useAircraft } from '@core/contexts';
 
-export const useNavigationResults = () => {
-  const { waypoints, flightType } = useNavigation();
-  const { selectedAircraft } = useAircraft();
-  
+export const useNavigationResults = (waypoints, flightType, selectedAircraft) => {
   return useMemo(() => {
-    if (!selectedAircraft || waypoints.length < 2) return null;
+    console.log('🔄 useNavigationResults called with:', {
+      waypoints: waypoints?.length,
+      flightType,
+      aircraft: selectedAircraft?.registration
+    });
+    
+    if (!selectedAircraft || !waypoints || waypoints.length < 2) {
+      console.log('🚫 NavigationResults: Missing data');
+      return null;
+    }
+    
+    // Filtrer les waypoints valides (avec coordonnées)
+    const validWaypoints = waypoints.filter(wp => wp.lat && wp.lon);
+    
+    if (validWaypoints.length < 2) {
+      console.log('🚫 NavigationResults: Not enough valid waypoints');
+      return null;
+    }
+    
+    console.log('📊 NavigationResults: Calculating with', {
+      validWaypoints: validWaypoints.length,
+      aircraft: selectedAircraft.registration,
+      cruiseSpeed: selectedAircraft.cruiseSpeedKt || selectedAircraft.cruiseSpeed,
+      fuelConsumption: selectedAircraft.fuelConsumption
+    });
     
     // Calcul de la distance totale
     let totalDistance = 0;
-    for (let i = 0; i < waypoints.length - 1; i++) {
-      const wp1 = waypoints[i];
-      const wp2 = waypoints[i + 1];
+    for (let i = 0; i < validWaypoints.length - 1; i++) {
+      const wp1 = validWaypoints[i];
+      const wp2 = validWaypoints[i + 1];
       
-      if (wp1.lat && wp1.lon && wp2.lat && wp2.lon) {
-        // Formule de Haversine pour la distance
-        const R = 3440.065; // Rayon de la Terre en miles nautiques
-        const dLat = (wp2.lat - wp1.lat) * Math.PI / 180;
-        const dLon = (wp2.lon - wp1.lon) * Math.PI / 180;
-        const a = 
-          Math.sin(dLat/2) * Math.sin(dLat/2) +
-          Math.cos(wp1.lat * Math.PI / 180) * Math.cos(wp2.lat * Math.PI / 180) *
-          Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        const distance = R * c;
-        
-        totalDistance += distance;
-      }
+      // Formule de Haversine pour la distance
+      const R = 3440.065; // Rayon de la Terre en miles nautiques
+      const dLat = (wp2.lat - wp1.lat) * Math.PI / 180;
+      const dLon = (wp2.lon - wp1.lon) * Math.PI / 180;
+      const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(wp1.lat * Math.PI / 180) * Math.cos(wp2.lat * Math.PI / 180) *
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const distance = R * c;
+      
+      totalDistance += distance;
+      console.log(`📏 Leg ${i+1}: ${wp1.name || 'WP'} → ${wp2.name || 'WP'} = ${distance.toFixed(1)} NM`);
     }
     
     // Calcul du temps de vol
-    const cruiseSpeed = selectedAircraft.cruiseSpeedKt || 100;
-    const totalTime = Math.round((totalDistance / cruiseSpeed) * 60); // en minutes
+    const cruiseSpeed = selectedAircraft.cruiseSpeedKt || selectedAircraft.cruiseSpeed || 100;
+    const totalTime = totalDistance > 0 ? Math.round((totalDistance / cruiseSpeed) * 60) : 0; // en minutes
     
     // Calcul du carburant nécessaire
     const fuelConsumption = selectedAircraft.fuelConsumption || 30; // L/h
-    const fuelRequired = Math.round((totalTime / 60) * fuelConsumption);
+    const fuelRequired = totalTime > 0 ? (totalTime / 60) * fuelConsumption : 0;
+    
+    console.log('📊 NavigationResults: Calculations', {
+      totalDistance: totalDistance.toFixed(1),
+      cruiseSpeed,
+      totalTime,
+      fuelConsumption,
+      fuelRequired: fuelRequired.toFixed(1)
+    });
     
     // Calcul de la réserve réglementaire
     let regulationReserveMinutes = 30; // Base VFR jour
     
-    if (flightType.period === 'nuit') {
+    if (flightType?.period === 'nuit') {
       regulationReserveMinutes = 45; // VFR nuit
     }
     
-    if (flightType.rules === 'IFR') {
+    if (flightType?.rules === 'IFR') {
       regulationReserveMinutes += 15; // Supplément IFR
     }
     
-    if (flightType.category === 'local' && flightType.period === 'jour') {
+    if (flightType?.category === 'local' && flightType?.period === 'jour') {
       regulationReserveMinutes = 20; // Vol local de jour
     }
     
-    const regulationReserveLiters = Math.round((regulationReserveMinutes / 60) * fuelConsumption);
+    const regulationReserveLiters = (regulationReserveMinutes / 60) * fuelConsumption;
     
-    return {
+    const result = {
       totalDistance: Math.round(totalDistance * 10) / 10,
       totalTime,
-      fuelRequired,
+      fuelRequired: Math.round(fuelRequired * 10) / 10, // Arrondir à 0.1L près
       regulationReserveMinutes,
-      regulationReserveLiters
+      regulationReserveLiters: Math.round(regulationReserveLiters * 10) / 10
     };
+    
+    console.log('📊 NavigationResults: Final result', result);
+    
+    return result;
   }, [waypoints, flightType, selectedAircraft]);
 };
