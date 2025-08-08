@@ -44,6 +44,12 @@ const VFRNavigationTable = ({
       const from = waypoints[i];
       const to = waypoints[i + 1];
       
+      // Vérifier que les coordonnées sont valides
+      if (!from.lat || !from.lon || !to.lat || !to.lon) {
+        console.warn(`Coordonnées manquantes pour le segment ${from.name} -> ${to.name}`);
+        continue;
+      }
+      
       // Calculer la distance
       const R = 3440.065; // Rayon de la Terre en NM
       const lat1 = from.lat * Math.PI / 180;
@@ -134,8 +140,8 @@ const VFRNavigationTable = ({
         frequencies: frequencies.join(', ') || 'N/A',
         msa: Math.round(msa),
         position: {
-          lat: to.lat.toFixed(4),
-          lon: to.lon.toFixed(4)
+          lat: to.lat ? to.lat.toFixed(4) : 'N/A',
+          lon: to.lon ? to.lon.toFixed(4) : 'N/A'
         }
       });
     }

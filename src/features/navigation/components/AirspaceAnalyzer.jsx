@@ -62,9 +62,14 @@ const AIRSPACE_TYPES = {
   }
 };
 
-// Fonction pour convertir les altitudes
+// Fonction pour convertir les altitudes pour l'affichage
 const convertAltitude = (altitude, unit, reference) => {
   if (!altitude || altitude === 0) return 'SFC';
+  
+  // Si c'est déjà un FL
+  if (unit === 'FL' || reference === 'STD') {
+    return `FL${altitude.toString().padStart(3, '0')}`;
+  }
   
   // Conversion en pieds si nécessaire
   let altFeet = altitude;
@@ -72,33 +77,99 @@ const convertAltitude = (altitude, unit, reference) => {
     altFeet = Math.round(altitude * 3.28084);
   }
   
-  // Format selon la référence
-  if (reference === 'STD') {
-    return `FL${Math.round(altFeet / 100).toString().padStart(3, '0')}`;
-  } else {
-    return `${altFeet} ft ${reference || 'AMSL'}`;
-  }
+  // Retourner avec l'unité appropriée
+  return `${altFeet} ft ${reference || 'AMSL'}`;
 };
 
 // Fonction pour déterminer si un waypoint traverse un espace aérien
 const isWaypointInAirspace = (waypoint, airspace) => {
   if (!waypoint.lat || !waypoint.lon || !airspace.geometry) return false;
   
-  // Pour simplifier, on vérifie si le waypoint est dans la bounding box
-  // En production, il faudrait utiliser un algorithme point-in-polygon plus sophistiqué
-  const bounds = airspace.geometry.coordinates[0];
-  if (!bounds || bounds.length === 0) return false;
+  // Gérer les différents types de géométrie
+  let coordinates;
+  try {
+    if (airspace.geometry.type === 'Polygon') {
+      coordinates = airspace.geometry.coordinates[0];
+    } else if (airspace.geometry.type === 'MultiPolygon') {
+      // Pour MultiPolygon, vérifier tous les polygones
+      for (const polygon of airspace.geometry.coordinates) {
+        const coords = polygon[0];
+        if (isPointInPolygon(waypoint, coords)) {
+          return true;
+        }
+      }
+      return false;
+    } else {
+      console.warn('Type de géométrie non supporté:', airspace.geometry.type);
+      return false;
+    }
+    
+    return isPointInPolygon(waypoint, coordinates);
+  } catch (e) {
+    console.warn('Erreur lors de la vérification de l\'espace aérien:', e);
+    return false;
+  }
+};
+
+// Fonction helper pour vérifier si un point est dans un polygone (ray casting algorithm)
+const isPointInPolygon = (point, polygon) => {
+  if (!polygon || polygon.length < 3) return false;
   
-  const lats = bounds.map(coord => coord[1]);
-  const lons = bounds.map(coord => coord[0]);
+  let inside = false;
+  const x = point.lon;
+  const y = point.lat;
   
-  const minLat = Math.min(...lats);
-  const maxLat = Math.max(...lats);
-  const minLon = Math.min(...lons);
-  const maxLon = Math.max(...lons);
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i][0]; // longitude
+    const yi = polygon[i][1]; // latitude
+    const xj = polygon[j][0];
+    const yj = polygon[j][1];
+    
+    const intersect = ((yi > y) !== (yj > y)) &&
+                     (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+    
+    if (intersect) inside = !inside;
+  }
   
-  return waypoint.lat >= minLat && waypoint.lat <= maxLat &&
-         waypoint.lon >= minLon && waypoint.lon <= maxLon;
+  return inside;
+};
+
+// Fonction helper pour vérifier si un point est dans les limites (bounding box)
+const isPointInBounds = (waypoint, coordinates) => {
+  if (!coordinates || coordinates.length === 0) return false;
+  
+  // Utiliser l'algorithme de ray casting pour une détection précise
+  return isPointInPolygon(waypoint, coordinates);
+};
+
+// Fonction pour vérifier si un segment traverse un polygone
+const doesSegmentIntersectPolygon = (p1, p2, polygon) => {
+  // Si un des points est dans le polygone, il y a intersection
+  if (isPointInPolygon(p1, polygon) || isPointInPolygon(p2, polygon)) {
+    return true;
+  }
+  
+  // Vérifier l'intersection avec chaque côté du polygone
+  for (let i = 0; i < polygon.length; i++) {
+    const j = (i + 1) % polygon.length;
+    const p3 = { lat: polygon[i][1], lon: polygon[i][0] };
+    const p4 = { lat: polygon[j][1], lon: polygon[j][0] };
+    
+    if (doSegmentsIntersect(p1, p2, p3, p4)) {
+      return true;
+    }
+  }
+  
+  return false;
+};
+
+// Fonction helper pour vérifier si deux segments s'intersectent
+const doSegmentsIntersect = (p1, p2, p3, p4) => {
+  const ccw = (A, B, C) => {
+    return (C.lat - A.lat) * (B.lon - A.lon) > (B.lat - A.lat) * (C.lon - A.lon);
+  };
+  
+  return ccw(p1, p3, p4) !== ccw(p2, p3, p4) && ccw(p1, p2, p3) !== ccw(p1, p2, p4);
 };
 
 // Fonction pour obtenir les espaces traversés entre deux waypoints
@@ -107,10 +178,29 @@ const getAirspacesBetweenWaypoints = (waypoint1, waypoint2, airspaces) => {
   
   // Vérifier chaque espace aérien
   airspaces.forEach(airspace => {
-    // Simplification : on vérifie si la ligne traverse la bounding box
-    if (isWaypointInAirspace(waypoint1, airspace) || 
-        isWaypointInAirspace(waypoint2, airspace)) {
-      traversed.push(airspace);
+    if (!airspace.geometry?.coordinates) return;
+    
+    try {
+      let intersects = false;
+      
+      if (airspace.geometry.type === 'Polygon') {
+        const coords = airspace.geometry.coordinates[0];
+        intersects = doesSegmentIntersectPolygon(waypoint1, waypoint2, coords);
+      } else if (airspace.geometry.type === 'MultiPolygon') {
+        // Pour MultiPolygon, vérifier chaque polygone
+        for (const polygon of airspace.geometry.coordinates) {
+          if (doesSegmentIntersectPolygon(waypoint1, waypoint2, polygon[0])) {
+            intersects = true;
+            break;
+          }
+        }
+      }
+      
+      if (intersects) {
+        traversed.push(airspace);
+      }
+    } catch (e) {
+      console.warn('Erreur lors de la vérification de l\'intersection:', e);
     }
   });
   
@@ -146,14 +236,47 @@ export const AirspaceAnalyzer = ({ waypoints, plannedAltitude, onAltitudeChange,
           maxLon: Math.max(...lons) + 0.5
         };
         
-        console.log('📍 Chargement des espaces aériens pour la France');
+        console.log('📍 Chargement des espaces aériens pour la zone de vol');
+        console.log('📐 Bounding box:', bounds);
         
         // Appeler le service OpenAIP avec le code pays
         const result = await openAIPService.getAirspaces('FR');
         
         if (result && Array.isArray(result)) {
-          setAirspaces(result);
-          console.log(`✅ ${result.length} espaces aériens chargés`);
+          // Filtrer les espaces dans la zone de vol (avec marge)
+          const relevantAirspaces = result.filter(airspace => {
+            if (!airspace.geometry?.coordinates) return false;
+            
+            try {
+              // Obtenir la bounding box de l'espace aérien
+              let coords = [];
+              if (airspace.geometry.type === 'Polygon') {
+                coords = airspace.geometry.coordinates[0];
+              } else if (airspace.geometry.type === 'MultiPolygon') {
+                coords = airspace.geometry.coordinates[0][0];
+              }
+              
+              if (coords.length === 0) return false;
+              
+              const lats = coords.map(c => c[1]);
+              const lons = coords.map(c => c[0]);
+              const airspaceMinLat = Math.min(...lats);
+              const airspaceMaxLat = Math.max(...lats);
+              const airspaceMinLon = Math.min(...lons);
+              const airspaceMaxLon = Math.max(...lons);
+              
+              // Vérifier si les bounding boxes s'intersectent
+              return !(airspaceMaxLat < bounds.minLat || 
+                      airspaceMinLat > bounds.maxLat ||
+                      airspaceMaxLon < bounds.minLon ||
+                      airspaceMinLon > bounds.maxLon);
+            } catch (e) {
+              return false;
+            }
+          });
+          
+          setAirspaces(relevantAirspaces);
+          console.log(`✅ ${relevantAirspaces.length}/${result.length} espaces aériens dans la zone`);
         } else {
           setAirspaces([]);
         }
@@ -171,10 +294,18 @@ export const AirspaceAnalyzer = ({ waypoints, plannedAltitude, onAltitudeChange,
 
   // Analyser les espaces traversés
   const traversedAirspaces = useMemo(() => {
-    if (!waypoints || waypoints.length < 2 || airspaces.length === 0) return [];
+    if (!waypoints || waypoints.length < 2 || airspaces.length === 0) {
+      console.log('⚠️ Conditions non remplies pour l\'analyse:', {
+        waypoints: waypoints?.length || 0,
+        airspaces: airspaces.length
+      });
+      return [];
+    }
     
     const traversed = new Map();
     const validWaypoints = waypoints.filter(w => w.lat && w.lon);
+    
+    console.log(`🔍 Analyse de ${validWaypoints.length} waypoints sur ${airspaces.length} espaces aériens`);
     
     // Analyser chaque segment de route
     for (let i = 0; i < validWaypoints.length - 1; i++) {
@@ -184,19 +315,26 @@ export const AirspaceAnalyzer = ({ waypoints, plannedAltitude, onAltitudeChange,
         airspaces
       );
       
+      if (segmentAirspaces.length > 0) {
+        console.log(`✅ Segment ${i}: ${segmentAirspaces.length} espaces trouvés`);
+      }
+      
       segmentAirspaces.forEach(airspace => {
-        if (!traversed.has(airspace._id)) {
-          traversed.set(airspace._id, {
+        const id = airspace._id || airspace.id || `airspace-${Math.random()}`;
+        if (!traversed.has(id)) {
+          traversed.set(id, {
             ...airspace,
             segments: []
           });
         }
-        traversed.get(airspace._id).segments.push({
+        traversed.get(id).segments.push({
           from: validWaypoints[i].name || `Point ${i + 1}`,
           to: validWaypoints[i + 1].name || `Point ${i + 2}`
         });
       });
     }
+    
+    console.log(`📊 Total espaces traversés: ${traversed.size}`);
     
     // Trier par priorité et altitude plancher
     return Array.from(traversed.values()).sort((a, b) => {
@@ -215,33 +353,73 @@ export const AirspaceAnalyzer = ({ waypoints, plannedAltitude, onAltitudeChange,
   const checkAltitudeConflict = (airspace) => {
     if (!plannedAltitude) return null;
     
-    const lowerAlt = airspace.lowerLimit?.value || 0;
-    const upperAlt = airspace.upperLimit?.value || 99999;
+    // Récupérer les limites verticales
+    const lowerLimit = airspace.lowerLimit || airspace.lower_limit || {};
+    const upperLimit = airspace.upperLimit || airspace.upper_limit || {};
     
-    // Convertir en pieds si nécessaire
-    let lowerFeet = lowerAlt;
-    let upperFeet = upperAlt;
+    // Calculer l'altitude plancher en pieds
+    let lowerFeet = 0; // Par défaut SFC (surface)
     
-    if (airspace.lowerLimit?.unit === 'M') {
-      lowerFeet = lowerAlt * 3.28084;
-    }
-    if (airspace.upperLimit?.unit === 'M') {
-      upperFeet = upperAlt * 3.28084;
+    // Vérifier si c'est une valeur spéciale
+    if (lowerLimit === 'SFC' || lowerLimit === 'GND' || 
+        lowerLimit.value === 0 || lowerLimit.value === null || lowerLimit.value === undefined) {
+      lowerFeet = 0;
+    } else if (typeof lowerLimit === 'object' && lowerLimit.value !== undefined) {
+      lowerFeet = lowerLimit.value;
+      
+      // Convertir selon l'unité
+      const unit = String(lowerLimit.unit || '').toUpperCase();
+      const datum = String(lowerLimit.referenceDatum || '').toUpperCase();
+      
+      if (unit === 'M') {
+        // Mètres vers pieds
+        lowerFeet = Math.round(lowerFeet * 3.28084);
+      } else if (unit === 'FL' || datum === 'STD') {
+        // Flight Level - multiplier par 100 pour avoir des pieds
+        lowerFeet = lowerFeet * 100;
+      }
+      // Si unit === 'FT' ou 'F', c'est déjà en pieds
     }
     
-    // Convertir FL en pieds
-    if (airspace.lowerLimit?.referenceDatum === 'STD') {
-      lowerFeet = lowerAlt * 100;
-    }
-    if (airspace.upperLimit?.referenceDatum === 'STD') {
-      upperFeet = upperAlt * 100;
+    // Calculer l'altitude plafond en pieds
+    let upperFeet = 999999; // Par défaut illimité
+    
+    // Vérifier si c'est une valeur spéciale
+    if (upperLimit === 'UNL' || upperLimit === 'UNLIM' || 
+        upperLimit.value === 999 || upperLimit.value === 9999 || upperLimit.value === 99999) {
+      upperFeet = 999999;
+    } else if (typeof upperLimit === 'object' && upperLimit.value !== undefined && upperLimit.value !== null) {
+      upperFeet = upperLimit.value;
+      
+      // Convertir selon l'unité
+      const unit = String(upperLimit.unit || '').toUpperCase();
+      const datum = String(upperLimit.referenceDatum || '').toUpperCase();
+      
+      if (unit === 'M') {
+        // Mètres vers pieds
+        upperFeet = Math.round(upperFeet * 3.28084);
+      } else if (unit === 'FL' || datum === 'STD') {
+        // Flight Level - multiplier par 100 pour avoir des pieds
+        upperFeet = upperFeet * 100;
+      }
+      // Si unit === 'FT' ou 'F', c'est déjà en pieds
     }
     
-    if (plannedAltitude >= lowerFeet && plannedAltitude <= upperFeet) {
+    // Vérifier les conflits (avec une altitude planifiée en pieds)
+    const altitudeNum = parseInt(plannedAltitude) || 0;
+    
+    // Ne signaler un conflit que si l'altitude est réellement dans l'espace
+    // et que l'espace a des limites définies
+    if (lowerFeet === 0 && upperFeet === 999999) {
+      // Espace sans limites définies, pas de conflit
+      return null;
+    }
+    
+    if (altitudeNum >= lowerFeet && altitudeNum <= upperFeet) {
       return 'inside';
-    } else if (plannedAltitude < lowerFeet && (lowerFeet - plannedAltitude) < 1000) {
+    } else if (altitudeNum < lowerFeet && (lowerFeet - altitudeNum) < 1000) {
       return 'below-close';
-    } else if (plannedAltitude > upperFeet && (plannedAltitude - upperFeet) < 1000) {
+    } else if (altitudeNum > upperFeet && (altitudeNum - upperFeet) < 1000) {
       return 'above-close';
     }
     
@@ -321,14 +499,15 @@ export const AirspaceAnalyzer = ({ waypoints, plannedAltitude, onAltitudeChange,
       {/* Liste des espaces traversés */}
       {traversedAirspaces.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {traversedAirspaces.map(airspace => {
+          {traversedAirspaces.map((airspace, index) => {
             const typeInfo = AIRSPACE_TYPES[airspace.type] || AIRSPACE_TYPES.OTHER;
             const conflict = checkAltitudeConflict(airspace);
-            const isExpanded = expandedAirspace === airspace._id;
+            const airspaceId = airspace._id || airspace.id || `airspace-${index}`;
+            const isExpanded = expandedAirspace === airspaceId;
             
             return (
               <div 
-                key={airspace._id}
+                key={airspaceId}
                 style={sx.combine(
                   sx.components.card.base,
                   sx.spacing.p(3),
@@ -341,7 +520,7 @@ export const AirspaceAnalyzer = ({ waypoints, plannedAltitude, onAltitudeChange,
                 {/* En-tête */}
                 <div 
                   style={sx.combine(sx.flex.between, sx.spacing.mb(2), { cursor: 'pointer' })}
-                  onClick={() => toggleAirspace(airspace._id)}
+                  onClick={() => toggleAirspace(airspaceId)}
                 >
                   <div style={sx.flex.row}>
                     <div>

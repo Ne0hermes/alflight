@@ -45,13 +45,21 @@ export const WaypointCardWithRunways = memo(({
       
       setLoading(true);
       try {
-        const airportData = await openAIPService.getAirportDetails(waypoint.name);
+        // Récupérer tous les aéroports et chercher celui qui correspond
+        const airports = await openAIPService.getAirports('FR');
+        const airportData = airports.find(a => a.icao === waypoint.name || a.icaoCode === waypoint.name);
+        
         if (airportData) {
           setAirport(airportData);
           setRunways(airportData.runways || []);
+        } else {
+          setAirport(null);
+          setRunways([]);
         }
       } catch (error) {
         console.error('Erreur chargement aérodrome:', error);
+        setAirport(null);
+        setRunways([]);
       } finally {
         setLoading(false);
       }
