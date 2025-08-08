@@ -2,9 +2,10 @@
 import React, { memo, useEffect, useRef, useState, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, Popup, ZoomControl, LayersControl, LayerGroup, useMap, Circle, Polygon } from 'react-leaflet';
 import L from 'leaflet';
-import { MapPin, Navigation, AlertTriangle, Info, Map, Fuel } from 'lucide-react';
+import { MapPin, Navigation, AlertTriangle, Info, Map, Fuel, RefreshCw } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useFuel } from '@core/contexts';
+import { Conversions } from '@utils/conversions';
 
 // Import des styles Leaflet - TRÈS IMPORTANT
 import 'leaflet/dist/leaflet.css';
@@ -43,8 +44,27 @@ const WAYPOINT_ICONS = {
   alternate: createIcon('#ef4444', 'ALT')
 };
 
+// Icône pour les points VFR
+const createVFRIcon = (code, mandatory) => {
+  const color = mandatory ? '#f59e0b' : '#3b82f6';
+  const svgIcon = `
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="10" fill="${color}" stroke="#ffffff" stroke-width="2"/>
+      <text x="12" y="16" text-anchor="middle" font-size="10" font-weight="bold" fill="#ffffff">${code}</text>
+    </svg>
+  `;
+
+  return L.divIcon({
+    html: svgIcon,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+    popupAnchor: [0, -12],
+    className: 'vfr-point-icon'
+  });
+};
+
 // Composant pour gérer les changements de vue
-const MapViewController = ({ waypoints, setZoomWarning }) => {
+const MapViewController = ({ waypoints, setZoomWarning, onMapError }) => {
   const map = useMap();
   
   useEffect(() => {
@@ -104,6 +124,26 @@ const MapViewController = ({ waypoints, setZoomWarning }) => {
               console.log('⚠️ Zoom trop fort pour OpenAIP, ajustement à 12');
               map.setZoom(12);
             }
+            
+            // Forcer le rafraîchissement des tuiles
+            map.invalidateSize();
+            
+            // Si les tuiles ne se chargent toujours pas, réinitialiser la vue
+            setTimeout(() => {
+              const tiles = map._layers;
+              let hasVisibleTiles = false;
+              for (let key in tiles) {
+                if (tiles[key]._tiles && Object.keys(tiles[key]._tiles).length > 0) {
+                  hasVisibleTiles = true;
+                  break;
+                }
+              }
+              
+              if (!hasVisibleTiles) {
+                console.log('🔄 Réinitialisation de la carte après problème de tuiles');
+                if (onMapError) onMapError();
+              }
+            }, 1000);
           } catch (error) {
             console.warn('Erreur lors de l\'ajustement du zoom:', error);
           }
@@ -111,8 +151,9 @@ const MapViewController = ({ waypoints, setZoomWarning }) => {
       }
     } catch (error) {
       console.error('Erreur lors de l\'ajustement de la vue:', error);
+      if (onMapError) onMapError();
     }
-  }, [waypoints, map, setZoomWarning]);
+  }, [waypoints, map, setZoomWarning, onMapError]);
   
   return null;
 };
@@ -366,18 +407,32 @@ const RangeCircles = memo(({ center, selectedAircraft, showRange }) => {
   );
 });
 
-export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircraft }) => {
+export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircraft, vfrPoints = {} }) => {
   const [mapReady, setMapReady] = useState(false);
   const [zoomWarning, setZoomWarning] = useState(false);
   const [showRange, setShowRange] = useState(false);
   const mapRef = useRef(null);
   const [mapKey, setMapKey] = useState(Date.now()); // Clé unique pour forcer la réinitialisation
+  const [needsReset, setNeedsReset] = useState(false);
   
   // Hook pour accéder aux données carburant
   const { fobFuel, fuelData } = useFuel();
   
-  // Clé API OpenAIP fournie
-  const openAIPToken = '2717b9196e8100ee2456e09b82b5b08e';
+  // Fonction pour réinitialiser la carte en cas de problème
+  const handleMapError = () => {
+    console.log('🔄 Réinitialisation complète de la carte');
+    setMapReady(false);
+    setNeedsReset(true);
+    // Forcer le remontage du composant avec une nouvelle clé
+    setTimeout(() => {
+      setMapKey(Date.now());
+      setNeedsReset(false);
+      setMapReady(true);
+    }, 100);
+  };
+  
+  // Clé API OpenAIP depuis l'environnement
+  const openAIPToken = import.meta.env.VITE_OPENAIP_API_KEY || '2717b9196e8100ee2456e09b82b5b08e';
 
   // Centre par défaut (France) avec zoom sûr pour OpenAIP
   const defaultCenter = [46.603354, 1.888334];
@@ -425,10 +480,10 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
     return (distance / 1852).toFixed(1); // Conversion en NM
   }, [route]);
 
-  // Configuration des cartes
+  // Configuration des cartes - URLs corrigées pour OpenAIP v2
   const openAIPLayerUrl = `https://api.tiles.openaip.net/api/data/openaip/{z}/{x}/{y}.png?apiKey=${openAIPToken}`;
-  const openAIPAirspaceUrl = `https://api.tiles.openaip.net/api/data/airspace/{z}/{x}/{y}.png?apiKey=${openAIPToken}`;
-  const openAIPAirportUrl = `https://api.tiles.openaip.net/api/data/airport/{z}/{x}/{y}.png?apiKey=${openAIPToken}`;
+  const openAIPAirspaceUrl = `https://api.tiles.openaip.net/api/data/airspaces/{z}/{x}/{y}.png?apiKey=${openAIPToken}`;
+  const openAIPAirportUrl = `https://api.tiles.openaip.net/api/data/airports/{z}/{x}/{y}.png?apiKey=${openAIPToken}`;
   const openAIPAttribution = '&copy; <a href="https://www.openaip.net" target="_blank">OpenAIP</a> - Carte aéronautique';
   
   // Cartes alternatives gratuites
@@ -460,6 +515,35 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
         </div>
       )}
       
+      {/* Bouton de réinitialisation en cas de problème */}
+      {mapReady && (
+        <button
+          onClick={handleMapError}
+          style={{
+            position: 'absolute',
+            top: '10px',
+            right: '10px',
+            zIndex: 1000,
+            backgroundColor: 'white',
+            border: '2px solid #e5e7eb',
+            borderRadius: '6px',
+            padding: '6px 10px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            fontSize: '12px',
+            fontWeight: '500',
+            color: '#6b7280',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+          }}
+          title="Réinitialiser la carte si elle ne s'affiche plus correctement"
+        >
+          <RefreshCw size={14} />
+          Réinitialiser
+        </button>
+      )}
+      
       <MapContainer
         key={mapKey} // Clé unique pour forcer la réinitialisation
         ref={mapRef}
@@ -487,9 +571,40 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
               const currentZoom = map.target.getZoom();
               console.log('🔍 Changement de zoom:', currentZoom);
               
+              // Corriger automatiquement si on sort des limites critiques
+              if (currentZoom < 3) {
+                console.log('⚠️ Zoom trop faible, correction automatique');
+                map.target.setZoom(5);
+                // Forcer le rafraîchissement
+                setTimeout(() => {
+                  map.target.invalidateSize();
+                  map.target.eachLayer((layer) => {
+                    if (layer._url && layer.redraw) {
+                      layer.redraw();
+                    }
+                  });
+                }, 100);
+              } else if (currentZoom > 15) {
+                console.log('⚠️ Zoom trop fort, correction automatique');
+                map.target.setZoom(12);
+              }
+              
               // Avertir si on sort des limites OpenAIP
               if (currentZoom < 5 || currentZoom > 12) {
-                console.log('⚠️ Zoom hors limites OpenAIP (5-12)');
+                console.log('⚠️ Zoom hors limites optimales OpenAIP (5-12)');
+              }
+            });
+            
+            // Écouter les erreurs de chargement des tuiles
+            map.target.on('tileerror', (error) => {
+              console.error('❌ Erreur de chargement de tuile:', error);
+              // Si trop d'erreurs, proposer de réinitialiser
+              if (!map.target._tileErrorCount) map.target._tileErrorCount = 0;
+              map.target._tileErrorCount++;
+              
+              if (map.target._tileErrorCount > 10) {
+                console.log('🔄 Trop d\'erreurs de tuiles, réinitialisation recommandée');
+                map.target._tileErrorCount = 0;
               }
             });
           }
@@ -499,7 +614,11 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
         <ZoomControl position="topright" />
         
         {/* Composant pour gérer les changements de vue */}
-        <MapViewController waypoints={waypoints} setZoomWarning={setZoomWarning} />
+        <MapViewController 
+          waypoints={waypoints} 
+          setZoomWarning={setZoomWarning} 
+          onMapError={handleMapError}
+        />
         
         <LayersControl position="topright">
           {/* Groupe de cartes de base */}
@@ -517,10 +636,11 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
                 url={openAIPLayerUrl}
                 attribution={openAIPAttribution}
                 tileSize={256}
-                minZoom={5}
-                maxZoom={12}
+                minZoom={4}
+                maxZoom={14}
                 opacity={0.7}
                 errorTileUrl=""
+                onError={(e) => console.error('Erreur tuile OpenAIP:', e)}
               />
             </LayerGroup>
           </LayersControl.BaseLayer>
@@ -568,9 +688,11 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
               url={openAIPAirspaceUrl}
               attribution=""
               tileSize={256}
-              minZoom={5}
-              maxZoom={12}
+              minZoom={4}
+              maxZoom={14}
               opacity={0.7}
+              errorTileUrl=""
+              onError={(e) => console.error('Erreur tuile espaces aériens:', e)}
             />
           </LayersControl.Overlay>
           
@@ -580,9 +702,11 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
               url={openAIPAirportUrl}
               attribution=""
               tileSize={256}
-              minZoom={5}
-              maxZoom={12}
+              minZoom={4}
+              maxZoom={14}
               opacity={0.8}
+              errorTileUrl=""
+              onError={(e) => console.error('Erreur tuile aérodromes:', e)}
             />
           </LayersControl.Overlay>
         </LayersControl>
@@ -636,23 +760,70 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
               }}
             >
               <Popup>
-                <div style={{ minWidth: '150px' }}>
+                <div style={{ minWidth: '200px' }}>
                   <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(2))}>
                     {waypoint.name || `Point ${index + 1}`}
                   </h4>
-                  <p style={sx.text.sm}>
-                    Lat: {waypoint.lat.toFixed(4)}°<br />
-                    Lon: {waypoint.lon.toFixed(4)}°
+                  <div style={sx.text.sm}>
+                    <p style={sx.spacing.mb(1)}>
+                      <strong>Décimal:</strong><br />
+                      Lat: {waypoint.lat.toFixed(4)}°<br />
+                      Lon: {waypoint.lon.toFixed(4)}°
+                    </p>
+                    <p style={sx.spacing.mb(1)}>
+                      <strong>DMS:</strong><br />
+                      {Conversions.coordinatesToDMS(waypoint.lat, waypoint.lon).lat}<br />
+                      {Conversions.coordinatesToDMS(waypoint.lat, waypoint.lon).lon}
+                    </p>
                     {waypoint.elevation && (
-                      <>
-                        <br />Alt: {waypoint.elevation} ft
-                      </>
+                      <p>Alt: {waypoint.elevation} ft</p>
                     )}
-                  </p>
+                  </div>
                 </div>
               </Popup>
             </Marker>
           );
+        })}
+        
+        {/* Points VFR */}
+        {Object.entries(vfrPoints).map(([waypointId, points]) => {
+          return points.map(point => {
+            if (!point.coordinates || !point.coordinates.lat || !point.coordinates.lon) return null;
+            
+            return (
+              <Marker
+                key={point.id}
+                position={[point.coordinates.lat, point.coordinates.lon]}
+                icon={createVFRIcon(point.code, point.mandatory)}
+              >
+                <Popup>
+                  <div style={{ minWidth: '220px' }}>
+                    <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(2))}>
+                      Point VFR: {point.code}
+                    </h4>
+                    <div style={sx.text.sm}>
+                      <p style={sx.spacing.mb(1)}>
+                        <strong>{point.name}</strong><br />
+                        {point.description}
+                      </p>
+                      <p style={sx.spacing.mb(1)}>
+                        <span style={{ color: point.mandatory ? '#f59e0b' : '#3b82f6' }}>
+                          {point.mandatory ? '⚠️ Obligatoire' : '📍 Optionnel'}
+                        </span>
+                      </p>
+                      <p style={sx.spacing.mb(1)}>
+                        <strong>Coordonnées:</strong><br />
+                        {point.coordinates.lat.toFixed(4)}°, {point.coordinates.lon.toFixed(4)}°<br />
+                        <span style={sx.text.xs}>
+                          {Conversions.coordinatesToDMS(point.coordinates.lat, point.coordinates.lon).formatted}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                </Popup>
+              </Marker>
+            );
+          });
         })}
       </MapContainer>
 
@@ -768,6 +939,17 @@ export const NavigationMap = memo(({ waypoints, onWaypointUpdate, selectedAircra
             <p>🔴 Zone dangereuse</p>
             <p>✈️ Aérodrome</p>
           </div>
+          {Object.keys(vfrPoints).length > 0 && (
+            <>
+              <h5 style={sx.combine(sx.text.xs, sx.text.bold, sx.spacing.mt(2), sx.spacing.mb(1))}>
+                Points VFR
+              </h5>
+              <div style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                <p>🟠 Point obligatoire</p>
+                <p>🔵 Point optionnel</p>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -778,7 +960,7 @@ const styles = {
   mapContainer: {
     position: 'relative',
     width: '100%',
-    height: '500px',
+    height: '600px',
     borderRadius: '8px',
     overflow: 'hidden',
     border: '1px solid #e5e7eb'

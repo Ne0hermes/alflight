@@ -4,6 +4,7 @@ import { Info, Fuel, Wind, Radio, Download, MapPin, Ruler, AlertTriangle } from 
 import { sx } from '@shared/styles/styleSystem';
 import { useVACStore, vacSelectors } from '@core/stores/vacStore';
 import { useWeatherStore, weatherSelectors } from '@core/stores/weatherStore';
+import { Conversions } from '@utils/conversions';
 
 export const AlternateDetails = memo(({ alternates }) => {
   const { downloadChart } = useVACStore();
@@ -61,12 +62,17 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
             {alternate.icao} - {alternate.name}
           </h4>
           <div style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mt(1))}>
-            <MapPin size={12} style={{ display: 'inline', marginRight: '4px' }} />
-            {alternate.position.lat.toFixed(4)}°, {alternate.position.lon.toFixed(4)}°
-            <span style={sx.spacing.ml(3)}>
-              <Ruler size={12} style={{ display: 'inline', marginRight: '4px' }} />
-              {alternate.distance.toFixed(1)} NM de la route
-            </span>
+            <div>
+              <MapPin size={12} style={{ display: 'inline', marginRight: '4px' }} />
+              {alternate.position.lat.toFixed(4)}°, {alternate.position.lon.toFixed(4)}°
+              <span style={sx.spacing.ml(3)}>
+                <Ruler size={12} style={{ display: 'inline', marginRight: '4px' }} />
+                {alternate.distance.toFixed(1)} NM de la route
+              </span>
+            </div>
+            <div style={sx.combine(sx.text.xs, sx.spacing.mt(1), { color: '#9ca3af' })}>
+              {Conversions.coordinatesToDMS(alternate.position.lat, alternate.position.lon).formatted}
+            </div>
           </div>
         </div>
         
@@ -81,6 +87,76 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
           Score: {(alternate.score * 100).toFixed(0)}%
         </div>
       </div>
+      
+      {/* METAR complet ou message d'indisponibilité */}
+      <div style={sx.combine(
+        sx.components.card.base, 
+        sx.spacing.mb(3),
+        weather?.metar ? 
+          { backgroundColor: '#f0f9ff', borderLeft: '4px solid #0284c7' } :
+          { backgroundColor: '#fef2f2', borderLeft: '4px solid #dc2626' }
+      )}>
+        <h5 style={sx.combine(
+          sx.text.sm, sx.text.bold, sx.spacing.mb(2), 
+          { color: weather?.metar ? '#0369a1' : '#991b1b' }
+        )}>
+          📡 METAR
+        </h5>
+        {weather?.metar ? (
+          <>
+            <div style={sx.combine(
+              sx.text.sm, 
+              { fontFamily: 'monospace', backgroundColor: '#ffffff', padding: '12px', borderRadius: '6px', whiteSpace: 'pre-wrap' }
+            )}>
+              {weather.metar.raw}
+            </div>
+          {weather.metar.decoded && (
+            <div style={sx.combine(sx.text.sm, sx.spacing.mt(2))}>
+              <p><strong>Décodé :</strong></p>
+              <ul style={{ listStyle: 'none', padding: 0, margin: '8px 0' }}>
+                <li>🌡️ Température: {weather.metar.decoded.temperature}°C / Point de rosée: {weather.metar.decoded.dewpoint}°C</li>
+                <li>🎚️ QNH: {weather.metar.decoded.altimeter} hPa</li>
+                <li>💨 Vent: {weather.metar.decoded.wind.direction}° à {weather.metar.decoded.wind.speed}kt
+                  {weather.metar.decoded.wind.gust && ` (rafales ${weather.metar.decoded.wind.gust}kt)`}</li>
+                <li>👁️ Visibilité: {weather.metar.decoded.visibility >= 9999 ? '>10km' : `${(weather.metar.decoded.visibility / 1000).toFixed(1)}km`}</li>
+                {weather.metar.decoded.clouds && weather.metar.decoded.clouds.length > 0 && (
+                  <li>☁️ Nuages: {weather.metar.decoded.clouds.map(c => `${c.type} ${c.altitude}ft`).join(', ')}</li>
+                )}
+                {weather.metar.decoded.conditions && weather.metar.decoded.conditions.length > 0 && (
+                  <li>⚠️ Conditions: {weather.metar.decoded.conditions.join(', ')}</li>
+                )}
+              </ul>
+            </div>
+          )}
+          </>
+        ) : (
+          <div style={sx.combine(sx.text.sm, { color: '#991b1b' })}>
+            <p>⚠️ METAR non disponible pour cet aérodrome</p>
+            <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
+              L'aérodrome {alternate.icao} pourrait être un aérodrome privé ou les données météo ne sont pas disponibles.
+            </p>
+          </div>
+        )}
+      </div>
+      
+      {/* TAF si disponible */}
+      {weather?.taf && (
+        <div style={sx.combine(
+          sx.components.card.base, 
+          sx.spacing.mb(3),
+          { backgroundColor: '#fef3c7', borderLeft: '4px solid #f59e0b' }
+        )}>
+          <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2), { color: '#d97706' })}>
+            📅 TAF (Prévisions)
+          </h5>
+          <div style={sx.combine(
+            sx.text.sm, 
+            { fontFamily: 'monospace', backgroundColor: '#ffffff', padding: '12px', borderRadius: '6px', whiteSpace: 'pre-wrap', maxHeight: '150px', overflowY: 'auto' }
+          )}>
+            {weather.taf.raw}
+          </div>
+        </div>
+      )}
       
       {/* Grille d'informations */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test VAC Module</title>
+</head>
+<body>
+    <h1>Test Import VAC Module</h1>
+    <button onclick="testImport()">Test Import</button>
+    <div id="result"></div>
+    
+    <script type="module">
+        window.testImport = async function() {
+            const resultDiv = document.getElementById('result');
+            try {
+                // Essayer d'importer le module
+                const module = await import('/src/features/vac/index.js');
+                resultDiv.innerHTML = '<p style="color: green;">✓ Import réussi</p>';
+                console.log('Module importé:', module);
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">✗ Erreur: ${error.message}</p>`;
+                console.error('Erreur import:', error);
+            }
+        }
+    </script>
+</body>
+</html>

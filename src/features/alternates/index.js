@@ -22,15 +22,11 @@ export { AlternateSelector } from './components/AlternateSelector';
 export { 
   calculateSearchZone, 
   isAirportInSearchZone,
-  calculateDistance,
-  calculateBearing,
-  calculateDestination,
-  calculateMidpoint,
-  calculateDistanceToSegment,
-  calculatePerpendicular,
-  getSideOfPerpendicular,
   calculateDistanceFromRoute,
   geometryUtils
 } from './utils/geometryCalculations';
+
+// Les fonctions de navigation sont maintenant importées depuis le module centralisé
+// Elles doivent être importées directement là où elles sont utilisées
 export { scoreAlternates, scoringUtils } from './hooks/useAlternateScoring';
 export { filterAlternates, filterUtils } from './utils/alternateFilters';

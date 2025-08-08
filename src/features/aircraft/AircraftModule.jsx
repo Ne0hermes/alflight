@@ -2,8 +2,10 @@
 import React, { memo, useState, useEffect } from 'react';
 import { useAircraft } from '@core/contexts';
 import { useAircraftStore } from '@core/stores/aircraftStore';
-import { Plus, Edit2, Trash2, Download, Upload, Info, AlertTriangle } from 'lucide-react';
+import { Plus, Edit2, Trash2, Download, Upload, Info, AlertTriangle, FileText, Eye, BookOpen } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
+import { ManexImporter } from './components/ManexImporter';
+import { ManexViewer } from './components/ManexViewer';
 
 // Composant pour l'aide contextuelle
 const InfoIcon = memo(({ tooltip }) => {
@@ -83,6 +85,10 @@ export const AircraftModule = memo(() => {
   
   const [showForm, setShowForm] = useState(false);
   const [editingAircraft, setEditingAircraft] = useState(null);
+  const [showManexImporter, setShowManexImporter] = useState(false);
+  const [showManexViewer, setShowManexViewer] = useState(false);
+  const [manexAircraft, setManexAircraft] = useState(null);
+  const updateAircraftManex = useAircraftStore(state => state.updateAircraftManex);
 
   const handleSelectAircraft = (aircraft) => {
     console.log('🎯 AircraftModule - Selecting aircraft:', aircraft);
@@ -486,10 +492,53 @@ export const AircraftModule = memo(() => {
                   handleSelectAircraft(aircraft);
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px' }}>
+                  {/* Photo de l'avion */}
+                  {aircraft.photo && (
+                    <div style={{ 
+                      flexShrink: 0,
+                      width: '120px',
+                      height: '90px',
+                      borderRadius: '6px',
+                      overflow: 'hidden',
+                      border: '1px solid #e5e7eb'
+                    }}>
+                      <img 
+                        src={aircraft.photo} 
+                        alt={`${aircraft.registration}`}
+                        style={{ 
+                          width: '100%', 
+                          height: '100%', 
+                          objectFit: 'cover' 
+                        }}
+                      />
+                    </div>
+                  )}
+                  
                   <div style={{ flex: 1 }}>
                     <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '4px' }}>
                       {aircraft.registration} - {aircraft.model}
+                      {aircraft.wakeTurbulenceCategory && (
+                        <span style={{
+                          marginLeft: '8px',
+                          padding: '2px 6px',
+                          backgroundColor: 
+                            aircraft.wakeTurbulenceCategory === 'L' ? '#DBEAFE' :
+                            aircraft.wakeTurbulenceCategory === 'M' ? '#FEF3C7' :
+                            aircraft.wakeTurbulenceCategory === 'H' ? '#FED7AA' :
+                            '#FECACA',
+                          color: 
+                            aircraft.wakeTurbulenceCategory === 'L' ? '#1E40AF' :
+                            aircraft.wakeTurbulenceCategory === 'M' ? '#92400E' :
+                            aircraft.wakeTurbulenceCategory === 'H' ? '#9A3412' :
+                            '#991B1B',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          fontWeight: 'bold'
+                        }}>
+                          CAT {aircraft.wakeTurbulenceCategory}
+                        </span>
+                      )}
                       {isSelected && (
                         <span style={{ fontSize: '14px', color: '#6B7280', marginLeft: '8px' }}>
                           (sélectionné)
@@ -500,6 +549,12 @@ export const AircraftModule = memo(() => {
                       <p>Carburant: {aircraft.fuelType} • Capacité: {aircraft.fuelCapacity}L</p>
                       <p>Vitesse: {aircraft.cruiseSpeed || aircraft.cruiseSpeedKt}kt • Conso: {aircraft.fuelConsumption}L/h</p>
                       <p>MTOW: {aircraft.maxTakeoffWeight}kg</p>
+                      {/* Affichage des informations MANEX si présent */}
+                      {aircraft.manex && (
+                        <p style={{ color: '#059669', fontSize: '12px', marginTop: '4px' }}>
+                          📚 MANEX: {aircraft.manex.fileName} ({aircraft.manex.pageCount} pages)
+                        </p>
+                      )}
                       {/* DEBUG: Afficher les surfaces compatibles */}
                       <p style={{ color: '#059669', fontSize: '12px' }}>
                         🛬 Surfaces compatibles: {aircraft.compatibleRunwaySurfaces && Array.isArray(aircraft.compatibleRunwaySurfaces) && aircraft.compatibleRunwaySurfaces.length > 0 ? 
@@ -514,11 +569,6 @@ export const AircraftModule = memo(() => {
                       {aircraft.armLengths?.emptyMassArm && (
                         <p style={{ color: '#7C3AED' }}>
                           📏 Bras masse à vide: {aircraft.armLengths.emptyMassArm}mm • Carburant: {aircraft.armLengths.fuelArm}mm
-                        </p>
-                      )}
-                      {aircraft.cgEnvelope && aircraft.cgEnvelope.length > 0 && (
-                        <p style={{ color: '#EC4899' }}>
-                          📈 Enveloppe CG: {aircraft.cgEnvelope.length} points définis
                         </p>
                       )}
                       {/* Types de pistes compatibles */}
@@ -546,14 +596,56 @@ export const AircraftModule = memo(() => {
                         ID: {aircraft.id} | Index: {index} | Selected: {isSelected ? 'YES' : 'NO'}
                       </p>
                     </div>
-                    {/* Mini graphique de l'enveloppe pour l'avion sélectionné */}
-                    {isSelected && aircraft.cgEnvelope && aircraft.cgEnvelope.length >= 2 && (
-                      <div style={{ marginTop: '12px' }}>
-                        <CGEnvelopeMini envelope={aircraft.cgEnvelope} />
-                      </div>
-                    )}
                   </div>
                   <div style={{ display: 'flex', gap: '4px' }}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('📚 AircraftModule - MANEX button clicked');
+                        setManexAircraft(aircraft);
+                        setShowManexImporter(true);
+                      }}
+                      style={sx.combine(
+                        sx.components.button.base, 
+                        sx.components.button.secondary, 
+                        { 
+                          padding: '8px',
+                          backgroundColor: aircraft.manex ? '#fef3c7' : undefined,
+                          borderColor: aircraft.manex ? '#fbbf24' : undefined
+                        }
+                      )}
+                      title={aircraft.manex ? "MANEX importé - Cliquer pour modifier" : "Importer le MANEX"}
+                    >
+                      <FileText size={16} color={aircraft.manex ? '#f59e0b' : undefined} />
+                    </button>
+                    
+                    {/* Bouton pour visualiser le MANEX (si existant) */}
+                    {aircraft.manex && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setManexAircraft(aircraft);
+                          setShowManexViewer(true);
+                        }}
+                        style={sx.combine(
+                          sx.components.button.base, 
+                          { 
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            fontSize: '14px',
+                            backgroundColor: '#e0f2fe',
+                            borderColor: '#0284c7',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }
+                        )}
+                        title="Consulter les données du MANEX"
+                      >
+                        <BookOpen size={16} color="#0284c7" />
+                      </button>
+                    )}
+                    
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -657,6 +749,29 @@ export const AircraftModule = memo(() => {
           </div>
         </div>
       )}
+
+      {/* Modal MANEX Importer */}
+      {showManexImporter && manexAircraft && (
+        <ManexImporter
+          aircraft={manexAircraft}
+          onManexUpdate={updateAircraftManex}
+          onClose={() => {
+            setShowManexImporter(false);
+            setManexAircraft(null);
+          }}
+        />
+      )}
+      
+      {/* Modal MANEX Viewer */}
+      {showManexViewer && manexAircraft && (
+        <ManexViewer
+          aircraft={manexAircraft}
+          onClose={() => {
+            setShowManexViewer(false);
+            setManexAircraft(null);
+          }}
+        />
+      )}
     </div>
   );
 });
@@ -666,6 +781,8 @@ AircraftModule.displayName = 'AircraftModule';
 // Composant de formulaire pour ajouter/modifier un avion
 const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
   const massUnit = 'kg';
+  const [activeTab, setActiveTab] = useState('general'); // État pour l'onglet actif
+  const [aircraftPhoto, setAircraftPhoto] = useState(aircraft?.photo || null);
 
   // DEBUG : Afficher l'avion reçu en props
   console.log('🛩️ AircraftForm - aircraft reçu:', aircraft);
@@ -679,6 +796,23 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
     // S'assurer que toutes les surfaces sont des chaînes valides
     return surfaces.filter(s => typeof s === 'string' && s.trim().length > 0);
   };
+  
+  // Fonction pour gérer l'upload de photo
+  const handlePhotoUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // Limite à 5MB
+        alert('La photo est trop volumineuse. Veuillez choisir une image de moins de 5MB.');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAircraftPhoto(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const [formData, setFormData] = useState({
     registration: aircraft?.registration || '',
@@ -688,7 +822,45 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
     cruiseSpeedKt: aircraft?.cruiseSpeedKt || aircraft?.cruiseSpeed || '',
     fuelConsumption: aircraft?.fuelConsumption || '',
     maxTakeoffWeight: aircraft?.maxTakeoffWeight || '',
+    wakeTurbulenceCategory: aircraft?.wakeTurbulenceCategory || 'L', // L=Light, M=Medium, H=Heavy, J=Super
     compatibleRunwaySurfaces: getValidSurfaces(aircraft?.compatibleRunwaySurfaces), // Valider les surfaces
+    // Section Performances - Vitesses caractéristiques
+    speeds: {
+      vso: aircraft?.speeds?.vso || aircraft?.manex?.performances?.vso || '',  // Vitesse de décrochage volets sortis
+      vs1: aircraft?.speeds?.vs1 || aircraft?.manex?.performances?.vs1 || '',  // Vitesse de décrochage volets rentrés
+      vfe: aircraft?.speeds?.vfe || aircraft?.manex?.performances?.vfe || '',  // Vitesse max volets sortis
+      vno: aircraft?.speeds?.vno || aircraft?.manex?.performances?.vno || '',  // Vitesse max en air turbulent
+      vne: aircraft?.speeds?.vne || aircraft?.manex?.performances?.vne || '',  // Vitesse à ne jamais dépasser
+      va: aircraft?.speeds?.va || aircraft?.manex?.performances?.va || '',    // Vitesse de manœuvre
+      vx: aircraft?.speeds?.vx || aircraft?.manex?.performances?.vx || '',    // Vitesse de montée max (pente)
+      vy: aircraft?.speeds?.vy || aircraft?.manex?.performances?.vy || '',    // Vitesse de montée optimale (taux)
+      vr: aircraft?.speeds?.vr || aircraft?.manex?.performances?.vr || '',    // Vitesse de rotation
+      vref: aircraft?.speeds?.vref || aircraft?.manex?.performances?.vref || '', // Vitesse de référence
+      vapp: aircraft?.speeds?.vapp || aircraft?.manex?.performances?.vapp || '', // Vitesse d'approche
+      vglide: aircraft?.speeds?.vglide || ''  // Vitesse de plané optimal
+    },
+    // Section Performances - Distances
+    distances: {
+      takeoffRoll: aircraft?.distances?.takeoffRoll || aircraft?.manex?.performances?.takeoffRoll || '',
+      takeoffDistance15m: aircraft?.distances?.takeoffDistance15m || '',
+      takeoffDistance50ft: aircraft?.distances?.takeoffDistance50ft || aircraft?.manex?.performances?.takeoffDistance || '',
+      landingRoll: aircraft?.distances?.landingRoll || aircraft?.manex?.performances?.landingRoll || '',
+      landingDistance15m: aircraft?.distances?.landingDistance15m || '',
+      landingDistance50ft: aircraft?.distances?.landingDistance50ft || aircraft?.manex?.performances?.landingDistance || ''
+    },
+    // Section Performances - Montée et plafonds
+    climb: {
+      rateOfClimb: aircraft?.climb?.rateOfClimb || '',  // Taux de montée (ft/min)
+      serviceCeiling: aircraft?.climb?.serviceCeiling || '',  // Plafond pratique (ft)
+      absoluteCeiling: aircraft?.climb?.absoluteCeiling || '',  // Plafond absolu (ft)
+      climbGradient: aircraft?.climb?.climbGradient || ''  // Gradient de montée (%)
+    },
+    // Section Limitations de vent
+    windLimits: {
+      maxCrosswind: aircraft?.windLimits?.maxCrosswind || aircraft?.manex?.limitations?.maxCrosswind || '',
+      maxTailwind: aircraft?.windLimits?.maxTailwind || aircraft?.manex?.limitations?.maxTailwind || '',
+      maxHeadwind: aircraft?.windLimits?.maxHeadwind || aircraft?.manex?.limitations?.maxHeadwind || ''
+    },
     masses: {
       emptyMass: aircraft?.masses?.emptyMass || '',
       minTakeoffMass: aircraft?.masses?.minTakeoffMass || '',
@@ -711,28 +883,80 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       maxLandingMass: aircraft?.limitations?.maxLandingMass || '',
       maxBaggageLest: aircraft?.limitations?.maxBaggageLest || ''
     },
-    cgEnvelope: aircraft?.cgEnvelope || [
-      { weight: '700', forwardLimit: '2050', aftLimit: '2350' },
-      { weight: '900', forwardLimit: '2080', aftLimit: '2350' },
-      { weight: '1100', forwardLimit: '2120', aftLimit: '2350' },
-      { weight: '1150', forwardLimit: '2150', aftLimit: '2350' }
-    ]
+    // Section Équipements COM/NAV/APP
+    equipmentCom: {
+      vhf1: aircraft?.equipmentCom?.vhf1 !== false,  // VHF COM 1
+      vhf2: aircraft?.equipmentCom?.vhf2 !== false,  // VHF COM 2
+      hf: aircraft?.equipmentCom?.hf || false,  // HF
+      satcom: aircraft?.equipmentCom?.satcom || false,  // SATCOM
+      elt: aircraft?.equipmentCom?.elt !== false,  // ELT (Emergency Locator Transmitter)
+      acars: aircraft?.equipmentCom?.acars || false,  // ACARS
+      cpdlc: aircraft?.equipmentCom?.cpdlc || false  // CPDLC (Controller-Pilot Data Link)
+    },
+    equipmentNav: {
+      vor: aircraft?.equipmentNav?.vor !== false,  // VOR
+      dme: aircraft?.equipmentNav?.dme !== false,  // DME
+      adf: aircraft?.equipmentNav?.adf || false,  // ADF
+      gnss: aircraft?.equipmentNav?.gnss !== false,  // GNSS/GPS
+      ils: aircraft?.equipmentNav?.ils !== false,  // ILS
+      mls: aircraft?.equipmentNav?.mls || false,  // MLS
+      rnav: aircraft?.equipmentNav?.rnav || false,  // RNAV
+      rnavTypes: aircraft?.equipmentNav?.rnavTypes || '',  // Types RNAV (ex: "RNAV 10, RNAV 5, RNAV 1")
+      rnp: aircraft?.equipmentNav?.rnp || false,  // RNP
+      rnpTypes: aircraft?.equipmentNav?.rnpTypes || '',  // Types RNP (ex: "RNP 4, RNP 1, RNP APCH")
+      gbas: aircraft?.equipmentNav?.gbas || false,  // GBAS Landing System
+      lnav: aircraft?.equipmentNav?.lnav || false,  // LNAV
+      vnav: aircraft?.equipmentNav?.vnav || false,  // VNAV
+      lpv: aircraft?.equipmentNav?.lpv || false  // LPV approach
+    },
+    // Section Équipements de surveillance
+    equipmentSurv: {
+      transponderMode: aircraft?.equipmentSurv?.transponderMode || 'C',  // A, C, S ou None
+      adsb: aircraft?.equipmentSurv?.adsb || false,  // ADS-B Out
+      adsbIn: aircraft?.equipmentSurv?.adsbIn || false,  // ADS-B In
+      tcas: aircraft?.equipmentSurv?.tcas || 'None',  // None, TCAS I, TCAS II
+      gpws: aircraft?.equipmentSurv?.gpws || false,  // GPWS/TAWS
+      egpws: aircraft?.equipmentSurv?.egpws || false,  // Enhanced GPWS
+      taws: aircraft?.equipmentSurv?.taws || false,  // TAWS
+      cvr: aircraft?.equipmentSurv?.cvr || false,  // Cockpit Voice Recorder
+      fdr: aircraft?.equipmentSurv?.fdr || false,  // Flight Data Recorder
+      ras: aircraft?.equipmentSurv?.ras || false,  // Runway Awareness System
+      flarm: aircraft?.equipmentSurv?.flarm || false  // FLARM (collision avoidance)
+    },
+    // Capacités spéciales et remarques
+    specialCapabilities: {
+      rvsm: aircraft?.specialCapabilities?.rvsm || false,  // RVSM approved
+      mnps: aircraft?.specialCapabilities?.mnps || false,  // MNPS approved
+      etops: aircraft?.specialCapabilities?.etops || false,  // ETOPS
+      etopsMinutes: aircraft?.specialCapabilities?.etopsMinutes || '',  // ETOPS time (60, 120, 180, etc.)
+      catII: aircraft?.specialCapabilities?.catII || false,  // CAT II approach
+      catIII: aircraft?.specialCapabilities?.catIII || false,  // CAT III approach
+      pbn: aircraft?.specialCapabilities?.pbn || false,  // Performance Based Navigation
+      remarks: aircraft?.specialCapabilities?.remarks || ''  // Remarques additionnelles
+    }
   });
 
   const handleChange = (field, value, index = null) => {
-    if (field === 'cgEnvelope' && index !== null) {
-      const [subField] = value;
-      setFormData(prev => {
-        const newEnvelope = [...prev.cgEnvelope];
-        newEnvelope[index] = {
-          ...newEnvelope[index],
-          [subField]: value[1]
-        };
-        return {
-          ...prev,
-          cgEnvelope: newEnvelope
-        };
-      });
+    if (field === 'maxTakeoffWeight') {
+      // Auto-déterminer la catégorie de turbulence basée sur MTOW
+      const mtow = parseFloat(value);
+      let category = formData.wakeTurbulenceCategory;
+      
+      if (!isNaN(mtow)) {
+        if (mtow <= 7000) {
+          category = 'L';
+        } else if (mtow <= 136000) {
+          category = 'M';
+        } else {
+          category = 'H';
+        }
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        maxTakeoffWeight: value,
+        wakeTurbulenceCategory: category
+      }));
     } else if (field === 'compatibleRunwaySurfaces') {
       // Gestion des surfaces compatibles (toggle)
       console.log('🔄 Toggle surface:', value);
@@ -812,7 +1036,50 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       cruiseSpeedKt: toValidNumber(formData.cruiseSpeedKt, 0),
       fuelConsumption: toValidNumber(formData.fuelConsumption, 0),
       maxTakeoffWeight: toValidNumber(formData.maxTakeoffWeight, 0),
+      wakeTurbulenceCategory: formData.wakeTurbulenceCategory,
       compatibleRunwaySurfaces: formData.compatibleRunwaySurfaces || ['ASPH', 'CONC'],
+      // Nouvelles sections de performances
+      speeds: Object.values(formData.speeds).some(v => v)
+        ? {
+            vso: toValidNumber(formData.speeds.vso, 0),
+            vs1: toValidNumber(formData.speeds.vs1, 0),
+            vfe: toValidNumber(formData.speeds.vfe, 0),
+            vno: toValidNumber(formData.speeds.vno, 0),
+            vne: toValidNumber(formData.speeds.vne, 0),
+            va: toValidNumber(formData.speeds.va, 0),
+            vx: toValidNumber(formData.speeds.vx, 0),
+            vy: toValidNumber(formData.speeds.vy, 0),
+            vr: toValidNumber(formData.speeds.vr, 0),
+            vref: toValidNumber(formData.speeds.vref, 0),
+            vapp: toValidNumber(formData.speeds.vapp, 0),
+            vglide: toValidNumber(formData.speeds.vglide, 0)
+          }
+        : undefined,
+      distances: Object.values(formData.distances).some(v => v)
+        ? {
+            takeoffRoll: toValidNumber(formData.distances.takeoffRoll, 0),
+            takeoffDistance15m: toValidNumber(formData.distances.takeoffDistance15m, 0),
+            takeoffDistance50ft: toValidNumber(formData.distances.takeoffDistance50ft, 0),
+            landingRoll: toValidNumber(formData.distances.landingRoll, 0),
+            landingDistance15m: toValidNumber(formData.distances.landingDistance15m, 0),
+            landingDistance50ft: toValidNumber(formData.distances.landingDistance50ft, 0)
+          }
+        : undefined,
+      climb: Object.values(formData.climb).some(v => v)
+        ? {
+            rateOfClimb: toValidNumber(formData.climb.rateOfClimb, 0),
+            serviceCeiling: toValidNumber(formData.climb.serviceCeiling, 0),
+            absoluteCeiling: toValidNumber(formData.climb.absoluteCeiling, 0),
+            climbGradient: toValidNumber(formData.climb.climbGradient, 0)
+          }
+        : undefined,
+      windLimits: Object.values(formData.windLimits).some(v => v)
+        ? {
+            maxCrosswind: toValidNumber(formData.windLimits.maxCrosswind, 0),
+            maxTailwind: toValidNumber(formData.windLimits.maxTailwind, 0),
+            maxHeadwind: toValidNumber(formData.windLimits.maxHeadwind, 0)
+          }
+        : undefined,
       masses: Object.values(formData.masses).some(v => v)
         ? {
             emptyMass: toValidNumber(formData.masses.emptyMass, 0),
@@ -821,7 +1088,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             maxBaggageTube: toValidNumber(formData.masses.maxBaggageTube, 0),
             maxAftBaggageExtension: toValidNumber(formData.masses.maxAftBaggageExtension, 0)
           }
-        : undefined, // Mettre undefined au lieu de null
+        : undefined,
       armLengths: Object.values(formData.armLengths).some(v => v)
         ? {
             emptyMassArm: toValidNumber(formData.armLengths.emptyMassArm, 0),
@@ -834,22 +1101,20 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             baggageTubeArm: toValidNumber(formData.armLengths.baggageTubeArm, 0),
             aftBaggageExtensionArm: toValidNumber(formData.armLengths.aftBaggageExtensionArm, 0)
           }
-        : undefined, // Mettre undefined au lieu de null
+        : undefined,
       limitations: Object.values(formData.limitations).some(v => v)
         ? {
             maxLandingMass: toValidNumber(formData.limitations.maxLandingMass, 0),
             maxBaggageLest: toValidNumber(formData.limitations.maxBaggageLest, 0)
           }
-        : undefined, // Mettre undefined au lieu de null
-      cgEnvelope: formData.cgEnvelope && formData.cgEnvelope.length > 0
-        ? formData.cgEnvelope
-          .filter(point => point.weight && (point.forwardLimit || point.aftLimit))
-          .map(point => ({
-            weight: toValidNumber(point.weight, 0),
-            forwardLimit: toValidNumber(point.forwardLimit, 0),
-            aftLimit: toValidNumber(point.aftLimit, 0)
-          }))
-        : []
+        : undefined,
+      // Équipements
+      equipmentCom: formData.equipmentCom,
+      equipmentNav: formData.equipmentNav,
+      equipmentSurv: formData.equipmentSurv,
+      specialCapabilities: formData.specialCapabilities,
+      // Photo de l'avion
+      photo: aircraftPhoto
     };
 
     // DEBUG : Afficher les données complètes avant de sauvegarder
@@ -878,25 +1143,177 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
 
   return (
     <form onSubmit={handleSubmit}>
+      {/* Barre d'onglets */}
       <div style={{
-        backgroundColor: '#EBF8FF',
-        border: '1px solid #90CDF4',
-        borderRadius: '8px',
-        padding: '12px',
-        marginBottom: '20px'
+        display: 'flex',
+        borderBottom: '2px solid #e5e7eb',
+        marginBottom: '24px',
+        gap: '4px'
       }}>
-        <p style={sx.combine(sx.text.sm, { color: '#2B6CB0' })}>
-          💡 <strong>Important :</strong> Les données de masse et centrage sont essentielles pour la sécurité du vol. 
-          Elles seront utilisées pour calculer le devis de masse et vérifier le respect des limites réglementaires.
-        </p>
+        <button
+          type="button"
+          onClick={() => setActiveTab('general')}
+          style={{
+            padding: '12px 24px',
+            backgroundColor: activeTab === 'general' ? '#3b82f6' : 'transparent',
+            color: activeTab === 'general' ? 'white' : '#6b7280',
+            border: 'none',
+            borderRadius: '8px 8px 0 0',
+            fontWeight: activeTab === 'general' ? 'bold' : 'normal',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            fontSize: '14px'
+          }}
+        >
+          📋 Général
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('performances')}
+          style={{
+            padding: '12px 24px',
+            backgroundColor: activeTab === 'performances' ? '#3b82f6' : 'transparent',
+            color: activeTab === 'performances' ? 'white' : '#6b7280',
+            border: 'none',
+            borderRadius: '8px 8px 0 0',
+            fontWeight: activeTab === 'performances' ? 'bold' : 'normal',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            fontSize: '14px'
+          }}
+        >
+          ✈️ Performances
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('masse-centrage')}
+          style={{
+            padding: '12px 24px',
+            backgroundColor: activeTab === 'masse-centrage' ? '#3b82f6' : 'transparent',
+            color: activeTab === 'masse-centrage' ? 'white' : '#6b7280',
+            border: 'none',
+            borderRadius: '8px 8px 0 0',
+            fontWeight: activeTab === 'masse-centrage' ? 'bold' : 'normal',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            fontSize: '14px'
+          }}
+        >
+          ⚖️ Masse & Centrage
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('equipements')}
+          style={{
+            padding: '12px 24px',
+            backgroundColor: activeTab === 'equipements' ? '#3b82f6' : 'transparent',
+            color: activeTab === 'equipements' ? 'white' : '#6b7280',
+            border: 'none',
+            borderRadius: '8px 8px 0 0',
+            fontWeight: activeTab === 'equipements' ? 'bold' : 'normal',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            fontSize: '14px'
+          }}
+        >
+          📡 Équipements
+        </button>
       </div>
 
+      {/* Contenu des onglets */}
       <div style={{ display: 'grid', gap: '16px' }}>
-        {/* Informations de base */}
-        <div>
-          <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
-            Informations générales
-          </h4>
+        {/* Onglet Général */}
+        {activeTab === 'general' && (
+          <>
+            {/* Informations de base */}
+            <div>
+              <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
+                Informations générales
+              </h4>
+              
+              {/* Photo de l'avion */}
+              <div style={{ marginBottom: '20px' }}>
+                <label style={labelStyle}>Photo de l'avion</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                  {aircraftPhoto ? (
+                    <div style={{ position: 'relative', width: '200px', height: '150px' }}>
+                      <img 
+                        src={aircraftPhoto} 
+                        alt="Aircraft" 
+                        style={{ 
+                          width: '100%', 
+                          height: '100%', 
+                          objectFit: 'cover', 
+                          borderRadius: '8px',
+                          border: '1px solid #d1d5db'
+                        }} 
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setAircraftPhoto(null)}
+                        style={{
+                          position: 'absolute',
+                          top: '5px',
+                          right: '5px',
+                          backgroundColor: 'rgba(239, 68, 68, 0.9)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '24px',
+                          height: '24px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ 
+                      width: '200px', 
+                      height: '150px', 
+                      border: '2px dashed #d1d5db',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: '#f9fafb'
+                    }}>
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.5">
+                        <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px' }}>Aucune photo</p>
+                    </div>
+                  )}
+                  <div>
+                    <input
+                      type="file"
+                      id="aircraft-photo"
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                      style={{ display: 'none' }}
+                    />
+                    <label
+                      htmlFor="aircraft-photo"
+                      style={{
+                        ...sx.components.button.base,
+                        ...sx.components.button.secondary,
+                        cursor: 'pointer',
+                        display: 'inline-block'
+                      }}
+                    >
+                      {aircraftPhoto ? 'Changer la photo' : 'Ajouter une photo'}
+                    </label>
+                    <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>
+                      Max 5MB • JPG, PNG
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <div>
               <label style={labelStyle}>Immatriculation *</label>
@@ -919,6 +1336,39 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                 required
                 style={inputStyle}
               />
+            </div>
+          </div>
+
+          {/* Catégorie de turbulence de sillage */}
+          <div style={{ marginTop: '16px' }}>
+            <label style={labelStyle}>
+              Catégorie de turbulence de sillage *
+              <InfoIcon tooltip="Catégorie OACI basée sur la masse maximale au décollage (MTOW)" />
+            </label>
+            <select
+              value={formData.wakeTurbulenceCategory}
+              onChange={(e) => handleChange('wakeTurbulenceCategory', e.target.value)}
+              style={inputStyle}
+              required
+            >
+              <option value="L">L - Light / Léger (MTOW &lt;= 7 000 kg)</option>
+              <option value="M">M - Medium / Moyen (7 000 kg &lt; MTOW &lt;= 136 000 kg)</option>
+              <option value="H">H - Heavy / Lourd (MTOW &gt; 136 000 kg)</option>
+              <option value="J">J - Super (A380, An-225)</option>
+            </select>
+            <div style={{
+              marginTop: '8px',
+              padding: '8px',
+              backgroundColor: '#F0F9FF',
+              borderRadius: '6px',
+              border: '1px solid #BAE6FD'
+            }}>
+              <p style={sx.combine(sx.text.xs, { color: '#0369A1' })}>
+                {formData.wakeTurbulenceCategory === 'L' && '💡 Catégorie Light: Espacement réduit derrière autres aéronefs, mais vulnérable aux turbulences de sillage.'}
+                {formData.wakeTurbulenceCategory === 'M' && '💡 Catégorie Medium: Espacement standard. Attention aux aéronefs Heavy devant.'}
+                {formData.wakeTurbulenceCategory === 'H' && '💡 Catégorie Heavy: Génère des turbulences importantes. Espacement accru pour les suivants.'}
+                {formData.wakeTurbulenceCategory === 'J' && '💡 Catégorie Super: Turbulences extrêmes. Espacements maximaux requis.'}
+              </p>
             </div>
           </div>
         </div>
@@ -1042,8 +1492,474 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             </div>
           )}
         </div>
+          </>
+        )}
 
-        {/* Masses structurelles */}
+        {/* Onglet Performances */}
+        {activeTab === 'performances' && (
+          <>
+            <div style={{
+              backgroundColor: '#EBF8FF',
+              border: '1px solid #90CDF4',
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '20px'
+            }}>
+              <p style={sx.combine(sx.text.sm, { color: '#2B6CB0' })}>
+                💡 <strong>Conseil :</strong> Les données de performances sont essentielles pour la planification de vol. 
+                Si vous avez importé un MANEX, les valeurs seront pré-remplies automatiquement. 
+                Sinon, référez-vous au manuel de vol pour obtenir les valeurs exactes.
+              </p>
+            </div>
+
+            {/* Section Performances - Vitesses caractéristiques */}
+        <div>
+          <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), sx.flex.start)}>
+            <span style={{ marginRight: '8px' }}>✈️</span>
+            Vitesses caractéristiques (kt)
+            <InfoIcon tooltip="Vitesses de référence pour les différentes phases de vol" />
+          </h4>
+          
+          <div style={{
+            backgroundColor: '#F0FDF4',
+            border: '1px solid #86EFAC',
+            borderRadius: '8px',
+            padding: '12px',
+            marginBottom: '16px'
+          }}>
+            <p style={sx.combine(sx.text.sm, { color: '#166534' })}>
+              💡 Ces vitesses sont critiques pour la sécurité. Consultez le manuel de vol pour les valeurs exactes.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+            {/* Vitesses de décrochage */}
+            <div>
+              <label style={labelStyle}>
+                Vso - Décrochage volets sortis
+                <InfoIcon tooltip="Vitesse de décrochage en configuration atterrissage" />
+              </label>
+              <input
+                type="number"
+                value={formData.speeds.vso}
+                onChange={(e) => handleChange('speeds.vso', e.target.value)}
+                placeholder="44"
+                min="0"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>
+                Vs1 - Décrochage volets rentrés
+                <InfoIcon tooltip="Vitesse de décrochage en configuration lisse" />
+              </label>
+              <input
+                type="number"
+                value={formData.speeds.vs1}
+                onChange={(e) => handleChange('speeds.vs1', e.target.value)}
+                placeholder="48"
+                min="0"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>
+                Va - Vitesse de manœuvre
+                <InfoIcon tooltip="Vitesse max pour manœuvres complètes" />
+              </label>
+              <input
+                type="number"
+                value={formData.speeds.va}
+                onChange={(e) => handleChange('speeds.va', e.target.value)}
+                placeholder="99"
+                min="0"
+                style={inputStyle}
+              />
+            </div>
+
+            {/* Vitesses limites */}
+            <div>
+              <label style={labelStyle}>
+                Vfe - Max volets sortis
+                <InfoIcon tooltip="Vitesse maximale volets sortis" />
+              </label>
+              <input
+                type="number"
+                value={formData.speeds.vfe}
+                onChange={(e) => handleChange('speeds.vfe', e.target.value)}
+                placeholder="85"
+                min="0"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>
+                Vno - Max en air calme
+                <InfoIcon tooltip="Vitesse max de croisière structurale" />
+              </label>
+              <input
+                type="number"
+                value={formData.speeds.vno}
+                onChange={(e) => handleChange('speeds.vno', e.target.value)}
+                placeholder="128"
+                min="0"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>
+                Vne - Ne jamais dépasser
+                <InfoIcon tooltip="Vitesse à ne jamais dépasser" />
+              </label>
+              <input
+                type="number"
+                value={formData.speeds.vne}
+                onChange={(e) => handleChange('speeds.vne', e.target.value)}
+                placeholder="163"
+                min="0"
+                style={inputStyle}
+              />
+            </div>
+
+            {/* Vitesses de montée */}
+            <div>
+              <label style={labelStyle}>
+                Vx - Montée max (pente)
+                <InfoIcon tooltip="Meilleur angle de montée" />
+              </label>
+              <input
+                type="number"
+                value={formData.speeds.vx}
+                onChange={(e) => handleChange('speeds.vx', e.target.value)}
+                placeholder="59"
+                min="0"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>
+                Vy - Montée optimale (taux)
+                <InfoIcon tooltip="Meilleur taux de montée" />
+              </label>
+              <input
+                type="number"
+                value={formData.speeds.vy}
+                onChange={(e) => handleChange('speeds.vy', e.target.value)}
+                placeholder="73"
+                min="0"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>
+                Vglide - Plané optimal
+                <InfoIcon tooltip="Vitesse de finesse max" />
+              </label>
+              <input
+                type="number"
+                value={formData.speeds.vglide}
+                onChange={(e) => handleChange('speeds.vglide', e.target.value)}
+                placeholder="65"
+                min="0"
+                style={inputStyle}
+              />
+            </div>
+
+            {/* Vitesses opérationnelles */}
+            <div>
+              <label style={labelStyle}>
+                Vr - Rotation
+                <InfoIcon tooltip="Vitesse de rotation au décollage" />
+              </label>
+              <input
+                type="number"
+                value={formData.speeds.vr}
+                onChange={(e) => handleChange('speeds.vr', e.target.value)}
+                placeholder="55"
+                min="0"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>
+                Vref - Référence approche
+                <InfoIcon tooltip="Vitesse de référence en approche" />
+              </label>
+              <input
+                type="number"
+                value={formData.speeds.vref}
+                onChange={(e) => handleChange('speeds.vref', e.target.value)}
+                placeholder="60"
+                min="0"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>
+                Vapp - Approche finale
+                <InfoIcon tooltip="Vitesse d'approche finale" />
+              </label>
+              <input
+                type="number"
+                value={formData.speeds.vapp}
+                onChange={(e) => handleChange('speeds.vapp', e.target.value)}
+                placeholder="65"
+                min="0"
+                style={inputStyle}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Section Performances - Distances */}
+        <div>
+          <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), sx.flex.start)}>
+            <span style={{ marginRight: '8px' }}>🛫</span>
+            Distances de décollage et atterrissage
+            <InfoIcon tooltip="Distances au niveau de la mer, conditions standard" />
+          </h4>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+            {/* Décollage */}
+            <div style={{
+              padding: '16px',
+              backgroundColor: '#F0F9FF',
+              borderRadius: '8px',
+              border: '1px solid #BAE6FD'
+            }}>
+              <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(3))}>
+                🛫 Décollage
+              </h5>
+              <div style={{ display: 'grid', gap: '12px' }}>
+                <div>
+                  <label style={labelStyle}>
+                    Roulage (m)
+                    <InfoIcon tooltip="Distance de roulage au sol" />
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.distances.takeoffRoll}
+                    onChange={(e) => handleChange('distances.takeoffRoll', e.target.value)}
+                    placeholder="280"
+                    min="0"
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>
+                    Passage 15m/50ft (m)
+                    <InfoIcon tooltip="Distance totale pour passer 15m (50ft)" />
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.distances.takeoffDistance50ft}
+                    onChange={(e) => handleChange('distances.takeoffDistance50ft', e.target.value)}
+                    placeholder="485"
+                    min="0"
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Atterrissage */}
+            <div style={{
+              padding: '16px',
+              backgroundColor: '#FFF7ED',
+              borderRadius: '8px',
+              border: '1px solid #FED7AA'
+            }}>
+              <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(3))}>
+                🛬 Atterrissage
+              </h5>
+              <div style={{ display: 'grid', gap: '12px' }}>
+                <div>
+                  <label style={labelStyle}>
+                    Roulage (m)
+                    <InfoIcon tooltip="Distance de roulage après toucher" />
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.distances.landingRoll}
+                    onChange={(e) => handleChange('distances.landingRoll', e.target.value)}
+                    placeholder="180"
+                    min="0"
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>
+                    Depuis 15m/50ft (m)
+                    <InfoIcon tooltip="Distance totale depuis 15m (50ft)" />
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.distances.landingDistance50ft}
+                    onChange={(e) => handleChange('distances.landingDistance50ft', e.target.value)}
+                    placeholder="520"
+                    min="0"
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section Performances - Montée et plafonds */}
+        <div>
+          <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), sx.flex.start)}>
+            <span style={{ marginRight: '8px' }}>📈</span>
+            Performances en montée et plafonds
+            <InfoIcon tooltip="Performances au poids max, conditions standard" />
+          </h4>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+            <div>
+              <label style={labelStyle}>
+                Taux de montée (ft/min)
+                <InfoIcon tooltip="Taux de montée au niveau de la mer" />
+              </label>
+              <input
+                type="number"
+                value={formData.climb.rateOfClimb}
+                onChange={(e) => handleChange('climb.rateOfClimb', e.target.value)}
+                placeholder="730"
+                min="0"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>
+                Gradient de montée (%)
+                <InfoIcon tooltip="Pente de montée en pourcentage" />
+              </label>
+              <input
+                type="number"
+                value={formData.climb.climbGradient}
+                onChange={(e) => handleChange('climb.climbGradient', e.target.value)}
+                placeholder="8.5"
+                min="0"
+                step="0.1"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>
+                Plafond pratique (ft)
+                <InfoIcon tooltip="Altitude où le taux de montée = 100 ft/min" />
+              </label>
+              <input
+                type="number"
+                value={formData.climb.serviceCeiling}
+                onChange={(e) => handleChange('climb.serviceCeiling', e.target.value)}
+                placeholder="14000"
+                min="0"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>
+                Plafond absolu (ft)
+                <InfoIcon tooltip="Altitude maximale atteignable" />
+              </label>
+              <input
+                type="number"
+                value={formData.climb.absoluteCeiling}
+                onChange={(e) => handleChange('climb.absoluteCeiling', e.target.value)}
+                placeholder="15000"
+                min="0"
+                style={inputStyle}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Section Limitations de vent */}
+        <div>
+          <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), sx.flex.start)}>
+            <span style={{ marginRight: '8px' }}>💨</span>
+            Limitations de vent (kt)
+            <InfoIcon tooltip="Limites maximales démontrées" />
+          </h4>
+
+          <div style={{
+            backgroundColor: '#FEF2F2',
+            border: '1px solid #FCA5A5',
+            borderRadius: '8px',
+            padding: '12px',
+            marginBottom: '16px'
+          }}>
+            <p style={sx.combine(sx.text.sm, { color: '#991B1B' })}>
+              ⚠️ Ces limites sont critiques pour la sécurité. Ne jamais les dépasser.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+            <div>
+              <label style={labelStyle}>
+                Vent traversier max
+                <InfoIcon tooltip="Composante traversière maximale démontrée" />
+              </label>
+              <input
+                type="number"
+                value={formData.windLimits.maxCrosswind}
+                onChange={(e) => handleChange('windLimits.maxCrosswind', e.target.value)}
+                placeholder="15"
+                min="0"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>
+                Vent arrière max
+                <InfoIcon tooltip="Vent arrière max pour décollage/atterrissage" />
+              </label>
+              <input
+                type="number"
+                value={formData.windLimits.maxTailwind}
+                onChange={(e) => handleChange('windLimits.maxTailwind', e.target.value)}
+                placeholder="10"
+                min="0"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>
+                Vent de face max
+                <InfoIcon tooltip="Vent de face max démontré" />
+              </label>
+              <input
+                type="number"
+                value={formData.windLimits.maxHeadwind}
+                onChange={(e) => handleChange('windLimits.maxHeadwind', e.target.value)}
+                placeholder="40"
+                min="0"
+                style={inputStyle}
+              />
+            </div>
+          </div>
+        </div>
+          </>
+        )}
+
+        {/* Onglet Masse & Centrage */}
+        {activeTab === 'masse-centrage' && (
+          <>
+            <div style={{
+              backgroundColor: '#F0FDF4',
+              border: '1px solid #86EFAC',
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '20px'
+            }}>
+              <p style={sx.combine(sx.text.sm, { color: '#166534' })}>
+                ⚖️ <strong>Important :</strong> Les données de masse et centrage sont critiques pour la sécurité. 
+                Elles seront utilisées pour calculer le devis de masse et vérifier que l'avion reste dans les limites de centrage.
+              </p>
+            </div>
+
+            {/* Masses structurelles */}
         <div>
           <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
             Masses structurelles ({massUnit})
@@ -1300,166 +2216,478 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
           </div>
         </div>
 
-        {/* Enveloppe de centrage */}
-        <div>
-          <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), { display: 'flex', alignItems: 'center', justifyContent: 'space-between' })}>
-            <span style={{ display: 'flex', alignItems: 'center' }}>
-              Enveloppe de centrage
-              <InfoIcon tooltip="Définissez les limites avant et arrière du CG en fonction de la masse pour créer l'enveloppe de centrage" />
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                setFormData(prev => ({
-                  ...prev,
-                  cgEnvelope: [
-                    { weight: '700', forwardLimit: '2050', aftLimit: '2350' },
-                    { weight: '900', forwardLimit: '2080', aftLimit: '2350' },
-                    { weight: '1100', forwardLimit: '2120', aftLimit: '2350' },
-                    { weight: '1150', forwardLimit: '2150', aftLimit: '2350' }
-                  ]
-                }));
-              }}
-              style={sx.combine(sx.components.button.base, sx.components.button.secondary, { fontSize: '12px', padding: '4px 8px' })}
-            >
-              Valeurs d'exemple
-            </button>
-          </h4>
-          <div style={{
-            backgroundColor: '#FEF3C7',
-            border: '1px solid #FCD34D',
-            borderRadius: '6px',
-            padding: '10px',
-            marginBottom: '12px',
-            fontSize: '13px',
-            color: '#92400E'
-          }}>
-            <strong>Note :</strong> Les valeurs pré-remplies sont des exemples typiques pour un avion léger. 
-            Remplacez-les par les données exactes du manuel de vol de votre avion.
-            <br />
-            <strong>Numérotation :</strong> Les points sont numérotés automatiquement par ordre de masse croissante dans le graphique. 
-            Un point n'apparaît dans le graphique que s'il a les 3 valeurs remplies.
-          </div>
-          <div style={{ display: 'grid', gap: '12px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: formData.cgEnvelope.length > 2 ? 'auto 1fr 1fr 1fr auto' : 'auto 1fr 1fr 1fr', gap: '16px', fontWeight: 'bold', fontSize: '14px' }}>
-              <div>#</div>
-              <div>Masse ({massUnit})</div>
-              <div>Limite avant (mm)</div>
-              <div>Limite arrière (mm)</div>
-              {formData.cgEnvelope.length > 2 && <div></div>}
+          </>
+        )}
+
+        {/* Onglet Équipements */}
+        {activeTab === 'equipements' && (
+          <>
+            <div style={{
+              backgroundColor: '#FEF3C7',
+              border: '1px solid #FCD34D',
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '20px'
+            }}>
+              <p style={sx.combine(sx.text.sm, { color: '#92400E' })}>
+                📡 <strong>Info :</strong> Ces équipements déterminent les capacités opérationnelles de votre avion. 
+                Ils sont essentiels pour la planification des routes et l'approbation des procédures d'approche.
+              </p>
             </div>
-            {formData.cgEnvelope.map((point, index) => {
-              const sortedIndex = formData.cgEnvelope
-                .map((p, i) => ({ ...p, originalIndex: i }))
-                .filter(p => p.weight && p.forwardLimit && p.aftLimit)
-                .sort((a, b) => Number(a.weight) - Number(b.weight))
-                .findIndex(p => p.originalIndex === index);
+
+            {/* Section Communication */}
+            <div>
+              <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), sx.flex.start)}>
+                <span style={{ marginRight: '8px' }}>📻</span>
+                Équipements de radiocommunication (COM)
+                <InfoIcon tooltip="Équipements de communication avec l'ATC et autres aéronefs" />
+              </h4>
               
-              return (
-                <div key={index} style={{ display: 'grid', gridTemplateColumns: formData.cgEnvelope.length > 2 ? 'auto 1fr 1fr 1fr auto' : 'auto 1fr 1fr 1fr', gap: '16px', alignItems: 'center' }}>
-                  <div style={{ 
-                    width: '24px', 
-                    height: '24px', 
-                    borderRadius: '50%', 
-                    backgroundColor: point.weight && point.forwardLimit && point.aftLimit ? '#3B82F6' : '#E5E7EB',
-                    color: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    cursor: 'help',
-                    position: 'relative'
-                  }}
-                  title={sortedIndex >= 0 ? `Point n°${sortedIndex + 1} dans le graphique` : 'Point incomplet'}
-                  >
-                    {sortedIndex >= 0 ? sortedIndex + 1 : '-'}
-                  </div>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(2, 1fr)', 
+                gap: '12px',
+                backgroundColor: '#F9FAFB',
+                padding: '16px',
+                borderRadius: '8px',
+                border: '1px solid #E5E7EB'
+              }}>
+                <label style={sx.flex.start}>
                   <input
-                    type="number"
-                    value={point.weight}
-                    onChange={(e) => handleChange('cgEnvelope', ['weight', e.target.value], index)}
-                    placeholder={index === 0 ? "700" : index === 1 ? "900" : index === 2 ? "1100" : "1150"}
-                    min="0"
-                    style={sx.components.input.base}
+                    type="checkbox"
+                    checked={formData.equipmentCom.vhf1}
+                    onChange={(e) => handleChange('equipmentCom.vhf1', e.target.checked)}
+                    style={{ marginRight: '8px' }}
                   />
+                  <span style={sx.text.sm}>VHF COM 1</span>
+                </label>
+                <label style={sx.flex.start}>
                   <input
-                    type="number"
-                    value={point.forwardLimit}
-                    onChange={(e) => handleChange('cgEnvelope', ['forwardLimit', e.target.value], index)}
-                    placeholder={index === 0 ? "2050" : index === 1 ? "2080" : index === 2 ? "2120" : "2150"}
-                    min="0"
-                    style={sx.components.input.base}
+                    type="checkbox"
+                    checked={formData.equipmentCom.vhf2}
+                    onChange={(e) => handleChange('equipmentCom.vhf2', e.target.checked)}
+                    style={{ marginRight: '8px' }}
                   />
+                  <span style={sx.text.sm}>VHF COM 2</span>
+                </label>
+                <label style={sx.flex.start}>
                   <input
-                    type="number"
-                    value={point.aftLimit}
-                    onChange={(e) => handleChange('cgEnvelope', ['aftLimit', e.target.value], index)}
-                    placeholder="2350"
-                    min="0"
-                    style={sx.components.input.base}
+                    type="checkbox"
+                    checked={formData.equipmentCom.hf}
+                    onChange={(e) => handleChange('equipmentCom.hf', e.target.checked)}
+                    style={{ marginRight: '8px' }}
                   />
-                  {formData.cgEnvelope.length > 2 && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData(prev => ({
-                          ...prev,
-                          cgEnvelope: prev.cgEnvelope.filter((_, i) => i !== index)
-                        }));
-                      }}
-                      style={sx.combine(sx.components.button.base, sx.components.button.danger, { padding: '8px' })}
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                  <span style={sx.text.sm}>HF (Haute fréquence)</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.equipmentCom.satcom}
+                    onChange={(e) => handleChange('equipmentCom.satcom', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>SATCOM (Communication satellite)</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.equipmentCom.elt}
+                    onChange={(e) => handleChange('equipmentCom.elt', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>ELT (Balise de détresse)</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.equipmentCom.acars}
+                    onChange={(e) => handleChange('equipmentCom.acars', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>ACARS</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.equipmentCom.cpdlc}
+                    onChange={(e) => handleChange('equipmentCom.cpdlc', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>CPDLC (Datalink)</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Section Navigation et Approche */}
+            <div>
+              <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), sx.flex.start)}>
+                <span style={{ marginRight: '8px' }}>🧭</span>
+                Équipements de navigation et approche (NAV/APP)
+                <InfoIcon tooltip="Systèmes de navigation et capacités d'approche aux instruments" />
+              </h4>
+              
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(2, 1fr)', 
+                gap: '12px',
+                backgroundColor: '#F0F9FF',
+                padding: '16px',
+                borderRadius: '8px',
+                border: '1px solid #BAE6FD',
+                marginBottom: '16px'
+              }}>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.equipmentNav.vor}
+                    onChange={(e) => handleChange('equipmentNav.vor', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>VOR</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.equipmentNav.dme}
+                    onChange={(e) => handleChange('equipmentNav.dme', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>DME</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.equipmentNav.adf}
+                    onChange={(e) => handleChange('equipmentNav.adf', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>ADF/NDB</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.equipmentNav.gnss}
+                    onChange={(e) => handleChange('equipmentNav.gnss', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>GNSS/GPS</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.equipmentNav.ils}
+                    onChange={(e) => handleChange('equipmentNav.ils', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>ILS</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.equipmentNav.mls}
+                    onChange={(e) => handleChange('equipmentNav.mls', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>MLS</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.equipmentNav.gbas}
+                    onChange={(e) => handleChange('equipmentNav.gbas', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>GBAS</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.equipmentNav.lpv}
+                    onChange={(e) => handleChange('equipmentNav.lpv', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>LPV (approche GPS)</span>
+                </label>
+              </div>
+
+              {/* RNAV/RNP capabilities */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={sx.flex.start}>
+                    <input
+                      type="checkbox"
+                      checked={formData.equipmentNav.rnav}
+                      onChange={(e) => handleChange('equipmentNav.rnav', e.target.checked)}
+                      style={{ marginRight: '8px' }}
+                    />
+                    <span style={sx.text.sm}>Capacité RNAV</span>
+                  </label>
+                  {formData.equipmentNav.rnav && (
+                    <input
+                      type="text"
+                      value={formData.equipmentNav.rnavTypes}
+                      onChange={(e) => handleChange('equipmentNav.rnavTypes', e.target.value)}
+                      placeholder="Ex: RNAV 10, RNAV 5, RNAV 1"
+                      style={sx.combine(sx.components.input.base, sx.spacing.mt(2))}
+                    />
                   )}
                 </div>
-              );
-            })}
-            <button
-              type="button"
-              onClick={() => {
-                setFormData(prev => ({
-                  ...prev,
-                  cgEnvelope: [...prev.cgEnvelope, { weight: '', forwardLimit: '', aftLimit: '' }]
-                }));
-              }}
-              style={sx.combine(sx.components.button.base, sx.components.button.secondary, { marginTop: '8px' })}
-            >
-              + Ajouter un point
-            </button>
-          </div>
-          
-          <div style={{ marginTop: '16px', padding: '8px', backgroundColor: '#F3F4F6', borderRadius: '4px', fontSize: '12px', color: '#6B7280' }}>
-            {formData.cgEnvelope.filter(p => p.weight && p.forwardLimit && p.aftLimit).length < 2 ? (
-              <div style={{ textAlign: 'center', color: '#EF4444' }}>
-                ⚠️ Au moins 2 points complets sont nécessaires pour afficher le graphique
-              </div>
-            ) : (
-              <div style={{ color: '#10B981' }}>
-                ✓ {formData.cgEnvelope.filter(p => p.weight && p.forwardLimit && p.aftLimit).length} points valides - Le graphique est affiché ci-dessous
-              </div>
-            )}
-          </div>
-          {formData.cgEnvelope.filter(p => p.weight && p.forwardLimit && p.aftLimit).length >= 2 && (
-            <div style={{ marginTop: '20px', padding: '16px', backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
-              <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-                Visualisation de l'enveloppe de centrage
-              </h5>
-              <div style={{ border: '1px solid #E5E7EB', borderRadius: '4px', padding: '8px', backgroundColor: 'white' }}>
-                <CGEnvelopeChart 
-                  envelope={formData.cgEnvelope.filter(p => p.weight && p.forwardLimit && p.aftLimit)}
-                  massUnit={massUnit}
-                />
-              </div>
-              <div style={{ marginTop: '8px', fontSize: '11px', color: '#6B7280', textAlign: 'center' }}>
-                Les numéros sur les points correspondent aux lignes du tableau ci-dessus (triées par masse croissante)
+                <div>
+                  <label style={sx.flex.start}>
+                    <input
+                      type="checkbox"
+                      checked={formData.equipmentNav.rnp}
+                      onChange={(e) => handleChange('equipmentNav.rnp', e.target.checked)}
+                      style={{ marginRight: '8px' }}
+                    />
+                    <span style={sx.text.sm}>Capacité RNP</span>
+                  </label>
+                  {formData.equipmentNav.rnp && (
+                    <input
+                      type="text"
+                      value={formData.equipmentNav.rnpTypes}
+                      onChange={(e) => handleChange('equipmentNav.rnpTypes', e.target.value)}
+                      placeholder="Ex: RNP 4, RNP 1, RNP APCH"
+                      style={sx.combine(sx.components.input.base, sx.spacing.mt(2))}
+                    />
+                  )}
+                </div>
               </div>
             </div>
-          )}
-        </div>
+
+            {/* Section Surveillance */}
+            <div>
+              <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), sx.flex.start)}>
+                <span style={{ marginRight: '8px' }}>📍</span>
+                Équipements de surveillance
+                <InfoIcon tooltip="Systèmes de surveillance et anti-collision" />
+              </h4>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                <div>
+                  <label style={labelStyle}>Mode transpondeur</label>
+                  <select
+                    value={formData.equipmentSurv.transponderMode}
+                    onChange={(e) => handleChange('equipmentSurv.transponderMode', e.target.value)}
+                    style={inputStyle}
+                  >
+                    <option value="None">Aucun</option>
+                    <option value="A">Mode A</option>
+                    <option value="C">Mode C (altitude)</option>
+                    <option value="S">Mode S</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Système TCAS</label>
+                  <select
+                    value={formData.equipmentSurv.tcas}
+                    onChange={(e) => handleChange('equipmentSurv.tcas', e.target.value)}
+                    style={inputStyle}
+                  >
+                    <option value="None">Aucun</option>
+                    <option value="TCAS I">TCAS I</option>
+                    <option value="TCAS II">TCAS II</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(2, 1fr)', 
+                gap: '12px',
+                backgroundColor: '#FFF7ED',
+                padding: '16px',
+                borderRadius: '8px',
+                border: '1px solid #FED7AA'
+              }}>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.equipmentSurv.adsb}
+                    onChange={(e) => handleChange('equipmentSurv.adsb', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>ADS-B Out</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.equipmentSurv.adsbIn}
+                    onChange={(e) => handleChange('equipmentSurv.adsbIn', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>ADS-B In</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.equipmentSurv.gpws}
+                    onChange={(e) => handleChange('equipmentSurv.gpws', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>GPWS</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.equipmentSurv.egpws}
+                    onChange={(e) => handleChange('equipmentSurv.egpws', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>Enhanced GPWS</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.equipmentSurv.taws}
+                    onChange={(e) => handleChange('equipmentSurv.taws', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>TAWS</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.equipmentSurv.ras}
+                    onChange={(e) => handleChange('equipmentSurv.ras', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>RAS (Runway Awareness)</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.equipmentSurv.cvr}
+                    onChange={(e) => handleChange('equipmentSurv.cvr', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>CVR (Enregistreur vocal)</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.equipmentSurv.fdr}
+                    onChange={(e) => handleChange('equipmentSurv.fdr', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>FDR (Enregistreur de vol)</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.equipmentSurv.flarm}
+                    onChange={(e) => handleChange('equipmentSurv.flarm', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>FLARM (Anti-collision)</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Capacités spéciales */}
+            <div>
+              <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), sx.flex.start)}>
+                <span style={{ marginRight: '8px' }}>🌟</span>
+                Capacités spéciales et approbations
+                <InfoIcon tooltip="Approbations opérationnelles spéciales" />
+              </h4>
+              
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(2, 1fr)', 
+                gap: '12px',
+                backgroundColor: '#F0FDF4',
+                padding: '16px',
+                borderRadius: '8px',
+                border: '1px solid #86EFAC',
+                marginBottom: '16px'
+              }}>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.specialCapabilities.rvsm}
+                    onChange={(e) => handleChange('specialCapabilities.rvsm', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>RVSM (FL290-FL410)</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.specialCapabilities.mnps}
+                    onChange={(e) => handleChange('specialCapabilities.mnps', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>MNPS (Atlantique Nord)</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.specialCapabilities.catII}
+                    onChange={(e) => handleChange('specialCapabilities.catII', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>CAT II (Approche)</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.specialCapabilities.catIII}
+                    onChange={(e) => handleChange('specialCapabilities.catIII', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>CAT III (Approche)</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.specialCapabilities.pbn}
+                    onChange={(e) => handleChange('specialCapabilities.pbn', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>PBN (Performance Based Nav)</span>
+                </label>
+                <div>
+                  <label style={sx.flex.start}>
+                    <input
+                      type="checkbox"
+                      checked={formData.specialCapabilities.etops}
+                      onChange={(e) => handleChange('specialCapabilities.etops', e.target.checked)}
+                      style={{ marginRight: '8px' }}
+                    />
+                    <span style={sx.text.sm}>ETOPS</span>
+                  </label>
+                  {formData.specialCapabilities.etops && (
+                    <input
+                      type="text"
+                      value={formData.specialCapabilities.etopsMinutes}
+                      onChange={(e) => handleChange('specialCapabilities.etopsMinutes', e.target.value)}
+                      placeholder="Minutes (60, 120, 180...)"
+                      style={sx.combine(sx.components.input.base, sx.spacing.mt(2))}
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Remarques */}
+              <div>
+                <label style={labelStyle}>
+                  Remarques additionnelles
+                  <InfoIcon tooltip="Autres équipements ou capacités spéciales" />
+                </label>
+                <textarea
+                  value={formData.specialCapabilities.remarks}
+                  onChange={(e) => handleChange('specialCapabilities.remarks', e.target.value)}
+                  placeholder="Ex: Équipé pour le vol en montagne, skis rétractables, etc."
+                  style={sx.combine(sx.components.input.base, { minHeight: '80px' })}
+                />
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
+      {/* Boutons d'action (toujours visibles) */}
       <div style={sx.combine(sx.flex.end, sx.spacing.gap(2), sx.spacing.mt(4))}>
         <button
           type="button"
@@ -1480,276 +2708,5 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
 });
 
 AircraftForm.displayName = 'AircraftForm';
-
-// Composant pour afficher le graphique de l'enveloppe de centrage
-const CGEnvelopeChart = memo(({ envelope, massUnit }) => {
-  try {
-    const sortedEnvelope = [...envelope].sort((a, b) => Number(a.weight) - Number(b.weight));
-    const weights = sortedEnvelope.map(p => Number(p.weight));
-    const allCGValues = sortedEnvelope.flatMap(p => [Number(p.forwardLimit), Number(p.aftLimit)]);
-    
-    const minWeight = Math.min(...weights) * 0.9;
-    const maxWeight = Math.max(...weights) * 1.1;
-    const minCG = Math.min(...allCGValues) * 0.98;
-    const maxCG = Math.max(...allCGValues) * 1.02;
-    
-    if (!isFinite(minWeight) || !isFinite(maxWeight) || !isFinite(minCG) || !isFinite(maxCG)) {
-      return <div>Données invalides pour le graphique</div>;
-    }
-  
-    const width = 400;
-    const height = 300;
-    const margin = { top: 20, right: 30, bottom: 50, left: 60 };
-    const chartWidth = width - margin.left - margin.right;
-    const chartHeight = height - margin.top - margin.bottom;
-    
-    const xScale = (cg) => ((cg - minCG) / (maxCG - minCG)) * chartWidth;
-    const yScale = (weight) => chartHeight - ((weight - minWeight) / (maxWeight - minWeight)) * chartHeight;
-    
-    const forwardPath = sortedEnvelope
-      .map((p, i) => `${i === 0 ? 'M' : 'L'} ${xScale(Number(p.forwardLimit))},${yScale(Number(p.weight))}`)
-      .join(' ');
-    
-    const aftPath = [...sortedEnvelope]
-      .reverse()
-      .map((p) => `L ${xScale(Number(p.aftLimit))},${yScale(Number(p.weight))}`)
-      .join(' ');
-    
-    const envelopePath = `${forwardPath} ${aftPath} Z`;
-    
-    const gridLinesY = 5;
-    const gridLinesX = 6;
-    
-    return (
-      <svg width={width} height={height} style={{ backgroundColor: '#FAFAFA', border: '1px solid #E5E7EB' }}>
-        <g transform={`translate(${margin.left},${margin.top})`}>
-          {/* Grille horizontale */}
-          {Array.from({ length: gridLinesY }).map((_, i) => {
-            const y = (chartHeight / (gridLinesY - 1)) * i;
-            const weight = minWeight + ((maxWeight - minWeight) / (gridLinesY - 1)) * (gridLinesY - 1 - i);
-            return (
-              <g key={`grid-y-${i}`}>
-                <line
-                  x1={0}
-                  y1={y}
-                  x2={chartWidth}
-                  y2={y}
-                  stroke="#E5E7EB"
-                  strokeDasharray={i === gridLinesY - 1 ? "0" : "2,2"}
-                />
-                <text
-                  x={-5}
-                  y={y}
-                  textAnchor="end"
-                  alignmentBaseline="middle"
-                  fontSize="11"
-                  fill="#6B7280"
-                >
-                  {Math.round(weight)}
-                </text>
-              </g>
-            );
-          })}
-          
-          {/* Grille verticale */}
-          {Array.from({ length: gridLinesX }).map((_, i) => {
-            const x = (chartWidth / (gridLinesX - 1)) * i;
-            const cg = minCG + ((maxCG - minCG) / (gridLinesX - 1)) * i;
-            return (
-              <g key={`grid-x-${i}`}>
-                <line
-                  x1={x}
-                  y1={0}
-                  x2={x}
-                  y2={chartHeight}
-                  stroke="#E5E7EB"
-                  strokeDasharray={i === 0 ? "0" : "2,2"}
-                />
-                <text
-                  x={x}
-                  y={chartHeight + 15}
-                  textAnchor="middle"
-                  fontSize="11"
-                  fill="#6B7280"
-                >
-                  {Math.round(cg)}
-                </text>
-              </g>
-            );
-          })}
-          
-          {/* Enveloppe */}
-          <path
-            d={envelopePath}
-            fill="#3B82F6"
-            fillOpacity="0.2"
-            stroke="#3B82F6"
-            strokeWidth="2"
-          />
-          
-          {/* Points de l'enveloppe */}
-          {sortedEnvelope.map((point, i) => (
-            <g key={`points-${i}`}>
-              <g>
-                <circle
-                  cx={xScale(Number(point.forwardLimit))}
-                  cy={yScale(Number(point.weight))}
-                  r="5"
-                  fill="#3B82F6"
-                  stroke="white"
-                  strokeWidth="1"
-                />
-                <text
-                  x={xScale(Number(point.forwardLimit))}
-                  y={yScale(Number(point.weight))}
-                  fontSize="11"
-                  fill="white"
-                  textAnchor="middle"
-                  alignmentBaseline="middle"
-                  fontWeight="bold"
-                >
-                  {i + 1}
-                </text>
-                {(i === 0 || i === sortedEnvelope.length - 1) && (
-                  <text
-                    x={xScale(Number(point.forwardLimit))}
-                    y={yScale(Number(point.weight)) - 12}
-                    fontSize="10"
-                    fill="#374151"
-                    textAnchor="middle"
-                    fontWeight="normal"
-                  >
-                    {Math.round(Number(point.weight))} {massUnit}
-                  </text>
-                )}
-              </g>
-              
-              <g>
-                <circle
-                  cx={xScale(Number(point.aftLimit))}
-                  cy={yScale(Number(point.weight))}
-                  r="5"
-                  fill="#3B82F6"
-                  stroke="white"
-                  strokeWidth="1"
-                />
-                <text
-                  x={xScale(Number(point.aftLimit))}
-                  y={yScale(Number(point.weight))}
-                  fontSize="11"
-                  fill="white"
-                  textAnchor="middle"
-                  alignmentBaseline="middle"
-                  fontWeight="bold"
-                >
-                  {i + 1}
-                </text>
-              </g>
-            </g>
-          ))}
-          
-          {/* Axes */}
-          <line
-            x1={0}
-            y1={chartHeight}
-            x2={chartWidth}
-            y2={chartHeight}
-            stroke="#374151"
-            strokeWidth="2"
-          />
-          <line
-            x1={0}
-            y1={0}
-            x2={0}
-            y2={chartHeight}
-            stroke="#374151"
-            strokeWidth="2"
-          />
-        </g>
-        
-        {/* Labels des axes */}
-        <text
-          x={width / 2}
-          y={height - 5}
-          textAnchor="middle"
-          fontSize="12"
-          fill="#374151"
-          fontWeight="bold"
-        >
-          Centre de gravité (mm)
-        </text>
-        <text
-          x={15}
-          y={height / 2}
-          textAnchor="middle"
-          fontSize="12"
-          fill="#374151"
-          fontWeight="bold"
-          transform={`rotate(-90, 15, ${height / 2})`}
-        >
-          Masse ({massUnit})
-        </text>
-      </svg>
-    );
-  } catch (error) {
-    console.error('CGEnvelopeChart - Erreur:', error);
-    return (
-      <div style={{ padding: '20px', textAlign: 'center', color: '#EF4444' }}>
-        Erreur lors de l'affichage du graphique: {error.message}
-      </div>
-    );
-  }
-});
-
-CGEnvelopeChart.displayName = 'CGEnvelopeChart';
-
-// Version miniature du graphique
-const CGEnvelopeMini = memo(({ envelope }) => {
-  const sortedEnvelope = [...envelope].sort((a, b) => Number(a.weight) - Number(b.weight));
-  
-  const weights = sortedEnvelope.map(p => Number(p.weight));
-  const allCGValues = sortedEnvelope.flatMap(p => [Number(p.forwardLimit), Number(p.aftLimit)]);
-  
-  const minWeight = Math.min(...weights) * 0.95;
-  const maxWeight = Math.max(...weights) * 1.05;
-  const minCG = Math.min(...allCGValues) * 0.99;
-  const maxCG = Math.max(...allCGValues) * 1.01;
-  
-  const width = 200;
-  const height = 100;
-  const margin = { top: 5, right: 5, bottom: 5, left: 5 };
-  const chartWidth = width - margin.left - margin.right;
-  const chartHeight = height - margin.top - margin.bottom;
-  
-  const xScale = (cg) => ((cg - minCG) / (maxCG - minCG)) * chartWidth;
-  const yScale = (weight) => chartHeight - ((weight - minWeight) / (maxWeight - minWeight)) * chartHeight;
-  
-  const forwardPath = sortedEnvelope
-    .map((p, i) => `${i === 0 ? 'M' : 'L'} ${xScale(Number(p.forwardLimit))},${yScale(Number(p.weight))}`)
-    .join(' ');
-  
-  const aftPath = [...sortedEnvelope]
-    .reverse()
-    .map((p) => `L ${xScale(Number(p.aftLimit))},${yScale(Number(p.weight))}`)
-    .join(' ');
-  
-  const envelopePath = `${forwardPath} ${aftPath} Z`;
-  
-  return (
-    <svg width={width} height={height} style={{ backgroundColor: '#F9FAFB', borderRadius: '4px' }}>
-      <g transform={`translate(${margin.left},${margin.top})`}>
-        <path
-          d={envelopePath}
-          fill="#3B82F6"
-          fillOpacity="0.3"
-          stroke="#3B82F6"
-          strokeWidth="1"
-        />
-      </g>
-    </svg>
-  );
-});
-
-CGEnvelopeMini.displayName = 'CGEnvelopeMini';
 
 export default AircraftModule;

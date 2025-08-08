@@ -7,8 +7,10 @@
  */
 
 const OPENAIP_CONFIG = {
-  apiKey: '2717b9196e8100ee2456e09b82b5b08e', // Votre clé API pour les tiles
-  useStaticData: true, // Toujours utiliser les données statiques
+  apiKey: import.meta.env.VITE_OPENAIP_API_KEY || '2717b9196e8100ee2456e09b82b5b08e',
+  useStaticData: false, // Par défaut, essayer d'utiliser l'API si le proxy est disponible
+  proxyUrl: import.meta.env.VITE_OPENAIP_PROXY_URL || 'http://localhost:3001/api/openaip',
+  tileUrl: 'https://api.tiles.openaip.net/api/data/openaip',
 };
 
 // Données statiques des aérodromes français principaux
@@ -141,16 +143,88 @@ const STATIC_REPORTING_POINTS = {
 class OpenAIPService {
   constructor() {
     this.cache = new Map();
+    
+    // Restaurer le mode depuis localStorage
+    const savedMode = localStorage.getItem('openaip_use_static_data');
+    if (savedMode !== null) {
+      OPENAIP_CONFIG.useStaticData = savedMode === 'true';
+    }
+    
     console.log('🔧 Service OpenAIP initialisé');
-    console.log('📍 Mode: Données statiques (API non accessible depuis le navigateur)');
+    console.log(`📍 Mode: ${OPENAIP_CONFIG.useStaticData ? 'Données statiques' : 'API (via proxy)'}`);
     console.log('🗺️ Les tiles de carte OpenAIP fonctionnent avec votre clé API');
   }
 
   /**
-   * Récupère tous les aérodromes français (données statiques)
+   * Récupère tous les aérodromes français
    */
   async getAirports(countryCode = 'FR') {
-    console.log('📚 Retour des données statiques d\'aérodromes');
+    // Essayer d'abord le proxy si disponible
+    console.log('📊 getAirports appelé - Mode:', OPENAIP_CONFIG.useStaticData ? 'Statique' : 'API');
+    
+    if (!OPENAIP_CONFIG.useStaticData && OPENAIP_CONFIG.proxyUrl) {
+      try {
+        console.log('🌐 Tentative de récupération via proxy...');
+        console.log('📍 URL:', `${OPENAIP_CONFIG.proxyUrl}/airports?country=${countryCode}`);
+        
+        const response = await fetch(`${OPENAIP_CONFIG.proxyUrl}/airports?country=${countryCode}`);
+        console.log('📡 Réponse reçue:', response.status, response.statusText);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`✅ ${data.items?.length || 0} aérodromes récupérés via l'API`);
+          
+          // Transformer les données API au format attendu
+          const transformed = data.items.map(airport => ({
+            id: airport._id || airport.id,
+            icao: airport.icaoCode || airport.icao,
+            name: airport.name,
+            city: airport.city,
+            type: airport.type,
+            coordinates: {
+              lat: airport.geometry.coordinates[1],
+              lon: airport.geometry.coordinates[0]
+            },
+            elevation: airport.elevation?.value || airport.elevation,
+            country: airport.country,
+            runways: airport.runways || [],
+            frequencies: airport.frequencies || []
+          }));
+          
+          // Debug : vérifier si LFST est présent
+          const lfst = transformed.find(a => a.icao === 'LFST');
+          if (!lfst) {
+            console.log('⚠️ LFST non trouvé dans l\'API. Ajout manuel...');
+            // Ajouter LFST manuellement car il manque dans l'API
+            const lfstData = STATIC_AIRPORTS.find(a => a.icao === 'LFST');
+            if (lfstData) {
+              transformed.push(lfstData);
+              console.log('✅ LFST ajouté manuellement');
+            }
+          }
+          
+          // Ajouter d'autres aéroports importants manquants si nécessaire
+          const importantMissing = ['LFPX', 'LFPH', 'LFPI', 'LFPK']; // Petits aérodromes parisiens
+          importantMissing.forEach(icao => {
+            if (!transformed.find(a => a.icao === icao)) {
+              const staticAirport = STATIC_AIRPORTS.find(a => a.icao === icao);
+              if (staticAirport) {
+                transformed.push(staticAirport);
+              }
+            }
+          });
+          
+          return transformed;
+        } else {
+          console.error('❌ Erreur HTTP:', response.status, await response.text());
+        }
+      } catch (error) {
+        console.warn('⚠️ Erreur proxy, bascule sur données statiques:', error);
+      }
+    }
+    
+    // Fallback sur les données statiques
+    console.log('📚 Utilisation des données statiques d\'aérodromes');
     
     // Simuler un délai réseau
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -199,6 +273,568 @@ class OpenAIPService {
       airport.name.toLowerCase().includes(searchTerm) ||
       (airport.city && airport.city.toLowerCase().includes(searchTerm))
     );
+  }
+
+  /**
+   * Récupère les espaces aériens dans une zone
+   */
+  async getAirspaces(countryCode = 'FR') {
+    console.log('📊 getAirspaces appelé - Mode:', OPENAIP_CONFIG.useStaticData ? 'Statique' : 'API');
+    
+    if (!OPENAIP_CONFIG.useStaticData && OPENAIP_CONFIG.proxyUrl) {
+      try {
+        console.log('🌐 Tentative de récupération des espaces aériens via proxy...');
+        
+        // Utiliser le pays au lieu des bounds
+        const url = `${OPENAIP_CONFIG.proxyUrl}/airspaces?country=${countryCode}&limit=500`;
+        console.log('📍 URL:', url);
+        
+        const response = await fetch(url);
+        console.log('📡 Réponse reçue:', response.status, response.statusText);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`✅ ${data.items?.length || 0} espaces aériens récupérés via l'API`);
+          
+          // Transformer les données de l'API au format attendu
+          const transformedAirspaces = (data.items || []).map(airspace => {
+            // Mapper les types OpenAIP vers nos classes
+            const classMapping = {
+              0: 'A',    // Class A
+              1: 'B',    // Class B
+              2: 'C',    // Class C
+              3: 'D',    // Class D
+              4: 'E',    // Class E
+              5: 'F',    // Class F
+              6: 'G',    // Class G
+              7: 'CTR',  // Control Zone
+              8: 'TMA',  // Terminal Area
+              15: 'AWY', // Airway
+              16: 'P',   // Prohibited
+              17: 'R',   // Restricted
+              18: 'D',   // Danger
+              19: 'TSA'  // Temporary Segregated Area
+            };
+            
+            const typeMapping = {
+              0: 'CTR',
+              1: 'TMA',
+              2: 'TMA',
+              3: 'TMA',
+              4: 'FIR',
+              5: 'UIR',
+              6: 'ADIZ',
+              7: 'ATZ',
+              8: 'MATZ',
+              9: 'Airway',
+              10: 'MTR',
+              11: 'Alert',
+              12: 'Warning',
+              13: 'Protected',
+              14: 'HTZ',
+              15: 'GLIDING',
+              16: 'P',
+              17: 'R',
+              18: 'D',
+              19: 'TSA',
+              20: 'TRA',
+              21: 'TFR',
+              22: 'VFR_SECTOR',
+              23: 'MTMA'
+            };
+            
+            return {
+              ...airspace,
+              class: classMapping[airspace.icaoClass] || airspace.class || 'D',
+              type: typeMapping[airspace.type] || airspace.type || 'TMA',
+              name: airspace.name || 'Zone inconnue',
+              floor: airspace.lowerLimit?.value || 0,
+              ceiling: airspace.upperLimit?.value || 'FL999'
+            };
+          }).filter(airspace => {
+            // Filtrer pour garder seulement les espaces pertinents
+            const relevantTypes = ['CTR', 'TMA', 'D', 'R', 'P', 'TSA', 'ATZ'];
+            const relevantClasses = ['A', 'B', 'C', 'D', 'E', 'CTR', 'TMA', 'P', 'R', 'D'];
+            return relevantTypes.includes(airspace.type) || relevantClasses.includes(airspace.class);
+          });
+          
+          console.log(`📊 ${transformedAirspaces.length} espaces aériens pertinents après filtrage`);
+          return transformedAirspaces;
+        } else {
+          console.error('❌ Erreur HTTP:', response.status, await response.text());
+        }
+      } catch (error) {
+        console.warn('⚠️ Erreur proxy pour les espaces aériens:', error);
+      }
+    }
+    
+    // Fallback sur des données statiques d'espaces aériens
+    console.log('📚 Utilisation de données statiques d\'espaces aériens');
+    
+    // Simuler un délai réseau
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Retourner des espaces aériens statiques pour la France
+    return [
+        {
+          _id: 'static-1',
+          name: 'CTR PARIS',
+          type: 'CTR',
+          class: 'D',
+          icaoCode: 'LFPG',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[
+              [2.4, 49.1],
+              [2.7, 49.1],
+              [2.7, 48.8],
+              [2.4, 48.8],
+              [2.4, 49.1]
+            ]]
+          },
+          lowerLimit: { value: 0, unit: 'FT', referenceDatum: 'GND' },
+          upperLimit: { value: 1500, unit: 'FT', referenceDatum: 'AMSL' },
+          frequencies: [
+            { name: 'PARIS TOUR', value: '119.250', type: 'TWR' },
+            { name: 'PARIS SOL', value: '121.700', type: 'GND' }
+          ]
+        },
+        {
+          _id: 'static-2',
+          name: 'TMA PARIS 1',
+          type: 'TMA',
+          class: 'A',
+          icaoCode: 'LFPG',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[
+              [1.9, 49.3],
+              [3.0, 49.3],
+              [3.0, 48.5],
+              [1.9, 48.5],
+              [1.9, 49.3]
+            ]]
+          },
+          lowerLimit: { value: 1500, unit: 'FT', referenceDatum: 'AMSL' },
+          upperLimit: { value: 195, unit: 'FL', referenceDatum: 'STD' },
+          frequencies: [
+            { name: 'PARIS APPROCHE', value: '125.830', type: 'APP' }
+          ]
+        },
+        {
+          _id: 'static-3',
+          name: 'R 45 N1',
+          type: 'R',
+          class: '',
+          icaoCode: '',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[
+              [2.5, 48.9],
+              [2.6, 48.9],
+              [2.6, 48.8],
+              [2.5, 48.8],
+              [2.5, 48.9]
+            ]]
+          },
+          lowerLimit: { value: 0, unit: 'FT', referenceDatum: 'GND' },
+          upperLimit: { value: 3000, unit: 'FT', referenceDatum: 'AMSL' },
+          remarks: 'Zone réglementée - Activité militaire'
+        },
+        {
+          _id: 'static-4',
+          name: 'D 126',
+          type: 'D',
+          class: '',
+          icaoCode: '',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[
+              [2.3, 48.95],
+              [2.35, 48.95],
+              [2.35, 48.9],
+              [2.3, 48.9],
+              [2.3, 48.95]
+            ]]
+          },
+          lowerLimit: { value: 0, unit: 'FT', referenceDatum: 'GND' },
+          upperLimit: { value: 5000, unit: 'FT', referenceDatum: 'AMSL' },
+          remarks: 'Zone dangereuse - Tir'
+        }
+      ];
+  }
+
+  /**
+   * Récupère les balises de navigation (VOR, NDB, etc.)
+   */
+  async getNavaids(countryCode = 'FR') {
+    console.log('📡 getNavaids appelé - Mode:', OPENAIP_CONFIG.useStaticData ? 'Statique' : 'API');
+    
+    // Données statiques des balises françaises principales
+    const staticNavaids = [
+      // VOR/DME principaux
+      { id: 'ABB', ident: 'ABB', name: 'Abbeville', type: 'VOR-DME', coordinates: { lat: 50.135, lon: 1.854 }, frequency: '108.45', channel: '021Y' },
+      { id: 'CGN', ident: 'CGN', name: 'Cognac', type: 'VOR-DME', coordinates: { lat: 45.668, lon: -0.317 }, frequency: '113.80', channel: '085X' },
+      { id: 'DJL', ident: 'DJL', name: 'Dijon', type: 'VOR-DME', coordinates: { lat: 47.269, lon: 5.089 }, frequency: '115.75', channel: '105X' },
+      { id: 'EPL', ident: 'EPL', name: 'Épinal', type: 'VOR-DME', coordinates: { lat: 48.219, lon: 6.070 }, frequency: '113.00', channel: '077X' },
+      { id: 'MTD', ident: 'MTD', name: 'Montauban', type: 'VOR-DME', coordinates: { lat: 44.026, lon: 1.378 }, frequency: '114.70', channel: '094X' },
+      { id: 'POI', ident: 'POI', name: 'Pontoise', type: 'VOR-DME', coordinates: { lat: 49.097, lon: 2.041 }, frequency: '112.60', channel: '073X' },
+      { id: 'ROU', ident: 'ROU', name: 'Rouen', type: 'VOR-DME', coordinates: { lat: 49.384, lon: 1.175 }, frequency: '116.80', channel: '115X' },
+      { id: 'TOU', ident: 'TOU', name: 'Toulouse', type: 'VOR-DME', coordinates: { lat: 43.576, lon: 1.377 }, frequency: '117.70', channel: '124X' },
+      
+      // NDB principaux
+      { id: 'AG', ident: 'AG', name: 'Agen', type: 'NDB', coordinates: { lat: 44.175, lon: 0.597 }, frequency: '417' },
+      { id: 'BT', ident: 'BT', name: 'Brest', type: 'NDB', coordinates: { lat: 48.448, lon: -4.418 }, frequency: '353' },
+      { id: 'CM', ident: 'CM', name: 'Chambéry', type: 'NDB', coordinates: { lat: 45.638, lon: 5.880 }, frequency: '390' },
+      { id: 'LN', ident: 'LN', name: 'Lyon', type: 'NDB', coordinates: { lat: 45.726, lon: 5.081 }, frequency: '398' },
+      { id: 'MN', ident: 'MN', name: 'Marseille', type: 'NDB', coordinates: { lat: 43.437, lon: 5.215 }, frequency: '357' },
+      { id: 'NC', ident: 'NC', name: 'Nice', type: 'NDB', coordinates: { lat: 43.658, lon: 7.216 }, frequency: '332' },
+      { id: 'PG', ident: 'PG', name: 'Paris CDG', type: 'NDB', coordinates: { lat: 49.010, lon: 2.548 }, frequency: '368' },
+      { id: 'PO', ident: 'PO', name: 'Paris Orly', type: 'NDB', coordinates: { lat: 48.723, lon: 2.379 }, frequency: '374' }
+    ];
+    
+    if (!OPENAIP_CONFIG.useStaticData && OPENAIP_CONFIG.proxyUrl) {
+      try {
+        const response = await fetch(`${OPENAIP_CONFIG.proxyUrl}/navaids?country=${countryCode}`);
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`✅ ${data.length} balises récupérées depuis l'API`);
+          return data;
+        }
+      } catch (error) {
+        console.warn('⚠️ Erreur API navaids, utilisation des données statiques:', error);
+      }
+    }
+    
+    console.log(`📡 Retour de ${staticNavaids.length} balises statiques`);
+    return staticNavaids;
+  }
+
+  /**
+   * Récupère les détails d'un aérodrome avec ses pistes
+   */
+  async getAirportDetails(icao) {
+    console.log(`📊 getAirportDetails appelé pour ${icao}`);
+    
+    // Chercher d'abord dans les données statiques
+    const staticAirport = STATIC_AIRPORTS.find(a => a.icao === icao);
+    
+    if (!staticAirport) {
+      console.log(`❌ Aérodrome ${icao} non trouvé`);
+      return null;
+    }
+    
+    // Vérifier si on a des données VAC téléchargées
+    try {
+      // Accéder au store VAC si disponible
+      if (typeof window !== 'undefined' && window.vacStore) {
+        const vacState = window.vacStore.getState();
+        const vacChart = vacState.charts[icao];
+        
+        if (vacChart && vacChart.isDownloaded && vacChart.extractedData) {
+          console.log(`📄 Utilisation des données VAC pour ${icao}`);
+          
+          // Convertir les données VAC au format attendu
+          const vacRunways = vacChart.extractedData.runways.map((rwy, idx) => {
+            // Extraire les identifiants des deux seuils
+            const [le_ident, he_ident] = rwy.identifier.split('/');
+            const le_heading = rwy.qfu;
+            const he_heading = (rwy.qfu + 180) % 360;
+            
+            return {
+              id: `${icao}-${rwy.identifier}`,
+              designator: rwy.identifier,
+              le_ident: le_ident || rwy.identifier,
+              he_ident: he_ident || '',
+              le_heading: le_heading,
+              he_heading: he_heading,
+              dimensions: {
+                length: rwy.length,
+                width: rwy.width,
+                tora: rwy.length,
+                toda: rwy.length,
+                asda: rwy.length,
+                lda: rwy.length
+              },
+              surface: { 
+                type: rwy.surface.toLowerCase().includes('herbe') ? 'GRASS' : 'ASPH',
+                condition: 'GOOD' 
+              },
+              lighting: null,
+              le_displaced_threshold: 0,
+              he_displaced_threshold: 0
+            };
+          });
+          
+          return {
+            ...staticAirport,
+            elevation: vacChart.extractedData.airportElevation,
+            runways: vacRunways,
+            vacData: {
+              circuitAltitude: vacChart.extractedData.circuitAltitude,
+              frequencies: vacChart.extractedData.frequencies,
+              magneticVariation: vacChart.extractedData.magneticVariation,
+              source: 'VAC',
+              extractDate: new Date(vacChart.downloadDate).toISOString()
+            },
+            dataSource: 'vac',
+            staticDataWarning: false,
+            vacAvailable: true
+          };
+        }
+      }
+    } catch (error) {
+      console.log('⚠️ Impossible d\'accéder aux données VAC:', error.message);
+    }
+    
+    // Vérifier si une carte VAC existe pour cet aérodrome
+    let vacAvailable = false;
+    try {
+      if (typeof window !== 'undefined' && window.vacStore) {
+        const vacState = window.vacStore.getState();
+        // Vérifier si l'aérodrome est dans la configuration VAC
+        const VAC_CONFIG = vacState.constructor?.VAC_CONFIG || window.VAC_CONFIG || {};
+        vacAvailable = !!(VAC_CONFIG.charts && VAC_CONFIG.charts[icao]);
+      }
+    } catch (error) {
+      console.log('⚠️ Impossible de vérifier la disponibilité VAC:', error.message);
+    }
+    
+    // Simuler un délai réseau
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Retourner les données avec indicateur de source
+    return {
+      ...staticAirport,
+      runways: [],  // Pas de données de pistes statiques
+      dataSource: 'static',
+      vacAvailable,
+      staticDataWarning: true,
+      // Marqueur pour le nouveau système d'indicateurs
+      source: 'static',
+      reliability: 'low'
+    };
+    
+    // Code des données statiques désactivé - on ne veut plus les utiliser
+    /*
+    const runwayData = {
+      'LFPG': [
+        {
+          id: 'LFPG-09L-27R',
+          designator: '09L/27R',
+          le_ident: '09L',
+          he_ident: '27R',
+          le_heading: 87,
+          he_heading: 267,
+          dimensions: {
+            length: 4200,
+            width: 60,
+            tora: 4200,
+            toda: 4200,
+            asda: 4200,
+            lda: 3700
+          },
+          surface: { type: 'ASPH', condition: 'GOOD' },
+          lighting: 'CAT III',
+          le_displaced_threshold: 0,
+          he_displaced_threshold: 500
+        },
+        {
+          id: 'LFPG-09R-27L',
+          designator: '09R/27L',
+          le_ident: '09R',
+          he_ident: '27L',
+          le_heading: 87,
+          he_heading: 267,
+          dimensions: {
+            length: 2700,
+            width: 60,
+            tora: 2700,
+            toda: 2700,
+            asda: 2700,
+            lda: 2700
+          },
+          surface: { type: 'ASPH', condition: 'GOOD' },
+          lighting: 'CAT III'
+        },
+        {
+          id: 'LFPG-08L-26R',
+          designator: '08L/26R',
+          le_ident: '08L',
+          he_ident: '26R',
+          le_heading: 80,
+          he_heading: 260,
+          dimensions: {
+            length: 3600,
+            width: 45,
+            tora: 3600,
+            toda: 3600,
+            asda: 3600,
+            lda: 3600
+          },
+          surface: { type: 'ASPH', condition: 'GOOD' },
+          lighting: 'CAT II'
+        },
+        {
+          id: 'LFPG-08R-26L',
+          designator: '08R/26L',
+          le_ident: '08R',
+          he_ident: '26L',
+          le_heading: 80,
+          he_heading: 260,
+          dimensions: {
+            length: 3900,
+            width: 45,
+            tora: 3900,
+            toda: 3900,
+            asda: 3900,
+            lda: 3900
+          },
+          surface: { type: 'CONC', condition: 'GOOD' },
+          lighting: 'CAT III'
+        }
+      ],
+      'LFPO': [
+        {
+          id: 'LFPO-06-24',
+          designator: '06/24',
+          le_ident: '06',
+          he_ident: '24',
+          le_heading: 61,
+          he_heading: 241,
+          dimensions: {
+            length: 3650,
+            width: 45,
+            tora: 3650,
+            toda: 3650,
+            asda: 3650,
+            lda: 3320
+          },
+          surface: { type: 'ASPH', condition: 'GOOD' },
+          lighting: 'CAT II'
+        },
+        {
+          id: 'LFPO-07-25',
+          designator: '07/25',
+          le_ident: '07',
+          he_ident: '25',
+          le_heading: 75,
+          he_heading: 255,
+          dimensions: {
+            length: 3320,
+            width: 45,
+            tora: 3320,
+            toda: 3320,
+            asda: 3320,
+            lda: 3320
+          },
+          surface: { type: 'ASPH', condition: 'GOOD' },
+          lighting: 'CAT I'
+        },
+        {
+          id: 'LFPO-08-26',
+          designator: '08/26',
+          le_ident: '08',
+          he_ident: '26',
+          le_heading: 80,
+          he_heading: 260,
+          dimensions: {
+            length: 2400,
+            width: 45,
+            tora: 2400,
+            toda: 2400,
+            asda: 2400,
+            lda: 2400
+          },
+          surface: { type: 'ASPH', condition: 'GOOD' },
+          lighting: 'HI/MI'
+        }
+      ],
+      'LFPN': [
+        {
+          id: 'LFPN-07-25',
+          designator: '07/25',
+          le_ident: '07',
+          he_ident: '25',
+          le_heading: 72,
+          he_heading: 252,
+          dimensions: {
+            length: 1845,
+            width: 45,
+            tora: 1845,
+            toda: 1845,
+            asda: 1845,
+            lda: 1845
+          },
+          surface: { type: 'ASPH', condition: 'GOOD' },
+          lighting: 'HI'
+        }
+      ],
+      'LFPT': [
+        {
+          id: 'LFPT-05-23',
+          designator: '05/23',
+          le_ident: '05',
+          he_ident: '23',
+          le_heading: 54,
+          he_heading: 234,
+          dimensions: {
+            length: 1400,
+            width: 45,
+            tora: 1400,
+            toda: 1400,
+            asda: 1400,
+            lda: 1400
+          },
+          surface: { type: 'ASPH', condition: 'GOOD' },
+          lighting: 'MI'
+        },
+        {
+          id: 'LFPT-12-30',
+          designator: '12/30',
+          le_ident: '12',
+          he_ident: '30',
+          le_heading: 117,
+          he_heading: 297,
+          dimensions: {
+            length: 1100,
+            width: 100,
+            tora: 1100,
+            toda: 1100,
+            asda: 1100,
+            lda: 1100
+          },
+          surface: { type: 'GRASS', condition: 'GOOD' },
+          lighting: null
+        }
+      ],
+      'LFST': [
+        {
+          id: 'LFST-05-23',
+          designator: '05/23',
+          le_ident: '05',
+          he_ident: '23',
+          le_heading: 50,
+          he_heading: 230,
+          dimensions: {
+            length: 2400,
+            width: 45,
+            tora: 2400,
+            toda: 2400,
+            asda: 2400,
+            lda: 2400
+          },
+          surface: { type: 'ASPH', condition: 'GOOD' },
+          lighting: 'CAT I'
+        }
+      ]
+    };
+    
+    return {
+      ...staticAirport,
+      runways: runwayData[icao] || []
+    };
+    */
   }
 
   /**
@@ -265,27 +901,75 @@ class OpenAIPService {
   }
 
   /**
-   * Basculer entre API et données statiques (toujours statique maintenant)
+   * Basculer entre API (via proxy) et données statiques
    */
   toggleDataSource(useStatic = null) {
-    console.log('📍 Mode de données: Toujours statique (API non accessible)');
+    if (useStatic !== null) {
+      OPENAIP_CONFIG.useStaticData = useStatic;
+    } else {
+      OPENAIP_CONFIG.useStaticData = !OPENAIP_CONFIG.useStaticData;
+    }
+    
+    // Sauvegarder le mode dans localStorage
+    localStorage.setItem('openaip_use_static_data', OPENAIP_CONFIG.useStaticData.toString());
+    
+    console.log(`📍 Mode de données: ${OPENAIP_CONFIG.useStaticData ? 'Statique' : 'API (via proxy)'}`);
+    this.clearCache();
+    
+    return OPENAIP_CONFIG.useStaticData;
   }
 
   /**
    * Vérifier si on utilise les données statiques
    */
   isUsingStaticData() {
-    return true;
+    return OPENAIP_CONFIG.useStaticData;
   }
 
   /**
-   * Tester la connexion (retourne toujours true avec les données statiques)
+   * Tester la connexion au proxy ou aux données statiques
    */
   async testConnection() {
-    console.log('🔍 Test avec données statiques...');
+    console.log('🔍 Test de connexion - Mode actuel:', OPENAIP_CONFIG.useStaticData ? 'Statique' : 'API');
+    
+    if (!OPENAIP_CONFIG.useStaticData && OPENAIP_CONFIG.proxyUrl) {
+      try {
+        console.log('🌐 Test de connexion au proxy...');
+        const response = await fetch(`${OPENAIP_CONFIG.proxyUrl.replace('/openaip', '')}/health`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('✅ Proxy connecté:', data);
+          
+          // Maintenant tester la vraie API
+          try {
+            const airportsResponse = await fetch(`${OPENAIP_CONFIG.proxyUrl}/airports?country=FR&limit=1`);
+            if (airportsResponse.ok) {
+              const airportsData = await airportsResponse.json();
+              return { 
+                connected: true, 
+                mode: 'api', 
+                proxyStatus: data,
+                totalAirports: airportsData.totalCount || 0
+              };
+            }
+          } catch (apiError) {
+            console.warn('⚠️ API accessible mais erreur:', apiError);
+            return { connected: true, mode: 'api-error', error: apiError.message };
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ Proxy non disponible:', error.message);
+        // Fallback automatique sur les données statiques
+        OPENAIP_CONFIG.useStaticData = true;
+        localStorage.setItem('openaip_use_static_data', 'true');
+      }
+    }
+    
+    console.log('📚 Test avec données statiques...');
     const airports = await this.getAirports('FR');
     console.log(`✅ ${airports.length} aéroports disponibles`);
-    return true;
+    return { connected: true, mode: 'static', airports: airports.length };
   }
 
   /**

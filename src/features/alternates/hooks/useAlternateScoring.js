@@ -115,9 +115,11 @@ const calculateInfrastructureScore = (airport, context) => {
   else if (widestRunway >= 23) score += 0.05; // Étroite (23-30m)
   
   // 4. Surface de piste (15% du score)
-  const hasPavedRunway = airport.runways.some(r => 
-    ['asphalt', 'concrete', 'paved', 'revêtue'].includes(r.surface?.toLowerCase())
-  );
+  const hasPavedRunway = airport.runways.some(r => {
+    // Vérifier que surface existe et est une chaîne
+    if (!r.surface || typeof r.surface !== 'string') return false;
+    return ['asphalt', 'concrete', 'paved', 'revêtue'].includes(r.surface.toLowerCase());
+  });
   score += hasPavedRunway ? 0.15 : 0.05;
   
   return Math.min(score, 1.0);

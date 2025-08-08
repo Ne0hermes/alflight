@@ -5,7 +5,8 @@ import { useFuel, useAircraft, useNavigation } from '@core/contexts';
 import { Fuel, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useAlternatesForFuel } from '@features/alternates';
-import { useAutoFuelSync } from '@hooks/useAutoFuelSync';
+import { useFuelSync } from '@hooks/useFuelSync';
+import { DataField } from '@shared/components';
 
 const FuelRow = memo(({ type, label, description, fuel, onChange, readonly = false, automatic = false, totalGal }) => {
   const GAL_TO_LTR = 3.78541;
@@ -81,27 +82,30 @@ const FuelRow = memo(({ type, label, description, fuel, onChange, readonly = fal
 });
 
 export const FuelModule = memo(() => {
-  useAutoFuelSync();
+  useFuelSync();
   const { selectedAircraft } = useAircraft();
   const { navigationResults, flightType } = useNavigation();
   const { fuelData, setFuelData, fobFuel, setFobFuel, calculateTotal, isFobSufficient } = useFuel();
+  const alternatesData = useAlternatesForFuel();
   const { 
     alternateFuelRequired, 
     alternateFuelRequiredGal, 
     alternatesCount, 
     maxDistanceAlternate,
     hasAlternates 
-  } = useAlternatesForFuel();
+  } = alternatesData;
+  
 
   // S'assurer que fuelData existe avec des valeurs par défaut
-  const safeFuelData = fuelData || {
-    roulage: { gal: 0, ltr: 0 },
-    trip: { gal: 0, ltr: 0 },
-    contingency: { gal: 0, ltr: 0 },
-    alternate: { gal: 0, ltr: 0 },
-    finalReserve: { gal: 0, ltr: 0 },
-    additional: { gal: 0, ltr: 0 },
-    extra: { gal: 0, ltr: 0 }
+  // Utiliser les valeurs de fuelData si elles existent, sinon les valeurs par défaut
+  const safeFuelData = {
+    roulage: fuelData?.roulage || { gal: 0, ltr: 0 },
+    trip: fuelData?.trip || { gal: 0, ltr: 0 },
+    contingency: fuelData?.contingency || { gal: 0, ltr: 0 },
+    alternate: fuelData?.alternate || { gal: 0, ltr: 0 },
+    finalReserve: fuelData?.finalReserve || { gal: 0, ltr: 0 },
+    additional: fuelData?.additional || { gal: 0, ltr: 0 },
+    extra: fuelData?.extra || { gal: 0, ltr: 0 }
   };
 
   // Synchronisation automatique du carburant depuis la navigation
@@ -179,20 +183,31 @@ export const FuelModule = memo(() => {
         finalReserve: { gal: 0, ltr: 0 }
       }));
     }
-  }, [navigationResults, selectedAircraft, setFuelData]);
+  }, [navigationResults, selectedAircraft]); // Retiré setFuelData des dépendances
 
   // Mettre à jour automatiquement le carburant alternate quand il change
   useEffect(() => {
-    if (hasAlternates && alternateFuelRequired > 0) {
+    console.log('📊 Fuel Update - Alternates:', {
+      hasAlternates,
+      alternateFuelRequired,
+      alternateFuelRequiredGal,
+      alternatesCount,
+      maxDistanceAlternate
+    });
+    
+    if (hasAlternates) {
+      // Toujours mettre à jour si on a des alternates, même si le fuel calculé est 0
+      console.log('📊 Mise à jour du carburant alternate:', alternateFuelRequired, 'L');
       setFuelData(prev => ({
         ...prev,
         alternate: {
-          gal: alternateFuelRequiredGal || 0,
-          ltr: alternateFuelRequired || 0
+          gal: parseFloat((alternateFuelRequiredGal || 0).toFixed(1)),
+          ltr: parseFloat((alternateFuelRequired || 0).toFixed(1))
         }
       }));
-    } else if (!hasAlternates) {
+    } else {
       // Remettre à zéro si aucun alternate sélectionné
+      console.log('📊 Reset carburant alternate (pas d\'alternates)');
       setFuelData(prev => ({
         ...prev,
         alternate: {
@@ -201,9 +216,10 @@ export const FuelModule = memo(() => {
         }
       }));
     }
-  }, [alternateFuelRequired, alternateFuelRequiredGal, hasAlternates, setFuelData, selectedAircraft]);
+  }, [alternateFuelRequired, alternateFuelRequiredGal, hasAlternates, alternatesCount]); // Retiré setFuelData et maxDistanceAlternate des dépendances
 
   const handleFuelChange = (type, values) => {
+    // Ne pas permettre la modification manuelle de ces types (calculés automatiquement)
     if (type === 'trip' || type === 'contingency' || type === 'finalReserve' || type === 'alternate') return;
     
     setFuelData({
@@ -253,7 +269,8 @@ export const FuelModule = memo(() => {
     if (!hasAlternates) return 'Aucun déroutement sélectionné';
     if (!maxDistanceAlternate || maxDistanceAlternate.distance === 0) return 'Calcul en cours...';
     
-    return `Vers ${maxDistanceAlternate.icao} (${maxDistanceAlternate.distance.toFixed(1)} NM)`;
+    const refPoint = maxDistanceAlternate.referencePoint || (maxDistanceAlternate.type === 'departure' ? 'Départ' : 'Arrivée');
+    return `${maxDistanceAlternate.icao} depuis ${refPoint} (${maxDistanceAlternate.distance.toFixed(1)} NM)`;
   };
 
   const fuelTypes = [
@@ -262,7 +279,6 @@ export const FuelModule = memo(() => {
     { key: 'contingency', label: 'Contingency', description: '5% du trip (min 1 gal)', readonly: true },
     { key: 'alternate', label: 'Alternate', description: getAlternateDescription(), readonly: true, automatic: true },
     { key: 'finalReserve', label: 'Final Reserve', description: getReserveDescription(), readonly: true },
-    { key: 'additional', label: 'Additional', description: 'Météo, ATC, etc.' },
     { key: 'extra', label: 'Extra', description: 'Discrétion pilote' }
   ];
 
@@ -301,26 +317,6 @@ export const FuelModule = memo(() => {
         </div>
       )}
 
-      {/* DEBUG: Affichage temporaire pour diagnostic */}
-      {navigationResults && (
-        <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mb(4))}>
-          <div style={sx.flex.col}>
-            <p style={sx.combine(sx.text.sm, sx.text.bold)}>🔍 Debug Navigation Results:</p>
-            <p style={sx.combine(sx.text.xs)}>
-              Distance: {navigationResults.totalDistance} NM | 
-              Temps: {navigationResults.totalTime} min | 
-              Fuel Required: {navigationResults.fuelRequired} L
-            </p>
-            {selectedAircraft && (
-              <p style={sx.combine(sx.text.xs)}>
-                Avion: {selectedAircraft.registration} | 
-                Vitesse: {selectedAircraft.cruiseSpeedKt || selectedAircraft.cruiseSpeed || 'N/A'} kt | 
-                Conso: {selectedAircraft.fuelConsumption || 'N/A'} L/h
-              </p>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Tableau principal */}
       <div style={sx.combine(sx.components.card.base, sx.spacing.mb(6))}>
@@ -445,34 +441,58 @@ export const FuelModule = memo(() => {
         </div>
 
         {/* Détails des déroutements si sélectionnés */}
-        {hasAlternates && maxDistanceAlternate && (
+        {hasAlternates && maxDistanceAlternate && maxDistanceAlternate.distance > 0 && (
           <div style={sx.combine(sx.components.card.base, sx.spacing.mt(4))}>
             <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(2))}>
-              🛬 Déroutements sélectionnés
+              🛬 Analyse des déroutements ({alternatesCount} sélectionnés)
             </h4>
-            <p style={sx.text.sm}>
-              <strong>Aérodrome le plus éloigné :</strong> {maxDistanceAlternate.icao} - {maxDistanceAlternate.name || 'N/A'}
-            </p>
-            <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
-              Distance depuis l'arrivée : {maxDistanceAlternate.distance.toFixed(1)} NM
-            </p>
+            <DataField
+              label="Aérodrome de référence pour le calcul"
+              value={`${maxDistanceAlternate.icao} - ${maxDistanceAlternate.name || 'N/A'}`}
+              dataSource={maxDistanceAlternate.dataSource || 'static'}
+              emphasis={true}
+            />
+            <DataField
+              label={`Distance depuis ${maxDistanceAlternate.referencePoint || 'le point de référence'}`}
+              value={maxDistanceAlternate.distance.toFixed(1)}
+              unit="NM"
+              dataSource="calculated"
+              size="sm"
+              style={{ marginTop: '8px' }}
+            />
             {selectedAircraft && (
               <>
-                <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
-                  Temps de vol estimé : {(maxDistanceAlternate.distance / (selectedAircraft.cruiseSpeedKt || 100) * 60).toFixed(0)} min
-                  {' '}(+ 30 min approche)
-                </p>
-                <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
-                  Consommation : {selectedAircraft.fuelConsumption || 30} L/h × {((maxDistanceAlternate.distance / (selectedAircraft.cruiseSpeedKt || 100)) + 0.5).toFixed(1)} h
-                  {' '}= {alternateFuelRequired} L
-                </p>
+                <div style={sx.combine(sx.spacing.mt(2), sx.spacing.pt(2), { borderTop: '1px solid #e5e7eb' })}>
+                  <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(1))}>
+                    Calcul du carburant de déroutement :
+                  </p>
+                  <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
+                    • Distance max : {maxDistanceAlternate.distance.toFixed(1)} NM
+                  </p>
+                  <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
+                    • Vitesse croisière : {selectedAircraft.cruiseSpeedKt || selectedAircraft.cruiseSpeed || 100} kt
+                  </p>
+                  <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
+                    • Temps de vol : {(maxDistanceAlternate.distance / (selectedAircraft.cruiseSpeedKt || selectedAircraft.cruiseSpeed || 100) * 60).toFixed(0)} min
+                  </p>
+                  <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
+                    • Réserve approche : 30 min
+                  </p>
+                  <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
+                    • Consommation : {selectedAircraft.fuelConsumption || 30} L/h
+                  </p>
+                  <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mt(1))}>
+                    • Total requis : {alternateFuelRequired} L ({alternateFuelRequiredGal.toFixed(1)} gal)
+                  </p>
+                </div>
               </>
             )}
             <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mt(2))}>
               <Info size={14} />
               <p style={sx.combine(sx.text.xs)}>
                 Le carburant de dégagement est calculé automatiquement pour l'aérodrome le plus éloigné 
-                parmi vos sélections, garantissant ainsi une couverture pour tous les déroutements possibles.
+                de son point de référence (départ ou arrivée), garantissant ainsi une couverture complète 
+                pour tous les déroutements possibles.
               </p>
             </div>
           </div>

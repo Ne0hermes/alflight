@@ -10,15 +10,16 @@ import { useAdvancedAlternateSelection } from './hooks/useAdvancedAlternateSelec
 import { AlternateMap } from './components/AlternateMap';
 import { AlternateSelectorDual } from './components/AlternateSelectorDual';
 import { useNavigationResults } from './hooks/useNavigationResults';
-import { WeatherRateLimitIndicator } from './components/WeatherRateLimitIndicator';
+import { WeatherRateLimitIndicator } from '@components/WeatherRateLimitIndicator';
 import { useAlternatesStore } from '@core/stores/alternatesStore';
+import { DataSourceBadge, DataField } from '@shared/components';
+import { calculateDistance } from '@utils/navigationCalculations';
+import { useWeatherStore } from '@core/stores/weatherStore';
 
 const AlternatesModule = memo(() => {
-  console.log('🛬 AlternatesModule - Rendu du composant'); // LOG DE RENDU
   
   const {
     searchZone,
-    selectedAlternates,
     isReady,
     dynamicRadius,
     triangleArea,
@@ -28,27 +29,19 @@ const AlternatesModule = memo(() => {
     statistics
   } = useAdvancedAlternateSelection();
   
-  const { scoredAlternates, setSelectedAlternates } = useAlternatesStore();
-  const [manualSelection, setManualSelection] = useState({ departure: null, arrival: null });
+  const { scoredAlternates, setSelectedAlternates, selectedAlternates } = useAlternatesStore();
+  const { fetchMultiple } = useWeatherStore();
   
   const [hasSearched, setHasSearched] = useState(false);
   
-  // Log détaillé de l'état
-  useEffect(() => {
-    console.log('🛬 AlternatesModule - État complet:', { 
-      isReady, 
-      alternatesCount: selectedAlternates?.length,
-      scoredAlternatesCount: scoredAlternates?.length,
-      formattedCount: formattedAlternates?.length,
-      statistics,
-      searchZone: searchZone ? {
-        type: searchZone.type,
-        radius: searchZone.radius,
-        hasPerpendicular: !!searchZone.perpendicular
-      } : null,
-      manualSelection
-    });
-  }, [isReady, selectedAlternates, scoredAlternates, formattedAlternates, statistics, searchZone, manualSelection]);
+  // Dériver la sélection manuelle depuis le store
+  const manualSelection = React.useMemo(() => {
+    const selection = {
+      departure: selectedAlternates?.find(alt => alt.selectionType === 'departure') || null,
+      arrival: selectedAlternates?.find(alt => alt.selectionType === 'arrival') || null
+    };
+    return selection;
+  }, [selectedAlternates]);
   
   // Déclencher automatiquement la recherche quand les conditions sont remplies
   useEffect(() => {
@@ -70,6 +63,54 @@ const AlternatesModule = memo(() => {
     }
   }, [searchZone]);
   
+  // Gérer la sélection manuelle - DOIT être défini AVANT le return conditionnel
+  const handleManualSelection = React.useCallback((selection) => {
+    // Mettre à jour le store avec la sélection manuelle
+    const newSelection = [];
+    if (selection.departure) {
+      // S'assurer que la position est correctement définie
+      const depAirport = selection.departure;
+      const position = depAirport.position || depAirport.coordinates || { lat: depAirport.lat, lon: depAirport.lon || depAirport.lng };
+      newSelection.push({ 
+        ...depAirport, 
+        position: position,
+        selectionType: 'departure' 
+      });
+    }
+    if (selection.arrival) {
+      // S'assurer que la position est correctement définie
+      const arrAirport = selection.arrival;
+      const position = arrAirport.position || arrAirport.coordinates || { lat: arrAirport.lat, lon: arrAirport.lon || arrAirport.lng };
+      newSelection.push({ 
+        ...arrAirport, 
+        position: position,
+        selectionType: 'arrival' 
+      });
+    }
+    setSelectedAlternates(newSelection);
+  }, [setSelectedAlternates]);
+  
+  // Déterminer quels alternates afficher sur la carte
+  const mapAlternates = (manualSelection.departure || manualSelection.arrival)
+    ? [manualSelection.departure, manualSelection.arrival].filter(Boolean)
+    : [];
+  
+  // Récupérer les METAR pour les aérodromes sélectionnés
+  useEffect(() => {
+    if (selectedAlternates && selectedAlternates.length > 0) {
+      // Extraire les codes ICAO
+      const icaoCodes = selectedAlternates.map(alt => alt.icao).filter(Boolean);
+      
+      if (icaoCodes.length > 0) {
+        // Récupérer les METAR en parallèle
+        fetchMultiple(icaoCodes).catch(error => {
+          console.error('Erreur récupération METAR:', error);
+        });
+      }
+    }
+  }, [selectedAlternates, fetchMultiple]);
+  
+  // Rendu conditionnel - DOIT être APRÈS tous les hooks
   if (!isReady) {
     return (
       <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning)}>
@@ -80,27 +121,6 @@ const AlternatesModule = memo(() => {
       </div>
     );
   }
-  
-  // Gérer la sélection manuelle
-  const handleManualSelection = (selection) => {
-    setManualSelection(selection);
-    
-    // Mettre à jour le store avec la sélection manuelle
-    const newSelection = [];
-    if (selection.departure) {
-      newSelection.push({ ...selection.departure, selectionType: 'departure' });
-    }
-    if (selection.arrival) {
-      newSelection.push({ ...selection.arrival, selectionType: 'arrival' });
-    }
-    
-    setSelectedAlternates(newSelection);
-  };
-  
-  // Déterminer quels alternates afficher sur la carte
-  const mapAlternates = (manualSelection.departure || manualSelection.arrival)
-    ? [manualSelection.departure, manualSelection.arrival].filter(Boolean)
-    : [];
   
   return (
     <div>
@@ -120,6 +140,34 @@ const AlternatesModule = memo(() => {
           <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
             Zone de recherche géométrique
           </h4>
+          
+          {/* Calcul de la distance et du rayon de la pilule */}
+          {searchZone && (
+            <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mb(3))}>
+              <Info size={16} />
+              <div>
+                <p style={sx.combine(sx.text.sm, sx.text.bold)}>
+                  Calcul de la zone de recherche (pilule)
+                </p>
+                <div style={sx.combine(sx.text.sm, sx.spacing.mt(1))}>
+                  <p>Distance départ-arrivée : <strong>{Math.round(calculateDistance(searchZone.departure, searchZone.arrival))} NM</strong></p>
+                  <p>Formule adaptative :</p>
+                  <ul style={{ paddingLeft: '20px', fontSize: '12px', marginTop: '4px' }}>
+                    <li>0-100 NM : h = (√3/2) × distance (formule classique)</li>
+                    <li>100-200 NM : croissance réduite à 50%</li>
+                    <li>200-400 NM : croissance réduite à 30%</li>
+                    <li>&gt;400 NM : croissance minimale (10%), max 250 NM</li>
+                  </ul>
+                  <p style={sx.spacing.mt(1)}>Rayon calculé : <strong>{dynamicRadius || 25} NM</strong></p>
+                  {dynamicRadius && searchZone.radius && dynamicRadius < searchZone.radius && (
+                    <p style={sx.combine(sx.text.warning, sx.spacing.mt(1))}>
+                      ⚠️ Rayon limité par le carburant disponible : <strong>{dynamicRadius} NM</strong>
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
             <StatCard
@@ -234,16 +282,27 @@ const AlternatesModule = memo(() => {
                   <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(1))}>
                     🔴 Déroutement côté départ
                   </p>
-                  <p style={sx.text.base}>
-                    <strong>{manualSelection.departure.icao}</strong> - {manualSelection.departure.name}
-                  </p>
-                  <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mt(1))}>
-                    <MapPin size={12} style={{ display: 'inline', marginRight: '4px' }} />
-                    {manualSelection.departure.distanceToDeparture?.toFixed(1) || '?'} NM depuis le départ
-                  </p>
-                  <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
-                    Score: {((manualSelection.departure.score || 0) * 100).toFixed(0)}%
-                  </p>
+                  <DataField
+                    label="Aérodrome"
+                    value={`${manualSelection.departure.icao} - ${manualSelection.departure.name}`}
+                    dataSource={manualSelection.departure.dataSource || 'static'}
+                    emphasis={true}
+                  />
+                  <DataField
+                    label="Distance"
+                    value={manualSelection.departure.distanceToDeparture?.toFixed(1) || '?'}
+                    unit="NM depuis le départ"
+                    dataSource={manualSelection.departure.dataSource || 'static'}
+                    size="sm"
+                    style={{ marginTop: '8px' }}
+                  />
+                  <DataField
+                    label="Score"
+                    value={`${((manualSelection.departure.score || 0) * 100).toFixed(0)}%`}
+                    dataSource="calculated"
+                    size="sm"
+                    style={{ marginTop: '4px' }}
+                  />
                 </div>
               )}
               
@@ -257,16 +316,27 @@ const AlternatesModule = memo(() => {
                   <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(1))}>
                     🟢 Déroutement côté arrivée
                   </p>
-                  <p style={sx.text.base}>
-                    <strong>{manualSelection.arrival.icao}</strong> - {manualSelection.arrival.name}
-                  </p>
-                  <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mt(1))}>
-                    <MapPin size={12} style={{ display: 'inline', marginRight: '4px' }} />
-                    {manualSelection.arrival.distanceToArrival?.toFixed(1) || '?'} NM depuis l'arrivée
-                  </p>
-                  <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
-                    Score: {((manualSelection.arrival.score || 0) * 100).toFixed(0)}%
-                  </p>
+                  <DataField
+                    label="Aérodrome"
+                    value={`${manualSelection.arrival.icao} - ${manualSelection.arrival.name}`}
+                    dataSource={manualSelection.arrival.dataSource || 'static'}
+                    emphasis={true}
+                  />
+                  <DataField
+                    label="Distance"
+                    value={manualSelection.arrival.distanceToArrival?.toFixed(1) || '?'}
+                    unit="NM depuis l'arrivée"
+                    dataSource={manualSelection.arrival.dataSource || 'static'}
+                    size="sm"
+                    style={{ marginTop: '8px' }}
+                  />
+                  <DataField
+                    label="Score"
+                    value={`${((manualSelection.arrival.score || 0) * 100).toFixed(0)}%`}
+                    dataSource="calculated"
+                    size="sm"
+                    style={{ marginTop: '4px' }}
+                  />
                 </div>
               )}
             </div>
@@ -286,7 +356,11 @@ const AlternatesModule = memo(() => {
               Vous pouvez sélectionner un aérodrome de chaque côté pour garantir une couverture complète.
             </p>
             <p style={sx.spacing.mb(2)}>
-              <strong>Zone de recherche :</strong> Capsule (pilule) autour de la route avec rayon h = (√3/2) × distance + tampons de 5-10 NM autour des points tournants critiques
+              <strong>Zone de recherche :</strong> Capsule (pilule) autour de la route avec rayon adaptatif. 
+              Pour les vols courts (&lt;100 NM), la formule classique h = (√3/2) × distance est utilisée. 
+              Pour les vols plus longs, la croissance du rayon est progressivement réduite pour éviter des zones 
+              de recherche démesurées, avec un maximum de 250 NM. Des tampons de 5-10 NM sont ajoutés autour 
+              des points tournants critiques.
             </p>
             <p style={sx.spacing.mb(2)}>
               <strong>Garantie :</strong> Aucun chemin de déroutement n'est plus long que la navigation initiale
@@ -309,11 +383,14 @@ const AlternatesModule = memo(() => {
 });
 
 // Composant pour afficher une carte de statistique
-const StatCard = memo(({ icon, label, value, detail }) => (
+const StatCard = memo(({ icon, label, value, detail, dataSource = 'static' }) => (
   <div style={sx.combine(sx.spacing.p(3), sx.bg.gray, sx.rounded.lg)}>
     <div style={sx.combine(sx.flex.start, sx.spacing.gap(2), sx.spacing.mb(2))}>
       <div style={{ color: '#3b82f6' }}>{icon}</div>
       <span style={sx.combine(sx.text.sm, sx.text.muted)}>{label}</span>
+      {dataSource !== 'static' && (
+        <DataSourceBadge source={dataSource} size="xs" showLabel={false} inline={true} />
+      )}
     </div>
     <p style={sx.combine(sx.text.lg, sx.text.bold)}>{value}</p>
     <p style={sx.combine(sx.text.xs, sx.text.secondary)}>{detail}</p>

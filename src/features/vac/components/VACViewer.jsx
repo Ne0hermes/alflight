@@ -28,8 +28,15 @@ export const VACViewer = memo(() => {
   const handleZoomOut = () => setZoom(prev => Math.max(prev - 25, 50));
   const handleRotate = () => setRotation(prev => (prev + 90) % 360);
   const handleDownload = () => {
-    // En production, télécharger le PDF réel
-    window.open(chart.url, '_blank');
+    // Pour les cartes importées, créer un lien de téléchargement
+    if (chart.isCustom && chart.url) {
+      const link = document.createElement('a');
+      link.href = chart.url;
+      link.download = `${chart.icao}_VAC.${chart.fileType?.split('/')[1] || 'pdf'}`;
+      link.click();
+    } else {
+      window.open(chart.url, '_blank');
+    }
   };
   
   return (
@@ -104,8 +111,12 @@ export const VACViewer = memo(() => {
         
         {/* Zone de visualisation */}
         <div style={styles.pdfContainer}>
-          {/* En mode démo, afficher une simulation de carte VAC */}
-          <DemoVACChart chart={chart} zoom={zoom} rotation={rotation} />
+          {/* Afficher la carte importée ou la démo */}
+          {chart.isCustom && chart.url ? (
+            <CustomChartViewer chart={chart} zoom={zoom} rotation={rotation} />
+          ) : (
+            <DemoVACChart chart={chart} zoom={zoom} rotation={rotation} />
+          )}
         </div>
         
         {/* Panneau d'information */}
@@ -117,6 +128,112 @@ export const VACViewer = memo(() => {
             </p>
           </div>
         </div>
+      </div>
+    </div>
+  );
+});
+
+// Composant pour afficher les cartes importées manuellement
+const CustomChartViewer = memo(({ chart, zoom, rotation }) => {
+  const isImage = chart.fileType?.startsWith('image/');
+  const isPDF = chart.fileType === 'application/pdf';
+  
+  return (
+    <div style={{
+      width: '100%',
+      height: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'auto',
+      backgroundColor: '#f3f4f6',
+      position: 'relative'
+    }}>
+      {isImage ? (
+        <img
+          src={chart.url}
+          alt={`Carte VAC ${chart.icao}`}
+          style={{
+            transform: `scale(${zoom / 100}) rotate(${rotation}deg)`,
+            transformOrigin: 'center',
+            transition: 'transform 0.3s',
+            maxWidth: '100%',
+            maxHeight: '100%',
+            objectFit: 'contain',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+          }}
+        />
+      ) : isPDF ? (
+        <div style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          {/* Pour les PDF, on utilise un iframe ou embed */}
+          <embed
+            src={chart.url}
+            type="application/pdf"
+            style={{
+              width: `${zoom}%`,
+              height: `${zoom}%`,
+              transform: `rotate(${rotation}deg)`,
+              transformOrigin: 'center',
+              transition: 'transform 0.3s',
+              border: 'none',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+            }}
+          />
+          {/* Alternative si embed ne fonctionne pas */}
+          <div style={{
+            position: 'absolute',
+            bottom: '20px',
+            padding: '10px 20px',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            color: 'white',
+            borderRadius: '8px',
+            fontSize: '14px'
+          }}>
+            Si le PDF ne s'affiche pas, 
+            <a 
+              href={chart.url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{ color: '#60a5fa', marginLeft: '5px' }}
+            >
+              cliquez ici pour l'ouvrir
+            </a>
+          </div>
+        </div>
+      ) : (
+        <div style={{
+          padding: '40px',
+          textAlign: 'center',
+          color: '#6b7280'
+        }}>
+          <p>Format de fichier non supporté pour l'affichage</p>
+          <p style={{ marginTop: '10px' }}>
+            Utilisez le bouton Télécharger pour accéder au fichier
+          </p>
+        </div>
+      )}
+      
+      {/* Indicateur de carte importée */}
+      <div style={{
+        position: 'absolute',
+        top: '20px',
+        right: '20px',
+        padding: '8px 16px',
+        backgroundColor: '#8b5cf6',
+        color: 'white',
+        borderRadius: '8px',
+        fontSize: '12px',
+        fontWeight: 'bold',
+        boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)'
+      }}>
+        CARTE IMPORTÉE
       </div>
     </div>
   );
@@ -187,7 +304,7 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
         </div>
         
         {/* Caractéristiques des pistes */}
-        {data?.runways && data.runways.length > 0 && (
+        {data?.runways && Array.isArray(data.runways) && data.runways.length > 0 && (
           <div style={{ marginBottom: '30px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px' }}>
               CARACTÉRISTIQUES DES PISTES
@@ -204,10 +321,10 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
               <tbody>
                 {data.runways.map((rwy, idx) => (
                   <tr key={idx}>
-                    <td style={styles.tableCell}>{rwy.identifier}</td>
-                    <td style={styles.tableCell}>{rwy.qfu}°</td>
-                    <td style={styles.tableCell}>{rwy.length} × {rwy.width} m</td>
-                    <td style={styles.tableCell}>{rwy.surface}</td>
+                    <td style={styles.tableCell}>{rwy.identifier || 'N/A'}</td>
+                    <td style={styles.tableCell}>{rwy.qfu || 0}°</td>
+                    <td style={styles.tableCell}>{rwy.length || 0} × {rwy.width || 0} m</td>
+                    <td style={styles.tableCell}>{rwy.surface || 'N/A'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -216,19 +333,21 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
         )}
         
         {/* Fréquences */}
-        {data?.frequencies && (
+        {data?.frequencies && Object.keys(data.frequencies).length > 0 && (
           <div style={{ marginBottom: '30px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px' }}>
               FRÉQUENCES RADIO
             </h3>
             <table style={{ width: '100%', fontSize: '14px' }}>
               <tbody>
-                {Object.entries(data.frequencies).map(([type, freq]) => (
-                  <tr key={type}>
-                    <td style={styles.tableCell}>{type.toUpperCase()} :</td>
-                    <td style={styles.tableCell}><strong>{freq} MHz</strong></td>
-                  </tr>
-                ))}
+                {Object.entries(data.frequencies)
+                  .filter(([type, freq]) => freq && freq !== '')
+                  .map(([type, freq]) => (
+                    <tr key={type}>
+                      <td style={styles.tableCell}>{type.toUpperCase()} :</td>
+                      <td style={styles.tableCell}><strong>{freq} MHz</strong></td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
@@ -364,6 +483,7 @@ const styles = {
 };
 
 VACViewer.displayName = 'VACViewer';
+CustomChartViewer.displayName = 'CustomChartViewer';
 DemoVACChart.displayName = 'DemoVACChart';
 
 export default VACViewer;

@@ -7,6 +7,7 @@ export const useAlternatesStore = create((set, get) => ({
   candidates: [],
   scoredAlternates: [],
   searchZone: null,
+  lastRouteKey: null,
   
   // Configuration de recherche
   searchConfig: {
@@ -26,7 +27,12 @@ export const useAlternatesStore = create((set, get) => ({
   },
   
   // Actions
-  setSelectedAlternates: (alternates) => set({ selectedAlternates: alternates }),
+  setSelectedAlternates: (alternates) => {
+    if (!Array.isArray(alternates)) {
+      return;
+    }
+    set({ selectedAlternates: alternates });
+  },
   
   addAlternate: (alternate) => set((state) => {
     if (state.selectedAlternates.length >= 3) {
@@ -48,6 +54,8 @@ export const useAlternatesStore = create((set, get) => ({
   setScoredAlternates: (scored) => set({ scoredAlternates: scored }),
   
   setSearchZone: (zone) => set({ searchZone: zone }),
+  
+  setLastRouteKey: (key) => set({ lastRouteKey: key }),
   
   setSearchConfig: (config) => set((state) => ({
     searchConfig: { ...state.searchConfig, ...config }

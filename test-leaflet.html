@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Leaflet Direct</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 20px; font-family: Arial, sans-serif; }
+        h1 { color: #3b82f6; }
+        #map { height: 500px; border: 3px solid #3b82f6; }
+        #status { 
+            padding: 10px; 
+            margin: 10px 0; 
+            background: #f0f9ff; 
+            border: 1px solid #3b82f6;
+            border-radius: 4px;
+        }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>🗺️ Test Leaflet Direct (HTML pur)</h1>
+    
+    <div id="status">
+        <strong>Status:</strong> <span id="status-text">Initialisation...</span>
+    </div>
+    
+    <div id="map"></div>
+    
+    <div style="margin-top: 20px; padding: 15px; background: #f9fafb; border-radius: 4px;">
+        <h3>Instructions:</h3>
+        <ol>
+            <li>Ouvrez ce fichier directement dans votre navigateur</li>
+            <li>Si la carte s'affiche ici mais pas dans React, le problème vient de l'intégration React</li>
+            <li>Si la carte ne s'affiche pas ici non plus, vérifiez:
+                <ul>
+                    <li>Connexion internet (pour charger Leaflet et les tuiles)</li>
+                    <li>Console du navigateur (F12) pour les erreurs</li>
+                    <li>Pare-feu ou proxy qui pourrait bloquer</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const statusEl = document.getElementById('status-text');
+        
+        try {
+            statusEl.textContent = 'Création de la carte...';
+            
+            // Créer la carte
+            const map = L.map('map').setView([48.8566, 2.3522], 6);
+            
+            statusEl.textContent = 'Ajout de la couche OSM...';
+            
+            // Ajouter OpenStreetMap
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+            
+            // Ajouter quelques marqueurs
+            L.marker([48.8566, 2.3522]).addTo(map)
+                .bindPopup('Paris').openPopup();
+            
+            L.marker([43.6047, 1.4442]).addTo(map)
+                .bindPopup('Toulouse');
+            
+            L.marker([45.764, 4.8357]).addTo(map)
+                .bindPopup('Lyon');
+            
+            // Tracer une route
+            const route = [
+                [48.8566, 2.3522],  // Paris
+                [45.764, 4.8357],   // Lyon
+                [43.6047, 1.4442]   // Toulouse
+            ];
+            
+            L.polyline(route, {
+                color: '#3b82f6',
+                weight: 3,
+                opacity: 0.8,
+                dashArray: '10, 5'
+            }).addTo(map);
+            
+            statusEl.innerHTML = '<span class="success">✅ Carte créée avec succès!</span>';
+            
+        } catch (error) {
+            statusEl.innerHTML = '<span class="error">❌ Erreur: ' + error.message + '</span>';
+            console.error('Erreur:', error);
+        }
+    </script>
+</body>
+</html>

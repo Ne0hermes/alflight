@@ -60,3 +60,5 @@ const styles = {
 };
 
 TabNavigation.displayName = 'TabNavigation';
+
+export default TabNavigation;

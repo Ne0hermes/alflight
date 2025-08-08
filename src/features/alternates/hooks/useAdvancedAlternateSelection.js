@@ -4,15 +4,15 @@ import { useMemo, useCallback, useEffect } from 'react';
 import { useAlternatesStore } from '@core/stores/alternatesStore';
 import { useAlternateSelection } from './useAlternateSelection';
 import { useVACStore } from '@core/stores/vacStore';
-import { calculateDistance } from '../utils/geometryCalculations';
+import { calculateDistance } from '@utils/navigationCalculations';
 
 /**
  * Hook avancé pour la sélection automatique des alternates
  * Fournit toutes les données nécessaires pour l'affichage dans AlternatesModule
  */
 export const useAdvancedAlternateSelection = () => {
-  const { searchZone, dynamicParams, selectedAlternates, findAlternates, isReady } = useAlternateSelection();
-  const { scoredAlternates, candidates } = useAlternatesStore();
+  const { searchZone, dynamicParams, findAlternates, isReady } = useAlternateSelection();
+  const { scoredAlternates, candidates, selectedAlternates } = useAlternatesStore();
   
   // Log de debug
   useEffect(() => {
