@@ -1,3 +1,2 @@
-export { useAircraftManager } from './useAircraftManager';
-export { useNavigation } from './useNavigation';
-export { useNavigationResults } from '../features/navigation/hooks/useNavigationResults';
+export { useAirportCoordinates } from './useAirportCoordinates';
+export { useFuelSync } from './useFuelSync';

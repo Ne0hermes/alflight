@@ -94,11 +94,11 @@ export const NavigationProvider = memo(({ children }) => {
   const setFlightParams = useNavigationStore(state => state.setFlightParams);
   const flightType = useNavigationStore(state => state.flightType);
   const setFlightType = useNavigationStore(state => state.setFlightType);
-  const calculateTotalDistance = useNavigationStore(state => state.calculateTotalDistance);
-  const calculateFlightTime = useNavigationStore(state => state.calculateFlightTime);
-  const calculateFuelRequired = useNavigationStore(state => state.calculateFuelRequired);
-  const getRegulationReserveMinutes = useNavigationStore(state => state.getRegulationReserveMinutes);
-  const getRegulationReserveLiters = useNavigationStore(state => state.getRegulationReserveLiters);
+  const getNavigationResults = useNavigationStore(state => state.getNavigationResults);
+  const addWaypoint = useNavigationStore(state => state.addWaypoint);
+  const removeWaypoint = useNavigationStore(state => state.removeWaypoint);
+  const updateWaypoint = useNavigationStore(state => state.updateWaypoint);
+  const clearRoute = useNavigationStore(state => state.clearRoute);
   
   const { selectedAircraft } = useAircraft();
   
@@ -106,21 +106,8 @@ export const NavigationProvider = memo(({ children }) => {
   const navigationResults = useMemo(() => {
     if (!selectedAircraft || !waypoints.length) return null;
     
-    const totalDistance = calculateTotalDistance();
-    const totalTime = calculateFlightTime(selectedAircraft.cruiseSpeedKt);
-    const fuelRequired = calculateFuelRequired(selectedAircraft.fuelConsumption);
-    const regulationReserveMinutes = getRegulationReserveMinutes();
-    const regulationReserveLiters = getRegulationReserveLiters(selectedAircraft.fuelConsumption);
-    
-    return {
-      totalDistance: parseFloat(totalDistance.toFixed(1)),
-      totalTime: totalTime,
-      fuelRequired: parseFloat(fuelRequired.toFixed(1)),
-      regulationReserveMinutes: regulationReserveMinutes,
-      regulationReserveLiters: parseFloat(regulationReserveLiters.toFixed(1))
-    };
-  }, [selectedAircraft, waypoints, flightType, calculateTotalDistance, calculateFlightTime, 
-      calculateFuelRequired, getRegulationReserveMinutes, getRegulationReserveLiters]);
+    return getNavigationResults(selectedAircraft);
+  }, [selectedAircraft, waypoints, flightType, getNavigationResults]);
 
   const value = useMemo(() => ({
     waypoints,
@@ -130,15 +117,14 @@ export const NavigationProvider = memo(({ children }) => {
     flightType,
     setFlightType,
     navigationResults,
-    // Exposer les fonctions de calcul
-    calculateTotalDistance,
-    calculateFlightTime,
-    calculateFuelRequired,
-    getRegulationReserveMinutes,
-    getRegulationReserveLiters
+    // Exposer les actions du store
+    addWaypoint,
+    removeWaypoint,
+    updateWaypoint,
+    clearRoute,
+    getNavigationResults
   }), [waypoints, setWaypoints, flightParams, setFlightParams, flightType, setFlightType,
-      navigationResults, calculateTotalDistance, calculateFlightTime, calculateFuelRequired,
-      getRegulationReserveMinutes, getRegulationReserveLiters]);
+      navigationResults, addWaypoint, removeWaypoint, updateWaypoint, clearRoute, getNavigationResults]);
 
   return <NavigationContext.Provider value={value}>{children}</NavigationContext.Provider>;
 });

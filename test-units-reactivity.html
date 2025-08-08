@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Réactivité Unités - Navigation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f3f4f6;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1f2937;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        .preset-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .preset-btn {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .preset-btn:hover {
+            background: #2563eb;
+        }
+        .values-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .value-card {
+            padding: 15px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .value-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+        .value-main {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        .value-alt {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 5px;
+        }
+        .current-units {
+            background: #eff6ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .log-box {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test de Réactivité du Système d'Unités</h1>
+        
+        <div class="current-units">
+            <h3>Unités Actuelles</h3>
+            <div id="current-units-display">
+                Carburant: <strong id="fuel-unit">ltr</strong> | 
+                Distance: <strong id="distance-unit">nm</strong> | 
+                Altitude: <strong id="altitude-unit">ft</strong>
+            </div>
+        </div>
+        
+        <div class="preset-buttons">
+            <button class="preset-btn" onclick="setPreset('europe')">🇪🇺 Europe (Litres)</button>
+            <button class="preset-btn" onclick="setPreset('usa')">🇺🇸 USA (Gallons)</button>
+            <button class="preset-btn" onclick="setPreset('metric')">📐 Métrique (Litres)</button>
+            <button class="preset-btn" onclick="setPreset('aviation')">✈️ Aviation (kg)</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>Valeurs de Navigation (Simulées)</h3>
+            <div class="values-grid">
+                <div class="value-card">
+                    <div class="value-label">Carburant nécessaire</div>
+                    <div class="value-main" id="fuel-display">150 L</div>
+                    <div class="value-alt" id="fuel-alt">≈ 39.6 gal</div>
+                </div>
+                <div class="value-card">
+                    <div class="value-label">Distance totale</div>
+                    <div class="value-main" id="distance-display">185 NM</div>
+                    <div class="value-alt" id="distance-alt">≈ 343 km</div>
+                </div>
+                <div class="value-card">
+                    <div class="value-label">Altitude croisière</div>
+                    <div class="value-main" id="altitude-display">5500 ft</div>
+                    <div class="value-alt" id="altitude-alt">≈ 1676 m</div>
+                </div>
+                <div class="value-card">
+                    <div class="value-label">Réserve finale</div>
+                    <div class="value-main" id="reserve-display">45 L</div>
+                    <div class="value-alt" id="reserve-alt">≈ 11.9 gal</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Journal des Changements</h3>
+            <div class="log-box" id="log">
+                > Système initialisé
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Valeurs de référence (stockage interne)
+        const referenceValues = {
+            fuel: 150,      // litres
+            distance: 185,  // NM
+            altitude: 5500, // ft
+            reserve: 45     // litres
+        };
+        
+        // État actuel des unités
+        let currentUnits = {
+            fuel: 'ltr',
+            distance: 'nm',
+            altitude: 'ft'
+        };
+        
+        // Conversions
+        const conversions = {
+            fuel: {
+                ltr: (v) => ({ value: v, unit: 'L' }),
+                gal: (v) => ({ value: v * 0.264172, unit: 'gal' }),
+                kg: (v) => ({ value: v * 0.72, unit: 'kg' })
+            },
+            distance: {
+                nm: (v) => ({ value: v, unit: 'NM' }),
+                km: (v) => ({ value: v * 1.852, unit: 'km' }),
+                mi: (v) => ({ value: v * 1.15078, unit: 'mi' })
+            },
+            altitude: {
+                ft: (v) => ({ value: v, unit: 'ft' }),
+                m: (v) => ({ value: v * 0.3048, unit: 'm' }),
+                FL: (v) => ({ value: Math.round(v / 100), unit: 'FL' })
+            }
+        };
+        
+        function log(message) {
+            const logBox = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            logBox.innerHTML += `\n> [${time}] ${message}`;
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+        
+        function setPreset(preset) {
+            const presets = {
+                europe: { fuel: 'ltr', distance: 'nm', altitude: 'ft' },
+                usa: { fuel: 'gal', distance: 'nm', altitude: 'ft' },
+                metric: { fuel: 'ltr', distance: 'km', altitude: 'm' },
+                aviation: { fuel: 'kg', distance: 'nm', altitude: 'ft' }
+            };
+            
+            currentUnits = presets[preset];
+            log(`Preset changé : ${preset.toUpperCase()}`);
+            log(`Unités : Carburant=${currentUnits.fuel}, Distance=${currentUnits.distance}, Alt=${currentUnits.altitude}`);
+            
+            updateDisplay();
+            updateUnitsDisplay();
+        }
+        
+        function updateUnitsDisplay() {
+            document.getElementById('fuel-unit').textContent = currentUnits.fuel;
+            document.getElementById('distance-unit').textContent = currentUnits.distance;
+            document.getElementById('altitude-unit').textContent = currentUnits.altitude;
+        }
+        
+        function updateDisplay() {
+            // Carburant
+            const fuelMain = conversions.fuel[currentUnits.fuel](referenceValues.fuel);
+            document.getElementById('fuel-display').textContent = 
+                `${fuelMain.value.toFixed(0)} ${fuelMain.unit}`;
+            
+            // Alternative carburant
+            let fuelAlt = '';
+            if (currentUnits.fuel === 'ltr') {
+                fuelAlt = `≈ ${(referenceValues.fuel * 0.264172).toFixed(1)} gal`;
+            } else if (currentUnits.fuel === 'gal') {
+                fuelAlt = `≈ ${referenceValues.fuel.toFixed(0)} L`;
+            } else if (currentUnits.fuel === 'kg') {
+                fuelAlt = `≈ ${referenceValues.fuel.toFixed(0)} L`;
+            }
+            document.getElementById('fuel-alt').textContent = fuelAlt;
+            
+            // Réserve
+            const reserveMain = conversions.fuel[currentUnits.fuel](referenceValues.reserve);
+            document.getElementById('reserve-display').textContent = 
+                `${reserveMain.value.toFixed(0)} ${reserveMain.unit}`;
+            
+            // Alternative réserve
+            let reserveAlt = '';
+            if (currentUnits.fuel === 'ltr') {
+                reserveAlt = `≈ ${(referenceValues.reserve * 0.264172).toFixed(1)} gal`;
+            } else if (currentUnits.fuel === 'gal') {
+                reserveAlt = `≈ ${referenceValues.reserve.toFixed(0)} L`;
+            } else if (currentUnits.fuel === 'kg') {
+                reserveAlt = `≈ ${referenceValues.reserve.toFixed(0)} L`;
+            }
+            document.getElementById('reserve-alt').textContent = reserveAlt;
+            
+            // Distance
+            const distMain = conversions.distance[currentUnits.distance](referenceValues.distance);
+            document.getElementById('distance-display').textContent = 
+                `${distMain.value.toFixed(0)} ${distMain.unit}`;
+            
+            // Altitude
+            const altMain = conversions.altitude[currentUnits.altitude](referenceValues.altitude);
+            document.getElementById('altitude-display').textContent = 
+                `${altMain.value.toFixed(0)} ${altMain.unit}`;
+            
+            log('Affichage mis à jour');
+        }
+        
+        // Initialisation
+        updateDisplay();
+        updateUnitsDisplay();
+    </script>
+</body>
+</html>

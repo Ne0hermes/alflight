@@ -32,24 +32,58 @@ export const useWeightBalanceStore = create(
       state.loads.fuel = fuelWeight;
     }),
     
-    // Méthode de calcul principale
+    // Méthode de calcul principale (pure function - no side effects)
     calculateWeightBalance: (aircraft, fobFuel) => {
       if (!aircraft) return null;
       
-      const loads = get().loads;
+      // Vérifier les propriétés requises de l'avion
+      if (!aircraft.emptyWeight || !aircraft.minTakeoffWeight || !aircraft.maxTakeoffWeight) {
+        console.error('WeightBalanceStore - Missing aircraft weight properties:', {
+          emptyWeight: aircraft.emptyWeight,
+          minTakeoffWeight: aircraft.minTakeoffWeight,
+          maxTakeoffWeight: aircraft.maxTakeoffWeight
+        });
+        return null;
+      }
+      
+      // Vérifier que les données de masse et centrage existent
+      if (!aircraft.weightBalance) {
+        console.warn('WeightBalanceStore - No weight balance data for aircraft:', aircraft.registration);
+        return null;
+      }
+      
       const wb = aircraft.weightBalance;
+      
+      // Vérifier que toutes les propriétés requises existent
+      const requiredProps = [
+        'emptyWeightArm', 'frontLeftSeatArm', 'frontRightSeatArm',
+        'rearLeftSeatArm', 'rearRightSeatArm', 'baggageArm',
+        'auxiliaryArm', 'fuelArm', 'cgLimits'
+      ];
+      
+      for (const prop of requiredProps) {
+        if (wb[prop] === undefined) {
+          console.error(`WeightBalanceStore - Missing required property: ${prop} for aircraft:`, aircraft.registration);
+          return null;
+        }
+      }
+      
+      if (!wb.cgLimits.forward || !wb.cgLimits.aft) {
+        console.error('WeightBalanceStore - Missing CG limits for aircraft:', aircraft.registration);
+        return null;
+      }
+      
+      let loads = get().loads;
       
       console.log('WeightBalanceStore - calculateWeightBalance with loads:', loads);
 
-      // Mise à jour automatique du poids du carburant si fobFuel est fourni
+      // Si fobFuel est fourni, utiliser ce poids de carburant pour le calcul
+      // (sans modifier le state - cela doit être fait séparément)
       if (fobFuel?.ltr) {
         const fuelDensity = aircraft.fuelType === 'JET A-1' ? 0.84 : 0.72;
         const fuelWeight = parseFloat((fobFuel.ltr * fuelDensity).toFixed(1));
-        if (loads.fuel !== fuelWeight) {
-          set(state => {
-            state.loads.fuel = fuelWeight;
-          });
-        }
+        // Créer une copie des loads avec le nouveau poids de carburant pour ce calcul
+        loads = { ...loads, fuel: fuelWeight };
       }
       
       // Calcul du poids total

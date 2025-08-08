@@ -298,22 +298,79 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
           )}
           
           {/* Points des scénarios avec traits de déport */}
-          {scenarioConfig.map(({ key, label, color }) => {
-            const scenario = scenarios[key];
-            if (!scenario || isNaN(scenario.cg) || isNaN(scenario.w)) {
-              return null;
+          {(() => {
+            // Calculer toutes les positions d'abord pour détecter les chevauchements
+            const labelPositions = {};
+            
+            scenarioConfig.forEach(({ key }) => {
+              const scenario = scenarios[key];
+              if (!scenario || isNaN(scenario.cg) || isNaN(scenario.w)) return;
+              
+              const x = toSvgX(scenario.cg);
+              const y = toSvgY(scenario.w);
+              labelPositions[key] = { x, y };
+            });
+            
+            return scenarioConfig.map(({ key, label, color }, index) => {
+              const scenario = scenarios[key];
+              if (!scenario || isNaN(scenario.cg) || isNaN(scenario.w)) {
+                return null;
+              }
+              
+              const x = toSvgX(scenario.cg);
+              const y = toSvgY(scenario.w);
+              
+              // Vérifier si ce point est dans les limites
+              const isInLimits = isPointWithinEnvelope(scenario.w, scenario.cg);
+              
+              // Position du label avec déport intelligent pour éviter le chevauchement
+              const labelOffset = 90;
+              let labelX, labelY;
+            
+            // Positionnement spécifique pour chaque scénario
+            switch(key) {
+              case 'fulltank':
+                // En haut à gauche ou droite selon position
+                labelX = x > 300 ? x + labelOffset : x - labelOffset;
+                labelY = y - 45;
+                break;
+              case 'toCrm':
+                // En haut à l'opposé de fulltank
+                labelX = x > 300 ? x + labelOffset + 10 : x - labelOffset - 10;
+                labelY = y - 45;
+                // Si proche de fulltank, décaler verticalement
+                if (scenarios.fulltank && Math.abs(y - toSvgY(scenarios.fulltank.w)) < 40) {
+                  labelY = y - 70;
+                }
+                break;
+              case 'landing':
+                // En bas, mais avec décalage horizontal pour éviter ZFW
+                labelX = x - labelOffset - 20; // Toujours à gauche
+                labelY = y + 45;
+                // Si très proche verticalement de ZFW, décaler encore plus
+                if (scenarios.zfw && Math.abs(x - toSvgX(scenarios.zfw.cg)) < 50) {
+                  labelX = x - labelOffset - 40;
+                }
+                break;
+              case 'zfw':
+                // En bas, mais à droite pour éviter landing
+                labelX = x + labelOffset + 20; // Toujours à droite
+                labelY = y + 45;
+                // Si très proche verticalement de landing, décaler encore plus
+                if (scenarios.landing && Math.abs(x - toSvgX(scenarios.landing.cg)) < 50) {
+                  labelX = x + labelOffset + 40;
+                }
+                break;
+              default:
+                labelX = x + (x > 300 ? labelOffset : -labelOffset);
+                labelY = y + (index % 2 === 0 ? -45 : 45);
             }
             
-            const x = toSvgX(scenario.cg);
-            const y = toSvgY(scenario.w);
-            
-            // Vérifier si ce point est dans les limites
-            const isInLimits = isPointWithinEnvelope(scenario.w, scenario.cg);
-            
-            // Position du label avec déport
-            const labelOffset = 80;
-            const labelX = x + (x > 300 ? labelOffset : -labelOffset);
-            const labelY = y + (key === 'fulltank' || key === 'toCrm' ? -30 : 30);
+            // Ajuster si proche des bords
+            if (labelX < 60) labelX = 60;
+            if (labelX > 540) labelX = 540;
+            if (labelY < 30) labelY = 30;
+            if (labelY > 340) labelY = 340;
             
             return (
               <g key={key}>
@@ -357,31 +414,32 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
                 {/* Label avec valeurs */}
                 <g transform={`translate(${labelX}, ${labelY})`}>
                   <rect 
-                    x="-5" 
-                    y="-10" 
-                    width="110" 
-                    height={isInLimits ? "25" : "35"} 
+                    x="-45" 
+                    y="-12" 
+                    width="90" 
+                    height={isInLimits ? "24" : "32"} 
                     fill="white" 
-                    fillOpacity="0.9" 
+                    fillOpacity="0.95" 
                     stroke={isInLimits ? color : '#ef4444'} 
                     strokeWidth={isInLimits ? "1" : "2"} 
-                    rx="2"
+                    rx="3"
                   />
-                  <text fontSize="9" fill={isInLimits ? color : '#ef4444'} fontWeight="600">
-                    <tspan x="0" y="0">{label}</tspan>
-                    <tspan x="0" y="10" fontSize="8" fontWeight="400">
+                  <text textAnchor="middle" fontSize="8" fill={isInLimits ? color : '#ef4444'} fontWeight="600">
+                    <tspan x="0" y="-2">{label}</tspan>
+                    <tspan x="0" y="9" fontSize="7" fontWeight="400">
                       {scenario.w.toFixed(0)}kg / {(scenario.cg * 1000).toFixed(0)}mm
                     </tspan>
                   </text>
                   {!isInLimits && (
-                    <text x="0" y="20" fontSize="7" fill="#ef4444" fontWeight="600">
+                    <text x="0" y="19" textAnchor="middle" fontSize="7" fill="#ef4444" fontWeight="600">
                       ⚠️ HORS LIMITES
                     </text>
                   )}
                 </g>
               </g>
             );
-          })}
+          });
+        })()}
           
           {/* Titre (taille réduite) */}
           <text x="300" y="25" textAnchor="middle" fontSize="12" fontWeight="600" fill="#1f2937">

@@ -24,9 +24,15 @@ export const weatherAPI = {
 
       if (!response.ok) {
         if (response.status === 404) {
-          throw new Error(`Aéroport ${icao} non trouvé`);
+          console.warn(`⚠️ METAR non disponible pour ${icao} (404)`);
+          return this.getMockMETAR(icao);
         }
-        throw new Error(`Erreur API: ${response.status}`);
+        if (response.status === 400) {
+          console.warn(`⚠️ METAR non disponible pour ${icao} (code invalide ou pas de données)`);
+          return this.getMockMETAR(icao);
+        }
+        console.warn(`⚠️ Erreur API pour ${icao}: ${response.status}`);
+        return this.getMockMETAR(icao);
       }
 
       // Vérifier que la réponse n'est pas vide
@@ -118,7 +124,12 @@ export const weatherAPI = {
           console.log(`ℹ️ Pas de TAF disponible pour ${icao}`);
           return null;
         }
-        throw new Error(`Erreur API: ${response.status}`);
+        if (response.status === 400) {
+          console.log(`ℹ️ TAF non disponible pour ${icao} (code invalide ou pas de données)`);
+          return null;
+        }
+        console.warn(`⚠️ Erreur TAF pour ${icao}: ${response.status}`);
+        return null;
       }
 
       // Vérifier que la réponse n'est pas vide

@@ -1,0 +1,20 @@
+{
+  "name": "flight-management-server",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Serveur proxy pour l'API OpenAIP",
+  "main": "openaip-proxy.js",
+  "scripts": {
+    "start": "node openaip-proxy.js",
+    "dev": "nodemon openaip-proxy.js"
+  },
+  "dependencies": {
+    "axios": "^1.11.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

@@ -8,13 +8,19 @@ export const useOpenAIPStore = create(
   immer((set, get) => ({
     // État
     airports: [],
+    airspaces: [],
+    navaids: [],
     reportingPoints: {}, // { [icao]: [...points] }
     loading: {
       airports: false,
+      airspaces: false,
+      navaids: false,
       reportingPoints: false
     },
     errors: {
       airports: null,
+      airspaces: null,
+      navaids: null,
       reportingPoints: null
     },
     searchQuery: '',
@@ -47,6 +53,58 @@ export const useOpenAIPStore = create(
         set(state => {
           state.errors.airports = error.message;
           state.loading.airports = false;
+        });
+      }
+    },
+    
+    loadAirspaces: async (countryCode = 'FR') => {
+      set(state => {
+        state.loading.airspaces = true;
+        state.errors.airspaces = null;
+      });
+      
+      try {
+        console.log('🔶 Chargement des espaces aériens OpenAIP...');
+        const airspaces = await openAIPService.getAirspaces(countryCode);
+        
+        set(state => {
+          state.airspaces = airspaces;
+          state.loading.airspaces = false;
+        });
+        
+        console.log(`✅ ${airspaces.length} espaces aériens chargés`);
+        
+      } catch (error) {
+        console.warn('Erreur chargement espaces aériens:', error);
+        set(state => {
+          state.errors.airspaces = error.message;
+          state.loading.airspaces = false;
+        });
+      }
+    },
+    
+    loadNavaids: async (countryCode = 'FR') => {
+      set(state => {
+        state.loading.navaids = true;
+        state.errors.navaids = null;
+      });
+      
+      try {
+        console.log('📡 Chargement des balises de navigation OpenAIP...');
+        const navaids = await openAIPService.getNavaids(countryCode);
+        
+        set(state => {
+          state.navaids = navaids;
+          state.loading.navaids = false;
+        });
+        
+        console.log(`✅ ${navaids.length} balises de navigation chargées`);
+        
+      } catch (error) {
+        console.warn('Erreur chargement balises:', error);
+        set(state => {
+          state.errors.navaids = error.message;
+          state.loading.navaids = false;
         });
       }
     },

@@ -1,134 +1,20 @@
 // src/features/alternates/utils/geometryCalculations.js
 
-/**
- * Calcule la distance entre deux points en NM
- */
-const calculateDistance = (point1, point2) => {
-  const R = 3440.065; // Rayon terre en NM
-  const dLat = toRad(point2.lat - point1.lat);
-  const dLon = toRad(point2.lon - point1.lon);
-  
-  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(toRad(point1.lat)) * Math.cos(toRad(point2.lat)) *
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-    
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c;
-};
+// Import des fonctions depuis le module centralisé
+import {
+  calculateDistance,
+  calculateBearing,
+  calculateDestination,
+  calculateMidpoint,
+  calculateDistanceToSegment,
+  calculatePerpendicular,
+  getSideOfPerpendicular,
+  isPointInPolygon,
+  toRad,
+  toDeg
+} from '@utils/navigationCalculations';
 
-/**
- * Calcule le cap (bearing) entre deux points
- */
-const calculateBearing = (point1, point2) => {
-  const dLon = toRad(point2.lon - point1.lon);
-  const lat1 = toRad(point1.lat);
-  const lat2 = toRad(point2.lat);
-  
-  const y = Math.sin(dLon) * Math.cos(lat2);
-  const x = Math.cos(lat1) * Math.sin(lat2) -
-    Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
-    
-  const bearing = toDeg(Math.atan2(y, x));
-  return (bearing + 360) % 360;
-};
-
-/**
- * Calcule un point destination à partir d'un point d'origine, distance et cap
- */
-const calculateDestination = (origin, distanceNM, bearingDeg) => {
-  const R = 3440.065; // Rayon terre en NM
-  const d = distanceNM / R;
-  const brng = toRad(bearingDeg);
-  const lat1 = toRad(origin.lat);
-  const lon1 = toRad(origin.lon);
-  
-  const lat2 = Math.asin(
-    Math.sin(lat1) * Math.cos(d) +
-    Math.cos(lat1) * Math.sin(d) * Math.cos(brng)
-  );
-  
-  const lon2 = lon1 + Math.atan2(
-    Math.sin(brng) * Math.sin(d) * Math.cos(lat1),
-    Math.cos(d) - Math.sin(lat1) * Math.sin(lat2)
-  );
-  
-  return {
-    lat: toDeg(lat2),
-    lon: toDeg(lon2)
-  };
-};
-
-/**
- * Calcule le point médian entre deux points
- */
-const calculateMidpoint = (point1, point2) => {
-  const lat1 = toRad(point1.lat);
-  const lon1 = toRad(point1.lon);
-  const lat2 = toRad(point2.lat);
-  const lon2 = toRad(point2.lon);
-  
-  const dLon = lon2 - lon1;
-  
-  const Bx = Math.cos(lat2) * Math.cos(dLon);
-  const By = Math.cos(lat2) * Math.sin(dLon);
-  
-  const lat3 = Math.atan2(
-    Math.sin(lat1) + Math.sin(lat2),
-    Math.sqrt((Math.cos(lat1) + Bx) * (Math.cos(lat1) + Bx) + By * By)
-  );
-  
-  const lon3 = lon1 + Math.atan2(By, Math.cos(lat1) + Bx);
-  
-  return {
-    lat: toDeg(lat3),
-    lon: toDeg(lon3)
-  };
-};
-
-/**
- * Calcule la médiatrice du segment [départ, arrivée]
- * Retourne deux points définissant la médiatrice
- */
-const calculatePerpendicular = (departure, arrival) => {
-  // Point milieu
-  const midpoint = calculateMidpoint(departure, arrival);
-  
-  // Cap de la route
-  const routeBearing = calculateBearing(departure, arrival);
-  
-  // Cap perpendiculaire (90° à droite et à gauche)
-  const perpBearing1 = (routeBearing + 90) % 360;
-  const perpBearing2 = (routeBearing - 90 + 360) % 360;
-  
-  // Distance pour créer les points de la médiatrice (assez grande pour couvrir toute la zone)
-  const perpDistance = calculateDistance(departure, arrival) * 2;
-  
-  // Points définissant la médiatrice
-  const perpPoint1 = calculateDestination(midpoint, perpDistance, perpBearing1);
-  const perpPoint2 = calculateDestination(midpoint, perpDistance, perpBearing2);
-  
-  return {
-    midpoint,
-    point1: perpPoint1,
-    point2: perpPoint2,
-    bearing: perpBearing1
-  };
-};
-
-/**
- * Détermine de quel côté de la médiatrice se trouve un point
- * Retourne 'departure' si du côté départ, 'arrival' si du côté arrivée
- */
-const getSideOfPerpendicular = (point, departure, arrival) => {
-  const midpoint = calculateMidpoint(departure, arrival);
-  
-  // Calculer les distances
-  const distToDeparture = calculateDistance(point, departure);
-  const distToArrival = calculateDistance(point, arrival);
-  
-  // Le côté est déterminé par la distance la plus courte
-  return distToDeparture < distToArrival ? 'departure' : 'arrival';
-};
+// Ces fonctions sont maintenant importées du module centralisé
 
 /**
  * Calcule la position relative d'un point par rapport à une route
@@ -188,58 +74,6 @@ const isPointInTriangle = (point, vertices) => {
 };
 
 /**
- * Vérifie si un point est dans un polygone
- */
-const isPointInPolygon = (point, vertices) => {
-  let inside = false;
-  
-  for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
-    const xi = vertices[i].lon, yi = vertices[i].lat;
-    const xj = vertices[j].lon, yj = vertices[j].lat;
-    
-    const intersect = ((yi > point.lat) !== (yj > point.lat))
-        && (point.lon < (xj - xi) * (point.lat - yi) / (yj - yi) + xi);
-    
-    if (intersect) inside = !inside;
-  }
-  
-  return inside;
-};
-
-/**
- * Calcule la distance d'un point à un segment de grande cercle (orthodromie)
- */
-const calculateDistanceToSegment = (point, start, end) => {
-  if (start.lat === end.lat && start.lon === end.lon) {
-    return calculateDistance(point, start);
-  }
-  
-  const R = 3440.065;
-  const distanceToStart = calculateDistance(point, start);
-  const distanceToEnd = calculateDistance(point, end);
-  const segmentDistance = calculateDistance(start, end);
-  
-  if (segmentDistance < 0.1) {
-    return Math.min(distanceToStart, distanceToEnd);
-  }
-  
-  const bearing13 = toRad(calculateBearing(start, end));
-  const bearing12 = toRad(calculateBearing(start, point));
-  const angularDistance12 = distanceToStart / R;
-  
-  const crossTrackDistance = Math.asin(Math.sin(angularDistance12) * Math.sin(bearing12 - bearing13)) * R;
-  const alongTrackDistance = Math.acos(Math.cos(angularDistance12) / Math.cos(crossTrackDistance / R)) * R;
-  
-  if (alongTrackDistance < 0) {
-    return distanceToStart;
-  } else if (alongTrackDistance > segmentDistance) {
-    return distanceToEnd;
-  }
-  
-  return Math.abs(crossTrackDistance);
-};
-
-/**
  * Calcule l'intersection de deux lignes
  */
 const calculateLineIntersection = (p1, p2, p3, p4) => {
@@ -268,19 +102,11 @@ const calculateLineIntersection = (p1, p2, p3, p4) => {
 };
 
 /**
- * Conversions degrés <-> radians
- */
-const toRad = (deg) => deg * Math.PI / 180;
-const toDeg = (rad) => rad * 180 / Math.PI;
-
-/**
  * Calcule une zone pilule (capsule) autour de la route
  */
 const calculatePillZone = (departure, arrival, radiusOverride = null) => {
   const distance = calculateDistance(departure, arrival);
   const radius = radiusOverride || (Math.sqrt(3) / 2) * distance;
-  
-  console.log(`Zone pilule: distance=${distance.toFixed(1)} NM, rayon=${radius.toFixed(1)} NM`);
   
   const bearing = calculateBearing(departure, arrival);
   
@@ -333,8 +159,6 @@ const calculatePillZone = (departure, arrival, radiusOverride = null) => {
   const circleArea = Math.PI * radius * radius;
   const totalArea = rectangleArea + circleArea;
   
-  console.log(`Zone pilule créée: ${vertices.length} vertices`);
-  
   // Ajouter les informations de médiatrice
   const perpendicular = calculatePerpendicular(departure, arrival);
   
@@ -358,8 +182,6 @@ const calculatePillZone = (departure, arrival, radiusOverride = null) => {
  */
 const calculateRectangleZone = (departure, arrival, radius) => {
   const distance = calculateDistance(departure, arrival);
-  
-  console.log(`Zone rectangle: distance=${distance.toFixed(1)} NM, largeur=${(radius * 2).toFixed(1)} NM`);
   
   const routeBearing = calculateBearing(departure, arrival);
   const perpLeft = (routeBearing + 90) % 360;
@@ -396,8 +218,6 @@ const calculateRectangleZone = (departure, arrival, radius) => {
  * Calcule une zone de déroutement rectangulaire (boîte englobante)
  */
 const calculateBoundingBoxZone = (departure, arrival, marginNM) => {
-  console.log(`Calcul zone boîte englobante: marge=${marginNM} NM`);
-  
   const marginLatDeg = marginNM / 60.0;
   
   const latMinRoute = Math.min(departure.lat, arrival.lat);
@@ -494,24 +314,11 @@ const identifyTurnPoints = (waypoints) => {
   return turnPoints;
 };
 
-// Exporter individuellement les fonctions principales
-export { 
-  calculateDistance, 
-  calculateBearing, 
-  calculateDestination, 
-  calculateMidpoint,
-  calculateDistanceToSegment,
-  calculatePerpendicular,
-  getSideOfPerpendicular
-};
-
 /**
  * Calcule la zone de recherche pour les alternates
  */
 export const calculateSearchZone = (departure, arrival, waypoints = [], fuelData = null, options = {}) => {
   const distance = calculateDistance(departure, arrival);
-  
-  console.log(`Calcul zone de recherche - Distance vol: ${distance.toFixed(1)} NM`);
   
   const config = {
     method: 'pill',
@@ -522,9 +329,35 @@ export const calculateSearchZone = (departure, arrival, waypoints = [], fuelData
   let radius;
   
   if (config.method === 'pill') {
-    // Pour la zone pilule, utiliser la formule h = (√3/2) × distance
-    radius = (Math.sqrt(3) / 2) * distance;
-    console.log(`Zone pilule: formule h = (√3/2) × d = ${radius.toFixed(1)} NM`);
+    // Pour la zone pilule, utiliser une formule adaptative avec des limites très strictes
+    // Objectif : zone de recherche réaliste et pratique pour les déroutements
+    
+    if (distance <= 30) {
+      // Distances très courtes : rayon de 30-35% de la distance
+      radius = Math.max(10, distance * 0.35);
+    } else if (distance <= 60) {
+      // Distances courtes : rayon de 25-30% de la distance  
+      radius = 10.5 + (distance - 30) * 0.25;
+    } else if (distance <= 120) {
+      // Distances moyennes : rayon de 18-22% de la distance
+      radius = 18 + (distance - 60) * 0.18;
+    } else if (distance <= 250) {
+      // Distances longues : rayon de 12-15% de la distance
+      radius = 28.8 + (distance - 120) * 0.12;
+    } else if (distance <= 500) {
+      // Distances très longues : rayon de 8-10% de la distance
+      radius = 44.4 + (distance - 250) * 0.08;
+    } else {
+      // Distances extrêmes : plafond très strict
+      // Maximum 80 NM de rayon (au lieu de 120)
+      radius = Math.min(80, 64.4 + (distance - 500) * 0.03);
+    }
+    
+    // Ajustement supplémentaire : ne jamais dépasser 20% de la distance totale (au lieu de 30%)
+    radius = Math.min(radius, distance * 0.20);
+    
+    // Minimum absolu pour assurer une zone viable mais raisonnable
+    radius = Math.max(8, radius);
   } else {
     // Pour les autres méthodes, calculer le rayon proportionnel à la distance
     if (distance < 20) {
@@ -536,7 +369,6 @@ export const calculateSearchZone = (departure, arrival, waypoints = [], fuelData
     } else {
       radius = Math.min(50, distance * 0.3);
     }
-    console.log(`Distance vol: ${distance.toFixed(1)} NM → Rayon calculé: ${radius.toFixed(1)} NM`);
   }
   
   // Ajustement par carburant si disponible (optionnel)
@@ -550,13 +382,8 @@ export const calculateSearchZone = (departure, arrival, waypoints = [], fuelData
       const fuelRadius = enduranceHours * fuelData.aircraft.cruiseSpeedKt * 0.3;
       const oldRadius = radius;
       radius = Math.min(radius, Math.max(10, fuelRadius));
-      if (radius !== oldRadius) {
-        console.log(`Rayon limité par carburant: ${oldRadius.toFixed(1)} → ${radius.toFixed(1)} NM`);
-      }
     }
   }
-  
-  console.log(`Méthode utilisée: ${config.method}`);
   
   let zone;
   
@@ -580,13 +407,10 @@ export const calculateSearchZone = (departure, arrival, waypoints = [], fuelData
     zone = calculateRectangleZone(departure, arrival, radius);
   }
   
-  console.log(`Zone créée - Type: ${zone.type}, Rayon: ${zone.radius?.toFixed(1)} NM, Aire: ${zone.area?.toFixed(0)} NM²`);
-  
   zone.dynamicRadius = radius;
   
   if (waypoints && waypoints.length > 2) {
     zone.turnPoints = identifyTurnPoints(waypoints);
-    console.log(`Points tournants identifiés: ${zone.turnPoints.length}`);
   }
   
   return zone;
@@ -611,10 +435,90 @@ export const isAirportInSearchZone = (airport, searchZone) => {
   
   // Pour une zone pilule
   if (searchZone.type === 'pill' && searchZone.radius && searchZone.departure && searchZone.arrival) {
+    // Calculer les distances importantes
+    const distToDeparture = calculateDistance(point, searchZone.departure);
+    const distToArrival = calculateDistance(point, searchZone.arrival);
+    const routeLength = calculateDistance(searchZone.departure, searchZone.arrival);
+    
+    // Debug pour LFAF
+    if (airport.icao === 'LFAF') {
+      console.log('🔍 DEBUG LFAF:', {
+        icao: airport.icao,
+        radius: searchZone.radius,
+        routeLength,
+        distToDeparture,
+        distToArrival,
+        sumDistances: distToDeparture + distToArrival,
+        maxAllowedSum: routeLength + 2 * searchZone.radius
+      });
+    }
+    
+    // Vérification stricte avec une tolérance réduite
+    // Un point est dans la pilule si la somme de ses distances aux extrémités
+    // est inférieure à la longueur de la route + 2 * rayon
+    // On applique une tolérance de 95% pour être plus strict
+    const maxDistanceSum = routeLength + 2 * searchZone.radius * 0.95;
+    
+    if (distToDeparture + distToArrival > maxDistanceSum) {
+      // Le point est définitivement hors de la zone pilule
+      if (airport.icao === 'LFAF') {
+        console.log('❌ LFAF exclu par test de somme des distances');
+      }
+      return { isInZone: false, reason: 'Hors zone pilule (somme distances)', distToDeparture, distToArrival };
+    }
+    
+    // Calcul plus précis de la position dans la pilule
     const distanceToRoute = calculateDistanceToSegment(point, searchZone.departure, searchZone.arrival);
     
-    if (distanceToRoute <= searchZone.radius) {
-      return { isInZone: true, location: 'pill', distanceToRoute, side };
+    // Vérifier que le point est dans la zone pilule (forme capsule)
+    // 1. D'abord vérifier si le point est dans le rectangle central
+    // On applique une marge de sécurité de 90% sur le rayon pour être plus strict
+    const effectiveRadius = searchZone.radius * 0.9;
+    
+    if (distanceToRoute <= effectiveRadius) {
+      // 2. Calculer la projection du point sur la ligne de route
+      const routeVector = {
+        x: searchZone.arrival.lon - searchZone.departure.lon,
+        y: searchZone.arrival.lat - searchZone.departure.lat
+      };
+      const pointVector = {
+        x: point.lon - searchZone.departure.lon,
+        y: point.lat - searchZone.departure.lat
+      };
+      
+      // Produit scalaire pour trouver la position le long de la route (0 = départ, 1 = arrivée)
+      const routeLengthSquared = routeVector.x * routeVector.x + routeVector.y * routeVector.y;
+      const t = routeLengthSquared > 0 ? 
+        (pointVector.x * routeVector.x + pointVector.y * routeVector.y) / routeLengthSquared : 0;
+      
+      // Si le point est entre départ et arrivée (dans le rectangle)
+      if (t >= 0 && t <= 1) {
+        return { isInZone: true, location: 'pill', distanceToRoute, side };
+      }
+      
+      // 3. Si le point est avant le départ, vérifier le demi-cercle de départ
+      if (t < 0) {
+        if (distToDeparture <= effectiveRadius) {
+          return { isInZone: true, location: 'pill', distanceToRoute: distToDeparture, side };
+        }
+      }
+      
+      // 4. Si le point est après l'arrivée, vérifier le demi-cercle d'arrivée
+      if (t > 1) {
+        if (distToArrival <= effectiveRadius) {
+          return { isInZone: true, location: 'pill', distanceToRoute: distToArrival, side };
+        }
+      }
+    }
+    
+    // Vérifier aussi les demi-cercles aux extrémités même si distanceToRoute > effectiveRadius
+    // (déjà calculé au début) - avec le rayon effectif réduit
+    if (distToDeparture <= effectiveRadius) {
+      return { isInZone: true, location: 'pill', distanceToRoute: distToDeparture, side };
+    }
+    
+    if (distToArrival <= effectiveRadius) {
+      return { isInZone: true, location: 'pill', distanceToRoute: distToArrival, side };
     }
     
     if (searchZone.turnPoints) {
@@ -692,17 +596,14 @@ export const calculateDistanceFromRoute = (point, departure, arrival) => {
  * Export de toutes les fonctions utilitaires
  */
 export const geometryUtils = {
-  calculateDistance,
-  calculateBearing,
-  calculateDestination,
-  calculateMidpoint,
+  // Fonctions définies dans ce fichier
   calculateCentroid,
   calculateTriangleArea,
   isPointInTriangle,
-  isPointInPolygon,
-  calculateDistanceToSegment,
   getPointSideOfRoute,
   calculateLineIntersection,
-  calculatePerpendicular,
-  getSideOfPerpendicular
+  calculatePillZone,
+  calculateRectangleZone,
+  calculateBoundingBoxZone,
+  identifyTurnPoints
 };

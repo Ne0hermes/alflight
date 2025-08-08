@@ -17,8 +17,13 @@ export const useFuelStore = create(
     fobFuel: { gal: 0, ltr: 0 },
     
     // Actions
-    setFuelData: (data) => set(state => {
-      state.fuelData = data;
+    setFuelData: (dataOrUpdater) => set(state => {
+      // Support pour les fonctions updater comme (prev => ({...}))
+      if (typeof dataOrUpdater === 'function') {
+        state.fuelData = dataOrUpdater(state.fuelData);
+      } else {
+        state.fuelData = dataOrUpdater;
+      }
     }),
     
     updateFuelItem: (type, values) => set(state => {

@@ -1,1378 +1,406 @@
-import React, { memo, useEffect, useMemo, useState } from 'react';
-import { Wind, Navigation, AlertTriangle, Plane, RefreshCw, Info, Download, Map, Shield } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plane, AlertTriangle, CheckCircle, Info, Ruler, Wind, ChevronDown, ChevronUp, Download, ExternalLink } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
-import { useOpenAIPStore, openAIPSelectors } from '@core/stores/openAIPStore';
-import { useWeatherStore, weatherSelectors } from '@core/stores/weatherStore';
-import { useVACStore, vacSelectors } from '@core/stores/vacStore';
+import { openAIPService } from '@services/openAIPService';
 import { useAircraft } from '@core/contexts';
 
-// Fonction pour normaliser les types de surfaces de piste
-const normalizeSurfaceType = (surface) => {
-  if (!surface) return 'UNKNOWN';
-  
-  // Normaliser les caractères spéciaux et accents AVANT de convertir en majuscules
-  const normalizedSurface = surface
-    .normalize('NFD') // Décompose les caractères accentués
-    .replace(/[\u0300-\u036f]/g, '') // Supprime les accents
-    .toUpperCase()
-    .trim(); // Enlever les espaces en début/fin
-  
-  // Garder aussi la version originale en majuscules pour certains tests
-  const surfaceUpper = surface.toUpperCase().trim();
-  
-  // Debug pour les surfaces revêtues
-  if (surface.toLowerCase().includes('revêt')) {
-    console.log(`🔍 Debug normalisation pour "${surface}":`, {
-      original: surface,
-      normalized: normalizedSurface,
-      containsREVETUE: normalizedSurface.includes('REVETUE'),
-      containsREVETU: normalizedSurface.includes('REVETU')
-    });
-  }
-  
-  // TERRE/NON REVÊTU - VÉRIFIER EN PREMIER pour éviter les faux positifs
-  if (normalizedSurface.includes('NON REVETUE') ||
-      normalizedSurface.includes('NON REVETU') ||
-      surfaceUpper.includes('NON REVÊTUE') ||
-      surfaceUpper.includes('NON REVÊTU') ||
-      normalizedSurface.includes('UNPAVED') || 
-      normalizedSurface.includes('TERRE') || 
-      normalizedSurface.includes('DIRT') ||
-      normalizedSurface.includes('EARTH') ||
-      normalizedSurface.includes('CLAY') ||
-      normalizedSurface.includes('MUD') ||
-      normalizedSurface.includes('SOIL') ||
-      normalizedSurface.includes('ARGILE') ||
-      normalizedSurface.includes('BOUE') ||
-      normalizedSurface.includes('NATUREL')) {
-    return 'UNPAVED';
-  }
-  
-  // ASPHALTE (inclut toutes les surfaces revêtues sauf béton)
-  // Tester APRÈS avoir exclu "NON REVÊTUE"
-  if (normalizedSurface.includes('ASPH') || 
-      normalizedSurface.includes('BITUM') || 
-      normalizedSurface.includes('ASPHALTE') ||
-      normalizedSurface === 'ASPHALT' ||
-      normalizedSurface.includes('ENROBE') ||
-      normalizedSurface.includes('REVETUE') ||
-      normalizedSurface.includes('REVETU') ||
-      normalizedSurface === 'REVETUE' || // Test exact aussi
-      surfaceUpper.includes('REVÊTUE') || // Test aussi avec accent au cas où
-      surfaceUpper.includes('REVÊTU') ||
-      normalizedSurface === 'PAVED' ||
-      normalizedSurface.includes('TARMAC') ||
-      normalizedSurface.includes('MACADAM') ||
-      normalizedSurface.includes('GOUDRON')) {
-    console.log(`✅ Surface "${surface}" normalisée en ASPH`);
-    return 'ASPH';
-  }
-  
-  // BÉTON
-  if (normalizedSurface.includes('CONC') || 
-      normalizedSurface.includes('BETON') ||
-      normalizedSurface === 'CONCRETE' ||
-      normalizedSurface.includes('CEMENT') ||
-      normalizedSurface.includes('CIMENT')) {
-    return 'CONC';
-  }
-  
-  // HERBE
-  if (normalizedSurface.includes('GRASS') || 
-      normalizedSurface.includes('HERBE') || 
-      normalizedSurface.includes('GAZON') ||
-      normalizedSurface === 'TURF' ||
-      normalizedSurface.includes('PELOUSE')) {
-    return 'GRASS';
-  }
-  
-  // GRAVIER
-  if (normalizedSurface.includes('GRAV') || 
-      normalizedSurface.includes('GRAVEL') ||
-      normalizedSurface.includes('GRAVIER') ||
-      normalizedSurface.includes('CRUSHED') ||
-      normalizedSurface.includes('PIERRAILLE') ||
-      normalizedSurface.includes('CAILLOU')) {
-    return 'GRVL';
-  }
-  
-  // SABLE
-  if (normalizedSurface.includes('SAND') || 
-      normalizedSurface.includes('SABLE') ||
-      normalizedSurface.includes('BEACH') ||
-      normalizedSurface.includes('PLAGE')) {
-    return 'SAND';
-  }
-  
-  // NEIGE
-  if (normalizedSurface.includes('SNOW') || 
-      normalizedSurface.includes('NEIGE') ||
-      normalizedSurface.includes('ICE') ||
-      normalizedSurface.includes('GLACE') ||
-      normalizedSurface.includes('GLACIER')) {
-    return 'SNOW';
-  }
-  
-  // EAU
-  if (normalizedSurface.includes('WATER') || 
-      normalizedSurface.includes('EAU') ||
-      normalizedSurface.includes('SEA') ||
-      normalizedSurface.includes('MER') ||
-      normalizedSurface.includes('LAKE') ||
-      normalizedSurface.includes('LAC') ||
-      normalizedSurface.includes('RIVER') ||
-      normalizedSurface.includes('RIVIERE') ||
-      surfaceUpper.includes('RIVIÈRE')) { // Garder ce test avec accent
-    return 'WATER';
-  }
-  
-  // Si on arrive ici, la surface n'est pas reconnue
-  console.warn(`⚠️ Surface non reconnue: "${surface}" (normalisée: "${normalizedSurface}")`);
-  return 'UNKNOWN';
+// Types de surface de piste
+const SURFACE_TYPES = {
+  'ASPH': { name: 'Asphalte', icon: '🛣️', quality: 1 },
+  'CONC': { name: 'Béton', icon: '🏗️', quality: 1 },
+  'GRASS': { name: 'Herbe', icon: '🌿', quality: 0.8 },
+  'GRAVEL': { name: 'Gravier', icon: '🪨', quality: 0.7 },
+  'SAND': { name: 'Sable', icon: '🏖️', quality: 0.6 },
+  'DIRT': { name: 'Terre', icon: '🟫', quality: 0.6 },
+  'WATER': { name: 'Eau', icon: '💧', quality: 0 },
+  'SNOW': { name: 'Neige', icon: '❄️', quality: 0.5 },
+  'ICE': { name: 'Glace', icon: '🧊', quality: 0.3 }
 };
 
-// Fonction pour obtenir le nom lisible d'un type de surface
-const getSurfaceName = (code) => {
-  const names = {
-    'ASPH': 'Asphalte',
-    'CONC': 'Béton',
-    'GRASS': 'Herbe',
-    'GRVL': 'Gravier',
-    'UNPAVED': 'Terre',
-    'SAND': 'Sable',
-    'SNOW': 'Neige',
-    'WATER': 'Eau',
-    'UNKNOWN': 'Inconnue'
-  };
-  return names[code] || code;
-};
+// Fonction pour convertir les mètres en pieds
+const metersToFeet = (meters) => Math.round(meters * 3.28084);
 
-// Fonction pour normaliser les surfaces compatibles de l'avion
-const normalizeAircraftSurfaces = (aircraft) => {
-  if (!aircraft) return null;
-  
-  // Debug complet de l'objet avion
-  console.log('🛩️ DEBUG - Structure complète de l\'avion:', aircraft);
-  
-  // Chercher les surfaces dans différentes propriétés possibles
-  let surfaces = aircraft.compatibleRunwaySurfaces || 
-                 aircraft.compatibleSurfaces || 
-                 aircraft.runwaySurfaces || 
-                 aircraft.surfaces ||
-                 [];
-  
-  // Si c'est une chaîne, la convertir en tableau
-  if (typeof surfaces === 'string') {
-    surfaces = surfaces.split(',').map(s => s.trim());
+// Fonction pour analyser la compatibilité d'une piste
+const analyzeRunwayCompatibility = (runway, aircraft) => {
+  if (!aircraft || !aircraft.runwayRequirements) {
+    return { compatible: 'unknown', reasons: ['Avion non sélectionné'] };
   }
-  
-  // Si surfaces est toujours vide, vérifier d'autres propriétés possibles
-  if ((!surfaces || surfaces.length === 0) && aircraft.surface) {
-    surfaces = [aircraft.surface];
+
+  const reasons = [];
+  let compatible = true;
+
+  // Vérifier la longueur de piste au décollage (TODA)
+  const todaFeet = metersToFeet(runway.dimensions?.toda || runway.dimensions?.length || 0);
+  if (todaFeet < aircraft.runwayRequirements.takeoffDistance) {
+    compatible = false;
+    reasons.push(`TODA insuffisante: ${todaFeet} ft < ${aircraft.runwayRequirements.takeoffDistance} ft requis`);
   }
+
+  // Vérifier la distance d'atterrissage disponible (LDA)
+  const ldaFeet = metersToFeet(runway.dimensions?.lda || runway.dimensions?.length || 0);
+  if (ldaFeet < aircraft.runwayRequirements.landingDistance) {
+    compatible = false;
+    reasons.push(`LDA insuffisante: ${ldaFeet} ft < ${aircraft.runwayRequirements.landingDistance} ft requis`);
+  }
+
+  // Vérifier le type de surface
+  const surface = runway.surface?.type || 'UNKNOWN';
+  const surfaceInfo = SURFACE_TYPES[surface] || { quality: 0.5 };
   
-  console.log('🛩️ Surfaces trouvées avant normalisation:', surfaces);
-  
-  // Normaliser les surfaces
-  const normalizedSurfaces = surfaces.map(surface => {
-    // Si c'est déjà un code normalisé, le garder
-    if (['ASPH', 'CONC', 'GRASS', 'GRVL', 'UNPAVED', 'SAND', 'SNOW', 'WATER'].includes(surface)) {
-      return surface;
-    }
-    // Sinon, normaliser
-    return normalizeSurfaceType(surface);
-  }).filter(s => s !== 'UNKNOWN'); // Filtrer les surfaces inconnues
-  
-  console.log('🛩️ Surfaces après normalisation:', normalizedSurfaces);
-  
+  if (aircraft.runwayRequirements.surfaceTypes && 
+      !aircraft.runwayRequirements.surfaceTypes.includes(surface)) {
+    compatible = false;
+    reasons.push(`Surface ${surfaceInfo.name} non compatible`);
+  }
+
+  // Avertissement pour surfaces dégradées
+  if (compatible && surfaceInfo.quality < 0.8) {
+    reasons.push(`⚠️ Surface ${surfaceInfo.name} - performances réduites`);
+  }
+
   return {
-    ...aircraft,
-    compatibleRunwaySurfaces: normalizedSurfaces
+    compatible,
+    reasons,
+    todaFeet,
+    ldaFeet,
+    surface: surfaceInfo
   };
 };
 
-// Fonction pour vérifier la compatibilité d'une piste avec l'avion
-const checkRunwayCompatibility = (runway, aircraft) => {
-  // Si pas d'avion sélectionné, on ne peut pas vérifier la compatibilité
-  if (!aircraft) {
-    console.log('⚠️ checkRunwayCompatibility: Aucun avion sélectionné');
-    return { 
-      isCompatible: null, 
-      reason: 'Aucun avion sélectionné' 
-    };
-  }
-  
-  // Normaliser les surfaces de l'avion
-  const normalizedAircraft = normalizeAircraftSurfaces(aircraft);
-  
-  // Debug : afficher les surfaces compatibles de l'avion
-  console.log(`🛩️ Surfaces compatibles de ${normalizedAircraft.registration}:`, normalizedAircraft.compatibleRunwaySurfaces);
-  
-  // Si l'avion n'a pas de surfaces compatibles définies ou si la liste est vide
-  // Par défaut, on considère qu'il peut opérer sur asphalte et béton
-  if (!normalizedAircraft.compatibleRunwaySurfaces || normalizedAircraft.compatibleRunwaySurfaces.length === 0) {
-    console.warn(`⚠️ Avion ${normalizedAircraft.registration} n'a aucune surface compatible définie - utilisation des valeurs par défaut`);
-    normalizedAircraft.compatibleRunwaySurfaces = ['ASPH', 'CONC']; // Valeurs par défaut
-  }
-  
-  const normalizedSurface = normalizeSurfaceType(runway.surface);
-  
-  console.log(`🔍 Vérification compatibilité piste ${runway.name}:`, {
-    surfaceOriginale: runway.surface,
-    surfaceNormalisée: normalizedSurface,
-    surfacesAvion: normalizedAircraft.compatibleRunwaySurfaces,
-    avionRegistration: normalizedAircraft.registration,
-    avionContientASPH: normalizedAircraft.compatibleRunwaySurfaces.includes('ASPH'),
-    avionContientCONC: normalizedAircraft.compatibleRunwaySurfaces.includes('CONC'),
-    testRevetue: runway.surface ? runway.surface.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().includes('REVETUE') : false
-  });
-  
-  if (normalizedSurface === 'UNKNOWN') {
-    console.error(`❌ Type de surface non reconnu pour la piste ${runway.name}: "${runway.surface}"`);
-    return { 
-      isCompatible: null, 
-      reason: `Type de surface inconnu: "${runway.surface}"`,
-      surface: runway.surface 
-    };
-  }
-  
-  const isCompatible = normalizedAircraft.compatibleRunwaySurfaces.includes(normalizedSurface);
-  
-  console.log(`✈️ Compatibilité ${runway.name} avec ${normalizedAircraft.registration}: ${isCompatible ? '✅ OUI' : '❌ NON'} (${normalizedSurface} ${isCompatible ? 'dans' : 'pas dans'} [${normalizedAircraft.compatibleRunwaySurfaces.join(', ')}])`);
-  
-  return {
-    isCompatible,
-    reason: isCompatible 
-      ? `Compatible avec ${getSurfaceName(normalizedSurface)}` 
-      : `Avion non compatible avec ${getSurfaceName(normalizedSurface)} (piste: ${runway.surface})`,
-    surface: normalizedSurface
-  };
-};
-
-// Données de secours pour quelques aérodromes majeurs (si VAC non disponible)
-const FALLBACK_RUNWAYS = {
-  'LFPG': [
-    { name: '08L', length: 2700, surface: 'ASPH' }, 
-    { name: '26R', length: 2700, surface: 'ASPH' }, 
-    { name: '08R', length: 4200, surface: 'ASPH' }, 
-    { name: '26L', length: 4200, surface: 'ASPH' }
-  ],
-  'LFPO': [
-    { name: '06', length: 3320, surface: 'ASPH' }, 
-    { name: '24', length: 3320, surface: 'ASPH' }, 
-    { name: '08', length: 2400, surface: 'CONC' }, 
-    { name: '26', length: 2400, surface: 'CONC' }
-  ],
-  'LFLL': [
-    { name: '18L', length: 4000, surface: 'CONC' }, 
-    { name: '36R', length: 4000, surface: 'CONC' }, 
-    { name: '18R', length: 2670, surface: 'ASPH' }, 
-    { name: '36L', length: 2670, surface: 'ASPH' }
-  ],
-  // Ajouter quelques aéroports majeurs uniquement
-};
-
-// Fonction pour calculer la différence entre deux angles (en degrés)
-const angleDifference = (angle1, angle2) => {
-  // Vérifier que les angles sont valides
-  if (angle1 === null || angle1 === undefined || angle2 === null || angle2 === undefined ||
-      isNaN(angle1) || isNaN(angle2)) {
-    return 0;
-  }
-  
-  // Normaliser les angles entre 0 et 360
-  angle1 = ((angle1 % 360) + 360) % 360;
-  angle2 = ((angle2 % 360) + 360) % 360;
-  
-  const diff = Math.abs(angle1 - angle2);
-  return Math.min(diff, 360 - diff);
-};
-
-// Fonction pour calculer le vent de travers
-const calculateCrosswind = (windDirection, windSpeed, runwayHeading) => {
-  try {
-    // Forcer la conversion en nombre et logger immédiatement
-    const wd = windDirection !== null && windDirection !== undefined ? Number(windDirection) : null;
-    const ws = Number(windSpeed) || 0;
-    const rh = Number(runwayHeading) || 0;
-    
-    console.log(`🎯 calculateCrosswind - Valeurs converties:`, { wd, ws, rh });
-    
-    // Si pas de vent ou pas de direction, retourner zéro
-    if (wd === null || ws === 0) {
-      console.log('🎯 Vent nul ou sans direction');
-      return {
-        crosswind: 0,
-        headwind: 0,
-        angleDiff: 0
-      };
-    }
-    
-    // MÉTHODE DE CALCUL :
-    // 1. Le vent vient DE windDirection (ex: 340° = vent du nord-ouest)
-    // 2. La piste pointe VERS runwayHeading (ex: piste 12 = cap 120°)
-    // 3. Pour un vent de face parfait, il faudrait que le vent vienne de runwayHeading + 180°
-    
-    // Direction d'où viendrait un vent de face parfait
-    const perfectHeadwindDirection = (rh + 180) % 360;
-    
-    // Angle entre la direction du vent et cette direction parfaite
-    let angleFromPerfectHeadwind = wd - perfectHeadwindDirection;
-    
-    // Normaliser entre -180 et 180
-    while (angleFromPerfectHeadwind > 180) angleFromPerfectHeadwind -= 360;
-    while (angleFromPerfectHeadwind < -180) angleFromPerfectHeadwind += 360;
-    
-    // Valeur absolue pour les calculs
-    const absAngle = Math.abs(angleFromPerfectHeadwind);
-    
-    // Convertir en radians
-    const angleRad = absAngle * Math.PI / 180;
-    
-    // Calculer les composantes
-    let headwindComponent = Math.cos(angleRad) * ws;
-    const crosswindComponent = Math.sin(angleRad) * ws;
-    
-    // Si l'angle est > 90°, on a un vent arrière
-    if (absAngle > 90) {
-      headwindComponent = -Math.abs(headwindComponent);
-    }
-    
-    // L'angle affiché est l'angle entre le vent et la direction de la piste
-    const displayAngle = angleDifference(wd, rh);
-    
-    const result = {
-      crosswind: Math.round(Math.abs(crosswindComponent)),
-      headwind: Math.round(headwindComponent),
-      angleDiff: Math.round(displayAngle)
-    };
-    
-    console.log(`🎯 Résultat calcul:`, result);
-    
-    return result;
-  } catch (error) {
-    console.error('❌ Erreur dans calculateCrosswind:', error);
-    return {
-      crosswind: 0,
-      headwind: 0,
-      angleDiff: 0
-    };
-  }
-};
-
-// Fonction de diagnostic (pour debug)
-const diagnosticRunwayCompatibility = (runway, aircraft) => {
-  console.group(`🔍 DIAGNOSTIC Compatibilité ${runway.name}`);
-  console.log('1. Surface originale de la piste:', runway.surface);
-  
-  // Test de normalisation détaillé
-  const normalized = runway.surface
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toUpperCase();
-  
-  console.log('2. Surface normalisée (sans accents):', normalized);
-  console.log('3. Surface normalisée par la fonction:', normalizeSurfaceType(runway.surface));
-  console.log('4. Structure complète de l\'avion:', aircraft);
-  
-  const normalizedAircraft = normalizeAircraftSurfaces(aircraft);
-  console.log('5. Surfaces compatibles après normalisation:', normalizedAircraft?.compatibleRunwaySurfaces);
-  console.log('6. L\'avion contient ASPH?', normalizedAircraft?.compatibleRunwaySurfaces?.includes('ASPH'));
-  console.log('7. L\'avion contient CONC?', normalizedAircraft?.compatibleRunwaySurfaces?.includes('CONC'));
-  
-  if (runway.surface) {
-    console.log('8. Tests détaillés de la chaîne:');
-    console.log('   - Contient "REVÊTUE"?', runway.surface.toUpperCase().includes('REVÊTUE'));
-    console.log('   - Contient "REVETUE" (après normalisation)?', normalized.includes('REVETUE'));
-    console.log('   - Longueur originale:', runway.surface.length);
-    console.log('   - Longueur normalisée:', normalized.length);
-    console.log('   - Codes de caractères:', Array.from(runway.surface).map(c => c.charCodeAt(0)));
-  }
-  
-  const result = checkRunwayCompatibility(runway, aircraft);
-  console.log('9. Résultat final:', result);
-  console.groupEnd();
-  
-  return result;
-};
-
-export const RunwayAnalyzer = memo(({ icao }) => {
-  // Récupérer les données de l'aérodrome
-  const airports = openAIPSelectors.useFilteredAirports();
-  const airport = airports.find(a => a.icao === icao);
-  
-  // Récupérer l'avion sélectionné
+export const RunwayAnalyzer = ({ icao }) => {
   const { selectedAircraft } = useAircraft();
-  
-  // État pour afficher/masquer les pistes incompatibles
-  const [showIncompatible, setShowIncompatible] = useState(false);
-  
-  // Debug de l'avion sélectionné
-  console.log(`🛩️ RunwayAnalyzer - Avion sélectionné:`, {
-    exists: !!selectedAircraft,
-    registration: selectedAircraft?.registration,
-    fullObject: selectedAircraft,
-    compatibleSurfaces: selectedAircraft?.compatibleRunwaySurfaces,
-    surfaceCount: selectedAircraft?.compatibleRunwaySurfaces?.length || 0
-  });
-  
-  // Récupérer les données VAC
-  const vacChart = vacSelectors.useChartByIcao(icao);
-  const { downloadChart } = vacSelectors.useVACActions();
-  const isVacDownloading = vacSelectors.useIsDownloading(icao);
-  
-  // Récupérer la météo
-  const weather = weatherSelectors.useWeatherByIcao(icao);
-  const isLoading = weatherSelectors.useIsLoading(icao);
-  const error = weatherSelectors.useError(icao);
-  const { fetchWeather } = weatherSelectors.useWeatherActions();
-  
-  // Charger automatiquement la météo si pas disponible
+  const [runways, setRunways] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [expandedRunway, setExpandedRunway] = useState(null);
+  const [airport, setAirport] = useState(null);
+
+  const goToVACModule = () => {
+    // Utiliser l'objet global pour changer d'onglet
+    if (window.setActiveTab) {
+      window.setActiveTab('vac');
+    }
+  };
+
   useEffect(() => {
-    if (icao && !weather && !isLoading && !error) {
-      fetchWeather(icao);
-    }
-  }, [icao, weather, isLoading, error, fetchWeather]);
-  
-  // Déterminer la source des données de pistes (toujours calculer même si pas d'aéroport)
-  let runways = [];
-  let dataSource = 'none';
-  
-  if (airport) {
-    // Priorité 1 : Données extraites de la carte VAC
-    if (vacChart?.isDownloaded && vacChart?.extractedData?.runways) {
-      // Les données VAC peuvent avoir des identifiants comme "05/23"
-      // On doit les séparer en deux pistes distinctes
-      const vacRunways = [];
-      vacChart.extractedData.runways.forEach(rwy => {
-        console.log('🔍 Traitement piste VAC:', rwy);
+    const loadRunwayData = async () => {
+      if (!icao) return;
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        console.log(`🛬 Chargement des pistes pour ${icao}`);
         
-        if (rwy.identifier.includes('/')) {
-          // Piste double (ex: "05/23")
-          const [rwy1, rwy2] = rwy.identifier.split('/');
-          
-          // Calculer les QFU
-          // Si le QFU est fourni dans les données VAC, l'utiliser
-          // Sinon, calculer depuis le numéro de piste
-          let qfu1, qfu2;
-          
-          if (rwy.qfu !== undefined && rwy.qfu !== null && !isNaN(rwy.qfu)) {
-            qfu1 = parseInt(rwy.qfu);
-            qfu2 = (qfu1 + 180) % 360;
-          } else {
-            // Calculer depuis les numéros de piste
-            const num1 = parseInt(rwy1.replace(/[LCR]/g, ''));
-            const num2 = parseInt(rwy2.replace(/[LCR]/g, ''));
-            qfu1 = num1 * 10;
-            qfu2 = num2 * 10;
-          }
-          
-          // Première direction
-          vacRunways.push({
-            name: rwy1,
-            length: rwy.length,
-            width: rwy.width,
-            surface: rwy.surface,
-            qfu: qfu1
-          });
-          // Direction opposée
-          vacRunways.push({
-            name: rwy2,
-            length: rwy.length,
-            width: rwy.width,
-            surface: rwy.surface,
-            qfu: qfu2
-          });
-          
-          console.log(`📐 Piste ${rwy.identifier} séparée:`, 
-            `${rwy1} (QFU ${qfu1}°) et ${rwy2} (QFU ${qfu2}°)`);
+        // Récupérer les infos de l'aérodrome
+        const airportData = await openAIPService.getAirportDetails(icao);
+        
+        if (airportData) {
+          setAirport(airportData);
+          setRunways(airportData.runways || []);
+          console.log(`✅ ${airportData.runways?.length || 0} pistes trouvées`);
         } else {
-          // Piste simple
-          let qfu;
-          if (rwy.qfu !== undefined && rwy.qfu !== null && !isNaN(rwy.qfu)) {
-            qfu = parseInt(rwy.qfu);
-          } else {
-            const num = parseInt(rwy.identifier.replace(/[LCR]/g, ''));
-            qfu = num * 10;
-          }
-          
-          vacRunways.push({
-            name: rwy.identifier,
-            length: rwy.length,
-            width: rwy.width,
-            surface: rwy.surface,
-            qfu: qfu
-          });
+          setError('Aérodrome non trouvé');
         }
-      });
-      runways = vacRunways;
-      dataSource = 'vac';
-    }
-    // Priorité 2 : Données OpenAIP
-    else if (airport.runways && airport.runways.length > 0) {
-      // Adapter les données OpenAIP au format attendu
-      runways = airport.runways.map(rwy => {
-        // OpenAIP peut avoir la surface dans différents formats
-        let surface = rwy.surface || rwy.surfaceType || rwy.type || '';
-        
-        // Si toujours pas de surface et c'est un aérodrome important, supposer asphalte
-        if (!surface && airport.type !== 'small_airport') {
-          surface = 'ASPH';
-        }
-        
-        return {
-          name: rwy.name || rwy.identifier || rwy.designator || 'Unknown',
-          length: rwy.length || rwy.dimensions?.length || 0,
-          width: rwy.width || rwy.dimensions?.width || 0,
-          surface: surface,
-          qfu: rwy.qfu || rwy.heading || (parseInt((rwy.name || '0').replace(/[LCR]/g, '')) * 10)
-        };
-      });
-      dataSource = 'openaip';
-    }
-    // Priorité 3 : Base de données de secours
-    else if (FALLBACK_RUNWAYS[icao]) {
-      runways = FALLBACK_RUNWAYS[icao];
-      dataSource = 'fallback';
-    }
-  }
-  
-  // Parser les données de vent (toujours parser même si pas de météo)
-  let windDirection = null;
-  let windSpeed = 0;
-  
-  if (weather?.metar?.decoded?.wind) {
-    const metar = weather.metar.decoded;
-    console.log('🌪️ Données vent brutes:', metar.wind);
-    
-    if (metar.wind.direction === 'Variable' || metar.wind.direction === 'Calme') {
-      windDirection = null;
-      windSpeed = 0;
-    } else {
-      // Forcer la conversion en nombre
-      windDirection = parseInt(metar.wind.direction);
-      
-      // Debug détaillé pour windSpeed
-      console.log('🔢 Conversion windSpeed:', {
-        raw: metar.wind.speed,
-        parseFloat: parseFloat(metar.wind.speed),
-        parseInt: parseInt(metar.wind.speed),
-        Number: Number(metar.wind.speed)
-      });
-      
-      windSpeed = Number(metar.wind.speed) || 0;
-      
-      // Vérifier que les valeurs sont valides
-      if (isNaN(windDirection)) windDirection = null;
-      if (isNaN(windSpeed)) windSpeed = 0;
-    }
-    
-    console.log('🌤️ Données météo parsées:', { 
-      rawWind: metar.wind,
-      windDirection, 
-      windSpeed,
-      windSpeedType: typeof windSpeed
-    });
-  }
-  
-  // Analyser les pistes (TOUJOURS utiliser useMemo, même si runways est vide)
-  const runwayAnalysis = useMemo(() => {
-    if (!runways || runways.length === 0) return { compatible: [], incompatible: [] };
-    
-    console.log(`📊 Début de l'analyse des pistes pour ${icao} avec avion ${selectedAircraft?.registration || 'non sélectionné'}`);
-    
-    const analyzedRunways = runways.map(runway => {
-      const heading = runway.qfu || parseInt(runway.name.replace(/[LCR]/g, '')) * 10;
-      const windAnalysis = windDirection !== null && windSpeed > 0 
-        ? calculateCrosswind(windDirection, windSpeed, heading)
-        : { crosswind: 0, headwind: 0, angleDiff: 0 };
-      
-      const compatibility = checkRunwayCompatibility(runway, selectedAircraft);
-      
-      // Debug détaillé pour les pistes avec surface "Revêtue"
-      if (runway.surface && runway.surface.toLowerCase().includes('revêt')) {
-        console.log(`📋 Debug spécial pour piste ${runway.name} avec surface "${runway.surface}"`);
-        diagnosticRunwayCompatibility(runway, selectedAircraft);
+      } catch (err) {
+        console.error('❌ Erreur chargement pistes:', err);
+        setError('Impossible de charger les données de pistes');
+        setRunways([]);
+      } finally {
+        setLoading(false);
       }
-      
-      console.log(`  Piste ${runway.name}: surface=${runway.surface}, compatible=${compatibility.isCompatible}, raison="${compatibility.reason}"`);
-      
-      return {
-        ...runway,
-        heading,
-        ...windAnalysis,
-        compatibility,
-        isFavorable: windAnalysis.angleDiff <= 30 && windSpeed > 0,
-        score: windAnalysis.headwind - windAnalysis.crosswind
-      };
-    });
-    
-    // Séparer les pistes compatibles et incompatibles
-    const compatible = analyzedRunways
-      .filter(r => r.compatibility?.isCompatible !== false)
-      .sort((a, b) => b.score - a.score);
-    
-    const incompatible = analyzedRunways
-      .filter(r => r.compatibility?.isCompatible === false)
-      .sort((a, b) => b.score - a.score);
-    
-    return { compatible, incompatible };
-  }, [runways, windDirection, windSpeed, selectedAircraft]);
-  
-  // Debug - afficher dans la console
-  console.log(`🛬 Analyse des pistes pour ${icao}:`, {
-    vacData: vacChart?.extractedData?.runways,
-    openAipData: airport?.runways,
-    fallbackData: FALLBACK_RUNWAYS[icao],
-    finalRunways: runways,
-    dataSource,
-    aircraft: selectedAircraft ? {
-      registration: selectedAircraft.registration,
-      fullObject: selectedAircraft,
-      compatibleSurfaces: selectedAircraft.compatibleRunwaySurfaces,
-      hasSurfaces: selectedAircraft.compatibleRunwaySurfaces && selectedAircraft.compatibleRunwaySurfaces.length > 0
-    } : null
-  });
-  
-  // Debug détaillé des surfaces de pistes
-  console.log('📋 Détail des surfaces de pistes:');
-  runways.forEach((runway, index) => {
-    console.log(`  ${index + 1}. Piste ${runway.name}: surface="${runway.surface || 'non définie'}"`);
-  });
-  
-  // Debug supplémentaire pour les données VAC
-  if (dataSource === 'vac') {
-    console.log('📋 Données VAC détaillées:', runways);
-  }
-  
-  console.log('🎯 Analyse du vent pour toutes les pistes:', {
-    windDirection,
-    windSpeed,
-    compatibleCount: runwayAnalysis?.compatible?.length || 0,
-    incompatibleCount: runwayAnalysis?.incompatible?.length || 0,
-    results: {
-      compatible: runwayAnalysis?.compatible?.map(r => ({
-        name: r.name,
-        heading: r.heading,
-        headwind: r.headwind,
-        crosswind: r.crosswind,
-        angleDiff: r.angleDiff
-      })) || [],
-      incompatible: runwayAnalysis?.incompatible?.map(r => ({
-        name: r.name,
-        surface: r.surface,
-        reason: r.compatibility?.reason
-      })) || []
-    }
-  });
-  
-  // MAINTENANT on peut faire les returns conditionnels
-  
-  // Si pas d'aérodrome trouvé
-  if (!airport) {
+    };
+
+    loadRunwayData();
+  }, [icao]);
+
+  const toggleRunway = (runwayId) => {
+    setExpandedRunway(expandedRunway === runwayId ? null : runwayId);
+  };
+
+  if (!icao) {
     return null;
   }
-  
-  // Si pas de pistes disponibles
-  if (runways.length === 0) {
+
+  if (loading) {
     return (
-      <div style={sx.combine(sx.components.card.base, { borderLeft: '4px solid #f59e0b' })}>
-        <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(2), sx.flex.start)}>
-          <Plane size={16} />
-          <span style={sx.spacing.ml(1)}>Analyse des pistes - {icao}</span>
-        </h4>
-        
-        <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning)}>
-          <AlertTriangle size={16} />
-          <div>
-            <p style={sx.text.sm}>
-              Aucune information de piste disponible pour cet aérodrome
-            </p>
-            <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
-              Téléchargez la carte VAC pour obtenir les données précises des pistes
-            </p>
-          </div>
-        </div>
-        
-        {/* Bouton pour télécharger la VAC */}
-        {!vacChart?.isDownloaded && (
-          <button
-            onClick={() => downloadChart(icao)}
-            disabled={isVacDownloading}
-            style={sx.combine(
-              sx.components.button.base,
-              sx.components.button.primary,
-              sx.spacing.mt(3),
-              isVacDownloading && { opacity: 0.5, cursor: 'not-allowed' }
-            )}
-          >
-            {isVacDownloading ? (
-              <>
-                <div style={{
-                  width: 16,
-                  height: 16,
-                  border: '2px solid white',
-                  borderTopColor: 'transparent',
-                  borderRadius: '50%',
-                  animation: 'spin 1s linear infinite'
-                }} />
-                Téléchargement VAC...
-              </>
-            ) : (
-              <>
-                <Download size={16} />
-                Télécharger la carte VAC
-              </>
-            )}
-          </button>
-        )}
-      </div>
-    );
-  }
-  
-  // En cours de chargement météo
-  if (isLoading) {
-    return (
-      <div style={sx.combine(sx.components.card.base, { borderLeft: '4px solid #f59e0b' })}>
-        <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(2), sx.flex.start)}>
-          <Plane size={16} />
-          <span style={sx.spacing.ml(1)}>Analyse des pistes - {icao}</span>
-        </h4>
-        <div style={sx.text.center}>
-          <div style={{
-            width: 40,
-            height: 40,
-            border: '3px solid #e5e7eb',
-            borderTopColor: '#3b82f6',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 12px'
-          }} />
-          <p style={sx.text.secondary}>Chargement de la météo...</p>
+      <div style={sx.combine(sx.components.card.base, sx.spacing.p(4))}>
+        <div style={sx.combine(sx.flex.center, sx.spacing.p(4))}>
+          <div className="animate-spin">⏳</div>
+          <span style={sx.spacing.ml(2)}>Chargement des pistes...</span>
         </div>
       </div>
     );
   }
-  
-  // Pas de météo disponible
-  if (!weather || !weather.metar?.decoded) {
-    return (
-      <div style={sx.combine(sx.components.card.base, { borderLeft: '4px solid #f59e0b' })}>
-        <div style={sx.combine(sx.flex.between, sx.spacing.mb(3))}>
-          <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.flex.start)}>
-            <Plane size={16} />
-            <span style={sx.spacing.ml(1)}>Analyse des pistes - {icao}</span>
-          </h4>
-          <button
-            onClick={() => fetchWeather(icao)}
-            style={sx.combine(sx.components.button.base, sx.components.button.secondary, { padding: '6px 12px' })}
-          >
-            <RefreshCw size={14} />
-            Charger météo
-          </button>
-        </div>
-        
-        <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning)}>
+
+  return (
+    <div style={sx.combine(sx.components.card.base, sx.spacing.p(4))}>
+      <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4))}>
+        <Plane size={20} style={{ display: 'inline', marginRight: '8px' }} />
+        Analyse des pistes - {icao}
+      </h4>
+
+      {error && (
+        <div style={sx.combine(sx.components.alert.base, sx.components.alert.danger, sx.spacing.mb(4))}>
           <AlertTriangle size={16} />
+          <p style={sx.text.sm}>{error}</p>
+        </div>
+      )}
+
+      {!selectedAircraft && (
+        <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning, sx.spacing.mb(4))}>
+          <Info size={16} />
           <p style={sx.text.sm}>
-            Météo non disponible - Impossible d'analyser les pistes
+            Sélectionnez un avion pour analyser la compatibilité des pistes
           </p>
         </div>
-        
-        {/* Afficher quand même les pistes disponibles */}
-        <div style={sx.spacing.mt(3)}>
-          <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>
-            Pistes disponibles ({dataSource === 'vac' ? 'données VAC' : dataSource === 'openaip' ? 'OpenAIP' : 'base de secours'}) :
-          </p>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {runways.map(runway => {
-              const compatibility = selectedAircraft ? checkRunwayCompatibility(runway, selectedAircraft) : null;
-              
-              return (
-                <span 
-                  key={runway.name}
-                  style={{
-                    padding: '4px 12px',
-                    backgroundColor: 
-                      compatibility?.isCompatible === false ? '#fee2e2' :
-                      dataSource === 'vac' ? '#dcfce7' : 
-                      '#f3f4f6',
-                    border: 
-                      compatibility?.isCompatible === false ? '1px solid #fca5a5' :
-                      dataSource === 'vac' ? '1px solid #86efac' : 
-                      '1px solid #e5e7eb',
-                    borderRadius: '4px',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    color: compatibility?.isCompatible === false ? '#991b1b' : '#374151'
-                  }}
-                  title={compatibility?.reason || ''}
-                >
-                  {compatibility?.isCompatible === false && '❌ '}
-                  {runway.name}
-                  {runway.qfu !== undefined && runway.qfu !== null && ` (QFU ${runway.qfu}°)`}
-                  {runway.length && ` • ${runway.length}m`}
-                  {runway.surface && ` • ${runway.surface}`}
-                </span>
-              );
-            })}
-          </div>
-          
-          {/* Avertissement si des pistes sont incompatibles */}
-          {selectedAircraft && runways.some(r => checkRunwayCompatibility(r, selectedAircraft).isCompatible === false) && (
-            <div style={sx.combine(sx.components.alert.base, sx.components.alert.danger, sx.spacing.mt(3))}>
-              <AlertTriangle size={16} />
-              <p style={sx.text.sm}>
-                ⚠️ Certaines pistes ne sont pas compatibles avec {selectedAircraft.registration}
-              </p>
-            </div>
+      )}
+
+      {airport && (
+        <div style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(3))}>
+          <p><strong>{airport.name}</strong></p>
+          <p>Élévation: {airport.elevation} ft AMSL</p>
+          {airport.vacData && (
+            <p style={sx.combine(sx.text.xs, sx.text.success)}>
+              ✅ Données issues de la carte VAC téléchargée
+              {airport.vacData.circuitAltitude && ` • Tour de piste: ${airport.vacData.circuitAltitude} ft`}
+            </p>
           )}
         </div>
-        
-        {/* Encourager le téléchargement de la VAC */}
-        {!vacChart?.isDownloaded && (
-          <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mt(3))}>
-            <Map size={16} />
-            <div>
-              <p style={sx.text.sm}>
-                <strong>Conseil :</strong> Téléchargez la carte VAC pour obtenir les données exactes des pistes (QFU précis, dimensions, etc.)
-              </p>
-              <button
-                onClick={() => downloadChart(icao)}
-                disabled={isVacDownloading}
+      )}
+
+      {/* Notification pour télécharger la carte VAC */}
+      {airport && airport.staticDataWarning && airport.vacAvailable && (
+        <div style={sx.combine(
+          sx.components.alert.base, 
+          sx.components.alert.warning, 
+          sx.spacing.mb(4),
+          { borderColor: '#f59e0b', borderWidth: '2px' }
+        )}>
+          <Download size={20} style={{ flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(1))}>
+              ⚠️ Données de pistes non disponibles
+            </p>
+            <p style={sx.combine(sx.text.sm, sx.spacing.mb(2))}>
+              Pour obtenir les informations officielles et à jour des pistes de {icao}, 
+              téléchargez la carte VAC depuis le module dédié.
+            </p>
+            <button
+              onClick={goToVACModule}
+              style={sx.combine(
+                sx.components.button.base,
+                sx.components.button.primary,
+                { 
+                  backgroundColor: '#f59e0b',
+                  '&:hover': { backgroundColor: '#d97706' }
+                }
+              )}
+            >
+              <ExternalLink size={16} />
+              Aller au module Cartes VAC
+            </button>
+          </div>
+        </div>
+      )}
+
+      {runways.length === 0 && !error && airport && !airport.vacAvailable && (
+        <div style={sx.combine(sx.components.alert.base, sx.components.alert.info)}>
+          <Info size={16} />
+          <p style={sx.text.sm}>
+            Aucune donnée de piste disponible pour cet aérodrome. 
+            Les cartes VAC ne sont pas disponibles pour tous les aérodromes.
+          </p>
+        </div>
+      )}
+
+      {runways.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {runways.map((runway, index) => {
+            const isExpanded = expandedRunway === runway.id || expandedRunway === index;
+            const analysis = selectedAircraft ? analyzeRunwayCompatibility(runway, selectedAircraft) : null;
+            
+            return (
+              <div 
+                key={runway.id || index}
                 style={sx.combine(
-                  sx.components.button.base,
-                  sx.components.button.primary,
-                  sx.spacing.mt(2),
-                  { fontSize: '13px', padding: '6px 12px' },
-                  isVacDownloading && { opacity: 0.5, cursor: 'not-allowed' }
+                  sx.components.card.base,
+                  sx.spacing.p(3),
+                  {
+                    borderLeft: analysis 
+                      ? `4px solid ${analysis.compatible ? '#10b981' : '#ef4444'}`
+                      : '4px solid #6b7280'
+                  }
                 )}
               >
-                {isVacDownloading ? 'Téléchargement...' : 'Télécharger VAC'}
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-  
-  
-  // CAS SPÉCIAL : VENT CALME OU VARIABLE
-  if (windSpeed === 0 || windDirection === null) {
-    return (
-      <div style={sx.combine(sx.components.card.base, { borderLeft: '4px solid #f59e0b' })}>
-        <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), sx.flex.start)}>
-          <Plane size={16} />
-          <span style={sx.spacing.ml(1)}>Analyse des pistes - {icao}</span>
-        </h4>
-        
-        {/* Badge source de données */}
-        <div style={sx.spacing.mb(3)}>
-          <span style={{
-            padding: '4px 12px',
-            backgroundColor: dataSource === 'vac' ? '#dcfce7' : dataSource === 'openaip' ? '#dbeafe' : '#f3f4f6',
-            color: dataSource === 'vac' ? '#166534' : dataSource === 'openaip' ? '#1e40af' : '#6b7280',
-            borderRadius: '4px',
-            fontSize: '12px',
-            fontWeight: '600'
-          }}>
-            {dataSource === 'vac' ? '✅ Données VAC' : dataSource === 'openaip' ? '🌐 Données OpenAIP' : '📋 Données de secours'}
-          </span>
-        </div>
-        
-        <div style={sx.combine(sx.components.alert.base, sx.components.alert.success)}>
-          <div>
-            <p style={sx.combine(sx.text.sm, sx.text.bold)}>
-              ✅ Vent calme ou variable
-            </p>
-            <p style={sx.text.xs}>
-              Toutes les pistes sont utilisables - Choisir selon la procédure locale
-            </p>
-          </div>
-        </div>
-        
-        {/* Liste des pistes */}
-        <div style={sx.spacing.mt(3)}>
-          <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>
-            Pistes disponibles :
-          </p>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {runways.map(runway => {
-              const compatibility = selectedAircraft ? checkRunwayCompatibility(runway, selectedAircraft) : null;
-              
-              return (
-                <span 
-                  key={runway.name}
-                  style={{
-                    padding: '6px 12px',
-                    backgroundColor: 
-                      compatibility?.isCompatible === false ? '#fee2e2' :
-                      compatibility?.isCompatible === true ? '#dcfce7' :
-                      '#f3f4f6',
-                    border: 
-                      compatibility?.isCompatible === false ? '1px solid #fca5a5' :
-                      compatibility?.isCompatible === true ? '1px solid #86efac' :
-                      '1px solid #e5e7eb',
-                    borderRadius: '4px',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    color: 
-                      compatibility?.isCompatible === false ? '#991b1b' :
-                      compatibility?.isCompatible === true ? '#166534' :
-                      '#374151'
-                  }}
-                  title={compatibility?.reason || ''}
+                {/* En-tête */}
+                <div 
+                  style={sx.combine(sx.flex.between, sx.spacing.mb(2), { cursor: 'pointer' })}
+                  onClick={() => toggleRunway(runway.id || index)}
                 >
-                  {compatibility?.isCompatible === false && '❌ '}
-                  {runway.name}
-                  {runway.qfu !== undefined && runway.qfu !== null && ` (QFU ${runway.qfu}°)`}
-                  {runway.length && ` • ${runway.length}m`}
-                  {runway.surface && ` • ${runway.surface}`}
-                </span>
-              );
-            })}
-          </div>
-          
-          {/* Avertissement si des pistes sont incompatibles */}
-          {selectedAircraft && runways.some(r => checkRunwayCompatibility(r, selectedAircraft).isCompatible === false) && (
-            <div style={sx.combine(sx.components.alert.base, sx.components.alert.danger, sx.spacing.mt(3))}>
-              <AlertTriangle size={16} />
-              <p style={sx.text.sm}>
-                ⚠️ Certaines pistes ne sont pas compatibles avec {selectedAircraft.registration}
-              </p>
-            </div>
-          )}
-        </div>
-        
-        {/* Encourager le téléchargement de la VAC si pas déjà fait */}
-        {!vacChart?.isDownloaded && (
-          <div style={sx.combine(sx.spacing.mt(3), sx.text.xs, sx.text.secondary, sx.text.center)}>
-            <button
-              onClick={() => downloadChart(icao)}
-              disabled={isVacDownloading}
-              style={{
-                color: '#3b82f6',
-                textDecoration: 'underline',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              Télécharger la carte VAC pour des données plus précises
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  }
-  
-  // CAS NORMAL : VENT PRÉSENT
-  return (
-    <div style={sx.combine(sx.components.card.base, { borderLeft: '4px solid #f59e0b' })}>
-      <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), sx.flex.start)}>
-        <Plane size={16} />
-        <span style={sx.spacing.ml(1)}>Analyse des pistes - {icao}</span>
-      </h4>
-      
-      {/* Avertissement général si des incompatibilités sont détectées */}
-      {runwayAnalysis?.incompatible?.length > 0 && (
-        <div style={sx.combine(sx.components.alert.base, sx.components.alert.danger, sx.spacing.mb(3))}>
-          <AlertTriangle size={16} />
-          <div>
-            <p style={sx.combine(sx.text.sm, sx.text.bold)}>
-              ⚠️ {runwayAnalysis.incompatible.length} piste{runwayAnalysis.incompatible.length > 1 ? 's' : ''} incompatible{runwayAnalysis.incompatible.length > 1 ? 's' : ''}
-            </p>
-            <p style={sx.text.xs}>
-              {selectedAircraft.registration} n'est pas configuré pour certaines surfaces disponibles à {icao}
-            </p>
-          </div>
-        </div>
-      )}
-      
-      {/* Badge source de données */}
-      <div style={sx.spacing.mb(3)}>
-        <span style={{
-          padding: '4px 12px',
-          backgroundColor: dataSource === 'vac' ? '#dcfce7' : dataSource === 'openaip' ? '#dbeafe' : '#f3f4f6',
-          color: dataSource === 'vac' ? '#166534' : dataSource === 'openaip' ? '#1e40af' : '#6b7280',
-          borderRadius: '4px',
-          fontSize: '12px',
-          fontWeight: '600'
-        }}>
-          {dataSource === 'vac' ? '✅ Données VAC précises' : dataSource === 'openaip' ? '🌐 Données OpenAIP' : '📋 Données de secours'}
-        </span>
-      </div>
-      
-      {/* Conditions de vent actuelles */}
-      <div style={sx.combine(sx.flex.row, sx.spacing.gap(3), sx.spacing.mb(3))}>
-        <div style={sx.combine(sx.flex.start, sx.text.sm)}>
-          <Wind size={16} style={{ color: '#3b82f6' }} />
-          <span style={sx.spacing.ml(1)}>
-            Vent : <strong>{windDirection || 'Variable'}° / {windSpeed}kt</strong>
-            {weather?.metar?.decoded?.wind?.gust && <span style={{ color: '#f59e0b' }}> (rafales {weather.metar.decoded.wind.gust}kt)</span>}
-          </span>
-        </div>
-      </div>
-      
-      {/* Piste recommandée ou avertissement */}
-      {windSpeed > 0 && (
-        (() => {
-          // Utiliser uniquement les pistes compatibles
-          const compatibleRunways = runwayAnalysis.compatible;
-          const bestRunway = compatibleRunways[0];
-          const hasIncompatibleRunways = runwayAnalysis.incompatible.length > 0;
-          
-          if (!bestRunway || compatibleRunways.length === 0) {
-            return (
-              <div style={sx.combine(sx.components.alert.base, sx.components.alert.danger, sx.spacing.mb(3))}>
-                <AlertTriangle size={16} />
-                <div>
-                  <p style={sx.combine(sx.text.sm, sx.text.bold)}>
-                    ❌ Aucune piste compatible disponible
-                  </p>
-                  <p style={sx.text.xs}>
-                    L'avion {selectedAircraft.registration} n'est pas configuré pour les types de pistes disponibles à {icao}
-                  </p>
-                </div>
-              </div>
-            );
-          }
-          
-          return (
-            <>
-              {bestRunway.isFavorable ? (
-                <div style={sx.combine(sx.components.alert.base, sx.components.alert.success, sx.spacing.mb(3))}>
-                  <div>
-                    <p style={sx.combine(sx.text.sm, sx.text.bold)}>
-                      ✅ Piste recommandée : {bestRunway.name}
-                    </p>
-                    <p style={sx.text.xs}>
-                      {bestRunway.headwind >= 0 ? 'Vent de face' : (
-                        <span style={{ color: '#dc2626', fontWeight: 'bold' }}>⚠️ Vent arrière</span>
-                      )} : {Math.abs(bestRunway.headwind)}kt
-                      {bestRunway.crosswind > 0 && ` • Vent traversier : ${bestRunway.crosswind}kt`}
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning, sx.spacing.mb(3))}>
-                  <AlertTriangle size={16} />
-                  <div>
-                    <p style={sx.combine(sx.text.sm, sx.text.bold)}>
-                      ⚠️ Vent traversier sur toutes les pistes compatibles
-                    </p>
-                    <p style={sx.text.xs}>
-                      Meilleure option : {bestRunway.name} (écart {bestRunway.angleDiff}°)
-                    </p>
-                  </div>
-                </div>
-              )}
-            </>
-          );
-        })()
-      )}
-      
-      {/* Analyse détaillée de toutes les pistes */}
-      <div>
-        <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>
-          Pistes compatibles :
-        </p>
-        
-        {/* Explication de la méthode de calcul */}
-        <div style={{
-          backgroundColor: '#f0f9ff',
-          border: '1px solid #bae6fd',
-          borderRadius: '6px',
-          padding: '12px',
-          marginBottom: '12px',
-          fontSize: '12px'
-        }}>
-          <strong>📐 Méthode de calcul :</strong>
-          <div style={{ marginTop: '4px', lineHeight: '1.6' }}>
-            • Le vent vient <strong>DE</strong> la direction indiquée (ex: 340° = vent du nord-ouest)<br/>
-            • Pour chaque piste, on calcule l'angle avec la direction idéale du vent de face<br/>
-            • Vent de face = cos(angle) × vitesse | Vent traversier = sin(angle) × vitesse<br/>
-            • <span style={{ color: '#dc2626' }}>Fond rouge</span> = vent arrière (à éviter)
-          </div>
-          <div style={{ 
-            marginTop: '8px', 
-            paddingTop: '8px', 
-            borderTop: '1px solid #93c5fd',
-            fontSize: '11px',
-            fontStyle: 'italic'
-          }}>
-            <strong>Exemple :</strong> Vent 340°/11kt sur piste 12 (QFU 120°)<br/>
-            → Vent de face parfait viendrait du 300° (120° + 180°)<br/>
-            → Angle : 340° - 300° = 40°<br/>
-            → Vent de face = cos(40°) × 11 = 8kt | Traversier = sin(40°) × 11 = 7kt
-          </div>
-        </div>
-        
-        {/* Pistes compatibles */}
-        {runwayAnalysis.compatible.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {runwayAnalysis.compatible.map((runway, index) => (
-              <div 
-                key={`${runway.name}-${index}`}
-                style={{
-                  padding: '12px',
-                  backgroundColor: runway.headwind < 0 ? '#fee2e2' : (index === 0 ? '#f0fdf4' : '#f9fafb'),
-                  borderRadius: '6px',
-                  border: runway.headwind < 0 ? '1px solid #fca5a5' : 
-                         (index === 0 ? '1px solid #86efac' : '1px solid #e5e7eb')
-                }}
-              >
-                <div style={sx.combine(sx.flex.between, sx.spacing.mb(2))}>
-                  <div>
-                    <span style={sx.combine(sx.text.base, sx.text.bold)}>
-                      Piste {runway.name}
-                    </span>
-                    <span style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.ml(2))}>
-                      (QFU {runway.heading}°)
-                    </span>
-                    {runway.length && (
-                      <span style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.ml(2))}>
-                        {runway.length}m
-                      </span>
-                    )}
-                    {runway.width && dataSource === 'vac' && (
-                      <span style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.ml(1))}>
-                        × {runway.width}m
-                      </span>
-                    )}
-                    {runway.surface && dataSource === 'vac' && (
-                      <span style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.ml(2))}>
-                        • {runway.surface}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    {/* Indicateur de compatibilité */}
-                    <span style={{
-                      padding: '4px 12px',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      backgroundColor: '#dcfce7',
-                      color: '#166534'
-                    }}>
-                      ✅ Compatible
-                    </span>
-                    {!runway.isFavorable && windSpeed > 0 && (
-                      <span style={{
-                        padding: '4px 12px',
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        fontWeight: '600',
-                        backgroundColor: '#fef3c7',
-                        color: '#92400e'
-                      }}>
-                        ⚠ Écart {runway.angleDiff}°
-                      </span>
-                    )}
-                  </div>
-                </div>
-                
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-                  <div style={sx.combine(sx.text.sm)}>
-                    <span style={{ color: runway.headwind >= 0 ? '#16a34a' : '#dc2626' }}>
-                      {runway.headwind >= 0 ? '↑' : '↓'}
-                    </span>
-                    {' '}Vent {runway.headwind >= 0 ? 'de face' : (
-                      <span style={{ color: '#dc2626', fontWeight: 'bold' }}>arrière</span>
-                    )} : 
-                    <strong style={{ color: runway.headwind < 0 ? '#dc2626' : 'inherit' }}>
-                      {' '}{Math.abs(runway.headwind)}kt
-                    </strong>
-                  </div>
-                  {runway.crosswind > 0 && (
-                    <div style={sx.combine(sx.text.sm)}>
-                      <span style={{ color: '#f59e0b' }}>→</span>
-                      {' '}Vent traversier : 
-                      <strong> {runway.crosswind}kt</strong>
+                  <div style={sx.flex.row}>
+                    <div>
+                      <h5 style={sx.combine(sx.text.base, sx.text.bold)}>
+                        Piste {runway.designator || `${runway.le_ident}/${runway.he_ident}`}
+                      </h5>
+                      <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                        {runway.surface?.type ? SURFACE_TYPES[runway.surface.type]?.name || runway.surface.type : 'Surface inconnue'}
+                        {runway.dimensions?.width && ` • Largeur: ${runway.dimensions.width}m`}
+                      </p>
                     </div>
-                  )}
+                    {analysis && (
+                      <div style={sx.spacing.ml(3)}>
+                        {analysis.compatible ? (
+                          <CheckCircle size={20} color="#10b981" />
+                        ) : (
+                          <AlertTriangle size={20} color="#ef4444" />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div style={sx.flex.center}>
+                    {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  </div>
                 </div>
-                
-                {/* Détail du calcul */}
-                <details style={{ marginTop: '8px' }}>
-                  <summary style={{ 
-                    cursor: 'pointer', 
-                    fontSize: '11px', 
-                    color: '#6b7280',
-                    userSelect: 'none'
-                  }}>
-                    Voir le détail du calcul
-                  </summary>
-                  <div style={{
-                    marginTop: '8px',
-                    padding: '8px',
-                    backgroundColor: '#f9fafb',
-                    borderRadius: '4px',
-                    fontSize: '11px',
-                    lineHeight: '1.5'
-                  }}>
-                    {(() => {
-                      const perfectHeadwindDir = (runway.heading + 180) % 360;
-                      let angleFromPerfect = (windDirection || 0) - perfectHeadwindDir;
-                      if (angleFromPerfect > 180) angleFromPerfect -= 360;
-                      if (angleFromPerfect < -180) angleFromPerfect += 360;
-                      const absAngle = Math.abs(angleFromPerfect);
-                      const ws = windSpeed || 0;
-                      
-                      return (
-                        <>
-                          <div>• Vent de : <strong>{windDirection || 'N/A'}°</strong> à <strong>{ws}kt</strong></div>
-                          <div>• Cap piste : <strong>{runway.heading}°</strong></div>
-                          <div>• Vent de face parfait viendrait du : <strong>{perfectHeadwindDir}°</strong></div>
-                          <div>• Angle avec vent de face parfait : <strong>{absAngle}°</strong></div>
-                          <div style={{ marginTop: '4px' }}>
-                            <strong>Calcul :</strong><br/>
-                            • Vent de face = cos({absAngle}°) × {ws}kt = <strong>{runway.headwind || 0}kt</strong><br/>
-                            • Vent traversier = sin({absAngle}°) × {ws}kt = <strong>{runway.crosswind || 0}kt</strong>
-                          </div>
-                          {runway.headwind < 0 && (
-                            <div style={{ marginTop: '4px', color: '#dc2626' }}>
-                              ⚠️ Angle {'>'} 90° = composante de vent arrière
+
+                {/* Distances principales */}
+                <div style={sx.combine(sx.text.sm, sx.spacing.mb(2))}>
+                  <div style={sx.combine(sx.flex.row, sx.spacing.gap(4))}>
+                    <div>
+                      <strong>TODA:</strong> {runway.dimensions?.toda || runway.dimensions?.length || 'N/A'} m
+                      {runway.dimensions?.toda && ` (${metersToFeet(runway.dimensions.toda)} ft)`}
+                    </div>
+                    <div>
+                      <strong>LDA:</strong> {runway.dimensions?.lda || runway.dimensions?.length || 'N/A'} m
+                      {runway.dimensions?.lda && ` (${metersToFeet(runway.dimensions.lda)} ft)`}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Analyse de compatibilité */}
+                {analysis && analysis.reasons.length > 0 && (
+                  <div style={sx.combine(
+                    sx.components.alert.base,
+                    analysis.compatible ? sx.components.alert.success : sx.components.alert.danger,
+                    sx.spacing.mb(2)
+                  )}>
+                    {analysis.reasons.map((reason, idx) => (
+                      <p key={idx} style={sx.text.xs}>{reason}</p>
+                    ))}
+                  </div>
+                )}
+
+                {/* Détails étendus */}
+                {isExpanded && (
+                  <div style={sx.combine(sx.spacing.mt(3), sx.spacing.pt(3), { borderTop: '1px solid #e5e7eb' })}>
+                    {/* Toutes les distances */}
+                    <div style={sx.spacing.mb(3)}>
+                      <h6 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(1))}>
+                        <Ruler size={14} /> Distances déclarées
+                      </h6>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                        <div style={sx.text.xs}>
+                          <strong>TORA:</strong> {runway.dimensions?.tora || runway.dimensions?.length || 'N/A'} m
+                          {runway.dimensions?.tora && ` (${metersToFeet(runway.dimensions.tora)} ft)`}
+                        </div>
+                        <div style={sx.text.xs}>
+                          <strong>TODA:</strong> {runway.dimensions?.toda || runway.dimensions?.length || 'N/A'} m
+                          {runway.dimensions?.toda && ` (${metersToFeet(runway.dimensions.toda)} ft)`}
+                        </div>
+                        <div style={sx.text.xs}>
+                          <strong>ASDA:</strong> {runway.dimensions?.asda || runway.dimensions?.length || 'N/A'} m
+                          {runway.dimensions?.asda && ` (${metersToFeet(runway.dimensions.asda)} ft)`}
+                        </div>
+                        <div style={sx.text.xs}>
+                          <strong>LDA:</strong> {runway.dimensions?.lda || runway.dimensions?.length || 'N/A'} m
+                          {runway.dimensions?.lda && ` (${metersToFeet(runway.dimensions.lda)} ft)`}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Orientation et seuils */}
+                    {(runway.le_ident || runway.he_ident) && (
+                      <div style={sx.spacing.mb(3)}>
+                        <h6 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(1))}>
+                          <Wind size={14} /> Orientations
+                        </h6>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          {runway.le_ident && (
+                            <div style={sx.text.xs}>
+                              <strong>{runway.le_ident}:</strong> {runway.le_heading || 'N/A'}°
+                              {runway.le_displaced_threshold && ` • Seuil décalé: ${runway.le_displaced_threshold}m`}
                             </div>
                           )}
-                        </>
-                      );
-                    })()}
-                  </div>
-                </details>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning, sx.spacing.mb(3))}>
-            <AlertTriangle size={16} />
-            <p style={sx.text.sm}>
-              Aucune piste compatible disponible
-            </p>
-          </div>
-        )}
-        
-        {/* Pistes incompatibles - Section cachable */}
-        {runwayAnalysis.incompatible.length > 0 && (
-          <div style={sx.spacing.mt(4)}>
-            <button
-              onClick={() => setShowIncompatible(!showIncompatible)}
-              style={{
-                background: 'none',
-                border: 'none',
-                padding: '8px 0',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                color: '#6b7280',
-                fontSize: '14px',
-                fontWeight: '500'
-              }}
-            >
-              <span style={{
-                display: 'inline-block',
-                transform: showIncompatible ? 'rotate(90deg)' : 'rotate(0deg)',
-                transition: 'transform 0.2s'
-              }}>
-                ▶
-              </span>
-              Pistes incompatibles ({runwayAnalysis.incompatible.length})
-            </button>
-            
-            {showIncompatible && (
-              <div style={{ 
-                marginTop: '12px',
-                padding: '12px',
-                backgroundColor: '#fee2e2',
-                borderRadius: '8px',
-                border: '1px solid #fca5a5'
-              }}>
-                <div style={sx.combine(sx.components.alert.base, sx.components.alert.danger, sx.spacing.mb(3))}>
-                  <AlertTriangle size={16} />
-                  <p style={sx.text.sm}>
-                    Ces pistes ne sont pas compatibles avec {selectedAircraft.registration}
-                  </p>
-                </div>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {runwayAnalysis.incompatible.map((runway, index) => (
-                    <div 
-                      key={`incomp-${runway.name}-${index}`}
-                      style={{
-                        padding: '12px',
-                        backgroundColor: '#ffffff',
-                        borderRadius: '6px',
-                        border: '2px solid #dc2626',
-                        opacity: 0.8
-                      }}
-                    >
-                      <div style={sx.combine(sx.flex.between, sx.spacing.mb(2))}>
-                        <div>
-                          <span style={sx.combine(sx.text.base, sx.text.bold, { color: '#991b1b' })}>
-                            ❌ Piste {runway.name}
-                          </span>
-                          <span style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.ml(2))}>
-                            (QFU {runway.heading}°)
-                          </span>
-                          {runway.length && (
-                            <span style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.ml(2))}>
-                              {runway.length}m
-                            </span>
-                          )}
-                          {runway.surface && (
-                            <span style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.ml(2))}>
-                              • {runway.surface}
-                            </span>
+                          {runway.he_ident && (
+                            <div style={sx.text.xs}>
+                              <strong>{runway.he_ident}:</strong> {runway.he_heading || 'N/A'}°
+                              {runway.he_displaced_threshold && ` • Seuil décalé: ${runway.he_displaced_threshold}m`}
+                            </div>
                           )}
                         </div>
                       </div>
-                      
-                      <p style={{ fontSize: '12px', color: '#991b1b', marginTop: '4px' }}>
-                        {runway.compatibility?.reason || 'Type de surface incompatible'}
-                      </p>
+                    )}
+
+                    {/* Caractéristiques */}
+                    <div style={sx.spacing.mb(2)}>
+                      <h6 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(1))}>
+                        Caractéristiques
+                      </h6>
+                      <div style={sx.text.xs}>
+                        {runway.surface?.condition && (
+                          <p>État: {runway.surface.condition}</p>
+                        )}
+                        {runway.lighting && (
+                          <p>Éclairage: {runway.lighting}</p>
+                        )}
+                        {runway.closed && (
+                          <p style={{ color: '#dc2626' }}>⚠️ PISTE FERMÉE</p>
+                        )}
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-      
-      {/* Note sur la source des données */}
-      {dataSource !== 'vac' && (
-        <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mt(3))}>
-          <Info size={16} />
-          <div>
-            <p style={sx.text.sm}>
-              <strong>💡 Astuce :</strong> Pour des données de pistes plus précises (QFU exact, dimensions, surface), 
-              téléchargez la carte VAC depuis l'onglet "Cartes VAC".
-            </p>
-            {!vacChart?.isDownloaded && (
-              <button
-                onClick={() => downloadChart(icao)}
-                disabled={isVacDownloading}
-                style={sx.combine(
-                  sx.components.button.base,
-                  sx.components.button.primary,
-                  sx.spacing.mt(2),
-                  { fontSize: '13px', padding: '6px 12px' },
-                  isVacDownloading && { opacity: 0.5, cursor: 'not-allowed' }
+
+                    {/* Comparaison avec l'avion */}
+                    {selectedAircraft && selectedAircraft.runwayRequirements && (
+                      <div style={sx.combine(
+                        sx.components.alert.base,
+                        sx.components.alert.info,
+                        sx.spacing.mt(3)
+                      )}>
+                        <h6 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(1))}>
+                          Configuration {selectedAircraft.registration}
+                        </h6>
+                        <div style={sx.text.xs}>
+                          <p>Distance décollage requise: {selectedAircraft.runwayRequirements.takeoffDistance} ft</p>
+                          <p>Distance atterrissage requise: {selectedAircraft.runwayRequirements.landingDistance} ft</p>
+                          {selectedAircraft.runwayRequirements.surfaceTypes && (
+                            <p>Surfaces compatibles: {selectedAircraft.runwayRequirements.surfaceTypes.join(', ')}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
-              >
-                {isVacDownloading ? 'Téléchargement...' : 'Aller télécharger la VAC'}
-              </button>
-            )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Résumé de compatibilité */}
+      {selectedAircraft && runways.length > 0 && (
+        <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mt(4))}>
+          <Info size={16} />
+          <div style={sx.text.sm}>
+            <p>
+              <strong>
+                {runways.filter(r => analyzeRunwayCompatibility(r, selectedAircraft).compatible).length}
+              </strong> piste(s) compatible(s) sur {runways.length}
+            </p>
           </div>
         </div>
       )}
     </div>
   );
-});
-
-RunwayAnalyzer.displayName = 'RunwayAnalyzer';
+};
 
 export default RunwayAnalyzer;

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Calcul Top of Descent</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #1f2937;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 30px;
+        }
+        .input-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .input-field {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        input {
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        .preset-btn {
+            padding: 5px 10px;
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        .preset-btn:hover {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .calculate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+            margin: 20px auto;
+            display: block;
+        }
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+        }
+        .result-box {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            text-align: center;
+            animation: slideIn 0.5s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .result-main {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .result-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 10px;
+        }
+        .detail-item {
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .detail-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+        .detail-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .warning {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .info {
+            background: #eff6ff;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .formula {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 20px 0;
+        }
+        .icon {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            <span style="font-size: 30px;">✈️</span>
+            Calculateur de Top of Descent (TOD)
+        </h1>
+        <p class="subtitle">Calculez le point optimal pour commencer votre descente</p>
+        
+        <div class="input-group">
+            <div class="input-field">
+                <label>Altitude actuelle (ft)</label>
+                <input type="number" id="currentAlt" value="10000" min="0" max="50000">
+            </div>
+            
+            <div class="input-field">
+                <label>Altitude cible (ft)</label>
+                <input type="number" id="targetAlt" value="2000" min="0" max="50000">
+            </div>
+            
+            <div class="input-field">
+                <label>Taux de descente (ft/min)</label>
+                <input type="number" id="descentRate" value="300" min="100" max="2000">
+                <div class="buttons">
+                    <button class="preset-btn" onclick="setDescentRate(300)">Confort</button>
+                    <button class="preset-btn" onclick="setDescentRate(500)">Standard</button>
+                    <button class="preset-btn" onclick="setDescentRate(700)">Rapide</button>
+                </div>
+            </div>
+            
+            <div class="input-field">
+                <label>Vitesse sol (kt)</label>
+                <input type="number" id="groundSpeed" value="120" min="50" max="500">
+                <div class="buttons">
+                    <button class="preset-btn" onclick="setGroundSpeed(80)">Lent</button>
+                    <button class="preset-btn" onclick="setGroundSpeed(120)">Moyen</button>
+                    <button class="preset-btn" onclick="setGroundSpeed(180)">Rapide</button>
+                </div>
+            </div>
+        </div>
+        
+        <button class="calculate-btn" onclick="calculateTOD()">
+            📐 Calculer le TOD
+        </button>
+        
+        <div id="result" style="display: none;"></div>
+        
+        <div class="formula">
+            <strong>📐 Formule utilisée :</strong><br>
+            Distance TOD (NM) = (Altitude à descendre / Taux de descente) × (Vitesse sol / 60)<br>
+            + Buffer de sécurité (10% ou 2 NM minimum)
+        </div>
+        
+        <div class="info">
+            <strong>💡 Règles pratiques :</strong><br>
+            • <strong>Règle du 3:1</strong> : 3 NM de distance pour 1000 ft d'altitude<br>
+            • <strong>Angle idéal</strong> : Entre 3° et 5° pour le confort<br>
+            • <strong>Taux standard</strong> : 300 ft/min pour les passagers, 500 ft/min en général<br>
+            • <strong>Buffer</strong> : Toujours prévoir une marge de sécurité
+        </div>
+    </div>
+    
+    <script>
+        function setDescentRate(rate) {
+            document.getElementById('descentRate').value = rate;
+        }
+        
+        function setGroundSpeed(speed) {
+            document.getElementById('groundSpeed').value = speed;
+        }
+        
+        function calculateTOD() {
+            const currentAlt = parseFloat(document.getElementById('currentAlt').value);
+            const targetAlt = parseFloat(document.getElementById('targetAlt').value);
+            const descentRate = parseFloat(document.getElementById('descentRate').value);
+            const groundSpeed = parseFloat(document.getElementById('groundSpeed').value);
+            
+            // Validation
+            if (!currentAlt || !targetAlt || !descentRate || !groundSpeed) {
+                alert('Veuillez remplir tous les champs');
+                return;
+            }
+            
+            const altitudeToDescent = currentAlt - targetAlt;
+            
+            if (altitudeToDescent <= 0) {
+                document.getElementById('result').innerHTML = `
+                    <div class="warning">
+                        ⚠️ Erreur : Vous êtes déjà en dessous de l'altitude cible
+                    </div>
+                `;
+                document.getElementById('result').style.display = 'block';
+                return;
+            }
+            
+            // Calculs
+            const descentTimeMinutes = altitudeToDescent / descentRate;
+            const groundSpeedNmPerMin = groundSpeed / 60;
+            const distanceToTod = descentTimeMinutes * groundSpeedNmPerMin;
+            const safetyBuffer = Math.max(distanceToTod * 0.1, 2);
+            const distanceWithBuffer = distanceToTod + safetyBuffer;
+            
+            // Angle de descente
+            const distanceInFeet = distanceToTod * 6076.12;
+            const descentAngle = Math.atan(altitudeToDescent / distanceInFeet) * 180 / Math.PI;
+            
+            // Formatage du temps
+            const hours = Math.floor(descentTimeMinutes / 60);
+            const minutes = Math.round(descentTimeMinutes % 60);
+            const timeString = hours > 0 ? `${hours}h${minutes.toString().padStart(2, '0')}min` : `${minutes} min`;
+            
+            // Affichage du résultat
+            let resultHTML = `
+                <div class="result-box">
+                    <div style="font-size: 14px; opacity: 0.9;">COMMENCER LA DESCENTE À</div>
+                    <div class="result-main">${distanceWithBuffer.toFixed(1)} NM</div>
+                    <div style="font-size: 14px;">de votre destination (incluant ${safetyBuffer.toFixed(1)} NM de marge)</div>
+                </div>
+                
+                <div class="result-details">
+                    <div class="detail-item">
+                        <div class="detail-label">📉 Altitude à descendre</div>
+                        <div class="detail-value">${altitudeToDescent.toLocaleString()} ft</div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <div class="detail-label">⏱️ Temps de descente</div>
+                        <div class="detail-value">${timeString}</div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <div class="detail-label">📏 Distance théorique</div>
+                        <div class="detail-value">${distanceToTod.toFixed(1)} NM</div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <div class="detail-label">📐 Angle de descente</div>
+                        <div class="detail-value">
+                            ${descentAngle.toFixed(1)}°
+                            ${descentAngle > 5 ? '<span style="color: #ef4444; font-size: 12px;"> (raide!)</span>' : ''}
+                            ${descentAngle < 2.5 ? '<span style="color: #f59e0b; font-size: 12px;"> (faible)</span>' : ''}
+                            ${descentAngle >= 2.5 && descentAngle <= 5 ? '<span style="color: #10b981; font-size: 12px;"> ✓</span>' : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Ajouter des alertes si nécessaire
+            if (descentAngle > 5) {
+                resultHTML += `
+                    <div class="warning">
+                        ⚠️ <strong>Attention :</strong> L'angle de descente est supérieur à 5° (${descentAngle.toFixed(1)}°). 
+                        Considérez un taux de descente plus faible ou commencez plus tôt pour le confort des passagers.
+                    </div>
+                `;
+            } else if (descentAngle < 2.5) {
+                resultHTML += `
+                    <div class="info">
+                        ℹ️ <strong>Note :</strong> L'angle de descente est faible (${descentAngle.toFixed(1)}°). 
+                        Vous pouvez augmenter le taux de descente ou commencer plus tard si nécessaire.
+                    </div>
+                `;
+            }
+            
+            // Vérification règle du 3:1
+            const rule31Distance = (altitudeToDescent / 1000) * 3;
+            if (Math.abs(distanceToTod - rule31Distance) > 5) {
+                resultHTML += `
+                    <div class="info">
+                        📏 <strong>Règle du 3:1 :</strong> Selon cette règle, la distance serait de ${rule31Distance.toFixed(1)} NM
+                        (différence de ${Math.abs(distanceToTod - rule31Distance).toFixed(1)} NM avec votre calcul)
+                    </div>
+                `;
+            }
+            
+            document.getElementById('result').innerHTML = resultHTML;
+            document.getElementById('result').style.display = 'block';
+        }
+        
+        // Calcul initial au chargement
+        window.onload = function() {
+            calculateTOD();
+        };
+    </script>
+</body>
+</html>

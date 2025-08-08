@@ -1,0 +1,43 @@
+/* Styles de debug pour la carte */
+
+/* S'assurer que les conteneurs Leaflet ont une hauteur */
+.leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+  position: relative !important;
+  z-index: 0 !important;
+}
+
+/* Fix pour les tuiles */
+.leaflet-tile-container {
+  position: absolute !important;
+}
+
+.leaflet-tile {
+  width: 256px !important;
+  height: 256px !important;
+}
+
+/* S'assurer que les contrôles sont visibles */
+.leaflet-control-container {
+  position: absolute !important;
+  z-index: 1000 !important;
+}
+
+/* Debug - Bordure rouge sur tous les éléments Leaflet */
+.debug-mode .leaflet-container {
+  border: 3px solid red !important;
+}
+
+.debug-mode .leaflet-tile-pane {
+  border: 2px solid blue !important;
+}
+
+.debug-mode .leaflet-overlay-pane {
+  border: 2px solid green !important;
+}
+
+/* Fix pour les markers */
+.leaflet-marker-icon {
+  position: absolute !important;
+}

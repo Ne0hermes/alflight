@@ -50,6 +50,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@components': path.resolve(__dirname, './src/components'),
       '@core': path.resolve(__dirname, './src/core'),
       '@features': path.resolve(__dirname, './src/features'),
       '@shared': path.resolve(__dirname, './src/shared'),
@@ -63,6 +64,10 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    headers: {
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Opener-Policy': 'same-origin'
+    },
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:4000/',
@@ -85,6 +90,15 @@ export default defineConfig({
         }
       }
     }
+  },
+  optimizeDeps: {
+    include: ['pdfjs-dist'],
+    esbuildOptions: {
+      target: 'esnext'
+    }
+  },
+  worker: {
+    format: 'es'
   },
   build: {
     rollupOptions: {

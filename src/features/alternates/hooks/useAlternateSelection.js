@@ -10,9 +10,9 @@ import { useVACStore } from '@core/stores/vacStore';
 import { 
   calculateSearchZone, 
   isAirportInSearchZone,
-  calculateDistanceFromRoute,
-  calculateDistance 
+  calculateDistanceFromRoute
 } from '../utils/geometryCalculations';
+import { calculateDistance } from '@utils/navigationCalculations';
 import { scoreAlternates } from './useAlternateScoring';
 
 // Fonction pour obtenir un minimum d'aérodromes
@@ -432,6 +432,12 @@ export const useAlternateSelection = () => {
       let debugInfo = { inPill: 0, inTurnBuffer: 0, tooFar: 0 };
       
       for (const airport of airports) {
+        // Ignorer les aérodromes sans code ICAO
+        if (!airport.icao) {
+          console.log(`⚠️ Aéroport sans ICAO ignoré:`, airport.name);
+          continue;
+        }
+        
         testedCount++;
         const zoneCheck = isAirportInSearchZone(airport, searchZone);
         
@@ -519,9 +525,26 @@ export const useAlternateSelection = () => {
         runways: airport.runways || []
       }));
       
+      // OPTION : Filtrer pour n'afficher que les aérodromes non contrôlés
+      // Activé par défaut pour ne montrer que les aérodromes non contrôlés
+      const SHOW_ONLY_UNCONTROLLED = true; // true = non contrôlés uniquement, false = tous
+      
+      let scoredToDisplay = scored;
+      if (SHOW_ONLY_UNCONTROLLED) {
+        scoredToDisplay = scored.filter(airport => {
+          const isControlled = hasATCService(airport);
+          if (isControlled) {
+            console.log(`🗼 Aérodrome contrôlé exclu: ${airport.icao} - ${airport.name}`);
+            return false;
+          }
+          return true;
+        });
+        console.log(`🎯 Filtrage ATC: ${scored.length} → ${scoredToDisplay.length} aérodromes non contrôlés`);
+      }
+      
       // 5. Séparer les aérodromes par côté
-      const departureSideAirports = scored.filter(apt => apt.side === 'departure');
-      const arrivalSideAirports = scored.filter(apt => apt.side === 'arrival');
+      const departureSideAirports = scoredToDisplay.filter(apt => apt.side === 'departure');
+      const arrivalSideAirports = scoredToDisplay.filter(apt => apt.side === 'arrival');
       
       console.log(`📊 Répartition des aérodromes:`);
       console.log(`   - Côté départ: ${departureSideAirports.length}`);
@@ -531,18 +554,19 @@ export const useAlternateSelection = () => {
       departureSideAirports.sort((a, b) => b.score - a.score);
       arrivalSideAirports.sort((a, b) => b.score - a.score);
       
-      // Stocker tous les aérodromes scorés
-      setScoredAlternates(scored);
+      // Stocker tous les aérodromes scorés (après filtrage optionnel)
+      setScoredAlternates(scoredToDisplay);
       
       // 6. PAS DE SÉLECTION AUTOMATIQUE - Juste stocker les suggestions
-      console.log(`✅ ${scored.length} alternates suggérés`);
+      const filterText = SHOW_ONLY_UNCONTROLLED ? ' (non contrôlés uniquement)' : '';
+      console.log(`✅ ${scoredToDisplay.length} alternates suggérés${filterText}`);
       console.log(`   - Côté départ: ${departureSideAirports.length} aérodromes`);
       console.log(`   - Côté arrivée: ${arrivalSideAirports.length} aérodromes`);
       
       // Ne pas sélectionner automatiquement - laisser l'utilisateur choisir
       // Les alternates scorés sont disponibles dans scoredAlternates du store
       
-      console.log(`✅ ${scored.length} alternates scorés et disponibles pour sélection manuelle`);
+      console.log(`✅ ${scoredToDisplay.length} alternates scorés et disponibles pour sélection manuelle`);
       
       // RÉSUMÉ FINAL
       console.log('📊 RÉSUMÉ FINAL:');
@@ -550,6 +574,9 @@ export const useAlternateSelection = () => {
       console.log(`- Dans la zone: ${candidatesInZone.length}`);
       console.log(`- Après filtrage: ${filtered.length}`);
       console.log(`- Après scoring: ${scored.length}`);
+      if (SHOW_ONLY_UNCONTROLLED) {
+        console.log(`- Après filtrage ATC (non contrôlés): ${scoredToDisplay.length}`);
+      }
       console.log(`- Sélection manuelle requise`);
     
     } finally {
@@ -587,9 +614,10 @@ export const useAlternateSelection = () => {
         console.log('🔄 Route modifiée, recalcul automatique des alternates');
         useAlternatesStore.getState().setLastRouteKey?.(routeKey);
         setSearchZone(searchZone);
-        // Effacer les sélections et suggestions précédentes
+        // Effacer les suggestions mais GARDER les sélections manuelles
         setScoredAlternates([]);
-        useAlternatesStore.getState().setSelectedAlternates([]);
+        // NE PAS effacer les sélections manuelles
+        // useAlternatesStore.getState().setSelectedAlternates([]);
         // Relancer la recherche
         findAlternates();
       }

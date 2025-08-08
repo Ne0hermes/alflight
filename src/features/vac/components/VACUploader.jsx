@@ -2,134 +2,124 @@
 import React, { memo, useState } from 'react';
 import { Upload, FileText, AlertCircle, CheckCircle } from 'lucide-react';
 import { useVACStore } from '@core/stores/vacStore';
-import { VACPDFExtractor } from '@services/pdfExtractor';
-import { sx } from '@shared/styles/styleSystem';
+import VACImporter from './VACImporter';
 
 export const VACUploader = memo(({ icao }) => {
-  const [uploading, setUploading] = useState(false);
+  const [showImporter, setShowImporter] = useState(false);
   const [extractedData, setExtractedData] = useState(null);
   const { updateExtractedData } = useVACStore();
-  
-  const extractor = new VACPDFExtractor();
 
-  const handleFileUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file || file.type !== 'application/pdf') {
-      alert('Veuillez sélectionner un fichier PDF');
-      return;
-    }
-
-    setUploading(true);
-    
-    try {
-      // Lire le fichier
-      const arrayBuffer = await file.arrayBuffer();
-      const data = new Uint8Array(arrayBuffer);
-      
-      // Extraire les données
-      const extracted = await extractor.extractFromPDF(data);
-      setExtractedData(extracted);
-      
-      // Mettre à jour le store
-      updateExtractedData(icao, extracted);
-      
-      console.log('Données extraites:', extracted);
-    } catch (error) {
-      console.error('Erreur extraction:', error);
-      alert('Erreur lors de l\'extraction des données');
-    } finally {
-      setUploading(false);
-    }
+  const handleImportComplete = (icaoCode, data) => {
+    setExtractedData(data);
+    setShowImporter(false);
   };
 
   return (
-    <div style={sx.combine(sx.components.card.base, sx.spacing.mt(4))}>
-      <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
-        📄 Charger une carte VAC PDF
-      </h4>
-      
-      <label style={{
-        display: 'block',
-        padding: '24px',
-        border: '2px dashed #e5e7eb',
-        borderRadius: '8px',
-        textAlign: 'center',
-        cursor: 'pointer',
-        transition: 'all 0.2s',
-        '&:hover': {
-          borderColor: '#3b82f6',
-          backgroundColor: '#f0f9ff'
-        }
-      }}>
-        <input
-          type="file"
-          accept=".pdf"
-          onChange={handleFileUpload}
-          style={{ display: 'none' }}
-          disabled={uploading}
+    <>
+      {/* Afficher l'importateur si demandé */}
+      {showImporter && (
+        <VACImporter
+          icao={icao}
+          onClose={() => setShowImporter(false)}
+          onImportComplete={handleImportComplete}
         />
-        
-        {uploading ? (
-          <div>
-            <div style={{
-              width: 40,
-              height: 40,
-              border: '3px solid #e5e7eb',
-              borderTopColor: '#3b82f6',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-              margin: '0 auto 12px'
-            }} />
-            <p style={sx.text.sm}>Extraction en cours...</p>
-          </div>
-        ) : (
-          <>
-            <Upload size={40} style={{ margin: '0 auto 12px', color: '#3b82f6' }} />
-            <p style={sx.combine(sx.text.base, sx.text.bold)}>
-              Cliquez pour charger un PDF
-            </p>
-            <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
-              ou glissez-déposez le fichier ici
-            </p>
-          </>
-        )}
-      </label>
-      
-      {/* Résultats de l'extraction */}
-      {extractedData && (
-        <div style={sx.combine(sx.spacing.mt(4))}>
-          <div style={sx.combine(
-            sx.components.alert.base,
-            sx.components.alert.success
-          )}>
-            <CheckCircle size={20} />
-            <div>
-              <p style={sx.text.bold}>Extraction réussie !</p>
-              <p style={sx.text.sm}>
-                {extractedData.runways.length} piste(s) • 
-                {Object.keys(extractedData.frequencies).length} fréquence(s)
-              </p>
-            </div>
-          </div>
-          
-          {/* Aperçu des données */}
-          <details style={sx.spacing.mt(3)}>
-            <summary style={{ cursor: 'pointer', fontSize: '14px' }}>
-              Voir les données extraites
-            </summary>
-            <pre style={{
-              fontSize: '12px',
-              backgroundColor: '#f9fafb',
-              padding: '12px',
-              borderRadius: '6px',
-              marginTop: '8px',
-              overflow: 'auto'
-            }}>
-              {JSON.stringify(extractedData, null, 2)}
-            </pre>
-          </details>
-        </div>
       )}
-    </div>
+      
+      <div style={{
+        backgroundColor: 'white',
+        padding: '20px',
+        borderRadius: '8px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        marginTop: '16px'
+      }}>
+        <h4 style={{
+          fontSize: '16px',
+          fontWeight: 'bold',
+          marginBottom: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <FileText size={20} />
+          Charger une carte VAC PDF
+        </h4>
+        
+        <button
+          onClick={() => setShowImporter(true)}
+          style={{
+            width: '100%',
+            padding: '24px',
+            border: '2px dashed #3b82f6',
+            borderRadius: '8px',
+            backgroundColor: '#f0f9ff',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#dbeafe';
+            e.currentTarget.style.borderColor = '#2563eb';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#f0f9ff';
+            e.currentTarget.style.borderColor = '#3b82f6';
+          }}
+        >
+          <Upload size={40} style={{ color: '#3b82f6' }} />
+          <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#1e40af' }}>
+            Cliquez pour importer une carte VAC
+          </p>
+          <p style={{ fontSize: '14px', color: '#6b7280' }}>
+            Extraction automatique des données (fréquences, pistes, procédures...)
+          </p>
+        </button>
+        
+        {/* Résultats de l'extraction */}
+        {extractedData && (
+          <div style={{ marginTop: '16px' }}>
+            <div style={{
+              backgroundColor: '#d1fae5',
+              border: '1px solid #86efac',
+              borderRadius: '6px',
+              padding: '12px',
+              display: 'flex',
+              gap: '12px',
+              alignItems: 'center'
+            }}>
+              <CheckCircle size={20} style={{ color: '#065f46' }} />
+              <div>
+                <p style={{ fontSize: '14px', fontWeight: 'bold' }}>Carte VAC importée avec succès!</p>
+                <p style={{ fontSize: '12px', color: '#6b7280' }}>
+                  {extractedData.runways?.length || 0} piste(s) • 
+                  {Object.keys(extractedData.frequencies || {}).length} fréquence(s) • 
+                  {extractedData.navaids?.length || 0} aide(s) à la navigation
+                </p>
+              </div>
+            </div>
+            
+            {/* Aperçu des données */}
+            <details style={{ marginTop: '12px' }}>
+              <summary style={{ cursor: 'pointer', fontSize: '14px', color: '#374151' }}>
+                Voir les données extraites
+              </summary>
+              <pre style={{
+                fontSize: '12px',
+                backgroundColor: '#f9fafb',
+                padding: '12px',
+                borderRadius: '6px',
+                marginTop: '8px',
+                overflow: 'auto',
+                maxHeight: '300px'
+              }}>
+                {JSON.stringify(extractedData, null, 2)}
+              </pre>
+            </details>
+          </div>
+        )}
+      </div>
+    </>
   );
 });
