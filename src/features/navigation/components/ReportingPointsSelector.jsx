@@ -52,8 +52,8 @@ export const ReportingPointsSelector = memo(({
   
   // Hooks VAC
   const vacChart = vacSelectors.useChartByIcao(airportIcao);
-  const { downloadChart } = vacSelectors.useVACActions();
-  const isDownloading = vacSelectors.useIsDownloading(airportIcao);
+  const { } = vacSelectors.useVACActions();
+  const isDownloading = false; // État de téléchargement temporairement désactivé
   
   // Charger les points VFR pour l'aérodrome
   useEffect(() => {

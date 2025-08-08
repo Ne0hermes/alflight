@@ -30,6 +30,16 @@ export const useOpenAIPStore = create(
     
     // Actions
     loadAirports: async (countryCode = 'FR') => {
+      // Vérifier si les données sont déjà chargées et récentes (cache de 10 minutes)
+      const state = get();
+      const lastLoad = state.lastLoadTime?.airports;
+      const cacheValid = lastLoad && Date.now() - lastLoad < 10 * 60 * 1000; // 10 minutes
+      
+      if (state.airports.length > 0 && cacheValid) {
+        console.log('🗄️ Utilisation du cache pour les aérodromes');
+        return;
+      }
+      
       set(state => {
         state.loading.airports = true;
         state.errors.airports = null;
@@ -42,6 +52,8 @@ export const useOpenAIPStore = create(
         set(state => {
           state.airports = airports;
           state.loading.airports = false;
+          if (!state.lastLoadTime) state.lastLoadTime = {};
+          state.lastLoadTime.airports = Date.now();
         });
         
         console.log(`✅ ${airports.length} aérodromes chargés`);
@@ -58,6 +70,16 @@ export const useOpenAIPStore = create(
     },
     
     loadAirspaces: async (countryCode = 'FR') => {
+      // Vérifier le cache
+      const state = get();
+      const lastLoad = state.lastLoadTime?.airspaces;
+      const cacheValid = lastLoad && Date.now() - lastLoad < 10 * 60 * 1000;
+      
+      if (state.airspaces.length > 0 && cacheValid) {
+        console.log('🗄️ Utilisation du cache pour les espaces aériens');
+        return;
+      }
+      
       set(state => {
         state.loading.airspaces = true;
         state.errors.airspaces = null;
@@ -70,6 +92,8 @@ export const useOpenAIPStore = create(
         set(state => {
           state.airspaces = airspaces;
           state.loading.airspaces = false;
+          if (!state.lastLoadTime) state.lastLoadTime = {};
+          state.lastLoadTime.airspaces = Date.now();
         });
         
         console.log(`✅ ${airspaces.length} espaces aériens chargés`);
@@ -84,6 +108,16 @@ export const useOpenAIPStore = create(
     },
     
     loadNavaids: async (countryCode = 'FR') => {
+      // Vérifier le cache
+      const state = get();
+      const lastLoad = state.lastLoadTime?.navaids;
+      const cacheValid = lastLoad && Date.now() - lastLoad < 10 * 60 * 1000;
+      
+      if (state.navaids.length > 0 && cacheValid) {
+        console.log('🗄️ Utilisation du cache pour les balises');
+        return;
+      }
+      
       set(state => {
         state.loading.navaids = true;
         state.errors.navaids = null;
@@ -96,6 +130,8 @@ export const useOpenAIPStore = create(
         set(state => {
           state.navaids = navaids;
           state.loading.navaids = false;
+          if (!state.lastLoadTime) state.lastLoadTime = {};
+          state.lastLoadTime.navaids = Date.now();
         });
         
         console.log(`✅ ${navaids.length} balises de navigation chargées`);
