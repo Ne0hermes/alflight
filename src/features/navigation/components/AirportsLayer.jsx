@@ -13,7 +13,7 @@ const AirportsLayer = ({ enabled = true }) => {
     if (!initializedRef.current && map) {
       console.log('🛫 Initialisation de la couche des aérodromes OpenAIP');
       layerRef.current = new OpenAIPAirportsLayer(map, {
-        minZoom: 7,
+        minZoom: 6,
         debounceDelay: 400,
         clusteringThreshold: 100
       });

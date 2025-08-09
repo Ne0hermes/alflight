@@ -108,7 +108,7 @@ class OpenAIPService {
       // Essayer l'API directe
       console.log('🌐 Récupération des aérodromes via API directe...');
       const response = await fetch(
-        `${OPENAIP_CONFIG.apiUrl}/airports?country=${countryCode}&page=1&limit=500`,
+        `${OPENAIP_CONFIG.apiUrl}/airports?country=${countryCode}&page=1&limit=1500`,
         {
           headers: {
             'x-openaip-api-key': OPENAIP_CONFIG.apiKey,
