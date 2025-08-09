@@ -3,12 +3,9 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, GeoJSON, LayerGroup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import 'leaflet.markercluster/dist/MarkerCluster.css';
-import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { Settings, Loader } from 'lucide-react';
 import { openAIPService } from '@services/openAIPService';
 import { useOpenAIPStore } from '@core/stores/openAIPStore';
-import AirportsLayer from './AirportsLayer';
 
 // Fix pour les icônes Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -113,7 +110,6 @@ const NavigationMapReact = ({ waypoints = [], onWaypointUpdate }) => {
   const [baseMap, setBaseMap] = useState('osm');
   const [showAirspaces, setShowAirspaces] = useState(true);
   const [showOpenAIP, setShowOpenAIP] = useState(true);
-  const [showAirports, setShowAirports] = useState(false); // Désactivé par défaut pour les performances
   const [visibleData, setVisibleData] = useState({
     airspaces: [],
     airfields: [],
@@ -124,21 +120,20 @@ const NavigationMapReact = ({ waypoints = [], onWaypointUpdate }) => {
     airspaces: {
       CTR: true,
       TMA: true,
-      D: true,      // Zone dangereuse
-      P: true,      // Zone interdite
-      R: true,      // Zone réglementée
+      D: true,
+      P: true,
+      R: true,
       TSA: false,
       TRA: false,
       ATZ: true,
       RMZ: true,
       TMZ: true,
-      CLASS_A: true,
-      CLASS_B: true,
-      CLASS_C: true,
-      CLASS_D: true,
-      CLASS_E: true,
-      CLASS_F: true,
-      CLASS_G: false
+      A: true,
+      B: true,
+      C: true,
+      E: true,
+      F: true,
+      G: false
     },
     airfields: {
       AIRPORT: true,
@@ -158,24 +153,16 @@ const NavigationMapReact = ({ waypoints = [], onWaypointUpdate }) => {
   // Couleurs des espaces aériens
   const getAirspaceColor = (type) => {
     const colors = {
-      CTR: '#FF0000',      // Rouge vif
-      TMA: '#FF6B00',      // Orange
-      D: '#0066FF',        // Bleu (Danger)
-      P: '#FF0000',        // Rouge (Prohibited/Interdit)
-      R: '#FF00FF',        // Magenta (Restricted/Réglementé)
-      TSA: '#9900FF',      // Violet
-      TRA: '#9900FF',      // Violet
-      ATZ: '#00AA00',      // Vert
-      RMZ: '#FFD700',      // Or
-      TMZ: '#FFA500',      // Orange foncé
-      CLASS_A: '#AA0000',  // Rouge foncé
-      CLASS_B: '#FF0066',  // Rose
-      CLASS_C: '#FF9900',  // Orange vif
-      CLASS_D: '#00CCFF',  // Bleu clair
-      CLASS_E: '#00AA00',  // Vert
-      CLASS_F: '#0099FF',  // Bleu ciel
-      CLASS_G: '#808080',  // Gris
-      // Anciens noms pour compatibilité
+      CTR: '#FF0000',
+      TMA: '#FF6B00',
+      D: '#0066FF',
+      P: '#FF0000',
+      R: '#FF0000',
+      TSA: '#9900FF',
+      TRA: '#9900FF',
+      ATZ: '#00AA00',
+      RMZ: '#FFD700',
+      TMZ: '#FFA500',
       A: '#AA0000',
       B: '#FF0066',
       C: '#FF9900',
@@ -346,12 +333,7 @@ const NavigationMapReact = ({ waypoints = [], onWaypointUpdate }) => {
     stamenTerrain: '&copy; Stadia Maps, &copy; Stamen Design, &copy; OpenMapTiles &copy; OpenStreetMap'
   };
   
-  // URL OpenAIP stable
-  const openAipUrl = useMemo(() => {
-    const url = openAIPService.getTileUrl('vfr');
-    console.log('OpenAIP tile URL:', url);
-    return url;
-  }, []); // Calculé une seule fois au montage
+  const openAipUrl = useMemo(() => openAIPService.getTileUrl('vfr'), []);
 
   return (
     <div style={{ position: 'relative' }}>
@@ -447,25 +429,6 @@ const NavigationMapReact = ({ waypoints = [], onWaypointUpdate }) => {
         >
           ⚙️ Filtres
         </button>
-        
-        <button
-          onClick={() => setShowAirports(!showAirports)}
-          style={{
-            padding: '6px 12px',
-            borderRadius: '6px',
-            border: '1px solid #d1d5db',
-            backgroundColor: showAirports ? '#10b981' : 'white',
-            color: showAirports ? 'white' : '#374151',
-            fontSize: '12px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px'
-          }}
-          title="Afficher/masquer les aérodromes"
-        >
-          🛩️ Aérodromes {showAirports ? 'ON' : 'OFF'}
-        </button>
       </div>
       
       {/* Panneau de filtres détaillés */}
@@ -550,24 +513,16 @@ const NavigationMapReact = ({ waypoints = [], onWaypointUpdate }) => {
               <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '6px', color: '#6b7280' }}>
                 Classes d'espace aérien
               </div>
-              {[
-                { key: 'CLASS_A', label: 'Classe A' },
-                { key: 'CLASS_B', label: 'Classe B' },
-                { key: 'CLASS_C', label: 'Classe C' },
-                { key: 'CLASS_D', label: 'Classe D' },
-                { key: 'CLASS_E', label: 'Classe E' },
-                { key: 'CLASS_F', label: 'Classe F' },
-                { key: 'CLASS_G', label: 'Classe G' }
-              ].map(({ key, label }) => (
-                <label key={key} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', cursor: 'pointer' }}>
+              {['A', 'B', 'C', 'E', 'F', 'G'].map(type => (
+                <label key={type} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', cursor: 'pointer' }}>
                   <input
                     type="checkbox"
-                    checked={filters.airspaces[key]}
-                    onChange={() => handleFilterChange('airspaces', key)}
+                    checked={filters.airspaces[type]}
+                    onChange={() => handleFilterChange('airspaces', type)}
                     style={{ cursor: 'pointer' }}
                   />
-                  <span style={{ color: getAirspaceColor(key), fontWeight: 'bold' }}>■</span>
-                  {label}
+                  <span style={{ color: getAirspaceColor(type), fontWeight: 'bold' }}>■</span>
+                  Classe {type}
                 </label>
               ))}
             </div>
@@ -642,9 +597,9 @@ const NavigationMapReact = ({ waypoints = [], onWaypointUpdate }) => {
         style={{ height: '500px', width: '100%', borderRadius: '8px' }}
         preferCanvas={true}
       >
-        {/* Couche de base dynamique - key stable sur l'URL */}
+        {/* Couche de base dynamique */}
         <TileLayer
-          key={tileUrls[baseMap] || tileUrls.osm}
+          key={`base-${baseMap}`}
           url={tileUrls[baseMap] || tileUrls.osm}
           attribution={tileAttributions[baseMap] || tileAttributions.osm}
           maxZoom={baseMap === 'openTopoMap' ? 17 : 19}
@@ -654,28 +609,21 @@ const NavigationMapReact = ({ waypoints = [], onWaypointUpdate }) => {
           crossOrigin={true}
         />
         
-        {/* Couche OpenAIP - sans key dynamique pour éviter les re-rendus */}
+        {/* Couche OpenAIP - conditionnelle */}
         {showOpenAIP && (
           <TileLayer
+            key="openaip"
             url={openAipUrl}
             attribution='&copy; <a href="https://www.openaip.net">OpenAIP</a>'
             opacity={0.7}
             maxZoom={14}
-            minZoom={4}
-            updateWhenIdle={false}
-            updateWhenZooming={false}
-            keepBuffer={4}
-            className="openaip-layer"
-            zIndex={10}
+            keepBuffer={2}
           />
         )}
         
         {/* Controleur de vue et chargeur de données */}
         <MapController waypoints={waypoints} />
         <DataLoader filters={filters} onDataUpdate={setVisibleData} />
-        
-        {/* Couche des aérodromes OpenAIP - Séparée pour éviter les conflits */}
-        {showAirports && <AirportsLayer enabled={showAirports} />}
         
         {/* Espaces aériens - conditionnels */}
         {showAirspaces && airspaceFeatures.features.length > 0 && (
