@@ -364,17 +364,17 @@ class OpenAIPService {
     const typeMapping = {
       0: 'CTR',    // CTR - Control Zone
       1: 'TMA',    // TMA - Terminal Control Area  
-      2: 'A',      // Class A
-      3: 'B',      // Class B
-      4: 'C',      // Class C
-      5: 'D',      // Class D (espace contrôlé)
-      6: 'E',      // Class E
-      7: 'F',      // Class F
-      8: 'G',      // Class G (espace non contrôlé)
+      2: 'CLASS_A',  // Class A
+      3: 'CLASS_B',  // Class B
+      4: 'CLASS_C',  // Class C
+      5: 'CLASS_D',  // Class D (espace contrôlé)
+      6: 'CLASS_E',  // Class E
+      7: 'CLASS_F',  // Class F
+      8: 'CLASS_G',  // Class G (espace non contrôlé)
       9: 'ATZ',    // ATZ - Aerodrome Traffic Zone
-      10: 'P',     // Prohibited
-      11: 'R',     // Restricted
-      12: 'D',     // Danger Zone (on utilise D comme pour Danger)
+      10: 'P',     // Prohibited (Zone interdite)
+      11: 'R',     // Restricted (Zone réglementée)
+      12: 'D',     // Danger Zone (Zone dangereuse)
       13: 'TSA',   // Temporary Segregated Area
       14: 'TRA',   // Temporary Reserved Area
       15: 'AWY',   // Airway (voie aérienne)
@@ -393,6 +393,11 @@ class OpenAIPService {
       // Déterminer le type normalisé
       let normalizedType = airspace.type;
       
+      // Log pour débugger les FIR
+      if (airspace.name && airspace.name.includes('FIR')) {
+        console.log(`🔍 FIR détecté: ${airspace.name}, type original: ${airspace.type}, typeof: ${typeof airspace.type}`);
+      }
+      
       // Si c'est un nombre ou une chaîne numérique, utiliser le mapping
       if (typeof airspace.type === 'number' || (typeof airspace.type === 'string' && !isNaN(parseInt(airspace.type)))) {
         const typeNum = parseInt(airspace.type);
@@ -403,11 +408,25 @@ class OpenAIPService {
           console.warn(`⚠️ Type d'espace inconnu: ${airspace.type} pour ${airspace.name}`);
           normalizedType = 'OTHER';
         }
+      } else if (typeof airspace.type === 'string') {
+        // Si c'est déjà une chaîne (P, D, R, etc.), la garder
+        normalizedType = airspace.type.toUpperCase();
+      }
+      
+      // Si le nom contient FIR, forcer le type FIR
+      if (airspace.name && airspace.name.includes('FIR')) {
+        normalizedType = 'FIR';
+        console.log(`✅ FIR ${airspace.name} sera filtré (type normalisé: ${normalizedType})`);
       }
       
       // Si c'est un type AWY, FIR, UIR, PART, SECTOR, REP ou SIV, on le filtre
       if (['AWY', 'FIR', 'UIR', 'PART', 'SECTOR', 'REP', 'SIV', '15', '18', '19', '21', '22', '29', '33'].includes(normalizedType)) {
         return null; // Sera filtré après
+      }
+      
+      // Log si c'est un espace qui pourrait être mal classé
+      if (airspace.name && (airspace.name.includes('FIR') || airspace.name.includes('UIR')) && normalizedType !== 'FIR' && normalizedType !== 'UIR') {
+        console.error(`❌ ${airspace.name} n'est pas filtré! Type: ${normalizedType}, Type original: ${airspace.type}`);
       }
       
       return {
