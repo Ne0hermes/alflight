@@ -9,7 +9,7 @@ class OpenAIPAirportsLayer {
   constructor(map, options = {}) {
     this.map = map;
     this.options = {
-      minZoom: 7, // Zoom minimum pour afficher les aérodromes
+      minZoom: 6, // Zoom minimum abaissé pour voir plus d'aérodromes
       debounceDelay: 400,
       clusteringThreshold: 100, // Nombre de marqueurs avant clustering
       ...options

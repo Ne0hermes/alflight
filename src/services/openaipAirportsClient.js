@@ -124,8 +124,9 @@ class OpenAIPAirportsClient {
     
     const url = new URL(`${proxyUrl}/airports`);
     
-    // Ajouter les paramètres de bbox si disponibles
-    if (bbox) {
+    // Si on fait une recherche spécifique (ex: LFSH), ne pas limiter par bbox
+    // pour être sûr de trouver l'aérodrome même s'il est hors zone
+    if (bbox && !filters.search) {
       // Format: minLon,minLat,maxLon,maxLat
       url.searchParams.set('bbox', `${bbox.west},${bbox.south},${bbox.east},${bbox.north}`);
     }
@@ -133,8 +134,8 @@ class OpenAIPAirportsClient {
     // Ajouter le pays par défaut (France)
     url.searchParams.set('country', 'FR');
     
-    // Limiter le nombre de résultats pour les performances
-    url.searchParams.set('limit', '500');
+    // Augmenter la limite pour avoir plus d'aérodromes
+    url.searchParams.set('limit', '1000');
 
     // Ajouter les filtres si l'API les supporte
     if (filters.search) {
