@@ -92,7 +92,7 @@ const MapConnectionTestV2 = () => {
       if (error.name === 'AbortError') {
         updateTest('proxy', 'error', 'Proxy OpenAIP timeout (>5s)');
       } else {
-        updateTest('proxy', 'warning', 'Proxy non disponible - Utilisation des données statiques');
+        updateTest('proxy', 'error', 'Proxy non disponible - Impossible de charger les aérodromes');
       }
     }
 
@@ -243,7 +243,7 @@ const MapConnectionTestV2 = () => {
               <li>Vérifiez votre connexion internet ou essayez un autre réseau</li>
             )}
             {tests.proxy.status !== 'success' && (
-              <li>Le proxy OpenAIP n'est pas disponible - Les données statiques seront utilisées</li>
+              <li>Le proxy OpenAIP n'est pas disponible - Les aérodromes ne peuvent pas être chargés</li>
             )}
             {tests.network.status === 'warning' && (
               <li>Des restrictions réseau peuvent limiter certaines fonctionnalités</li>
@@ -274,7 +274,7 @@ const MapConnectionTestV2 = () => {
         ) : (
           <>
             <WifiOff size={14} />
-            <strong>Mode hors-ligne:</strong> Utilisation des données statiques intégrées
+            <strong>Erreur API:</strong> Impossible de charger les données OpenAIP
           </>
         )}
       </div>

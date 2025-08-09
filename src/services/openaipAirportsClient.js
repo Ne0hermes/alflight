@@ -124,7 +124,7 @@ class OpenAIPAirportsClient {
     
     const url = new URL(`${proxyUrl}/airports`);
     
-    // Si on fait une recherche spécifique (ex: LFSH), ne pas limiter par bbox
+    // Si on fait une recherche spécifique (ex: LFST), ne pas limiter par bbox
     // pour être sûr de trouver l'aérodrome même s'il est hors zone
     if (bbox && !filters.search) {
       // Format: minLon,minLat,maxLon,maxLat
@@ -161,7 +161,7 @@ class OpenAIPAirportsClient {
       const airports = Array.isArray(data) ? data : (data.items || data.airports || []);
       const normalized = airports.map(a => this.normalizeAirport(a));
       
-      console.log(`✅ ${normalized.length} aérodromes chargés`);
+      console.log(`✅ ${normalized.length} aérodromes chargés depuis l'API OpenAIP`);
       return normalized;
     } catch (error) {
       console.error('❌ Erreur lors du chargement des aérodromes:', error);

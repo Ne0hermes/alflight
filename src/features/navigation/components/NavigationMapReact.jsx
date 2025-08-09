@@ -1,6 +1,6 @@
 // src/features/navigation/components/NavigationMapReact.jsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, GeoJSON, LayerGroup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, GeoJSON, LayerGroup, useMap, ZoomControl } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
@@ -9,6 +9,7 @@ import { Settings, Loader } from 'lucide-react';
 import { openAIPService } from '@services/openAIPService';
 import { useOpenAIPStore } from '@core/stores/openAIPStore';
 import AirportsLayer from './AirportsLayer';
+import ManualWaypointControl from './ManualWaypointControl';
 
 // Fix pour les icônes Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -114,6 +115,7 @@ const NavigationMapReact = ({ waypoints = [], onWaypointUpdate }) => {
   const [showAirspaces, setShowAirspaces] = useState(true);
   const [showOpenAIP, setShowOpenAIP] = useState(true);
   const [showAirports, setShowAirports] = useState(false); // Désactivé par défaut pour les performances
+  const [isAddingWaypoint, setIsAddingWaypoint] = useState(false); // État pour le mode ajout de waypoint
   const [visibleData, setVisibleData] = useState({
     airspaces: [],
     airfields: [],
@@ -196,8 +198,21 @@ const NavigationMapReact = ({ waypoints = [], onWaypointUpdate }) => {
   });
 
   // Créer les icônes personnalisées
-  const createWaypointIcon = (index, total) => {
-    const color = index === 0 ? '#00AA00' : index === total - 1 ? '#FF0000' : '#0066CC';
+  const createWaypointIcon = (waypoint, index, total) => {
+    // Couleur différente pour les waypoints manuels
+    let color;
+    if (waypoint.isManual) {
+      color = '#9333ea'; // Violet pour les waypoints manuels
+    } else if (index === 0) {
+      color = '#00AA00'; // Vert pour le départ
+    } else if (index === total - 1) {
+      color = '#FF0000'; // Rouge pour l'arrivée
+    } else {
+      color = '#0066CC'; // Bleu pour les autres
+    }
+    
+    // Icône différente pour les waypoints manuels
+    const content = waypoint.isManual ? '📍' : (index + 1);
     
     return L.divIcon({
       html: `<div style="
@@ -205,14 +220,15 @@ const NavigationMapReact = ({ waypoints = [], onWaypointUpdate }) => {
         color: white;
         width: 30px;
         height: 30px;
-        border-radius: 50%;
+        border-radius: ${waypoint.isManual ? '5px' : '50%'};
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: bold;
         border: 3px solid white;
         box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-      ">${index + 1}</div>`,
+        font-size: ${waypoint.isManual ? '16px' : '14px'};
+      ">${content}</div>`,
       className: 'custom-waypoint-icon',
       iconSize: [30, 30],
       iconAnchor: [15, 15]
@@ -285,6 +301,15 @@ const NavigationMapReact = ({ waypoints = [], onWaypointUpdate }) => {
         [type]: !prev[category][type]
       }
     }));
+  };
+
+  // Handler pour ajouter un waypoint manuel
+  const handleAddManualWaypoint = (waypoint) => {
+    if (onWaypointUpdate) {
+      // Ajouter le waypoint à la liste existante
+      const updatedWaypoints = [...waypoints, waypoint];
+      onWaypointUpdate(updatedWaypoints);
+    }
   };
 
   // Filtrer les espaces aériens
@@ -466,6 +491,27 @@ const NavigationMapReact = ({ waypoints = [], onWaypointUpdate }) => {
         >
           🛩️ Aérodromes {showAirports ? 'ON' : 'OFF'}
         </button>
+        
+        <div style={{ width: '1px', height: '24px', backgroundColor: '#e5e7eb' }} />
+        
+        <button
+          onClick={() => setIsAddingWaypoint(!isAddingWaypoint)}
+          style={{
+            padding: '6px 12px',
+            borderRadius: '6px',
+            border: '1px solid #d1d5db',
+            backgroundColor: isAddingWaypoint ? '#9333ea' : 'white',
+            color: isAddingWaypoint ? 'white' : '#374151',
+            fontSize: '12px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px'
+          }}
+          title="Ajouter un waypoint manuel"
+        >
+          📍 {isAddingWaypoint ? 'Ajout actif' : 'Ajouter point'}
+        </button>
       </div>
       
       {/* Panneau de filtres détaillés */}
@@ -641,6 +687,7 @@ const NavigationMapReact = ({ waypoints = [], onWaypointUpdate }) => {
         zoom={7}
         style={{ height: '500px', width: '100%', borderRadius: '8px' }}
         preferCanvas={true}
+        zoomControl={false}
       >
         {/* Couche de base dynamique - key stable sur l'URL */}
         <TileLayer
@@ -673,6 +720,16 @@ const NavigationMapReact = ({ waypoints = [], onWaypointUpdate }) => {
         {/* Controleur de vue et chargeur de données */}
         <MapController waypoints={waypoints} />
         <DataLoader filters={filters} onDataUpdate={setVisibleData} />
+        
+        {/* Contrôle de zoom en bas */}
+        <ZoomControl position="bottomleft" />
+        
+        {/* Contrôle pour ajouter des waypoints manuels */}
+        <ManualWaypointControl 
+          onAddWaypoint={handleAddManualWaypoint}
+          isActive={isAddingWaypoint}
+          setIsActive={setIsAddingWaypoint}
+        />
         
         {/* Couche des aérodromes OpenAIP - Séparée pour éviter les conflits */}
         {showAirports && <AirportsLayer enabled={showAirports} />}
@@ -775,7 +832,7 @@ const NavigationMapReact = ({ waypoints = [], onWaypointUpdate }) => {
               <Marker
                 key={waypoint.id}
                 position={[waypoint.lat, waypoint.lon]}
-                icon={createWaypointIcon(index, waypoints.length)}
+                icon={createWaypointIcon(waypoint, index, waypoints.length)}
                 draggable={true}
                 eventHandlers={{
                   dragend: (e) => {
@@ -790,11 +847,31 @@ const NavigationMapReact = ({ waypoints = [], onWaypointUpdate }) => {
                 }}
               >
                 <Popup>
-                  <div>
-                    <h4>Point {index + 1}: {waypoint.name || 'Sans nom'}</h4>
-                    {waypoint.airportName && <p>{waypoint.airportName}</p>}
-                    <p>Lat: {waypoint.lat.toFixed(4)}°</p>
-                    <p>Lon: {waypoint.lon.toFixed(4)}°</p>
+                  <div style={{ minWidth: '200px' }}>
+                    <h4 style={{ margin: '0 0 8px 0', color: waypoint.isManual ? '#9333ea' : '#0066CC' }}>
+                      {waypoint.isManual ? '📍 ' : `Point ${index + 1}: `}{waypoint.name || 'Sans nom'}
+                    </h4>
+                    {waypoint.isManual && (
+                      <p style={{ margin: '4px 0', fontSize: '12px', color: '#9333ea', fontWeight: 'bold' }}>
+                        Waypoint manuel
+                      </p>
+                    )}
+                    {waypoint.airportName && <p style={{ margin: '4px 0' }}>{waypoint.airportName}</p>}
+                    {waypoint.description && (
+                      <p style={{ margin: '4px 0', fontSize: '12px', fontStyle: 'italic' }}>
+                        {waypoint.description}
+                      </p>
+                    )}
+                    <table style={{ width: '100%', fontSize: '12px', marginTop: '8px' }}>
+                      <tr><td><b>Latitude:</b></td><td>{waypoint.lat.toFixed(6)}°</td></tr>
+                      <tr><td><b>Longitude:</b></td><td>{waypoint.lon.toFixed(6)}°</td></tr>
+                      {waypoint.altitude && (
+                        <tr><td><b>Altitude:</b></td><td>{waypoint.altitude} ft</td></tr>
+                      )}
+                      {waypoint.type && (
+                        <tr><td><b>Type:</b></td><td>{waypoint.type}</td></tr>
+                      )}
+                    </table>
                   </div>
                 </Popup>
               </Marker>
@@ -802,129 +879,6 @@ const NavigationMapReact = ({ waypoints = [], onWaypointUpdate }) => {
           })}
         </LayerGroup>
       </MapContainer>
-      
-      {/* Bouton des filtres */}
-      <button
-        onClick={() => setShowFilters(!showFilters)}
-        style={{
-          position: 'absolute',
-          top: '10px',
-          left: '10px',
-          backgroundColor: 'white',
-          border: 'none',
-          padding: '8px',
-          borderRadius: '6px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-          cursor: 'pointer',
-          zIndex: 1000,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px'
-        }}
-        title="Filtres"
-      >
-        <Settings size={20} />
-      </button>
-      
-      {/* Panneau des filtres */}
-      {showFilters && (
-        <div style={{
-          position: 'absolute',
-          top: '50px',
-          left: '10px',
-          backgroundColor: 'white',
-          padding: '16px',
-          borderRadius: '8px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-          zIndex: 1000,
-          maxHeight: '400px',
-          overflowY: 'auto',
-          minWidth: '250px'
-        }}>
-          <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold' }}>
-            Filtres de la carte
-          </h3>
-          
-          {/* Espaces aériens */}
-          <div style={{ marginBottom: '16px' }}>
-            <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: 'bold' }}>
-              Espaces aériens
-            </h4>
-            {Object.entries(filters.airspaces).map(([type, enabled]) => (
-              <label key={type} style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px',
-                marginBottom: '4px',
-                fontSize: '12px',
-                cursor: 'pointer'
-              }}>
-                <input
-                  type="checkbox"
-                  checked={enabled}
-                  onChange={() => handleFilterChange('airspaces', type)}
-                />
-                <span style={{
-                  display: 'inline-block',
-                  width: '12px',
-                  height: '12px',
-                  backgroundColor: getAirspaceColor(type),
-                  borderRadius: '2px'
-                }} />
-                {type}
-              </label>
-            ))}
-          </div>
-          
-          {/* Aérodromes */}
-          <div style={{ marginBottom: '16px' }}>
-            <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: 'bold' }}>
-              Aérodromes
-            </h4>
-            {Object.entries(filters.airfields).map(([type, enabled]) => (
-              <label key={type} style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px',
-                marginBottom: '4px',
-                fontSize: '12px',
-                cursor: 'pointer'
-              }}>
-                <input
-                  type="checkbox"
-                  checked={enabled}
-                  onChange={() => handleFilterChange('airfields', type)}
-                />
-                {type}
-              </label>
-            ))}
-          </div>
-          
-          {/* Balises */}
-          <div>
-            <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: 'bold' }}>
-              Balises de navigation
-            </h4>
-            {Object.entries(filters.navaids).map(([type, enabled]) => (
-              <label key={type} style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px',
-                marginBottom: '4px',
-                fontSize: '12px',
-                cursor: 'pointer'
-              }}>
-                <input
-                  type="checkbox"
-                  checked={enabled}
-                  onChange={() => handleFilterChange('navaids', type)}
-                />
-                {type}
-              </label>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
