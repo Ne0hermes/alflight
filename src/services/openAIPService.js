@@ -17,34 +17,69 @@ class OpenAIPService {
   constructor() {
     this.cache = new Map();
     this.connectionError = null;
+    this.errorCache = new Map(); // Cache pour les erreurs
+    this.retryCount = new Map(); // Compteur de tentatives
+    this.maxRetries = 3;
+    this.baseDelay = 1000; // Délai de base pour le backoff (1 seconde)
     
-    console.log('🔧 Service OpenAIP initialisé');
-    console.log('📡 Mode: API uniquement (pas de données statiques)');
-    console.log('🔑 Clé API:', OPENAIP_CONFIG.apiKey ? 'Configurée' : 'Non configurée');
+    // Logs réduits au démarrage
+  }
+  
+  /**
+   * Vérifie si une erreur est en cache et encore valide
+   */
+  hasRecentError(key) {
+    const error = this.errorCache.get(key);
+    if (error && Date.now() - error.timestamp < 60000) { // Cache d'erreur de 1 minute
+      return true;
+    }
+    return false;
+  }
+  
+  /**
+   * Enregistre une erreur dans le cache
+   */
+  cacheError(key, error) {
+    this.errorCache.set(key, {
+      error: error,
+      timestamp: Date.now()
+    });
+  }
+  
+  /**
+   * Calcule le délai de retry avec backoff exponentiel
+   */
+  getRetryDelay(retryNumber) {
+    return Math.min(this.baseDelay * Math.pow(2, retryNumber), 30000); // Max 30 secondes
   }
 
   /**
    * Teste la connexion à l'API
    */
   async testConnection() {
+    const cacheKey = 'connection-test';
+    
+    // Vérifier le cache d'erreur
+    if (this.hasRecentError(cacheKey)) {
+      return { success: false, error: 'Connexion échouée récemment (cache)' };
+    }
+    
     try {
       // Essayer d'abord le proxy
       if (OPENAIP_CONFIG.useProxy && OPENAIP_CONFIG.proxyUrl) {
-        console.log('🔄 Test de connexion au proxy OpenAIP...');
         const response = await fetch(`${OPENAIP_CONFIG.proxyUrl}/test`, {
           method: 'GET',
           signal: AbortSignal.timeout(5000)
         });
         
         if (response.ok) {
-          console.log('✅ Proxy OpenAIP accessible');
           this.connectionError = null;
+          this.errorCache.delete(cacheKey);
           return { success: true, mode: 'proxy' };
         }
       }
       
       // Essayer l'API directe
-      console.log('🔄 Test de connexion directe à l\'API OpenAIP...');
       const response = await fetch(`${OPENAIP_CONFIG.apiUrl}/airports?page=1&limit=1`, {
         headers: {
           'x-openaip-api-key': OPENAIP_CONFIG.apiKey,
@@ -54,8 +89,8 @@ class OpenAIPService {
       });
       
       if (response.ok) {
-        console.log('✅ API OpenAIP accessible directement');
         this.connectionError = null;
+        this.errorCache.delete(cacheKey);
         return { success: true, mode: 'direct' };
       }
       
@@ -63,7 +98,12 @@ class OpenAIPService {
       
     } catch (error) {
       this.connectionError = error.message;
-      console.error('❌ Erreur de connexion OpenAIP:', error);
+      this.cacheError(cacheKey, error.message);
+      // Ne logger l'erreur qu'une fois
+      if (!this.retryCount.has(cacheKey)) {
+        console.error('❌ Erreur de connexion OpenAIP:', error.message);
+        this.retryCount.set(cacheKey, 1);
+      }
       return { success: false, error: error.message };
     }
   }
@@ -73,18 +113,23 @@ class OpenAIPService {
    */
   async getAirports(countryCode = 'FR') {
     const cacheKey = `airports-${countryCode}`;
+    const errorKey = `error-${cacheKey}`;
+    
+    // Vérifier le cache d'erreur
+    if (this.hasRecentError(errorKey)) {
+      return [];
+    }
     
     // Vérifier le cache (5 minutes)
     const cached = this.cache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
-      console.log('📦 Utilisation du cache pour les aérodromes');
       return cached.data;
     }
     
     try {
       // Essayer le proxy d'abord
       if (OPENAIP_CONFIG.useProxy && OPENAIP_CONFIG.proxyUrl) {
-        console.log('🌐 Récupération des aérodromes via proxy...');
+        // Récupération via proxy
         const response = await fetch(
           `${OPENAIP_CONFIG.proxyUrl}/airports?country=${countryCode}`,
           { signal: AbortSignal.timeout(10000) }
@@ -100,13 +145,13 @@ class OpenAIPService {
             timestamp: Date.now()
           });
           
-          console.log(`✅ ${airports.length} aérodromes récupérés via proxy`);
+          // Succès proxy
           return airports;
         }
       }
       
       // Essayer l'API directe
-      console.log('🌐 Récupération des aérodromes via API directe...');
+      // Récupération via API directe
       const response = await fetch(
         `${OPENAIP_CONFIG.apiUrl}/airports?country=${countryCode}&page=1&limit=1500`,
         {
@@ -131,12 +176,19 @@ class OpenAIPService {
         timestamp: Date.now()
       });
       
-      console.log(`✅ ${airports.length} aérodromes récupérés via API directe`);
+      // Succès API directe
       return airports;
       
     } catch (error) {
-      console.error('❌ Erreur lors de la récupération des aérodromes:', error);
+      const errorKey = `error-${cacheKey}`;
+      this.cacheError(errorKey, error.message);
       this.connectionError = error.message;
+      
+      // Ne logger qu'une fois par minute
+      if (!this.retryCount.has(errorKey) || Date.now() - this.retryCount.get(errorKey) > 60000) {
+        console.error('❌ Erreur lors de la récupération des aérodromes:', error.message);
+        this.retryCount.set(errorKey, Date.now());
+      }
       
       // Retourner un tableau vide avec un message d'erreur
       return [];
@@ -148,18 +200,23 @@ class OpenAIPService {
    */
   async getAirspaces(countryCode = 'FR') {
     const cacheKey = `airspaces-${countryCode}`;
+    const errorKey = `error-${cacheKey}`;
+    
+    // Vérifier le cache d'erreur
+    if (this.hasRecentError(errorKey)) {
+      return [];
+    }
     
     // Vérifier le cache
     const cached = this.cache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
-      console.log('📦 Utilisation du cache pour les espaces aériens');
       return cached.data;
     }
     
     try {
       // Essayer le proxy
       if (OPENAIP_CONFIG.useProxy && OPENAIP_CONFIG.proxyUrl) {
-        console.log('🌐 Récupération des espaces aériens via proxy...');
+        // Récupération via proxy
         const response = await fetch(
           `${OPENAIP_CONFIG.proxyUrl}/airspaces?country=${countryCode}`,
           { signal: AbortSignal.timeout(10000) }
@@ -174,13 +231,13 @@ class OpenAIPService {
             timestamp: Date.now()
           });
           
-          console.log(`✅ ${airspaces.length} espaces aériens récupérés via proxy`);
+          // Succès proxy
           return airspaces;
         }
       }
       
       // API directe
-      console.log('🌐 Récupération des espaces aériens via API directe...');
+      // Récupération via API directe
       const response = await fetch(
         `${OPENAIP_CONFIG.apiUrl}/airspaces?country=${countryCode}&type=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14&page=1&limit=500`,
         {
@@ -198,15 +255,7 @@ class OpenAIPService {
       
       const data = await response.json();
       
-      // Debug: afficher un échantillon des données brutes
-      console.log('🔍 Données brutes OpenAIP (5 premiers):', 
-        (data.items || []).slice(0, 5).map(item => ({
-          name: item.name,
-          type: item.type,
-          class: item.class,
-          country: item.country
-        }))
-      );
+      // Debug supprimé pour réduire le spam
       
       const airspaces = this.transformAirspaces(data.items || []);
       
@@ -215,12 +264,19 @@ class OpenAIPService {
         timestamp: Date.now()
       });
       
-      console.log(`✅ ${airspaces.length} espaces aériens récupérés et transformés (sur ${(data.items || []).length} reçus)`);
+      // Succès API directe
       return airspaces;
       
     } catch (error) {
-      console.error('❌ Erreur lors de la récupération des espaces aériens:', error);
+      const errorKey = `error-${cacheKey}`;
+      this.cacheError(errorKey, error.message);
       this.connectionError = error.message;
+      
+      // Ne logger qu'une fois par minute
+      if (!this.retryCount.has(errorKey) || Date.now() - this.retryCount.get(errorKey) > 60000) {
+        console.error('❌ Erreur lors de la récupération des espaces aériens:', error.message);
+        this.retryCount.set(errorKey, Date.now());
+      }
       return [];
     }
   }
@@ -230,18 +286,23 @@ class OpenAIPService {
    */
   async getNavaids(countryCode = 'FR') {
     const cacheKey = `navaids-${countryCode}`;
+    const errorKey = `error-${cacheKey}`;
+    
+    // Vérifier le cache d'erreur
+    if (this.hasRecentError(errorKey)) {
+      return [];
+    }
     
     // Vérifier le cache
     const cached = this.cache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
-      console.log('📦 Utilisation du cache pour les balises');
       return cached.data;
     }
     
     try {
       // Essayer le proxy
       if (OPENAIP_CONFIG.useProxy && OPENAIP_CONFIG.proxyUrl) {
-        console.log('🌐 Récupération des balises via proxy...');
+        // Récupération via proxy
         const response = await fetch(
           `${OPENAIP_CONFIG.proxyUrl}/navaids?country=${countryCode}`,
           { signal: AbortSignal.timeout(10000) }
@@ -256,13 +317,13 @@ class OpenAIPService {
             timestamp: Date.now()
           });
           
-          console.log(`✅ ${navaids.length} balises récupérées via proxy`);
+          // Succès proxy
           return navaids;
         }
       }
       
       // API directe
-      console.log('🌐 Récupération des balises via API directe...');
+      // Récupération via API directe
       const response = await fetch(
         `${OPENAIP_CONFIG.apiUrl}/navaids?country=${countryCode}&page=1&limit=500`,
         {
@@ -286,12 +347,19 @@ class OpenAIPService {
         timestamp: Date.now()
       });
       
-      console.log(`✅ ${navaids.length} balises récupérées via API directe`);
+      // Succès API directe
       return navaids;
       
     } catch (error) {
-      console.error('❌ Erreur lors de la récupération des balises:', error);
+      const errorKey = `error-${cacheKey}`;
+      this.cacheError(errorKey, error.message);
       this.connectionError = error.message;
+      
+      // Ne logger qu'une fois par minute
+      if (!this.retryCount.has(errorKey) || Date.now() - this.retryCount.get(errorKey) > 60000) {
+        console.error('❌ Erreur lors de la récupération des balises:', error.message);
+        this.retryCount.set(errorKey, Date.now());
+      }
       return [];
     }
   }

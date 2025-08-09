@@ -124,8 +124,14 @@ class OpenAIPAirportsLayer {
       this.setLoading(false);
     } catch (error) {
       console.error('Erreur lors du chargement des aérodromes:', error);
-      this.setError(error.message);
+      const errorMessage = error.message.includes('Failed to fetch') || error.message.includes('NetworkError')
+        ? 'Impossible de se connecter à l\'API OpenAIP. Vérifiez votre connexion internet et le proxy.'
+        : `Erreur API OpenAIP: ${error.message}`;
+      this.setError(errorMessage);
       this.setLoading(false);
+      
+      // Afficher une notification d'erreur visible
+      this.showErrorNotification(errorMessage);
     }
   }
 
@@ -394,6 +400,43 @@ class OpenAIPAirportsLayer {
     if (this.filterControl) {
       this.filterControl.setError(error);
     }
+  }
+  
+  showErrorNotification(message) {
+    // Créer une notification d'erreur visible sur la carte
+    const notification = L.control({position: 'topright'});
+    
+    notification.onAdd = function() {
+      const div = L.DomUtil.create('div', 'error-notification');
+      div.style.cssText = `
+        background: #ff4444;
+        color: white;
+        padding: 12px 16px;
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        max-width: 300px;
+        font-size: 14px;
+        margin: 10px;
+        z-index: 1000;
+      `;
+      div.innerHTML = `
+        <div style="display: flex; align-items: start;">
+          <span style="margin-right: 8px;">⚠️</span>
+          <div>
+            <strong>Erreur Aérodromes</strong><br>
+            ${message}
+          </div>
+        </div>
+      `;
+      return div;
+    };
+    
+    notification.addTo(this.map);
+    
+    // Retirer la notification après 10 secondes
+    setTimeout(() => {
+      this.map.removeControl(notification);
+    }, 10000);
   }
 
   destroy() {
