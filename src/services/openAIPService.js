@@ -182,7 +182,7 @@ class OpenAIPService {
       // API directe
       console.log('🌐 Récupération des espaces aériens via API directe...');
       const response = await fetch(
-        `${OPENAIP_CONFIG.apiUrl}/airspaces?country=${countryCode}&page=1&limit=500`,
+        `${OPENAIP_CONFIG.apiUrl}/airspaces?country=${countryCode}&type=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14&page=1&limit=500`,
         {
           headers: {
             'x-openaip-api-key': OPENAIP_CONFIG.apiKey,
@@ -197,6 +197,17 @@ class OpenAIPService {
       }
       
       const data = await response.json();
+      
+      // Debug: afficher un échantillon des données brutes
+      console.log('🔍 Données brutes OpenAIP (5 premiers):', 
+        (data.items || []).slice(0, 5).map(item => ({
+          name: item.name,
+          type: item.type,
+          class: item.class,
+          country: item.country
+        }))
+      );
+      
       const airspaces = this.transformAirspaces(data.items || []);
       
       this.cache.set(cacheKey, {
@@ -204,7 +215,7 @@ class OpenAIPService {
         timestamp: Date.now()
       });
       
-      console.log(`✅ ${airspaces.length} espaces aériens récupérés via API directe`);
+      console.log(`✅ ${airspaces.length} espaces aériens récupérés et transformés (sur ${(data.items || []).length} reçus)`);
       return airspaces;
       
     } catch (error) {
@@ -346,24 +357,78 @@ class OpenAIPService {
    * Transforme les données d'espaces aériens de l'API
    */
   transformAirspaces(apiAirspaces) {
-    return apiAirspaces.map(airspace => ({
-      id: airspace._id || airspace.id,
-      _id: airspace._id || airspace.id,
-      name: airspace.name,
-      class: airspace.class || airspace.type,
-      type: airspace.type,
-      icaoCode: airspace.icaoCode,
-      // Conserver les limites verticales complètes
-      lowerLimit: airspace.lowerLimit || airspace.lower_limit || null,
-      upperLimit: airspace.upperLimit || airspace.upper_limit || null,
-      // Anciens champs pour compatibilité
-      floor: airspace.lowerLimit?.value || airspace.floor || 'SFC',
-      ceiling: airspace.upperLimit?.value || airspace.ceiling || 'UNL',
-      geometry: airspace.geometry || null,
-      country: airspace.country || 'FR',
-      frequencies: airspace.frequencies || [],
-      remarks: airspace.remarks || null
-    }));
+    console.log('📊 Transformation des espaces aériens. Échantillon:', apiAirspaces.slice(0, 5).map(a => ({name: a.name, type: a.type, class: a.class})));
+    
+    // Mapping des types numériques OpenAIP vers nos catégories
+    // Basé sur la documentation OpenAIP
+    const typeMapping = {
+      0: 'CTR',    // CTR - Control Zone
+      1: 'TMA',    // TMA - Terminal Control Area  
+      2: 'A',      // Class A
+      3: 'B',      // Class B
+      4: 'C',      // Class C
+      5: 'D',      // Class D (espace contrôlé)
+      6: 'E',      // Class E
+      7: 'F',      // Class F
+      8: 'G',      // Class G (espace non contrôlé)
+      9: 'ATZ',    // ATZ - Aerodrome Traffic Zone
+      10: 'P',     // Prohibited
+      11: 'R',     // Restricted
+      12: 'D',     // Danger Zone (on utilise D comme pour Danger)
+      13: 'TSA',   // Temporary Segregated Area
+      14: 'TRA',   // Temporary Reserved Area
+      15: 'AWY',   // Airway (voie aérienne)
+      16: 'RMZ',   // Radio Mandatory Zone
+      17: 'TMZ',   // Transponder Mandatory Zone
+      18: 'FIR',   // Flight Information Region
+      19: 'UIR',   // Upper Information Region
+      20: 'ADIZ',  // Air Defense Identification Zone
+      21: 'PART',  // Part of airspace
+      22: 'SECTOR', // Sector
+      29: 'REP',   // Reporting Point
+      33: 'SIV'    // Service d'Information de Vol
+    };
+    
+    return apiAirspaces.map(airspace => {
+      // Déterminer le type normalisé
+      let normalizedType = airspace.type;
+      
+      // Si c'est un nombre ou une chaîne numérique, utiliser le mapping
+      if (typeof airspace.type === 'number' || (typeof airspace.type === 'string' && !isNaN(parseInt(airspace.type)))) {
+        const typeNum = parseInt(airspace.type);
+        normalizedType = typeMapping[typeNum];
+        
+        // Si on n'a pas de mapping, garder le type original
+        if (!normalizedType) {
+          console.warn(`⚠️ Type d'espace inconnu: ${airspace.type} pour ${airspace.name}`);
+          normalizedType = 'OTHER';
+        }
+      }
+      
+      // Si c'est un type AWY, FIR, UIR, PART, SECTOR, REP ou SIV, on le filtre
+      if (['AWY', 'FIR', 'UIR', 'PART', 'SECTOR', 'REP', 'SIV', '15', '18', '19', '21', '22', '29', '33'].includes(normalizedType)) {
+        return null; // Sera filtré après
+      }
+      
+      return {
+        id: airspace._id || airspace.id,
+        _id: airspace._id || airspace.id,
+        name: airspace.name,
+        class: airspace.class || normalizedType,
+        type: normalizedType,
+        icaoCode: airspace.icaoCode,
+        // Conserver les limites verticales complètes
+        lowerLimit: airspace.lowerLimit || airspace.lower_limit || null,
+        upperLimit: airspace.upperLimit || airspace.upper_limit || null,
+        // Anciens champs pour compatibilité
+        floor: airspace.lowerLimit?.value || airspace.floor || 'SFC',
+        ceiling: airspace.upperLimit?.value || airspace.ceiling || 'UNL',
+        geometry: airspace.geometry || null,
+        country: airspace.country || 'FR',
+        frequencies: airspace.frequencies || [],
+        remarks: airspace.remarks || null
+      };
+    }).filter(airspace => airspace !== null); // Filtrer les nulls (AWY, etc.)
   }
 
   /**
@@ -436,9 +501,20 @@ class OpenAIPService {
 
   /**
    * Retourne l'URL des tiles de carte OpenAIP
+   * @param {string} layerType - Type de couche: 'vfr' (par défaut), 'ifr-low', 'ifr-high', 'visual-reporting-points'
    */
-  getTileUrl() {
-    return `${OPENAIP_CONFIG.tileUrl}/{z}/{x}/{y}.png?apiKey=${OPENAIP_CONFIG.apiKey}`;
+  getTileUrl(layerType = 'vfr') {
+    // Mapper les types de couches aux endpoints OpenAIP
+    const layerMap = {
+      'vfr': '',  // Couche par défaut VFR
+      'ifr-low': '/ifr-low',
+      'ifr-high': '/ifr-high', 
+      'vrp': '/visual-reporting-points',
+      'obstacles': '/obstacles'
+    };
+    
+    const layer = layerMap[layerType] || '';
+    return `${OPENAIP_CONFIG.tileUrl}${layer}/{z}/{x}/{y}.png?apiKey=${OPENAIP_CONFIG.apiKey}`;
   }
 
   /**
