@@ -14,12 +14,9 @@ import { useWeatherStore, weatherSelectors } from '@core/stores/weatherStore';
 import { useNavigationResults } from './hooks/useNavigationResults';
 
 // Import des composants locaux
-import NavigationMapFinal from './components/NavigationMapFinal';
-import NavigationMapAlternative from './components/NavigationMapAlternative';
-import NavigationMapWithLayers from './components/NavigationMapWithLayers';
-import NavigationMapIntegrated from './components/NavigationMapIntegrated';
-// Utiliser la carte intégrée avec OSM et couches automatiques
-const NavigationMap = NavigationMapIntegrated; // Version intégrée OSM + aérodromes + espaces
+import NavigationMapReact from './components/NavigationMapReact';
+// Utilisation de la carte React-Leaflet
+const NavigationMap = NavigationMapReact;
 import { OpenAIPConfig } from '@components/OpenAIPConfig';
 import { SimpleAirportSelector as AirportSelector } from './components/SimpleAirportSelector';
 import { WaypointCardWithRunways } from './components/WaypointCardWithRunways';
@@ -379,8 +376,6 @@ const NavigationModule = () => {
             <NavigationMap 
               waypoints={waypoints}
               onWaypointUpdate={handleWaypointUpdate}
-              selectedAircraft={selectedAircraft}
-              vfrPoints={selectedVFRPoints}
             />
             
             <div style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mt(3))}>

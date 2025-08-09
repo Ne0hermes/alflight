@@ -1,10 +1,9 @@
 // src/features/navigation/components/NavigationMapIntegrated.jsx
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { Navigation, Fuel, MapPin, AlertCircle, Plane, Map as MapIcon } from 'lucide-react';
+import { Navigation, Fuel, MapPin, AlertCircle, Plane, Map as MapIcon, Settings, ChevronDown, ChevronUp } from 'lucide-react';
 import { useFuel } from '@core/contexts';
 import { useOpenAIPStore, openAIPSelectors } from '@core/stores/openAIPStore';
 import { openAIPService } from '@services/openAIPService';
-import MapFiltersPanel from './MapFiltersPanel';
 
 // Fonction de filtrage mémorisée pour éviter les recalculs
 const filterAirports = (airports, showPrivateAirfields) => {
@@ -35,32 +34,7 @@ const NavigationMapIntegrated = ({ waypoints = [], onWaypointUpdate, selectedAir
     range: false,
     openAIPOverlay: true,
     openAIPOpacity: 80,
-    baseMap: 'osm', // Choix du fond de carte
-    // Filtres pour les espaces aériens
-    airspaceFilters: {
-      CTR: true,  // Control Zone
-      TMA: true,  // Terminal Control Area
-      ATZ: true,  // Aerodrome Traffic Zone
-      D: true,    // Zone Dangereuse
-      P: true,    // Zone Interdite
-      R: true,    // Zone Réglementée
-      TSA: false, // Zone Temporaire
-      TRA: false, // Zone d'Entraînement
-      C: true,    // Classe C
-      E: true,    // Classe E
-      F: false,   // Classe F
-      G: false    // Classe G
-    },
-    // Filtres pour les aérodromes
-    airportFilters: {
-      international: true,
-      regional: true,
-      small: true,
-      heliport: false,
-      glider: false,
-      ulm: false,
-      water: false
-    }
+    openAIPLayerType: 'vfr'
   });
   const [showAdvancedControls, setShowAdvancedControls] = useState(false);
 
@@ -91,45 +65,6 @@ const NavigationMapIntegrated = ({ waypoints = [], onWaypointUpdate, selectedAir
     filterAirports(airports, showLayers.privateAirfields),
     [airports, showLayers.privateAirfields]
   );
-
-  // Fonction pour changer le fond de carte
-  const changeBaseMap = useCallback((newBaseMap) => {
-    if (!mapInstanceRef.current) {
-      console.warn('⚠️ Map instance not ready');
-      return;
-    }
-    
-    if (!layersRef.current.baseMaps) {
-      console.warn('⚠️ Base maps not initialized');
-      return;
-    }
-    
-    // Retirer l'ancienne couche de base
-    if (layersRef.current.currentBaseMap) {
-      try {
-        mapInstanceRef.current.removeLayer(layersRef.current.currentBaseMap);
-      } catch (e) {
-        console.warn('Could not remove previous base layer:', e);
-      }
-    }
-    
-    // Ajouter la nouvelle couche de base
-    const selectedMap = layersRef.current.baseMaps[newBaseMap];
-    if (selectedMap) {
-      try {
-        selectedMap.addTo(mapInstanceRef.current);
-        layersRef.current.currentBaseMap = selectedMap;
-        
-        // Mettre à jour l'état
-        setShowLayers(prev => ({ ...prev, baseMap: newBaseMap }));
-        console.log('✅ Fond de carte changé:', newBaseMap);
-      } catch (e) {
-        console.error('❌ Erreur lors du changement de fond de carte:', e);
-      }
-    } else {
-      console.warn('❌ Fond de carte non trouvé:', newBaseMap);
-    }
-  }, []);
 
   // Fonction de recentrage mémorisée
   const recenterMap = useCallback(() => {
@@ -181,82 +116,16 @@ const NavigationMapIntegrated = ({ waypoints = [], onWaypointUpdate, selectedAir
         map.createPane('waypointsPane');
         map.getPane('waypointsPane').style.zIndex = 600;
 
-        // Définir les différents fonds de carte disponibles
-        const baseMaps = {};
+        // Ajouter les tuiles OpenStreetMap comme fond de base
+        const osmLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors',
+          maxZoom: 19,
+          crossOrigin: true,
+          updateWhenIdle: true,
+          updateWhenZooming: false
+        });
         
-        try {
-          baseMaps.osm = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 19,
-            crossOrigin: true,
-            updateWhenIdle: true,
-            updateWhenZooming: false
-          });
-          
-          baseMaps.osmHot = window.L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors, Humanitarian OpenStreetMap Team',
-            maxZoom: 19,
-            crossOrigin: true
-          });
-          
-          baseMaps.cartoDB = window.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors, © CARTO',
-            maxZoom: 19,
-            crossOrigin: true
-          });
-          
-          baseMaps.cartoDBDark = window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors, © CARTO',
-            maxZoom: 19,
-            crossOrigin: true
-          });
-          
-          baseMaps.esriSatellite = window.L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: '© Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP',
-            maxZoom: 19,
-            crossOrigin: true
-          });
-          
-          baseMaps.openTopoMap = window.L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors, © OpenTopoMap',
-            maxZoom: 17,
-            crossOrigin: true
-          });
-          
-          baseMaps.stamenTerrain = window.L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}.jpg', {
-            attribution: '© Stadia Maps, © Stamen Design, © OpenMapTiles © OpenStreetMap contributors',
-            maxZoom: 18,
-            crossOrigin: true
-          });
-          
-          // Fond de carte OpenAIP par défaut si disponible
-          baseMaps.openAIPBase = window.L.tileLayer('https://api.tiles.openaip.net/api/data/openaip/{z}/{x}/{y}.png', {
-            attribution: '© OpenAIP',
-            maxZoom: 14,
-            minZoom: 3,
-            crossOrigin: true
-          });
-        } catch (e) {
-          console.error('❌ Erreur lors de la création des fonds de carte:', e);
-          // Créer au moins OSM par défaut
-          baseMaps.osm = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 19,
-            crossOrigin: true
-          });
-        }
-
-        // Stocker les références des couches de base
-        layersRef.current.baseMaps = baseMaps;
-        
-        // Ajouter la couche de base sélectionnée
-        const selectedBaseMap = baseMaps[showLayers.baseMap] || baseMaps.osm;
-        if (selectedBaseMap) {
-          selectedBaseMap.addTo(map);
-          layersRef.current.currentBaseMap = selectedBaseMap;
-        } else {
-          console.error('❌ Aucun fond de carte disponible');
-        }
+        osmLayer.addTo(map);
         
         // Ajouter les tuiles OpenAIP en overlay avec transparence
         const openAIPLayer = window.L.tileLayer(openAIPService.getTileUrl(), {
@@ -307,9 +176,8 @@ const NavigationMapIntegrated = ({ waypoints = [], onWaypointUpdate, selectedAir
   }, []); // Créer la carte une seule fois
 
   // Créer les marqueurs d'aéroports de manière optimisée
-  const createAirportMarkers = (airports, map, filters) => {
+  const createAirportMarkers = useCallback((airports, map) => {
     const markers = [];
-    let filteredCount = 0;
     
     // S'assurer que le pane existe
     if (!map.getPane('airportsPane')) {
@@ -320,39 +188,9 @@ const NavigationMapIntegrated = ({ waypoints = [], onWaypointUpdate, selectedAir
     airports.forEach(airport => {
       if (!airport.coordinates?.lat || !airport.coordinates?.lon) return;
 
-      const airportType = airport.type;
-      const isMainAirport = airportType === 'AIRPORT' || airportType === 'large_airport' || 
-                           airportType === 'medium_airport' || airportType === 0 || airportType === 1;
-      const isPrivateField = [5, 6, 7, 8].includes(airportType);
-      
-      // Appliquer les filtres d'aérodromes
-      let shouldDisplay = false;
-      
-      // Vérifier le type et appliquer le filtre correspondant
-      if (isMainAirport && airport.icao?.startsWith('LF') && airport.icao?.length === 4) {
-        // Aéroport international français (LFXX)
-        shouldDisplay = filters.international;
-      } else if (isMainAirport) {
-        // Aéroport régional
-        shouldDisplay = filters.regional;
-      } else if (airportType === 'HELIPORT' || airportType === 4) {
-        shouldDisplay = filters.heliport;
-      } else if (airportType === 'GLIDER' || airportType === 6) {
-        shouldDisplay = filters.glider;
-      } else if (airportType === 'ULM' || airportType === 7) {
-        shouldDisplay = filters.ulm;
-      } else if (airportType === 'SEAPLANE' || airportType === 8) {
-        shouldDisplay = filters.water;
-      } else {
-        // Petits terrains et autres
-        shouldDisplay = filters.small;
-      }
-      
-      // Ne pas afficher si le filtre est désactivé
-      if (!shouldDisplay) {
-        filteredCount++;
-        return;
-      }
+      const isMainAirport = airport.type === 'AIRPORT' || airport.type === 'large_airport' || 
+                           airport.type === 'medium_airport' || airport.type === 0 || airport.type === 1;
+      const isPrivateField = [5, 6, 7, 8].includes(airport.type);
       
       const label = airport.icao || airport.icaoCode || (isPrivateField ? '🛩️' : '✈️');
       const bgColor = isMainAirport ? '#1e40af' : isPrivateField ? '#9333ea' : '#6366f1';
@@ -384,14 +222,12 @@ const NavigationMapIntegrated = ({ waypoints = [], onWaypointUpdate, selectedAir
       markers.push(marker);
     });
 
-    console.log(`🛬 Aéroports: ${markers.length} affichés, ${filteredCount} filtrés`);
     return markers;
-  };
+  }, []);
 
   // Créer les polygones d'espaces aériens
-  const createAirspacePolygons = (airspaces, map, filters) => {
+  const createAirspacePolygons = useCallback((airspaces, map) => {
     const polygons = [];
-    let filteredCount = 0;
     
     // S'assurer que le pane existe
     if (map && !map.getPane('airspacesPane')) {
@@ -402,12 +238,9 @@ const NavigationMapIntegrated = ({ waypoints = [], onWaypointUpdate, selectedAir
     const styles = {
       'CTR': { color: '#dc2626', fillOpacity: 0.15, weight: 2 },
       'TMA': { color: '#ea580c', fillOpacity: 0.1, weight: 2 },
-      'ATZ': { color: '#3b82f6', fillOpacity: 0.1, weight: 2 },
       'D': { color: '#f59e0b', fillOpacity: 0.08, weight: 1.5 },
       'R': { color: '#b91c1c', fillOpacity: 0.2, weight: 2, dashArray: '5, 5' },
       'P': { color: '#7f1d1d', fillOpacity: 0.25, weight: 2, dashArray: '2, 2' },
-      'TSA': { color: '#8b5cf6', fillOpacity: 0.08, weight: 1.5 },
-      'TRA': { color: '#6366f1', fillOpacity: 0.08, weight: 1.5 },
       'A': { color: '#2563eb', fillOpacity: 0.05, weight: 1 },
       'B': { color: '#3b82f6', fillOpacity: 0.05, weight: 1 },
       'C': { color: '#60a5fa', fillOpacity: 0.05, weight: 1 },
@@ -420,20 +253,6 @@ const NavigationMapIntegrated = ({ waypoints = [], onWaypointUpdate, selectedAir
       if (!airspace.geometry?.coordinates) {
         console.warn('⚠️ Espace aérien sans géométrie:', airspace);
         return;
-      }
-      
-      // Vérifier si ce type d'espace doit être affiché
-      const airspaceType = airspace.type || airspace.class || 'OTHER';
-      
-      // Debug: afficher les types pour les premiers espaces
-      if (polygons.length < 5) {
-        console.log(`🌐 ${airspace.name}: type='${airspaceType}', filtres actifs:`, Object.keys(filters).filter(k => filters[k]));
-      }
-      
-      // Vérifier si le filtre pour ce type est activé
-      if (!filters[airspaceType]) {
-        filteredCount++;
-        return; // Ne pas afficher si le filtre est désactivé
       }
 
       const style = styles[airspace.class] || styles[airspace.type] || { color: '#6b7280', fillOpacity: 0.05, weight: 1 };
@@ -491,85 +310,36 @@ const NavigationMapIntegrated = ({ waypoints = [], onWaypointUpdate, selectedAir
       }
     });
 
-    console.log(`🌍 Espaces aériens: ${polygons.length} affichés, ${filteredCount} filtrés`);
     return polygons;
-  };
+  }, []);
 
-  // Forcer la mise à jour quand les filtres changent
+  // Gérer les couches de manière optimisée avec debounce
   useEffect(() => {
     if (!mapReady || !mapInstanceRef.current) return;
     
     const map = mapInstanceRef.current;
-    
-    // Fonction pour mettre à jour les couches
-    const updateLayers = () => {
-      console.log('🔄 Mise à jour des couches avec les filtres:', {
-        airports: showLayers.airportFilters,
-        airspaces: showLayers.airspaceFilters
-      });
-      
-      // Nettoyer les anciennes couches d'aéroports
+    const updateTimer = setTimeout(() => {
+      // Nettoyer les anciennes couches
       if (layersRef.current.airports) {
         map.removeLayer(layersRef.current.airports);
         layersRef.current.airports = null;
       }
 
-      // Ajouter les nouvelles couches d'aéroports si nécessaire
+      // Ajouter les nouvelles couches si nécessaire
       if (showLayers.airports && filteredAirports.length > 0) {
-        const airportMarkers = createAirportMarkers(filteredAirports, map, showLayers.airportFilters);
-        console.log(`✈️ ${airportMarkers.length} aéroports affichés après filtrage`);
+        const airportMarkers = createAirportMarkers(filteredAirports, map);
         if (airportMarkers.length > 0) {
           layersRef.current.airports = window.L.layerGroup(airportMarkers);
           layersRef.current.airports.addTo(map);
         }
       }
       
-      // Nettoyer les anciennes couches d'espaces aériens
-      if (layersRef.current.airspaces) {
-        map.removeLayer(layersRef.current.airspaces);
-        layersRef.current.airspaces = null;
-      }
-      
-      // Ajouter les espaces aériens avec filtrage
-      if (airspaces.length > 0) {
-        const airspacePolygons = createAirspacePolygons(airspaces, map, showLayers.airspaceFilters);
-        console.log(`🌐 ${airspacePolygons.length} espaces aériens affichés après filtrage`);
-        if (airspacePolygons.length > 0) {
-          layersRef.current.airspaces = window.L.layerGroup(airspacePolygons);
-          layersRef.current.airspaces.addTo(map);
-        }
-      }
-    };
-    
-    // Utiliser un timeout pour le debounce
-    const updateTimer = setTimeout(updateLayers, 100);
-    
+      // Les espaces aériens et balises sont maintenant affichés via les tuiles OpenAIP
+      // Plus besoin de les ajouter en tant que données vectorielles
+    }, 100); // Debounce de 100ms
+
     return () => clearTimeout(updateTimer);
-  }, [
-    mapReady, 
-    showLayers.airports,
-    showLayers.airportFilters.international,
-    showLayers.airportFilters.regional,
-    showLayers.airportFilters.small,
-    showLayers.airportFilters.heliport,
-    showLayers.airportFilters.glider,
-    showLayers.airportFilters.ulm,
-    showLayers.airportFilters.water,
-    showLayers.airspaceFilters.CTR,
-    showLayers.airspaceFilters.TMA,
-    showLayers.airspaceFilters.ATZ,
-    showLayers.airspaceFilters.D,
-    showLayers.airspaceFilters.P,
-    showLayers.airspaceFilters.R,
-    showLayers.airspaceFilters.TSA,
-    showLayers.airspaceFilters.TRA,
-    showLayers.airspaceFilters.C,
-    showLayers.airspaceFilters.E,
-    showLayers.airspaceFilters.F,
-    showLayers.airspaceFilters.G,
-    filteredAirports, 
-    airspaces
-  ]);
+  }, [mapReady, showLayers, filteredAirports, createAirportMarkers]);
 
   // Gérer les waypoints et la route (séparément des autres couches)
   useEffect(() => {
@@ -725,36 +495,6 @@ const NavigationMapIntegrated = ({ waypoints = [], onWaypointUpdate, selectedAir
     setShowLayers(prev => ({ ...prev, range: !prev.range }));
   }, []);
 
-  const toggleAirspaceFilter = useCallback((airspaceType) => {
-    setShowLayers(prev => ({
-      ...prev,
-      airspaceFilters: {
-        ...prev.airspaceFilters,
-        [airspaceType]: !prev.airspaceFilters[airspaceType]
-      }
-    }));
-  }, []);
-
-  const toggleAirportFilter = useCallback((airportType) => {
-    setShowLayers(prev => ({
-      ...prev,
-      airportFilters: {
-        ...prev.airportFilters,
-        [airportType]: !prev.airportFilters[airportType]
-      }
-    }));
-  }, []);
-
-  const handleOpacityChange = useCallback((value) => {
-    const opacity = parseInt(value);
-    setShowLayers(prev => ({ ...prev, openAIPOpacity: opacity }));
-    
-    // Appliquer l'opacité à la couche OpenAIP si elle existe
-    if (layersRef.current.openAIPLayer) {
-      layersRef.current.openAIPLayer.setOpacity(opacity / 100);
-    }
-  }, []);
-
   const toggleOpenAIPOverlay = useCallback(() => {
     setShowLayers(prev => {
       const newState = { ...prev, openAIPOverlay: !prev.openAIPOverlay };
@@ -771,6 +511,44 @@ const NavigationMapIntegrated = ({ waypoints = [], onWaypointUpdate, selectedAir
       return newState;
     });
   }, []);
+
+  const handleOpacityChange = useCallback((value) => {
+    const opacity = parseInt(value);
+    setShowLayers(prev => ({ ...prev, openAIPOpacity: opacity }));
+    
+    // Appliquer l'opacité à la couche OpenAIP
+    if (layersRef.current.openAIPLayer) {
+      layersRef.current.openAIPLayer.setOpacity(opacity / 100);
+    }
+  }, []);
+
+  const handleLayerTypeChange = useCallback((layerType) => {
+    setShowLayers(prev => ({ ...prev, openAIPLayerType: layerType }));
+    
+    // Recréer la couche OpenAIP avec le nouveau type
+    if (mapInstanceRef.current && layersRef.current.openAIPLayer) {
+      // Supprimer l'ancienne couche
+      mapInstanceRef.current.removeLayer(layersRef.current.openAIPLayer);
+      
+      // Créer une nouvelle couche avec le nouveau type
+      const newLayer = window.L.tileLayer(openAIPService.getTileUrl(layerType), {
+        attribution: '© OpenAIP',
+        maxZoom: 14,
+        minZoom: 3,
+        crossOrigin: true,
+        opacity: showLayers.openAIPOpacity / 100,
+        updateWhenIdle: true,
+        updateWhenZooming: false
+      });
+      
+      layersRef.current.openAIPLayer = newLayer;
+      
+      // Ajouter la nouvelle couche si l'overlay est activé
+      if (showLayers.openAIPOverlay) {
+        newLayer.addTo(mapInstanceRef.current);
+      }
+    }
+  }, [showLayers.openAIPOpacity, showLayers.openAIPOverlay]);
 
   return (
     <div>
@@ -795,31 +573,6 @@ const NavigationMapIntegrated = ({ waypoints = [], onWaypointUpdate, selectedAir
 
         {/* Boutons de contrôle */}
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {/* Sélecteur de fond de carte */}
-          <select
-            value={showLayers.baseMap}
-            onChange={(e) => changeBaseMap(e.target.value)}
-            style={{
-              padding: '6px 8px',
-              borderRadius: '6px',
-              border: '1px solid #d1d5db',
-              backgroundColor: 'white',
-              fontSize: '12px',
-              cursor: 'pointer',
-              minWidth: '120px'
-            }}
-            title="Changer le fond de carte"
-          >
-            <option value="osm">OpenStreetMap</option>
-            <option value="osmHot">OSM Humanitarian</option>
-            <option value="cartoDB">CartoDB Light</option>
-            <option value="cartoDBDark">CartoDB Dark</option>
-            <option value="esriSatellite">Satellite (Esri)</option>
-            <option value="openTopoMap">OpenTopoMap</option>
-            <option value="stamenTerrain">Terrain (Stamen)</option>
-            <option value="openAIPBase">OpenAIP Base</option>
-          </select>
-          
           <button
             onClick={recenterMap}
             style={{
@@ -857,10 +610,62 @@ const NavigationMapIntegrated = ({ waypoints = [], onWaypointUpdate, selectedAir
               gap: '4px',
               transition: 'all 0.2s'
             }}
-            title={showLayers.openAIPOverlay ? 'Masquer l\'overlay OpenAIP' : 'Afficher l\'overlay OpenAIP'}
+            title={showLayers.openAIPOverlay ? 'Masquer les données aéronautiques OpenAIP' : 'Afficher les données aéronautiques OpenAIP'}
           >
-            🗺️ OpenAIP {showLayers.openAIPOverlay ? 'ON' : 'OFF'}
+            🗺️ OpenAIP
           </button>
+          
+          {showLayers.openAIPOverlay && (
+            <>
+              <select
+                value={showLayers.openAIPLayerType}
+                onChange={(e) => handleLayerTypeChange(e.target.value)}
+                style={{
+                  padding: '6px 8px',
+                  borderRadius: '6px',
+                  border: '1px solid #d1d5db',
+                  backgroundColor: 'white',
+                  fontSize: '12px',
+                  cursor: 'pointer'
+                }}
+                title="Type de données OpenAIP à afficher"
+              >
+                <option value="vfr">🌤️ VFR</option>
+                <option value="ifr-low">☁️ IFR Low</option>
+                <option value="ifr-high">✈️ IFR High</option>
+                <option value="vrp">📍 Points VFR</option>
+                <option value="obstacles">⚠️ Obstacles</option>
+              </select>
+              
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '0 8px',
+                borderRadius: '6px',
+                backgroundColor: '#f3f4f6',
+                fontSize: '11px'
+              }}>
+                <span>Opacité:</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={showLayers.openAIPOpacity}
+                  onChange={(e) => handleOpacityChange(e.target.value)}
+                  style={{
+                    width: '80px',
+                    height: '20px',
+                    cursor: 'pointer'
+                  }}
+                  title={`Opacité: ${showLayers.openAIPOpacity}%`}
+                />
+                <span style={{ minWidth: '35px', textAlign: 'right' }}>
+                  {showLayers.openAIPOpacity}%
+                </span>
+              </div>
+            </>
+          )}
           
           <button
             onClick={togglePrivateAirfields}
@@ -965,6 +770,19 @@ const NavigationMapIntegrated = ({ waypoints = [], onWaypointUpdate, selectedAir
             </h4>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {showLayers.openAIPOverlay && (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>🗺️ OpenAIP:</span>
+                    <strong>{showLayers.openAIPOpacity}%</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#6b7280', marginTop: '2px' }}>
+                    <span>Type:</span>
+                    <span style={{ textTransform: 'uppercase' }}>{showLayers.openAIPLayerType}</span>
+                  </div>
+                </div>
+              )}
+              
               {showLayers.airports && (
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>✈️ Aérodromes:</span>
@@ -1073,15 +891,161 @@ const NavigationMapIntegrated = ({ waypoints = [], onWaypointUpdate, selectedAir
         </div>
       )}
 
-      {/* Panneau de filtres pour contrôler l'affichage */}
-      <MapFiltersPanel
-        showLayers={showLayers}
-        showAdvancedControls={showAdvancedControls}
-        setShowAdvancedControls={setShowAdvancedControls}
-        toggleAirspaceFilter={toggleAirspaceFilter}
-        toggleAirportFilter={toggleAirportFilter}
-        handleOpacityChange={handleOpacityChange}
-      />
+      {/* Panneau de contrôles avancés */}
+      <div style={{
+        marginTop: '12px',
+        border: '1px solid #e5e7eb',
+        borderRadius: '8px',
+        overflow: 'hidden'
+      }}>
+        <button
+          onClick={() => setShowAdvancedControls(!showAdvancedControls)}
+          style={{
+            width: '100%',
+            padding: '10px 12px',
+            backgroundColor: '#f9fafb',
+            border: 'none',
+            borderBottom: showAdvancedControls ? '1px solid #e5e7eb' : 'none',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: '500'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Settings size={16} />
+            Contrôles avancés de la carte
+          </div>
+          {showAdvancedControls ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </button>
+        
+        {showAdvancedControls && (
+          <div style={{ padding: '12px' }}>
+            <div style={{ marginBottom: '12px' }}>
+              <h4 style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px' }}>
+                🌐 Types de cartes OpenAIP
+              </h4>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                {[
+                  { value: 'vfr', label: '🌤️ VFR', desc: 'Vol à vue' },
+                  { value: 'ifr-low', label: '☁️ IFR Low', desc: 'Vol aux instruments basse altitude' },
+                  { value: 'ifr-high', label: '✈️ IFR High', desc: 'Vol aux instruments haute altitude' },
+                  { value: 'vrp', label: '📍 Points VFR', desc: 'Points de report VFR' },
+                  { value: 'obstacles', label: '⚠️ Obstacles', desc: 'Obstacles à la navigation' }
+                ].map(type => (
+                  <label
+                    key={type.value}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      padding: '8px',
+                      borderRadius: '6px',
+                      border: `2px solid ${showLayers.openAIPLayerType === type.value ? '#f59e0b' : '#e5e7eb'}`,
+                      backgroundColor: showLayers.openAIPLayerType === type.value ? '#fef3c7' : 'white',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="openAIPLayerType"
+                      value={type.value}
+                      checked={showLayers.openAIPLayerType === type.value}
+                      onChange={(e) => handleLayerTypeChange(e.target.value)}
+                      style={{ marginRight: '8px', marginTop: '2px' }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '12px', fontWeight: '500' }}>{type.label}</div>
+                      <div style={{ fontSize: '10px', color: '#6b7280', marginTop: '2px' }}>
+                        {type.desc}
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+            
+            <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #e5e7eb' }}>
+              <h4 style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px' }}>
+                🎨 Paramètres d'affichage
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <label style={{ fontSize: '12px' }}>Opacité de l'overlay OpenAIP:</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={showLayers.openAIPOpacity}
+                      onChange={(e) => handleOpacityChange(e.target.value)}
+                      style={{
+                        width: '120px',
+                        height: '20px',
+                        cursor: 'pointer'
+                      }}
+                    />
+                    <span style={{ minWidth: '40px', fontSize: '12px', textAlign: 'right' }}>
+                      {showLayers.openAIPOpacity}%
+                    </span>
+                  </div>
+                </div>
+                
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  fontSize: '12px'
+                }}>
+                  <span>Afficher les aérodromes:</span>
+                  <input
+                    type="checkbox"
+                    checked={showLayers.airports}
+                    onChange={(e) => setShowLayers(prev => ({ ...prev, airports: e.target.checked }))}
+                    style={{ cursor: 'pointer' }}
+                  />
+                </label>
+                
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  fontSize: '12px'
+                }}>
+                  <span>Afficher les terrains privés:</span>
+                  <input
+                    type="checkbox"
+                    checked={showLayers.privateAirfields}
+                    onChange={(e) => setShowLayers(prev => ({ ...prev, privateAirfields: e.target.checked }))}
+                    style={{ cursor: 'pointer' }}
+                  />
+                </label>
+                
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  fontSize: '12px'
+                }}>
+                  <span>Afficher les waypoints:</span>
+                  <input
+                    type="checkbox"
+                    checked={showLayers.waypoints}
+                    onChange={(e) => setShowLayers(prev => ({ ...prev, waypoints: e.target.checked }))}
+                    style={{ cursor: 'pointer' }}
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
       
       {/* Note d'utilisation */}
       <div style={{
@@ -1092,8 +1056,9 @@ const NavigationMapIntegrated = ({ waypoints = [], onWaypointUpdate, selectedAir
         fontSize: '12px',
         color: '#1e40af'
       }}>
-        💡 <strong>Navigation:</strong> La carte affiche les données aéronautiques OpenAIP (espaces aériens, balises) en overlay sur le fond OpenStreetMap. 
-        Utilisez les filtres pour afficher/masquer les différents types d'espaces aériens et d'aérodromes.
+        💡 <strong>Navigation:</strong> La carte affiche les données aéronautiques OpenAIP en overlay sur OpenStreetMap. 
+        Utilisez les contrôles avancés pour personnaliser l'affichage selon vos besoins (VFR/IFR, opacité, filtres). 
+        Cliquez sur les éléments pour voir les détails.
       </div>
     </div>
   );
