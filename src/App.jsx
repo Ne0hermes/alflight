@@ -1,16 +1,15 @@
-// src/App.jsx
 import React, { lazy, Suspense, memo, useState, useCallback, useMemo, useEffect } from 'react';
 import { FlightSystemProviders } from '@core/contexts';
 import { TabNavigation } from '@shared/components/TabNavigation';
 import { LoadingSpinner } from '@shared/components/LoadingSpinner';
 import ErrorBoundary from '@shared/components/ErrorBoundary';
 import { sx } from '@shared/styles/styleSystem';
-import { useOpenAIPStore } from '@core/stores/openAIPStore';
-import { OpenAIPStatus } from '@shared/components/OpenAIPStatus';
 import { autoMigrateIfNeeded } from '@utils/manexMigration';
 import { NotificationContainer } from '@shared/components/Notification';
+import { DataBackupUI } from '@components/DataBackupUI';
+import dataBackupManager from '@utils/dataBackupManager';
+import { useAuthStore } from '@features/account/stores/authStore';
 
-// Lazy loading des modules
 const NavigationModule = lazy(() => import('@features/navigation'));
 const WeightBalanceModule = lazy(() => import('@features/weight-balance'));
 const FuelModule = lazy(() => import('@features/fuel'));
@@ -19,13 +18,15 @@ const WeatherModule = lazy(() => import('@features/weather'));
 const PerformanceModule = lazy(() => import('@features/performance'));
 const VACModule = lazy(() => import('@features/vac'));
 const AlternatesModule = lazy(() => import('@features/alternates'));
-const TechnicalLogModule = lazy(() => import('@features/technical-log'));
 const ChecklistModule = lazy(() => import('@features/checklist'));
 const PilotModule = lazy(() => import('@features/pilot'));
+const LogbookModule = lazy(() => import('@features/logbook'));
+const AccountModule = lazy(() => import('@features/account/components/AccountPanel').then(module => ({ default: module.AccountPanel })));
 
-// Configuration des onglets
 const TAB_CONFIG = [
+  { id: 'account', label: 'Compte', icon: 'UserCircle', component: AccountModule },
   { id: 'pilot', label: 'Pilote', icon: 'User', component: PilotModule },
+  { id: 'logbook', label: 'Carnet de bord', icon: 'Book', component: LogbookModule },
   { id: 'navigation', label: 'Navigation', icon: 'Navigation', component: NavigationModule },
   { id: 'alternates', label: 'Déroutements', icon: 'Plane', component: AlternatesModule },
   { id: 'weather', label: 'Météo', icon: 'Cloud', component: WeatherModule },
@@ -33,7 +34,6 @@ const TAB_CONFIG = [
   { id: 'performance', label: 'Performances', icon: 'TrendingUp', component: PerformanceModule },
   { id: 'weight-balance', label: 'Masse et Centrage', icon: 'Scale', component: WeightBalanceModule },
   { id: 'fuel', label: 'Bilan Carburant', icon: 'Fuel', component: FuelModule },
-  { id: 'technical-log', label: 'Log Technique', icon: 'FileText', component: TechnicalLogModule },
   { id: 'aircraft', label: 'Gestion Avions', icon: 'Settings', component: AircraftModule },
   { id: 'vac', label: 'Cartes VAC', icon: 'Map', component: VACModule }
 ];
@@ -41,13 +41,25 @@ const TAB_CONFIG = [
 const FlightSystemUI = memo(() => {
   const [activeTab, setActiveTab] = useState('navigation');
   
-  // Effectuer la migration des données MANEX au montage si nécessaire
   useEffect(() => {
     try {
       autoMigrateIfNeeded();
     } catch (err) {
-      console.error('Erreur lors de la migration MANEX:', err);
     }
+    
+    // Initialiser l'authentification
+    useAuthStore.getState().actions.initialize();
+    
+    // Initialiser le gestionnaire de sauvegarde au démarrage
+    const initBackupManager = async () => {
+      try {
+        await dataBackupManager.initPromise;
+        console.log('✅ Gestionnaire de sauvegarde initialisé');
+      } catch (error) {
+        console.error('❌ Erreur initialisation gestionnaire de sauvegarde:', error);
+      }
+    };
+    initBackupManager();
   }, []);
   
   const ActiveComponent = useMemo(() => {
@@ -59,7 +71,6 @@ const FlightSystemUI = memo(() => {
     setActiveTab(tabId);
   }, []);
   
-  // Exposer la fonction pour changer d'onglet globalement
   useEffect(() => {
     window.setActiveTab = handleTabChange;
     return () => {
@@ -76,6 +87,8 @@ const FlightSystemUI = memo(() => {
           </h1>
           <AppVersion />
         </header>
+        
+        <DataBackupUI />
         
         <TabNavigation
           tabs={TAB_CONFIG}
