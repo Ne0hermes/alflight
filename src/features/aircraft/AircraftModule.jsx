@@ -2,10 +2,16 @@
 import React, { memo, useState, useEffect } from 'react';
 import { useAircraft } from '@core/contexts';
 import { useAircraftStore } from '@core/stores/aircraftStore';
-import { Plus, Edit2, Trash2, Download, Upload, Info, AlertTriangle, FileText, Eye, BookOpen } from 'lucide-react';
+import { Plus, Edit2, Trash2, Download, Upload, Info, AlertTriangle, FileText, Eye, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
+import AccordionButton from '@shared/components/AccordionButton';
 import { ManexImporter } from './components/ManexImporter';
-import { ManexViewer } from './components/ManexViewer';
+import AdvancedPerformanceAnalyzer from './components/AdvancedPerformanceAnalyzer';
+// import APIKeyTest from '../performance/components/APIKeyTest'; // Temporairement désactivé
+import { useUnits } from '@hooks/useUnits';
+import performanceDataManager from '../../utils/performanceDataManager';
+import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
+import dataBackupManager from '@utils/dataBackupManager';
 
 // Composant pour l'aide contextuelle
 const InfoIcon = memo(({ tooltip }) => {
@@ -62,8 +68,6 @@ InfoIcon.displayName = 'InfoIcon';
 export const AircraftModule = memo(() => {
   const aircraftContext = useAircraft();
   
-  // DEBUG: Afficher le contexte complet
-  console.log('🔍 AircraftModule - Full Context:', aircraftContext);
   
   // Vérifier si le contexte est valide
   if (!aircraftContext) {
@@ -78,15 +82,30 @@ export const AircraftModule = memo(() => {
   
   const { aircraftList, selectedAircraft, setSelectedAircraft, addAircraft, updateAircraft, deleteAircraft } = aircraftContext;
   
-  // DEBUG: Afficher l'état actuel
-  console.log('✈️ AircraftModule - aircraftList:', aircraftList);
-  console.log('✅ AircraftModule - selectedAircraft:', selectedAircraft);
-  console.log('📊 AircraftModule - aircraftList length:', aircraftList?.length || 0);
+  // Importer la fonction de migration depuis le store
+  const migrateAircraftSurfaces = useAircraftStore(state => state.migrateAircraftSurfaces);
+  
+  // Vérifier les avions ayant des données manquantes
+  const [showIncompleteDataAlert, setShowIncompleteDataAlert] = useState(false);
+  const [incompleteAircraft, setIncompleteAircraft] = useState([]);
+  
+  // Vérifier les données manquantes au premier chargement
+  useEffect(() => {
+    const incomplete = aircraftList.filter(aircraft => 
+      !aircraft.compatibleRunwaySurfaces || aircraft.compatibleRunwaySurfaces.length === 0
+    );
+    
+    if (incomplete.length > 0) {
+      console.log('⚠️ Avions avec données manquantes trouvés:', incomplete.map(a => a.registration));
+      setIncompleteAircraft(incomplete);
+      setShowIncompleteDataAlert(true);
+    }
+  }, [aircraftList]); // Se réexécute quand la liste change
+  
   
   const [showForm, setShowForm] = useState(false);
   const [editingAircraft, setEditingAircraft] = useState(null);
   const [showManexImporter, setShowManexImporter] = useState(false);
-  const [showManexViewer, setShowManexViewer] = useState(false);
   const [manexAircraft, setManexAircraft] = useState(null);
   const updateAircraftManex = useAircraftStore(state => state.updateAircraftManex);
 
@@ -107,10 +126,46 @@ export const AircraftModule = memo(() => {
     }, 100);
   };
 
-  const handleEdit = (aircraft) => {
+  const handleEdit = async (aircraft) => {
     console.log('✏️ AircraftModule - Editing aircraft:', aircraft);
-    console.log('✏️ AircraftModule - Aircraft surfaces:', aircraft.compatibleRunwaySurfaces);
-    setEditingAircraft(aircraft);
+    // Récupérer l'avion le plus récent depuis la liste pour avoir les dernières modifications
+    let currentAircraft = aircraftList.find(a => a.id === aircraft.id) || aircraft;
+    console.log('✏️ AircraftModule - Current aircraft from list:', currentAircraft);
+    console.log('✏️ AircraftModule - Aircraft surfaces:', currentAircraft.compatibleRunwaySurfaces);
+    
+    // Si l'avion a des données volumineuses, essayer de les récupérer depuis IndexedDB avec timeout
+    if (currentAircraft.hasPhoto || currentAircraft.hasManex) {
+      try {
+        console.log('🔍 Récupération des données volumineuses depuis IndexedDB...');
+        
+        // Ajouter un timeout pour éviter d'attendre indéfiniment
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Timeout')), 3000); // 3 secondes max
+        });
+        
+        const dataPromise = dataBackupManager.getAircraftData(currentAircraft.id);
+        
+        const fullAircraft = await Promise.race([dataPromise, timeoutPromise]);
+        
+        if (fullAircraft) {
+          currentAircraft = {
+            ...currentAircraft,
+            photo: fullAircraft.photo || currentAircraft.photo,
+            manex: fullAircraft.manex || currentAircraft.manex
+          };
+          console.log('✅ Données volumineuses récupérées depuis IndexedDB');
+        } else {
+          console.log('⚠️ Aucune donnée volumineuse trouvée dans IndexedDB');
+        }
+      } catch (error) {
+        console.error('❌ Erreur ou timeout lors de la récupération des données depuis IndexedDB:', error);
+        console.log('➡️ Continuons sans les données volumineuses');
+      }
+    }
+    
+    console.log('📝 Ouverture du formulaire d\'édition...');
+    
+    setEditingAircraft(currentAircraft);
     setShowForm(true);
   };
 
@@ -135,200 +190,356 @@ export const AircraftModule = memo(() => {
     console.log('✅ AircraftModule - Export completed');
   };
 
-  const handleImport = (event) => {
+  const handleImport = async (event) => {
     console.log('📥 AircraftModule - Importing aircraft');
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         try {
           const importedData = JSON.parse(e.target.result);
           console.log('📋 AircraftModule - Imported data:', importedData);
           
           if (Array.isArray(importedData)) {
             if (window.confirm(`Voulez-vous importer ${importedData.length} avion(s) ?`)) {
-              importedData.forEach(aircraft => {
-                addAircraft(aircraft);
-              });
-              alert('Import réussi !');
+              // Vérifier et nettoyer le localStorage si nécessaire
+              const currentSize = dataBackupManager.getLocalStorageSize();
+              console.log(`📊 localStorage actuel: ${currentSize} KB`);
+              
+              // Si le localStorage est presque plein, le nettoyer
+              if (currentSize > 3000) {
+                console.log('🧹 Nettoyage du localStorage avant import...');
+                await dataBackupManager.cleanupLocalStorage();
+              }
+              
+              // Compteurs pour le rapport d'import
+              let aircraftUpdated = 0;
+              let aircraftAdded = 0;
+              
+              // Importer chaque avion
+              for (const aircraft of importedData) {
+                console.log(`📥 Import en cours pour: ${aircraft.registration}`);
+                console.log('📋 Données originales:', aircraft);
+                
+                // Séparer les données volumineuses
+                const { photo, manex, ...lightAircraft } = aircraft;
+                
+                // CHANGEMENT: Vérifier si un avion avec la même immatriculation existe déjà
+                const existingAircraftByRegistration = aircraftList.find(a => a.registration === lightAircraft.registration);
+                
+                if (existingAircraftByRegistration) {
+                  // Si l'avion existe déjà, on le met à jour au lieu d'en créer un nouveau
+                  console.log(`🔄 Mise à jour de l'avion existant: ${lightAircraft.registration} (ID: ${existingAircraftByRegistration.id})`);
+                  
+                  // Conserver l'ID existant pour la mise à jour
+                  lightAircraft.id = existingAircraftByRegistration.id;
+                  
+                  // Marquer si l'avion a des données volumineuses
+                  if (photo) lightAircraft.hasPhoto = true;
+                  if (manex) lightAircraft.hasManex = true;
+                  
+                  console.log('📋 Données légères à mettre à jour:', lightAircraft);
+                  console.log('🎒 Compartiments bagages:', lightAircraft.baggageCompartments);
+                  
+                  // Mettre à jour l'avion existant
+                  try {
+                    updateAircraft(lightAircraft);
+                    console.log(`✅ Avion ${lightAircraft.registration} mis à jour`);
+                    aircraftUpdated++;
+                  } catch (error) {
+                    console.error(`❌ Erreur lors de la mise à jour de l'avion ${lightAircraft.registration}:`, error);
+                    throw error;
+                  }
+                } else {
+                  // Si l'avion n'existe pas, on l'ajoute comme nouveau
+                  console.log(`➕ Ajout d'un nouvel avion: ${lightAircraft.registration}`);
+                  
+                  // S'assurer que l'avion a un ID unique
+                  if (!lightAircraft.id) {
+                    lightAircraft.id = `aircraft_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                    console.log(`🆕 Génération d'un nouvel ID: ${lightAircraft.id}`);
+                  }
+                  
+                  // Marquer si l'avion a des données volumineuses
+                  if (photo) lightAircraft.hasPhoto = true;
+                  if (manex) lightAircraft.hasManex = true;
+                  
+                  console.log('📋 Données légères à sauvegarder:', lightAircraft);
+                  console.log('🎒 Compartiments bagages:', lightAircraft.baggageCompartments);
+                  
+                  // Vérifier spécifiquement les compartiments bagages
+                  if (lightAircraft.baggageCompartments) {
+                    lightAircraft.baggageCompartments.forEach((compartment, index) => {
+                      console.log(`🎒 Compartiment ${index}:`, {
+                        id: compartment.id,
+                        name: compartment.name,
+                        arm: compartment.arm,
+                        maxWeight: compartment.maxWeight
+                      });
+                    });
+                  }
+                  
+                  // Ajouter le nouvel avion
+                  try {
+                    const result = addAircraft(lightAircraft);
+                    console.log(`✅ Nouvel avion ${lightAircraft.registration} ajouté à la liste`);
+                    console.log('📋 Résultat de addAircraft:', result);
+                    aircraftAdded++;
+                    
+                    // Vérifier que l'avion a bien été ajouté
+                    console.log('📋 Liste des avions après ajout:', aircraftList.map(a => a.registration));
+                  } catch (error) {
+                    console.error(`❌ Erreur lors de l'ajout de l'avion ${lightAircraft.registration}:`, error);
+                    console.error('📋 Détails de l\'erreur:', {
+                      name: error.name,
+                      message: error.message,
+                      stack: error.stack
+                    });
+                    throw error;
+                  }
+                }
+                
+                // Ensuite sauvegarder les données volumineuses dans IndexedDB si elles existent
+                if (photo || manex) {
+                  try {
+                    console.log(`💾 Sauvegarde des données volumineuses pour ${lightAircraft.registration}...`);
+                    const fullAircraft = {
+                      ...lightAircraft,
+                      photo: photo || null,
+                      manex: manex || null
+                    };
+                    await dataBackupManager.saveAircraftData(fullAircraft);
+                    console.log(`✅ Données volumineuses de ${lightAircraft.registration} sauvegardées dans IndexedDB`);
+                  } catch (error) {
+                    console.warn(`⚠️ Impossible de sauvegarder les données volumineuses pour ${lightAircraft.registration}:`, error);
+                    console.log(`ℹ️ L'avion a été ajouté mais sans photo/manex`);
+                  }
+                } else {
+                  console.log(`ℹ️ Aucune donnée volumineuse pour ${lightAircraft.registration}`);
+                }
+              }
+              
               console.log('✅ AircraftModule - Import successful');
+              console.log(`📊 Résultat de l'import: ${aircraftUpdated} avion(s) mis à jour, ${aircraftAdded} avion(s) ajouté(s)`);
+              
+              // Créer un message personnalisé selon les résultats
+              let message = 'Import terminé avec succès !\n\n';
+              if (aircraftUpdated > 0 && aircraftAdded > 0) {
+                message += `• ${aircraftUpdated} avion${aircraftUpdated > 1 ? 's mis à jour' : ' mis à jour'}\n`;
+                message += `• ${aircraftAdded} nouvel${aircraftAdded > 1 ? 's avions ajoutés' : ' avion ajouté'}`;
+              } else if (aircraftUpdated > 0) {
+                message += `${aircraftUpdated} avion${aircraftUpdated > 1 ? 's ont été mis à jour' : ' a été mis à jour'}`;
+              } else if (aircraftAdded > 0) {
+                message += `${aircraftAdded} nouvel${aircraftAdded > 1 ? 's avions ont été ajoutés' : ' avion a été ajouté'}`;
+              }
+              
+              alert(message);
+              
+              // Ne PAS recharger automatiquement pour pouvoir voir les erreurs
+              console.log('ℹ️ Rechargement manuel désactivé pour débogage');
+              console.log('💡 Si vous voulez recharger, appuyez sur F5');
             }
           } else {
             alert('Format de fichier invalide');
             console.error('❌ AircraftModule - Invalid file format');
           }
         } catch (error) {
-          alert('Erreur lors de l\'import : ' + error.message);
           console.error('❌ AircraftModule - Import error:', error);
+          console.error('❌ Stack trace:', error.stack);
+          
+          // Créer un message d'erreur détaillé
+          let errorMessage = `Erreur lors de l'import:\n\n`;
+          errorMessage += `Type: ${error.name || 'Unknown'}\n`;
+          errorMessage += `Message: ${error.message || 'Aucun message'}\n`;
+          
+          // Si c'est une erreur de quota, proposer le nettoyage
+          if (error.name === 'QuotaExceededError' || error.message.includes('quota')) {
+            errorMessage += '\nLe stockage local est plein.';
+            if (window.confirm(errorMessage + '\n\nVoulez-vous nettoyer le stockage et réessayer ?')) {
+              await dataBackupManager.cleanupLocalStorage();
+              alert('Stockage nettoyé. Veuillez réessayer l\'import.');
+            }
+          } else {
+            // Afficher l'erreur complète
+            alert(errorMessage);
+            
+            // Aussi afficher dans la console avec plus de détails
+            console.group('🔴 Détails de l\'erreur d\'import');
+            console.error('Error object:', error);
+            console.error('Error name:', error.name);
+            console.error('Error message:', error.message);
+            console.error('Error stack:', error.stack);
+            console.groupEnd();
+          }
         }
       };
       reader.readAsText(file);
     }
   };
 
-  // Fonction pour tester manuellement la sélection
-  window.debugSelectAircraft = (index) => {
-    if (aircraftList && aircraftList[index]) {
-      console.log('🧪 DEBUG - Manually selecting aircraft at index:', index);
-      handleSelectAircraft(aircraftList[index]);
-    }
-  };
-
-  // Test direct du store
-  window.debugStoreSelect = (index) => {
-    if (aircraftList && aircraftList[index]) {
-      console.log('🧪 DEBUG - Direct store selection at index:', index);
-      const { setSelectedAircraft: storeSetSelectedAircraft } = useAircraftStore.getState();
-      storeSetSelectedAircraft(aircraftList[index]);
-    }
-  };
-
-  // Test de création d'un avion de debug
-  window.debugCreateTestAircraft = () => {
-    const testAircraft = {
-      registration: 'DEBUG-TEST',
-      model: 'Test Aircraft',
-      fuelType: 'AVGAS',
-      fuelCapacity: 100,
-      cruiseSpeedKt: 100,
-      fuelConsumption: 10,
-      maxTakeoffWeight: 1000,
-      compatibleRunwaySurfaces: ['ASPH', 'CONC', 'GRASS']
-    };
-    console.log('🧪 Creating test aircraft with surfaces:', testAircraft.compatibleRunwaySurfaces);
-    addAircraft(testAircraft);
-  };
-
-  // Fonction pour forcer la mise à jour des surfaces d'un avion
-  window.debugUpdateAircraftSurfaces = (index, surfaces) => {
-    try {
-      if (!aircraftList || !aircraftList[index]) {
-        console.error('❌ Avion non trouvé à l\'index:', index);
-        return;
-      }
-      
-      // Valider que surfaces est un tableau
-      if (!Array.isArray(surfaces)) {
-        console.error('❌ Les surfaces doivent être un tableau, reçu:', typeof surfaces);
-        return;
-      }
-      
-      const aircraft = aircraftList[index];
-      const updated = {
-        ...aircraft,
-        compatibleRunwaySurfaces: surfaces,
-        // S'assurer que les autres champs obligatoires sont présents
-        cruiseSpeed: aircraft.cruiseSpeed || aircraft.cruiseSpeedKt || 100,
-        cruiseSpeedKt: aircraft.cruiseSpeedKt || aircraft.cruiseSpeed || 100
-      };
-      
-      console.log('🔧 Updating aircraft surfaces:', {
-        aircraft: aircraft.registration,
-        oldSurfaces: aircraft.compatibleRunwaySurfaces,
-        newSurfaces: surfaces,
-        fullUpdate: updated
-      });
-      
-      updateAircraft(updated);
-      console.log('✅ Surfaces mises à jour avec succès');
-    } catch (error) {
-      console.error('❌ Erreur lors de la mise à jour des surfaces:', error);
-    }
-  };
-
-  // Fonction pour afficher l'état complet d'un avion
-  window.debugShowAircraft = (index) => {
-    if (aircraftList && aircraftList[index]) {
-      const aircraft = aircraftList[index];
-      console.group(`✈️ État complet de l'avion ${aircraft.registration}`);
-      console.log('Données brutes:', aircraft);
-      console.log('Surfaces compatibles:', aircraft.compatibleRunwaySurfaces);
-      console.log('Type de compatibleRunwaySurfaces:', typeof aircraft.compatibleRunwaySurfaces);
-      console.log('Est un tableau?', Array.isArray(aircraft.compatibleRunwaySurfaces));
-      if (aircraft.compatibleRunwaySurfaces) {
-        console.log('Contenu des surfaces:');
-        aircraft.compatibleRunwaySurfaces.forEach((s, i) => {
-          console.log(`  [${i}]: "${s}" (type: ${typeof s})`);
-        });
-      }
-      console.groupEnd();
-    } else {
-      console.error('❌ Avion non trouvé à l\'index:', index);
-    }
-  };
-
-  // Fonction pour tester la sauvegarde
-  window.debugTestSave = () => {
-    console.group('🧪 Test de sauvegarde');
-    
-    const testData = {
-      registration: 'TEST-SAVE',
-      model: 'Test Save Model',
-      fuelType: 'AVGAS',
-      fuelCapacity: 100,
-      cruiseSpeed: 120,
-      cruiseSpeedKt: 120,
-      fuelConsumption: 30,
-      maxTakeoffWeight: 1000,
-      compatibleRunwaySurfaces: ['ASPH', 'CONC', 'GRASS']
-    };
-    
-    console.log('📋 Données de test:', testData);
-    
-    try {
-      addAircraft(testData);
-      console.log('✅ Sauvegarde réussie');
-    } catch (error) {
-      console.error('❌ Erreur lors de la sauvegarde:', error);
-      console.error('Stack trace:', error.stack);
-    }
-    
-    console.groupEnd();
-  };
-
-  // Fonction pour migrer tous les avions sans surfaces compatibles
-  window.debugMigrateAllAircraft = () => {
-    console.group('🔄 Migration des avions');
-    let migratedCount = 0;
-    
-    aircraftList.forEach((aircraft, index) => {
-      if (!aircraft.compatibleRunwaySurfaces || aircraft.compatibleRunwaySurfaces.length === 0) {
-        console.log(`📌 Migration de ${aircraft.registration}...`);
-        const updated = {
-          ...aircraft,
-          compatibleRunwaySurfaces: ['ASPH', 'CONC'], // Valeurs par défaut
-          cruiseSpeed: aircraft.cruiseSpeed || aircraft.cruiseSpeedKt || 100,
-          cruiseSpeedKt: aircraft.cruiseSpeedKt || aircraft.cruiseSpeed || 100
-        };
-        updateAircraft(updated);
-        migratedCount++;
-      }
-    });
-    
-    console.log(`✅ Migration terminée: ${migratedCount} avion(s) mis à jour`);
-    console.groupEnd();
-  };
 
   return (
     <div>
-      <div style={sx.combine(sx.flex.between, sx.spacing.mb(4))}>
-        <h3 style={sx.combine(sx.text.lg, sx.text.bold)}>
-          ✈️ Gestion des avions
-        </h3>
-        <div style={sx.combine(sx.flex.row, sx.spacing.gap(2))}>
-          <label style={sx.combine(sx.components.button.base, sx.components.button.secondary, { cursor: 'pointer' })}>
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleImport}
-              style={{ display: 'none' }}
-            />
+      {/* Alerte pour les avions avec données manquantes */}
+      {showIncompleteDataAlert && incompleteAircraft.length > 0 && (
+        <div style={{
+          marginBottom: '20px',
+          padding: '16px',
+          backgroundColor: '#fef3c7',
+          border: '2px solid #f59e0b',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'start',
+          gap: '12px'
+        }}>
+          <AlertTriangle size={24} style={{ color: '#d97706', marginTop: '2px', flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            <h4 style={{ 
+              fontSize: '16px', 
+              fontWeight: '600', 
+              color: '#92400e',
+              marginBottom: '8px'
+            }}>
+              ⚠️ Configuration incomplète détectée
+            </h4>
+            <p style={{ 
+              fontSize: '14px', 
+              color: '#78350f',
+              marginBottom: '12px'
+            }}>
+              {incompleteAircraft.length} avion{incompleteAircraft.length > 1 ? 's' : ''} n'a{incompleteAircraft.length > 1 ? 'ont' : ''} pas de surfaces compatibles définies. 
+              Ces informations sont essentielles pour la sélection automatique des aérodromes compatibles.
+            </p>
+            <div style={{ 
+              marginBottom: '12px',
+              padding: '8px',
+              backgroundColor: '#fffbeb',
+              borderRadius: '4px',
+              border: '1px solid #fbbf24'
+            }}>
+              <p style={{ fontSize: '13px', fontWeight: '600', color: '#92400e', marginBottom: '4px' }}>
+                Avions concernés:
+              </p>
+              <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: '#78350f' }}>
+                {incompleteAircraft.map(aircraft => (
+                  <li key={aircraft.id}>
+                    {aircraft.registration} ({aircraft.model})
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => {
+                  // Ouvrir le formulaire de modification pour le premier avion incomplet
+                  if (incompleteAircraft.length > 0) {
+                    handleEdit(incompleteAircraft[0]);
+                  }
+                }}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#f59e0b',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                📝 Configurer maintenant
+              </button>
+              <button
+                onClick={() => {
+                  setShowIncompleteDataAlert(false);
+                }}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'transparent',
+                  color: '#78350f',
+                  border: '1px solid #f59e0b',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  cursor: 'pointer'
+                }}
+              >
+                Ignorer pour le moment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Définition du style pour les boutons */}
+      {(() => {
+        const buttonSectionStyle = {
+          width: '100%',
+          padding: '12px !important',
+          backgroundColor: 'rgba(55, 65, 81, 0.35) !important',
+          color: 'white !important',
+          border: '1px solid rgba(0, 0, 0, 0.7) !important',
+          borderRadius: '8px !important',
+          fontSize: '16px !important',
+          fontWeight: 'bold !important',
+          cursor: 'pointer !important',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          transition: 'all 0.2s !important',
+          background: 'rgba(55, 65, 81, 0.35) !important',
+          textTransform: 'none !important',
+          letterSpacing: 'normal !important'
+        };
+        window.buttonSectionStyle = buttonSectionStyle;
+      })()}
+      
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            onClick={() => {
+              // Déclencher le click sur l'input file caché
+              document.getElementById('import-file-input').click();
+            }}
+            style={{ 
+              padding: '8px 16px', 
+              backgroundColor: '#e5e7eb', 
+              color: '#374151', 
+              border: 'none', 
+              borderRadius: '6px', 
+              fontSize: '14px', 
+              fontWeight: '500', 
+              cursor: 'pointer', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px'
+            }}
+          >
             <Upload size={16} />
             Importer
-          </label>
+          </button>
+          <input
+            id="import-file-input"
+            type="file"
+            accept=".json"
+            onChange={handleImport}
+            style={{ display: 'none' }}
+          />
           <button
             onClick={handleExport}
-            style={sx.combine(sx.components.button.base, sx.components.button.secondary)}
+            style={{ 
+              padding: '8px 16px', 
+              backgroundColor: '#e5e7eb', 
+              color: '#374151', 
+              border: 'none', 
+              borderRadius: '6px', 
+              fontSize: '14px', 
+              fontWeight: '500', 
+              cursor: 'pointer', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px' 
+            }}
           >
             <Download size={16} />
             Exporter
@@ -339,7 +550,19 @@ export const AircraftModule = memo(() => {
               setEditingAircraft(null);
               setShowForm(true);
             }}
-            style={sx.combine(sx.components.button.base, sx.components.button.primary)}
+            style={{ 
+              padding: '8px 16px', 
+              backgroundColor: '#3b82f6', 
+              color: 'white', 
+              border: 'none', 
+              borderRadius: '6px', 
+              fontSize: '14px', 
+              fontWeight: '500', 
+              cursor: 'pointer', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px' 
+            }}
           >
             <Plus size={16} />
             Nouvel avion
@@ -347,119 +570,13 @@ export const AircraftModule = memo(() => {
         </div>
       </div>
 
-      {/* Section de débogage - VISIBLE UNIQUEMENT EN DEV */}
-      <div style={{ 
-        marginBottom: '16px', 
-        padding: '12px', 
-        backgroundColor: '#F3F4F6', 
-        borderRadius: '8px',
-        border: '1px solid #E5E7EB'
-      }}>
-        <h4 style={{ margin: 0, marginBottom: '8px', fontSize: '14px', color: '#374151' }}>
-          🔧 Debug Info:
-        </h4>
-        
-        {/* Alerte si des avions n'ont pas de surfaces compatibles */}
-        {aircraftList.some(a => !a.compatibleRunwaySurfaces || a.compatibleRunwaySurfaces.length === 0) && (
-          <div style={{
-            backgroundColor: '#fef3c7',
-            border: '1px solid #fbbf24',
-            borderRadius: '6px',
-            padding: '8px',
-            marginBottom: '8px',
-            fontSize: '12px'
-          }}>
-            <strong>⚠️ Attention :</strong> Certains avions n'ont pas de surfaces compatibles définies.
-            <br/>
-            <button
-              onClick={() => window.debugMigrateAllAircraft()}
-              style={{
-                marginTop: '4px',
-                padding: '4px 8px',
-                fontSize: '11px',
-                backgroundColor: '#f59e0b',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
-              Migrer tous les avions
-            </button>
-          </div>
-        )}
-        
-        <div style={{ fontSize: '12px', color: '#6B7280', lineHeight: '1.6' }}>
-          <p style={{ margin: '4px 0' }}>
-            • Nombre d'avions: <strong>{aircraftList?.length || 0}</strong>
-          </p>
-          <p style={{ margin: '4px 0' }}>
-            • Avion sélectionné: <strong>
-              {selectedAircraft 
-                ? `${selectedAircraft.registration} (ID: ${selectedAircraft.id})` 
-                : 'Aucun'}
-            </strong>
-          </p>
-          <p style={{ margin: '4px 0' }}>
-            • État du contexte: <strong style={{ color: aircraftContext ? '#10B981' : '#EF4444' }}>
-              {aircraftContext ? 'Connecté' : 'Déconnecté'}
-            </strong>
-          </p>
-          <p style={{ margin: '4px 0', fontSize: '11px', color: '#9CA3AF' }}>
-            Console: window.debugSelectAircraft(0) pour sélectionner le premier avion
-          </p>
-          <p style={{ margin: '4px 0', fontSize: '11px', color: '#9CA3AF' }}>
-            Console: window.debugStoreSelect(1) pour sélectionner directement via le store
-          </p>
-          <p style={{ margin: '4px 0', fontSize: '11px', color: '#9CA3AF' }}>
-            Console: window.debugCreateTestAircraft() pour créer un avion de test
-          </p>
-          <p style={{ margin: '4px 0', fontSize: '11px', color: '#9CA3AF' }}>
-            Console: window.debugUpdateAircraftSurfaces(0, ['ASPH', 'GRASS']) pour forcer les surfaces
-          </p>
-          <p style={{ margin: '4px 0', fontSize: '11px', color: '#9CA3AF' }}>
-            Console: window.debugShowAircraft(0) pour voir l'état complet d'un avion
-          </p>
-          <p style={{ margin: '4px 0', fontSize: '11px', color: '#9CA3AF' }}>
-            Console: window.debugMigrateAllAircraft() pour migrer tous les avions sans surfaces
-          </p>
-          <p style={{ margin: '4px 0', fontSize: '11px', color: '#9CA3AF' }}>
-            Console: window.debugTestSave() pour tester la sauvegarde
-          </p>
-        </div>
-        <div style={{ marginTop: '8px' }}>
-          <button
-            onClick={() => {
-              console.log('🔬 Testing direct store access...');
-              const store = useAircraftStore.getState();
-              console.log('🔬 Store state:', store);
-              console.log('🔬 Store setSelectedAircraft:', store.setSelectedAircraft);
-              if (aircraftList.length > 1) {
-                const targetAircraft = selectedAircraft?.id === aircraftList[0].id ? aircraftList[1] : aircraftList[0];
-                console.log('🔬 Switching to:', targetAircraft);
-                store.setSelectedAircraft(targetAircraft);
-              }
-            }}
-            style={{
-              padding: '4px 8px',
-              fontSize: '11px',
-              backgroundColor: '#10B981',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            Test Direct Store Selection
-          </button>
-        </div>
-      </div>
 
       {/* Liste des avions */}
       <div style={{ display: 'grid', gap: '12px' }}>
         {aircraftList && aircraftList.length > 0 ? (
           aircraftList.map((aircraft, index) => {
             const isSelected = selectedAircraft && selectedAircraft.id === aircraft.id;
+            const hasIncompleteSurfaces = !aircraft.compatibleRunwaySurfaces || aircraft.compatibleRunwaySurfaces.length === 0;
             
             console.log(`🔍 Rendering aircraft ${index}:`, {
               aircraftId: aircraft.id,
@@ -467,7 +584,8 @@ export const AircraftModule = memo(() => {
               isSelected: isSelected,
               strictEquality: selectedAircraft?.id === aircraft.id,
               typeOfAircraftId: typeof aircraft.id,
-              typeOfSelectedId: typeof selectedAircraft?.id
+              typeOfSelectedId: typeof selectedAircraft?.id,
+              hasIncompleteSurfaces: hasIncompleteSurfaces
             });
             
             return (
@@ -476,12 +594,13 @@ export const AircraftModule = memo(() => {
                 style={{
                   padding: '16px',
                   borderRadius: '8px',
-                  border: isSelected ? '2px solid #3182CE' : '1px solid #E5E7EB',
-                  backgroundColor: isSelected ? '#EBF8FF' : 'white',
+                  border: hasIncompleteSurfaces ? '2px solid #f59e0b' : (isSelected ? '2px solid #3182CE' : '1px solid #E5E7EB'),
+                  backgroundColor: hasIncompleteSurfaces ? '#fffbeb' : (isSelected ? '#EBF8FF' : 'white'),
                   cursor: 'pointer',
                   transition: 'all 0.2s ease-in-out',
                   marginBottom: '8px',
-                  boxShadow: isSelected ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : 'none'
+                  boxShadow: isSelected ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : 'none',
+                  position: 'relative'
                 }}
                 onClick={(e) => {
                   console.log(`🖱️ AircraftModule - Card clicked for aircraft index ${index}`);
@@ -492,6 +611,28 @@ export const AircraftModule = memo(() => {
                   handleSelectAircraft(aircraft);
                 }}
               >
+                {/* Badge d'avertissement pour données incomplètes */}
+                {hasIncompleteSurfaces && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '8px',
+                    right: '8px',
+                    backgroundColor: '#f59e0b',
+                    color: 'white',
+                    padding: '4px 8px',
+                    borderRadius: '12px',
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    zIndex: 1
+                  }}>
+                    <AlertTriangle size={12} />
+                    Config requise
+                  </div>
+                )}
+                
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px' }}>
                   {/* Photo de l'avion */}
                   {aircraft.photo && (
@@ -516,8 +657,8 @@ export const AircraftModule = memo(() => {
                   )}
                   
                   <div style={{ flex: 1 }}>
-                    <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '4px' }}>
-                      {aircraft.registration} - {aircraft.model}
+                    <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '4px', color: '#000000' }}>
+                      <span style={{ color: '#000000' }}>{aircraft.registration} - {aircraft.model}</span>
                       {aircraft.wakeTurbulenceCategory && (
                         <span style={{
                           marginLeft: '8px',
@@ -555,12 +696,6 @@ export const AircraftModule = memo(() => {
                           📚 MANEX: {aircraft.manex.fileName} ({aircraft.manex.pageCount} pages)
                         </p>
                       )}
-                      {/* DEBUG: Afficher les surfaces compatibles */}
-                      <p style={{ color: '#059669', fontSize: '12px' }}>
-                        🛬 Surfaces compatibles: {aircraft.compatibleRunwaySurfaces && Array.isArray(aircraft.compatibleRunwaySurfaces) && aircraft.compatibleRunwaySurfaces.length > 0 ? 
-                          `[${aircraft.compatibleRunwaySurfaces.join(', ')}]` : 
-                          <span style={{ color: '#dc2626' }}>Non définies ⚠️</span>}
-                      </p>
                       {aircraft.masses?.emptyMass && (
                         <p style={{ color: '#3182CE' }}>
                           ⚖️ Masse à vide: {aircraft.masses.emptyMass}kg • MLM: {aircraft.limitations?.maxLandingMass || 'N/A'}kg
@@ -568,7 +703,7 @@ export const AircraftModule = memo(() => {
                       )}
                       {aircraft.armLengths?.emptyMassArm && (
                         <p style={{ color: '#7C3AED' }}>
-                          📏 Bras masse à vide: {aircraft.armLengths.emptyMassArm}mm • Carburant: {aircraft.armLengths.fuelArm}mm
+                          📏 Bras masse à vide: {aircraft.armLengths.emptyMassArm}m • Carburant: {aircraft.armLengths.fuelArm}m
                         </p>
                       )}
                       {/* Types de pistes compatibles */}
@@ -591,10 +726,106 @@ export const AircraftModule = memo(() => {
                           })()}
                         </p>
                       )}
-                      {/* Debug info spécifique à cet avion */}
-                      <p style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '4px' }}>
-                        ID: {aircraft.id} | Index: {index} | Selected: {isSelected ? 'YES' : 'NO'}
-                      </p>
+                      
+                      {/* Opérations approuvées */}
+                      <div style={{ marginTop: '6px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        {aircraft.approvedOperations?.vfrDay !== false && (
+                          <span style={{ 
+                            padding: '2px 6px', 
+                            fontSize: '10px', 
+                            backgroundColor: '#dbeafe',
+                            color: '#1e40af',
+                            borderRadius: '3px',
+                            fontWeight: '500'
+                          }}>
+                            VFR jour
+                          </span>
+                        )}
+                        {aircraft.approvedOperations?.vfrNight && (
+                          <span style={{ 
+                            padding: '2px 6px', 
+                            fontSize: '10px', 
+                            backgroundColor: '#1e293b',
+                            color: '#e0f2fe',
+                            borderRadius: '3px',
+                            fontWeight: '500'
+                          }}>
+                            VFR nuit 🌙
+                          </span>
+                        )}
+                        {aircraft.approvedOperations?.ifrDay && (
+                          <span style={{ 
+                            padding: '2px 6px', 
+                            fontSize: '10px', 
+                            backgroundColor: '#dcfce7',
+                            color: '#14532d',
+                            borderRadius: '3px',
+                            fontWeight: '500'
+                          }}>
+                            IFR jour
+                          </span>
+                        )}
+                        {aircraft.approvedOperations?.ifrNight && (
+                          <span style={{ 
+                            padding: '2px 6px', 
+                            fontSize: '10px', 
+                            backgroundColor: '#064e3b',
+                            color: '#d1fae5',
+                            borderRadius: '3px',
+                            fontWeight: '500'
+                          }}>
+                            IFR nuit 🌙
+                          </span>
+                        )}
+                        {aircraft.approvedOperations?.svfr && (
+                          <span style={{ 
+                            padding: '2px 6px', 
+                            fontSize: '10px', 
+                            backgroundColor: '#fef3c7',
+                            color: '#78350f',
+                            borderRadius: '3px',
+                            fontWeight: '500'
+                          }}>
+                            SVFR
+                          </span>
+                        )}
+                        {aircraft.approvedOperations?.training && (
+                          <span style={{ 
+                            padding: '2px 6px', 
+                            fontSize: '10px', 
+                            backgroundColor: '#fce7f3',
+                            color: '#831843',
+                            borderRadius: '3px',
+                            fontWeight: '500'
+                          }}>
+                            École ✈️
+                          </span>
+                        )}
+                        {aircraft.approvedOperations?.mountainous && (
+                          <span style={{ 
+                            padding: '2px 6px', 
+                            fontSize: '10px', 
+                            backgroundColor: '#f3f4f6',
+                            color: '#374151',
+                            borderRadius: '3px',
+                            fontWeight: '500'
+                          }}>
+                            Montagne ⛰️
+                          </span>
+                        )}
+                        {aircraft.approvedOperations?.aerobatics && (
+                          <span style={{ 
+                            padding: '2px 6px', 
+                            fontSize: '10px', 
+                            backgroundColor: '#fee2e2',
+                            color: '#991b1b',
+                            borderRadius: '3px',
+                            fontWeight: '500'
+                          }}>
+                            Voltige 🎪
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '4px' }}>
@@ -605,46 +836,17 @@ export const AircraftModule = memo(() => {
                         setManexAircraft(aircraft);
                         setShowManexImporter(true);
                       }}
-                      style={sx.combine(
-                        sx.components.button.base, 
-                        sx.components.button.secondary, 
-                        { 
-                          padding: '8px',
-                          backgroundColor: aircraft.manex ? '#fef3c7' : undefined,
-                          borderColor: aircraft.manex ? '#fbbf24' : undefined
-                        }
-                      )}
+                      style={{
+                        ...window.buttonSectionStyle,
+                        padding: '8px',
+                        background: aircraft.manex ? '#fef3c7' : 'rgba(55, 65, 81, 0.35)',
+                        borderColor: aircraft.manex ? '#fbbf24' : 'rgba(0, 0, 0, 0.7)'
+                      }}
                       title={aircraft.manex ? "MANEX importé - Cliquer pour modifier" : "Importer le MANEX"}
                     >
                       <FileText size={16} color={aircraft.manex ? '#f59e0b' : undefined} />
                     </button>
                     
-                    {/* Bouton pour visualiser le MANEX (si existant) */}
-                    {aircraft.manex && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setManexAircraft(aircraft);
-                          setShowManexViewer(true);
-                        }}
-                        style={sx.combine(
-                          sx.components.button.base, 
-                          { 
-                            padding: '4px 8px',
-                            borderRadius: '4px',
-                            fontSize: '14px',
-                            backgroundColor: '#e0f2fe',
-                            borderColor: '#0284c7',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px'
-                          }
-                        )}
-                        title="Consulter les données du MANEX"
-                      >
-                        <BookOpen size={16} color="#0284c7" />
-                      </button>
-                    )}
                     
                     <button
                       onClick={(e) => {
@@ -652,7 +854,10 @@ export const AircraftModule = memo(() => {
                         console.log('✏️ AircraftModule - Edit button clicked');
                         handleEdit(aircraft);
                       }}
-                      style={sx.combine(sx.components.button.base, sx.components.button.secondary, { padding: '8px' })}
+                      style={{
+                        ...window.buttonSectionStyle,
+                        padding: '8px'
+                      }}
                       title="Modifier"
                     >
                       <Edit2 size={16} />
@@ -664,7 +869,10 @@ export const AircraftModule = memo(() => {
                           console.log('🗑️ AircraftModule - Delete button clicked');
                           handleDelete(aircraft.id);
                         }}
-                        style={sx.combine(sx.components.button.base, sx.components.button.danger, { padding: '8px' })}
+                        style={{
+                          ...window.buttonSectionStyle,
+                          padding: '8px'
+                        }}
                         title="Supprimer"
                       >
                         <Trash2 size={16} />
@@ -689,6 +897,9 @@ export const AircraftModule = memo(() => {
         )}
       </div>
 
+      {/* API Key Test Component - Temporairement désactivé */}
+      {/* <APIKeyTest /> */}
+
       {/* Modal formulaire */}
       {showForm && (
         <div style={{
@@ -698,46 +909,142 @@ export const AircraftModule = memo(() => {
           right: 0,
           bottom: 0,
           backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 1000
         }}>
           <div style={{
-            backgroundColor: 'white',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
             borderRadius: '12px',
             padding: '24px',
             maxWidth: '800px',
             width: '90%',
             maxHeight: '90vh',
-            overflow: 'auto'
+            overflow: 'auto',
+            position: 'relative',
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.2)'
           }}>
-            <h3 style={sx.combine(sx.text.xl, sx.text.bold, sx.spacing.mb(4))}>
-              {editingAircraft ? 'Modifier l\'avion' : 'Nouvel avion'}
-            </h3>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginBottom: '24px',
+              position: 'sticky',
+              top: '-24px',
+              backgroundColor: 'white',
+              paddingBottom: '12px',
+              zIndex: 10
+            }}>
+              <h3 style={sx.combine(sx.text.xl, sx.text.bold)}>
+                {editingAircraft ? `Informations ${editingAircraft.registration}` : 'Nouvel avion'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingAircraft(null);
+                }}
+                style={{
+                  position: 'absolute',
+                  right: 0,
+                  padding: '8px',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#6b7280',
+                  transition: 'color 0.2s'
+                }}
+                onMouseEnter={(e) => e.target.style.color = '#000'}
+                onMouseLeave={(e) => e.target.style.color = '#6b7280'}
+              >
+                <X size={24} />
+              </button>
+            </div>
             
             <AircraftForm
               aircraft={editingAircraft}
-              onSubmit={(formData) => {
-                console.log('💾 AircraftModule - Form submitted with data:', formData);
-                console.log('💾 AircraftModule - Surfaces compatibles:', formData.compatibleRunwaySurfaces);
+              onSubmit={async (processedData) => {
+                console.log('💾 AircraftModule - Form submitted with processed data:', processedData);
+                console.log('💾 AircraftModule - Speeds in processed data:', processedData.speeds);
+                console.log('💾 AircraftModule - Surfaces compatibles:', processedData.compatibleRunwaySurfaces);
                 
                 try {
+                  // Séparer les données volumineuses
+                  const { photo, manex, ...lightData } = processedData;
+                  
                   if (editingAircraft) {
-                    const updatedAircraft = {...formData, id: editingAircraft.id};
-                    console.log('💾 AircraftModule - Updating aircraft:', updatedAircraft);
+                    const updatedAircraft = {...lightData, id: editingAircraft.id};
+                    
+                    // Marquer si l'avion a des données volumineuses
+                    if (photo) updatedAircraft.hasPhoto = true;
+                    if (manex) updatedAircraft.hasManex = true;
+                    
+                    console.log('💾 AircraftModule - Updating aircraft with speeds:', updatedAircraft.speeds);
+                    
+                    // Sauvegarder les données volumineuses dans IndexedDB si elles existent
+                    if (photo || manex) {
+                      const fullAircraft = {
+                        ...updatedAircraft,
+                        photo: photo || null,
+                        manex: manex || null
+                      };
+                      await dataBackupManager.saveAircraftData(fullAircraft);
+                      console.log('✅ Données volumineuses sauvegardées dans IndexedDB');
+                    }
+                    
+                    // Mettre à jour avec les données légères
                     updateAircraft(updatedAircraft);
-                    console.log('✅ AircraftModule - Aircraft updated');
+                    console.log('✅ AircraftModule - Aircraft updated with speeds');
                   } else {
                     console.log('💾 AircraftModule - Adding new aircraft');
-                    addAircraft(formData);
-                    console.log('✅ AircraftModule - New aircraft added');
+                    console.log('💾 AircraftModule - Données complètes à ajouter:', lightData);
+                    
+                    // Utiliser l'ID existant ou en créer un nouveau
+                    if (!lightData.id) {
+                      lightData.id = `aircraft_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                    }
+                    
+                    // Marquer si l'avion a des données volumineuses
+                    if (photo) lightData.hasPhoto = true;
+                    if (manex) lightData.hasManex = true;
+                    
+                    // Sauvegarder les données volumineuses dans IndexedDB si elles existent
+                    if (photo || manex) {
+                      const fullAircraft = {
+                        ...lightData,
+                        photo: photo || null,
+                        manex: manex || null
+                      };
+                      await dataBackupManager.saveAircraftData(fullAircraft);
+                      console.log('✅ Données volumineuses sauvegardées dans IndexedDB');
+                    }
+                    
+                    try {
+                      const result = addAircraft(lightData);
+                      console.log('✅ AircraftModule - addAircraft result:', result);
+                      console.log('✅ AircraftModule - New aircraft added');
+                    } catch (error) {
+                      console.error('❌ AircraftModule - Erreur lors de l\'ajout:', error);
+                      console.error('❌ Stack trace:', error.stack);
+                    }
                   }
                   setShowForm(false);
                   setEditingAircraft(null);
                 } catch (error) {
                   console.error('❌ AircraftModule - Erreur lors de la sauvegarde:', error);
-                  alert(`Erreur lors de la sauvegarde: ${error.message}`);
+                  
+                  // Si c'est une erreur de quota, proposer le nettoyage
+                  if (error.name === 'QuotaExceededError' || error.message.includes('quota')) {
+                    if (window.confirm('Le stockage est plein. Voulez-vous nettoyer le stockage et réessayer ?')) {
+                      await dataBackupManager.cleanupLocalStorage();
+                      alert('Stockage nettoyé. Veuillez réessayer.');
+                    }
+                  } else {
+                    alert(`Erreur lors de la sauvegarde: ${error.message}`);
+                  }
                 }
               }}
               onCancel={() => {
@@ -762,16 +1069,6 @@ export const AircraftModule = memo(() => {
         />
       )}
       
-      {/* Modal MANEX Viewer */}
-      {showManexViewer && manexAircraft && (
-        <ManexViewer
-          aircraft={manexAircraft}
-          onClose={() => {
-            setShowManexViewer(false);
-            setManexAircraft(null);
-          }}
-        />
-      )}
     </div>
   );
 });
@@ -780,19 +1077,36 @@ AircraftModule.displayName = 'AircraftModule';
 
 // Composant de formulaire pour ajouter/modifier un avion
 const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
-  const massUnit = 'kg';
-  const [activeTab, setActiveTab] = useState('general'); // État pour l'onglet actif
+  const { format, convert, getSymbol, toStorage, getUnit } = useUnits();
+  const units = useUnitsWatcher(); // Force re-render on units change
+  const massUnit = getSymbol('weight');
+  const fuelUnit = getSymbol('fuel');
+  const armUnit = getSymbol('armLength');
+  const consumptionUnit = getUnit('fuel') === 'ltr' ? 'L/h' : getUnit('fuel') === 'gal' ? 'gal/h' : `${getSymbol('fuel')}/h`;
+  // États pour les sections collapsibles
+  const [showGeneral, setShowGeneral] = useState(false);
+  const [showPerformances, setShowPerformances] = useState(false);
+  const [showMasseCentrage, setShowMasseCentrage] = useState(false);
+  const [showEquipements, setShowEquipements] = useState(false);
+  const [showOperations, setShowOperations] = useState(false);
+  const [showRemarques, setShowRemarques] = useState(false);
+  const [showPerformancesIA, setShowPerformancesIA] = useState(false);
   const [aircraftPhoto, setAircraftPhoto] = useState(aircraft?.photo || null);
 
   // DEBUG : Afficher l'avion reçu en props
-  console.log('🛩️ AircraftForm - aircraft reçu:', aircraft);
-  console.log('🛩️ AircraftForm - surfaces compatibles de l\'avion:', aircraft?.compatibleRunwaySurfaces);
+  // console.log('🛩️ AircraftForm - aircraft reçu:', aircraft);
+  // console.log('🛩️ AircraftForm - surfaces compatibles de l\'avion:', aircraft?.compatibleRunwaySurfaces);
+  // console.log('🛩️ AircraftForm - ID de l\'avion:', aircraft?.id);
 
   // Valider et normaliser les surfaces compatibles
   const getValidSurfaces = (surfaces) => {
-    if (!surfaces) return ['ASPH', 'CONC'];
-    if (!Array.isArray(surfaces)) return ['ASPH', 'CONC'];
-    if (surfaces.length === 0) return ['ASPH', 'CONC'];
+    // Pour un nouvel avion (aircraft est null), pas de valeurs par défaut
+    if (!aircraft) return [];
+    
+    // Pour un avion existant, préserver ses surfaces ou utiliser un tableau vide
+    if (!surfaces) return [];
+    if (!Array.isArray(surfaces)) return [];
+    
     // S'assurer que toutes les surfaces sont des chaînes valides
     return surfaces.filter(s => typeof s === 'string' && s.trim().length > 0);
   };
@@ -820,6 +1134,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
     fuelType: aircraft?.fuelType || 'AVGAS',
     fuelCapacity: aircraft?.fuelCapacity || '',
     cruiseSpeedKt: aircraft?.cruiseSpeedKt || aircraft?.cruiseSpeed || '',
+    baseFactor: aircraft?.baseFactor || '',  // Facteur de base calculé automatiquement
     fuelConsumption: aircraft?.fuelConsumption || '',
     maxTakeoffWeight: aircraft?.maxTakeoffWeight || '',
     wakeTurbulenceCategory: aircraft?.wakeTurbulenceCategory || 'L', // L=Light, M=Medium, H=Heavy, J=Super
@@ -828,16 +1143,27 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
     speeds: {
       vso: aircraft?.speeds?.vso || aircraft?.manex?.performances?.vso || '',  // Vitesse de décrochage volets sortis
       vs1: aircraft?.speeds?.vs1 || aircraft?.manex?.performances?.vs1 || '',  // Vitesse de décrochage volets rentrés
-      vfe: aircraft?.speeds?.vfe || aircraft?.manex?.performances?.vfe || '',  // Vitesse max volets sortis
-      vno: aircraft?.speeds?.vno || aircraft?.manex?.performances?.vno || '',  // Vitesse max en air turbulent
+      vr: aircraft?.speeds?.vr || '',    // Vitesse de rotation
+      vfe: aircraft?.speeds?.vfe || aircraft?.manex?.performances?.vfe || '',  // Vitesse max volets sortis (compatibilité ancienne)
+      vfeLdg: aircraft?.speeds?.vfeLdg || '',    // Vitesse max volets LDG (atterrissage)
+      vfeTO: aircraft?.speeds?.vfeTO || '',      // Vitesse max volets T/O (décollage)
+      vno: aircraft?.speeds?.vno || aircraft?.manex?.performances?.vno || '',  // Vitesse max en air calme
       vne: aircraft?.speeds?.vne || aircraft?.manex?.performances?.vne || '',  // Vitesse à ne jamais dépasser
-      va: aircraft?.speeds?.va || aircraft?.manex?.performances?.va || '',    // Vitesse de manœuvre
       vx: aircraft?.speeds?.vx || aircraft?.manex?.performances?.vx || '',    // Vitesse de montée max (pente)
       vy: aircraft?.speeds?.vy || aircraft?.manex?.performances?.vy || '',    // Vitesse de montée optimale (taux)
-      vr: aircraft?.speeds?.vr || aircraft?.manex?.performances?.vr || '',    // Vitesse de rotation
-      vref: aircraft?.speeds?.vref || aircraft?.manex?.performances?.vref || '', // Vitesse de référence
-      vapp: aircraft?.speeds?.vapp || aircraft?.manex?.performances?.vapp || '', // Vitesse d'approche
-      vglide: aircraft?.speeds?.vglide || ''  // Vitesse de plané optimal
+      vapp: aircraft?.speeds?.vapp || '',  // Vitesse d'approche
+      vle: aircraft?.speeds?.vle || '',  // Vitesse max train sorti
+      vlo: aircraft?.speeds?.vlo || '',  // Vitesse max manœuvre train
+      initialClimb: aircraft?.speeds?.initialClimb || '',  // Vitesse de montée initiale
+      vglide: aircraft?.speeds?.vglide || '',  // Vitesse de plané optimal
+      // VO - Operating manoeuvring speed (variable selon la masse)
+      voWeight1: aircraft?.speeds?.voWeight1 || '',     // Masse max pour VO1
+      voSpeed1: aircraft?.speeds?.voSpeed1 || '',       // VO1
+      voWeight2Min: aircraft?.speeds?.voWeight2Min || '', // Masse min pour VO2
+      voWeight2Max: aircraft?.speeds?.voWeight2Max || '', // Masse max pour VO2
+      voSpeed2: aircraft?.speeds?.voSpeed2 || '',       // VO2
+      voWeight3: aircraft?.speeds?.voWeight3 || '',     // Masse min pour VO3
+      voSpeed3: aircraft?.speeds?.voSpeed3 || ''        // VO3
     },
     // Section Performances - Distances
     distances: {
@@ -852,19 +1178,17 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
     climb: {
       rateOfClimb: aircraft?.climb?.rateOfClimb || '',  // Taux de montée (ft/min)
       serviceCeiling: aircraft?.climb?.serviceCeiling || '',  // Plafond pratique (ft)
-      absoluteCeiling: aircraft?.climb?.absoluteCeiling || '',  // Plafond absolu (ft)
       climbGradient: aircraft?.climb?.climbGradient || ''  // Gradient de montée (%)
     },
     // Section Limitations de vent
     windLimits: {
       maxCrosswind: aircraft?.windLimits?.maxCrosswind || aircraft?.manex?.limitations?.maxCrosswind || '',
       maxTailwind: aircraft?.windLimits?.maxTailwind || aircraft?.manex?.limitations?.maxTailwind || '',
-      maxHeadwind: aircraft?.windLimits?.maxHeadwind || aircraft?.manex?.limitations?.maxHeadwind || ''
+      maxCrosswindWet: aircraft?.windLimits?.maxCrosswindWet || ''
     },
     masses: {
       emptyMass: aircraft?.masses?.emptyMass || '',
       minTakeoffMass: aircraft?.masses?.minTakeoffMass || '',
-      baseFactor: aircraft?.masses?.baseFactor || '',
       maxBaggageTube: aircraft?.masses?.maxBaggageTube || '',
       maxAftBaggageExtension: aircraft?.masses?.maxAftBaggageExtension || ''
     },
@@ -883,6 +1207,36 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       maxLandingMass: aircraft?.limitations?.maxLandingMass || '',
       maxBaggageLest: aircraft?.limitations?.maxBaggageLest || ''
     },
+    // Enveloppe de centrage
+    cgEnvelope: {
+      // Points CG avant (forward) - tableau dynamique
+      forwardPoints: aircraft?.cgEnvelope?.forwardPoints && aircraft.cgEnvelope.forwardPoints.length > 0
+        ? aircraft.cgEnvelope.forwardPoints
+        : [{ weight: '', cg: '', id: Date.now() + Math.random() }],
+      // CG arrière (aft)
+      aftMinWeight: aircraft?.cgEnvelope?.aftMinWeight || '',  // Masse min pour CG arrière
+      aftCG: aircraft?.cgEnvelope?.aftCG || '',  // CG arrière (constant ou à masse min)
+      aftMaxWeight: aircraft?.cgEnvelope?.aftMaxWeight || '',  // Masse max pour CG arrière (si différente)
+    },
+    // Sièges supplémentaires dynamiques
+    additionalSeats: aircraft?.additionalSeats || [],
+    // Compartiments bagages dynamiques
+    baggageCompartments: aircraft?.baggageCompartments && aircraft.baggageCompartments.length > 0
+      ? aircraft.baggageCompartments
+      : [
+          { 
+            id: Date.now() + Math.random(), 
+            name: 'Compartiment standard', 
+            arm: aircraft?.armLengths?.standardBaggageArm || '', 
+            maxWeight: aircraft?.limitations?.maxBaggageLest || '' 
+          }
+        ],
+    // Remarques du manuel
+    manualRemarks: aircraft?.manualRemarks || '',
+    emergencyNotes: aircraft?.emergencyNotes || '',
+    maintenanceNotes: aircraft?.maintenanceNotes || '',
+    // Analyse IA des performances
+    performance: aircraft?.performance || null,
     // Section Équipements COM/NAV/APP
     equipmentCom: {
       vhf1: aircraft?.equipmentCom?.vhf1 !== false,  // VHF COM 1
@@ -933,11 +1287,328 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       catIII: aircraft?.specialCapabilities?.catIII || false,  // CAT III approach
       pbn: aircraft?.specialCapabilities?.pbn || false,  // Performance Based Navigation
       remarks: aircraft?.specialCapabilities?.remarks || ''  // Remarques additionnelles
+    },
+    // Opérations approuvées
+    approvedOperations: {
+      vfrDay: aircraft?.approvedOperations?.vfrDay !== false,  // VFR jour (par défaut true)
+      vfrNight: aircraft?.approvedOperations?.vfrNight || false,  // VFR nuit
+      ifrDay: aircraft?.approvedOperations?.ifrDay || false,  // IFR jour
+      ifrNight: aircraft?.approvedOperations?.ifrNight || false,  // IFR nuit
+      svfr: aircraft?.approvedOperations?.svfr || false,  // Special VFR
+      formation: aircraft?.approvedOperations?.formation || false,  // Vol en formation
+      aerobatics: aircraft?.approvedOperations?.aerobatics || false,  // Voltige
+      banner: aircraft?.approvedOperations?.banner || false,  // Remorquage de bannière
+      glider: aircraft?.approvedOperations?.glider || false,  // Remorquage de planeur
+      parachute: aircraft?.approvedOperations?.parachute || false,  // Largage de parachutistes
+      agricultural: aircraft?.approvedOperations?.agricultural || false,  // Épandage agricole
+      aerial: aircraft?.approvedOperations?.aerial || false,  // Photographie/surveillance aérienne
+      training: aircraft?.approvedOperations?.training || false,  // École de pilotage
+      charter: aircraft?.approvedOperations?.charter || false,  // Transport public
+      mountainous: aircraft?.approvedOperations?.mountainous || false,  // Vol en montagne
+      seaplane: aircraft?.approvedOperations?.seaplane || false,  // Hydravion
+      skiPlane: aircraft?.approvedOperations?.skiPlane || false,  // Avion sur skis
+      icing: aircraft?.approvedOperations?.icing || false  // Vol en conditions givrantes
     }
   });
 
+  // Réinitialiser le formulaire quand l'avion change
+  React.useEffect(() => {
+    // console.log('🔄 AircraftForm - useEffect triggered, aircraft changed:', aircraft?.id);
+    if (aircraft) {
+      // console.log('🔄 AircraftForm - Réinitialisation avec les nouvelles surfaces:', aircraft.compatibleRunwaySurfaces);
+      setFormData({
+        registration: aircraft?.registration || '',
+        model: aircraft?.model || '',
+        fuelType: aircraft?.fuelType || 'AVGAS',
+        fuelCapacity: aircraft?.fuelCapacity || '',
+        cruiseSpeedKt: aircraft?.cruiseSpeedKt || aircraft?.cruiseSpeed || '',
+        baseFactor: aircraft?.baseFactor || '',
+        fuelConsumption: aircraft?.fuelConsumption || '',
+        maxTakeoffWeight: aircraft?.maxTakeoffWeight || '',
+        wakeTurbulenceCategory: aircraft?.wakeTurbulenceCategory || 'L',
+        engineType: aircraft?.engineType || 'singleEngine',
+        compatibleRunwaySurfaces: getValidSurfaces(aircraft?.compatibleRunwaySurfaces),
+        speeds: {
+          vso: aircraft?.speeds?.vso || aircraft?.manex?.performances?.vso || '',
+          vs1: aircraft?.speeds?.vs1 || aircraft?.manex?.performances?.vs1 || '',
+          vfe: aircraft?.speeds?.vfe || aircraft?.manex?.performances?.vfe || '',
+          vfeLdg: aircraft?.speeds?.vfeLdg || '',
+          vfeTO: aircraft?.speeds?.vfeTO || '',
+          vno: aircraft?.speeds?.vno || aircraft?.manex?.performances?.vno || '',
+          vne: aircraft?.speeds?.vne || aircraft?.manex?.performances?.vne || '',
+          vx: aircraft?.speeds?.vx || aircraft?.manex?.performances?.vx || '',
+          vy: aircraft?.speeds?.vy || aircraft?.manex?.performances?.vy || '',
+          vapp: aircraft?.speeds?.vapp || '',
+          vle: aircraft?.speeds?.vle || '',
+          vlo: aircraft?.speeds?.vlo || '',
+          initialClimb: aircraft?.speeds?.initialClimb || '',
+          vglide: aircraft?.speeds?.vglide || '',
+          // VO - Operating manoeuvring speed
+          voWeight1: aircraft?.speeds?.voWeight1 || '',
+          voSpeed1: aircraft?.speeds?.voSpeed1 || '',
+          voWeight2Min: aircraft?.speeds?.voWeight2Min || '',
+          voWeight2Max: aircraft?.speeds?.voWeight2Max || '',
+          voSpeed2: aircraft?.speeds?.voSpeed2 || '',
+          voWeight3: aircraft?.speeds?.voWeight3 || '',
+          voSpeed3: aircraft?.speeds?.voSpeed3 || ''
+        },
+        distances: {
+          takeoffRoll: aircraft?.distances?.takeoffRoll || aircraft?.manex?.performances?.takeoffRoll || '',
+          takeoffDistance15m: aircraft?.distances?.takeoffDistance15m || '',
+          takeoffDistance50ft: aircraft?.distances?.takeoffDistance50ft || aircraft?.manex?.performances?.takeoffDistance || '',
+          landingRoll: aircraft?.distances?.landingRoll || aircraft?.manex?.performances?.landingRoll || '',
+          landingDistance15m: aircraft?.distances?.landingDistance15m || '',
+          landingDistance50ft: aircraft?.distances?.landingDistance50ft || aircraft?.manex?.performances?.landingDistance || ''
+        },
+        climb: {
+          rateOfClimb: aircraft?.climb?.rateOfClimb || '',
+          serviceCeiling: aircraft?.climb?.serviceCeiling || '',
+          climbGradient: aircraft?.climb?.climbGradient || ''
+        },
+        windLimits: {
+          maxCrosswind: aircraft?.windLimits?.maxCrosswind || aircraft?.manex?.limitations?.maxCrosswind || '',
+          maxTailwind: aircraft?.windLimits?.maxTailwind || aircraft?.manex?.limitations?.maxTailwind || '',
+          maxCrosswindWet: aircraft?.windLimits?.maxCrosswindWet || ''
+        },
+        masses: {
+          emptyMass: aircraft?.masses?.emptyMass || '',
+          minTakeoffMass: aircraft?.masses?.minTakeoffMass || '',
+          baseFactor: aircraft?.masses?.baseFactor || '',
+          maxBaggageTube: aircraft?.masses?.maxBaggageTube || '',
+          maxAftBaggageExtension: aircraft?.masses?.maxAftBaggageExtension || ''
+        },
+        armLengths: {
+          emptyMassArm: aircraft?.armLengths?.emptyMassArm || '',
+          fuelArm: aircraft?.armLengths?.fuelArm || '',
+          frontSeat1Arm: aircraft?.armLengths?.frontSeat1Arm || '',
+          frontSeat2Arm: aircraft?.armLengths?.frontSeat2Arm || '',
+          rearSeat1Arm: aircraft?.armLengths?.rearSeat1Arm || '',
+          rearSeat2Arm: aircraft?.armLengths?.rearSeat2Arm || '',
+          standardBaggageArm: aircraft?.armLengths?.standardBaggageArm || '',
+          baggageTubeArm: aircraft?.armLengths?.baggageTubeArm || '',
+          aftBaggageExtensionArm: aircraft?.armLengths?.aftBaggageExtensionArm || ''
+        },
+        limitations: {
+          maxLandingMass: aircraft?.limitations?.maxLandingMass || '',
+          maxBaggageLest: aircraft?.limitations?.maxBaggageLest || ''
+        },
+        // Enveloppe de centrage
+        cgEnvelope: {
+          forwardPoints: aircraft?.cgEnvelope?.forwardPoints && aircraft.cgEnvelope.forwardPoints.length > 0
+            ? aircraft.cgEnvelope.forwardPoints
+            : [{ weight: '', cg: '', id: Date.now() + Math.random() }],
+          aftMinWeight: aircraft?.cgEnvelope?.aftMinWeight || '',
+          aftCG: aircraft?.cgEnvelope?.aftCG || '',
+          aftMaxWeight: aircraft?.cgEnvelope?.aftMaxWeight || '',
+        },
+        // Compartiments bagages dynamiques
+        baggageCompartments: aircraft?.baggageCompartments && aircraft.baggageCompartments.length > 0
+          ? aircraft.baggageCompartments
+          : [
+              { 
+                id: Date.now() + Math.random(), 
+                name: 'Compartiment standard', 
+                arm: aircraft?.armLengths?.standardBaggageArm || '', 
+                maxWeight: aircraft?.limitations?.maxBaggageLest || '' 
+              }
+            ],
+        // Remarques du manuel
+        manualRemarks: aircraft?.manualRemarks || '',
+        emergencyNotes: aircraft?.emergencyNotes || '',
+        maintenanceNotes: aircraft?.maintenanceNotes || '',
+        equipmentCom: aircraft?.equipmentCom || {
+          vhf1: true,
+          vhf2: true,
+          hf: false,
+          satcom: false,
+          elt: true,
+          acars: false,
+          cpdlc: false
+        },
+        equipmentNav: aircraft?.equipmentNav || {
+          vor: true,
+          dme: true,
+          adf: false,
+          gnss: true,
+          ils: true,
+          mls: false,
+          rnav: false,
+          rnavTypes: '',
+          rnp: false,
+          rnpTypes: '',
+          gbas: false,
+          lnav: false,
+          vnav: false,
+          lpv: false
+        },
+        equipmentSurv: aircraft?.equipmentSurv || {
+          transponderMode: 'C',
+          adsb: false,
+          adsbIn: false,
+          tcas: 'None',
+          gpws: false,
+          egpws: false,
+          taws: false,
+          cvr: false,
+          fdr: false,
+          ras: false,
+          flarm: false
+        },
+        specialCapabilities: aircraft?.specialCapabilities || {
+          rvsm: false,
+          mnps: false,
+          etops: false,
+          etopsMinutes: '',
+          catII: false,
+          catIII: false,
+          pbn: false,
+          remarks: ''
+        },
+        approvedOperations: aircraft?.approvedOperations || {
+          vfrDay: true,
+          vfrNight: false,
+          ifrDay: false,
+          ifrNight: false,
+          svfr: false,
+          formation: false,
+          aerobatics: false,
+          banner: false,
+          glider: false,
+          parachute: false,
+          agricultural: false,
+          aerial: false,
+          training: false,
+          charter: false,
+          mountainous: false,
+          seaplane: false,
+          skiPlane: false,
+          icing: false
+        },
+        // Ajouter les performances avancées si elles existent
+        advancedPerformance: aircraft?.advancedPerformance || null
+      });
+    }
+  }, [aircraft?.id]); // Se déclenche SEULEMENT quand l'ID de l'avion change
+
+  // Fonctions pour gérer les compartiments bagages dynamiques
+  const addBaggageCompartment = () => {
+    setFormData(prev => {
+      const currentCompartments = prev.baggageCompartments || [];
+      return {
+        ...prev,
+        baggageCompartments: [
+          ...currentCompartments,
+          { 
+            id: Date.now() + Math.random(), 
+            name: `Compartiment ${currentCompartments.length + 1}`, 
+            arm: '', 
+            maxWeight: '' 
+          }
+        ]
+      };
+    });
+  };
+
+  const removeBaggageCompartment = (compartmentId) => {
+    setFormData(prev => ({
+      ...prev,
+      baggageCompartments: (prev.baggageCompartments || []).filter(c => c.id !== compartmentId)
+    }));
+  };
+
+  const updateBaggageCompartment = (compartmentId, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      baggageCompartments: (prev.baggageCompartments || []).map(c => 
+        c.id === compartmentId ? { ...c, [field]: value } : c
+      )
+    }));
+  };
+
+  // Fonctions pour gérer les sièges supplémentaires
+  const addAdditionalSeat = () => {
+    setFormData(prev => {
+      const currentSeats = prev.additionalSeats || [];
+      return {
+        ...prev,
+        additionalSeats: [
+          ...currentSeats,
+          { 
+            id: Date.now() + Math.random(), 
+            name: `Siège ${currentSeats.length + 5}`, // +5 car on a déjà 4 sièges standard
+            arm: ''
+          }
+        ]
+      };
+    });
+  };
+
+  const removeAdditionalSeat = (seatId) => {
+    setFormData(prev => ({
+      ...prev,
+      additionalSeats: (prev.additionalSeats || []).filter(s => s.id !== seatId)
+    }));
+  };
+
+  const updateAdditionalSeat = (seatId, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      additionalSeats: (prev.additionalSeats || []).map(s => 
+        s.id === seatId ? { ...s, [field]: value } : s
+      )
+    }));
+  };
+
+  // Fonctions pour gérer les points CG avant
+  const addForwardPoint = () => {
+    setFormData(prev => ({
+      ...prev,
+      cgEnvelope: {
+        ...prev.cgEnvelope,
+        forwardPoints: [
+          ...prev.cgEnvelope.forwardPoints,
+          { weight: '', cg: '', id: Date.now() + Math.random() }
+        ]
+      }
+    }));
+  };
+
+  const removeForwardPoint = (pointId) => {
+    setFormData(prev => ({
+      ...prev,
+      cgEnvelope: {
+        ...prev.cgEnvelope,
+        forwardPoints: prev.cgEnvelope.forwardPoints.filter(point => point.id !== pointId)
+      }
+    }));
+  };
+
+  const updateForwardPoint = (pointId, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      cgEnvelope: {
+        ...prev.cgEnvelope,
+        forwardPoints: prev.cgEnvelope.forwardPoints.map(point => 
+          point.id === pointId 
+            ? { ...point, [field]: value }
+            : point
+        )
+      }
+    }));
+  };
+
   const handleChange = (field, value, index = null) => {
-    if (field === 'maxTakeoffWeight') {
+    if (field === 'cruiseSpeedKt') {
+      // Calculer automatiquement le facteur de base
+      const speed = parseFloat(value);
+      const baseFactor = speed > 0 ? (60 / speed).toFixed(3) : '';
+      
+      setFormData(prev => ({
+        ...prev,
+        cruiseSpeedKt: value,
+        baseFactor: baseFactor
+      }));
+    } else if (field === 'maxTakeoffWeight') {
       // Auto-déterminer la catégorie de turbulence basée sur MTOW
       const mtow = parseFloat(value);
       let category = formData.wakeTurbulenceCategory;
@@ -959,8 +1630,8 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       }));
     } else if (field === 'compatibleRunwaySurfaces') {
       // Gestion des surfaces compatibles (toggle)
-      console.log('🔄 Toggle surface:', value);
-      console.log('🔄 Surfaces actuelles:', formData.compatibleRunwaySurfaces);
+      // console.log('🔄 Toggle surface:', value);
+      // console.log('🔄 Surfaces actuelles:', formData.compatibleRunwaySurfaces);
       
       setFormData(prev => {
         const surfaces = prev.compatibleRunwaySurfaces || [];
@@ -969,17 +1640,25 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
         if (surfaces.includes(value)) {
           // Retirer la surface
           newSurfaces = surfaces.filter(s => s !== value);
+          // console.log('🔄 Surface retirée:', value);
         } else {
           // Ajouter la surface
           newSurfaces = [...surfaces, value];
+          // console.log('🔄 Surface ajoutée:', value);
         }
         
-        console.log('🔄 Nouvelles surfaces:', newSurfaces);
+        // console.log('🔄 Nouvelles surfaces après toggle:', newSurfaces);
+        // console.log('🔄 Type du nouveau tableau:', typeof newSurfaces);
+        // console.log('🔄 Est un tableau:', Array.isArray(newSurfaces));
         
-        return {
+        const newFormData = {
           ...prev,
           compatibleRunwaySurfaces: newSurfaces
         };
+        
+        // console.log('🔄 Nouveau formData surfaces:', newFormData.compatibleRunwaySurfaces);
+        
+        return newFormData;
       });
     } else if (field.includes('.')) {
       const parts = field.split('.');
@@ -1002,7 +1681,14 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
   };
 
   const handleSubmit = (e) => {
+    console.log('🟢 handleSubmit APPELÉ !');
     e.preventDefault();
+    
+    console.log('📋 handleSubmit - Début de la validation');
+    console.log('📋 handleSubmit - Registration:', formData.registration);
+    console.log('📋 handleSubmit - Model:', formData.model);
+    console.log('📋 handleSubmit - FormData complet:', formData);
+    console.log('📋 handleSubmit - Surfaces:', formData.compatibleRunwaySurfaces);
     
     if (!formData.registration || !formData.model) {
       alert('L\'immatriculation et le modèle sont obligatoires');
@@ -1016,9 +1702,13 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
     }
     
     if (!formData.compatibleRunwaySurfaces || formData.compatibleRunwaySurfaces.length === 0) {
+      console.log('❌ handleSubmit - Validation des surfaces échouée');
+      console.log('❌ handleSubmit - Surfaces actuelles:', formData.compatibleRunwaySurfaces);
       alert('Vous devez sélectionner au moins un type de piste compatible');
       return;
     }
+    
+    console.log('✅ handleSubmit - Toutes les validations passées');
 
     // DEBUG : Afficher les surfaces compatibles avant de sauvegarder
     console.log('🛩️ Surfaces compatibles sélectionnées:', formData.compatibleRunwaySurfaces);
@@ -1029,30 +1719,47 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       return isNaN(num) ? defaultValue : num;
     };
 
+    // DEBUG : Vérifier les surfaces avant traitement
+    console.log('💾 handleSubmit - formData.compatibleRunwaySurfaces:', formData.compatibleRunwaySurfaces);
+    console.log('💾 handleSubmit - Type:', typeof formData.compatibleRunwaySurfaces);
+    console.log('💾 handleSubmit - Est un tableau:', Array.isArray(formData.compatibleRunwaySurfaces));
+
     const processedData = {
       ...formData,
       fuelCapacity: toValidNumber(formData.fuelCapacity, 0),
       cruiseSpeed: toValidNumber(formData.cruiseSpeedKt, 0), // Ajouter cruiseSpeed pour compatibilité
       cruiseSpeedKt: toValidNumber(formData.cruiseSpeedKt, 0),
+      baseFactor: formData.baseFactor || (formData.cruiseSpeedKt ? (60 / parseFloat(formData.cruiseSpeedKt)).toFixed(3) : ''),
       fuelConsumption: toValidNumber(formData.fuelConsumption, 0),
       maxTakeoffWeight: toValidNumber(formData.maxTakeoffWeight, 0),
       wakeTurbulenceCategory: formData.wakeTurbulenceCategory,
-      compatibleRunwaySurfaces: formData.compatibleRunwaySurfaces || ['ASPH', 'CONC'],
+      compatibleRunwaySurfaces: formData.compatibleRunwaySurfaces || [],
       // Nouvelles sections de performances
       speeds: Object.values(formData.speeds).some(v => v)
         ? {
             vso: toValidNumber(formData.speeds.vso, 0),
             vs1: toValidNumber(formData.speeds.vs1, 0),
-            vfe: toValidNumber(formData.speeds.vfe, 0),
+            vr: toValidNumber(formData.speeds.vr, 0),
+            vfe: toValidNumber(formData.speeds.vfe, 0), // Garder pour compatibilité
+            vfeLdg: toValidNumber(formData.speeds.vfeLdg, 0),
+            vfeTO: toValidNumber(formData.speeds.vfeTO, 0),
             vno: toValidNumber(formData.speeds.vno, 0),
             vne: toValidNumber(formData.speeds.vne, 0),
-            va: toValidNumber(formData.speeds.va, 0),
             vx: toValidNumber(formData.speeds.vx, 0),
             vy: toValidNumber(formData.speeds.vy, 0),
-            vr: toValidNumber(formData.speeds.vr, 0),
-            vref: toValidNumber(formData.speeds.vref, 0),
             vapp: toValidNumber(formData.speeds.vapp, 0),
-            vglide: toValidNumber(formData.speeds.vglide, 0)
+            vle: toValidNumber(formData.speeds.vle, 0),
+            vlo: toValidNumber(formData.speeds.vlo, 0),
+            initialClimb: toValidNumber(formData.speeds.initialClimb, 0),
+            vglide: toValidNumber(formData.speeds.vglide, 0),
+            // VO - Operating manoeuvring speed
+            voWeight1: toValidNumber(formData.speeds.voWeight1, 0),
+            voSpeed1: toValidNumber(formData.speeds.voSpeed1, 0),
+            voWeight2Min: toValidNumber(formData.speeds.voWeight2Min, 0),
+            voWeight2Max: toValidNumber(formData.speeds.voWeight2Max, 0),
+            voSpeed2: toValidNumber(formData.speeds.voSpeed2, 0),
+            voWeight3: toValidNumber(formData.speeds.voWeight3, 0),
+            voSpeed3: toValidNumber(formData.speeds.voSpeed3, 0)
           }
         : undefined,
       distances: Object.values(formData.distances).some(v => v)
@@ -1069,7 +1776,6 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
         ? {
             rateOfClimb: toValidNumber(formData.climb.rateOfClimb, 0),
             serviceCeiling: toValidNumber(formData.climb.serviceCeiling, 0),
-            absoluteCeiling: toValidNumber(formData.climb.absoluteCeiling, 0),
             climbGradient: toValidNumber(formData.climb.climbGradient, 0)
           }
         : undefined,
@@ -1077,7 +1783,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
         ? {
             maxCrosswind: toValidNumber(formData.windLimits.maxCrosswind, 0),
             maxTailwind: toValidNumber(formData.windLimits.maxTailwind, 0),
-            maxHeadwind: toValidNumber(formData.windLimits.maxHeadwind, 0)
+            maxCrosswindWet: toValidNumber(formData.windLimits.maxCrosswindWet, 0)
           }
         : undefined,
       masses: Object.values(formData.masses).some(v => v)
@@ -1108,11 +1814,78 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             maxBaggageLest: toValidNumber(formData.limitations.maxBaggageLest, 0)
           }
         : undefined,
+      // Enveloppe de centrage - TOUJOURS sauvegarder pour préserver les points en cours de saisie
+      cgEnvelope: {
+        forwardPoints: formData.cgEnvelope.forwardPoints.map(point => ({
+          weight: point.weight || '',
+          cg: point.cg || '',
+          id: point.id
+        })),
+        aftMinWeight: formData.cgEnvelope.aftMinWeight || '',
+        aftCG: formData.cgEnvelope.aftCG || '',
+        aftMaxWeight: formData.cgEnvelope.aftMaxWeight || '',
+      },
+      
+      // Mettre à jour weightBalance avec les données armLengths ET cgLimits
+      weightBalance: {
+        ...aircraft?.weightBalance,
+        // Mapper les bras de levier depuis armLengths vers la structure attendue par WeightBalance
+        emptyWeightArm: toValidNumber(formData.armLengths.emptyMassArm, 2.00),
+        frontLeftSeatArm: toValidNumber(formData.armLengths.frontSeat1Arm, 2.00),
+        frontRightSeatArm: toValidNumber(formData.armLengths.frontSeat2Arm, 2.00),
+        rearLeftSeatArm: toValidNumber(formData.armLengths.rearSeat1Arm, 2.90),
+        rearRightSeatArm: toValidNumber(formData.armLengths.rearSeat2Arm, 2.90),
+        baggageArm: toValidNumber(formData.armLengths.standardBaggageArm, 3.50),
+        auxiliaryArm: toValidNumber(formData.armLengths.aftBaggageExtensionArm || formData.armLengths.baggageTubeArm, 3.70),
+        fuelArm: toValidNumber(formData.armLengths.fuelArm, 2.18),
+        // CG Limits
+        ...((formData.cgEnvelope.forwardPoints.some(p => p.weight && p.cg) || 
+             formData.cgEnvelope.aftCG) ? {
+          cgLimits: {
+            forward: formData.cgEnvelope.forwardPoints.length > 0 ? 
+              toValidNumber(formData.cgEnvelope.forwardPoints[0].cg, aircraft?.weightBalance?.cgLimits?.forward || 2.00) :
+              aircraft?.weightBalance?.cgLimits?.forward || 2.00,
+            aft: toValidNumber(formData.cgEnvelope.aftCG, aircraft?.weightBalance?.cgLimits?.aft || 2.45),
+            forwardVariable: formData.cgEnvelope.forwardPoints
+              .filter(point => point.weight && point.cg)
+              .map(point => ({
+                weight: toValidNumber(point.weight, 0),
+                cg: toValidNumber(point.cg, 0)
+              }))
+              .filter(point => point.weight > 0 && point.cg > 0)
+              .sort((a, b) => a.weight - b.weight)
+          }
+        } : {
+          cgLimits: {
+            forward: 2.00,
+            aft: 2.45
+          }
+        })
+      },
+      // Ajouter aussi les masses importantes pour le module Weight & Balance
+      emptyWeight: toValidNumber(formData.masses.emptyMass, 600),
+      minTakeoffWeight: toValidNumber(formData.masses.minTakeoffMass, 600),
+      maxBaggageWeight: toValidNumber(formData.limitations.maxBaggageLest, 50),
+      maxAuxiliaryWeight: 20, // Valeur par défaut pour rangement annexe
       // Équipements
       equipmentCom: formData.equipmentCom,
       equipmentNav: formData.equipmentNav,
       equipmentSurv: formData.equipmentSurv,
       specialCapabilities: formData.specialCapabilities,
+      // Opérations approuvées
+      approvedOperations: formData.approvedOperations,
+      // Sièges supplémentaires
+      additionalSeats: formData.additionalSeats || [],
+      // Compartiments bagages dynamiques
+      baggageCompartments: formData.baggageCompartments || [],
+      // Remarques du manuel
+      manualRemarks: formData.manualRemarks || '',
+      emergencyNotes: formData.emergencyNotes || '',
+      maintenanceNotes: formData.maintenanceNotes || '',
+      // Analyse IA des performances
+      performance: formData.performance || null,
+      // Performances avancées extraites par IA
+      advancedPerformance: formData.advancedPerformance || null,
       // Photo de l'avion
       photo: aircraftPhoto
     };
@@ -1138,103 +1911,54 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
     sx.text.sm,
     sx.text.bold,
     sx.spacing.mb(1),
-    { display: 'flex', alignItems: 'center' }
+    { display: 'flex', alignItems: 'center', color: '#000000' }
   );
 
+  const buttonSectionStyle = {
+    width: '100%',
+    padding: '12px !important',
+    backgroundColor: 'rgba(55, 65, 81, 0.35) !important',
+    color: 'white !important',
+    border: '1px solid rgba(0, 0, 0, 0.7) !important',
+    borderRadius: '8px !important',
+    fontSize: '16px !important',
+    fontWeight: 'bold !important',
+    cursor: 'pointer !important',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    transition: 'all 0.2s !important',
+    background: 'rgba(55, 65, 81, 0.35) !important',
+    textTransform: 'none !important',
+    letterSpacing: 'normal !important'
+  };
+
   return (
-    <form onSubmit={handleSubmit}>
-      {/* Barre d'onglets */}
-      <div style={{
-        display: 'flex',
-        borderBottom: '2px solid #e5e7eb',
-        marginBottom: '24px',
-        gap: '4px'
-      }}>
-        <button
-          type="button"
-          onClick={() => setActiveTab('general')}
-          style={{
-            padding: '12px 24px',
-            backgroundColor: activeTab === 'general' ? '#3b82f6' : 'transparent',
-            color: activeTab === 'general' ? 'white' : '#6b7280',
-            border: 'none',
-            borderRadius: '8px 8px 0 0',
-            fontWeight: activeTab === 'general' ? 'bold' : 'normal',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            fontSize: '14px'
-          }}
-        >
-          📋 Général
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('performances')}
-          style={{
-            padding: '12px 24px',
-            backgroundColor: activeTab === 'performances' ? '#3b82f6' : 'transparent',
-            color: activeTab === 'performances' ? 'white' : '#6b7280',
-            border: 'none',
-            borderRadius: '8px 8px 0 0',
-            fontWeight: activeTab === 'performances' ? 'bold' : 'normal',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            fontSize: '14px'
-          }}
-        >
-          ✈️ Performances
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('masse-centrage')}
-          style={{
-            padding: '12px 24px',
-            backgroundColor: activeTab === 'masse-centrage' ? '#3b82f6' : 'transparent',
-            color: activeTab === 'masse-centrage' ? 'white' : '#6b7280',
-            border: 'none',
-            borderRadius: '8px 8px 0 0',
-            fontWeight: activeTab === 'masse-centrage' ? 'bold' : 'normal',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            fontSize: '14px'
-          }}
-        >
-          ⚖️ Masse & Centrage
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('equipements')}
-          style={{
-            padding: '12px 24px',
-            backgroundColor: activeTab === 'equipements' ? '#3b82f6' : 'transparent',
-            color: activeTab === 'equipements' ? 'white' : '#6b7280',
-            border: 'none',
-            borderRadius: '8px 8px 0 0',
-            fontWeight: activeTab === 'equipements' ? 'bold' : 'normal',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            fontSize: '14px'
-          }}
-        >
-          📡 Équipements
-        </button>
+    <form onSubmit={handleSubmit} style={{ color: '#000000' }}>
+      {/* Section Général */}
+      <div style={{ marginBottom: '16px' }}>
+        <AccordionButton
+          isOpen={showGeneral}
+          onClick={() => setShowGeneral(!showGeneral)}
+          icon="📋"
+          title="Général"
+        />
       </div>
 
-      {/* Contenu des onglets */}
-      <div style={{ display: 'grid', gap: '16px' }}>
-        {/* Onglet Général */}
-        {activeTab === 'general' && (
+      {showGeneral && (
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', color: '#000000' }}>
           <>
             {/* Informations de base */}
-            <div>
-              <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
+            <div style={{ color: '#000000' }}>
+              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000', WebkitTextFillColor: '#000000', opacity: 1, filter: 'none' }}>
                 Informations générales
               </h4>
               
               {/* Photo de l'avion */}
               <div style={{ marginBottom: '20px' }}>
                 <label style={labelStyle}>Photo de l'avion</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '100%' }}>
                   {aircraftPhoto ? (
                     <div style={{ position: 'relative', width: '200px', height: '150px' }}>
                       <img 
@@ -1288,7 +2012,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                       <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px' }}>Aucune photo</p>
                     </div>
                   )}
-                  <div>
+                  <div style={{ textAlign: 'center' }}>
                     <input
                       type="file"
                       id="aircraft-photo"
@@ -1299,15 +2023,14 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                     <label
                       htmlFor="aircraft-photo"
                       style={{
-                        ...sx.components.button.base,
-                        ...sx.components.button.secondary,
+                        ...window.buttonSectionStyle,
                         cursor: 'pointer',
                         display: 'inline-block'
                       }}
                     >
                       {aircraftPhoto ? 'Changer la photo' : 'Ajouter une photo'}
                     </label>
-                    <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>
+                    <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px', textAlign: 'center' }}>
                       Max 5MB • JPG, PNG
                     </p>
                   </div>
@@ -1339,11 +2062,30 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             </div>
           </div>
 
+          {/* Type de moteur */}
+          <div style={{ marginTop: '16px' }}>
+            <label style={labelStyle}>
+              Type de moteur *
+              <InfoIcon tooltip="Type de motorisation de l'aéronef" />
+            </label>
+            <select
+              value={formData.engineType || 'singleEngine'}
+              onChange={(e) => handleChange('engineType', e.target.value)}
+              style={inputStyle}
+              required
+            >
+              <option value="singleEngine">Monomoteur à pistons</option>
+              <option value="multiEngine">Multimoteur à pistons</option>
+              <option value="turboprop">Turbopropulseur</option>
+              <option value="jet">Réacteur (Jet)</option>
+              <option value="electric">Électrique</option>
+            </select>
+          </div>
+
           {/* Catégorie de turbulence de sillage */}
           <div style={{ marginTop: '16px' }}>
             <label style={labelStyle}>
               Catégorie de turbulence de sillage *
-              <InfoIcon tooltip="Catégorie OACI basée sur la masse maximale au décollage (MTOW)" />
             </label>
             <select
               value={formData.wakeTurbulenceCategory}
@@ -1356,30 +2098,17 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
               <option value="H">H - Heavy / Lourd (MTOW &gt; 136 000 kg)</option>
               <option value="J">J - Super (A380, An-225)</option>
             </select>
-            <div style={{
-              marginTop: '8px',
-              padding: '8px',
-              backgroundColor: '#F0F9FF',
-              borderRadius: '6px',
-              border: '1px solid #BAE6FD'
-            }}>
-              <p style={sx.combine(sx.text.xs, { color: '#0369A1' })}>
-                {formData.wakeTurbulenceCategory === 'L' && '💡 Catégorie Light: Espacement réduit derrière autres aéronefs, mais vulnérable aux turbulences de sillage.'}
-                {formData.wakeTurbulenceCategory === 'M' && '💡 Catégorie Medium: Espacement standard. Attention aux aéronefs Heavy devant.'}
-                {formData.wakeTurbulenceCategory === 'H' && '💡 Catégorie Heavy: Génère des turbulences importantes. Espacement accru pour les suivants.'}
-                {formData.wakeTurbulenceCategory === 'J' && '💡 Catégorie Super: Turbulences extrêmes. Espacements maximaux requis.'}
-              </p>
-            </div>
           </div>
         </div>
 
         {/* Carburant */}
-        <div>
-          <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
+        <div style={{ color: '#000000' }}>
+          <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000', WebkitTextFillColor: '#000000', opacity: 1, filter: 'none' }}>
             Carburant
           </h4>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
-            <div>
+          {/* Première ligne : Type et capacités */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px', alignItems: 'end' }}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
               <label style={labelStyle}>Type de carburant</label>
               <select
                 value={formData.fuelType}
@@ -1391,512 +2120,835 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                 <option value="MOGAS">MOGAS</option>
               </select>
             </div>
-            <div>
-              <label style={labelStyle}>Capacité (L)</label>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label style={labelStyle}>Capacité ({fuelUnit})</label>
               <input
                 type="number"
-                value={formData.fuelCapacity}
-                onChange={(e) => handleChange('fuelCapacity', e.target.value)}
-                placeholder="200"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>Consommation (L/h)</label>
-              <input
-                type="number"
-                value={formData.fuelConsumption}
-                onChange={(e) => handleChange('fuelConsumption', e.target.value)}
-                placeholder="35"
+                value={getUnit('fuel') !== 'ltr' ? convert(formData.fuelCapacity, 'fuel', 'ltr', { toUnit: getUnit('fuel') }).toFixed(1) : formData.fuelCapacity}
+                onChange={(e) => {
+                  const valueInStorageUnit = getUnit('fuel') !== 'ltr' ? toStorage(parseFloat(e.target.value) || 0, 'fuel') : e.target.value;
+                  handleChange('fuelCapacity', valueInStorageUnit);
+                }}
+                placeholder={getUnit('fuel') === 'gal' ? "53" : getUnit('fuel') === 'kg' ? "160" : "200"}
                 min="0"
                 step="0.1"
                 style={inputStyle}
               />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label style={labelStyle}>Consommation ({consumptionUnit})</label>
+              <input
+                type="number"
+                value={getUnit('fuel') !== 'ltr' ? convert(formData.fuelConsumption, 'fuel', 'ltr', { toUnit: getUnit('fuel') }).toFixed(1) : formData.fuelConsumption}
+                onChange={(e) => {
+                  const valueInStorageUnit = getUnit('fuel') !== 'ltr' ? toStorage(parseFloat(e.target.value) || 0, 'fuel') : e.target.value;
+                  handleChange('fuelConsumption', valueInStorageUnit);
+                }}
+                placeholder={getUnit('fuel') === 'gal' ? "9.2" : getUnit('fuel') === 'kg' ? "28" : "35"}
+                min="0"
+                step="0.1"
+                style={inputStyle}
+              />
+            </div>
+          </div>
+          
+          {/* Deuxième ligne : Vitesse et facteur de base */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', alignItems: 'end' }}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label style={labelStyle}>
+                Vitesse de croisière (kt)
+                <InfoIcon tooltip="Vitesse de croisière en nœuds (knots)" />
+              </label>
+              <input
+                type="number"
+                value={formData.cruiseSpeedKt}
+                onChange={(e) => handleChange('cruiseSpeedKt', e.target.value)}
+                placeholder="120"
+                min="0"
+                style={inputStyle}
+              />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label style={labelStyle}>
+                Facteur de base (min/NM)
+                <InfoIcon tooltip="Calculé automatiquement : 60 / vitesse de croisière" />
+              </label>
+              <div>
+                <input
+                  type="text"
+                  value={formData.baseFactor || (formData.cruiseSpeedKt ? (60 / parseFloat(formData.cruiseSpeedKt)).toFixed(3) : '')}
+                  readOnly
+                  style={{
+                    ...inputStyle, 
+                    backgroundColor: '#f3f4f6', 
+                    cursor: 'not-allowed',
+                    fontWeight: '600',
+                    color: formData.baseFactor ? '#059669' : '#9ca3af'
+                  }}
+                  placeholder="Auto"
+                />
+              </div>
             </div>
           </div>
         </div>
 
         {/* Types de pistes compatibles */}
-        <div>
-          <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
+        <div style={{ color: '#000000' }}>
+          <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000', WebkitTextFillColor: '#000000', opacity: 1, filter: 'none' }}>
             Types de pistes compatibles
           </h4>
-          <div style={{
-            backgroundColor: '#EBF8FF',
-            border: '1px solid #90CDF4',
-            borderRadius: '8px',
-            padding: '12px',
-            marginBottom: '16px'
-          }}>
-            <p style={sx.combine(sx.text.sm, { color: '#2B6CB0' })}>
-              🛬 Sélectionnez tous les types de surfaces sur lesquels cet avion peut opérer en sécurité
-            </p>
-          </div>
-          
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(2, 1fr)', 
-            gap: '12px',
-            backgroundColor: '#F9FAFB',
-            padding: '16px',
-            borderRadius: '8px',
-            border: '1px solid #E5E7EB'
-          }}>
-            {[
-              { code: 'ASPH', name: 'Asphalte/Bitume', icon: '🛣️' },
-              { code: 'CONC', name: 'Béton', icon: '🏗️' },
-              { code: 'GRASS', name: 'Herbe', icon: '🌱' },
-              { code: 'GRVL', name: 'Gravier', icon: '🪨' },
-              { code: 'UNPAVED', name: 'Terre/Non revêtu', icon: '🏜️' },
-              { code: 'SAND', name: 'Sable', icon: '🏖️' },
-              { code: 'SNOW', name: 'Neige', icon: '❄️' },
-              { code: 'WATER', name: 'Eau (hydravion)', icon: '💧' }
-            ].map(surface => (
-              <label
-                key={surface.code}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '12px',
-                  backgroundColor: formData.compatibleRunwaySurfaces?.includes(surface.code) ? '#DBEAFE' : 'white',
-                  border: `2px solid ${formData.compatibleRunwaySurfaces?.includes(surface.code) ? '#3B82F6' : '#E5E7EB'}`,
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    borderColor: '#3B82F6',
-                    backgroundColor: '#F0F9FF'
-                  }
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={formData.compatibleRunwaySurfaces?.includes(surface.code) || false}
-                  onChange={() => handleChange('compatibleRunwaySurfaces', surface.code)}
-                  style={{ marginRight: '8px' }}
-                />
-                <span style={{ marginRight: '8px', fontSize: '18px' }}>{surface.icon}</span>
-                <span style={sx.text.sm}>{surface.name}</span>
-              </label>
-            ))}
-          </div>
-          
-          {/* Avertissement si aucune surface sélectionnée */}
-          {(!formData.compatibleRunwaySurfaces || formData.compatibleRunwaySurfaces.length === 0) && (
-            <div style={sx.combine(sx.components.alert.base, sx.components.alert.danger, sx.spacing.mt(2))}>
-              <AlertTriangle size={16} />
-              <p style={sx.text.sm}>
-                ⚠️ Attention : Aucun type de piste sélectionné. L'avion doit être compatible avec au moins un type de surface.
-              </p>
+          <div>
+            <label style={labelStyle}>Type de surfaces compatibles *</label>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(2, 1fr)', 
+              gap: '8px',
+              marginTop: '8px'
+            }}>
+              {[
+                { code: 'ASPH', name: 'Asphalte', icon: '🛣️' },
+                { code: 'CONC', name: 'Béton', icon: '🏗️' },
+                { code: 'GRASS', name: 'Herbe', icon: '🌱' },
+                { code: 'GRVL', name: 'Gravier', icon: '🪨' },
+                { code: 'UNPAVED', name: 'Terre', icon: '🏜️' },
+                { code: 'SAND', name: 'Sable', icon: '🏖️' },
+                { code: 'SNOW', name: 'Neige', icon: '❄️' },
+                { code: 'WATER', name: 'Eau', icon: '💧' }
+              ].map(surface => (
+                <label
+                  key={surface.code}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '8px',
+                    backgroundColor: formData.compatibleRunwaySurfaces?.includes(surface.code) ? '#3b82f6' : 'white',
+                    color: formData.compatibleRunwaySurfaces?.includes(surface.code) ? 'white' : '#374151',
+                    border: `1px solid ${formData.compatibleRunwaySurfaces?.includes(surface.code) ? '#3b82f6' : '#e5e7eb'}`,
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '13px'
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={formData.compatibleRunwaySurfaces?.includes(surface.code) || false}
+                    onChange={() => handleChange('compatibleRunwaySurfaces', surface.code)}
+                    style={{ display: 'none' }}
+                  />
+                  <span style={{ marginRight: '6px' }}>{surface.icon}</span>
+                  <span>{surface.name}</span>
+                </label>
+              ))}
             </div>
-          )}
+          </div>
         </div>
           </>
-        )}
+        </div>
+      )}
 
-        {/* Onglet Performances */}
-        {activeTab === 'performances' && (
+      {/* Section Performances */}
+      <div style={{ marginBottom: '16px' }}>
+        <AccordionButton
+          isOpen={showPerformances}
+          onClick={() => setShowPerformances(!showPerformances)}
+          icon="✈️"
+          title="Vitesses et Limitations"
+        />
+      </div>
+
+      {showPerformances && (
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
           <>
-            <div style={{
-              backgroundColor: '#EBF8FF',
-              border: '1px solid #90CDF4',
-              borderRadius: '8px',
-              padding: '12px',
-              marginBottom: '20px'
-            }}>
-              <p style={sx.combine(sx.text.sm, { color: '#2B6CB0' })}>
-                💡 <strong>Conseil :</strong> Les données de performances sont essentielles pour la planification de vol. 
-                Si vous avez importé un MANEX, les valeurs seront pré-remplies automatiquement. 
-                Sinon, référez-vous au manuel de vol pour obtenir les valeurs exactes.
-              </p>
-            </div>
-
             {/* Section Performances - Vitesses caractéristiques */}
         <div>
-          <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), sx.flex.start)}>
+          <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000', display: 'flex', alignItems: 'center' }}>
             <span style={{ marginRight: '8px' }}>✈️</span>
             Vitesses caractéristiques (kt)
             <InfoIcon tooltip="Vitesses de référence pour les différentes phases de vol" />
           </h4>
           
+          {/* Vitesses critiques pour les arcs de l'indicateur */}
           <div style={{
-            backgroundColor: '#F0FDF4',
-            border: '1px solid #86EFAC',
+            backgroundColor: '#f9fafb',
+            padding: '16px',
             borderRadius: '8px',
+            marginBottom: '16px',
+            border: '2px solid #374151'
+          }}>
+            <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '12px', color: '#000000' }}>
+              Vitesses critiques de l'indicateur de vitesse
+            </h5>
+            
+            {/* Arcs de limitation de vitesse (Airspeed Indicator Markings) */}
+            <div style={{
+              backgroundColor: '#1f2937',
+              padding: '16px',
+              borderRadius: '8px',
+              marginBottom: '16px'
+            }}>
+              <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px', color: '#000000' }}>
+                🎯 Arcs de limitation de vitesse (Airspeed Indicator Markings)
+              </h6>
+              
+              {/* Indicateur visuel des arcs */}
+              <div style={{
+                backgroundColor: '#374151',
+                padding: '20px',
+                borderRadius: '8px',
+                marginBottom: '16px',
+                position: 'relative',
+                minHeight: '120px'
+              }}>
+                {/* Calcul et affichage des arcs */}
+                {(() => {
+                  const vso = parseFloat(formData.speeds.vso) || 0;
+                  const vs1 = parseFloat(formData.speeds.vs1) || 0;
+                  const vfeLdg = parseFloat(formData.speeds.vfeLdg) || 0;
+                  const vfeTO = parseFloat(formData.speeds.vfeTO) || 0;
+                  const vno = parseFloat(formData.speeds.vno) || 0;
+                  const vne = parseFloat(formData.speeds.vne) || 0;
+                  
+                  // VO - Déterminer la vitesse VO basée sur la masse actuelle (utiliser la plus restrictive par défaut)
+                  const voSpeed1 = parseFloat(formData.speeds.voSpeed1) || 0;
+                  const voSpeed2 = parseFloat(formData.speeds.voSpeed2) || 0;
+                  const voSpeed3 = parseFloat(formData.speeds.voSpeed3) || 0;
+                  // Afficher la VO la plus élevée (la plus restrictive)
+                  const vo = Math.max(voSpeed1, voSpeed2, voSpeed3);
+                  
+                  // Calculer la vitesse max pour l'échelle
+                  const maxSpeed = Math.max(vne * 1.1, 200);
+                  const scale = 100 / maxSpeed;
+                  
+                  return (
+                    <>
+                      {/* Échelle de vitesse */}
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '10px',
+                        left: '20px',
+                        right: '20px',
+                        height: '4px',
+                        backgroundColor: '#4b5563',
+                        borderRadius: '2px'
+                      }}>
+                        {/* Arc blanc - Volets sortis (Vso à VfeLdg) */}
+                        {vso > 0 && vfeLdg > 0 && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              left: `${vso * scale}%`,
+                              width: `${(vfeLdg - vso) * scale}%`,
+                              height: '20px',
+                              backgroundColor: 'white',
+                              bottom: '0',
+                              borderRadius: '4px',
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                            }}
+                            title={`Arc blanc: ${vso} - ${vfeLdg} kt (Plage volets)`}
+                          />
+                        )}
+                        
+                        {/* Arc vert - Vol normal (Vs1 à Vno) */}
+                        {vs1 > 0 && vno > 0 && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              left: `${vs1 * scale}%`,
+                              width: `${(vno - vs1) * scale}%`,
+                              height: '20px',
+                              backgroundColor: '#10b981',
+                              bottom: '25px',
+                              borderRadius: '4px',
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                            }}
+                            title={`Arc vert: ${vs1} - ${vno} kt (Plage normale)`}
+                          />
+                        )}
+                        
+                        {/* Arc jaune - Précaution (Vno à Vne) */}
+                        {vno > 0 && vne > 0 && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              left: `${vno * scale}%`,
+                              width: `${(vne - vno) * scale}%`,
+                              height: '20px',
+                              backgroundColor: '#fbbf24',
+                              bottom: '25px',
+                              borderRadius: '4px',
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                            }}
+                            title={`Arc jaune: ${vno} - ${vne} kt (Précaution)`}
+                          />
+                        )}
+                        
+                        {/* Trait rouge - Vne */}
+                        {vne > 0 && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              left: `${vne * scale}%`,
+                              width: '3px',
+                              height: '40px',
+                              backgroundColor: '#dc2626',
+                              bottom: '15px',
+                              borderRadius: '2px',
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.5)'
+                            }}
+                            title={`Trait rouge: ${vne} kt (Ne jamais dépasser)`}
+                          />
+                        )}
+                        
+                        {/* Trait blanc - VFE T/O */}
+                        {vfeTO > 0 && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              left: `${vfeTO * scale}%`,
+                              width: '2px',
+                              height: '30px',
+                              backgroundColor: 'white',
+                              bottom: '10px',
+                              borderRadius: '1px',
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.5)'
+                            }}
+                            title={`VFE T/O: ${vfeTO} kt (Max volets décollage)`}
+                          />
+                        )}
+                        
+                        {/* Trait blanc pointillé - VO (Operating manoeuvring speed) */}
+                        {vo > 0 && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              left: `${vo * scale}%`,
+                              width: '2px',
+                              height: '35px',
+                              background: 'repeating-linear-gradient(to bottom, white 0px, white 4px, transparent 4px, transparent 8px)',
+                              bottom: '12px',
+                              borderRadius: '1px',
+                              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))'
+                            }}
+                            title={`VO: ${vo} kt (Operating manoeuvring speed - ne pas faire de mouvements brusques au-dessus)`}
+                          />
+                        )}
+                      </div>
+                      
+                      {/* Labels de vitesse */}
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '-5px',
+                        left: '20px',
+                        right: '20px',
+                        height: '20px',
+                        fontSize: '10px',
+                        color: '#9ca3af'
+                      }}>
+                        {vso > 0 && (
+                          <span style={{
+                            position: 'absolute',
+                            left: `${vso * scale}%`,
+                            transform: 'translateX(-50%)'
+                          }}>
+                            {vso}
+                          </span>
+                        )}
+                        {vs1 > 0 && (
+                          <span style={{
+                            position: 'absolute',
+                            left: `${vs1 * scale}%`,
+                            transform: 'translateX(-50%)'
+                          }}>
+                            {vs1}
+                          </span>
+                        )}
+                        {vno > 0 && (
+                          <span style={{
+                            position: 'absolute',
+                            left: `${vno * scale}%`,
+                            transform: 'translateX(-50%)'
+                          }}>
+                            {vno}
+                          </span>
+                        )}
+                        {vne > 0 && (
+                          <span style={{
+                            position: 'absolute',
+                            left: `${vne * scale}%`,
+                            transform: 'translateX(-50%)',
+                            color: '#dc2626',
+                            fontWeight: 'bold'
+                          }}>
+                            {vne}
+                          </span>
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+              
+              {/* Légende des arcs */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '12px',
+                fontSize: '12px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{
+                    width: '30px',
+                    height: '8px',
+                    backgroundColor: 'white',
+                    borderRadius: '2px',
+                    border: '1px solid #6b7280'
+                  }} />
+                  <span style={{ color: '#d1d5db' }}>
+                    <strong>Arc blanc:</strong> Plage volets (Vso - Vfe LDG)
+                  </span>
+                </div>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{
+                    width: '30px',
+                    height: '8px',
+                    backgroundColor: '#10b981',
+                    borderRadius: '2px'
+                  }} />
+                  <span style={{ color: '#d1d5db' }}>
+                    <strong>Arc vert:</strong> Plage normale (Vs1 - Vno)
+                  </span>
+                </div>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{
+                    width: '30px',
+                    height: '8px',
+                    backgroundColor: '#fbbf24',
+                    borderRadius: '2px'
+                  }} />
+                  <span style={{ color: '#d1d5db' }}>
+                    <strong>Arc jaune:</strong> Air calme (Vno - Vne)
+                  </span>
+                </div>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{
+                    width: '30px',
+                    height: '8px',
+                    backgroundColor: '#dc2626',
+                    borderRadius: '2px'
+                  }} />
+                  <span style={{ color: '#d1d5db' }}>
+                    <strong>Trait rouge:</strong> Ne jamais dépasser (Vne)
+                  </span>
+                </div>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{
+                    width: '2px',
+                    height: '20px',
+                    backgroundColor: 'white',
+                    marginLeft: '14px',
+                    marginRight: '14px',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.5)'
+                  }} />
+                  <span style={{ color: '#d1d5db' }}>
+                    <strong>Trait blanc:</strong> VFE T/O (Max volets décollage)
+                  </span>
+                </div>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{
+                    width: '30px',
+                    height: '20px',
+                    background: 'repeating-linear-gradient(to bottom, white 0px, white 3px, transparent 3px, transparent 6px)',
+                    borderRadius: '1px'
+                  }} />
+                  <span style={{ color: '#d1d5db' }}>
+                    <strong>Trait pointillé:</strong> VO (Manœuvre max)
+                  </span>
+                </div>
+              </div>
+              
+              {/* Avertissement si des vitesses manquent */}
+              {(!formData.speeds.vso || !formData.speeds.vs1 || !formData.speeds.vno || !formData.speeds.vne) && (
+                <div style={{
+                  backgroundColor: '#7f1d1d',
+                  padding: '10px',
+                  borderRadius: '6px',
+                  marginTop: '12px'
+                }}>
+                  <p style={{ fontSize: '12px', color: '#fca5a5', margin: 0 }}>
+                    ⚠️ Certaines vitesses critiques ne sont pas définies. Remplissez les vitesses pour afficher les arcs complets.
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            {/* Configuration volets sortis */}
+            <div style={{
+              backgroundColor: '#f0f9ff',
+              padding: '10px',
+              borderRadius: '6px',
+              marginBottom: '12px',
+              border: '1px solid #93c5fd'
+            }}>
+              <h6 style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#000000' }}>
+                Configuration volets sortis
+              </h6>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={labelStyle}>
+                    Vso - Décrochage volets sortis
+                    <InfoIcon tooltip="Vitesse de décrochage en configuration atterrissage" />
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.speeds.vso}
+                    onChange={(e) => handleChange('speeds.vso', e.target.value)}
+                    placeholder="60"
+                    min="0"
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>
+                    Vfe LDG - Volets atterrissage
+                    <InfoIcon tooltip="Vitesse max volets en position atterrissage" />
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.speeds.vfeLdg}
+                    onChange={(e) => handleChange('speeds.vfeLdg', e.target.value)}
+                    placeholder="98"
+                    min="0"
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>
+                    Vfe T/O - Volets décollage
+                    <InfoIcon tooltip="Vitesse max volets en position décollage" />
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.speeds.vfeTO}
+                    onChange={(e) => handleChange('speeds.vfeTO', e.target.value)}
+                    placeholder="110"
+                    min="0"
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+            </div>
+            
+            {/* Configuration lisse */}
+            <div style={{
+              backgroundColor: '#f0fdf4',
+              padding: '10px',
+              borderRadius: '6px',
+              marginBottom: '12px',
+              border: '1px solid #86efac'
+            }}>
+              <h6 style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#000000' }}>
+                Configuration lisse
+              </h6>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={labelStyle}>
+                    Vs1 - Décrochage volets rentrés
+                    <InfoIcon tooltip="Vitesse de décrochage en configuration lisse" />
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.speeds.vs1}
+                    onChange={(e) => handleChange('speeds.vs1', e.target.value)}
+                    placeholder="66"
+                    min="0"
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>
+                    Vno - Max en air calme
+                    <InfoIcon tooltip="Vitesse max de croisière structurale" />
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.speeds.vno}
+                    onChange={(e) => handleChange('speeds.vno', e.target.value)}
+                    placeholder="130"
+                    min="0"
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+            </div>
+            
+            {/* Vitesse limite absolue */}
+            <div style={{
+              backgroundColor: '#fef2f2',
+              padding: '10px',
+              borderRadius: '6px',
+              marginBottom: '12px',
+              border: '1px solid #fca5a5'
+            }}>
+              <div>
+                <label style={labelStyle}>
+                  Vne - Ne jamais dépasser
+                  <InfoIcon tooltip="Vitesse à ne jamais dépasser" />
+                </label>
+                <input
+                  type="number"
+                  value={formData.speeds.vne}
+                  onChange={(e) => handleChange('speeds.vne', e.target.value)}
+                  placeholder="163"
+                  min="0"
+                  style={inputStyle}
+                />
+              </div>
+            </div>
+            
+            {/* VO - Operating manoeuvring speed (variable selon la masse) */}
+            <div style={{
+              backgroundColor: '#fef3c7',
+              padding: '10px',
+              borderRadius: '6px',
+              border: '1px solid #fcd34d'
+            }}>
+              <h6 style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#000000' }}>
+                VO - Operating Manoeuvring Speed (variable selon la masse)
+              </h6>
+              <p style={{ fontSize: '11px', color: '#78350f', marginBottom: '8px' }}>
+                Ne pas effectuer de mouvements complets ou brusques des commandes au-dessus de ces vitesses
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', alignItems: 'end' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                  <label style={{ ...labelStyle, fontSize: '11px', color: '#000000' }}>
+                    Jusqu'à ({massUnit})
+                    <InfoIcon tooltip="Masse max pour cette VO" />
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.speeds.voWeight1}
+                    onChange={(e) => handleChange('speeds.voWeight1', e.target.value)}
+                    placeholder="1080"
+                    min="0"
+                    style={{ ...inputStyle, marginBottom: '4px' }}
+                  />
+                  <label style={{ ...labelStyle, fontSize: '11px', color: '#000000' }}>VO (KIAS)</label>
+                  <input
+                    type="number"
+                    value={formData.speeds.voSpeed1}
+                    onChange={(e) => handleChange('speeds.voSpeed1', e.target.value)}
+                    placeholder="101"
+                    min="0"
+                    style={inputStyle}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                  <label style={{ ...labelStyle, fontSize: '11px', color: '#000000' }}>
+                    De ({massUnit}) à ({massUnit})
+                    <InfoIcon tooltip="Plage de masse intermédiaire" />
+                  </label>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <input
+                      type="number"
+                      value={formData.speeds.voWeight2Min}
+                      onChange={(e) => handleChange('speeds.voWeight2Min', e.target.value)}
+                      placeholder="1080"
+                      min="0"
+                      style={{ ...inputStyle, marginBottom: '4px', flex: 1 }}
+                    />
+                    <input
+                      type="number"
+                      value={formData.speeds.voWeight2Max}
+                      onChange={(e) => handleChange('speeds.voWeight2Max', e.target.value)}
+                      placeholder="1180"
+                      min="0"
+                      style={{ ...inputStyle, marginBottom: '4px', flex: 1 }}
+                    />
+                  </div>
+                  <label style={{ ...labelStyle, fontSize: '11px', color: '#000000' }}>VO (KIAS)</label>
+                  <input
+                    type="number"
+                    value={formData.speeds.voSpeed2}
+                    onChange={(e) => handleChange('speeds.voSpeed2', e.target.value)}
+                    placeholder="108"
+                    min="0"
+                    style={inputStyle}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                  <label style={{ ...labelStyle, fontSize: '11px', color: '#000000' }}>
+                    Au-dessus de ({massUnit})
+                    <InfoIcon tooltip="Masse min pour cette VO" />
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.speeds.voWeight3}
+                    onChange={(e) => handleChange('speeds.voWeight3', e.target.value)}
+                    placeholder="1180"
+                    min="0"
+                    style={{ ...inputStyle, marginBottom: '4px' }}
+                  />
+                  <label style={{ ...labelStyle, fontSize: '11px', color: '#000000' }}>VO (KIAS)</label>
+                  <input
+                    type="number"
+                    value={formData.speeds.voSpeed3}
+                    onChange={(e) => handleChange('speeds.voSpeed3', e.target.value)}
+                    placeholder="113"
+                    min="0"
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          {/* Vitesses de montée et plané */}
+          <div style={{
+            backgroundColor: '#f3f4f6',
             padding: '12px',
+            borderRadius: '8px',
+            marginTop: '16px',
             marginBottom: '16px'
           }}>
-            <p style={sx.combine(sx.text.sm, { color: '#166534' })}>
-              💡 Ces vitesses sont critiques pour la sécurité. Consultez le manuel de vol pour les valeurs exactes.
-            </p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-            {/* Vitesses de décrochage */}
-            <div>
-              <label style={labelStyle}>
-                Vso - Décrochage volets sortis
-                <InfoIcon tooltip="Vitesse de décrochage en configuration atterrissage" />
-              </label>
-              <input
-                type="number"
-                value={formData.speeds.vso}
-                onChange={(e) => handleChange('speeds.vso', e.target.value)}
-                placeholder="44"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>
-                Vs1 - Décrochage volets rentrés
-                <InfoIcon tooltip="Vitesse de décrochage en configuration lisse" />
-              </label>
-              <input
-                type="number"
-                value={formData.speeds.vs1}
-                onChange={(e) => handleChange('speeds.vs1', e.target.value)}
-                placeholder="48"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>
-                Va - Vitesse de manœuvre
-                <InfoIcon tooltip="Vitesse max pour manœuvres complètes" />
-              </label>
-              <input
-                type="number"
-                value={formData.speeds.va}
-                onChange={(e) => handleChange('speeds.va', e.target.value)}
-                placeholder="99"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
-
-            {/* Vitesses limites */}
-            <div>
-              <label style={labelStyle}>
-                Vfe - Max volets sortis
-                <InfoIcon tooltip="Vitesse maximale volets sortis" />
-              </label>
-              <input
-                type="number"
-                value={formData.speeds.vfe}
-                onChange={(e) => handleChange('speeds.vfe', e.target.value)}
-                placeholder="85"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>
-                Vno - Max en air calme
-                <InfoIcon tooltip="Vitesse max de croisière structurale" />
-              </label>
-              <input
-                type="number"
-                value={formData.speeds.vno}
-                onChange={(e) => handleChange('speeds.vno', e.target.value)}
-                placeholder="128"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>
-                Vne - Ne jamais dépasser
-                <InfoIcon tooltip="Vitesse à ne jamais dépasser" />
-              </label>
-              <input
-                type="number"
-                value={formData.speeds.vne}
-                onChange={(e) => handleChange('speeds.vne', e.target.value)}
-                placeholder="163"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
-
-            {/* Vitesses de montée */}
-            <div>
-              <label style={labelStyle}>
-                Vx - Montée max (pente)
-                <InfoIcon tooltip="Meilleur angle de montée" />
-              </label>
-              <input
-                type="number"
-                value={formData.speeds.vx}
-                onChange={(e) => handleChange('speeds.vx', e.target.value)}
-                placeholder="59"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>
-                Vy - Montée optimale (taux)
-                <InfoIcon tooltip="Meilleur taux de montée" />
-              </label>
-              <input
-                type="number"
-                value={formData.speeds.vy}
-                onChange={(e) => handleChange('speeds.vy', e.target.value)}
-                placeholder="73"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>
-                Vglide - Plané optimal
-                <InfoIcon tooltip="Vitesse de finesse max" />
-              </label>
-              <input
-                type="number"
-                value={formData.speeds.vglide}
-                onChange={(e) => handleChange('speeds.vglide', e.target.value)}
-                placeholder="65"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
-
-            {/* Vitesses opérationnelles */}
-            <div>
-              <label style={labelStyle}>
-                Vr - Rotation
-                <InfoIcon tooltip="Vitesse de rotation au décollage" />
-              </label>
-              <input
-                type="number"
-                value={formData.speeds.vr}
-                onChange={(e) => handleChange('speeds.vr', e.target.value)}
-                placeholder="55"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>
-                Vref - Référence approche
-                <InfoIcon tooltip="Vitesse de référence en approche" />
-              </label>
-              <input
-                type="number"
-                value={formData.speeds.vref}
-                onChange={(e) => handleChange('speeds.vref', e.target.value)}
-                placeholder="60"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>
-                Vapp - Approche finale
-                <InfoIcon tooltip="Vitesse d'approche finale" />
-              </label>
-              <input
-                type="number"
-                value={formData.speeds.vapp}
-                onChange={(e) => handleChange('speeds.vapp', e.target.value)}
-                placeholder="65"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Section Performances - Distances */}
-        <div>
-          <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), sx.flex.start)}>
-            <span style={{ marginRight: '8px' }}>🛫</span>
-            Distances de décollage et atterrissage
-            <InfoIcon tooltip="Distances au niveau de la mer, conditions standard" />
-          </h4>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-            {/* Décollage */}
-            <div style={{
-              padding: '16px',
-              backgroundColor: '#F0F9FF',
-              borderRadius: '8px',
-              border: '1px solid #BAE6FD'
-            }}>
-              <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(3))}>
-                🛫 Décollage
-              </h5>
-              <div style={{ display: 'grid', gap: '12px' }}>
-                <div>
-                  <label style={labelStyle}>
-                    Roulage (m)
-                    <InfoIcon tooltip="Distance de roulage au sol" />
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.distances.takeoffRoll}
-                    onChange={(e) => handleChange('distances.takeoffRoll', e.target.value)}
-                    placeholder="280"
-                    min="0"
-                    style={inputStyle}
-                  />
-                </div>
-                <div>
-                  <label style={labelStyle}>
-                    Passage 15m/50ft (m)
-                    <InfoIcon tooltip="Distance totale pour passer 15m (50ft)" />
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.distances.takeoffDistance50ft}
-                    onChange={(e) => handleChange('distances.takeoffDistance50ft', e.target.value)}
-                    placeholder="485"
-                    min="0"
-                    style={inputStyle}
-                  />
-                </div>
+            <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '12px', color: '#000000' }}>
+              Vitesses de montée et plané
+            </h5>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+              <div>
+                <label style={labelStyle}>
+                  VR - Vitesse de rotation
+                  <InfoIcon tooltip="Vitesse à laquelle le pilote tire sur le manche pour décoller" />
+                </label>
+                <input
+                  type="number"
+                  value={formData.speeds.vr}
+                  onChange={(e) => handleChange('speeds.vr', e.target.value)}
+                  placeholder="55"
+                  min="0"
+                  style={inputStyle}
+                />
               </div>
-            </div>
-
-            {/* Atterrissage */}
-            <div style={{
-              padding: '16px',
-              backgroundColor: '#FFF7ED',
-              borderRadius: '8px',
-              border: '1px solid #FED7AA'
-            }}>
-              <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(3))}>
-                🛬 Atterrissage
-              </h5>
-              <div style={{ display: 'grid', gap: '12px' }}>
-                <div>
-                  <label style={labelStyle}>
-                    Roulage (m)
-                    <InfoIcon tooltip="Distance de roulage après toucher" />
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.distances.landingRoll}
-                    onChange={(e) => handleChange('distances.landingRoll', e.target.value)}
-                    placeholder="180"
-                    min="0"
-                    style={inputStyle}
-                  />
-                </div>
-                <div>
-                  <label style={labelStyle}>
-                    Depuis 15m/50ft (m)
-                    <InfoIcon tooltip="Distance totale depuis 15m (50ft)" />
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.distances.landingDistance50ft}
-                    onChange={(e) => handleChange('distances.landingDistance50ft', e.target.value)}
-                    placeholder="520"
-                    min="0"
-                    style={inputStyle}
-                  />
-                </div>
+              <div>
+                <label style={labelStyle}>
+                  Vx - Montée max (pente)
+                  <InfoIcon tooltip="Meilleur angle de montée" />
+                </label>
+                <input
+                  type="number"
+                  value={formData.speeds.vx}
+                  onChange={(e) => handleChange('speeds.vx', e.target.value)}
+                  placeholder="59"
+                  min="0"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>
+                  Vy - Montée optimale (taux)
+                  <InfoIcon tooltip="Meilleur taux de montée" />
+                </label>
+                <input
+                  type="number"
+                  value={formData.speeds.vy}
+                  onChange={(e) => handleChange('speeds.vy', e.target.value)}
+                  placeholder="73"
+                  min="0"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>
+                  VApp - Vitesse d'approche
+                  <InfoIcon tooltip="Vitesse d'approche en finale" />
+                </label>
+                <input
+                  type="number"
+                  value={formData.speeds.vapp}
+                  onChange={(e) => handleChange('speeds.vapp', e.target.value)}
+                  placeholder="65"
+                  min="0"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>
+                  Montée initiale
+                  <InfoIcon tooltip="Vitesse de montée après décollage" />
+                </label>
+                <input
+                  type="number"
+                  value={formData.speeds.initialClimb}
+                  onChange={(e) => handleChange('speeds.initialClimb', e.target.value)}
+                  placeholder="65"
+                  min="0"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>
+                  Vglide - Plané optimal
+                  <InfoIcon tooltip="Vitesse de finesse max" />
+                </label>
+                <input
+                  type="number"
+                  value={formData.speeds.vglide}
+                  onChange={(e) => handleChange('speeds.vglide', e.target.value)}
+                  placeholder="65"
+                  min="0"
+                  style={inputStyle}
+                />
+              </div>
+              
+              <div>
+                <label style={labelStyle}>
+                  VLE - Train sorti
+                  <InfoIcon tooltip="Vitesse maximale train sorti" />
+                </label>
+                <input
+                  type="number"
+                  value={formData.speeds.vle}
+                  onChange={(e) => handleChange('speeds.vle', e.target.value)}
+                  placeholder="140"
+                  min="0"
+                  style={inputStyle}
+                />
+              </div>
+              
+              <div>
+                <label style={labelStyle}>
+                  VLO - Manœuvre train
+                  <InfoIcon tooltip="Vitesse maximale pour manœuvrer le train" />
+                </label>
+                <input
+                  type="number"
+                  value={formData.speeds.vlo}
+                  onChange={(e) => handleChange('speeds.vlo', e.target.value)}
+                  placeholder="120"
+                  min="0"
+                  style={inputStyle}
+                />
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Section Performances - Montée et plafonds */}
-        <div>
-          <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), sx.flex.start)}>
-            <span style={{ marginRight: '8px' }}>📈</span>
-            Performances en montée et plafonds
-            <InfoIcon tooltip="Performances au poids max, conditions standard" />
-          </h4>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-            <div>
-              <label style={labelStyle}>
-                Taux de montée (ft/min)
-                <InfoIcon tooltip="Taux de montée au niveau de la mer" />
-              </label>
-              <input
-                type="number"
-                value={formData.climb.rateOfClimb}
-                onChange={(e) => handleChange('climb.rateOfClimb', e.target.value)}
-                placeholder="730"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>
-                Gradient de montée (%)
-                <InfoIcon tooltip="Pente de montée en pourcentage" />
-              </label>
-              <input
-                type="number"
-                value={formData.climb.climbGradient}
-                onChange={(e) => handleChange('climb.climbGradient', e.target.value)}
-                placeholder="8.5"
-                min="0"
-                step="0.1"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>
-                Plafond pratique (ft)
-                <InfoIcon tooltip="Altitude où le taux de montée = 100 ft/min" />
-              </label>
-              <input
-                type="number"
-                value={formData.climb.serviceCeiling}
-                onChange={(e) => handleChange('climb.serviceCeiling', e.target.value)}
-                placeholder="14000"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>
-                Plafond absolu (ft)
-                <InfoIcon tooltip="Altitude maximale atteignable" />
-              </label>
-              <input
-                type="number"
-                value={formData.climb.absoluteCeiling}
-                onChange={(e) => handleChange('climb.absoluteCeiling', e.target.value)}
-                placeholder="15000"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
-          </div>
         </div>
 
         {/* Section Limitations de vent */}
         <div>
-          <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), sx.flex.start)}>
+          <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000', display: 'flex', alignItems: 'center' }}>
             <span style={{ marginRight: '8px' }}>💨</span>
             Limitations de vent (kt)
             <InfoIcon tooltip="Limites maximales démontrées" />
           </h4>
 
-          <div style={{
-            backgroundColor: '#FEF2F2',
-            border: '1px solid #FCA5A5',
-            borderRadius: '8px',
-            padding: '12px',
-            marginBottom: '16px'
-          }}>
-            <p style={sx.combine(sx.text.sm, { color: '#991B1B' })}>
-              ⚠️ Ces limites sont critiques pour la sécurité. Ne jamais les dépasser.
-            </p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-            <div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', alignItems: 'end' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
               <label style={labelStyle}>
                 Vent traversier max
                 <InfoIcon tooltip="Composante traversière maximale démontrée" />
@@ -1910,7 +2962,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                 style={inputStyle}
               />
             </div>
-            <div>
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
               <label style={labelStyle}>
                 Vent arrière max
                 <InfoIcon tooltip="Vent arrière max pour décollage/atterrissage" />
@@ -1924,155 +2976,15 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                 style={inputStyle}
               />
             </div>
-            <div>
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
               <label style={labelStyle}>
-                Vent de face max
-                <InfoIcon tooltip="Vent de face max démontré" />
+                Vent de travers sur piste mouillée
+                <InfoIcon tooltip="Vent de travers max sur piste mouillée" />
               </label>
               <input
                 type="number"
-                value={formData.windLimits.maxHeadwind}
-                onChange={(e) => handleChange('windLimits.maxHeadwind', e.target.value)}
-                placeholder="40"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
-          </div>
-        </div>
-          </>
-        )}
-
-        {/* Onglet Masse & Centrage */}
-        {activeTab === 'masse-centrage' && (
-          <>
-            <div style={{
-              backgroundColor: '#F0FDF4',
-              border: '1px solid #86EFAC',
-              borderRadius: '8px',
-              padding: '12px',
-              marginBottom: '20px'
-            }}>
-              <p style={sx.combine(sx.text.sm, { color: '#166534' })}>
-                ⚖️ <strong>Important :</strong> Les données de masse et centrage sont critiques pour la sécurité. 
-                Elles seront utilisées pour calculer le devis de masse et vérifier que l'avion reste dans les limites de centrage.
-              </p>
-            </div>
-
-            {/* Masses structurelles */}
-        <div>
-          <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
-            Masses structurelles ({massUnit})
-          </h4>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div>
-              <label style={labelStyle}>
-                Masse à vide
-                <InfoIcon tooltip="Masse de l'avion sans carburant ni charge utile" />
-              </label>
-              <input
-                type="number"
-                value={formData.masses.emptyMass}
-                onChange={(e) => handleChange('masses.emptyMass', e.target.value)}
-                placeholder="650"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>
-                Masse max atterrissage
-                <InfoIcon tooltip="Masse maximale autorisée à l'atterrissage (MLM)" />
-              </label>
-              <input
-                type="number"
-                value={formData.limitations.maxLandingMass}
-                onChange={(e) => handleChange('limitations.maxLandingMass', e.target.value)}
-                placeholder="1100"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>
-                Masse max décollage
-                <InfoIcon tooltip="Masse maximale autorisée au décollage (MTOW)" />
-              </label>
-              <input
-                type="number"
-                value={formData.maxTakeoffWeight}
-                onChange={(e) => handleChange('maxTakeoffWeight', e.target.value)}
-                placeholder="1150"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>
-                Masse min décollage
-                <InfoIcon tooltip="Masse minimale pour le décollage" />
-              </label>
-              <input
-                type="number"
-                value={formData.masses.minTakeoffMass}
-                onChange={(e) => handleChange('masses.minTakeoffMass', e.target.value)}
-                placeholder="700"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>
-                Facteur de base
-                <InfoIcon tooltip="Facteur utilisé pour les calculs de centrage" />
-              </label>
-              <input
-                type="number"
-                value={formData.masses.baseFactor}
-                onChange={(e) => handleChange('masses.baseFactor', e.target.value)}
-                placeholder="1.0"
-                min="0"
-                step="0.1"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>
-                Max bagages + lest
-                <InfoIcon tooltip="Masse maximale cumulée des bagages et du lestage" />
-              </label>
-              <input
-                type="number"
-                value={formData.limitations.maxBaggageLest}
-                onChange={(e) => handleChange('limitations.maxBaggageLest', e.target.value)}
-                placeholder="45"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>
-                Max Baggage Tube
-                <InfoIcon tooltip="Masse maximale dans le tube à bagages" />
-              </label>
-              <input
-                type="number"
-                value={formData.masses.maxBaggageTube}
-                onChange={(e) => handleChange('masses.maxBaggageTube', e.target.value)}
-                placeholder="10"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>
-                Max AFT Baggage Extension
-                <InfoIcon tooltip="Masse maximale dans l'extension arrière" />
-              </label>
-              <input
-                type="number"
-                value={formData.masses.maxAftBaggageExtension}
-                onChange={(e) => handleChange('masses.maxAftBaggageExtension', e.target.value)}
+                value={formData.windLimits.maxCrosswindWet}
+                onChange={(e) => handleChange('windLimits.maxCrosswindWet', e.target.value)}
                 placeholder="15"
                 min="0"
                 style={inputStyle}
@@ -2080,164 +2992,887 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             </div>
           </div>
         </div>
+          </>
 
-        {/* Bras de levier */}
+        </div>
+      )}
+
+      {/* Section Masse & Centrage */}
+      <div style={{ marginBottom: '16px' }}>
+        <AccordionButton
+          isOpen={showMasseCentrage}
+          onClick={() => setShowMasseCentrage(!showMasseCentrage)}
+          icon="⚖️"
+          title="Masse & Centrage"
+        />
+      </div>
+
+      {showMasseCentrage && (
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+          <>
+
+            {/* Masses et Centrage */}
         <div>
-          <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
-            Bras de levier (mm)
+          <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000' }}>
+            ⚖️ Masses et Centrage
           </h4>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-            <div>
-              <label style={labelStyle}>
-                Masse à vide
-                <InfoIcon tooltip="Distance du CG de la masse à vide par rapport à la référence" />
-              </label>
-              <input
-                type="number"
-                value={formData.armLengths.emptyMassArm}
-                onChange={(e) => handleChange('armLengths.emptyMassArm', e.target.value)}
-                placeholder="2150"
-                min="0"
-                style={inputStyle}
-              />
+          
+          {/* Masse à vide et son bras de levier */}
+          <div style={{ 
+            backgroundColor: '#f8f9fa', 
+            padding: '12px', 
+            borderRadius: '8px', 
+            marginBottom: '16px',
+            border: '1px solid #e5e7eb'
+          }}>
+            <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#000000' }}>
+              Masse à vide
+            </h5>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div>
+                <label style={labelStyle}>
+                  Masse ({massUnit})
+                  <InfoIcon tooltip="Masse de l'avion sans carburant ni charge utile" />
+                </label>
+                <input
+                  type="number"
+                  value={formData.masses.emptyMass}
+                  onChange={(e) => handleChange('masses.emptyMass', e.target.value)}
+                  placeholder="650"
+                  min="0"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>
+                  Bras de levier ({armUnit})
+                  <InfoIcon tooltip="Distance du CG de la masse à vide par rapport à la référence" />
+                </label>
+                <input
+                  type="number"
+                  value={formData.armLengths.emptyMassArm}
+                  onChange={(e) => handleChange('armLengths.emptyMassArm', e.target.value)}
+                  placeholder="2.15"
+                  min="0"
+                  step="0.01"
+                  style={inputStyle}
+                />
+              </div>
             </div>
-            <div>
-              <label style={labelStyle}>
-                Carburant
-                <InfoIcon tooltip="Distance du CG du carburant par rapport à la référence" />
-              </label>
-              <input
-                type="number"
-                value={formData.armLengths.fuelArm}
-                onChange={(e) => handleChange('armLengths.fuelArm', e.target.value)}
-                placeholder="2180"
-                min="0"
-                style={inputStyle}
-              />
+          </div>
+
+          {/* Carburant et son bras de levier */}
+          <div style={{ 
+            backgroundColor: '#f0f9ff', 
+            padding: '12px', 
+            borderRadius: '8px', 
+            marginBottom: '16px',
+            border: '1px solid #bfdbfe'
+          }}>
+            <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#000000' }}>
+              Carburant
+            </h5>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div>
+                <label style={labelStyle}>
+                  Capacité max ({fuelUnit})
+                  <InfoIcon tooltip="Capacité maximale des réservoirs" />
+                </label>
+                <input
+                  type="number"
+                  value={getUnit('fuel') !== 'ltr' ? convert(formData.fuelCapacity, 'fuel', 'ltr', { toUnit: getUnit('fuel') }).toFixed(1) : formData.fuelCapacity}
+                  onChange={(e) => {
+                    const valueInStorageUnit = getUnit('fuel') !== 'ltr' ? toStorage(parseFloat(e.target.value) || 0, 'fuel') : e.target.value;
+                    handleChange('fuelCapacity', valueInStorageUnit);
+                  }}
+                  placeholder={getUnit('fuel') === 'gal' ? "40" : getUnit('fuel') === 'kg' ? "120" : "150"}
+                  min="0"
+                  step="0.1"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>
+                  Bras de levier ({armUnit})
+                  <InfoIcon tooltip="Distance du CG du carburant par rapport à la référence" />
+                </label>
+                <input
+                  type="number"
+                  value={formData.armLengths.fuelArm}
+                  onChange={(e) => handleChange('armLengths.fuelArm', e.target.value)}
+                  placeholder="2.18"
+                  min="0"
+                  step="0.01"
+                  style={inputStyle}
+                />
+              </div>
             </div>
-            <div>
-              <label style={labelStyle}>
-                Siège avant gauche
-                <InfoIcon tooltip="Distance du siège pilote par rapport à la référence" />
-              </label>
-              <input
-                type="number"
-                value={formData.armLengths.frontSeat1Arm}
-                onChange={(e) => handleChange('armLengths.frontSeat1Arm', e.target.value)}
-                placeholder="2000"
-                min="0"
-                style={inputStyle}
-              />
+          </div>
+
+          {/* Sièges et leurs bras de levier */}
+          <div style={{ 
+            backgroundColor: '#fef3f2', 
+            padding: '12px', 
+            borderRadius: '8px', 
+            marginBottom: '16px',
+            border: '1px solid #fecaca'
+          }}>
+            <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#000000' }}>
+              Sièges (bras de levier en m)
+            </h5>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div>
+                <label style={labelStyle}>
+                  Siège avant gauche (Pilote) - Bras (m)
+                  <InfoIcon tooltip="Distance du siège pilote par rapport à la référence (en mètres)" />
+                </label>
+                <input
+                  type="number"
+                  value={formData.armLengths.frontSeat1Arm}
+                  onChange={(e) => handleChange('armLengths.frontSeat1Arm', e.target.value)}
+                  placeholder="2.00"
+                  min="0"
+                  step="0.01"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>
+                  Siège avant droit - Bras (m)
+                  <InfoIcon tooltip="Distance du siège passager avant par rapport à la référence (en mètres)" />
+                </label>
+                <input
+                  type="number"
+                  value={formData.armLengths.frontSeat2Arm}
+                  onChange={(e) => handleChange('armLengths.frontSeat2Arm', e.target.value)}
+                  placeholder="2.00"
+                  min="0"
+                  step="0.01"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>
+                  Siège arrière gauche - Bras (m)
+                  <InfoIcon tooltip="Distance du siège arrière gauche par rapport à la référence (en mètres)" />
+                </label>
+                <input
+                  type="number"
+                  value={formData.armLengths.rearSeat1Arm}
+                  onChange={(e) => handleChange('armLengths.rearSeat1Arm', e.target.value)}
+                  placeholder="2.30"
+                  min="0"
+                  step="0.01"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>
+                  Siège arrière droit - Bras (m)
+                  <InfoIcon tooltip="Distance du siège arrière droit par rapport à la référence (en mètres)" />
+                </label>
+                <input
+                  type="number"
+                  value={formData.armLengths.rearSeat2Arm}
+                  onChange={(e) => handleChange('armLengths.rearSeat2Arm', e.target.value)}
+                  placeholder="2.30"
+                  min="0"
+                  step="0.01"
+                  style={inputStyle}
+                />
+              </div>
             </div>
-            <div>
-              <label style={labelStyle}>
-                Siège avant droit
-                <InfoIcon tooltip="Distance du siège passager avant par rapport à la référence" />
-              </label>
-              <input
-                type="number"
-                value={formData.armLengths.frontSeat2Arm}
-                onChange={(e) => handleChange('armLengths.frontSeat2Arm', e.target.value)}
-                placeholder="2000"
-                min="0"
-                style={inputStyle}
-              />
+          </div>
+
+          {/* Sièges supplémentaires dynamiques */}
+          <div style={{ 
+            backgroundColor: '#f0f9ff', 
+            padding: '12px', 
+            borderRadius: '8px', 
+            marginBottom: '16px',
+            border: '1px solid #93c5fd'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: '#000000', margin: 0 }}>
+                💺 Sièges supplémentaires
+              </h5>
+              <button
+                type="button"
+                onClick={addAdditionalSeat}
+                style={{
+                  padding: '4px 12px',
+                  backgroundColor: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  fontWeight: '500'
+                }}
+              >
+                + Ajouter un siège
+              </button>
             </div>
-            <div>
-              <label style={labelStyle}>
-                Siège arrière gauche
-                <InfoIcon tooltip="Distance du siège arrière gauche par rapport à la référence" />
-              </label>
-              <input
-                type="number"
-                value={formData.armLengths.rearSeat1Arm}
-                onChange={(e) => handleChange('armLengths.rearSeat1Arm', e.target.value)}
-                placeholder="2300"
-                min="0"
-                style={inputStyle}
-              />
+            
+            {!formData.additionalSeats || formData.additionalSeats.length === 0 ? (
+              <p style={{ fontSize: '12px', color: '#6b7280', margin: '8px 0' }}>
+                Aucun siège supplémentaire. Cliquez sur "Ajouter un siège" pour les configurations 6+ places.
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {(formData.additionalSeats || []).map((seat) => (
+                  <div key={seat.id} style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: '2fr 1fr auto', 
+                    gap: '12px',
+                    padding: '8px',
+                    backgroundColor: 'white',
+                    borderRadius: '4px',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <div>
+                      <label style={{...labelStyle, fontSize: '11px', color: '#000000'}}>
+                        Nom du siège
+                        <InfoIcon tooltip="Identifiant du siège (ex: Rangée 3 gauche)" />
+                      </label>
+                      <input
+                        type="text"
+                        value={seat.name}
+                        onChange={(e) => updateAdditionalSeat(seat.id, 'name', e.target.value)}
+                        placeholder="Ex: Rangée 3 gauche"
+                        style={{...inputStyle, fontSize: '13px'}}
+                      />
+                    </div>
+                    <div>
+                      <label style={{...labelStyle, fontSize: '11px', color: '#000000'}}>
+                        Bras de levier ({armUnit})
+                        <InfoIcon tooltip="Distance par rapport à la référence" />
+                      </label>
+                      <input
+                        type="number"
+                        value={seat.arm}
+                        onChange={(e) => updateAdditionalSeat(seat.id, 'arm', e.target.value)}
+                        placeholder="2.50"
+                        min="0"
+                        step="0.01"
+                        style={{...inputStyle, fontSize: '13px'}}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeAdditionalSeat(seat.id)}
+                      style={{
+                        padding: '4px',
+                        backgroundColor: '#ef4444',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        alignSelf: 'end',
+                        marginBottom: '4px'
+                      }}
+                      title="Supprimer ce siège"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '8px', marginBottom: 0 }}>
+              Utile pour les avions 6+ places, les configurations club ou les sièges additionnels
+            </p>
+          </div>
+
+          {/* Compartiments bagages dynamiques */}
+          <div style={{ 
+            backgroundColor: '#fefce8', 
+            padding: '12px', 
+            borderRadius: '8px', 
+            marginBottom: '16px',
+            border: '1px solid #fde047'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: '#000000', margin: 0 }}>
+                🏎️ Compartiments bagages
+              </h5>
+              <button
+                type="button"
+                onClick={addBaggageCompartment}
+                style={{
+                  backgroundColor: '#fbbf24',
+                  color: '#78350f',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '6px 12px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                <Plus size={16} />
+                Ajouter un compartiment
+              </button>
             </div>
-            <div>
-              <label style={labelStyle}>
-                Siège arrière droit
-                <InfoIcon tooltip="Distance du siège arrière droit par rapport à la référence" />
-              </label>
-              <input
-                type="number"
-                value={formData.armLengths.rearSeat2Arm}
-                onChange={(e) => handleChange('armLengths.rearSeat2Arm', e.target.value)}
-                placeholder="2300"
-                min="0"
-                style={inputStyle}
-              />
+            
+            {formData.baggageCompartments && formData.baggageCompartments.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {formData.baggageCompartments.map((compartment, index) => (
+                  <div key={compartment.id} style={{
+                    display: 'grid',
+                    gridTemplateColumns: '2fr 1fr 1fr auto',
+                    gap: '12px',
+                    padding: '12px',
+                    backgroundColor: 'white',
+                    borderRadius: '6px',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <div>
+                      <label style={{...labelStyle, fontSize: '11px', color: '#000000'}}>
+                        Nom du compartiment
+                      </label>
+                      <input
+                        type="text"
+                        value={compartment.name}
+                        onChange={(e) => updateBaggageCompartment(compartment.id, 'name', e.target.value)}
+                        placeholder="Nom du compartiment"
+                        style={{...inputStyle, fontSize: '13px'}}
+                      />
+                    </div>
+                    <div>
+                      <label style={{...labelStyle, fontSize: '11px', color: '#000000'}}>
+                        Bras de levier ({armUnit})
+                        <InfoIcon tooltip="Distance par rapport à la référence" />
+                      </label>
+                      <input
+                        type="number"
+                        value={compartment.arm}
+                        onChange={(e) => updateBaggageCompartment(compartment.id, 'arm', e.target.value)}
+                        placeholder="2.45"
+                        min="0"
+                        step="0.01"
+                        style={{...inputStyle, fontSize: '13px'}}
+                      />
+                    </div>
+                    <div>
+                      <label style={{...labelStyle, fontSize: '11px', color: '#000000'}}>
+                        Masse max ({massUnit})
+                        <InfoIcon tooltip="Masse maximale autorisée" />
+                      </label>
+                      <input
+                        type="number"
+                        value={getUnit('weight') !== 'kg' ? 
+                          convert(compartment.maxWeight || 0, 'weight', 'kg', { toUnit: getUnit('weight') }).toFixed(1) : 
+                          compartment.maxWeight}
+                        onChange={(e) => {
+                          const valueInStorageUnit = getUnit('weight') !== 'kg' ? 
+                            toStorage(parseFloat(e.target.value) || 0, 'weight') : 
+                            e.target.value;
+                          updateBaggageCompartment(compartment.id, 'maxWeight', valueInStorageUnit);
+                        }}
+                        placeholder={getUnit('weight') === 'lbs' ? "110" : "50"}
+                        min="0"
+                        style={{...inputStyle, fontSize: '13px'}}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'end' }}>
+                      {formData.baggageCompartments.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeBaggageCompartment(compartment.id)}
+                          style={{
+                            backgroundColor: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            padding: '8px',
+                            fontSize: '12px',
+                            cursor: 'pointer',
+                            height: '32px',
+                            width: '32px'
+                          }}
+                          title="Supprimer ce compartiment"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{
+                textAlign: 'center',
+                padding: '20px',
+                color: '#9ca3af',
+                fontStyle: 'italic'
+              }}>
+                Aucun compartiment défini. Cliquez sur "Ajouter un compartiment" pour commencer.
+              </div>
+            )}
+          </div>
+
+          {/* Masses limites */}
+          <div style={{ 
+            backgroundColor: '#fee2e2', 
+            padding: '12px', 
+            borderRadius: '8px', 
+            marginBottom: '16px',
+            border: '1px solid #fca5a5'
+          }}>
+            <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#000000' }}>
+              Masses limites ({massUnit})
+            </h5>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+              <div>
+                <label style={labelStyle}>
+                  Masse min décollage
+                  <InfoIcon tooltip="Masse minimale pour le décollage" />
+                </label>
+                <input
+                  type="number"
+                  value={formData.masses.minTakeoffMass}
+                  onChange={(e) => handleChange('masses.minTakeoffMass', e.target.value)}
+                  placeholder="900"
+                  min="0"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>
+                  Masse max décollage
+                  <InfoIcon tooltip="Masse maximale au décollage (MTOW)" />
+                </label>
+                <input
+                  type="number"
+                  value={formData.maxTakeoffWeight}
+                  onChange={(e) => handleChange('maxTakeoffWeight', e.target.value)}
+                  placeholder="1200"
+                  min="0"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>
+                  Masse max atterrissage
+                  <InfoIcon tooltip="Masse maximale à l'atterrissage (MLW)" />
+                </label>
+                <input
+                  type="number"
+                  value={formData.limitations.maxLandingMass}
+                  onChange={(e) => handleChange('limitations.maxLandingMass', e.target.value)}
+                  placeholder="1150"
+                  min="0"
+                  style={inputStyle}
+                />
+              </div>
             </div>
-            <div>
-              <label style={labelStyle}>
-                Compartiment standard
-                <InfoIcon tooltip="Distance du compartiment bagages principal par rapport à la référence" />
-              </label>
-              <input
-                type="number"
-                value={formData.armLengths.standardBaggageArm}
-                onChange={(e) => handleChange('armLengths.standardBaggageArm', e.target.value)}
-                placeholder="2450"
-                min="0"
-                style={inputStyle}
-              />
+          </div>
+
+          {/* CENTER OF GRAVITY - Enveloppe de centrage */}
+          <div style={{ 
+            backgroundColor: '#fef2f2', 
+            padding: '16px', 
+            borderRadius: '8px', 
+            marginBottom: '16px',
+            border: '2px solid #dc2626',
+            marginTop: '24px'
+          }}>
+            <h5 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000' }}>
+              ⚠️ CENTER OF GRAVITY - Enveloppe de centrage
+            </h5>
+
+            {/* CG Avant (Most forward) - Points dynamiques */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <h6 style={{ fontSize: '14px', fontWeight: 'bold', color: '#000000' }}>
+                  📍 Most Forward CG (Limite avant)
+                </h6>
+                <button
+                  type="button"
+                  onClick={addForwardPoint}
+                  style={{
+                    backgroundColor: '#22c55e',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '6px 12px',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  ➕ Ajouter un point
+                </button>
+              </div>
+              
+              <div style={{
+                backgroundColor: '#f8fafc',
+                padding: '12px',
+                borderRadius: '6px',
+                border: '1px solid #e2e8f0'
+              }}>
+                <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '12px', margin: '0 0 12px 0' }}>
+                  💡 <strong>Astuce:</strong> Ajoutez plusieurs points pour définir une courbe de limite CG avant. Les points seront connectés par ordre croissant de masse.
+                </p>
+                
+                {formData.cgEnvelope.forwardPoints.map((point, index) => (
+                  <div key={point.id} style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr auto',
+                    gap: '12px',
+                    marginBottom: '12px',
+                    padding: '12px',
+                    backgroundColor: 'white',
+                    borderRadius: '6px',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <div>
+                      <label style={{...labelStyle, fontSize: '11px', color: '#000000'}}>
+                        Masse ({massUnit})
+                        <InfoIcon tooltip={`Point ${index + 1} - Masse pour la limite CG avant`} />
+                      </label>
+                      <input
+                        type="number"
+                        value={point.weight}
+                        onChange={(e) => updateForwardPoint(point.id, 'weight', e.target.value)}
+                        placeholder="940"
+                        min="0"
+                        style={{...inputStyle, fontSize: '13px'}}
+                      />
+                    </div>
+                    <div>
+                      <label style={{...labelStyle, fontSize: '11px', color: '#000000'}}>
+                        CG (m)
+                        <InfoIcon tooltip={`Point ${index + 1} - Position CG avant à cette masse`} />
+                      </label>
+                      <input
+                        type="number"
+                        value={point.cg}
+                        onChange={(e) => updateForwardPoint(point.id, 'cg', e.target.value)}
+                        placeholder="2.4000"
+                        min="0"
+                        step="0.0001"
+                        style={{...inputStyle, fontSize: '13px'}}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'end', gap: '4px' }}>
+                      {formData.cgEnvelope.forwardPoints.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeForwardPoint(point.id)}
+                          style={{
+                            backgroundColor: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            padding: '8px',
+                            fontSize: '12px',
+                            cursor: 'pointer',
+                            minWidth: '32px',
+                            height: '32px'
+                          }}
+                          title="Supprimer ce point"
+                        >
+                          🗑️
+                        </button>
+                      )}
+                      <span style={{ 
+                        fontSize: '11px', 
+                        color: '#6b7280', 
+                        alignSelf: 'center',
+                        minWidth: '40px',
+                        textAlign: 'center'
+                      }}>
+                        Point {index + 1}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                
+                {formData.cgEnvelope.forwardPoints.length === 0 && (
+                  <div style={{
+                    textAlign: 'center',
+                    padding: '20px',
+                    color: '#9ca3af',
+                    fontStyle: 'italic'
+                  }}>
+                    Aucun point défini. Cliquez sur "Ajouter un point" pour commencer.
+                  </div>
+                )}
+              </div>
             </div>
+
+            {/* CG Arrière (Most rearward) */}
             <div>
-              <label style={labelStyle}>
-                Tube à bagages
-                <InfoIcon tooltip="Distance du tube à bagages par rapport à la référence" />
-              </label>
-              <input
-                type="number"
-                value={formData.armLengths.baggageTubeArm}
-                onChange={(e) => handleChange('armLengths.baggageTubeArm', e.target.value)}
-                placeholder="2500"
-                min="0"
-                style={inputStyle}
-              />
+              <h6 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '12px', color: '#000000' }}>
+                📍 Most Rearward CG (Limite arrière)
+              </h6>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={labelStyle}>
+                    Masse min ({massUnit})
+                    <InfoIcon tooltip="Masse minimale pour la limite CG arrière" />
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.cgEnvelope.aftMinWeight}
+                    onChange={(e) => handleChange('cgEnvelope.aftMinWeight', e.target.value)}
+                    placeholder="940"
+                    min="0"
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>
+                    CG arrière constant (m)
+                    <InfoIcon tooltip="Position CG arrière (constante sur toute la plage)" />
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.cgEnvelope.aftCG}
+                    onChange={(e) => handleChange('cgEnvelope.aftCG', e.target.value)}
+                    placeholder="2.5300"
+                    min="0"
+                    step="0.0001"
+                    style={inputStyle}
+                  />
+                </div>
+                
+                <div>
+                  <label style={labelStyle}>
+                    Masse max ({massUnit})
+                    <InfoIcon tooltip="Masse maximale pour la limite CG arrière" />
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.cgEnvelope.aftMaxWeight}
+                    onChange={(e) => handleChange('cgEnvelope.aftMaxWeight', e.target.value)}
+                    placeholder="1310"
+                    min="0"
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
             </div>
-            <div>
-              <label style={labelStyle}>
-                Extension bagages AR
-                <InfoIcon tooltip="Distance de l'extension arrière par rapport à la référence" />
-              </label>
-              <input
-                type="number"
-                value={formData.armLengths.aftBaggageExtensionArm}
-                onChange={(e) => handleChange('armLengths.aftBaggageExtensionArm', e.target.value)}
-                placeholder="2550"
-                min="0"
-                style={inputStyle}
-              />
-            </div>
+
+            {/* Visualisation graphique de l'enveloppe */}
+            {(() => {
+              // Récupérer les points avant dynamiques
+              const forwardPoints = formData.cgEnvelope.forwardPoints
+                .filter(point => parseFloat(point.weight) > 0 && parseFloat(point.cg) > 0)
+                .map(point => ({
+                  w: parseFloat(point.weight),
+                  cg: parseFloat(point.cg),
+                  label: 'Forward'
+                }))
+                .sort((a, b) => a.w - b.w); // Trier par masse croissante
+
+              // Points arrière
+              const aftMinWeight = parseFloat(formData.cgEnvelope.aftMinWeight) || 0;
+              const aftCG = parseFloat(formData.cgEnvelope.aftCG) || 0;
+              const aftMaxWeight = parseFloat(formData.cgEnvelope.aftMaxWeight) || 0;
+
+              // Calculer les échelles pour le graphique
+              const forwardWeights = forwardPoints.map(p => p.w);
+              const forwardCGs = forwardPoints.map(p => p.cg);
+              const aftWeights = [aftMinWeight, aftMaxWeight].filter(w => w > 0);
+              const aftCGs = [aftCG].filter(cg => cg > 0);
+
+              const allWeights = [...forwardWeights, ...aftWeights];
+              const allCGs = [...forwardCGs, ...aftCGs];
+              
+              const minWeight = allWeights.length > 0 ? Math.min(...allWeights) - 50 : 900;
+              const maxWeight = allWeights.length > 0 ? Math.max(...allWeights) + 50 : 1400;
+              const minCG = allCGs.length > 0 ? Math.min(...allCGs) - 0.1 : 2.0;
+              const maxCG = allCGs.length > 0 ? Math.max(...allCGs) + 0.1 : 2.8;
+
+              const toSvgX = (cg) => 50 + (cg - minCG) / (maxCG - minCG) * 400;
+              const toSvgY = (weight) => 250 - (weight - minWeight) / (maxWeight - minWeight) * 200;
+
+              // Créer les points de l'enveloppe
+              const envelopePoints = [];
+              
+              // Ajouter tous les points avant (déjà triés)
+              forwardPoints.forEach((point, index) => {
+                envelopePoints.push({ 
+                  ...point, 
+                  label: `Forward ${index + 1}` 
+                });
+              });
+              
+              // Points arrière (ordre décroissant de masse)
+              if (aftMaxWeight > 0 && aftCG > 0) {
+                envelopePoints.push({ w: aftMaxWeight, cg: aftCG, label: 'Aft Max' });
+              }
+              if (aftMinWeight > 0 && aftCG > 0 && aftMinWeight !== aftMaxWeight) {
+                envelopePoints.push({ w: aftMinWeight, cg: aftCG, label: 'Aft Min' });
+              }
+
+              return (
+                <div style={{
+                  backgroundColor: '#f0f9ff',
+                  padding: '20px',
+                  borderRadius: '12px',
+                  marginTop: '20px',
+                  border: '2px solid #0ea5e9',
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                }}>
+                  <div style={{ 
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginBottom: '16px',
+                    padding: '20px',
+                    backgroundColor: '#ffffff',
+                    borderRadius: '8px',
+                    border: '2px solid #e2e8f0',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                  }}>
+                    <div style={{
+                      position: 'relative',
+                      width: '100%',
+                      maxWidth: '600px',
+                      aspectRatio: '5/3'
+                    }}>
+                      <svg 
+                        viewBox="0 0 500 300" 
+                        style={{ 
+                          width: '100%',
+                          height: '100%',
+                          border: '1px solid #cbd5e1', 
+                          borderRadius: '4px', 
+                          backgroundColor: 'white'
+                        }}>
+                      {/* Grille */}
+                      <defs>
+                        <pattern id="cgGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+                          <path d="M 25 0 L 0 0 0 25" fill="none" stroke="#f1f5f9" strokeWidth="1"/>
+                        </pattern>
+                      </defs>
+                      <rect width="500" height="300" fill="url(#cgGrid)" />
+                      
+                      {/* Axes */}
+                      <line x1="50" y1="250" x2="450" y2="250" stroke="#374151" strokeWidth="2" />
+                      <line x1="50" y1="50" x2="50" y2="250" stroke="#374151" strokeWidth="2" />
+                      
+                      {/* Labels des axes */}
+                      <text x="250" y="280" textAnchor="middle" fontSize="12" fill="#374151">Centre de Gravité (m)</text>
+                      <text x="20" y="150" textAnchor="middle" fontSize="12" fill="#374151" transform="rotate(-90 20 150)">Masse ({massUnit})</text>
+                      
+                      {/* Graduations X (CG) */}
+                      {(() => {
+                        const ticks = [];
+                        for (let i = 0; i <= 4; i++) {
+                          const cgValue = minCG + (maxCG - minCG) * (i / 4);
+                          const x = 50 + (400 * i) / 4;
+                          ticks.push(
+                            <g key={`x-${i}`}>
+                              <line x1={x} y1="250" x2={x} y2="255" stroke="#374151" strokeWidth="1" />
+                              <text x={x} y="270" textAnchor="middle" fontSize="10" fill="#374151">
+                                {cgValue.toFixed(2)}
+                              </text>
+                            </g>
+                          );
+                        }
+                        return ticks;
+                      })()}
+                      
+                      {/* Graduations Y (Masse) */}
+                      {(() => {
+                        const ticks = [];
+                        for (let i = 0; i <= 4; i++) {
+                          const weightValue = minWeight + (maxWeight - minWeight) * (i / 4);
+                          const y = 250 - (200 * i) / 4;
+                          ticks.push(
+                            <g key={`y-${i}`}>
+                              <line x1="45" y1={y} x2="50" y2={y} stroke="#374151" strokeWidth="1" />
+                              <text x="40" y={y + 3} textAnchor="end" fontSize="10" fill="#374151">
+                                {Math.round(weightValue)}
+                              </text>
+                            </g>
+                          );
+                        }
+                        return ticks;
+                      })()}
+                      
+                      {/* Enveloppe */}
+                      {envelopePoints.length >= 3 && (
+                        <polygon 
+                          points={envelopePoints.map(p => `${toSvgX(p.cg)},${toSvgY(p.w)}`).join(' ')}
+                          fill="rgba(34, 197, 94, 0.2)" 
+                          stroke="#22c55e" 
+                          strokeWidth="2"
+                        />
+                      )}
+                      
+                      {/* Points de l'enveloppe */}
+                      {envelopePoints.map((point, index) => (
+                        <g key={index}>
+                          <circle 
+                            cx={toSvgX(point.cg)} 
+                            cy={toSvgY(point.w)} 
+                            r="4" 
+                            fill="#dc2626" 
+                            stroke="white" 
+                            strokeWidth="2"
+                          />
+                          <text 
+                            x={toSvgX(point.cg)} 
+                            y={toSvgY(point.w) + 20} 
+                            textAnchor="middle" 
+                            fontSize="8" 
+                            fill="#6b7280"
+                          >
+                            {point.w}kg / {point.cg}m
+                          </text>
+                        </g>
+                      ))}
+                      
+                      {/* Message si pas assez de données */}
+                      {envelopePoints.length < 3 && (
+                        <text x="250" y="150" textAnchor="middle" fontSize="14" fill="#9ca3af">
+                          Saisissez au moins 3 points pour visualiser l'enveloppe
+                        </text>
+                      )}
+                    </svg>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
           </div>
         </div>
 
           </>
-        )}
 
-        {/* Onglet Équipements */}
-        {activeTab === 'equipements' && (
+        </div>
+      )}
+
+      {/* Section Équipements */}
+      <div style={{ marginBottom: '16px' }}>
+        <AccordionButton
+          isOpen={showEquipements}
+          onClick={() => setShowEquipements(!showEquipements)}
+          icon="📡"
+          title="Équipements"
+        />
+      </div>
+
+      {showEquipements && (
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
           <>
-            <div style={{
-              backgroundColor: '#FEF3C7',
-              border: '1px solid #FCD34D',
-              borderRadius: '8px',
-              padding: '12px',
-              marginBottom: '20px'
-            }}>
-              <p style={sx.combine(sx.text.sm, { color: '#92400E' })}>
-                📡 <strong>Info :</strong> Ces équipements déterminent les capacités opérationnelles de votre avion. 
-                Ils sont essentiels pour la planification des routes et l'approbation des procédures d'approche.
-              </p>
-            </div>
 
             {/* Section Communication */}
             <div>
-              <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), sx.flex.start)}>
+              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000', display: 'flex', alignItems: 'center' }}>
                 <span style={{ marginRight: '8px' }}>📻</span>
                 Équipements de radiocommunication (COM)
                 <InfoIcon tooltip="Équipements de communication avec l'ATC et autres aéronefs" />
@@ -2320,7 +3955,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
 
             {/* Section Navigation et Approche */}
             <div>
-              <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), sx.flex.start)}>
+              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000', display: 'flex', alignItems: 'center' }}>
                 <span style={{ marginRight: '8px' }}>🧭</span>
                 Équipements de navigation et approche (NAV/APP)
                 <InfoIcon tooltip="Systèmes de navigation et capacités d'approche aux instruments" />
@@ -2457,7 +4092,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
 
             {/* Section Surveillance */}
             <div>
-              <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), sx.flex.start)}>
+              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000', display: 'flex', alignItems: 'center' }}>
                 <span style={{ marginRight: '8px' }}>📍</span>
                 Équipements de surveillance
                 <InfoIcon tooltip="Systèmes de surveillance et anti-collision" />
@@ -2586,7 +4221,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
 
             {/* Capacités spéciales */}
             <div>
-              <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3), sx.flex.start)}>
+              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000', display: 'flex', alignItems: 'center' }}>
                 <span style={{ marginRight: '8px' }}>🌟</span>
                 Capacités spéciales et approbations
                 <InfoIcon tooltip="Approbations opérationnelles spéciales" />
@@ -2684,21 +4319,380 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
               </div>
             </div>
           </>
-        )}
+        
+        </div>
+      )}
+
+      {/* Section Opérations */}
+      <div style={{ marginBottom: '16px' }}>
+        <AccordionButton
+          isOpen={showOperations}
+          onClick={() => setShowOperations(!showOperations)}
+          icon="✈️"
+          title="Opérations"
+        />
       </div>
 
+      {showOperations && (
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+          <>
+
+            {/* Opérations de base */}
+            <div>
+              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000' }}>
+                📋 Règles de vol
+              </h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.approvedOperations.vfrDay}
+                    onChange={(e) => handleChange('approvedOperations.vfrDay', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>☀️ VFR Jour</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.approvedOperations.vfrNight}
+                    onChange={(e) => handleChange('approvedOperations.vfrNight', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>🌙 VFR Nuit</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.approvedOperations.ifrDay}
+                    onChange={(e) => handleChange('approvedOperations.ifrDay', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>☁️ IFR Jour</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.approvedOperations.ifrNight}
+                    onChange={(e) => handleChange('approvedOperations.ifrNight', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>🌙☁️ IFR Nuit</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.approvedOperations.svfr}
+                    onChange={(e) => handleChange('approvedOperations.svfr', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>🌫️ VFR Spécial (SVFR)</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Opérations spéciales */}
+            <div>
+              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000' }}>
+                🎯 Opérations spéciales
+              </h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.approvedOperations.formation}
+                    onChange={(e) => handleChange('approvedOperations.formation', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>✈️✈️ Vol en formation</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.approvedOperations.aerobatics}
+                    onChange={(e) => handleChange('approvedOperations.aerobatics', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>🎪 Voltige aérienne</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.approvedOperations.banner}
+                    onChange={(e) => handleChange('approvedOperations.banner', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>🏴 Remorquage bannière</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.approvedOperations.glider}
+                    onChange={(e) => handleChange('approvedOperations.glider', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>🪂 Remorquage planeur</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.approvedOperations.parachute}
+                    onChange={(e) => handleChange('approvedOperations.parachute', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>🪂 Largage parachutistes</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.approvedOperations.agricultural}
+                    onChange={(e) => handleChange('approvedOperations.agricultural', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>🚜 Épandage agricole</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.approvedOperations.aerial}
+                    onChange={(e) => handleChange('approvedOperations.aerial', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>📷 Photo/Surveillance</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Opérations commerciales et environnement */}
+            <div>
+              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000' }}>
+                🏔️ Environnement et usage
+              </h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.approvedOperations.training}
+                    onChange={(e) => handleChange('approvedOperations.training', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>🎓 École de pilotage</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.approvedOperations.charter}
+                    onChange={(e) => handleChange('approvedOperations.charter', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>🎫 Transport public</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.approvedOperations.mountainous}
+                    onChange={(e) => handleChange('approvedOperations.mountainous', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>⛰️ Vol en montagne</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.approvedOperations.seaplane}
+                    onChange={(e) => handleChange('approvedOperations.seaplane', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>🌊 Hydravion</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.approvedOperations.skiPlane}
+                    onChange={(e) => handleChange('approvedOperations.skiPlane', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>⛷️ Avion sur skis</span>
+                </label>
+                <label style={sx.flex.start}>
+                  <input
+                    type="checkbox"
+                    checked={formData.approvedOperations.icing}
+                    onChange={(e) => handleChange('approvedOperations.icing', e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={sx.text.sm}>❄️ Conditions givrantes</span>
+                </label>
+              </div>
+            </div>
+          </>
+
+        </div>
+      )}
+
+      {/* Section Remarques */}
+      <div style={{ marginBottom: '16px' }}>
+        <AccordionButton
+          isOpen={showRemarques}
+          onClick={() => setShowRemarques(!showRemarques)}
+          icon="📋"
+          title="Remarques"
+        />
+      </div>
+
+      {showRemarques && (
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+          <>
+
+            <div>
+              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000' }}>
+                Notes et remarques
+              </h4>
+              
+              <div style={{ marginBottom: '16px' }}>
+                <label style={labelStyle}>
+                  Remarques générales
+                  <InfoIcon tooltip="Ajoutez ici toute information pertinente du manuel de vol non couverte dans les autres sections" />
+                </label>
+                <textarea
+                  value={formData.manualRemarks || ''}
+                  onChange={(e) => handleChange('manualRemarks', e.target.value)}
+                  placeholder="Exemple : Limitations spécifiques, procédures particulières, notes sur les performances, recommandations du constructeur..."
+                  style={{
+                    ...inputStyle,
+                    minHeight: '150px',
+                    resize: 'vertical',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                    fontSize: '14px',
+                    lineHeight: '1.5'
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={labelStyle}>
+                  Procédures d'urgence spécifiques
+                  <InfoIcon tooltip="Notes sur les procédures d'urgence particulières à cet aéronef" />
+                </label>
+                <textarea
+                  value={formData.emergencyNotes || ''}
+                  onChange={(e) => handleChange('emergencyNotes', e.target.value)}
+                  placeholder="Procédures d'urgence spécifiques non standards..."
+                  style={{
+                    ...inputStyle,
+                    minHeight: '100px',
+                    resize: 'vertical',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                    fontSize: '14px',
+                    lineHeight: '1.5'
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={labelStyle}>
+                  Notes de maintenance
+                  <InfoIcon tooltip="Informations de maintenance importantes pour le pilote" />
+                </label>
+                <textarea
+                  value={formData.maintenanceNotes || ''}
+                  onChange={(e) => handleChange('maintenanceNotes', e.target.value)}
+                  placeholder="Points de vigilance, intervalles de maintenance critiques..."
+                  style={{
+                    ...inputStyle,
+                    minHeight: '100px',
+                    resize: 'vertical',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                    fontSize: '14px',
+                    lineHeight: '1.5'
+                  }}
+                />
+              </div>
+
+            </div>
+          </>
+        
+        </div>
+      )}
+
+      {/* Section Performances IA */}
+      <div style={{ marginBottom: '16px' }}>
+        <AccordionButton
+          isOpen={showPerformancesIA}
+          onClick={() => setShowPerformancesIA(!showPerformancesIA)}
+          icon="🤖"
+          title="Analyse Avancée des Performances"
+        />
+      </div>
+
+      {showPerformancesIA && (
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+          <>
+            <div style={{ marginTop: '20px' }}>
+              <AdvancedPerformanceAnalyzer 
+                aircraft={{
+                  ...formData,
+                  id: aircraft?.id,
+                  performance: aircraft?.performance,
+                  advancedPerformance: aircraft?.advancedPerformance
+                }}
+                onPerformanceUpdate={async (performanceData) => {
+                  // Mettre à jour les données de performance dans le formulaire
+                  console.log('📊 Mise à jour des performances IA avancées:', performanceData);
+                  
+                  try {
+                    // Stocker avec le gestionnaire optimisé pour éviter QuotaExceededError
+                    if (aircraft?.id) {
+                      await performanceDataManager.storePerformanceData(aircraft.id, performanceData);
+                      console.log('✅ Données de performance stockées avec le gestionnaire optimisé');
+                    }
+                    
+                    // Mettre à jour le formulaire avec des données allégées (sans images base64)
+                    const lightweightData = {
+                      advancedPerformance: performanceData.advancedPerformance ? {
+                        tables: performanceData.advancedPerformance.tables?.map(table => ({
+                          table_name: table.table_name,
+                          table_type: table.table_type,
+                          conditions: table.conditions,
+                          units: table.units,
+                          data: table.data,
+                          confidence: table.confidence
+                        })) || [],
+                        extractionMetadata: {
+                          analyzedAt: performanceData.advancedPerformance.extractionMetadata?.analyzedAt,
+                          totalTables: performanceData.advancedPerformance.extractionMetadata?.totalTables
+                        }
+                      } : null
+                    };
+                    
+                    setFormData(prev => ({
+                      ...prev,
+                      ...lightweightData,
+                      // S'assurer que advancedPerformance est bien ajouté au formData
+                      advancedPerformance: lightweightData.advancedPerformance || prev.advancedPerformance
+                    }));
+                    
+                  } catch (error) {
+                    console.error('❌ Erreur lors de la sauvegarde des performances:', error);
+                    // Afficher une notification à l'utilisateur
+                    alert('Erreur lors de la sauvegarde des données de performance. Les données sont trop volumineuses.');
+                  }
+                }}
+              />
+            </div>
+          </>
+        </div>
+      )}
+
       {/* Boutons d'action (toujours visibles) */}
-      <div style={sx.combine(sx.flex.end, sx.spacing.gap(2), sx.spacing.mt(4))}>
-        <button
-          type="button"
-          onClick={onCancel}
-          style={sx.combine(sx.components.button.base, sx.components.button.secondary)}
-        >
-          Annuler
-        </button>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px' }}>
         <button
           type="submit"
-          style={sx.combine(sx.components.button.base, sx.components.button.primary)}
+          style={{
+            ...buttonSectionStyle,
+            padding: '12px 32px'
+          }}
+          onClick={() => console.log('🔴 BOUTON CLIQUÉ - Type:', aircraft ? 'UPDATE' : 'CREATE')}
         >
           {aircraft ? 'Mettre à jour' : 'Créer'}
         </button>

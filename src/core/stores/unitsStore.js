@@ -31,6 +31,9 @@ export const useUnitsStore = create(
         // Consommation
         fuelConsumption: 'lph', // lph (liters per hour), gph (gallons per hour)
         
+        // Bras de levier
+        armLength: 'mm',       // mm (millimeters), cm (centimeters), m (meters), in (inches)
+        
         // Format de coordonnées
         coordinates: 'dms',    // dms (degrees minutes seconds), dd (decimal degrees)
         
@@ -67,6 +70,7 @@ export const useUnitsStore = create(
             pressure: 'hPa',
             temperature: 'C',
             fuelConsumption: 'lph',
+            armLength: 'mm',
             coordinates: 'dms',
             timeFormat: '24h'
           },
@@ -82,6 +86,7 @@ export const useUnitsStore = create(
             pressure: 'inHg',
             temperature: 'C',
             fuelConsumption: 'gph',
+            armLength: 'in',
             coordinates: 'dms',
             timeFormat: '12h'
           },
@@ -97,6 +102,7 @@ export const useUnitsStore = create(
             pressure: 'hPa',
             temperature: 'C',
             fuelConsumption: 'lph',
+            armLength: 'cm',
             coordinates: 'dd',
             timeFormat: '24h'
           },
@@ -112,6 +118,7 @@ export const useUnitsStore = create(
             pressure: 'hPa',
             temperature: 'C',
             fuelConsumption: 'lph',
+            armLength: 'mm',
             coordinates: 'dms',
             timeFormat: '24h'
           }

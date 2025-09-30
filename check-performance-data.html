@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Vérification des Tableaux de Performance</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #f0f0f0; }
+        .section { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+        .info { color: blue; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Vérification des Tableaux de Performance ALFlight</h1>
+    
+    <div class="section">
+        <button onclick="checkPerformanceData()">Vérifier les données</button>
+        <button onclick="clearConsole()">Effacer</button>
+        <button onclick="exportData()">Exporter JSON</button>
+    </div>
+    
+    <div id="output" class="section"></div>
+
+    <script>
+        function log(message, className = '') {
+            const output = document.getElementById('output');
+            const div = document.createElement('div');
+            div.className = className;
+            div.textContent = message;
+            output.appendChild(div);
+        }
+
+        function clearConsole() {
+            document.getElementById('output').innerHTML = '';
+        }
+
+        function checkPerformanceData() {
+            clearConsole();
+            log('=== VÉRIFICATION DES TABLEAUX DE PERFORMANCE ===', 'info');
+            
+            // Récupérer la clé aircraft-storage
+            const aircraftKey = 'aircraft-storage';
+            const aircraftData = localStorage.getItem(aircraftKey);
+            
+            if (!aircraftData) {
+                log('❌ Aucune donnée avion trouvée dans localStorage', 'error');
+                return;
+            }
+            
+            try {
+                const aircraft = JSON.parse(aircraftData);
+                log(`✅ ${aircraft.length} avion(s) trouvé(s)`, 'success');
+                
+                aircraft.forEach((plane, index) => {
+                    log(`\n--- Avion ${index + 1}: ${plane.registration || 'Sans immatriculation'} (${plane.model || 'Modèle inconnu'}) ---`);
+                    
+                    // Vérifier les performances avancées
+                    if (plane.advancedPerformance) {
+                        const perf = plane.advancedPerformance;
+                        log('  ✅ Performances avancées présentes', 'success');
+                        
+                        if (perf.tables && Array.isArray(perf.tables)) {
+                            log(`  📊 Nombre de tableaux extraits: ${perf.tables.length}`, 'info');
+                            
+                            perf.tables.forEach((table, i) => {
+                                log(`\n  📋 Tableau ${i + 1}: ${table.table_name || 'Sans nom'}`);
+                                log(`     Type: ${table.table_type || 'Non défini'}`);
+                                log(`     Lignes de données: ${table.data ? table.data.length : 0}`);
+                                
+                                // Afficher les conditions
+                                if (typeof table.conditions === 'object') {
+                                    log(`     Conditions: ${JSON.stringify(table.conditions)}`);
+                                } else {
+                                    log(`     Conditions: ${table.conditions || 'Non spécifiées'}`);
+                                }
+                                
+                                // Afficher les unités
+                                if (table.units) {
+                                    log(`     Unités détectées:`);
+                                    Object.entries(table.units).forEach(([key, unit]) => {
+                                        log(`       - ${key}: ${unit}`);
+                                    });
+                                }
+                                
+                                // Afficher un échantillon des données
+                                if (table.data && table.data.length > 0) {
+                                    log(`     Échantillon de données (première ligne):`);
+                                    const firstRow = table.data[0];
+                                    Object.entries(firstRow).forEach(([key, value]) => {
+                                        log(`       - ${key}: ${value}`);
+                                    });
+                                }
+                                
+                                // Source de l'image
+                                if (table.sourceImage) {
+                                    log(`     Source: ${table.sourceImage.name || 'Image inconnue'}`);
+                                }
+                            });
+                        } else {
+                            log('  ⚠️ Pas de tableaux dans advancedPerformance', 'warning');
+                        }
+                        
+                        // Métadonnées d'extraction
+                        if (perf.extractionMetadata) {
+                            log(`\n  📅 Métadonnées d'extraction:`);
+                            log(`     Date: ${perf.extractionMetadata.analyzedAt || 'Inconnue'}`);
+                            log(`     Images analysées: ${perf.extractionMetadata.totalImages || 0}`);
+                            log(`     Total tableaux: ${perf.extractionMetadata.totalTables || 0}`);
+                            log(`     Version: ${perf.extractionMetadata.analysisVersion || 'Inconnue'}`);
+                        }
+                    } else {
+                        log('  ❌ Pas de performances avancées pour cet avion', 'error');
+                    }
+                    
+                    // Vérifier les anciennes données de performance
+                    if (plane.performanceData) {
+                        log('  📈 Anciennes données de performance également présentes', 'info');
+                    }
+                });
+                
+            } catch (e) {
+                log(`❌ Erreur lors du parsing: ${e.message}`, 'error');
+                console.error(e);
+            }
+            
+            // Afficher la taille totale des données
+            const dataSize = (aircraftData.length / 1024).toFixed(2);
+            log(`\n📦 Taille totale des données: ${dataSize} KB`, 'info');
+            
+            // Vérifier d'autres clés liées aux performances
+            const allKeys = Object.keys(localStorage);
+            const perfKeys = allKeys.filter(k => k.toLowerCase().includes('performance'));
+            if (perfKeys.length > 0) {
+                log('\n🔑 Autres clés de performance trouvées:', 'info');
+                perfKeys.forEach(key => {
+                    const size = (localStorage.getItem(key).length / 1024).toFixed(2);
+                    log(`  - ${key}: ${size} KB`);
+                });
+            }
+        }
+
+        function exportData() {
+            const aircraftData = localStorage.getItem('aircraft-storage');
+            if (!aircraftData) {
+                alert('Aucune donnée à exporter');
+                return;
+            }
+            
+            try {
+                const aircraft = JSON.parse(aircraftData);
+                const performanceData = {
+                    exportDate: new Date().toISOString(),
+                    aircraft: aircraft.map(plane => ({
+                        registration: plane.registration,
+                        model: plane.model,
+                        hasAdvancedPerformance: !!plane.advancedPerformance,
+                        tablesCount: plane.advancedPerformance?.tables?.length || 0,
+                        tables: plane.advancedPerformance?.tables || []
+                    }))
+                };
+                
+                const blob = new Blob([JSON.stringify(performanceData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `alflight-performance-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                log('✅ Données exportées avec succès', 'success');
+            } catch (e) {
+                log(`❌ Erreur lors de l'export: ${e.message}`, 'error');
+            }
+        }
+
+        // Vérification automatique au chargement
+        window.addEventListener('load', () => {
+            checkPerformanceData();
+        });
+    </script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 // src/features/pilot/components/UnitsPreferences.jsx
-import React, { useState } from 'react';
-import { Settings, Globe, Ruler, Thermometer, Gauge, Clock, MapPin } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Settings, Globe, Ruler, Thermometer, Gauge, Clock, MapPin, Save, Check, AlertCircle } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useUnitsStore, unitsSelectors } from '@core/stores/unitsStore';
 
@@ -8,6 +8,32 @@ const UnitsPreferences = () => {
   const units = unitsSelectors.useUnits();
   const { setUnit, setPreset } = unitsSelectors.useUnitsActions();
   const [activeTab, setActiveTab] = useState('general');
+  const [saved, setSaved] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [initialUnits, setInitialUnits] = useState(units);
+
+  // Détecter les changements
+  useEffect(() => {
+    const changed = JSON.stringify(units) !== JSON.stringify(initialUnits);
+    setHasChanges(changed);
+  }, [units, initialUnits]);
+
+  // Sauvegarder les préférences
+  const handleSave = () => {
+    // Les données sont déjà persistées automatiquement par Zustand
+    // Mais on ajoute un feedback visuel
+    setSaved(true);
+    setHasChanges(false);
+    setInitialUnits(units);
+    
+    // Afficher un message de succès temporaire
+    setTimeout(() => {
+      setSaved(false);
+    }, 3000);
+    
+    // Forcer un rafraîchissement global de l'application
+    window.dispatchEvent(new CustomEvent('unitsUpdated', { detail: units }));
+  };
 
   // Configuration des catégories d'unités
   const unitsConfig = {
@@ -289,6 +315,77 @@ const UnitsPreferences = () => {
           <div>Pression: <strong>{units.pressure}</strong></div>
           <div>Carburant: <strong>{units.fuel.toUpperCase()}</strong></div>
         </div>
+      </div>
+
+      {/* Bouton de sauvegarde et messages */}
+      <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {/* Message de changements non sauvegardés */}
+        {hasChanges && !saved && (
+          <div style={{
+            padding: '12px',
+            backgroundColor: '#fef3c7',
+            borderRadius: '6px',
+            border: '1px solid #fbbf24',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <AlertCircle size={16} style={{ color: '#f59e0b' }} />
+            <span style={{ fontSize: '14px', color: '#92400e' }}>
+              Des modifications non sauvegardées sont en attente
+            </span>
+          </div>
+        )}
+        
+        {/* Message de succès */}
+        {saved && (
+          <div style={{
+            padding: '12px',
+            backgroundColor: '#d1fae5',
+            borderRadius: '6px',
+            border: '1px solid #10b981',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <Check size={16} style={{ color: '#059669' }} />
+            <span style={{ fontSize: '14px', color: '#065f46' }}>
+              Préférences sauvegardées et appliquées dans toute l'application !
+            </span>
+          </div>
+        )}
+        
+        {/* Bouton de sauvegarde */}
+        <button
+          onClick={handleSave}
+          disabled={!hasChanges || saved}
+          style={{
+            ...sx.components.button.base,
+            ...(hasChanges && !saved ? sx.components.button.primary : sx.components.button.secondary),
+            padding: '12px 24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            fontSize: '16px',
+            fontWeight: '600',
+            opacity: (!hasChanges || saved) ? 0.5 : 1,
+            cursor: (!hasChanges || saved) ? 'not-allowed' : 'pointer',
+            transition: 'all 0.3s'
+          }}
+        >
+          {saved ? (
+            <>
+              <Check size={20} />
+              Sauvegardé
+            </>
+          ) : (
+            <>
+              <Save size={20} />
+              Sauvegarder et appliquer
+            </>
+          )}
+        </button>
       </div>
 
       {/* Note d'information */}

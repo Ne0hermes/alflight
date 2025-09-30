@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Altitude Segments</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🛩️ Test des Altitudes par Segment</h1>
+    
+    <div class="test-section">
+        <h2>1. État du Store Navigation</h2>
+        <div id="store-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Test d'Ajout d'Altitude de Segment</h2>
+        <button onclick="testAddSegmentAltitude()">Tester l'ajout d'altitude</button>
+        <div id="add-test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Test de Récupération d'Altitude</h2>
+        <button onclick="testGetSegmentAltitude()">Tester la récupération</button>
+        <div id="get-test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. État Actuel des Segments</h2>
+        <button onclick="showCurrentSegments()">Afficher les segments</button>
+        <div id="segments-display"></div>
+    </div>
+    
+    <script>
+        // Attendre que l'app soit chargée
+        setTimeout(() => {
+            checkStoreStatus();
+        }, 2000);
+        
+        function checkStoreStatus() {
+            try {
+                // Tester l'accès au localStorage
+                const navData = localStorage.getItem('navigation-storage');
+                if (navData) {
+                    const parsed = JSON.parse(navData);
+                    document.getElementById('store-status').innerHTML = `
+                        <div class="status success">
+                            ✅ Store Navigation accessible
+                            <pre>${JSON.stringify(parsed.state, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('store-status').innerHTML = `
+                        <div class="status warning">
+                            ⚠️ Store Navigation vide - Ouvrez l'application d'abord
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('store-status').innerHTML = `
+                    <div class="status error">
+                        ❌ Erreur: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        function testAddSegmentAltitude() {
+            try {
+                // Simuler l'ajout d'une altitude de segment
+                const testSegment = {
+                    segmentId: 'test-1-2',
+                    data: {
+                        startAlt: 3000,
+                        endAlt: 5000,
+                        type: 'climb'
+                    }
+                };
+                
+                console.log('Testing segment altitude addition:', testSegment);
+                
+                // Vérifier dans la console du navigateur
+                document.getElementById('add-test-result').innerHTML = `
+                    <div class="status info">
+                        📝 Test envoyé - Vérifiez la console du navigateur
+                        <pre>${JSON.stringify(testSegment, null, 2)}</pre>
+                    </div>
+                `;
+                
+                // Envoyer un message à l'app si possible
+                if (window.parent !== window) {
+                    window.parent.postMessage({
+                        type: 'TEST_SEGMENT_ALTITUDE',
+                        payload: testSegment
+                    }, '*');
+                }
+            } catch (error) {
+                document.getElementById('add-test-result').innerHTML = `
+                    <div class="status error">
+                        ❌ Erreur: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        function testGetSegmentAltitude() {
+            try {
+                const navData = localStorage.getItem('navigation-storage');
+                if (navData) {
+                    const parsed = JSON.parse(navData);
+                    const segments = parsed.state.segmentAltitudes || {};
+                    
+                    document.getElementById('get-test-result').innerHTML = `
+                        <div class="status success">
+                            ✅ Segments récupérés: ${Object.keys(segments).length} segment(s)
+                            <pre>${JSON.stringify(segments, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('get-test-result').innerHTML = `
+                        <div class="status warning">
+                            ⚠️ Aucune donnée dans le store
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('get-test-result').innerHTML = `
+                    <div class="status error">
+                        ❌ Erreur: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        function showCurrentSegments() {
+            try {
+                const navData = localStorage.getItem('navigation-storage');
+                if (navData) {
+                    const parsed = JSON.parse(navData);
+                    const waypoints = parsed.state.waypoints || [];
+                    const segments = parsed.state.segmentAltitudes || {};
+                    
+                    let html = '<h3>Waypoints:</h3><ul>';
+                    waypoints.forEach((wp, idx) => {
+                        html += `<li>WP${idx + 1}: ${wp.name || 'Sans nom'} (ID: ${wp.id})</li>`;
+                    });
+                    html += '</ul>';
+                    
+                    html += '<h3>Segments avec altitudes:</h3>';
+                    if (Object.keys(segments).length > 0) {
+                        html += '<ul>';
+                        for (const [segId, altData] of Object.entries(segments)) {
+                            html += `<li>
+                                <strong>${segId}</strong>: 
+                                ${altData.startAlt}ft → ${altData.endAlt}ft 
+                                (${altData.type})
+                            </li>`;
+                        }
+                        html += '</ul>';
+                    } else {
+                        html += '<p>Aucun segment configuré</p>';
+                    }
+                    
+                    document.getElementById('segments-display').innerHTML = `
+                        <div class="status info">
+                            ${html}
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('segments-display').innerHTML = `
+                        <div class="status warning">
+                            ⚠️ Aucune donnée disponible
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('segments-display').innerHTML = `
+                    <div class="status error">
+                        ❌ Erreur: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        // Auto-refresh toutes les 3 secondes
+        setInterval(() => {
+            if (document.querySelector('#auto-refresh:checked')) {
+                checkStoreStatus();
+            }
+        }, 3000);
+    </script>
+    
+    <div style="position: fixed; bottom: 20px; right: 20px; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+        <label>
+            <input type="checkbox" id="auto-refresh"> Auto-refresh
+        </label>
+    </div>
+</body>
+</html>

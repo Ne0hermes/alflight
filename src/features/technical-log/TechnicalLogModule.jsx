@@ -1,13 +1,36 @@
 import React, { useState } from 'react';
-import { useAircraft } from '../../core/contexts';
-import TechnicalLog from './components/TechnicalLog';
+import { Box, Tabs, Tab, Badge } from '@mui/material';
+import {
+  Description as DescriptionIcon,
+  Build as BuildIcon,
+  Schedule as ScheduleIcon,
+  Shield as ShieldIcon,
+  Warning as WarningIcon
+} from '@mui/icons-material';
+import { useAircraftStore } from '../../core/stores/aircraftStore';
+import { useNavigationStore } from '../../core/stores/navigationStore';
+import { useTechnicalLogStore } from '../../core/stores/technicalLogStore';
+import TechnicalLogList from './components/TechnicalLogList';
+import MaintenanceSchedule from './components/MaintenanceSchedule';
 import SurvivalEquipmentChecklist from './components/SurvivalEquipmentChecklist';
-import { FileText, Shield } from 'lucide-react';
+import DangerousZonesDetector from '../navigation/components/DangerousZonesDetector';
 
 const TechnicalLogModule = () => {
-  const { selectedAircraft } = useAircraft();
-  const [activeTab, setActiveTab] = useState('log');
+  const { selectedAircraft } = useAircraftStore();
+  const { waypoints, segmentAltitudes } = useNavigationStore();
+  const { getDeferredEntries, getOpenDefects, getMaintenanceDue } = useTechnicalLogStore();
+  const [activeTab, setActiveTab] = useState(0);
   const [flightZones, setFlightZones] = useState({});
+  const [dangerousZones, setDangerousZones] = useState({});
+  
+  // Calculer les badges pour les onglets
+  const deferredCount = getDeferredEntries().length;
+  const defectsCount = getOpenDefects().length;
+  const maintenanceDue = getMaintenanceDue(
+    selectedAircraft?.totalHours || 0,
+    selectedAircraft?.totalCycles || 0
+  );
+  const maintenanceDueCount = maintenanceDue.due.length + maintenanceDue.upcoming.length;
   
   // Récupérer les zones dangereuses depuis le module Navigation
   React.useEffect(() => {
@@ -17,6 +40,7 @@ const TechnicalLogModule = () => {
         try {
           const zones = JSON.parse(storedZones);
           setFlightZones(zones);
+          setDangerousZones(zones);
         } catch (error) {
           console.error('Error parsing flight zones:', error);
         }
@@ -31,70 +55,67 @@ const TechnicalLogModule = () => {
   }, []);
 
   return (
-    <div style={{ padding: '16px' }}>
-      {/* Onglets de navigation */}
-      <div style={{
-        display: 'flex',
-        flexDirection: 'row',
-        marginBottom: '16px', 
-        borderBottom: '2px solid #e5e7eb',
-        gap: '0'
-      }}>
-        <button
-          onClick={() => setActiveTab('log')}
-          style={{
-            padding: '12px 24px',
-            backgroundColor: activeTab === 'log' ? '#3b82f6' : 'transparent',
-            color: activeTab === 'log' ? 'white' : '#6b7280',
-            border: 'none',
-            borderBottom: activeTab === 'log' ? '2px solid #3b82f6' : '2px solid transparent',
-            marginBottom: '-2px',
-            cursor: 'pointer',
-            fontWeight: activeTab === 'log' ? 'bold' : 'normal',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            transition: 'all 0.2s'
-          }}
-        >
-          <FileText size={18} />
-          Log de vol
-        </button>
-        
-        <button
-          onClick={() => setActiveTab('survival')}
-          style={{
-            padding: '12px 24px',
-            backgroundColor: activeTab === 'survival' ? '#3b82f6' : 'transparent',
-            color: activeTab === 'survival' ? 'white' : '#6b7280',
-            border: 'none',
-            borderBottom: activeTab === 'survival' ? '2px solid #3b82f6' : '2px solid transparent',
-            marginBottom: '-2px',
-            cursor: 'pointer',
-            fontWeight: activeTab === 'survival' ? 'bold' : 'normal',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            transition: 'all 0.2s'
-          }}
-        >
-          <Shield size={18} />
-          Équipements SAR
-        </button>
-      </div>
+    <Box sx={{ width: '100%', p: 2 }}>
+      <Tabs
+        value={activeTab}
+        onChange={(e, newValue) => setActiveTab(newValue)}
+        variant="scrollable"
+        scrollButtons="auto"
+        sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}
+      >
+        <Tab 
+          icon={<DescriptionIcon />} 
+          label={
+            <Badge badgeContent={deferredCount + defectsCount} color="error">
+              Log technique
+            </Badge>
+          }
+          iconPosition="start"
+        />
+        <Tab 
+          icon={<ScheduleIcon />} 
+          label={
+            <Badge badgeContent={maintenanceDueCount} color="warning">
+              Programme maintenance
+            </Badge>
+          }
+          iconPosition="start"
+        />
+        <Tab 
+          icon={<ShieldIcon />} 
+          label="Équipements SAR" 
+          iconPosition="start"
+        />
+        <Tab 
+          icon={<WarningIcon />} 
+          label={
+            <Badge badgeContent={Object.keys(dangerousZones).length} color="error">
+              Zones dangereuses
+            </Badge>
+          }
+          iconPosition="start"
+        />
+      </Tabs>
 
       {/* Contenu des onglets */}
-      {activeTab === 'log' && (
-        <TechnicalLog selectedAircraft={selectedAircraft} />
-      )}
-      
-      {activeTab === 'survival' && (
-        <SurvivalEquipmentChecklist 
-          aircraftReg={selectedAircraft?.registration || 'DEFAULT'}
-          flightZones={flightZones}
-        />
-      )}
-    </div>
+      <Box sx={{ mt: 2 }}>
+        {activeTab === 0 && <TechnicalLogList />}
+        {activeTab === 1 && <MaintenanceSchedule />}
+        {activeTab === 2 && (
+          <SurvivalEquipmentChecklist 
+            aircraftReg={selectedAircraft?.registration || 'DEFAULT'}
+            flightZones={flightZones}
+          />
+        )}
+        {activeTab === 3 && (
+          <DangerousZonesDetector
+            waypoints={waypoints}
+            onZonesChange={setDangerousZones}
+            segmentAltitudes={segmentAltitudes}
+          />
+        )}
+      </Box>
+    </Box>
   );
 };
 

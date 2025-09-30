@@ -1,4 +1,3 @@
-// src/features/alternates/hooks/useAlternateSelection.js
 
 import { useMemo, useCallback, useEffect, useState } from 'react';
 import { useAlternatesStore } from '@core/stores/alternatesStore';
@@ -206,15 +205,10 @@ export const useAlternateSelection = () => {
           console.log(`📊 ${loadedAirports.length} aérodromes trouvés dans le store`);
         }
         
-        // Si pas d'aérodromes dans le store, charger depuis le service
         if (!loadedAirports || loadedAirports.length === 0) {
-          console.warn('⚠️ Store vide, chargement depuis openAIPService...');
-          
           try {
-            // Import dynamique du service
-            const { openAIPService } = await import('@services/openAIPService');
-            const staticAirports = await openAIPService.getAirports('FR');
-            console.log(`✅ ${staticAirports.length} aérodromes chargés depuis le service`);
+            const { aeroDataProvider } = await import('@core/data');
+            const staticAirports = await aeroDataProvider.getAirfields({ country: 'FR' });
             
             // Formater pour correspondre à la structure attendue
             loadedAirports = staticAirports.map(apt => ({

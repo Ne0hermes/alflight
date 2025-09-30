@@ -1,0 +1,11 @@
+/* Exemple de structure pour le fond de la main page */
+/* Collez ici le code CSS depuis Figma */
+
+.main-background {
+  /* Le code Figma ira ici */
+  /* Exemple:
+  background: linear-gradient(180deg, #1a1a1f 0%, #2c2c34 100%);
+  background-image: url('/assets/pattern.svg');
+  backdrop-filter: blur(10px);
+  */
+}

@@ -12,18 +12,61 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
     );
   }
 
-  const wb = aircraft.weightBalance;
+  // Utiliser UNIQUEMENT les données de l'onglet "Gestion des avions" (cgEnvelope)
+  const cgEnvelope = aircraft.cgEnvelope;
   
-  // Calcul des échelles
+  // Debug: afficher ce que contient l'aircraft
+  console.log('🛩️ Aircraft reçu dans WeightBalanceChart:', aircraft);
+  console.log('📊 cgEnvelope disponible:', cgEnvelope);
+  if (cgEnvelope) {
+    console.log('   - forwardPoints:', cgEnvelope.forwardPoints);
+    console.log('   - aftCG:', cgEnvelope.aftCG);
+    console.log('   - aftMinWeight:', cgEnvelope.aftMinWeight);
+    console.log('   - aftMaxWeight:', cgEnvelope.aftMaxWeight);
+  }
+  
+  // Vérifier si les données cgEnvelope sont complètes
+  const hasCgEnvelopeData = cgEnvelope && 
+    cgEnvelope.forwardPoints && 
+    cgEnvelope.forwardPoints.length > 0 &&
+    cgEnvelope.aftCG;
+
+  // Afficher une erreur si les données manquent
+  if (!hasCgEnvelopeData) {
+    return (
+      <div style={sx.spacing.mt(8)}>
+        <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4))}>
+          📈 Enveloppe de centrage
+        </h3>
+        
+        <div style={sx.combine(
+          sx.components.alert.base,
+          sx.components.alert.danger,
+          sx.spacing.mb(4)
+        )}>
+          <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+            ❌ Données d'enveloppe de centrage manquantes
+          </p>
+          <p style={sx.combine(sx.text.sm, sx.spacing.mt(2))}>
+            Veuillez configurer l'enveloppe de centrage dans l'onglet <strong>"Gestion des avions"</strong> → 
+            Section <strong>"CENTER OF GRAVITY - Enveloppe de centrage"</strong>
+          </p>
+          <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
+            <li>Ajoutez au moins un point CG avant (Most Forward CG)</li>
+            <li>Définissez les limites CG arrière (Most Rearward CG)</li>
+          </ul>
+        </div>
+      </div>
+    );
+  }
+  
+  // Calcul des échelles avec les données cgEnvelope
   const scales = useMemo(() => {
-    let cgMin = wb.cgLimits.forward;
-    let cgMax = wb.cgLimits.aft;
+    const forwardCGs = cgEnvelope.forwardPoints.map(p => p.cg);
+    const aftCG = cgEnvelope.aftCG;
     
-    wb.cgLimits.forwardVariable?.forEach(p => {
-      cgMin = Math.min(cgMin, p.cg);
-      cgMax = Math.max(cgMax, p.cg);
-    });
-    
+    const cgMin = Math.min(...forwardCGs, aftCG);
+    const cgMax = Math.max(...forwardCGs, aftCG);
     const cgRange = cgMax - cgMin;
     
     return {
@@ -32,7 +75,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
       weightMin: aircraft.minTakeoffWeight - 50,
       weightMax: aircraft.maxTakeoffWeight + 50
     };
-  }, [aircraft, wb]);
+  }, [aircraft, cgEnvelope]);
 
   const toSvgX = (cg) => {
     const cgValue = isNaN(cg) ? 0 : cg;
@@ -43,48 +86,77 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
     return 350 - (weightValue - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300;
   };
 
-  // Fonction pour vérifier si un point est dans l'enveloppe
+  // Fonction pour vérifier si un point est dans l'enveloppe (utilise cgEnvelope uniquement)
   const isPointWithinEnvelope = (weight, cg) => {
-    // Vérifier les limites de poids
+    // Le CG est déjà en mètres, pas besoin de conversion
+    const cgInMeters = cg;
+    
+    console.log(`🔍 Vérification point: ${weight}kg / ${(cg * 1000).toFixed(0)}mm (${cgInMeters.toFixed(4)}m)`);
+    
+    // Vérifier les limites de poids MTOW
     if (weight < aircraft.minTakeoffWeight || weight > aircraft.maxTakeoffWeight) {
+      console.log(`❌ Poids hors MTOW: ${weight}kg (min: ${aircraft.minTakeoffWeight}kg, max: ${aircraft.maxTakeoffWeight}kg)`);
       return false;
     }
     
-    // Vérifier les limites arrière
-    if (cg > wb.cgLimits.aft) {
+    // Vérifier la limite arrière (cgEnvelope.aftCG)
+    const aftCG = parseFloat(cgEnvelope.aftCG);
+    if (!isNaN(aftCG) && cgInMeters > aftCG) {
+      console.log(`❌ CG trop arrière: ${cgInMeters.toFixed(4)}m > ${aftCG}m`);
       return false;
     }
     
-    // Vérifier les limites avant
-    const hasVariableLimits = wb.cgLimits.forwardVariable?.length > 0;
+    // Vérifier les limites avant avec les points dynamiques (convertir en nombres)
+    const sortedForwardPoints = [...cgEnvelope.forwardPoints]
+      .filter(p => p.weight && p.cg && !isNaN(parseFloat(p.weight)) && !isNaN(parseFloat(p.cg)))
+      .map(p => ({ weight: parseFloat(p.weight), cg: parseFloat(p.cg) }))
+      .sort((a, b) => a.weight - b.weight);
     
-    if (!hasVariableLimits) {
-      // Limite avant fixe
-      return cg >= wb.cgLimits.forward;
-    } else {
-      // Limite avant variable selon le poids
-      const sortedLimits = [...wb.cgLimits.forwardVariable].sort((a, b) => a.weight - b.weight);
-      
-      // Si le poids est inférieur au premier point, utiliser la limite forward standard
-      if (weight <= sortedLimits[0].weight) {
-        return cg >= wb.cgLimits.forward;
-      }
-      
-      // Si le poids est supérieur au dernier point, utiliser la limite du dernier point
-      if (weight >= sortedLimits[sortedLimits.length - 1].weight) {
-        return cg >= sortedLimits[sortedLimits.length - 1].cg;
-      }
-      
-      // Interpolation linéaire entre deux points
-      for (let i = 0; i < sortedLimits.length - 1; i++) {
-        if (weight >= sortedLimits[i].weight && weight <= sortedLimits[i + 1].weight) {
-          const ratio = (weight - sortedLimits[i].weight) / (sortedLimits[i + 1].weight - sortedLimits[i].weight);
-          const interpolatedCg = sortedLimits[i].cg + ratio * (sortedLimits[i + 1].cg - sortedLimits[i].cg);
-          return cg >= interpolatedCg;
-        }
+    console.log(`📊 Points avant disponibles:`, sortedForwardPoints);
+    
+    if (sortedForwardPoints.length === 0) {
+      console.log(`❌ Aucun point avant valide`);
+      return false;
+    }
+    
+    // Vérifier les limites de poids de l'enveloppe CG
+    const minEnvelopeWeight = sortedForwardPoints[0].weight;
+    const maxEnvelopeWeight = Math.max(
+      sortedForwardPoints[sortedForwardPoints.length - 1].weight,
+      parseFloat(cgEnvelope.aftMaxWeight) || 0
+    );
+    
+    if (weight < minEnvelopeWeight || weight > maxEnvelopeWeight) {
+      console.log(`❌ Poids hors enveloppe CG: ${weight}kg (enveloppe: ${minEnvelopeWeight}kg - ${maxEnvelopeWeight}kg)`);
+      return false;
+    }
+    
+    // Si le poids est inférieur ou égal au premier point, utiliser le CG du premier point
+    if (weight <= sortedForwardPoints[0].weight) {
+      const result = cgInMeters >= sortedForwardPoints[0].cg;
+      console.log(`✅ Poids <= premier point (${sortedForwardPoints[0].weight}kg): CG ${cgInMeters.toFixed(4)}m >= ${sortedForwardPoints[0].cg}m ? ${result}`);
+      return result;
+    }
+    
+    // Si le poids est supérieur ou égal au dernier point, utiliser le CG du dernier point
+    if (weight >= sortedForwardPoints[sortedForwardPoints.length - 1].weight) {
+      const result = cgInMeters >= sortedForwardPoints[sortedForwardPoints.length - 1].cg;
+      console.log(`✅ Poids >= dernier point (${sortedForwardPoints[sortedForwardPoints.length - 1].weight}kg): CG ${cgInMeters.toFixed(4)}m >= ${sortedForwardPoints[sortedForwardPoints.length - 1].cg}m ? ${result}`);
+      return result;
+    }
+    
+    // Interpolation linéaire entre deux points
+    for (let i = 0; i < sortedForwardPoints.length - 1; i++) {
+      if (weight >= sortedForwardPoints[i].weight && weight <= sortedForwardPoints[i + 1].weight) {
+        const ratio = (weight - sortedForwardPoints[i].weight) / (sortedForwardPoints[i + 1].weight - sortedForwardPoints[i].weight);
+        const interpolatedCg = sortedForwardPoints[i].cg + ratio * (sortedForwardPoints[i + 1].cg - sortedForwardPoints[i].cg);
+        const result = cgInMeters >= interpolatedCg;
+        console.log(`✅ Interpolation entre ${sortedForwardPoints[i].weight}kg et ${sortedForwardPoints[i + 1].weight}kg: CG requis ${interpolatedCg.toFixed(4)}m, actuel ${cgInMeters.toFixed(4)}m ? ${result}`);
+        return result;
       }
     }
     
+    console.log(`⚠️ Cas non géré, retour true par défaut`);
     return true;
   };
 
@@ -100,31 +172,38 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
     });
   }, [scenarios]);
 
-  // Création des points de l'enveloppe avec leurs valeurs
+  // Création des points de l'enveloppe avec cgEnvelope
   const envelopeData = useMemo(() => {
-    const hasVar = wb.cgLimits.forwardVariable?.length > 0;
+    const sortedForwardPoints = [...cgEnvelope.forwardPoints]
+      .filter(p => p.weight && p.cg && !isNaN(parseFloat(p.weight)) && !isNaN(parseFloat(p.cg)))
+      .map(p => ({ weight: parseFloat(p.weight), cg: parseFloat(p.cg) }))
+      .sort((a, b) => a.weight - b.weight);
     
-    if (!hasVar) {
-      return [
-        { w: aircraft.minTakeoffWeight, cg: wb.cgLimits.forward, label: 'Min T/O - Avant' },
-        { w: aircraft.maxTakeoffWeight, cg: wb.cgLimits.forward, label: 'Max T/O - Avant' },
-        { w: aircraft.maxTakeoffWeight, cg: wb.cgLimits.aft, label: 'Max T/O - Arrière' },
-        { w: aircraft.minTakeoffWeight, cg: wb.cgLimits.aft, label: 'Min T/O - Arrière' }
-      ];
-    }
+    const points = [];
     
-    const fwdPts = [...wb.cgLimits.forwardVariable].sort((a, b) => a.weight - b.weight);
-    
-    return [
-      ...fwdPts.map((p, i) => ({ 
+    // Ajouter tous les points avant
+    sortedForwardPoints.forEach((p, i) => {
+      points.push({ 
         w: p.weight, 
         cg: p.cg, 
-        label: `Limite avant ${i + 1}` 
-      })),
-      { w: aircraft.maxTakeoffWeight, cg: wb.cgLimits.aft, label: 'Max T/O - Arrière' },
-      { w: aircraft.minTakeoffWeight, cg: wb.cgLimits.aft, label: 'Min T/O - Arrière' }
-    ];
-  }, [aircraft, wb]);
+        label: `Forward ${i + 1}` 
+      });
+    });
+    
+    // Ajouter les points arrière
+    const aftMaxWeight = parseFloat(cgEnvelope.aftMaxWeight);
+    const aftMinWeight = parseFloat(cgEnvelope.aftMinWeight);
+    const aftCG = parseFloat(cgEnvelope.aftCG);
+    
+    if (!isNaN(aftMaxWeight) && aftMaxWeight > 0 && !isNaN(aftCG)) {
+      points.push({ w: aftMaxWeight, cg: aftCG, label: 'Aft Max' });
+    }
+    if (!isNaN(aftMinWeight) && aftMinWeight > 0 && !isNaN(aftCG) && aftMinWeight !== aftMaxWeight) {
+      points.push({ w: aftMinWeight, cg: aftCG, label: 'Aft Min' });
+    }
+    
+    return points;
+  }, [aircraft, cgEnvelope]);
 
   const createEnvelopePoints = () => {
     return envelopeData.map(p => `${toSvgX(p.cg)},${toSvgY(p.w)}`).join(' ');

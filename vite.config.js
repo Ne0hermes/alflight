@@ -58,19 +58,28 @@ export default defineConfig({
       '@utils': path.resolve(__dirname, './src/utils'),
       '@data': path.resolve(__dirname, './src/data'),
       '@hooks': path.resolve(__dirname, './src/hooks'),
+      '@styles': path.resolve(__dirname, './src/styles'),
       '@context': path.resolve(__dirname, './src/old/context'),
       '@modules': path.resolve(__dirname, './src/old/modules')
     }
   },
   server: {
-    port: 5173,
+    port: 4001,
+    host: '0.0.0.0',
+    strictPort: false,
+    hmr: {
+      clientPort: 4001,
+      port: 4001,
+      protocol: 'ws',
+      host: 'localhost'
+    },
     headers: {
       'Cross-Origin-Embedder-Policy': 'require-corp',
       'Cross-Origin-Opener-Policy': 'same-origin'
     },
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:4000/',
+        target: 'http://127.0.0.1:4001/',
         changeOrigin: true,
       },
       '/api/vac-proxy': {

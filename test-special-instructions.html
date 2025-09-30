@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Consignes Particulières</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px; 
+            background: #f3f4f6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #111827;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .airport-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .airport-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .icao-code {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        .airport-name {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .instructions-section {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .instruction-content {
+            background: #f9fafb;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #374151;
+            white-space: pre-wrap;
+        }
+        .remarks-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .remarks-list li {
+            background: #fef3c7;
+            padding: 8px 10px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #78350f;
+            border-left: 3px solid #f59e0b;
+        }
+        .no-instructions {
+            color: #9ca3af;
+            font-style: italic;
+            font-size: 13px;
+        }
+        .loading {
+            text-align: center;
+            color: #6b7280;
+            padding: 40px;
+        }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: #f0f9ff;
+            border-radius: 6px;
+        }
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0c4a6e;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #0369a1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 Test Consignes Particulières / Special Instructions</h1>
+        
+        <div id="stats" class="stats" style="display: none;">
+            <div class="stat-item">
+                <span class="stat-value" id="totalAirports">0</span>
+                <span class="stat-label">Aérodromes</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="withInstructions">0</span>
+                <span class="stat-label">Avec consignes</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="withRemarks">0</span>
+                <span class="stat-label">Avec remarques</span>
+            </div>
+        </div>
+        
+        <div id="content">
+            <div class="loading">Chargement des données...</div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { aixmParser } from '/src/services/aixmParser.js';
+        
+        async function loadAndDisplay() {
+            const contentDiv = document.getElementById('content');
+            const statsDiv = document.getElementById('stats');
+            
+            try {
+                console.log('🔄 Chargement des données AIXM/SIA...');
+                const aerodromes = await aixmParser.loadAndParse();
+                
+                // Filtrer les aérodromes avec des consignes
+                const withInstructions = aerodromes.filter(ad => 
+                    ad.specialInstructions || 
+                    ad.additionalRemarks?.length > 0 ||
+                    ad.remarks
+                );
+                
+                // Afficher les statistiques
+                document.getElementById('totalAirports').textContent = aerodromes.length;
+                document.getElementById('withInstructions').textContent = 
+                    aerodromes.filter(ad => ad.specialInstructions || ad.remarks).length;
+                document.getElementById('withRemarks').textContent = 
+                    aerodromes.filter(ad => ad.additionalRemarks?.length > 0).length;
+                statsDiv.style.display = 'flex';
+                
+                // Créer le HTML
+                let html = '';
+                
+                // D'abord afficher LFST si présent
+                const lfst = aerodromes.find(ad => ad.icao === 'LFST');
+                if (lfst) {
+                    html += createAirportCard(lfst, true);
+                }
+                
+                // Puis afficher les autres aérodromes avec consignes
+                withInstructions.forEach(ad => {
+                    if (ad.icao !== 'LFST') {
+                        html += createAirportCard(ad);
+                    }
+                });
+                
+                if (withInstructions.length === 0) {
+                    html = '<div class="no-instructions">Aucune consigne particulière trouvée dans les fichiers.</div>';
+                }
+                
+                contentDiv.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Erreur:', error);
+                contentDiv.innerHTML = `
+                    <div class="error">
+                        Erreur lors du chargement: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        function createAirportCard(aerodrome, highlight = false) {
+            const hasContent = aerodrome.specialInstructions || 
+                               aerodrome.additionalRemarks?.length > 0 ||
+                               aerodrome.remarks;
+            
+            if (!hasContent) return '';
+            
+            return `
+                <div class="airport-card" ${highlight ? 'style="border-color: #3b82f6; border-width: 2px;"' : ''}>
+                    <div class="airport-header">
+                        <div>
+                            <span class="icao-code">${aerodrome.icao}</span>
+                            <span class="airport-name">${aerodrome.name || ''}</span>
+                        </div>
+                        <div class="airport-name">${aerodrome.city || ''}</div>
+                    </div>
+                    
+                    ${aerodrome.specialInstructions ? `
+                        <div class="instructions-section">
+                            <div class="section-title">Consignes SIA (AdRem)</div>
+                            <div class="instruction-content">${escapeHtml(aerodrome.specialInstructions)}</div>
+                        </div>
+                    ` : ''}
+                    
+                    ${aerodrome.remarks ? `
+                        <div class="instructions-section">
+                            <div class="section-title">Remarques AIXM (txtRmk)</div>
+                            <div class="instruction-content">${escapeHtml(aerodrome.remarks)}</div>
+                        </div>
+                    ` : ''}
+                    
+                    ${aerodrome.additionalRemarks?.length > 0 ? `
+                        <div class="instructions-section">
+                            <div class="section-title">Remarques additionnelles</div>
+                            <ul class="remarks-list">
+                                ${aerodrome.additionalRemarks.map(r => 
+                                    `<li>${escapeHtml(r)}</li>`
+                                ).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Charger au démarrage
+        loadAndDisplay();
+    </script>
+</body>
+</html>

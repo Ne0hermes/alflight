@@ -1,6 +1,6 @@
 // src/hooks/useAirportCoordinates.js
-import { FRENCH_AIRPORTS_COORDINATES } from '@data/airportElevations';
 import { useVACStore } from '@core/stores/vacStore';
+import airportDataService from '@services/airportDataService';
 
 export const useAirportCoordinates = () => {
   // Récupérer les cartes VAC depuis le store
@@ -10,14 +10,15 @@ export const useAirportCoordinates = () => {
     if (!icao) return null;
     const u = icao.toUpperCase();
     
-    // Vérifier d'abord dans les données statiques
-    if (FRENCH_AIRPORTS_COORDINATES[u]) {
-      const airport = FRENCH_AIRPORTS_COORDINATES[u];
+    // Vérifier d'abord dans le service de données aéroport
+    const airportInfo = airportDataService.getAirportInfo(u);
+    if (airportInfo) {
       return {
-        lat: airport.lat,
-        lon: airport.lon,
-        name: airport.name,
-        source: 'static'
+        lat: airportInfo.latitude,
+        lon: airportInfo.longitude,
+        name: airportInfo.name,
+        elevation: airportInfo.elevation,
+        source: 'data-service'
       };
     }
     
@@ -47,11 +48,8 @@ export const useAirportCoordinates = () => {
   const getAllAvailableCoordinates = () => {
     const coords = {};
     
-    // Ajouter les coordonnées statiques
-    Object.keys(FRENCH_AIRPORTS_COORDINATES).forEach(icao => {
-      const co = getCoordinatesByICAO(icao);
-      if (co) coords[icao] = co;
-    });
+    // Récupérer tous les aéroports depuis le service de données
+    // (le service peut fournir une méthode pour lister tous les aéroports si nécessaire)
     
     // Ajouter les coordonnées des cartes VAC
     Object.values(charts).forEach(c => { 
@@ -64,6 +62,3 @@ export const useAirportCoordinates = () => {
 
   return { getCoordinatesByICAO, getMultipleCoordinates, getAllAvailableCoordinates };
 };
-
-// Exporter les données pour compatibilité
-export { FRENCH_AIRPORTS_COORDINATES } from '@data/airportElevations';

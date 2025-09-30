@@ -3,539 +3,457 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Système d'Unités - Flight Management System</title>
+    <title>Test du système d'unités</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             max-width: 1200px;
-            margin: 40px auto;
+            margin: 0 auto;
             padding: 20px;
-            background: #f3f4f6;
-        }
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            background: #f5f5f5;
         }
         h1 {
             color: #1f2937;
             margin-bottom: 30px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
-        .presets {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-bottom: 30px;
-        }
-        .preset-btn {
-            padding: 12px;
-            background: white;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-align: center;
-        }
-        .preset-btn:hover {
-            border-color: #3b82f6;
-            background: #eff6ff;
-        }
-        .preset-btn.active {
-            background: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
-        }
-        .units-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .unit-category {
-            padding: 20px;
-            background: #f9fafb;
-            border-radius: 8px;
-        }
-        .unit-category h3 {
+        h2 {
             color: #374151;
+            margin-top: 30px;
             margin-bottom: 15px;
-            font-size: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
         }
-        .unit-selector {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-        .unit-option {
-            padding: 6px 12px;
+        .test-section {
             background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-        .unit-option:hover {
-            background: #f3f4f6;
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: 600;
+            margin-left: 10px;
         }
-        .unit-option.selected {
+        .status.success {
+            background: #10b981;
+            color: white;
+        }
+        .status.info {
             background: #3b82f6;
             color: white;
-            border-color: #3b82f6;
         }
-        .conversions {
-            background: #eff6ff;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 30px;
+        .status.warning {
+            background: #f59e0b;
+            color: white;
         }
-        .conversion-row {
+        .test-grid {
             display: grid;
-            grid-template-columns: 200px 150px 50px 150px;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        .value-input {
-            padding: 8px;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        .arrow {
-            text-align: center;
-            font-size: 20px;
-            color: #6b7280;
-        }
-        .result {
-            padding: 8px 12px;
-            background: white;
-            border-radius: 6px;
-            font-weight: 600;
-            text-align: center;
-        }
-        .demo-values {
-            background: #fef3c7;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-        .demo-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 15px;
             margin-top: 15px;
         }
-        .demo-item {
-            padding: 10px;
-            background: white;
+        .test-item {
+            background: #f9fafb;
+            padding: 12px;
             border-radius: 6px;
-            text-align: center;
+            border: 1px solid #e5e7eb;
         }
-        .demo-label {
-            font-size: 12px;
-            color: #6b7280;
-            margin-bottom: 4px;
+        .test-item strong {
+            color: #374151;
+            display: block;
+            margin-bottom: 5px;
         }
-        .demo-value {
+        .test-item .value {
+            color: #111827;
             font-size: 18px;
-            font-weight: bold;
-            color: #1f2937;
+            font-weight: 600;
         }
-        .info-box {
-            background: #f0f9ff;
-            border: 1px solid #3b82f6;
+        .unit-selector {
+            margin: 15px 0;
             padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
+            background: #eff6ff;
+            border-radius: 6px;
+            border: 1px solid #3b82f6;
+        }
+        .unit-selector label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1e40af;
+        }
+        .unit-selector select {
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+            margin-right: 10px;
+            background: white;
+        }
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .log {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        .log .entry {
+            margin-bottom: 5px;
+        }
+        .log .timestamp {
+            color: #6b7280;
+            margin-right: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>
-            ⚙️ Système de Préférences d'Unités
-        </h1>
+    <h1>🧪 Test du système d'unités ALFlight</h1>
+
+    <div class="test-section">
+        <h2>État du système <span class="status success">Actif</span></h2>
+        <p>Test du système de préférences d'unités avec conversion automatique.</p>
         
-        <!-- Préréglages -->
-        <div class="presets">
-            <button class="preset-btn active" onclick="setPreset('europe')">
-                🇪🇺 Europe<br>
-                <small>Standard européen</small>
-            </button>
-            <button class="preset-btn" onclick="setPreset('usa')">
-                🇺🇸 USA<br>
-                <small>Standard américain</small>
-            </button>
-            <button class="preset-btn" onclick="setPreset('aviation')">
-                ✈️ Aviation<br>
-                <small>Standard OACI</small>
-            </button>
-            <button class="preset-btn" onclick="setPreset('metric')">
-                📐 Métrique<br>
-                <small>Système métrique</small>
-            </button>
-        </div>
-        
-        <!-- Sélecteurs d'unités -->
-        <div class="units-grid">
-            <div class="unit-category">
-                <h3>📏 Distance & Altitude</h3>
+        <div class="unit-selector">
+            <label>Sélectionnez les unités pour tester:</label>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
                 <div>
-                    <div class="demo-label">Distance:</div>
-                    <div class="unit-selector">
-                        <button class="unit-option selected" onclick="setUnit('distance', 'nm')">NM</button>
-                        <button class="unit-option" onclick="setUnit('distance', 'km')">km</button>
-                        <button class="unit-option" onclick="setUnit('distance', 'mi')">mi</button>
-                    </div>
+                    <label style="font-size: 12px; font-weight: normal;">Distance:</label>
+                    <select id="unit-distance">
+                        <option value="nm">NM (Nautique)</option>
+                        <option value="km">km (Métrique)</option>
+                        <option value="mi">mi (Terrestre)</option>
+                    </select>
                 </div>
                 <div>
-                    <div class="demo-label">Altitude:</div>
-                    <div class="unit-selector">
-                        <button class="unit-option selected" onclick="setUnit('altitude', 'ft')">ft</button>
-                        <button class="unit-option" onclick="setUnit('altitude', 'm')">m</button>
-                        <button class="unit-option" onclick="setUnit('altitude', 'FL')">FL</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="unit-category">
-                <h3>🌡️ Météo</h3>
-                <div>
-                    <div class="demo-label">Température:</div>
-                    <div class="unit-selector">
-                        <button class="unit-option selected" onclick="setUnit('temperature', 'C')">°C</button>
-                        <button class="unit-option" onclick="setUnit('temperature', 'F')">°F</button>
-                    </div>
+                    <label style="font-size: 12px; font-weight: normal;">Altitude:</label>
+                    <select id="unit-altitude">
+                        <option value="ft">ft (Pieds)</option>
+                        <option value="m">m (Mètres)</option>
+                        <option value="FL">FL (Niveau)</option>
+                    </select>
                 </div>
                 <div>
-                    <div class="demo-label">Pression:</div>
-                    <div class="unit-selector">
-                        <button class="unit-option selected" onclick="setUnit('pressure', 'hPa')">hPa</button>
-                        <button class="unit-option" onclick="setUnit('pressure', 'inHg')">inHg</button>
-                        <button class="unit-option" onclick="setUnit('pressure', 'mb')">mb</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="unit-category">
-                <h3>⚡ Vitesse</h3>
-                <div>
-                    <div class="demo-label">Vitesse:</div>
-                    <div class="unit-selector">
-                        <button class="unit-option selected" onclick="setUnit('speed', 'kt')">kt</button>
-                        <button class="unit-option" onclick="setUnit('speed', 'km/h')">km/h</button>
-                        <button class="unit-option" onclick="setUnit('speed', 'mph')">mph</button>
-                        <button class="unit-option" onclick="setUnit('speed', 'm/s')">m/s</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="unit-category">
-                <h3>⛽ Carburant & Masse</h3>
-                <div>
-                    <div class="demo-label">Masse:</div>
-                    <div class="unit-selector">
-                        <button class="unit-option selected" onclick="setUnit('weight', 'kg')">kg</button>
-                        <button class="unit-option" onclick="setUnit('weight', 'lbs')">lbs</button>
-                    </div>
+                    <label style="font-size: 12px; font-weight: normal;">Vitesse:</label>
+                    <select id="unit-speed">
+                        <option value="kt">kt (Nœuds)</option>
+                        <option value="km/h">km/h</option>
+                        <option value="mph">mph</option>
+                        <option value="m/s">m/s</option>
+                    </select>
                 </div>
                 <div>
-                    <div class="demo-label">Carburant:</div>
-                    <div class="unit-selector">
-                        <button class="unit-option selected" onclick="setUnit('fuel', 'ltr')">L</button>
-                        <button class="unit-option" onclick="setUnit('fuel', 'gal')">gal</button>
-                        <button class="unit-option" onclick="setUnit('fuel', 'kg')">kg</button>
-                    </div>
+                    <label style="font-size: 12px; font-weight: normal;">Température:</label>
+                    <select id="unit-temperature">
+                        <option value="C">°C (Celsius)</option>
+                        <option value="F">°F (Fahrenheit)</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size: 12px; font-weight: normal;">Pression:</label>
+                    <select id="unit-pressure">
+                        <option value="hPa">hPa</option>
+                        <option value="inHg">inHg</option>
+                        <option value="mb">mb</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size: 12px; font-weight: normal;">Carburant:</label>
+                    <select id="unit-fuel">
+                        <option value="ltr">L (Litres)</option>
+                        <option value="gal">gal (US)</option>
+                        <option value="kg">kg</option>
+                        <option value="lbs">lbs</option>
+                    </select>
                 </div>
             </div>
-        </div>
-        
-        <!-- Démonstration de conversions -->
-        <div class="conversions">
-            <h3>🔄 Conversions en temps réel</h3>
-            <div class="conversion-row">
-                <div class="demo-label">Distance:</div>
-                <input type="number" class="value-input" id="distance-input" value="100" onchange="updateConversions()">
-                <div class="arrow">→</div>
-                <div class="result" id="distance-result">100 NM</div>
+            <div style="margin-top: 15px;">
+                <button onclick="applyUnits()">Appliquer les unités</button>
+                <button onclick="testEurope()" style="background: #10b981;">Preset Europe</button>
+                <button onclick="testUSA()" style="background: #f59e0b;">Preset USA</button>
+                <button onclick="testMetric()" style="background: #8b5cf6;">Preset Métrique</button>
             </div>
-            <div class="conversion-row">
-                <div class="demo-label">Altitude:</div>
-                <input type="number" class="value-input" id="altitude-input" value="5000" onchange="updateConversions()">
-                <div class="arrow">→</div>
-                <div class="result" id="altitude-result">5000 ft</div>
-            </div>
-            <div class="conversion-row">
-                <div class="demo-label">Vitesse:</div>
-                <input type="number" class="value-input" id="speed-input" value="120" onchange="updateConversions()">
-                <div class="arrow">→</div>
-                <div class="result" id="speed-result">120 kt</div>
-            </div>
-            <div class="conversion-row">
-                <div class="demo-label">Température:</div>
-                <input type="number" class="value-input" id="temp-input" value="15" onchange="updateConversions()">
-                <div class="arrow">→</div>
-                <div class="result" id="temp-result">15 °C</div>
-            </div>
-        </div>
-        
-        <!-- Valeurs de démonstration -->
-        <div class="demo-values">
-            <h3>✈️ Exemple: Données de vol converties</h3>
-            <div class="demo-grid">
-                <div class="demo-item">
-                    <div class="demo-label">Distance totale</div>
-                    <div class="demo-value" id="demo-distance">185 NM</div>
-                </div>
-                <div class="demo-item">
-                    <div class="demo-label">Altitude croisière</div>
-                    <div class="demo-value" id="demo-altitude">8500 ft</div>
-                </div>
-                <div class="demo-item">
-                    <div class="demo-label">Vitesse sol</div>
-                    <div class="demo-value" id="demo-speed">135 kt</div>
-                </div>
-                <div class="demo-item">
-                    <div class="demo-label">Carburant</div>
-                    <div class="demo-value" id="demo-fuel">150 L</div>
-                </div>
-                <div class="demo-item">
-                    <div class="demo-label">Masse totale</div>
-                    <div class="demo-value" id="demo-weight">1250 kg</div>
-                </div>
-                <div class="demo-item">
-                    <div class="demo-label">QNH</div>
-                    <div class="demo-value" id="demo-pressure">1013 hPa</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="info-box">
-            <strong>💡 Information:</strong> Les préférences d'unités sont sauvegardées localement et s'appliquent à toute l'application. 
-            Les valeurs sont automatiquement converties lors du changement d'unités, sans perte de précision.
         </div>
     </div>
-    
+
+    <div class="test-section">
+        <h2>Valeurs de test avec conversion</h2>
+        
+        <h3>Navigation</h3>
+        <div class="test-grid">
+            <div class="test-item">
+                <strong>Distance parcourue:</strong>
+                <div class="value" id="distance-value">125 NM</div>
+                <small>Valeur source: 125 NM</small>
+            </div>
+            <div class="test-item">
+                <strong>Altitude de croisière:</strong>
+                <div class="value" id="altitude-value">4500 ft</div>
+                <small>Valeur source: 4500 ft</small>
+            </div>
+            <div class="test-item">
+                <strong>Vitesse vraie (TAS):</strong>
+                <div class="value" id="speed-value">108 kt</div>
+                <small>Valeur source: 108 kt</small>
+            </div>
+        </div>
+
+        <h3>Météo</h3>
+        <div class="test-grid">
+            <div class="test-item">
+                <strong>Température:</strong>
+                <div class="value" id="temp-value">15°C</div>
+                <small>Valeur source: 15°C</small>
+            </div>
+            <div class="test-item">
+                <strong>Pression QNH:</strong>
+                <div class="value" id="pressure-value">1013 hPa</div>
+                <small>Valeur source: 1013 hPa</small>
+            </div>
+            <div class="test-item">
+                <strong>Vent:</strong>
+                <div class="value" id="wind-value">15 kt</div>
+                <small>Valeur source: 15 kt</small>
+            </div>
+        </div>
+
+        <h3>Carburant</h3>
+        <div class="test-grid">
+            <div class="test-item">
+                <strong>Quantité embarquée:</strong>
+                <div class="value" id="fuel-value">120 L</div>
+                <small>Valeur source: 120 L</small>
+            </div>
+            <div class="test-item">
+                <strong>Consommation:</strong>
+                <div class="value" id="consumption-value">35 L/h</div>
+                <small>Valeur source: 35 L/h</small>
+            </div>
+            <div class="test-item">
+                <strong>Poids carburant:</strong>
+                <div class="value" id="fuel-weight-value">96 kg</div>
+                <small>Valeur source: 96 kg (densité 0.8)</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Journal des événements</h2>
+        <div class="log" id="event-log">
+            <div class="entry"><span class="timestamp">[00:00:00]</span> Système initialisé</div>
+        </div>
+    </div>
+
     <script>
-        // État actuel des unités
-        let currentUnits = {
-            distance: 'nm',
-            altitude: 'ft',
-            speed: 'kt',
-            temperature: 'C',
-            pressure: 'hPa',
-            weight: 'kg',
-            fuel: 'ltr'
-        };
-        
-        // Valeurs de référence (stockées en unités standard)
-        const referenceValues = {
-            distance: 185,      // NM
-            altitude: 8500,     // ft
-            speed: 135,         // kt
-            temperature: 15,    // °C
-            pressure: 1013,     // hPa
-            weight: 1250,       // kg
-            fuel: 150          // L
-        };
-        
-        // Fonctions de conversion
+        // Facteurs de conversion
         const conversions = {
             distance: {
-                'nm-km': v => v * 1.852,
-                'nm-mi': v => v * 1.15078,
-                'km-nm': v => v / 1.852,
-                'km-mi': v => v * 0.621371,
-                'mi-nm': v => v / 1.15078,
-                'mi-km': v => v / 0.621371
+                nm: { km: 1.852, mi: 1.15078, nm: 1 },
+                km: { nm: 0.539957, mi: 0.621371, km: 1 },
+                mi: { nm: 0.868976, km: 1.60934, mi: 1 }
             },
             altitude: {
-                'ft-m': v => v * 0.3048,
-                'ft-FL': v => Math.round(v / 100),
-                'm-ft': v => v / 0.3048,
-                'm-FL': v => Math.round(v / 30.48),
-                'FL-ft': v => v * 100,
-                'FL-m': v => v * 30.48
+                ft: { m: 0.3048, ft: 1, FL: (v) => v >= 18000 ? Math.floor(v/100) : v },
+                m: { ft: 3.28084, m: 1, FL: (v) => v >= 5486 ? Math.floor(v/30.48) : v },
+                FL: { ft: (v) => v * 100, m: (v) => v * 30.48, FL: (v) => v }
             },
             speed: {
-                'kt-km/h': v => v * 1.852,
-                'kt-mph': v => v * 1.15078,
-                'kt-m/s': v => v * 0.514444,
-                'km/h-kt': v => v / 1.852,
-                'mph-kt': v => v / 1.15078,
-                'm/s-kt': v => v / 0.514444
+                kt: { 'km/h': 1.852, mph: 1.15078, 'm/s': 0.514444, kt: 1 },
+                'km/h': { kt: 0.539957, mph: 0.621371, 'm/s': 0.277778, 'km/h': 1 },
+                mph: { kt: 0.868976, 'km/h': 1.60934, 'm/s': 0.44704, mph: 1 },
+                'm/s': { kt: 1.94384, 'km/h': 3.6, mph: 2.23694, 'm/s': 1 }
             },
             temperature: {
-                'C-F': v => (v * 9/5) + 32,
-                'F-C': v => (v - 32) * 5/9
+                C: { F: (c) => c * 9/5 + 32, C: (c) => c },
+                F: { C: (f) => (f - 32) * 5/9, F: (f) => f }
             },
             pressure: {
-                'hPa-inHg': v => v * 0.02953,
-                'hPa-mb': v => v,
-                'inHg-hPa': v => v / 0.02953,
-                'mb-hPa': v => v
-            },
-            weight: {
-                'kg-lbs': v => v * 2.20462,
-                'lbs-kg': v => v / 2.20462
+                hPa: { inHg: 0.02953, mb: 1, hPa: 1 },
+                inHg: { hPa: 33.8639, mb: 33.8639, inHg: 1 },
+                mb: { hPa: 1, inHg: 0.02953, mb: 1 }
             },
             fuel: {
-                'ltr-gal': v => v * 0.264172,
-                'ltr-kg': v => v * 0.72, // AVGAS density
-                'gal-ltr': v => v / 0.264172,
-                'kg-ltr': v => v / 0.72
+                ltr: { gal: 0.264172, kg: 0.8, lbs: 1.76373, ltr: 1 },
+                gal: { ltr: 3.78541, kg: 3.02833, lbs: 6.67, gal: 1 },
+                kg: { ltr: 1.25, gal: 0.330215, lbs: 2.20462, kg: 1 },
+                lbs: { ltr: 0.567, gal: 0.149875, kg: 0.453592, lbs: 1 }
             }
         };
-        
+
+        // Valeurs sources
+        const sourceValues = {
+            distance: 125,  // NM
+            altitude: 4500, // ft
+            speed: 108,     // kt
+            temperature: 15, // °C
+            pressure: 1013,  // hPa
+            wind: 15,       // kt
+            fuel: 120,      // L
+            consumption: 35, // L/h
+            fuelWeight: 96  // kg
+        };
+
+        function addLog(message) {
+            const log = document.getElementById('event-log');
+            const time = new Date().toLocaleTimeString('fr-FR');
+            const entry = document.createElement('div');
+            entry.className = 'entry';
+            entry.innerHTML = `<span class="timestamp">[${time}]</span> ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
         function convert(value, category, from, to) {
             if (from === to) return value;
             
-            const key = `${from}-${to}`;
-            const converter = conversions[category][key];
-            
-            if (converter) {
+            const converter = conversions[category][from][to];
+            if (typeof converter === 'function') {
                 return converter(value);
+            } else if (typeof converter === 'number') {
+                return value * converter;
             }
-            
-            // Conversion indirecte (via unité standard)
-            const standards = {
-                distance: 'nm',
-                altitude: 'ft',
-                speed: 'kt',
-                temperature: 'C',
-                pressure: 'hPa',
-                weight: 'kg',
-                fuel: 'ltr'
-            };
-            
-            const std = standards[category];
-            const toStd = conversions[category][`${from}-${std}`];
-            const fromStd = conversions[category][`${std}-${to}`];
-            
-            if (toStd && fromStd) {
-                return fromStd(toStd(value));
-            }
-            
             return value;
         }
-        
-        function setUnit(category, unit) {
-            currentUnits[category] = unit;
-            
-            // Mettre à jour les boutons
-            document.querySelectorAll('.unit-option').forEach(btn => {
-                const parent = btn.closest('.unit-category');
-                if (parent && parent.textContent.toLowerCase().includes(category.toLowerCase())) {
-                    btn.classList.remove('selected');
-                }
-            });
-            event.target.classList.add('selected');
-            
-            updateConversions();
-            updateDemoValues();
-        }
-        
-        function setPreset(preset) {
-            const presets = {
-                europe: {
-                    distance: 'nm', altitude: 'ft', speed: 'kt',
-                    temperature: 'C', pressure: 'hPa', weight: 'kg', fuel: 'ltr'
-                },
-                usa: {
-                    distance: 'nm', altitude: 'ft', speed: 'kt',
-                    temperature: 'F', pressure: 'inHg', weight: 'lbs', fuel: 'gal'
-                },
-                aviation: {
-                    distance: 'nm', altitude: 'ft', speed: 'kt',
-                    temperature: 'C', pressure: 'hPa', weight: 'kg', fuel: 'kg'
-                },
-                metric: {
-                    distance: 'km', altitude: 'm', speed: 'km/h',
-                    temperature: 'C', pressure: 'hPa', weight: 'kg', fuel: 'ltr'
-                }
+
+        function formatValue(value, unit) {
+            const symbols = {
+                nm: 'NM', km: 'km', mi: 'mi',
+                ft: 'ft', m: 'm', FL: 'FL',
+                kt: 'kt', 'km/h': 'km/h', mph: 'mph', 'm/s': 'm/s',
+                C: '°C', F: '°F',
+                hPa: 'hPa', inHg: 'inHg', mb: 'mb',
+                ltr: 'L', gal: 'gal', kg: 'kg', lbs: 'lbs'
             };
             
-            currentUnits = { ...presets[preset] };
+            if (unit === 'FL' && typeof value === 'number') {
+                return `FL${Math.floor(value).toString().padStart(3, '0')}`;
+            }
             
-            // Mettre à jour les boutons de préréglage
-            document.querySelectorAll('.preset-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            updateConversions();
-            updateDemoValues();
+            const decimals = ['distance', 'speed', 'fuel'].includes(getCategory(unit)) ? 1 : 0;
+            return `${value.toFixed(decimals)} ${symbols[unit] || unit}`;
         }
-        
-        function updateConversions() {
+
+        function getCategory(unit) {
+            for (const [cat, units] of Object.entries(conversions)) {
+                if (Object.keys(units).includes(unit)) return cat;
+            }
+            return null;
+        }
+
+        function applyUnits() {
+            const units = {
+                distance: document.getElementById('unit-distance').value,
+                altitude: document.getElementById('unit-altitude').value,
+                speed: document.getElementById('unit-speed').value,
+                temperature: document.getElementById('unit-temperature').value,
+                pressure: document.getElementById('unit-pressure').value,
+                fuel: document.getElementById('unit-fuel').value
+            };
+
             // Distance
-            const distValue = parseFloat(document.getElementById('distance-input').value);
-            const distConverted = convert(distValue, 'distance', 'nm', currentUnits.distance);
-            document.getElementById('distance-result').textContent = 
-                `${distConverted.toFixed(1)} ${currentUnits.distance.toUpperCase()}`;
-            
+            const distanceConverted = convert(sourceValues.distance, 'distance', 'nm', units.distance);
+            document.getElementById('distance-value').textContent = formatValue(distanceConverted, units.distance);
+
             // Altitude
-            const altValue = parseFloat(document.getElementById('altitude-input').value);
-            const altConverted = convert(altValue, 'altitude', 'ft', currentUnits.altitude);
-            const altUnit = currentUnits.altitude === 'FL' ? 'FL' : currentUnits.altitude;
-            document.getElementById('altitude-result').textContent = 
-                `${altConverted.toFixed(0)} ${altUnit}`;
-            
+            const altitudeConverted = convert(sourceValues.altitude, 'altitude', 'ft', units.altitude);
+            document.getElementById('altitude-value').textContent = formatValue(altitudeConverted, units.altitude);
+
             // Vitesse
-            const speedValue = parseFloat(document.getElementById('speed-input').value);
-            const speedConverted = convert(speedValue, 'speed', 'kt', currentUnits.speed);
-            document.getElementById('speed-result').textContent = 
-                `${speedConverted.toFixed(1)} ${currentUnits.speed}`;
-            
+            const speedConverted = convert(sourceValues.speed, 'speed', 'kt', units.speed);
+            document.getElementById('speed-value').textContent = formatValue(speedConverted, units.speed);
+
+            // Vent
+            const windConverted = convert(sourceValues.wind, 'speed', 'kt', units.speed);
+            document.getElementById('wind-value').textContent = formatValue(windConverted, units.speed);
+
             // Température
-            const tempValue = parseFloat(document.getElementById('temp-input').value);
-            const tempConverted = convert(tempValue, 'temperature', 'C', currentUnits.temperature);
-            document.getElementById('temp-result').textContent = 
-                `${tempConverted.toFixed(1)} °${currentUnits.temperature}`;
-        }
-        
-        function updateDemoValues() {
-            // Distance
-            const dist = convert(referenceValues.distance, 'distance', 'nm', currentUnits.distance);
-            document.getElementById('demo-distance').textContent = 
-                `${dist.toFixed(1)} ${currentUnits.distance.toUpperCase()}`;
-            
-            // Altitude
-            const alt = convert(referenceValues.altitude, 'altitude', 'ft', currentUnits.altitude);
-            const altUnit = currentUnits.altitude === 'FL' ? 'FL' : currentUnits.altitude;
-            document.getElementById('demo-altitude').textContent = 
-                `${alt.toFixed(0)} ${altUnit}`;
-            
-            // Vitesse
-            const speed = convert(referenceValues.speed, 'speed', 'kt', currentUnits.speed);
-            document.getElementById('demo-speed').textContent = 
-                `${speed.toFixed(0)} ${currentUnits.speed}`;
-            
-            // Carburant
-            const fuel = convert(referenceValues.fuel, 'fuel', 'ltr', currentUnits.fuel);
-            const fuelUnit = currentUnits.fuel === 'ltr' ? 'L' : currentUnits.fuel;
-            document.getElementById('demo-fuel').textContent = 
-                `${fuel.toFixed(0)} ${fuelUnit}`;
-            
-            // Masse
-            const weight = convert(referenceValues.weight, 'weight', 'kg', currentUnits.weight);
-            document.getElementById('demo-weight').textContent = 
-                `${weight.toFixed(0)} ${currentUnits.weight}`;
-            
+            const tempConverted = convert(sourceValues.temperature, 'temperature', 'C', units.temperature);
+            document.getElementById('temp-value').textContent = formatValue(tempConverted, units.temperature);
+
             // Pression
-            const pressure = convert(referenceValues.pressure, 'pressure', 'hPa', currentUnits.pressure);
-            document.getElementById('demo-pressure').textContent = 
-                `${pressure.toFixed(currentUnits.pressure === 'inHg' ? 2 : 0)} ${currentUnits.pressure}`;
+            const pressureConverted = convert(sourceValues.pressure, 'pressure', 'hPa', units.pressure);
+            document.getElementById('pressure-value').textContent = formatValue(pressureConverted, units.pressure);
+
+            // Carburant
+            const fuelConverted = convert(sourceValues.fuel, 'fuel', 'ltr', units.fuel);
+            document.getElementById('fuel-value').textContent = formatValue(fuelConverted, units.fuel);
+
+            // Consommation
+            const consumptionUnit = units.fuel === 'ltr' ? 'L/h' : units.fuel === 'gal' ? 'gal/h' : units.fuel + '/h';
+            const consumptionConverted = convert(sourceValues.consumption, 'fuel', 'ltr', units.fuel);
+            document.getElementById('consumption-value').textContent = formatValue(consumptionConverted, units.fuel).replace(units.fuel, consumptionUnit);
+
+            // Poids carburant
+            const fuelWeightUnit = units.fuel === 'kg' || units.fuel === 'lbs' ? units.fuel : 'kg';
+            let fuelWeightConverted = sourceValues.fuelWeight;
+            if (fuelWeightUnit === 'lbs') {
+                fuelWeightConverted = convert(sourceValues.fuelWeight, 'fuel', 'kg', 'lbs');
+            }
+            document.getElementById('fuel-weight-value').textContent = formatValue(fuelWeightConverted, fuelWeightUnit);
+
+            // Dispatch event
+            window.dispatchEvent(new CustomEvent('unitsUpdated', { detail: units }));
+            addLog(`Unités appliquées: ${JSON.stringify(units)}`);
         }
-        
-        // Initialisation
-        updateConversions();
-        updateDemoValues();
+
+        function testEurope() {
+            document.getElementById('unit-distance').value = 'nm';
+            document.getElementById('unit-altitude').value = 'ft';
+            document.getElementById('unit-speed').value = 'kt';
+            document.getElementById('unit-temperature').value = 'C';
+            document.getElementById('unit-pressure').value = 'hPa';
+            document.getElementById('unit-fuel').value = 'ltr';
+            applyUnits();
+            addLog('Preset Europe appliqué');
+        }
+
+        function testUSA() {
+            document.getElementById('unit-distance').value = 'nm';
+            document.getElementById('unit-altitude').value = 'ft';
+            document.getElementById('unit-speed').value = 'kt';
+            document.getElementById('unit-temperature').value = 'C';
+            document.getElementById('unit-pressure').value = 'inHg';
+            document.getElementById('unit-fuel').value = 'gal';
+            applyUnits();
+            addLog('Preset USA appliqué');
+        }
+
+        function testMetric() {
+            document.getElementById('unit-distance').value = 'km';
+            document.getElementById('unit-altitude').value = 'm';
+            document.getElementById('unit-speed').value = 'km/h';
+            document.getElementById('unit-temperature').value = 'C';
+            document.getElementById('unit-pressure').value = 'hPa';
+            document.getElementById('unit-fuel').value = 'ltr';
+            applyUnits();
+            addLog('Preset Métrique appliqué');
+        }
+
+        // Listen for units updates
+        window.addEventListener('unitsUpdated', (event) => {
+            console.log('Units updated:', event.detail);
+        });
+
+        // Initial load
+        addLog('Page de test chargée');
     </script>
 </body>
 </html>

@@ -243,17 +243,20 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
   }, [graphChain]);
 
   // Fonction pour vérifier un paramètre et retourner un avertissement si nécessaire
-  const checkParameterBounds = useCallback((graph: GraphConfig, value: number) => {
+  const checkParameterBounds = useCallback((graph: GraphConfig, value: number, isWindGraph: boolean = false) => {
     if (!graph.axes) return null;
+
+    // Pour les graphiques de vent, utiliser la valeur absolue pour la vérification
+    const checkValue = isWindGraph ? Math.abs(value) : value;
 
     const xMin = graph.axes.xAxis.min;
     const xMax = graph.axes.xAxis.max;
     const unit = graph.axes.xAxis.unit ? ` ${graph.axes.xAxis.unit}` : '';
 
-    if (value < xMin) {
-      return `⚠️ ${value}${unit} est en dessous de la plage [${xMin}${unit} - ${xMax}${unit}]`;
-    } else if (value > xMax) {
-      return `⚠️ ${value}${unit} est au-dessus de la plage [${xMin}${unit} - ${xMax}${unit}]`;
+    if (checkValue < xMin) {
+      return `⚠️ ${checkValue}${unit} est en dessous de la plage [${xMin}${unit} - ${xMax}${unit}]`;
+    } else if (checkValue > xMax) {
+      return `⚠️ ${checkValue}${unit} est au-dessus de la plage [${xMin}${unit} - ${xMax}${unit}]`;
     }
     return null;
   }, []);
@@ -264,14 +267,27 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
 
     // Vérifier les bornes en temps réel
     const graph = graphChain.find(g => g.id === graphId);
+    const graphIndex = graphChain.findIndex(g => g.id === graphId);
+
     if (graph && value !== '') {
       const numValue = parseFloat(value);
       if (!isNaN(numValue)) {
-        const warning = checkParameterBounds(graph, numValue);
-        setParameterWarnings(prev => ({
-          ...prev,
-          [graphId]: warning || ''
-        }));
+        // Ne pas vérifier les bornes pour le premier graphique (altitude)
+        // car l'altitude est un paramètre d'interpolation, pas une entrée X
+        if (graphIndex === 0) {
+          setParameterWarnings(prev => ({
+            ...prev,
+            [graphId]: ''
+          }));
+        } else {
+          // Pour les autres graphiques, vérifier les bornes
+          // Passer isWindGraph=true si le graphique est lié au vent
+          const warning = checkParameterBounds(graph, numValue, graph.isWindRelated);
+          setParameterWarnings(prev => ({
+            ...prev,
+            [graphId]: warning || ''
+          }));
+        }
       } else {
         setParameterWarnings(prev => ({
           ...prev,
@@ -290,6 +306,10 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
     setError('');
     setWarnings([]);
     setResult(null);
+
+    console.log('🎯 État du calcul:');
+    console.log('   Direction du vent sélectionnée:', windDirection);
+    console.log('   Graphiques dans la chaîne:', graphChain.map(g => ({name: g.name, isWindRelated: g.isWindRelated})));
 
     const value = parseFloat(initialValue);
     if (isNaN(value)) {
@@ -322,6 +342,10 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
           setError('L\'altitude pression est requise pour le calcul');
           return;
         }
+
+        // NE PAS vérifier les bornes pour l'altitude car c'est un paramètre, pas une entrée X
+        // L'altitude sera interpolée entre les courbes disponibles (ex: entre 2000ft et 4000ft)
+
         graphParameters.push({
           graphId: graph.id,
           parameter: paramValue,
@@ -334,32 +358,36 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
           return;
         }
 
-        // Pour un graphique de vent, appliquer le signe selon la direction sélectionnée
-        let adjustedParamValue = paramValue;
-        if (graph.isWindRelated && windDirection !== 'all') {
-          // Si vent arrière (tailwind), rendre la valeur négative
-          // Si vent de face (headwind), garder positive
-          adjustedParamValue = windDirection === 'tailwind' ? -Math.abs(paramValue) : Math.abs(paramValue);
-          console.log(`📌 Ajustement du paramètre vent: ${paramValue} → ${adjustedParamValue} (${windDirection})`);
-        }
+        // Pour un graphique de vent, stocker la direction du vent
+        console.log(`🔍 Vérification pour graphique "${graph.name}": isWindRelated=${graph.isWindRelated}, windDirection=${windDirection}`);
 
         // Vérifier si le paramètre est dans les bornes définies du graphique
         if (graph.axes) {
           const xMin = graph.axes.xAxis.min;
           const xMax = graph.axes.xAxis.max;
 
-          if (Math.abs(paramValue) < xMin || Math.abs(paramValue) > xMax) {
+          if (paramValue < xMin || paramValue > xMax) {
             const unit = graph.axes.xAxis.unit ? ` ${graph.axes.xAxis.unit}` : '';
             warningsList.push(
-              `⚠️ ${graph.axes.xAxis.title}: ${Math.abs(paramValue)}${unit} est hors plage réglementaire [${xMin}${unit} - ${xMax}${unit}]. Résultat extrapolé.`
+              `⚠️ ${graph.axes.xAxis.title}: ${paramValue}${unit} est hors plage réglementaire [${xMin}${unit} - ${xMax}${unit}]. Résultat extrapolé.`
             );
           }
         }
 
+        // Passer la direction du vent dans les paramètres si c'est un graphique de vent
+        const graphWindDirection = graph.isWindRelated && windDirection !== 'all' ? windDirection : undefined;
+
+        if (graphWindDirection) {
+          console.log(`📌 Graphique "${graph.name}" - Configuration vent:`);
+          console.log(`   Valeur du paramètre: ${paramValue}`);
+          console.log(`   Direction sélectionnée: ${graphWindDirection}`);
+        }
+
         graphParameters.push({
           graphId: graph.id,
-          parameter: adjustedParamValue,
-          parameterName: graph.axes?.xAxis.title
+          parameter: paramValue,
+          parameterName: graph.axes?.xAxis.title,
+          windDirection: graphWindDirection
         });
       }
     }
@@ -377,7 +405,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
     }
 
     setResult(calcResult);
-  }, [initialValue, graphChain, chainValidation, parameters]);
+  }, [initialValue, graphChain, chainValidation, parameters, windDirection]);
 
   const renderStep = (step: CascadeStep, index: number) => {
     // Trouver le graphique correspondant
@@ -390,7 +418,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
         {step.graphName}
       </div>
 
-      {/* Mini graphique avec visualisation */}
+      {/* Mini graphique avec visualisation CORRECTE des abaques */}
       {graph && graph.axes && (
         <div style={{
           marginTop: '15px',
@@ -402,13 +430,26 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
         }}>
           <Chart
             axesConfig={graph.axes}
-            curves={graph.curves.map(c => {
-              // Mettre en évidence la courbe utilisée
-              const isUsed = step.curveUsed &&
-                (c.name === step.curveUsed ||
-                 step.curveUsed.includes(c.name));
-              return { ...c, color: isUsed ? '#ff4444' : '#ddd' };
-            })}
+            curves={(() => {
+              // Filtrer et colorer les courbes selon leur utilisation
+              if (step.referenceCurves) {
+                // Si on a des courbes de référence, les mettre en évidence
+                return graph.curves.map(c => {
+                  const isLower = c.name === step.referenceCurves.lowerCurveName;
+                  const isUpper = c.name === step.referenceCurves.upperCurveName;
+                  if (isLower) return { ...c, color: '#4CAF50' }; // Vert pour courbe inférieure
+                  if (isUpper) return { ...c, color: '#2196F3' }; // Bleu pour courbe supérieure
+                  return { ...c, color: '#ddd' }; // Gris pour les autres
+                });
+              } else if (step.curveUsed) {
+                // Sinon, utiliser l'ancienne méthode
+                return graph.curves.map(c => {
+                  const isUsed = c.name === step.curveUsed || step.curveUsed.includes(c.name);
+                  return { ...c, color: isUsed ? '#ff4444' : '#ddd' };
+                });
+              }
+              return graph.curves;
+            })()}
             selectedCurveId={null}
             width={350}
             height={250}
@@ -416,7 +457,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
             showGrid={true}
           />
 
-          {/* Points de tracé sur le graphique */}
+          {/* Overlay SVG pour les annotations du processus d'abaques */}
           <svg
             style={{
               position: 'absolute',
@@ -428,135 +469,307 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
             height="250"
           >
             <g transform="translate(40, 30)">
-              {/* Ligne horizontale d'entrée (pour graphiques 2+) */}
-              {index > 0 && (
+              {(() => {
+                // Créer les mêmes fonctions de scaling que Chart.tsx
+                const innerWidth = 270;
+                const innerHeight = 190;
+
+                // Debug: Vérifier les axes du graphique
+                const isMassGraph = graph.name.toLowerCase().includes('masse');
+                console.log(`📊 Graphique ${index} "${graph.name}":`, {
+                  isMassGraph,
+                  xAxis: {
+                    min: graph.axes.xAxis.min,
+                    max: graph.axes.xAxis.max,
+                    reversed: graph.axes.xAxis.reversed,
+                    title: graph.axes.xAxis.title
+                  },
+                  yAxis: {
+                    min: graph.axes.yAxis.min,
+                    max: graph.axes.yAxis.max,
+                    reversed: graph.axes.yAxis.reversed,
+                    title: graph.axes.yAxis.title
+                  },
+                  step: {
+                    inputValue: step.inputValue,
+                    outputValue: step.outputValue,
+                    parameter: step.parameter
+                  }
+                });
+
+                // Fonction de scaling X
+                const xScale = (value: number) => {
+                  const ratio = (value - graph.axes.xAxis.min) / (graph.axes.xAxis.max - graph.axes.xAxis.min);
+                  const scaled = graph.axes.xAxis.reversed ? innerWidth * (1 - ratio) : innerWidth * ratio;
+
+                  // Debug pour le graphique de masse
+                  if (graph.name.toLowerCase().includes('masse') && step.parameter) {
+                    console.log(`  xScale(${value}): ratio=${ratio.toFixed(3)}, reversed=${graph.axes.xAxis.reversed}, result=${scaled.toFixed(1)}`);
+                  }
+
+                  return scaled;
+                };
+
+                // Fonction de scaling Y (inversé pour SVG)
+                const yScale = (value: number) => {
+                  const ratio = (value - graph.axes.yAxis.min) / (graph.axes.yAxis.max - graph.axes.yAxis.min);
+                  const scaled = graph.axes.yAxis.reversed ? innerHeight * ratio : innerHeight * (1 - ratio);
+
+                  // Debug pour le graphique de masse
+                  if (graph.name.toLowerCase().includes('masse')) {
+                    console.log(`  yScale(${value}): ratio=${ratio.toFixed(3)}, reversed=${graph.axes.yAxis.reversed}, result=${scaled.toFixed(1)}`);
+                  }
+
+                  return scaled;
+                };
+
+                // Debug: afficher les positions calculées pour le graphique de masse
+                if (graph.name.toLowerCase().includes('masse') && step.parameter) {
+                  console.log(`📍 Positions calculées pour le graphique de masse:`, {
+                    axes: {
+                      xRange: `[${graph.axes.xAxis.min}, ${graph.axes.xAxis.max}]`,
+                      yRange: `[${graph.axes.yAxis.min}, ${graph.axes.yAxis.max}]`
+                    },
+                    valeurs: {
+                      entreeY: step.inputValue,
+                      parametreX: step.parameter,
+                      sortieY: step.outputValue
+                    },
+                    pixels: {
+                      ligneHorizontaleY: yScale(step.inputValue),
+                      ligneVerticaleX: xScale(step.parameter),
+                      pointSortie: { x: xScale(step.parameter), y: yScale(step.outputValue) }
+                    }
+                  });
+
+                  if (step.valuesAtCrossing) {
+                    console.log(`  Points d'interpolation:`, {
+                      valeurs: {
+                        lower: step.valuesAtCrossing.lowerValue,
+                        upper: step.valuesAtCrossing.upperValue
+                      },
+                      pixels: {
+                        lowerPoint: step.valuesAtCrossing.lowerValue ?
+                          { x: xScale(step.parameter), y: yScale(step.valuesAtCrossing.lowerValue) } : null,
+                        upperPoint: step.valuesAtCrossing.upperValue ?
+                          { x: xScale(step.parameter), y: yScale(step.valuesAtCrossing.upperValue) } : null
+                      }
+                    });
+                  }
+
+                  // Vérifier si les points sont dans la zone visible
+                  const checkVisible = (y: number) => {
+                    if (y < 0) return "⚠️ Au-dessus du graphique";
+                    if (y > innerHeight) return "⚠️ En dessous du graphique";
+                    return "✓ Visible";
+                  };
+
+                  console.log(`  Visibilité:`, {
+                    ligneHorizontale: checkVisible(yScale(step.inputValue)),
+                    pointSortie: checkVisible(yScale(step.outputValue)),
+                    lowerPoint: step.valuesAtCrossing?.lowerValue ?
+                      checkVisible(yScale(step.valuesAtCrossing.lowerValue)) : null,
+                    upperPoint: step.valuesAtCrossing?.upperValue ?
+                      checkVisible(yScale(step.valuesAtCrossing.upperValue)) : null
+                  });
+                }
+
+                return (
+                  <>
+              {/* Pour le premier graphique (température) */}
+              {index === 0 && (
                 <>
+                  {/* Ligne verticale d'entrée X */}
                   <line
-                    x1="0"
-                    y1={(190 * (graph.axes.yAxis.max - step.inputValue) / (graph.axes.yAxis.max - graph.axes.yAxis.min))}
-                    x2="270"
-                    y2={(190 * (graph.axes.yAxis.max - step.inputValue) / (graph.axes.yAxis.max - graph.axes.yAxis.min))}
+                    x1={xScale(step.inputValue)}
+                    y1="0"
+                    x2={xScale(step.inputValue)}
+                    y2={innerHeight}
                     stroke="#2196F3"
                     strokeWidth="2"
                     strokeDasharray="5,5"
                     opacity="0.7"
                   />
-                  {/* Texte indicateur pour la ligne horizontale */}
                   <text
-                    x="275"
-                    y={(190 * (graph.axes.yAxis.max - step.inputValue) / (graph.axes.yAxis.max - graph.axes.yAxis.min)) + 3}
+                    x={xScale(step.inputValue) - 10}
+                    y={innerHeight + 15}
                     fontSize="10"
                     fill="#2196F3"
                   >
-                    Y={step.inputValue.toFixed(0)}
-                  </text>
-                </>
-              )}
-
-              {/* Point de paramètre et ligne verticale */}
-              {step.parameter !== undefined && (
-                <>
-                  {/* Ligne verticale du paramètre */}
-                  <line
-                    x1={(270 * (step.parameter - graph.axes.xAxis.min) / (graph.axes.xAxis.max - graph.axes.xAxis.min))}
-                    y1="0"
-                    x2={(270 * (step.parameter - graph.axes.xAxis.min) / (graph.axes.xAxis.max - graph.axes.xAxis.min))}
-                    y2="190"
-                    stroke="#ff9800"
-                    strokeWidth="1.5"
-                    strokeDasharray="3,3"
-                    opacity="0.7"
-                  />
-
-                  {/* Texte indicateur pour la ligne verticale */}
-                  <text
-                    x={(270 * (step.parameter - graph.axes.xAxis.min) / (graph.axes.xAxis.max - graph.axes.xAxis.min)) - 10}
-                    y="200"
-                    fontSize="10"
-                    fill="#ff9800"
-                  >
-                    X={step.parameter.toFixed(0)}
+                    X={step.inputValue.toFixed(0)}
                   </text>
 
-                  {/* Point d'intersection final (sortie) */}
-                  <circle
-                    cx={(270 * (step.parameter - graph.axes.xAxis.min) / (graph.axes.xAxis.max - graph.axes.xAxis.min))}
-                    cy={(190 * (graph.axes.yAxis.max - step.outputValue) / (graph.axes.yAxis.max - graph.axes.yAxis.min))}
-                    r="6"
-                    fill="#ff4444"
-                    stroke="white"
-                    strokeWidth="2"
-                  />
+                  {/* Si altitude fournie, montrer les courbes d'interpolation */}
+                  {step.parameter !== undefined && step.referenceCurves && (
+                    <>
+                      {/* Indicateur d'altitude */}
+                      <text
+                        x="5"
+                        y="-10"
+                        fontSize="11"
+                        fill="#ff9800"
+                        fontWeight="bold"
+                      >
+                        Alt: {step.parameter.toFixed(0)} ft
+                      </text>
 
-                  {/* Flèche indiquant la sortie */}
-                  <path
-                    d={`M ${(270 * (step.parameter - graph.axes.xAxis.min) / (graph.axes.xAxis.max - graph.axes.xAxis.min)) + 10} ${(190 * (graph.axes.yAxis.max - step.outputValue) / (graph.axes.yAxis.max - graph.axes.yAxis.min))}
-                        L ${(270 * (step.parameter - graph.axes.xAxis.min) / (graph.axes.xAxis.max - graph.axes.xAxis.min)) + 20} ${(190 * (graph.axes.yAxis.max - step.outputValue) / (graph.axes.yAxis.max - graph.axes.yAxis.min)) - 5}
-                        L ${(270 * (step.parameter - graph.axes.xAxis.min) / (graph.axes.xAxis.max - graph.axes.xAxis.min)) + 20} ${(190 * (graph.axes.yAxis.max - step.outputValue) / (graph.axes.yAxis.max - graph.axes.yAxis.min)) + 5}
-                        Z`}
-                    fill="#ff4444"
-                  />
-                </>
-              )}
+                      {/* Point de sortie interpolé */}
+                      <circle
+                        cx={xScale(step.inputValue)}
+                        cy={yScale(step.outputValue)}
+                        r="6"
+                        fill="#ff4444"
+                        stroke="white"
+                        strokeWidth="2"
+                      />
 
-              {/* Point d'intersection initiale avec la courbe de référence (pour graphiques 2+) */}
-              {index > 0 && step.referenceIntersectionX !== undefined && (
-                <>
-                  <circle
-                    cx={(270 * (step.referenceIntersectionX - graph.axes.xAxis.min) / (graph.axes.xAxis.max - graph.axes.xAxis.min))}
-                    cy={(190 * (graph.axes.yAxis.max - step.inputValue) / (graph.axes.yAxis.max - graph.axes.yAxis.min))}
-                    r="4"
-                    fill="#00BCD4"
-                    stroke="white"
-                    strokeWidth="1.5"
-                    title="Point d'intersection avec la courbe de référence"
-                  />
+                      {/* Label de sortie */}
+                      <text
+                        x={xScale(step.inputValue) + 10}
+                        y={yScale(step.outputValue) - 5}
+                        fontSize="10"
+                        fill="#ff4444"
+                        fontWeight="bold"
+                      >
+                        Y={step.outputValue.toFixed(0)}
+                      </text>
+                    </>
+                  )}
 
-                  {/* Trajectoire parallèle à la courbe (si paramètre et offset définis) */}
-                  {step.parameter !== undefined && step.offset !== undefined && (
-                    <line
-                      x1={(270 * (step.referenceIntersectionX - graph.axes.xAxis.min) / (graph.axes.xAxis.max - graph.axes.xAxis.min))}
-                      y1={(190 * (graph.axes.yAxis.max - step.inputValue) / (graph.axes.yAxis.max - graph.axes.yAxis.min))}
-                      x2={(270 * (step.parameter - graph.axes.xAxis.min) / (graph.axes.xAxis.max - graph.axes.xAxis.min))}
-                      y2={(190 * (graph.axes.yAxis.max - step.outputValue) / (graph.axes.yAxis.max - graph.axes.yAxis.min))}
-                      stroke="#9C27B0"
+                  {/* Sans altitude, point direct */}
+                  {step.parameter === undefined && (
+                    <circle
+                      cx={xScale(step.inputValue)}
+                      cy={yScale(step.outputValue)}
+                      r="6"
+                      fill="#4CAF50"
+                      stroke="white"
                       strokeWidth="2"
-                      strokeDasharray="2,2"
-                      opacity="0.8"
-                      markerEnd="url(#arrowhead)"
                     />
                   )}
                 </>
               )}
 
-              {/* Définition de la flèche pour la trajectoire */}
-              <defs>
-                <marker
-                  id="arrowhead"
-                  markerWidth="10"
-                  markerHeight="7"
-                  refX="9"
-                  refY="3.5"
-                  orient="auto"
-                >
-                  <polygon
-                    points="0 0, 10 3.5, 0 7"
-                    fill="#9C27B0"
+              {/* Pour les graphiques suivants (avec méthode des abaques) */}
+              {index > 0 && (
+                <>
+                  {/* ÉTAPE 1: Ligne horizontale à Y=entrée */}
+                  <line
+                    x1="0"
+                    y1={yScale(step.inputValue)}
+                    x2={innerWidth}
+                    y2={yScale(step.inputValue)}
+                    stroke="#2196F3"
+                    strokeWidth="2"
+                    strokeDasharray="5,5"
+                    opacity="0.7"
                   />
-                </marker>
-              </defs>
+                  <text
+                    x="-35"
+                    y={yScale(step.inputValue) + 3}
+                    fontSize="10"
+                    fill="#2196F3"
+                  >
+                    Y={step.inputValue.toFixed(0)}
+                  </text>
 
-              {/* Point de sortie (pour graphique 1 uniquement sans paramètre) */}
-              {index === 0 && step.parameter === undefined && (
-                <circle
-                  cx={(270 * (step.inputValue - graph.axes.xAxis.min) / (graph.axes.xAxis.max - graph.axes.xAxis.min))}
-                  cy={(190 * (graph.axes.yAxis.max - step.outputValue) / (graph.axes.yAxis.max - graph.axes.yAxis.min))}
-                  r="6"
-                  fill="#4CAF50"
-                  stroke="white"
-                  strokeWidth="2"
-                />
+                  {/* ÉTAPE 2: Ligne verticale au paramètre X */}
+                  {step.parameter !== undefined && (
+                    <>
+                      <line
+                        x1={xScale(step.parameter)}
+                        y1="0"
+                        x2={xScale(step.parameter)}
+                        y2={innerHeight}
+                        stroke="#ff9800"
+                        strokeWidth="1.5"
+                        strokeDasharray="3,3"
+                        opacity="0.7"
+                      />
+                      <text
+                        x={xScale(step.parameter) - 10}
+                        y={innerHeight + 15}
+                        fontSize="10"
+                        fill="#ff9800"
+                      >
+                        X={step.parameter.toFixed(0)}
+                      </text>
+
+                      {/* ÉTAPE 3: Points aux intersections des courbes de référence */}
+                      {step.valuesAtCrossing && (
+                        <>
+                          {/* Point sur la courbe inférieure */}
+                          {step.valuesAtCrossing.lowerValue !== undefined && (
+                            <circle
+                              cx={xScale(step.parameter)}
+                              cy={yScale(step.valuesAtCrossing.lowerValue)}
+                              r="4"
+                              fill="#4CAF50"
+                              stroke="white"
+                              strokeWidth="1.5"
+                            />
+                          )}
+
+                          {/* Point sur la courbe supérieure */}
+                          {step.valuesAtCrossing.upperValue !== undefined && (
+                            <circle
+                              cx={xScale(step.parameter)}
+                              cy={yScale(step.valuesAtCrossing.upperValue)}
+                              r="4"
+                              fill="#2196F3"
+                              stroke="white"
+                              strokeWidth="1.5"
+                            />
+                          )}
+
+                          {/* Ligne reliant les deux points (zone d'interpolation) */}
+                          {step.valuesAtCrossing.lowerValue !== undefined && step.valuesAtCrossing.upperValue !== undefined && (
+                            <line
+                              x1={xScale(step.parameter)}
+                              y1={yScale(step.valuesAtCrossing.lowerValue)}
+                              x2={xScale(step.parameter)}
+                              y2={yScale(step.valuesAtCrossing.upperValue)}
+                              stroke="#9C27B0"
+                              strokeWidth="3"
+                              opacity="0.3"
+                            />
+                          )}
+                        </>
+                      )}
+
+                      {/* ÉTAPE 4: Point de sortie interpolé */}
+                      <circle
+                        cx={xScale(step.parameter)}
+                        cy={yScale(step.outputValue)}
+                        r="6"
+                        fill="#ff4444"
+                        stroke="white"
+                        strokeWidth="2"
+                      />
+
+                      {/* Flèche et label de sortie */}
+                      <g transform={`translate(${xScale(step.parameter) + 15}, ${yScale(step.outputValue)})`}>
+                        <path
+                          d="M 0,0 L 10,-3 L 10,3 Z"
+                          fill="#ff4444"
+                        />
+                        <text
+                          x="15"
+                          y="3"
+                          fontSize="10"
+                          fill="#ff4444"
+                          fontWeight="bold"
+                        >
+                          Y={step.outputValue.toFixed(0)}
+                        </text>
+                      </g>
+                    </>
+                  )}
+                </>
               )}
+                  </>
+                );
+              })()}
             </g>
           </svg>
         </div>

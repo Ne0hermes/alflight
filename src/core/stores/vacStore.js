@@ -13,14 +13,68 @@ const vacStore = create(
       
       // Actions
       addCustomChart: (icao, chartData) => set(state => {
+        // Vérifier que l'ICAO est valide
+        if (!icao || typeof icao !== 'string') {
+          console.error('ICAO invalide dans vacStore:', icao);
+          return;
+        }
         const upperIcao = icao.toUpperCase();
         // Remplacer directement la carte si elle existe
         state.charts[upperIcao] = {
           ...chartData,
           icao: upperIcao,
           isCustom: true,
-          isDownloaded: true
+          isDownloaded: true,
+          // Initialiser les points VFR personnalisés si nécessaire
+          customVfrPoints: chartData.customVfrPoints || []
         };
+      }),
+      
+      // Gestion des points VFR personnalisés
+      addCustomVfrPoint: (icao, vfrPoint) => set(state => {
+        const upperIcao = icao.toUpperCase();
+        if (!state.charts[upperIcao]) {
+          console.error('Aérodrome non trouvé:', upperIcao);
+          return;
+        }
+        
+        const newPoint = {
+          id: `custom-vfr-${Date.now()}`,
+          ...vfrPoint,
+          isCustom: true,
+          createdAt: new Date().toISOString()
+        };
+        
+        if (!state.charts[upperIcao].customVfrPoints) {
+          state.charts[upperIcao].customVfrPoints = [];
+        }
+        
+        state.charts[upperIcao].customVfrPoints.push(newPoint);
+        console.log(`✅ Point VFR personnalisé ajouté à ${upperIcao}:`, newPoint.name);
+      }),
+      
+      updateCustomVfrPoint: (icao, pointId, updates) => set(state => {
+        const upperIcao = icao.toUpperCase();
+        if (!state.charts[upperIcao]?.customVfrPoints) return;
+        
+        const pointIndex = state.charts[upperIcao].customVfrPoints.findIndex(p => p.id === pointId);
+        if (pointIndex !== -1) {
+          state.charts[upperIcao].customVfrPoints[pointIndex] = {
+            ...state.charts[upperIcao].customVfrPoints[pointIndex],
+            ...updates,
+            updatedAt: new Date().toISOString()
+          };
+        }
+      }),
+      
+      deleteCustomVfrPoint: (icao, pointId) => set(state => {
+        const upperIcao = icao.toUpperCase();
+        if (!state.charts[upperIcao]?.customVfrPoints) return;
+        
+        state.charts[upperIcao].customVfrPoints = state.charts[upperIcao].customVfrPoints.filter(
+          p => p.id !== pointId
+        );
+        console.log(`🗑️ Point VFR personnalisé supprimé de ${upperIcao}:`, pointId);
       }),
       
       deleteChart: (icao) => set(state => {
@@ -95,7 +149,10 @@ export const vacSelectors = {
       selectChart: state.selectChart,
       updateExtractedData: state.updateExtractedData,
       updateChartData: state.updateChartData,
-      addCustomChart: state.addCustomChart
+      addCustomChart: state.addCustomChart,
+      addCustomVfrPoint: state.addCustomVfrPoint,
+      updateCustomVfrPoint: state.updateCustomVfrPoint,
+      deleteCustomVfrPoint: state.deleteCustomVfrPoint
     }),
     (a, b) => Object.is(a, b)
   )

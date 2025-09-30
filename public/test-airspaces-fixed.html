@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Espaces Aériens - Résolu</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 30px;
+        }
+        .status-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 2px solid #e5e7eb;
+        }
+        .status-card.success {
+            background: #f0fdf4;
+            border-color: #86efac;
+        }
+        .status-card.error {
+            background: #fef2f2;
+            border-color: #fca5a5;
+        }
+        .status-card.loading {
+            background: #fef3c7;
+            border-color: #fde047;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #10b981;
+            color: white;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 0 3px;
+        }
+        .badge.red {
+            background: #ef4444;
+        }
+        .badge.yellow {
+            background: #f59e0b;
+        }
+        .badge.blue {
+            background: #3b82f6;
+        }
+        .test-results {
+            margin-top: 20px;
+        }
+        .test-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 1px solid #e5e7eb;
+        }
+        .test-status {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 16px;
+        }
+        .test-status.success {
+            background: #dcfce7;
+        }
+        .test-status.error {
+            background: #fee2e2;
+        }
+        .test-status.loading {
+            background: #fef3c7;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .stat-box {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+        pre {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✅ Test Connexion Espaces Aériens</h1>
+        </div>
+        
+        <div class="content">
+            <div id="status" class="status-card loading">
+                <h2>⏳ Test en cours...</h2>
+                <p>Vérification de la connexion au proxy OpenAIP</p>
+            </div>
+
+            <div class="test-results">
+                <h3>🔍 Tests de connexion</h3>
+                
+                <div id="test-proxy" class="test-item">
+                    <div class="test-status loading">⏳</div>
+                    <div>
+                        <strong>Proxy OpenAIP</strong><br>
+                        <small id="proxy-details">Test en cours...</small>
+                    </div>
+                </div>
+
+                <div id="test-api" class="test-item">
+                    <div class="test-status loading">⏳</div>
+                    <div>
+                        <strong>API OpenAIP</strong><br>
+                        <small id="api-details">En attente...</small>
+                    </div>
+                </div>
+
+                <div id="test-airspaces" class="test-item">
+                    <div class="test-status loading">⏳</div>
+                    <div>
+                        <strong>Chargement Espaces Aériens</strong><br>
+                        <small id="airspaces-details">En attente...</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-grid" id="stats" style="display: none;">
+                <div class="stat-box">
+                    <div class="stat-value" id="total-airspaces">0</div>
+                    <div class="stat-label">Espaces aériens</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="response-time">0ms</div>
+                    <div class="stat-label">Temps de réponse</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="data-size">0 KB</div>
+                    <div class="stat-label">Taille des données</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="types-count">0</div>
+                    <div class="stat-label">Types différents</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button onclick="runTests()">🔄 Relancer les tests</button>
+                <button onclick="testHybridService()">🧪 Tester Service Hybride</button>
+                <button onclick="showSampleData()">📊 Voir échantillon</button>
+            </div>
+
+            <div id="sample-data" style="display: none; margin-top: 20px;">
+                <h3>📊 Échantillon de données</h3>
+                <pre id="sample-content"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const PROXY_URL = 'http://127.0.0.1:3001';
+        
+        async function runTests() {
+            console.log('🚀 Démarrage des tests...');
+            
+            // Reset UI
+            document.getElementById('status').className = 'status-card loading';
+            document.getElementById('status').innerHTML = '<h2>⏳ Test en cours...</h2><p>Vérification de la connexion au proxy OpenAIP</p>';
+            document.getElementById('test-proxy').querySelector('.test-status').className = 'test-status loading';
+            document.getElementById('test-proxy').querySelector('.test-status').innerHTML = '⏳';
+            document.getElementById('test-api').querySelector('.test-status').className = 'test-status loading';
+            document.getElementById('test-api').querySelector('.test-status').innerHTML = '⏳';
+            document.getElementById('test-airspaces').querySelector('.test-status').className = 'test-status loading';
+            document.getElementById('test-airspaces').querySelector('.test-status').innerHTML = '⏳';
+            
+            // Test 1: Proxy Health
+            try {
+                const healthResponse = await fetch(`${PROXY_URL}/api/health`);
+                const healthData = await healthResponse.json();
+                
+                if (healthData.status === 'OK') {
+                    document.getElementById('test-proxy').querySelector('.test-status').className = 'test-status success';
+                    document.getElementById('test-proxy').querySelector('.test-status').innerHTML = '✅';
+                    document.getElementById('proxy-details').innerHTML = `✅ Proxy actif - Clé API: ${healthData.apiKeyConfigured ? '✅ Configurée' : '❌ Manquante'}`;
+                } else {
+                    throw new Error('Proxy status not OK');
+                }
+            } catch (error) {
+                document.getElementById('test-proxy').querySelector('.test-status').className = 'test-status error';
+                document.getElementById('test-proxy').querySelector('.test-status').innerHTML = '❌';
+                document.getElementById('proxy-details').innerHTML = `❌ Erreur: ${error.message}`;
+                updateStatus('error', 'Erreur Proxy', error.message);
+                return;
+            }
+            
+            // Test 2: API Test
+            try {
+                const testResponse = await fetch(`${PROXY_URL}/api/test`);
+                const testData = await testResponse.json();
+                
+                if (testData.test === 'SUCCESS') {
+                    document.getElementById('test-api').querySelector('.test-status').className = 'test-status success';
+                    document.getElementById('test-api').querySelector('.test-status').innerHTML = '✅';
+                    document.getElementById('api-details').innerHTML = '✅ Connexion API OpenAIP réussie';
+                } else {
+                    document.getElementById('test-api').querySelector('.test-status').className = 'test-status error';
+                    document.getElementById('test-api').querySelector('.test-status').innerHTML = '⚠️';
+                    document.getElementById('api-details').innerHTML = `⚠️ ${testData.suggestion || 'API non disponible'}`;
+                }
+            } catch (error) {
+                document.getElementById('test-api').querySelector('.test-status').className = 'test-status error';
+                document.getElementById('test-api').querySelector('.test-status').innerHTML = '⚠️';
+                document.getElementById('api-details').innerHTML = `⚠️ Test API échoué: ${error.message}`;
+            }
+            
+            // Test 3: Load Airspaces
+            try {
+                const startTime = Date.now();
+                const airspacesResponse = await fetch(`${PROXY_URL}/api/airspaces?bbox=-5.5,41.0,10.0,51.5&country=FR`);
+                const responseTime = Date.now() - startTime;
+                
+                const airspacesData = await airspacesResponse.json();
+                
+                if (airspacesData.features && Array.isArray(airspacesData.features)) {
+                    const count = airspacesData.features.length;
+                    
+                    document.getElementById('test-airspaces').querySelector('.test-status').className = 'test-status success';
+                    document.getElementById('test-airspaces').querySelector('.test-status').innerHTML = '✅';
+                    document.getElementById('airspaces-details').innerHTML = `✅ ${count} espaces aériens chargés`;
+                    
+                    // Calculer les statistiques
+                    const types = new Set(airspacesData.features.map(f => f.properties.type));
+                    const dataSize = JSON.stringify(airspacesData).length / 1024;
+                    
+                    // Afficher les stats
+                    document.getElementById('stats').style.display = 'grid';
+                    document.getElementById('total-airspaces').textContent = count;
+                    document.getElementById('response-time').textContent = `${responseTime}ms`;
+                    document.getElementById('data-size').textContent = `${Math.round(dataSize)} KB`;
+                    document.getElementById('types-count').textContent = types.size;
+                    
+                    // Stocker les données pour l'échantillon
+                    window.airspacesData = airspacesData;
+                    
+                    updateStatus('success', '✅ Connexion Réussie!', `${count} espaces aériens chargés depuis OpenAIP en ${responseTime}ms`);
+                } else {
+                    throw new Error('Aucune donnée reçue');
+                }
+            } catch (error) {
+                document.getElementById('test-airspaces').querySelector('.test-status').className = 'test-status error';
+                document.getElementById('test-airspaces').querySelector('.test-status').innerHTML = '❌';
+                document.getElementById('airspaces-details').innerHTML = `❌ Erreur: ${error.message}`;
+                updateStatus('error', 'Erreur Chargement', error.message);
+            }
+        }
+        
+        function updateStatus(type, title, message) {
+            const statusEl = document.getElementById('status');
+            statusEl.className = `status-card ${type}`;
+            statusEl.innerHTML = `
+                <h2>${title}</h2>
+                <p>${message}</p>
+                <p style="margin-top: 10px; font-size: 12px; color: #6b7280;">
+                    ${new Date().toLocaleTimeString('fr-FR')}
+                </p>
+            `;
+        }
+        
+        async function testHybridService() {
+            console.log('🧪 Test du service hybride...');
+            updateStatus('loading', '🧪 Test Service Hybride', 'Simulation du chargement depuis NavigationMapSIAFixed...');
+            
+            try {
+                // Simuler l'appel du service hybride
+                const response = await fetch(`${PROXY_URL}/api/airspaces?bbox=-5.5,41.0,10.0,51.5&country=FR`);
+                const data = await response.json();
+                
+                if (data.features) {
+                    updateStatus('success', '✅ Service Hybride OK', `Le service peut charger ${data.features.length} espaces aériens`);
+                }
+            } catch (error) {
+                updateStatus('error', '❌ Erreur Service Hybride', error.message);
+            }
+        }
+        
+        function showSampleData() {
+            const sampleDiv = document.getElementById('sample-data');
+            const contentEl = document.getElementById('sample-content');
+            
+            if (window.airspacesData && window.airspacesData.features) {
+                const sample = window.airspacesData.features.slice(0, 3);
+                contentEl.textContent = JSON.stringify(sample, null, 2);
+                sampleDiv.style.display = 'block';
+            } else {
+                alert('Aucune donnée disponible. Lancez d\'abord les tests.');
+            }
+        }
+        
+        // Lancer les tests au chargement
+        window.addEventListener('load', runTests);
+    </script>
+</body>
+</html>

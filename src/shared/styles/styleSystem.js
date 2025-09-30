@@ -177,7 +177,10 @@ class StyleSystem {
       medium: { fontWeight: theme.fontWeight.medium },
       primary: { color: theme.colors.gray[900] },
       secondary: { color: theme.colors.gray[600] },
-      muted: { color: theme.colors.gray[500] }
+      muted: { color: theme.colors.gray[500] },
+      center: { textAlign: 'center' },
+      left: { textAlign: 'left' },
+      right: { textAlign: 'right' }
     }));
   }
 

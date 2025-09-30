@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Éditeur d'Espaces Aériens Amélioré</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 30px;
+        }
+        .feature-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 2px solid #e5e7eb;
+        }
+        .new-features {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-color: #86efac;
+        }
+        .editor-preview {
+            background: white;
+            border: 2px solid #d1d5db;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+        }
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        select.form-control {
+            background: white;
+            cursor: pointer;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 0 3px;
+        }
+        .badge.new {
+            background: #10b981;
+        }
+        .badge.orange {
+            background: #f59e0b;
+        }
+        .badge.purple {
+            background: #8b5cf6;
+        }
+        .feature-list {
+            margin: 20px 0;
+        }
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .feature-icon {
+            font-size: 24px;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        .feature-content h3 {
+            margin: 0 0 8px 0;
+            font-size: 16px;
+            color: #1f2937;
+        }
+        .feature-content p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .comparison-table th {
+            background: #f3f4f6;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid #e5e7eb;
+        }
+        .comparison-table td {
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+        }
+        .comparison-table tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        .info-box {
+            background: #e0e7ff;
+            border: 1px solid #818cf8;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 15px 0;
+            font-size: 13px;
+            color: #312e81;
+        }
+        .warning-box {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 15px 0;
+            font-size: 13px;
+            color: #78350f;
+        }
+        code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✏️ Éditeur d'Espaces Aériens Amélioré</h1>
+        </div>
+        
+        <div class="content">
+            <div class="feature-card new-features">
+                <h2>🆕 Nouvelles Fonctionnalités d'Édition</h2>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-icon">🔄</div>
+                        <div class="feature-content">
+                            <h3>Changement de Type <span class="badge new">NOUVEAU</span></h3>
+                            <p>Possibilité de modifier le type d'espace aérien (CTR → TMA, R → D, etc.) avec une liste déroulante complète de 15 types disponibles.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">⚡</div>
+                        <div class="feature-content">
+                            <h3>Édition d'Activité <span class="badge new">NOUVEAU</span></h3>
+                            <p>Ajout et modification de l'activité de l'espace (MILITARY, GLIDING, H24, etc.)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">🕐</div>
+                        <div class="feature-content">
+                            <h3>Gestion des Horaires <span class="badge new">NOUVEAU</span></h3>
+                            <p>Définition des horaires d'activation (HO, H24, SR-SS, etc.)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">ℹ️</div>
+                        <div class="feature-content">
+                            <h3>Indicateur de Modification</h3>
+                            <p>Affichage du type original si modifié, avec alerte visuelle bleue.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <h2>👁️ Aperçu de l'Éditeur</h2>
+                <div class="editor-preview">
+                    <h3 style="margin-top: 0;">✏️ Éditer l'espace aérien</h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Type d'espace aérien</label>
+                        <select class="form-control">
+                            <option>CTR - Zone de contrôle</option>
+                            <option selected>TMA - Région de contrôle terminale</option>
+                            <option>CTA - Région de contrôle</option>
+                            <option>R - Zone réglementée</option>
+                            <option>P - Zone interdite</option>
+                            <option>D - Zone dangereuse</option>
+                            <option>TMZ - Zone à transpondeur obligatoire</option>
+                            <option>RMZ - Zone radio obligatoire</option>
+                            <option>Autres...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Nom</label>
+                        <input type="text" class="form-control" value="STRASBOURG 1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Classe</label>
+                        <select class="form-control">
+                            <option>Classe A</option>
+                            <option>Classe B</option>
+                            <option>Classe C</option>
+                            <option selected>Classe D</option>
+                            <option>Classe E</option>
+                            <option>Classe F</option>
+                            <option>Classe G</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Plancher</label>
+                            <input type="text" class="form-control" value="1500 ft" placeholder="ex: SFC, 1000 ft, FL65">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Plafond</label>
+                            <input type="text" class="form-control" value="FL195" placeholder="ex: 1500 ft, FL195">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Activité</label>
+                            <input type="text" class="form-control" value="H24" placeholder="ex: MILITARY, GLIDING, H24">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Horaires</label>
+                            <input type="text" class="form-control" value="H24" placeholder="ex: HO, H24, SR-SS">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Remarques</label>
+                        <textarea class="form-control" rows="3" style="resize: vertical;">Contact obligatoire avant pénétration</textarea>
+                    </div>
+                    
+                    <div class="info-box">
+                        ℹ️ Type original : <strong>CTR</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <h2>📊 Champs Éditables</h2>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Champ</th>
+                            <th>Description</th>
+                            <th>Exemples</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Type</strong></td>
+                            <td>Type d'espace aérien</td>
+                            <td>CTR, TMA, R, P, D, TMZ, RMZ...</td>
+                            <td><span class="badge new">NOUVEAU</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Nom</strong></td>
+                            <td>Nom de l'espace</td>
+                            <td>PARIS TMA, COLMAR SUD...</td>
+                            <td><span class="badge">Existant</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Classe</strong></td>
+                            <td>Classification OACI</td>
+                            <td>A, B, C, D, E, F, G</td>
+                            <td><span class="badge">Existant</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Plancher</strong></td>
+                            <td>Altitude minimale</td>
+                            <td>SFC, 1000 ft, FL65</td>
+                            <td><span class="badge">Existant</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Plafond</strong></td>
+                            <td>Altitude maximale</td>
+                            <td>1500 ft, FL195, UNLIMITED</td>
+                            <td><span class="badge">Existant</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Activité</strong></td>
+                            <td>Type d'activité</td>
+                            <td>MILITARY, GLIDING, H24</td>
+                            <td><span class="badge new">NOUVEAU</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Horaires</strong></td>
+                            <td>Période d'activation</td>
+                            <td>HO, H24, SR-SS, NOTAM</td>
+                            <td><span class="badge new">NOUVEAU</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Remarques</strong></td>
+                            <td>Notes additionnelles</td>
+                            <td>Texte libre</td>
+                            <td><span class="badge">Existant</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="feature-card">
+                <h2>🎯 Types d'Espaces Disponibles</h2>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px;">
+                    <div>
+                        <code>CTR</code> - Zone de contrôle
+                    </div>
+                    <div>
+                        <code>TMA</code> - Région de contrôle terminale
+                    </div>
+                    <div>
+                        <code>CTA</code> - Région de contrôle
+                    </div>
+                    <div>
+                        <code>AWY</code> - Voie aérienne
+                    </div>
+                    <div>
+                        <code>ATZ</code> - Zone de trafic d'aérodrome
+                    </div>
+                    <div>
+                        <code>R</code> - Zone réglementée
+                    </div>
+                    <div>
+                        <code>P</code> - Zone interdite
+                    </div>
+                    <div>
+                        <code>D</code> - Zone dangereuse
+                    </div>
+                    <div>
+                        <code>TMZ</code> - Zone à transpondeur
+                    </div>
+                    <div>
+                        <code>RMZ</code> - Zone radio obligatoire
+                    </div>
+                    <div>
+                        <code>TSA</code> - Zone temporaire
+                    </div>
+                    <div>
+                        <code>TRA</code> - Zone réservée temporaire
+                    </div>
+                    <div>
+                        <code>FIR</code> - Région d'information
+                    </div>
+                    <div>
+                        <code>UIR</code> - Région supérieure
+                    </div>
+                    <div>
+                        <code>OTHER</code> - Autre
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <h2>💾 Sauvegarde et Persistance</h2>
+                <ul>
+                    <li>Les modifications sont sauvegardées dans le <strong>localStorage</strong></li>
+                    <li>Les changements persistent entre les sessions</li>
+                    <li>Un indicateur <span class="badge orange">⚠️ Modifié</span> apparaît pour les espaces édités</li>
+                    <li>Le type original est conservé et affiché si changé</li>
+                    <li>Bouton <strong>🔄 Réinitialiser</strong> pour revenir aux données originales</li>
+                </ul>
+                
+                <div class="warning-box">
+                    ⚠️ Les modifications sont locales et ne sont pas synchronisées avec les bases de données officielles
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

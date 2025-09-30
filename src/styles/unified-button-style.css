@@ -1,0 +1,113 @@
+/* Style unifié pour tous les boutons de l'application */
+/* Gris anthracite avec opacité 35% et bordure noire avec opacité 70% */
+
+/* Style de base pour TOUS les boutons */
+button,
+.btn,
+[type="button"],
+[type="submit"],
+[type="reset"],
+[role="button"] {
+  background: rgba(55, 65, 81, 0.35) !important;
+  background-color: rgba(55, 65, 81, 0.35) !important;
+  background-image: none !important;
+  color: white !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.7) !important;
+  border-radius: 8px !important;
+  font-size: 16px !important;
+  font-weight: bold !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  font-family: inherit !important;
+}
+
+/* États hover */
+button:hover:not(:disabled),
+.btn:hover:not(:disabled),
+[type="button"]:hover:not(:disabled),
+[type="submit"]:hover:not(:disabled),
+[type="reset"]:hover:not(:disabled),
+[role="button"]:hover:not(:disabled) {
+  background: rgba(55, 65, 81, 0.5) !important;
+  background-color: rgba(55, 65, 81, 0.5) !important;
+  background-image: none !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* États actifs */
+button:active:not(:disabled),
+.btn:active:not(:disabled),
+[type="button"]:active:not(:disabled),
+[type="submit"]:active:not(:disabled),
+[type="reset"]:active:not(:disabled),
+[role="button"]:active:not(:disabled) {
+  background: rgba(55, 65, 81, 0.6) !important;
+  background-color: rgba(55, 65, 81, 0.6) !important;
+  background-image: none !important;
+  transform: translateY(0) !important;
+}
+
+/* États désactivés */
+button:disabled,
+.btn:disabled,
+[type="button"]:disabled,
+[type="submit"]:disabled,
+[type="reset"]:disabled,
+[role="button"]:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+/* Forcer le style sur les boutons avec classes spécifiques */
+button.secondary,
+button[variant="secondary"],
+.btn-secondary,
+button.primary,
+button[variant="primary"],
+.btn-primary,
+button.danger,
+button[variant="danger"],
+.btn-danger {
+  background: rgba(55, 65, 81, 0.35) !important;
+  background-color: rgba(55, 65, 81, 0.35) !important;
+  background-image: none !important;
+  color: white !important;
+  border: 1px solid rgba(0, 0, 0, 0.7) !important;
+}
+
+/* S'assurer que les icônes dans les boutons restent blanches */
+button svg,
+button i,
+button span,
+.btn svg,
+.btn i,
+.btn span {
+  color: white !important;
+  fill: white !important;
+}
+
+/* Éviter que d'autres styles écrasent */
+#root button,
+#root .btn,
+.aircraft-module button,
+.modal button,
+.dialog button,
+form button {
+  background: rgba(55, 65, 81, 0.35) !important;
+  background-color: rgba(55, 65, 81, 0.35) !important;
+  background-image: none !important;
+  color: white !important;
+  border: 1px solid rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Fix pour les boutons qui utilisent sx.components.button */
+[style*="background"],
+[style*="backgroundColor"] {
+  background: rgba(55, 65, 81, 0.35) !important;
+  background-color: rgba(55, 65, 81, 0.35) !important;
+  background-image: none !important;
+}

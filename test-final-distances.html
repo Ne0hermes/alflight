@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Final Distances</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .runway { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+        .distances {
+            background: white;
+            color: #333;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+        .distance-item {
+            display: inline-block;
+            margin: 5px 10px;
+            padding: 5px 10px;
+            background: #f0f0f0;
+            border-radius: 3px;
+        }
+        .vfr-points {
+            background: #e8f5e9;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🛬 Test Final - LFST Strasbourg</h1>
+    <div id="output">⏳ Chargement...</div>
+    
+    <script type="module">
+        import { aixmParser } from '/src/services/aixmParser.js';
+        
+        async function testFinal() {
+            const output = document.getElementById('output');
+            
+            try {
+                const data = await aixmParser.loadAndParse();
+                const lfst = data.find(ad => ad.icao === 'LFST');
+                
+                if (!lfst) {
+                    output.innerHTML = '<div class="error">❌ LFST non trouvé!</div>';
+                    return;
+                }
+                
+                let html = '<div class="success">✅ LFST trouvé avec succès!</div>';
+                
+                // Info générale
+                html += '<h2>📍 ' + lfst.name + ' (' + lfst.city + ')</h2>';
+                html += '<p>Altitude: ' + lfst.elevation.value + ' ft</p>';
+                
+                // Pistes
+                html += '<h2>🛬 Pistes</h2>';
+                if (lfst.runways && lfst.runways.length > 0) {
+                    for (const runway of lfst.runways) {
+                        html += '<div class="runway">';
+                        html += '<h3>Piste ' + runway.designation + '</h3>';
+                        html += '<div>Dimensions: ' + runway.length + ' × ' + runway.width + ' m</div>';
+                        html += '<div>Surface: ' + runway.surface + '</div>';
+                        html += '<div>QFU: ' + (runway.qfu || runway.magneticBearing) + '°</div>';
+                        
+                        html += '<div class="distances">';
+                        html += '<strong>Distances déclarées:</strong><br>';
+                        
+                        const tora = runway.tora !== null ? runway.tora + ' m' : '<span class="error">❌ NULL</span>';
+                        const toda = runway.toda !== null ? runway.toda + ' m' : '<span class="error">❌ NULL</span>';
+                        const asda = runway.asda !== null ? runway.asda + ' m' : '<span class="error">❌ NULL</span>';
+                        const lda = runway.lda !== null ? runway.lda + ' m' : '<span class="error">❌ NULL</span>';
+                        
+                        html += '<span class="distance-item">TORA: <strong>' + tora + '</strong></span>';
+                        html += '<span class="distance-item">TODA: <strong>' + toda + '</strong></span>';
+                        html += '<span class="distance-item">ASDA: <strong>' + asda + '</strong></span>';
+                        html += '<span class="distance-item">LDA: <strong>' + lda + '</strong></span>';
+                        
+                        if (runway.ils) {
+                            html += '<br><br>ILS: CAT ' + runway.ils.category;
+                        }
+                        
+                        html += '</div>';
+                        html += '</div>';
+                    }
+                } else {
+                    html += '<div class="error">Aucune piste trouvée</div>';
+                }
+                
+                // Points VFR
+                html += '<h2>📍 Points VFR</h2>';
+                if (lfst.vfrPoints && lfst.vfrPoints.length > 0) {
+                    html += '<div class="vfr-points">';
+                    html += '<div class="success">✅ ' + lfst.vfrPoints.length + ' points VFR trouvés</div>';
+                    html += '<ul>';
+                    for (let i = 0; i < Math.min(5, lfst.vfrPoints.length); i++) {
+                        const point = lfst.vfrPoints[i];
+                        html += '<li><strong>' + point.name + '</strong> - ' + point.description + '</li>';
+                    }
+                    if (lfst.vfrPoints.length > 5) {
+                        html += '<li>... et ' + (lfst.vfrPoints.length - 5) + ' autres points</li>';
+                    }
+                    html += '</ul>';
+                    html += '</div>';
+                } else {
+                    html += '<div class="error">Aucun point VFR trouvé</div>';
+                }
+                
+                output.innerHTML = html;
+                
+                // Log pour debug
+                console.log('LFST complet:', lfst);
+                
+            } catch (error) {
+                output.innerHTML = '<div class="error">❌ Erreur: ' + error.message + '</div>';
+                console.error('Erreur:', error);
+            }
+        }
+        
+        testFinal();
+    </script>
+</body>
+</html>

@@ -1,100 +1,88 @@
 // src/features/aircraft/components/ManexImporter.jsx
-import React, { memo, useState, useRef } from 'react';
-import { Upload, FileText, CheckCircle, AlertTriangle, X, Eye, Download, Trash2, BarChart3 } from 'lucide-react';
-// Style system removed - using inline styles
-import { generateDefaultChart } from '../utils/performanceCharts';
-import ManexImporterFallback from './ManexImporterFallback';
-import PdfExtractor from './PdfExtractor';
-import SimplePdfReader from './SimplePdfReader';
+import React, { memo, useState, useRef, useEffect } from 'react';
+import { Upload, FileText, X, Download, Trash2 } from 'lucide-react';
 import { showNotification } from '../../../shared/components/Notification';
+import { getManexWithPdf } from '../../../core/stores/manexStore';
 
-export const ManexImporter = memo(({ 
-  aircraft, 
+export const ManexImporter = memo(({
+  aircraft,
   onManexUpdate,
-  onClose 
+  onClose
 }) => {
   const [loading, setLoading] = useState(false);
-  const [extractedData, setExtractedData] = useState(null);
-  const [error, setError] = useState(null);
   const [pdfFile, setPdfFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
-  const [useFallback, setUseFallback] = useState(false);
-  const [usePdfJs, setUsePdfJs] = useState(true);
+  const [manexData, setManexData] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Si on veut utiliser le mode fallback
-  if (useFallback) {
-    return <ManexImporterFallback aircraft={aircraft} onManexUpdate={onManexUpdate} onClose={onClose} />;
-  }
+  // Charger le MANEX depuis IndexedDB au montage
+  useEffect(() => {
+    const loadManexData = async () => {
+      if (aircraft.manex && aircraft.id) {
+        try {
+          const data = await getManexWithPdf(aircraft.id);
+          if (data) {
+            setManexData(data);
+          }
+        } catch (error) {
+          console.error('Erreur lors du chargement du MANEX:', error);
+        }
+      }
+    };
+    loadManexData();
+  }, [aircraft.id, aircraft.manex]);
 
   const handleFileSelect = async (event) => {
     const file = event.target.files[0];
     if (!file || file.type !== 'application/pdf') {
-      setError('Veuillez sélectionner un fichier PDF');
+      showNotification('Veuillez sélectionner un fichier PDF', 'error', 4000);
       return;
     }
 
-    setPdfFile(file);
-    setError(null);
     setLoading(true);
+    setPdfFile(file);
 
     // Créer URL de prévisualisation
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
-  };
 
-  // Callback pour quand PdfExtractor a extrait les données
-  const handlePdfExtracted = (data) => {
-    setExtractedData(data);
-    setLoading(false);
-    setError(null);
-  };
+    // Lire le fichier et le convertir en base64 pour sauvegarde
+    const reader = new FileReader();
+    reader.onload = () => {
+      const manexData = {
+        fileName: file.name,
+        fileSize: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+        uploadDate: new Date().toISOString(),
+        pdfData: reader.result // Base64 du PDF
+      };
 
-  // Callback pour les erreurs - essayer SimplePdfReader comme fallback
-  const handlePdfError = (errorMsg) => {
-    console.warn('PdfExtractor a échoué, utilisation de SimplePdfReader comme fallback');
-    // Ne pas afficher d'erreur immédiatement, laisser SimplePdfReader essayer
-  };
-  
-  // Callback pour SimplePdfReader (fallback)
-  const handleSimplePdfExtracted = (data) => {
-    setExtractedData(data);
-    setLoading(false);
-    setError(null);
-  };
-  
-  // Callback pour erreur du SimplePdfReader
-  const handleSimplePdfError = (errorMsg) => {
-    setError(errorMsg);
-    setLoading(false);
-    // Proposer le mode manuel après une erreur
-    setTimeout(() => {
-      if (window.confirm('L\'extraction du PDF a échoué. Voulez-vous utiliser le mode de saisie manuelle ?')) {
-        setUseFallback(true);
-      }
-    }, 500);
-  };
-
-
-  const handleSave = () => {
-    if (extractedData && onManexUpdate) {
+      // Sauvegarder directement
       try {
-        onManexUpdate(aircraft.id, extractedData);
+        onManexUpdate(aircraft.id, manexData);
         showNotification(
-          `✅ MANEX enregistré avec succès pour ${aircraft.registration}`,
+          `✅ MANEX "${file.name}" enregistré pour ${aircraft.registration}`,
           'success',
           5000
         );
-        onClose();
+        setLoading(false);
+        setTimeout(() => onClose(), 1500);
       } catch (error) {
         console.error('Erreur lors de l\'enregistrement du MANEX:', error);
         showNotification(
-          `❌ Erreur lors de l'enregistrement du MANEX: ${error.message || 'Erreur inconnue'}`,
+          `❌ Erreur lors de l'enregistrement: ${error.message || 'Erreur inconnue'}`,
           'error',
           7000
         );
+        setLoading(false);
       }
-    }
+    };
+
+    reader.onerror = () => {
+      showNotification('❌ Erreur lors de la lecture du fichier', 'error', 5000);
+      setLoading(false);
+    };
+
+    reader.readAsDataURL(file);
   };
 
   const handleRemoveManex = () => {
@@ -118,30 +106,151 @@ export const ManexImporter = memo(({
     }
   };
 
+  const handleViewManex = async () => {
+    try {
+      console.log('🔍 handleViewManex - Début');
+      console.log('Aircraft:', aircraft);
+      console.log('ManexData actuel:', manexData);
+
+      let pdfDataToView = null;
+
+      // Si on a déjà chargé les données depuis IndexedDB
+      if (manexData?.pdfData) {
+        console.log('✅ PDF trouvé dans manexData');
+        pdfDataToView = manexData.pdfData;
+      }
+      // Sinon, essayer de les récupérer
+      else if (aircraft.id) {
+        console.log('📥 Récupération depuis IndexedDB pour aircraft.id:', aircraft.id);
+        const data = await getManexWithPdf(aircraft.id);
+        console.log('📊 Données récupérées:', data);
+
+        if (data?.pdfData) {
+          pdfDataToView = data.pdfData;
+          setManexData(data);
+        }
+      }
+
+      console.log('📄 pdfDataToView:', pdfDataToView ? 'Présent' : 'Absent');
+      console.log('📄 Type de pdfDataToView:', typeof pdfDataToView);
+      console.log('📄 Format (100 premiers caractères):', pdfDataToView ? pdfDataToView.substring(0, 100) : 'N/A');
+
+      if (pdfDataToView) {
+        // Si c'est un objet File ou Blob, on le convertit
+        if (pdfDataToView instanceof File || pdfDataToView instanceof Blob) {
+          console.log('📄 Type détecté: File ou Blob');
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const dataUrl = e.target.result;
+            const newWindow = window.open('', '_blank');
+            if (newWindow) {
+              newWindow.document.write(
+                `<!DOCTYPE html>
+                <html style="height: 100%; margin: 0;">
+                <head><title>MANEX - ${aircraft.registration}</title></head>
+                <body style="height: 100%; margin: 0;">
+                  <embed src="${dataUrl}" type="application/pdf" style="width:100%; height:100%;" />
+                </body>
+                </html>`
+              );
+              newWindow.document.close();
+            }
+          };
+          reader.readAsDataURL(pdfDataToView);
+          return;
+        }
+
+        // Vérifier que c'est bien une URL data
+        if (!pdfDataToView.startsWith('data:')) {
+          console.error('❌ Format PDF invalide - ne commence pas par data:', pdfDataToView.substring(0, 50));
+
+          // Essayer de corriger le format si possible
+          if (pdfDataToView.includes('base64,')) {
+            // Il manque peut-être juste le début
+            pdfDataToView = 'data:application/pdf;base64,' + pdfDataToView.split('base64,')[1];
+            console.log('🔧 Format corrigé');
+          } else {
+            showNotification('❌ Format PDF invalide', 'error', 3000);
+            return;
+          }
+        }
+
+        // Ouvrir le PDF dans un nouvel onglet avec embed au lieu d'iframe
+        const newWindow = window.open('', '_blank');
+        if (newWindow) {
+          newWindow.document.write(
+            `<!DOCTYPE html>
+            <html style="height: 100%; margin: 0;">
+            <head><title>MANEX - ${aircraft.registration}</title></head>
+            <body style="height: 100%; margin: 0;">
+              <embed src="${pdfDataToView}" type="application/pdf" style="width:100%; height:100%;" />
+            </body>
+            </html>`
+          );
+          newWindow.document.close();
+        } else {
+          showNotification('❌ Impossible d\'ouvrir une nouvelle fenêtre', 'error', 3000);
+        }
+      } else {
+        console.log('❌ Aucun PDF trouvé');
+        showNotification('❌ Impossible de charger le PDF', 'error', 3000);
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de la visualisation du MANEX:', error);
+      showNotification('❌ Erreur lors de la visualisation', 'error', 3000);
+    }
+  };
+
+  const handleDownloadManex = async () => {
+    try {
+      let pdfDataToDownload = null;
+
+      // Si on a déjà chargé les données depuis IndexedDB
+      if (manexData?.pdfData) {
+        pdfDataToDownload = manexData.pdfData;
+      }
+      // Sinon, essayer de les récupérer
+      else if (aircraft.id) {
+        const data = await getManexWithPdf(aircraft.id);
+        if (data?.pdfData) {
+          pdfDataToDownload = data.pdfData;
+          setManexData(data);
+        }
+      }
+
+      if (pdfDataToDownload) {
+        // Si c'est un File ou Blob, on le convertit en URL
+        if (pdfDataToDownload instanceof File || pdfDataToDownload instanceof Blob) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const link = document.createElement('a');
+            link.href = e.target.result;
+            link.download = manexData?.fileName || aircraft.manex?.fileName || `MANEX_${aircraft.registration}.pdf`;
+            link.click();
+          };
+          reader.readAsDataURL(pdfDataToDownload);
+        } else {
+          // Vérifier le format et corriger si nécessaire
+          if (!pdfDataToDownload.startsWith('data:')) {
+            if (pdfDataToDownload.includes('base64,')) {
+              pdfDataToDownload = 'data:application/pdf;base64,' + pdfDataToDownload.split('base64,')[1];
+            }
+          }
+          const link = document.createElement('a');
+          link.href = pdfDataToDownload;
+          link.download = manexData?.fileName || aircraft.manex?.fileName || `MANEX_${aircraft.registration}.pdf`;
+          link.click();
+        }
+      } else {
+        showNotification('❌ Impossible de télécharger le PDF', 'error', 3000);
+      }
+    } catch (error) {
+      console.error('Erreur lors du téléchargement du MANEX:', error);
+      showNotification('❌ Erreur lors du téléchargement', 'error', 3000);
+    }
+  };
+
   return (
-    <>
-      {/* Essayer d'abord PdfExtractor avec PDF.js, puis SimplePdfReader en fallback */}
-      {pdfFile && loading && usePdfJs && (
-        <PdfExtractor 
-          file={pdfFile} 
-          onExtracted={handlePdfExtracted}
-          onError={(err) => {
-            handlePdfError(err);
-            // Basculer sur SimplePdfReader en cas d'erreur
-            setUsePdfJs(false);
-          }}
-        />
-      )}
-      
-      {/* Fallback sur SimplePdfReader si PdfExtractor échoue */}
-      {pdfFile && loading && !usePdfJs && (
-        <SimplePdfReader 
-          file={pdfFile} 
-          onExtracted={handleSimplePdfExtracted}
-          onError={handleSimplePdfError}
-        />
-      )}
-      
     <div style={{
       position: 'fixed',
       top: 0,
@@ -158,16 +267,16 @@ export const ManexImporter = memo(({
         backgroundColor: 'white',
         borderRadius: '12px',
         padding: '24px',
-        maxWidth: '800px',
+        maxWidth: '600px',
         width: '90%',
         maxHeight: '90vh',
         overflow: 'auto'
       }}>
         {/* En-tête */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3 style={{ fontSize: '20px', fontWeight: 'bold', display: 'flex', alignItems: 'flex-start' }}>
-            <FileText size={24} style={{ marginRight: '8px' }} />
-            Import du Manuel de Vol (MANEX)
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h3 style={{ fontSize: '20px', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
+            <FileText size={24} style={{ marginRight: '8px', color: '#3b82f6' }} />
+            Manuel de Vol (MANEX)
           </h3>
           <button
             onClick={onClose}
@@ -175,340 +284,144 @@ export const ManexImporter = memo(({
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              padding: '4px'
+              padding: '4px',
+              color: '#6b7280'
             }}
           >
             <X size={24} />
           </button>
         </div>
 
-        {/* Info avion */}
-        <div style={{ backgroundColor: '#f9fafb', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '16px' }}>
-          <p style={{ fontSize: '14px' }}>
-            <strong>Avion:</strong> {aircraft.registration} - {aircraft.model}
-          </p>
-          {aircraft.manex && (
-            <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
-              MANEX actuel: {aircraft.manex.fileName} ({aircraft.manex.fileSize})
-            </p>
-          )}
-          <button
-            onClick={() => setUseFallback(true)}
-            style={{
-              marginTop: '8px',
-              padding: '6px 12px',
-              backgroundColor: '#3b82f6',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              fontSize: '12px',
-              cursor: 'pointer'
-            }}
-          >
-            Utiliser le mode de saisie manuelle
-          </button>
-        </div>
+        {/* Affichage du MANEX existant */}
+        {aircraft.manex && !loading && (
+          <div style={{
+            backgroundColor: '#f0f9ff',
+            border: '1px solid #3b82f6',
+            borderRadius: '8px',
+            padding: '16px',
+            marginBottom: '20px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+              <FileText size={20} style={{ marginRight: '8px', color: '#3b82f6' }} />
+              <div>
+                <p style={{ fontWeight: '600', marginBottom: '4px' }}>{aircraft.manex.fileName}</p>
+                <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                  {aircraft.manex.fileSize} • Importé le {new Date(aircraft.manex.uploadDate).toLocaleDateString('fr-FR')}
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={handleDownloadManex}
+                style={{
+                  padding: '6px 12px',
+                  backgroundColor: 'white',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <Download size={16} />
+                Télécharger
+              </button>
+
+              <button
+                onClick={handleRemoveManex}
+                style={{
+                  padding: '6px 12px',
+                  backgroundColor: '#fee2e2',
+                  color: '#991b1b',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <Trash2 size={16} />
+                Supprimer
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Zone d'upload */}
-        {!extractedData && (
-          <div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf"
-              onChange={handleFileSelect}
-              style={{ display: 'none' }}
-            />
-            
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              style={{
-                border: '2px dashed #d1d5db',
-                borderRadius: '8px',
-                padding: '40px',
-                textAlign: 'center',
-                cursor: 'pointer',
-                backgroundColor: '#fafafa',
-                transition: 'all 0.2s',
-                ':hover': {
-                  borderColor: '#3b82f6',
-                  backgroundColor: '#f0f9ff'
-                }
-              }}
-              onMouseEnter={(e) => {
+        <div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf"
+            onChange={handleFileSelect}
+            style={{ display: 'none' }}
+            disabled={loading}
+          />
+
+          <div
+            onClick={() => !loading && fileInputRef.current?.click()}
+            style={{
+              border: '2px dashed #d1d5db',
+              borderRadius: '8px',
+              padding: '32px',
+              textAlign: 'center',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              backgroundColor: '#fafafa',
+              opacity: loading ? 0.6 : 1,
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) {
                 e.currentTarget.style.borderColor = '#3b82f6';
                 e.currentTarget.style.backgroundColor = '#f0f9ff';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#d1d5db';
-                e.currentTarget.style.backgroundColor = '#fafafa';
-              }}
-            >
-              <Upload size={48} style={{ margin: '0 auto 16px', color: '#9ca3af' }} />
-              <p style={{ fontSize: '16px', marginBottom: '8px' }}>
-                Cliquez pour sélectionner le fichier PDF du MANEX
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = '#d1d5db';
+              e.currentTarget.style.backgroundColor = '#fafafa';
+            }}
+          >
+            <Upload size={40} style={{ margin: '0 auto 12px', color: '#9ca3af' }} />
+            <p style={{ fontSize: '16px', marginBottom: '8px', fontWeight: '500' }}>
+              {aircraft.manex ? 'Remplacer le MANEX' : 'Importer le MANEX'}
+            </p>
+            <p style={{ fontSize: '14px', color: '#6b7280' }}>
+              Cliquez pour sélectionner un fichier PDF
+            </p>
+          </div>
+
+          {/* Message de chargement */}
+          {loading && (
+            <div style={{ textAlign: 'center', marginTop: '16px' }}>
+              <p style={{ color: '#3b82f6', fontWeight: '500' }}>
+                Enregistrement du MANEX en cours...
               </p>
-              <p style={{ fontSize: '14px', color: '#6b7280' }}>
-                ou glissez-déposez le fichier ici
-              </p>
             </div>
+          )}
+        </div>
 
-            {/* Actions pour MANEX existant */}
-            {aircraft.manex && (
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px', gap: '8px' }}>
-                <button
-                  onClick={handleRemoveManex}
-                  style={{ padding: '8px 16px', backgroundColor: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-                >
-                  <Trash2 size={16} />
-                  Supprimer le MANEX actuel
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Affichage du chargement */}
-        {loading && (
-          <div style={{ textAlign: 'center', padding: '32px' }}>
-            <div style={{
-              width: '48px',
-              height: '48px',
-              border: '4px solid #e5e7eb',
-              borderTopColor: '#3b82f6',
-              borderRadius: '50%',
-              margin: '0 auto 16px',
-              animation: 'spin 1s linear infinite'
-            }} />
-            <p style={{ fontSize: '16px' }}>Extraction des données du MANEX en cours...</p>
-          </div>
-        )}
-
-        {/* Affichage des données extraites */}
-        {extractedData && !loading && (
-          <div>
-            <div style={{ backgroundColor: '#d1fae5', border: '1px solid #86efac', borderRadius: '6px', padding: '12px', display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px' }}>
-              <CheckCircle size={20} style={{ color: '#065f46' }} />
-              <div>
-                <p style={{ fontSize: '14px' }}>
-                  <strong>MANEX importé avec succès!</strong>
-                </p>
-                <p style={{ fontSize: '12px', color: '#6b7280' }}>
-                  {extractedData.pageCount} pages analysées
-                </p>
-              </div>
-            </div>
-
-            {/* Sections trouvées */}
-            {extractedData.sections.length > 0 && (
-              <div style={{ marginBottom: '16px' }}>
-                <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>
-                  Sections identifiées
-                </h4>
-                <div style={{ maxHeight: '150px', overflow: 'auto', backgroundColor: '#f9fafb', padding: '12px', borderRadius: '6px' }}>
-                  {extractedData.sections.map((section, idx) => (
-                    <div key={idx} style={{ fontSize: '12px', marginBottom: '4px' }}>
-                      • Section {section.number}: {section.title}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Performances extraites */}
-            {Object.keys(extractedData.performances).length > 0 && (
-              <div style={{ marginBottom: '16px' }}>
-                <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>
-                  Données de performance
-                </h4>
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', 
-                  gap: '8px',
-                  backgroundColor: '#f9fafb',
-                  padding: '12px',
-                  borderRadius: '6px'
-                }}>
-                  {Object.entries(extractedData.performances).map(([key, value]) => {
-                    const isDefault = extractedData.extractionDetails?.performances?.[key] === 'default';
-                    return (
-                      <div 
-                        key={key} 
-                        style={{ 
-                          fontSize: '12px',
-                          padding: '4px 8px',
-                          borderRadius: '4px',
-                          backgroundColor: isDefault ? '#fef3c7' : '#d1fae5',
-                          border: isDefault ? '1px solid #fcd34d' : '1px solid #86efac',
-                          position: 'relative'
-                        }}
-                      >
-                        <strong>{key.toUpperCase()}:</strong> {value}
-                        {isDefault && (
-                          <span style={{
-                            position: 'absolute',
-                            top: '-8px',
-                            right: '4px',
-                            fontSize: '10px',
-                            backgroundColor: '#f59e0b',
-                            color: 'white',
-                            padding: '1px 4px',
-                            borderRadius: '3px',
-                            fontWeight: 'bold'
-                          }}>
-                            Par défaut
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-                {extractedData.extractionDetails?.performances && 
-                 Object.values(extractedData.extractionDetails.performances).some(v => v === 'default') && (
-                  <div style={{
-                    marginTop: '8px',
-                    fontSize: '12px',
-                    color: '#92400e',
-                    backgroundColor: '#fef3c7',
-                    padding: '8px',
-                    borderRadius: '4px',
-                    border: '1px solid #fcd34d'
-                  }}>
-                    ⚠️ Les valeurs en jaune sont des valeurs par défaut. Veuillez les vérifier et les ajuster selon votre manuel de vol.
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Abaques de performances extraits */}
-            {extractedData.performanceCharts && (
-              <div style={{ marginBottom: '16px' }}>
-                <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '8px', display: 'flex', alignItems: 'flex-start' }}>
-                  <BarChart3 size={16} style={{ marginRight: '8px' }} />
-                  Abaques de performances
-                </h4>
-                <div style={{ 
-                  backgroundColor: '#EFF6FF',
-                  padding: '12px',
-                  borderRadius: '6px',
-                  border: '1px solid #BFDBFE'
-                }}>
-                  {Object.entries(extractedData.performanceCharts).map(([chartType, chart]) => (
-                    chart && (
-                      <div key={chartType} style={{ marginBottom: '8px' }}>
-                        <p style={{ fontSize: '14px', fontWeight: 'bold' }}>
-                          {chartType.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                        </p>
-                        <div style={{ fontSize: '12px', color: '#6b7280' }}>
-                          • Altitudes: {chart.pressureAltitudes?.join(', ')} ft<br/>
-                          • Températures: {chart.temperatures?.join(', ')} °C<br/>
-                          • Unité: {chart.unit}<br/>
-                          {chart.corrections && Object.keys(chart.corrections).length > 0 && (
-                            <>• Corrections disponibles: {Object.keys(chart.corrections).join(', ')}<br/></>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  ))}
-                  <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px' }}>
-                    💡 Les abaques permettront le calcul précis des performances en fonction des conditions atmosphériques
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Limitations extraites */}
-            {Object.keys(extractedData.limitations).length > 0 && (
-              <div style={{ marginBottom: '16px' }}>
-                <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>
-                  Limitations
-                </h4>
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', 
-                  gap: '8px',
-                  backgroundColor: '#fff4ed',
-                  padding: '12px',
-                  borderRadius: '6px',
-                  border: '1px solid #fed7aa'
-                }}>
-                  {Object.entries(extractedData.limitations).map(([key, value]) => {
-                    const isDefault = extractedData.extractionDetails?.limitations?.[key] === 'default';
-                    return (
-                      <div 
-                        key={key} 
-                        style={{ 
-                          fontSize: '12px',
-                          padding: '4px 8px',
-                          borderRadius: '4px',
-                          backgroundColor: isDefault ? '#fef3c7' : '#fee2e2',
-                          border: isDefault ? '1px solid #fcd34d' : '1px solid #fca5a5',
-                          position: 'relative'
-                        }}
-                      >
-                        <strong>{key.toUpperCase()}:</strong> {value}
-                        {isDefault && (
-                          <span style={{
-                            position: 'absolute',
-                            top: '-8px',
-                            right: '4px',
-                            fontSize: '10px',
-                            backgroundColor: '#f59e0b',
-                            color: 'white',
-                            padding: '1px 4px',
-                            borderRadius: '3px',
-                            fontWeight: 'bold'
-                          }}>
-                            Par défaut
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Boutons d'action */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px' }}>
-              <button
-                onClick={() => {
-                  setPdfFile(null);
-                  setExtractedData(null);
-                  setPreviewUrl(null);
-                }}
-                style={{ padding: '8px 16px', backgroundColor: '#e5e7eb', color: '#374151', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}
-              >
-                Choisir un autre fichier
-              </button>
-              <button
-                onClick={handleSave}
-                style={{ padding: '8px 16px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-              >
-                <CheckCircle size={16} />
-                Enregistrer le MANEX
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Affichage des erreurs */}
-        {error && (
-          <div style={{ backgroundColor: '#fee2e2', border: '1px solid #fecaca', borderRadius: '6px', padding: '12px', display: 'flex', gap: '12px', alignItems: 'center', marginTop: '16px' }}>
-            <AlertTriangle size={20} style={{ color: '#991b1b' }} />
-            <p style={{ fontSize: '14px' }}>{error}</p>
-          </div>
-        )}
+        {/* Note informative */}
+        <div style={{
+          marginTop: '20px',
+          padding: '12px',
+          backgroundColor: '#f3f4f6',
+          borderRadius: '6px',
+          fontSize: '14px',
+          color: '#6b7280'
+        }}>
+          <p style={{ display: 'flex', alignItems: 'flex-start' }}>
+            <span style={{ marginRight: '8px' }}>ℹ️</span>
+            Le MANEX sera stocké avec l'avion pour référence future.
+            Vous pourrez le consulter ou le télécharger à tout moment depuis la fiche de l'avion.
+          </p>
+        </div>
       </div>
-
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
-    </>
   );
 });
 

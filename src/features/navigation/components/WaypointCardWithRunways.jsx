@@ -1,11 +1,11 @@
-import React, { memo, useState, useEffect } from 'react';
-import { Trash2, Navigation2, ChevronDown, ChevronUp, AlertTriangle, Download, ExternalLink, Plane, CheckCircle } from 'lucide-react';
+import React, { memo, useState, useEffect, useMemo } from 'react';
+import { Trash2, Navigation2, ChevronDown, ChevronUp, TrendingDown } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
-import { openAIPService } from '@services/openAIPService';
-import { useAircraft } from '@core/contexts';
+import { aeroDataProvider } from '@core/data';
+import { useAircraft, useNavigation } from '@core/contexts';
 import { SimpleAirportSelector as AirportSelector } from './SimpleAirportSelector';
+import { VFRPointInserter } from './VFRPointInserter';
 import { Conversions } from '@utils/conversions';
-import { DataSourceBadge, DataField } from '@shared/components';
 
 // Composant pour une carte de waypoint avec analyse des pistes intégrée
 export const WaypointCardWithRunways = memo(({ 
@@ -14,17 +14,82 @@ export const WaypointCardWithRunways = memo(({
   totalWaypoints, 
   onSelect, 
   onRemove, 
-  onShowReportingPoints 
+  onShowReportingPoints,
+  onInsertWaypoint,
+  allWaypoints,
+  segmentAltitude // Altitude du segment précédent pour le calcul TOD
 }) => {
   const { selectedAircraft } = useAircraft();
+  const { waypoints, updateWaypoint, segmentAltitudes } = useNavigation();
   const [airport, setAirport] = useState(null);
   const [runways, setRunways] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [showRunwayDetails, setShowRunwayDetails] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  const [vacData, setVacData] = useState(null);
   
   const isFirst = index === 0;
   const isLast = index === totalWaypoints - 1;
   const canDelete = totalWaypoints > 2;
+  
+  // Calcul du TOD pour l'arrivée
+  const todCalculation = useMemo(() => {
+    if (!isLast) return null;
+    
+    // Utiliser l'altitude du terrain ou une valeur par défaut
+    const terrainElevation = waypoint.elevation || vacData?.elevation || 0;
+    
+    // Altitude de croisière (depuis le segment ou altitude planifiée par défaut)
+    const cruiseAltitude = segmentAltitude?.startAlt || segmentAltitude?.endAlt || 3000;
+    
+    // Altitude pattern (1000ft au-dessus du terrain, ou 1500ft si aérodrome au niveau de la mer)
+    const targetAltitude = terrainElevation + (terrainElevation > 0 ? 1000 : 1500);
+    
+    const altitudeToDescent = cruiseAltitude - targetAltitude;
+    
+    // Debug logging
+    console.log('TOD Calculation:', {
+      isLast,
+      terrainElevation,
+      cruiseAltitude,
+      targetAltitude,
+      altitudeToDescent,
+      segmentAltitude
+    });
+    
+    // Si pas de descente nécessaire ou données insuffisantes
+    if (altitudeToDescent <= 0) {
+      return {
+        error: true,
+        message: altitudeToDescent === 0 ? "Déjà à l'altitude pattern" : "Montée requise pour le pattern",
+        cruiseAltitude,
+        targetAltitude,
+        terrainElevation
+      };
+    }
+    
+    // Paramètres standard
+    const descentRate = 500; // ft/min (taux standard)
+    const groundSpeed = selectedAircraft?.cruiseSpeedKt || 100; // kt
+    
+    // Calculs
+    const descentTimeMinutes = altitudeToDescent / descentRate;
+    const groundSpeedNmPerMin = groundSpeed / 60;
+    const distanceToTod = descentTimeMinutes * groundSpeedNmPerMin;
+    const descentAngle = Math.atan((altitudeToDescent / 6076.12) / distanceToTod) * 180 / Math.PI;
+    
+    return {
+      altitudeToDescent,
+      descentTimeMinutes,
+      distanceToTod: distanceToTod.toFixed(1),
+      descentAngle: descentAngle.toFixed(1),
+      targetAltitude,
+      cruiseAltitude,
+      terrainElevation,
+      descentRate,
+      groundSpeed,
+      error: false
+    };
+  }, [isLast, waypoint.elevation, vacData?.elevation, segmentAltitude, selectedAircraft]);
   
   const getLabel = () => {
     if (isFirst) return { text: 'Départ', color: '#10b981' };
@@ -34,27 +99,41 @@ export const WaypointCardWithRunways = memo(({
   
   const label = getLabel();
   
-  // Charger les données de l'aérodrome quand le waypoint change
+  // Charger les données VAC de l'aérodrome quand le waypoint change
   useEffect(() => {
     const loadAirportData = async () => {
       if (!waypoint.name || !waypoint.name.match(/^[A-Z]{4}$/)) {
         setAirport(null);
         setRunways([]);
+        setVacData(null);
         return;
       }
       
       setLoading(true);
       try {
-        // Récupérer tous les aéroports et chercher celui qui correspond
-        const airports = await openAIPService.getAirports('FR');
-        const airportData = airports.find(a => a.icao === waypoint.name || a.icaoCode === waypoint.name);
+        // Priorité aux données VAC
+        if (window.vacStore) {
+          const vacChart = window.vacStore.getState().getChartByIcao(waypoint.name);
+          if (vacChart && vacChart.extractedData) {
+            setVacData(vacChart.extractedData);
+            // Utiliser les pistes depuis VAC si disponibles
+            if (vacChart.extractedData.runways) {
+              setRunways(vacChart.extractedData.runways);
+            }
+          }
+        }
         
-        if (airportData) {
-          setAirport(airportData);
-          setRunways(airportData.runways || []);
-        } else {
-          setAirport(null);
-          setRunways([]);
+        // Fallback sur les données statiques si pas de VAC
+        if (!vacData) {
+          const airports = await aeroDataProvider.getAirfields({ country: 'FR' });
+          const airportData = airports.find(a => a.icao === waypoint.name || a.icaoCode === waypoint.name);
+          
+          if (airportData) {
+            setAirport(airportData);
+            if (!runways.length) {
+              setRunways(airportData.runways || []);
+            }
+          }
         }
       } catch (error) {
         console.error('Erreur chargement aérodrome:', error);
@@ -133,253 +212,309 @@ export const WaypointCardWithRunways = memo(({
       sx.components.card.base,
       { borderColor: label.color, borderWidth: '2px' }
     )}>
-      {/* En-tête avec label */}
-      <div style={sx.combine(sx.flex.between, sx.spacing.mb(3))}>
-        <span style={{
-          fontSize: '12px',
-          fontWeight: '600',
-          color: label.color,
-          backgroundColor: label.color + '20',
-          padding: '4px 12px',
-          borderRadius: '4px'
-        }}>
-          {label.text}
-        </span>
+      
+      {/* Ligne avec sélecteur et détails */}
+      <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch' }}>
+        {/* Sélecteur d'aérodrome - 40% */}
+        <div style={{ flex: '0 0 40%' }}>
+          <AirportSelector
+            label="Aérodrome"
+            value={waypoint.name ? { 
+              icao: waypoint.name, 
+              name: waypoint.airportName || waypoint.name,
+              coordinates: { lat: waypoint.lat, lon: waypoint.lon },
+              city: waypoint.city,
+              elevation: waypoint.elevation
+            } : null}
+            onChange={onSelect}
+            placeholder="Code OACI ou nom..."
+          />
+        </div>
         
-        {canDelete && (
-          <button
-            onClick={onRemove}
-            style={sx.combine(sx.components.button.base, sx.components.button.danger, { padding: '6px' })}
-            title="Supprimer ce point"
-          >
-            <Trash2 size={14} />
+        {/* Détails compacts - 60% */}
+        {waypoint.lat && waypoint.lon ? (
+          <div style={{ flex: '0 0 calc(60% - 12px)', display: 'flex', flexDirection: 'column' }}>
+            <label style={sx.components.label.base}>Détails</label>
+            <button
+              onClick={() => setShowDetails(!showDetails)}
+              style={sx.combine(
+                sx.components.input.base,
+                sx.text.xs,
+                { 
+                  cursor: 'pointer',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  backgroundColor: showDetails ? '#f3f4f6' : '#f9fafb',
+                  '&:hover': {
+                    backgroundColor: '#f3f4f6'
+                  }
+                }
+              )}
+            >
+            <div style={{ display: 'flex', gap: '12px', flex: 1, flexWrap: 'wrap' }}>
+              {/* TOD pour l'arrivée */}
+              {isLast && todCalculation && !todCalculation.error ? (
+                <>
+                  <div style={sx.combine({ minWidth: '110px' }, sx.text.warning)}>
+                    <TrendingDown size={12} style={{ display: 'inline', marginRight: '4px' }} />
+                    TOD: {todCalculation.distanceToTod} NM
+                  </div>
+                  <div style={sx.combine({ minWidth: '90px' }, sx.text.secondary)}>
+                    ⏱️ {Math.round(todCalculation.descentTimeMinutes)} min
+                  </div>
+                  <div style={sx.combine({ minWidth: '100px' }, sx.text.secondary)}>
+                    ↘️ {todCalculation.descentRate} ft/min
+                  </div>
+                </>
+              ) : isLast && todCalculation?.error ? (
+                <div style={sx.combine({ minWidth: '200px' }, sx.text.secondary)}>
+                  <TrendingDown size={12} style={{ display: 'inline', marginRight: '4px' }} />
+                  {todCalculation.message}
+                </div>
+              ) : runways.length > 0 && compatibility && selectedAircraft ? (
+                <div style={sx.combine(
+                  { minWidth: '140px' },
+                  compatibility.compatible > 0 ? sx.text.success : sx.text.danger
+                )}>
+                  ✈️ {compatibility.compatible} piste{compatibility.compatible > 1 ? 's' : ''} compatible{compatibility.compatible > 1 ? 's' : ''}
+                </div>
+              ) : isLast ? (
+                <div style={sx.combine({ minWidth: '140px' }, sx.text.secondary)}>
+                  <TrendingDown size={12} style={{ display: 'inline', marginRight: '4px' }} />
+                  TOD: En attente altitude
+                </div>
+              ) : null}
+              
+              {/* Altitude - toujours affichée */}
+              {(waypoint.elevation || vacData?.elevation) && (
+                <div style={{ minWidth: '70px' }}>
+                  ⛰️ {vacData?.elevation || waypoint.elevation} ft
+                </div>
+              )}
+              
+              {/* Coordonnées - affichées si pas d'arrivée ou pas de place pour TOD */}
+              {(!isLast || !todCalculation || todCalculation.error) && (
+                <div style={{ minWidth: '110px' }}>
+                  📍 {waypoint.lat.toFixed(2)}°, {waypoint.lon.toFixed(2)}°
+                </div>
+              )}
+            </div>
+            {/* Chevron */}
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              {showDetails ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </div>
           </button>
+          </div>
+        ) : (
+          /* Placeholder si pas de coordonnées */
+          <div style={{ flex: '0 0 calc(60% - 12px)' }}></div>
         )}
       </div>
       
-      {/* Sélecteur d'aérodrome */}
-      <AirportSelector
-        label="Aérodrome"
-        value={waypoint.name ? { 
-          icao: waypoint.name, 
-          name: waypoint.airportName || waypoint.name,
-          coordinates: { lat: waypoint.lat, lon: waypoint.lon },
-          city: waypoint.city,
-          elevation: waypoint.elevation
-        } : null}
-        onChange={onSelect}
-        placeholder="Code OACI ou nom..."
-      />
-      
-      {/* Informations du waypoint */}
-      {waypoint.lat && waypoint.lon && (
-        <div style={sx.spacing.mt(3)}>
-          <DataField
-            label="Coordonnées"
-            value={`${waypoint.lat.toFixed(4)}°, ${waypoint.lon.toFixed(4)}°`}
-            dataSource={airport?.dataSource || 'static'}
-            size="sm"
-          />
-          <div style={sx.combine(sx.text.xs, sx.spacing.mt(1), sx.spacing.ml(2), { color: '#6b7280' })}>
-            {Conversions.coordinatesToDMS(waypoint.lat, waypoint.lon).formatted}
-          </div>
-          {waypoint.elevation && (
-            <DataField
-              label="Altitude"
-              value={waypoint.elevation}
-              unit="ft"
-              dataSource={airport?.dataSource || 'static'}
-              size="sm"
-              style={{ marginTop: '4px' }}
-            />
-          )}
-        </div>
-      )}
-      
-      {/* Section pistes et VAC */}
-      {airport && (
-        <div style={sx.combine(sx.spacing.mt(3), sx.spacing.pt(3), { borderTop: '1px solid #e5e7eb' })}>
-          {/* Avertissement données non officielles */}
-          {airport.dataSource === 'static' && !airport.vacData && (
+      {/* Section détails étendue */}
+      {waypoint.lat && waypoint.lon && showDetails && (
+        <div style={sx.combine(sx.spacing.mt(3), sx.spacing.p(3), sx.bg.gray, sx.rounded.md)}>
+          {/* Indicateur VAC si données disponibles */}
+          {vacData && (
             <div style={sx.combine(
-              sx.components.alert.base,
-              sx.components.alert.warning,
-              sx.spacing.mb(2),
-              { padding: '8px 12px' }
+              sx.text.xs, 
+              sx.spacing.mb(3),
+              sx.spacing.p(2),
+              sx.rounded.sm,
+              { 
+                background: '#dbeafe',
+                color: '#1e40af',
+                border: '1px solid #93c5fd'
+              }
             )}>
-              <AlertTriangle size={16} style={{ flexShrink: 0 }} />
-              <div style={{ flex: 1 }}>
-                <p style={sx.combine(sx.text.xs, sx.text.bold)}>
-                  ⚠️ Données non officielles
-                </p>
-                <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
-                  Ces informations proviennent d'une base de données statique et peuvent être obsolètes.
-                  {airport.vacAvailable && ' Une carte VAC officielle est disponible.'}
-                </p>
-                {airport.vacAvailable && (
-                  <button
-                    onClick={goToVACModule}
-                    style={sx.combine(
-                      sx.text.xs,
-                      { 
-                        color: '#d97706',
-                        textDecoration: 'underline',
-                        background: 'none',
-                        border: 'none',
-                        padding: 0,
-                        cursor: 'pointer',
-                        marginTop: '4px'
-                      }
-                    )}
-                  >
-                    Télécharger la carte VAC pour des données officielles
-                  </button>
-                )}
+              ✅ Données issues de la carte VAC officielle
+            </div>
+          )}
+          
+          {/* Coordonnées détaillées */}
+          <div style={sx.spacing.mb(3)}>
+            <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
+              📍 Coordonnées complètes
+            </h5>
+            <div style={sx.text.sm}>
+              {waypoint.lat.toFixed(4)}°, {waypoint.lon.toFixed(4)}°
+            </div>
+            <div style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
+              {Conversions.coordinatesToDMS(waypoint.lat, waypoint.lon).formatted}
+            </div>
+          </div>
+          
+          {/* Altitude détaillée */}
+          {(waypoint.elevation || vacData?.elevation) && (
+            <div style={sx.spacing.mb(3)}>
+              <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
+                ⛰️ Altitude terrain
+              </h5>
+              <div style={sx.text.sm}>
+                {vacData?.elevation || waypoint.elevation} ft
               </div>
             </div>
           )}
           
-          {/* Indicateur VAC téléchargée */}
-          {airport.vacData && (
-            <div style={sx.combine(sx.text.xs, sx.text.success, sx.spacing.mb(2))}>
-              ✅ Données VAC disponibles
-              {airport.vacData.circuitAltitude && ` • Tour: ${airport.vacData.circuitAltitude} ft`}
-            </div>
-          )}
-          
-          {/* Résumé des pistes */}
-          {runways.length > 0 && (
-            <div>
-              <button
-                onClick={() => setShowRunwayDetails(!showRunwayDetails)}
-                style={sx.combine(
-                  sx.flex.between,
-                  sx.text.sm,
+          {/* Calcul TOD pour l'arrivée */}
+          {isLast && (
+            <div style={sx.spacing.mb(3)}>
+              <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
+                <TrendingDown size={14} style={{ display: 'inline', marginRight: '4px', color: '#f59e0b' }} />
+                Top of Descent (TOD)
+              </h5>
+              {todCalculation ? (
+                <div style={sx.combine(
                   sx.spacing.p(2),
-                  sx.bg.gray,
-                  sx.rounded.md,
+                  sx.rounded.sm,
                   { 
-                    width: '100%',
-                    border: 'none',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s'
+                    background: todCalculation.error ? '#fee2e2' : '#fef3c7', 
+                    border: todCalculation.error ? '1px solid #ef4444' : '1px solid #fbbf24' 
                   }
-                )}
-              >
-                <div style={sx.flex.start}>
-                  <Plane size={16} style={{ marginRight: '8px' }} />
-                  <span style={sx.text.bold}>
-                    {runways.length} piste{runways.length > 1 ? 's' : ''} • {Object.keys(runwayGroups).length} orientation{Object.keys(runwayGroups).length > 1 ? 's' : ''}
-                  </span>
-                  {compatibility && selectedAircraft && (
-                    <span style={sx.combine(
-                      sx.spacing.ml(2),
-                      compatibility.compatible === compatibility.total ? sx.text.success : 
-                      compatibility.compatible > 0 ? sx.text.warning : sx.text.danger
-                    )}>
-                      {compatibility.compatible === compatibility.total ? (
-                        <CheckCircle size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                      ) : (
-                        <AlertTriangle size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                      )}
-                      {compatibility.compatible}/{compatibility.total} compatible{compatibility.compatible > 1 ? 's' : ''}
-                    </span>
+                )}>
+                  {!todCalculation.error ? (
+                    <>
+                      <div style={sx.text.sm}>
+                        <strong>Distance TOD : {todCalculation.distanceToTod} NM</strong> avant l'arrivée
+                      </div>
+                      <div style={sx.combine(sx.text.xs, sx.spacing.mt(2))}>
+                        <strong>Paramètres utilisés :</strong>
+                      </div>
+                      <div style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
+                        • Altitude croisière : {todCalculation.cruiseAltitude} ft<br/>
+                        • Altitude terrain : {todCalculation.terrainElevation} ft<br/>
+                        • Altitude pattern : {todCalculation.targetAltitude} ft (terrain + 1000 ft)<br/>
+                        • Descente totale : {todCalculation.altitudeToDescent} ft<br/>
+                        • Taux de descente : {todCalculation.descentRate} ft/min<br/>
+                        • Vitesse sol : {todCalculation.groundSpeed} kt<br/>
+                        • Temps de descente : {Math.round(todCalculation.descentTimeMinutes)} min<br/>
+                        • Angle de descente : {todCalculation.descentAngle}°
+                      </div>
+                    </>
+                  ) : (
+                    <div style={sx.text.sm}>
+                      <strong>{todCalculation.message}</strong>
+                      <div style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
+                        • Altitude actuelle : {todCalculation.cruiseAltitude} ft<br/>
+                        • Altitude terrain : {todCalculation.terrainElevation} ft<br/>
+                        • Altitude pattern requise : {todCalculation.targetAltitude} ft
+                      </div>
+                    </div>
                   )}
                 </div>
-                {showRunwayDetails ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-              </button>
-              
-              {/* Détails des pistes groupées par orientation */}
-              {showRunwayDetails && (
-                <div style={sx.combine(sx.spacing.mt(2), sx.text.xs)}>
-                  {Object.entries(runwayGroups).map(([orientation, groupRunways]) => (
-                    <div key={orientation} style={sx.spacing.mb(2)}>
-                      <div style={sx.combine(
-                        sx.text.bold,
-                        sx.spacing.mb(1),
-                        sx.spacing.px(2),
-                        { color: '#4b5563' }
-                      )}>
-                        Orientation {orientation}
-                      </div>
-                      {groupRunways.map((runway, idx) => {
-                        const isCompatible = selectedAircraft && selectedAircraft.runwayRequirements && 
-                          Math.round((runway.dimensions?.toda || 0) * 3.28084) >= selectedAircraft.runwayRequirements.takeoffDistance &&
-                          Math.round((runway.dimensions?.lda || 0) * 3.28084) >= selectedAircraft.runwayRequirements.landingDistance;
-                        
-                        return (
-                          <div key={idx} style={sx.combine(
-                            sx.spacing.p(2),
-                            sx.spacing.mb(1),
-                            sx.bg.gray,
-                            sx.rounded.sm,
-                            sx.spacing.ml(2),
-                            {
-                              borderLeft: `3px solid ${isCompatible ? '#10b981' : '#ef4444'}`
-                            }
-                          )}>
-                            <div style={sx.flex.between}>
-                              <div>
-                                <strong>{runway.designator || `${runway.le_ident}/${runway.he_ident}`}</strong>
-                                {selectedAircraft && (
-                                  <span style={sx.combine(
-                                    sx.spacing.ml(2),
-                                    isCompatible ? sx.text.success : sx.text.danger,
-                                    { fontSize: '10px' }
-                                  )}>
-                                    {isCompatible ? '✓ Compatible' : '✗ Trop courte'}
-                                  </span>
-                                )}
-                              </div>
-                              <span>
-                                {runway.dimensions?.length || 'N/A'} m × {runway.dimensions?.width || 'N/A'} m
-                              </span>
-                            </div>
-                            {runway.surface?.type && (
-                              <div style={sx.text.secondary}>
-                                Surface: {runway.surface.type}
-                              </div>
-                            )}
-                            {runway.dimensions && (
-                              <div style={sx.combine(sx.text.secondary, sx.spacing.mt(1))}>
-                                TODA: {runway.dimensions.toda || runway.dimensions.length} m ({Math.round((runway.dimensions.toda || runway.dimensions.length) * 3.28084)} ft) • 
-                                LDA: {runway.dimensions.lda || runway.dimensions.length} m ({Math.round((runway.dimensions.lda || runway.dimensions.length) * 3.28084)} ft)
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ))}
+              ) : (
+                <div style={sx.combine(
+                  sx.spacing.p(2),
+                  sx.rounded.sm,
+                  sx.text.sm,
+                  sx.text.secondary,
+                  { background: '#f3f4f6', border: '1px solid #d1d5db' }
+                )}>
+                  ⚠️ Définissez l'altitude du segment précédent pour calculer le TOD
                 </div>
               )}
             </div>
           )}
           
-          {/* Pas de pistes disponibles */}
-          {!loading && runways.length === 0 && !airport.vacAvailable && (
-            <div style={sx.combine(sx.text.xs, sx.text.secondary)}>
-              Aucune donnée de piste disponible
+          {/* Pistes détaillées */}
+          {runways.length > 0 && (
+            <div>
+              <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
+                ✈️ Détails des pistes
+              </h5>
+              {Object.entries(runwayGroups).map(([orientation, groupRunways]) => (
+                <div key={orientation} style={sx.spacing.mb(2)}>
+                  {groupRunways.map((runway, idx) => {
+                    const isCompatible = selectedAircraft && selectedAircraft.runwayRequirements && 
+                      Math.round((runway.dimensions?.toda || 0) * 3.28084) >= selectedAircraft.runwayRequirements.takeoffDistance &&
+                      Math.round((runway.dimensions?.lda || 0) * 3.28084) >= selectedAircraft.runwayRequirements.landingDistance;
+                    
+                    return (
+                      <div key={idx} style={sx.combine(
+                        sx.text.xs, 
+                        sx.spacing.p(2),
+                        sx.spacing.mb(1),
+                        sx.rounded.sm,
+                        {
+                          background: isCompatible ? '#dcfce7' : '#fee2e2',
+                          borderLeft: `3px solid ${isCompatible ? '#10b981' : '#ef4444'}`
+                        }
+                      )}>
+                        <strong>{runway.designator || `${runway.le_ident}/${runway.he_ident}`}</strong>
+                        {runway.dimensions && (
+                          <span style={sx.text.secondary}>
+                            {' '}• {runway.dimensions.length} m × {runway.dimensions.width} m
+                          </span>
+                        )}
+                        {runway.surface?.type && (
+                          <span style={sx.text.secondary}>
+                            {' '}• {runway.surface.type}
+                          </span>
+                        )}
+                        {selectedAircraft && (
+                          <span style={sx.combine(
+                            sx.spacing.ml(1),
+                            isCompatible ? sx.text.success : sx.text.danger
+                          )}>
+                            {isCompatible ? ' ✓ Compatible' : ' ✗ Trop courte'}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
           )}
         </div>
       )}
       
-      {/* Bouton pour les points de report VFR */}
-      {waypoint.name && waypoint.name.match(/^LF[A-Z]{2}$/) && (
-        <button
-          onClick={onShowReportingPoints}
-          style={sx.combine(
-            sx.components.button.base,
-            sx.components.button.secondary,
-            sx.spacing.mt(2),
-            { fontSize: '12px', padding: '6px 12px' }
+      {/* Pied de carte avec boutons, label et bouton supprimer sur la même ligne */}
+      <div style={sx.combine(
+        sx.flex.between, 
+        sx.spacing.mt(3),
+        sx.spacing.pt(3),
+        { borderTop: '1px solid #e5e7eb', alignItems: 'center' }
+      )}>
+        {/* Boutons d'ajout */}
+        {!isLast && onInsertWaypoint && (
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <VFRPointInserter
+              waypoints={allWaypoints || waypoints}
+              onInsertWaypoint={(newWaypoint, _) => {
+                // Insérer après ce waypoint
+                onInsertWaypoint(newWaypoint, index + 1);
+              }}
+              insertPosition={index + 1}
+            />
+          </div>
+        )}
+        
+        {/* Étiquette et bouton supprimer */}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <span style={{
+            fontSize: '12px',
+            fontWeight: '600',
+            color: label.color,
+            backgroundColor: label.color + '20',
+            padding: '4px 12px',
+            borderRadius: '4px'
+          }}>
+            {label.text}
+          </span>
+          
+          {canDelete && (
+            <button
+              onClick={onRemove}
+              style={sx.combine(sx.components.button.base, sx.components.button.danger, { padding: '6px' })}
+              title="Supprimer ce point"
+            >
+              <Trash2 size={14} />
+            </button>
           )}
-        >
-          <Navigation2 size={14} />
-          Points de report VFR
-        </button>
-      )}
+        </div>
+      </div>
     </div>
   );
 });

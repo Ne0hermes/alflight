@@ -70,7 +70,30 @@ export const DEFAULT_AIRCRAFT = {
 
 // Nouveau : liste d'avions par défaut
 export const DEFAULT_AIRCRAFT_LIST = [
-  DEFAULT_AIRCRAFT,
+  {
+    ...DEFAULT_AIRCRAFT,
+    compatibleRunwaySurfaces: ['ASPH', 'CONC'], // Surfaces par défaut pour DA40NG
+    approvedOperations: {
+      vfrDay: true,
+      vfrNight: true,
+      ifrDay: true,
+      ifrNight: true,
+      svfr: false,
+      formation: false,
+      aerobatics: false,
+      banner: false,
+      glider: false,
+      parachute: false,
+      agricultural: false,
+      aerial: false,
+      training: true,
+      charter: false,
+      mountainous: false,
+      seaplane: false,
+      skiPlane: false,
+      icing: false
+    }
+  },
   {
     id: 'cessna-172-demo',
     registration: 'F-TEST',
@@ -90,6 +113,27 @@ export const DEFAULT_AIRCRAFT_LIST = [
     maxLandingWeight: 1157,
     maxBaggageWeight: 54,
     maxAuxiliaryWeight: 10,
+    compatibleRunwaySurfaces: ['ASPH', 'CONC', 'GRASS'], // Surfaces par défaut pour Cessna 172
+    approvedOperations: {
+      vfrDay: true,
+      vfrNight: true,
+      ifrDay: false,
+      ifrNight: false,
+      svfr: false,
+      formation: false,
+      aerobatics: false,
+      banner: false,
+      glider: false,
+      parachute: false,
+      agricultural: false,
+      aerial: false,
+      training: true,
+      charter: false,
+      mountainous: false,
+      seaplane: false,
+      skiPlane: false,
+      icing: false
+    },
     performances: {
       takeoffDistance: 365,
       accelerateStopDistance: 420,

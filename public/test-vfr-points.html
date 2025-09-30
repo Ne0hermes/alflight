@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Points VFR des Cartes VAC</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 30px;
+        }
+        .status-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 2px solid #e5e7eb;
+        }
+        .status-card.success {
+            background: #f0fdf4;
+            border-color: #86efac;
+        }
+        .status-card.error {
+            background: #fef2f2;
+            border-color: #fca5a5;
+        }
+        .status-card.loading {
+            background: #fef3c7;
+            border-color: #fde047;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #10b981;
+            color: white;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 0 3px;
+        }
+        .vfr-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .vfr-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            transition: box-shadow 0.2s;
+        }
+        .vfr-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .vfr-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .vfr-name {
+            font-weight: 600;
+            font-size: 16px;
+            color: #1f2937;
+        }
+        .vfr-aerodrome {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .vfr-details {
+            font-size: 14px;
+            color: #4b5563;
+        }
+        .vfr-detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+        .vfr-label {
+            font-weight: 500;
+            color: #6b7280;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .stat-box {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            align-items: center;
+        }
+        input[type="text"] {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            flex: 1;
+            max-width: 300px;
+        }
+        select {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📍 Test Points VFR des Cartes VAC</h1>
+        </div>
+        
+        <div class="content">
+            <div id="status" class="status-card loading">
+                <h2>⏳ Chargement en cours...</h2>
+                <p>Extraction des points VFR depuis les données AIXM/SIA</p>
+            </div>
+
+            <div class="stats-grid" id="stats" style="display: none;">
+                <div class="stat-box">
+                    <div class="stat-value" id="total-vfr">0</div>
+                    <div class="stat-label">Points VFR totaux</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="total-aerodromes">0</div>
+                    <div class="stat-label">Aérodromes avec VFR</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="avg-per-aerodrome">0</div>
+                    <div class="stat-label">Moyenne par aérodrome</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="max-per-aerodrome">0</div>
+                    <div class="stat-label">Maximum par aérodrome</div>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <input type="text" id="searchInput" placeholder="Rechercher un point VFR ou aérodrome...">
+                <select id="aerodromeFilter">
+                    <option value="">Tous les aérodromes</option>
+                </select>
+                <button onclick="loadVFRPoints()">🔄 Recharger</button>
+                <button onclick="exportVFRPoints()">📥 Exporter JSON</button>
+            </div>
+
+            <div id="vfr-list" class="vfr-grid"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        let allVFRPoints = [];
+        let filteredVFRPoints = [];
+
+        async function loadVFRPoints() {
+            const statusEl = document.getElementById('status');
+            statusEl.className = 'status-card loading';
+            statusEl.innerHTML = '<h2>⏳ Chargement en cours...</h2><p>Extraction des points VFR depuis les données AIXM/SIA</p>';
+            
+            try {
+                // Charger d'abord les aérodromes
+                const response = await fetch('/data/geojson/aerodromes.geojson');
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP: ${response.status}`);
+                }
+                
+                const geojsonData = await response.json();
+                const aerodromes = geojsonData.features || [];
+                
+                // Extraire les points VFR
+                allVFRPoints = [];
+                const aerodromeStats = {};
+                
+                for (const aerodrome of aerodromes) {
+                    const vfrPoints = aerodrome.properties?.vfrPoints || [];
+                    const aerodromeIcao = aerodrome.properties?.icao;
+                    const aerodromeName = aerodrome.properties?.name;
+                    
+                    if (vfrPoints.length > 0) {
+                        aerodromeStats[aerodromeIcao] = vfrPoints.length;
+                        
+                        for (const vfrPoint of vfrPoints) {
+                            if (vfrPoint.coordinates?.lat && vfrPoint.coordinates?.lon) {
+                                allVFRPoints.push({
+                                    name: vfrPoint.name,
+                                    description: vfrPoint.description || '',
+                                    coordinates: vfrPoint.coordinates,
+                                    aerodrome: aerodromeIcao,
+                                    aerodromeName: aerodromeName,
+                                    altitude: vfrPoint.altitude,
+                                    reference: vfrPoint.reference
+                                });
+                            }
+                        }
+                    }
+                }
+                
+                // Calculer les statistiques
+                const totalVFR = allVFRPoints.length;
+                const totalAerodromes = Object.keys(aerodromeStats).length;
+                const avgPerAerodrome = totalAerodromes > 0 ? Math.round(totalVFR / totalAerodromes * 10) / 10 : 0;
+                const maxPerAerodrome = Math.max(...Object.values(aerodromeStats), 0);
+                
+                // Afficher les statistiques
+                document.getElementById('stats').style.display = 'grid';
+                document.getElementById('total-vfr').textContent = totalVFR;
+                document.getElementById('total-aerodromes').textContent = totalAerodromes;
+                document.getElementById('avg-per-aerodrome').textContent = avgPerAerodrome;
+                document.getElementById('max-per-aerodrome').textContent = maxPerAerodrome;
+                
+                // Remplir le filtre des aérodromes
+                const aerodromeFilter = document.getElementById('aerodromeFilter');
+                aerodromeFilter.innerHTML = '<option value="">Tous les aérodromes</option>';
+                Object.keys(aerodromeStats).sort().forEach(icao => {
+                    const option = document.createElement('option');
+                    option.value = icao;
+                    option.textContent = `${icao} (${aerodromeStats[icao]} points)`;
+                    aerodromeFilter.appendChild(option);
+                });
+                
+                // Afficher les points VFR
+                displayVFRPoints(allVFRPoints);
+                
+                // Mettre à jour le statut
+                statusEl.className = 'status-card success';
+                statusEl.innerHTML = `
+                    <h2>✅ Chargement réussi!</h2>
+                    <p>${totalVFR} points VFR extraits depuis ${totalAerodromes} aérodromes</p>
+                    <p style="margin-top: 10px; font-size: 12px; color: #6b7280;">
+                        ${new Date().toLocaleTimeString('fr-FR')}
+                    </p>
+                `;
+                
+            } catch (error) {
+                console.error('Erreur:', error);
+                statusEl.className = 'status-card error';
+                statusEl.innerHTML = `
+                    <h2>❌ Erreur de chargement</h2>
+                    <p>${error.message}</p>
+                    <p style="margin-top: 10px; font-size: 12px;">
+                        Vérifiez que les données GeoJSON sont disponibles dans /data/geojson/
+                    </p>
+                `;
+            }
+        }
+
+        function displayVFRPoints(points) {
+            const container = document.getElementById('vfr-list');
+            
+            if (points.length === 0) {
+                container.innerHTML = '<div class="status-card">Aucun point VFR trouvé</div>';
+                return;
+            }
+            
+            container.innerHTML = points.map(vfr => `
+                <div class="vfr-card">
+                    <div class="vfr-header">
+                        <div class="vfr-name">${vfr.name}</div>
+                        <div class="vfr-aerodrome">${vfr.aerodrome}</div>
+                    </div>
+                    <div class="vfr-details">
+                        ${vfr.aerodromeName ? `
+                            <div class="vfr-detail-row">
+                                <span class="vfr-label">Aérodrome:</span>
+                                <span>${vfr.aerodromeName}</span>
+                            </div>
+                        ` : ''}
+                        ${vfr.description ? `
+                            <div class="vfr-detail-row">
+                                <span class="vfr-label">Description:</span>
+                                <span>${vfr.description}</span>
+                            </div>
+                        ` : ''}
+                        <div class="vfr-detail-row">
+                            <span class="vfr-label">Coordonnées:</span>
+                            <span>${formatCoordinates(vfr.coordinates)}</span>
+                        </div>
+                        ${vfr.altitude ? `
+                            <div class="vfr-detail-row">
+                                <span class="vfr-label">Altitude:</span>
+                                <span>${vfr.altitude}</span>
+                            </div>
+                        ` : ''}
+                        ${vfr.reference ? `
+                            <div class="vfr-detail-row">
+                                <span class="vfr-label">Référence:</span>
+                                <span>${vfr.reference}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function formatCoordinates(coords) {
+            if (!coords || !coords.lat || !coords.lon) return 'N/A';
+            
+            const lat = coords.lat;
+            const lon = coords.lon;
+            
+            const latDir = lat >= 0 ? 'N' : 'S';
+            const lonDir = lon >= 0 ? 'E' : 'W';
+            
+            const formatDMS = (decimal, isLat) => {
+                const abs = Math.abs(decimal);
+                const degrees = Math.floor(abs);
+                const minutes = Math.floor((abs - degrees) * 60);
+                const seconds = Math.round(((abs - degrees) * 60 - minutes) * 60);
+                
+                return `${degrees}°${String(minutes).padStart(2, '0')}'${String(seconds).padStart(2, '0')}"`;
+            };
+            
+            return `${formatDMS(lat, true)}${latDir} ${formatDMS(lon, false)}${lonDir}`;
+        }
+
+        function filterVFRPoints() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const selectedAerodrome = document.getElementById('aerodromeFilter').value;
+            
+            filteredVFRPoints = allVFRPoints.filter(vfr => {
+                const matchesSearch = !searchTerm || 
+                    vfr.name.toLowerCase().includes(searchTerm) ||
+                    vfr.aerodrome.toLowerCase().includes(searchTerm) ||
+                    (vfr.description && vfr.description.toLowerCase().includes(searchTerm)) ||
+                    (vfr.aerodromeName && vfr.aerodromeName.toLowerCase().includes(searchTerm));
+                
+                const matchesAerodrome = !selectedAerodrome || vfr.aerodrome === selectedAerodrome;
+                
+                return matchesSearch && matchesAerodrome;
+            });
+            
+            displayVFRPoints(filteredVFRPoints);
+        }
+
+        function exportVFRPoints() {
+            const dataToExport = filteredVFRPoints.length > 0 ? filteredVFRPoints : allVFRPoints;
+            
+            const geojson = {
+                type: 'FeatureCollection',
+                features: dataToExport.map(vfr => ({
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Point',
+                        coordinates: [vfr.coordinates.lon, vfr.coordinates.lat]
+                    },
+                    properties: {
+                        name: vfr.name,
+                        description: vfr.description,
+                        aerodrome: vfr.aerodrome,
+                        aerodromeName: vfr.aerodromeName,
+                        altitude: vfr.altitude,
+                        reference: vfr.reference
+                    }
+                }))
+            };
+            
+            const blob = new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `vfr_points_${new Date().toISOString().split('T')[0]}.geojson`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', filterVFRPoints);
+        document.getElementById('aerodromeFilter').addEventListener('change', filterVFRPoints);
+
+        // Charger au démarrage
+        window.addEventListener('load', loadVFRPoints);
+    </script>
+</body>
+</html>

@@ -930,42 +930,29 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
         </div>
       </div>
       
-      {/* En-tête avec statut global */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <div>
-          <h3 style={{ fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
-            <Activity size={20} style={{ marginRight: '8px' }} />
-            Détail des obligations réglementaires
-          </h3>
-          <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
-            Basé sur vos licences et qualifications actives
-          </p>
-        </div>
-        
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {/* Bouton ajouter un vol */}
-          <button
-            onClick={() => {
-              if (window.setPilotActiveTab) {
-                window.setPilotActiveTab('logbook');
-              }
-            }}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#3b82f6',
-              color: 'white',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            📝 Ajouter un vol
-          </button>
-        </div>
+      {/* Bouton ajouter un vol */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+        <button
+          onClick={() => {
+            if (window.setPilotActiveTab) {
+              window.setPilotActiveTab('logbook');
+            }
+          }}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#3b82f6',
+            color: 'white',
+            borderRadius: '6px',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}
+        >
+          📝 Ajouter un vol
+        </button>
       </div>
 
       {/* Alertes pour les licences arrivant à expiration */}
@@ -1248,107 +1235,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
                 </div>
               )}
               
-              {/* Exigences pour revalidation */}
-              {grouped.revalidation.length > 0 && (
-                <div>
-                  <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#f59e0b' }}>
-                    📋 Exigences pour revalidation
-                  </h4>
-                  <div style={{ display: 'grid', gap: '8px' }}>
-                    {grouped.revalidation.map(status => (
-                      <div key={status.key} style={{
-                        padding: '12px',
-                        borderRadius: '8px',
-                        backgroundColor: status.isValid ? '#f0fdf4' : '#fef3c7',
-                        border: `1px solid ${status.isValid ? '#86efac' : '#fcd34d'}`
-                      }}>
-                        <div style={{ marginBottom: '8px' }}>
-                          <p style={{ fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
-                            {status.isValid ? <CheckCircle size={14} color="#10b981" /> : <AlertTriangle size={14} color="#f59e0b" />}
-                            <span style={{ marginLeft: '6px' }}>{status.description}</span>
-                          </p>
-                          <p style={{ fontSize: '11px', color: '#6b7280' }}>
-                            {status.periodText} • {status.regulation}
-                          </p>
-                        </div>
-                        
-                        {/* Barre de progression simplifiée */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
-                          {status.minFlights && (
-                            <div style={{ fontSize: '11px' }}>
-                              <span style={{ color: '#6b7280' }}>Vols: </span>
-                              <span style={{ fontWeight: 'bold', color: status.missingFlights > 0 ? '#dc2626' : '#059669' }}>
-                                {status.current.totalFlights}/{status.minFlights}
-                              </span>
-                            </div>
-                          )}
-                          {status.minHours && (
-                            <div style={{ fontSize: '11px' }}>
-                              <span style={{ color: '#6b7280' }}>Heures: </span>
-                              <span style={{ fontWeight: 'bold', color: status.missingHours > 0 ? '#dc2626' : '#059669' }}>
-                                {status.current.totalHours.toFixed(1)}/{status.minHours}h
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {!status.isValid && (
-                          <div style={{ marginTop: '8px', fontSize: '11px', color: '#92400e' }}>
-                            ⚠️ Manque: {status.missingFlights > 0 && `${status.missingFlights} vol(s)`}
-                            {status.missingHours > 0 && ` • ${status.missingHours.toFixed(1)}h`}
-                            {status.needsInstructorFlight && ' • Vol instructeur'}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
               
-              {/* Maintien des compétences */}
-              {grouped.currency.length > 0 && (
-                <div>
-                  <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#6b7280' }}>
-                    ✈️ Maintien des compétences
-                  </h4>
-                  <div style={{ display: 'grid', gap: '8px' }}>
-                    {grouped.currency.map(status => (
-                      <div key={status.key} style={{
-                        padding: '12px',
-                        borderRadius: '8px',
-                        backgroundColor: status.isValid ? '#f0fdf4' : '#fef3c7',
-                        border: `1px solid ${status.isValid ? '#86efac' : '#fcd34d'}`
-                      }}>
-                        <div style={{ marginBottom: '8px' }}>
-                          <p style={{ fontSize: '13px', fontWeight: 'bold' }}>
-                            {status.description}
-                          </p>
-                          <p style={{ fontSize: '11px', color: '#6b7280' }}>
-                            Période: {status.period} jours • {status.regulation}
-                          </p>
-                        </div>
-                        
-                        <div style={{ display: 'flex', gap: '12px', fontSize: '11px' }}>
-                          {status.minTakeoffs && (
-                            <span>
-                              Décollages: <strong style={{ color: status.missingTakeoffs > 0 ? '#dc2626' : '#059669' }}>
-                                {status.current.totalTakeoffs}/{status.minTakeoffs}
-                              </strong>
-                            </span>
-                          )}
-                          {status.minLandings && (
-                            <span>
-                              Atterrissages: <strong style={{ color: status.missingLandings > 0 ? '#dc2626' : '#059669' }}>
-                                {status.current.totalLandings}/{status.minLandings}
-                              </strong>
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
               
               {/* Éléments valides (résumé compact) */}
               {grouped.valid.length > 0 && (
@@ -1374,32 +1261,6 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
             </>
           );
         })()}
-      </div>
-      
-      {/* Informations réglementaires - En bas de page */}
-      <div style={{
-        display: 'flex',
-        gap: '12px',
-        padding: '12px',
-        borderRadius: '8px',
-        marginTop: '20px',
-        backgroundColor: '#eff6ff',
-        border: '1px solid #60a5fa'
-      }}>
-        <Info size={16} />
-        <div style={{ width: '100%' }}>
-          <p style={{ fontSize: '14px', fontWeight: 'bold' }}>Références réglementaires</p>
-          <p style={{ fontSize: '12px' }}>
-            Ces exigences sont basées sur la réglementation EASA Part-FCL. Consultez toujours les textes officiels
-            et votre école de pilotage pour les exigences spécifiques à votre situation.
-          </p>
-          <ul style={{ fontSize: '12px', marginLeft: '20px', marginTop: '8px' }}>
-            <li>FCL.740 - Validité et renouvellement des qualifications</li>
-            <li>FCL.060 - Expérience récente</li>
-            <li>FCL.625 - Validité de la qualification IR</li>
-            <li>AMC1 FCL.740.A(b)(1) - Renouvellement SEP</li>
-          </ul>
-        </div>
       </div>
     </div>
   );

@@ -1,285 +1,230 @@
-import React, { useState } from 'react';
-import { Calculator, Plane, TrendingUp, TrendingDown, Mountain, Thermometer, Wind, CheckCircle, AlertTriangle, Settings } from 'lucide-react';
-import { DataField, DataSourceBadge } from '../../shared/components';
+import React, { useState, useEffect } from 'react';
+import { Calculator, AlertCircle, TrendingUp, Wind, Compass, FileText } from 'lucide-react';
 import { sx } from '../../shared/styles/styleSystem';
-import { PerformanceCalculator } from './components/PerformanceCalculator';
+import PerformanceCalculator from './components/PerformanceCalculator';
+import AdvancedPerformanceCalculator from './components/AdvancedPerformanceCalculator';
+import { RunwaySuggestionEnhanced } from '../weather/components/RunwaySuggestionEnhanced';
+import { useAircraft, useWeightBalance, useNavigation, useWeather, useFuel } from '../../core/contexts';
+import { useWeatherStore } from '../../core/stores/weatherStore';
 
-const PerformanceModule = () => {
-  const [showAdvancedCalculator, setShowAdvancedCalculator] = useState(false);
+const PerformanceModule = ({ wizardMode = false, config = {} }) => {
+  const { selectedAircraft } = useAircraft();
+  const { calculations } = useWeightBalance();
+  const { waypoints } = useNavigation();
+  const { getWeatherByIcao } = useWeather();
+  const { fuelData, fobFuel } = useFuel();
+  const weatherData = useWeatherStore(state => state.weatherData || {});
+  
+  
+  // Récupérer les aérodromes de départ et d'arrivée
+  const departureAirport = waypoints?.[0];
+  const arrivalAirport = waypoints?.[waypoints?.length - 1];
+  
+  // Récupérer la météo pour les aérodromes
+  const departureWeather = departureAirport?.name && weatherData[departureAirport.name];
+  const arrivalWeather = arrivalAirport?.name && weatherData[arrivalAirport.name];
+  
+  // Si aucun avion sélectionné, afficher un message
+  if (!selectedAircraft) {
+    return (
+      <div style={sx.spacing.p(6)}>
+        <div style={sx.combine(sx.components.card.base, sx.text.left, sx.spacing.p(8))}>
+          <AlertCircle size={48} style={{ marginBottom: '16px', color: '#f59e0b' }} />
+          <p style={sx.combine(sx.text.lg, sx.text.secondary)}>
+            Sélectionnez un avion pour voir ses performances
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+
   return (
     <div style={sx.spacing.p(6)}>
-      {/* Header du module avec switch pour calculateur avancé */}
+      {/* Header du module */}
       <div style={sx.combine(sx.components.card.base, sx.spacing.mb(6))}>
         <div style={sx.combine(sx.flex.between, sx.spacing.mb(4))}>
           <h2 style={sx.combine(sx.text.xl, sx.text.bold, sx.flex.start)}>
-            <Calculator size={24} style={{ marginRight: '8px' }} />
-            Performances de décollage et d'atterrissage
+            <TrendingUp size={24} style={{ marginRight: '8px', color: '#10b981' }} />
+            Calcul des performances
           </h2>
-          <button
-            onClick={() => setShowAdvancedCalculator(!showAdvancedCalculator)}
-            style={{
-              ...sx.components.button.base,
-              ...sx.components.button.primary,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}
-          >
-            <Settings size={16} />
-            {showAdvancedCalculator ? 'Calcul simple' : 'Calcul avec abaques'}
-          </button>
+          
         </div>
         
         {/* Info avion */}
-        <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.mb(4))}>
-          <div style={sx.combine(sx.flex.between, sx.spacing.mb(3))}>
+        <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
+          <div style={sx.combine(sx.flex.between)}>
             <div>
-              <h4 style={sx.text.bold}>F-GKXS</h4>
-              <p style={sx.text.secondary}>Cessna 172S</p>
+              <h4 style={sx.text.bold}>{selectedAircraft.registration}</h4>
+              <p style={sx.text.secondary}>{selectedAircraft.model}</p>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <DataField label="MTOW" value="1111" unit="kg" dataSource="static" size="sm" />
-              <DataField label="Vitesse croisière" value="122" unit="kt" dataSource="static" size="sm" style={{ marginTop: '4px' }} />
-            </div>
-          </div>
-          
-          <div style={sx.combine(sx.components.card.base, sx.bg.white)}>
-            <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>Performances standard (ISA, niveau mer)</h5>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-              <DataField label="TOD" value="290" unit="m" dataSource="static" size="xs" />
-              <DataField label="ASD" value="520" unit="m" dataSource="static" size="xs" />
-              <DataField label="LD" value="215" unit="m" dataSource="static" size="xs" />
-              <DataField label="LD UP" value="395" unit="m" dataSource="static" size="xs" />
+              <p style={sx.text.sm}>
+                <span style={sx.text.secondary}>MTOW: </span>
+                <span style={sx.text.bold}>{selectedAircraft.maxTakeoffWeight || 'N/A'} kg</span>
+              </p>
+              <p style={sx.text.sm}>
+                <span style={sx.text.secondary}>Vitesse: </span>
+                <span style={sx.text.bold}>{selectedAircraft.cruiseSpeedKt || selectedAircraft.cruiseSpeed || 'N/A'} kt</span>
+              </p>
             </div>
           </div>
         </div>
       </div>
       
-      {/* Performance Départ */}
-      <div style={sx.combine(sx.components.card.base, sx.spacing.mb(6), { borderColor: '#10b981', borderWidth: '2px' })}>
-        <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(3), sx.flex.start)}>
-          <TrendingUp size={20} style={{ color: '#10b981', marginRight: '8px' }} />
-          Décollage - LFPN
-          <DataSourceBadge source="vac" size="sm" inline={true} style={{ marginLeft: '8px' }} />
-        </h4>
-        
-        {/* Conditions */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-          <DataField
-            label="Altitude"
-            value="538"
-            unit="ft"
-            dataSource="vac"
-            emphasis={true}
-          />
+      {/* Affichage des performances si disponibles */}
+      {selectedAircraft.performance && (
+        <div style={sx.combine(sx.components.card.base, sx.spacing.mb(6))}>
+          <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4))}>
+            <Calculator size={20} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle' }} />
+            Performances de l'avion
+          </h3>
           
-          <DataField
-            label="Température"
-            value="22°C (ISA +8°)"
-            dataSource="api"
-            emphasis={true}
-          />
-          
-          <DataField
-            label="Facteur"
-            value="×1.13"
-            dataSource="calculated"
-            emphasis={true}
-          />
-        </div>
-        
-        {/* Météo */}
-        <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.mb(4))}>
-          <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>🌤️ Conditions météo actuelles</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <DataField label="Vent" value="270° / 8kt" dataSource="api" size="sm" />
-            <DataField label="Visibilité" value="10km" dataSource="api" size="sm" />
-            <DataField label="QNH" value="1018 hPa" dataSource="api" size="sm" />
-            <DataField label="Point de rosée" value="15°C" dataSource="api" size="sm" />
-          </div>
-        </div>
-        
-        {/* Distances corrigées */}
-        <div style={sx.spacing.mb(4)}>
-          <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.text.secondary, sx.spacing.mb(2))}>Distances corrigées</h5>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <div style={sx.combine(sx.components.card.base, sx.bg.gray)}>
-              <p style={sx.combine(sx.text.xs, sx.text.secondary)}>TOD (Take-off Distance)</p>
-              <p style={sx.combine(sx.text.xl, sx.text.bold)}>328 m</p>
-              <p style={sx.combine(sx.text.xs, sx.text.secondary)}>(290 m std)</p>
-            </div>
-            <div style={sx.combine(sx.components.card.base, sx.bg.gray)}>
-              <p style={sx.combine(sx.text.xs, sx.text.secondary)}>ASD (Accelerate-Stop)</p>
-              <p style={sx.combine(sx.text.xl, sx.text.bold)}>588 m</p>
-              <p style={sx.combine(sx.text.xs, sx.text.secondary)}>(520 m std)</p>
-            </div>
-          </div>
-        </div>
-        
-        {/* Analyse pistes */}
-        <div>
-          <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.text.secondary, sx.spacing.mb(2))}>Analyse des pistes disponibles</h5>
-          <div style={{ display: 'grid', gap: '8px' }}>
-            <div style={sx.combine(sx.components.alert.base, sx.components.alert.success)}>
-              <CheckCircle size={16} />
-              <div>
-                <p style={sx.combine(sx.text.sm, sx.text.bold)}>
-                  Piste 07/25 - 1410 m × 30 m
-                </p>
-                <DataField
-                  label="QFU"
-                  value="070°/250°"
-                  dataSource="vac"
-                  size="xs"
-                  style={{ marginTop: '4px' }}
-                />
-                <DataField
-                  label="Surface"
-                  value="Bitume"
-                  dataSource="vac"
-                  size="xs"
-                  style={{ marginTop: '4px' }}
-                />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            {selectedAircraft.performance.takeoff && (
+              <div style={sx.combine(sx.components.card.base, sx.bg.gray)}>
+                <h4 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
+                  ✈️ Décollage (conditions standards)
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                  <div>
+                    <p style={sx.text.xs}>TOD</p>
+                    <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+                      {selectedAircraft.performance.takeoff.tod} m
+                    </p>
+                  </div>
+                  <div>
+                    <p style={sx.text.xs}>15m</p>
+                    <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+                      {selectedAircraft.performance.takeoff.toda15m} m
+                    </p>
+                  </div>
+                  <div>
+                    <p style={sx.text.xs}>50ft</p>
+                    <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+                      {selectedAircraft.performance.takeoff.toda50ft} m
+                    </p>
+                  </div>
+                </div>
+                {selectedAircraft.performance.conditions?.takeoff && (
+                  <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(2))}>
+                    Conditions: {selectedAircraft.performance.conditions.takeoff.mass}kg, 
+                    {selectedAircraft.performance.conditions.takeoff.altitude}ft, 
+                    {selectedAircraft.performance.conditions.takeoff.temperature}°C
+                  </p>
+                )}
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Performance Arrivée */}
-      <div style={sx.combine(sx.components.card.base, sx.spacing.mb(6), { borderColor: '#ef4444', borderWidth: '2px' })}>
-        <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(3), sx.flex.start)}>
-          <TrendingDown size={20} style={{ color: '#ef4444', marginRight: '8px' }} />
-          Atterrissage - LFPT
-          <DataSourceBadge source="static" size="sm" inline={true} style={{ marginLeft: '8px' }} />
-        </h4>
-        
-        {/* Conditions */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-          <DataField
-            label="Altitude"
-            value="325"
-            unit="ft"
-            dataSource="static"
-            emphasis={true}
-          />
-          
-          <DataField
-            label="Température"
-            value="15°C (ISA +0°)"
-            dataSource="static"
-            emphasis={true}
-          />
-          
-          <DataField
-            label="Facteur"
-            value="×1.03"
-            dataSource="calculated"
-            emphasis={true}
-          />
-        </div>
-        
-        {/* Distances corrigées */}
-        <div style={sx.spacing.mb(4)}>
-          <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.text.secondary, sx.spacing.mb(2))}>Distances corrigées</h5>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <div style={sx.combine(sx.components.card.base, sx.bg.gray)}>
-              <p style={sx.combine(sx.text.xs, sx.text.secondary)}>LD (Landing Distance)</p>
-              <p style={sx.combine(sx.text.xl, sx.text.bold)}>222 m</p>
-              <p style={sx.combine(sx.text.xs, sx.text.secondary)}>(215 m std)</p>
-            </div>
-            <div style={sx.combine(sx.components.card.base, sx.bg.gray)}>
-              <p style={sx.combine(sx.text.xs, sx.text.secondary)}>LD UP (Flaps UP)</p>
-              <p style={sx.combine(sx.text.xl, sx.text.bold)}>407 m</p>
-              <p style={sx.combine(sx.text.xs, sx.text.secondary)}>(395 m std)</p>
-            </div>
-          </div>
-        </div>
-        
-        {/* Analyse pistes */}
-        <div>
-          <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.text.secondary, sx.spacing.mb(2))}>Analyse des pistes disponibles</h5>
-          <div style={{ display: 'grid', gap: '8px' }}>
-            <div style={sx.combine(sx.components.alert.base, sx.components.alert.danger)}>
-              <AlertTriangle size={16} />
-              <div>
-                <p style={sx.combine(sx.text.sm, sx.text.bold)}>
-                  Piste 05/23 - 600 m × 18 m
-                </p>
-                <p style={sx.combine(sx.text.xs)}>
-                  • Distance d'atterrissage insuffisante (LD: 222 m &gt; 600 m) ✓
-                  <br />• Attention : piste courte, technique d'atterrissage court recommandée
-                </p>
-                <DataField
-                  label="QFU"
-                  value="050°/230°"
-                  dataSource="static"
-                  size="xs"
-                  style={{ marginTop: '4px' }}
-                />
-                <DataField
-                  label="Surface"
-                  value="Bitume"
-                  dataSource="static"
-                  size="xs"
-                  style={{ marginTop: '4px' }}
-                />
-              </div>
-            </div>
+            )}
             
-            <div style={sx.combine(sx.components.alert.base, sx.components.alert.success)}>
-              <CheckCircle size={16} />
-              <div>
-                <p style={sx.combine(sx.text.sm, sx.text.bold)}>
-                  Piste 12/30 - 950 m × 30 m
-                </p>
-                <DataField
-                  label="QFU"
-                  value="120°/300°"
-                  dataSource="static"
-                  size="xs"
-                  style={{ marginTop: '4px' }}
-                />
-                <DataField
-                  label="Surface"
-                  value="Bitume"
-                  dataSource="static"
-                  size="xs"
-                  style={{ marginTop: '4px' }}
-                />
+            {selectedAircraft.performance.landing && (
+              <div style={sx.combine(sx.components.card.base, sx.bg.gray)}>
+                <h4 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
+                  🛬 Atterrissage (conditions standards)
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                  <div>
+                    <p style={sx.text.xs}>LD</p>
+                    <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+                      {selectedAircraft.performance.landing.ld} m
+                    </p>
+                  </div>
+                  <div>
+                    <p style={sx.text.xs}>15m</p>
+                    <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+                      {selectedAircraft.performance.landing.lda15m} m
+                    </p>
+                  </div>
+                  <div>
+                    <p style={sx.text.xs}>50ft</p>
+                    <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+                      {selectedAircraft.performance.landing.lda50ft} m
+                    </p>
+                  </div>
+                </div>
+                {selectedAircraft.performance.conditions?.landing && (
+                  <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(2))}>
+                    Conditions: {selectedAircraft.performance.conditions.landing.mass}kg, 
+                    {selectedAircraft.performance.conditions.landing.altitude}ft, 
+                    {selectedAircraft.performance.conditions.landing.temperature}°C
+                  </p>
+                )}
               </div>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {/* Section Analyse du vent et pistes recommandées */}
+      {(departureWeather || arrivalWeather) && (
+        <div style={sx.combine(sx.components.card.base, sx.spacing.mb(6))}>
+          <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4), sx.flex.start)}>
+            <Wind size={20} style={{ marginRight: '8px' }} />
+            Analyse du vent et pistes recommandées
+          </h3>
+          
+          {/* Explication des calculs */}
+          <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mb(4))}>
+            <h4 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
+              <Compass size={16} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
+              Calcul des composantes de vent
+            </h4>
+            <div style={sx.text.xs}>
+              <p style={sx.spacing.mb(1)}>
+                <strong>Vent de face (Headwind):</strong> VF = V × cos(α) où α = angle entre vent et piste
+              </p>
+              <p style={sx.spacing.mb(1)}>
+                <strong>Vent traversier (Crosswind):</strong> VT = V × sin(α)
+              </p>
+              <p style={sx.spacing.mb(1)}>
+                <strong>Critères de sélection:</strong>
+              </p>
+              <ul style={{ marginLeft: '20px', marginTop: '4px' }}>
+                <li>Piste recommandée = vent de face maximal (meilleure performance)</li>
+                <li>Vent traversier {'<'} 15 kt = acceptable</li>
+                <li>Vent traversier {'>'} 20 kt = attention requise</li>
+                <li>Vent arrière {'>'} 10 kt = déconseillé (augmente distance de décollage/atterrissage)</li>
+              </ul>
             </div>
           </div>
+          
+          {/* Pistes recommandées pour le départ */}
+          {departureWeather?.metar?.wind && departureAirport?.name && (
+            <div style={sx.spacing.mb(4)}>
+              <h4 style={sx.combine(sx.text.md, sx.text.bold, sx.spacing.mb(2))}>
+                ✈️ Départ - {departureAirport.name}
+              </h4>
+              <RunwaySuggestionEnhanced 
+                icao={departureAirport.name} 
+                wind={departureWeather.metar.wind}
+                showDetails={true}
+              />
+            </div>
+          )}
+          
+          {/* Pistes recommandées pour l'arrivée */}
+          {arrivalWeather?.metar?.wind && arrivalAirport?.name && (
+            <div>
+              <h4 style={sx.combine(sx.text.md, sx.text.bold, sx.spacing.mb(2))}>
+                🛬 Arrivée - {arrivalAirport.name}
+              </h4>
+              <RunwaySuggestionEnhanced 
+                icao={arrivalAirport.name} 
+                wind={arrivalWeather.metar.wind}
+                showDetails={true}
+              />
+            </div>
+          )}
         </div>
-        
-        {/* Alerte VAC */}
-        <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning, sx.spacing.mt(3))}>
-          <AlertTriangle size={16} />
-          <div>
-            <p style={sx.combine(sx.text.sm, sx.text.bold)}>⚠️ Données de pistes non disponibles</p>
-            <p style={sx.combine(sx.text.sm, sx.spacing.mt(1))}>
-              Téléchargez la carte VAC dans l'onglet "Cartes VAC" pour obtenir l'analyse des pistes
-            </p>
-          </div>
-        </div>
-      </div>
+      )}
       
-      {/* Formule */}
-      <div style={sx.combine(sx.components.alert.base, sx.components.alert.info)}>
-        <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>📐 Formule de calcul utilisée :</p>
-        <code style={sx.combine(sx.bg.white, sx.spacing.p(3), sx.rounded.md, { display: 'block', fontFamily: 'monospace', fontSize: '13px' })}>
-          Distance corrigée = Distance standard × [1 + (Alt/1000 × 0.1) + (ΔT/10 × 0.1)]
-        </code>
-        <p style={sx.combine(sx.text.sm, sx.spacing.mt(2))}>
-          où ΔT = Température réelle - Température ISA (15°C - Alt × 0.002)
-        </p>
-      </div>
+      {/* Calculateur avancé si tableaux extraits disponibles */}
+      {selectedAircraft.advancedPerformance?.tables && selectedAircraft.advancedPerformance.tables.length > 0 && (
+        <AdvancedPerformanceCalculator aircraft={selectedAircraft} />
+      )}
       
-      {/* Calculateur avancé avec abaques */}
-      {showAdvancedCalculator && (
-        <div style={sx.spacing.mb(6)}>
-          <PerformanceCalculator />
-        </div>
+      {/* Calculateur de performances standard */}
+      {(!selectedAircraft.advancedPerformance || selectedAircraft.advancedPerformance.tables?.length === 0) && (
+        <PerformanceCalculator />
       )}
     </div>
   );

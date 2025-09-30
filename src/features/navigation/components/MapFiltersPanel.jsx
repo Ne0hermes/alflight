@@ -1,5 +1,6 @@
 import React from 'react';
 import { Settings, ChevronDown, ChevronUp } from 'lucide-react';
+import AccordionButton from '@shared/components/AccordionButton';
 
 const MapFiltersPanel = ({ 
   showLayers, 
@@ -42,28 +43,20 @@ const MapFiltersPanel = ({
       borderRadius: '8px',
       overflow: 'hidden'
     }}>
-      <button
+      <AccordionButton
+        isOpen={showAdvancedControls}
         onClick={() => setShowAdvancedControls(!showAdvancedControls)}
+        icon={<Settings size={16} />}
+        title="Filtres de la carte"
+        variant="minimal"
         style={{
-          width: '100%',
-          padding: '10px 12px',
           backgroundColor: '#f9fafb',
-          border: 'none',
           borderBottom: showAdvancedControls ? '1px solid #e5e7eb' : 'none',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          cursor: 'pointer',
           fontSize: '13px',
-          fontWeight: '500'
+          fontWeight: '500',
+          borderRadius: '0'
         }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Settings size={16} />
-          Filtres de la carte
-        </div>
-        {showAdvancedControls ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-      </button>
+      />
       
       {showAdvancedControls && (
         <div style={{ padding: '12px' }}>

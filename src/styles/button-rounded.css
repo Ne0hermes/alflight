@@ -1,0 +1,124 @@
+/* Styles pour arrondir tous les boutons de l'application */
+
+/* Arrondir tous les types de boutons */
+button,
+.btn,
+[type="button"],
+[type="submit"],
+[type="reset"],
+[role="button"],
+a.button {
+  border-radius: 25px !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Petits boutons encore plus arrondis */
+button.btn-sm,
+.btn-sm {
+  border-radius: 20px !important;
+}
+
+/* Grands boutons */
+button.btn-lg,
+.btn-lg {
+  border-radius: 30px !important;
+}
+
+/* Boutons circulaires pour les icônes */
+button.btn-icon,
+.btn-icon,
+button[aria-label*="icon"],
+button[title*="icon"] {
+  border-radius: 50% !important;
+}
+
+/* Effet hover pour accentuer l'arrondi */
+button:hover,
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(147, 22, 60, 0.3) !important;
+}
+
+/* Boutons dans la navigation */
+.nav button,
+.tab-navigation button,
+.tabs button {
+  border-radius: 20px !important;
+}
+
+/* Boutons dans les formulaires */
+form button,
+.form button {
+  border-radius: 25px !important;
+}
+
+/* Boutons d'action flottants */
+.fab,
+.floating-action-button {
+  border-radius: 50% !important;
+}
+
+/* Groupe de boutons */
+.btn-group button:first-child {
+  border-top-left-radius: 25px !important;
+  border-bottom-left-radius: 25px !important;
+}
+
+.btn-group button:last-child {
+  border-top-right-radius: 25px !important;
+  border-bottom-right-radius: 25px !important;
+}
+
+/* Inputs et selects aussi arrondis pour cohérence */
+input:not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+  border-radius: 12px !important;
+}
+
+/* Cards avec coins arrondis */
+.card,
+.panel,
+.module {
+  border-radius: 16px !important;
+}
+
+/* Modals arrondis */
+.modal-content,
+.dialog {
+  border-radius: 20px !important;
+}
+
+/* Badges et tags arrondis */
+.badge,
+.tag,
+.chip {
+  border-radius: 50px !important;
+}
+
+/* Animation de pulsation sur les boutons principaux */
+button.btn-primary,
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+}
+
+button.btn-primary::before,
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+button.btn-primary:hover::before,
+.btn-primary:hover::before {
+  width: 300px;
+  height: 300px;
+}

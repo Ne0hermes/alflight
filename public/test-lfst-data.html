@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test LFST Data</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .section { margin: 20px 0; padding: 10px; background: #f5f5f5; }
+        .runway { background: #e8f4ff; padding: 10px; margin: 10px 0; }
+        .direction { background: #fff; padding: 8px; margin: 5px 0; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Vérification des données LFST</h1>
+    <div id="output"></div>
+    
+    <script type="module">
+        import { aixmParser } from '/src/services/aixmParser.js';
+        
+        async function checkLFST() {
+            const output = document.getElementById('output');
+            let html = '';
+            
+            try {
+                console.log('Chargement des données...');
+                const data = await aixmParser.loadAndParse();
+                
+                // Trouver LFST
+                const lfst = data.find(ad => ad.icao === 'LFST');
+                
+                if (!lfst) {
+                    html = '<div class="error">LFST non trouvé!</div>';
+                } else {
+                    html = '<div class="success">✅ LFST trouvé</div>';
+                    
+                    // Informations générales
+                    html += '<div class="section">';
+                    html += '<h2>Informations générales</h2>';
+                    html += `<p>Nom: ${lfst.name}</p>`;
+                    html += `<p>Ville: ${lfst.city}</p>`;
+                    html += `<p>Altitude: ${lfst.elevation?.value} ft</p>`;
+                    html += `<p>Coordonnées: ${lfst.coordinates?.lat?.toFixed(6)}, ${lfst.coordinates?.lon?.toFixed(6)}</p>`;
+                    html += '</div>';
+                    
+                    // Pistes
+                    html += '<div class="section">';
+                    html += '<h2>Pistes</h2>';
+                    
+                    if (lfst.runways && lfst.runways.length > 0) {
+                        for (const runway of lfst.runways) {
+                            html += '<div class="runway">';
+                            html += `<h3>Piste ${runway.designation || runway.identifier}</h3>`;
+                            html += `<p>Dimensions: ${runway.length} × ${runway.width} m</p>`;
+                            html += `<p>Surface: ${runway.surface}</p>`;
+                            html += `<p>QFU Magnétique: ${runway.qfu || runway.magneticBearing}°</p>`;
+                            html += `<p>QFU Vrai: ${runway.trueBearing}°</p>`;
+                            
+                            html += '<h4>Distances déclarées:</h4>';
+                            html += `<ul>`;
+                            html += `<li>TORA: ${runway.tora} m</li>`;
+                            html += `<li>TODA: ${runway.toda} m</li>`;
+                            html += `<li>ASDA: ${runway.asda} m</li>`;
+                            html += `<li>LDA: ${runway.lda} m</li>`;
+                            html += `</ul>`;
+                            
+                            if (runway.ils) {
+                                html += `<p>ILS: CAT ${runway.ils.category} - ${runway.ils.frequency} MHz - ${runway.ils.identifier}</p>`;
+                            }
+                            
+                            if (runway.pcn) {
+                                html += `<p>PCN: ${runway.pcn}</p>`;
+                            }
+                            
+                            html += '</div>';
+                        }
+                    } else {
+                        html += '<p class="error">Aucune piste trouvée</p>';
+                    }
+                    html += '</div>';
+                    
+                    // Fréquences
+                    html += '<div class="section">';
+                    html += '<h2>Fréquences</h2>';
+                    
+                    if (lfst.frequencies && Object.keys(lfst.frequencies).length > 0) {
+                        for (const [service, freqs] of Object.entries(lfst.frequencies)) {
+                            html += `<p><strong>${service.toUpperCase()}:</strong> `;
+                            if (Array.isArray(freqs)) {
+                                html += freqs.map(f => f.frequency).join(', ');
+                            } else {
+                                html += freqs;
+                            }
+                            html += '</p>';
+                        }
+                    } else {
+                        html += '<p class="error">Aucune fréquence trouvée</p>';
+                    }
+                    html += '</div>';
+                    
+                    // Debug: afficher les données brutes
+                    html += '<div class="section">';
+                    html += '<h2>Données brutes (JSON)</h2>';
+                    html += '<pre>' + JSON.stringify(lfst, null, 2) + '</pre>';
+                    html += '</div>';
+                }
+                
+                output.innerHTML = html;
+                
+            } catch (error) {
+                output.innerHTML = `<div class="error">Erreur: ${error.message}</div>`;
+                console.error('Erreur:', error);
+            }
+        }
+        
+        // Lancer le test
+        checkLFST();
+    </script>
+</body>
+</html>

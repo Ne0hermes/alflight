@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Data</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        pre { background: #f0f0f0; padding: 10px; overflow: auto; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Debug Parser Data - LFST</h1>
+    <div id="output">Chargement...</div>
+    
+    <script type="module">
+        import { aixmParser } from '/src/services/aixmParser.js';
+        
+        async function debugData() {
+            const output = document.getElementById('output');
+            
+            try {
+                console.log('🔄 Chargement...');
+                const data = await aixmParser.loadAndParse();
+                
+                const lfst = data.find(ad => ad.icao === 'LFST');
+                
+                if (!lfst) {
+                    output.innerHTML = '<div class="error">LFST non trouvé!</div>';
+                    return;
+                }
+                
+                let html = '<div class="success">✅ LFST trouvé</div>';
+                
+                // Afficher les pistes en détail
+                html += '<h2>Pistes Debug:</h2>';
+                
+                if (lfst.runways && lfst.runways.length > 0) {
+                    for (let i = 0; i < lfst.runways.length; i++) {
+                        const runway = lfst.runways[i];
+                        html += '<h3>Piste ' + (runway.designation || runway.identifier) + ' (index ' + i + ')</h3>';
+                        html += '<pre>';
+                        html += 'Length: ' + runway.length + ' (type: ' + typeof runway.length + ')\n';
+                        html += 'Width: ' + runway.width + ' (type: ' + typeof runway.width + ')\n';
+                        html += 'Surface: ' + runway.surface + ' (type: ' + typeof runway.surface + ')\n';
+                        html += 'QFU: ' + runway.qfu + ' (type: ' + typeof runway.qfu + ')\n';
+                        html += 'MagBearing: ' + runway.magneticBearing + ' (type: ' + typeof runway.magneticBearing + ')\n';
+                        html += '\n=== DISTANCES ===\n';
+                        html += 'TORA: ' + runway.tora + ' (null? ' + (runway.tora === null) + ', undefined? ' + (runway.tora === undefined) + ')\n';
+                        html += 'TODA: ' + runway.toda + ' (null? ' + (runway.toda === null) + ', undefined? ' + (runway.toda === undefined) + ')\n';
+                        html += 'ASDA: ' + runway.asda + ' (null? ' + (runway.asda === null) + ', undefined? ' + (runway.asda === undefined) + ')\n';
+                        html += 'LDA: ' + runway.lda + ' (null? ' + (runway.lda === null) + ', undefined? ' + (runway.lda === undefined) + ')\n';
+                        html += '\n=== ILS ===\n';
+                        if (runway.ils) {
+                            html += 'ILS présent: OUI\n';
+                            html += 'Category: ' + runway.ils.category + '\n';
+                            html += 'Frequency: ' + runway.ils.frequency + ' (type: ' + typeof runway.ils.frequency + ')\n';
+                            html += 'Identifier: ' + runway.ils.identifier + '\n';
+                            if (runway.ils.glidePath) {
+                                html += 'GlidePath.frequency: ' + runway.ils.glidePath.frequency + '\n';
+                                html += 'GlidePath.slope: ' + runway.ils.glidePath.slope + '\n';
+                            }
+                        } else {
+                            html += 'ILS présent: NON (null? ' + (runway.ils === null) + ', undefined? ' + (runway.ils === undefined) + ')\n';
+                        }
+                        html += '</pre>';
+                        
+                        // Afficher l'objet complet en JSON
+                        html += '<h4>JSON complet de la piste:</h4>';
+                        html += '<pre>' + JSON.stringify(runway, null, 2) + '</pre>';
+                    }
+                } else {
+                    html += '<div class="error">Aucune piste trouvée</div>';
+                }
+                
+                // Afficher les logs console
+                html += '<h2>Logs Console (voir la console du navigateur):</h2>';
+                console.log('LFST complet:', lfst);
+                console.log('Runways:', lfst.runways);
+                
+                if (lfst.runways) {
+                    lfst.runways.forEach((rwy, idx) => {
+                        console.log(`Piste ${idx} (${rwy.designation}):`, rwy);
+                        console.log(`  - Distances: TORA=${rwy.tora}, TODA=${rwy.toda}, ASDA=${rwy.asda}, LDA=${rwy.lda}`);
+                        console.log(`  - ILS:`, rwy.ils);
+                    });
+                }
+                
+                output.innerHTML = html;
+                
+            } catch (error) {
+                output.innerHTML = '<div class="error">Erreur: ' + error.message + '</div>';
+                console.error('Erreur:', error);
+            }
+        }
+        
+        debugData();
+    </script>
+</body>
+</html>

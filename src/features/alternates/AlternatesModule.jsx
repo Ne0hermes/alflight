@@ -16,7 +16,7 @@ import { DataSourceBadge, DataField } from '@shared/components';
 import { calculateDistance } from '@utils/navigationCalculations';
 import { useWeatherStore } from '@core/stores/weatherStore';
 
-const AlternatesModule = memo(() => {
+const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
   
   const {
     searchZone,
@@ -240,7 +240,7 @@ const AlternatesModule = memo(() => {
                   </p>
                 </div>
               ) : (
-                <div style={sx.combine(sx.components.card.base, sx.text.center, sx.spacing.p(8))}>
+                <div style={sx.combine(sx.components.card.base, sx.text.left, sx.spacing.p(8))}>
                   <div style={{ 
                     display: 'inline-block',
                     animation: 'spin 2s linear infinite'

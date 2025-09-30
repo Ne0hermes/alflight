@@ -1,43 +1,11 @@
 import React, { memo, useState, useEffect } from 'react';
 import { Navigation2, MapPin, Plus, Trash2, Info, CheckCircle, Download, FileText, AlertTriangle } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
-import { openAIPService } from '@services/openAIPService';
+import { aeroDataProvider } from '@core/data';
 import { useVACStore, vacSelectors } from '@core/stores/vacStore';
 import { Conversions } from '@utils/conversions';
 
-// Points VFR prédéfinis pour quelques aérodromes
-const PRESET_VFR_POINTS = {
-  'LFPN': [
-    { id: 'LFPN-N', code: 'N', name: 'November', description: 'Château d\'eau de Jouy-en-Josas', coordinates: { lat: 48.7800, lon: 2.1061 }, mandatory: true },
-    { id: 'LFPN-S', code: 'S', name: 'Sierra', description: 'Étang de Saclay', coordinates: { lat: 48.7200, lon: 2.1061 }, mandatory: true },
-    { id: 'LFPN-E', code: 'E', name: 'Echo', description: 'Pont de Sèvres', coordinates: { lat: 48.7519, lon: 2.1500 }, mandatory: false },
-    { id: 'LFPN-W', code: 'W', name: 'Whiskey', description: 'Viaduc de l\'A12', coordinates: { lat: 48.7519, lon: 2.0600 }, mandatory: false }
-  ],
-  'LFPT': [
-    { id: 'LFPT-N', code: 'N', name: 'November', description: 'Forêt de l\'Isle-Adam', coordinates: { lat: 49.1300, lon: 2.0413 }, mandatory: true },
-    { id: 'LFPT-S', code: 'S', name: 'Sierra', description: 'Centre de Cergy-Pontoise', coordinates: { lat: 49.0600, lon: 2.0413 }, mandatory: true },
-    { id: 'LFPT-E', code: 'E', name: 'Echo', description: 'Parc du Vexin', coordinates: { lat: 49.0967, lon: 2.1000 }, mandatory: false },
-    { id: 'LFPT-W', code: 'W', name: 'Whiskey', description: 'Boucle de l\'Oise', coordinates: { lat: 49.0967, lon: 1.9800 }, mandatory: false }
-  ],
-  'LFST': [
-    { id: 'LFST-N', code: 'N', name: 'November', description: 'Obernai', coordinates: { lat: 48.5900, lon: 7.6283 }, mandatory: true },
-    { id: 'LFST-S', code: 'S', name: 'Sierra', description: 'Sélestat', coordinates: { lat: 48.4000, lon: 7.6283 }, mandatory: true },
-    { id: 'LFST-E', code: 'E', name: 'Echo', description: 'Pont de Kehl', coordinates: { lat: 48.5444, lon: 7.7500 }, mandatory: false },
-    { id: 'LFST-W', code: 'W', name: 'Whiskey', description: 'Molsheim', coordinates: { lat: 48.5444, lon: 7.5000 }, mandatory: false }
-  ],
-  'LFPG': [
-    { id: 'LFPG-NE', code: 'NE', name: 'Nord-Est', description: 'Point NE CDG', coordinates: { lat: 49.0500, lon: 2.6000 }, mandatory: true },
-    { id: 'LFPG-SE', code: 'SE', name: 'Sud-Est', description: 'Point SE CDG', coordinates: { lat: 48.9700, lon: 2.6000 }, mandatory: true },
-    { id: 'LFPG-SW', code: 'SW', name: 'Sud-Ouest', description: 'Point SW CDG', coordinates: { lat: 48.9700, lon: 2.5000 }, mandatory: true },
-    { id: 'LFPG-NW', code: 'NW', name: 'Nord-Ouest', description: 'Point NW CDG', coordinates: { lat: 49.0500, lon: 2.5000 }, mandatory: true }
-  ],
-  'LFPO': [
-    { id: 'LFPO-N', code: 'N', name: 'November', description: 'Antony', coordinates: { lat: 48.7700, lon: 2.3794 }, mandatory: true },
-    { id: 'LFPO-S', code: 'S', name: 'Sierra', description: 'Marché de Rungis', coordinates: { lat: 48.6800, lon: 2.3794 }, mandatory: true },
-    { id: 'LFPO-E', code: 'EA', name: 'Echo Alpha', description: 'Athis-Mons', coordinates: { lat: 48.7233, lon: 2.4200 }, mandatory: false },
-    { id: 'LFPO-W', code: 'WA', name: 'Whiskey Alpha', description: 'Wissous', coordinates: { lat: 48.7233, lon: 2.3400 }, mandatory: false }
-  ]
-};
+// PAS DE POINTS PRÉDÉFINIS - Les points VFR doivent venir exclusivement des fichiers SIA/AIXM locaux
 
 export const ReportingPointsSelector = memo(({ 
   airportIcao, 
@@ -67,11 +35,8 @@ export const ReportingPointsSelector = memo(({
     if (vacChart && vacChart.isDownloaded && vacChart.extractedData && vacChart.extractedData.vfrPoints) {
       setAvailablePoints(vacChart.extractedData.vfrPoints);
       setVacPointsAvailable(true);
-    } else if (PRESET_VFR_POINTS[airportIcao]) {
-      // Sinon utiliser les points prédéfinis
-      setAvailablePoints(PRESET_VFR_POINTS[airportIcao]);
-      setVacPointsAvailable(false);
     } else {
+      // Pas de points prédéfinis - uniquement les données SIA/VAC
       setAvailablePoints([]);
       setVacPointsAvailable(false);
     }

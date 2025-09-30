@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Plane, AlertTriangle, CheckCircle, Info, Ruler, Wind, ChevronDown, ChevronUp, Download, ExternalLink } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
-import { openAIPService } from '@services/openAIPService';
+import { aeroDataProvider } from '@core/data';
 import { useAircraft } from '@core/contexts';
 
-// Types de surface de piste
 const SURFACE_TYPES = {
   'ASPH': { name: 'Asphalte', icon: '🛣️', quality: 1 },
   'CONC': { name: 'Béton', icon: '🏗️', quality: 1 },
@@ -17,10 +16,8 @@ const SURFACE_TYPES = {
   'ICE': { name: 'Glace', icon: '🧊', quality: 0.3 }
 };
 
-// Fonction pour convertir les mètres en pieds
 const metersToFeet = (meters) => Math.round(meters * 3.28084);
 
-// Fonction pour analyser la compatibilité d'une piste
 const analyzeRunwayCompatibility = (runway, aircraft) => {
   if (!aircraft || !aircraft.runwayRequirements) {
     return { compatible: 'unknown', reasons: ['Avion non sélectionné'] };
@@ -29,21 +26,18 @@ const analyzeRunwayCompatibility = (runway, aircraft) => {
   const reasons = [];
   let compatible = true;
 
-  // Vérifier la longueur de piste au décollage (TODA)
   const todaFeet = metersToFeet(runway.dimensions?.toda || runway.dimensions?.length || 0);
   if (todaFeet < aircraft.runwayRequirements.takeoffDistance) {
     compatible = false;
     reasons.push(`TODA insuffisante: ${todaFeet} ft < ${aircraft.runwayRequirements.takeoffDistance} ft requis`);
   }
 
-  // Vérifier la distance d'atterrissage disponible (LDA)
   const ldaFeet = metersToFeet(runway.dimensions?.lda || runway.dimensions?.length || 0);
   if (ldaFeet < aircraft.runwayRequirements.landingDistance) {
     compatible = false;
     reasons.push(`LDA insuffisante: ${ldaFeet} ft < ${aircraft.runwayRequirements.landingDistance} ft requis`);
   }
 
-  // Vérifier le type de surface
   const surface = runway.surface?.type || 'UNKNOWN';
   const surfaceInfo = SURFACE_TYPES[surface] || { quality: 0.5 };
   
@@ -53,7 +47,6 @@ const analyzeRunwayCompatibility = (runway, aircraft) => {
     reasons.push(`Surface ${surfaceInfo.name} non compatible`);
   }
 
-  // Avertissement pour surfaces dégradées
   if (compatible && surfaceInfo.quality < 0.8) {
     reasons.push(`⚠️ Surface ${surfaceInfo.name} - performances réduites`);
   }
@@ -76,7 +69,6 @@ export const RunwayAnalyzer = ({ icao }) => {
   const [airport, setAirport] = useState(null);
 
   const goToVACModule = () => {
-    // Utiliser l'objet global pour changer d'onglet
     if (window.setActiveTab) {
       window.setActiveTab('vac');
     }
@@ -90,10 +82,8 @@ export const RunwayAnalyzer = ({ icao }) => {
       setError(null);
 
       try {
-        console.log(`🛬 Chargement des pistes pour ${icao}`);
-        
-        // Récupérer les infos de l'aérodrome
-        const airportData = await openAIPService.getAirportDetails(icao);
+        const airports = await aeroDataProvider.getAirfields({ icao });
+        const airportData = airports[0];
         
         if (airportData) {
           setAirport(airportData);

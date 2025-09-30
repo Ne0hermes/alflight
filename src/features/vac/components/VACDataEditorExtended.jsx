@@ -1,8 +1,13 @@
 // src/features/vac/components/VACDataEditorExtended.jsx
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo, useState, useEffect, Fragment } from 'react';
 import { Save, X, Plus, Trash2, AlertTriangle, Edit2, MapPin, Radio, Plane, Mountain, Shield, FileText, Fuel, Info } from 'lucide-react';
 import { useVACStore } from '@core/stores/vacStore';
 import { sx } from '@shared/styles/styleSystem';
+import { RunwaysEditor } from './VACDataEditorRunways';
+import { VFREditor } from './VACDataEditorVFR';
+import { ObstaclesEditor } from './VACDataEditorObstacles';
+import { ProceduresEditor } from './VACDataEditorProcedures';
+import { ServicesEditor } from './VACDataEditorServices';
 
 export const VACDataEditor = memo(({ chart, onClose }) => {
   const { updateExtractedData } = useVACStore(state => ({
@@ -13,30 +18,126 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
   const [hasModifications, setHasModifications] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
   
-  // Initialiser les données à l'ouverture
-  useEffect(() => {
-    if (chart?.extractedData) {
-      const clonedData = JSON.parse(JSON.stringify(chart.extractedData));
-      // Initialiser toutes les sections
-      if (!clonedData.vfrPoints) clonedData.vfrPoints = [];
-      if (!clonedData.runways) clonedData.runways = [];
-      if (!clonedData.procedures) clonedData.procedures = { departure: [], arrival: [] };
-      if (!clonedData.obstacles) clonedData.obstacles = [];
-      if (!clonedData.restrictions) clonedData.restrictions = [];
-      if (!clonedData.remarks) clonedData.remarks = '';
-      if (!clonedData.services) clonedData.services = { 
-        fuel: false, 
-        avgas100LL: false,
-        jetA1: false,
-        maintenance: false, 
-        customs: false, 
-        handling: false,
-        restaurant: false,
-        hotel: false,
-        parking: false
+  // Fonction pour vérifier si un champ est manquant ou incomplet
+  const isMissingData = (value) => {
+    return value === null || value === undefined || value === '' || value === 0 || 
+           (typeof value === 'object' && Object.keys(value).length === 0) ||
+           (Array.isArray(value) && value.length === 0);
+  };
+  
+  // Styles pour les champs manquants
+  const getMissingFieldStyle = (value) => {
+    if (isMissingData(value)) {
+      return {
+        backgroundColor: '#fef2f2',
+        borderColor: '#fca5a5',
+        borderWidth: '2px'
       };
-      if (!clonedData.operatingHours) clonedData.operatingHours = '';
-      if (!clonedData.coordinates) clonedData.coordinates = chart.coordinates || { lat: 0, lon: 0 };
+    }
+    return {};
+  };
+  
+  // Initialiser les données à l'ouverture avec toutes les données extraites
+  useEffect(() => {
+    if (chart?.extractedData || chart) {
+      const existingData = chart.extractedData || {};
+      
+      // Debug: afficher les données reçues
+      console.log('📊 VACDataEditor - Chart reçu:', chart);
+      console.log('📊 VACDataEditor - ExtractedData:', existingData);
+      console.log('📊 VACDataEditor - Fréquences dans extractedData:', existingData.frequencies);
+      console.log('📊 VACDataEditor - Fréquences dans chart:', chart.frequencies);
+      console.log('📊 VACDataEditor - Fréquences dans chart.extractedData:', chart.extractedData?.frequencies);
+      console.log('🛬 VACDataEditor - Pistes dans extractedData:', existingData.runways);
+      if (existingData.runways && existingData.runways.length > 0) {
+        console.log('🛬 Détail de la première piste:', existingData.runways[0]);
+        console.log('🛬 Designation:', existingData.runways[0].designation);
+        console.log('🛬 Identifier:', existingData.runways[0].identifier);
+      }
+      console.log('🛬 VACDataEditor - Pistes dans chart:', chart.runways);
+      
+      // Log pour débugger le problème des fréquences
+      const allFrequencies = existingData.frequencies || chart.extractedData?.frequencies || chart.frequencies || {};
+      console.log('📻 VACDataEditor - Toutes les fréquences trouvées:', allFrequencies);
+      console.log('📻 VACDataEditor - Type des fréquences:', typeof allFrequencies);
+      console.log('📻 VACDataEditor - Clés des fréquences:', Object.keys(allFrequencies));
+      
+      // Créer une structure complète avec les données existantes et les valeurs par défaut
+      const clonedData = {
+        // Informations générales (pré-remplies depuis AIXM)
+        airportName: existingData.airportName || chart.name || '',
+        airportICAO: existingData.airportICAO || chart.icao || '',
+        airportIATA: existingData.iata || existingData.airportIATA || chart.iata || '',
+        airportCity: existingData.city || existingData.airportCity || chart.city || '',
+        airportType: existingData.airportType || '',
+        airportElevation: existingData.airportElevation || 0,
+        
+        // Variation magnétique et transition
+        magneticVariation: existingData.magneticVariation || chart.magneticVariation?.value || 0,
+        magneticVariationDate: chart.magneticVariation?.date || '',
+        magneticVariationChange: chart.magneticVariation?.change || 0,
+        transitionAltitude: existingData.transitionAltitude || chart.transitionAltitude || 0,
+        referencePoint: existingData.referencePoint || chart.referencePoint || '',
+        
+        // Tour de piste
+        circuitAltitude: existingData.circuitAltitude || 1000,
+        circuitSide: existingData.circuitSide || 'left',
+        
+        // Coordonnées
+        coordinates: existingData.coordinates || chart.coordinates || { lat: 0, lon: 0 },
+        
+        // Pistes (avec toutes les données AIXM)
+        runways: existingData.runways || [],
+        
+        // Fréquences (depuis AIXM) - chercher dans extractedData ET directement dans chart
+        // Les fréquences peuvent être dans chart.extractedData.frequencies ou chart.frequencies
+        frequencies: (() => {
+          const freq = existingData.frequencies || chart.extractedData?.frequencies || chart.frequencies || {};
+          console.log('🎯 Fréquences finalement assignées:', freq);
+          return freq;
+        })(),
+        
+        // Aides à la navigation
+        navaids: existingData.navaids || chart.navaids || [],
+        
+        // Espaces aériens
+        airspaces: existingData.airspaces || chart.airspaces || {},
+        
+        // Points VFR
+        vfrPoints: existingData.vfrPoints || [],
+        
+        // Procédures
+        procedures: existingData.procedures || { departure: [], arrival: [] },
+        
+        // Obstacles
+        obstacles: existingData.obstacles || [],
+        
+        // Restrictions
+        restrictions: existingData.restrictions || [],
+        
+        // Services
+        services: existingData.services || { 
+          fuel: existingData.fuel || false,
+          avgas100LL: false,
+          jetA1: false,
+          maintenance: false,
+          customs: existingData.customs || false,
+          handling: existingData.handling || false,
+          restaurant: false,
+          hotel: false,
+          parking: false
+        },
+        
+        // Horaires et remarques
+        operatingHours: existingData.operatingHours || '',
+        remarks: existingData.remarks || '',
+        
+        // Métadonnées
+        dataSource: existingData.dataSource || chart.source || '',
+        airac: existingData.airac || chart.airac || '',
+        lastUpdate: existingData.lastUpdate || new Date().toISOString()
+      };
+      
       setEditedData(clonedData);
     }
   }, [chart]);
@@ -169,8 +270,83 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
             <section>
               <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
                 Informations générales
+                {isMissingData(editedData.airportName) && (
+                  <span style={{ color: '#ef4444', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
+                    ⚠️ Certaines données sont manquantes
+                  </span>
+                )}
               </h4>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                {/* Codes aérodrome */}
+                <div>
+                  <label style={sx.components.label.base}>
+                    Code ICAO
+                  </label>
+                  <input
+                    type="text"
+                    value={editedData.airportICAO || chart?.icao || ''}
+                    onChange={(e) => updateValue('airportICAO', e.target.value)}
+                    style={sx.components.input.base}
+                    readOnly
+                  />
+                </div>
+                <div>
+                  <label style={sx.components.label.base}>
+                    Code IATA
+                    {isMissingData(editedData.airportIATA) && (
+                      <span style={{ color: '#fbbf24', marginLeft: '8px', fontSize: '11px' }}>
+                        (optionnel)
+                      </span>
+                    )}
+                  </label>
+                  <input
+                    type="text"
+                    value={editedData.airportIATA || ''}
+                    onChange={(e) => updateValue('airportIATA', e.target.value)}
+                    style={{
+                      ...sx.components.input.base,
+                      ...getMissingFieldStyle(editedData.airportIATA)
+                    }}
+                    placeholder="Ex: CDG"
+                  />
+                </div>
+                
+                {/* Nom et ville */}
+                <div>
+                  <label style={sx.components.label.base}>
+                    Nom de l'aérodrome
+                    {isMissingData(editedData.airportName) && (
+                      <span style={{ color: '#ef4444', marginLeft: '8px', fontSize: '12px' }}>
+                        ⚠️ Requis
+                      </span>
+                    )}
+                  </label>
+                  <input
+                    type="text"
+                    value={editedData.airportName || ''}
+                    onChange={(e) => updateValue('airportName', e.target.value)}
+                    style={{
+                      ...sx.components.input.base,
+                      ...getMissingFieldStyle(editedData.airportName)
+                    }}
+                    placeholder="Ex: STRASBOURG ENTZHEIM"
+                  />
+                </div>
+                <div>
+                  <label style={sx.components.label.base}>
+                    Ville
+                  </label>
+                  <input
+                    type="text"
+                    value={editedData.airportCity || ''}
+                    onChange={(e) => updateValue('airportCity', e.target.value)}
+                    style={{
+                      ...sx.components.input.base,
+                      ...getMissingFieldStyle(editedData.airportCity)
+                    }}
+                    placeholder="Ex: STRASBOURG"
+                  />
+                </div>
                 {/* Date de publication */}
                 <div style={{ gridColumn: 'span 2' }}>
                   <label style={sx.components.label.base}>
@@ -201,30 +377,64 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                 </div>
                 
                 <div>
-                  <label style={sx.components.label.base}>Altitude terrain (ft)</label>
+                  <label style={sx.components.label.base}>
+                    Altitude terrain (ft)
+                    {isMissingData(editedData.airportElevation) && (
+                      <span style={{ color: '#ef4444', marginLeft: '8px', fontSize: '12px' }}>
+                        ⚠️ Donnée manquante
+                      </span>
+                    )}
+                  </label>
                   <input
                     type="number"
                     value={editedData.airportElevation || 0}
                     onChange={(e) => updateValue('airportElevation', parseInt(e.target.value) || 0)}
-                    style={sx.components.input.base}
+                    style={{
+                      ...sx.components.input.base,
+                      ...getMissingFieldStyle(editedData.airportElevation)
+                    }}
+                    placeholder="Entrez l'altitude du terrain"
                   />
                 </div>
                 <div>
-                  <label style={sx.components.label.base}>Tour de piste (ft)</label>
+                  <label style={sx.components.label.base}>
+                    Tour de piste (ft)
+                    {isMissingData(editedData.circuitAltitude) && (
+                      <span style={{ color: '#ef4444', marginLeft: '8px', fontSize: '12px' }}>
+                        ⚠️ Donnée manquante
+                      </span>
+                    )}
+                  </label>
                   <input
                     type="number"
                     value={editedData.circuitAltitude || 0}
                     onChange={(e) => updateValue('circuitAltitude', parseInt(e.target.value) || 0)}
-                    style={sx.components.input.base}
+                    style={{
+                      ...sx.components.input.base,
+                      ...getMissingFieldStyle(editedData.circuitAltitude)
+                    }}
+                    placeholder="Généralement 1000ft AAL"
                   />
                 </div>
                 <div>
-                  <label style={sx.components.label.base}>Variation magnétique (°)</label>
+                  <label style={sx.components.label.base}>
+                    Variation magnétique (°)
+                    {editedData.magneticVariationDate && (
+                      <span style={{ fontSize: '11px', color: '#6b7280', marginLeft: '8px' }}>
+                        ({editedData.magneticVariationDate})
+                      </span>
+                    )}
+                  </label>
                   <input
                     type="number"
+                    step="0.1"
                     value={editedData.magneticVariation || 0}
                     onChange={(e) => updateValue('magneticVariation', parseFloat(e.target.value) || 0)}
-                    style={sx.components.input.base}
+                    style={{
+                      ...sx.components.input.base,
+                      ...getMissingFieldStyle(editedData.magneticVariation)
+                    }}
+                    placeholder="Ex: 2.5°E"
                   />
                 </div>
                 <div>
@@ -237,6 +447,57 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                     style={sx.components.input.base}
                   />
                 </div>
+                
+                {/* Altitude de transition et point de référence */}
+                <div>
+                  <label style={sx.components.label.base}>
+                    Altitude de transition (ft)
+                    {isMissingData(editedData.transitionAltitude) && (
+                      <span style={{ color: '#fbbf24', marginLeft: '8px', fontSize: '11px' }}>
+                        ⚠️ Important
+                      </span>
+                    )}
+                  </label>
+                  <input
+                    type="number"
+                    value={editedData.transitionAltitude || 0}
+                    onChange={(e) => updateValue('transitionAltitude', parseInt(e.target.value) || 0)}
+                    style={{
+                      ...sx.components.input.base,
+                      ...getMissingFieldStyle(editedData.transitionAltitude)
+                    }}
+                    placeholder="Ex: 4000"
+                  />
+                </div>
+                
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={sx.components.label.base}>
+                    Point de référence
+                  </label>
+                  <input
+                    type="text"
+                    value={editedData.referencePoint || ''}
+                    onChange={(e) => updateValue('referencePoint', e.target.value)}
+                    style={{
+                      ...sx.components.input.base,
+                      ...getMissingFieldStyle(editedData.referencePoint)
+                    }}
+                    placeholder="Ex: Intersection axe de piste et voie de circulation F"
+                  />
+                </div>
+                
+                {/* Métadonnées */}
+                {editedData.dataSource && (
+                  <div style={{ gridColumn: 'span 2', padding: '12px', backgroundColor: '#f3f4f6', borderRadius: '8px' }}>
+                    <div style={{ display: 'flex', gap: '16px', fontSize: '13px', color: '#6b7280' }}>
+                      <span><strong>Source:</strong> {editedData.dataSource}</span>
+                      {editedData.airac && <span><strong>AIRAC:</strong> {editedData.airac}</span>}
+                      {editedData.lastUpdate && (
+                        <span><strong>Dernière MAJ:</strong> {new Date(editedData.lastUpdate).toLocaleDateString()}</span>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </section>
             
@@ -271,716 +532,226 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
         );
         
       case 'runways':
-        return (
-          <div>
-            <div style={sx.combine(sx.flex.between, sx.spacing.mb(3))}>
-              <h4 style={sx.text.base}>Caractéristiques des pistes</h4>
-              <button
-                onClick={addRunway}
-                style={sx.combine(sx.components.button.base, sx.components.button.primary)}
-              >
-                <Plus size={16} />
-                Ajouter un seuil de piste
-              </button>
-            </div>
-            
-            <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mb(3))}>
-              <Info size={16} />
-              <div>
-                <p style={sx.text.sm}>
-                  <strong>Important :</strong> Chaque seuil de piste est géré individuellement.
-                </p>
-                <ul style={{ marginTop: '8px', marginLeft: '20px', fontSize: '13px' }}>
-                  <li>Pour une piste 05/23, créez deux entrées séparées : une pour le seuil 05 et une pour le seuil 23</li>
-                  <li>Chaque seuil peut avoir ses propres caractéristiques (ILS, distances déclarées, etc.)</li>
-                  <li>Cela reflète la réalité opérationnelle où chaque sens d'approche a ses spécificités</li>
-                </ul>
-              </div>
-            </div>
-            
-            {editedData.runways?.map((runway, idx) => (
-              <div key={idx} style={sx.combine(sx.components.card.base, sx.spacing.p(3), sx.spacing.mb(2))}>
-                <div style={sx.combine(sx.flex.between, sx.spacing.mb(2))}>
-                  <h5 style={sx.combine(sx.text.base, sx.flex.start)}>
-                    <Plane size={18} style={{ marginRight: '8px' }} />
-                    Seuil {runway.identifier || `#${idx + 1}`}
-                    {runway.qfu && (
-                      <span style={{ 
-                        marginLeft: '8px', 
-                        fontSize: '12px', 
-                        color: '#6b7280',
-                        fontWeight: 'normal' 
-                      }}>
-                        (QFU {runway.qfu}°)
-                      </span>
-                    )}
-                  </h5>
-                  <button
-                    onClick={() => removeRunway(idx)}
-                    style={sx.combine(sx.components.button.base, sx.components.button.danger)}
-                    title="Supprimer ce seuil"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-                
-                {/* Identifiant unique et QFU */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '12px' }}>
-                  <div>
-                    <label style={sx.combine(sx.components.label.base, sx.text.xs)}>
-                      Identifiant du seuil
-                      <span style={{ color: '#ef4444', marginLeft: '4px' }}>*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={runway.identifier}
-                      onChange={(e) => updateValue(`runways.${idx}.identifier`, e.target.value.toUpperCase())}
-                      placeholder="Ex: 05, 23, 05L, 23R"
-                      maxLength="3"
-                      style={sx.components.input.base}
-                    />
-                    <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>
-                      Entrez uniquement ce seuil (05 OU 23, pas 05/23)
-                    </p>
-                  </div>
-                  <div>
-                    <label style={sx.combine(sx.components.label.base, sx.text.xs)}>
-                      QFU (orientation magnétique)
-                      <span style={{ color: '#ef4444', marginLeft: '4px' }}>*</span>
-                    </label>
-                    <input
-                      type="number"
-                      value={runway.qfu}
-                      onChange={(e) => updateValue(`runways.${idx}.qfu`, parseInt(e.target.value) || 0)}
-                      placeholder="Ex: 050 pour piste 05"
-                      min="0"
-                      max="360"
-                      style={sx.components.input.base}
-                    />
-                    <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>
-                      Direction magnétique en degrés (0-360)
-                    </p>
-                  </div>
-                </div>
-                
-                {/* Dimensions physiques */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '12px' }}>
-                  <div>
-                    <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Longueur (m)</label>
-                    <input
-                      type="number"
-                      value={runway.length}
-                      onChange={(e) => updateValue(`runways.${idx}.length`, parseInt(e.target.value) || 0)}
-                      style={sx.components.input.base}
-                    />
-                  </div>
-                  <div>
-                    <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Largeur (m)</label>
-                    <input
-                      type="number"
-                      value={runway.width}
-                      onChange={(e) => updateValue(`runways.${idx}.width`, parseInt(e.target.value) || 0)}
-                      style={sx.components.input.base}
-                    />
-                  </div>
-                  <div>
-                    <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Surface</label>
-                    <select
-                      value={runway.surface}
-                      onChange={(e) => updateValue(`runways.${idx}.surface`, e.target.value)}
-                      style={sx.components.input.base}
-                    >
-                      <option value="Revêtue">Revêtue</option>
-                      <option value="Asphalte">Asphalte</option>
-                      <option value="Béton">Béton</option>
-                      <option value="Herbe">Herbe</option>
-                      <option value="Terre">Terre</option>
-                      <option value="Gravier">Gravier</option>
-                      <option value="Composite">Composite</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Pente (%)</label>
-                    <input
-                      type="number"
-                      value={runway.slope || 0}
-                      onChange={(e) => updateValue(`runways.${idx}.slope`, parseFloat(e.target.value) || 0)}
-                      step="0.1"
-                      placeholder="+ montée, - descente"
-                      style={sx.components.input.base}
-                    />
-                  </div>
-                </div>
-                
-                {/* Distances déclarées */}
-                <div style={sx.combine(sx.spacing.mb(2))}>
-                  <h6 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(1))}>Distances déclarées (m)</h6>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
-                    <div>
-                      <label style={sx.combine(sx.components.label.base, sx.text.xs)}>
-                        TORA
-                        <span style={sx.combine(sx.text.xs, sx.text.secondary)}> (décollage)</span>
-                      </label>
-                      <input
-                        type="number"
-                        value={runway.tora || runway.length}
-                        onChange={(e) => updateValue(`runways.${idx}.tora`, parseInt(e.target.value) || 0)}
-                        placeholder="Distance de roulement"
-                        style={sx.components.input.base}
-                      />
-                    </div>
-                    <div>
-                      <label style={sx.combine(sx.components.label.base, sx.text.xs)}>
-                        TODA
-                        <span style={sx.combine(sx.text.xs, sx.text.secondary)}> (+ clearway)</span>
-                      </label>
-                      <input
-                        type="number"
-                        value={runway.toda || runway.tora || runway.length}
-                        onChange={(e) => updateValue(`runways.${idx}.toda`, parseInt(e.target.value) || 0)}
-                        placeholder="TORA + clearway"
-                        style={sx.components.input.base}
-                      />
-                    </div>
-                    <div>
-                      <label style={sx.combine(sx.components.label.base, sx.text.xs)}>
-                        ASDA
-                        <span style={sx.combine(sx.text.xs, sx.text.secondary)}> (+ stopway)</span>
-                      </label>
-                      <input
-                        type="number"
-                        value={runway.asda || runway.tora || runway.length}
-                        onChange={(e) => updateValue(`runways.${idx}.asda`, parseInt(e.target.value) || 0)}
-                        placeholder="TORA + stopway"
-                        style={sx.components.input.base}
-                      />
-                    </div>
-                    <div>
-                      <label style={sx.combine(sx.components.label.base, sx.text.xs)}>
-                        LDA
-                        <span style={sx.combine(sx.text.xs, sx.text.secondary)}> (atterrissage)</span>
-                      </label>
-                      <input
-                        type="number"
-                        value={runway.lda || runway.length}
-                        onChange={(e) => updateValue(`runways.${idx}.lda`, parseInt(e.target.value) || 0)}
-                        placeholder="Distance d'atterrissage"
-                        style={sx.components.input.base}
-                      />
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Aides à l'approche */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '12px' }}>
-                  <div>
-                    <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Éclairage</label>
-                    <select
-                      value={runway.lighting || 'Non éclairée'}
-                      onChange={(e) => updateValue(`runways.${idx}.lighting`, e.target.value)}
-                      style={sx.components.input.base}
-                    >
-                      <option value="Non éclairée">Non éclairée</option>
-                      <option value="Basse intensité">Basse intensité</option>
-                      <option value="Moyenne intensité">Moyenne intensité</option>
-                      <option value="Haute intensité">Haute intensité</option>
-                      <option value="HIRL">HIRL</option>
-                      <option value="MIRL">MIRL</option>
-                      <option value="LIRL">LIRL</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Aide visuelle</label>
-                    <select
-                      value={runway.visualAid || 'Aucune'}
-                      onChange={(e) => updateValue(`runways.${idx}.visualAid`, e.target.value)}
-                      style={sx.components.input.base}
-                    >
-                      <option value="Aucune">Aucune</option>
-                      <option value="PAPI">PAPI</option>
-                      <option value="APAPI">APAPI</option>
-                      <option value="VASI">VASI</option>
-                      <option value="AVASI">AVASI</option>
-                      <option value="T-VASIS">T-VASIS</option>
-                      <option value="PVASI">PVASI</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Balisage lumineux</label>
-                    <select
-                      value={runway.approachLighting || 'Aucun'}
-                      onChange={(e) => updateValue(`runways.${idx}.approachLighting`, e.target.value)}
-                      style={sx.components.input.base}
-                    >
-                      <option value="Aucun">Aucun</option>
-                      <option value="ALSF-1">ALSF-1</option>
-                      <option value="ALSF-2">ALSF-2</option>
-                      <option value="CALVERT">CALVERT</option>
-                      <option value="CALVERT-2">CALVERT-2</option>
-                      <option value="MALS">MALS</option>
-                      <option value="MALSF">MALSF</option>
-                      <option value="MALSR">MALSR</option>
-                      <option value="SALS">SALS</option>
-                      <option value="SALSF">SALSF</option>
-                      <option value="SSALF">SSALF</option>
-                      <option value="SSALR">SSALR</option>
-                      <option value="SSALS">SSALS</option>
-                    </select>
-                  </div>
-                </div>
-                
-                {/* ILS et radio-navigation */}
-                <div style={sx.combine(sx.spacing.mb(2))}>
-                  <h6 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(1))}>Aides radio-électriques</h6>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <input
-                        type="checkbox"
-                        checked={runway.ils || false}
-                        onChange={(e) => updateValue(`runways.${idx}.ils`, e.target.checked)}
-                        style={{ marginRight: '4px' }}
-                      />
-                      <label style={sx.text.sm}>ILS disponible</label>
-                      {runway.ils && (
-                        <>
-                          <select
-                            value={runway.ilsCategory || 'CAT I'}
-                            onChange={(e) => updateValue(`runways.${idx}.ilsCategory`, e.target.value)}
-                            style={sx.combine(sx.components.input.base, { flex: 1 })}
-                          >
-                            <option value="CAT I">CAT I</option>
-                            <option value="CAT II">CAT II</option>
-                            <option value="CAT IIIA">CAT IIIA</option>
-                            <option value="CAT IIIB">CAT IIIB</option>
-                            <option value="CAT IIIC">CAT IIIC</option>
-                          </select>
-                        </>
-                      )}
-                    </div>
-                    
-                    {runway.ils && (
-                      <>
-                        <div>
-                          <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Fréquence ILS (MHz)</label>
-                          <input
-                            type="text"
-                            value={runway.ilsFrequency}
-                            onChange={(e) => updateValue(`runways.${idx}.ilsFrequency`, e.target.value)}
-                            placeholder="110.30"
-                            style={sx.components.input.base}
-                          />
-                        </div>
-                        <div>
-                          <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Indicatif ILS</label>
-                          <input
-                            type="text"
-                            value={runway.ilsIdent}
-                            onChange={(e) => updateValue(`runways.${idx}.ilsIdent`, e.target.value.toUpperCase())}
-                            placeholder="PGS"
-                            maxLength="4"
-                            style={sx.components.input.base}
-                          />
-                        </div>
-                        <div>
-                          <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Radiale ILS (°)</label>
-                          <input
-                            type="number"
-                            value={runway.ilsRadial || runway.qfu}
-                            onChange={(e) => updateValue(`runways.${idx}.ilsRadial`, parseInt(e.target.value) || 0)}
-                            placeholder="Same as QFU"
-                            min="0"
-                            max="360"
-                            style={sx.components.input.base}
-                          />
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  
-                  {/* Autres aides radio */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginTop: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <input
-                        type="checkbox"
-                        checked={runway.dme || false}
-                        onChange={(e) => updateValue(`runways.${idx}.dme`, e.target.checked)}
-                        style={{ marginRight: '8px' }}
-                      />
-                      <label style={sx.text.sm}>DME</label>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <input
-                        type="checkbox"
-                        checked={runway.vor || false}
-                        onChange={(e) => updateValue(`runways.${idx}.vor`, e.target.checked)}
-                        style={{ marginRight: '8px' }}
-                      />
-                      <label style={sx.text.sm}>VOR</label>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <input
-                        type="checkbox"
-                        checked={runway.ndb || false}
-                        onChange={(e) => updateValue(`runways.${idx}.ndb`, e.target.checked)}
-                        style={{ marginRight: '8px' }}
-                      />
-                      <label style={sx.text.sm}>NDB</label>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Remarques */}
-                <div>
-                  <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Remarques spécifiques à ce seuil</label>
-                  <textarea
-                    value={runway.remarks || ''}
-                    onChange={(e) => updateValue(`runways.${idx}.remarks`, e.target.value)}
-                    placeholder="Obstacles, restrictions, procédures particulières..."
-                    rows={2}
-                    style={sx.combine(sx.components.input.base, { resize: 'vertical' })}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        );
-        
+        return <RunwaysEditor editedData={editedData} updateValue={updateValue} />;
       case 'frequencies':
+        console.log('🔍 Rendering frequencies tab - editedData.frequencies:', editedData.frequencies);
+        console.log('🔍 Frequencies keys:', Object.keys(editedData.frequencies || {}));
+        console.log('🔍 Frequencies length:', Object.keys(editedData.frequencies || {}).length);
+        
         return (
           <div>
             <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
               Fréquences radio (MHz)
+              {(!editedData.frequencies || Object.keys(editedData.frequencies).length === 0) && (
+                <span style={{ color: '#ef4444', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
+                  ⚠️ Aucune fréquence définie
+                </span>
+              )}
             </h4>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-              {['twr', 'gnd', 'atis', 'afis', 'app', 'dep', 'info'].map(freq => (
-                <div key={freq}>
-                  <label style={sx.components.label.base}>{freq.toUpperCase()}</label>
-                  <input
-                    type="text"
-                    value={editedData.frequencies?.[freq] || ''}
-                    onChange={(e) => updateValue(`frequencies.${freq}`, e.target.value)}
-                    placeholder="118.850"
-                    style={sx.components.input.base}
-                  />
+            
+            {/* Fréquences AIXM/SIA modifiables */}
+            <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f0f9ff', borderRadius: '8px' }}>
+              <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '12px', color: '#0369a1' }}>
+                Fréquences radio (MHz)
+                {(!editedData.frequencies || Object.keys(editedData.frequencies).length === 0) && (
+                  <span style={{ color: '#ef4444', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
+                    ⚠️ Aucune fréquence définie
+                  </span>
+                )}
+              </h5>
+              
+              {editedData.frequencies && Object.keys(editedData.frequencies).length > 0 ? (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
+                  {Object.entries(editedData.frequencies).map(([service, freqData]) => {
+                    // Si c'est un tableau de fréquences (depuis AIXM)
+                    if (Array.isArray(freqData) && freqData.length > 0) {
+                      return (
+                        <div key={service} style={{ 
+                          padding: '12px', 
+                          backgroundColor: 'white', 
+                          borderRadius: '6px',
+                          border: '1px solid #e5e7eb'
+                        }}>
+                          <div style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            alignItems: 'center',
+                            marginBottom: '8px'
+                          }}>
+                            <label style={{ fontWeight: 'bold', color: '#1f2937', fontSize: '14px' }}>
+                              {service.toUpperCase()}
+                            </label>
+                            <button
+                              onClick={() => {
+                                const newFreq = { frequency: '', schedule: 'H24', remarks: '' };
+                                updateValue(`frequencies.${service}`, [...freqData, newFreq]);
+                              }}
+                              style={{
+                                padding: '4px 8px',
+                                fontSize: '12px',
+                                backgroundColor: '#3b82f6',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              <Plus size={14} style={{ display: 'inline', verticalAlign: 'middle' }} /> Ajouter
+                            </button>
+                          </div>
+                          {freqData.map((freq, idx) => (
+                            <div key={`${service}_${idx}`} style={{ 
+                              display: 'flex',
+                              gap: '8px',
+                              alignItems: 'center',
+                              marginBottom: '8px'
+                            }}>
+                              <input
+                                type="text"
+                                value={freq.frequency || ''}
+                                onChange={(e) => {
+                                  const newFreqs = [...freqData];
+                                  newFreqs[idx] = { ...freq, frequency: e.target.value };
+                                  updateValue(`frequencies.${service}`, newFreqs);
+                                }}
+                                placeholder="Fréquence"
+                                style={{
+                                  ...sx.components.input.base,
+                                  flex: '1',
+                                  padding: '6px',
+                                  fontSize: '14px'
+                                }}
+                              />
+                              <input
+                                type="text"
+                                value={freq.schedule || ''}
+                                onChange={(e) => {
+                                  const newFreqs = [...freqData];
+                                  newFreqs[idx] = { ...freq, schedule: e.target.value };
+                                  updateValue(`frequencies.${service}`, newFreqs);
+                                }}
+                                placeholder="Horaire"
+                                style={{
+                                  ...sx.components.input.base,
+                                  width: '80px',
+                                  padding: '6px',
+                                  fontSize: '14px'
+                                }}
+                              />
+                              <input
+                                type="text"
+                                value={freq.remarks || ''}
+                                onChange={(e) => {
+                                  const newFreqs = [...freqData];
+                                  newFreqs[idx] = { ...freq, remarks: e.target.value };
+                                  updateValue(`frequencies.${service}`, newFreqs);
+                                }}
+                                placeholder="Remarques"
+                                style={{
+                                  ...sx.components.input.base,
+                                  flex: '2',
+                                  padding: '6px',
+                                  fontSize: '14px'
+                                }}
+                              />
+                              <button
+                                onClick={() => {
+                                  const newFreqs = freqData.filter((_, i) => i !== idx);
+                                  updateValue(`frequencies.${service}`, newFreqs);
+                                }}
+                                style={{
+                                  padding: '6px',
+                                  backgroundColor: '#ef4444',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }
+                    return null;
+                  })}
+                  
+                  {/* Bouton pour ajouter un nouveau service */}
+                  <div style={{ 
+                    padding: '12px', 
+                    backgroundColor: 'white', 
+                    borderRadius: '6px',
+                    border: '1px dashed #d1d5db',
+                    textAlign: 'center'
+                  }}>
+                    <button
+                      onClick={() => {
+                        const serviceName = prompt('Nom du nouveau service (ex: DEL, AFIS, etc.):');
+                        if (serviceName) {
+                          const key = serviceName.toLowerCase().replace(/[^a-z]/g, '');
+                          if (!editedData.frequencies[key]) {
+                            updateValue(`frequencies.${key}`, [{ frequency: '', schedule: 'H24', remarks: '' }]);
+                          }
+                        }
+                      }}
+                      style={{
+                        padding: '8px 16px',
+                        fontSize: '14px',
+                        backgroundColor: '#10b981',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <Plus size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} />
+                      Ajouter un nouveau service
+                    </button>
+                  </div>
                 </div>
-              ))}
+              ) : (
+                <div style={{ textAlign: 'center', padding: '20px' }}>
+                  <p style={{ color: '#6b7280', marginBottom: '12px' }}>
+                    Aucune fréquence disponible. Ajoutez des fréquences manuellement.
+                  </p>
+                  <button
+                    onClick={() => {
+                      updateValue('frequencies', {
+                        twr: [{ frequency: '', schedule: 'H24', remarks: '' }],
+                        gnd: [{ frequency: '', schedule: 'H24', remarks: '' }],
+                        atis: [{ frequency: '', schedule: 'H24', remarks: '' }],
+                        app: [{ frequency: '', schedule: 'H24', remarks: '' }]
+                      });
+                    }}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#3b82f6',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Initialiser les fréquences standards
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         );
         
       case 'vfr':
-        return (
-          <div>
-            <div style={sx.combine(sx.flex.between, sx.spacing.mb(3))}>
-              <h4 style={sx.text.base}>Points de report VFR</h4>
-              <button
-                onClick={addVFRPoint}
-                style={sx.combine(sx.components.button.base, sx.components.button.primary)}
-              >
-                <Plus size={16} />
-                Ajouter un point
-              </button>
-            </div>
-            
-            {editedData.vfrPoints?.map((point, idx) => (
-              <div key={idx} style={sx.combine(sx.components.card.base, sx.spacing.p(3), sx.spacing.mb(2))}>
-                <div style={sx.combine(sx.flex.between, sx.spacing.mb(2))}>
-                  <h5 style={sx.text.base}>Point {idx + 1}</h5>
-                  <button
-                    onClick={() => removeVFRPoint(idx)}
-                    style={sx.combine(sx.components.button.base, sx.components.button.danger)}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-                  <div>
-                    <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Nom</label>
-                    <input
-                      type="text"
-                      value={point.name}
-                      onChange={(e) => updateValue(`vfrPoints.${idx}.name`, e.target.value)}
-                      style={sx.components.input.base}
-                    />
-                  </div>
-                  <div>
-                    <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Code</label>
-                    <input
-                      type="text"
-                      value={point.code}
-                      onChange={(e) => updateValue(`vfrPoints.${idx}.code`, e.target.value)}
-                      style={sx.components.input.base}
-                    />
-                  </div>
-                  <div>
-                    <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Altitude (ft)</label>
-                    <input
-                      type="number"
-                      value={point.altitude || 0}
-                      onChange={(e) => updateValue(`vfrPoints.${idx}.altitude`, parseInt(e.target.value) || 0)}
-                      style={sx.components.input.base}
-                    />
-                  </div>
-                  <div>
-                    <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Latitude</label>
-                    <input
-                      type="number"
-                      value={point.coordinates?.lat || 0}
-                      onChange={(e) => updateValue(`vfrPoints.${idx}.coordinates.lat`, parseFloat(e.target.value) || 0)}
-                      step="0.0001"
-                      style={sx.components.input.base}
-                    />
-                  </div>
-                  <div>
-                    <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Longitude</label>
-                    <input
-                      type="number"
-                      value={point.coordinates?.lon || 0}
-                      onChange={(e) => updateValue(`vfrPoints.${idx}.coordinates.lon`, parseFloat(e.target.value) || 0)}
-                      step="0.0001"
-                      style={sx.components.input.base}
-                    />
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <input
-                      type="checkbox"
-                      checked={point.mandatory || false}
-                      onChange={(e) => updateValue(`vfrPoints.${idx}.mandatory`, e.target.checked)}
-                      style={{ marginRight: '8px' }}
-                    />
-                    <label style={sx.text.sm}>Obligatoire</label>
-                  </div>
-                  <div style={{ gridColumn: 'span 3' }}>
-                    <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Description</label>
-                    <input
-                      type="text"
-                      value={point.description || ''}
-                      onChange={(e) => updateValue(`vfrPoints.${idx}.description`, e.target.value)}
-                      placeholder="Ex: Château d'eau, Pont, Église..."
-                      style={sx.components.input.base}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        );
-        
+        return <VFREditor editedData={editedData} updateValue={updateValue} />;
       case 'obstacles':
-        return (
-          <div>
-            <div style={sx.combine(sx.flex.between, sx.spacing.mb(3))}>
-              <h4 style={sx.text.base}>Obstacles remarquables</h4>
-              <button
-                onClick={addObstacle}
-                style={sx.combine(sx.components.button.base, sx.components.button.primary)}
-              >
-                <Plus size={16} />
-                Ajouter un obstacle
-              </button>
-            </div>
-            
-            {editedData.obstacles?.map((obstacle, idx) => (
-              <div key={idx} style={sx.combine(sx.components.card.base, sx.spacing.p(3), sx.spacing.mb(2))}>
-                <div style={sx.combine(sx.flex.between, sx.spacing.mb(2))}>
-                  <h5 style={sx.text.base}>Obstacle {idx + 1}</h5>
-                  <button
-                    onClick={() => removeObstacle(idx)}
-                    style={sx.combine(sx.components.button.base, sx.components.button.danger)}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-                  <div>
-                    <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Type</label>
-                    <select
-                      value={obstacle.type}
-                      onChange={(e) => updateValue(`obstacles.${idx}.type`, e.target.value)}
-                      style={sx.components.input.base}
-                    >
-                      <option value="Antenne">Antenne</option>
-                      <option value="Château d'eau">Château d'eau</option>
-                      <option value="Éolienne">Éolienne</option>
-                      <option value="Pylône">Pylône</option>
-                      <option value="Cheminée">Cheminée</option>
-                      <option value="Grue">Grue</option>
-                      <option value="Ligne HT">Ligne HT</option>
-                      <option value="Immeuble">Immeuble</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Hauteur (ft)</label>
-                    <input
-                      type="number"
-                      value={obstacle.height}
-                      onChange={(e) => updateValue(`obstacles.${idx}.height`, parseInt(e.target.value) || 0)}
-                      style={sx.components.input.base}
-                    />
-                  </div>
-                  <div>
-                    <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Élévation sol (ft)</label>
-                    <input
-                      type="number"
-                      value={obstacle.elevation}
-                      onChange={(e) => updateValue(`obstacles.${idx}.elevation`, parseInt(e.target.value) || 0)}
-                      style={sx.components.input.base}
-                    />
-                  </div>
-                  <div>
-                    <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Distance (NM)</label>
-                    <input
-                      type="number"
-                      value={obstacle.distance}
-                      onChange={(e) => updateValue(`obstacles.${idx}.distance`, parseFloat(e.target.value) || 0)}
-                      step="0.1"
-                      style={sx.components.input.base}
-                    />
-                  </div>
-                  <div>
-                    <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Relèvement (°)</label>
-                    <input
-                      type="number"
-                      value={obstacle.bearing}
-                      onChange={(e) => updateValue(`obstacles.${idx}.bearing`, parseInt(e.target.value) || 0)}
-                      style={sx.components.input.base}
-                    />
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <input
-                      type="checkbox"
-                      checked={obstacle.lit || false}
-                      onChange={(e) => updateValue(`obstacles.${idx}.lit`, e.target.checked)}
-                      style={{ marginRight: '8px' }}
-                    />
-                    <label style={sx.text.sm}>Balisé</label>
-                  </div>
-                  <div style={{ gridColumn: 'span 3' }}>
-                    <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Description</label>
-                    <input
-                      type="text"
-                      value={obstacle.description || ''}
-                      onChange={(e) => updateValue(`obstacles.${idx}.description`, e.target.value)}
-                      placeholder="Informations complémentaires..."
-                      style={sx.components.input.base}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        );
+        return <ObstaclesEditor editedData={editedData} updateValue={updateValue} />;
         
       case 'procedures':
-        return (
-          <div>
-            <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
-              Procédures de départ et d'arrivée
-            </h4>
-            
-            {['departure', 'arrival'].map(type => (
-              <div key={type} style={sx.spacing.mb(4)}>
-                <div style={sx.combine(sx.flex.between, sx.spacing.mb(2))}>
-                  <h5 style={sx.text.base}>
-                    {type === 'departure' ? 'Procédures de départ' : 'Procédures d\'arrivée'}
-                  </h5>
-                  <button
-                    onClick={() => addProcedure(type)}
-                    style={sx.combine(sx.components.button.base, sx.components.button.primary)}
-                  >
-                    <Plus size={16} />
-                    Ajouter
-                  </button>
-                </div>
-                
-                {editedData.procedures?.[type]?.map((proc, idx) => (
-                  <div key={idx} style={sx.combine(sx.components.card.base, sx.spacing.p(3), sx.spacing.mb(2))}>
-                    <div style={sx.combine(sx.flex.between, sx.spacing.mb(2))}>
-                      <input
-                        type="text"
-                        value={proc.name}
-                        onChange={(e) => updateValue(`procedures.${type}.${idx}.name`, e.target.value)}
-                        placeholder="Nom de la procédure"
-                        style={sx.combine(sx.components.input.base, { fontWeight: 'bold' })}
-                      />
-                      <button
-                        onClick={() => removeProcedure(type, idx)}
-                        style={sx.combine(sx.components.button.base, sx.components.button.danger)}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-                      <div>
-                        <label style={sx.combine(sx.components.label.base, sx.text.xs)}>QFU</label>
-                        <input
-                          type="text"
-                          value={proc.qfu || ''}
-                          onChange={(e) => updateValue(`procedures.${type}.${idx}.qfu`, e.target.value)}
-                          placeholder="Ex: 07, 25, Toutes"
-                          style={sx.components.input.base}
-                        />
-                      </div>
-                      <div>
-                        <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Altitude (ft)</label>
-                        <input
-                          type="number"
-                          value={proc.altitude}
-                          onChange={(e) => updateValue(`procedures.${type}.${idx}.altitude`, parseInt(e.target.value) || 0)}
-                          style={sx.components.input.base}
-                        />
-                      </div>
-                      <div style={{ gridColumn: 'span 2' }}>
-                        <label style={sx.combine(sx.components.label.base, sx.text.xs)}>Description</label>
-                        <textarea
-                          value={proc.description}
-                          onChange={(e) => updateValue(`procedures.${type}.${idx}.description`, e.target.value)}
-                          placeholder="Décrivez la procédure..."
-                          style={sx.combine(sx.components.input.base, { minHeight: '60px' })}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        );
+        return <ProceduresEditor editedData={editedData} updateValue={updateValue} />;
         
       case 'services':
-        return (
-          <div>
-            <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
-              Services disponibles
-            </h4>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-              {[
-                { key: 'fuel', label: 'Avitaillement carburant' },
-                { key: 'avgas100LL', label: 'AVGAS 100LL disponible' },
-                { key: 'jetA1', label: 'JET A1 disponible' },
-                { key: 'maintenance', label: 'Maintenance' },
-                { key: 'customs', label: 'Douanes' },
-                { key: 'handling', label: 'Assistance au sol' },
-                { key: 'restaurant', label: 'Restaurant' },
-                { key: 'hotel', label: 'Hôtel' },
-                { key: 'parking', label: 'Parking avions' },
-                { key: 'hangar', label: 'Hangar disponible' },
-                { key: 'meteo', label: 'Station météo' },
-                { key: 'flightSchool', label: 'École de pilotage' }
-              ].map(service => (
-                <div key={service.key} style={{ display: 'flex', alignItems: 'center' }}>
-                  <input
-                    type="checkbox"
-                    checked={editedData.services?.[service.key] || false}
-                    onChange={(e) => updateValue(`services.${service.key}`, e.target.checked)}
-                    style={{ marginRight: '8px' }}
-                  />
-                  <label style={sx.text.sm}>{service.label}</label>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
+        return <ServicesEditor editedData={editedData} updateValue={updateValue} />;
         
       case 'remarks':
         return (

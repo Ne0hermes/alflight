@@ -1,0 +1,35 @@
+{
+  "appId": "com.alflight.app",
+  "appName": "ALFlight",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "backgroundColor": "#ffffff",
+  "android": {
+    "backgroundColor": "#ffffff",
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  },
+  "ios": {
+    "backgroundColor": "#ffffff",
+    "contentInset": "automatic",
+    "scrollEnabled": true,
+    "limitsNavigationsToAppBoundDomains": true
+  },
+  "server": {
+    "cleartext": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "backgroundColor": "#3b82f6",
+      "androidSplashResourceName": "splash",
+      "showSpinner": false
+    },
+    "Keyboard": {
+      "resize": "ionic",
+      "resizeOnFullScreen": true
+    }
+  }
+}

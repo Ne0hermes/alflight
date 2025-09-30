@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Système Hybride OpenAIP + AIXM</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        .subtitle {
+            margin-top: 10px;
+            opacity: 0.95;
+            font-size: 18px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .status-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+        .status-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+        }
+        .success {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-color: #86efac;
+        }
+        .success h2 {
+            color: #14532d;
+        }
+        .info {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-color: #93c5fd;
+        }
+        .warning {
+            background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%);
+            border-color: #fde047;
+        }
+        h2 {
+            margin: 0 0 20px 0;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .comparison-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        .comparison-card h3 {
+            margin: 0 0 15px 0;
+            color: #1f2937;
+            font-size: 18px;
+        }
+        .comparison-card .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .comparison-card ul {
+            text-align: left;
+            padding-left: 20px;
+            margin: 15px 0;
+        }
+        .comparison-card li {
+            margin: 8px 0;
+            color: #4b5563;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 0 3px;
+        }
+        .badge.green {
+            background: #10b981;
+        }
+        .badge.yellow {
+            background: #f59e0b;
+        }
+        .badge.red {
+            background: #ef4444;
+        }
+        .badge.purple {
+            background: #8b5cf6;
+        }
+        .flow-diagram {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+        .flow-step .number {
+            background: #3b82f6;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        .code-block {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .feature-item .icon {
+            font-size: 24px;
+        }
+        .example-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .example-box h4 {
+            margin: 0 0 10px 0;
+            color: #78350f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                🌐 + 📋 = ✨
+                Système Hybride OpenAIP + AIXM
+            </h1>
+            <div class="subtitle">Géométries précises + Métadonnées corrigées = Solution optimale</div>
+        </div>
+        
+        <div class="content">
+            <div class="status-card success">
+                <h2>✅ Approche Hybride Implémentée</h2>
+                <p>Le système utilise maintenant une approche hybride combinant le meilleur des deux sources :</p>
+                <div class="comparison-grid">
+                    <div class="comparison-card">
+                        <div class="icon">🌐</div>
+                        <h3>OpenAIP</h3>
+                        <span class="badge green">Géométries</span>
+                        <ul>
+                            <li>Contours précis des espaces</li>
+                            <li>Coordonnées détaillées</li>
+                            <li>Couverture complète</li>
+                            <li>Mises à jour régulières</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="comparison-card">
+                        <div class="icon">📋</div>
+                        <h3>AIXM Local</h3>
+                        <span class="badge purple">Métadonnées</span>
+                        <ul>
+                            <li>Classes corrigées (ex: TMA Strasbourg → D)</li>
+                            <li>Fréquences radio</li>
+                            <li>Remarques et consignes</li>
+                            <li>Informations officielles SIA</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="comparison-card">
+                        <div class="icon">✨</div>
+                        <h3>Résultat Hybride</h3>
+                        <span class="badge yellow">Optimal</span>
+                        <ul>
+                            <li>Géométries précises OpenAIP</li>
+                            <li>Classes corrigées AIXM</li>
+                            <li>Fréquences intégrées</li>
+                            <li>Édition locale possible</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="status-card info">
+                <h2>🔄 Flux de Traitement</h2>
+                <div class="flow-diagram">
+                    <div class="flow-step">
+                        <div class="number">1</div>
+                        <div>
+                            <strong>Chargement AIXM</strong> - Extraction des corrections et métadonnées depuis le fichier local
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="number">2</div>
+                        <div>
+                            <strong>Requête OpenAIP</strong> - Récupération des géométries via le proxy (3.5 MB de données GeoJSON)
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="number">3</div>
+                        <div>
+                            <strong>Fusion Intelligente</strong> - Association par nom/type, application des corrections AIXM
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="number">4</div>
+                        <div>
+                            <strong>Cache Optimisé</strong> - Stockage 30 minutes pour performances optimales
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="example-box">
+                <h4>📍 Exemple Concret : TMA STRASBOURG</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
+                    <div>
+                        <strong>Données OpenAIP :</strong>
+                        <ul style="margin: 5px 0;">
+                            <li>Type: <code>5</code> (TMA)</li>
+                            <li>Classe: <code>5</code> (E) ❌</li>
+                            <li>Géométrie: Polygone précis ✅</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <strong>Après fusion AIXM :</strong>
+                        <ul style="margin: 5px 0;">
+                            <li>Type: <code>TMA</code> ✅</li>
+                            <li>Classe: <code>D</code> ✅</li>
+                            <li>Géométrie: Polygone OpenAIP ✅</li>
+                            <li>Fréquences: TWR, APP ✅</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <h2>🚀 Avantages du Système Hybride</h2>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <span class="icon">🎯</span>
+                        <div>
+                            <strong>Précision maximale</strong> - Géométries exactes des espaces
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="icon">✅</span>
+                        <div>
+                            <strong>Données corrigées</strong> - Classes et métadonnées justes
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="icon">📻</span>
+                        <div>
+                            <strong>Fréquences intégrées</strong> - TWR, APP, ATIS depuis AIXM
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="icon">✏️</span>
+                        <div>
+                            <strong>Édition locale</strong> - Modifications sauvegardées
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="icon">⚡</span>
+                        <div>
+                            <strong>Performance</strong> - Cache intelligent 30 minutes
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="icon">🔄</span>
+                        <div>
+                            <strong>Fallback robuste</strong> - AIXM seul si OpenAIP échoue
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="status-card warning">
+                <h2>⚙️ Configuration Technique</h2>
+                <div class="code-block">
+// Architecture du système hybride
+src/services/
+  ├── hybridAirspacesService.js    // 🆕 Service de fusion
+  ├── aixmAirspacesParser.js        // Parser AIXM (métadonnées)
+  └── openAIPAirspacesService.js    // Service principal (utilise hybrid)
+
+// Flux de données
+1. OpenAIP API → Proxy (port 3001) → Géométries GeoJSON
+2. AIXM Local → Parser → Corrections & Métadonnées
+3. Hybrid Service → Fusion → Espaces aériens complets
+                </div>
+            </div>
+
+            <div class="status-card info">
+                <h2>📊 Statistiques</h2>
+                <ul>
+                    <li><strong>Source OpenAIP :</strong> ~3.5 MB de données GeoJSON</li>
+                    <li><strong>Timeout API :</strong> 30 secondes (pour les grosses données)</li>
+                    <li><strong>Cache :</strong> 30 minutes de durée de vie</li>
+                    <li><strong>Fallback :</strong> AIXM local si OpenAIP échoue</li>
+                    <li><strong>Classes supportées :</strong> A, B, C, D, E, F, G</li>
+                    <li><strong>Types mappés :</strong> 27 types OpenAIP → Types OACI</li>
+                </ul>
+            </div>
+
+            <div class="status-card success">
+                <h2>🎯 Résultat Final</h2>
+                <p>Le système offre maintenant :</p>
+                <ul>
+                    <li>✅ <strong>Géométries précises</strong> des zones géographiques depuis OpenAIP</li>
+                    <li>✅ <strong>Classes corrigées</strong> (TMA Strasbourg en classe D, pas E)</li>
+                    <li>✅ <strong>Fréquences radio</strong> associées depuis AIXM</li>
+                    <li>✅ <strong>Filtrage fonctionnel</strong> par type et classe</li>
+                    <li>✅ <strong>Édition interactive</strong> avec sauvegarde locale</li>
+                    <li>✅ <strong>Performance optimale</strong> avec cache intelligent</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

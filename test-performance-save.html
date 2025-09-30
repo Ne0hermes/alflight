@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Sauvegarde Performances Avancées</title>
+    <style>
+        body { 
+            font-family: monospace; 
+            padding: 20px; 
+            background: #f5f5f5;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .section { 
+            background: white; 
+            padding: 20px; 
+            margin: 15px 0; 
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { color: #10b981; font-weight: bold; }
+        .error { color: #ef4444; font-weight: bold; }
+        .warning { color: #f59e0b; font-weight: bold; }
+        .info { color: #3b82f6; }
+        pre { 
+            background: #f8fafc; 
+            padding: 15px; 
+            overflow-x: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+        button { 
+            padding: 10px 20px; 
+            margin: 5px; 
+            cursor: pointer;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .aircraft-card {
+            border: 2px solid #e5e7eb;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .aircraft-card.has-performance {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        .aircraft-card h4 {
+            margin: 0 0 10px 0;
+            color: #1f2937;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .stat-card {
+            background: #f9fafb;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Test de Sauvegarde des Performances Avancées</h1>
+    
+    <div class="section">
+        <h2>📊 Contrôles</h2>
+        <button onclick="checkAllAircraft()">🔄 Vérifier tous les avions</button>
+        <button onclick="checkLocalStorage()">💾 Analyser localStorage</button>
+        <button onclick="simulateExtraction()">🧪 Simuler extraction</button>
+        <button onclick="clearConsole()">🗑️ Effacer</button>
+        <button onclick="exportDetailed()">📥 Exporter détaillé</button>
+    </div>
+    
+    <div class="section">
+        <h2>📈 Statistiques</h2>
+        <div class="stats" id="stats"></div>
+    </div>
+    
+    <div class="section">
+        <h2>✈️ Avions dans le système</h2>
+        <div id="aircraft-list"></div>
+    </div>
+    
+    <div id="output" class="section" style="display: none;"></div>
+
+    <script>
+        function log(message, className = '') {
+            const output = document.getElementById('output');
+            output.style.display = 'block';
+            const div = document.createElement('div');
+            div.className = className;
+            if (typeof message === 'object') {
+                const pre = document.createElement('pre');
+                pre.textContent = JSON.stringify(message, null, 2);
+                div.appendChild(pre);
+            } else {
+                div.textContent = message;
+            }
+            output.appendChild(div);
+        }
+
+        function clearConsole() {
+            document.getElementById('output').innerHTML = '';
+            document.getElementById('output').style.display = 'none';
+        }
+
+        function updateStats() {
+            const aircraftData = localStorage.getItem('aircraft-storage');
+            if (!aircraftData) return;
+            
+            try {
+                const aircraft = JSON.parse(aircraftData);
+                const stats = {
+                    total: aircraft.length,
+                    withAdvanced: aircraft.filter(a => a.advancedPerformance).length,
+                    totalTables: aircraft.reduce((sum, a) => sum + (a.advancedPerformance?.tables?.length || 0), 0),
+                    withManex: aircraft.filter(a => a.manex).length
+                };
+                
+                document.getElementById('stats').innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.total}</div>
+                        <div class="stat-label">Avions total</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.withAdvanced}</div>
+                        <div class="stat-label">Avec performances IA</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.totalTables}</div>
+                        <div class="stat-label">Tableaux extraits</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${Math.round((stats.withAdvanced / stats.total) * 100)}%</div>
+                        <div class="stat-label">Couverture</div>
+                    </div>
+                `;
+            } catch (e) {
+                console.error('Erreur stats:', e);
+            }
+        }
+
+        function checkAllAircraft() {
+            clearConsole();
+            log('=== VÉRIFICATION COMPLÈTE DES AVIONS ===', 'info');
+            
+            const aircraftData = localStorage.getItem('aircraft-storage');
+            if (!aircraftData) {
+                log('❌ Aucune donnée avion dans localStorage', 'error');
+                return;
+            }
+            
+            try {
+                const aircraft = JSON.parse(aircraftData);
+                const aircraftList = document.getElementById('aircraft-list');
+                aircraftList.innerHTML = '';
+                
+                aircraft.forEach((plane, index) => {
+                    const hasAdvanced = !!plane.advancedPerformance;
+                    const tablesCount = plane.advancedPerformance?.tables?.length || 0;
+                    
+                    const card = document.createElement('div');
+                    card.className = `aircraft-card ${hasAdvanced ? 'has-performance' : ''}`;
+                    
+                    let content = `
+                        <h4>${hasAdvanced ? '✅' : '⚠️'} ${plane.registration || 'Sans immat'} - ${plane.model || 'Modèle inconnu'}</h4>
+                        <div style="font-size: 13px; color: #6b7280;">
+                    `;
+                    
+                    if (hasAdvanced) {
+                        content += `
+                            <div class="success">Performances avancées présentes</div>
+                            <div>📊 ${tablesCount} tableau(x) extrait(s)</div>
+                        `;
+                        
+                        if (plane.advancedPerformance.tables) {
+                            content += '<div style="margin-top: 8px;">Tableaux:</div><ul style="margin: 4px 0; padding-left: 20px;">';
+                            plane.advancedPerformance.tables.forEach(table => {
+                                content += `<li>${table.table_name} (${table.data?.length || 0} lignes)</li>`;
+                            });
+                            content += '</ul>';
+                        }
+                        
+                        if (plane.advancedPerformance.extractionMetadata) {
+                            const meta = plane.advancedPerformance.extractionMetadata;
+                            content += `
+                                <div style="margin-top: 8px; font-size: 11px; color: #9ca3af;">
+                                    Extrait le: ${new Date(meta.analyzedAt).toLocaleString('fr-FR')}<br>
+                                    Version: ${meta.analysisVersion || 'inconnue'}
+                                </div>
+                            `;
+                        }
+                    } else {
+                        content += '<div class="warning">Pas de performances avancées</div>';
+                    }
+                    
+                    // Autres données
+                    if (plane.performance) {
+                        content += '<div style="margin-top: 8px;">📈 Performances basiques présentes</div>';
+                    }
+                    if (plane.manex) {
+                        content += '<div style="margin-top: 8px;">📚 MANEX présent</div>';
+                    }
+                    
+                    content += '</div>';
+                    card.innerHTML = content;
+                    
+                    // Bouton pour voir le détail
+                    const detailBtn = document.createElement('button');
+                    detailBtn.textContent = 'Voir détails JSON';
+                    detailBtn.style.marginTop = '10px';
+                    detailBtn.style.fontSize = '12px';
+                    detailBtn.style.padding = '5px 10px';
+                    detailBtn.onclick = () => {
+                        log(`Détails de ${plane.registration}:`, 'info');
+                        log(plane);
+                    };
+                    card.appendChild(detailBtn);
+                    
+                    aircraftList.appendChild(card);
+                });
+                
+                // Résumé
+                const withPerf = aircraft.filter(a => a.advancedPerformance).length;
+                const totalTables = aircraft.reduce((sum, a) => 
+                    sum + (a.advancedPerformance?.tables?.length || 0), 0);
+                
+                log(`\n📊 RÉSUMÉ:`, 'info');
+                log(`Total avions: ${aircraft.length}`, 'info');
+                log(`Avec performances avancées: ${withPerf} (${Math.round(withPerf/aircraft.length*100)}%)`, 
+                    withPerf > 0 ? 'success' : 'warning');
+                log(`Total tableaux extraits: ${totalTables}`, 'info');
+                
+                updateStats();
+                
+            } catch (e) {
+                log(`❌ Erreur parsing: ${e.message}`, 'error');
+            }
+        }
+
+        function checkLocalStorage() {
+            clearConsole();
+            log('=== ANALYSE DU LOCALSTORAGE ===', 'info');
+            
+            const keys = Object.keys(localStorage);
+            const relevantKeys = keys.filter(k => 
+                k.includes('aircraft') || 
+                k.includes('performance') || 
+                k.includes('manex')
+            );
+            
+            log(`Clés pertinentes trouvées: ${relevantKeys.length}`, 'info');
+            
+            relevantKeys.forEach(key => {
+                const size = (localStorage.getItem(key).length / 1024).toFixed(2);
+                log(`📦 ${key}: ${size} KB`, 'info');
+                
+                if (key === 'aircraft-storage') {
+                    try {
+                        const data = JSON.parse(localStorage.getItem(key));
+                        if (Array.isArray(data)) {
+                            data.forEach(aircraft => {
+                                if (aircraft.advancedPerformance) {
+                                    log(`  ✅ ${aircraft.registration} a des performances avancées`, 'success');
+                                }
+                            });
+                        }
+                    } catch (e) {
+                        log(`  ⚠️ Impossible de parser ${key}`, 'warning');
+                    }
+                }
+            });
+            
+            const totalSize = keys.reduce((sum, key) => 
+                sum + localStorage.getItem(key).length, 0);
+            log(`\nTaille totale localStorage: ${(totalSize / 1024).toFixed(2)} KB`, 'info');
+            log(`Quota estimé utilisé: ${Math.round(totalSize / (5 * 1024 * 1024) * 100)}%`, 'info');
+        }
+
+        function simulateExtraction() {
+            clearConsole();
+            log('=== SIMULATION D\'EXTRACTION ===', 'info');
+            
+            // Créer des données de test
+            const testPerformance = {
+                advancedPerformance: {
+                    tables: [
+                        {
+                            table_name: "TAKEOFF DISTANCE - TEST",
+                            table_type: "takeoff",
+                            conditions: "Max weight, Flaps 10°, Dry runway",
+                            units: {
+                                altitude: "ft",
+                                temperature_c: "°C",
+                                ground_roll: "m",
+                                distance_50ft: "m"
+                            },
+                            data: [
+                                { altitude: 0, temperature_c: 15, ground_roll: 280, distance_50ft: 430 },
+                                { altitude: 0, temperature_c: 25, ground_roll: 310, distance_50ft: 475 },
+                                { altitude: 2000, temperature_c: 11, ground_roll: 340, distance_50ft: 520 }
+                            ],
+                            confidence: 0.95
+                        }
+                    ],
+                    extractionMetadata: {
+                        analyzedAt: new Date().toISOString(),
+                        totalTables: 1,
+                        analysisVersion: "2.0-TEST"
+                    }
+                }
+            };
+            
+            log('Données de test créées:', 'success');
+            log(testPerformance);
+            
+            // Proposer de l'ajouter au premier avion
+            const aircraftData = localStorage.getItem('aircraft-storage');
+            if (aircraftData) {
+                try {
+                    const aircraft = JSON.parse(aircraftData);
+                    if (aircraft.length > 0) {
+                        if (confirm(`Voulez-vous ajouter ces données de test à ${aircraft[0].registration} ?`)) {
+                            aircraft[0].advancedPerformance = testPerformance.advancedPerformance;
+                            localStorage.setItem('aircraft-storage', JSON.stringify(aircraft));
+                            log(`✅ Données ajoutées à ${aircraft[0].registration}`, 'success');
+                            checkAllAircraft();
+                        }
+                    }
+                } catch (e) {
+                    log('❌ Erreur lors de l\'ajout:', 'error');
+                }
+            }
+        }
+
+        function exportDetailed() {
+            const aircraftData = localStorage.getItem('aircraft-storage');
+            if (!aircraftData) {
+                alert('Aucune donnée à exporter');
+                return;
+            }
+            
+            try {
+                const aircraft = JSON.parse(aircraftData);
+                const performanceReport = {
+                    exportDate: new Date().toISOString(),
+                    summary: {
+                        totalAircraft: aircraft.length,
+                        withAdvancedPerformance: aircraft.filter(a => a.advancedPerformance).length,
+                        totalTables: aircraft.reduce((sum, a) => sum + (a.advancedPerformance?.tables?.length || 0), 0)
+                    },
+                    aircraft: aircraft.map(a => ({
+                        registration: a.registration,
+                        model: a.model,
+                        hasAdvancedPerformance: !!a.advancedPerformance,
+                        advancedPerformance: a.advancedPerformance || null
+                    }))
+                };
+                
+                const blob = new Blob([JSON.stringify(performanceReport, null, 2)], 
+                    { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `alflight-performance-report-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                log('✅ Export réussi', 'success');
+            } catch (e) {
+                log(`❌ Erreur export: ${e.message}`, 'error');
+            }
+        }
+
+        // Vérification au chargement
+        window.addEventListener('load', () => {
+            checkAllAircraft();
+        });
+    </script>
+</body>
+</html>

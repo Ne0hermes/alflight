@@ -4,6 +4,7 @@ import { Table, Download, Printer, RefreshCw, Navigation2, Clock, Wind, Radio, M
 import { useWeatherStore } from '@core/stores/weatherStore';
 import { useVACStore } from '@core/stores/vacStore';
 import { useUnits } from '@hooks/useUnits';
+import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
 
 const VFRNavigationTable = ({ 
   waypoints, 
@@ -15,6 +16,7 @@ const VFRNavigationTable = ({
   const [showTable, setShowTable] = useState(false);
   const [copied, setCopied] = useState(false);
   const { format, convert, getSymbol } = useUnits();
+  const units = useUnitsWatcher(); // Force re-render on units change
   
   // Récupérer les données météo et VAC
   const weatherData = useWeatherStore(state => state.weatherData) || {};
@@ -131,10 +133,12 @@ const VFRNavigationTable = ({
         altitude: plannedAltitude,
         trueCourse: Math.round(trueCourse),
         magneticHeading: Math.round(magneticHeading),
-        distance: Math.round(distance),
-        windInfo: windSpeed > 0 ? `${windDirection}°/${windSpeed}kt` : 'Calme',
+        distance: distance, // Garder la valeur brute pour conversion
+        distanceDisplay: format(distance, 'distance', 1),
+        windInfo: windSpeed > 0 ? `${windDirection}°/${format(windSpeed, 'windSpeed', 0)}` : 'Calme',
         windCorrectionAngle: Math.round(windCorrectionAngle),
-        groundSpeed: Math.round(groundSpeed),
+        groundSpeed: groundSpeed, // Garder la valeur brute
+        groundSpeedDisplay: format(groundSpeed, 'speed', 0),
         estimatedTime: Math.round(timeMinutes),
         actualTime: '', // À remplir pendant le vol
         frequencies: frequencies.join(', ') || 'N/A',
@@ -374,10 +378,10 @@ ${tableText}`;
                 <strong>Type:</strong> {flightType?.rules || 'VFR'} {flightType?.period || 'Jour'}
               </div>
               <div>
-                <strong>Altitude:</strong> {plannedAltitude} ft
+                <strong>Altitude:</strong> {format(plannedAltitude, 'altitude', 0)}
               </div>
               <div>
-                <strong>TAS:</strong> {selectedAircraft.cruiseSpeedKt || selectedAircraft.cruiseSpeed || 100} kt
+                <strong>TAS:</strong> {format(selectedAircraft.cruiseSpeedKt || selectedAircraft.cruiseSpeed || 100, 'speed', 0)}
               </div>
             </div>
           </div>
@@ -458,16 +462,16 @@ ${tableText}`;
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>#</th>
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb' }}>De</th>
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb' }}>Vers</th>
-                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>Alt (ft)</th>
+                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>Alt ({getSymbol('altitude')})</th>
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>CAP (°)</th>
-                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>DIST (NM)</th>
+                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>DIST ({getSymbol('distance')})</th>
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>VENT</th>
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>DÉR (°)</th>
-                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>GS (kt)</th>
+                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>GS ({getSymbol('speed')})</th>
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>ETE</th>
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', backgroundColor: '#fef3c7' }}>ATE</th>
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb' }}>FREQ</th>
-                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>MSA (ft)</th>
+                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>MSA ({getSymbol('altitude')})</th>
                 </tr>
               </thead>
               <tbody>
@@ -483,13 +487,13 @@ ${tableText}`;
                       {seg.to}
                     </td>
                     <td style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>
-                      {seg.altitude}
+                      {format(seg.altitude, 'altitude', 0)}
                     </td>
                     <td style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', fontWeight: 'bold', color: '#3b82f6' }}>
                       {seg.magneticHeading}°
                     </td>
                     <td style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>
-                      {seg.distance}
+                      {seg.distanceDisplay || format(seg.distance, 'distance', 1)}
                     </td>
                     <td style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', fontSize: '11px' }}>
                       {seg.windInfo}
@@ -498,7 +502,7 @@ ${tableText}`;
                       {seg.windCorrectionAngle > 0 ? '+' : ''}{seg.windCorrectionAngle}°
                     </td>
                     <td style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>
-                      {seg.groundSpeed}
+                      {seg.groundSpeedDisplay || format(seg.groundSpeed, 'speed', 0)}
                     </td>
                     <td style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', fontWeight: 'bold' }}>
                       {formatTime(seg.estimatedTime)}
@@ -516,7 +520,7 @@ ${tableText}`;
                       {seg.frequencies}
                     </td>
                     <td style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>
-                      {seg.msa}
+                      {format(seg.msa, 'altitude', 0)}
                     </td>
                   </tr>
                 ))}
@@ -527,7 +531,7 @@ ${tableText}`;
                     TOTAUX:
                   </td>
                   <td style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>
-                    {totals?.distance || 0}
+                    {format(totals?.distance || 0, 'distance', 1)}
                   </td>
                   <td colSpan="3" style={{ padding: '8px', border: '1px solid #e5e7eb' }}></td>
                   <td style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>

@@ -1,30 +1,15 @@
 // src/features/pilot/PilotModule.jsx
 import React, { useState } from 'react';
-import { User, FileText, Award, Calendar, Settings } from 'lucide-react';
-// Style system removed - using inline styles
+import { User, UserCircle, KeyRound } from 'lucide-react';
 import PilotProfile from './components/PilotProfile';
-import PilotLogbook from './components/PilotLogbook';
-import PilotCertifications from './components/PilotCertifications';
-import MedicalReminders from './components/MedicalReminders';
-import UnitsPreferences from './components/UnitsPreferences';
+import { AccountPanel } from '../account/components/AccountPanel';
 
 const PilotModule = () => {
   const [activeTab, setActiveTab] = useState('profile');
-  
-  // Exposer setActiveTab globalement pour les composants enfants
-  React.useEffect(() => {
-    window.setPilotActiveTab = setActiveTab;
-    return () => {
-      delete window.setPilotActiveTab;
-    };
-  }, []);
 
   const tabs = [
     { id: 'profile', label: 'Profil Pilote', icon: User },
-    { id: 'logbook', label: 'Carnet de Vol', icon: FileText },
-    { id: 'certifications', label: 'Licences & Qualifications', icon: Award },
-    { id: 'medical', label: 'Suivi Médical', icon: Calendar },
-    { id: 'units', label: 'Unités', icon: Settings }
+    { id: 'account', label: 'Compte', icon: UserCircle }
   ];
 
   return (
@@ -37,13 +22,13 @@ const PilotModule = () => {
         </h2>
       </div>
 
-      {/* Onglets de navigation */}
-      <div style={{ 
+      {/* Onglets */}
+      <div style={{
         display: 'flex',
-        marginBottom: '16px',
+        gap: '8px',
+        marginBottom: '20px',
         borderBottom: '2px solid #e5e7eb',
-        gap: '0',
-        overflowX: 'auto'
+        paddingBottom: '0'
       }}>
         {tabs.map(tab => {
           const Icon = tab.icon;
@@ -52,19 +37,31 @@ const PilotModule = () => {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               style={{
-                padding: '12px 24px',
-                backgroundColor: activeTab === tab.id ? '#3b82f6' : 'transparent',
-                color: activeTab === tab.id ? 'white' : '#6b7280',
-                border: 'none',
-                borderBottom: activeTab === tab.id ? '2px solid #3b82f6' : '2px solid transparent',
-                marginBottom: '-2px',
-                cursor: 'pointer',
-                fontWeight: activeTab === tab.id ? 'bold' : 'normal',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
+                padding: '12px 20px',
+                backgroundColor: activeTab === tab.id ? '#93163C' : 'transparent',
+                color: activeTab === tab.id ? 'white' : '#6b7280',
+                border: 'none',
+                borderTopLeftRadius: '8px',
+                borderTopRightRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
                 transition: 'all 0.2s',
-                whiteSpace: 'nowrap'
+                marginBottom: '-2px',
+                borderBottom: activeTab === tab.id ? '2px solid #93163C' : '2px solid transparent'
+              }}
+              onMouseEnter={(e) => {
+                if (activeTab !== tab.id) {
+                  e.target.style.backgroundColor = 'rgba(147, 22, 60, 0.1)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (activeTab !== tab.id) {
+                  e.target.style.backgroundColor = 'transparent';
+                }
               }}
             >
               <Icon size={18} />
@@ -74,13 +71,15 @@ const PilotModule = () => {
         })}
       </div>
 
-      {/* Contenu des onglets */}
-      <div>
-        {activeTab === 'profile' && <PilotProfile setActiveTab={setActiveTab} />}
-        {activeTab === 'logbook' && <PilotLogbook />}
-        {activeTab === 'certifications' && <PilotCertifications />}
-        {activeTab === 'medical' && <MedicalReminders />}
-        {activeTab === 'units' && <UnitsPreferences />}
+      {/* Contenu */}
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '8px',
+        padding: '20px',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+      }}>
+        {activeTab === 'profile' && <PilotProfile />}
+        {activeTab === 'account' && <AccountPanel />}
       </div>
     </div>
   );
