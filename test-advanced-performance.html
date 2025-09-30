@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Analyse Avancée des Performances</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .feature-box {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+            background: #f8fafc;
+        }
+        .feature-title {
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 4px 0;
+            color: #4a5568;
+        }
+        .feature-list li:before {
+            content: "✓ ";
+            color: #48bb78;
+            font-weight: bold;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.completed {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        .status.new {
+            background: #bee3f8;
+            color: #1a365d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Nouveau Système d'Analyse Avancée des Performances</h1>
+        
+        <p><strong>Statut:</strong> <span class="status completed">Implémentation terminée</span></p>
+        
+        <h2>📋 Fonctionnalités Implémentées</h2>
+        
+        <div class="feature-box">
+            <div class="feature-title">🔍 Reconnaissance Intelligente</div>
+            <ul class="feature-list">
+                <li>Détection automatique du type de contenu (tableau, graphique, mixte)</li>
+                <li>Classification des performances (décollage, atterrissage, montée, croisière)</li>
+                <li>Évaluation de la qualité d'image</li>
+                <li>Extraction des conditions et métadonnées</li>
+            </ul>
+        </div>
+
+        <div class="feature-box">
+            <div class="feature-title">📊 Extraction Structurée</div>
+            <ul class="feature-list">
+                <li>Extraction complète des tableaux avec en-têtes et unités</li>
+                <li>Lecture des graphiques avec interpolation automatique</li>
+                <li>Traitement des documents mixtes (tableau + graphique)</li>
+                <li>Gestion du texte non structuré avec extraction de valeurs</li>
+            </ul>
+        </div>
+
+        <div class="feature-box">
+            <div class="feature-title">✏️ Édition Complète</div>
+            <ul class="feature-list">
+                <li>Tables entièrement éditables (données, en-têtes, unités)</li>
+                <li>Ajout/suppression de lignes et colonnes</li>
+                <li>Renommage de colonnes en temps réel</li>
+                <li>Validation des données avec alertes</li>
+            </ul>
+        </div>
+
+        <div class="feature-box">
+            <div class="feature-title">📄 Support PDF Avancé</div>
+            <ul class="feature-list">
+                <li>Extraction automatique de toutes les pages</li>
+                <li>Traitement en haute résolution pour l'IA</li>
+                <li>Gestion des PDFs multi-pages</li>
+                <li>Prévisualisation de chaque page</li>
+            </ul>
+        </div>
+
+        <div class="feature-box">
+            <div class="feature-title">💾 Export et Intégration</div>
+            <ul class="feature-list">
+                <li>Export JSON structuré pour intégration</li>
+                <li>Export CSV pour analyse externe</li>
+                <li>Sauvegarde persistante avec l'avion</li>
+                <li>Copie vers le presse-papiers</li>
+            </ul>
+        </div>
+
+        <div class="feature-box">
+            <div class="feature-title">🔧 Robustesse et Qualité</div>
+            <ul class="feature-list">
+                <li>Retry automatique en cas d'échec API</li>
+                <li>Validation des données extraites</li>
+                <li>Gestion d'erreurs avec feedback utilisateur</li>
+                <li>Mémorisation pour éviter les re-renders</li>
+            </ul>
+        </div>
+
+        <h2>🎯 Architecture Technique</h2>
+        
+        <div class="feature-box">
+            <div class="feature-title">Composants Créés</div>
+            <ul class="feature-list">
+                <li><code>AdvancedPerformanceAnalyzer.jsx</code> - Composant principal</li>
+                <li><code>TableDisplay.jsx</code> - Affichage et édition des tableaux</li>
+                <li><code>advancedPerformanceAnalyzer.js</code> - Service d'analyse IA</li>
+                <li>Extension de <code>pdfToImageConverter.js</code> - Support multi-pages</li>
+            </ul>
+        </div>
+
+        <h2>🔄 Processus d'Analyse</h2>
+        
+        <div class="feature-box">
+            <div class="feature-title">Étapes de Traitement</div>
+            <ol style="color: #4a5568; padding-left: 20px;">
+                <li><strong>Détection:</strong> Classification du contenu par l'IA</li>
+                <li><strong>Extraction:</strong> Lecture des données selon le type détecté</li>
+                <li><strong>Validation:</strong> Vérification de cohérence des données</li>
+                <li><strong>Structuration:</strong> Normalisation en format JSON standard</li>
+                <li><strong>Édition:</strong> Interface utilisateur pour corrections</li>
+                <li><strong>Export:</strong> Génération de formats exploitables</li>
+            </ol>
+        </div>
+
+        <h2>📈 Format de Données Standard</h2>
+        
+        <div class="feature-box">
+            <div class="feature-title">Structure JSON</div>
+            <pre style="background: #2d3748; color: #e2e8f0; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 12px;">{
+  "table_name": "Distance de décollage",
+  "table_type": "takeoff",
+  "conditions": "Flaps 10°, Piste sèche, ISA",
+  "units": {
+    "altitude_pression": "ft",
+    "distance_decollage": "m",
+    "distance_50ft": "m"
+  },
+  "data": [
+    {"altitude_pression": 0, "distance_decollage": 365, "distance_50ft": 550},
+    {"altitude_pression": 2000, "distance_decollage": 410, "distance_50ft": 615}
+  ],
+  "analysisMetadata": {
+    "analyzedAt": "2025-08-17T12:30:00Z",
+    "confidence": 0.95,
+    "detectionMethod": "table"
+  }
+}</pre>
+        </div>
+
+        <h2>✅ Prêt pour Utilisation</h2>
+        
+        <p>Le nouveau système est maintenant intégré dans l'onglet <strong>"🤖 Performances IA"</strong> du module de gestion des avions. Il remplace complètement l'ancien système tout en conservant la compatibilité avec les données existantes.</p>
+        
+        <p><strong>Pour tester:</strong></p>
+        <ol>
+            <li>Allez dans "Gestion Avions"</li>
+            <li>Modifiez un avion</li>
+            <li>Cliquez sur l'onglet "🤖 Performances IA"</li>
+            <li>Chargez vos manuels de vol (images ou PDFs)</li>
+            <li>Lancez l'analyse</li>
+            <li>Éditez et exportez les résultats</li>
+        </ol>
+
+        <p style="margin-top: 20px; padding: 16px; background: #f0fff4; border: 1px solid #9ae6b4; border-radius: 6px;">
+            <strong>🎉 Innovation Majeure:</strong> Ce système transforme n'importe quel manuel de vol en base de données exploitable pour les calculs de performances !
+        </p>
+    </div>
+</body>
+</html>

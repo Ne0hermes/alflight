@@ -57,22 +57,40 @@ export const WeightBalanceTable = memo(({ aircraft, loads, calculations }) => {
       });
     }
     
-    if (loads.baggage > 0) {
-      items.push({
-        label: 'Bagages',
-        mass: loads.baggage,
-        arm: wb.baggageArm,
-        moment: (loads.baggage * wb.baggageArm).toFixed(1)
+    // Gérer les compartiments bagages dynamiques
+    if (aircraft.baggageCompartments && aircraft.baggageCompartments.length > 0) {
+      aircraft.baggageCompartments.forEach((compartment, index) => {
+        const loadKey = `baggage_${compartment.id || index}`;
+        const weight = loads[loadKey] || 0;
+        if (weight > 0) {
+          const arm = parseFloat(compartment.arm) || 3.50;
+          items.push({
+            label: compartment.name || `Compartiment ${index + 1}`,
+            mass: weight,
+            arm: arm,
+            moment: (weight * arm).toFixed(1)
+          });
+        }
       });
-    }
-    
-    if (loads.auxiliary > 0) {
-      items.push({
-        label: 'Rangement auxiliaire',
-        mass: loads.auxiliary,
-        arm: wb.auxiliaryArm,
-        moment: (loads.auxiliary * wb.auxiliaryArm).toFixed(1)
-      });
+    } else {
+      // Fallback vers les compartiments par défaut
+      if (loads.baggage > 0) {
+        items.push({
+          label: 'Bagages',
+          mass: loads.baggage,
+          arm: wb.baggageArm,
+          moment: (loads.baggage * wb.baggageArm).toFixed(1)
+        });
+      }
+      
+      if (loads.auxiliary > 0) {
+        items.push({
+          label: 'Rangement auxiliaire',
+          mass: loads.auxiliary,
+          arm: wb.auxiliaryArm,
+          moment: (loads.auxiliary * wb.auxiliaryArm).toFixed(1)
+        });
+      }
     }
     
     return items;
@@ -95,11 +113,22 @@ export const WeightBalanceTable = memo(({ aircraft, loads, calculations }) => {
     totalWeight += (loads.rearRight || 0);
     totalMoment += (loads.rearRight || 0) * wb.rearRightSeatArm;
     
-    totalWeight += (loads.baggage || 0);
-    totalMoment += (loads.baggage || 0) * wb.baggageArm;
-    
-    totalWeight += (loads.auxiliary || 0);
-    totalMoment += (loads.auxiliary || 0) * wb.auxiliaryArm;
+    // Gérer les compartiments bagages dynamiques pour les totaux
+    if (aircraft.baggageCompartments && aircraft.baggageCompartments.length > 0) {
+      aircraft.baggageCompartments.forEach((compartment, index) => {
+        const loadKey = `baggage_${compartment.id || index}`;
+        const weight = loads[loadKey] || 0;
+        const arm = parseFloat(compartment.arm) || 3.50;
+        totalWeight += weight;
+        totalMoment += weight * arm;
+      });
+    } else {
+      totalWeight += (loads.baggage || 0);
+      totalMoment += (loads.baggage || 0) * wb.baggageArm;
+      
+      totalWeight += (loads.auxiliary || 0);
+      totalMoment += (loads.auxiliary || 0) * wb.auxiliaryArm;
+    }
     
     totalWeight += (loads.fuel || 0);
     totalMoment += (loads.fuel || 0) * wb.fuelArm;

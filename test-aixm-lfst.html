@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test AIXM LFST</title>
+</head>
+<body>
+    <h1>Test données AIXM pour LFST</h1>
+    <div id="output"></div>
+    
+    <script>
+        async function testAIXM() {
+            const output = document.getElementById('output');
+            
+            try {
+                // Charger le fichier AIXM
+                const response = await fetch('/src/data/AIXM4.5_all_FR_OM_2025-09-04.xml');
+                const xmlText = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(xmlText, 'text/xml');
+                
+                let html = '<h2>Données LFST dans AIXM:</h2>';
+                
+                // Chercher les pistes
+                const rwys = doc.getElementsByTagName('Rwy');
+                html += '<h3>Pistes (Rwy):</h3><ul>';
+                
+                for (const rwy of rwys) {
+                    const rwyUid = rwy.querySelector('RwyUid');
+                    const ahpUid = rwyUid?.querySelector('AhpUid');
+                    const icao = ahpUid?.querySelector('codeId')?.textContent;
+                    
+                    if (icao === 'LFST') {
+                        const desig = rwyUid?.querySelector('txtDesig')?.textContent;
+                        const length = rwy.querySelector('valLen')?.textContent;
+                        const width = rwy.querySelector('valWid')?.textContent;
+                        const surface = rwy.querySelector('codeComposition')?.textContent;
+                        
+                        html += `<li><strong>Piste ${desig}:</strong> ${length}×${width}m, Surface: ${surface}</li>`;
+                    }
+                }
+                html += '</ul>';
+                
+                // Chercher les directions (Rdn)
+                const rdns = doc.getElementsByTagName('Rdn');
+                html += '<h3>Directions (Rdn):</h3><ul>';
+                
+                for (const rdn of rdns) {
+                    const rdnUid = rdn.querySelector('RdnUid');
+                    const rwyUid = rdnUid?.querySelector('RwyUid');
+                    const ahpUid = rwyUid?.querySelector('AhpUid');
+                    const icao = ahpUid?.querySelector('codeId')?.textContent;
+                    
+                    if (icao === 'LFST') {
+                        const rwyDesig = rwyUid?.querySelector('txtDesig')?.textContent;
+                        const direction = rdnUid?.querySelector('txtDesig')?.textContent;
+                        const trueBrg = rdn.querySelector('valTrueBrg')?.textContent;
+                        const magBrg = rdn.querySelector('valMagBrg')?.textContent;
+                        
+                        html += `<li><strong>Piste ${rwyDesig} - Direction ${direction}:</strong>`;
+                        html += ` QFU Vrai: ${trueBrg}°, QFU Mag: ${magBrg}°</li>`;
+                    }
+                }
+                html += '</ul>';
+                
+                // Chercher les distances déclarées (Rdd)
+                const rdds = doc.getElementsByTagName('Rdd');
+                html += '<h3>Distances déclarées (Rdd):</h3><ul>';
+                
+                for (const rdd of rdds) {
+                    const rdnUid = rdd.querySelector('RdnUid');
+                    const rwyUid = rdnUid?.querySelector('RwyUid');
+                    const ahpUid = rwyUid?.querySelector('AhpUid');
+                    const icao = ahpUid?.querySelector('codeId')?.textContent;
+                    
+                    if (icao === 'LFST') {
+                        const rwyDesig = rwyUid?.querySelector('txtDesig')?.textContent;
+                        const direction = rdnUid?.querySelector('txtDesig')?.textContent;
+                        const distType = rdd.querySelector('codeType')?.textContent;
+                        const distance = rdd.querySelector('valDist')?.textContent;
+                        const uom = rdd.querySelector('uomDist')?.textContent;
+                        
+                        html += `<li><strong>Piste ${rwyDesig} - Dir ${direction} - ${distType}:</strong> ${distance} ${uom}</li>`;
+                    }
+                }
+                html += '</ul>';
+                
+                // Chercher les ILS
+                const ilss = doc.getElementsByTagName('Ils');
+                html += '<h3>ILS:</h3><ul>';
+                
+                for (const ils of ilss) {
+                    const rdnUid = ils.querySelector('RdnUid');
+                    const rwyUid = rdnUid?.querySelector('RwyUid');
+                    const ahpUid = rwyUid?.querySelector('AhpUid');
+                    const icao = ahpUid?.querySelector('codeId')?.textContent;
+                    
+                    if (icao === 'LFST') {
+                        const rwyDesig = rwyUid?.querySelector('txtDesig')?.textContent;
+                        const direction = rdnUid?.querySelector('txtDesig')?.textContent;
+                        const category = ils.querySelector('codeCat')?.textContent;
+                        
+                        html += `<li><strong>Piste ${rwyDesig} - Dir ${direction}:</strong> CAT ${category}</li>`;
+                    }
+                }
+                html += '</ul>';
+                
+                output.innerHTML = html;
+                
+            } catch (error) {
+                output.innerHTML = `<p style="color: red;">Erreur: ${error.message}</p>`;
+                console.error('Erreur:', error);
+            }
+        }
+        
+        // Lancer le test
+        testAIXM();
+    </script>
+</body>
+</html>

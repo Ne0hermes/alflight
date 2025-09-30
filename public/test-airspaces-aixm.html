@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Espaces Aériens AIXM Locaux</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .subtitle {
+            margin-top: 10px;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .status-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid #e5e7eb;
+        }
+        .status-card h2 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .success {
+            background: #f0fdf4;
+            border-color: #86efac;
+        }
+        .success h2 {
+            color: #14532d;
+        }
+        .warning {
+            background: #fefce8;
+            border-color: #fde047;
+        }
+        .warning h2 {
+            color: #713f12;
+        }
+        .info {
+            background: #eff6ff;
+            border-color: #93c5fd;
+        }
+        .info h2 {
+            color: #1e3a8a;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .feature-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        .feature-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.1);
+        }
+        .feature-card h3 {
+            margin: 0 0 10px 0;
+            color: #1f2937;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .feature-card p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .code-block {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 5px;
+        }
+        .badge.green {
+            background: #10b981;
+        }
+        .badge.yellow {
+            background: #f59e0b;
+        }
+        .badge.red {
+            background: #ef4444;
+        }
+        ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        li {
+            margin: 8px 0;
+            color: #4b5563;
+        }
+        .example-box {
+            background: #f9fafb;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .example-box h4 {
+            margin: 0 0 10px 0;
+            color: #1e40af;
+            font-size: 14px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛫 Système d'Espaces Aériens AIXM</h1>
+            <div class="subtitle">Extraction exclusive depuis les données locales SIA/AIXM</div>
+        </div>
+        
+        <div class="content">
+            <div class="status-card success">
+                <h2>✅ Corrections Appliquées</h2>
+                <ul>
+                    <li><strong>Classes corrigées :</strong> Les espaces comme TMA STRASBOURG sont maintenant correctement en classe D</li>
+                    <li><strong>Filtrage amélioré :</strong> Les classes sont maintenant sans préfixe (A, B, C, D, E, F, G)</li>
+                    <li><strong>Source unique :</strong> Utilisation exclusive des données AIXM locales</li>
+                    <li><strong>Édition activée :</strong> Possibilité de modifier les propriétés des espaces aériens</li>
+                </ul>
+            </div>
+
+            <div class="status-card info">
+                <h2>📊 Architecture Simplifiée</h2>
+                <div class="code-block">
+src/services/
+  ├── aixmAirspacesParser.js     # Parser dédié AIXM
+  └── openAIPAirspacesService.js  # Service unifié (AIXM only)
+                </div>
+                <p style="margin-top: 15px;">Le système utilise maintenant <strong>uniquement</strong> les données AIXM locales, garantissant :</p>
+                <ul>
+                    <li>Cohérence des données</li>
+                    <li>Indépendance vis-à-vis des API externes</li>
+                    <li>Performance optimale avec cache local</li>
+                    <li>Possibilité d'édition et de sauvegarde locale</li>
+                </ul>
+            </div>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="icon">🎯</div>
+                    <h3>Extraction AIXM Native</h3>
+                    <p>Parse direct des balises &lt;Ase&gt; depuis le fichier AIXM4.5 avec extraction correcte des classes</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="icon">✏️</div>
+                    <h3>Édition Interactive</h3>
+                    <p>Cliquez sur n'importe quel espace aérien pour modifier ses propriétés (classe, altitude, nom)</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="icon">💾</div>
+                    <h3>Sauvegarde Locale</h3>
+                    <p>Les modifications sont sauvegardées dans le localStorage et persistent entre les sessions</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="icon">🔄</div>
+                    <h3>Réinitialisation</h3>
+                    <p>Bouton pour réinitialiser toutes les modifications et revenir aux données AIXM originales</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="icon">🗺️</div>
+                    <h3>Géométries Précises</h3>
+                    <p>Extraction des coordonnées depuis les balises Abd/Avx avec support des formats DMS</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="icon">📻</div>
+                    <h3>Fréquences Intégrées</h3>
+                    <p>Association automatique des fréquences aux espaces aériens depuis les données AIXM</p>
+                </div>
+            </div>
+
+            <div class="example-box">
+                <h4>Exemple de Correction Appliquée</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px;">
+                    <div>
+                        <span class="badge red">Avant</span>
+                        <div style="margin-top: 5px;">
+                            TMA STRASBOURG 1<br>
+                            Type: <strong>AIRSPACE_E</strong> ❌<br>
+                            Classe affichée: E
+                        </div>
+                    </div>
+                    <div>
+                        <span class="badge green">Après</span>
+                        <div style="margin-top: 5px;">
+                            TMA STRASBOURG 1<br>
+                            Type: <strong>TMA</strong> ✅<br>
+                            Classe: <strong>D</strong> ✅
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="status-card warning">
+                <h2>⚙️ Comment Utiliser</h2>
+                <ol>
+                    <li><strong>Navigation :</strong> Ouvrez le module Navigation</li>
+                    <li><strong>Visualisation :</strong> Les espaces aériens sont chargés automatiquement depuis AIXM</li>
+                    <li><strong>Filtrage :</strong> Utilisez les filtres pour afficher/masquer par type ou classe</li>
+                    <li><strong>Édition :</strong> Cliquez sur un espace aérien pour l'éditer</li>
+                    <li><strong>Sauvegarde :</strong> Les modifications sont automatiquement sauvegardées</li>
+                    <li><strong>Réinitialisation :</strong> Utilisez le bouton 🔄 pour revenir aux données originales</li>
+                </ol>
+            </div>
+
+            <div class="status-card">
+                <h2>📝 Propriétés Éditables</h2>
+                <ul>
+                    <li><strong>Nom :</strong> Nom de l'espace aérien</li>
+                    <li><strong>Classe :</strong> Classification (A, B, C, D, E, F, G)</li>
+                    <li><strong>Plancher :</strong> Altitude minimale (SFC, feet, FL)</li>
+                    <li><strong>Plafond :</strong> Altitude maximale (feet, FL)</li>
+                    <li><strong>Remarques :</strong> Notes et informations supplémentaires</li>
+                </ul>
+            </div>
+
+            <div class="status-card info">
+                <h2>🚀 Performance</h2>
+                <ul>
+                    <li>Cache de 30 minutes pour les données chargées</li>
+                    <li>Chargement asynchrone sans blocage</li>
+                    <li>Filtrage en temps réel côté client</li>
+                    <li>Géométries optimisées en GeoJSON</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,7 +1,7 @@
 import React, { memo, useState, useEffect } from 'react';
 import { Plane, Wind, CheckCircle, AlertTriangle, Info, ChevronDown, ChevronUp, FileText } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
-import { openAIPService } from '@services/openAIPService';
+import { aeroDataProvider } from '@core/data';
 
 // Calcul de la différence d'angle entre deux directions
 const calculateAngleDifference = (heading1, heading2) => {
@@ -41,7 +41,8 @@ export const RunwaySuggestion = memo(({ icao, wind }) => {
       
       setLoading(true);
       try {
-        const airportData = await openAIPService.getAirportDetails(icao);
+        const airports = await aeroDataProvider.getAirfields({ icao });
+        const airportData = airports.find(a => a.icao === icao);
         if (airportData) {
           setAirport(airportData);
           setRunways(airportData.runways || []);

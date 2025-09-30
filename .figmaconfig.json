@@ -1,0 +1,20 @@
+{
+  "export": {
+    "outputDir": "./src/designs/figma",
+    "fileFormat": "jsx",
+    "componentFormat": "function",
+    "styleFormat": "css-in-js",
+    "includeStyles": true,
+    "includeComments": true
+  },
+  "tokens": {
+    "colors": "./src/styles/theme.js",
+    "spacing": "./src/styles/theme.js",
+    "typography": "./src/styles/theme.js"
+  },
+  "react": {
+    "importReact": true,
+    "typescript": false,
+    "propsInterface": false
+  }
+}

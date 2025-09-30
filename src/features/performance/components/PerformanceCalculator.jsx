@@ -2,8 +2,7 @@
 import React, { memo, useState, useMemo, useEffect } from 'react';
 import { Calculator, AlertTriangle, Info, Wind, Thermometer, Mountain, Plane } from 'lucide-react';
 import { sx } from '../../../shared/styles/styleSystem';
-import { useAircraft } from '../../../core/contexts';
-import { useWeatherStore } from '../../../core/stores/weatherStore';
+import { useAircraft, useNavigation, useWeather, useWeightBalance, useFuel } from '../../../core/contexts';
 import { 
   interpolatePerformance, 
   applyEnvironmentalCorrections,
@@ -12,7 +11,10 @@ import {
 
 export const PerformanceCalculator = memo(() => {
   const { selectedAircraft } = useAircraft();
-  const { weatherData, fetchWeather } = useWeatherStore();
+  const { waypoints } = useNavigation();
+  const { getWeatherByIcao } = useWeather();
+  const { calculations } = useWeightBalance();
+  const { fuelData, fobFuel } = useFuel();
   
   // État pour les conditions de calcul
   const [conditions, setConditions] = useState({
@@ -32,28 +34,26 @@ export const PerformanceCalculator = memo(() => {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Charger la météo si un aéroport est sélectionné
-  useEffect(() => {
-    if (conditions.airport && conditions.airport.length === 4) {
-      fetchWeather(conditions.airport);
-    }
-  }, [conditions.airport, fetchWeather]);
-
   // Mise à jour automatique des conditions depuis la météo
   useEffect(() => {
-    if (weatherData && conditions.airport && weatherData[conditions.airport]) {
-      const metar = weatherData[conditions.airport];
-      setConditions(prev => ({
-        ...prev,
-        temperature: metar.temperature || prev.temperature,
-        qnh: metar.altimeter ? metar.altimeter * 33.8639 : prev.qnh, // Conversion inHg vers hPa
-        // Analyser le vent depuis METAR
-        ...(metar.wind && {
-          headwind: metar.wind.speed_kts || 0 // Simplification, nécessiterait l'angle de piste
-        })
-      }));
+    if (conditions.airport && conditions.airport.length === 4) {
+      const weather = getWeatherByIcao(conditions.airport);
+      if (weather) {
+        const temp = weather.decoded?.temperature || weather.metar?.temperature;
+        const qnh = weather.decoded?.altimeter?.value || weather.metar?.altimeter;
+        
+        setConditions(prev => ({
+          ...prev,
+          temperature: temp || prev.temperature,
+          qnh: qnh ? qnh * 33.8639 : prev.qnh, // Conversion inHg vers hPa si nécessaire
+          // Analyser le vent depuis METAR
+          ...(weather.decoded?.wind && {
+            headwind: weather.decoded.wind.speed?.value || 0 // Simplification, nécessiterait l'angle de piste
+          })
+        }));
+      }
     }
-  }, [weatherData, conditions.airport]);
+  }, [conditions.airport, getWeatherByIcao]);
 
   // Calculer les performances
   const calculatePerformances = useMemo(() => {
@@ -194,16 +194,134 @@ export const PerformanceCalculator = memo(() => {
     );
   }
 
-  if (!selectedAircraft.manex?.performanceCharts) {
+  // Si pas d'abaques MANEX mais performances IA disponibles
+  if (!selectedAircraft.manex?.performanceCharts && selectedAircraft.performance) {
+    return (
+      <div style={sx.combine(sx.components.card.base, sx.spacing.p(4))}>
+        <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4), sx.flex.start)}>
+          <Calculator size={20} style={{ marginRight: '8px' }} />
+          Calculateur de Performances
+        </h3>
+
+        <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mb(4))}>
+          <Info size={16} />
+          <div>
+            <p style={sx.text.sm}>
+              Calculs basés sur les performances IA extraites. Pour des calculs plus précis avec abaques, importez le MANEX.
+            </p>
+          </div>
+        </div>
+
+        {/* Affichage des conditions actuelles */}
+        <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3), sx.spacing.mb(4))}>
+          <h4 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
+            Conditions actuelles du vol
+          </h4>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div>
+              <p style={sx.text.xs}>Masse au décollage</p>
+              <p style={sx.text.base}>{calculations?.totalWeight || selectedAircraft.maxTakeoffWeight} kg</p>
+            </div>
+            <div>
+              <p style={sx.text.xs}>Masse à l'atterrissage</p>
+              <p style={sx.text.base}>
+                {calculations && fuelData ? 
+                  Math.round(calculations.totalWeight - (fuelData.trip?.kg || 0)) : 
+                  Math.round(selectedAircraft.maxTakeoffWeight * 0.9)} kg
+              </p>
+            </div>
+            {waypoints?.length >= 2 && (
+              <>
+                <div>
+                  <p style={sx.text.xs}>Départ</p>
+                  <p style={sx.text.base}>{waypoints[0].icao || waypoints[0].name}</p>
+                </div>
+                <div>
+                  <p style={sx.text.xs}>Arrivée</p>
+                  <p style={sx.text.base}>{waypoints[waypoints.length - 1].icao || waypoints[waypoints.length - 1].name}</p>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Performances IA */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div style={sx.combine(sx.components.card.base, sx.bg.gray)}>
+            <h4 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
+              ✈️ Décollage (référence IA)
+            </h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+              <div>
+                <p style={sx.text.xs}>TOD</p>
+                <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+                  {selectedAircraft.performance.takeoff?.tod || 'N/A'} m
+                </p>
+              </div>
+              <div>
+                <p style={sx.text.xs}>15m</p>
+                <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+                  {selectedAircraft.performance.takeoff?.toda15m || 'N/A'} m
+                </p>
+              </div>
+              <div>
+                <p style={sx.text.xs}>50ft</p>
+                <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+                  {selectedAircraft.performance.takeoff?.toda50ft || 'N/A'} m
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div style={sx.combine(sx.components.card.base, sx.bg.gray)}>
+            <h4 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
+              🛬 Atterrissage (référence IA)
+            </h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+              <div>
+                <p style={sx.text.xs}>LD</p>
+                <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+                  {selectedAircraft.performance.landing?.ld || 'N/A'} m
+                </p>
+              </div>
+              <div>
+                <p style={sx.text.xs}>15m</p>
+                <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+                  {selectedAircraft.performance.landing?.lda15m || 'N/A'} m
+                </p>
+              </div>
+              <div>
+                <p style={sx.text.xs}>50ft</p>
+                <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+                  {selectedAircraft.performance.landing?.lda50ft || 'N/A'} m
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style={sx.combine(sx.spacing.mt(4), sx.components.alert.base, sx.components.alert.warning)}>
+          <AlertTriangle size={16} />
+          <p style={sx.text.xs}>
+            Ces valeurs sont des références extraites par IA. Pour des calculs ajustés aux conditions actuelles, 
+            importez le MANEX de l'avion.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si ni abaques ni performances IA
+  if (!selectedAircraft.manex?.performanceCharts && !selectedAircraft.performance) {
     return (
       <div style={sx.combine(sx.components.card.base, sx.components.alert.base, sx.components.alert.warning)}>
         <AlertTriangle size={20} />
         <div>
           <p style={sx.text.sm}>
-            <strong>Abaques de performances non disponibles</strong>
+            <strong>Performances non disponibles</strong>
           </p>
           <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
-            Importez le MANEX de l'avion pour accéder aux calculs de performances basés sur les abaques
+            Analysez les tableaux de performances avec l'IA dans le module "Gestion Avions" ou importez le MANEX de l'avion.
           </p>
         </div>
       </div>
@@ -539,3 +657,5 @@ export const PerformanceCalculator = memo(() => {
 });
 
 PerformanceCalculator.displayName = 'PerformanceCalculator';
+
+export default PerformanceCalculator;

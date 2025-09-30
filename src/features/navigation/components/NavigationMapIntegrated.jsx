@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { Navigation, Fuel, MapPin, AlertCircle, Plane, Map as MapIcon } from 'lucide-react';
 import { useFuel } from '@core/contexts';
 import { useOpenAIPStore, openAIPSelectors } from '@core/stores/openAIPStore';
-import { openAIPService } from '@services/openAIPService';
+import { aeroDataProvider } from '@core/data';
 import MapFiltersPanel from './MapFiltersPanel';
 
 // Fonction de filtrage mémorisée pour éviter les recalculs
@@ -258,20 +258,7 @@ const NavigationMapIntegrated = ({ waypoints = [], onWaypointUpdate, selectedAir
           console.error('❌ Aucun fond de carte disponible');
         }
         
-        // Ajouter les tuiles OpenAIP en overlay avec transparence
-        const openAIPLayer = window.L.tileLayer(openAIPService.getTileUrl(), {
-          attribution: '© OpenAIP',
-          maxZoom: 14,
-          minZoom: 3,
-          crossOrigin: true,
-          opacity: 0.8,  // Transparence pour voir OSM en dessous
-          updateWhenIdle: true,
-          updateWhenZooming: false
-        });
-        
-        // Stocker la référence de la couche OpenAIP
-        layersRef.current.openAIPLayer = openAIPLayer;
-        openAIPLayer.addTo(map);
+        // Couche OpenAIP supprimée
         
         mapInstanceRef.current = map;
         setMapReady(true);
@@ -749,24 +736,14 @@ const NavigationMapIntegrated = ({ waypoints = [], onWaypointUpdate, selectedAir
     const opacity = parseInt(value);
     setShowLayers(prev => ({ ...prev, openAIPOpacity: opacity }));
     
-    // Appliquer l'opacité à la couche OpenAIP si elle existe
-    if (layersRef.current.openAIPLayer) {
-      layersRef.current.openAIPLayer.setOpacity(opacity / 100);
-    }
+    // Opacité OpenAIP supprimée
   }, []);
 
   const toggleOpenAIPOverlay = useCallback(() => {
     setShowLayers(prev => {
       const newState = { ...prev, openAIPOverlay: !prev.openAIPOverlay };
       
-      // Gérer l'affichage de la couche OpenAIP
-      if (mapInstanceRef.current && layersRef.current.openAIPLayer) {
-        if (newState.openAIPOverlay) {
-          layersRef.current.openAIPLayer.addTo(mapInstanceRef.current);
-        } else {
-          mapInstanceRef.current.removeLayer(layersRef.current.openAIPLayer);
-        }
-      }
+      // Gestion OpenAIP supprimée
       
       return newState;
     });

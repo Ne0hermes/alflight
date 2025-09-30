@@ -1,7 +1,14 @@
 // src/features/pilot/components/PilotCertifications.jsx
 import React, { useState, useEffect } from 'react';
-import { Award, Upload, Download, Trash2, Eye, Plus, Calendar, AlertTriangle, CheckCircle, FileText } from 'lucide-react';
-// Style system removed - using inline styles
+import { Upload, Trash2, Eye, FileText, Edit2, AlertCircle } from 'lucide-react';
+import {
+  safeSetItem,
+  compressImage,
+  getLocalStorageSize,
+  manualCleanStorage
+} from '../../../utils/storageUtils';
+import { debugCertifications, addTestLicense, addTestRating } from '../../../utils/debugCertifications';
+import { runFullTest, resetCertifications, validateStructure } from '../../../utils/testLicensesImportExport';
 
 const PilotCertifications = () => {
   const [certifications, setCertifications] = useState({
@@ -12,32 +19,35 @@ const PilotCertifications = () => {
   });
 
   const [showForm, setShowForm] = useState(false);
-  const [formType, setFormType] = useState('licenses');
   const [editingItem, setEditingItem] = useState(null);
+  const [editingCategory, setEditingCategory] = useState(null);
 
   const [formData, setFormData] = useState({
+    category: 'licenses',
     type: '',
     name: '',
-    number: '',
-    issuedBy: '',
     issueDate: '',
     expiryDate: '',
-    nextCheckDate: '',
     document: null,
-    documentName: '',
-    remarks: ''
+    documentName: ''
   });
 
   // Types prédéfinis
   const certTypes = {
     licenses: [
-      'PPL - Private Pilot License',
-      'CPL - Commercial Pilot License',
-      'ATPL - Airline Transport Pilot License',
-      'LAPL - Light Aircraft Pilot License',
+      'PPL(A) - Private Pilot License (Avion)',
+      'PPL(H) - Private Pilot License (Hélicoptère)',
+      'CPL(A) - Commercial Pilot License (Avion)',
+      'CPL(H) - Commercial Pilot License (Hélicoptère)',
+      'ATPL(A) - Airline Transport Pilot License (Avion)',
+      'ATPL(H) - Airline Transport Pilot License (Hélicoptère)',
+      'LAPL(A) - Light Aircraft Pilot License (Avion)',
+      'LAPL(H) - Light Aircraft Pilot License (Hélicoptère)',
       'ULM - Ultra Léger Motorisé',
-      'FI - Flight Instructor',
-      'FE - Flight Examiner'
+      'FI(A) - Flight Instructor (Avion)',
+      'FI(H) - Flight Instructor (Hélicoptère)',
+      'FE(A) - Flight Examiner (Avion)',
+      'FE(H) - Flight Examiner (Hélicoptère)'
     ],
     ratings: [
       'SEP - Single Engine Piston',
@@ -73,42 +83,283 @@ const PilotCertifications = () => {
     ]
   };
 
+  const categoryLabels = {
+    licenses: 'Licences',
+    ratings: 'Qualifications',
+    endorsements: 'Variantes',
+    training: 'Formations'
+  };
+
+  const categoryIcons = {
+    licenses: '✈️',
+    ratings: '🎯',
+    endorsements: '📋',
+    training: '🎓'
+  };
+
+  const categoryColors = {
+    licenses: '#3b82f6',
+    ratings: '#10b981',
+    endorsements: '#f59e0b',
+    training: '#8b5cf6'
+  };
+
   // Charger les certifications depuis localStorage
   useEffect(() => {
+    console.log('=== CHARGEMENT INITIAL CERTIFICATIONS ===');
     const saved = localStorage.getItem('pilotCertifications');
+    console.log('Données brutes du localStorage:', saved);
+
     if (saved) {
-      setCertifications(JSON.parse(saved));
+      const parsed = JSON.parse(saved);
+      console.log('Données parsées:', parsed);
+      console.log('  - licenses:', parsed.licenses?.length || 0, 'éléments');
+      console.log('  - ratings:', parsed.ratings?.length || 0, 'éléments');
+      console.log('  - endorsements:', parsed.endorsements?.length || 0, 'éléments');
+      console.log('  - training:', parsed.training?.length || 0, 'éléments');
+      setCertifications(parsed);
+    } else {
+      console.log('Aucune donnée existante - initialisation vide');
+    }
+
+    // Ajouter les fonctions de debug au window pour faciliter le test
+    if (typeof window !== 'undefined') {
+      window.debugCert = debugCertifications;
+      window.addTestLicense = addTestLicense;
+      window.addTestRating = addTestRating;
+      window.runFullTest = runFullTest;
+      window.resetCert = resetCertifications;
+      window.validateCert = validateStructure;
+      console.log('💡 Fonctions de debug disponibles dans la console:');
+      console.log('   - debugCert() : affiche l\'état des certifications');
+      console.log('   - addTestLicense() : ajoute une licence de test');
+      console.log('   - addTestRating() : ajoute une qualification de test');
+      console.log('   - runFullTest() : lance un test complet avec données');
+      console.log('   - resetCert() : réinitialise les certifications');
+      console.log('   - validateCert() : valide la structure des données');
     }
   }, []);
 
-  // Vérifier les dates d'expiration
-  const checkExpiry = (date) => {
-    if (!date) return 'none';
-    const expiryDate = new Date(date);
-    const today = new Date();
-    const daysUntilExpiry = Math.floor((expiryDate - today) / (1000 * 60 * 60 * 24));
-    
-    if (daysUntilExpiry < 0) return 'expired';
-    if (daysUntilExpiry <= 30) return 'urgent';
-    if (daysUntilExpiry <= 90) return 'warning';
-    return 'valid';
+  // Durées de validité par type (en mois)
+  const validityPeriods = {
+    'SEP - Single Engine Piston': 24,
+    'MEP - Multi Engine Piston': 24,
+    'SET - Single Engine Turbine': 12,
+    'MET - Multi Engine Turbine': 12,
+    'IR - Instrument Rating': 12,
+    'Night Rating': null, // Pas d'expiration
+    'Mountain Rating': null,
+    'Type Rating': 12,
+    'FI(A) - Flight Instructor (Avion)': 36,
+    'FI(H) - Flight Instructor (Hélicoptère)': 36,
+    'FE(A) - Flight Examiner (Avion)': 36,
+    'FE(H) - Flight Examiner (Hélicoptère)': 36,
+    'BFR - Biennial Flight Review': 24,
+    'IPC - Instrument Proficiency Check': 12,
+    'Line Check': 12,
+    'CRM - Crew Resource Management': 36,
+    'Dangerous Goods': 24,
+    'Security Training': 60,
+    // Default pour autres
+    'default': 12
+  };
+
+  const calculateExpiryDate = (issueDate, type, category) => {
+    if (!issueDate || category === 'licenses') return '';
+
+    const issue = new Date(issueDate);
+    let validityMonths = validityPeriods[type] || validityPeriods.default;
+
+    if (validityMonths === null) return ''; // Pas d'expiration
+
+    issue.setMonth(issue.getMonth() + validityMonths);
+    return issue.toISOString().split('T')[0];
   };
 
   const handleChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+
+      // Auto-calculer la date d'expiration si on change la date d'émission ou le type
+      if ((field === 'issueDate' || field === 'type') && prev.category !== 'licenses') {
+        const issueDate = field === 'issueDate' ? value : prev.issueDate;
+        const type = field === 'type' ? value : prev.type;
+        updated.expiryDate = calculateExpiryDate(issueDate, type, prev.category);
+      }
+
+      // Si on change de catégorie, recalculer l'expiration
+      if (field === 'category' && value !== 'licenses' && prev.issueDate && prev.type) {
+        updated.expiryDate = calculateExpiryDate(prev.issueDate, prev.type, value);
+      } else if (field === 'category' && value === 'licenses') {
+        updated.expiryDate = ''; // Pas d'expiration pour les licences
+      }
+
+      return updated;
+    });
   };
 
-  const handleDocumentUpload = (e) => {
+  const handleDocumentUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Vérifier l'espace disponible avant l'upload
+      const currentSize = parseFloat(getLocalStorageSize());
+      const fileSizeMB = file.size / (1024 * 1024);
+      const base64SizeMB = fileSizeMB * 1.37; // Base64 ajoute ~37% de taille
+      const projectedTotal = currentSize + base64SizeMB;
+
+      // Si le fichier est trop gros même après nettoyage complet
+      if (base64SizeMB > 4.8) {
+        const useReference = confirm(
+          `❌ Fichier trop volumineux !\n\n` +
+          `Taille du fichier: ${fileSizeMB.toFixed(2)}MB\n` +
+          `Après encodage: ~${base64SizeMB.toFixed(2)}MB\n` +
+          `Limite maximale: ~4.8MB\n\n` +
+          `Voulez-vous enregistrer uniquement une référence au fichier ?\n` +
+          `(Le nom du fichier sera sauvegardé, mais pas son contenu)\n\n` +
+          `OK = Sauvegarder la référence\n` +
+          `Annuler = Ne pas ajouter le document`
+        );
+
+        if (useReference) {
+          // Sauvegarder juste la référence
+          setFormData(prev => ({
+            ...prev,
+            document: null, // Pas de contenu
+            documentName: `[Référence] ${file.name} (${fileSizeMB.toFixed(1)}MB)` // Nom avec indication
+          }));
+          alert(
+            `✅ Référence ajoutée\n\n` +
+            `Le nom du document a été enregistré.\n` +
+            `Conservez le fichier original sur votre ordinateur.\n\n` +
+            `Pour réduire la taille, utilisez:\n` +
+            `• smallpdf.com (PDF)\n` +
+            `• tinypng.com (images)\n` +
+            `• cloudconvert.com (général)`
+          );
+        } else {
+          e.target.value = '';
+        }
+        return;
+      }
+
+      if (projectedTotal > 4.5) {
+        // Proposer un nettoyage automatique complet
+        const confirmClean = confirm(
+          `⚠️ Espace insuffisant !\n\n` +
+          `Espace actuel: ${currentSize.toFixed(2)}MB\n` +
+          `Fichier (après encodage): ~${base64SizeMB.toFixed(2)}MB\n` +
+          `Total prévu: ${projectedTotal.toFixed(2)}MB\n` +
+          `Limite: ~5MB\n\n` +
+          `Voulez-vous effectuer un nettoyage complet pour faire de la place ?`
+        );
+
+        if (confirmClean) {
+          // Forcer un nettoyage complet
+          const result = manualCleanStorage();
+          updateStorageInfo();
+
+          // Revérifier après nettoyage
+          const newSize = parseFloat(getLocalStorageSize());
+          if (newSize + base64SizeMB > 4.8) {
+            alert(`Même après nettoyage, pas assez d'espace. Le fichier doit être compressé.`);
+            e.target.value = '';
+            return;
+          } else {
+            alert(`✅ Nettoyage terminé ! ${result.freedMB}MB libérés. Vous pouvez maintenant réessayer.`);
+          }
+        }
+        e.target.value = '';
+        return;
+      }
+
+      // Limites ajustées pour tenir compte du base64
+      let maxSize = 3 * 1024 * 1024; // 3MB par défaut (devient ~4MB en base64)
+
+      // Pour les PDF, limiter selon l'espace disponible
+      if (file.type === 'application/pdf') {
+        const availableSpace = (4.5 - currentSize) * 1024 * 1024;
+        maxSize = Math.min(availableSpace / 1.37, 10 * 1024 * 1024); // Max 10MB ou l'espace disponible
+      }
+      // Pour les images, limiter à 2MB (devient ~2.7MB en base64)
+      else if (file.type.startsWith('image/')) {
+        maxSize = 2 * 1024 * 1024;
+      }
+
+      if (file.size > maxSize) {
+        const maxSizeMB = maxSize / (1024 * 1024);
+        alert(`Le fichier est trop volumineux (max ${maxSizeMB}MB). Taille actuelle: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+        e.target.value = ''; // Réinitialiser l'input
+        return;
+      }
+
       const reader = new FileReader();
-      reader.onloadend = () => {
+      reader.onloadend = async () => {
+        let result = reader.result;
+
+        // Compression intelligente basée sur le type et la taille
+        if (file.type.startsWith('image/')) {
+          let maxWidth = 1200; // Par défaut
+          let targetSizeMB = 2; // Cible de compression
+
+          // Compression plus agressive si le fichier est gros
+          if (file.size > 3 * 1024 * 1024) {
+            maxWidth = 1000;
+            targetSizeMB = 1.5;
+          }
+          if (file.size > 4 * 1024 * 1024) {
+            maxWidth = 800;
+            targetSizeMB = 1;
+          }
+
+          try {
+            result = await compressImage(result, maxWidth);
+            const compressedSizeMB = (result.length / 1024 / 1024).toFixed(2);
+            const originalSizeMB = (file.size / 1024 / 1024).toFixed(2);
+            console.log(`Image compressée: ${originalSizeMB}MB → ${compressedSizeMB}MB`);
+          } catch (error) {
+            console.error('Erreur de compression:', error);
+          }
+        }
+
+        // Vérifier la taille finale après compression
+        const resultSizeMB = (result.length / 1024 / 1024).toFixed(2);
+        const currentSize = parseFloat(getLocalStorageSize());
+        const newTotal = currentSize + parseFloat(resultSizeMB);
+
+        if (newTotal > 4.8) {
+          alert(
+            `❌ Impossible d'ajouter ce document !\n\n` +
+            `Espace actuel: ${currentSize.toFixed(2)}MB\n` +
+            `Document: ${resultSizeMB}MB\n` +
+            `Total: ${newTotal.toFixed(2)}MB (limite: ~5MB)\n\n` +
+            `Solutions:\n` +
+            `1. Cliquez sur "Nettoyer le stockage"\n` +
+            `2. Supprimez d'anciens documents\n` +
+            `3. Compressez le fichier avant l'upload`
+          );
+          e.target.value = '';
+
+          // Proposer le nettoyage
+          if (confirm('Voulez-vous nettoyer le stockage maintenant ?')) {
+            handleCleanStorage();
+          }
+          return;
+        } else if (resultSizeMB > 1) {
+          // Avertissement pour les fichiers > 1MB
+          const confirmSave = confirm(
+            `⚠️ Document volumineux: ${resultSizeMB}MB\n\n` +
+            `Espace restant après ajout: ${(4.8 - newTotal).toFixed(2)}MB\n\n` +
+            `Continuer ?`
+          );
+          if (!confirmSave) {
+            e.target.value = '';
+            return;
+          }
+        }
+
         setFormData(prev => ({
           ...prev,
-          document: reader.result,
+          document: result,
           documentName: file.name
         }));
       };
@@ -117,6 +368,10 @@ const PilotCertifications = () => {
   };
 
   const handleSubmit = () => {
+    console.log('=== SAUVEGARDE CERTIFICATION ===');
+    console.log('Catégorie:', formData.category);
+    console.log('Type:', formData.type);
+
     const item = {
       ...formData,
       id: editingItem ? editingItem.id : Date.now(),
@@ -124,52 +379,66 @@ const PilotCertifications = () => {
       updatedAt: new Date().toISOString()
     };
 
+    // Retirer la catégorie de l'objet item car elle ne doit pas être stockée dans l'item
+    const { category, ...itemWithoutCategory } = item;
+
     const newCertifications = { ...certifications };
-    
-    if (editingItem) {
-      const index = newCertifications[formType].findIndex(c => c.id === editingItem.id);
+
+    if (editingItem && editingCategory) {
+      const index = newCertifications[editingCategory].findIndex(c => c.id === editingItem.id);
       if (index !== -1) {
-        newCertifications[formType][index] = item;
+        newCertifications[editingCategory][index] = itemWithoutCategory;
       }
     } else {
-      newCertifications[formType].push(item);
+      newCertifications[category].push(itemWithoutCategory);
     }
 
+    console.log('Nouvelles certifications:', newCertifications);
+    console.log(`Nombre dans ${category}:`, newCertifications[category].length);
+
     setCertifications(newCertifications);
-    localStorage.setItem('pilotCertifications', JSON.stringify(newCertifications));
-    
-    resetForm();
-    alert(editingItem ? 'Certification modifiée !' : 'Certification ajoutée !');
+
+    // Utiliser safeSetItem pour gérer les erreurs de quota
+    const saved = safeSetItem('pilotCertifications', JSON.stringify(newCertifications));
+    console.log('Sauvegarde dans localStorage:', saved ? 'Succès' : 'Échec');
+
+    if (saved) {
+      resetForm();
+      alert(editingItem ? 'Certification modifiée !' : 'Certification ajoutée !');
+    } else {
+      alert('Erreur de sauvegarde : espace de stockage insuffisant');
+    }
   };
 
   const resetForm = () => {
     setFormData({
+      category: 'licenses',
       type: '',
       name: '',
-      number: '',
-      issuedBy: '',
       issueDate: '',
       expiryDate: '',
-      nextCheckDate: '',
       document: null,
-      documentName: '',
-      remarks: ''
+      documentName: ''
     });
     setEditingItem(null);
+    setEditingCategory(null);
     setShowForm(false);
   };
 
-  const handleEdit = (type, item) => {
-    setFormType(type);
-    setFormData(item);
+  const handleEdit = (category, item) => {
+    setFormData({
+      ...item,
+      category: category
+    });
     setEditingItem(item);
+    setEditingCategory(category);
     setShowForm(true);
   };
 
-  const handleDelete = (type, id) => {
+  const handleDelete = (category, id) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette certification ?')) {
       const newCertifications = { ...certifications };
-      newCertifications[type] = newCertifications[type].filter(c => c.id !== id);
+      newCertifications[category] = newCertifications[category].filter(c => c.id !== id);
       setCertifications(newCertifications);
       localStorage.setItem('pilotCertifications', JSON.stringify(newCertifications));
     }
@@ -183,17 +452,7 @@ const PilotCertifications = () => {
     link.click();
   };
 
-  const handleExport = () => {
-    const dataStr = JSON.stringify(certifications, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = `pilot-certifications-${new Date().toISOString().split('T')[0]}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-  };
+
 
   const inputStyle = {
     padding: '8px 12px',
@@ -212,157 +471,142 @@ const PilotCertifications = () => {
     display: 'block'
   };
 
-  const getExpiryBadge = (date) => {
-    const status = checkExpiry(date);
-    const styles = {
-      expired: { backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca' },
-      urgent: { backgroundColor: '#fed7aa', color: '#9a3412', border: '1px solid #fb923c' },
-      warning: { backgroundColor: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d' },
-      valid: { backgroundColor: '#d1fae5', color: '#065f46', border: '1px solid #86efac' },
-      none: { backgroundColor: '#f3f4f6', color: '#6b7280', border: '1px solid #d1d5db' }
-    };
+  // Compter le total de certifications
+  const totalCertifications = Object.values(certifications).reduce((sum, arr) => sum + arr.length, 0);
 
-    const labels = {
-      expired: 'Expiré',
-      urgent: 'Urgent',
-      warning: 'Attention',
-      valid: 'Valide',
-      none: 'N/A'
-    };
-
-    if (!date) return null;
-
-    const expiryDate = new Date(date);
-    const daysUntilExpiry = Math.floor((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
-
-    return (
-      <span style={{
-        ...styles[status],
-        padding: '2px 8px',
-        borderRadius: '4px',
-        fontSize: '12px',
-        fontWeight: 'bold'
-      }}>
-        {labels[status]} {status !== 'none' && `(${Math.abs(daysUntilExpiry)}j)`}
-      </span>
-    );
+  // Vérifier les dates d'expiration
+  const getExpiryColor = (expiryDate) => {
+    if (!expiryDate) return '#6b7280';
+    const today = new Date();
+    const expiry = new Date(expiryDate);
+    const daysUntilExpiry = Math.floor((expiry - today) / (1000 * 60 * 60 * 24));
+    
+    if (daysUntilExpiry < 0) return '#dc2626';
+    if (daysUntilExpiry <= 30) return '#ea580c';
+    if (daysUntilExpiry <= 90) return '#f59e0b';
+    return '#6b7280';
   };
 
-  const renderCertificationCard = (type, item) => (
-    <div key={item.id} style={{ backgroundColor: 'white', padding: '12px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '8px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-        <div>
-          <h5 style={{ fontSize: '16px', fontWeight: 'bold' }}>
-            {item.name || item.type}
-          </h5>
-          {item.number && (
-            <p style={{ fontSize: '14px', color: '#6b7280' }}>
-              N° {item.number}
-            </p>
-          )}
-          {item.issuedBy && (
-            <p style={{ fontSize: '12px', color: '#6b7280' }}>
-              Délivré par: {item.issuedBy}
-            </p>
-          )}
-        </div>
-        
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          {getExpiryBadge(item.expiryDate)}
-          
-          <div style={{ display: 'flex', gap: '4px' }}>
-            {item.document && (
-              <button
-                onClick={() => handleViewDocument(item.document, item.documentName)}
-                style={{ padding: '4px 8px', backgroundColor: '#f3f4f6', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                title="Voir le document"
-              >
-                <Eye size={14} />
-              </button>
-            )}
-            <button
-              onClick={() => handleEdit(type, item)}
-              style={{ padding: '4px 8px', backgroundColor: '#f3f4f6', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-            >
-              ✏️
-            </button>
-            <button
-              onClick={() => handleDelete(type, item.id)}
-              style={{ padding: '4px 8px', backgroundColor: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-            >
-              <Trash2 size={14} />
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      <div style={{ fontSize: '12px', display: 'flex', gap: '12px' }}>
-        {item.issueDate && (
-          <span>
-            <Calendar size={12} style={{ display: 'inline', marginRight: '4px' }} />
-            Délivré: {new Date(item.issueDate).toLocaleDateString()}
-          </span>
-        )}
-        {item.expiryDate && (
-          <span>
-            <Calendar size={12} style={{ display: 'inline', marginRight: '4px' }} />
-            Expire: {new Date(item.expiryDate).toLocaleDateString()}
-          </span>
-        )}
-        {item.nextCheckDate && (
-          <span>
-            <Calendar size={12} style={{ display: 'inline', marginRight: '4px' }} />
-            Prochain contrôle: {new Date(item.nextCheckDate).toLocaleDateString()}
-          </span>
-        )}
-      </div>
-      
-      {item.remarks && (
-        <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px' }}>
-          📝 {item.remarks}
+  const renderCertificationItem = (category, item) => (
+    <div key={item.id} style={{ 
+      padding: '6px 0',
+      display: 'flex',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      gap: '16px'
+    }}>
+      <div style={{ flex: 1 }}>
+        <p style={{ 
+          fontSize: '14px', 
+          fontWeight: '600',
+          color: '#111827',
+          marginBottom: '4px'
+        }}>
+          {item.name || item.type}
         </p>
-      )}
+        <div style={{ 
+          display: 'flex', 
+          flexWrap: 'wrap',
+          gap: '16px', 
+          fontSize: '12px', 
+          color: '#6b7280',
+          marginBottom: item.remarks ? '4px' : '0'
+        }}>
+          {item.number && <span>N° {item.number}</span>}
+          {item.issuedBy && <span>{item.issuedBy}</span>}
+          {item.issueDate && (
+            <span>Délivré: {new Date(item.issueDate).toLocaleDateString()}</span>
+          )}
+          {item.expiryDate && (
+            <span style={{ color: getExpiryColor(item.expiryDate) }}>
+              Expire: {new Date(item.expiryDate).toLocaleDateString()}
+            </span>
+          )}
+        </div>
+        {item.remarks && (
+          <p style={{ 
+            fontSize: '12px', 
+            color: '#9ca3af', 
+            fontStyle: 'italic'
+          }}>
+            {item.remarks}
+          </p>
+        )}
+      </div>
+      
+      <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
+        {item.document && (
+          <button
+            onClick={() => handleViewDocument(item.document, item.documentName)}
+            style={{ 
+              padding: '6px', 
+              backgroundColor: 'transparent',
+              border: 'none', 
+              borderRadius: '4px', 
+              cursor: 'pointer',
+              color: '#6b7280',
+              transition: 'all 0.2s'
+            }}
+            title="Voir le document"
+          >
+            <Eye size={16} />
+          </button>
+        )}
+        <button
+          onClick={() => handleEdit(category, item)}
+          style={{ 
+            padding: '6px', 
+            backgroundColor: 'transparent',
+            border: 'none', 
+            borderRadius: '4px', 
+            cursor: 'pointer',
+            color: '#6b7280',
+            transition: 'all 0.2s'
+          }}
+          title="Modifier"
+        >
+          <Edit2 size={16} />
+        </button>
+        <button
+          onClick={() => handleDelete(category, item.id)}
+          style={{ 
+            padding: '6px', 
+            backgroundColor: 'transparent',
+            color: '#ef4444', 
+            border: 'none', 
+            borderRadius: '4px', 
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}
+          title="Supprimer"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
     </div>
   );
 
   return (
     <div>
-      {/* En-tête */}
-      <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: 'bold' }}>
-            <Award size={20} style={{ display: 'inline', marginRight: '8px' }} />
-            Licences et Qualifications
-          </h3>
-          
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {Object.values(certifications).some(arr => arr.length > 0) && (
-              <button
-                onClick={handleExport}
-                style={{ padding: '8px 16px', backgroundColor: '#e5e7eb', color: '#374151', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-              >
-                <Download size={16} />
-                Exporter
-              </button>
-            )}
-          </div>
-        </div>
-
-      </div>
-
-      {/* Formulaire d'ajout/édition */}
+      {/* Formulaire unifié */}
       {showForm && (
-        <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '16px' }}>
-          <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px' }}>
-            {editingItem ? 'Modifier la certification' : 'Ajouter une certification'}
+        <div style={{ 
+          backgroundColor: 'white', 
+          padding: '20px', 
+          borderRadius: '8px', 
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)', 
+          marginBottom: '16px' 
+        }}>
+          <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '16px' }}>
+            {editingItem ? 'Modifier la certification' : 'Nouvelle certification'}
           </h4>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '16px', marginBottom: '20px' }}>
             <div>
               <label style={labelStyle}>Catégorie *</label>
               <select
-                value={formType}
-                onChange={(e) => setFormType(e.target.value)}
+                value={formData.category}
+                onChange={(e) => handleChange('category', e.target.value)}
                 style={inputStyle}
                 disabled={editingItem}
               >
@@ -382,7 +626,7 @@ const PilotCertifications = () => {
                 required
               >
                 <option value="">Sélectionner...</option>
-                {certTypes[formType].map(type => (
+                {certTypes[formData.category].map(type => (
                   <option key={type} value={type}>{type}</option>
                 ))}
                 <option value="other">Autre</option>
@@ -404,29 +648,7 @@ const PilotCertifications = () => {
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px' }}>
-            <div>
-              <label style={labelStyle}>Numéro</label>
-              <input
-                type="text"
-                value={formData.number}
-                onChange={(e) => handleChange('number', e.target.value)}
-                placeholder="N° de licence/certificat"
-                style={inputStyle}
-              />
-            </div>
-            
-            <div>
-              <label style={labelStyle}>Délivré par</label>
-              <input
-                type="text"
-                value={formData.issuedBy}
-                onChange={(e) => handleChange('issuedBy', e.target.value)}
-                placeholder="DGAC, EASA..."
-                style={inputStyle}
-              />
-            </div>
-            
+          <div style={{ display: 'grid', gridTemplateColumns: formData.category !== 'licenses' ? 'repeat(2, 1fr)' : '1fr', gap: '16px', marginBottom: '20px' }}>
             <div>
               <label style={labelStyle}>Date de délivrance</label>
               <input
@@ -436,34 +658,37 @@ const PilotCertifications = () => {
                 style={inputStyle}
               />
             </div>
-          </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '20px' }}>
-            <div>
-              <label style={labelStyle}>Date d'expiration</label>
-              <input
-                type="date"
-                value={formData.expiryDate}
-                onChange={(e) => handleChange('expiryDate', e.target.value)}
-                style={inputStyle}
-              />
-            </div>
-            
-            <div>
-              <label style={labelStyle}>Prochain contrôle</label>
-              <input
-                type="date"
-                value={formData.nextCheckDate}
-                onChange={(e) => handleChange('nextCheckDate', e.target.value)}
-                style={inputStyle}
-              />
-            </div>
+            {formData.category !== 'licenses' && (
+              <div>
+                <label style={labelStyle}>Date d'expiration</label>
+                <input
+                  type="date"
+                  value={formData.expiryDate}
+                  onChange={(e) => handleChange('expiryDate', e.target.value)}
+                  style={{...inputStyle, backgroundColor: formData.issueDate && formData.type ? '#fef3c7' : 'white'}}
+                  title={formData.issueDate && formData.type ? 'Calculée automatiquement mais modifiable' : ''}
+                />
+              </div>
+            )}
           </div>
 
           <div style={{ marginBottom: '20px' }}>
             <label style={labelStyle}>Document (PDF, image)</label>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <label style={{ padding: '8px 16px', backgroundColor: '#e5e7eb', color: '#374151', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <label style={{ 
+                padding: '8px 16px', 
+                backgroundColor: '#e5e7eb', 
+                color: '#374151', 
+                border: 'none', 
+                borderRadius: '6px', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                cursor: 'pointer', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '6px' 
+              }}>
                 <Upload size={16} />
                 Choisir un fichier
                 <input
@@ -474,7 +699,7 @@ const PilotCertifications = () => {
                 />
               </label>
               {formData.documentName && (
-                <span style={{ fontSize: '14px' }}>
+                <span style={{ fontSize: '14px', color: '#6b7280' }}>
                   <FileText size={14} style={{ display: 'inline', marginRight: '4px' }} />
                   {formData.documentName}
                 </span>
@@ -482,28 +707,36 @@ const PilotCertifications = () => {
             </div>
           </div>
 
-          <div style={{ marginBottom: '20px' }}>
-            <label style={labelStyle}>Remarques</label>
-            <textarea
-              value={formData.remarks}
-              onChange={(e) => handleChange('remarks', e.target.value)}
-              placeholder="Notes, restrictions, observations..."
-              rows={2}
-              style={{ ...inputStyle, resize: 'vertical' }}
-            />
-          </div>
 
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
               onClick={handleSubmit}
-              style={{ padding: '8px 16px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}
+              style={{ 
+                padding: '8px 16px', 
+                backgroundColor: '#3b82f6', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '6px', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                cursor: 'pointer' 
+              }}
             >
               {editingItem ? 'Modifier' : 'Ajouter'}
             </button>
             
             <button
               onClick={resetForm}
-              style={{ padding: '8px 16px', backgroundColor: '#e5e7eb', color: '#374151', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}
+              style={{ 
+                padding: '8px 16px', 
+                backgroundColor: '#e5e7eb', 
+                color: '#374151', 
+                border: 'none', 
+                borderRadius: '6px', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                cursor: 'pointer' 
+              }}
             >
               Annuler
             </button>
@@ -511,107 +744,82 @@ const PilotCertifications = () => {
         </div>
       )}
 
-      {/* Sections de certifications */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
-        {/* Licences */}
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <h4 style={{ fontSize: '16px', fontWeight: 'bold' }}>
-              ✈️ Licences
-            </h4>
-            <button
-              onClick={() => {
-                setFormType('licenses');
-                setShowForm(true);
-              }}
-              style={{ padding: '4px 8px', backgroundColor: '#f3f4f6', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-            >
-              <Plus size={14} />
-            </button>
-          </div>
-          {certifications.licenses.length > 0 ? (
-            certifications.licenses.map(item => renderCertificationCard('licenses', item))
-          ) : (
-            <div style={{ backgroundColor: 'white', textAlign: 'center', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <p style={{ fontSize: '14px', color: '#6b7280' }}>Aucune licence</p>
-            </div>
-          )}
+      {/* Listes des certifications par catégorie */}
+      <div style={{ backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '20px' }}>
+        {/* Bouton Ajouter centré */}
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            style={{ 
+              padding: '8px 24px', 
+              backgroundColor: showForm ? '#ef4444' : '#3b82f6', 
+              color: 'white', 
+              border: 'none', 
+              borderRadius: '6px', 
+              fontSize: '14px', 
+              fontWeight: '500', 
+              cursor: 'pointer'
+            }}
+          >
+            {showForm ? 'Fermer' : 'Ajouter'}
+          </button>
         </div>
+        
+        <div style={{ 
+          height: '2px',
+          backgroundColor: '#3b82f6',
+          marginBottom: '20px'
+        }} />
+        
+        {Object.entries(certifications)
+          .filter(([category, items]) => items.length > 0)
+          .map(([category, items], categoryIndex, filteredArray) => {
+            const isLastCategory = categoryIndex === filteredArray.length - 1;
+            
+            return (
+              <div key={category} style={{ marginBottom: '0' }}>
+                {/* En-tête de catégorie */}
+                <div style={{ 
+                  marginBottom: '8px'
+                }}>
+                  <h4 style={{ 
+                    fontSize: '16px', 
+                    fontWeight: '600',
+                    color: '#111827'
+                  }}>
+                    {categoryLabels[category]}
+                  </h4>
+                </div>
 
-        {/* Qualifications */}
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <h4 style={{ fontSize: '16px', fontWeight: 'bold' }}>
-              🎯 Qualifications
-            </h4>
-            <button
-              onClick={() => {
-                setFormType('ratings');
-                setShowForm(true);
-              }}
-              style={{ padding: '4px 8px', backgroundColor: '#f3f4f6', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-            >
-              <Plus size={14} />
-            </button>
+                {/* Liste des éléments */}
+                <div>
+                  {items.map((item, index) => (
+                    <React.Fragment key={item.id}>
+                      {renderCertificationItem(category, item)}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+            );
+          })
+        }
+        
+        {/* Message si aucune certification */}
+        {totalCertifications === 0 && (
+          <div style={{ 
+            padding: '40px',
+            textAlign: 'center',
+            color: '#9ca3af'
+          }}>
+            <AlertCircle size={48} style={{ color: '#e5e7eb', marginBottom: '16px' }} />
+            <p style={{ fontSize: '16px', fontWeight: '500', marginBottom: '8px' }}>
+              Aucune certification enregistrée
+            </p>
+            <p style={{ fontSize: '14px' }}>
+              Cliquez sur "Ajouter" pour enregistrer vos licences et qualifications
+            </p>
           </div>
-          {certifications.ratings.length > 0 ? (
-            certifications.ratings.map(item => renderCertificationCard('ratings', item))
-          ) : (
-            <div style={{ backgroundColor: 'white', textAlign: 'center', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <p style={{ fontSize: '14px', color: '#6b7280' }}>Aucune qualification</p>
-            </div>
-          )}
-        </div>
-
-        {/* Variantes */}
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <h4 style={{ fontSize: '16px', fontWeight: 'bold' }}>
-              📋 Variantes
-            </h4>
-            <button
-              onClick={() => {
-                setFormType('endorsements');
-                setShowForm(true);
-              }}
-              style={{ padding: '4px 8px', backgroundColor: '#f3f4f6', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-            >
-              <Plus size={14} />
-            </button>
-          </div>
-          {certifications.endorsements.length > 0 ? (
-            certifications.endorsements.map(item => renderCertificationCard('endorsements', item))
-          ) : (
-            <div style={{ backgroundColor: 'white', textAlign: 'center', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <p style={{ fontSize: '14px', color: '#6b7280' }}>Aucune variante</p>
-            </div>
-          )}
-        </div>
-
-        {/* Formations */}
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <h4 style={{ fontSize: '16px', fontWeight: 'bold' }}>
-              🎓 Formations
-            </h4>
-            <button
-              onClick={() => {
-                setFormType('training');
-                setShowForm(true);
-              }}
-              style={{ padding: '4px 8px', backgroundColor: '#f3f4f6', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-            >
-              <Plus size={14} />
-            </button>
-          </div>
-          {certifications.training.length > 0 ? (
-            certifications.training.map(item => renderCertificationCard('training', item))
-          ) : (
-            <div style={{ backgroundColor: 'white', textAlign: 'center', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <p style={{ fontSize: '14px', color: '#6b7280' }}>Aucune formation</p>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

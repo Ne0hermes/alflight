@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test ALFlight</title>
+    <style>
+        body {
+            background: #0A0A0A;
+            color: white;
+            font-family: sans-serif;
+            padding: 20px;
+        }
+        .status {
+            padding: 20px;
+            background: #8B1538;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Page ALFlight</h1>
+    <div class="status">
+        <h2>État du serveur</h2>
+        <p id="server-status">Vérification...</p>
+    </div>
+    <div class="status">
+        <h2>Test React App</h2>
+        <p id="react-status">Vérification...</p>
+    </div>
+    
+    <script>
+        // Test du serveur
+        fetch('http://127.0.0.1:4013/')
+            .then(res => {
+                document.getElementById('server-status').textContent = 
+                    '✅ Serveur accessible sur port 4013';
+                return res.text();
+            })
+            .then(html => {
+                if (html.includes('root')) {
+                    document.getElementById('react-status').textContent = 
+                        '✅ Page HTML chargée avec div root';
+                } else {
+                    document.getElementById('react-status').textContent = 
+                        '❌ Div root non trouvée';
+                }
+            })
+            .catch(err => {
+                document.getElementById('server-status').textContent = 
+                    '❌ Erreur: ' + err.message;
+            });
+            
+        // Affiche l'URL actuelle
+        document.write('<p>URL actuelle: ' + window.location.href + '</p>');
+    </script>
+</body>
+</html>

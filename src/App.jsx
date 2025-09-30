@@ -10,6 +10,9 @@ import { DataBackupUI } from '@components/DataBackupUI';
 import dataBackupManager from '@utils/dataBackupManager';
 import { useAuthStore } from '@features/account/stores/authStore';
 
+// Import automatique du logger Google Sheets direct
+import '@services/directGoogleSheetsLogger';
+
 const NavigationModule = lazy(() => import('@features/navigation'));
 const WeightBalanceModule = lazy(() => import('@features/weight-balance'));
 const FuelModule = lazy(() => import('@features/fuel'));
@@ -22,6 +25,7 @@ const ChecklistModule = lazy(() => import('@features/checklist'));
 const PilotModule = lazy(() => import('@features/pilot'));
 const LogbookModule = lazy(() => import('@features/logbook'));
 const AccountModule = lazy(() => import('@features/account/components/AccountPanel').then(module => ({ default: module.AccountPanel })));
+const RegulationsModule = lazy(() => import('@features/regulations'));
 
 const TAB_CONFIG = [
   { id: 'account', label: 'Compte', icon: 'UserCircle', component: AccountModule },
@@ -35,7 +39,8 @@ const TAB_CONFIG = [
   { id: 'weight-balance', label: 'Masse et Centrage', icon: 'Scale', component: WeightBalanceModule },
   { id: 'fuel', label: 'Bilan Carburant', icon: 'Fuel', component: FuelModule },
   { id: 'aircraft', label: 'Gestion Avions', icon: 'Settings', component: AircraftModule },
-  { id: 'vac', label: 'Cartes VAC', icon: 'Map', component: VACModule }
+  { id: 'vac', label: 'Cartes VAC', icon: 'Map', component: VACModule },
+  { id: 'regulations', label: 'Réglementations', icon: 'Book', component: RegulationsModule }
 ];
 
 const FlightSystemUI = memo(() => {
@@ -87,9 +92,9 @@ const FlightSystemUI = memo(() => {
           </h1>
           <AppVersion />
         </header>
-        
+
         <DataBackupUI />
-        
+
         <TabNavigation
           tabs={TAB_CONFIG}
           activeTab={activeTab}

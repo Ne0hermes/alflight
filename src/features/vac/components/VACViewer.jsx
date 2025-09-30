@@ -50,8 +50,9 @@ export const VACViewer = memo(() => {
             </h3>
             {chart.extractedData && (
               <span style={sx.combine(sx.text.sm, sx.text.secondary)}>
-                Alt: {chart.extractedData.airportElevation} ft • 
-                {chart.extractedData.runways.length} piste(s)
+                {chart.extractedData.airportElevation > 0 && `Alt: ${chart.extractedData.airportElevation} ft`}
+                {chart.extractedData.runways && chart.extractedData.runways.length > 0 && 
+                  ` • ${chart.extractedData.runways.length} piste(s)`}
               </span>
             )}
           </div>
@@ -286,6 +287,34 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
           <table style={{ width: '100%', fontSize: '14px' }}>
             <tbody>
               <tr>
+                <td style={styles.tableCell}>Code ICAO :</td>
+                <td style={styles.tableCell}><strong>{chart.icao}</strong></td>
+              </tr>
+              {chart.extractedData?.iata && (
+                <tr>
+                  <td style={styles.tableCell}>Code IATA :</td>
+                  <td style={styles.tableCell}><strong>{chart.extractedData.iata}</strong></td>
+                </tr>
+              )}
+              <tr>
+                <td style={styles.tableCell}>Nom complet :</td>
+                <td style={styles.tableCell}><strong>{chart.name}</strong></td>
+              </tr>
+              {chart.extractedData?.city && (
+                <tr>
+                  <td style={styles.tableCell}>Ville :</td>
+                  <td style={styles.tableCell}><strong>{chart.extractedData.city}</strong></td>
+                </tr>
+              )}
+              <tr>
+                <td style={styles.tableCell}>Coordonnées :</td>
+                <td style={styles.tableCell}>
+                  <strong>
+                    {chart.coordinates?.lat?.toFixed(6)}°N, {chart.coordinates?.lon?.toFixed(6)}°E
+                  </strong>
+                </td>
+              </tr>
+              <tr>
                 <td style={styles.tableCell}>Altitude de référence :</td>
                 <td style={styles.tableCell}><strong>{data?.airportElevation || 0} ft</strong></td>
               </tr>
@@ -297,8 +326,35 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
               )}
               <tr>
                 <td style={styles.tableCell}>Variation magnétique :</td>
-                <td style={styles.tableCell}><strong>{data?.magneticVariation || 0}° E</strong></td>
+                <td style={styles.tableCell}>
+                  <strong>
+                    {data?.magneticVariation?.value || data?.magneticVariation || 0}° E 
+                    {data?.magneticVariation?.date && ` (${data.magneticVariation.date})`}
+                    {data?.magneticVariation?.change && ` (Δ ${data.magneticVariation.change}°/an)`}
+                  </strong>
+                </td>
               </tr>
+              {data?.transitionAltitude && (
+                <tr>
+                  <td style={styles.tableCell}>Altitude de transition :</td>
+                  <td style={styles.tableCell}><strong>{data.transitionAltitude} ft</strong></td>
+                </tr>
+              )}
+              {data?.referencePoint && (
+                <tr>
+                  <td style={styles.tableCell}>Point de référence :</td>
+                  <td style={styles.tableCell}><strong>{data.referencePoint}</strong></td>
+                </tr>
+              )}
+              {chart.source && (
+                <tr>
+                  <td style={styles.tableCell}>Source des données :</td>
+                  <td style={styles.tableCell}>
+                    <strong>{chart.source}</strong>
+                    {data?.airac && ` (AIRAC ${data.airac})`}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -313,22 +369,100 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
               <thead>
                 <tr style={{ backgroundColor: '#f3f4f6' }}>
                   <th style={styles.tableHeader}>Piste</th>
-                  <th style={styles.tableHeader}>QFU</th>
-                  <th style={styles.tableHeader}>Dimensions</th>
+                  <th style={styles.tableHeader}>QFU (Mag)</th>
+                  <th style={styles.tableHeader}>QFU (Vrai)</th>
+                  <th style={styles.tableHeader}>TORA</th>
+                  <th style={styles.tableHeader}>TODA</th>
+                  <th style={styles.tableHeader}>ASDA</th>
+                  <th style={styles.tableHeader}>LDA</th>
+                  <th style={styles.tableHeader}>Largeur</th>
                   <th style={styles.tableHeader}>Revêtement</th>
+                  <th style={styles.tableHeader}>PCN</th>
+                  <th style={styles.tableHeader}>ILS</th>
                 </tr>
               </thead>
               <tbody>
                 {data.runways.map((rwy, idx) => (
                   <tr key={idx}>
-                    <td style={styles.tableCell}>{rwy.identifier || 'N/A'}</td>
-                    <td style={styles.tableCell}>{rwy.qfu || 0}°</td>
-                    <td style={styles.tableCell}>{rwy.length || 0} × {rwy.width || 0} m</td>
-                    <td style={styles.tableCell}>{rwy.surface || 'N/A'}</td>
+                    <td style={styles.tableCell}><strong>{rwy.identifier || rwy.designation || 'N/A'}</strong></td>
+                    <td style={styles.tableCell}>{rwy.magneticBearing || rwy.qfu || rwy.orientation || 0}°</td>
+                    <td style={styles.tableCell}>{rwy.trueBearing ? `${rwy.trueBearing}°` : '-'}</td>
+                    <td style={styles.tableCell}>{rwy.tora || rwy.length || rwy.length_m || 0}m</td>
+                    <td style={styles.tableCell}>{rwy.toda || rwy.length || rwy.length_m || 0}m</td>
+                    <td style={styles.tableCell}>{rwy.asda || rwy.length || rwy.length_m || 0}m</td>
+                    <td style={styles.tableCell}>{rwy.lda || rwy.length || rwy.length_m || 0}m</td>
+                    <td style={styles.tableCell}>{rwy.width || rwy.width_m || 0}m</td>
+                    <td style={styles.tableCell}>{rwy.surface || 'ASPH'}</td>
+                    <td style={styles.tableCell}>{rwy.pcn || '-'}</td>
+                    <td style={styles.tableCell}>
+                      {rwy.ils ? (
+                        <div style={{ fontSize: '11px' }}>
+                          <div><strong>{rwy.ils.identifier || ''}</strong></div>
+                          <div>{rwy.ils.frequency ? `${rwy.ils.frequency} MHz` : ''}</div>
+                          <div>{rwy.ils.category ? `Cat ${rwy.ils.category}` : ''}</div>
+                          {rwy.ils.glidePath?.slope && <div>GP: {rwy.ils.glidePath.slope}°</div>}
+                        </div>
+                      ) : '-'}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            {/* Légende des distances */}
+            <div style={{ marginTop: '10px', fontSize: '12px', color: '#6b7280' }}>
+              <p><strong>TORA</strong>: Take-Off Run Available (Distance de roulement au décollage)</p>
+              <p><strong>TODA</strong>: Take-Off Distance Available (Distance utilisable au décollage)</p>
+              <p><strong>ASDA</strong>: Accelerate-Stop Distance Available (Distance accélération-arrêt)</p>
+              <p><strong>LDA</strong>: Landing Distance Available (Distance utilisable à l'atterrissage)</p>
+              <p style={{ marginTop: '8px', fontStyle: 'italic' }}>
+                ✅ <strong>Données AIXM officielles</strong>: Les valeurs QFU et distances déclarées affichées proviennent directement 
+                des fichiers AIXM 4.5 et XML SIA officiels (AIRAC {data.airac || '2025-09-04'}). 
+                Ces données sont fournies à titre indicatif et doivent être vérifiées avec les documents VAC officiels.
+              </p>
+            </div>
+            
+            {/* Détails des équipements de piste */}
+            {data.runways.length > 0 && (
+              <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+                <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '10px' }}>
+                  ÉQUIPEMENTS ET AIDES VISUELLES
+                </h4>
+                {data.runways.map((rwy, idx) => (
+                  <div key={idx} style={{ marginBottom: '15px' }}>
+                    <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '5px' }}>
+                      Piste {rwy.designation || rwy.identifier}
+                    </h5>
+                    <div style={{ fontSize: '13px', paddingLeft: '15px' }}>
+                      {rwy.vasis && (
+                        <div>
+                          <strong>VASIS/PAPI:</strong> {rwy.vasis.type || 'PAPI'} 
+                          {rwy.vasis.angle && ` - Angle: ${rwy.vasis.angle}°`}
+                          {rwy.vasis.meht && ` - MEHT: ${rwy.vasis.meht} ft`}
+                        </div>
+                      )}
+                      {rwy.threshold && (
+                        <div>
+                          <strong>Seuil:</strong> {rwy.threshold.lat?.toFixed(6)}°N, {rwy.threshold.lon?.toFixed(6)}°E
+                          {rwy.threshold_displaced > 0 && ` - Décalé de ${rwy.threshold_displaced}m`}
+                        </div>
+                      )}
+                      {rwy.lighting && (
+                        <div><strong>Balisage:</strong> {rwy.lighting}</div>
+                      )}
+                      {rwy.approach_lighting && (
+                        <div><strong>Balisage d'approche:</strong> {rwy.approach_lighting}</div>
+                      )}
+                      {rwy.elevation && (
+                        <div><strong>Élévation seuil:</strong> {rwy.elevation} ft</div>
+                      )}
+                      {rwy.remarks && (
+                        <div><strong>Remarques:</strong> {rwy.remarks}</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
         
@@ -341,13 +475,142 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
             <table style={{ width: '100%', fontSize: '14px' }}>
               <tbody>
                 {Object.entries(data.frequencies)
-                  .filter(([type, freq]) => freq && freq !== '')
-                  .map(([type, freq]) => (
-                    <tr key={type}>
-                      <td style={styles.tableCell}>{type.toUpperCase()} :</td>
-                      <td style={styles.tableCell}><strong>{freq} MHz</strong></td>
-                    </tr>
-                  ))}
+                  .filter(([type, freqData]) => freqData && (Array.isArray(freqData) ? freqData.length > 0 : freqData !== ''))
+                  .map(([type, freqData]) => {
+                    // Si c'est un tableau de fréquences (depuis AIXM)
+                    if (Array.isArray(freqData)) {
+                      return freqData.map((freq, idx) => (
+                        <tr key={`${type}_${idx}`}>
+                          <td style={styles.tableCell}>
+                            {type.toUpperCase()}
+                            {freq.remarks && <span style={{ fontSize: '12px', color: '#6b7280' }}> ({freq.remarks})</span>}
+                            :
+                          </td>
+                          <td style={styles.tableCell}>
+                            <strong>{freq.frequency} MHz</strong>
+                            {freq.schedule && <span style={{ marginLeft: '10px', fontSize: '12px' }}>({freq.schedule})</span>}
+                          </td>
+                        </tr>
+                      ));
+                    }
+                    // Si c'est une simple string (format ancien)
+                    return (
+                      <tr key={type}>
+                        <td style={styles.tableCell}>{type.toUpperCase()} :</td>
+                        <td style={styles.tableCell}><strong>{freqData} MHz</strong></td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+          </div>
+        )}
+        
+        {/* Aides à la navigation */}
+        {data?.navaids && data.navaids.length > 0 && (
+          <div style={{ marginBottom: '30px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px' }}>
+              AIDES À LA NAVIGATION
+            </h3>
+            <table style={{ width: '100%', fontSize: '14px', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#f3f4f6' }}>
+                  <th style={styles.tableHeader}>Type</th>
+                  <th style={styles.tableHeader}>Identifiant</th>
+                  <th style={styles.tableHeader}>Fréquence</th>
+                  <th style={styles.tableHeader}>Coordonnées</th>
+                  <th style={styles.tableHeader}>Distance/Radial</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.navaids.map((nav, idx) => (
+                  <tr key={idx}>
+                    <td style={styles.tableCell}><strong>{nav.type}</strong></td>
+                    <td style={styles.tableCell}>{nav.identifier}</td>
+                    <td style={styles.tableCell}>{nav.frequency} MHz</td>
+                    <td style={styles.tableCell}>
+                      {nav.coordinates?.lat?.toFixed(4)}°N, {nav.coordinates?.lon?.toFixed(4)}°E
+                    </td>
+                    <td style={styles.tableCell}>
+                      {nav.distance && `${nav.distance} NM`}
+                      {nav.radial && ` / ${nav.radial}°`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        
+        {/* Espaces aériens */}
+        {data?.airspaces && Object.keys(data.airspaces).length > 0 && (
+          <div style={{ marginBottom: '30px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px' }}>
+              ESPACES AÉRIENS ASSOCIÉS
+            </h3>
+            <table style={{ width: '100%', fontSize: '14px' }}>
+              <tbody>
+                {Object.entries(data.airspaces).map(([type, space]) => (
+                  <tr key={type}>
+                    <td style={styles.tableCell}>
+                      <strong>{type.toUpperCase()}</strong>
+                      {space.class && ` (Classe ${space.class})`}
+                      :
+                    </td>
+                    <td style={styles.tableCell}>
+                      {space.lower || 'SFC'} → {space.altitude || space.upper || 'UNL'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        
+        {/* Services et équipements */}
+        {(data?.operatingHours || data?.fuel || data?.customs || data?.handling) && (
+          <div style={{ marginBottom: '30px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px' }}>
+              SERVICES ET ÉQUIPEMENTS
+            </h3>
+            <table style={{ width: '100%', fontSize: '14px' }}>
+              <tbody>
+                {data?.operatingHours && (
+                  <tr>
+                    <td style={styles.tableCell}>Horaires d'ouverture :</td>
+                    <td style={styles.tableCell}><strong>{data.operatingHours}</strong></td>
+                  </tr>
+                )}
+                {data?.fuel !== undefined && (
+                  <tr>
+                    <td style={styles.tableCell}>Avitaillement :</td>
+                    <td style={styles.tableCell}>
+                      <strong>{data.fuel ? '✅ Disponible' : '❌ Non disponible'}</strong>
+                    </td>
+                  </tr>
+                )}
+                {data?.customs !== undefined && (
+                  <tr>
+                    <td style={styles.tableCell}>Douanes :</td>
+                    <td style={styles.tableCell}>
+                      <strong>{data.customs ? '✅ Disponible' : '❌ Non disponible'}</strong>
+                    </td>
+                  </tr>
+                )}
+                {data?.handling !== undefined && (
+                  <tr>
+                    <td style={styles.tableCell}>Assistance (Handling) :</td>
+                    <td style={styles.tableCell}>
+                      <strong>{data.handling ? '✅ Disponible' : '❌ Non disponible'}</strong>
+                    </td>
+                  </tr>
+                )}
+                {data?.remarks && (
+                  <tr>
+                    <td style={styles.tableCell}>Remarques :</td>
+                    <td style={styles.tableCell}>{data.remarks}</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

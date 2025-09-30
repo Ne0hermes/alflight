@@ -4,7 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, GeoJSON, LayerGroup, 
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Settings, Loader } from 'lucide-react';
-import { openAIPService } from '@services/openAIPService';
+import { aeroDataProvider } from '@core/data';
 import { useOpenAIPStore } from '@core/stores/openAIPStore';
 
 // Fix pour les icônes Leaflet

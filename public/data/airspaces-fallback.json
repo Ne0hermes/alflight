@@ -1,0 +1,53 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "CTR_LFPG",
+      "properties": {
+        "name": "PARIS CDG CTR",
+        "type": "CTR",
+        "class": "D",
+        "ceiling": "1500 ft",
+        "floor": "SFC",
+        "country": "FR"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[2.615, 49.022], [2.710, 49.005], [2.742, 48.978], [2.694, 48.936], [2.600, 48.917], [2.497, 48.926], [2.433, 48.965], [2.419, 49.000], [2.435, 49.038], [2.541, 49.073], [2.615, 49.022]]]
+      }
+    },
+    {
+      "type": "Feature", 
+      "id": "CTR_LFPO",
+      "properties": {
+        "name": "PARIS ORLY CTR",
+        "type": "CTR",
+        "class": "D",
+        "ceiling": "1500 ft",
+        "floor": "SFC",
+        "country": "FR"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[2.322, 48.753], [2.432, 48.753], [2.432, 48.693], [2.322, 48.693], [2.322, 48.753]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "TMA_PARIS",
+      "properties": {
+        "name": "PARIS TMA",
+        "type": "TMA",
+        "class": "A",
+        "ceiling": "FL195",
+        "floor": "1500 ft",
+        "country": "FR"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[1.783, 49.500], [3.367, 49.500], [3.367, 48.367], [1.783, 48.367], [1.783, 49.500]]]
+      }
+    }
+  ]
+}

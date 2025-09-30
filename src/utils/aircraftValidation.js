@@ -44,16 +44,77 @@ const DEFAULT_AIRCRAFT_VALUES = {
 export function validateAndRepairAircraft(aircraft) {
   if (!aircraft) return null;
   
-  // Créer une copie pour ne pas modifier l'original
-  const repairedAircraft = { ...aircraft };
+  // console.log('🔧 validateAndRepairAircraft - Input aircraft:', aircraft);
+  // console.log('🔧 validateAndRepairAircraft - Surfaces compatibles avant:', aircraft.compatibleRunwaySurfaces);
+  // console.log('🔧 validateAndRepairAircraft - Type des surfaces:', typeof aircraft.compatibleRunwaySurfaces);
+  // console.log('🔧 validateAndRepairAircraft - Aircraft complet:', JSON.stringify(aircraft, null, 2));
   
-  // Réparer les propriétés de base
+  // Créer une copie PROFONDE pour ne pas modifier l'original et préserver TOUS les champs
+  const repairedAircraft = JSON.parse(JSON.stringify(aircraft));
+  
+  // Réparer les propriétés de base SANS écraser les autres
   Object.keys(DEFAULT_AIRCRAFT_VALUES).forEach(key => {
     if (repairedAircraft[key] === undefined || repairedAircraft[key] === null) {
       console.warn(`Aircraft ${aircraft.registration}: Missing ${key}, using default value`);
       repairedAircraft[key] = DEFAULT_AIRCRAFT_VALUES[key];
     }
   });
+  
+  // Préserver explicitement les champs importants qui ne sont pas dans les valeurs par défaut
+  if (aircraft.compatibleRunwaySurfaces !== undefined) {
+    repairedAircraft.compatibleRunwaySurfaces = aircraft.compatibleRunwaySurfaces;
+  }
+  if (aircraft.approvedOperations !== undefined) {
+    repairedAircraft.approvedOperations = aircraft.approvedOperations;
+  }
+  if (aircraft.equipmentCom !== undefined) {
+    repairedAircraft.equipmentCom = aircraft.equipmentCom;
+  }
+  if (aircraft.equipmentNav !== undefined) {
+    repairedAircraft.equipmentNav = aircraft.equipmentNav;
+  }
+  if (aircraft.equipmentSurv !== undefined) {
+    repairedAircraft.equipmentSurv = aircraft.equipmentSurv;
+  }
+  if (aircraft.specialCapabilities !== undefined) {
+    repairedAircraft.specialCapabilities = aircraft.specialCapabilities;
+  }
+  if (aircraft.speeds !== undefined) {
+    repairedAircraft.speeds = aircraft.speeds;
+  }
+  if (aircraft.distances !== undefined) {
+    repairedAircraft.distances = aircraft.distances;
+  }
+  if (aircraft.climb !== undefined) {
+    repairedAircraft.climb = aircraft.climb;
+  }
+  if (aircraft.windLimits !== undefined) {
+    repairedAircraft.windLimits = aircraft.windLimits;
+  }
+  if (aircraft.masses !== undefined) {
+    repairedAircraft.masses = aircraft.masses;
+  }
+  if (aircraft.armLengths !== undefined) {
+    repairedAircraft.armLengths = aircraft.armLengths;
+  }
+  if (aircraft.limitations !== undefined) {
+    repairedAircraft.limitations = aircraft.limitations;
+  }
+  if (aircraft.cgEnvelope !== undefined) {
+    repairedAircraft.cgEnvelope = aircraft.cgEnvelope;
+  }
+  if (aircraft.baggageCompartments !== undefined) {
+    repairedAircraft.baggageCompartments = aircraft.baggageCompartments;
+  }
+  if (aircraft.manualRemarks !== undefined) {
+    repairedAircraft.manualRemarks = aircraft.manualRemarks;
+  }
+  if (aircraft.emergencyNotes !== undefined) {
+    repairedAircraft.emergencyNotes = aircraft.emergencyNotes;
+  }
+  if (aircraft.maintenanceNotes !== undefined) {
+    repairedAircraft.maintenanceNotes = aircraft.maintenanceNotes;
+  }
   
   // Réparer les données de masse et centrage
   if (!repairedAircraft.weightBalance) {
@@ -87,6 +148,9 @@ export function validateAndRepairAircraft(aircraft) {
     
     repairedAircraft.weightBalance = wb;
   }
+  
+  // console.log('🔧 validateAndRepairAircraft - Output aircraft:', repairedAircraft);
+  // console.log('🔧 validateAndRepairAircraft - Surfaces compatibles après:', repairedAircraft.compatibleRunwaySurfaces);
   
   return repairedAircraft;
 }

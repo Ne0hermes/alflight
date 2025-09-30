@@ -1,4 +1,5 @@
 // src/hooks/useUnits.js
+import { useEffect, useState } from 'react';
 import { useUnitsStore, unitsSelectors } from '@core/stores/unitsStore';
 import { convertValue, formatWithUnit } from '@utils/unitsConversion';
 
@@ -6,8 +7,30 @@ import { convertValue, formatWithUnit } from '@utils/unitsConversion';
  * Hook personnalisé pour gérer les unités et conversions
  */
 export const useUnits = () => {
-  const units = unitsSelectors.useUnits();
+  const [units, setUnitsState] = useState(unitsSelectors.useUnits());
   const { setUnit, setPreset } = unitsSelectors.useUnitsActions();
+  
+  // Écouter les changements d'unités via l'événement custom
+  useEffect(() => {
+    const handleUnitsUpdate = (event) => {
+      console.log('📐 Units updated via event:', event.detail);
+      // Forcer la mise à jour depuis le store
+      const newUnits = useUnitsStore.getState().units;
+      setUnitsState(newUnits);
+    };
+    
+    window.addEventListener('unitsUpdated', handleUnitsUpdate);
+    
+    // Également s'abonner aux changements du store directement
+    const unsubscribe = useUnitsStore.subscribe((state) => {
+      setUnitsState(state.units);
+    });
+    
+    return () => {
+      window.removeEventListener('unitsUpdated', handleUnitsUpdate);
+      unsubscribe();
+    };
+  }, []);
   
   /**
    * Convertit une valeur depuis l'unité de stockage vers l'unité préférée de l'utilisateur

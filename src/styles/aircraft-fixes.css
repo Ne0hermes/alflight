@@ -1,0 +1,97 @@
+/* Corrections de style pour le module Aircraft */
+
+/* Force tous les labels en noir */
+label {
+  color: #000000 !important;
+}
+
+/* Force tous les titres h1-h6 en noir */
+h1, h2, h3, h4, h5, h6 {
+  color: #000000 !important;
+}
+
+/* Force les paragraphes en noir */
+p {
+  color: #000000 !important;
+}
+
+/* Force les éléments de liste en noir */
+li {
+  color: #000000 !important;
+}
+
+/* Force les spans en noir sauf exceptions */
+span:not(.badge):not(.icon) {
+  color: #000000 !important;
+}
+
+/* Force les divs contenant du texte en noir */
+div {
+  color: #000000 !important;
+}
+
+/* Inputs et textareas */
+input, textarea, select {
+  color: #000000 !important;
+  background-color: #ffffff !important;
+}
+
+/* Placeholders */
+input::placeholder,
+textarea::placeholder {
+  color: #9CA3AF !important;
+}
+
+/* Tables */
+th, td {
+  color: #000000 !important;
+}
+
+/* Sections spécifiques du module Aircraft */
+.aircraft-module label {
+  color: #000000 !important;
+  font-weight: 500;
+}
+
+.aircraft-module h1,
+.aircraft-module h2,
+.aircraft-module h3,
+.aircraft-module h4,
+.aircraft-module h5,
+.aircraft-module h6 {
+  color: #000000 !important;
+}
+
+/* Correction pour les sections de vitesses */
+.speed-section h6 {
+  color: #000000 !important;
+  font-weight: bold !important;
+}
+
+/* Correction pour les tooltips (doivent rester blancs sur fond noir) */
+.tooltip {
+  color: #ffffff !important;
+  background-color: #1F2937 !important;
+}
+
+/* Boutons - garder les couleurs appropriées - DÉSACTIVÉ POUR UTILISER LE STYLE UNIFIÉ */
+/* button {
+  color: inherit;
+} */
+
+/* Alertes - garder les couleurs sémantiques */
+.alert-warning {
+  color: #92400E !important;
+}
+
+.alert-info {
+  color: #075985 !important;
+}
+
+.alert-error {
+  color: #991B1B !important;
+}
+
+.alert-success {
+  color: #166534 !important;
+}

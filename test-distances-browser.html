@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Distances Browser</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        pre { background: #f0f0f0; padding: 10px; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Test Parser Distances - LFST</h1>
+    <div id="output">Chargement...</div>
+    
+    <script type="module">
+        import { aixmParser } from '/src/services/aixmParser.js';
+        
+        window.testParser = async function() {
+            const output = document.getElementById('output');
+            let html = '';
+            
+            try {
+                console.log('🔄 Chargement...');
+                const data = await aixmParser.loadAndParse();
+                
+                const lfst = data.find(ad => ad.icao === 'LFST');
+                
+                if (!lfst) {
+                    output.innerHTML = '<div class="error">LFST non trouvé!</div>';
+                    return;
+                }
+                
+                html += '<div class="success">✅ LFST trouvé</div>';
+                html += '<pre>Nombre de pistes: ' + (lfst.runways?.length || 0) + '</pre>';
+                
+                // Afficher les pistes
+                if (lfst.runways) {
+                    for (const runway of lfst.runways) {
+                        html += '<h3>Piste ' + (runway.designation || runway.identifier) + '</h3>';
+                        html += '<pre>';
+                        html += 'Length: ' + runway.length + '\n';
+                        html += 'Width: ' + runway.width + '\n';
+                        html += 'Surface: ' + runway.surface + '\n';
+                        html += 'QFU: ' + runway.qfu + '°\n';
+                        html += '\nDistances déclarées:\n';
+                        html += 'TORA: ' + runway.tora + ' m (type: ' + typeof runway.tora + ', null? ' + (runway.tora === null) + ')\n';
+                        html += 'TODA: ' + runway.toda + ' m (type: ' + typeof runway.toda + ', null? ' + (runway.toda === null) + ')\n';
+                        html += 'ASDA: ' + runway.asda + ' m (type: ' + typeof runway.asda + ', null? ' + (runway.asda === null) + ')\n';
+                        html += 'LDA: ' + runway.lda + ' m (type: ' + typeof runway.lda + ', null? ' + (runway.lda === null) + ')\n';
+                        html += '</pre>';
+                    }
+                }
+                
+                // Points VFR
+                html += '<h3>Points VFR</h3>';
+                html += '<pre>Nombre: ' + (lfst.vfrPoints?.length || 0) + '</pre>';
+                
+                output.innerHTML = html;
+                
+                // Log détaillé dans la console
+                console.log('LFST data:', lfst);
+                
+            } catch (error) {
+                output.innerHTML = '<div class="error">Erreur: ' + error.message + '</div>';
+                console.error('Erreur:', error);
+            }
+        }
+        
+        // Lancer automatiquement
+        testParser();
+    </script>
+</body>
+</html>

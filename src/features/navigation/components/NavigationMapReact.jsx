@@ -6,8 +6,7 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { Settings, Loader } from 'lucide-react';
-import { openAIPService } from '@services/openAIPService';
-import { useOpenAIPStore } from '@core/stores/openAIPStore';
+import { aeroDataProvider } from '@core/data';
 import AirportsLayer from './AirportsLayer';
 import ManualWaypointControl from './ManualWaypointControl';
 
@@ -41,10 +40,6 @@ const MapController = ({ waypoints }) => {
 // Composant pour charger les données dynamiquement
 const DataLoader = ({ filters, onDataUpdate }) => {
   const map = useMap();
-  const { loadAirspaces, loadNavaids } = useOpenAIPStore();
-  const airports = useOpenAIPStore(state => state.airports);
-  const airspaces = useOpenAIPStore(state => state.airspaces);
-  const navaids = useOpenAIPStore(state => state.navaids);
   
   const loadData = useCallback(async () => {
     const bounds = map.getBounds();
@@ -59,37 +54,13 @@ const DataLoader = ({ filters, onDataUpdate }) => {
       return;
     }
     
-    // Charger les données si nécessaire
-    if (!airspaces.length) {
-      await loadAirspaces('FR');
-    }
-    if (!navaids.length) {
-      await loadNavaids('FR');
-    }
-    
-    // Filtrer les données visibles
-    const visibleAirspaces = airspaces.filter(airspace => {
-      if (!airspace.geometry?.coordinates) return false;
-      const coords = airspace.geometry.type === 'MultiPolygon' 
-        ? airspace.geometry.coordinates[0][0]
-        : airspace.geometry.coordinates[0];
-      return coords.some(coord => bounds.contains([coord[1], coord[0]]));
-    });
-    
-    const visibleAirfields = airports.filter(airport => 
-      bounds.contains([airport.coordinates.lat, airport.coordinates.lon])
-    );
-    
-    const visibleNavaids = navaids.filter(navaid => 
-      bounds.contains([navaid.coordinates.lat, navaid.coordinates.lon])
-    );
-    
+    // Pour l'instant, on ne charge pas de données OpenAIP
     onDataUpdate({
-      airspaces: visibleAirspaces,
-      airfields: visibleAirfields,
-      navaids: visibleNavaids
+      airspaces: [],
+      airfields: [],
+      navaids: []
     });
-  }, [map, airports, airspaces, navaids, loadAirspaces, loadNavaids, onDataUpdate]);
+  }, [map, onDataUpdate]);
   
   useEffect(() => {
     // Chargement initial
@@ -113,7 +84,6 @@ const NavigationMapReact = ({ waypoints = [], onWaypointUpdate }) => {
   const [showDetailedFilters, setShowDetailedFilters] = useState(false);
   const [baseMap, setBaseMap] = useState('osm');
   const [showAirspaces, setShowAirspaces] = useState(true);
-  const [showOpenAIP, setShowOpenAIP] = useState(true);
   const [showAirports, setShowAirports] = useState(false); // Désactivé par défaut pour les performances
   const [isAddingWaypoint, setIsAddingWaypoint] = useState(false); // État pour le mode ajout de waypoint
   const [visibleData, setVisibleData] = useState({
@@ -371,12 +341,6 @@ const NavigationMapReact = ({ waypoints = [], onWaypointUpdate }) => {
     stamenTerrain: '&copy; Stadia Maps, &copy; Stamen Design, &copy; OpenMapTiles &copy; OpenStreetMap'
   };
   
-  // URL OpenAIP stable
-  const openAipUrl = useMemo(() => {
-    const url = openAIPService.getTileUrl('vfr');
-    console.log('OpenAIP tile URL:', url);
-    return url;
-  }, []); // Calculé une seule fois au montage
 
   return (
     <div style={{ position: 'relative' }}>
@@ -435,24 +399,6 @@ const NavigationMapReact = ({ waypoints = [], onWaypointUpdate }) => {
           ✈️ Espaces {showAirspaces ? 'ON' : 'OFF'}
         </button>
         
-        <button
-          onClick={() => setShowOpenAIP(!showOpenAIP)}
-          style={{
-            padding: '6px 12px',
-            borderRadius: '6px',
-            border: '1px solid #d1d5db',
-            backgroundColor: showOpenAIP ? '#f59e0b' : 'white',
-            color: showOpenAIP ? 'white' : '#374151',
-            fontSize: '12px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px'
-          }}
-          title="Afficher/masquer l'overlay OpenAIP"
-        >
-          🗺️ OpenAIP {showOpenAIP ? 'ON' : 'OFF'}
-        </button>
         
         <button
           onClick={() => setShowDetailedFilters(!showDetailedFilters)}
@@ -702,20 +648,6 @@ const NavigationMapReact = ({ waypoints = [], onWaypointUpdate }) => {
         />
         
         {/* Couche OpenAIP - sans key dynamique pour éviter les re-rendus */}
-        {showOpenAIP && (
-          <TileLayer
-            url={openAipUrl}
-            attribution='&copy; <a href="https://www.openaip.net">OpenAIP</a>'
-            opacity={0.7}
-            maxZoom={14}
-            minZoom={4}
-            updateWhenIdle={false}
-            updateWhenZooming={false}
-            keepBuffer={4}
-            className="openaip-layer"
-            zIndex={10}
-          />
-        )}
         
         {/* Controleur de vue et chargeur de données */}
         <MapController waypoints={waypoints} />

@@ -2,13 +2,16 @@
 import React, { memo, useState, useEffect, useRef } from 'react';
 import { Cloud, Search, RefreshCw, AlertTriangle, Wind, Eye, Thermometer, Gauge, Clock, Plane, Navigation2, Info, ChevronDown, ChevronUp, Map, ExternalLink, Download } from 'lucide-react';
 import { useWeatherStore, weatherSelectors } from '@core/stores/weatherStore';
+import AccordionButton from '@shared/components/AccordionButton';
 import { useNavigation } from '@core/contexts';
 import { useAlternatesStore } from '@core/stores/alternatesStore';
 import { sx } from '@shared/styles/styleSystem';
-import { RunwaySuggestionEnhanced } from './components/RunwaySuggestionEnhanced';
+// RunwaySuggestionEnhanced déplacé vers le module Performance
 import { DataSourceBadge, DataField, DataFieldGroup } from '@shared/components';
+import { useUnits } from '@hooks/useUnits';
+import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
 
-export const WeatherModule = memo(() => {
+export const WeatherModule = memo(({ wizardMode = false, config = {} }) => {
   const { waypoints } = useNavigation();
   const { selectedAlternates } = useAlternatesStore();
   const { fetchWeather, fetchMultiple } = weatherSelectors.useWeatherActions();
@@ -54,16 +57,12 @@ export const WeatherModule = memo(() => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
   
-  // Charger les suggestions d'aérodromes
   useEffect(() => {
     const loadSuggestions = async () => {
       if (searchIcao.length >= 2) {
         try {
-          // Essayer de charger depuis le service OpenAIP
-          const { openAIPService } = await import('@services/openAIPService');
-          const airports = await openAIPService.getAirports('FR');
-          
-          // Filtrer les aérodromes qui correspondent à la recherche
+          const { aeroDataProvider } = await import('@core/data');
+          const airports = await aeroDataProvider.getAirfields({ country: 'FR' });
           const filtered = airports
             .filter(apt => 
               apt.icao && 
@@ -364,105 +363,27 @@ export const WeatherModule = memo(() => {
         </section>
       )}
       
-      {/* Section Cartes météo WINTEM et TEMSI */}
+      {/* Section Cartes météo - À venir */}
       <section style={sx.combine(sx.components.section.base, sx.spacing.mt(6))}>
         <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4), sx.flex.start)}>
           <Map size={20} />
           <span style={sx.spacing.ml(2)}>Cartes météo aéronautiques</span>
         </h3>
-        
-        <WeatherChartsSection />
-      </section>
-      
-      {/* Guide d'interprétation des pistes - En bas du module */}
-      <section style={sx.combine(sx.components.section.base, sx.spacing.mt(6), { 
-        backgroundColor: '#f9fafb',
-        borderTop: '2px solid #e5e7eb'
-      })}>
-        <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
-          📚 Guide d'interprétation des pistes
-        </h4>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
-          {/* Colonne gauche - Codes couleur */}
-          <div>
-            <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-              Codes couleur des pistes
-            </h5>
-            <div style={sx.combine(sx.text.sm, sx.text.secondary)}>
-              <div style={sx.combine(sx.spacing.mb(2), sx.flex.start)}>
-                <span style={{ 
-                  width: '20px', 
-                  height: '20px', 
-                  backgroundColor: '#10b981', 
-                  borderRadius: '50%',
-                  marginRight: '8px',
-                  display: 'inline-block'
-                }}></span>
-                <strong>Optimal (±30°):</strong> Vent de face idéal, conditions optimales
-              </div>
-              <div style={sx.combine(sx.spacing.mb(2), sx.flex.start)}>
-                <span style={{ 
-                  width: '20px', 
-                  height: '20px', 
-                  backgroundColor: '#f59e0b', 
-                  borderRadius: '50%',
-                  marginRight: '8px',
-                  display: 'inline-block'
-                }}></span>
-                <strong>Bon (±45°):</strong> Vent favorable, légère composante traversière
-              </div>
-              <div style={sx.combine(sx.spacing.mb(2), sx.flex.start)}>
-                <span style={{ 
-                  width: '20px', 
-                  height: '20px', 
-                  backgroundColor: '#ea580c', 
-                  borderRadius: '50%',
-                  marginRight: '8px',
-                  display: 'inline-block'
-                }}></span>
-                <strong>Acceptable (±90°):</strong> Vent traversier dominant, prudence requise
-              </div>
-              <div style={sx.combine(sx.spacing.mb(2), sx.flex.start)}>
-                <span style={{ 
-                  width: '20px', 
-                  height: '20px', 
-                  backgroundColor: '#dc2626', 
-                  borderRadius: '50%',
-                  marginRight: '8px',
-                  display: 'inline-block'
-                }}></span>
-                <strong>Déconseillé ({'>'}90°):</strong> Vent arrière, éviter sauf urgence
-              </div>
-            </div>
-          </div>
-          
-          {/* Colonne droite - Conseils pratiques */}
-          <div>
-            <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-              Conseils pratiques
-            </h5>
-            <ul style={sx.combine(sx.text.sm, sx.text.secondary, { 
-              listStyleType: 'disc',
-              paddingLeft: '20px',
-              lineHeight: '1.6'
-            })}>
-              <li>Ajoutez 5kt à votre vitesse d'approche par tranche de 10kt de rafales</li>
-              <li>Anticipez la dérive due au vent traversier</li>
-              <li>Préparez-vous à une remise de gaz si conditions instables</li>
-              <li>Vérifiez les limites vent traversier de votre appareil</li>
-              <li>Considérez le déroutement si vent arrière sur toutes les pistes</li>
-            </ul>
-            
-            <div style={sx.combine(sx.spacing.mt(3), sx.components.alert.base, sx.components.alert.info, { padding: '8px' })}>
-              <Info size={14} />
-              <p style={sx.text.xs}>
-                Les icônes 🛫 et 🛬 dans le tableau indiquent les pistes recommandées pour le décollage et l'atterrissage
-              </p>
-            </div>
-          </div>
+
+        <div style={sx.combine(sx.components.card.base, sx.spacing.p(4), {
+          backgroundColor: '#f9fafb',
+          textAlign: 'center'
+        })}>
+          <Info size={32} style={{ color: '#6b7280', marginBottom: '16px' }} />
+          <p style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(2))}>
+            Cartes WINTEM/TEMSI - Fonction à venir
+          </p>
+          <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
+            Les cartes météorologiques aéronautiques (WINTEM et TEMSI) seront disponibles dans une prochaine mise à jour.
+          </p>
         </div>
       </section>
+      
       
     </div>
   );
@@ -475,11 +396,13 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
   const error = weatherSelectors.useError(icao);
   const { fetchWeather } = weatherSelectors.useWeatherActions();
   const [showDecoded, setShowDecoded] = useState(false);
+  const { format, getSymbol } = useUnits();
+  const units = useUnitsWatcher(); // Force re-render on units change
   
   if (isLoading) {
     return (
       <div style={sx.combine(sx.components.card.base, sx.flex.center, { minHeight: '120px' })}>
-        <div style={sx.text.center}>
+        <div style={sx.text.left}>
           <div style={{
             width: 40,
             height: 40,
@@ -487,7 +410,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
             borderTopColor: '#3b82f6',
             borderRadius: '50%',
             animation: 'spin 1s linear infinite',
-            margin: '0 auto 12px'
+            marginBottom: '12px'
           }} />
           <p style={sx.text.secondary}>Chargement météo {icao}...</p>
         </div>
@@ -579,8 +502,8 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
         
         {metar && (
           <div style={{ fontSize: '11px', marginTop: '4px', lineHeight: '1.4' }}>
-            <div>💨 {metar.wind.direction === 'Calme' ? 'Calme' : `${metar.wind.direction}°/${metar.wind.speed}kt`}</div>
-            <div>👁 {metar.visibility === 'CAVOK' ? 'CAVOK' : `${metar.visibility}m`} | 🌡 {metar.temperature}°C | 📊 {metar.pressure}hPa</div>
+            <div>💨 {metar.wind.direction === 'Calme' ? 'Calme' : `${metar.wind.direction}°/${format(metar.wind.speed, 'windSpeed', 0)}`}</div>
+            <div>👁 {metar.visibility === 'CAVOK' ? 'CAVOK' : format(metar.visibility, 'visibility', 0)} | 🌡 {format(metar.temperature, 'temperature', 0)} | 📊 {format(metar.pressure, 'pressure', 0)}</div>
           </div>
         )}
         
@@ -692,24 +615,14 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
       {/* Données METAR décodées - juste après le METAR/TAF */}
       {metar && (
         <div style={sx.combine(sx.spacing.mt(3), sx.components.card.base, { backgroundColor: '#fafafa' })}>
-          <div style={sx.combine(sx.flex.start, sx.spacing.mb(showDecoded ? 2 : 0))}>
-            <button
+          <div style={sx.spacing.mb(showDecoded ? 2 : 0)}>
+            <AccordionButton
+              isOpen={showDecoded}
               onClick={() => setShowDecoded(!showDecoded)}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '2px',
-                marginRight: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                color: '#6b7280'
-              }}
-              title={showDecoded ? 'Réduire' : 'Afficher'}
-            >
-              {showDecoded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-            </button>
-            <p style={sx.combine(sx.text.sm, sx.text.bold)}>Données décodées</p>
+              title="Données décodées"
+              variant="minimal"
+              style={{ justifyContent: 'flex-start', fontSize: '14px', fontWeight: '600' }}
+            />
           </div>
           
           {showDecoded && (
@@ -720,7 +633,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
                   value={
                     metar.wind.direction === 'Calme' || metar.wind.direction === 'Variable' 
                       ? metar.wind.direction 
-                      : `${metar.wind.direction}° / ${metar.wind.speed}kt${metar.wind.gust ? ` G${metar.wind.gust}kt` : ''}`
+                      : `${metar.wind.direction}° / ${format(metar.wind.speed, 'windSpeed', 0)}${metar.wind.gust ? ` G${format(metar.wind.gust, 'windSpeed', 0)}` : ''}`
                   }
                   dataSource="api"
                   emphasis={true}
@@ -733,7 +646,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
                     metar.visibility === 'CAVOK' 
                       ? 'CAVOK' 
                       : typeof metar.visibility === 'number' 
-                        ? `${metar.visibility}m` 
+                        ? format(metar.visibility / 1000, 'visibility', 1) // Convert m to km
                         : metar.visibility
                   }
                   dataSource="api"
@@ -743,7 +656,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
                 
                 <DataField
                   label="Temp/Rosée"
-                  value={`${metar.temperature !== null ? metar.temperature : 'N/A'}°C / ${metar.dewpoint !== null ? metar.dewpoint : 'N/A'}°C`}
+                  value={`${metar.temperature !== null ? format(metar.temperature, 'temperature', 0) : 'N/A'} / ${metar.dewpoint !== null ? format(metar.dewpoint, 'temperature', 0) : 'N/A'}`}
                   dataSource="api"
                   emphasis={true}
                   size="sm"
@@ -751,8 +664,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
                 
                 <DataField
                   label="QNH"
-                  value={metar.pressure !== null ? metar.pressure : 'N/A'}
-                  unit="hPa"
+                  value={metar.pressure !== null ? format(metar.pressure, 'pressure', 0) : 'N/A'}
                   dataSource="api"
                   emphasis={true}
                   size="sm"
@@ -771,7 +683,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
                         borderRadius: '4px',
                         fontSize: '12px'
                       })}>
-                        {cloud.type} {cloud.altitude}ft
+                        {cloud.type} {format(cloud.altitude, 'altitude', 0)}
                       </span>
                     ))}
                   </div>
@@ -782,10 +694,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
         </div>
       )}
       
-      {/* Suggestion de piste selon le vent - TOUJOURS VISIBLE */}
-      {metar && metar.wind && (
-        <RunwaySuggestionEnhanced icao={icao} wind={metar.wind} />
-      )}
+      {/* Suggestion de piste selon le vent - Déplacé vers le module Performance */}
     </div>
   );
 });
@@ -797,7 +706,7 @@ const AllWeatherStations = memo(() => {
   
   if (stations.length === 0) {
     return (
-      <div style={sx.combine(sx.text.center, sx.text.secondary, sx.spacing.p(8))}>
+      <div style={sx.combine(sx.text.left, sx.text.secondary, sx.spacing.p(8))}>
         Aucune donnée météo chargée
       </div>
     );
@@ -812,287 +721,6 @@ const AllWeatherStations = memo(() => {
   );
 });
 
-// Composant pour les cartes météo WINTEM et TEMSI
-const WeatherChartsSection = memo(() => {
-  const [selectedChart, setSelectedChart] = useState('wintem');
-  const [selectedLevel, setSelectedLevel] = useState('FL100');
-  const [validityTime, setValidityTime] = useState('');
-  
-  // Options pour l'accès aux cartes
-  // Option 1: AEROWEB API (nécessite inscription gratuite)
-  // Option 2: URLs directes (nécessite authentification)
-  // Option 3: SOFIA-Briefing (accès public limité)
-  
-  const chartUrls = {
-    wintem: {
-      FL020: 'https://aviation.meteo.fr/FR/aviation/affiche_image.jsp?LOGIN=pro&NIVEAU=FL020&TYPE_IMAGE=WINTEM',
-      FL050: 'https://aviation.meteo.fr/FR/aviation/affiche_image.jsp?LOGIN=pro&NIVEAU=FL050&TYPE_IMAGE=WINTEM',
-      FL100: 'https://aviation.meteo.fr/FR/aviation/affiche_image.jsp?LOGIN=pro&NIVEAU=FL100&TYPE_IMAGE=WINTEM',
-      FL180: 'https://aviation.meteo.fr/FR/aviation/affiche_image.jsp?LOGIN=pro&NIVEAU=FL180&TYPE_IMAGE=WINTEM',
-      FL240: 'https://aviation.meteo.fr/FR/aviation/affiche_image.jsp?LOGIN=pro&NIVEAU=FL240&TYPE_IMAGE=WINTEM',
-      FL300: 'https://aviation.meteo.fr/FR/aviation/affiche_image.jsp?LOGIN=pro&NIVEAU=FL300&TYPE_IMAGE=WINTEM',
-      FL340: 'https://aviation.meteo.fr/FR/aviation/affiche_image.jsp?LOGIN=pro&NIVEAU=FL340&TYPE_IMAGE=WINTEM',
-      FL390: 'https://aviation.meteo.fr/FR/aviation/affiche_image.jsp?LOGIN=pro&NIVEAU=FL390&TYPE_IMAGE=WINTEM'
-    },
-    temsi: {
-      'EUROC': 'https://aviation.meteo.fr/FR/aviation/affiche_image.jsp?LOGIN=pro&TYPE_IMAGE=TEMSI_EUROC',
-      'France': 'https://aviation.meteo.fr/FR/aviation/affiche_image.jsp?LOGIN=pro&TYPE_IMAGE=TEMSI_FRANCE'
-    }
-  };
-  
-  // Générer l'heure de validité (prochaine heure synoptique)
-  useEffect(() => {
-    const now = new Date();
-    const hours = now.getUTCHours();
-    const synopticHour = Math.floor(hours / 6) * 6; // 00, 06, 12, 18
-    const validity = new Date(now);
-    validity.setUTCHours(synopticHour + 6, 0, 0, 0);
-    
-    if (validity > now) {
-      setValidityTime(validity.toISOString().slice(11, 16) + ' UTC');
-    } else {
-      validity.setUTCHours(synopticHour + 12, 0, 0, 0);
-      setValidityTime(validity.toISOString().slice(11, 16) + ' UTC');
-    }
-  }, []);
-  
-  return (
-    <div>
-      {/* Sélecteur de type de carte */}
-      <div style={sx.combine(sx.flex.start, sx.spacing.mb(4), sx.spacing.gap(2))}>
-        <button
-          onClick={() => {
-            setSelectedChart('wintem');
-            setSelectedLevel('FL100');
-          }}
-          style={sx.combine(
-            sx.components.button.base,
-            selectedChart === 'wintem' ? sx.components.button.primary : sx.components.button.secondary
-          )}
-        >
-          <Wind size={16} />
-          WINTEM
-        </button>
-        <button
-          onClick={() => {
-            setSelectedChart('temsi');
-            setSelectedLevel('EUROC');
-          }}
-          style={sx.combine(
-            sx.components.button.base,
-            selectedChart === 'temsi' ? sx.components.button.primary : sx.components.button.secondary
-          )}
-        >
-          <Cloud size={16} />
-          TEMSI
-        </button>
-        
-        {validityTime && (
-          <span style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.ml(3))}>
-            <Clock size={14} style={{ display: 'inline', marginRight: '4px' }} />
-            Validité estimée: {validityTime}
-          </span>
-        )}
-      </div>
-      
-      {/* Sélecteur de niveau pour WINTEM */}
-      {selectedChart === 'wintem' && (
-        <div style={sx.combine(sx.spacing.mb(3))}>
-          <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-            Niveau de vol :
-          </p>
-          <div style={sx.combine(sx.flex.row, sx.spacing.gap(2), { flexWrap: 'wrap' })}>
-            {Object.keys(chartUrls.wintem).map(level => (
-              <button
-                key={level}
-                onClick={() => setSelectedLevel(level)}
-                style={sx.combine(
-                  sx.components.button.base,
-                  sx.components.button.secondary,
-                  selectedLevel === level && sx.components.button.primary,
-                  { padding: '6px 12px', fontSize: '13px' }
-                )}
-              >
-                {level}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {/* Sélecteur de zone pour TEMSI */}
-      {selectedChart === 'temsi' && (
-        <div style={sx.combine(sx.spacing.mb(3))}>
-          <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-            Zone :
-          </p>
-          <div style={sx.combine(sx.flex.row, sx.spacing.gap(2))}>
-            {Object.keys(chartUrls.temsi).map(zone => (
-              <button
-                key={zone}
-                onClick={() => setSelectedLevel(zone)}
-                style={sx.combine(
-                  sx.components.button.base,
-                  sx.components.button.secondary,
-                  selectedLevel === zone && sx.components.button.primary,
-                  { padding: '6px 12px', fontSize: '13px' }
-                )}
-              >
-                {zone}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {/* Zone d'affichage de la carte */}
-      <div style={sx.combine(sx.components.card.base, sx.spacing.p(3))}>
-        <div style={sx.combine(sx.flex.between, sx.spacing.mb(3))}>
-          <h4 style={sx.combine(sx.text.base, sx.text.bold)}>
-            {selectedChart === 'wintem' ? `WINTEM ${selectedLevel}` : `TEMSI ${selectedLevel}`}
-          </h4>
-          <div style={sx.combine(sx.flex.row, sx.spacing.gap(2))}>
-            <a
-              href={chartUrls[selectedChart][selectedLevel]}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={sx.combine(sx.components.button.base, sx.components.button.secondary)}
-            >
-              <ExternalLink size={16} />
-              Ouvrir dans un nouvel onglet
-            </a>
-            <a
-              href={chartUrls[selectedChart][selectedLevel]}
-              download
-              style={sx.combine(sx.components.button.base, sx.components.button.primary)}
-            >
-              <Download size={16} />
-              Télécharger
-            </a>
-          </div>
-        </div>
-        
-        {/* Image de la carte */}
-        <div style={{ 
-          width: '100%', 
-          backgroundColor: '#f3f4f6',
-          borderRadius: '8px',
-          padding: '16px',
-          textAlign: 'center',
-          minHeight: '400px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <img
-            src={chartUrls[selectedChart][selectedLevel]}
-            alt={`${selectedChart === 'wintem' ? 'WINTEM' : 'TEMSI'} ${selectedLevel}`}
-            style={{ 
-              maxWidth: '100%',
-              height: 'auto',
-              borderRadius: '4px',
-              border: '1px solid #d1d5db'
-            }}
-            onError={(e) => {
-              e.target.style.display = 'none';
-              e.target.nextSibling.style.display = 'block';
-            }}
-          />
-          <div style={{ 
-            display: 'none',
-            padding: '32px',
-            backgroundColor: '#fef2f2',
-            borderRadius: '8px',
-            border: '1px solid #fca5a5'
-          }}>
-            <AlertTriangle size={48} style={{ color: '#dc2626', marginBottom: '16px' }} />
-            <p style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(2))}>
-              Carte non disponible
-            </p>
-            <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
-              Les cartes WINTEM et TEMSI nécessitent un accès authentifié.
-            </p>
-            
-            <div style={sx.combine(sx.text.sm, sx.spacing.mt(3), { textAlign: 'left' })}>
-              <p style={sx.combine(sx.text.bold, sx.spacing.mb(2))}>Options disponibles :</p>
-              
-              <div style={sx.spacing.mb(2)}>
-                <strong>1. AEROWEB API (Gratuit avec inscription)</strong>
-                <p style={sx.text.secondary}>
-                  API XML officielle de Météo-France pour l'aviation.
-                  Nécessite de signer une convention AEROWEB Server.
-                </p>
-              </div>
-              
-              <div style={sx.spacing.mb(2)}>
-                <strong>2. SOFIA-Briefing</strong>
-                <p style={sx.text.secondary}>
-                  Plateforme de briefing de la DGAC avec accès aux cartes TEMSI.
-                </p>
-              </div>
-              
-              <div style={sx.spacing.mb(2)}>
-                <strong>3. Accès direct Météo-France</strong>
-                <p style={sx.text.secondary}>
-                  Compte professionnel sur aviation.meteo.fr
-                </p>
-              </div>
-            </div>
-            
-            <div style={sx.combine(sx.flex.row, sx.spacing.gap(2), sx.spacing.mt(3))}>
-              <a
-                href="https://aviation.meteo.fr"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={sx.combine(
-                  sx.components.button.base,
-                  sx.components.button.primary
-                )}
-              >
-                <ExternalLink size={16} />
-                Météo-France Aviation
-              </a>
-              <a
-                href="https://sofia-briefing.aviation-civile.gouv.fr"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={sx.combine(
-                  sx.components.button.base,
-                  sx.components.button.secondary
-                )}
-              >
-                <ExternalLink size={16} />
-                SOFIA-Briefing
-              </a>
-            </div>
-          </div>
-        </div>
-        
-        {/* Informations supplémentaires */}
-        <div style={sx.combine(sx.spacing.mt(3), sx.components.alert.base, sx.components.alert.info)}>
-          <Info size={16} />
-          <div>
-            <p style={sx.text.sm}>
-              <strong>{selectedChart === 'wintem' ? 'WINTEM' : 'TEMSI'} :</strong>
-              {selectedChart === 'wintem' 
-                ? ' Carte des vents et températures en altitude pour la planification du vol.'
-                : ' Carte du temps significatif prévu (fronts, zones de turbulence, givrage, etc.).'
-              }
-            </p>
-            {selectedChart === 'wintem' && (
-              <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
-                Les vents sont représentés par des barbules (triangle = 50kt, trait long = 10kt, trait court = 5kt)
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-});
-
-WeatherChartsSection.displayName = 'WeatherChartsSection';
 
 WeatherModule.displayName = 'WeatherModule';
 WeatherCard.displayName = 'WeatherCard';

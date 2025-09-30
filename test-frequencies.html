@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Fréquences AIXM</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .freq-display {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .freq-item {
+            margin: 5px 0;
+            padding: 5px;
+            background: white;
+            border-radius: 3px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 Test des Fréquences AIXM</h1>
+    
+    <div class="test-section">
+        <h2>1. Test du Parser AIXM</h2>
+        <button onclick="testAIXMParser()">Tester l'extraction AIXM</button>
+        <div id="aixm-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Test du VAC Store</h2>
+        <button onclick="testVACStore()">Vérifier les données du store</button>
+        <div id="store-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Test d'import complet LFST</h2>
+        <button onclick="testFullImport()">Import complet LFST</button>
+        <div id="import-result"></div>
+    </div>
+
+    <script type="module">
+        // Import des modules nécessaires
+        import { aixmParser } from '/src/services/aixmParser.js';
+        
+        window.testAIXMParser = async function() {
+            const resultDiv = document.getElementById('aixm-result');
+            resultDiv.innerHTML = '<p>⏳ Test en cours...</p>';
+            
+            try {
+                // Charger et parser les données
+                await aixmParser.loadAndParse();
+                
+                // Récupérer les données de LFST
+                const lfst = await aixmParser.getAerodromeByICAO('LFST');
+                
+                if (!lfst) {
+                    resultDiv.innerHTML = '<div class="error">❌ LFST non trouvé dans les données AIXM</div>';
+                    return;
+                }
+                
+                // Afficher les résultats
+                let html = '<div class="success">✅ LFST trouvé avec succès!</div>';
+                
+                // Informations générales
+                html += '<div class="freq-display">';
+                html += '<h3>Informations générales</h3>';
+                html += `<div class="freq-item">📍 Nom: ${lfst.name}</div>`;
+                html += `<div class="freq-item">🏙️ Ville: ${lfst.city || 'N/A'}</div>`;
+                html += `<div class="freq-item">📏 Altitude: ${lfst.elevation?.value || 0} ${lfst.elevation?.unit || 'FT'}</div>`;
+                html += '</div>';
+                
+                // Fréquences
+                html += '<div class="freq-display">';
+                html += '<h3>📻 Fréquences extraites</h3>';
+                
+                if (lfst.frequencies && Object.keys(lfst.frequencies).length > 0) {
+                    let totalFreq = 0;
+                    for (const [type, freqs] of Object.entries(lfst.frequencies)) {
+                        if (Array.isArray(freqs) && freqs.length > 0) {
+                            html += `<div class="freq-item"><strong>${type.toUpperCase()}:</strong>`;
+                            freqs.forEach(f => {
+                                html += `<br>  • ${f.frequency} MHz`;
+                                if (f.schedule) html += ` (${f.schedule})`;
+                                if (f.remarks) html += ` - ${f.remarks}`;
+                                totalFreq++;
+                            });
+                            html += '</div>';
+                        }
+                    }
+                    html += `<div class="success">Total: ${totalFreq} fréquences trouvées</div>`;
+                } else {
+                    html += '<div class="error">❌ Aucune fréquence trouvée</div>';
+                }
+                html += '</div>';
+                
+                // Pistes
+                html += '<div class="freq-display">';
+                html += '<h3>🛬 Pistes</h3>';
+                if (lfst.runways && lfst.runways.length > 0) {
+                    lfst.runways.forEach(rwy => {
+                        html += `<div class="freq-item">`;
+                        html += `Piste ${rwy.designation || 'N/A'}: `;
+                        html += `${rwy.length || 0}m x ${rwy.width || 0}m`;
+                        if (rwy.qfu) html += ` (QFU: ${rwy.qfu}°)`;
+                        html += '</div>';
+                    });
+                } else {
+                    html += '<div class="error">Aucune piste trouvée</div>';
+                }
+                html += '</div>';
+                
+                // Afficher le JSON complet
+                html += '<details>';
+                html += '<summary>Voir les données complètes (JSON)</summary>';
+                html += '<pre>' + JSON.stringify(lfst, null, 2) + '</pre>';
+                html += '</details>';
+                
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+                console.error('Erreur test AIXM:', error);
+            }
+        };
+        
+        window.testVACStore = function() {
+            const resultDiv = document.getElementById('store-result');
+            
+            if (!window.vacStore) {
+                resultDiv.innerHTML = '<div class="error">❌ VAC Store non disponible</div>';
+                return;
+            }
+            
+            const state = window.vacStore.getState();
+            const charts = state.charts || {};
+            const lfstChart = charts['LFST'];
+            
+            let html = '<div class="freq-display">';
+            html += '<h3>État du VAC Store</h3>';
+            html += `<div class="freq-item">Nombre de cartes: ${Object.keys(charts).length}</div>`;
+            
+            if (lfstChart) {
+                html += '<div class="success">✅ LFST présent dans le store</div>';
+                
+                // Vérifier les différents emplacements possibles des fréquences
+                const locations = [
+                    { path: 'frequencies', data: lfstChart.frequencies },
+                    { path: 'extractedData.frequencies', data: lfstChart.extractedData?.frequencies }
+                ];
+                
+                html += '<h4>Emplacements des fréquences:</h4>';
+                locations.forEach(loc => {
+                    if (loc.data && Object.keys(loc.data).length > 0) {
+                        html += `<div class="success">✅ Fréquences trouvées dans: ${loc.path}</div>`;
+                        html += '<pre>' + JSON.stringify(loc.data, null, 2) + '</pre>';
+                    } else {
+                        html += `<div class="error">❌ Pas de fréquences dans: ${loc.path}</div>`;
+                    }
+                });
+                
+            } else {
+                html += '<div class="error">❌ LFST non trouvé dans le store</div>';
+                html += '<p>Cliquez sur "Import complet LFST" pour importer les données</p>';
+            }
+            
+            html += '</div>';
+            resultDiv.innerHTML = html;
+        };
+        
+        window.testFullImport = async function() {
+            const resultDiv = document.getElementById('import-result');
+            resultDiv.innerHTML = '<p>⏳ Import en cours...</p>';
+            
+            try {
+                // Simuler l'import comme dans VACModule
+                const fullAerodromeData = await aixmParser.getAerodromeByICAO('LFST');
+                
+                if (!fullAerodromeData) {
+                    resultDiv.innerHTML = '<div class="error">❌ Impossible de récupérer les données LFST</div>';
+                    return;
+                }
+                
+                // Créer l'objet VAC comme dans le module
+                const vacData = {
+                    icao: 'LFST',
+                    name: fullAerodromeData.name,
+                    city: fullAerodromeData.city,
+                    type: 'AIXM_COMPLETE',
+                    isDownloaded: true,
+                    isCustom: false,
+                    downloadDate: new Date().toISOString(),
+                    source: 'AIXM4.5/SIA',
+                    coordinates: fullAerodromeData.coordinates,
+                    magneticVariation: fullAerodromeData.magneticVariation,
+                    transitionAltitude: fullAerodromeData.transitionAltitude,
+                    referencePoint: fullAerodromeData.referencePoint,
+                    // Fréquences au niveau racine
+                    frequencies: fullAerodromeData.frequencies || {},
+                    extractedData: {
+                        airportName: fullAerodromeData.name,
+                        airportElevation: fullAerodromeData.elevation?.value || 0,
+                        airportType: fullAerodromeData.type,
+                        runways: fullAerodromeData.runways || [],
+                        // Fréquences dans extractedData aussi
+                        frequencies: fullAerodromeData.frequencies || {},
+                        navaids: fullAerodromeData.navaids || [],
+                        iata: fullAerodromeData.iata,
+                        city: fullAerodromeData.city,
+                        transitionAltitude: fullAerodromeData.transitionAltitude,
+                        referencePoint: fullAerodromeData.referencePoint,
+                        dataSource: 'AIXM4.5/SIA',
+                        airac: '2025-09-04',
+                        extractionDate: new Date().toISOString(),
+                        confidenceScore: 1.0,
+                        autoExtracted: true
+                    }
+                };
+                
+                // Afficher le résultat
+                let html = '<div class="success">✅ Import simulé avec succès!</div>';
+                html += '<div class="freq-display">';
+                html += '<h3>Structure des données VAC créée</h3>';
+                
+                // Vérifier les fréquences aux deux emplacements
+                html += '<h4>Fréquences au niveau racine:</h4>';
+                if (vacData.frequencies && Object.keys(vacData.frequencies).length > 0) {
+                    html += '<div class="success">✅ Présentes</div>';
+                    html += '<pre>' + JSON.stringify(vacData.frequencies, null, 2) + '</pre>';
+                } else {
+                    html += '<div class="error">❌ Absentes</div>';
+                }
+                
+                html += '<h4>Fréquences dans extractedData:</h4>';
+                if (vacData.extractedData.frequencies && Object.keys(vacData.extractedData.frequencies).length > 0) {
+                    html += '<div class="success">✅ Présentes</div>';
+                    html += '<pre>' + JSON.stringify(vacData.extractedData.frequencies, null, 2) + '</pre>';
+                } else {
+                    html += '<div class="error">❌ Absentes</div>';
+                }
+                
+                html += '</div>';
+                
+                // Option pour sauvegarder dans le store
+                if (window.vacStore) {
+                    html += '<button onclick="saveToStore()">💾 Sauvegarder dans le store</button>';
+                    window.tempVacData = vacData;
+                }
+                
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+                console.error('Erreur import:', error);
+            }
+        };
+        
+        window.saveToStore = function() {
+            if (window.vacStore && window.tempVacData) {
+                const { addCustomChart } = window.vacStore.getState();
+                addCustomChart('LFST', window.tempVacData);
+                alert('✅ Données sauvegardées dans le store!');
+                // Rafraîchir l'affichage du store
+                testVACStore();
+            }
+        };
+        
+        // Test automatique au chargement
+        window.addEventListener('load', () => {
+            console.log('🚀 Page de test des fréquences chargée');
+            console.log('Modules disponibles:', {
+                aixmParser: typeof aixmParser !== 'undefined',
+                vacStore: typeof window.vacStore !== 'undefined'
+            });
+        });
+    </script>
+</body>
+</html>

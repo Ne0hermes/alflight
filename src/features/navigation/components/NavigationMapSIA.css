@@ -1,0 +1,224 @@
+.navigation-map-sia {
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  position: relative;
+}
+
+/* S'assurer que le conteneur Leaflet a une hauteur */
+.navigation-map-sia .leaflet-container {
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+}
+
+.map-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: #f5f5f5;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e0e0e0;
+  border-top-color: #2196f3;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.map-loading p {
+  margin-top: 16px;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Styles pour les popups */
+.sia-popup {
+  min-width: 200px;
+}
+
+.sia-popup h3 {
+  margin: 0 0 8px 0;
+  color: #1976d2;
+  font-size: 16px;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 4px;
+}
+
+.sia-popup p {
+  margin: 4px 0;
+  font-size: 13px;
+  color: #333;
+}
+
+.sia-popup strong {
+  color: #666;
+  margin-right: 4px;
+}
+
+/* Contrôles Leaflet personnalisés */
+.leaflet-control-layers {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  padding: 8px;
+}
+
+.leaflet-control-layers-toggle {
+  width: 36px;
+  height: 36px;
+  background-size: 24px 24px;
+}
+
+.leaflet-control-layers-expanded {
+  padding: 12px;
+  min-width: 200px;
+}
+
+.leaflet-control-layers-base label,
+.leaflet-control-layers-overlays label {
+  display: flex;
+  align-items: center;
+  padding: 4px 0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.leaflet-control-layers-base label:hover,
+.leaflet-control-layers-overlays label:hover {
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  padding-left: 4px;
+  margin-left: -4px;
+}
+
+/* Markers personnalisés */
+.custom-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Panneau de filtres */
+.map-filters {
+  position: absolute;
+  top: 80px;
+  right: 10px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  padding: 12px;
+  z-index: 1000;
+  min-width: 200px;
+}
+
+.map-filters h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.filter-group {
+  margin-bottom: 12px;
+}
+
+.filter-group label {
+  display: flex;
+  align-items: center;
+  padding: 4px 0;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.filter-group input[type="checkbox"] {
+  margin-right: 6px;
+}
+
+/* Panneau d'information */
+.map-info-panel {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  padding: 12px;
+  z-index: 1000;
+  max-width: 300px;
+}
+
+.map-info-panel h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #1976d2;
+}
+
+.map-info-panel .info-item {
+  display: flex;
+  align-items: center;
+  margin: 4px 0;
+  font-size: 13px;
+}
+
+.map-info-panel .info-label {
+  font-weight: 500;
+  margin-right: 4px;
+  color: #666;
+}
+
+.map-info-panel .info-value {
+  color: #333;
+}
+
+/* Légende des espaces aériens */
+.airspace-legend {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  padding: 12px;
+  z-index: 1000;
+}
+
+.airspace-legend h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin: 4px 0;
+  font-size: 12px;
+}
+
+.legend-color {
+  width: 20px;
+  height: 12px;
+  margin-right: 8px;
+  border: 1px solid #ccc;
+  opacity: 0.6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .map-filters,
+  .map-info-panel,
+  .airspace-legend {
+    display: none;
+  }
+  
+  .leaflet-control-layers-expanded {
+    min-width: 150px;
+  }
+}

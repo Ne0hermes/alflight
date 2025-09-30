@@ -4,7 +4,26 @@
       "Bash(rm:*)",
       "Bash(curl:*)",
       "Bash(mkdir:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(npm run test:*)",
+      "Bash(cat:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx xml2js:*)",
+      "Bash(taskkill:*)",
+      "Bash(npm run:*)",
+      "Bash(grep:*)",
+      "Bash(npm install:*)",
+      "Bash(node:*)",
+      "Bash(npx cap init:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npx vite:*)",
+      "Bash(mv:*)",
+      "Bash(del:*)",
+      "Bash(cp:*)",
+      "Bash(python:*)",
+      "Bash(powershell:*)",
+      "Bash(sed:*)",
+      "Bash(awk:*)"
     ],
     "deny": []
   }

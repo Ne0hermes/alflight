@@ -1,22 +1,22 @@
 // src/features/vac/VACModule.jsx
-import React, { memo, useState, useEffect, useRef } from 'react';
-import { Map, Trash2, Eye, Info, Search, AlertTriangle, Clock, HardDrive, Upload, FileImage, Edit2, CheckCircle, FileSearch } from 'lucide-react';
-import { useVACStore } from '@core/stores/vacStore';
-import { useNavigation } from '@core/contexts';
-import { sx } from '@shared/styles/styleSystem';
-import { VACViewer } from './components/VACViewer';
-import { VACDataEditor } from './components/VACDataEditorExtended';
-import { Conversions } from '@utils/conversions';
-import { vacDataExtractor } from '@utils/vacDataExtractor';
-import { vacDataExtractorEnhanced } from '@utils/vacDataExtractorEnhanced';
-import { pdfExtractors } from '@utils/pdfExtractors';
+import React, { memo } from 'react';
+import { SIAReportEnhanced } from './components/SIAReportEnhanced';
 
-export const VACModule = memo(() => {
+export const VACModule = memo(({ wizardMode = false, config = {} }) => {
+  // Afficher directement le rapport SIA amélioré
+  return <SIAReportEnhanced />;
+});
+
+// Code original conservé mais désactivé
+const VACModuleOld = memo(() => {
   const { waypoints } = useNavigation();
   const [searchIcao, setSearchIcao] = useState('');
-  const [showDetails, setShowDetails] = useState(null);
   const [filter, setFilter] = useState('downloaded'); // Afficher par défaut uniquement les cartes téléchargées/importées
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showSIASearch, setShowSIASearch] = useState(true); // Toujours visible
+  const [siaAerodromes, setSIAAerodromes] = useState([]);
+  const [filteredSIAAerodromes, setFilteredSIAAerodromes] = useState([]);
+  const [siaSearchTerm, setSIASearchTerm] = useState('');
   const [importIcao, setImportIcao] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
@@ -330,6 +330,190 @@ export const VACModule = memo(() => {
     }
   };
   
+  // Charger les aérodromes SIA au démarrage
+  useEffect(() => {
+    loadSIAAerodromes();
+  }, []);
+
+  const handleSIAImport = async (aerodrome) => {
+    const props = aerodrome.properties || {};
+    const coords = aerodrome.geometry?.coordinates || [];
+    
+    try {
+      // Obtenir les données complètes depuis AIXM
+      const fullAerodromeData = await aixmParser.getAerodromeByICAO(props.icao);
+      
+      console.log(`📊 Import VAC pour ${props.icao} - Données AIXM complètes:`, fullAerodromeData);
+      console.log(`📻 Fréquences trouvées:`, fullAerodromeData?.frequencies);
+      
+      // Créer l'objet VAC avec TOUTES les données AIXM disponibles
+      const vacData = {
+        icao: props.icao,
+        name: fullAerodromeData?.name || props.name || props.icao,
+        city: fullAerodromeData?.city || props.city || '',
+        type: 'AIXM_COMPLETE',
+        isDownloaded: true,
+        isCustom: false,
+        downloadDate: new Date().toISOString(),
+        source: 'AIXM4.5/SIA',
+        coordinates: {
+          lat: fullAerodromeData?.coordinates?.lat || coords[1] || 0,
+          lon: fullAerodromeData?.coordinates?.lon || coords[0] || 0
+        },
+        magneticVariation: fullAerodromeData?.magneticVariation,
+        transitionAltitude: fullAerodromeData?.transitionAltitude,
+        referencePoint: fullAerodromeData?.referencePoint,
+        // Ajouter les fréquences directement au niveau racine pour compatibilité
+        frequencies: fullAerodromeData?.frequencies || {},
+        extractedData: {
+          airportName: fullAerodromeData?.name || props.name || props.icao,
+          airportElevation: fullAerodromeData?.elevation?.value || props.elevation_ft || 0,
+          airportType: fullAerodromeData?.type || props.type || 'UNKNOWN',
+          runways: (fullAerodromeData?.runways || props.runways || []).map(rwy => ({
+            // Toutes les données complètes de piste depuis AIXM
+            identifier: rwy.designation || rwy.id,
+            designation: rwy.designation,
+            length: rwy.length || 0,
+            width: rwy.width || 0,
+            length_m: rwy.length || 0,
+            width_m: rwy.width || 0,
+            // QFU et orientation RÉELS depuis AIXM
+            qfu: rwy.magneticBearing || rwy.qfu || 0,
+            trueBearing: rwy.trueBearing,
+            magneticBearing: rwy.magneticBearing,
+            orientation: rwy.magneticBearing || rwy.qfu || 0,
+            // Distances déclarées RÉELLES depuis AIXM
+            tora: rwy.tora || rwy.length || 0,
+            toda: rwy.toda || rwy.length || 0,
+            asda: rwy.asda || rwy.length || 0,
+            lda: rwy.lda || rwy.length || 0,
+            surface: rwy.surface || 'ASPH',
+            pcn: rwy.pcn,
+            // Équipements
+            vasis: rwy.vasis,
+            ils: rwy.ils,
+            threshold: rwy.threshold,
+            strength: rwy.strength || '',
+            elevation: rwy.elevation || 0,
+            threshold_displaced: rwy.threshold_displaced || 0,
+            papi: rwy.papi || '',
+            lighting: rwy.lighting || '',
+            approach_lighting: rwy.approach_lighting || '',
+            coordinates: rwy.coordinates || [],
+            status: rwy.status || 'ACTIVE',
+            remarks: rwy.remarks || ''
+          })),
+          // Ajouter les fréquences extraites depuis AIXM
+          frequencies: fullAerodromeData?.frequencies || props.frequencies || {},
+          circuitAltitude: fullAerodromeData?.vacInfo?.circuitAltitude || props.vacInfo?.circuitAltitude || 1000,
+          magneticVariation: fullAerodromeData?.magneticVariation?.value || props.vacInfo?.magneticVariation || 2,
+          operatingHours: fullAerodromeData?.operatingHours || props.vacInfo?.operatingHours || '',
+          fuel: fullAerodromeData?.fuel || props.vacInfo?.fuel || false,
+          customs: fullAerodromeData?.customs || props.vacInfo?.customs || false,
+          handling: fullAerodromeData?.handling || props.vacInfo?.handling || false,
+          remarks: fullAerodromeData?.remarks || props.vacInfo?.remarks || '',
+          airspaces: fullAerodromeData?.airspaces || props.airspaces || {},
+          navaids: fullAerodromeData?.navaids || [],
+          iata: fullAerodromeData?.iata,
+          city: fullAerodromeData?.city,
+          admin: fullAerodromeData?.admin,
+          transitionAltitude: fullAerodromeData?.transitionAltitude || 0,
+          referencePoint: fullAerodromeData?.referencePoint || '',
+          dataSource: 'AIXM4.5/SIA',
+          airac: '2025-09-04',
+          extractionDate: new Date().toISOString(),
+          confidenceScore: 1.0,
+          autoExtracted: true
+        }
+      };
+      
+      // Ajouter au store
+      addCustomChart(props.icao, vacData);
+      
+      // Sauvegarder dans localStorage
+      const storedCharts = JSON.parse(localStorage.getItem('customVACCharts') || '{}');
+      storedCharts[props.icao] = vacData;
+      
+      // Debug: vérifier ce qui est sauvegardé
+      console.log(`💾 Sauvegarde VAC ${props.icao} - Fréquences au niveau racine:`, vacData.frequencies);
+      console.log(`💾 Sauvegarde VAC ${props.icao} - Fréquences dans extractedData:`, vacData.extractedData?.frequencies);
+      
+      localStorage.setItem('customVACCharts', JSON.stringify(storedCharts));
+      
+      // Mettre à jour uniquement le statut de l'aérodrome importé
+      setSIAAerodromes(prevAerodromes => 
+        prevAerodromes.map(a => 
+          a.properties?.icao === props.icao 
+            ? { ...a, properties: { ...a.properties, isImported: true } }
+            : a
+        )
+      );
+      
+      console.log(`✅ Données VAC importées depuis XML pour ${props.icao}`);
+    } catch (error) {
+      console.error('Erreur import VAC:', error);
+      alert('❌ Erreur lors de l\'import des données VAC');
+    }
+  };
+
+  const loadSIAAerodromes = async () => {
+    try {
+      // Ne charger qu'une seule fois si déjà chargé
+      if (siaAerodromes.length > 0) {
+        return;
+      }
+      console.log('🔄 Chargement des aérodromes depuis les fichiers AIXM/SIA...');
+      const aerodromes = await aixmParser.loadAndParse();
+      
+      // Convertir au format attendu par le composant
+      const formattedAerodromes = aerodromes.map(aerodrome => ({
+        geometry: {
+          type: 'Point',
+          coordinates: [aerodrome.coordinates.lon, aerodrome.coordinates.lat]
+        },
+        properties: {
+          icao: aerodrome.icao,
+          name: aerodrome.name,
+          city: aerodrome.city,
+          elevation_ft: aerodrome.elevation.unit === 'FT' ? aerodrome.elevation.value : aerodrome.elevation.value * 3.28084,
+          type: aerodrome.type,
+          runways: aerodrome.runways || [],
+          frequencies: aerodrome.frequencies || {},
+          airspaces: aerodrome.airspaces || {},
+          vacInfo: aerodrome.vacInfo || {},
+          source: aerodrome.source,
+          isImported: !!charts[aerodrome.icao]?.isDownloaded
+        }
+      }));
+      
+      setSIAAerodromes(formattedAerodromes);
+      setFilteredSIAAerodromes(formattedAerodromes);
+      console.log(`✅ ${formattedAerodromes.length} aérodromes chargés depuis XML`);
+    } catch (error) {
+      console.error('❌ Erreur chargement aérodromes SIA:', error);
+    }
+  };
+
+  // Filtrer les aérodromes SIA selon la recherche
+  useEffect(() => {
+    if (!siaSearchTerm) {
+      setFilteredSIAAerodromes(siaAerodromes);
+      return;
+    }
+
+    const search = siaSearchTerm.toLowerCase();
+    const filtered = siaAerodromes.filter(aerodrome => {
+      const props = aerodrome.properties || {};
+      return (
+        props.icao?.toLowerCase().includes(search) ||
+        props.name?.toLowerCase().includes(search) ||
+        props.city?.toLowerCase().includes(search)
+      );
+    });
+    
+    setFilteredSIAAerodromes(filtered);
+  }, [siaSearchTerm, siaAerodromes]);
+
   // Charger les cartes custom au démarrage
   useEffect(() => {
     const storedCharts = JSON.parse(localStorage.getItem('customVACCharts') || '{}');
@@ -357,6 +541,15 @@ export const VACModule = memo(() => {
         console.log(`📅 Carte ${icao} chargée avec date: ${chart.extractedData.publicationDate}`);
       } else {
         console.log(`⚠️ Carte ${icao} chargée sans date de publication`);
+      }
+      
+      // Debug des fréquences chargées
+      if (icao === 'LFST') {
+        console.log(`🔍 LFST chargé depuis localStorage:`, chart);
+        console.log(`🔍 LFST frequencies au niveau racine:`, chart.frequencies);
+        console.log(`🔍 LFST frequencies dans extractedData:`, chart.extractedData?.frequencies);
+        console.log(`🛬 LFST runways dans extractedData:`, chart.extractedData?.runways);
+        console.log(`🛬 LFST runways au niveau racine:`, chart.runways);
       }
       
       // Vérifier si une carte existe déjà (custom ou SIA)
@@ -440,7 +633,7 @@ export const VACModule = memo(() => {
                 <AlertTriangle size={48} color="#ef4444" />
               </div>
               
-              <h3 style={sx.combine(sx.text.xl, sx.text.bold, sx.text.center, sx.spacing.mb(4))}>
+              <h3 style={sx.combine(sx.text.xl, sx.text.bold, sx.text.left, sx.spacing.mb(4))}>
                 AVERTISSEMENT IMPORTANT - RESPONSABILITÉ DU COMMANDANT DE BORD
               </h3>
               
@@ -559,23 +752,25 @@ export const VACModule = memo(() => {
                 🗺️ Gestion des cartes VAC
               </h3>
               
-              {/* Bouton d'import manuel */}
-              <button
-                onClick={() => {
-                  setShowImportModal(true);
-                  setSelectedFile(null);
-                  setImportIcao('');
-                }}
-                style={sx.combine(
-                  sx.components.button.base,
-                  sx.components.button.primary,
-                  sx.flex.row,
-                  sx.spacing.gap(2)
-                )}
-              >
-                <Upload size={16} />
-                Importer une carte
-              </button>
+              {/* Boutons d'import */}
+              <div style={sx.combine(sx.flex.row, sx.spacing.gap(2))}>
+                <button
+                  onClick={() => {
+                    setShowImportModal(true);
+                    setSelectedFile(null);
+                    setImportIcao('');
+                  }}
+                  style={sx.combine(
+                    sx.components.button.base,
+                    sx.components.button.primary,
+                    sx.flex.row,
+                    sx.spacing.gap(2)
+                  )}
+                >
+                  <Upload size={16} />
+                  Import manuel
+                </button>
+              </div>
             </div>
           
           {/* Statistiques */}
@@ -619,48 +814,120 @@ export const VACModule = memo(() => {
           </div>
         )}
         
-        {/* Barre de recherche et filtres */}
+        {/* Section de recherche SIA - Toujours visible */}
         <section style={sx.combine(sx.components.section.base, sx.spacing.mb(4))}>
-        <div style={sx.combine(sx.flex.row, sx.spacing.gap(3))}>
-          {/* Recherche */}
-          <div style={{ flex: 1, position: 'relative' }}>
-            <Search size={16} style={{
-              position: 'absolute',
-              left: '12px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: sx.theme.colors.gray[400]
-            }} />
-            <input
-              type="text"
-              placeholder="Rechercher par code OACI ou nom..."
-              value={searchIcao}
-              onChange={(e) => setSearchIcao(e.target.value)}
-              style={sx.combine(sx.components.input.base, { paddingLeft: '36px' })}
-            />
-          </div>
-          
-          {/* Filtres */}
-          <div style={sx.combine(sx.flex.row, sx.spacing.gap(2))}>
-            {[
-              { value: 'all', label: 'Toutes' },
-              { value: 'custom', label: 'Importées' },
-              { value: 'navigation', label: 'Navigation' }
-            ].map(f => (
-              <button
-                key={f.value}
-                onClick={() => setFilter(f.value)}
-                style={sx.combine(
-                  sx.components.button.base,
-                  filter === f.value ? sx.components.button.primary : sx.components.button.secondary
+          <div style={sx.combine(sx.spacing.mb(3))}>
+            <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(3))}>
+              Rechercher dans la base SIA locale
+            </h4>
+              
+              {/* Barre de recherche */}
+              <div style={{ position: 'relative', marginBottom: '16px' }}>
+                <Search size={16} style={{
+                  position: 'absolute',
+                  left: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: sx.theme.colors.gray[400]
+                }} />
+                <input
+                  type="text"
+                  placeholder="Rechercher par code OACI, nom ou ville..."
+                  value={siaSearchTerm}
+                  onChange={(e) => setSIASearchTerm(e.target.value)}
+                  autoFocus
+                  style={sx.combine(sx.components.input.base, { paddingLeft: '36px' })}
+                />
+              </div>
+              
+              <div style={{ fontSize: '13px', color: '#666', marginBottom: '12px' }}>
+                {filteredSIAAerodromes.length} aérodrome(s) trouvé(s) dans la base SIA
+              </div>
+              
+              {/* Liste des aérodromes SIA */}
+              <div style={{
+                maxHeight: '400px',
+                overflowY: 'auto',
+                border: '1px solid #e0e0e0',
+                borderRadius: '8px',
+                padding: '12px'
+              }}>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                  gap: '8px'
+                }}>
+                  {filteredSIAAerodromes.slice(0, 50).map((aerodrome) => {
+                    const props = aerodrome.properties || {};
+                    const isImported = props.isImported;
+                    
+                    return (
+                      <div
+                        key={props.icao}
+                        onClick={() => !isImported && handleSIAImport(aerodrome)}
+                        style={{
+                          padding: '10px',
+                          border: `1px solid ${isImported ? '#4CAF50' : '#e0e0e0'}`,
+                          borderRadius: '6px',
+                          cursor: isImported ? 'default' : 'pointer',
+                          background: isImported ? '#E8F5E9' : 'white',
+                          transition: 'all 0.2s',
+                          ':hover': !isImported && { borderColor: '#2196F3', background: '#f5f5f5' }
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              {props.icao}
+                              {props.source && (
+                                <span style={{ 
+                                  fontSize: '9px', 
+                                  padding: '1px 4px', 
+                                  borderRadius: '3px',
+                                  backgroundColor: props.source === 'AIXM' ? '#e3f2fd' : '#fff3e0',
+                                  color: props.source === 'AIXM' ? '#1976d2' : '#f57c00'
+                                }}>
+                                  {props.source}
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#666' }}>
+                              {props.name || 'Sans nom'}
+                            </div>
+                            {props.city && (
+                              <div style={{ fontSize: '11px', color: '#999' }}>
+                                {props.city}
+                              </div>
+                            )}
+                            {props.elevation_ft > 0 && (
+                              <div style={{ fontSize: '10px', color: '#666', marginTop: '2px' }}>
+                                Alt: {props.elevation_ft}ft
+                              </div>
+                            )}
+                          </div>
+                          {isImported && (
+                            <CheckCircle size={16} color="#4CAF50" />
+                          )}
+                        </div>
+                        {(props.frequencies?.twr || props.frequencies?.info) && (
+                          <div style={{ fontSize: '10px', color: '#666', marginTop: '2px' }}>
+                            {props.frequencies.twr && `TWR: ${props.frequencies.twr}`}
+                            {props.frequencies.twr && props.frequencies.info && ' • '}
+                            {props.frequencies.info && `INFO: ${props.frequencies.info}`}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                {filteredSIAAerodromes.length > 50 && (
+                  <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '12px', color: '#666' }}>
+                    Affichage limité aux 50 premiers résultats. Affinez votre recherche.
+                  </div>
                 )}
-              >
-                {f.label}
-              </button>
-            ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
       
       {/* Liste des cartes */}
       <section>
@@ -672,14 +939,17 @@ export const VACModule = memo(() => {
               isInNavigation={navigationIcaos.includes(chart.icao)}
               onDelete={() => deleteChart(chart.icao)}
               onView={() => selectChart(chart.icao)}
-              onDetails={() => setShowDetails(showDetails === chart.icao ? null : chart.icao)}
-              showDetails={showDetails === chart.icao}
+              onImportManual={(icao) => {
+                setImportIcao(icao);
+                setShowImportModal(true);
+                setSelectedFile(null);
+              }}
             />
           ))}
         </div>
         
         {filteredCharts.length === 0 && (
-          <div style={sx.combine(sx.text.center, sx.text.secondary, sx.spacing.p(8))}>
+          <div style={sx.combine(sx.text.left, sx.text.secondary, sx.spacing.p(8))}>
             {searchIcao ? 'Aucune carte trouvée' : 'Aucune carte dans cette catégorie'}
           </div>
         )}
@@ -872,9 +1142,8 @@ const StatCard = memo(({ icon: Icon, value, total, label, color }) => {
 });
 
 // Composant pour une carte VAC
-const ChartCard = memo(({ chart, isInNavigation, onDelete, onView, onDetails, showDetails }) => {
+const ChartCard = memo(({ chart, isInNavigation, onDelete, onView, onImportManual }) => {
   const [showEditor, setShowEditor] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { updateChartData } = useVACStore();
   
   // Vérifier si la carte est périmée (plus d'un an)
@@ -889,145 +1158,6 @@ const ChartCard = memo(({ chart, isInNavigation, onDelete, onView, onDetails, sh
   };
   
   const isOutdated = checkIfOutdated();
-  
-  // Fonction pour analyser le contenu de la carte
-  const handleAnalyzeContent = async (useEnhanced = false) => {
-    if (!chart.fileData) {
-      // Demander à l'utilisateur de saisir ou coller le texte de la carte VAC
-      const userText = prompt(
-        `Analyse ${useEnhanced ? 'approfondie' : 'standard'} de la carte VAC ${chart.icao}\n\n` +
-        "Collez ici le texte extrait de votre carte VAC (PDF ou image).\n" +
-        "Vous pouvez copier le texte depuis un PDF ou utiliser un outil OCR pour les images.\n\n" +
-        "Exemples d'informations à inclure :\n" +
-        "- ALTITUDE : 538 ft\n" +
-        "- PISTE : 07/25 1845x45\n" +
-        "- TWR : 118.450\n" +
-        "- Tour de piste : 1538 ft\n" +
-        "- Points VFR, obstacles, etc."
-      );
-      
-      if (!userText) {
-        return;
-      }
-      
-      setIsAnalyzing(true);
-      
-      try {
-        // Utiliser l'extracteur approprié
-        const extractor = useEnhanced ? vacDataExtractorEnhanced : vacDataExtractor;
-        
-        // Options pour l'extraction approfondie
-        const options = useEnhanced ? {
-          deepAnalysis: true,
-          contextual: true,
-          multiPass: true,
-          confidence: 0.6
-        } : {};
-        
-        const extractedData = useEnhanced 
-          ? extractor.extractFromText(userText, chart.icao, options)
-          : extractor.extractFromText(userText, chart.icao);
-        
-        // Mettre à jour les données de la carte
-        updateChartData(chart.icao, {
-          extractedData: {
-            ...chart.extractedData,
-            ...extractedData,
-            lastAnalysisDate: new Date().toISOString(),
-            extractionMethod: useEnhanced ? 'enhanced' : 'standard'
-          },
-          extractedText: userText // Sauvegarder le texte pour analyse future
-        });
-        
-        // Message de succès avec score de confiance si disponible
-        let message = `Analyse ${useEnhanced ? 'approfondie' : 'standard'} terminée !\n\n`;
-        
-        if (extractedData.confidenceScore) {
-          const score = Math.round(extractedData.confidenceScore * 100);
-          message += `Score de confiance : ${score}%\n`;
-          if (score < 50) {
-            message += "⚠️ Score faible - vérification manuelle recommandée\n";
-          } else if (score < 70) {
-            message += "⚠️ Certaines données peuvent être incomplètes\n";
-          } else {
-            message += "✅ Extraction réussie\n";
-          }
-        }
-        
-        // Afficher les données extraites principales
-        const summary = [];
-        if (extractedData.airportElevation) summary.push(`Altitude: ${extractedData.airportElevation}ft`);
-        if (extractedData.runways?.length) summary.push(`${extractedData.runways.length} piste(s)`);
-        if (extractedData.frequencies?.twr) summary.push(`TWR: ${extractedData.frequencies.twr}`);
-        if (extractedData.publicationDate) summary.push(`Date: ${extractedData.publicationDate}`);
-        
-        if (summary.length > 0) {
-          message += `\nDonnées extraites :\n${summary.join('\n')}`;
-        }
-        
-        message += "\n\nUtilisez le bouton \"Éditer\" pour vérifier et compléter les informations.";
-        
-        alert(message);
-      } catch (error) {
-        console.error('Erreur lors de l\'analyse:', error);
-        alert('Erreur lors de l\'analyse du contenu. Vérifiez le format du texte.');
-      } finally {
-        setIsAnalyzing(false);
-      }
-      
-      return;
-    }
-    
-    // Si on a déjà des données de fichier, proposer de réanalyser
-    if (chart.extractedText) {
-      const confirmReanalyze = confirm(
-        `Voulez-vous réanalyser le texte existant avec la méthode ${useEnhanced ? 'approfondie' : 'standard'} ?\n\n` +
-        "Cliquez sur OK pour réanalyser, ou Annuler pour saisir un nouveau texte."
-      );
-      
-      if (!confirmReanalyze) {
-        // Relancer avec fileData = null pour demander un nouveau texte
-        const tempChart = { ...chart, fileData: null };
-        handleAnalyzeContent.call({ chart: tempChart }, useEnhanced);
-        return;
-      }
-      
-      setIsAnalyzing(true);
-      
-      try {
-        const extractor = useEnhanced ? vacDataExtractorEnhanced : vacDataExtractor;
-        const options = useEnhanced ? {
-          deepAnalysis: true,
-          contextual: true,
-          multiPass: true,
-          confidence: 0.6
-        } : {};
-        
-        const extractedData = useEnhanced 
-          ? extractor.extractFromText(chart.extractedText, chart.icao, options)
-          : extractor.extractFromText(chart.extractedText, chart.icao);
-        
-        updateChartData(chart.icao, {
-          extractedData: {
-            ...chart.extractedData,
-            ...extractedData,
-            lastAnalysisDate: new Date().toISOString(),
-            extractionMethod: useEnhanced ? 'enhanced' : 'standard'
-          }
-        });
-        
-        alert(`Réanalyse ${useEnhanced ? 'approfondie' : 'standard'} terminée ! Vérifiez les données avec le bouton \"Éditer\".`);
-      } catch (error) {
-        console.error('Erreur lors de la réanalyse:', error);
-        alert('Erreur lors de la réanalyse du contenu');
-      } finally {
-        setIsAnalyzing(false);
-      }
-    } else {
-      // Pas de texte existant, demander à l'utilisateur
-      handleAnalyzeContent.call({ ...this, chart: { ...chart, fileData: null } }, useEnhanced);
-    }
-  };
   
   // Formater la date pour l'affichage
   const formatPublicationDate = () => {
@@ -1048,7 +1178,7 @@ const ChartCard = memo(({ chart, isInNavigation, onDelete, onView, onDetails, sh
         backgroundColor: sx.theme.colors.primary[50]
       }
     )}>
-      <div style={sx.combine(sx.flex.between, sx.spacing.mb(showDetails ? 3 : 0))}>
+      <div style={sx.combine(sx.flex.between)}>
         {/* Informations principales */}
         <div style={{ flex: 1 }}>
           <div style={sx.combine(sx.flex.start, sx.spacing.gap(3), sx.spacing.mb(2))}>
@@ -1160,119 +1290,20 @@ const ChartCard = memo(({ chart, isInNavigation, onDelete, onView, onDetails, sh
           >
             <Edit2 size={16} />
           </button>
-          <div style={{ position: 'relative', display: 'inline-block' }}>
-            <button
-              onClick={() => handleAnalyzeContent(false)}
-              disabled={isAnalyzing}
-              style={sx.combine(
-                sx.components.button.base, 
-                { 
-                  backgroundColor: '#8b5cf6',
-                  color: 'white',
-                  paddingRight: '24px',
-                  '&:hover': { backgroundColor: '#7c3aed' },
-                  ...(isAnalyzing && { opacity: 0.5, cursor: 'not-allowed' })
-                }
-              )}
-              title="Analyser le contenu"
-            >
-              <FileSearch size={16} />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                const menu = e.currentTarget.nextElementSibling;
-                menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-              }}
-              disabled={isAnalyzing}
-              style={{
-                position: 'absolute',
-                right: 0,
-                top: 0,
-                bottom: 0,
-                width: '24px',
-                backgroundColor: '#7c3aed',
-                color: 'white',
-                border: 'none',
-                borderLeft: '1px solid #6d28d9',
-                borderRadius: '0 6px 6px 0',
-                cursor: isAnalyzing ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: isAnalyzing ? 0.5 : 1
-              }}
-              title="Options d'analyse"
-            >
-              ▼
-            </button>
-            <div style={{
-              display: 'none',
-              position: 'absolute',
-              top: '100%',
-              right: 0,
-              marginTop: '4px',
-              backgroundColor: 'white',
-              border: '1px solid #e5e7eb',
-              borderRadius: '6px',
-              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-              zIndex: 1000,
-              minWidth: '200px'
-            }}>
-              <button
-                onClick={(e) => {
-                  e.currentTarget.parentElement.style.display = 'none';
-                  handleAnalyzeContent(false);
-                }}
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  padding: '8px 12px',
-                  textAlign: 'left',
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  ':hover': { backgroundColor: '#f3f4f6' }
-                }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#f3f4f6'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-              >
-                📝 Analyse standard
-              </button>
-              <button
-                onClick={(e) => {
-                  e.currentTarget.parentElement.style.display = 'none';
-                  handleAnalyzeContent(true);
-                }}
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  padding: '8px 12px',
-                  textAlign: 'left',
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  borderTop: '1px solid #e5e7eb',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  ':hover': { backgroundColor: '#f3f4f6' }
-                }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#f3f4f6'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-              >
-                🔍 Analyse approfondie
-                <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>
-                  Multi-passes, contexte, validation
-                </div>
-              </button>
-            </div>
-          </div>
+          {/* Bouton d'import manuel pour remplacer/ajouter une carte VAC */}
           <button
-            onClick={onDetails}
-            style={sx.combine(sx.components.button.base, sx.components.button.secondary)}
-            title="Détails"
+            onClick={() => onImportManual && onImportManual(chart.icao)}
+            style={sx.combine(
+              sx.components.button.base,
+              {
+                backgroundColor: '#8b5cf6',
+                color: 'white',
+                '&:hover': { backgroundColor: '#7c3aed' }
+              }
+            )}
+            title={chart.url ? "Remplacer la carte VAC" : "Importer une carte VAC"}
           >
-            <Info size={16} />
+            <Upload size={16} />
           </button>
           <button
             onClick={() => {
@@ -1304,26 +1335,6 @@ const ChartCard = memo(({ chart, isInNavigation, onDelete, onView, onDetails, sh
         </div>
       )}
       
-      {/* Détails extraits */}
-      {showDetails && chart.isDownloaded && chart.extractedData && (
-        <>
-          {chart.extractedData.needsManualExtraction && (
-            <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning, sx.spacing.mt(3))}>
-              <AlertTriangle size={16} />
-              <div>
-                <p style={sx.text.sm}>
-                  <strong>Données à compléter</strong>
-                </p>
-                <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
-                  Cette carte a été importée manuellement. Utilisez le bouton <FileSearch size={12} style={{ display: 'inline' }} /> pour analyser le contenu ou <Edit2 size={12} style={{ display: 'inline' }} /> pour saisir/modifier les données.
-                </p>
-              </div>
-            </div>
-          )}
-          <ExtractedDataDetails data={chart.extractedData} />
-        </>
-      )}
-      
       {/* Modal d'édition des données */}
       {showEditor && (
         <VACDataEditor 
@@ -1335,88 +1346,10 @@ const ChartCard = memo(({ chart, isInNavigation, onDelete, onView, onDetails, sh
   );
 });
 
-// Composant pour afficher les données extraites
-const ExtractedDataDetails = memo(({ data }) => {
-  return (
-    <div style={sx.combine(
-      sx.spacing.mt(3),
-      sx.spacing.pt(3),
-      { borderTop: `1px solid ${sx.theme.colors.gray[200]}` }
-    )}>
-      <h5 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
-        📊 Données extraites
-      </h5>
-      
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-        {/* Informations générales */}
-        <div style={sx.components.card.base}>
-          <h6 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-            Informations terrain
-          </h6>
-          <div style={sx.combine(sx.text.sm, sx.text.secondary)}>
-            <p style={{ margin: '4px 0' }}>
-              Altitude : <strong>{data.airportElevation} ft</strong>
-            </p>
-            {data.circuitAltitude && (
-              <p style={{ margin: '4px 0' }}>
-                Tour de piste : <strong>{data.circuitAltitude} ft</strong>
-              </p>
-            )}
-            <p style={{ margin: '4px 0' }}>
-              Variation magnétique : <strong>{data.magneticVariation}°</strong>
-            </p>
-          </div>
-        </div>
-        
-        {/* Fréquences */}
-        <div style={sx.components.card.base}>
-          <h6 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-            Fréquences radio
-          </h6>
-          <div style={sx.combine(sx.text.sm, sx.text.secondary)}>
-            {Object.entries(data.frequencies).map(([type, freq]) => (
-              <p key={type} style={{ margin: '4px 0' }}>
-                {type.toUpperCase()} : <strong>{freq} MHz</strong>
-              </p>
-            ))}
-          </div>
-        </div>
-      </div>
-      
-      {/* Pistes */}
-      {data.runways.length > 0 && (
-        <div style={sx.combine(sx.spacing.mt(3))}>
-          <h6 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-            Caractéristiques des pistes
-          </h6>
-          <div style={{ display: 'grid', gap: '8px' }}>
-            {data.runways.map((rwy, idx) => (
-              <div key={idx} style={sx.combine(
-                sx.spacing.p(2),
-                sx.bg.gray,
-                sx.rounded.md,
-                sx.text.sm
-              )}>
-                <div style={sx.combine(sx.flex.between)}>
-                  <strong>Piste {rwy.identifier}</strong>
-                  <span style={sx.text.secondary}>QFU {rwy.qfu}°</span>
-                </div>
-                <div style={sx.combine(sx.text.secondary, sx.spacing.mt(1))}>
-                  {rwy.length} × {rwy.width} m • {rwy.surface}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-});
-
 // Export des display names
 VACModule.displayName = 'VACModule';
+VACModuleOld.displayName = 'VACModuleOld';
 StatCard.displayName = 'StatCard';
 ChartCard.displayName = 'ChartCard';
-ExtractedDataDetails.displayName = 'ExtractedDataDetails';
 
 export default VACModule;

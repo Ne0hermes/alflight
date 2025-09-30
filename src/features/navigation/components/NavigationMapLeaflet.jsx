@@ -5,7 +5,7 @@ const L = window.L || {};
 // CSS déjà chargé dans index.html
 import { MapPin, Plane, Navigation2, AlertCircle, Loader, Settings } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
-import { openAIPService } from '@services/openAIPService';
+import { aeroDataProvider } from '@core/data';
 import { useOpenAIPStore } from '@core/stores/openAIPStore';
 
 // Fix pour les icônes Leaflet par défaut si nécessaire
@@ -428,15 +428,7 @@ const NavigationMapLeaflet = ({ waypoints = [], onWaypointUpdate }) => {
     
     osmLayer.addTo(map);
     
-    // Ajouter la couche OpenAIP
-    const openAipLayer = L.tileLayer(openAIPService.getTileUrl('vfr'), {
-      attribution: '© OpenAIP',
-      opacity: 0.7,
-      maxZoom: 14,
-      minZoom: 5
-    });
-    
-    openAipLayer.addTo(map);
+    // Couche OpenAIP supprimée
     
     mapRef.current = map;
     

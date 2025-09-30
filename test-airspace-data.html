@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Structure Données Espaces Aériens</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px; 
+            background: #f3f4f6;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #111827;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .airspace-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 16px;
+            background: #f9fafb;
+        }
+        .airspace-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .airspace-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        .airspace-type {
+            font-size: 12px;
+            color: #fff;
+            background: #3b82f6;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .altitude-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 12px;
+        }
+        .altitude-box {
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+        .altitude-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+        .altitude-value {
+            font-size: 14px;
+            color: #111827;
+            font-weight: 500;
+        }
+        .altitude-raw {
+            font-size: 10px;
+            color: #9ca3af;
+            margin-top: 4px;
+            font-family: monospace;
+        }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+        .warning {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+        .loading {
+            text-align: center;
+            color: #6b7280;
+            padding: 40px;
+        }
+        pre {
+            background: #f3f4f6;
+            padding: 8px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛩️ Test Structure Données Espaces Aériens</h1>
+        
+        <div id="status" class="loading">Chargement des données...</div>
+        
+        <div id="content"></div>
+    </div>
+
+    <script type="module">
+        import { openAIPAirspacesService } from '/src/services/openAIPAirspacesService.js';
+        import { aeroDataProvider } from '/src/core/data/index.js';
+        
+        const statusDiv = document.getElementById('status');
+        const contentDiv = document.getElementById('content');
+        
+        async function testAirspaceData() {
+            try {
+                console.log('🔄 Test des données d\'espaces aériens...');
+                
+                // Test 1: Charger depuis OpenAIP
+                statusDiv.innerHTML = '<div class="warning">⏳ Chargement des données OpenAIP...</div>';
+                let openAIPData = [];
+                try {
+                    openAIPData = await openAIPAirspacesService.getFrenchAirspaces();
+                    console.log('✅ OpenAIP chargé:', openAIPData.length, 'espaces');
+                } catch (e) {
+                    console.warn('⚠️ OpenAIP non disponible:', e);
+                }
+                
+                // Test 2: Charger depuis aeroDataProvider
+                statusDiv.innerHTML = '<div class="warning">⏳ Chargement des données locales...</div>';
+                const localData = await aeroDataProvider.getAirspaces();
+                console.log('✅ Données locales:', localData.length, 'espaces');
+                
+                // Combiner les données
+                const allAirspaces = [...openAIPData, ...localData];
+                
+                // Analyser la structure
+                const structures = new Map();
+                const problematicAirspaces = [];
+                
+                allAirspaces.forEach(airspace => {
+                    const props = airspace.properties || airspace;
+                    
+                    // Vérifier les structures floor/ceiling
+                    const floorType = typeof props.floor;
+                    const ceilingType = typeof props.ceiling;
+                    const hasLowerLimit = !!props.lowerLimit;
+                    const hasUpperLimit = !!props.upperLimit;
+                    
+                    const key = `floor:${floorType}, ceiling:${ceilingType}, lower:${hasLowerLimit}, upper:${hasUpperLimit}`;
+                    
+                    if (!structures.has(key)) {
+                        structures.set(key, {
+                            count: 0,
+                            example: airspace,
+                            names: []
+                        });
+                    }
+                    
+                    structures.get(key).count++;
+                    structures.get(key).names.push(props.name || props.code_id);
+                    
+                    // Détecter les problèmes
+                    if (floorType === 'object' || ceilingType === 'object') {
+                        problematicAirspaces.push({
+                            name: props.name || props.code_id,
+                            type: props.type,
+                            floor: props.floor,
+                            ceiling: props.ceiling,
+                            lowerLimit: props.lowerLimit,
+                            upperLimit: props.upperLimit
+                        });
+                    }
+                });
+                
+                // Afficher les résultats
+                let html = '';
+                
+                // Résumé
+                html += `
+                    <div class="success">
+                        ✅ ${allAirspaces.length} espaces aériens analysés
+                    </div>
+                `;
+                
+                // Structures trouvées
+                html += '<h2>📊 Structures de données trouvées</h2>';
+                structures.forEach((info, key) => {
+                    html += `
+                        <div class="airspace-card">
+                            <div class="airspace-header">
+                                <span class="airspace-name">${key}</span>
+                                <span class="airspace-type">${info.count} espaces</span>
+                            </div>
+                            <p style="font-size: 12px; color: #6b7280;">
+                                Exemples: ${info.names.slice(0, 3).join(', ')}${info.names.length > 3 ? '...' : ''}
+                            </p>
+                            <pre>${JSON.stringify(extractAltitudeInfo(info.example), null, 2)}</pre>
+                        </div>
+                    `;
+                });
+                
+                // Espaces problématiques
+                if (problematicAirspaces.length > 0) {
+                    html += '<h2>⚠️ Espaces avec altitudes [object Object]</h2>';
+                    problematicAirspaces.slice(0, 5).forEach(airspace => {
+                        html += `
+                            <div class="airspace-card">
+                                <div class="airspace-header">
+                                    <span class="airspace-name">${airspace.name}</span>
+                                    <span class="airspace-type">${airspace.type}</span>
+                                </div>
+                                <div class="altitude-info">
+                                    <div class="altitude-box">
+                                        <div class="altitude-label">PLANCHER</div>
+                                        <div class="altitude-value">
+                                            ${formatAltitude(airspace.floor, airspace.lowerLimit)}
+                                        </div>
+                                        <div class="altitude-raw">
+                                            floor: ${JSON.stringify(airspace.floor)}
+                                            <br>lowerLimit: ${JSON.stringify(airspace.lowerLimit)}
+                                        </div>
+                                    </div>
+                                    <div class="altitude-box">
+                                        <div class="altitude-label">PLAFOND</div>
+                                        <div class="altitude-value">
+                                            ${formatAltitude(airspace.ceiling, airspace.upperLimit)}
+                                        </div>
+                                        <div class="altitude-raw">
+                                            ceiling: ${JSON.stringify(airspace.ceiling)}
+                                            <br>upperLimit: ${JSON.stringify(airspace.upperLimit)}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                contentDiv.innerHTML = html;
+                statusDiv.style.display = 'none';
+                
+            } catch (error) {
+                console.error('❌ Erreur:', error);
+                statusDiv.innerHTML = `<div class="error">Erreur: ${error.message}</div>`;
+            }
+        }
+        
+        function extractAltitudeInfo(airspace) {
+            const props = airspace.properties || airspace;
+            return {
+                name: props.name || props.code_id,
+                type: props.type,
+                floor: props.floor,
+                ceiling: props.ceiling,
+                lowerLimit: props.lowerLimit,
+                upperLimit: props.upperLimit,
+                floor_raw: props.floor_raw,
+                ceiling_raw: props.ceiling_raw
+            };
+        }
+        
+        function formatAltitude(altValue, limitObject) {
+            // Si c'est un objet limite
+            if (limitObject && typeof limitObject === 'object') {
+                const value = limitObject.value || limitObject.altitude;
+                const unit = limitObject.unit || limitObject.uom || 'FT';
+                const ref = limitObject.referenceDatum || limitObject.reference || 'MSL';
+                
+                if (value === 0 || value === 'GND' || ref === 'GND') {
+                    return 'SFC';
+                }
+                if (value === 999999 || value === 'UNLIMITED') {
+                    return 'UNLIMITED';
+                }
+                if (unit === 'FL' || ref === 'STD') {
+                    return `FL${String(value).padStart(3, '0')}`;
+                }
+                return `${value} ${unit} ${ref}`;
+            }
+            
+            // Si c'est une valeur simple
+            if (typeof altValue === 'number') {
+                if (altValue === 0) return 'SFC';
+                if (altValue === 999999) return 'UNLIMITED';
+                return `${altValue} ft`;
+            }
+            
+            // Si c'est une chaîne
+            if (typeof altValue === 'string') {
+                return altValue;
+            }
+            
+            // Si c'est un objet (bug)
+            if (typeof altValue === 'object' && altValue !== null) {
+                return '[object Object] - BUG!';
+            }
+            
+            return 'Indéfini';
+        }
+        
+        // Lancer le test
+        testAirspaceData();
+    </script>
+</body>
+</html>

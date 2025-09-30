@@ -1,15 +1,15 @@
 // src/features/checklist/ChecklistModule.jsx
 import React, { memo, useState, useEffect } from 'react';
-import { 
-  CheckSquare, 
-  Plus, 
-  Edit2, 
-  Trash2, 
-  Save, 
-  Download, 
-  Upload, 
-  Copy, 
-  ChevronDown, 
+import {
+  CheckSquare,
+  Plus,
+  Edit2,
+  Trash2,
+  Save,
+  Download,
+  Upload,
+  Copy,
+  ChevronDown,
   ChevronUp,
   AlertTriangle,
   Clock,
@@ -20,8 +20,9 @@ import {
 } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useChecklistStore } from '@core/stores/checklistStore';
+import AccordionButton from '@shared/components/AccordionButton';
 
-export const ChecklistModule = memo(() => {
+export const ChecklistModule = memo(({ wizardMode = false, config = {} }) => {
   const {
     checklists,
     activeChecklist,
@@ -39,6 +40,17 @@ export const ChecklistModule = memo(() => {
   const [showForm, setShowForm] = useState(false);
   const [editingChecklist, setEditingChecklist] = useState(null);
   const [expandedSections, setExpandedSections] = useState({});
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // Gérer le redimensionnement de la fenêtre
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleCreateChecklist = () => {
     setEditingChecklist(null);
@@ -117,13 +129,80 @@ export const ChecklistModule = memo(() => {
     <div style={sx.spacing.p(6)}>
       {/* En-tête */}
       <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
-        <div style={sx.combine(sx.flex.between, sx.spacing.mb(4))}>
+        {/* Titre */}
+        <div style={sx.combine(sx.spacing.mb(4))}>
           <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.flex.start)}>
             <CheckSquare size={20} />
             <span style={sx.spacing.ml(2)}>Gestion des Checklists</span>
           </h3>
-          <div style={sx.combine(sx.flex.row, sx.spacing.gap(2))}>
-            <label style={sx.combine(sx.components.button.base, sx.components.button.secondary, { cursor: 'pointer' })}>
+        </div>
+
+        {/* Contrôles organisés en colonnes responsive */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: '16px',
+          alignItems: isMobile ? 'stretch' : 'center',
+          flexWrap: 'wrap'
+        }}>
+          {/* Sélecteur de checklist */}
+          {checklists.length > 0 && (
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: '8px',
+              alignItems: isMobile ? 'stretch' : 'center',
+              flex: '1 1 auto',
+              minWidth: isMobile ? '100%' : '300px'
+            }}>
+              <label style={sx.combine(sx.text.sm, sx.text.secondary, {
+                whiteSpace: 'nowrap',
+                marginBottom: isMobile ? '4px' : '0'
+              })}>
+                Sélectionner :
+              </label>
+              <select
+                value={activeChecklist?.id || ''}
+                onChange={(e) => setActiveChecklist(e.target.value)}
+                style={sx.combine(
+                  sx.components.input.base,
+                  {
+                    padding: '8px 12px',
+                    flex: '1',
+                    fontSize: '14px',
+                    cursor: 'pointer'
+                  }
+                )}
+              >
+                <option value="">-- Choisir une checklist --</option>
+                {checklists.map(checklist => {
+                  const stats = getChecklistStats(checklist);
+                  return (
+                    <option key={checklist.id} value={checklist.id}>
+                      {checklist.name} {stats.percentage > 0 ? `(${stats.percentage}% complété)` : ''}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          )}
+
+          {/* Boutons d'action */}
+          <div style={{
+            display: 'flex',
+            gap: '8px',
+            flexWrap: 'wrap',
+            justifyContent: isMobile ? 'stretch' : 'flex-end'
+          }}>
+            <label style={sx.combine(
+              sx.components.button.base,
+              sx.components.button.secondary,
+              {
+                cursor: 'pointer',
+                flex: isMobile ? '1' : 'initial',
+                justifyContent: 'center'
+              }
+            )}>
               <input
                 type="file"
                 accept=".json"
@@ -131,65 +210,40 @@ export const ChecklistModule = memo(() => {
                 style={{ display: 'none' }}
               />
               <Upload size={16} />
-              Importer
+              <span style={{ marginLeft: '6px' }}>Importer</span>
             </label>
             <button
               onClick={handleExport}
-              style={sx.combine(sx.components.button.base, sx.components.button.secondary)}
+              style={sx.combine(
+                sx.components.button.base,
+                sx.components.button.secondary,
+                {
+                  flex: isMobile ? '1' : 'initial',
+                  justifyContent: 'center'
+                }
+              )}
               disabled={checklists.length === 0}
             >
               <Download size={16} />
-              Exporter
+              <span style={{ marginLeft: '6px' }}>Exporter</span>
             </button>
             <button
               onClick={handleCreateChecklist}
-              style={sx.combine(sx.components.button.base, sx.components.button.primary)}
+              style={sx.combine(
+                sx.components.button.base,
+                sx.components.button.primary,
+                {
+                  flex: isMobile ? '1 1 100%' : 'initial',
+                  justifyContent: 'center'
+                }
+              )}
             >
               <Plus size={16} />
-              Nouvelle checklist
+              <span style={{ marginLeft: '6px' }}>Nouvelle checklist</span>
             </button>
           </div>
         </div>
 
-        {/* Liste des checklists disponibles */}
-        {checklists.length > 0 && (
-          <div style={sx.combine(sx.flex.row, sx.spacing.gap(2), { flexWrap: 'wrap' })}>
-            {checklists.map(checklist => {
-              const stats = getChecklistStats(checklist);
-              const isActive = activeChecklist?.id === checklist.id;
-              
-              return (
-                <button
-                  key={checklist.id}
-                  onClick={() => setActiveChecklist(checklist.id)}
-                  style={sx.combine(
-                    sx.components.button.base,
-                    isActive ? sx.components.button.primary : sx.components.button.secondary,
-                    { 
-                      padding: '8px 12px',
-                      fontSize: '13px',
-                      position: 'relative'
-                    }
-                  )}
-                >
-                  <FileText size={14} style={{ marginRight: '4px' }} />
-                  {checklist.name}
-                  {stats.percentage > 0 && (
-                    <span style={{
-                      marginLeft: '8px',
-                      padding: '2px 6px',
-                      backgroundColor: isActive ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)',
-                      borderRadius: '10px',
-                      fontSize: '11px'
-                    }}>
-                      {stats.percentage}%
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
       </section>
 
       {/* Checklist active */}
@@ -207,7 +261,7 @@ export const ChecklistModule = memo(() => {
           />
         </section>
       ) : (
-        <div style={sx.combine(sx.components.card.base, sx.text.center, sx.spacing.p(8))}>
+        <div style={sx.combine(sx.components.card.base, sx.text.left, sx.spacing.p(8))}>
           <CheckSquare size={48} style={{ color: '#9ca3af', marginBottom: '16px' }} />
           <p style={sx.combine(sx.text.lg, sx.text.secondary, sx.spacing.mb(2))}>
             Aucune checklist sélectionnée
@@ -457,20 +511,29 @@ const ActiveChecklistView = memo(({
 
 // Composant pour le formulaire de création/édition
 const ChecklistForm = memo(({ checklist, onSave, onCancel }) => {
-  const [formData, setFormData] = useState({
-    name: checklist?.name || '',
-    description: checklist?.description || '',
-    category: checklist?.category || 'preflight',
-    sections: checklist?.sections || [
-      {
-        id: Date.now().toString(),
-        name: 'Section 1',
-        critical: false,
-        items: [
-          { id: Date.now().toString() + '-1', text: '', note: '', warning: false, checked: false }
+  const [formData, setFormData] = useState(() => {
+    // Créer une copie profonde pour éviter les problèmes d'objet non-extensible
+    const initialData = {
+      name: checklist?.name || '',
+      description: checklist?.description || '',
+      category: checklist?.category || 'preflight',
+      sections: checklist?.sections ? 
+        checklist.sections.map(section => ({
+          ...section,
+          items: section.items ? [...section.items] : []
+        })) : 
+        [
+          {
+            id: Date.now().toString(),
+            name: 'Section 1',
+            critical: false,
+            items: [
+              { id: Date.now().toString() + '-1', text: '', note: '', warning: false, checked: false }
+            ]
+          }
         ]
-      }
-    ]
+    };
+    return initialData;
   });
 
   const handleAddSection = () => {
@@ -496,13 +559,20 @@ const ChecklistForm = memo(({ checklist, onSave, onCancel }) => {
 
   const handleAddItem = (sectionIndex) => {
     setFormData(prev => {
-      const newSections = [...prev.sections];
-      newSections[sectionIndex].items.push({
-        id: Date.now().toString(),
-        text: '',
-        note: '',
-        warning: false,
-        checked: false
+      const newSections = prev.sections.map((section, index) => {
+        if (index === sectionIndex) {
+          return {
+            ...section,
+            items: [...section.items, {
+              id: Date.now().toString(),
+              text: '',
+              note: '',
+              warning: false,
+              checked: false
+            }]
+          };
+        }
+        return section;
       });
       return { ...prev, sections: newSections };
     });
@@ -510,24 +580,47 @@ const ChecklistForm = memo(({ checklist, onSave, onCancel }) => {
 
   const handleRemoveItem = (sectionIndex, itemIndex) => {
     setFormData(prev => {
-      const newSections = [...prev.sections];
-      newSections[sectionIndex].items = newSections[sectionIndex].items.filter((_, index) => index !== itemIndex);
+      const newSections = prev.sections.map((section, index) => {
+        if (index === sectionIndex) {
+          return {
+            ...section,
+            items: section.items.filter((_, idx) => idx !== itemIndex)
+          };
+        }
+        return section;
+      });
       return { ...prev, sections: newSections };
     });
   };
 
   const handleSectionChange = (sectionIndex, field, value) => {
     setFormData(prev => {
-      const newSections = [...prev.sections];
-      newSections[sectionIndex][field] = value;
+      const newSections = prev.sections.map((section, index) => {
+        if (index === sectionIndex) {
+          return { ...section, [field]: value };
+        }
+        return section;
+      });
       return { ...prev, sections: newSections };
     });
   };
 
   const handleItemChange = (sectionIndex, itemIndex, field, value) => {
     setFormData(prev => {
-      const newSections = [...prev.sections];
-      newSections[sectionIndex].items[itemIndex][field] = value;
+      const newSections = prev.sections.map((section, sIdx) => {
+        if (sIdx === sectionIndex) {
+          return {
+            ...section,
+            items: section.items.map((item, iIdx) => {
+              if (iIdx === itemIndex) {
+                return { ...item, [field]: value };
+              }
+              return item;
+            })
+          };
+        }
+        return section;
+      });
       return { ...prev, sections: newSections };
     });
   };

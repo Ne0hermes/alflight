@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Correction Espaces Aériens</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 10px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .success {
+            background: #dcfce7;
+            border: 1px solid #16a34a;
+            color: #14532d;
+        }
+        .warning {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #78350f;
+        }
+        .error {
+            background: #fee2e2;
+            border: 1px solid #dc2626;
+            color: #7f1d1d;
+        }
+        .info {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e3a8a;
+        }
+        .solution-list {
+            margin: 20px 0;
+        }
+        .solution-item {
+            background: #f9fafb;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border-left: 4px solid #3b82f6;
+        }
+        .solution-item h3 {
+            margin-top: 0;
+            color: #1e40af;
+        }
+        code {
+            background: #e5e7eb;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .test-results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        ul {
+            line-height: 1.8;
+        }
+        li {
+            margin: 5px 0;
+        }
+        .check {
+            color: #16a34a;
+            font-weight: bold;
+        }
+        .cross {
+            color: #dc2626;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛫 Correction du Problème des Espaces Aériens</h1>
+        
+        <div class="status warning">
+            <h2>⚠️ Problème Détecté</h2>
+            <p><strong>Erreur 404 avec l'API OpenAIP pour les espaces aériens</strong></p>
+            <p>Le proxy OpenAIP répond mais retourne une erreur 404 lors de la récupération des espaces aériens.</p>
+        </div>
+
+        <div class="status success">
+            <h2>✅ Solution Implémentée</h2>
+            <p>Un système de fallback robuste a été mis en place avec plusieurs niveaux de récupération des données :</p>
+        </div>
+
+        <div class="solution-list">
+            <div class="solution-item">
+                <h3>1. Tentative OpenAIP avec Timeout</h3>
+                <p>Le système tente d'abord de récupérer les données depuis l'API OpenAIP avec un timeout de 5 secondes.</p>
+                <ul>
+                    <li>URL du proxy : <code>http://localhost:3001/api/airspaces</code></li>
+                    <li>Timeout : 5 secondes pour éviter les blocages</li>
+                    <li>Si erreur 404 → bascule automatique sur les données locales</li>
+                </ul>
+            </div>
+
+            <div class="solution-item">
+                <h3>2. Fallback AIXM Local</h3>
+                <p>En cas d'échec OpenAIP, le système utilise les données AIXM locales pour créer des espaces aériens :</p>
+                <ul>
+                    <li>Extraction depuis <code>src/data/AIXM4.5_all_FR_OM_2025-09-04.xml</code></li>
+                    <li>Création automatique de CTR pour chaque aérodrome</li>
+                    <li>Association des fréquences depuis les données AIXM</li>
+                    <li>Rayon approximatif de 10km pour chaque CTR</li>
+                </ul>
+            </div>
+
+            <div class="solution-item">
+                <h3>3. Données Manuelles de Secours</h3>
+                <p>Si l'extraction AIXM échoue aussi, utilisation des données manuelles prédéfinies :</p>
+                <ul>
+                    <li>Fichier : <code>src/data/frenchAirspacesManual.js</code></li>
+                    <li>Espaces aériens principaux de France avec géométries approximatives</li>
+                    <li>CTR, TMA, zones R/P/D les plus importantes</li>
+                </ul>
+            </div>
+
+            <div class="solution-item">
+                <h3>4. Données Minimales</h3>
+                <p>En dernier recours, des données minimales sont fournies pour garantir le fonctionnement :</p>
+                <ul>
+                    <li>CTR Paris CDG basique</li>
+                    <li>Permet au moins de tester les fonctionnalités</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="status info">
+            <h2>📊 Résultat</h2>
+            <p>Le système est maintenant résilient et fonctionne même sans connexion à l'API OpenAIP :</p>
+            <ul>
+                <li><span class="check">✓</span> Affichage des espaces aériens sur la carte</li>
+                <li><span class="check">✓</span> Détection des espaces traversés selon l'altitude</li>
+                <li><span class="check">✓</span> Affichage des fréquences pour chaque espace</li>
+                <li><span class="check">✓</span> Filtrage par type et classe d'espace</li>
+                <li><span class="check">✓</span> Cache de 30 minutes pour optimiser les performances</li>
+            </ul>
+        </div>
+
+        <div class="test-results">
+            <h2>🧪 Tests de Validation</h2>
+            <p>Pour vérifier que tout fonctionne correctement :</p>
+            <ol>
+                <li>Ouvrez le module Navigation</li>
+                <li>Créez une route avec au moins 2 waypoints</li>
+                <li>Ajustez l'altitude planifiée (contrôle en haut de la carte)</li>
+                <li>Vérifiez que les espaces aériens s'affichent sur la carte</li>
+                <li>Observez l'indicateur des espaces traversés sous la carte</li>
+                <li>Les fréquences doivent s'afficher pour chaque espace traversé</li>
+            </ol>
+            
+            <p style="margin-top: 20px;"><strong>Messages console attendus :</strong></p>
+            <ul>
+                <li>Si OpenAIP fonctionne : <code>"✅ X espaces aériens OpenAIP chargés"</code></li>
+                <li>Si fallback AIXM : <code>"✅ X espaces aériens chargés depuis AIXM local"</code></li>
+                <li>Si fallback manuel : <code>"📂 X espaces aériens manuels chargés"</code></li>
+            </ul>
+        </div>
+
+        <div class="status info" style="margin-top: 30px;">
+            <h3>💡 Note pour le développement</h3>
+            <p>Pour réactiver l'API OpenAIP quand elle sera disponible :</p>
+            <ol>
+                <li>Vérifier que la clé API est valide dans <code>.env</code></li>
+                <li>Vérifier l'URL de l'API dans <code>server/openaip-airspaces-proxy.js</code></li>
+                <li>L'API semble avoir changé d'endpoint ou nécessiter une authentification différente</li>
+                <li>Documentation OpenAIP : <a href="https://www.openaip.net/api" target="_blank">https://www.openaip.net/api</a></li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Parser Rapide</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .section { margin: 20px 0; padding: 10px; background: #f5f5f5; }
+        .runway { background: #e8f4ff; padding: 10px; margin: 10px 0; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Test Parser AIXM - LFST</h1>
+    <div id="output">Chargement...</div>
+    
+    <script type="module">
+        import { aixmParser } from '/src/services/aixmParser.js';
+        
+        async function testParser() {
+            const output = document.getElementById('output');
+            
+            try {
+                console.log('Chargement des données...');
+                const data = await aixmParser.loadAndParse();
+                
+                // Trouver LFST
+                const lfst = data.find(ad => ad.icao === 'LFST');
+                
+                if (!lfst) {
+                    output.innerHTML = '<div class="error">LFST non trouvé!</div>';
+                    return;
+                }
+                
+                let html = '<div class="success">✅ LFST trouvé</div>';
+                
+                // Pistes
+                html += '<div class="section"><h2>Pistes</h2>';
+                
+                if (lfst.runways && lfst.runways.length > 0) {
+                    for (const runway of lfst.runways) {
+                        html += '<div class="runway">';
+                        html += `<h3>Piste ${runway.designation || runway.identifier}</h3>`;
+                        html += `<p>Dimensions: ${runway.length} × ${runway.width} m</p>`;
+                        html += `<p>Surface: ${runway.surface}</p>`;
+                        html += `<p>QFU: ${runway.qfu || runway.magneticBearing}°</p>`;
+                        
+                        html += '<h4>Distances déclarées:</h4>';
+                        html += '<ul>';
+                        html += `<li>TORA: <strong>${runway.tora !== null ? runway.tora + ' m' : '❌ NULL'}</strong></li>`;
+                        html += `<li>TODA: <strong>${runway.toda !== null ? runway.toda + ' m' : '❌ NULL'}</strong></li>`;
+                        html += `<li>ASDA: <strong>${runway.asda !== null ? runway.asda + ' m' : '❌ NULL'}</strong></li>`;
+                        html += `<li>LDA: <strong>${runway.lda !== null ? runway.lda + ' m' : '❌ NULL'}</strong></li>`;
+                        html += '</ul>';
+                        
+                        if (runway.ils) {
+                            html += `<p>ILS: CAT ${runway.ils.category}</p>`;
+                        }
+                        
+                        html += '</div>';
+                    }
+                } else {
+                    html += '<p class="error">Aucune piste trouvée</p>';
+                }
+                html += '</div>';
+                
+                // Points VFR
+                html += '<div class="section"><h2>Points VFR</h2>';
+                if (lfst.vfrPoints && lfst.vfrPoints.length > 0) {
+                    html += `<p class="success">✅ ${lfst.vfrPoints.length} points VFR trouvés</p>`;
+                    html += '<ul>';
+                    for (const point of lfst.vfrPoints) {
+                        html += `<li><strong>${point.name}</strong> - ${point.description}</li>`;
+                    }
+                    html += '</ul>';
+                } else {
+                    html += '<p class="error">Aucun point VFR trouvé</p>';
+                }
+                html += '</div>';
+                
+                output.innerHTML = html;
+                
+                // Log pour debug
+                console.log('LFST data:', lfst);
+                
+            } catch (error) {
+                output.innerHTML = `<div class="error">Erreur: ${error.message}</div>`;
+                console.error('Erreur:', error);
+            }
+        }
+        
+        // Lancer le test
+        testParser();
+    </script>
+</body>
+</html>

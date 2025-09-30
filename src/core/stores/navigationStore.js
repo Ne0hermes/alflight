@@ -92,9 +92,30 @@ export const useNavigationStore = create(
         speed: 100,
         heading: 0
       },
+      
+      // Altitudes par segment (clé: "waypointId1-waypointId2")
+      segmentAltitudes: {},
 
       // Actions
       setWaypoints: (waypoints) => set({ waypoints }),
+      
+      setSegmentAltitude: (segmentId, altitudeData) => {
+        set(state => ({
+          segmentAltitudes: {
+            ...state.segmentAltitudes,
+            [segmentId]: altitudeData
+          }
+        }));
+      },
+      
+      getSegmentAltitude: (segmentId) => {
+        const state = get();
+        return state.segmentAltitudes[segmentId] || {
+          startAlt: state.flightParams.altitude,
+          endAlt: state.flightParams.altitude,
+          type: 'level'
+        };
+      },
       
       setFlightType: (flightType) => set({ flightType }),
       

@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { Navigation, Fuel, MapPin, AlertCircle, Plane, Map as MapIcon, Settings, ChevronDown, ChevronUp } from 'lucide-react';
 import { useFuel } from '@core/contexts';
 import { useOpenAIPStore, openAIPSelectors } from '@core/stores/openAIPStore';
-import { openAIPService } from '@services/openAIPService';
+import { aeroDataProvider } from '@core/data';
 
 // Fonction de filtrage mémorisée pour éviter les recalculs
 const filterAirports = (airports, showPrivateAirfields) => {

@@ -1,0 +1,110 @@
+====================================
+CONFIGURATION AUTOMATIQUE GOOGLE SHEETS
+====================================
+
+⚠️ IMPORTANT: Cette configuration ne se fait qu'UNE SEULE FOIS !
+
+ÉTAPES À SUIVRE:
+
+1. Ouvrez votre Google Sheets:
+   https://docs.google.com/spreadsheets/d/1Y26_Zf7-jHPgpjWasubXpzQE-k0eMl0pHIMpg8OHw_k
+
+2. Allez dans: Extensions → Apps Script
+
+3. Supprimez tout le code existant et collez le code ci-dessous:
+
+====================================
+SCRIPT À COPIER:
+====================================
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+
+    // Ouvrir la feuille de calcul
+    let sheet = SpreadsheetApp.openById('1Y26_Zf7-jHPgpjWasubXpzQE-k0eMl0pHIMpg8OHw_k')
+                               .getSheetByName('Tracking');
+
+    // Si la feuille n'existe pas, la créer
+    if (!sheet) {
+      const spreadsheet = SpreadsheetApp.openById('1Y26_Zf7-jHPgpjWasubXpzQE-k0eMl0pHIMpg8OHw_k');
+      sheet = spreadsheet.insertSheet('Tracking');
+
+      // Ajouter les en-têtes
+      const headers = [
+        'Date/Heure',
+        'Action',
+        'Composant',
+        'Résumé',
+        'Détails',
+        'Fichiers',
+        'Statut',
+        'Auteur'
+      ];
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+      sheet.getRange(1, 1, 1, headers.length)
+        .setBackground('#4285f4')
+        .setFontColor('#ffffff')
+        .setFontWeight('bold');
+      sheet.setFrozenRows(1);
+    }
+
+    // Ajouter la ligne
+    sheet.appendRow(data.values);
+
+    return ContentService
+      .createTextOutput(JSON.stringify({'result': 'success'}))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch(error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({'result': 'error', 'error': error.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService
+    .createTextOutput('Service actif')
+    .setMimeType(ContentService.MimeType.TEXT);
+}
+
+====================================
+FIN DU SCRIPT
+====================================
+
+4. Cliquez sur "Déployer" → "Nouveau déploiement"
+
+5. Configuration du déploiement:
+   - Type: Application Web
+   - Description: Logger automatique Claude
+   - Exécuter en tant que: Moi
+   - Qui a accès: Tout le monde
+
+6. Cliquez sur "Déployer"
+
+7. COPIEZ L'URL qui apparaît (elle ressemble à: https://script.google.com/macros/s/AKfyc.../exec)
+
+8. Ouvrez le fichier: D:\Applicator\alflight\src\services\autoLogger.js
+
+9. À la ligne 10, remplacez l'URL par celle que vous avez copiée:
+   this.webhookUrl = 'COLLEZ_VOTRE_URL_ICI';
+
+10. Sauvegardez le fichier
+
+====================================
+C'EST TERMINÉ !
+====================================
+
+Le système est maintenant configuré et enverra AUTOMATIQUEMENT tous mes résumés vers votre Google Sheets.
+Aucune autre action n'est nécessaire. Tout est automatique.
+
+Les logs seront envoyés dans la feuille "Tracking" avec les colonnes:
+- Date/Heure
+- Action
+- Composant
+- Résumé
+- Détails
+- Fichiers modifiés
+- Statut
+- Auteur (Claude Assistant)

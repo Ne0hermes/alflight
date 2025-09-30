@@ -7,27 +7,62 @@ import { sx } from '@shared/styles/styleSystem';
 import { useAlternatesForFuel } from '@features/alternates';
 import { useFuelSync } from '@hooks/useFuelSync';
 import { DataField } from '@shared/components';
+import { useUnits } from '@hooks/useUnits';
+import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
 
 const FuelRow = memo(({ type, label, description, fuel, onChange, readonly = false, automatic = false, totalGal }) => {
+  const { format, convert, getSymbol, toStorage, getUnit } = useUnits();
+  const units = useUnitsWatcher(); // Force re-render on units change
   const GAL_TO_LTR = 3.78541;
   
   // Valeurs par défaut si fuel est undefined
   const safeFuel = fuel || { gal: 0, ltr: 0 };
   
-  const handleGalChange = (value) => {
-    const gal = parseFloat(value) || 0;
+  // Gérer les changements selon l'unité préférée
+  const handleFuelChange = (value) => {
+    const numValue = parseFloat(value) || 0;
+    const userUnit = getUnit('fuel');
+    
+    // Convertir vers les unités de stockage (L et gal)
+    let ltr, gal;
+    
+    if (userUnit === 'ltr') {
+      ltr = numValue;
+      gal = ltr / GAL_TO_LTR;
+    } else if (userUnit === 'gal') {
+      gal = numValue;
+      ltr = gal * GAL_TO_LTR;
+    } else if (userUnit === 'kg') {
+      // Densité du carburant: ~0.8 kg/L pour AVGAS
+      ltr = numValue / 0.8;
+      gal = ltr / GAL_TO_LTR;
+    } else if (userUnit === 'lbs') {
+      // 1 lbs = 0.453592 kg
+      const kg = numValue * 0.453592;
+      ltr = kg / 0.8;
+      gal = ltr / GAL_TO_LTR;
+    }
+    
     onChange({
       gal: gal,
-      ltr: gal * GAL_TO_LTR
+      ltr: ltr
     });
   };
   
-  const handleLtrChange = (value) => {
-    const ltr = parseFloat(value) || 0;
-    onChange({
-      gal: ltr / GAL_TO_LTR,
-      ltr: ltr
-    });
+  // Obtenir la valeur à afficher selon l'unité préférée
+  const getDisplayValue = () => {
+    const userUnit = getUnit('fuel');
+    
+    if (userUnit === 'ltr') {
+      return safeFuel.ltr.toFixed(1);
+    } else if (userUnit === 'gal') {
+      return safeFuel.gal.toFixed(1);
+    } else if (userUnit === 'kg') {
+      return (safeFuel.ltr * 0.8).toFixed(1);
+    } else if (userUnit === 'lbs') {
+      return (safeFuel.ltr * 0.8 * 2.20462).toFixed(1);
+    }
+    return safeFuel.ltr.toFixed(1);
   };
 
   return (
@@ -45,32 +80,23 @@ const FuelRow = memo(({ type, label, description, fuel, onChange, readonly = fal
         </div>
       </td>
       <td style={{ padding: '12px', textAlign: 'center' }}>
-        <input
-          type="number"
-          value={safeFuel.gal.toFixed(1)}
-          onChange={(e) => handleGalChange(e.target.value)}
-          disabled={readonly}
-          style={sx.combine(
-            sx.components.input.base,
-            { width: '80px', textAlign: 'center' },
-            readonly && { backgroundColor: sx.theme.colors.gray[100], cursor: 'not-allowed' }
-          )}
-          step="0.1"
-        />
-      </td>
-      <td style={{ padding: '12px', textAlign: 'center' }}>
-        <input
-          type="number"
-          value={safeFuel.ltr.toFixed(1)}
-          onChange={(e) => handleLtrChange(e.target.value)}
-          disabled={readonly}
-          style={sx.combine(
-            sx.components.input.base,
-            { width: '80px', textAlign: 'center' },
-            readonly && { backgroundColor: sx.theme.colors.gray[100], cursor: 'not-allowed' }
-          )}
-          step="0.1"
-        />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+          <input
+            type="number"
+            value={getDisplayValue()}
+            onChange={(e) => handleFuelChange(e.target.value)}
+            disabled={readonly}
+            style={sx.combine(
+              sx.components.input.base,
+              { width: '100px', textAlign: 'center' },
+              readonly && { backgroundColor: sx.theme.colors.gray[100], cursor: 'not-allowed' }
+            )}
+            step="0.1"
+          />
+          <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>
+            {getSymbol('fuel')}
+          </span>
+        </div>
       </td>
       <td style={{ padding: '12px', textAlign: 'center' }}>
         <span style={sx.combine(sx.text.sm, sx.text.bold)}>
@@ -81,8 +107,10 @@ const FuelRow = memo(({ type, label, description, fuel, onChange, readonly = fal
   );
 });
 
-export const FuelModule = memo(() => {
+export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
   useFuelSync();
+  const { format, convert, getSymbol, toStorage, getUnit } = useUnits();
+  const units = useUnitsWatcher(); // Force re-render on units change
   const { selectedAircraft } = useAircraft();
   const { navigationResults, flightType } = useNavigation();
   const { fuelData, setFuelData, fobFuel, setFobFuel, calculateTotal, isFobSufficient } = useFuel();
@@ -329,8 +357,7 @@ export const FuelModule = memo(() => {
           <thead>
             <tr style={{ borderBottom: `2px solid ${sx.theme.colors.gray[300]}` }}>
               <th style={{ padding: '12px', textAlign: 'left' }}>Type</th>
-              <th style={{ padding: '12px', textAlign: 'center' }}>Gallons</th>
-              <th style={{ padding: '12px', textAlign: 'center' }}>Litres</th>
+              <th style={{ padding: '12px', textAlign: 'center' }}>Quantité</th>
               <th style={{ padding: '12px', textAlign: 'center' }}>%</th>
             </tr>
           </thead>
@@ -360,10 +387,21 @@ export const FuelModule = memo(() => {
             <tr style={{ borderTop: `2px solid ${sx.theme.colors.gray[700]}` }}>
               <td style={{ padding: '12px', fontWeight: 'bold' }}>TOTAL</td>
               <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '18px' }}>
-                {safeCalculateTotal('gal').toFixed(1)}
-              </td>
-              <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '18px' }}>
-                {safeCalculateTotal('ltr').toFixed(1)}
+                {(() => {
+                  const totalLtr = safeCalculateTotal('ltr');
+                  const userUnit = getUnit('fuel');
+                  
+                  if (userUnit === 'ltr') {
+                    return `${totalLtr.toFixed(1)} ${getSymbol('fuel')}`;
+                  } else if (userUnit === 'gal') {
+                    return `${safeCalculateTotal('gal').toFixed(1)} ${getSymbol('fuel')}`;
+                  } else if (userUnit === 'kg') {
+                    return `${(totalLtr * 0.8).toFixed(1)} ${getSymbol('fuel')}`;
+                  } else if (userUnit === 'lbs') {
+                    return `${(totalLtr * 0.8 * 2.20462).toFixed(1)} ${getSymbol('fuel')}`;
+                  }
+                  return `${totalLtr.toFixed(1)} L`;
+                })()}
               </td>
               <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold' }}>
                 100%

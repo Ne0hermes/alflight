@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { AlertCircle, Radio, ChevronDown, ChevronUp, Plane, AlertTriangle, Info } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
-import { openAIPService } from '@services/openAIPService';
+import { aeroDataProvider } from '@core/data';
 import { calculateDistance } from '@utils/navigationCalculations';
 
 // Types d'espaces aériens avec leurs caractéristiques
@@ -178,17 +178,35 @@ const getAirspacesBetweenWaypoints = (waypoint1, waypoint2, airspaces) => {
   
   // Vérifier chaque espace aérien
   airspaces.forEach(airspace => {
-    if (!airspace.geometry?.coordinates) return;
+    // Gérer les différentes structures de données
+    let geometry = airspace.geometry;
+    let properties = airspace.properties || airspace;
+    
+    // Si pas de géométrie, essayer de la reconstituer
+    if (!geometry && airspace.coordinates) {
+      geometry = {
+        type: airspace.type || 'Polygon',
+        coordinates: airspace.coordinates
+      };
+    }
+    
+    if (!geometry?.coordinates) {
+      // Debug: afficher les espaces sans géométrie
+      if (properties.name && properties.name !== 'unknown') {
+        console.warn(`⚠️ Espace aérien sans géométrie: ${properties.name || properties.code_id}`);
+      }
+      return;
+    }
     
     try {
       let intersects = false;
       
-      if (airspace.geometry.type === 'Polygon') {
-        const coords = airspace.geometry.coordinates[0];
+      if (geometry.type === 'Polygon') {
+        const coords = geometry.coordinates[0];
         intersects = doesSegmentIntersectPolygon(waypoint1, waypoint2, coords);
-      } else if (airspace.geometry.type === 'MultiPolygon') {
+      } else if (geometry.type === 'MultiPolygon') {
         // Pour MultiPolygon, vérifier chaque polygone
-        for (const polygon of airspace.geometry.coordinates) {
+        for (const polygon of geometry.coordinates) {
           if (doesSegmentIntersectPolygon(waypoint1, waypoint2, polygon[0])) {
             intersects = true;
             break;
@@ -197,10 +215,26 @@ const getAirspacesBetweenWaypoints = (waypoint1, waypoint2, airspaces) => {
       }
       
       if (intersects) {
-        traversed.push(airspace);
+        // Enrichir avec les propriétés normalisées
+        traversed.push({
+          ...airspace,
+          geometry: geometry,
+          properties: properties,
+          // Assurer que les limites sont bien structurées
+          lowerLimit: properties.lowerLimit || {
+            value: properties.floor || 0,
+            unit: 'FT',
+            referenceDatum: properties.floor === 0 ? 'GND' : 'MSL'
+          },
+          upperLimit: properties.upperLimit || {
+            value: properties.ceiling || 999999,
+            unit: 'FT',
+            referenceDatum: properties.ceiling === 999999 ? 'MSL' : 'MSL'
+          }
+        });
       }
     } catch (e) {
-      console.warn('Erreur lors de la vérification de l\'intersection:', e);
+      console.warn('Erreur lors de la vérification de l\'intersection:', e, airspace);
     }
   });
   
@@ -239,12 +273,40 @@ export const AirspaceAnalyzer = ({ waypoints, plannedAltitude, onAltitudeChange,
         console.log('📍 Chargement des espaces aériens pour la zone de vol');
         console.log('📐 Bounding box:', bounds);
         
-        // Appeler le service OpenAIP avec le code pays
-        const result = await openAIPService.getAirspaces('FR');
+        // Appeler le provider de données avec le code pays
+        const result = await aeroDataProvider.getAirspaces({ country: 'FR' });
         
         if (result && Array.isArray(result)) {
+          // Normaliser les données pour gérer différentes structures
+          const normalizedAirspaces = result.map(airspace => {
+            // Si c'est déjà une structure GeoJSON
+            if (airspace.geometry && airspace.properties) {
+              return airspace;
+            }
+            
+            // Si c'est une structure plate, la convertir
+            return {
+              type: 'Feature',
+              geometry: airspace.geometry || {
+                type: airspace.type || 'Polygon',
+                coordinates: airspace.coordinates
+              },
+              properties: airspace.properties || {
+                name: airspace.name,
+                type: airspace.airspaceType || airspace.type,
+                class: airspace.class,
+                floor: airspace.floor,
+                ceiling: airspace.ceiling,
+                floor_raw: airspace.floor_raw,
+                ceiling_raw: airspace.ceiling_raw,
+                lowerLimit: airspace.lowerLimit,
+                upperLimit: airspace.upperLimit
+              }
+            };
+          });
+          
           // Filtrer les espaces dans la zone de vol (avec marge)
-          const relevantAirspaces = result.filter(airspace => {
+          const relevantAirspaces = normalizedAirspaces.filter(airspace => {
             if (!airspace.geometry?.coordinates) return false;
             
             try {
@@ -306,6 +368,18 @@ export const AirspaceAnalyzer = ({ waypoints, plannedAltitude, onAltitudeChange,
     const validWaypoints = waypoints.filter(w => w.lat && w.lon);
     
     console.log(`🔍 Analyse de ${validWaypoints.length} waypoints sur ${airspaces.length} espaces aériens`);
+    
+    // Debug: vérifier la structure des premiers espaces
+    if (airspaces.length > 0) {
+      const sample = airspaces[0];
+      console.log('📐 Structure échantillon espace aérien:', {
+        hasGeometry: !!sample.geometry,
+        hasProperties: !!sample.properties,
+        hasCoordinates: !!sample.geometry?.coordinates || !!sample.coordinates,
+        type: sample.geometry?.type || sample.type,
+        name: sample.properties?.name || sample.name
+      });
+    }
     
     // Analyser chaque segment de route
     for (let i = 0; i < validWaypoints.length - 1; i++) {

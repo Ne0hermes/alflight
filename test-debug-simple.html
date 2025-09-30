@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Simple</title>
+</head>
+<body>
+    <h1>Debug Simple - Voir Console</h1>
+    <div id="output">Chargement...</div>
+    
+    <script type="module">
+        import { aixmParser } from '/src/services/aixmParser.js';
+        
+        async function test() {
+            console.log('=== TEST DEBUG SIMPLE ===');
+            
+            try {
+                const data = await aixmParser.loadAndParse();
+                const lfst = data.find(ad => ad.icao === 'LFST');
+                
+                if (!lfst) {
+                    document.getElementById('output').innerHTML = 'LFST non trouvé!';
+                    return;
+                }
+                
+                console.log('LFST trouvé:', lfst);
+                
+                let html = '<h2>LFST - ' + lfst.name + '</h2>';
+                
+                if (lfst.runways && lfst.runways.length > 0) {
+                    html += '<h3>Pistes: ' + lfst.runways.length + '</h3>';
+                    
+                    for (let i = 0; i < lfst.runways.length; i++) {
+                        const rwy = lfst.runways[i];
+                        console.log('Piste ' + i + ' (' + rwy.designation + '):', rwy);
+                        
+                        html += '<div style="border: 1px solid #ccc; padding: 10px; margin: 10px 0;">';
+                        html += '<h4>Piste ' + rwy.designation + '</h4>';
+                        html += '<p>TORA: ' + rwy.tora + ' | TODA: ' + rwy.toda + ' | ASDA: ' + rwy.asda + ' | LDA: ' + rwy.lda + '</p>';
+                        
+                        if (rwy.ils) {
+                            html += '<p>ILS: CAT ' + rwy.ils.category + ' - ' + rwy.ils.frequency + ' MHz - ' + rwy.ils.identifier + '</p>';
+                        } else {
+                            html += '<p>ILS: AUCUN</p>';
+                        }
+                        
+                        html += '</div>';
+                    }
+                } else {
+                    html += '<p>Aucune piste</p>';
+                }
+                
+                document.getElementById('output').innerHTML = html;
+                
+            } catch (error) {
+                console.error('Erreur:', error);
+                document.getElementById('output').innerHTML = 'Erreur: ' + error.message;
+            }
+        }
+        
+        test();
+    </script>
+</body>
+</html>

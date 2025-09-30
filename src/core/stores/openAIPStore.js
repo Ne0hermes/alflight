@@ -1,16 +1,14 @@
-// src/core/stores/openAIPStore.js
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { openAIPService } from '@services/openAIPService';
+import { aeroDataProvider } from '@core/data';
 import { useVACStore } from './vacStore';
 
 export const useOpenAIPStore = create(
   immer((set, get) => ({
-    // État
     airports: [],
     airspaces: [],
     navaids: [],
-    reportingPoints: {}, // { [icao]: [...points] }
+    reportingPoints: {},
     loading: {
       airports: false,
       airspaces: false,
@@ -26,17 +24,21 @@ export const useOpenAIPStore = create(
     searchQuery: '',
     selectedDeparture: null,
     selectedArrival: null,
-    coordinateValidation: {}, // { [pointId]: { isValid, diff } }
-    
-    // Actions
+    coordinateValidation: {},
     loadAirports: async (countryCode = 'FR') => {
-      // Vérifier si les données sont déjà chargées et récentes (cache de 10 minutes)
+      if (!aeroDataProvider.isAvailable()) {
+        set(state => {
+          state.airports = [];
+          state.errors.airports = 'Service de données aéronautiques non disponible';
+          state.loading.airports = false;
+        });
+        return;
+      }
       const state = get();
       const lastLoad = state.lastLoadTime?.airports;
-      const cacheValid = lastLoad && Date.now() - lastLoad < 10 * 60 * 1000; // 10 minutes
+      const cacheValid = lastLoad && Date.now() - lastLoad < 10 * 60 * 1000;
       
       if (state.airports.length > 0 && cacheValid) {
-        console.log('🗄️ Utilisation du cache pour les aérodromes');
         return;
       }
       
@@ -46,8 +48,7 @@ export const useOpenAIPStore = create(
       });
       
       try {
-        console.log('🛩️ Chargement des aérodromes OpenAIP...');
-        const airports = await openAIPService.getAirports(countryCode);
+        const airports = await aeroDataProvider.getAirfields({ country: countryCode });
         
         set(state => {
           state.airports = airports;
@@ -55,10 +56,6 @@ export const useOpenAIPStore = create(
           if (!state.lastLoadTime) state.lastLoadTime = {};
           state.lastLoadTime.airports = Date.now();
         });
-        
-        console.log(`✅ ${airports.length} aérodromes chargés`);
-        
-        // Charger aussi tous les points de report
         get().loadAllReportingPoints(countryCode);
         
       } catch (error) {
@@ -70,13 +67,19 @@ export const useOpenAIPStore = create(
     },
     
     loadAirspaces: async (countryCode = 'FR') => {
-      // Vérifier le cache
+      if (!aeroDataProvider.isAvailable()) {
+        set(state => {
+          state.airspaces = [];
+          state.errors.airspaces = 'Service de données aéronautiques non disponible';
+          state.loading.airspaces = false;
+        });
+        return;
+      }
       const state = get();
       const lastLoad = state.lastLoadTime?.airspaces;
       const cacheValid = lastLoad && Date.now() - lastLoad < 10 * 60 * 1000;
       
       if (state.airspaces.length > 0 && cacheValid) {
-        console.log('🗄️ Utilisation du cache pour les espaces aériens');
         return;
       }
       
@@ -86,8 +89,7 @@ export const useOpenAIPStore = create(
       });
       
       try {
-        console.log('🔶 Chargement des espaces aériens OpenAIP...');
-        const airspaces = await openAIPService.getAirspaces(countryCode);
+        const airspaces = await aeroDataProvider.getAirspaces({ country: countryCode });
         
         set(state => {
           state.airspaces = airspaces;
@@ -96,10 +98,7 @@ export const useOpenAIPStore = create(
           state.lastLoadTime.airspaces = Date.now();
         });
         
-        console.log(`✅ ${airspaces.length} espaces aériens chargés`);
-        
       } catch (error) {
-        console.warn('Erreur chargement espaces aériens:', error);
         set(state => {
           state.errors.airspaces = error.message;
           state.loading.airspaces = false;
@@ -108,13 +107,19 @@ export const useOpenAIPStore = create(
     },
     
     loadNavaids: async (countryCode = 'FR') => {
-      // Vérifier le cache
+      if (!aeroDataProvider.isAvailable()) {
+        set(state => {
+          state.navaids = [];
+          state.errors.navaids = 'Service de données aéronautiques non disponible';
+          state.loading.navaids = false;
+        });
+        return;
+      }
       const state = get();
       const lastLoad = state.lastLoadTime?.navaids;
       const cacheValid = lastLoad && Date.now() - lastLoad < 10 * 60 * 1000;
       
       if (state.navaids.length > 0 && cacheValid) {
-        console.log('🗄️ Utilisation du cache pour les balises');
         return;
       }
       
@@ -124,8 +129,7 @@ export const useOpenAIPStore = create(
       });
       
       try {
-        console.log('📡 Chargement des balises de navigation OpenAIP...');
-        const navaids = await openAIPService.getNavaids(countryCode);
+        const navaids = await aeroDataProvider.getNavaids({ country: countryCode });
         
         set(state => {
           state.navaids = navaids;
@@ -134,10 +138,7 @@ export const useOpenAIPStore = create(
           state.lastLoadTime.navaids = Date.now();
         });
         
-        console.log(`✅ ${navaids.length} balises de navigation chargées`);
-        
       } catch (error) {
-        console.warn('Erreur chargement balises:', error);
         set(state => {
           state.errors.navaids = error.message;
           state.loading.navaids = false;
@@ -153,7 +154,19 @@ export const useOpenAIPStore = create(
       
       try {
         console.log('📍 Chargement des points de report VFR...');
-        const pointsByAirport = await openAIPService.getAllReportingPoints(countryCode);
+        // Pour l'instant, on charge point par point pour chaque aérodrome
+        const airports = get().airports;
+        const pointsByAirport = {};
+        for (const airport of airports) {
+          try {
+            const points = await aeroDataProvider.getReportingPoints(airport.icao);
+            if (points && points.length > 0) {
+              pointsByAirport[airport.icao] = points;
+            }
+          } catch (err) {
+            console.warn(`Erreur chargement points pour ${airport.icao}:`, err);
+          }
+        }
         
         set(state => {
           state.reportingPoints = pointsByAirport;
@@ -161,9 +174,6 @@ export const useOpenAIPStore = create(
         });
         
         const totalPoints = Object.values(pointsByAirport).reduce((sum, points) => sum + points.length, 0);
-        console.log(`✅ ${totalPoints} points de report chargés pour ${Object.keys(pointsByAirport).length} aérodromes`);
-        
-        // Valider automatiquement avec les données VAC
         get().validateAllPoints();
         
       } catch (error) {
@@ -185,8 +195,6 @@ export const useOpenAIPStore = create(
     setSearchQuery: (query) => set(state => {
       state.searchQuery = query;
     }),
-    
-    // Validation des coordonnées avec VAC
     validateAllPoints: () => {
       const { reportingPoints } = get();
       const vacCharts = useVACStore.getState().charts;
@@ -196,18 +204,21 @@ export const useOpenAIPStore = create(
         const vacChart = vacCharts[icao];
         
         if (vacChart?.isDownloaded && vacChart.extractedData?.reportingPoints) {
-          // Comparer avec les points VAC
           points.forEach(openAipPoint => {
             const vacPoint = vacChart.extractedData.reportingPoints.find(
               vp => vp.code === openAipPoint.code || vp.name === openAipPoint.name
             );
             
             if (vacPoint) {
-              const comparison = openAIPService.compareCoordinates(
-                openAipPoint.coordinates,
-                vacPoint.coordinates,
-                0.001 // Tolérance de 0.001° (~110m)
-              );
+              const latDiff = Math.abs(openAipPoint.coordinates.lat - vacPoint.coordinates.lat);
+              const lonDiff = Math.abs(openAipPoint.coordinates.lon - vacPoint.coordinates.lon);
+              const tolerance = 0.001;
+              const comparison = {
+                isMatch: latDiff <= tolerance && lonDiff <= tolerance,
+                distance: Math.sqrt(latDiff * latDiff + lonDiff * lonDiff) * 111000, // Approximation en mètres
+                latDiff,
+                lonDiff
+              };
               
               validationResults[`${icao}_${openAipPoint.code}`] = {
                 isValid: comparison.isMatch,
@@ -226,8 +237,6 @@ export const useOpenAIPStore = create(
         state.coordinateValidation = validationResults;
       });
     },
-    
-    // Sélecteurs
     getAirportByIcao: (icao) => {
       return get().airports.find(a => a.icao === icao);
     },
@@ -254,8 +263,6 @@ export const useOpenAIPStore = create(
       
       if (!vacChart) return { status: 'not_available', icon: '❓' };
       if (!vacChart.isDownloaded) return { status: 'not_downloaded', icon: '⚠️' };
-      
-      // Vérifier s'il y a des divergences de coordonnées
       const validation = get().coordinateValidation;
       const airportValidations = Object.entries(validation)
         .filter(([key]) => key.startsWith(icao))
@@ -269,8 +276,6 @@ export const useOpenAIPStore = create(
       
       return { status: 'ok', icon: '✅' };
     },
-    
-    // Recherche de l'aérodrome le plus proche
     getNearestAirport: (coordinates) => {
       const { airports } = get();
       if (!airports.length) return null;
@@ -279,10 +284,15 @@ export const useOpenAIPStore = create(
       let minDistance = Infinity;
       
       airports.forEach(airport => {
-        const distance = openAIPService.calculateDistance(
-          coordinates,
-          airport.coordinates
-        );
+        const R = 6371;
+        const dLat = (airport.coordinates.lat - coordinates.lat) * Math.PI / 180;
+        const dLon = (airport.coordinates.lon - coordinates.lon) * Math.PI / 180;
+        const a = 
+          Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(coordinates.lat * Math.PI / 180) * Math.cos(airport.coordinates.lat * Math.PI / 180) *
+          Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const distance = R * c;
         
         if (distance < minDistance) {
           minDistance = distance;
@@ -292,8 +302,6 @@ export const useOpenAIPStore = create(
       
       return { airport: nearest, distance: minDistance };
     },
-    
-    // Export/Import pour backup
     exportData: () => {
       const { airports, reportingPoints } = get();
       return {
@@ -310,15 +318,12 @@ export const useOpenAIPStore = create(
           state.airports = data.airports || [];
           state.reportingPoints = data.reportingPoints || {};
         });
-        
-        // Revalider avec les VAC actuelles
         get().validateAllPoints();
       }
     }
   }))
 );
 
-// Sélecteurs optimisés
 export const openAIPSelectors = {
   useAirports: () => useOpenAIPStore(state => state.airports),
   useFilteredAirports: () => useOpenAIPStore(state => state.getFilteredAirports()),

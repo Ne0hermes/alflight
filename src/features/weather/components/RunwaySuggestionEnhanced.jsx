@@ -1,8 +1,9 @@
 import React, { memo, useState, useEffect } from 'react';
 import { Plane, Wind, CheckCircle, AlertTriangle, Info, ChevronDown, ChevronUp, FileText, TrendingUp, TrendingDown, Navigation } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
-import { openAIPService } from '@services/openAIPService';
+import { aeroDataProvider } from '@core/data';
 import { useVACStore } from '@core/stores/vacStore';
+import { getFallbackRunways, getFallbackAirport } from '@data/fallbackRunways';
 
 // Calcul de la différence d'angle entre deux directions
 const calculateAngleDifference = (heading1, heading2) => {
@@ -94,11 +95,27 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, showCompact = false 
             dataSource: 'vac'
           });
         } else {
-          // Sinon essayer l'API OpenAIP
-          const airportData = await openAIPService.getAirportDetails(icao);
-          if (airportData) {
+          // Sinon essayer le provider de données
+          const airports = await aeroDataProvider.getAirfields({ icao });
+          const airportData = airports.find(a => a.icao === icao);
+          
+          if (airportData && airportData.runways && airportData.runways.length > 0) {
             setAirport(airportData);
-            setRunways(airportData.runways || []);
+            setRunways(airportData.runways);
+          } else {
+            // En dernier recours, utiliser les données de secours
+            const fallbackRunways = getFallbackRunways(icao);
+            const fallbackAirport = getFallbackAirport(icao);
+            
+            if (fallbackRunways) {
+              console.log(`Utilisation des données de secours pour ${icao}`);
+              setRunways(fallbackRunways);
+              setAirport(fallbackAirport || { icao, name: icao, dataSource: 'fallback' });
+            } else if (airportData) {
+              // Si on a l'aérodrome mais pas les pistes
+              setAirport(airportData);
+              setRunways([]);
+            }
           }
         }
       } catch (error) {
@@ -134,66 +151,121 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, showCompact = false 
   }
   
   // Analyser chaque piste par rapport au vent
-  const analyzedRunways = runways.flatMap(runway => {
-    const results = [];
-    
-    // Analyser chaque seuil de la piste
-    if (runway.le_ident || runway.identifier) {
-      const ident = runway.le_ident || runway.identifier?.split('/')[0];
-      const heading = runway.le_heading || runway.qfu || parseInt(ident?.replace(/[LRC]/, '')) * 10;
+  const analyzedRunways = [];
+  const processedRunways = new Set(); // Pour éviter les doublons
+  
+  runways.forEach(runway => {
+    // Traiter le format avec identifier "05/23"
+    if (runway.identifier && runway.identifier.includes('/')) {
+      const [baseIdent, oppositeIdent] = runway.identifier.split('/');
+      const runwayKey = runway.identifier;
       
-      if (ident && heading !== undefined) {
-        const headwind = calculateHeadwindComponent(wind.direction, wind.speed, heading);
-        const crosswind = calculateCrosswindComponent(wind.direction, wind.speed, heading);
-        const crosswindSide = getCrosswindSide(wind.direction, heading);
-        const angleDiff = calculateAngleDifference(wind.direction, heading);
+      if (!processedRunways.has(runwayKey)) {
+        processedRunways.add(runwayKey);
         
-        results.push({
-          ident,
-          heading,
-          headwind: Math.round(headwind),
-          crosswind: Math.round(crosswind),
-          crosswindSide,
-          angleDiff: Math.round(angleDiff),
-          runway,
-          isOptimal: angleDiff <= 30, // Vent de face à +/- 30°
-          isGood: angleDiff <= 45, // Bon jusqu'à 45°
-          isAcceptable: angleDiff <= 90, // Acceptable jusqu'à 90°
-          isTailwind: headwind < 0,
-          score: (headwind * 2) - crosswind // Score pour classement
-        });
+        // Analyser le premier seuil
+        const baseHeading = runway.qfu || parseInt(baseIdent.replace(/[LRC]/, '')) * 10;
+        if (baseIdent && baseHeading !== undefined) {
+          const headwind = calculateHeadwindComponent(wind.direction, wind.speed, baseHeading);
+          const crosswind = calculateCrosswindComponent(wind.direction, wind.speed, baseHeading);
+          const crosswindSide = getCrosswindSide(wind.direction, baseHeading);
+          const angleDiff = calculateAngleDifference(wind.direction, baseHeading);
+          
+          analyzedRunways.push({
+            ident: baseIdent,
+            heading: baseHeading,
+            headwind: Math.round(headwind),
+            crosswind: Math.round(crosswind),
+            crosswindSide,
+            angleDiff: Math.round(angleDiff),
+            runway,
+            isOptimal: angleDiff <= 30,
+            isGood: angleDiff <= 45,
+            isAcceptable: angleDiff <= 90,
+            isTailwind: headwind < 0,
+            score: (headwind * 2) - crosswind
+          });
+        }
+        
+        // Analyser le seuil opposé
+        const oppositeHeading = (baseHeading + 180) % 360;
+        if (oppositeIdent && oppositeHeading !== undefined) {
+          const headwind = calculateHeadwindComponent(wind.direction, wind.speed, oppositeHeading);
+          const crosswind = calculateCrosswindComponent(wind.direction, wind.speed, oppositeHeading);
+          const crosswindSide = getCrosswindSide(wind.direction, oppositeHeading);
+          const angleDiff = calculateAngleDifference(wind.direction, oppositeHeading);
+          
+          analyzedRunways.push({
+            ident: oppositeIdent,
+            heading: oppositeHeading,
+            headwind: Math.round(headwind),
+            crosswind: Math.round(crosswind),
+            crosswindSide,
+            angleDiff: Math.round(angleDiff),
+            runway,
+            isOptimal: angleDiff <= 30,
+            isGood: angleDiff <= 45,
+            isAcceptable: angleDiff <= 90,
+            isTailwind: headwind < 0,
+            score: (headwind * 2) - crosswind
+          });
+        }
       }
     }
-    
-    if (runway.he_ident || (runway.identifier && runway.identifier.includes('/'))) {
-      const ident = runway.he_ident || runway.identifier?.split('/')[1];
-      const heading = runway.he_heading || 
-                     ((runway.qfu || parseInt(ident?.replace(/[LRC]/, '')) * 10) + 180) % 360;
+    // Traiter le format avec le_ident et he_ident séparés
+    else if (runway.le_ident || runway.he_ident) {
+      const runwayKey = `${runway.le_ident || ''}/${runway.he_ident || ''}`;
       
-      if (ident && heading !== undefined) {
-        const headwind = calculateHeadwindComponent(wind.direction, wind.speed, heading);
-        const crosswind = calculateCrosswindComponent(wind.direction, wind.speed, heading);
-        const crosswindSide = getCrosswindSide(wind.direction, heading);
-        const angleDiff = calculateAngleDifference(wind.direction, heading);
+      if (!processedRunways.has(runwayKey)) {
+        processedRunways.add(runwayKey);
         
-        results.push({
-          ident,
-          heading,
-          headwind: Math.round(headwind),
-          crosswind: Math.round(crosswind),
-          crosswindSide,
-          angleDiff: Math.round(angleDiff),
-          runway,
-          isOptimal: angleDiff <= 30,
-          isGood: angleDiff <= 45,
-          isAcceptable: angleDiff <= 90,
-          isTailwind: headwind < 0,
-          score: (headwind * 2) - crosswind
-        });
+        // Analyser le seuil "le" (lower end)
+        if (runway.le_ident && runway.le_heading !== undefined) {
+          const headwind = calculateHeadwindComponent(wind.direction, wind.speed, runway.le_heading);
+          const crosswind = calculateCrosswindComponent(wind.direction, wind.speed, runway.le_heading);
+          const crosswindSide = getCrosswindSide(wind.direction, runway.le_heading);
+          const angleDiff = calculateAngleDifference(wind.direction, runway.le_heading);
+          
+          analyzedRunways.push({
+            ident: runway.le_ident,
+            heading: runway.le_heading,
+            headwind: Math.round(headwind),
+            crosswind: Math.round(crosswind),
+            crosswindSide,
+            angleDiff: Math.round(angleDiff),
+            runway,
+            isOptimal: angleDiff <= 30,
+            isGood: angleDiff <= 45,
+            isAcceptable: angleDiff <= 90,
+            isTailwind: headwind < 0,
+            score: (headwind * 2) - crosswind
+          });
+        }
+        
+        // Analyser le seuil "he" (higher end)
+        if (runway.he_ident && runway.he_heading !== undefined) {
+          const headwind = calculateHeadwindComponent(wind.direction, wind.speed, runway.he_heading);
+          const crosswind = calculateCrosswindComponent(wind.direction, wind.speed, runway.he_heading);
+          const crosswindSide = getCrosswindSide(wind.direction, runway.he_heading);
+          const angleDiff = calculateAngleDifference(wind.direction, runway.he_heading);
+          
+          analyzedRunways.push({
+            ident: runway.he_ident,
+            heading: runway.he_heading,
+            headwind: Math.round(headwind),
+            crosswind: Math.round(crosswind),
+            crosswindSide,
+            angleDiff: Math.round(angleDiff),
+            runway,
+            isOptimal: angleDiff <= 30,
+            isGood: angleDiff <= 45,
+            isAcceptable: angleDiff <= 90,
+            isTailwind: headwind < 0,
+            score: (headwind * 2) - crosswind
+          });
+        }
       }
     }
-    
-    return results;
   });
   
   // Trier par score (meilleur en premier)

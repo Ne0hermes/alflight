@@ -1,7 +1,7 @@
 // src/features/navigation/components/AirportSelector.jsx
 import React, { memo, useState, useRef, useEffect } from 'react';
 import { Search, MapPin, Download, AlertTriangle, CheckCircle, Info } from 'lucide-react';
-import { useOpenAIPStore, openAIPSelectors } from '@core/stores/openAIPStore';
+import { aeroDataProvider } from '@core/data';
 import { useVACStore } from '@core/stores/vacStore';
 import { sx } from '@shared/styles/styleSystem';
 
@@ -16,8 +16,24 @@ export const AirportSelector = memo(({
   const [search, setSearch] = useState('');
   const dropdownRef = useRef(null);
   
-  const airports = openAIPSelectors.useFilteredAirports();
-  const { setSearchQuery } = useOpenAIPStore();
+  const [airports, setAirports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Charger les aéroports au montage
+  useEffect(() => {
+    const loadAirports = async () => {
+      try {
+        setLoading(true);
+        const data = await aeroDataProvider.getAirfields({ country: 'FR' });
+        setAirports(data);
+      } catch (error) {
+        console.error('Erreur lors du chargement des aéroports:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadAirports();
+  }, []);
   const { downloadChart } = useVACStore();
   
   // Fermer le dropdown si on clique ailleurs
@@ -32,10 +48,6 @@ export const AirportSelector = memo(({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
   
-  // Mettre à jour la recherche globale
-  useEffect(() => {
-    setSearchQuery(search);
-  }, [search, setSearchQuery]);
   
   // Filtrer les aérodromes
   const filteredAirports = airports.filter(airport => 
@@ -53,8 +65,8 @@ export const AirportSelector = memo(({
   };
   
   const getVacStatus = (icao) => {
-    const { getVacStatus } = useOpenAIPStore.getState();
-    return getVacStatus(icao);
+    // OpenAIP supprimé - retour par défaut
+    return { hasVac: false, lastUpdate: null };
   };
   
   return (

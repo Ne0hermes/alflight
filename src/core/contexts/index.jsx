@@ -59,13 +59,50 @@ export const AircraftProvider = memo(({ children }) => {
   const deleteAircraft = useAircraftStore(state => state.deleteAircraft);
   const addAircraft = useAircraftStore(state => state.addAircraft);
   
+  // Wrapper pour debugger les appels addAircraft
+  const debugAddAircraft = useCallback(async (aircraft) => {
+    // console.log('🚀 AircraftProvider - debugAddAircraft wrapper called with:', aircraft);
+    // console.log('🚀 AircraftProvider - addAircraft function type:', typeof addAircraft);
+    // console.log('🚀 AircraftProvider - addAircraft function:', addAircraft);
+    
+    try {
+      const result = await addAircraft(aircraft);
+      // console.log('✅ AircraftProvider - addAircraft completed, result:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ AircraftProvider - addAircraft error:', error);
+      throw error;
+    }
+  }, [addAircraft]);
+  
   // Debug: vérifier que le store est bien initialisé
-  console.log('🚀 AircraftProvider - Render with:', {
-    aircraftListLength: aircraftList?.length,
-    selectedAircraftId: selectedAircraftId,
-    selectedAircraft: selectedAircraft?.registration,
-    setSelectedAircraftType: typeof setSelectedAircraft
-  });
+  // console.log('🚀 AircraftProvider - Render at', new Date().toISOString(), 'with:', {
+  //   aircraftListLength: aircraftList?.length,
+  //   aircraftListIds: aircraftList?.map(a => a.id) || [],
+  //   selectedAircraftId: selectedAircraftId,
+  //   selectedAircraft: selectedAircraft?.registration,
+  //   setSelectedAircraftType: typeof setSelectedAircraft
+  // });
+  
+  // Effectuer une surveillance des changements de la liste d'avions
+  React.useEffect(() => {
+    // console.log('🔄 AircraftProvider - aircraftList changed:', {
+    //   length: aircraftList?.length || 0,
+    //   ids: aircraftList?.map(a => a.id) || []
+    // });
+  }, [aircraftList]);
+  
+  // Surveillance spécifique pour les nouvelles entrées
+  React.useEffect(() => {
+    const currentLength = aircraftList?.length || 0;
+    // console.log('🔍 AircraftProvider - Length monitoring:', currentLength);
+    
+    // Forcer un re-render si nécessaire
+    if (currentLength !== (window.lastKnownAircraftCount || 2)) {
+      console.log('📈 AircraftProvider - Aircraft count changed from', window.lastKnownAircraftCount || 2, 'to', currentLength);
+      window.lastKnownAircraftCount = currentLength;
+    }
+  }, [aircraftList?.length]);
   
   const value = useMemo(() => ({
     aircraftList,
@@ -73,14 +110,14 @@ export const AircraftProvider = memo(({ children }) => {
     setSelectedAircraft,
     updateAircraft,
     deleteAircraft,
-    addAircraft
+    addAircraft: debugAddAircraft
   }), [
     aircraftList,
     selectedAircraft,
     setSelectedAircraft,
     updateAircraft,
     deleteAircraft,
-    addAircraft
+    debugAddAircraft
   ]);
 
   return <AircraftContext.Provider value={value}>{children}</AircraftContext.Provider>;
@@ -99,6 +136,9 @@ export const NavigationProvider = memo(({ children }) => {
   const removeWaypoint = useNavigationStore(state => state.removeWaypoint);
   const updateWaypoint = useNavigationStore(state => state.updateWaypoint);
   const clearRoute = useNavigationStore(state => state.clearRoute);
+  const segmentAltitudes = useNavigationStore(state => state.segmentAltitudes);
+  const setSegmentAltitude = useNavigationStore(state => state.setSegmentAltitude);
+  const getSegmentAltitude = useNavigationStore(state => state.getSegmentAltitude);
   
   const { selectedAircraft } = useAircraft();
   
@@ -122,9 +162,14 @@ export const NavigationProvider = memo(({ children }) => {
     removeWaypoint,
     updateWaypoint,
     clearRoute,
-    getNavigationResults
+    getNavigationResults,
+    // Altitudes par segment
+    segmentAltitudes,
+    setSegmentAltitude,
+    getSegmentAltitude
   }), [waypoints, setWaypoints, flightParams, setFlightParams, flightType, setFlightType,
-      navigationResults, addWaypoint, removeWaypoint, updateWaypoint, clearRoute, getNavigationResults]);
+      navigationResults, addWaypoint, removeWaypoint, updateWaypoint, clearRoute, getNavigationResults,
+      segmentAltitudes, setSegmentAltitude, getSegmentAltitude]);
 
   return <NavigationContext.Provider value={value}>{children}</NavigationContext.Provider>;
 });

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Search, MapPin, ChevronDown } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
-import { useOpenAIPStore, openAIPSelectors } from '@core/stores/openAIPStore';
+import { aeroDataProvider } from '@core/data';
 
 export const SimpleAirportSelector = ({ label, value, onChange, placeholder, excludeIcao }) => {
   const [inputValue, setInputValue] = useState('');
@@ -11,8 +11,25 @@ export const SimpleAirportSelector = ({ label, value, onChange, placeholder, exc
   const dropdownRef = useRef(null);
   const inputRef = useRef(null);
   
-  // Récupérer les aéroports depuis le store
-  const airports = openAIPSelectors.useAirports();
+  // Récupérer les aéroports depuis le provider
+  const [airports, setAirports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const loadAirports = async () => {
+      try {
+        setLoading(true);
+        const data = await aeroDataProvider.getAirfields({ country: 'FR' });
+        setAirports(data || []);
+      } catch (error) {
+        console.error('Erreur chargement aéroports:', error);
+        setAirports([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadAirports();
+  }, []);
   
   // Debug : vérifier si LFST est présent
   React.useEffect(() => {
@@ -237,9 +254,18 @@ export const SimpleAirportSelector = ({ label, value, onChange, placeholder, exc
       )}
       
       {/* Dropdown */}
-      {isOpen && suggestions.length > 0 && (
+      {isOpen && (
         <div style={styles.dropdown}>
-          {suggestions.map((airport, index) => (
+          {loading ? (
+            <div style={styles.dropdownItem}>
+              <span>Chargement des aéroports...</span>
+            </div>
+          ) : suggestions.length === 0 ? (
+            <div style={styles.dropdownItem}>
+              <span>Aucun aéroport trouvé</span>
+            </div>
+          ) : (
+            suggestions.map((airport, index) => (
             <div
               key={airport.id || airport.icao}
               onClick={() => handleSelect(airport)}
@@ -267,13 +293,7 @@ export const SimpleAirportSelector = ({ label, value, onChange, placeholder, exc
                 </div>
               </div>
             </div>
-          ))}
-          
-          {/* Message d'aide en bas du dropdown */}
-          {inputValue.length > 0 && suggestions.length === 0 && (
-            <div style={sx.combine(styles.dropdownItem, sx.text.center, sx.text.sm, sx.text.secondary)}>
-              Aucun résultat - Tapez 4 lettres pour créer un code OACI
-            </div>
+          ))
           )}
         </div>
       )}

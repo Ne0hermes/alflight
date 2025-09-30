@@ -82,16 +82,37 @@ export const WeightBalanceModule = memo(() => {
 
 // Composant pour la section de chargement
 const LoadingSection = memo(({ loads, aircraft, onLoadChange }) => {
-  const wb = aircraft.weightBalance;
+  // Gérer le cas où weightBalance n'existe pas ou est incomplet
+  // Utiliser armLengths comme fallback si weightBalance n'est pas défini
+  const wb = aircraft.weightBalance || {
+    emptyWeightArm: aircraft.armLengths?.emptyMassArm || 2.00,
+    frontLeftSeatArm: aircraft.armLengths?.frontSeat1Arm || 2.00,
+    frontRightSeatArm: aircraft.armLengths?.frontSeat2Arm || 2.00,
+    rearLeftSeatArm: aircraft.armLengths?.rearSeat1Arm || 2.90,
+    rearRightSeatArm: aircraft.armLengths?.rearSeat2Arm || 2.90,
+    baggageArm: aircraft.armLengths?.standardBaggageArm || 3.50,
+    auxiliaryArm: aircraft.armLengths?.aftBaggageExtensionArm || aircraft.armLengths?.baggageTubeArm || 3.70,
+    fuelArm: aircraft.armLengths?.fuelArm || 2.18,
+    cgLimits: {
+      forward: 2.00,
+      aft: 2.45
+    }
+  };
   
-  // S'assurer que toutes les valeurs sont numériques
+  // S'assurer que toutes les valeurs sont numériques, incluant les compartiments dynamiques
   const safeLoads = {
     frontLeft: loads.frontLeft || 0,
     frontRight: loads.frontRight || 0,
     rearLeft: loads.rearLeft || 0,
     rearRight: loads.rearRight || 0,
     baggage: loads.baggage || 0,
-    auxiliary: loads.auxiliary || 0
+    auxiliary: loads.auxiliary || 0,
+    // Ajouter les compartiments bagages dynamiques
+    ...(aircraft.baggageCompartments && aircraft.baggageCompartments.reduce((acc, compartment, index) => {
+      const key = `baggage_${compartment.id || index}`;
+      acc[key] = loads[key] || 0;
+      return acc;
+    }, {}))
   };
   
   return (
@@ -137,25 +158,42 @@ const LoadingSection = memo(({ loads, aircraft, onLoadChange }) => {
           />
         </div>
 
-        {/* Bagages */}
-        <div style={styles.grid2}>
-          <LoadInputWithInfo
-            label={`🎒 Bagages (max ${aircraft.maxBaggageWeight} kg)`}
-            value={safeLoads.baggage}
-            onChange={(v) => onLoadChange('baggage', v)}
-            arm={wb.baggageArm}
-            max={aircraft.maxBaggageWeight}
-            loadKey="baggage"
-          />
-          <LoadInputWithInfo
-            label={`📦 Rangement annexe (max ${aircraft.maxAuxiliaryWeight} kg)`}
-            value={safeLoads.auxiliary}
-            onChange={(v) => onLoadChange('auxiliary', v)}
-            arm={wb.auxiliaryArm}
-            max={aircraft.maxAuxiliaryWeight}
-            loadKey="auxiliary"
-          />
-        </div>
+        {/* Compartiments bagages dynamiques */}
+        {aircraft.baggageCompartments && aircraft.baggageCompartments.length > 0 ? (
+          <div style={{ display: 'grid', gridTemplateColumns: aircraft.baggageCompartments.length === 1 ? '1fr' : '1fr 1fr', gap: '16px' }}>
+            {aircraft.baggageCompartments.map((compartment, index) => (
+              <LoadInputWithInfo
+                key={compartment.id || `baggage-${index}`}
+                label={`🎒 ${compartment.name} (max ${compartment.maxWeight || '50'} kg)`}
+                value={safeLoads[`baggage_${compartment.id || index}`] || 0}
+                onChange={(v) => onLoadChange(`baggage_${compartment.id || index}`, v)}
+                arm={parseFloat(compartment.arm) || 3.50}
+                max={parseFloat(compartment.maxWeight) || 50}
+                loadKey={`baggage_${compartment.id || index}`}
+              />
+            ))}
+          </div>
+        ) : (
+          // Fallback vers les compartiments par défaut si aucun n'est défini
+          <div style={styles.grid2}>
+            <LoadInputWithInfo
+              label={`🎒 Bagages (max ${aircraft.maxBaggageWeight || 50} kg)`}
+              value={safeLoads.baggage}
+              onChange={(v) => onLoadChange('baggage', v)}
+              arm={wb.baggageArm}
+              max={aircraft.maxBaggageWeight || 50}
+              loadKey="baggage"
+            />
+            <LoadInputWithInfo
+              label={`📦 Rangement annexe (max ${aircraft.maxAuxiliaryWeight || 20} kg)`}
+              value={safeLoads.auxiliary}
+              onChange={(v) => onLoadChange('auxiliary', v)}
+              arm={wb.auxiliaryArm}
+              max={aircraft.maxAuxiliaryWeight || 20}
+              loadKey="auxiliary"
+            />
+          </div>
+        )}
       </div>
     </section>
   );
@@ -192,7 +230,7 @@ const LoadInputWithInfo = memo(({ label, value, onChange, arm, max, loadKey }) =
 // État vide
 const EmptyState = memo(() => (
   <div style={sx.combine(sx.flex.center, sx.spacing.p(8))}>
-    <div style={sx.text.center}>
+    <div style={sx.text.left}>
       <p style={sx.combine(sx.text.lg, sx.text.secondary)}>
         Sélectionnez un avion pour afficher le module de masse et centrage
       </p>

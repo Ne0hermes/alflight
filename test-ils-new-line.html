@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test ILS Nouvelle Ligne</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px; 
+            background: #f3f4f6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .runway-section {
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        .runway-header {
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #111827;
+        }
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4px;
+            margin-top: 4px;
+        }
+        .field-group {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-size: 10px;
+            color: #6b7280;
+            margin-bottom: 2px;
+            font-weight: 500;
+        }
+        input, select {
+            padding: 2px 4px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        input.missing, select.missing {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+        }
+        .ils-section {
+            margin-top: 4px;
+        }
+        .ils-controls {
+            display: flex;
+            gap: 4px;
+        }
+        .ils-controls select {
+            flex: 0 0 80px;
+        }
+        .ils-controls input:nth-child(2) {
+            flex: 1;
+        }
+        .ils-controls input:nth-child(3) {
+            flex: 0 0 45px;
+            text-transform: uppercase;
+        }
+        h1 {
+            color: #111827;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #374151;
+            font-size: 18px;
+            margin-top: 20px;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛬 Test Interface ILS sur Nouvelle Ligne</h1>
+        
+        <h2>Version Actuelle - ILS sur ligne séparée</h2>
+        
+        <div class="runway-section">
+            <div class="runway-header">Piste 05 - LFST Strasbourg</div>
+            
+            <!-- Distances déclarées -->
+            <label>Distances déclarées (m)</label>
+            <div class="grid-4">
+                <div class="field-group">
+                    <label>TORA</label>
+                    <input type="number" value="1600" />
+                </div>
+                <div class="field-group">
+                    <label>TODA</label>
+                    <input type="number" value="2695" />
+                </div>
+                <div class="field-group">
+                    <label>ASDA</label>
+                    <input type="number" value="2670" />
+                </div>
+                <div class="field-group">
+                    <label>LDA</label>
+                    <input type="number" value="2400" />
+                </div>
+            </div>
+            
+            <!-- Surface et QFU sur la même ligne -->
+            <div class="grid-2">
+                <div class="field-group">
+                    <label>Surface</label>
+                    <input type="text" value="CONC+ASPH" />
+                </div>
+                <div class="field-group">
+                    <label>QFU (°)</label>
+                    <input type="number" step="0.1" value="46.16" />
+                </div>
+            </div>
+            
+            <!-- ILS sur une nouvelle ligne -->
+            <div class="ils-section">
+                <label>ILS</label>
+                <div class="ils-controls">
+                    <select>
+                        <option value="">Aucun</option>
+                        <option value="I" selected>CAT I</option>
+                        <option value="II">CAT II</option>
+                        <option value="III">CAT III</option>
+                        <option value="IIIA">CAT IIIA</option>
+                        <option value="IIIB">CAT IIIB</option>
+                        <option value="IIIC">CAT IIIC</option>
+                    </select>
+                    <input type="number" step="0.01" value="108.55" placeholder="Fréquence MHz" />
+                    <input type="text" maxlength="3" value="ENT" placeholder="ID" style="text-transform: uppercase;" />
+                </div>
+            </div>
+        </div>
+        
+        <div class="runway-section">
+            <div class="runway-header">Piste 23 - LFST Strasbourg</div>
+            
+            <!-- Distances déclarées -->
+            <label>Distances déclarées (m)</label>
+            <div class="grid-4">
+                <div class="field-group">
+                    <label>TORA</label>
+                    <input type="number" value="1800" />
+                </div>
+                <div class="field-group">
+                    <label>TODA</label>
+                    <input type="number" value="2600" />
+                </div>
+                <div class="field-group">
+                    <label>ASDA</label>
+                    <input type="number" value="2671" />
+                </div>
+                <div class="field-group">
+                    <label>LDA</label>
+                    <input type="number" value="2400" />
+                </div>
+            </div>
+            
+            <!-- Surface et QFU sur la même ligne -->
+            <div class="grid-2">
+                <div class="field-group">
+                    <label>Surface</label>
+                    <input type="text" value="CONC+ASPH" />
+                </div>
+                <div class="field-group">
+                    <label>QFU (°)</label>
+                    <input type="number" step="0.1" value="226.16" />
+                </div>
+            </div>
+            
+            <!-- ILS sur une nouvelle ligne -->
+            <div class="ils-section">
+                <label>ILS</label>
+                <div class="ils-controls">
+                    <select>
+                        <option value="">Aucun</option>
+                        <option value="I">CAT I</option>
+                        <option value="II">CAT II</option>
+                        <option value="III" selected>CAT III</option>
+                        <option value="IIIA">CAT IIIA</option>
+                        <option value="IIIB">CAT IIIB</option>
+                        <option value="IIIC">CAT IIIC</option>
+                    </select>
+                    <input type="number" step="0.01" value="109.55" placeholder="Fréquence MHz" />
+                    <input type="text" maxlength="3" value="STZ" placeholder="ID" style="text-transform: uppercase;" />
+                </div>
+            </div>
+        </div>
+        
+        <div class="runway-section">
+            <div class="runway-header">Piste sans ILS - Exemple</div>
+            
+            <!-- Distances déclarées -->
+            <label>Distances déclarées (m)</label>
+            <div class="grid-4">
+                <div class="field-group">
+                    <label>TORA</label>
+                    <input type="number" value="" placeholder="?" class="missing" />
+                </div>
+                <div class="field-group">
+                    <label>TODA</label>
+                    <input type="number" value="" placeholder="?" class="missing" />
+                </div>
+                <div class="field-group">
+                    <label>ASDA</label>
+                    <input type="number" value="" placeholder="?" class="missing" />
+                </div>
+                <div class="field-group">
+                    <label>LDA</label>
+                    <input type="number" value="" placeholder="?" class="missing" />
+                </div>
+            </div>
+            
+            <!-- Surface et QFU sur la même ligne -->
+            <div class="grid-2">
+                <div class="field-group">
+                    <label>Surface</label>
+                    <input type="text" value="GRASS" />
+                </div>
+                <div class="field-group">
+                    <label>QFU (°)</label>
+                    <input type="number" step="0.1" value="90.0" />
+                </div>
+            </div>
+            
+            <!-- ILS sur une nouvelle ligne -->
+            <div class="ils-section">
+                <label>ILS</label>
+                <div class="ils-controls">
+                    <select class="missing">
+                        <option value="" selected>Aucun</option>
+                        <option value="I">CAT I</option>
+                        <option value="II">CAT II</option>
+                        <option value="III">CAT III</option>
+                        <option value="IIIA">CAT IIIA</option>
+                        <option value="IIIB">CAT IIIB</option>
+                        <option value="IIIC">CAT IIIC</option>
+                    </select>
+                    <input type="number" step="0.01" value="" placeholder="Fréquence MHz" />
+                    <input type="text" maxlength="3" value="" placeholder="ID" style="text-transform: uppercase;" />
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</body>
+</html>
