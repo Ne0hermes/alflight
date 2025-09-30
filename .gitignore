@@ -36,3 +36,19 @@ src/config/secrets.js
 # Backup files
 *.backup
 *.bak
+
+# IMPORTANT: Google Sheets credentials
+server/credentials.json
+alfight-*.json
+server/*.json
+
+# iOS credentials
+*.p8
+*.p12
+*.mobileprovision
+ExportOptions.plist
+
+# Logs locaux Excel
+logs/
+*.csv
+tracking_local.json
