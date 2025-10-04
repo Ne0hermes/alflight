@@ -15,8 +15,8 @@ console.log('🚀 AircraftStore module loaded - v2');
 
 // Store pour la gestion des avions avec optimisations
 export const useAircraftStore = create(
-  subscribeWithSelector(
-    persist(
+  persist(
+    subscribeWithSelector(
       (set, get) => ({
         // État
         aircraftList: DEFAULT_AIRCRAFT_LIST,
@@ -243,11 +243,12 @@ export const useAircraftStore = create(
           });
           return aircraft;
         }
-      }),
-      {
-        name: 'aircraft-storage',
-        storage: createJSONStorage(() => localStorage),
-        partialize: (state) => ({
+      })
+    ),
+    {
+      name: 'aircraft-storage',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
           // Exclure les photos et autres données volumineuses de localStorage
           aircraftList: state.aircraftList.map(aircraft => {
             const { photo, manex, ...aircraftWithoutLargeData } = aircraft;
@@ -262,56 +263,50 @@ export const useAircraftStore = create(
         }),
         onRehydrateStorage: () => async (state) => {
           console.log('🔄 AircraftStore - Rehydrating from localStorage...', state);
-          
+
           // Valider et réparer tous les avions lors du chargement depuis localStorage
           if (state && state.aircraftList && state.aircraftList.length > 0) {
             console.log(`📥 AircraftStore - Found ${state.aircraftList.length} aircraft(s) in localStorage`);
-            
+
             // D'abord, s'assurer que les données de base sont valides
             const validatedAircraftList = state.aircraftList.map(aircraft => {
               console.log(`✅ AircraftStore - Validating aircraft: ${aircraft.registration}`);
               return validateAndRepairAircraft(aircraft);
             });
-            
+
             // Mettre à jour immédiatement avec les données validées
             state.aircraftList = validatedAircraftList;
             console.log('✅ AircraftStore - Aircraft list validated and loaded from localStorage');
-            
-            // Ensuite, essayer de charger les données volumineuses depuis IndexedDB en arrière-plan
+
+            // Ensuite, charger les photos et MANEX depuis IndexedDB de manière asynchrone
             try {
-              console.log('🔍 AircraftStore - Attempting to load heavy data from IndexedDB...');
-              
-              // Utiliser Promise.allSettled pour ne pas échouer si certains avions n'ont pas de données IndexedDB
-              const results = await Promise.allSettled(
+              console.log('📸 AircraftStore - Loading photos and MANEX from IndexedDB...');
+
+              const enrichedAircraftList = await Promise.all(
                 validatedAircraftList.map(async (aircraft) => {
                   if (aircraft.hasPhoto || aircraft.hasManex) {
-                    const completeAircraft = await dataBackupManager.getAircraftData(aircraft.id);
-                    if (completeAircraft) {
-                      return {
-                        ...aircraft,
-                        photo: completeAircraft.photo || aircraft.photo,
-                        manex: completeAircraft.manex || aircraft.manex
-                      };
+                    try {
+                      const fullData = await dataBackupManager.getAircraftData(aircraft.id);
+                      if (fullData) {
+                        console.log(`📸 Loaded photo/manex for ${aircraft.registration}`);
+                        return {
+                          ...aircraft,
+                          photo: fullData.photo || null,
+                          manex: fullData.manex || null
+                        };
+                      }
+                    } catch (error) {
+                      console.warn(`⚠️ Failed to load photo/manex for ${aircraft.registration}:`, error);
                     }
                   }
                   return aircraft;
                 })
               );
-              
-              // Mettre à jour avec les données complètes si disponibles
-              const enrichedAircraftList = results.map((result, index) => {
-                if (result.status === 'fulfilled' && result.value) {
-                  return result.value;
-                }
-                return validatedAircraftList[index]; // Fallback vers les données de base
-              });
-              
+
               state.aircraftList = enrichedAircraftList;
-              console.log('🎯 AircraftStore - Heavy data loaded from IndexedDB where available');
-              
+              console.log('✅ AircraftStore - Photos and MANEX loaded from IndexedDB');
             } catch (error) {
-              console.warn('⚠️ AircraftStore - Failed to load heavy data from IndexedDB, continuing with light data:', error);
-              // Les données de base sont déjà chargées, donc pas de problème
+              console.error('❌ AircraftStore - Error loading photos from IndexedDB:', error);
             }
           } else {
             console.log('ℹ️ AircraftStore - No aircraft found in localStorage, using defaults');

@@ -9,6 +9,7 @@ import { google } from 'googleapis';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,53 +28,71 @@ app.use((req, res, next) => {
   next();
 });
 
-// Charger les credentials du service account
-const CREDENTIALS_PATH = path.join(__dirname, 'credentials.json');
+// Configuration Google Sheets
 const SPREADSHEET_ID = '1Y26_Zf7-jHPgpjWasubXpzQE-k0eMl0pHIMpg8OHw_k';
 const SHEET_NAME = 'Tracking';
+const CREDENTIALS_PATH = 'D:\\Applicator\\alfight-46443ca54259.json';
 
-let auth;
-let sheets;
+// Initialiser l'authentification Google Sheets
+let sheetsClient = null;
 
-// Initialiser l'authentification Google
-async function initializeGoogle() {
+async function initGoogleSheets() {
   try {
-    const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, 'utf8'));
+    if (!fs.existsSync(CREDENTIALS_PATH)) {
+      throw new Error(`Fichier credentials non trouvé: ${CREDENTIALS_PATH}`);
+    }
 
-    auth = new google.auth.JWT({
-      email: credentials.client_email,
-      key: credentials.private_key,
-      scopes: ['https://www.googleapis.com/auth/spreadsheets']
+    const auth = new google.auth.GoogleAuth({
+      keyFile: CREDENTIALS_PATH,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
 
-    await auth.authorize();
-    sheets = google.sheets({ version: 'v4', auth });
+    const authClient = await auth.getClient();
+    sheetsClient = google.sheets({ version: 'v4', auth: authClient });
 
     console.log('✅ Authentification Google Sheets réussie');
-    console.log(`📊 Connecté avec: ${credentials.client_email}`);
-
-    // Vérifier que la feuille existe
-    await checkSheet();
-
+    return sheetsClient;
   } catch (error) {
-    console.error('❌ Erreur d\'authentification:', error);
+    console.error('❌ Erreur authentification Google Sheets:', error);
+    throw error;
   }
 }
 
-// Vérifier/créer la feuille Tracking
-async function checkSheet() {
+// Vérifier que la feuille existe et créer les en-têtes si nécessaire
+async function checkSheetExists() {
   try {
-    const response = await sheets.spreadsheets.get({
+    const response = await sheetsClient.spreadsheets.get({
       spreadsheetId: SPREADSHEET_ID,
     });
 
-    const trackingSheet = response.data.sheets.find(
-      sheet => sheet.properties.title === SHEET_NAME
-    );
+    const sheet = response.data.sheets.find(s => s.properties.title === SHEET_NAME);
 
-    if (!trackingSheet) {
+    if (!sheet) {
       console.log('📝 Création de la feuille Tracking...');
-      await createTrackingSheet();
+      await sheetsClient.spreadsheets.batchUpdate({
+        spreadsheetId: SPREADSHEET_ID,
+        resource: {
+          requests: [{
+            addSheet: {
+              properties: {
+                title: SHEET_NAME
+              }
+            }
+          }]
+        }
+      });
+
+      // Ajouter les en-têtes
+      await sheetsClient.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `${SHEET_NAME}!A1:H1`,
+        valueInputOption: 'RAW',
+        resource: {
+          values: [['Date/Heure', 'Action', 'Composant', 'Résumé', 'Détails', 'Fichiers', 'Statut', 'Auteur']]
+        }
+      });
+
+      console.log('✅ Feuille Tracking créée avec en-têtes');
     } else {
       console.log('✅ Feuille Tracking trouvée');
     }
@@ -82,104 +101,70 @@ async function checkSheet() {
   }
 }
 
-// Créer la feuille Tracking avec les en-têtes
-async function createTrackingSheet() {
+// Fonction pour afficher la notification PowerShell
+function showPowerShellNotification(action, component, files, details) {
   try {
-    // Ajouter une nouvelle feuille
-    await sheets.spreadsheets.batchUpdate({
-      spreadsheetId: SPREADSHEET_ID,
-      resource: {
-        requests: [{
-          addSheet: {
-            properties: {
-              title: SHEET_NAME
-            }
-          }
-        }]
-      }
-    });
+    const scriptPath = path.join(__dirname, '..', 'scripts', 'notify-update.ps1');
 
-    // Ajouter les en-têtes
-    const headers = [
-      ['Date/Heure', 'Action', 'Composant', 'Résumé', 'Détails', 'Fichiers', 'Statut', 'Auteur']
-    ];
+    // Échapper les guillemets et les caractères spéciaux
+    const escapeArg = (str) => str.replace(/"/g, '`"').replace(/\$/g, '`$');
 
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_NAME}!A1:H1`,
-      valueInputOption: 'RAW',
-      resource: {
-        values: headers
-      }
-    });
+    const command = `powershell.exe -ExecutionPolicy Bypass -File "${scriptPath}" -Action "${escapeArg(action)}" -Component "${escapeArg(component)}" -Files "${escapeArg(files)}" -Details "${escapeArg(details)}"`;
 
-    console.log('✅ Feuille Tracking créée avec succès');
+    execSync(command, { encoding: 'utf8', stdio: 'inherit' });
   } catch (error) {
-    console.error('Erreur création feuille:', error);
+    console.error('⚠️  Erreur notification PowerShell:', error.message);
   }
 }
 
 // Endpoint pour ajouter un log
 app.post('/api/log', async (req, res) => {
   try {
-    if (!sheets) {
-      throw new Error('Service non initialise');
+    const { action, summary, details, status, component, files } = req.body;
+
+    if (!sheetsClient) {
+      throw new Error('Google Sheets client non initialisé');
     }
 
-    const { action, component, summary, details, files, status } = req.body;
-
-    // Fonction pour retirer les accents et nettoyer les chaines
-    const removeAccents = (str) => {
-      if (!str) return '';
-      // Normaliser et retirer les accents
-      return String(str)
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '') // Retire les accents
-        .replace(/[àâä]/gi, 'a')
-        .replace(/[éèêë]/gi, 'e')
-        .replace(/[îï]/gi, 'i')
-        .replace(/[ôö]/gi, 'o')
-        .replace(/[ùûü]/gi, 'u')
-        .replace(/[ç]/gi, 'c')
-        .replace(/[œ]/gi, 'oe')
-        .replace(/[æ]/gi, 'ae')
-        .replace(/[ñ]/gi, 'n');
-    };
-
-    // Fonction pour nettoyer et encoder correctement les chaines
-    const cleanString = (str) => {
-      if (!str) return '';
-      // Retirer les accents puis encoder
-      return removeAccents(str);
-    };
-
-    // S'assurer que toutes les chaînes sont correctement encodées en UTF-8
     const values = [[
       new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' }),
-      cleanString(action),
-      cleanString(component),
-      cleanString(summary),
-      cleanString(details),
-      cleanString(files),
-      cleanString(status) || 'completed',
+      action || '',
+      component || '',
+      summary || '',
+      details || '',
+      files || '',
+      status || 'completed',
       'Claude Assistant'
     ]];
 
-    const response = await sheets.spreadsheets.values.append({
+    const response = await sheetsClient.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
       range: `${SHEET_NAME}!A:H`,
-      valueInputOption: 'RAW',  // Changé de USER_ENTERED à RAW pour préserver l'encodage
+      valueInputOption: 'RAW',
       insertDataOption: 'INSERT_ROWS',
-      resource: {
-        values: values
-      }
+      resource: { values }
     });
 
-    console.log(`📝 Log ajoute: ${removeAccents(action)}`);
-    res.json({ success: true, data: response.data });
+    console.log(`📝 Log ajouté à Google Sheets: ${action}`);
+    console.log(`✅ Ligne ajoutée:`, response.data.updates.updatedRange);
+
+    // Afficher la notification PowerShell
+    showPowerShellNotification(
+      action || 'Mise à jour',
+      component || 'Application',
+      files || '',
+      details ? details.substring(0, 100) : ''
+    );
+
+    res.json({
+      success: true,
+      message: 'Log ajouté à Google Sheets',
+      spreadsheet: SPREADSHEET_ID,
+      range: response.data.updates.updatedRange
+    });
 
   } catch (error) {
-    console.error('Erreur ajout log:', error);
+    console.error('❌ Erreur ajout log:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -187,20 +172,20 @@ app.post('/api/log', async (req, res) => {
 // Endpoint de test
 app.get('/api/test', async (req, res) => {
   try {
-    if (!sheets) {
-      throw new Error('Service non initialisé');
+    if (!sheetsClient) {
+      throw new Error('Google Sheets client non initialisé');
     }
 
-    // Lire les dernières lignes pour vérifier
-    const response = await sheets.spreadsheets.values.get({
+    const response = await sheetsClient.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_NAME}!A1:H10`
+      range: `${SHEET_NAME}!A:H`
     });
 
     res.json({
       success: true,
-      message: 'Connexion Google Sheets OK',
-      rows: response.data.values?.length || 0
+      message: 'Google Sheets accessible',
+      rows: response.data.values?.length || 0,
+      spreadsheet: SPREADSHEET_ID
     });
 
   } catch (error) {
@@ -213,16 +198,28 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     service: 'Google Sheets Logger',
-    authenticated: !!sheets
+    spreadsheet: SPREADSHEET_ID,
+    sheet: SHEET_NAME
   });
 });
 
 // Démarrer le serveur
 app.listen(PORT, async () => {
-  console.log(`\n🚀 Serveur Google Sheets démarré sur http://localhost:${PORT}`);
+  console.log(`\n🚀 Serveur Google Sheets Logger démarré sur http://localhost:${PORT}`);
   console.log('📊 Spreadsheet ID:', SPREADSHEET_ID);
   console.log('📄 Feuille:', SHEET_NAME);
-  console.log('\n⏳ Initialisation de Google Sheets...');
-  await initializeGoogle();
-  console.log('\n✅ Serveur prêt à recevoir les logs\n');
+  console.log('🔑 Credentials:', CREDENTIALS_PATH);
+  console.log('\n⏳ Initialisation Google Sheets...');
+
+  try {
+    await initGoogleSheets();
+    await checkSheetExists();
+    console.log('\n✅ Serveur prêt à recevoir les logs\n');
+  } catch (error) {
+    console.error('\n❌ Erreur initialisation:', error);
+    console.log('\nVérifiez que:');
+    console.log('1. Le fichier credentials existe');
+    console.log('2. Le service account a accès au spreadsheet');
+    console.log('3. L\'API Google Sheets est activée\n');
+  }
 });
