@@ -1,6 +1,8 @@
 // Service de gestion des versions d'avions
 // En production, ce service communiquera avec l'API backend
 
+import { COMMUNITY_AIRCRAFT_DATABASE } from '../data/communityAircraftDatabase';
+
 class AircraftVersioningService {
   constructor() {
     // Mock database pour le développement
@@ -9,41 +11,25 @@ class AircraftVersioningService {
   }
 
   initMockData() {
-    // Exemple de versioning pour F-GBYU
-    this.versions.set('F-GBYU', {
-      current: {
-        id: 'v1',
-        version: 1,
-        registration: 'F-GBYU',
-        model: 'Diamond DA40 NG',
-        manufacturer: 'Diamond Aircraft',
-        type: 'DA40 NG',
-        addedBy: 'Pilot123',
-        dateAdded: '2024-03-15',
-        lastUpdated: '2024-03-15',
-        votes: { up: 42, down: 2 },
-        verified: true,
-        data: {
-          // Données complètes de l'avion
-          cruiseSpeed: 127,
-          maxSpeed: 154,
-          stallSpeed: 49,
-          serviceCeiling: 16400,
-          fuelCapacity: 148,
-          emptyWeight: 795,
-          maxTakeoffWeight: 1280
-        }
-      },
-      history: [
-        {
-          id: 'v0',
-          version: 0,
-          updatedBy: 'Pilot123',
-          updateDate: '2024-03-15',
-          updateReason: 'Configuration initiale',
-          changes: []
-        }
-      ]
+    // Initialiser le versioning pour tous les avions de la base communautaire
+    COMMUNITY_AIRCRAFT_DATABASE.forEach(aircraft => {
+      this.versions.set(aircraft.registration.toUpperCase(), {
+        current: {
+          id: 'v1',
+          version: 1,
+          ...aircraft
+        },
+        history: [
+          {
+            id: 'v0',
+            version: 0,
+            updatedBy: aircraft.addedBy,
+            updateDate: aircraft.dateAdded,
+            updateReason: 'Configuration initiale',
+            changes: []
+          }
+        ]
+      });
     });
   }
 

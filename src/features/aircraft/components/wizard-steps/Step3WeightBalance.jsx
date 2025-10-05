@@ -40,7 +40,6 @@ import { StyledTextField } from './FormFieldStyles';
 
 const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
   const [expandedPanels, setExpandedPanels] = useState({
-    emptyWeight: false,
     fuel: false,
     seats: false,
     baggage: false,
@@ -52,7 +51,6 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
     if (isExpanded) {
       // When opening a panel, close all others and open this one
       setExpandedPanels({
-        emptyWeight: false,
         fuel: false,
         seats: false,
         baggage: false,
@@ -66,29 +64,51 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
     }
   };
   
-  const [forwardPoints, setForwardPoints] = useState(
-    data.cgEnvelope?.forwardPoints && data.cgEnvelope.forwardPoints.length > 0
-      ? data.cgEnvelope.forwardPoints
-      : [{ weight: '', cg: '', id: Date.now() + Math.random() }]
+  // État pour Most Forward CG - liste de points
+  const [forwardCGPoints, setForwardCGPoints] = useState(() => {
+    // Si des données existent dans le nouveau format (forwardPoints)
+    if (data.cgEnvelope?.forwardPoints && data.cgEnvelope.forwardPoints.length > 0) {
+      return data.cgEnvelope.forwardPoints;
+    }
+    // Sinon, migrer depuis l'ancien format si disponible
+    if (data.cgEnvelope?.forwardMinWeight || data.cgEnvelope?.forwardMaxWeight || data.cgEnvelope?.forwardCG) {
+      const points = [];
+      if (data.cgEnvelope.forwardMinWeight && data.cgEnvelope.forwardCG) {
+        points.push({
+          id: Date.now() + Math.random(),
+          weight: data.cgEnvelope.forwardMinWeight,
+          cg: data.cgEnvelope.forwardCG
+        });
+      }
+      if (data.cgEnvelope.forwardMaxWeight && data.cgEnvelope.forwardCG &&
+          data.cgEnvelope.forwardMaxWeight !== data.cgEnvelope.forwardMinWeight) {
+        points.push({
+          id: Date.now() + Math.random() + 1,
+          weight: data.cgEnvelope.forwardMaxWeight,
+          cg: data.cgEnvelope.forwardCG
+        });
+      }
+      return points;
+    }
+    return [];
+  });
+
+  // État pour Most Rearward CG - formulaire simple (minWeight, maxWeight, un seul CG)
+  const [aftCG, setAftCG] = useState({
+    minWeight: data.cgEnvelope?.aftMinWeight || '',
+    maxWeight: data.cgEnvelope?.aftMaxWeight || '',
+    cg: data.cgEnvelope?.aftCG || ''
+  });
+
+  // État pour les points intermédiaires de l'enveloppe CG
+  const [intermediatePoints, setIntermediatePoints] = useState(
+    data.cgEnvelope?.intermediatePoints || []
   );
   const [additionalSeats, setAdditionalSeats] = useState(data.additionalSeats || []);
   const [baggageCompartments, setBaggageCompartments] = useState(
     data.baggageCompartments && data.baggageCompartments.length > 0
       ? data.baggageCompartments
-      : [
-          { 
-            id: Date.now() + Math.random(), 
-            name: 'Compartiment avant', 
-            arm: data.arms?.baggageFwd || '', 
-            maxWeight: data.weights?.maxBaggageFwd || '' 
-          },
-          { 
-            id: Date.now() + Math.random() + 1, 
-            name: 'Compartiment arrière', 
-            arm: data.arms?.baggageAft || '', 
-            maxWeight: data.weights?.maxBaggageAft || '' 
-          }
-        ]
+      : [] // Vide par défaut
   );
   const units = unitsSelectors.useUnits();
   const [previousUnits, setPreviousUnits] = useState(units);
@@ -192,18 +212,18 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
 
     }
 
-    // Convertir les points CG avant
-    if (forwardPoints.length > 0) {
-      const convertedPoints = forwardPoints.map(point => ({
+    // Convertir les points Forward CG
+    if (forwardCGPoints.length > 0) {
+      const convertedForwardPoints = forwardCGPoints.map(point => ({
         ...point,
-        weight: point.weight && previousUnits.weight !== units.weight ? 
+        weight: point.weight && previousUnits.weight !== units.weight ?
           Math.round(convertValue(
             point.weight,
             previousUnits.weight,
             units.weight,
             'weight'
           ) * 10) / 10 : point.weight,
-        cg: point.cg && previousUnits.armLength !== units.armLength ? 
+        cg: point.cg && previousUnits.armLength !== units.armLength ?
           Math.round(convertValue(
             point.cg,
             previousUnits.armLength || 'mm',
@@ -211,33 +231,128 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
             'armLength'
           ) * 10000) / 10000 : point.cg
       }));
-      setForwardPoints(convertedPoints);
-      updateData('cgEnvelope.forwardPoints', convertedPoints);
+      setForwardCGPoints(convertedForwardPoints);
+      updateData('cgEnvelope.forwardPoints', convertedForwardPoints);
+    }
+
+    // Convertir les données Aft CG
+    if (aftCG.minWeight || aftCG.maxWeight || aftCG.cg) {
+      const convertedAft = {
+        minWeight: aftCG.minWeight && previousUnits.weight !== units.weight ?
+          Math.round(convertValue(
+            aftCG.minWeight,
+            previousUnits.weight,
+            units.weight,
+            'weight'
+          ) * 10) / 10 : aftCG.minWeight,
+        maxWeight: aftCG.maxWeight && previousUnits.weight !== units.weight ?
+          Math.round(convertValue(
+            aftCG.maxWeight,
+            previousUnits.weight,
+            units.weight,
+            'weight'
+          ) * 10) / 10 : aftCG.maxWeight,
+        cg: aftCG.cg && previousUnits.armLength !== units.armLength ?
+          Math.round(convertValue(
+            aftCG.cg,
+            previousUnits.armLength || 'mm',
+            units.armLength || 'mm',
+            'armLength'
+          ) * 10000) / 10000 : aftCG.cg
+      };
+      setAftCG(convertedAft);
+    }
+
+    // Convertir les points intermédiaires
+    if (intermediatePoints.length > 0) {
+      const convertedPoints = intermediatePoints.map(point => ({
+        ...point,
+        minWeight: point.minWeight && previousUnits.weight !== units.weight ?
+          Math.round(convertValue(
+            point.minWeight,
+            previousUnits.weight,
+            units.weight,
+            'weight'
+          ) * 10) / 10 : point.minWeight,
+        maxWeight: point.maxWeight && previousUnits.weight !== units.weight ?
+          Math.round(convertValue(
+            point.maxWeight,
+            previousUnits.weight,
+            units.weight,
+            'weight'
+          ) * 10) / 10 : point.maxWeight,
+        cg: point.cg && previousUnits.armLength !== units.armLength ?
+          Math.round(convertValue(
+            point.cg,
+            previousUnits.armLength || 'mm',
+            units.armLength || 'mm',
+            'armLength'
+          ) * 10000) / 10000 : point.cg
+      }));
+      setIntermediatePoints(convertedPoints);
+      updateData('cgEnvelope.intermediatePoints', convertedPoints);
     }
 
     setPreviousUnits(units);
   }, [units]);
 
-  // Fonctions pour gérer les points CG avant
+  // Gestion des points Forward CG
   const addForwardPoint = () => {
-    const newPoint = { weight: '', cg: '', id: Date.now() + Math.random() };
-    const updatedPoints = [...forwardPoints, newPoint];
-    setForwardPoints(updatedPoints);
+    const newPoint = {
+      id: Date.now() + Math.random(),
+      weight: '',
+      cg: ''
+    };
+    const updatedPoints = [...forwardCGPoints, newPoint];
+    setForwardCGPoints(updatedPoints);
     updateData('cgEnvelope.forwardPoints', updatedPoints);
   };
 
   const removeForwardPoint = (pointId) => {
-    const updatedPoints = forwardPoints.filter(point => point.id !== pointId);
-    setForwardPoints(updatedPoints);
+    const updatedPoints = forwardCGPoints.filter(p => p.id !== pointId);
+    setForwardCGPoints(updatedPoints);
     updateData('cgEnvelope.forwardPoints', updatedPoints);
   };
 
   const updateForwardPoint = (pointId, field, value) => {
-    const updatedPoints = forwardPoints.map(point => 
-      point.id === pointId ? { ...point, [field]: value } : point
+    const updatedPoints = forwardCGPoints.map(p =>
+      p.id === pointId ? { ...p, [field]: value } : p
     );
-    setForwardPoints(updatedPoints);
+    setForwardCGPoints(updatedPoints);
     updateData('cgEnvelope.forwardPoints', updatedPoints);
+  };
+
+  // Fonction de validation et sauvegarde Most Rearward CG
+  const handleValidateAftCG = () => {
+    let finalMinWeight = aftCG.minWeight;
+    let finalMaxWeight = aftCG.maxWeight;
+
+    // Auto-complétion intelligente
+    if (!finalMinWeight && finalMaxWeight) {
+      // Si masse min manquante, utiliser la masse minimale de vol
+      finalMinWeight = data.weights?.minTakeoffWeight || '';
+    }
+
+    if (!finalMaxWeight && finalMinWeight) {
+      // Si masse max manquante, utiliser MTOW
+      finalMaxWeight = data.weights?.mtow || '';
+    }
+
+    // Mettre à jour l'état local
+    const updatedAft = {
+      minWeight: finalMinWeight,
+      maxWeight: finalMaxWeight,
+      cg: aftCG.cg
+    };
+
+    setAftCG(updatedAft);
+
+    // Sauvegarder dans les données principales
+    updateData('cgEnvelope.aftMinWeight', finalMinWeight);
+    updateData('cgEnvelope.aftMaxWeight', finalMaxWeight);
+    updateData('cgEnvelope.aftCG', aftCG.cg);
+
+    return true;
   };
 
   // Gestion des sièges supplémentaires
@@ -286,86 +401,56 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
   };
 
   const updateBaggageCompartment = (compartmentId, field, value) => {
-    const updatedCompartments = baggageCompartments.map(c => 
+    const updatedCompartments = baggageCompartments.map(c =>
       c.id === compartmentId ? { ...c, [field]: value } : c
     );
     setBaggageCompartments(updatedCompartments);
     updateData('baggageCompartments', updatedCompartments);
   };
 
+  // Gestion des points intermédiaires de l'enveloppe CG
+  const addIntermediatePoint = () => {
+    // Déterminer la masse min du nouveau point (masse max du point précédent)
+    let autoMinWeight = '';
+
+    if (intermediatePoints.length > 0) {
+      // Si des points intermédiaires existent, prendre la masse max du dernier
+      const lastPoint = intermediatePoints[intermediatePoints.length - 1];
+      autoMinWeight = lastPoint.maxWeight || '';
+    } else if (forwardCGPoints.length > 0) {
+      // Si aucun point intermédiaire, prendre la masse du dernier point Forward CG
+      const lastForwardPoint = forwardCGPoints[forwardCGPoints.length - 1];
+      autoMinWeight = lastForwardPoint.weight || '';
+    }
+
+    const newPoint = {
+      id: Date.now() + Math.random(),
+      minWeight: autoMinWeight,
+      maxWeight: '',
+      cg: ''
+    };
+    const updatedPoints = [...intermediatePoints, newPoint];
+    setIntermediatePoints(updatedPoints);
+    updateData('cgEnvelope.intermediatePoints', updatedPoints);
+  };
+
+  const removeIntermediatePoint = (pointId) => {
+    const updatedPoints = intermediatePoints.filter(p => p.id !== pointId);
+    setIntermediatePoints(updatedPoints);
+    updateData('cgEnvelope.intermediatePoints', updatedPoints);
+  };
+
+  const updateIntermediatePoint = (pointId, field, value) => {
+    const updatedPoints = intermediatePoints.map(p =>
+      p.id === pointId ? { ...p, [field]: value } : p
+    );
+    setIntermediatePoints(updatedPoints);
+    updateData('cgEnvelope.intermediatePoints', updatedPoints);
+  };
+
   return (
     <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
 
-      {/* Masse à vide */}
-      <Accordion 
-        expanded={expandedPanels.emptyWeight}
-        onChange={handlePanelChange('emptyWeight')}
-        elevation={0}
-        sx={{ 
-          mb: 2,
-          border: '1px solid',
-          borderColor: 'divider',
-          '&:before': { display: 'none' }
-        }}
-      >
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          sx={{ 
-            minHeight: '40px',
-            '&.Mui-expanded': { minHeight: '40px' },
-            '& .MuiAccordionSummary-content': { 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 1,
-              margin: '8px 0'
-            },
-            '& .MuiAccordionSummary-content.Mui-expanded': {
-              margin: '8px 0'
-            }
-          }}
-        >
-          <ScaleIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
-            Masse à vide
-          </Typography>
-        </AccordionSummary>
-        <AccordionDetails sx={{ pt: 1, pb: 2 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-            <Box sx={{ width: '100%', maxWidth: 350, mb: 1.5 }}>
-              <StyledTextField
-                fullWidth
-                size="small"
-                label="Masse à vide *"
-                type="number"
-                value={data.weights?.emptyWeight || ''}
-                onChange={(e) => updateData('weights.emptyWeight', e.target.value)}
-                error={!!errors['weights.emptyWeight']}
-                helperText={errors['weights.emptyWeight'] || "Masse de l'avion sans carburant ni chargement"}
-                required
-                InputProps={{
-                  endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
-                }}
-              />
-            </Box>
-            
-            <Box sx={{ width: '100%', maxWidth: 350 }}>
-              <StyledTextField
-                fullWidth
-                size="small"
-                label="Bras de levier"
-                type="number"
-                value={data.arms?.empty || ''}
-                onChange={(e) => updateData('arms.empty', e.target.value)}
-                error={!!errors['arms.empty']}
-                helperText="Distance depuis la référence"
-                InputProps={{
-                  endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
-                }}
-              />
-            </Box>
-          </Box>
-        </AccordionDetails>
-      </Accordion>
 
       {/* Carburant */}
       <Accordion 
@@ -621,11 +706,20 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
             ) : (
               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
                 {baggageCompartments.map((compartment, index) => (
-                  <Box key={compartment.id} sx={{ width: '100%', maxWidth: 500, mb: index < baggageCompartments.length - 1 ? 2 : 0 }}>
+                  <Box key={compartment.id} sx={{ width: '100%', maxWidth: 550, mb: index < baggageCompartments.length - 1 ? 2 : 0 }}>
                     {index > 0 && <Divider sx={{ mb: 2 }} />}
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, textAlign: 'center' }}>
-                      {compartment.name}
-                    </Typography>
+
+                    <Box sx={{ mb: 1.5 }}>
+                      <StyledTextField
+                        fullWidth
+                        size="small"
+                        label="Nom du compartiment"
+                        value={compartment.name}
+                        onChange={(e) => updateBaggageCompartment(compartment.id, 'name', e.target.value)}
+                        placeholder={`Compartiment ${index + 1}`}
+                      />
+                    </Box>
+
                     <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', justifyContent: 'center' }}>
                       <StyledTextField
                         size="small"
@@ -634,7 +728,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
                         value={compartment.arm}
                         onChange={(e) => updateBaggageCompartment(compartment.id, 'arm', e.target.value)}
                         placeholder="Station"
-                        sx={{ width: 180 }}
+                        sx={{ flex: 1 }}
                         InputProps={{
                           endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
                         }}
@@ -646,12 +740,12 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
                         value={compartment.maxWeight}
                         onChange={(e) => updateBaggageCompartment(compartment.id, 'maxWeight', e.target.value)}
                         placeholder="Charge max"
-                        sx={{ width: 180 }}
+                        sx={{ flex: 1 }}
                         InputProps={{
                           endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
                         }}
                       />
-                      {baggageCompartments.length > 1 && (
+                      {baggageCompartments.length > 0 && (
                         <IconButton
                           color="error"
                           onClick={() => removeBaggageCompartment(compartment.id)}
@@ -670,12 +764,12 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
         </AccordionDetails>
       </Accordion>
 
-      {/* Masses limites */}
-      <Accordion 
+      {/* Masses limites (fusion de Masse à vide + Masses limites) */}
+      <Accordion
         expanded={expandedPanels.limits}
         onChange={handlePanelChange('limits')}
         elevation={0}
-        sx={{ 
+        sx={{
           mb: 2,
           border: '1px solid',
           borderColor: 'divider',
@@ -684,12 +778,12 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
       >
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
-          sx={{ 
+          sx={{
             minHeight: '40px',
             '&.Mui-expanded': { minHeight: '40px' },
-            '& .MuiAccordionSummary-content': { 
-              display: 'flex', 
-              alignItems: 'center', 
+            '& .MuiAccordionSummary-content': {
+              display: 'flex',
+              alignItems: 'center',
               gap: 1,
               margin: '8px 0'
             },
@@ -705,7 +799,40 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-            <Box sx={{ width: '100%', maxWidth: 350, mb: 1.5 }}>
+            {/* Masse à vide carburant + Bras de levier sur la même ligne */}
+            <Box sx={{ width: '100%', maxWidth: 700, mb: 1.5 }}>
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                <StyledTextField
+                  fullWidth
+                  size="small"
+                  label="Masse maximale à vide carburant *"
+                  type="number"
+                  value={data.weights?.emptyWeight || ''}
+                  onChange={(e) => updateData('weights.emptyWeight', e.target.value)}
+                  error={!!errors['weights.emptyWeight']}
+                  helperText={errors['weights.emptyWeight'] || "Max Zero Fuel Mass"}
+                  required
+                  InputProps={{
+                    endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
+                  }}
+                />
+                <StyledTextField
+                  fullWidth
+                  size="small"
+                  label="Bras de levier"
+                  type="number"
+                  value={data.arms?.empty || ''}
+                  onChange={(e) => updateData('arms.empty', e.target.value)}
+                  error={!!errors['arms.empty']}
+                  helperText="Distance depuis la référence"
+                  InputProps={{
+                    endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
+                  }}
+                />
+              </Box>
+            </Box>
+
+            <Box sx={{ width: '100%', maxWidth: 700, mb: 1.5 }}>
               <StyledTextField
                 fullWidth
                 size="small"
@@ -721,8 +848,8 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
                 }}
               />
             </Box>
-            
-            <Box sx={{ width: '100%', maxWidth: 350, mb: 1.5 }}>
+
+            <Box sx={{ width: '100%', maxWidth: 700, mb: 1.5 }}>
               <StyledTextField
                 fullWidth
                 size="small"
@@ -737,17 +864,17 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
                 }}
               />
             </Box>
-            
-            <Box sx={{ width: '100%', maxWidth: 350 }}>
+
+            <Box sx={{ width: '100%', maxWidth: 700 }}>
               <StyledTextField
                 fullWidth
                 size="small"
-                label="Masse min au décollage"
+                label="Masse minimale de vol"
                 type="number"
                 value={data.weights?.minTakeoffWeight || ''}
                 onChange={(e) => updateData('weights.minTakeoffWeight', e.target.value)}
                 error={!!errors['weights.minTakeoffWeight']}
-                helperText={errors['weights.minTakeoffWeight'] || "Masse minimale autorisée au décollage"}
+                helperText={errors['weights.minTakeoffWeight'] || "Masse minimale de vol (Minimum Flight Mass)"}
                 InputProps={{
                   endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
                 }}
@@ -792,15 +919,16 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ width: '100%' }}>
-            {/* CG Avant (Most forward) - Points dynamiques */}
+            {/* CG Avant (Most forward) - Liste de points */}
             <Box sx={{ mb: 4 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '14px' }}>
-                  📍 Most Forward CG (Limite avant)
-                </Typography>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', fontSize: '14px' }}>
+                📍 Most Forward CG (Limite avant)
+              </Typography>
+
+              <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
                 <Button
-                  variant="contained"
-                  color="success"
+                  variant="outlined"
+                  color="primary"
                   size="small"
                   startIcon={<AddIcon />}
                   onClick={addForwardPoint}
@@ -809,60 +937,79 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
                   Ajouter un point
                 </Button>
               </Box>
-              
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-                {forwardPoints.map((point, index) => (
-                  <Box key={point.id} sx={{ width: '100%', maxWidth: 500, mb: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, textAlign: 'center' }}>
-                      Point {index + 1}
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', justifyContent: 'center' }}>
-                      <StyledTextField
-                        size="small"
-                        label={`Masse Point ${index + 1}`}
-                        type="number"
-                        value={point.weight}
-                        onChange={(e) => updateForwardPoint(point.id, 'weight', e.target.value)}
-                        placeholder="940"
-                        sx={{ width: 180 }}
-                        InputProps={{
-                          endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
-                        }}
-                      />
-                      <StyledTextField
-                        size="small"
-                        label={`CG Point ${index + 1}`}
-                        type="number"
-                        value={point.cg}
-                        onChange={(e) => updateForwardPoint(point.id, 'cg', e.target.value)}
-                        placeholder="2.4000"
-                        inputProps={{ step: "0.0001" }}
-                        sx={{ width: 180 }}
-                        InputProps={{
-                          endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
-                        }}
-                      />
-                      {forwardPoints.length > 1 && (
+
+              {forwardCGPoints.length === 0 ? (
+                <Alert severity="info" sx={{ maxWidth: 700, mx: 'auto' }}>
+                  <Typography variant="body2">
+                    💡 Aucun point défini. Cliquez sur "Ajouter un point" pour commencer.
+                  </Typography>
+                </Alert>
+              ) : (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+                  {forwardCGPoints.map((point, index) => (
+                    <Box
+                      key={point.id}
+                      sx={{
+                        width: '100%',
+                        maxWidth: 700,
+                        p: 2,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        bgcolor: 'background.paper'
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', fontSize: '13px' }}>
+                          Point Forward #{index + 1}
+                        </Typography>
                         <IconButton
+                          size="small"
                           color="error"
                           onClick={() => removeForwardPoint(point.id)}
-                          size="small"
+                          sx={{ ml: 1 }}
                         >
                           <DeleteIcon fontSize="small" />
                         </IconButton>
-                      )}
+                      </Box>
+
+                      <Box sx={{ display: 'flex', gap: 2 }}>
+                        <StyledTextField
+                          fullWidth
+                          size="small"
+                          label="Masse *"
+                          type="number"
+                          value={point.weight}
+                          onChange={(e) => updateForwardPoint(point.id, 'weight', e.target.value)}
+                          required
+                          InputProps={{
+                            endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
+                          }}
+                        />
+                        <StyledTextField
+                          fullWidth
+                          size="small"
+                          label="Bras de levier (CG) *"
+                          type="number"
+                          value={point.cg}
+                          onChange={(e) => updateForwardPoint(point.id, 'cg', e.target.value)}
+                          inputProps={{ step: "0.0001" }}
+                          required
+                          InputProps={{
+                            endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
+                          }}
+                        />
+                      </Box>
                     </Box>
-                  </Box>
-                ))}
-              </Box>
-              
-              {forwardPoints.length === 0 && (
-                <Alert severity="warning">
-                  <Typography variant="body2">
-                    Aucun point défini. Cliquez sur "Ajouter un point" pour commencer.
-                  </Typography>
-                </Alert>
+                  ))}
+                </Box>
               )}
+
+              <Alert severity="info" sx={{ mt: 2, maxWidth: 700, mx: 'auto' }}>
+                <Typography variant="body2">
+                  💡 <strong>Info :</strong> Pour une masse donnée, vous rentrez un bras de levier (CG). Vous pouvez ajouter autant de points que nécessaire pour définir la limite avant de l'enveloppe.
+                </Typography>
+              </Alert>
             </Box>
 
             {/* CG Arrière (Most rearward) */}
@@ -870,73 +1017,87 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
               <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', fontSize: '14px' }}>
                 📍 Most Rearward CG (Limite arrière)
               </Typography>
-              
+
               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-                <Box sx={{ width: '100%', maxWidth: 350, mb: 1.5 }}>
-                  <StyledTextField
-                    fullWidth
-                    size="small"
-                    label="Masse min"
-                    type="number"
-                    value={data.cgEnvelope?.aftMinWeight || ''}
-                    onChange={(e) => updateData('cgEnvelope.aftMinWeight', e.target.value)}
-                    placeholder="940"
-                    InputProps={{
-                      endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
-                    }}
-                    helperText="Masse minimale pour la limite CG arrière"
-                  />
+                <Box sx={{ width: '100%', maxWidth: 700, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper' }}>
+                  {/* Masse min et max sur la même ligne */}
+                  <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                    <StyledTextField
+                      fullWidth
+                      size="small"
+                      label="Masse min *"
+                      type="number"
+                      value={aftCG.minWeight}
+                      onChange={(e) => setAftCG(prev => ({ ...prev, minWeight: e.target.value }))}
+                      placeholder={data.weights?.minTakeoffWeight || "940"}
+                      required
+                      InputProps={{
+                        endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
+                      }}
+                      helperText={!aftCG.minWeight && data.weights?.minTakeoffWeight ? "Auto: Masse min de vol" : ""}
+                    />
+                    <StyledTextField
+                      fullWidth
+                      size="small"
+                      label="Masse max *"
+                      type="number"
+                      value={aftCG.maxWeight}
+                      onChange={(e) => setAftCG(prev => ({ ...prev, maxWeight: e.target.value }))}
+                      placeholder={data.weights?.mtow || "1310"}
+                      required
+                      InputProps={{
+                        endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
+                      }}
+                      helperText={!aftCG.maxWeight && data.weights?.mtow ? "Auto: MTOW" : ""}
+                    />
+                  </Box>
+
+                  {/* Bras de levier (CG position) */}
+                  <Box sx={{ mb: 2 }}>
+                    <StyledTextField
+                      fullWidth
+                      size="small"
+                      label="Bras de levier (CG arrière) *"
+                      type="number"
+                      value={aftCG.cg}
+                      onChange={(e) => setAftCG(prev => ({ ...prev, cg: e.target.value }))}
+                      placeholder="2.5300"
+                      inputProps={{ step: "0.0001" }}
+                      required
+                      InputProps={{
+                        endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
+                      }}
+                      helperText="Position du centre de gravité arrière"
+                    />
+                  </Box>
+
+                  {/* Bouton de validation */}
+                  <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      onClick={handleValidateAftCG}
+                      disabled={!aftCG.cg || (!aftCG.minWeight && !aftCG.maxWeight)}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      ✓ Valider Most Rearward CG
+                    </Button>
+                  </Box>
                 </Box>
-                <Box sx={{ width: '100%', maxWidth: 350, mb: 1.5 }}>
-                  <StyledTextField
-                    fullWidth
-                    size="small"
-                    label="CG arrière constant"
-                    type="number"
-                    value={data.cgEnvelope?.aftCG || ''}
-                    onChange={(e) => updateData('cgEnvelope.aftCG', e.target.value)}
-                    placeholder="2.5300"
-                    inputProps={{ step: "0.0001" }}
-                    InputProps={{
-                      endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
-                    }}
-                    helperText="Position CG arrière (constante)"
-                  />
-                </Box>
-                <Box sx={{ width: '100%', maxWidth: 350 }}>
-                  <StyledTextField
-                    fullWidth
-                    size="small"
-                    label="Masse max"
-                    type="number"
-                    value={data.cgEnvelope?.aftMaxWeight || ''}
-                    onChange={(e) => updateData('cgEnvelope.aftMaxWeight', e.target.value)}
-                    placeholder="1225"
-                    InputProps={{
-                      endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
-                    }}
-                    helperText="Masse maximale pour la limite CG arrière"
-                  />
-                </Box>
+
               </Box>
-              
-              <Alert severity="warning" sx={{ mt: 2 }}>
-                <Typography variant="body2">
-                  Le CG arrière est généralement constant. Entrez les masses min et max pour définir la plage.
-                </Typography>
-              </Alert>
             </Box>
           </Box>
         </AccordionDetails>
       </Accordion>
 
       {/* Graphique de l'enveloppe de centrage */}
-      <CGEnvelopeChart 
+      <CGEnvelopeChart
         cgEnvelope={{
-          forwardPoints: forwardPoints,
-          aftMinWeight: data.cgEnvelope?.aftMinWeight,
-          aftCG: data.cgEnvelope?.aftCG,
-          aftMaxWeight: data.cgEnvelope?.aftMaxWeight
+          forwardPoints: forwardCGPoints,
+          aftMinWeight: data.cgEnvelope?.aftMinWeight || aftCG.minWeight,
+          aftCG: data.cgEnvelope?.aftCG || aftCG.cg,
+          aftMaxWeight: data.cgEnvelope?.aftMaxWeight || aftCG.maxWeight
         }}
         massUnit={getUnitSymbol(units.weight)}
       />

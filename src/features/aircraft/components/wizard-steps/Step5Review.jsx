@@ -157,6 +157,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
     console.log('🔵 Step5Review - handleSave appelé avec mode:', saveMode);
     console.log('🔵 data.baseAircraft:', data.baseAircraft);
     console.log('🔵 data.isImportedFromCommunity:', data.isImportedFromCommunity);
+    console.log('🔵 data.id:', data.id);
 
     // Si un mode est spécifié directement (pour les variantes)
     if (saveMode) {
@@ -165,6 +166,13 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
       } else if (saveMode === 'community') {
         handleCommunitySubmission();
       }
+      return;
+    }
+
+    // Si c'est une édition d'un avion existant (a un ID), sauvegarder localement
+    if (data.id || data.aircraftId) {
+      console.log('🔵 Édition d\'un avion existant, sauvegarde locale');
+      handleLocalSave();
       return;
     }
 

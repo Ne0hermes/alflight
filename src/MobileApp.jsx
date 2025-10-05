@@ -12,6 +12,7 @@ import { useAuthStore } from './features/account/stores/authStore';
 import dataBackupManager from './utils/dataBackupManager';
 import { LandingPage } from './components/LandingPage';
 import { ALFlightSplashScreen } from './components/ALFlightSplashScreen';
+import { IndexedDBChecker } from './components/IndexedDBChecker';
 
 // Import modules directly
 import NavigationModule from './features/navigation';
@@ -33,6 +34,7 @@ import './utils/testGoogleSheets';
 import './utils/fixSpecificEntry';
 import './utils/testLogbookIntegration';
 import './utils/analyzeFlightEntry';
+import './utils/debugIndexedDB';
 
 // Wrap them in lazy loading
 const FlightWizardModule = FlightPlanWizard;
@@ -110,30 +112,33 @@ export const MobileApp = () => {
   // Show landing page
   if (activeTab === 'landing') {
     return (
-      <ThemeProvider theme={muiTheme}>
-        <CssBaseline />
-        <FlightSystemProviders>
-          <div style={styles.app}>
-            {/* Afficher le menu burger aussi sur la page d'accueil */}
-            {isMobile && (
-              <MobileNavigation
-                tabs={TAB_CONFIG}
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-              />
-            )}
-            <LandingPage onNavigate={setActiveTab} />
-            <NotificationContainer />
-          </div>
-        </FlightSystemProviders>
-      </ThemeProvider>
+      <IndexedDBChecker>
+        <ThemeProvider theme={muiTheme}>
+          <CssBaseline />
+          <FlightSystemProviders>
+            <div style={styles.app}>
+              {/* Afficher le menu burger aussi sur la page d'accueil */}
+              {isMobile && (
+                <MobileNavigation
+                  tabs={TAB_CONFIG}
+                  activeTab={activeTab}
+                  onTabChange={setActiveTab}
+                />
+              )}
+              <LandingPage onNavigate={setActiveTab} />
+              <NotificationContainer />
+            </div>
+          </FlightSystemProviders>
+        </ThemeProvider>
+      </IndexedDBChecker>
     );
   }
 
   return (
-    <ThemeProvider theme={muiTheme}>
-      <CssBaseline />
-      <FlightSystemProviders>
+    <IndexedDBChecker>
+      <ThemeProvider theme={muiTheme}>
+        <CssBaseline />
+        <FlightSystemProviders>
         <div style={styles.app}>
         {/* Navigation */}
         {isMobile ? (
@@ -176,6 +181,7 @@ export const MobileApp = () => {
       </div>
     </FlightSystemProviders>
     </ThemeProvider>
+    </IndexedDBChecker>
   );
 };
 

@@ -124,7 +124,8 @@ const Step4Performance = ({ data, updateData, errors = {} }) => {
     model: data.model,
     manufacturer: data.manufacturer,
     type: data.aircraftType,
-    category: data.category
+    category: data.category,
+    manex: data.manex // Passer le MANEX existant
   };
 
   console.log('🔴 Rendu final - wizardStep:', wizardStep);

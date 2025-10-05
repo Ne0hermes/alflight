@@ -26,5 +26,10 @@
       "Bash(awk:*)"
     ],
     "deny": []
+  },
+  "hooks": {
+    "onFileEdit": "powershell.exe -ExecutionPolicy Bypass -File .claude/hooks/on-file-edit.ps1 -FilePath \"{{file_path}}\"",
+    "onFileWrite": "powershell.exe -ExecutionPolicy Bypass -File .claude/hooks/on-file-write.ps1 -FilePath \"{{file_path}}\"",
+    "onFileDelete": "powershell.exe -ExecutionPolicy Bypass -File .claude/hooks/on-file-delete.ps1 -FilePath \"{{file_path}}\""
   }
 }

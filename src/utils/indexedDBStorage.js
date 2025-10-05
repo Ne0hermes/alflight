@@ -6,7 +6,7 @@
  */
 
 const DB_NAME = 'FlightManagementDB';
-const DB_VERSION = 1;
+const DB_VERSION = 5; // Synchronisé avec dataBackupManager.js
 const MANEX_STORE = 'manexPDFs';
 const VAC_STORE = 'vacPDFs';
 
@@ -53,6 +53,40 @@ class IndexedDBStorage {
           const vacStore = db.createObjectStore(VAC_STORE, { keyPath: 'icao' });
           vacStore.createIndex('uploadDate', 'uploadDate', { unique: false });
           console.log('Store VAC créé');
+        }
+
+        // Créer les stores de dataBackupManager (pour éviter les conflits de version)
+        if (!db.objectStoreNames.contains('dataBackups')) {
+          const backupStore = db.createObjectStore('dataBackups', { keyPath: 'id' });
+          backupStore.createIndex('timestamp', 'timestamp', { unique: false });
+          backupStore.createIndex('type', 'type', { unique: false });
+          console.log('Store dataBackups créé');
+        }
+
+        if (!db.objectStoreNames.contains('protectedData')) {
+          const protectedStore = db.createObjectStore('protectedData', { keyPath: 'id' });
+          protectedStore.createIndex('type', 'type', { unique: false });
+          protectedStore.createIndex('lastModified', 'lastModified', { unique: false });
+          console.log('Store protectedData créé');
+        }
+
+        if (!db.objectStoreNames.contains('aircraftData')) {
+          const aircraftStore = db.createObjectStore('aircraftData', { keyPath: 'id' });
+          aircraftStore.createIndex('registration', 'registration', { unique: false });
+          aircraftStore.createIndex('lastModified', 'lastModified', { unique: false });
+          console.log('Store aircraftData créé');
+        }
+
+        if (!db.objectStoreNames.contains('vfrPoints')) {
+          const vfrStore = db.createObjectStore('vfrPoints', { keyPath: 'id' });
+          vfrStore.createIndex('name', 'name', { unique: false });
+          console.log('Store vfrPoints créé');
+        }
+
+        if (!db.objectStoreNames.contains('navigationData')) {
+          const navStore = db.createObjectStore('navigationData', { keyPath: 'id' });
+          navStore.createIndex('timestamp', 'timestamp', { unique: false });
+          console.log('Store navigationData créé');
         }
       };
     });

@@ -36,68 +36,11 @@ import {
   Update as UpdateIcon
 } from '@mui/icons-material';
 import { useAircraftStore } from '@core/stores/aircraftStore';
+import { COMMUNITY_AIRCRAFT_DATABASE } from '../../data/communityAircraftDatabase';
 
 // Simulation de la base de données communautaire
 // En production, ceci sera remplacé par un appel API vers la base de données en ligne
-const MOCK_COMMUNITY_AIRCRAFT = [
-  {
-    registration: 'F-GBYU',
-    model: 'Diamond DA40 NG',
-    manufacturer: 'Diamond Aircraft',
-    type: 'DA40 NG',
-    addedBy: 'Pilot123',
-    dateAdded: '2024-03-15',
-    downloads: 156,
-    verified: true,
-    votes: { up: 42, down: 2 },
-    validationThreshold: 10, // Nombre de votes positifs nets nécessaires
-    hasFlightManual: true,
-    manualVersion: 'Rev. 7 - 2023',
-    adminVerified: true // Vérifié par les administrateurs
-  },
-  {
-    registration: 'F-HXYZ',
-    model: 'Cessna 172S',
-    manufacturer: 'Cessna',
-    type: 'C172S',
-    addedBy: 'AeroClub75',
-    dateAdded: '2024-02-28',
-    downloads: 89,
-    verified: true,
-    votes: { up: 28, down: 1 },
-    hasFlightManual: true,
-    manualVersion: 'Rev. 5 - 2022',
-    adminVerified: true
-  },
-  {
-    registration: 'F-GJKL',
-    model: 'Piper PA-28-181',
-    manufacturer: 'Piper',
-    type: 'PA28',
-    addedBy: 'FlightSchool',
-    dateAdded: '2024-01-10',
-    downloads: 234,
-    verified: false,
-    votes: { up: 8, down: 3 },
-    hasFlightManual: true,
-    manualVersion: 'Report 2215 - 2021',
-    adminVerified: false // En attente de vérification admin
-  },
-  {
-    registration: 'F-GMNO',
-    model: 'Robin DR400-140B',
-    manufacturer: 'Robin',
-    type: 'DR400',
-    addedBy: 'FrenchPilot',
-    dateAdded: '2024-03-01',
-    downloads: 178,
-    verified: true,
-    votes: { up: 35, down: 0 },
-    hasFlightManual: true,
-    manualVersion: 'Ed. 2020',
-    adminVerified: true
-  }
-];
+const MOCK_COMMUNITY_AIRCRAFT = COMMUNITY_AIRCRAFT_DATABASE;
 
 const Step0CommunityCheck = ({ data, updateData, onSkip, onComplete }) => {
   const [searchValue, setSearchValue] = useState(data.searchRegistration || '');

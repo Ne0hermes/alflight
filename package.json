@@ -7,6 +7,8 @@
     "dev": "concurrently \"vite\" \"node server/googleSheetsServer.js\"",
     "dev:frontend": "vite",
     "dev:logger": "node server/googleSheetsServer.js",
+    "dev:tracker": "node scripts/autoTracker.cjs",
+    "dev:tracked": "concurrently \"vite\" \"node server/googleSheetsServer.js\" \"node scripts/autoTracker.cjs\"",
     "dev:old": "vite",
     "build": "vite build",
     "preview": "vite preview",
@@ -55,6 +57,7 @@
     "d3-shape": "^3.2.0",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.1",
+    "exceljs": "^4.4.0",
     "express": "^4.21.2",
     "googleapis": "^160.0.0",
     "idb-keyval": "^6.2.2",
@@ -71,6 +74,7 @@
     "react-router-dom": "^7.8.1",
     "recharts": "^3.1.2",
     "uuid": "^13.0.0",
+    "xlsx": "^0.18.5",
     "zustand": "^4.5.7"
   },
   "devDependencies": {
@@ -80,6 +84,7 @@
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^4.2.1",
     "@xmldom/xmldom": "^0.9.8",
+    "chokidar": "^4.0.3",
     "concurrently": "^9.2.1",
     "eslint": "^8.55.0",
     "eslint-plugin-react": "^7.33.2",

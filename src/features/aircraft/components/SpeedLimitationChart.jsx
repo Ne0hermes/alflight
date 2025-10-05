@@ -43,7 +43,7 @@ const SpeedLimitationChart = memo(({ speeds }) => {
         borderRadius: '8px',
         marginBottom: '16px',
         position: 'relative',
-        minHeight: '120px'
+        minHeight: '160px'
       }}>
         {/* Échelle de vitesse */}
         <div style={{
@@ -156,12 +156,167 @@ const SpeedLimitationChart = memo(({ speeds }) => {
               title={`VO: ${vo} kt (Operating manoeuvring speed)`}
             />
           )}
+
+          {/* Labels de vitesse aux bornes des arcs */}
+          {/* VSO - Début arc blanc */}
+          {vso > 0 && (
+            <div
+              style={{
+                position: 'absolute',
+                left: `${vso * scale}%`,
+                bottom: '50px',
+                transform: 'translateX(-50%)',
+                fontSize: '10px',
+                fontWeight: 'bold',
+                color: '#ffffff',
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                padding: '2px 6px',
+                borderRadius: '3px',
+                whiteSpace: 'nowrap',
+                zIndex: 10
+              }}
+            >
+              VSO {vso} kt
+            </div>
+          )}
+
+          {/* VFE Ldg - Fin arc blanc */}
+          {vfeLdg > 0 && (
+            <div
+              style={{
+                position: 'absolute',
+                left: `${vfeLdg * scale}%`,
+                bottom: '50px',
+                transform: 'translateX(-50%)',
+                fontSize: '10px',
+                fontWeight: 'bold',
+                color: '#ffffff',
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                padding: '2px 6px',
+                borderRadius: '3px',
+                whiteSpace: 'nowrap',
+                zIndex: 10
+              }}
+            >
+              VFE {vfeLdg} kt
+            </div>
+          )}
+
+          {/* VS1 - Début arc vert */}
+          {vs1 > 0 && (
+            <div
+              style={{
+                position: 'absolute',
+                left: `${vs1 * scale}%`,
+                bottom: '75px',
+                transform: 'translateX(-50%)',
+                fontSize: '10px',
+                fontWeight: 'bold',
+                color: '#10b981',
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                padding: '2px 6px',
+                borderRadius: '3px',
+                whiteSpace: 'nowrap',
+                zIndex: 10
+              }}
+            >
+              VS1 {vs1} kt
+            </div>
+          )}
+
+          {/* VNO - Fin arc vert / Début arc jaune */}
+          {vno > 0 && (
+            <div
+              style={{
+                position: 'absolute',
+                left: `${vno * scale}%`,
+                bottom: '75px',
+                transform: 'translateX(-50%)',
+                fontSize: '10px',
+                fontWeight: 'bold',
+                color: '#fbbf24',
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                padding: '2px 6px',
+                borderRadius: '3px',
+                whiteSpace: 'nowrap',
+                zIndex: 10
+              }}
+            >
+              VNO {vno} kt
+            </div>
+          )}
+
+          {/* VNE - Trait rouge */}
+          {vne > 0 && (
+            <div
+              style={{
+                position: 'absolute',
+                left: `${vne * scale}%`,
+                bottom: '75px',
+                transform: 'translateX(-50%)',
+                fontSize: '10px',
+                fontWeight: 'bold',
+                color: '#dc2626',
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                padding: '2px 6px',
+                borderRadius: '3px',
+                whiteSpace: 'nowrap',
+                zIndex: 10
+              }}
+            >
+              VNE {vne} kt
+            </div>
+          )}
+
+          {/* VFE T/O - si différent de VFE */}
+          {vfeTO > 0 && vfeTO !== vfeLdg && (
+            <div
+              style={{
+                position: 'absolute',
+                left: `${vfeTO * scale}%`,
+                bottom: '50px',
+                transform: 'translateX(-50%)',
+                fontSize: '9px',
+                fontWeight: 'bold',
+                color: '#d1d5db',
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                padding: '2px 4px',
+                borderRadius: '3px',
+                whiteSpace: 'nowrap',
+                zIndex: 10
+              }}
+            >
+              VFE T/O {vfeTO} kt
+            </div>
+          )}
+
+          {/* VO */}
+          {vo > 0 && (
+            <div
+              style={{
+                position: 'absolute',
+                left: `${vo * scale}%`,
+                bottom: '50px',
+                transform: 'translateX(-50%)',
+                fontSize: '9px',
+                fontWeight: 'bold',
+                color: '#d1d5db',
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                padding: '2px 4px',
+                borderRadius: '3px',
+                whiteSpace: 'nowrap',
+                zIndex: 10
+              }}
+            >
+              VO {vo} kt
+            </div>
+          )}
         </div>
         
         {/* Graduations et labels */}
         <div style={{
           position: 'absolute',
-          bottom: '60px',
+          bottom: '100px',
           left: '20px',
           right: '20px',
           display: 'flex',
