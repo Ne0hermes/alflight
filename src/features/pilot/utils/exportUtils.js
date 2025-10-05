@@ -15,7 +15,10 @@ export const exportPilotData = () => {
     // 1. Récupérer TOUTES les données du profil pilote
     const pilotProfile = JSON.parse(localStorage.getItem('pilotProfile') || '{}');
     const personalInfo = JSON.parse(localStorage.getItem('personalInfo') || '{}');
-    const unitsConfig = JSON.parse(localStorage.getItem('unitsConfig') || '{}');
+
+    // Récupérer les unités depuis le store Zustand
+    const unitsPreferences = JSON.parse(localStorage.getItem('units-preferences') || '{}');
+    const unitsConfig = unitsPreferences.state?.units || {};
 
     // 2. Récupérer les certifications (licences, qualifications, etc.)
     const pilotCertifications = JSON.parse(localStorage.getItem('pilotCertifications') || '{}');
@@ -182,8 +185,17 @@ export const importPilotData = (file) => {
         }
 
         // 5. Importer la configuration des unités
-        if (data.unitsConfig) {
-          localStorage.setItem('unitsConfig', JSON.stringify(data.unitsConfig));
+        if (data.unitsConfig && Object.keys(data.unitsConfig).length > 0) {
+          // Restaurer dans le format Zustand
+          const unitsPreferences = {
+            state: {
+              units: data.unitsConfig
+            },
+            version: 0
+          };
+          localStorage.setItem('units-preferences', JSON.stringify(unitsPreferences));
+          // Marquer que les unités ont été configurées
+          localStorage.setItem('unitsConfigured', 'true');
           console.log('✅ Configuration des unités importée');
         }
 
@@ -194,7 +206,7 @@ export const importPilotData = (file) => {
           pilotProfile: localStorage.getItem('pilotProfile') !== null,
           certifications: localStorage.getItem('pilotCertifications') !== null,
           medical: localStorage.getItem('pilotMedicalRecords') !== null,
-          units: localStorage.getItem('unitsConfig') !== null
+          units: localStorage.getItem('units-preferences') !== null
         };
         console.log('  ✅ Informations personnelles:', verif.personalInfo ? 'OK' : 'Manquant');
         console.log('  ✅ Profil pilote:', verif.pilotProfile ? 'OK' : 'Manquant');
@@ -250,25 +262,90 @@ export const exportLogbook = () => {
 };
 
 /**
- * Export de la flotte d'avions (inchangé)
+ * Export de la flotte d'avions avec données de performance
  */
-export const exportAircraft = () => {
-  const aircraft = JSON.parse(localStorage.getItem('userAircraft') || '[]');
-  const selectedAircraft = JSON.parse(localStorage.getItem('selectedAircraft') || '{}');
+export const exportAircraft = async () => {
+  try {
+    // Récupérer la liste des avions depuis le store Zustand
+    const aircraftStore = JSON.parse(localStorage.getItem('aircraft-storage') || '{}');
+    const aircraft = aircraftStore.state?.aircraftList || [];
+    const selectedId = aircraftStore.state?.selectedId || null;
 
-  const exportData = {
-    version: '1.0',
-    exportDate: new Date().toISOString(),
-    type: 'aircraft',
-    data: {
-      fleet: aircraft,
-      selectedAircraft: selectedAircraft,
-      totalAircraft: aircraft.length
-    }
-  };
+    console.log('📦 Export de', aircraft.length, 'avions');
 
-  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-  downloadFile(blob, `aircraft-${formatDateFile(new Date())}.json`);
+    // Charger les données volumineuses depuis IndexedDB
+    const { default: dataBackupManager } = await import('../../../core/services/dataBackupManager');
+    await dataBackupManager.initPromise;
+
+    // Pour chaque avion, récupérer les données volumineuses si présentes
+    const enrichedAircraft = await Promise.all(
+      aircraft.map(async (ac) => {
+        if (ac.hasPhoto || ac.hasManex || ac.hasPerformance) {
+          try {
+            const fullData = await dataBackupManager.getAircraftData(ac.id);
+            if (fullData) {
+              console.log(`✅ Données volumineuses chargées pour ${ac.registration}`);
+              return {
+                ...ac,
+                photo: fullData.photo || null,
+                manex: fullData.manex || null,
+                advancedPerformance: fullData.advancedPerformance || null,
+                performanceTables: fullData.performanceTables || null,
+                performanceModels: fullData.performanceModels || null
+              };
+            }
+          } catch (error) {
+            console.warn(`⚠️ Impossible de charger les données volumineuses pour ${ac.registration}:`, error);
+          }
+        }
+        return ac;
+      })
+    );
+
+    const exportData = {
+      version: '2.0', // Version 2.0 pour inclure les performances
+      exportDate: new Date().toISOString(),
+      type: 'aircraft',
+      data: {
+        fleet: enrichedAircraft,
+        selectedId: selectedId,
+        totalAircraft: enrichedAircraft.length
+      },
+      stats: {
+        totalAircraft: enrichedAircraft.length,
+        withPhoto: enrichedAircraft.filter(a => a.hasPhoto).length,
+        withManex: enrichedAircraft.filter(a => a.hasManex).length,
+        withPerformance: enrichedAircraft.filter(a => a.hasPerformance).length
+      }
+    };
+
+    console.log('📊 Statistiques export:', exportData.stats);
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    downloadFile(blob, `aircraft-fleet-${formatDateFile(new Date())}.json`);
+
+    return exportData;
+  } catch (error) {
+    console.error('❌ Erreur lors de l\'export des avions:', error);
+    alert('Erreur lors de l\'export: ' + error.message);
+
+    // Fallback: export sans données volumineuses
+    const aircraftStore = JSON.parse(localStorage.getItem('aircraft-storage') || '{}');
+    const aircraft = aircraftStore.state?.aircraftList || [];
+    const exportData = {
+      version: '1.0',
+      exportDate: new Date().toISOString(),
+      type: 'aircraft',
+      data: {
+        fleet: aircraft,
+        selectedId: aircraftStore.state?.selectedId || null,
+        totalAircraft: aircraft.length
+      }
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    downloadFile(blob, `aircraft-fleet-${formatDateFile(new Date())}.json`);
+    return exportData;
+  }
 };
 
 /**
