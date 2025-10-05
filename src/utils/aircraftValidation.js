@@ -43,14 +43,38 @@ const DEFAULT_AIRCRAFT_VALUES = {
  */
 export function validateAndRepairAircraft(aircraft) {
   if (!aircraft) return null;
-  
+
   // console.log('🔧 validateAndRepairAircraft - Input aircraft:', aircraft);
   // console.log('🔧 validateAndRepairAircraft - Surfaces compatibles avant:', aircraft.compatibleRunwaySurfaces);
   // console.log('🔧 validateAndRepairAircraft - Type des surfaces:', typeof aircraft.compatibleRunwaySurfaces);
   // console.log('🔧 validateAndRepairAircraft - Aircraft complet:', JSON.stringify(aircraft, null, 2));
-  
+
+  // Sauvegarder les données volumineuses AVANT le JSON parse/stringify qui les détruirait
+  const savedPhoto = aircraft.photo;
+  const savedManex = aircraft.manex;
+  const savedHasPhoto = aircraft.hasPhoto;
+  const savedHasManex = aircraft.hasManex;
+  const savedHasPerformance = aircraft.hasPerformance;
+
   // Créer une copie PROFONDE pour ne pas modifier l'original et préserver TOUS les champs
   const repairedAircraft = JSON.parse(JSON.stringify(aircraft));
+
+  // Restaurer immédiatement les données volumineuses
+  if (savedPhoto !== undefined) {
+    repairedAircraft.photo = savedPhoto;
+  }
+  if (savedManex !== undefined) {
+    repairedAircraft.manex = savedManex;
+  }
+  if (savedHasPhoto !== undefined) {
+    repairedAircraft.hasPhoto = savedHasPhoto;
+  }
+  if (savedHasManex !== undefined) {
+    repairedAircraft.hasManex = savedHasManex;
+  }
+  if (savedHasPerformance !== undefined) {
+    repairedAircraft.hasPerformance = savedHasPerformance;
+  }
   
   // Réparer les propriétés de base SANS écraser les autres
   Object.keys(DEFAULT_AIRCRAFT_VALUES).forEach(key => {
@@ -115,7 +139,21 @@ export function validateAndRepairAircraft(aircraft) {
   if (aircraft.maintenanceNotes !== undefined) {
     repairedAircraft.maintenanceNotes = aircraft.maintenanceNotes;
   }
-  
+
+  // Préserver les données de performance
+  if (aircraft.advancedPerformance !== undefined) {
+    repairedAircraft.advancedPerformance = aircraft.advancedPerformance;
+  }
+  if (aircraft.performanceTables !== undefined) {
+    repairedAircraft.performanceTables = aircraft.performanceTables;
+  }
+  if (aircraft.performanceModels !== undefined) {
+    repairedAircraft.performanceModels = aircraft.performanceModels;
+  }
+  if (aircraft.flightManual !== undefined) {
+    repairedAircraft.flightManual = aircraft.flightManual;
+  }
+
   // Réparer les données de masse et centrage
   if (!repairedAircraft.weightBalance) {
     console.warn(`Aircraft ${aircraft.registration}: Missing weightBalance data, using defaults`);

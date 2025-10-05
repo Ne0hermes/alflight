@@ -2,16 +2,18 @@
 import React, { memo, useState, useEffect } from 'react';
 import { useAircraft } from '@core/contexts';
 import { useAircraftStore } from '@core/stores/aircraftStore';
-import { Plus, Edit2, Trash2, Download, Upload, Info, AlertTriangle, FileText, Eye, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Edit2, Trash2, Download, Upload, Info, AlertTriangle, FileText, Eye, X, ChevronDown, ChevronUp, Wand2 } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import AccordionButton from '@shared/components/AccordionButton';
 import { ManexImporter } from './components/ManexImporter';
 import AdvancedPerformanceAnalyzer from './components/AdvancedPerformanceAnalyzer';
+import AircraftCreationWizard from './components/AircraftCreationWizard';
 // import APIKeyTest from '../performance/components/APIKeyTest'; // Temporairement désactivé
 import { useUnits } from '@hooks/useUnits';
 import performanceDataManager from '../../utils/performanceDataManager';
 import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
 import dataBackupManager from '@utils/dataBackupManager';
+import indexedDBStorage from '@utils/indexedDBStorage';
 
 // Composant pour l'aide contextuelle
 const InfoIcon = memo(({ tooltip }) => {
@@ -91,23 +93,79 @@ export const AircraftModule = memo(() => {
   
   // Vérifier les données manquantes au premier chargement
   useEffect(() => {
-    const incomplete = aircraftList.filter(aircraft => 
+    const incomplete = aircraftList.filter(aircraft =>
       !aircraft.compatibleRunwaySurfaces || aircraft.compatibleRunwaySurfaces.length === 0
     );
-    
+
     if (incomplete.length > 0) {
       console.log('⚠️ Avions avec données manquantes trouvés:', incomplete.map(a => a.registration));
       setIncompleteAircraft(incomplete);
       setShowIncompleteDataAlert(true);
     }
   }, [aircraftList]); // Se réexécute quand la liste change
+
+  // Écouter l'événement pour reprendre l'assistant de création
+  useEffect(() => {
+    const handleResumeWizard = () => {
+      console.log('🔄 Event: resume-aircraft-wizard received');
+      const draft = localStorage.getItem('aircraft_wizard_draft');
+      if (draft) {
+        try {
+          const draftData = JSON.parse(draft);
+          console.log('📂 Draft loaded:', draftData);
+
+          // Ouvrir l'assistant avec les données du brouillon
+          setWizardAircraft(draftData.aircraftData);
+          setShowWizard(true);
+        } catch (e) {
+          console.error('❌ Error loading draft:', e);
+        }
+      }
+    };
+
+    window.addEventListener('resume-aircraft-wizard', handleResumeWizard);
+
+    return () => {
+      window.removeEventListener('resume-aircraft-wizard', handleResumeWizard);
+    };
+  }, []);
   
   
   const [showForm, setShowForm] = useState(false);
   const [editingAircraft, setEditingAircraft] = useState(null);
   const [showManexImporter, setShowManexImporter] = useState(false);
   const [manexAircraft, setManexAircraft] = useState(null);
+  const [showWizard, setShowWizard] = useState(false);
+  const [wizardAircraft, setWizardAircraft] = useState(null);
+  const [aircraftPhotos, setAircraftPhotos] = useState({});
   const updateAircraftManex = useAircraftStore(state => state.updateAircraftManex);
+
+  // Charger les photos depuis IndexedDB pour tous les avions qui en ont
+  useEffect(() => {
+    const loadPhotos = async () => {
+      const photosMap = {};
+
+      for (const aircraft of aircraftList) {
+        if (aircraft.hasPhoto || aircraft.hasManex) {
+          try {
+            const fullData = await dataBackupManager.getAircraftData(aircraft.id);
+            if (fullData && fullData.photo) {
+              photosMap[aircraft.id] = fullData.photo;
+              console.log(`📸 Photo chargée pour ${aircraft.registration}`);
+            }
+          } catch (error) {
+            console.warn(`⚠️ Erreur lors du chargement de la photo pour ${aircraft.registration}:`, error);
+          }
+        }
+      }
+
+      setAircraftPhotos(photosMap);
+    };
+
+    if (aircraftList.length > 0) {
+      loadPhotos();
+    }
+  }, [aircraftList]);
 
   const handleSelectAircraft = (aircraft) => {
     console.log('🎯 AircraftModule - Selecting aircraft:', aircraft);
@@ -132,22 +190,32 @@ export const AircraftModule = memo(() => {
     let currentAircraft = aircraftList.find(a => a.id === aircraft.id) || aircraft;
     console.log('✏️ AircraftModule - Current aircraft from list:', currentAircraft);
     console.log('✏️ AircraftModule - Aircraft surfaces:', currentAircraft.compatibleRunwaySurfaces);
-    
+
     // Si l'avion a des données volumineuses, essayer de les récupérer depuis IndexedDB avec timeout
     if (currentAircraft.hasPhoto || currentAircraft.hasManex) {
       try {
         console.log('🔍 Récupération des données volumineuses depuis IndexedDB...');
-        
+        console.log('🔍 ID de l\'avion:', currentAircraft.id);
+        console.log('🔍 hasPhoto:', currentAircraft.hasPhoto);
+        console.log('🔍 hasManex:', currentAircraft.hasManex);
+
+        // Attendre que la DB soit initialisée
+        await dataBackupManager.initPromise;
+        console.log('✅ DB initialisée');
+
         // Ajouter un timeout pour éviter d'attendre indéfiniment
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Timeout')), 3000); // 3 secondes max
+          setTimeout(() => reject(new Error('Timeout')), 5000); // 5 secondes max
         });
-        
+
         const dataPromise = dataBackupManager.getAircraftData(currentAircraft.id);
-        
+
         const fullAircraft = await Promise.race([dataPromise, timeoutPromise]);
-        
+
+        console.log('📦 Données récupérées:', fullAircraft ? 'OUI' : 'NON');
         if (fullAircraft) {
+          console.log('📸 Photo présente:', !!fullAircraft.photo);
+          console.log('📚 Manex présent:', !!fullAircraft.manex);
           currentAircraft = {
             ...currentAircraft,
             photo: fullAircraft.photo || currentAircraft.photo,
@@ -159,14 +227,54 @@ export const AircraftModule = memo(() => {
         }
       } catch (error) {
         console.error('❌ Erreur ou timeout lors de la récupération des données depuis IndexedDB:', error);
+        console.error('❌ Type d\'erreur:', error.name);
+        console.error('❌ Message:', error.message);
         console.log('➡️ Continuons sans les données volumineuses');
       }
     }
-    
+
     console.log('📝 Ouverture du formulaire d\'édition...');
-    
+
     setEditingAircraft(currentAircraft);
     setShowForm(true);
+  };
+
+  const handleOpenWizard = async (aircraft) => {
+    console.log('🪄 AircraftModule - Opening wizard for aircraft:', aircraft);
+    // Récupérer l'avion le plus récent depuis la liste pour avoir les dernières modifications
+    let currentAircraft = aircraftList.find(a => a.id === aircraft.id) || aircraft;
+
+    // Si l'avion a des données volumineuses, essayer de les récupérer depuis IndexedDB
+    if (currentAircraft.hasPhoto || currentAircraft.hasManex || currentAircraft.hasPerformance) {
+      try {
+        console.log('🔍 Chargement des données volumineuses (photos/manex/performances) pour le wizard...');
+        await dataBackupManager.initPromise;
+
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Timeout')), 5000);
+        });
+
+        const dataPromise = dataBackupManager.getAircraftData(currentAircraft.id);
+        const fullAircraft = await Promise.race([dataPromise, timeoutPromise]);
+
+        if (fullAircraft) {
+          currentAircraft = {
+            ...currentAircraft,
+            photo: fullAircraft.photo || currentAircraft.photo,
+            manex: fullAircraft.manex || currentAircraft.manex,
+            advancedPerformance: fullAircraft.advancedPerformance || currentAircraft.advancedPerformance,
+            performanceTables: fullAircraft.performanceTables || currentAircraft.performanceTables,
+            performanceModels: fullAircraft.performanceModels || currentAircraft.performanceModels
+          };
+          console.log('✅ Données volumineuses chargées pour le wizard');
+        }
+      } catch (error) {
+        console.error('❌ Erreur lors du chargement pour le wizard:', error);
+      }
+    }
+
+    setWizardAircraft(currentAircraft);
+    setShowWizard(true);
   };
 
   const handleDelete = (id) => {
@@ -177,18 +285,90 @@ export const AircraftModule = memo(() => {
     }
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     console.log('📤 AircraftModule - Exporting aircraft list');
-    const dataStr = JSON.stringify(aircraftList, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    const exportFileDefaultName = `aircraft-${new Date().toISOString().split('T')[0]}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-    console.log('✅ AircraftModule - Export completed');
+    console.log('📋 AircraftModule - Nombre d\'avions à exporter:', aircraftList.length);
+
+    try {
+      // Charger les données complètes (avec photo et manex) depuis IndexedDB ET localStorage
+      const fullAircraftList = await Promise.all(
+        aircraftList.map(async (aircraft) => {
+          console.log(`🔍 Traitement de l'avion: ${aircraft.registration} (ID: ${aircraft.id})`);
+          let exportData = { ...aircraft };
+
+          try {
+            // Essayer de charger les données volumineuses depuis IndexedDB (aircraftData store)
+            const fullData = await dataBackupManager.getAircraftData(aircraft.id);
+            console.log(`📦 Données IndexedDB (aircraftData) pour ${aircraft.registration}:`, fullData ? 'Trouvées' : 'Non trouvées');
+            if (fullData && fullData.photo) {
+              console.log(`📸 Photo trouvée dans IndexedDB (aircraftData) pour ${aircraft.registration}`);
+              exportData.photo = fullData.photo;
+            }
+            if (fullData && fullData.manex) {
+              console.log(`📚 MANEX trouvé dans IndexedDB (aircraftData) pour ${aircraft.registration}`);
+              exportData.manex = fullData.manex;
+            }
+            // Récupérer les données de performance depuis IndexedDB
+            if (fullData && fullData.advancedPerformance) {
+              console.log(`📊 Performances avancées trouvées dans IndexedDB (aircraftData) pour ${aircraft.registration}`);
+              exportData.advancedPerformance = fullData.advancedPerformance;
+            }
+            if (fullData && fullData.performanceTables) {
+              console.log(`📋 Tables de performance trouvées dans IndexedDB (aircraftData) pour ${aircraft.registration}`);
+              exportData.performanceTables = fullData.performanceTables;
+            }
+            if (fullData && fullData.performanceModels) {
+              console.log(`🎯 Modèles de performance trouvés dans IndexedDB (aircraftData) pour ${aircraft.registration}`);
+              exportData.performanceModels = fullData.performanceModels;
+            }
+          } catch (error) {
+            console.warn(`⚠️ Impossible de charger les données volumineuses depuis IndexedDB (aircraftData) pour ${aircraft.registration}:`, error);
+          }
+
+          // IMPORTANT: Toujours essayer de charger le MANEX depuis manexPDFs car il contient le pdfData
+          console.log(`🔎 Recherche MANEX dans manexPDFs pour ${aircraft.registration}... exportData.manex existe:`, !!exportData.manex);
+          try {
+            const manexData = await indexedDBStorage.getManexPDF(aircraft.id);
+            console.log(`📦 Résultat getManexPDF pour ${aircraft.registration}:`, manexData ? 'Trouvé' : 'Non trouvé');
+            if (manexData && manexData.pdfData) {
+              console.log(`📚 MANEX avec pdfData trouvé dans IndexedDB (manexPDFs) pour ${aircraft.registration}`);
+              exportData.manex = manexData;
+            } else if (!exportData.manex && manexData) {
+              // Si pas de pdfData mais on a des métadonnées dans manexPDFs, les utiliser
+              console.log(`📚 MANEX métadonnées trouvées dans IndexedDB (manexPDFs) pour ${aircraft.registration}`);
+              exportData.manex = manexData;
+            }
+          } catch (error) {
+            console.warn(`⚠️ Impossible de charger le MANEX depuis IndexedDB (manexPDFs) pour ${aircraft.registration}:`, error);
+          }
+
+          // IMPORTANT: Le MANEX peut aussi être dans aircraft.manex (localStorage)
+          console.log(`🔎 Recherche MANEX dans localStorage pour ${aircraft.registration}... aircraft.manex existe:`, !!aircraft.manex, 'exportData.manex existe:', !!exportData.manex);
+          if (aircraft.manex && !exportData.manex) {
+            console.log(`📚 MANEX trouvé dans localStorage pour ${aircraft.registration}`);
+            exportData.manex = aircraft.manex;
+          }
+
+          console.log(`✅ Export data final pour ${aircraft.registration} - a un MANEX:`, !!exportData.manex);
+          return exportData;
+        })
+      );
+
+      const dataStr = JSON.stringify(fullAircraftList, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      const exportFileDefaultName = `aircraft-${new Date().toISOString().split('T')[0]}.json`;
+
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+      console.log('✅ AircraftModule - Export completed');
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'export:', error);
+      alert('Erreur lors de l\'export des avions');
+    }
   };
+
 
   const handleImport = async (event) => {
     console.log('📥 AircraftModule - Importing aircraft');
@@ -197,9 +377,15 @@ export const AircraftModule = memo(() => {
       const reader = new FileReader();
       reader.onload = async (e) => {
         try {
-          const importedData = JSON.parse(e.target.result);
+          let importedData = JSON.parse(e.target.result);
           console.log('📋 AircraftModule - Imported data:', importedData);
-          
+
+          // Détecter et convertir le format wizard (export unique avec metadata)
+          if (importedData.aircraftData && !Array.isArray(importedData)) {
+            console.log('📦 Détection du format wizard - Conversion en cours...');
+            importedData = [importedData.aircraftData];
+          }
+
           if (Array.isArray(importedData)) {
             if (window.confirm(`Voulez-vous importer ${importedData.length} avion(s) ?`)) {
               // Vérifier et nettoyer le localStorage si nécessaire
@@ -299,17 +485,39 @@ export const AircraftModule = memo(() => {
                   }
                 }
                 
-                // Ensuite sauvegarder les données volumineuses dans IndexedDB si elles existent
+                // Ensuite sauvegarder les données volumineuses dans IndexedDB ET dans le store si elles existent
+                console.log(`🔍 Vérification photo/manex pour ${lightAircraft.registration}: photo=${!!photo}, manex=${!!manex}`);
                 if (photo || manex) {
                   try {
                     console.log(`💾 Sauvegarde des données volumineuses pour ${lightAircraft.registration}...`);
+                    console.log(`📸 Taille de la photo: ${photo ? photo.length : 0} caractères`);
+                    console.log(`📚 Taille du MANEX: ${manex ? (typeof manex === 'string' ? manex.length : JSON.stringify(manex).length) : 0} caractères`);
+
                     const fullAircraft = {
                       ...lightAircraft,
                       photo: photo || null,
                       manex: manex || null
                     };
+
+                    console.log(`🔄 Appel de dataBackupManager.saveAircraftData avec ID: ${fullAircraft.id}`);
                     await dataBackupManager.saveAircraftData(fullAircraft);
-                    console.log(`✅ Données volumineuses de ${lightAircraft.registration} sauvegardées dans IndexedDB`);
+                    console.log(`✅ Données volumineuses de ${lightAircraft.registration} sauvegardées dans IndexedDB (aircraftData)`);
+
+                    // IMPORTANT: Si le MANEX existe, le sauvegarder aussi dans le store manexPDFs
+                    if (manex) {
+                      console.log(`📚 Sauvegarde du MANEX dans le store manexPDFs...`);
+                      try {
+                        await indexedDBStorage.saveManexPDF(lightAircraft.id, manex);
+                        console.log(`✅ MANEX sauvegardé dans manexPDFs pour ${lightAircraft.registration}`);
+                      } catch (manexError) {
+                        console.warn(`⚠️  Erreur lors de la sauvegarde du MANEX dans manexPDFs:`, manexError);
+                      }
+                    }
+
+                    // IMPORTANT: Mettre à jour l'avion dans le store avec la photo pour que partialize puisse définir hasPhoto=true
+                    console.log(`🔄 Mise à jour de l'avion dans le store avec photo/manex...`);
+                    updateAircraft(fullAircraft);
+                    console.log(`✅ Avion mis à jour dans le store avec photo/manex`);
                   } catch (error) {
                     console.warn(`⚠️ Impossible de sauvegarder les données volumineuses pour ${lightAircraft.registration}:`, error);
                     console.log(`ℹ️ L'avion a été ajouté mais sans photo/manex`);
@@ -527,18 +735,18 @@ export const AircraftModule = memo(() => {
           />
           <button
             onClick={handleExport}
-            style={{ 
-              padding: '8px 16px', 
-              backgroundColor: '#e5e7eb', 
-              color: '#374151', 
-              border: 'none', 
-              borderRadius: '6px', 
-              fontSize: '14px', 
-              fontWeight: '500', 
-              cursor: 'pointer', 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '6px' 
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#e5e7eb',
+              color: '#374151',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
             }}
           >
             <Download size={16} />
@@ -546,22 +754,22 @@ export const AircraftModule = memo(() => {
           </button>
           <button
             onClick={() => {
-              console.log('➕ AircraftModule - Opening new aircraft form');
-              setEditingAircraft(null);
-              setShowForm(true);
+              console.log('➕ AircraftModule - Opening wizard for new aircraft');
+              setWizardAircraft(null);
+              setShowWizard(true);
             }}
-            style={{ 
-              padding: '8px 16px', 
-              backgroundColor: '#3b82f6', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '6px', 
-              fontSize: '14px', 
-              fontWeight: '500', 
-              cursor: 'pointer', 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '6px' 
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
             }}
           >
             <Plus size={16} />
@@ -635,8 +843,8 @@ export const AircraftModule = memo(() => {
                 
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px' }}>
                   {/* Photo de l'avion */}
-                  {aircraft.photo && (
-                    <div style={{ 
+                  {aircraftPhotos[aircraft.id] && (
+                    <div style={{
                       flexShrink: 0,
                       width: '120px',
                       height: '90px',
@@ -644,13 +852,13 @@ export const AircraftModule = memo(() => {
                       overflow: 'hidden',
                       border: '1px solid #e5e7eb'
                     }}>
-                      <img 
-                        src={aircraft.photo} 
+                      <img
+                        src={aircraftPhotos[aircraft.id]}
                         alt={`${aircraft.registration}`}
-                        style={{ 
-                          width: '100%', 
-                          height: '100%', 
-                          objectFit: 'cover' 
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover'
                         }}
                       />
                     </div>
@@ -691,9 +899,9 @@ export const AircraftModule = memo(() => {
                       <p>Vitesse: {aircraft.cruiseSpeed || aircraft.cruiseSpeedKt}kt • Conso: {aircraft.fuelConsumption}L/h</p>
                       <p>MTOW: {aircraft.maxTakeoffWeight}kg</p>
                       {/* Affichage des informations MANEX si présent */}
-                      {aircraft.manex && (
+                      {(aircraft.hasManex || aircraft.manex) && (
                         <p style={{ color: '#059669', fontSize: '12px', marginTop: '4px' }}>
-                          📚 MANEX: {aircraft.manex.fileName} ({aircraft.manex.pageCount} pages)
+                          📚 MANEX: {aircraft.manex?.fileName || 'Chargé'} {aircraft.manex?.pageCount ? `(${aircraft.manex.pageCount} pages)` : ''}
                         </p>
                       )}
                       {aircraft.masses?.emptyMass && (
@@ -839,12 +1047,12 @@ export const AircraftModule = memo(() => {
                       style={{
                         ...window.buttonSectionStyle,
                         padding: '8px',
-                        background: aircraft.manex ? '#fef3c7' : 'rgba(55, 65, 81, 0.35)',
-                        borderColor: aircraft.manex ? '#fbbf24' : 'rgba(0, 0, 0, 0.7)'
+                        background: (aircraft.hasManex || aircraft.manex) ? '#fef3c7' : 'rgba(55, 65, 81, 0.35)',
+                        borderColor: (aircraft.hasManex || aircraft.manex) ? '#fbbf24' : 'rgba(0, 0, 0, 0.7)'
                       }}
-                      title={aircraft.manex ? "MANEX importé - Cliquer pour modifier" : "Importer le MANEX"}
+                      title={(aircraft.hasManex || aircraft.manex) ? "MANEX importé - Cliquer pour modifier" : "Importer le MANEX"}
                     >
-                      <FileText size={16} color={aircraft.manex ? '#f59e0b' : undefined} />
+                      <FileText size={16} color={(aircraft.hasManex || aircraft.manex) ? '#f59e0b' : undefined} />
                     </button>
                     
                     
@@ -861,6 +1069,20 @@ export const AircraftModule = memo(() => {
                       title="Modifier"
                     >
                       <Edit2 size={16} />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenWizard(aircraft);
+                      }}
+                      style={{
+                        ...window.buttonSectionStyle,
+                        padding: '8px',
+                        color: '#8b5cf6'
+                      }}
+                      title="Modifier avec l'assistant"
+                    >
+                      <Wand2 size={16} />
                     </button>
                     {aircraftList.length > 1 && (
                       <button
@@ -1068,7 +1290,115 @@ export const AircraftModule = memo(() => {
           }}
         />
       )}
-      
+
+      {/* Modal Assistant de création/modification */}
+      {showWizard && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            maxWidth: '1200px',
+            width: '90%',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            position: 'relative'
+          }}>
+            <AircraftCreationWizard
+              existingAircraft={wizardAircraft}
+              onClose={() => {
+                setShowWizard(false);
+                setWizardAircraft(null);
+              }}
+              onComplete={async (aircraftData) => {
+                console.log('✅ Wizard completed with data:', aircraftData);
+
+                try {
+                  // Séparer les données volumineuses
+                  const { photo, manex, ...lightData } = aircraftData;
+
+                  if (wizardAircraft) {
+                    // Mode édition : mettre à jour l'avion existant
+                    const updatedAircraft = {
+                      ...lightData,
+                      id: wizardAircraft.id,
+                      photo: photo || null,
+                      manex: manex || null
+                    };
+
+                    // Marquer si l'avion a des données volumineuses
+                    if (photo) updatedAircraft.hasPhoto = true;
+                    if (manex) updatedAircraft.hasManex = true;
+                    if (updatedAircraft.advancedPerformance || updatedAircraft.performanceTables || updatedAircraft.performanceModels) {
+                      updatedAircraft.hasPerformance = true;
+                      console.log('✅ Wizard - Données de performance détectées et marquées');
+                    }
+
+                    console.log('💾 Wizard - Updating aircraft with photo:', !!photo, 'manex:', !!manex);
+
+                    // Sauvegarder les données volumineuses dans IndexedDB
+                    await dataBackupManager.saveAircraftData(updatedAircraft);
+                    console.log('✅ Wizard - Données volumineuses sauvegardées dans IndexedDB');
+
+                    // Mettre à jour avec l'objet complet (photo/manex inclus)
+                    updateAircraft(updatedAircraft);
+                    console.log('✅ Wizard - Aircraft updated');
+                  } else {
+                    // Mode création : ajouter un nouvel avion
+                    console.log('💾 Wizard - Adding new aircraft');
+
+                    // Utiliser l'ID existant ou en créer un nouveau
+                    if (!lightData.id) {
+                      lightData.id = `aircraft_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                    }
+
+                    // Marquer si l'avion a des données volumineuses
+                    if (photo) lightData.hasPhoto = true;
+                    if (manex) lightData.hasManex = true;
+                    if (lightData.advancedPerformance || lightData.performanceTables || lightData.performanceModels) {
+                      lightData.hasPerformance = true;
+                      console.log('✅ Wizard - Données de performance détectées et marquées (nouveau)');
+                    }
+
+                    console.log('💾 Wizard - New aircraft photo:', !!photo, 'manex:', !!manex);
+
+                    // Sauvegarder les données volumineuses dans IndexedDB si elles existent
+                    if (photo || manex || lightData.hasPerformance) {
+                      const fullAircraft = {
+                        ...lightData,
+                        photo: photo || null,
+                        manex: manex || null
+                      };
+                      await dataBackupManager.saveAircraftData(fullAircraft);
+                      console.log('✅ Wizard - Données volumineuses sauvegardées dans IndexedDB');
+                    }
+
+                    addAircraft(lightData);
+                    console.log('✅ Wizard - New aircraft added');
+                  }
+
+                  setShowWizard(false);
+                  setWizardAircraft(null);
+                } catch (error) {
+                  console.error('❌ Wizard - Erreur lors de la sauvegarde:', error);
+                  alert(`Erreur lors de la sauvegarde: ${error.message}`);
+                }
+              }}
+            />
+          </div>
+        </div>
+      )}
+
     </div>
   );
 });
@@ -3364,8 +3694,8 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                       </label>
                       <input
                         type="number"
-                        value={getUnit('weight') !== 'kg' ? 
-                          convert(compartment.maxWeight || 0, 'weight', 'kg', { toUnit: getUnit('weight') }).toFixed(1) : 
+                        value={getUnit('weight') !== 'kg' ?
+                          (Number(convert(compartment.maxWeight || 0, 'weight', 'kg', { toUnit: getUnit('weight') })) || 0).toFixed(1) :
                           compartment.maxWeight}
                         onChange={(e) => {
                           const valueInStorageUnit = getUnit('weight') !== 'kg' ? 
