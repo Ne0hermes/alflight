@@ -70,26 +70,61 @@ const Step2Speeds = ({ data, updateData, errors = {} }) => {
 
   // Initialiser les plages VO si elles n'existent pas
   const [voRanges, setVoRanges] = useState(data.speeds?.voRanges || [
-    { minWeight: '', maxWeight: '', speed: '' }
+    { minWeight: '', maxWeight: '', speed: '', saved: false }
   ]);
-
+  const [voTempRanges, setVoTempRanges] = useState(voRanges.map(r => ({ ...r })));
 
   const addVoRange = () => {
-    const newRanges = [...voRanges, { minWeight: '', maxWeight: '', speed: '' }];
+    const newRange = { minWeight: '', maxWeight: '', speed: '', saved: false };
+    const newRanges = [...voRanges, newRange];
     setVoRanges(newRanges);
-    updateData('speeds.voRanges', newRanges);
+    setVoTempRanges([...voTempRanges, { ...newRange }]);
   };
 
   const removeVoRange = (index) => {
     const newRanges = voRanges.filter((_, i) => i !== index);
     setVoRanges(newRanges);
+    setVoTempRanges(voTempRanges.filter((_, i) => i !== index));
     updateData('speeds.voRanges', newRanges);
   };
 
-  const updateVoRange = (index, field, value) => {
+  const updateVoRangeTemp = (index, field, value) => {
+    const newTempRanges = [...voTempRanges];
+    newTempRanges[index][field] = value;
+    setVoTempRanges(newTempRanges);
+  };
+
+  const saveVoRange = (index) => {
+    const tempRange = voTempRanges[index];
+
+    // Auto-complétion des masses depuis data.weights
+    let finalMinWeight = tempRange.minWeight;
+    let finalMaxWeight = tempRange.maxWeight;
+
+    // Si masse min vide mais max remplie, utiliser emptyWeight
+    if ((!finalMinWeight || finalMinWeight === '') && finalMaxWeight && data.weights?.emptyWeight) {
+      finalMinWeight = data.weights.emptyWeight;
+    }
+
+    // Si masse max vide mais min remplie, utiliser mtow
+    if ((!finalMaxWeight || finalMaxWeight === '') && finalMinWeight && data.weights?.mtow) {
+      finalMaxWeight = data.weights.mtow;
+    }
+
     const newRanges = [...voRanges];
-    newRanges[index][field] = value;
+    newRanges[index] = {
+      minWeight: finalMinWeight,
+      maxWeight: finalMaxWeight,
+      speed: tempRange.speed,
+      saved: true
+    };
     setVoRanges(newRanges);
+
+    // Mettre à jour aussi voTempRanges avec les valeurs auto-complétées
+    const newTempRanges = [...voTempRanges];
+    newTempRanges[index] = { ...newRanges[index] };
+    setVoTempRanges(newTempRanges);
+
     updateData('speeds.voRanges', newRanges);
   };
 
@@ -267,24 +302,25 @@ const Step2Speeds = ({ data, updateData, errors = {} }) => {
           Visualisation de l'arc de vitesses
         </Typography>
         
-        <Box sx={{ 
-          position: 'relative', 
-          height: 60, 
+        <Box sx={{
+          position: 'relative',
+          height: 120,
           bgcolor: 'background.paper',
           border: '1px solid',
           borderColor: 'divider',
           borderRadius: 1,
-          overflow: 'hidden',
+          overflow: 'visible',
           mb: 2
         }}>
-          {/* Arc blanc - VSO à VFE LDG */}
+          {/* Arc blanc - VSO à VFE LDG (en bas) */}
           {speeds.vso && speeds.vfeLdg && (
             <Box
               sx={{
                 position: 'absolute',
                 left: `${getPosition(speeds.vso)}%`,
                 width: `${getPosition(speeds.vfeLdg) - getPosition(speeds.vso)}%`,
-                height: '100%',
+                height: '40%',
+                bottom: 0,
                 bgcolor: 'grey.100',
                 border: '2px solid',
                 borderColor: 'grey.300',
@@ -293,49 +329,54 @@ const Step2Speeds = ({ data, updateData, errors = {} }) => {
                 justifyContent: 'center',
                 color: 'text.secondary',
                 fontSize: '0.75rem',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                zIndex: 1
               }}
             >
               Arc blanc
             </Box>
           )}
-          
-          {/* Arc vert - VS1 à VNO */}
+
+          {/* Arc vert - VS1 à VNO (au milieu) */}
           {speeds.vs1 && speeds.vno && (
             <Box
               sx={{
                 position: 'absolute',
                 left: `${getPosition(speeds.vs1)}%`,
                 width: `${getPosition(speeds.vno) - getPosition(speeds.vs1)}%`,
-                height: '100%',
+                height: '60%',
+                top: 0,
                 bgcolor: 'success.main',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'white',
                 fontSize: '0.75rem',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                zIndex: 2
               }}
             >
               Arc vert
             </Box>
           )}
-          
-          {/* Arc jaune - VNO à VNE */}
+
+          {/* Arc jaune - VNO à VNE (au milieu, continuation du vert) */}
           {speeds.vno && speeds.vne && (
             <Box
               sx={{
                 position: 'absolute',
                 left: `${getPosition(speeds.vno)}%`,
                 width: `${getPosition(speeds.vne) - getPosition(speeds.vno)}%`,
-                height: '100%',
+                height: '60%',
+                top: 0,
                 bgcolor: 'warning.main',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'text.primary',
                 fontSize: '0.75rem',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                zIndex: 2
               }}
             >
               Arc jaune
@@ -349,8 +390,10 @@ const Step2Speeds = ({ data, updateData, errors = {} }) => {
                 position: 'absolute',
                 left: `${getPosition(speeds.vne)}%`,
                 width: '3px',
-                height: '100%',
-                bgcolor: 'error.main'
+                height: '60%',
+                top: 0,
+                bgcolor: 'error.main',
+                zIndex: 3
               }}
             />
           )}
@@ -359,28 +402,186 @@ const Step2Speeds = ({ data, updateData, errors = {} }) => {
           {voRanges && voRanges.map((range, index) => {
             if (!range.speed) return null;
             return (
-              <Box
-                key={`vo-${index}`}
-                sx={{
-                  position: 'absolute',
-                  left: `${getPosition(range.speed)}%`,
-                  width: '2px',
-                  height: '50%',
-                  top: '25%',
-                  bgcolor: 'purple',
-                  '&::after': {
-                    content: `"VO${index + 1}"`,
+              <React.Fragment key={`vo-${index}`}>
+                <Box
+                  sx={{
                     position: 'absolute',
-                    bottom: '-18px',
-                    left: '-12px',
-                    fontSize: '9px',
+                    left: `${getPosition(range.speed)}%`,
+                    width: '2px',
+                    height: '40%',
+                    bottom: 0,
+                    bgcolor: 'purple',
+                    zIndex: 5
+                  }}
+                />
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    left: `${getPosition(range.speed)}%`,
+                    bottom: '-25px',
+                    transform: 'translateX(-50%)',
+                    fontSize: '11px',
                     fontWeight: 'bold',
-                    color: 'purple'
-                  }
-                }}
-              />
+                    color: 'purple',
+                    px: 0.75,
+                    py: 0.25,
+                    borderRadius: '3px',
+                    whiteSpace: 'nowrap',
+                    zIndex: 10
+                  }}
+                >
+                  {range.speed}
+                </Box>
+              </React.Fragment>
             );
           })}
+
+          {/* Labels de vitesse aux bornes des arcs */}
+          {/* VSO - Début arc blanc */}
+          {speeds.vso && (
+            <Box
+              sx={{
+                position: 'absolute',
+                left: `${getPosition(speeds.vso)}%`,
+                top: '-25px',
+                transform: 'translateX(-50%)',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                color: '#6b7280',
+                px: 0.75,
+                py: 0.25,
+                borderRadius: '3px',
+                whiteSpace: 'nowrap',
+                zIndex: 10
+              }}
+            >
+              {speeds.vso}
+            </Box>
+          )}
+
+          {/* VFE LDG - Fin arc blanc */}
+          {speeds.vfeLdg && (
+            <Box
+              sx={{
+                position: 'absolute',
+                left: `${getPosition(speeds.vfeLdg)}%`,
+                top: '-25px',
+                transform: 'translateX(-50%)',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                color: '#6b7280',
+                px: 0.75,
+                py: 0.25,
+                borderRadius: '3px',
+                whiteSpace: 'nowrap',
+                zIndex: 10
+              }}
+            >
+              {speeds.vfeLdg}
+            </Box>
+          )}
+
+          {/* VS1 - Début arc vert */}
+          {speeds.vs1 && (
+            <Box
+              sx={{
+                position: 'absolute',
+                left: `${getPosition(speeds.vs1)}%`,
+                top: '-25px',
+                transform: 'translateX(-50%)',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                color: 'success.main',
+                px: 0.75,
+                py: 0.25,
+                borderRadius: '3px',
+                whiteSpace: 'nowrap',
+                zIndex: 10
+              }}
+            >
+              {speeds.vs1}
+            </Box>
+          )}
+
+          {/* VNO - Fin arc vert / Début arc jaune */}
+          {speeds.vno && (
+            <Box
+              sx={{
+                position: 'absolute',
+                left: `${getPosition(speeds.vno)}%`,
+                top: '-25px',
+                transform: 'translateX(-50%)',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                color: 'warning.main',
+                px: 0.75,
+                py: 0.25,
+                borderRadius: '3px',
+                whiteSpace: 'nowrap',
+                zIndex: 10
+              }}
+            >
+              {speeds.vno}
+            </Box>
+          )}
+
+          {/* VNE - Trait rouge */}
+          {speeds.vne && (
+            <Box
+              sx={{
+                position: 'absolute',
+                left: `${getPosition(speeds.vne)}%`,
+                top: '-25px',
+                transform: 'translateX(-50%)',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                color: 'error.main',
+                px: 0.75,
+                py: 0.25,
+                borderRadius: '3px',
+                whiteSpace: 'nowrap',
+                zIndex: 10
+              }}
+            >
+              {speeds.vne}
+            </Box>
+          )}
+
+          {/* VFE T/O - Vitesse max volets décollage */}
+          {speeds.vfeTO && speeds.vfeTO !== speeds.vfeLdg && (
+            <>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  left: `${getPosition(speeds.vfeTO)}%`,
+                  width: '2px',
+                  height: '60%',
+                  top: 0,
+                  bgcolor: '#06b6d4',
+                  zIndex: 5
+                }}
+              />
+              <Box
+                sx={{
+                  position: 'absolute',
+                  left: `${getPosition(speeds.vfeTO)}%`,
+                  top: '-25px',
+                  transform: 'translateX(-50%)',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  color: '#06b6d4',
+                  px: 0.75,
+                  py: 0.25,
+                  borderRadius: '3px',
+                  whiteSpace: 'nowrap',
+                  zIndex: 10
+                }}
+              >
+                {speeds.vfeTO}
+              </Box>
+            </>
+          )}
+
         </Box>
         
         <Grid container spacing={1}>
@@ -406,6 +607,18 @@ const Step2Speeds = ({ data, updateData, errors = {} }) => {
             <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <Box sx={{ width: 16, height: 16, bgcolor: 'error.main', borderRadius: 0.5 }} />
               Trait rouge: Ne jamais dépasser
+            </Typography>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Box sx={{ width: 16, height: 16, bgcolor: 'purple', borderRadius: 0.5 }} />
+              Trait violet: Vitesses de manœuvre (VO)
+            </Typography>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Box sx={{ width: 16, height: 16, bgcolor: '#06b6d4', borderRadius: 0.5 }} />
+              Trait cyan: VFE T/O (Volets décollage)
             </Typography>
           </Grid>
         </Grid>
@@ -631,8 +844,110 @@ const Step2Speeds = ({ data, updateData, errors = {} }) => {
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2, textAlign: 'center' }}>
               Vitesse maximale pour manœuvres complètes selon la masse
             </Typography>
-            
-            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
+
+            <Grid container spacing={2} justifyContent="center">
+              {voTempRanges.map((range, index) => (
+                <Grid item xs={12} key={index} sx={{ maxWidth: 800 }}>
+                  <Box sx={{
+                    display: 'flex',
+                    gap: 1.5,
+                    alignItems: 'flex-start',
+                    p: 2,
+                    bgcolor: 'background.default',
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'divider'
+                  }}>
+                    <Chip
+                      label={`VO${index + 1}`}
+                      sx={{
+                        bgcolor: 'purple',
+                        color: 'white',
+                        mt: 1.5,
+                        fontWeight: 'bold',
+                        minWidth: '50px'
+                      }}
+                    />
+
+                    <Grid container spacing={1.5} sx={{ flex: 1 }}>
+                      <Grid item xs={12} sm={4} md={3}>
+                        <StyledTextField
+                          fullWidth
+                          label="Masse min"
+                          type="number"
+                          value={range.minWeight || ''}
+                          onChange={(e) => updateVoRangeTemp(index, 'minWeight', e.target.value)}
+                          placeholder={index === 0 ? "0" : "900"}
+                          variant="outlined"
+                          size="small"
+                          InputProps={{
+                            endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
+                          }}
+                        />
+                      </Grid>
+
+                      <Grid item xs={12} sm={4} md={3}>
+                        <StyledTextField
+                          fullWidth
+                          label="Masse max *"
+                          type="number"
+                          value={range.maxWeight || ''}
+                          onChange={(e) => updateVoRangeTemp(index, 'maxWeight', e.target.value)}
+                          placeholder="1150"
+                          variant="outlined"
+                          size="small"
+                          required
+                          InputProps={{
+                            endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
+                          }}
+                        />
+                      </Grid>
+
+                      <Grid item xs={12} sm={4} md={3}>
+                        <StyledTextField
+                          fullWidth
+                          label="Vitesse VO *"
+                          type="number"
+                          value={range.speed || ''}
+                          onChange={(e) => updateVoRangeTemp(index, 'speed', e.target.value)}
+                          placeholder="95"
+                          variant="outlined"
+                          size="small"
+                          required
+                          InputProps={{
+                            endAdornment: <InputAdornment position="end">{getUnitSymbol(units.speed)}</InputAdornment>,
+                          }}
+                        />
+                      </Grid>
+
+                      <Grid item xs={12} sm={12} md={3} sx={{ display: 'flex', gap: 1 }}>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          size="small"
+                          onClick={() => saveVoRange(index)}
+                          sx={{ flex: 1 }}
+                        >
+                          Sauvegarder
+                        </Button>
+                      </Grid>
+                    </Grid>
+
+                    <IconButton
+                      onClick={() => removeVoRange(index)}
+                      disabled={voRanges.length === 1}
+                      color="error"
+                      size="small"
+                      sx={{ mt: 0.5 }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+
+            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
               <Button
                 variant="outlined"
                 startIcon={<AddIcon />}
@@ -642,94 +957,6 @@ const Step2Speeds = ({ data, updateData, errors = {} }) => {
                 Ajouter une plage
               </Button>
             </Box>
-
-            <Grid container spacing={2} justifyContent="center">
-              {voRanges.map((range, index) => (
-                <Grid item xs={12} key={index} sx={{ maxWidth: 600 }}>
-                  <Box sx={{ 
-                    display: 'flex', 
-                    gap: 2, 
-                    alignItems: 'flex-start',
-                    p: 2,
-                    bgcolor: 'background.default',
-                    borderRadius: 1,
-                    border: '1px solid',
-                    borderColor: 'divider'
-                  }}>
-                    <Chip 
-                      label={`VO${index + 1}`}
-                      sx={{ 
-                        bgcolor: 'purple',
-                        color: 'white',
-                        mt: 1.5,
-                        fontWeight: 'bold'
-                      }}
-                    />
-                    
-                    <Grid container spacing={2} sx={{ flex: 1 }}>
-                      <Grid item xs={12} md={4}>
-                        <StyledTextField
-                          fullWidth
-                          label="Masse min"
-                          type="number"
-                          value={range.minWeight || ''}
-                          onChange={(e) => updateVoRange(index, 'minWeight', e.target.value)}
-                          placeholder={index === 0 ? "0" : "900"}
-                          variant="outlined"
-                          size="medium"
-                          InputProps={{
-                            endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
-                          }}
-                        />
-                      </Grid>
-                      
-                      <Grid item xs={12} md={4}>
-                        <StyledTextField
-                          fullWidth
-                          label="Masse max *"
-                          type="number"
-                          value={range.maxWeight || ''}
-                          onChange={(e) => updateVoRange(index, 'maxWeight', e.target.value)}
-                          placeholder="1150"
-                          variant="outlined"
-                          size="medium"
-                          required
-                          InputProps={{
-                            endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
-                          }}
-                        />
-                      </Grid>
-                      
-                      <Grid item xs={12} md={3}>
-                        <StyledTextField
-                          fullWidth
-                          label="Vitesse VO *"
-                          type="number"
-                          value={range.speed || ''}
-                          onChange={(e) => updateVoRange(index, 'speed', e.target.value)}
-                          placeholder="95"
-                          variant="outlined"
-                          size="medium"
-                          required
-                          InputProps={{
-                            endAdornment: <InputAdornment position="end">{getUnitSymbol(units.speed)}</InputAdornment>,
-                          }}
-                        />
-                      </Grid>
-                    </Grid>
-                    
-                    <IconButton
-                      onClick={() => removeVoRange(index)}
-                      disabled={voRanges.length === 1}
-                      color="error"
-                      sx={{ mt: 1 }}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
             
             <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block', textAlign: 'center' }}>
               Définissez les vitesses de manœuvre pour différentes plages de masse

@@ -169,6 +169,16 @@ const Step1BasicInfo = ({ data, updateData, errors = {} }) => {
     }
   };
 
+  // Calculer le baseFactor au chargement initial si cruiseSpeedKt existe
+  useEffect(() => {
+    if (data.cruiseSpeedKt && !data.baseFactor) {
+      const factor = calculateBaseFactor(data.cruiseSpeedKt);
+      if (factor) {
+        updateData('baseFactor', factor);
+      }
+    }
+  }, []); // Execute uniquement au montage du composant
+
   const handleSurfaceChange = (surface) => (event) => {
     const currentSurfaces = data.compatibleRunwaySurfaces || [];
     const updatedSurfaces = event.target.checked 

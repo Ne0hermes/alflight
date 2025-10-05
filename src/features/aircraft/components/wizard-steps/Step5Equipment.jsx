@@ -25,7 +25,15 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
     surveillance: false,
     special: false
   });
-  
+
+  // Helper pour assurer que les valeurs sont des booléens
+  const ensureBoolean = (value) => {
+    if (typeof value === 'string') {
+      return value === 'true' || value === '1';
+    }
+    return Boolean(value);
+  };
+
   const handlePanelChange = (panel) => (event, isExpanded) => {
     if (isExpanded) {
       // When opening a panel, close all others and open this one
@@ -99,7 +107,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={equipmentCom.vhf1 !== false}
+                      checked={ensureBoolean(equipmentCom.vhf1 !== false)}
                       onChange={(e) => handleEquipmentChange('equipmentCom', 'vhf1', e.target.checked)}
                       size="small"
                     />
@@ -113,7 +121,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={equipmentCom.vhf2 !== false}
+                      checked={ensureBoolean(equipmentCom.vhf2 !== false)}
                       onChange={(e) => handleEquipmentChange('equipmentCom', 'vhf2', e.target.checked)}
                       size="small"
                     />
@@ -127,7 +135,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={equipmentCom.hf || false}
+                      checked={ensureBoolean(equipmentCom.hf || false)}
                       onChange={(e) => handleEquipmentChange('equipmentCom', 'hf', e.target.checked)}
                       size="small"
                     />
@@ -141,7 +149,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={equipmentCom.satcom || false}
+                      checked={ensureBoolean(equipmentCom.satcom || false)}
                       onChange={(e) => handleEquipmentChange('equipmentCom', 'satcom', e.target.checked)}
                       size="small"
                     />
@@ -155,7 +163,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={equipmentCom.elt !== false}
+                      checked={ensureBoolean(equipmentCom.elt !== false)}
                       onChange={(e) => handleEquipmentChange('equipmentCom', 'elt', e.target.checked)}
                       size="small"
                     />
@@ -169,7 +177,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={equipmentCom.acars || false}
+                      checked={ensureBoolean(equipmentCom.acars || false)}
                       onChange={(e) => handleEquipmentChange('equipmentCom', 'acars', e.target.checked)}
                       size="small"
                     />
@@ -183,7 +191,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={equipmentCom.cpdlc || false}
+                      checked={ensureBoolean(equipmentCom.cpdlc || false)}
                       onChange={(e) => handleEquipmentChange('equipmentCom', 'cpdlc', e.target.checked)}
                       size="small"
                     />
@@ -241,7 +249,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={equipmentNav.vor !== false}
+                      checked={ensureBoolean(equipmentNav.vor !== false)}
                       onChange={(e) => handleEquipmentChange('equipmentNav', 'vor', e.target.checked)}
                       size="small"
                     />
@@ -255,7 +263,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={equipmentNav.dme !== false}
+                      checked={ensureBoolean(equipmentNav.dme !== false)}
                       onChange={(e) => handleEquipmentChange('equipmentNav', 'dme', e.target.checked)}
                       size="small"
                     />
@@ -269,7 +277,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={equipmentNav.adf || false}
+                      checked={ensureBoolean(equipmentNav.adf || false)}
                       onChange={(e) => handleEquipmentChange('equipmentNav', 'adf', e.target.checked)}
                       size="small"
                     />
@@ -283,7 +291,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={equipmentNav.gnss !== false}
+                      checked={ensureBoolean(equipmentNav.gnss !== false)}
                       onChange={(e) => handleEquipmentChange('equipmentNav', 'gnss', e.target.checked)}
                       size="small"
                     />
@@ -297,7 +305,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={equipmentNav.ils !== false}
+                      checked={ensureBoolean(equipmentNav.ils !== false)}
                       onChange={(e) => handleEquipmentChange('equipmentNav', 'ils', e.target.checked)}
                       size="small"
                     />
@@ -311,7 +319,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={equipmentNav.mls || false}
+                      checked={ensureBoolean(equipmentNav.mls || false)}
                       onChange={(e) => handleEquipmentChange('equipmentNav', 'mls', e.target.checked)}
                       size="small"
                     />
@@ -325,7 +333,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={equipmentNav.gbas || false}
+                      checked={ensureBoolean(equipmentNav.gbas || false)}
                       onChange={(e) => handleEquipmentChange('equipmentNav', 'gbas', e.target.checked)}
                       size="small"
                     />
@@ -339,7 +347,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={equipmentNav.lpv || false}
+                      checked={ensureBoolean(equipmentNav.lpv || false)}
                       onChange={(e) => handleEquipmentChange('equipmentNav', 'lpv', e.target.checked)}
                       size="small"
                     />
@@ -359,7 +367,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                     <FormControlLabel
                       control={
                         <Checkbox
-                          checked={equipmentNav.rnav || false}
+                          checked={ensureBoolean(equipmentNav.rnav || false)}
                           onChange={(e) => handleEquipmentChange('equipmentNav', 'rnav', e.target.checked)}
                           size="small"
                         />
@@ -385,7 +393,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                     <FormControlLabel
                       control={
                         <Checkbox
-                          checked={equipmentNav.rnp || false}
+                          checked={ensureBoolean(equipmentNav.rnp || false)}
                           onChange={(e) => handleEquipmentChange('equipmentNav', 'rnp', e.target.checked)}
                           size="small"
                         />
@@ -454,7 +462,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={equipmentSurv.adsb || false}
+                      checked={ensureBoolean(equipmentSurv.adsb || false)}
                       onChange={(e) => handleEquipmentChange('equipmentSurv', 'adsb', e.target.checked)}
                       size="small"
                     />
@@ -468,7 +476,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={equipmentSurv.adsc || false}
+                      checked={ensureBoolean(equipmentSurv.adsc || false)}
                       onChange={(e) => handleEquipmentChange('equipmentSurv', 'adsc', e.target.checked)}
                       size="small"
                     />
@@ -482,7 +490,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={equipmentSurv.tcas || false}
+                      checked={ensureBoolean(equipmentSurv.tcas || false)}
                       onChange={(e) => handleEquipmentChange('equipmentSurv', 'tcas', e.target.checked)}
                       size="small"
                     />
@@ -496,7 +504,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={equipmentSurv.acas || false}
+                      checked={ensureBoolean(equipmentSurv.acas || false)}
                       onChange={(e) => handleEquipmentChange('equipmentSurv', 'acas', e.target.checked)}
                       size="small"
                     />
@@ -510,7 +518,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={equipmentSurv.taws || false}
+                      checked={ensureBoolean(equipmentSurv.taws || false)}
                       onChange={(e) => handleEquipmentChange('equipmentSurv', 'taws', e.target.checked)}
                       size="small"
                     />
@@ -524,7 +532,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={equipmentSurv.cvr || false}
+                      checked={ensureBoolean(equipmentSurv.cvr || false)}
                       onChange={(e) => handleEquipmentChange('equipmentSurv', 'cvr', e.target.checked)}
                       size="small"
                     />
@@ -538,7 +546,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={equipmentSurv.fdr || false}
+                      checked={ensureBoolean(equipmentSurv.fdr || false)}
                       onChange={(e) => handleEquipmentChange('equipmentSurv', 'fdr', e.target.checked)}
                       size="small"
                     />
@@ -552,7 +560,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={equipmentSurv.weather || false}
+                      checked={ensureBoolean(equipmentSurv.weather || false)}
                       onChange={(e) => handleEquipmentChange('equipmentSurv', 'weather', e.target.checked)}
                       size="small"
                     />
@@ -576,7 +584,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                       key={mode}
                       control={
                         <Checkbox
-                          checked={(equipmentSurv.transponderMode || 'C') === mode}
+                          checked={ensureBoolean((equipmentSurv.transponderMode || 'C') === mode)}
                           onChange={() => handleEquipmentChange('equipmentSurv', 'transponderMode', mode)}
                           size="small"
                         />
@@ -635,7 +643,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={specialCapabilities.pbn || false}
+                      checked={ensureBoolean(specialCapabilities.pbn || false)}
                       onChange={(e) => handleEquipmentChange('specialCapabilities', 'pbn', e.target.checked)}
                       size="small"
                     />
@@ -649,7 +657,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={specialCapabilities.lvto || false}
+                      checked={ensureBoolean(specialCapabilities.lvto || false)}
                       onChange={(e) => handleEquipmentChange('specialCapabilities', 'lvto', e.target.checked)}
                       size="small"
                     />
@@ -663,7 +671,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={specialCapabilities.catII || false}
+                      checked={ensureBoolean(specialCapabilities.catII || false)}
                       onChange={(e) => handleEquipmentChange('specialCapabilities', 'catII', e.target.checked)}
                       size="small"
                     />
@@ -677,7 +685,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={specialCapabilities.catIIIa || false}
+                      checked={ensureBoolean(specialCapabilities.catIIIa || false)}
                       onChange={(e) => handleEquipmentChange('specialCapabilities', 'catIIIa', e.target.checked)}
                       size="small"
                     />
@@ -691,7 +699,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={specialCapabilities.catIIIb || false}
+                      checked={ensureBoolean(specialCapabilities.catIIIb || false)}
                       onChange={(e) => handleEquipmentChange('specialCapabilities', 'catIIIb', e.target.checked)}
                       size="small"
                     />
@@ -705,7 +713,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={specialCapabilities.catIIIc || false}
+                      checked={ensureBoolean(specialCapabilities.catIIIc || false)}
                       onChange={(e) => handleEquipmentChange('specialCapabilities', 'catIIIc', e.target.checked)}
                       size="small"
                     />
@@ -719,7 +727,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={specialCapabilities.etops || false}
+                      checked={ensureBoolean(specialCapabilities.etops || false)}
                       onChange={(e) => handleEquipmentChange('specialCapabilities', 'etops', e.target.checked)}
                       size="small"
                     />
@@ -733,7 +741,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={specialCapabilities.rvsm || false}
+                      checked={ensureBoolean(specialCapabilities.rvsm || false)}
                       onChange={(e) => handleEquipmentChange('specialCapabilities', 'rvsm', e.target.checked)}
                       size="small"
                     />
@@ -747,7 +755,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={specialCapabilities.mnps || false}
+                      checked={ensureBoolean(specialCapabilities.mnps || false)}
                       onChange={(e) => handleEquipmentChange('specialCapabilities', 'mnps', e.target.checked)}
                       size="small"
                     />
@@ -761,7 +769,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={specialCapabilities.icing || false}
+                      checked={ensureBoolean(specialCapabilities.icing || false)}
                       onChange={(e) => handleEquipmentChange('specialCapabilities', 'icing', e.target.checked)}
                       size="small"
                     />

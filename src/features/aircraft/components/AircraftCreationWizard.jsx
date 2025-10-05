@@ -17,7 +17,12 @@ import {
   useMediaQuery,
   useTheme,
   Chip,
-  Snackbar
+  Snackbar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions
 } from '@mui/material';
 import {
   Flight as FlightIcon,
@@ -31,7 +36,9 @@ import {
   Settings as SettingsIcon,
   Build as BuildIcon,
   FlightTakeoff as TakeoffIcon,
-  Notes as NotesIcon
+  Notes as NotesIcon,
+  Close as CloseIcon,
+  Warning as WarningIcon
 } from '@mui/icons-material';
 import { useAircraft } from '../../../core/contexts';
 
@@ -45,6 +52,7 @@ import Step5Equipment from './wizard-steps/Step5Equipment';
 import Step6Operations from './wizard-steps/Step6Operations';
 import Step7Remarks from './wizard-steps/Step7Remarks';
 import Step5Review from './wizard-steps/Step5Review';
+import ExportButton from './wizard-steps/ExportButton';
 
 // Style personnalisé pour le Stepper
 const CustomStepIcon = styled(StepIcon)(({ theme, ownerState }) => ({
@@ -56,12 +64,34 @@ const CustomStepIcon = styled(StepIcon)(({ theme, ownerState }) => ({
   },
 }));
 
-function AircraftCreationWizard({ onComplete, onCancel, existingAircraft = null }) {
+function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraft = null }) {
   // Hook pour accéder au contexte des avions
-  const { addAircraft, setSelectedAircraft } = useAircraft();
-  
+  const { addAircraft, updateAircraft, setSelectedAircraft } = useAircraft();
+
+  // Vérifier s'il y a un brouillon à reprendre
+  const loadDraftIfExists = () => {
+    // Si on a un existingAircraft, c'est qu'on édite, pas qu'on reprend un brouillon
+    if (existingAircraft) return null;
+
+    const draft = localStorage.getItem('aircraft_wizard_draft');
+    if (draft) {
+      try {
+        const draftData = JSON.parse(draft);
+        console.log('📂 Reprise du brouillon:', draftData);
+        return draftData;
+      } catch (e) {
+        console.error('❌ Erreur lors du chargement du brouillon:', e);
+      }
+    }
+    return null;
+  };
+
+  const draft = loadDraftIfExists();
+
   // État principal - utilisant EXACTEMENT la même structure que AircraftModule
-  const [aircraftData, setAircraftData] = useState({
+  const [aircraftData, setAircraftData] = useState(draft?.aircraftData || {
+    id: existingAircraft?.id || existingAircraft?.aircraftId || undefined,
+    aircraftId: existingAircraft?.aircraftId || existingAircraft?.id || undefined,
     registration: existingAircraft?.registration || '',
     model: existingAircraft?.model || '',
     fuelType: existingAircraft?.fuelType || 'AVGAS',
@@ -73,7 +103,8 @@ function AircraftCreationWizard({ onComplete, onCancel, existingAircraft = null 
     engineType: existingAircraft?.engineType || 'singleEngine',
     compatibleRunwaySurfaces: existingAircraft?.compatibleRunwaySurfaces || [],
     photo: existingAircraft?.photo || null,
-    
+    manex: existingAircraft?.manex || null,
+
     // Vitesses caractéristiques
     speeds: {
       vso: existingAircraft?.speeds?.vso || '',
@@ -99,6 +130,7 @@ function AircraftCreationWizard({ onComplete, onCancel, existingAircraft = null 
       emptyWeight: existingAircraft?.weights?.emptyWeight || '',
       mtow: existingAircraft?.weights?.mtow || '',
       mlw: existingAircraft?.weights?.mlw || '',
+      minTakeoffWeight: existingAircraft?.weights?.minTakeoffWeight || '',
       maxPayload: existingAircraft?.weights?.maxPayload || '',
       maxBaggageFwd: existingAircraft?.weights?.maxBaggageFwd || '',
       maxBaggageAft: existingAircraft?.weights?.maxBaggageAft || ''
@@ -117,13 +149,56 @@ function AircraftCreationWizard({ onComplete, onCancel, existingAircraft = null 
       forward: existingAircraft?.cgLimits?.forward || '',
       aft: existingAircraft?.cgLimits?.aft || ''
     },
-    
+
+    // Enveloppe de centrage (CG Envelope)
+    cgEnvelope: {
+      // Points Forward CG (nouveau format)
+      forwardPoints: (() => {
+        // Si le nouveau format existe déjà, l'utiliser
+        if (existingAircraft?.cgEnvelope?.forwardPoints && existingAircraft.cgEnvelope.forwardPoints.length > 0) {
+          return existingAircraft.cgEnvelope.forwardPoints;
+        }
+        // Sinon, migrer depuis l'ancien format si disponible
+        if (existingAircraft?.cgEnvelope?.forwardMinWeight || existingAircraft?.cgEnvelope?.forwardMaxWeight || existingAircraft?.cgEnvelope?.forwardCG) {
+          const points = [];
+          if (existingAircraft.cgEnvelope.forwardMinWeight && existingAircraft.cgEnvelope.forwardCG) {
+            points.push({
+              id: Date.now() + Math.random(),
+              weight: existingAircraft.cgEnvelope.forwardMinWeight,
+              cg: existingAircraft.cgEnvelope.forwardCG
+            });
+          }
+          if (existingAircraft.cgEnvelope.forwardMaxWeight && existingAircraft.cgEnvelope.forwardCG &&
+              existingAircraft.cgEnvelope.forwardMaxWeight !== existingAircraft.cgEnvelope.forwardMinWeight) {
+            points.push({
+              id: Date.now() + Math.random() + 1,
+              weight: existingAircraft.cgEnvelope.forwardMaxWeight,
+              cg: existingAircraft.cgEnvelope.forwardCG
+            });
+          }
+          return points;
+        }
+        return [];
+      })(),
+      aftMinWeight: existingAircraft?.cgEnvelope?.aftMinWeight || '',
+      aftCG: existingAircraft?.cgEnvelope?.aftCG || '',
+      aftMaxWeight: existingAircraft?.cgEnvelope?.aftMaxWeight || ''
+    },
+
     envelope: {
       points: existingAircraft?.envelope?.points || []
     },
-    
+
+    // Compartiments bagages
+    baggageCompartments: existingAircraft?.baggageCompartments || [],
+
+    // Sièges supplémentaires
+    additionalSeats: existingAircraft?.additionalSeats || [],
+
     // Performances
     advancedPerformance: existingAircraft?.advancedPerformance || null,
+    performanceTables: existingAircraft?.performanceTables || null,
+    performanceModels: existingAircraft?.performanceModels || null,
     performance: {
       takeoff: {
         groundRoll: existingAircraft?.performance?.takeoff?.groundRoll || '',
@@ -215,11 +290,16 @@ function AircraftCreationWizard({ onComplete, onCancel, existingAircraft = null 
     units: {}
   });
 
-  const [currentStep, setCurrentStep] = useState(0);
+  // En mode édition (existingAircraft présent), commencer à l'étape 1
+  // Si on reprend un brouillon, commencer à l'étape sauvegardée
+  const [currentStep, setCurrentStep] = useState(
+    draft?.currentStep ?? (existingAircraft ? 1 : 0)
+  );
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [debugMode, setDebugMode] = useState(false); // Mode temporaire pour ignorer les validations
-  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success', closeable: true, duration: 6000 });
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   // Effet pour gérer le retour à l'étape 0 quand on détecte une immatriculation existante
   useEffect(() => {
@@ -234,6 +314,56 @@ function AircraftCreationWizard({ onComplete, onCancel, existingAircraft = null 
     }
   }, [aircraftData.shouldReturnToStep0]);
 
+  // Sauvegarder l'état de l'assistant dans localStorage
+  const saveWizardState = () => {
+    const wizardState = {
+      aircraftData,
+      currentStep,
+      timestamp: new Date().toISOString(),
+      isEdit: !!existingAircraft
+    };
+    localStorage.setItem('aircraft_wizard_draft', JSON.stringify(wizardState));
+    console.log('💾 État de l\'assistant sauvegardé:', wizardState);
+  };
+
+
+  // Annuler et sauvegarder l'état
+  const handleCancel = () => {
+    setShowCancelDialog(true);
+  };
+
+  const handleConfirmCancel = (saveState) => {
+    const closeCallback = onClose || onCancel;
+
+    if (saveState) {
+      saveWizardState();
+      setNotification({
+        open: true,
+        message: 'Configuration sauvegardée. Vous pourrez la reprendre depuis le tableau de bord.',
+        severity: 'info'
+      });
+
+      setShowCancelDialog(false);
+
+      // Fermer l'assistant après un court délai
+      setTimeout(() => {
+        if (closeCallback) {
+          closeCallback();
+        }
+      }, 500);
+    } else {
+      // Supprimer le brouillon
+      localStorage.removeItem('aircraft_wizard_draft');
+
+      setShowCancelDialog(false);
+
+      // Fermer l'assistant
+      if (closeCallback) {
+        closeCallback();
+      }
+    }
+  };
+
   // Configuration des étapes
   const steps = [
     {
@@ -247,14 +377,14 @@ function AircraftCreationWizard({ onComplete, onCancel, existingAircraft = null 
       icon: <FlightIcon />
     },
     {
-      label: 'Vitesses',
-      description: 'Vitesses caractéristiques',
-      icon: <SpeedIcon />
-    },
-    {
       label: 'Masse & Centrage',
       description: 'Poids et équilibrage',
       icon: <ScaleIcon />
+    },
+    {
+      label: 'Vitesses',
+      description: 'Vitesses caractéristiques',
+      icon: <SpeedIcon />
     },
     {
       label: 'Performances Avancées',
@@ -331,7 +461,12 @@ function AircraftCreationWizard({ onComplete, onCancel, existingAircraft = null 
         if (!aircraftData.cruiseSpeedKt) newErrors.cruiseSpeedKt = "La vitesse de croisière est requise";
         break;
         
-      case 2: // Vitesses
+      case 2: // Masse et centrage
+        if (!aircraftData.weights?.emptyWeight) newErrors.emptyWeight = "La masse à vide est requise";
+        if (!aircraftData.weights?.mtow) newErrors.mtow = "La masse maximale est requise";
+        break;
+
+      case 3: // Vitesses
         // Vitesses critiques requises uniquement
         if (!aircraftData.speeds?.vso || aircraftData.speeds.vso === '') {
           newErrors.vso = "VSO est requise";
@@ -354,7 +489,7 @@ function AircraftCreationWizard({ onComplete, onCancel, existingAircraft = null 
         // Les vitesses suivantes sont facultatives - pas de validation
         // VA, VR, VX, VY, initialClimb, vglide sont facultatives
         // VO ranges sont facultatives
-        
+
         // Limitations de vent requises
         if (!aircraftData.windLimits?.maxCrosswind || aircraftData.windLimits.maxCrosswind === '') {
           newErrors.maxCrosswind = "Le vent traversier max est requis";
@@ -365,11 +500,6 @@ function AircraftCreationWizard({ onComplete, onCancel, existingAircraft = null 
         if (!aircraftData.windLimits?.maxCrosswindWet || aircraftData.windLimits.maxCrosswindWet === '') {
           newErrors.maxCrosswindWet = "Le vent traversier max sur piste mouillée est requis";
         }
-        break;
-        
-      case 3: // Masse et centrage
-        if (!aircraftData.weights?.emptyWeight) newErrors.emptyWeight = "La masse à vide est requise";
-        if (!aircraftData.weights?.mtow) newErrors.mtow = "La masse maximale est requise";
         break;
     }
     
@@ -403,6 +533,22 @@ function AircraftCreationWizard({ onComplete, onCancel, existingAircraft = null 
     setIsLoading(true);
     try {
       const dataToSave = saveData.data;
+
+      // Convertir flightManual en manex si présent
+      if (dataToSave.flightManual?.file) {
+        console.log('🔄 Conversion flightManual → manex:', dataToSave.flightManual.file.name);
+        dataToSave.manex = {
+          fileName: dataToSave.flightManual.file.name || 'MANEX.pdf',
+          fileSize: dataToSave.flightManual.file.size ?
+            (dataToSave.flightManual.file.size / 1024 / 1024).toFixed(2) + ' MB' :
+            'Taille inconnue',
+          uploadDate: dataToSave.flightManual.uploadDate || new Date().toISOString(),
+          pdfData: dataToSave.flightManual.file
+        };
+        // Retirer flightManual des données à sauvegarder
+        delete dataToSave.flightManual;
+        console.log('✅ manex créé:', dataToSave.manex.fileName, dataToSave.manex.fileSize);
+      }
 
       // Calculer le baseFactor si nécessaire
       if (dataToSave.cruiseSpeedKt && !dataToSave.baseFactor) {
@@ -439,10 +585,17 @@ function AircraftCreationWizard({ onComplete, onCancel, existingAircraft = null 
         console.log('Enregistrement local:', dataToSave);
       }
 
-      // Dans tous les cas, ajouter localement
-      console.log('Appel de addAircraft avec:', dataToSave);
-      const savedAircraft = await addAircraft(dataToSave);
-      console.log('Résultat de addAircraft:', savedAircraft);
+      // Déterminer s'il faut ajouter ou mettre à jour
+      let savedAircraft;
+      if (dataToSave.id || dataToSave.aircraftId) {
+        console.log('Appel de updateAircraft avec:', dataToSave);
+        savedAircraft = updateAircraft(dataToSave);
+        console.log('Résultat de updateAircraft:', savedAircraft);
+      } else {
+        console.log('Appel de addAircraft avec:', dataToSave);
+        savedAircraft = await addAircraft(dataToSave);
+        console.log('Résultat de addAircraft:', savedAircraft);
+      }
 
       // Sélectionner le nouvel avion
       if (savedAircraft) {
@@ -462,12 +615,13 @@ function AircraftCreationWizard({ onComplete, onCancel, existingAircraft = null 
         }
 
         // Afficher un message de succès et fermer le wizard après un délai
-        console.log('Enregistrement réussi, appel de onComplete dans 2.5s...');
+        console.log('Enregistrement réussi, appel de onComplete dans 0.5s...');
 
-        // Nettoyer le localStorage des données temporaires de performance
+        // Nettoyer le localStorage des données temporaires
         try {
           localStorage.removeItem('wizard_performance_temp');
-          console.log('🧹 Données temporaires de performance nettoyées du localStorage');
+          localStorage.removeItem('aircraft_wizard_draft'); // Supprimer le brouillon
+          console.log('🧹 Données temporaires nettoyées du localStorage');
         } catch (e) {
           console.error('Erreur lors du nettoyage du localStorage:', e);
         }
@@ -490,7 +644,7 @@ function AircraftCreationWizard({ onComplete, onCancel, existingAircraft = null 
               window.location.reload();
             }
           }
-        }, 2500);
+        }, 500);
       }
     } catch (error) {
       console.error('Erreur lors de l\'enregistrement:', error);
@@ -544,9 +698,9 @@ function AircraftCreationWizard({ onComplete, onCancel, existingAircraft = null 
         // Fermer le wizard après un délai
         setTimeout(() => {
           if (onComplete) {
-            onComplete(aircraftData);
+            onComplete(dataToSave);
           }
-        }, 2000);
+        }, 500);
       }
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
@@ -568,9 +722,9 @@ function AircraftCreationWizard({ onComplete, onCancel, existingAircraft = null 
       case 1:
         return <Step1BasicInfo data={aircraftData} updateData={updateData} errors={errors} />;
       case 2:
-        return <Step2Speeds data={aircraftData} updateData={updateData} errors={errors} />;
-      case 3:
         return <Step3WeightBalance data={aircraftData} updateData={updateData} errors={errors} />;
+      case 3:
+        return <Step2Speeds data={aircraftData} updateData={updateData} errors={errors} />;
       case 4:
         return <Step4Performance data={aircraftData} updateData={updateData} errors={errors} />;
       case 5:
@@ -596,9 +750,9 @@ function AircraftCreationWizard({ onComplete, onCancel, existingAircraft = null 
     <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* Header */}
       <Box sx={{ textAlign: 'center', mb: 4 }}>
-        <Typography 
-          variant="h3" 
-          sx={{ 
+        <Typography
+          variant="h3"
+          sx={{
             fontWeight: 700,
             color: debugMode ? 'warning.main' : 'primary.main',
             mb: 1,
@@ -628,6 +782,8 @@ function AircraftCreationWizard({ onComplete, onCancel, existingAircraft = null 
             </Typography>
           )}
         </Typography>
+
+
         {debugMode && (
           <Typography variant="body1" color="warning.main">
             🧪 Mode test activé - Navigation libre entre les sections
@@ -749,9 +905,9 @@ function AircraftCreationWizard({ onComplete, onCancel, existingAircraft = null 
       </Paper>
 
       {/* Navigation */}
-      <Box 
-        sx={{ 
-          display: 'flex', 
+      <Box
+        sx={{
+          display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           p: 2,
@@ -760,6 +916,17 @@ function AircraftCreationWizard({ onComplete, onCancel, existingAircraft = null 
         }}
       >
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          {/* Bouton Annuler */}
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={handleCancel}
+            startIcon={<CloseIcon />}
+            size="large"
+          >
+            Annuler
+          </Button>
+
           {currentStep > 0 && (
             <Button
               variant="outlined"
@@ -797,7 +964,15 @@ function AircraftCreationWizard({ onComplete, onCancel, existingAircraft = null 
           />
         </Box>
 
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          {/* Bouton Export - visible à toutes les étapes */}
+          <ExportButton
+            aircraftData={aircraftData}
+            currentStep={currentStep}
+            variant="outlined"
+            size="medium"
+          />
+
           {currentStep !== steps.length - 1 && (
             <Button
               variant="contained"
@@ -810,6 +985,49 @@ function AircraftCreationWizard({ onComplete, onCancel, existingAircraft = null 
           )}
         </Box>
       </Box>
+
+      {/* Dialog de confirmation d'annulation */}
+      <Dialog
+        open={showCancelDialog}
+        onClose={() => setShowCancelDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <WarningIcon color="warning" />
+          Quitter l'assistant de création
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Vous êtes sur le point de quitter l'assistant. La configuration de <strong>{aircraftData.registration || 'cet avion'}</strong> n'est pas terminée.
+          </DialogContentText>
+          <Alert severity="info" sx={{ mt: 2 }}>
+            Vous pouvez sauvegarder votre progression et reprendre plus tard, ou annuler complètement cette configuration.
+          </Alert>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button
+            onClick={() => setShowCancelDialog(false)}
+            variant="outlined"
+          >
+            Continuer l'édition
+          </Button>
+          <Button
+            onClick={() => handleConfirmCancel(false)}
+            variant="outlined"
+            color="error"
+          >
+            Annuler sans sauvegarder
+          </Button>
+          <Button
+            onClick={() => handleConfirmCancel(true)}
+            variant="contained"
+            color="primary"
+          >
+            Sauvegarder et reprendre plus tard
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Affichage des erreurs globales */}
       {Object.keys(errors).length > 0 && (
@@ -828,12 +1046,12 @@ function AircraftCreationWizard({ onComplete, onCancel, existingAircraft = null 
       {/* Notification Snackbar */}
       <Snackbar
         open={notification.open}
-        autoHideDuration={6000}
-        onClose={() => setNotification({ ...notification, open: false })}
+        autoHideDuration={notification.duration || 6000}
+        onClose={notification.closeable !== false ? () => setNotification({ ...notification, open: false }) : undefined}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert 
-          onClose={() => setNotification({ ...notification, open: false })}
+        <Alert
+          onClose={notification.closeable !== false ? () => setNotification({ ...notification, open: false }) : undefined}
           severity={notification.severity}
           sx={{ width: '100%' }}
         >

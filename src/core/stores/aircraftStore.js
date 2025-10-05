@@ -5,7 +5,7 @@ import { subscribeWithSelector } from 'zustand/middleware';
 import { DEFAULT_AIRCRAFT_LIST } from '@utils/constants';
 import { createModuleLogger } from '@utils/logger';
 import { validateAndRepairAircraft } from '@utils/aircraftValidation';
-import { storeManexOptimized } from './manexStore';
+import { storeManexOptimized, getManexWithPdf } from './manexStore';
 import dataBackupManager from '@utils/dataBackupManager';
 
 const logger = createModuleLogger('AircraftStore');
@@ -137,9 +137,11 @@ export const useAircraftStore = create(
             
             // console.log('🔄 AircraftStore - Nouvelle liste après update, avion mis à jour:', validatedAircraft.registration);
             // console.log('🔄 AircraftStore - Surfaces finales:', validatedAircraft.compatibleRunwaySurfaces);
-            
+
             set({ aircraftList: newList });
+            return validatedAircraft;
           }
+          return null;
         },
         
         // Ajouter ou mettre à jour le MANEX pour un avion
@@ -229,14 +231,20 @@ export const useAircraftStore = create(
         // Getter calculé avec validation automatique
         get selectedAircraft() {
           const state = get();
+
+          // Protection contre l'accès pendant l'initialisation
+          if (!state || !state.aircraftList) {
+            return null;
+          }
+
           const id = state.selectedAircraftId;
           let aircraft = state.aircraftList.find(a => a.id === id) || null;
-          
+
           // Valider et réparer l'avion si nécessaire
           if (aircraft) {
             aircraft = validateAndRepairAircraft(aircraft);
           }
-          
+
           console.log('🏪 AircraftStore - Getter selectedAircraft called:', {
             id,
             aircraft: aircraft?.registration
@@ -247,73 +255,133 @@ export const useAircraftStore = create(
     ),
     {
       name: 'aircraft-storage',
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-          // Exclure les photos et autres données volumineuses de localStorage
-          aircraftList: state.aircraftList.map(aircraft => {
-            const { photo, manex, ...aircraftWithoutLargeData } = aircraft;
-            return {
-              ...aircraftWithoutLargeData,
-              // Conserver seulement un flag pour savoir si une photo existe
-              hasPhoto: !!photo,
-              hasManex: !!manex
-            };
-          }),
-          selectedAircraftId: state.selectedAircraftId
-        }),
-        onRehydrateStorage: () => async (state) => {
-          console.log('🔄 AircraftStore - Rehydrating from localStorage...', state);
+      storage: createJSONStorage(() => {
+        console.log('💾 Creating JSON storage, checking localStorage...');
+        const stored = localStorage.getItem('aircraft-storage');
+        console.log('💾 Current localStorage value:', stored ? 'Found' : 'Not found', stored?.length, 'chars');
+        return localStorage;
+      }),
+      partialize: (state) => {
+          console.log('💾 AircraftStore - partialize called with state:', {
+            aircraftCount: state.aircraftList?.length,
+            selectedId: state.selectedAircraftId
+          });
 
-          // Valider et réparer tous les avions lors du chargement depuis localStorage
-          if (state && state.aircraftList && state.aircraftList.length > 0) {
-            console.log(`📥 AircraftStore - Found ${state.aircraftList.length} aircraft(s) in localStorage`);
+          const result = {
+            // Exclure les photos et autres données volumineuses de localStorage
+            aircraftList: state.aircraftList.map(aircraft => {
+              const { photo, manex, ...aircraftWithoutLargeData } = aircraft;
+              const hasPhoto = !!photo;
+              const hasManex = !!manex;
 
-            // D'abord, s'assurer que les données de base sont valides
-            const validatedAircraftList = state.aircraftList.map(aircraft => {
-              console.log(`✅ AircraftStore - Validating aircraft: ${aircraft.registration}`);
-              return validateAndRepairAircraft(aircraft);
-            });
+              if (hasPhoto) {
+                console.log(`💾 Aircraft ${aircraft.registration} has photo (size: ${photo?.length || 0} chars)`);
+              }
 
-            // Mettre à jour immédiatement avec les données validées
-            state.aircraftList = validatedAircraftList;
-            console.log('✅ AircraftStore - Aircraft list validated and loaded from localStorage');
+              return {
+                ...aircraftWithoutLargeData,
+                // Conserver seulement un flag pour savoir si une photo existe
+                hasPhoto,
+                hasManex
+              };
+            }),
+            selectedAircraftId: state.selectedAircraftId
+          };
 
-            // Ensuite, charger les photos et MANEX depuis IndexedDB de manière asynchrone
-            try {
-              console.log('📸 AircraftStore - Loading photos and MANEX from IndexedDB...');
+          console.log('💾 AircraftStore - partialize result:', {
+            aircraftCount: result.aircraftList.length,
+            selectedId: result.selectedAircraftId,
+            firstAircraftReg: result.aircraftList[0]?.registration
+          });
 
-              const enrichedAircraftList = await Promise.all(
-                validatedAircraftList.map(async (aircraft) => {
-                  if (aircraft.hasPhoto || aircraft.hasManex) {
-                    try {
-                      const fullData = await dataBackupManager.getAircraftData(aircraft.id);
-                      if (fullData) {
-                        console.log(`📸 Loaded photo/manex for ${aircraft.registration}`);
-                        return {
-                          ...aircraft,
-                          photo: fullData.photo || null,
-                          manex: fullData.manex || null
-                        };
-                      }
-                    } catch (error) {
-                      console.warn(`⚠️ Failed to load photo/manex for ${aircraft.registration}:`, error);
-                    }
-                  }
-                  return aircraft;
-                })
-              );
+          return result;
+        },
+        onRehydrateStorage: () => {
+          return async (state, error) => {
+            console.log('🔄 AircraftStore - Rehydrating from localStorage...');
+            console.log('🔄 State received:', state);
+            console.log('🔄 State type:', typeof state);
+            console.log('🔄 State keys:', state ? Object.keys(state) : 'N/A');
+            console.log('🔄 aircraftList:', state?.aircraftList);
+            console.log('🔄 Error:', error);
 
-              state.aircraftList = enrichedAircraftList;
-              console.log('✅ AircraftStore - Photos and MANEX loaded from IndexedDB');
-            } catch (error) {
-              console.error('❌ AircraftStore - Error loading photos from IndexedDB:', error);
+            if (error) {
+              console.error('❌ AircraftStore - Error during rehydration:', error);
+              return;
             }
-          } else {
-            console.log('ℹ️ AircraftStore - No aircraft found in localStorage, using defaults');
-          }
+
+            // Valider et réparer tous les avions lors du chargement depuis localStorage
+            if (state && state.aircraftList && state.aircraftList.length > 0) {
+              console.log(`📥 AircraftStore - Found ${state.aircraftList.length} aircraft(s) in localStorage`);
+
+              // D'abord, s'assurer que les données de base sont valides
+              const validatedAircraftList = state.aircraftList.map(aircraft => {
+                console.log(`✅ AircraftStore - Validating aircraft: ${aircraft.registration}`);
+                return validateAndRepairAircraft(aircraft);
+              });
+
+              // Mettre à jour le state avec les données validées
+              // Note: on ne peut pas modifier state directement, Zustand l'a déjà appliqué
+              // On va utiliser setState après l'initialisation
+              console.log('✅ AircraftStore - Aircraft list validated and loaded from localStorage');
+
+              // Ensuite, charger les photos et MANEX depuis IndexedDB de manière asynchrone
+              // On utilise setTimeout pour laisser le temps à Zustand de terminer l'initialisation
+              setTimeout(async () => {
+                try {
+                  console.log('📸 AircraftStore - Loading photos and MANEX from IndexedDB...');
+
+                  // Récupérer la liste actuelle depuis le store
+                  const currentState = useAircraftStore.getState();
+                  const currentAircraftList = currentState.aircraftList;
+
+                  const enrichedAircraftList = await Promise.all(
+                    currentAircraftList.map(async (aircraft) => {
+                      let enrichedAircraft = { ...aircraft };
+
+                      // Charger la photo depuis aircraftData
+                      if (aircraft.hasPhoto) {
+                        try {
+                          const fullData = await dataBackupManager.getAircraftData(aircraft.id);
+                          if (fullData && fullData.photo) {
+                            console.log(`📸 Loaded photo for ${aircraft.registration}`);
+                            enrichedAircraft.photo = fullData.photo;
+                          }
+                        } catch (error) {
+                          console.warn(`⚠️ Failed to load photo for ${aircraft.registration}:`, error);
+                        }
+                      }
+
+                      // Charger le MANEX depuis manexStore
+                      if (aircraft.hasManex) {
+                        try {
+                          const manexData = await getManexWithPdf(aircraft.id);
+                          if (manexData) {
+                            console.log(`📚 Loaded MANEX for ${aircraft.registration}`);
+                            enrichedAircraft.manex = manexData;
+                          }
+                        } catch (error) {
+                          console.warn(`⚠️ Failed to load MANEX for ${aircraft.registration}:`, error);
+                        }
+                      }
+
+                      return enrichedAircraft;
+                    })
+                  );
+
+                  // Utiliser useAircraftStore.setState pour forcer la mise à jour
+                  useAircraftStore.setState({ aircraftList: enrichedAircraftList });
+                  console.log('✅ AircraftStore - Photos and MANEX loaded from IndexedDB');
+                } catch (error) {
+                  console.error('❌ AircraftStore - Error loading photos from IndexedDB:', error);
+                }
+              }, 100);
+            } else {
+              console.log('ℹ️ AircraftStore - No aircraft found in localStorage, using defaults');
+            }
+          };
         }
       }
-    )
   )
 );
 

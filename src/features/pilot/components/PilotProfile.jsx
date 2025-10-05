@@ -7,7 +7,6 @@ import PilotCertifications from './PilotCertifications';
 import MedicalReminders from './MedicalReminders';
 import UnitsConfiguration from './UnitsConfiguration';
 import { exportPilotData, importData } from '../utils/exportUtils';
-import { clearPersonalData } from '../../../utils/clearPersonalData';
 import ImageEditor from '../../../components/ImageEditor';
 import { useUnitsStore, unitsSelectors } from '@core/stores/unitsStore';
 import AccordionButton from '../../../shared/components/AccordionButton';
@@ -720,36 +719,6 @@ const PilotProfile = () => {
             >
               <Download size={16} />
               Exporter le profil pilote
-            </button>
-
-            {/* BOUTON TEMPORAIRE POUR TESTS */}
-            <button
-              onClick={() => {
-                if (confirm('⚠️ Ceci va supprimer toutes les données personnelles pour tester l\'import. Continuer?')) {
-                  const result = clearPersonalData();
-                  alert(`✅ ${result.removedCount} clés supprimées.\nEspace restant: ${result.remainingStorageMB}MB\n\nActualisez la page (F5) pour voir les changements.`);
-                  // Recharger la page après 2 secondes
-                  setTimeout(() => window.location.reload(), 2000);
-                }
-              }}
-              style={{
-                padding: '8px 12px',
-                backgroundColor: '#dc2626',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                fontSize: '13px',
-                fontWeight: '500',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                whiteSpace: 'nowrap',
-                marginTop: '8px'
-              }}
-              title="Vider les données pour test"
-            >
-              🗑️ Vider données (TEST)
             </button>
           </div>
         </div>

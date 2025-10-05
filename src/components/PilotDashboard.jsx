@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   AlertTriangle, CheckCircle, Calendar, Heart, Activity,
   Clock, TrendingUp, AlertCircle, Shield, Award, Plane,
-  Moon, Sun, Cloud, Navigation, ChevronDown, ChevronUp, Eye, RefreshCw
+  Moon, Sun, Cloud, Navigation, ChevronDown, ChevronUp, Eye, RefreshCw, Wand2, X
 } from 'lucide-react';
 import { theme } from '../styles/theme';
 
@@ -26,6 +26,7 @@ export const PilotDashboard = ({ onNavigate }) => {
     totalLandings: 0,
     recentFlights: []
   });
+  const [wizardDraft, setWizardDraft] = useState(null);
 
   useEffect(() => {
     checkPilotAge();
@@ -34,7 +35,40 @@ export const PilotDashboard = ({ onNavigate }) => {
     checkCurrencyStatus();
     checkQualificationStatus();
     calculateFlightStats();
+    checkWizardDraft();
   }, []);
+
+  // Vérifier s'il y a un brouillon d'assistant de création
+  const checkWizardDraft = () => {
+    const draft = localStorage.getItem('aircraft_wizard_draft');
+    if (draft) {
+      try {
+        const draftData = JSON.parse(draft);
+        setWizardDraft(draftData);
+      } catch (e) {
+        console.error('Erreur lors du chargement du brouillon:', e);
+      }
+    }
+  };
+
+  // Reprendre la configuration de l'assistant
+  const handleResumeWizard = () => {
+    // Naviguer vers le module avion
+    if (onNavigate) {
+      onNavigate('aircraft');
+      // Après un court délai, déclencher l'ouverture de l'assistant
+      setTimeout(() => {
+        // Émettre un événement personnalisé pour ouvrir l'assistant
+        window.dispatchEvent(new CustomEvent('resume-aircraft-wizard'));
+      }, 100);
+    }
+  };
+
+  // Annuler le brouillon
+  const handleCancelDraft = () => {
+    localStorage.removeItem('aircraft_wizard_draft');
+    setWizardDraft(null);
+  };
 
   // Vérifier l'âge du pilote
   const checkPilotAge = () => {
@@ -220,21 +254,36 @@ export const PilotDashboard = ({ onNavigate }) => {
         const sepLandings = sepTakeoffs;
         
         const hasInstructorFlight = sep12Months.some(flight => {
+          // Vérifier dans les remarques
           const remarksHasInstructor = flight.remarks && (
-            flight.remarks.includes('FI') ||
-            flight.remarks.includes('CRI') ||
-            flight.remarks.includes('instructeur')
+            flight.remarks.toUpperCase().includes('FI') ||
+            flight.remarks.toUpperCase().includes('CRI') ||
+            flight.remarks.toLowerCase().includes('instructeur')
           );
 
+          // Vérifier dans le champ functionOnBoard principal
+          const mainFunctionIsFiCri = flight.functionOnBoard === 'fi-cri';
+
+          // Vérifier dans les segments
           const segmentsHaveInstructor = flight.flightSegments && flight.flightSegments.some(segment => {
             const isFiCri = segment.functionOnBoard === 'fi-cri';
             const hasMinTime = parseFloat(segment.time) >= 1;
             return isFiCri && hasMinTime;
           });
 
-          const totalTimeValid = parseFloat(flight.totalTime) >= 1;
+          // Convertir totalTime en heures décimales (gère HH:MM et décimal)
+          let totalTimeHours = 0;
+          if (flight.totalTime) {
+            if (typeof flight.totalTime === 'string' && flight.totalTime.includes(':')) {
+              const [h, m] = flight.totalTime.split(':').map(Number);
+              totalTimeHours = h + (m / 60);
+            } else {
+              totalTimeHours = parseFloat(flight.totalTime) || 0;
+            }
+          }
+          const totalTimeValid = totalTimeHours >= 1;
 
-          return totalTimeValid && (remarksHasInstructor || segmentsHaveInstructor);
+          return totalTimeValid && (remarksHasInstructor || mainFunctionIsFiCri || segmentsHaveInstructor);
         });
         
         const canRenew = sepTotalHours >= 12 && sepPicHours >= 6 && sepTakeoffs >= 12 && sepLandings >= 12 && hasInstructorFlight;
@@ -582,6 +631,60 @@ export const PilotDashboard = ({ onNavigate }) => {
             >
               Configurer les unités
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Alerte pour reprendre la configuration d'avion */}
+      {wizardDraft && (
+        <div style={{
+          ...styles.ageErrorAlert,
+          backgroundColor: 'rgba(139, 92, 246, 0.1)',
+          borderColor: 'rgba(139, 92, 246, 0.3)'
+        }}>
+          <div style={{
+            ...styles.ageErrorContent,
+            color: '#8b5cf6'
+          }}>
+            <Wand2 size={20} />
+            <div style={{ flex: 1 }}>
+              <p style={styles.ageErrorTitle}>Configuration d'avion en cours</p>
+              <p style={styles.ageErrorMessage}>
+                Vous avez une configuration d'avion non terminée{wizardDraft.aircraftData?.registration ? ` (${wizardDraft.aircraftData.registration})` : ''}.
+                Reprenez là où vous vous êtes arrêté à l'étape {wizardDraft.currentStep + 1}.
+              </p>
+              <p style={{ ...styles.ageErrorMessage, fontSize: '11px', marginTop: '4px', opacity: 0.7 }}>
+                Sauvegardé le {new Date(wizardDraft.timestamp).toLocaleString('fr-FR')}
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button
+                style={{
+                  padding: '8px',
+                  backgroundColor: 'transparent',
+                  border: '1px solid rgba(139, 92, 246, 0.3)',
+                  borderRadius: '4px',
+                  color: '#8b5cf6',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                onClick={handleCancelDraft}
+                title="Supprimer le brouillon"
+              >
+                <X size={16} />
+              </button>
+              <button
+                style={{
+                  ...styles.configureButton,
+                  backgroundColor: '#8b5cf6'
+                }}
+                onClick={handleResumeWizard}
+              >
+                Reprendre la configuration
+              </button>
+            </div>
           </div>
         </div>
       )}

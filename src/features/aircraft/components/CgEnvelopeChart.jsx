@@ -2,15 +2,13 @@
 import React, { memo } from 'react';
 
 const CGEnvelopeChart = memo(({ cgEnvelope, massUnit = 'kg' }) => {
-  // Récupérer les points avant dynamiques
+  // Points avant (format liste de points)
   const forwardPoints = (cgEnvelope?.forwardPoints || [])
-    .filter(point => parseFloat(point.weight) > 0 && parseFloat(point.cg) > 0)
-    .map(point => ({
-      w: parseFloat(point.weight),
-      cg: parseFloat(point.cg),
-      label: 'Forward'
+    .map(p => ({
+      weight: parseFloat(p.weight) || 0,
+      cg: parseFloat(p.cg) || 0
     }))
-    .sort((a, b) => a.w - b.w); // Trier par masse croissante
+    .filter(p => p.weight > 0 && p.cg > 0);
 
   // Points arrière
   const aftMinWeight = parseFloat(cgEnvelope?.aftMinWeight) || 0;
@@ -18,7 +16,7 @@ const CGEnvelopeChart = memo(({ cgEnvelope, massUnit = 'kg' }) => {
   const aftMaxWeight = parseFloat(cgEnvelope?.aftMaxWeight) || 0;
 
   // Calculer les échelles pour le graphique
-  const forwardWeights = forwardPoints.map(p => p.w);
+  const forwardWeights = forwardPoints.map(p => p.weight);
   const forwardCGs = forwardPoints.map(p => p.cg);
   const aftWeights = [aftMinWeight, aftMaxWeight].filter(w => w > 0);
   const aftCGs = [aftCG].filter(cg => cg > 0);
@@ -34,21 +32,26 @@ const CGEnvelopeChart = memo(({ cgEnvelope, massUnit = 'kg' }) => {
   const toSvgX = (cg) => 50 + (cg - minCG) / (maxCG - minCG) * 400;
   const toSvgY = (weight) => 250 - (weight - minWeight) / (maxWeight - minWeight) * 200;
 
-  // Créer les points de l'enveloppe
+  // Créer les points de l'enveloppe (sens horaire)
   const envelopePoints = [];
-  
-  // Ajouter tous les points avant (déjà triés)
-  forwardPoints.forEach((point, index) => {
-    envelopePoints.push({ 
-      ...point, 
-      label: `Forward ${index + 1}` 
+
+  // 1. Points Forward (triés par masse croissante pour former le côté gauche)
+  const sortedForwardPoints = [...forwardPoints].sort((a, b) => a.weight - b.weight);
+  sortedForwardPoints.forEach((point, index) => {
+    envelopePoints.push({
+      w: point.weight,
+      cg: point.cg,
+      label: `Fwd ${index + 1}`,
+      isForward: true
     });
   });
-  
-  // Points arrière (ordre décroissant de masse)
+
+  // 2. Point Aft Max (haut droit)
   if (aftMaxWeight > 0 && aftCG > 0) {
     envelopePoints.push({ w: aftMaxWeight, cg: aftCG, label: 'Aft Max' });
   }
+
+  // 3. Point Aft Min (bas droit)
   if (aftMinWeight > 0 && aftCG > 0 && aftMinWeight !== aftMaxWeight) {
     envelopePoints.push({ w: aftMinWeight, cg: aftCG, label: 'Aft Min' });
   }
@@ -150,29 +153,29 @@ const CGEnvelopeChart = memo(({ cgEnvelope, massUnit = 'kg' }) => {
           {/* Points de l'enveloppe */}
           {envelopePoints.map((point, index) => (
             <g key={index}>
-              <circle 
-                cx={toSvgX(point.cg)} 
-                cy={toSvgY(point.w)} 
-                r="4" 
-                fill="#dc2626" 
-                stroke="white" 
+              <circle
+                cx={toSvgX(point.cg)}
+                cy={toSvgY(point.w)}
+                r="4"
+                fill={point.isForward ? "#22c55e" : "#dc2626"}
+                stroke="white"
                 strokeWidth="2"
               />
-              <text 
-                x={toSvgX(point.cg)} 
-                y={toSvgY(point.w) - 10} 
-                textAnchor="middle" 
-                fontSize="9" 
-                fill="#374151" 
+              <text
+                x={toSvgX(point.cg)}
+                y={toSvgY(point.w) - 10}
+                textAnchor="middle"
+                fontSize="9"
+                fill="#374151"
                 fontWeight="bold"
               >
                 {point.label}
               </text>
-              <text 
-                x={toSvgX(point.cg)} 
-                y={toSvgY(point.w) + 20} 
-                textAnchor="middle" 
-                fontSize="8" 
+              <text
+                x={toSvgX(point.cg)}
+                y={toSvgY(point.w) + 20}
+                textAnchor="middle"
+                fontSize="8"
                 fill="#6b7280"
               >
                 {point.w}{massUnit} / {point.cg}m

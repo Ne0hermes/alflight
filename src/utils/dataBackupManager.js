@@ -6,7 +6,7 @@
  */
 
 const DB_NAME = 'FlightManagementDB';
-const DB_VERSION = 2; // Incrémenté pour ajouter de nouveaux stores
+const DB_VERSION = 5; // Incrémenté pour forcer la recréation du store BACKUP_STORE avec autoIncrement
 const BACKUP_STORE = 'dataBackups';
 const PROTECTED_DATA_STORE = 'protectedData';
 const AIRCRAFT_DATA_STORE = 'aircraftData';
@@ -16,7 +16,11 @@ const NAVIGATION_STORE = 'navigationData';
 class DataBackupManager {
   constructor() {
     this.db = null;
-    this.initPromise = this.initDB();
+    this.initPromise = this.initDB().catch(error => {
+      console.error('❌ Erreur lors de l\'initialisation d\'IndexedDB:', error);
+      // Retourner une promesse résolue pour éviter le blocage
+      return Promise.resolve(null);
+    });
     this.autoBackupInterval = null;
     this.isProtectionEnabled = true; // Protection activée par défaut
   }
@@ -25,33 +29,55 @@ class DataBackupManager {
    * Initialise la base de données avec les nouveaux stores
    */
   async initDB() {
+    console.log('🔧 DataBackupManager.initDB - Début d\'initialisation');
+
+    // Si la base est déjà initialisée, retourner immédiatement
+    if (this.db) {
+      console.log('✅ DataBackupManager.initDB - Base déjà initialisée, réutilisation');
+      return this.db;
+    }
+
     return new Promise((resolve, reject) => {
       if (!window.indexedDB) {
+        console.error('❌ IndexedDB non supporté par le navigateur');
         reject(new Error('IndexedDB non supporté'));
         return;
       }
 
+      console.log('🔧 DataBackupManager.initDB - Ouverture de la base de données:', DB_NAME, 'version:', DB_VERSION);
       const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-      request.onerror = () => {
+      request.onerror = (event) => {
+        console.error('❌ Erreur IndexedDB:', event.target.error);
         reject(new Error('Erreur lors de l\'ouverture d\'IndexedDB'));
       };
 
       request.onsuccess = (event) => {
         this.db = event.target.result;
         console.log('✅ DataBackupManager: Base de données initialisée');
-        
+
         // Démarrer la sauvegarde automatique
         this.startAutoBackup();
-        
+
         resolve(this.db);
       };
 
       request.onupgradeneeded = (event) => {
+        console.log('🔄 DataBackupManager.onupgradeneeded - Mise à niveau de la base de données');
         const db = event.target.result;
-        
+        const oldVersion = event.oldVersion;
+        console.log('🔄 Ancienne version:', oldVersion, '→ Nouvelle version:', DB_VERSION);
+        console.log('🔄 Stores existants:', Array.from(db.objectStoreNames));
+
         // Store pour les backups complets
+        // Si on passe à la version 5, recréer le store pour corriger le problème autoIncrement
+        if (oldVersion < 5 && db.objectStoreNames.contains(BACKUP_STORE)) {
+          console.log('🗑️ Suppression de l\'ancien store BACKUP_STORE');
+          db.deleteObjectStore(BACKUP_STORE);
+        }
+
         if (!db.objectStoreNames.contains(BACKUP_STORE)) {
+          console.log('✨ Création du nouveau store BACKUP_STORE avec autoIncrement');
           const backupStore = db.createObjectStore(BACKUP_STORE, { keyPath: 'id', autoIncrement: true });
           backupStore.createIndex('timestamp', 'timestamp', { unique: false });
           backupStore.createIndex('type', 'type', { unique: false });
@@ -119,8 +145,10 @@ class DataBackupManager {
    */
   async createAutoBackup() {
     try {
+      const timestamp = new Date().toISOString();
       const backup = {
-        timestamp: new Date().toISOString(),
+        id: `backup_auto_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: timestamp,
         type: 'auto',
         data: {
           localStorage: { ...localStorage },
@@ -149,8 +177,10 @@ class DataBackupManager {
    */
   async createManualBackup(name = 'Sauvegarde manuelle') {
     try {
+      const timestamp = new Date().toISOString();
       const backup = {
-        timestamp: new Date().toISOString(),
+        id: `backup_manual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: timestamp,
         type: 'manual',
         name: name,
         data: {
@@ -249,32 +279,50 @@ class DataBackupManager {
    * Sauvegarde des données protégées
    */
   async saveProtectedData(key, data, type = 'general') {
+    console.log(`💾 saveProtectedData - Début: key="${key}", type="${type}"`);
+
     if (!this.isProtectionEnabled) {
       console.warn('⚠️ Protection désactivée, les données ne sont pas protégées');
     }
-    
+
     await this.initPromise;
-    
+
     const protectedItem = {
-      key: key,
+      id: key, // keyPath du store est 'id', pas 'key'
+      key: key, // Gardé pour compatibilité
       type: type,
       data: data,
       lastModified: new Date().toISOString(),
       protected: this.isProtectionEnabled
     };
-    
+
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([PROTECTED_DATA_STORE], 'readwrite');
-      const store = transaction.objectStore(PROTECTED_DATA_STORE);
-      const request = store.put(protectedItem);
-      
-      request.onsuccess = () => {
-        // Sauvegarder aussi dans localStorage pour compatibilité
-        localStorage.setItem(key, JSON.stringify(data));
-        console.log('✅ Données protégées sauvegardées:', key);
-        resolve(request.result);
-      };
-      request.onerror = () => reject(request.error);
+      try {
+        const transaction = this.db.transaction([PROTECTED_DATA_STORE], 'readwrite');
+
+        transaction.onerror = (event) => {
+          console.error(`❌ saveProtectedData - Erreur de transaction:`, event.target.error);
+          reject(event.target.error);
+        };
+
+        const store = transaction.objectStore(PROTECTED_DATA_STORE);
+        const request = store.put(protectedItem);
+
+        request.onsuccess = () => {
+          // Sauvegarder aussi dans localStorage pour compatibilité
+          localStorage.setItem(key, JSON.stringify(data));
+          console.log('✅ Données protégées sauvegardées:', key);
+          resolve(request.result);
+        };
+
+        request.onerror = () => {
+          console.error(`❌ saveProtectedData - Erreur de requête:`, request.error);
+          reject(request.error);
+        };
+      } catch (error) {
+        console.error(`❌ saveProtectedData - Exception:`, error);
+        reject(error);
+      }
     });
   }
 
@@ -301,20 +349,27 @@ class DataBackupManager {
    * Sauvegarde les données d'un avion
    */
   async saveAircraftData(aircraft) {
+    console.log('💾 dataBackupManager.saveAircraftData - Début', aircraft.id);
     await this.initPromise;
-    
+    console.log('💾 dataBackupManager.saveAircraftData - initPromise résolu');
+
     const aircraftData = {
       ...aircraft,
       id: aircraft.id || `aircraft_${Date.now()}`,
       lastModified: new Date().toISOString()
     };
-    
+
+    console.log('💾 dataBackupManager.saveAircraftData - Sauvegarde dans AIRCRAFT_DATA_STORE...');
     // Sauvegarder dans IndexedDB
     await this.saveToStore(AIRCRAFT_DATA_STORE, aircraftData);
-    
+    console.log('💾 dataBackupManager.saveAircraftData - AIRCRAFT_DATA_STORE OK');
+
+    console.log('💾 dataBackupManager.saveAircraftData - Sauvegarde dans PROTECTED_DATA_STORE...');
     // Sauvegarder aussi dans les données protégées
     await this.saveProtectedData(`aircraft_${aircraftData.id}`, aircraftData, 'aircraft');
-    
+    console.log('💾 dataBackupManager.saveAircraftData - PROTECTED_DATA_STORE OK');
+
+    console.log('💾 dataBackupManager.saveAircraftData - Terminé avec succès');
     return aircraftData;
   }
 
@@ -322,15 +377,39 @@ class DataBackupManager {
    * Récupère les données d'un avion par son ID
    */
   async getAircraftData(aircraftId) {
+    console.log('📖 getAircraftData - Début pour ID:', aircraftId);
     await this.initPromise;
-    
+    console.log('📖 getAircraftData - initPromise résolu');
+
+    if (!this.db) {
+      console.error('❌ getAircraftData - DB non initialisée');
+      return null;
+    }
+
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([AIRCRAFT_DATA_STORE], 'readonly');
-      const store = transaction.objectStore(AIRCRAFT_DATA_STORE);
-      const request = store.get(aircraftId);
-      
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      try {
+        console.log('📖 getAircraftData - Création transaction...');
+        const transaction = this.db.transaction([AIRCRAFT_DATA_STORE], 'readonly');
+        const store = transaction.objectStore(AIRCRAFT_DATA_STORE);
+        console.log('📖 getAircraftData - Store obtenu, keyPath:', store.keyPath);
+        const request = store.get(aircraftId);
+
+        request.onsuccess = () => {
+          console.log('✅ getAircraftData - Succès, résultat:', request.result ? 'trouvé' : 'non trouvé');
+          if (request.result) {
+            console.log('📸 getAircraftData - Photo présente:', !!request.result.photo);
+            console.log('📚 getAircraftData - Manex présent:', !!request.result.manex);
+          }
+          resolve(request.result);
+        };
+        request.onerror = () => {
+          console.error('❌ getAircraftData - Erreur:', request.error);
+          reject(request.error);
+        };
+      } catch (error) {
+        console.error('❌ getAircraftData - Exception:', error);
+        reject(error);
+      }
     });
   }
 
@@ -550,26 +629,78 @@ class DataBackupManager {
   // Méthodes utilitaires privées
 
   async saveToStore(storeName, data) {
+    console.log(`💾 saveToStore - Début: store="${storeName}", data.id="${data?.id}"`);
+
     await this.initPromise;
-    
+    console.log(`💾 saveToStore - initPromise résolu, db=`, this.db);
+
+    if (!this.db) {
+      console.error('❌ saveToStore - La base de données n\'est pas initialisée');
+      throw new Error('La base de données n\'est pas initialisée');
+    }
+
+    // Vérifier que le store existe
+    const storeNames = Array.from(this.db.objectStoreNames);
+    console.log(`💾 saveToStore - Stores disponibles:`, storeNames);
+
+    if (!storeNames.includes(storeName)) {
+      console.error(`❌ saveToStore - Store "${storeName}" introuvable!`);
+      throw new Error(`Object store "${storeName}" n'existe pas. Stores disponibles: ${storeNames.join(', ')}`);
+    }
+
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([storeName], 'readwrite');
-      const store = transaction.objectStore(storeName);
-      const request = store.put(data);
-      
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      try {
+        console.log(`💾 saveToStore - Création de la transaction pour "${storeName}"...`);
+        const transaction = this.db.transaction([storeName], 'readwrite');
+
+        transaction.onerror = (event) => {
+          console.error(`❌ saveToStore - Erreur de transaction:`, event.target.error);
+          reject(event.target.error);
+        };
+
+        const store = transaction.objectStore(storeName);
+        console.log(`💾 saveToStore - Store obtenu, keyPath="${store.keyPath}"`);
+
+        const request = store.put(data);
+
+        request.onsuccess = () => {
+          console.log(`✅ saveToStore - Succès pour "${storeName}", key=`, request.result);
+          resolve(request.result);
+        };
+
+        request.onerror = () => {
+          console.error(`❌ saveToStore - Erreur de requête:`, request.error);
+          reject(request.error);
+        };
+      } catch (error) {
+        console.error(`❌ saveToStore - Exception:`, error);
+        reject(error);
+      }
     });
   }
 
   async getAllFromStore(storeName) {
     await this.initPromise;
-    
+
+    if (!this.db) {
+      console.error('❌ getAllFromStore - La base de données n\'est pas initialisée');
+      return [];
+    }
+
+    // Vérifier que le store existe
+    const storeNames = Array.from(this.db.objectStoreNames);
+    console.log(`📖 getAllFromStore - Store demandé: "${storeName}", Stores disponibles:`, storeNames);
+
+    if (!storeNames.includes(storeName)) {
+      console.warn(`⚠️ getAllFromStore - Store "${storeName}" introuvable, retourne []`);
+      return [];
+    }
+
     return new Promise((resolve, reject) => {
       const transaction = this.db.transaction([storeName], 'readonly');
       const store = transaction.objectStore(storeName);
       const request = store.getAll();
-      
+
       request.onsuccess = () => resolve(request.result || []);
       request.onerror = () => reject(request.error);
     });

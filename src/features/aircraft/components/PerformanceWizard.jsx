@@ -337,27 +337,13 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
   const handleToolSelection = async (type) => {
     setPerformanceType(type);
 
-    // Si on sélectionne les tableaux, lancer automatiquement l'extraction
-    if (type === 'tables' && selectedPages.length > 0) {
-      // Préparer les pages pour l'extraction immédiate
-      const pagesToExtract = extractedPages
-        .filter((_, idx) => selectedPages.includes(idx))
-        .map((page, i) => {
-          const originalIndex = selectedPages[i];
-          return {
-            id: `page_${page.pageNumber}`,
-            name: `Page ${page.pageNumber}`,
-            base64: page.image.replace(/^data:image\/\w+;base64,/, ''),
-            preview: page.image,
-            classification: pageClassifications[originalIndex] || 'non-classified'
-          };
-        });
-
-      // Stocker les pages préparées pour l'étape 4
-      setAutoExtractPages(pagesToExtract);
+    if (type === 'tables') {
+      // Pour les tableaux, aller à l'étape 3 (sélection des pages)
+      setCurrentStep(3);
+    } else if (type === 'abacs') {
+      // Pour les abaques, aller directement à l'étape 4 (construction manuelle)
+      setCurrentStep(4);
     }
-
-    setCurrentStep(4);
   };
 
   // Rendu des étapes
@@ -379,6 +365,23 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                 Ce document sera archivé avec la configuration pour référence future.
               </p>
 
+              {aircraft?.manex && (
+                <div style={{
+                  ...styles.alert,
+                  ...styles.alertSuccess,
+                  marginBottom: '16px',
+                  textAlign: 'left'
+                }}>
+                  <Check size={20} />
+                  <div>
+                    <strong>Un MANEX est déjà présent :</strong> {aircraft.manex.fileName}
+                    <div style={{ fontSize: '12px', marginTop: '4px' }}>
+                      Vous pouvez le conserver ou en uploader un nouveau.
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <input
                 ref={fileInputRef}
                 type="file"
@@ -387,19 +390,48 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                 style={{ display: 'none' }}
               />
 
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isProcessing}
-                style={{
-                  ...styles.button,
-                  ...styles.buttonPrimary,
-                  width: '100%',
-                  maxWidth: '400px',
-                  opacity: isProcessing ? 0.5 : 1
-                }}
-              >
-                {isProcessing ? (loadingMessage || 'Traitement en cours...') : 'Sélectionner le manuel PDF'}
-              </button>
+              {aircraft?.manex ? (
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => setCurrentStep(2)}
+                    style={{
+                      ...styles.button,
+                      ...styles.buttonPrimary,
+                      minWidth: '200px'
+                    }}
+                  >
+                    <Check size={16} />
+                    Conserver le MANEX existant
+                  </button>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isProcessing}
+                    style={{
+                      ...styles.button,
+                      ...styles.buttonSecondary,
+                      minWidth: '200px',
+                      opacity: isProcessing ? 0.5 : 1
+                    }}
+                  >
+                    <Upload size={16} />
+                    {isProcessing ? (loadingMessage || 'Traitement en cours...') : 'Remplacer le MANEX'}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isProcessing}
+                  style={{
+                    ...styles.button,
+                    ...styles.buttonPrimary,
+                    width: '100%',
+                    maxWidth: '400px',
+                    opacity: isProcessing ? 0.5 : 1
+                  }}
+                >
+                  {isProcessing ? (loadingMessage || 'Traitement en cours...') : 'Sélectionner le manuel PDF'}
+                </button>
+              )}
 
               {manualFile && (
                 <div style={{
@@ -426,8 +458,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
             <div style={{
               ...styles.card,
               backgroundColor: '#f0f9ff',
-              borderColor: '#1e40af',
-              marginBottom: '16px'
+              borderColor: '#1e40af'
             }}>
               <h4 style={{ ...styles.text.sm, ...styles.text.bold, marginBottom: '8px', color: '#1e40af' }}>
                 📕 Manuel de vol
@@ -436,21 +467,8 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                 <li><strong>Le manuel sera conservé dans votre configuration</strong></li>
                 <li>Les données extraites seront vérifiées par rapport au manuel</li>
                 <li>Vous pourrez le consulter à tout moment depuis votre profil avion</li>
-              </ul>
-            </div>
-
-            <div style={{
-              ...styles.card,
-              backgroundColor: '#fef3c7',
-              borderColor: '#f59e0b'
-            }}>
-              <h4 style={{ ...styles.text.sm, ...styles.text.bold, marginBottom: '8px' }}>
-                💡 Conseils pour de meilleurs résultats
-              </h4>
-              <ul style={{ ...styles.text.sm, paddingLeft: '20px', margin: 0 }}>
                 <li>Utilisez le manuel complet officiel du constructeur</li>
                 <li>Assurez-vous que le PDF n'est pas protégé par mot de passe</li>
-                <li>Les PDFs de plus de 5 MB seront analysés intelligemment</li>
               </ul>
             </div>
           </div>
@@ -461,7 +479,76 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
           <div style={styles.flexCol}>
             <div style={styles.card}>
               <h3 style={{ ...styles.text.lg, ...styles.text.bold, marginBottom: '16px' }}>
-                Étape 2 : Sélection des pages de performance
+                Étape 2 : Type de données de performance
+              </h3>
+
+              {detectionResult?.success && (
+                <div style={{ ...styles.alert, ...styles.alertSuccess }}>
+                  <Check size={16} />
+                  {detectionResult.pageCount} page{detectionResult.pageCount > 1 ? 's' : ''} de performance détectée{detectionResult.pageCount > 1 ? 's' : ''} automatiquement
+                </div>
+              )}
+
+              <p style={{ ...styles.text.sm, ...styles.text.muted, marginBottom: '24px' }}>
+                Quel type de données de performance souhaitez-vous extraire ?
+              </p>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '24px'
+              }}>
+                <div
+                  onClick={() => handleToolSelection('tables')}
+                  style={styles.cardHover}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = '#1e40af'}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = '#e5e7eb'}
+                >
+                  <Table size={48} style={{ margin: '0 auto 16px', color: '#1e40af' }} />
+                  <h4 style={{ ...styles.text.md, ...styles.text.bold, marginBottom: '8px' }}>
+                    Tableaux
+                  </h4>
+                  <p style={{ ...styles.text.sm, ...styles.text.muted }}>
+                    Données structurées en lignes et colonnes
+                    (distances de décollage/atterrissage, performances de montée).<br/>
+                    <strong>Extraction automatique avec OpenAI</strong>
+                  </p>
+                </div>
+
+                <div
+                  onClick={() => handleToolSelection('abacs')}
+                  style={styles.cardHover}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = '#1e40af'}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = '#e5e7eb'}
+                >
+                  <LineChart size={48} style={{ margin: '0 auto 16px', color: '#1e40af' }} />
+                  <h4 style={{ ...styles.text.md, ...styles.text.bold, marginBottom: '8px' }}>
+                    Abaques / Graphiques
+                  </h4>
+                  <p style={{ ...styles.text.sm, ...styles.text.muted }}>
+                    Courbes et graphiques de performance
+                    (graphiques avec axes et courbes).<br/>
+                    <strong>Construction manuelle</strong>
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setCurrentStep(1)}
+                style={{ ...styles.button, ...styles.buttonSecondary, marginTop: '16px' }}
+              >
+                Retour
+              </button>
+            </div>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div style={styles.flexCol}>
+            <div style={styles.card}>
+              <h3 style={{ ...styles.text.lg, ...styles.text.bold, marginBottom: '16px' }}>
+                Étape 3 : Sélection des pages de performance
               </h3>
 
               {detectionResult && !detectionResult.success && (
@@ -676,14 +763,14 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                 marginTop: '16px'
               }}>
                 <button
-                  onClick={() => setCurrentStep(1)}
+                  onClick={() => setCurrentStep(2)}
                   style={{ ...styles.button, ...styles.buttonSecondary }}
                 >
                   Retour
                 </button>
 
                 <button
-                  onClick={() => setCurrentStep(3)}
+                  onClick={() => setCurrentStep(4)}
                   disabled={selectedPages.length === 0}
                   style={{
                     ...styles.button,
@@ -695,73 +782,6 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                   <ChevronRight size={16} />
                 </button>
               </div>
-            </div>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div style={styles.flexCol}>
-            <div style={styles.card}>
-              <h3 style={{ ...styles.text.lg, ...styles.text.bold, marginBottom: '16px' }}>
-                Étape 3 : Type de données de performance
-              </h3>
-
-              {detectionResult?.success && (
-                <div style={{ ...styles.alert, ...styles.alertSuccess }}>
-                  <Check size={16} />
-                  {detectionResult.pageCount} page{detectionResult.pageCount > 1 ? 's' : ''} de performance détectée{detectionResult.pageCount > 1 ? 's' : ''} automatiquement
-                </div>
-              )}
-
-              <p style={{ ...styles.text.sm, ...styles.text.muted, marginBottom: '24px' }}>
-                Quel type de données de performance contiennent les pages sélectionnées ?
-              </p>
-
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '24px'
-              }}>
-                <div
-                  onClick={() => handleToolSelection('tables')}
-                  style={styles.cardHover}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = '#1e40af'}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = '#e5e7eb'}
-                >
-                  <Table size={48} style={{ margin: '0 auto 16px', color: '#1e40af' }} />
-                  <h4 style={{ ...styles.text.md, ...styles.text.bold, marginBottom: '8px' }}>
-                    Tableaux
-                  </h4>
-                  <p style={{ ...styles.text.sm, ...styles.text.muted }}>
-                    Données structurées en lignes et colonnes
-                    (distances de décollage/atterrissage, performances de montée)
-                  </p>
-                </div>
-
-                <div
-                  onClick={() => handleToolSelection('abacs')}
-                  style={styles.cardHover}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = '#1e40af'}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = '#e5e7eb'}
-                >
-                  <LineChart size={48} style={{ margin: '0 auto 16px', color: '#1e40af' }} />
-                  <h4 style={{ ...styles.text.md, ...styles.text.bold, marginBottom: '8px' }}>
-                    Abaques / Graphiques
-                  </h4>
-                  <p style={{ ...styles.text.sm, ...styles.text.muted }}>
-                    Courbes et graphiques de performance
-                    (graphiques avec axes et courbes)
-                  </p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setCurrentStep(2)}
-                style={{ ...styles.button, ...styles.buttonSecondary, marginTop: '16px' }}
-              >
-                Retour à la sélection des pages
-              </button>
             </div>
           </div>
         );
@@ -818,7 +838,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
             <div>
               <div style={{ ...styles.flexRow, marginBottom: '16px' }}>
                 <button
-                  onClick={() => setCurrentStep(3)}
+                  onClick={() => setCurrentStep(2)}
                   style={{ ...styles.button, ...styles.buttonSecondary }}
                 >
                   ← Retour
@@ -856,8 +876,8 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
 
     const steps = [
       { num: 1, label: 'Upload manuel' },
-      { num: 2, label: 'Sélection pages' },
-      { num: 3, label: 'Type de données' }
+      { num: 2, label: 'Type de données' },
+      { num: 3, label: 'Sélection pages' }
     ];
 
     return (
