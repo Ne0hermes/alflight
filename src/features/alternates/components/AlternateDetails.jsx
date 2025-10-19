@@ -278,6 +278,8 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
       )}
     </div>
 
+
+  );
 });
 
 // Composant pour afficher un service

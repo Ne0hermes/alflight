@@ -244,7 +244,7 @@ class UnifiedPerformanceService {
       const data = await response.json();
       
       const content = data.choices[0].message.content;
-      :', content.substring(0, 100));
+    //', content.substring(0, 100));
 
       // Essayer de parser comme JSON
       try {

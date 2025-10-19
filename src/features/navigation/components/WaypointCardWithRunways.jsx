@@ -640,7 +640,7 @@ export const WaypointCardWithRunways = memo(({
         </div>
       </div>
     </div>
-
+  );
 });
 
 WaypointCardWithRunways.displayName = 'WaypointCardWithRunways';

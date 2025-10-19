@@ -416,7 +416,7 @@ const PilotProfile = () => {
     const status = getMedicalStatus();
     if (status.status === 'none') {
       return 'Non renseigné';
-    }
+    };
     if (status.status === 'expired') {
       return `Expiré depuis ${Math.abs(status.daysRemaining)} jours`;
     }

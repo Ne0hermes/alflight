@@ -252,6 +252,7 @@ const UpdateAircraftDialog = ({
               </Alert>
             )}
           </Box>
+        );
 
       case 2:
         return (

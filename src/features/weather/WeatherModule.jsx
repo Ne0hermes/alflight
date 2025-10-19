@@ -416,8 +416,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
         </div>
       </div>
     );
-  }
-  
+  };
   if (error) {
     return (
       <div style={sx.combine(sx.components.card.base, sx.components.alert.danger)}>
@@ -428,8 +427,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
         </div>
       </div>
     );
-  }
-  
+  });
   if (!weather) {
     return (
       <div style={sx.combine(sx.components.card.base, sx.flex.between)}>
@@ -446,8 +444,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
         </button>
       </div>
     );
-  }
-  
+  });
   const metar = weather.metar?.decoded;
   const isOld = Date.now() - weather.timestamp > 60 * 60 * 1000; // Plus d'une heure
   

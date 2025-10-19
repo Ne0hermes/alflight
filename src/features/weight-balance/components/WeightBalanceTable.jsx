@@ -28,8 +28,7 @@ export const WeightBalanceTable = memo(({ aircraft, loads, calculations }) => {
         arm: wb.frontLeftSeatArm,
         moment: (loads.frontLeft * wb.frontLeftSeatArm).toFixed(1)
       });
-    }
-    
+    };
     if (loads.frontRight > 0) {
       items.push({
         label: 'Passager avant',
@@ -37,8 +36,7 @@ export const WeightBalanceTable = memo(({ aircraft, loads, calculations }) => {
         arm: wb.frontRightSeatArm,
         moment: (loads.frontRight * wb.frontRightSeatArm).toFixed(1)
       });
-    }
-    
+    });
     if (loads.rearLeft > 0) {
       items.push({
         label: 'Passager arrière gauche',
@@ -46,8 +44,7 @@ export const WeightBalanceTable = memo(({ aircraft, loads, calculations }) => {
         arm: wb.rearLeftSeatArm,
         moment: (loads.rearLeft * wb.rearLeftSeatArm).toFixed(1)
       });
-    }
-    
+    });
     if (loads.rearRight > 0) {
       items.push({
         label: 'Passager arrière droit',

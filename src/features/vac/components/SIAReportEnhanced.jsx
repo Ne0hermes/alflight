@@ -199,8 +199,7 @@ export const SIAReportEnhanced = () => {
       // Essayer le format standard avec séparateurs
       const standardPattern = /(\d{1,3})[°\s]+(\d{1,2})['\s]+(\d{1,2})(?:\.(\d+))?["'\s]*([NSEW])/i;
       match = dmsString.match(standardPattern);
-    }
-    
+    };
     if (!match) return null;
     
     const degrees = parseInt(match[1]);

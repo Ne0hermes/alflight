@@ -197,7 +197,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
     
     if (!isNaN(aftMaxWeight) && aftMaxWeight > 0 && !isNaN(aftCG)) {
       points.push({ w: aftMaxWeight, cg: aftCG, label: 'Aft Max' });
-    }
+    };
     if (!isNaN(aftMinWeight) && aftMinWeight > 0 && !isNaN(aftCG) && aftMinWeight !== aftMaxWeight) {
       points.push({ w: aftMinWeight, cg: aftCG, label: 'Aft Min' });
     }

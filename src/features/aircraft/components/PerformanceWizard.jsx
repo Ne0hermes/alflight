@@ -350,6 +350,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
       const text = page.text.toLowerCase();
       const score = keywords.reduce((acc, keyword) =>
         acc + (text.includes(keyword) ? 1 : 0), 0
+      );
 
       return { ...page, index, score };
     }).filter(p => p.score > 2);

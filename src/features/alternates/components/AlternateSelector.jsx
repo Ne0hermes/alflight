@@ -202,6 +202,8 @@ const ScoreBadge = memo(({ score }) => {
       {(score * 100).toFixed(0)}%
     </span>
 
+
+  );
 });
 
 const getAlternateColor = (index) => {

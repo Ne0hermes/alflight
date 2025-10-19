@@ -85,7 +85,7 @@ export const useAlternatesForFuel = () => {
                 return;
       }
       
-      :`, {
+    //`, {
         position: alt.position,
         selectionType: alt.selectionType
       });
