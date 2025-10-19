@@ -370,9 +370,27 @@ export class FlightPlanData {
   }
 
   /**
-   * Export vers JSON
+   * Export vers JSON - retourne l'objet (pas le string)
+   * JavaScript utilisera automatiquement cette méthode lors de JSON.stringify()
    */
   toJSON() {
+    return {
+      generalInfo: this.generalInfo,
+      aircraft: this.aircraft,
+      route: this.route,
+      alternates: this.alternates,
+      weather: this.weather,
+      fuel: this.fuel,
+      weightBalance: this.weightBalance,
+      todParameters: this.todParameters,
+      metadata: this.metadata,
+    };
+  }
+
+  /**
+   * Convertit vers string JSON
+   */
+  toString() {
     return JSON.stringify(this, null, 2);
   }
 
