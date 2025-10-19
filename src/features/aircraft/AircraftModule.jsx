@@ -331,6 +331,46 @@ export const AircraftModule = memo(() => {
       addText(`Fiche Technique - ${fullAircraft.registration}`, 50, yPosition, { bold: true, size: 20 });
       yPosition -= 40;
 
+      // Ajouter la photo de l'avion si disponible
+      if (fullAircraft.photo) {
+        try {
+          checkNewPage(200);
+
+          // Convertir la photo base64 en image
+          let imageBytes;
+          let image;
+
+          if (fullAircraft.photo.startsWith('data:image/png')) {
+            imageBytes = fullAircraft.photo.split(',')[1];
+            image = await pdfDoc.embedPng(imageBytes);
+          } else if (fullAircraft.photo.startsWith('data:image/jpeg') || fullAircraft.photo.startsWith('data:image/jpg')) {
+            imageBytes = fullAircraft.photo.split(',')[1];
+            image = await pdfDoc.embedJpg(imageBytes);
+          }
+
+          if (image) {
+            const imageWidth = 200;
+            const imageHeight = (image.height / image.width) * imageWidth;
+
+            // Centrer l'image
+            const xPos = (width - imageWidth) / 2;
+
+            page.drawImage(image, {
+              x: xPos,
+              y: yPosition - imageHeight,
+              width: imageWidth,
+              height: imageHeight,
+            });
+
+            yPosition -= imageHeight + 20;
+          }
+        } catch (error) {
+          console.warn('⚠️ Erreur lors de l\'ajout de la photo:', error);
+        }
+      }
+
+      checkNewPage(50);
+
       // Informations générales
       addText('INFORMATIONS GÉNÉRALES', 50, yPosition, { bold: true, size: 14 });
       yPosition -= 25;
@@ -539,6 +579,43 @@ export const AircraftModule = memo(() => {
         const surfaces = fullAircraft.compatibleRunwaySurfaces.join(', ');
         addText(surfaces, 50, yPosition);
         yPosition -= 20;
+        yPosition -= 10;
+      }
+
+      // Opérations approuvées
+      if (fullAircraft.approvedOperations) {
+        checkNewPage(100);
+        addText('OPÉRATIONS APPROUVÉES', 50, yPosition, { bold: true, size: 14 });
+        yPosition -= 25;
+
+        const ops = fullAircraft.approvedOperations;
+        const approvedOps = [];
+
+        if (ops.vfrDay) approvedOps.push('VFR Jour');
+        if (ops.vfrNight) approvedOps.push('VFR Nuit');
+        if (ops.ifrDay) approvedOps.push('IFR Jour');
+        if (ops.ifrNight) approvedOps.push('IFR Nuit');
+        if (ops.aerobatics) approvedOps.push('Voltige');
+        if (ops.spinning) approvedOps.push('Vrille');
+        if (ops.waterOperations) approvedOps.push('Opérations sur eau');
+        if (ops.skiOperations) approvedOps.push('Opérations sur skis');
+        if (ops.icingConditions) approvedOps.push('Conditions givrantes');
+
+        if (approvedOps.length > 0) {
+          addText('Règles de vol et opérations spéciales:', 50, yPosition, { bold: true, size: 11 });
+          yPosition -= 20;
+
+          approvedOps.forEach(op => {
+            checkNewPage();
+            addText(`• ${op}`, 70, yPosition, { size: 10 });
+            yPosition -= 18;
+          });
+        } else {
+          addText('Aucune opération spécifique approuvée', 50, yPosition, { size: 10 });
+          yPosition -= 18;
+        }
+
+        yPosition -= 10;
       }
 
       // Performances de décollage/atterrissage si disponibles
