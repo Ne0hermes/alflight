@@ -31,6 +31,16 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
 
   // État principal : instance du modèle de données
   const [flightPlan] = useState(() => {
+    // Essayer de restaurer depuis localStorage
+    const savedPlan = localStorage.getItem('flightPlanDraft');
+    if (savedPlan && !testMode) {
+      try {
+        return FlightPlanData.fromJSON(savedPlan);
+      } catch (error) {
+        console.warn('Impossible de restaurer le plan sauvegardé:', error);
+      }
+    }
+
     const plan = new FlightPlanData();
     // Si mode test, pré-remplir avec des données de test
     if (testMode) {
@@ -80,15 +90,28 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
   });
 
   // État de navigation
-  const [currentStep, setCurrentStep] = useState(1);
-  const [completedSteps, setCompletedSteps] = useState(new Set());
+  const [currentStep, setCurrentStep] = useState(() => {
+    const saved = localStorage.getItem('flightPlanCurrentStep');
+    return saved ? parseInt(saved, 10) : 1;
+  });
+  const [completedSteps, setCompletedSteps] = useState(() => {
+    const saved = localStorage.getItem('flightPlanCompletedSteps');
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
   const [isLoading, setIsLoading] = useState(false);
   
   // Force le re-render quand le plan de vol change
   const [, forceUpdate] = useState({});
   const updateFlightPlan = useCallback(() => {
     forceUpdate({});
-  }, []);
+    // Sauvegarder automatiquement dans localStorage
+    try {
+      localStorage.setItem('flightPlanDraft', flightPlan.toJSON());
+      console.log('✅ Plan de vol sauvegardé automatiquement');
+    } catch (error) {
+      console.error('❌ Erreur sauvegarde automatique:', error);
+    }
+  }, [flightPlan]);
 
   // Configuration des étapes
   const steps = [
@@ -157,24 +180,42 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
    */
   const handleNext = useCallback(() => {
     if (currentStepConfig.validate()) {
-      setCompletedSteps(prev => new Set([...prev, currentStep]));
-      
+      const newCompletedSteps = new Set([...completedSteps, currentStep]);
+      setCompletedSteps(newCompletedSteps);
+      localStorage.setItem('flightPlanCompletedSteps', JSON.stringify([...newCompletedSteps]));
+
       if (currentStep < steps.length) {
-        setCurrentStep(currentStep + 1);
+        const nextStep = currentStep + 1;
+        setCurrentStep(nextStep);
+        localStorage.setItem('flightPlanCurrentStep', nextStep.toString());
       }
     } else {
       alert('Veuillez compléter tous les champs requis');
     }
-  }, [currentStep, currentStepConfig, steps.length]);
+  }, [currentStep, currentStepConfig, steps.length, completedSteps]);
 
   /**
    * Retour à l'étape précédente
    */
   const handlePrevious = useCallback(() => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      const prevStep = currentStep - 1;
+      setCurrentStep(prevStep);
+      localStorage.setItem('flightPlanCurrentStep', prevStep.toString());
     }
   }, [currentStep]);
+
+  /**
+   * Réinitialiser le wizard et recommencer
+   */
+  const handleReset = useCallback(() => {
+    if (confirm('Voulez-vous vraiment recommencer ? Toutes les données non sauvegardées seront perdues.')) {
+      localStorage.removeItem('flightPlanDraft');
+      localStorage.removeItem('flightPlanCurrentStep');
+      localStorage.removeItem('flightPlanCompletedSteps');
+      window.location.reload();
+    }
+  }, []);
 
   /**
    * Navigation directe vers une étape
@@ -194,16 +235,29 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
     try {
       // Génération du rapport final
       const summary = flightPlan.generateSummary();
-      
+
+      // Marquer comme complété
+      flightPlan.metadata.status = 'completed';
+      localStorage.setItem('flightPlanDraft', flightPlan.toJSON());
+
       // Callback de complétion
       if (onComplete) {
         await onComplete(flightPlan, summary);
       }
-      
+
       // Log pour debug
       console.log('Plan de vol complété:', summary);
       console.log('Données complètes:', flightPlan);
-      
+
+      // Optionnel : archiver le plan complété
+      const completedPlans = JSON.parse(localStorage.getItem('completedFlightPlans') || '[]');
+      completedPlans.push({
+        ...summary,
+        completedAt: new Date().toISOString(),
+        fullData: flightPlan.toJSON()
+      });
+      localStorage.setItem('completedFlightPlans', JSON.stringify(completedPlans));
+
     } catch (error) {
       console.error('Erreur lors de la finalisation:', error);
       alert('Une erreur est survenue lors de la génération du rapport');
@@ -234,10 +288,44 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
                 🧪 MODE TEST
               </span>
             )}
+            {flightPlan.metadata.updatedAt && !testMode && (
+              <span style={{
+                fontSize: '12px',
+                marginLeft: '12px',
+                padding: '4px 12px',
+                backgroundColor: '#10b981',
+                color: '#fff',
+                borderRadius: '12px',
+                fontWeight: 'normal'
+              }}>
+                💾 Brouillon sauvegardé
+              </span>
+            )}
           </h1>
 
-          {/* Bouton pour activer/désactiver le mode test */}
-          <button
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {/* Bouton recommencer */}
+            <button
+              onClick={handleReset}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#ef4444',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+              title="Effacer le brouillon et recommencer"
+            >
+              🗑️ Recommencer
+            </button>
+
+            {/* Bouton pour activer/désactiver le mode test */}
+            <button
             onClick={() => {
               const newTestMode = !testMode;
               setTestMode(newTestMode);
