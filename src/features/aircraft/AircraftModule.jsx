@@ -480,7 +480,7 @@ export const AircraftModule = memo(() => {
           }
         });
 
-        // Limites CG
+        // Limites CG et graphique d'enveloppe
         if (fullAircraft.cgEnvelope) {
           yPosition -= 5;
           checkNewPage(50);
@@ -494,6 +494,166 @@ export const AircraftModule = memo(() => {
           if (fullAircraft.cgEnvelope.aftCG) {
             addText(`CG arrière (max): ${fullAircraft.cgEnvelope.aftCG} mm`, 70, yPosition, { size: 10 });
             yPosition -= 18;
+          }
+
+          // Dessiner le graphique de l'enveloppe de centrage
+          yPosition -= 10;
+          checkNewPage(250);
+
+          try {
+            // Dimensions du graphique
+            const chartWidth = 400;
+            const chartHeight = 200;
+            const chartX = (width - chartWidth) / 2; // Centrer le graphique
+            const chartY = yPosition - chartHeight;
+
+            // Collecter tous les points pour déterminer les échelles
+            const forwardPoints = fullAircraft.cgEnvelope.forwardPoints || [];
+            const aftMinWeight = fullAircraft.cgEnvelope.aftMinWeight || 0;
+            const aftMaxWeight = fullAircraft.cgEnvelope.aftMaxWeight || fullAircraft.weights?.mtow || 1000;
+            const aftCG = fullAircraft.cgEnvelope.aftCG || 0;
+
+            // Trouver les valeurs min/max pour les échelles
+            const allWeights = [...forwardPoints.map(p => p.weight), aftMinWeight, aftMaxWeight].filter(w => w);
+            const allCGs = [...forwardPoints.map(p => p.cg), aftCG].filter(cg => cg);
+
+            if (allWeights.length > 0 && allCGs.length > 0) {
+              const minWeight = Math.min(...allWeights);
+              const maxWeight = Math.max(...allWeights);
+              const minCG = Math.min(...allCGs);
+              const maxCG = Math.max(...allCGs);
+
+              // Marges pour l'affichage
+              const weightMargin = (maxWeight - minWeight) * 0.1 || 50;
+              const cgMargin = (maxCG - minCG) * 0.1 || 10;
+
+              const weightRange = {
+                min: Math.max(0, minWeight - weightMargin),
+                max: maxWeight + weightMargin
+              };
+              const cgRange = {
+                min: minCG - cgMargin,
+                max: maxCG + cgMargin
+              };
+
+              // Fonction pour convertir les coordonnées données en coordonnées PDF
+              const scaleX = (weight) => {
+                return chartX + ((weight - weightRange.min) / (weightRange.max - weightRange.min)) * chartWidth;
+              };
+              const scaleY = (cg) => {
+                return chartY + ((cg - cgRange.min) / (cgRange.max - cgRange.min)) * chartHeight;
+              };
+
+              // Dessiner les axes
+              page.drawLine({
+                start: { x: chartX, y: chartY },
+                end: { x: chartX, y: chartY + chartHeight },
+                thickness: 1,
+                color: rgb(0, 0, 0)
+              });
+              page.drawLine({
+                start: { x: chartX, y: chartY },
+                end: { x: chartX + chartWidth, y: chartY },
+                thickness: 1,
+                color: rgb(0, 0, 0)
+              });
+
+              // Labels des axes
+              addText('Masse (kg)', chartX + chartWidth / 2 - 30, chartY - 20, { size: 10, bold: true });
+
+              // Label axe Y (vertical) - rotation simulée avec texte vertical
+              const cgLabelX = chartX - 25;
+              const cgLabelY = chartY + chartHeight / 2;
+              addText('CG (mm)', cgLabelX - 20, cgLabelY, { size: 10, bold: true });
+
+              // Graduations et labels sur l'axe X (masse)
+              const numXTicks = 5;
+              for (let i = 0; i <= numXTicks; i++) {
+                const weight = weightRange.min + (i / numXTicks) * (weightRange.max - weightRange.min);
+                const x = scaleX(weight);
+                page.drawLine({
+                  start: { x, y: chartY },
+                  end: { x, y: chartY - 5 },
+                  thickness: 1,
+                  color: rgb(0, 0, 0)
+                });
+                addText(Math.round(weight).toString(), x - 15, chartY - 15, { size: 8 });
+              }
+
+              // Graduations et labels sur l'axe Y (CG)
+              const numYTicks = 5;
+              for (let i = 0; i <= numYTicks; i++) {
+                const cg = cgRange.min + (i / numYTicks) * (cgRange.max - cgRange.min);
+                const y = scaleY(cg);
+                page.drawLine({
+                  start: { x: chartX, y },
+                  end: { x: chartX - 5, y },
+                  thickness: 1,
+                  color: rgb(0, 0, 0)
+                });
+                addText(Math.round(cg).toString(), chartX - 35, y - 3, { size: 8 });
+              }
+
+              // Dessiner l'enveloppe de centrage
+              // Zone verte pour l'enveloppe acceptable
+              if (forwardPoints.length >= 2) {
+                // Ligne limite avant (forward CG)
+                forwardPoints.sort((a, b) => a.weight - b.weight);
+                for (let i = 0; i < forwardPoints.length - 1; i++) {
+                  const p1 = forwardPoints[i];
+                  const p2 = forwardPoints[i + 1];
+                  page.drawLine({
+                    start: { x: scaleX(p1.weight), y: scaleY(p1.cg) },
+                    end: { x: scaleX(p2.weight), y: scaleY(p2.cg) },
+                    thickness: 2,
+                    color: rgb(0, 0.6, 0),
+                    opacity: 0.8
+                  });
+                }
+              }
+
+              // Ligne limite arrière (aft CG)
+              if (aftMinWeight && aftMaxWeight && aftCG) {
+                page.drawLine({
+                  start: { x: scaleX(aftMinWeight), y: scaleY(aftCG) },
+                  end: { x: scaleX(aftMaxWeight), y: scaleY(aftCG) },
+                  thickness: 2,
+                  color: rgb(0.8, 0, 0),
+                  opacity: 0.8
+                });
+              }
+
+              // Légende
+              const legendX = chartX + chartWidth - 120;
+              const legendY = chartY + chartHeight - 30;
+
+              // Ligne verte
+              page.drawLine({
+                start: { x: legendX, y: legendY },
+                end: { x: legendX + 20, y: legendY },
+                thickness: 2,
+                color: rgb(0, 0.6, 0)
+              });
+              addText('Limite avant', legendX + 25, legendY - 3, { size: 8 });
+
+              // Ligne rouge
+              page.drawLine({
+                start: { x: legendX, y: legendY - 15 },
+                end: { x: legendX + 20, y: legendY - 15 },
+                thickness: 2,
+                color: rgb(0.8, 0, 0)
+              });
+              addText('Limite arrière', legendX + 25, legendY - 18, { size: 8 });
+
+              yPosition = chartY - 30;
+
+              addText('Graphique: Enveloppe de centrage', chartX, yPosition, { size: 9, bold: true });
+              yPosition -= 25;
+            }
+          } catch (error) {
+            console.warn('⚠️ Erreur lors de la génération du graphique CG:', error);
+            addText('(Graphique non disponible)', 70, yPosition, { size: 9 });
+            yPosition -= 20;
           }
         }
 
