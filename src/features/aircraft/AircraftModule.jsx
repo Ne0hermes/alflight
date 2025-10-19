@@ -381,24 +381,104 @@ export const AircraftModule = memo(() => {
       yPosition -= 10;
       checkNewPage(50);
 
-      // Performances
-      addText('PERFORMANCES', 50, yPosition, { bold: true, size: 14 });
+      // Vitesses caractéristiques
+      if (fullAircraft.speeds) {
+        addText('VITESSES CARACTÉRISTIQUES', 50, yPosition, { bold: true, size: 14 });
+        yPosition -= 25;
+
+        const speedsInfo = [
+          ['VSO (Volets sortis)', fullAircraft.speeds.vso],
+          ['VS1 (Config lisse)', fullAircraft.speeds.vs1],
+          ['VFE Landing', fullAircraft.speeds.vfeLdg],
+          ['VFE Takeoff', fullAircraft.speeds.vfeTO],
+          ['VNO (Normale)', fullAircraft.speeds.vno],
+          ['VNE (Ne jamais excéder)', fullAircraft.speeds.vne],
+          ['VA (Manœuvre)', fullAircraft.speeds.va],
+          ['V Glide', fullAircraft.speeds.vglide],
+          ['VR (Rotation)', fullAircraft.speeds.vr],
+          ['V2 (Sécurité)', fullAircraft.speeds.v2],
+          ['VREF (Référence)', fullAircraft.speeds.vref],
+        ];
+
+        speedsInfo.forEach(([label, value]) => {
+          if (value) {
+            checkNewPage();
+            addText(`${label}:`, 50, yPosition, { bold: true, size: 10 });
+            addText(`${value} kt`, 250, yPosition, { size: 10 });
+            yPosition -= 18;
+          }
+        });
+
+        yPosition -= 10;
+        checkNewPage(50);
+      }
+
+      // Masse et centrage
+      if (fullAircraft.weights || fullAircraft.arms || fullAircraft.cgEnvelope) {
+        addText('MASSE ET CENTRAGE', 50, yPosition, { bold: true, size: 14 });
+        yPosition -= 25;
+
+        const massBalanceInfo = [
+          ['Masse à vide', fullAircraft.weights?.emptyWeight, 'kg'],
+          ['Bras à vide', fullAircraft.arms?.empty, 'mm'],
+          ['MTOW', fullAircraft.weights?.mtow || fullAircraft.maxTakeoffWeight, 'kg'],
+          ['MLW', fullAircraft.weights?.mlw, 'kg'],
+          ['MZFW', fullAircraft.weights?.mzfw, 'kg'],
+          ['Carburant max', fullAircraft.fuel?.maxCapacity || fullAircraft.fuelCapacity, 'L'],
+          ['Bras carburant', fullAircraft.arms?.fuel, 'mm'],
+          ['Bras sièges avant', fullAircraft.arms?.frontSeats, 'mm'],
+          ['Bras sièges arrière', fullAircraft.arms?.rearSeats, 'mm'],
+          ['Bras bagages', fullAircraft.arms?.baggage, 'mm'],
+        ];
+
+        massBalanceInfo.forEach(([label, value, unit]) => {
+          if (value) {
+            checkNewPage();
+            addText(`${label}:`, 50, yPosition, { bold: true, size: 10 });
+            addText(`${value} ${unit}`, 250, yPosition, { size: 10 });
+            yPosition -= 18;
+          }
+        });
+
+        // Limites CG
+        if (fullAircraft.cgEnvelope) {
+          yPosition -= 5;
+          checkNewPage(50);
+          addText('Limites de centrage:', 50, yPosition, { bold: true, size: 11 });
+          yPosition -= 20;
+
+          if (fullAircraft.cgEnvelope.forwardPoints && fullAircraft.cgEnvelope.forwardPoints.length > 0) {
+            addText(`CG avant (min): ${fullAircraft.cgEnvelope.forwardPoints[0].cg} mm`, 70, yPosition, { size: 10 });
+            yPosition -= 18;
+          }
+          if (fullAircraft.cgEnvelope.aftCG) {
+            addText(`CG arrière (max): ${fullAircraft.cgEnvelope.aftCG} mm`, 70, yPosition, { size: 10 });
+            yPosition -= 18;
+          }
+        }
+
+        yPosition -= 10;
+        checkNewPage(50);
+      }
+
+      // Performances générales
+      addText('PERFORMANCES GÉNÉRALES', 50, yPosition, { bold: true, size: 14 });
       yPosition -= 25;
 
       const perfInfo = [
-        ['Vitesse de croisière', fullAircraft.cruiseSpeed || fullAircraft.cruiseSpeedKt ? `${fullAircraft.cruiseSpeed || fullAircraft.cruiseSpeedKt} kt` : null],
-        ['Vitesse max', fullAircraft.maxSpeed ? `${fullAircraft.maxSpeed} kt` : null],
-        ['Vitesse de décrochage', fullAircraft.stallSpeed ? `${fullAircraft.stallSpeed} kt` : null],
-        ['Plafond', fullAircraft.ceiling ? `${fullAircraft.ceiling} ft` : null],
-        ['Autonomie', fullAircraft.range ? `${fullAircraft.range} NM` : null],
-        ['Taux de montée', fullAircraft.climbRate ? `${fullAircraft.climbRate} ft/min` : null],
+        ['Vitesse de croisière', fullAircraft.cruiseSpeed || fullAircraft.cruiseSpeedKt, 'kt'],
+        ['Vitesse max', fullAircraft.maxSpeed, 'kt'],
+        ['Plafond', fullAircraft.ceiling, 'ft'],
+        ['Autonomie', fullAircraft.range, 'NM'],
+        ['Taux de montée', fullAircraft.climbRate, 'ft/min'],
+        ['Consommation', fullAircraft.fuelConsumption, 'L/h'],
       ];
 
-      perfInfo.forEach(([label, value]) => {
+      perfInfo.forEach(([label, value, unit]) => {
         if (value) {
           checkNewPage();
           addText(`${label}:`, 50, yPosition, { bold: true });
-          addText(value, 200, yPosition);
+          addText(`${value} ${unit}`, 200, yPosition);
           yPosition -= 20;
         }
       });
