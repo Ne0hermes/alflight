@@ -2,7 +2,8 @@
 import React, { memo, useState, useEffect } from 'react';
 import { useAircraft } from '@core/contexts';
 import { useAircraftStore } from '@core/stores/aircraftStore';
-import { Plus, Edit2, Trash2, Download, Upload, Info, AlertTriangle, FileText, Eye, X, ChevronDown, ChevronUp, Wand2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Download, Upload, Info, AlertTriangle, FileText, Eye, X, ChevronDown, ChevronUp, Wand2, FileDown } from 'lucide-react';
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { sx } from '@shared/styles/styleSystem';
 import AccordionButton from '@shared/components/AccordionButton';
 import { ManexImporter } from './components/ManexImporter';
@@ -274,6 +275,288 @@ export const AircraftModule = memo(() => {
 
     setWizardAircraft(currentAircraft);
     setShowWizard(true);
+  };
+
+  const handleGeneratePDF = async (aircraft) => {
+    try {
+      console.log('📄 Génération du PDF pour:', aircraft.registration);
+
+      // Récupérer toutes les données de l'avion
+      let fullAircraft = { ...aircraft };
+      if (aircraft.hasPhoto || aircraft.hasManex || aircraft.hasPerformance) {
+        try {
+          await dataBackupManager.initPromise;
+          const data = await dataBackupManager.getAircraftData(aircraft.id);
+          if (data) {
+            fullAircraft = { ...fullAircraft, ...data };
+          }
+        } catch (error) {
+          console.warn('⚠️ Impossible de charger toutes les données:', error);
+        }
+      }
+
+      // Créer un nouveau document PDF
+      const pdfDoc = await PDFDocument.create();
+      const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+      // Ajouter une page
+      let page = pdfDoc.addPage([595, 842]); // A4
+      const { width, height } = page.getSize();
+      let yPosition = height - 50;
+
+      // Fonction helper pour ajouter du texte
+      const addText = (text, x, y, options = {}) => {
+        const font = options.bold ? helveticaBold : helveticaFont;
+        const size = options.size || 12;
+        page.drawText(text, {
+          x,
+          y,
+          size,
+          font,
+          color: rgb(0, 0, 0),
+          ...options
+        });
+      };
+
+      // Fonction pour ajouter une nouvelle page si nécessaire
+      const checkNewPage = (neededSpace = 50) => {
+        if (yPosition < neededSpace) {
+          page = pdfDoc.addPage([595, 842]);
+          yPosition = height - 50;
+        }
+      };
+
+      // Titre
+      addText(`Fiche Technique - ${fullAircraft.registration}`, 50, yPosition, { bold: true, size: 20 });
+      yPosition -= 40;
+
+      // Informations générales
+      addText('INFORMATIONS GÉNÉRALES', 50, yPosition, { bold: true, size: 14 });
+      yPosition -= 25;
+
+      const generalInfo = [
+        ['Immatriculation', fullAircraft.registration],
+        ['Modèle', fullAircraft.model],
+        ['Constructeur', fullAircraft.manufacturer],
+        ['Type', fullAircraft.category],
+        ['Année', fullAircraft.year],
+        ['Propriétaire', fullAircraft.owner],
+      ];
+
+      generalInfo.forEach(([label, value]) => {
+        if (value) {
+          checkNewPage();
+          addText(`${label}:`, 50, yPosition, { bold: true });
+          addText(String(value), 200, yPosition);
+          yPosition -= 20;
+        }
+      });
+
+      yPosition -= 10;
+      checkNewPage(50);
+
+      // Masses et dimensions
+      addText('MASSES ET DIMENSIONS', 50, yPosition, { bold: true, size: 14 });
+      yPosition -= 25;
+
+      const massInfo = [
+        ['Masse à vide', fullAircraft.emptyWeight ? `${fullAircraft.emptyWeight} kg` : null],
+        ['Masse max au décollage', fullAircraft.maxTakeoffWeight ? `${fullAircraft.maxTakeoffWeight} kg` : null],
+        ['Charge utile', fullAircraft.usefulLoad ? `${fullAircraft.usefulLoad} kg` : null],
+        ['Capacité carburant', fullAircraft.fuelCapacity ? `${fullAircraft.fuelCapacity} L` : null],
+        ['Envergure', fullAircraft.wingspan ? `${fullAircraft.wingspan} m` : null],
+        ['Longueur', fullAircraft.length ? `${fullAircraft.length} m` : null],
+      ];
+
+      massInfo.forEach(([label, value]) => {
+        if (value) {
+          checkNewPage();
+          addText(`${label}:`, 50, yPosition, { bold: true });
+          addText(value, 200, yPosition);
+          yPosition -= 20;
+        }
+      });
+
+      yPosition -= 10;
+      checkNewPage(50);
+
+      // Performances
+      addText('PERFORMANCES', 50, yPosition, { bold: true, size: 14 });
+      yPosition -= 25;
+
+      const perfInfo = [
+        ['Vitesse de croisière', fullAircraft.cruiseSpeed || fullAircraft.cruiseSpeedKt ? `${fullAircraft.cruiseSpeed || fullAircraft.cruiseSpeedKt} kt` : null],
+        ['Vitesse max', fullAircraft.maxSpeed ? `${fullAircraft.maxSpeed} kt` : null],
+        ['Vitesse de décrochage', fullAircraft.stallSpeed ? `${fullAircraft.stallSpeed} kt` : null],
+        ['Plafond', fullAircraft.ceiling ? `${fullAircraft.ceiling} ft` : null],
+        ['Autonomie', fullAircraft.range ? `${fullAircraft.range} NM` : null],
+        ['Taux de montée', fullAircraft.climbRate ? `${fullAircraft.climbRate} ft/min` : null],
+      ];
+
+      perfInfo.forEach(([label, value]) => {
+        if (value) {
+          checkNewPage();
+          addText(`${label}:`, 50, yPosition, { bold: true });
+          addText(value, 200, yPosition);
+          yPosition -= 20;
+        }
+      });
+
+      yPosition -= 10;
+      checkNewPage(50);
+
+      // Moteur et hélice
+      addText('MOTEUR ET HÉLICE', 50, yPosition, { bold: true, size: 14 });
+      yPosition -= 25;
+
+      const engineInfo = [
+        ['Type moteur', fullAircraft.engineType],
+        ['Modèle moteur', fullAircraft.engineModel],
+        ['Puissance', fullAircraft.enginePower ? `${fullAircraft.enginePower} HP` : null],
+        ['Nombre de moteurs', fullAircraft.engineCount],
+        ['Type hélice', fullAircraft.propellerType],
+      ];
+
+      engineInfo.forEach(([label, value]) => {
+        if (value) {
+          checkNewPage();
+          addText(`${label}:`, 50, yPosition, { bold: true });
+          addText(String(value), 200, yPosition);
+          yPosition -= 20;
+        }
+      });
+
+      yPosition -= 10;
+      checkNewPage(50);
+
+      // Équipements
+      if (fullAircraft.avionics || fullAircraft.equipment) {
+        addText('ÉQUIPEMENTS', 50, yPosition, { bold: true, size: 14 });
+        yPosition -= 25;
+
+        if (fullAircraft.avionics) {
+          checkNewPage();
+          addText('Avionique:', 50, yPosition, { bold: true });
+          yPosition -= 20;
+          const avionicsText = fullAircraft.avionics.split('\n');
+          avionicsText.forEach(line => {
+            checkNewPage();
+            addText(line, 70, yPosition, { size: 10 });
+            yPosition -= 15;
+          });
+        }
+
+        yPosition -= 10;
+      }
+
+      // Surfaces compatibles
+      if (fullAircraft.compatibleRunwaySurfaces && fullAircraft.compatibleRunwaySurfaces.length > 0) {
+        checkNewPage(50);
+        addText('SURFACES DE PISTE COMPATIBLES', 50, yPosition, { bold: true, size: 14 });
+        yPosition -= 25;
+
+        const surfaces = fullAircraft.compatibleRunwaySurfaces.join(', ');
+        addText(surfaces, 50, yPosition);
+        yPosition -= 20;
+      }
+
+      // Performances de décollage/atterrissage si disponibles
+      if (fullAircraft.performance) {
+        checkNewPage(70);
+        addText('DONNÉES DE PERFORMANCE', 50, yPosition, { bold: true, size: 14 });
+        yPosition -= 25;
+
+        if (fullAircraft.performance.takeoff) {
+          addText('Décollage:', 50, yPosition, { bold: true });
+          yPosition -= 20;
+          const takeoff = fullAircraft.performance.takeoff;
+          if (takeoff.tod) {
+            addText(`  TOD: ${takeoff.tod} m`, 70, yPosition);
+            yPosition -= 18;
+          }
+          if (takeoff.toda15m) {
+            addText(`  15m: ${takeoff.toda15m} m`, 70, yPosition);
+            yPosition -= 18;
+          }
+          if (takeoff.toda50ft) {
+            addText(`  50ft: ${takeoff.toda50ft} m`, 70, yPosition);
+            yPosition -= 18;
+          }
+          yPosition -= 10;
+        }
+
+        if (fullAircraft.performance.landing) {
+          checkNewPage(70);
+          addText('Atterrissage:', 50, yPosition, { bold: true });
+          yPosition -= 20;
+          const landing = fullAircraft.performance.landing;
+          if (landing.ld) {
+            addText(`  LD: ${landing.ld} m`, 70, yPosition);
+            yPosition -= 18;
+          }
+          if (landing.lda15m) {
+            addText(`  15m: ${landing.lda15m} m`, 70, yPosition);
+            yPosition -= 18;
+          }
+          if (landing.lda50ft) {
+            addText(`  50ft: ${landing.lda50ft} m`, 70, yPosition);
+            yPosition -= 18;
+          }
+        }
+      }
+
+      // Remarques
+      if (fullAircraft.notes) {
+        checkNewPage(50);
+        yPosition -= 10;
+        addText('REMARQUES', 50, yPosition, { bold: true, size: 14 });
+        yPosition -= 25;
+
+        const notesLines = fullAircraft.notes.split('\n');
+        notesLines.forEach(line => {
+          checkNewPage();
+          addText(line, 50, yPosition, { size: 10 });
+          yPosition -= 15;
+        });
+      }
+
+      // Pied de page sur toutes les pages
+      const pages = pdfDoc.getPages();
+      pages.forEach((p, index) => {
+        p.drawText(`Page ${index + 1}/${pages.length}`, {
+          x: width / 2 - 30,
+          y: 30,
+          size: 10,
+          font: helveticaFont,
+          color: rgb(0.5, 0.5, 0.5)
+        });
+        p.drawText(`Généré le ${new Date().toLocaleDateString('fr-FR')}`, {
+          x: 50,
+          y: 30,
+          size: 8,
+          font: helveticaFont,
+          color: rgb(0.5, 0.5, 0.5)
+        });
+      });
+
+      // Sauvegarder le PDF
+      const pdfBytes = await pdfDoc.save();
+
+      // Télécharger le PDF
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Fiche_${fullAircraft.registration}_${new Date().toISOString().split('T')[0]}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      console.log('✅ PDF généré avec succès');
+    } catch (error) {
+      console.error('❌ Erreur lors de la génération du PDF:', error);
+      alert('Erreur lors de la génération du PDF. Consultez la console pour plus de détails.');
+    }
   };
 
   const handleDelete = (id) => {
@@ -1058,16 +1341,17 @@ export const AircraftModule = memo(() => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        console.log('✏️ AircraftModule - Edit button clicked');
-                        handleEdit(aircraft);
+                        console.log('📄 AircraftModule - Generate PDF button clicked');
+                        handleGeneratePDF(aircraft);
                       }}
                       style={{
                         ...window.buttonSectionStyle,
-                        padding: '8px'
+                        padding: '8px',
+                        color: '#ef4444'
                       }}
-                      title="Modifier"
+                      title="Générer PDF"
                     >
-                      <Edit2 size={16} />
+                      <FileDown size={16} />
                     </button>
                     <button
                       onClick={(e) => {
