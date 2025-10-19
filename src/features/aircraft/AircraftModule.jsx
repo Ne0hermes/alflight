@@ -1692,22 +1692,21 @@ export const AircraftModule = memo(() => {
                     >
                       <Wand2 size={16} />
                     </button>
-                    {aircraftList.length > 1 && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          console.log('🗑️ AircraftModule - Delete button clicked');
-                          handleDelete(aircraft.id);
-                        }}
-                        style={{
-                          ...window.buttonSectionStyle,
-                          padding: '8px'
-                        }}
-                        title="Supprimer"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('🗑️ AircraftModule - Delete button clicked');
+                        handleDelete(aircraft.id);
+                      }}
+                      style={{
+                        ...window.buttonSectionStyle,
+                        padding: '8px',
+                        color: '#dc2626'
+                      }}
+                      title="Supprimer l'avion"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 </div>
               </div>
