@@ -331,6 +331,14 @@ export const AircraftModule = memo(() => {
       addText(`Fiche Technique - ${fullAircraft.registration}`, 50, yPosition, { bold: true, size: 20 });
       yPosition -= 40;
 
+      // Avertissement "À DÉVELOPPER" en gros et en rouge
+      const warningText = 'À DÉVELOPPER';
+      const warningSize = 18;
+      const warningWidth = helveticaBold.widthOfTextAtSize(warningText, warningSize);
+      const warningX = (width - warningWidth) / 2; // Centrer le texte
+      addText(warningText, warningX, yPosition, { bold: true, size: warningSize, color: rgb(1, 0, 0) });
+      yPosition -= 40;
+
       // Ajouter la photo de l'avion si disponible
       if (fullAircraft.photo) {
         try {
