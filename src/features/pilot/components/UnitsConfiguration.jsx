@@ -373,7 +373,7 @@ const UnitsConfiguration = () => {
       ))}
 
     </Box>
-
+  );
 };
 
 export default UnitsConfiguration;

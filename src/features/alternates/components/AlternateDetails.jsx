@@ -20,15 +20,15 @@ export const AlternateDetails = memo(({ alternates }) => {
   return (
     <div style={{ display: 'grid', gap: '16px' }}>
       {alternates.map((alternate, index) => (
-        <AlternateCard 
-          key={alternate.icao} 
-          alternate={alternate} 
+        <AlternateCard
+          key={alternate.icao}
+          alternate={alternate}
           index={index}
           onDownloadVAC={() => downloadChart(alternate.icao)}
         />
       ))}
     </div>
-
+  );
 });
 
 const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
@@ -291,6 +291,7 @@ const ServiceIndicator = memo(({ available, label, icon }) => (
     </span>
     <span>{label}</span>
   </div>
+));
 
 // Composant pour le détail du score
 const ScoreBreakdown = memo(({ factors }) => (
@@ -321,6 +322,7 @@ const ScoreBreakdown = memo(({ factors }) => (
       </div>
     ))}
   </div>
+));
 
 // Fonctions utilitaires
 const getAlternateColor = (index) => {

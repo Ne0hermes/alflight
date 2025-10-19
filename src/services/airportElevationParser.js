@@ -103,7 +103,7 @@ class AirportElevationParser {
     // Sinon chercher dans les données parsées
     return this.elevations.get(code) || 0;
   }
-);}
+}
 
 // Export singleton
 export default new AirportElevationParser();

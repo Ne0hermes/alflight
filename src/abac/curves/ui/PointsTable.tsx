@@ -10,7 +10,7 @@ interface PointsTableProps {
   onDeletePoint: (curveId: string, pointId: string) => void;
   onAddPoint?: (x: number, y: number) => void;
   onSelectCurve?: (curveId: string | null) => void;
-);}
+}
 
 const styles = {
   container: {
@@ -412,4 +412,5 @@ export const PointsTable: React.FC<PointsTableProps> = ({
         </tbody>
       </table>
     </div>
+  );
 };

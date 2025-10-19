@@ -713,7 +713,6 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
           
           if (daysUntil < 0) {
             summary.licenses.expired++;
-            , 'jours');
           } else if (daysUntil < 90) {
             summary.licenses.expiring++;
           } else {
@@ -1258,10 +1257,11 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
                 </div>
               )}
             </>
+          );
         })()}
       </div>
     </div>
-
+  );
 };
 
 export default FlightCurrencyTracker;

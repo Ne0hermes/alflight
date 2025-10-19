@@ -109,9 +109,8 @@ export const runFullTest = async () => {
   
 
   // Étape 4: Préparer pour l'import
-  
-  
-  "');
+  console.log('Test completed successfully');
+
   return {
     success: true,
     data: afterAdd
@@ -148,11 +147,11 @@ export const validateStructure = () => {
     const hasEndorsements = Array.isArray(parsed.endorsements);
     const hasTraining = Array.isArray(parsed.training);
 
-    
-    :', hasLicenses ? '✅' : '❌');
-    :', hasRatings ? '✅' : '❌');
-    :', hasEndorsements ? '✅' : '❌');
-    :', hasTraining ? '✅' : '❌');
+    console.log('Structure validation:');
+    console.log('Licenses:', hasLicenses ? '✅' : '❌');
+    console.log('Ratings:', hasRatings ? '✅' : '❌');
+    console.log('Endorsements:', hasEndorsements ? '✅' : '❌');
+    console.log('Training:', hasTraining ? '✅' : '❌');
 
     return hasLicenses && hasRatings && hasEndorsements && hasTraining;
   } catch (e) {

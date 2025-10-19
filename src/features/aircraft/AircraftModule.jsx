@@ -2028,7 +2028,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
     if (!/^[A-Za-z0-9\-]+$/.test(formData.registration)) {
       alert('L\'immatriculation ne peut contenir que des lettres, chiffres et tirets');
       return;
-    });
+    }
     if (!formData.compatibleRunwaySurfaces || formData.compatibleRunwaySurfaces.length === 0) {
       console.log('❌ handleSubmit - Validation des surfaces échouée');
       console.log('❌ handleSubmit - Surfaces actuelles:', formData.compatibleRunwaySurfaces);

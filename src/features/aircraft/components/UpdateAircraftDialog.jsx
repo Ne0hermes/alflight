@@ -321,6 +321,7 @@ const UpdateAircraftDialog = ({
               </Box>
             )}
           </Box>
+        );
 
       default:
         return null;
@@ -378,6 +379,7 @@ const UpdateAircraftDialog = ({
         </Button>
       </DialogActions>
     </Dialog>
+  );
 };
 
 export default UpdateAircraftDialog;

@@ -101,6 +101,7 @@ export const VFRPointInserter = ({
           )) ||
           (props.type === 'VRP') ||
           (pointCode.length >= 2 && !pointCode.match(/^[NSEW]$/)) // Au moins 2 caractères et pas juste N/S/E/W
+        );
 
         if (!addedIds.has(pointId) && isRealVFR) {
           const point = {
@@ -153,11 +154,15 @@ export const VFRPointInserter = ({
     result.custom = organizedPoints.custom.filter(p =>
       !term || p.searchName.includes(term) ||
       p.code?.toLowerCase().includes(term)
+    );
+
     // Filtrer les points VFR de la route
     result.routeVFR = organizedPoints.routeVFR.filter(p =>
       !term || p.searchName.includes(term) ||
       p.code?.toLowerCase().includes(term) ||
       p.airportIcao?.toLowerCase().includes(term)
+    );
+
     return result;
   }, [organizedPoints, searchTerm]);
 
@@ -439,7 +444,7 @@ export const VFRPointInserter = ({
         </div>
       )}
     </div>
-
+  );
 };
 
 export default VFRPointInserter;

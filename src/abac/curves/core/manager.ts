@@ -57,7 +57,7 @@ export class AbacCurveManager {
     }
 
         if (curve.points.length > 0) {
-      .map(p => `(${p.x}, ${p.y})`));
+      console.log('Points added to curve:', curve.points.map(p => `(${p.x}, ${p.y})`));
     }
 
     this.curves.set(id, curve);
@@ -163,7 +163,7 @@ export class AbacCurveManager {
       }
 
             if (fittedPoints.length > 0) {
-        .map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`).join(', '));
+        console.log('✅ Fitted points:', fittedPoints.map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`).join(', '));
       } else {
                         // Utiliser les points originaux si l'interpolation échoue
         fittedPoints = [...curve.points];
@@ -190,12 +190,13 @@ export class AbacCurveManager {
         const hasExtrapolation = fittedPoints.some(p =>
           p.x < xAxis.min || p.x > xAxis.max ||
           p.y < yAxis.min || p.y > yAxis.max
+        );
         if (hasExtrapolation) {
           warnings.push('Some fitted points are outside the defined axes bounds');
         }
       }
 
-      }`);
+      console.log(`✅ Courbe ${curveId} fitted avec succès (méthode: ${method}, RMSE: ${rmse.toFixed(4)})`);
 
       curve.fitted = {
         points: fittedPoints,
@@ -203,7 +204,7 @@ export class AbacCurveManager {
         method
       };
 
-             ===\n');
+      console.log(`\n${'='.repeat(80)}\n`);
 
       return {
         curveId,
@@ -218,7 +219,7 @@ export class AbacCurveManager {
       console.error('📦 Stack trace:', (error as Error).stack);
       warnings.push(`Interpolation failed: ${error.message}`);
 
-       ===\n');
+      console.log(`\n${'='.repeat(80)}\n`);
 
       return {
         curveId,
@@ -283,7 +284,7 @@ export class AbacCurveManager {
 
     // Si aucune courbe de base, retourner vide
     if (baseCurves.length < 2) {
-      , minimum 2 requis`);
+      console.log(`⚠️ Pas assez de courbes de base pour interpolation: ${baseCurves.length}, minimum 2 requis`);
       return newCurveIds;
     }
 
@@ -333,8 +334,8 @@ export class AbacCurveManager {
         .sort((a, b) => a.param! - b.param!);
     }
 
-        : ${baseCurves.map(c => c.name).join(', ')}`);
-    : ${curvesWithParams.map(cp => `${cp.curve.name}(${cp.param})`).join(', ')}`);
+    console.log(`📋 Courbes de base disponibles: ${baseCurves.map(c => c.name).join(', ')}`);
+    console.log(`📊 Courbes avec paramètres triées: ${curvesWithParams.map(cp => `${cp.curve.name}(${cp.param})`).join(', ')}`);
 
     // Pour chaque paire de courbes consécutives
     for (let i = 0; i < curvesWithParams.length - 1; i++) {
@@ -353,7 +354,7 @@ export class AbacCurveManager {
       }
 
       if (!lower.curve.fitted || !upper.curve.fitted) {
-        , passage à la paire suivante`);
+        console.log(`⚠️ Une ou plusieurs courbes non fittées entre ${lower.curve.name} et ${upper.curve.name}, passage à la paire suivante`);
         continue;
       }
 
@@ -376,13 +377,14 @@ export class AbacCurveManager {
         const xMax = Math.min(
           lowerPoints[lowerPoints.length - 1].x,
           upperPoints[upperPoints.length - 1].x
+        );
 
         // Créer des points uniformément espacés
         const numPoints = Math.max(lowerPoints.length, upperPoints.length);
         const xStep = (xMax - xMin) / (numPoints - 1);
 
-        })`);
-        }, ${xMax.toFixed(2)}]`);
+        console.log(`📏 Courbe intermédiaire ${j}/${numIntermediateCurves} entre ${lower.curve.name} et ${upper.curve.name} (param: ${intermediateParam.toFixed(1)})`);
+        console.log(`   Plage X commune: [${xMin.toFixed(2)}, ${xMax.toFixed(2)}]`);
 
         // Pour chaque valeur X, calculer la moyenne pondérée des Y
         for (let k = 0; k < numPoints; k++) {
@@ -433,11 +435,13 @@ export class AbacCurveManager {
           });
 
           newCurveIds.push(newId);
-                  }
+          console.log(`✅ Courbe intermédiaire créée: ${intermediateName} (${intermediatePoints.length} points)`);
+        }
       }
     }
 
-        return newCurveIds;
+    console.log(`🎯 Total de ${newCurveIds.length} courbes intermédiaires générées`);
+    return newCurveIds;
   }
 
   /**

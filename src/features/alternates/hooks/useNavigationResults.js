@@ -65,7 +65,7 @@ export const useNavigationResults = () => {
         to: validWaypoints[i + 1],
         distance: calculateDistance(wp, validWaypoints[i + 1]),
         time: calculateDistance(wp, validWaypoints[i + 1]) / cruiseSpeed * 60
-
+      }))
     };
   }, [waypoints, selectedAircraft, flightType]);
 };

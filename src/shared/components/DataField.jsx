@@ -143,7 +143,7 @@ export const DataField = memo(({
         </button>
       )}
     </div>
-
+  );
 });
 
 DataField.displayName = 'DataField';

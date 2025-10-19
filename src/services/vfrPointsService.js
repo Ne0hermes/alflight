@@ -11,7 +11,7 @@ class VFRPointsService {
    */
   async getAllPublicPoints() {
     try {
-      
+      console.log('Fetching all public VFR points');
 
       const { data, error } = await supabase
         .from('vfr_points')
@@ -24,7 +24,7 @@ class VFRPointsService {
         throw error;
       }
 
-       VFR chargé(s) depuis Supabase`);
+      console.log(`${data.length} points VFR chargé(s) depuis Supabase`);
       return data;
     } catch (error) {
       console.error('❌ Erreur lors de la récupération des points VFR:', error);
@@ -40,7 +40,7 @@ class VFRPointsService {
    */
   async uploadPoint(point, userId = 'anonymous') {
     try {
-      
+      console.log('Uploading VFR point:', point.name);
 
       const { data, error } = await supabase
         .from('vfr_points')
@@ -64,7 +64,7 @@ class VFRPointsService {
         throw error;
       }
 
-      
+      console.log('Point uploaded successfully');
       return data;
     } catch (error) {
       console.error('❌ Erreur lors de l\'upload:', error);
@@ -80,7 +80,7 @@ class VFRPointsService {
    */
   async uploadMultiplePoints(points, userId = 'anonymous') {
     try {
-       VFR...`);
+      console.log(`Uploading ${points.length} VFR points...`);
 
       const pointsData = points.map(point => ({
         name: point.name,
@@ -105,7 +105,7 @@ class VFRPointsService {
         throw error;
       }
 
-       VFR uploadé(s)`);
+      console.log(`${data.length} points VFR uploadé(s)`);
       return data;
     } catch (error) {
       console.error('❌ Erreur lors de l\'upload multiple:', error);
@@ -120,13 +120,14 @@ class VFRPointsService {
    */
   async syncWithSupabase(localPoints) {
     try {
-      
+      console.log('Syncing with Supabase...');
 
       const supabasePoints = await this.getAllPublicPoints();
 
       // Créer une Map des points locaux par nom pour éviter les doublons
       const localPointsMap = new Map(
         localPoints.map(p => [p.name.toLowerCase(), p])
+      );
 
       // Ajouter les points Supabase qui ne sont pas déjà en local
       const newPoints = [];
@@ -147,7 +148,7 @@ class VFRPointsService {
         }
       }
 
-       point(s) synchronisé(s)`);
+      console.log(`${newPoints.length} new point(s) synchronized`);
       return newPoints;
     } catch (error) {
       console.error('❌ Erreur lors de la synchronisation:', error);
@@ -206,7 +207,7 @@ class VFRPointsService {
 
       if (error) throw error;
 
-      
+      console.log('Point deleted successfully');
       return true;
     } catch (error) {
       console.error('❌ Erreur lors de la suppression:', error);
@@ -239,7 +240,7 @@ class VFRPointsService {
       return false;
     }
   }
-);}
+}
 
 // Exporter une instance unique
 const vfrPointsService = new VFRPointsService();

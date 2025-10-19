@@ -131,20 +131,20 @@ const PilotLogbook = ({ showFormProp }) => {
     // Charger les fonctions de debug pour l'édition
     import('../../../utils/debugEditLogbook').then(module => {
       window.debugLogbook = module.default;
-    // - Analyser toutes les entrées');
-       - Tester l\'édition de la première entrée');
-       - Ajouter des segments aux anciennes entrées');
+      // - Analyser toutes les entrées
+      // - Tester l'édition de la première entrée
+      // - Ajouter des segments aux anciennes entrées
     }).catch(err => {
-          });
-
+      console.error('Failed to load debug tools:', err);
+    });
     // Charger les fonctions pour forcer l'édition
     import('../../../utils/forceEditLogbook').then(module => {
       window.forceEditEntry = module.default;
-             - Forcer l\'édition de l\'entrée par index');
-       - Supprimer une entrée par index');
+      // - Forcer l'édition de l'entrée par index
+      // - Supprimer une entrée par index
     }).catch(err => {
-          });
-  }, []);
+      console.error('Failed to load force edit tools:', err);
+    });
 
   // Construire la liste des pilotes à partir des entrées et du profil
   useEffect(() => {

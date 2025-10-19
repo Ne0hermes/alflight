@@ -84,12 +84,12 @@ export const useAlternatesForFuel = () => {
       if (!alt.position || !alt.position.lat || !alt.position.lon) {
                 return;
       }
-      
-    //`, {
+
+      console.log(`Alternate: ${alt.icao}`, {
         position: alt.position,
         selectionType: alt.selectionType
       });
-      
+
       if (alt.selectionType === 'departure') {
         // Calculer la distance depuis le départ
         const departurePoint = { lat: departure.lat, lon: departure.lon || departure.lng };
@@ -129,8 +129,8 @@ export const useAlternatesForFuel = () => {
     // Ajouter 30 minutes de réserve pour l'approche et l'atterrissage
     const totalFlightTime = flightTime + 0.5;
     const fuelRequired = totalFlightTime * fuelConsumption;
-    
-    ,
+
+    console.log('Fuel calculation:', {
       cruiseSpeed,
       flightTime: flightTime.toFixed(4),
       totalFlightTime: totalFlightTime.toFixed(4),
@@ -163,7 +163,8 @@ export const useAlternatesForFuel = () => {
     const distance = calculateDistance(
       { lat: referencePoint.lat, lon: referencePoint.lon || referencePoint.lng },
       alt.position
-    
+    );
+
     return {
       icao: alt.icao,
       distance: distance,
@@ -174,10 +175,11 @@ export const useAlternatesForFuel = () => {
   });
   
   // Trouver l'aérodrome le plus éloigné
-  const maxDistanceAlternate = alternateDistances.reduce((max, current) => 
+  const maxDistanceAlternate = alternateDistances.reduce((max, current) =>
     current.distance > max.distance ? current : max,
     { distance: 0 }
-  
+  );
+
   // Calculer une seule fois le carburant avec useMemo pour éviter les recalculs
   const fuelRequired = useMemo(() => {
     const result = calculateAlternateFuel();
@@ -225,9 +227,10 @@ export const useAlternatesForPerformance = () => {
     
     // Vérifier les surfaces compatibles
     if (selectedAircraft.compatibleRunwaySurfaces) {
-      const hasCompatibleSurface = alternate.runways.some(rwy => 
+      const hasCompatibleSurface = alternate.runways.some(rwy =>
         selectedAircraft.compatibleRunwaySurfaces.includes(rwy.surface)
-      
+      );
+
       if (!hasCompatibleSurface) {
         compatible = false;
         reasons.push('Surface de piste incompatible');
@@ -256,17 +259,18 @@ export const useAlternatesForPerformance = () => {
       .map(alt => ({
         ...alt,
         compatibility: checkAlternateCompatibility(alt)
-
+      }))
   };
-  
+
   return {
     checkAlternateCompatibility,
     compatibleAlternates: scoredAlternates.filter(alt => 
       checkAlternateCompatibility(alt).compatible
     ),
     compatibilityByType,
-    allAlternatesCompatible: selectedAlternates.every(alt => 
+    allAlternatesCompatible: selectedAlternates.every(alt =>
       checkAlternateCompatibility(alt).compatible
+    )
   };
 };
 

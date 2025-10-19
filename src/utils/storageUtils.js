@@ -53,7 +53,7 @@ export const cleanOldData = (aggressive = false) => {
           localStorage.setItem(key, JSON.stringify(trimmed));
           const newSize = localStorage.getItem(key).length;
           freedSpace += originalSize - newSize;
-           / 1024).toFixed(1)}KB`);
+          console.log(`Trimmed ${key}: removed ${((originalSize - newSize) / 1024).toFixed(1)}KB`);
         }
 
         // Pour les certifications, supprimer les documents base64
@@ -62,7 +62,7 @@ export const cleanOldData = (aggressive = false) => {
           localStorage.setItem(key, JSON.stringify(cleaned));
           const newSize = localStorage.getItem(key).length;
           freedSpace += originalSize - newSize;
-           / 1024).toFixed(1)}KB`);
+          console.log(`Cleaned ${key}: removed ${((originalSize - newSize) / 1024).toFixed(1)}KB`);
         }
       }
     } catch (error) {
@@ -92,7 +92,7 @@ const cleanCertifications = (certifications, aggressive = false) => {
 
           // Supprimer les documents selon le seuil
           if (docSize > maxDocSize || (aggressive && totalSize > maxTotalSize)) {
-            .toFixed(2)}MB)`);
+            console.log(`Removing document: ${(docSize / 1024 / 1024).toFixed(2)}MB`);
             removedCount++;
             return { ...item, document: null, documentName: `Document supprimé (>${(maxDocSize/1024/1024).toFixed(0)}MB)` };
           }
@@ -147,7 +147,7 @@ export const safeSetItem = (key, value) => {
 
       // Nettoyer les vieilles données - mode normal
       let freedSpace = cleanOldData(false);
-      .toFixed(1)}KB libérés`);
+      console.log(`Normal cleanup: ${(freedSpace / 1024).toFixed(1)}KB libérés`);
 
       // Deuxième tentative
       try {
@@ -156,9 +156,9 @@ export const safeSetItem = (key, value) => {
         return true;
       } catch (e2) {
         // Nettoyage agressif
-        
+        console.log('Attempting aggressive cleanup...');
         freedSpace = cleanOldData(true);
-        .toFixed(1)}KB libérés`);
+        console.log(`Aggressive cleanup: ${(freedSpace / 1024).toFixed(1)}KB libérés`);
 
         try {
           localStorage.setItem(key, value);
@@ -179,7 +179,7 @@ export const safeSetItem = (key, value) => {
 
           for (let [k, size] of sorted) {
             if (!essentialKeys.includes(k) && k !== key) {
-              .toFixed(1)}KB)`);
+              console.log(`Removing ${k} to free space: ${(size / 1024).toFixed(1)}KB`);
               localStorage.removeItem(k);
 
               // Réessayer
@@ -221,7 +221,7 @@ export const showStorageStats = () => {
   stats.sort((a, b) => parseFloat(b.size) - parseFloat(a.size));
 
   console.table(stats.slice(0, 10)); // Top 10
-  .toFixed(2)} MB`);
+  console.log(`Total storage used: ${(total / 1024 / 1024).toFixed(2)} MB`);
 
   return {
     items: stats,
@@ -274,7 +274,7 @@ export const compressImage = (base64String, maxWidth = 800, targetQuality = 0.7)
       const originalSizeMB = (base64String.length / 1024 / 1024).toFixed(2);
       const compressedSizeMB = (compressed.length / 1024 / 1024).toFixed(2);
       const reduction = ((1 - compressed.length / base64String.length) * 100).toFixed(0);
-       [Qualité: ${quality.toFixed(1)}]`);
+      console.log(`Image compressed: ${originalSizeMB}MB -> ${compressedSizeMB}MB (-${reduction}%) [Qualité: ${quality.toFixed(1)}]`);
 
       resolve(compressed);
     };
@@ -328,7 +328,7 @@ export const manualCleanStorage = () => {
       const size = item.length;
       localStorage.removeItem(key);
       freedSpace += size;
-      .toFixed(1)}KB)`);
+      console.log(`Removed ${key}: freed ${(size / 1024).toFixed(1)}KB`);
     }
   });
 
@@ -370,9 +370,8 @@ export const manualCleanStorage = () => {
   const afterSize = parseFloat(afterStats.totalMB);
   const totalFreed = beforeSize - afterSize;
 
-  
-  }MB`);
-  }MB → Après: ${afterSize.toFixed(2)}MB`);
+  console.log(`Emergency cleanup completed: freed ${totalFreed.toFixed(2)}MB`);
+  console.log(`Storage: Avant: ${beforeSize.toFixed(2)}MB → Après: ${afterSize.toFixed(2)}MB`);
 
   return {
     success: true,

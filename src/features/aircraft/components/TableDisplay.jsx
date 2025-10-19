@@ -68,10 +68,11 @@ const TableDisplay = ({
   const handleDataChange = useCallback((rowIndex, columnKey, value) => {
     setEditedTable(prev => ({
       ...prev,
-      data: prev.data.map((row, index) => 
-        index === rowIndex 
+      data: prev.data.map((row, index) =>
+        index === rowIndex
           ? { ...row, [columnKey]: value }
           : row
+      )
     }));
   }, []);
 
@@ -140,6 +141,7 @@ const TableDisplay = ({
       }),
       units: Object.fromEntries(
         Object.entries(prev.units || {}).filter(([key]) => key !== columnKey)
+      )
     }));
   }, []);
 
@@ -153,8 +155,10 @@ const TableDisplay = ({
         return { ...rest, [newKey]: value };
       }),
       units: Object.fromEntries(
-        Object.entries(prev.units || {}).map(([key, unit]) => 
+        Object.entries(prev.units || {}).map(([key, unit]) =>
           key === oldKey ? [newKey, unit] : [key, unit]
+        )
+      )
     }));
   }, []);
 
@@ -176,8 +180,9 @@ const TableDisplay = ({
     const headers = Object.keys(editedTable.data[0]);
     const csvContent = [
       headers.join('\t'),
-      ...editedTable.data.map(row => 
+      ...editedTable.data.map(row =>
         headers.map(header => row[header] || '').join('\t')
+      )
     ].join('\n');
 
     navigator.clipboard.writeText(csvContent).then(() => {
@@ -536,8 +541,8 @@ const TableDisplay = ({
                           />
                         ) : (
                           editedTable.units?.[column] && (
-                            <span style={{ 
-                              fontSize: '10px', 
+                            <span style={{
+                              fontSize: '10px',
                               color: '#6b7280',
                               backgroundColor: '#f3f4f6',
                               padding: '1px 4px',
@@ -545,8 +550,9 @@ const TableDisplay = ({
                             }}>
                               {editedTable.units[column]}
                             </span>
+                          )
                         )}
-                        
+
                         {/* Bouton supprimer colonne */}
                         {isEditMode && columns.length > 1 && (
                           <button
@@ -670,7 +676,7 @@ const TableDisplay = ({
         </div>
       )}
     </div>
-
+  );
 };
 
 // Mémoriser le composant pour éviter les re-renders inutiles
@@ -683,4 +689,5 @@ export default React.memo(TableDisplay, (prevProps, nextProps) => {
     prevProps.isEditMode === nextProps.isEditMode &&
     prevProps.onEditModeChange === nextProps.onEditModeChange &&
     prevProps.onTableUpdate === nextProps.onTableUpdate
+  );
 });

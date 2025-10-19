@@ -294,10 +294,11 @@ const identifyTurnPoints = (waypoints) => {
     const bearing1 = calculateBearing(
       { lat: prev.lat, lon: prev.lon },
       { lat: current.lat, lon: current.lon }
+    );
     const bearing2 = calculateBearing(
       { lat: current.lat, lon: current.lon },
       { lat: next.lat, lon: next.lon }
-    
+    );
     const turnAngle = Math.abs((bearing2 - bearing1 + 180) % 360 - 180);
     
     if (turnAngle > 30) {

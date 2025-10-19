@@ -9,9 +9,9 @@ export const debugCertifications = () => {
   if (certRaw) {
     try {
       const certParsed = JSON.parse(certRaw);
-      :', certParsed.ratings?.length || 0, 'éléments');
-      :', certParsed.endorsements?.length || 0, 'éléments');
-      :', certParsed.training?.length || 0, 'éléments');
+      console.log('Ratings:', certParsed.ratings?.length || 0, 'éléments');
+      console.log('Endorsements:', certParsed.endorsements?.length || 0, 'éléments');
+      console.log('Training:', certParsed.training?.length || 0, 'éléments');
 
       if (certParsed.licenses?.length > 0) {
         
@@ -43,7 +43,7 @@ export const debugCertifications = () => {
     if (value) {
       try {
         const parsed = JSON.parse(value);
-         ? parsed.length : 'objet'} éléments`);
+        console.log(`${key}:`, Array.isArray(parsed) ? parsed.length : 'objet', 'éléments');
       } catch (e) {
         
       }

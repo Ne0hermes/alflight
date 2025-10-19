@@ -57,9 +57,7 @@ class PDFToImageConverterOptimized {
    */
   async analyzeManualPDF(pdfFile) {
     try {
-      
-      
-      ).toFixed(2)} MB`);
+      console.log(`📘 Analyse optimisée du manuel: ${pdfFile.name} (${(pdfFile.size / 1024 / 1024).toFixed(2)} MB)`);
 
       const startTime = Date.now();
 
@@ -215,7 +213,7 @@ class PDFToImageConverterOptimized {
           if (score > 0.5) { // Seuil de pertinence
             if (!sections[type].includes(pageNum)) {
               sections[type].push(pageNum);
-              })`);
+              console.log(`Page ${pageNum} identified as ${type} (score: ${score.toFixed(2)})`);
             }
           }
         }
@@ -381,7 +379,7 @@ class PDFToImageConverterOptimized {
           confidence: types.length > 0 ? 'high' : 'medium'
         });
 
-        })`);
+        console.log(`✅ Page ${pageNum} convertie (${types.join(', ') || 'other'})`);
 
       } catch (error) {
         console.error(`❌ Erreur page ${pageNum}:`, error);
@@ -492,7 +490,7 @@ class PDFToImageConverterOptimized {
   isPDF(file) {
     return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
   }
-);}
+}
 
 // Export singleton
 export default new PDFToImageConverterOptimized();

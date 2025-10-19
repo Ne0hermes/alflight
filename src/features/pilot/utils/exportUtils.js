@@ -298,7 +298,8 @@ export const exportAircraft = async () => {
           }
         }
         return ac;
-      });
+      })
+    );
 
     const exportData = {
       version: '2.0', // Version 2.0 pour inclure les performances

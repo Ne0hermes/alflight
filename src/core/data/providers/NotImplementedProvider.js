@@ -96,10 +96,11 @@ export class NotImplementedProvider extends AeroDataProvider {
 
     if (params?.search) {
       const search = params.search.toLowerCase();
-      return staticAirfields.filter(a => 
+      return staticAirfields.filter(a =>
         a.icao.toLowerCase().includes(search) ||
         a.name.toLowerCase().includes(search) ||
         a.city?.toLowerCase().includes(search)
+      );
     }
 
     if (params?.icao) {

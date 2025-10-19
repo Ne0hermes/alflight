@@ -24,9 +24,8 @@ class PDFToImageConverter {
    */
   async convertPDFToImage(pdfFile, pageNumber = 1) {
     try {
-      
-      } KB`);
-      
+      console.log(`📄 Conversion PDF: ${pdfFile.name} (${(pdfFile.size / 1024).toFixed(2)} KB)`);
+
       // Lire le fichier PDF
       const arrayBuffer = await this.fileToArrayBuffer(pdfFile);
       
@@ -43,15 +42,15 @@ class PDFToImageConverter {
       // Définir l'échelle pour une bonne qualité (2 = 200% de la taille originale)
       const scale = 2.0;
       const viewport = page.getViewport({ scale });
-      
+
       // Créer un canvas pour le rendu
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
       canvas.height = viewport.height;
       canvas.width = viewport.width;
-      
-      ...`);
-      
+
+      console.log(`Rendering page ${pageNumber}...`);
+
       // Rendre la page PDF sur le canvas
       const renderContext = {
         canvasContext: context,
@@ -59,12 +58,12 @@ class PDFToImageConverter {
       };
       
       await page.render(renderContext).promise;
-      
+
       // Convertir le canvas en base64
       const base64Image = canvas.toDataURL('image/jpeg', 0.95).split(',')[1];
-      
-      } KB)`);
-      
+
+      console.log(`✅ Image convertie: ${(base64Image.length / 1024).toFixed(2)} KB)`);
+
       return base64Image;
       
     } catch (error) {
@@ -86,9 +85,9 @@ class PDFToImageConverter {
       
       const numPages = Math.min(pdf.numPages, maxPages);
       const images = [];
-      
-       du PDF...`);
-      
+
+      console.log(`📄 Extraction de ${numPages} page(s) du PDF...`);
+
       for (let i = 1; i <= numPages; i++) {
         const image = await this.convertPDFToImage(pdfFile, i);
         images.push({
@@ -178,9 +177,8 @@ class PDFToImageConverter {
    */
   async extractAllPages(pdfFile) {
     try {
-      
-      } KB`);
-      
+      console.log(`📄 Extraction de toutes les pages du PDF: ${pdfFile.name} (${(pdfFile.size / 1024).toFixed(2)} KB)`);
+
       const arrayBuffer = await this.fileToArrayBuffer(pdfFile);
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
       const pages = [];
@@ -198,9 +196,9 @@ class PDFToImageConverter {
           
           canvas.width = viewport.width;
           canvas.height = viewport.height;
-          
-          ...`);
-          
+
+          console.log(`🔄 Rendu de la page ${pageNum}...`);
+
           const renderContext = {
             canvasContext: context,
             viewport: viewport
@@ -242,7 +240,7 @@ class PDFToImageConverter {
   isPDF(file) {
     return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
   }
-);}
+}
 
 // Export singleton
 export default new PDFToImageConverter();

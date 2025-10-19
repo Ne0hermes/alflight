@@ -546,8 +546,9 @@ If mass in header (900kg), add Masse:900 to row.`;
           const analysisResult = await unifiedPerformanceService.analyzeManualPerformance(
             image.base64,
             detailedPrompt
+          );
 
-          
+
 
           if (analysisResult.tables && analysisResult.tables.length > 0) {
             const imageTables = analysisResult.tables.map(table => {
@@ -563,7 +564,9 @@ If mass in header (900kg), add Masse:900 to row.`;
                   });
                   return rowObj;
                 });
-              } else               // Post-traitement pour s'assurer que la colonne "Masse" existe
+              }
+
+              // Post-traitement pour s'assurer que la colonne "Masse" existe
               if (tableData && tableData.length > 0) {
                 const hasMasse = tableData.some(row => row.Masse !== undefined);
 
@@ -630,9 +633,9 @@ If mass in header (900kg), add Masse:900 to row.`;
                 }
               };
             });
-            
+
             results.push(...imageTables);
-             depuis ${image.name}`);
+            console.log(`✅ ${imageTables.length} tableaux extraits depuis ${image.name}`);
           } else {
             
             
@@ -708,7 +711,7 @@ If mass in header (900kg), add Masse:900 to row.`;
       
       // Afficher un message récapitulatif
       if (analysisSummary.failedDocuments > 0) {
-         n'ont pas pu être analysés`);
+        console.log(`⚠️ ${analysisSummary.failedDocuments} document(s) n'ont pas pu être analysés`);
       }
 
       setCurrentStep('Validation et structuration des données...');
@@ -1025,7 +1028,8 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
       const analysisResult = await unifiedPerformanceService.analyzeManualPerformance(
         table.sourceImage.preview.split(',')[1], // Extraire le base64 de la preview
         detailedPrompt
-      
+      );
+
       if (analysisResult.tables && analysisResult.tables.length > 0) {
         // Remplacer l'entrée existante par les nouveaux résultats
         const newTables = [...extractedTables];
@@ -1117,7 +1121,6 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
     });
 
     setGroupedTables(grouped);
-    .map(k => `${k}: ${grouped[k].length} tables`));
   }, []);
 
   // Effet pour regrouper les tableaux quand ils changent
@@ -1383,6 +1386,7 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
                         const result = await unifiedPerformanceService.analyzeManualPerformance(
                           base64Data,
                           detailedPrompt
+                        );
 
                         if (result && result.tables && result.tables.length > 0) {
                           // Remplacer le tableau non détecté par les nouveaux résultats
@@ -1553,6 +1557,7 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
                         {classification === 'non-classified' ? '📁 Non classifié' : `✈️ ${classification}`}
                         {` (${tables.length} tableau${tables.length > 1 ? 'x' : ''}, ${tables.reduce((acc, t) => acc + (t.data?.length || 0), 0)} lignes)`}
                       </option>
+                    ))
                   ) : (
                     // Mode individuel : afficher seulement les tableaux valides
                     extractedTables
@@ -1565,6 +1570,7 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
                             {table.table_name || `Tableau ${filteredIndex + 1}`}
                             {table.data && table.data.length > 0 ? ` (${table.data.length} lignes)` : ''}
                           </option>
+                        );
                       })
                   )}
                 </select>
@@ -2038,7 +2044,8 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
                 const isSelected = selectedPdfPages.includes(page.pageNumber);
                 const isAutoDetected = uploadedImages.some(
                   img => img.pageNumber === page.pageNumber && img.autoDetected
-                
+                );
+
                 return (
                   <div
                     key={page.pageNumber}
@@ -2114,7 +2121,7 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
                       {page.size} KB
                     </div>
                   </div>
-
+                );
               })}
             </div>
 
@@ -2130,9 +2137,10 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
               <button
                 onClick={() => {
                   // Ajouter les pages sélectionnées non encore ajoutées
-                  const newPages = selectedPdfPages.filter(pageNum => 
+                  const newPages = selectedPdfPages.filter(pageNum =>
                     !uploadedImages.some(img => img.pageNumber === pageNum)
-                  
+                  );
+
                   const newImages = [];
                   for (const pageNum of newPages) {
                     const page = pdfPages.find(p => p.pageNumber === pageNum);
@@ -2153,7 +2161,7 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
                   
                   if (newImages.length > 0) {
                     setUploadedImages(prev => [...prev, ...newImages]);
-                     ajoutée(s) manuellement`);
+                    console.log(`${newImages.length} page(s) ajoutée(s) manuellement`);
                   }
                   
                   setShowPdfPageSelector(false);
@@ -2169,7 +2177,7 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
         </div>
       )}
     </div>
-
+  );
 };
 
 export default AdvancedPerformanceAnalyzer;

@@ -97,6 +97,8 @@ class VFRPointsExtractor {
         codeId.match(/^[A-Z]{2,}$/) && // Au moins 2 lettres
         !codeId.match(/^[NSEW]$/) && // Exclure les points cardinaux simples
         (txtRmk?.includes('VFR') || txtRmk?.includes('VRP') || txtRmk?.includes('visual'))
+      ));
+
       if (isVFR) {
         // Extraire les coordonnées
         const geoLat = this.getTextContent(dpn, 'geoLat');
@@ -138,7 +140,7 @@ class VFRPointsExtractor {
           
           // Log pour debug
           if (aerodromeId === 'LFST') {
-            }, ${coords.lon.toFixed(4)}`);
+            console.log(`VFR Point found: ${codeId} at ${coords.lat.toFixed(4)}, ${coords.lon.toFixed(4)}`);
           }
           
           // Grouper par aérodrome si possible
@@ -224,7 +226,7 @@ class VFRPointsExtractor {
       }
     }));
   }
-);}
+}
 
 // Export singleton
 export const vfrPointsExtractor = new VFRPointsExtractor();

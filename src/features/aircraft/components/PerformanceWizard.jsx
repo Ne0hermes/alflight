@@ -461,6 +461,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
           aircraft.manex.remoteUrl ||
           aircraft.manex.uploadedToSupabase ||
           aircraft.manex.fileName // Ajout: si un fileName existe, c'est qu'un MANEX est présent
+        );
 
         // Vérifier si MANEX disponible dans Supabase mais téléchargement échoué
         const hasManexInSupabase = aircraft?.manexAvailableInSupabase;
@@ -628,6 +629,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
               )}
             </div>
           </div>
+        );
 
       case 3:
         // Si l'analyseur est affiché, afficher directement l'AdvancedPerformanceAnalyzer
@@ -784,7 +786,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                         <li key={idx}>
                           Page {page.pageNumber} : <strong>{type?.label || 'Non classifié'}</strong>
                         </li>
-
+                      );
                     })}
                   </ul>
                 </div>
@@ -989,6 +991,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
               </div>
             </div>
           </div>
+        );
 
       case 4:
         // Étape 4 : uniquement pour les abaques
@@ -1048,6 +1051,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                 aircraftModel={aircraft?.model || null}
               />
             </div>
+          );
         }
         break;
 
@@ -1115,13 +1119,15 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
           </React.Fragment>
         ))}
       </div>
+    );
+  };
 
   return (
     <div style={styles.container}>
       {renderProgressIndicator()}
       {renderStep()}
     </div>
-
+  );
 };
 
 export default PerformanceWizard;

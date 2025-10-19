@@ -202,6 +202,7 @@ class AutoTracker {
       log.action === action &&
       log.details === details &&
       Date.now() - log.timestamp < 5000 // Moins de 5 secondes
+    );
   }
 
   /**

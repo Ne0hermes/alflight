@@ -9,6 +9,7 @@ export function pchipInterpolate(points: XYPoint[], numOutputPoints: number = 10
   const validPoints = points.filter(p =>
     typeof p.x === 'number' && !isNaN(p.x) && isFinite(p.x) &&
     typeof p.y === 'number' && !isNaN(p.y) && isFinite(p.y)
+  );
 
   if (validPoints.length < 2) {
         return validPoints;
@@ -125,6 +126,7 @@ export function akimaInterpolate(points: XYPoint[], numOutputPoints: number = 10
   const validPoints = points.filter(p =>
     typeof p.x === 'number' && !isNaN(p.x) && isFinite(p.x) &&
     typeof p.y === 'number' && !isNaN(p.y) && isFinite(p.y)
+  );
 
   if (validPoints.length < 5) {
         return pchipInterpolate(validPoints, numOutputPoints);
@@ -229,6 +231,7 @@ export function naturalCubicSplineInterpolate(points: XYPoint[], numOutputPoints
   const validPoints = points.filter(p =>
     typeof p.x === 'number' && !isNaN(p.x) && isFinite(p.x) &&
     typeof p.y === 'number' && !isNaN(p.y) && isFinite(p.y)
+  );
 
   if (validPoints.length < 2) {
         return validPoints;
@@ -360,6 +363,7 @@ export function catmullRomInterpolate(points: XYPoint[], numOutputPoints: number
   const validPoints = points.filter(p =>
     typeof p.x === 'number' && !isNaN(p.x) && isFinite(p.x) &&
     typeof p.y === 'number' && !isNaN(p.y) && isFinite(p.y)
+  );
 
   if (validPoints.length < 2) {
         return validPoints;

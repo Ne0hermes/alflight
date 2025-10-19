@@ -211,9 +211,9 @@ export const verifyCompleteProfile = () => {
   if (personalInfo) {
     const data = JSON.parse(personalInfo);
     results.personalInfo = Object.keys(data).length > 0;
-    .length, 'champs');
+    console.log('✅ Infos personnelles:', Object.keys(data).length, 'champs');
   } else {
-    
+    console.log('❌ Pas d\'infos personnelles');
   }
 
   // 2. Vérifier le profil pilote
@@ -221,9 +221,9 @@ export const verifyCompleteProfile = () => {
   if (pilotProfile) {
     const data = JSON.parse(pilotProfile);
     results.pilotProfile = Object.keys(data).length > 0;
-    .length, 'champs');
+    console.log('✓ Profil pilote:', Object.keys(data).length, 'champs');
   } else {
-    
+    console.log('❌ Pas de profil pilote');
   }
 
   // 3. Vérifier les certifications
@@ -259,9 +259,9 @@ export const verifyCompleteProfile = () => {
   if (unitsConfig) {
     const data = JSON.parse(unitsConfig);
     results.units = Object.keys(data).length > 0;
-    .length, 'paramètres');
+    console.log('✓ Configuration unités:', Object.keys(data).length, 'paramètres');
   } else {
-    
+    console.log('❌ Pas de configuration unités');
   }
 
   // Résumé
@@ -308,23 +308,11 @@ export const runCompleteSystemTest = () => {
 
   
   addCompleteTestData();
-
-  
   const verification = verifyCompleteProfile();
 
-  
-  
-  
-  
-  
-  
-  
-
-  
-   pour vider les données');
-   pour vérifier');
-
-  
+  console.log('\n📋 Données de test complètes ajoutées !');
+  console.log('💡 Utilisez clearAllData() pour vider les données');
+  console.log('💡 Utilisez verifyCompleteProfile() pour vérifier');
 
   return verification;
 };

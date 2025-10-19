@@ -425,6 +425,7 @@ class ABACProtocolHandler {
           expected: c.pred,
           tol_abs: 30,
           tol_pct: 10
+        }))
       }
     };
   }
@@ -523,7 +524,8 @@ class ABACProtocolHandler {
     // Passer à l'ABAC suivant dans la liste
     const currentIndex = this.state.abacIndex?.abacs.findIndex(
       a => a.id === this.state.currentAbacId
-    
+    );
+
     if (currentIndex !== -1 && currentIndex < this.state.abacIndex.abacs.length - 1) {
       const nextAbac = this.state.abacIndex.abacs[currentIndex + 1];
       return this.handleSelectAbac({ id: nextAbac.id });

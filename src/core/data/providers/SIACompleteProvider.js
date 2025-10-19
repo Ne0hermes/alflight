@@ -122,11 +122,12 @@ export class SIACompleteProvider extends AeroDataProvider {
     data.navaids.forEach(navaid => {
       // Déterminer si c'est un VOR-DME
       if (navaid.type === 'VOR') {
-        const dme = data.navaids.find(n => 
-          n.type === 'DME' && 
+        const dme = data.navaids.find(n =>
+          n.type === 'DME' &&
           n.identifier === navaid.identifier &&
           Math.abs(n.coordinates.lat - navaid.coordinates.lat) < 0.001 &&
           Math.abs(n.coordinates.lon - navaid.coordinates.lon) < 0.001
+        );
         if (dme) {
           navaid.type = 'VOR-DME';
           navaid.dmeChannel = dme.channel;
@@ -182,11 +183,12 @@ export class SIACompleteProvider extends AeroDataProvider {
       const [minLat, minLon, maxLat, maxLon] = params.bounds;
       filtered = filtered.filter(airspace => {
         if (!airspace.geometry?.coordinates?.[0]) return false;
-        
+
         // Vérifier si au moins un point est dans les limites
-        return airspace.geometry.coordinates[0].some(coord => 
+        return airspace.geometry.coordinates[0].some(coord =>
           coord[1] >= minLat && coord[1] <= maxLat &&
           coord[0] >= minLon && coord[0] <= maxLon
+        );
       });
     }
     
@@ -210,9 +212,10 @@ export class SIACompleteProvider extends AeroDataProvider {
     
     if (params.search) {
       const search = params.search.toLowerCase();
-      filtered = filtered.filter(af => 
+      filtered = filtered.filter(af =>
         af.icao?.toLowerCase().includes(search) ||
         af.name?.toLowerCase().includes(search)
+      );
     }
     
     if (params.nearPoint) {
@@ -243,17 +246,19 @@ export class SIACompleteProvider extends AeroDataProvider {
     let filtered = [...this.data.navaids];
     
     if (params.types && params.types.length > 0) {
-      filtered = filtered.filter(navaid => 
+      filtered = filtered.filter(navaid =>
         params.types.some(type => navaid.type.includes(type))
+      );
     }
     
     if (params.bounds) {
       const [minLat, minLon, maxLat, maxLon] = params.bounds;
-      filtered = filtered.filter(navaid => 
+      filtered = filtered.filter(navaid =>
         navaid.coordinates.lat >= minLat && navaid.coordinates.lat <= maxLat &&
         navaid.coordinates.lon >= minLon && navaid.coordinates.lon <= maxLon
+      );
     }
-    
+
     return filtered;
   }
 
@@ -271,9 +276,10 @@ export class SIACompleteProvider extends AeroDataProvider {
     
     if (params.bounds) {
       const [minLat, minLon, maxLat, maxLon] = params.bounds;
-      filtered = filtered.filter(wp => 
+      filtered = filtered.filter(wp =>
         wp.coordinates.lat >= minLat && wp.coordinates.lat <= maxLat &&
         wp.coordinates.lon >= minLon && wp.coordinates.lon <= maxLon
+      );
     }
     
     return filtered;
@@ -289,16 +295,18 @@ export class SIACompleteProvider extends AeroDataProvider {
     
     if (params.bounds) {
       const [minLat, minLon, maxLat, maxLon] = params.bounds;
-      filtered = filtered.filter(obs => 
+      filtered = filtered.filter(obs =>
         obs.coordinates.lat >= minLat && obs.coordinates.lat <= maxLat &&
         obs.coordinates.lon >= minLon && obs.coordinates.lon <= maxLon
+      );
     }
-    
+
     if (params.minHeight) {
-      filtered = filtered.filter(obs => 
+      filtered = filtered.filter(obs =>
         (obs.height || 0) >= params.minHeight
+      );
     }
-    
+
     return filtered;
   }
 
@@ -337,6 +345,7 @@ export class SIACompleteProvider extends AeroDataProvider {
         airport.coordinates.lon,
         wp.coordinates.lat,
         wp.coordinates.lon
+      );
       return distance <= 15; // 15 km de rayon
     });
     

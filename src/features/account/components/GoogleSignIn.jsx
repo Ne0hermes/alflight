@@ -68,3 +68,7 @@ export const GoogleSignIn = ({ onSuccess, onError }) => {
     <div className="google-signin-container">
       <div ref={buttonRef} id="googleSignInButton"></div>
     </div>
+  );
+};
+
+export default GoogleSignIn;

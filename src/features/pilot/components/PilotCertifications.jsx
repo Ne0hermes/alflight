@@ -110,9 +110,8 @@ const PilotCertifications = () => {
     
     if (saved) {
       const parsed = JSON.parse(saved);
-                                    setCertifications(parsed);
-    } else {
-          }
+      setCertifications(parsed);
+    }
 
     // Ajouter les fonctions de debug au window pour faciliter le test
     if (typeof window !== 'undefined') {
@@ -122,12 +121,12 @@ const PilotCertifications = () => {
       window.runFullTest = runFullTest;
       window.resetCert = resetCertifications;
       window.validateCert = validateStructure;
-             : affiche l\'état des certifications');
-       : ajoute une licence de test');
-       : ajoute une qualification de test');
-       : lance un test complet avec données');
-       : réinitialise les certifications');
-       : valide la structure des données');
+      console.log('window.debugCert() : affiche l\'état des certifications');
+      console.log('window.addTestLicense() : ajoute une licence de test');
+      console.log('window.addTestRating() : ajoute une qualification de test');
+      console.log('window.runFullTest() : lance un test complet avec données');
+      console.log('window.resetCert() : réinitialise les certifications');
+      console.log('window.validateCert() : valide la structure des données');
     }
   }, []);
 
@@ -209,6 +208,7 @@ const PilotCertifications = () => {
           `(Le nom du fichier sera sauvegardé, mais pas son contenu)\n\n` +
           `OK = Sauvegarder la référence\n` +
           `Annuler = Ne pas ajouter le document`
+        );
 
         if (useReference) {
           // Sauvegarder juste la référence
@@ -225,6 +225,7 @@ const PilotCertifications = () => {
             `• smallpdf.com (PDF)\n` +
             `• tinypng.com (images)\n` +
             `• cloudconvert.com (général)`
+          );
         } else {
           e.target.value = '';
         }
@@ -240,6 +241,7 @@ const PilotCertifications = () => {
           `Total prévu: ${projectedTotal.toFixed(2)}MB\n` +
           `Limite: ~5MB\n\n` +
           `Voulez-vous effectuer un nettoyage complet pour faire de la place ?`
+        );
 
         if (confirmClean) {
           // Forcer un nettoyage complet
@@ -323,6 +325,7 @@ const PilotCertifications = () => {
             `1. Cliquez sur "Nettoyer le stockage"\n` +
             `2. Supprimez d'anciens documents\n` +
             `3. Compressez le fichier avant l'upload`
+          );
           e.target.value = '';
 
           // Proposer le nettoyage
@@ -336,6 +339,7 @@ const PilotCertifications = () => {
             `⚠️ Document volumineux: ${resultSizeMB}MB\n\n` +
             `Espace restant après ajout: ${(4.8 - newTotal).toFixed(2)}MB\n\n` +
             `Continuer ?`
+          );
           if (!confirmSave) {
             e.target.value = '';
             return;
@@ -562,6 +566,7 @@ const PilotCertifications = () => {
         </button>
       </div>
     </div>
+  );
 
   return (
     <div>
@@ -777,6 +782,7 @@ const PilotCertifications = () => {
                   ))}
                 </div>
               </div>
+            );
           })
         }
         
@@ -798,7 +804,7 @@ const PilotCertifications = () => {
         )}
       </div>
     </div>
-
+  );
 };
 
 export default PilotCertifications;
