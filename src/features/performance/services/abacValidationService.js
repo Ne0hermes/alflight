@@ -318,9 +318,10 @@ class ABACValidationService {
     const y = inputs.oat_c;
     
     // Filtrer par masse proche
-    const massFiltered = values.filter(v => 
+    const massFiltered = values.filter(v =>
       Math.abs(v.mass_kg - inputs.mass_kg) < 50
-    
+    );
+
     if (massFiltered.length < 4) return null;
     
     // Trouver les 4 coins
@@ -334,8 +335,9 @@ class ABACValidationService {
     
     // Trouver les valeurs aux 4 coins
     const findValue = (px, py) => {
-      const point = massFiltered.find(v => 
+      const point = massFiltered.find(v =>
         v.pressure_alt_ft === px && v.oat_c === py
+      );
       return point ? point.value : null;
     };
     

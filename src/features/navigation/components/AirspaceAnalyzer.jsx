@@ -486,7 +486,7 @@ export const AirspaceAnalyzer = ({ waypoints, plannedAltitude, onAltitudeChange,
     if (lowerFeet === 0 && upperFeet === 999999) {
       // Espace sans limites définies, pas de conflit
       return null;
-    });
+    }
     if (altitudeNum >= lowerFeet && altitudeNum <= upperFeet) {
       return 'inside';
     } else if (altitudeNum < lowerFeet && (lowerFeet - altitudeNum) < 1000) {

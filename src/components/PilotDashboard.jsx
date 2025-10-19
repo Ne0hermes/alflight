@@ -108,7 +108,7 @@ export const PilotDashboard = ({ onNavigate }) => {
       if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
         pilotAge--;
       }
-    });
+    }
     if (medicalRecords.length > 0) {
       const latestMedical = medicalRecords.sort((a, b) => 
         new Date(b.expiryDate) - new Date(a.expiryDate)
@@ -349,7 +349,7 @@ export const PilotDashboard = ({ onNavigate }) => {
     if (mepRating && mepRating.expiryDate) {
       const expiryDate = new Date(mepRating.expiryDate);
       isMEPExpired = expiryDate < today;
-    });
+    }
     if (mepRating) {
       if (isMEPExpired) {
         // Qualification MEP expirée

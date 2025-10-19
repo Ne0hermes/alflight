@@ -116,7 +116,7 @@ const SupabaseUpdater = ({ aircraft, onUpdateComplete }) => {
 
       // Log détaillé pour chaque comparaison
       if (isDifferent) {
-        :`, {
+        console.log(`Difference found in ${label}:`, {
           supabase: supabaseValue,
           local: localValue,
           type: isArray ? 'array' : typeof localValue
@@ -318,5 +318,7 @@ const SupabaseUpdater = ({ aircraft, onUpdateComplete }) => {
         </DialogActions>
       </Dialog>
     </>
+  );
+};
 
 export default SupabaseUpdater;

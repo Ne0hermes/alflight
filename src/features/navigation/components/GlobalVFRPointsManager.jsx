@@ -484,7 +484,8 @@ const GlobalVFRPointsManager = () => {
         gap: '12px'
       }}>
         {filteredPoints.length > 0 ? (
-          filteredPoints.map(point => (
+          <div style={{ display: 'grid', gap: '12px' }}>
+            {filteredPoints.map(point => (
             <div
               key={point.id}
               style={{
@@ -754,9 +755,10 @@ const GlobalVFRPointsManager = () => {
                     )}
                   </div>
                 </div>
-              ))
+              )}
             </div>
-          )
+            ))}
+          </div>
         ) : (
           <div style={{
             padding: '40px',
@@ -803,7 +805,7 @@ const GlobalVFRPointsManager = () => {
         </div>
       )}
     </div>
-
+  );
 };
 
 export default GlobalVFRPointsManager;

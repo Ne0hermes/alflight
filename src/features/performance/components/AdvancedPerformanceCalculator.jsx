@@ -264,19 +264,16 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
               result.groundRollCorrected = performanceInterpolation.applyCorrections(
                 result.groundRoll,
                 corrections
-            );
+              );
+            }
             if (result.distance50ft) {
               result.distance50ftCorrected = performanceInterpolation.applyCorrections(
                 result.distance50ft,
                 corrections
-            );
-            
+              );
+            }
+
             result.airport = departureAirport;
-            result.weather = departureWeather;
-            result.temperatureUsed = temperature;
-            result.altitudeUsed = altitudeFt;  // Altitude en pieds
-            result.weightUsed = currentWeight;
-            result.corrections = corrections;
             
             // Ajouter la suggestion de piste
             const windInfo = extractWindInfo(departureWeather);
@@ -347,11 +344,8 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
                 corrections
               );
             }
-            
+
             result.airport = arrivalAirport;
-            result.weather = arrivalWeather;
-            result.temperatureUsed = temperature;
-            result.altitudeUsed = altitudeFt;  // Altitude en pieds
             result.weightUsed = landingWeight;
             result.corrections = corrections;
             
@@ -379,7 +373,8 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
           const altitudeFt = ensureAltitudeInFeet(
             alternate,
             `Alternate ${altIcao || 'Unknown'}`
-          const temperature = extractTemperature(altWeather) || 
+          );
+          const temperature = extractTemperature(altWeather) ||
                             performanceInterpolation.getISATemperature(altitudeFt);
           
           const landingTable = performanceInterpolation.findBestTable(tables, 'landing', currentWeight - 30);
@@ -390,7 +385,8 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
               altitudeFt,  // Utiliser l'altitude en pieds
               temperature,
               currentWeight - 30
-            
+            );
+
             if (result) {
               result.airport = alternate;
               result.weather = altWeather;
@@ -752,8 +748,8 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
           </div>
         )}
       </div>
-
-  // Si pas de performances avancées
+    );
+  };
   if (!aircraft?.advancedPerformance?.tables || aircraft.advancedPerformance.tables.length === 0) {
     return (
       <div style={sx.combine(sx.components.card.base, sx.spacing.p(6), sx.text.center)}>
@@ -939,7 +935,7 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
         </div>
       )}
     </div>
-
+  );
 };
 
 export default AdvancedPerformanceCalculator;

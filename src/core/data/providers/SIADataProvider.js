@@ -247,9 +247,10 @@ export class SIADataProvider extends AeroDataProvider {
       const [minLat, minLon, maxLat, maxLon] = params.bounds;
       filtered = filtered.filter(airspace => {
         if (!airspace.geometry || airspace.geometry.length === 0) return false;
-        return airspace.geometry.some(coord => 
+        return airspace.geometry.some(coord =>
           coord[1] >= minLat && coord[1] <= maxLat &&
           coord[0] >= minLon && coord[0] <= maxLon
+        );
       });
     }
     
@@ -265,10 +266,11 @@ export class SIADataProvider extends AeroDataProvider {
     
     if (params.search) {
       const search = params.search.toLowerCase();
-      filtered = filtered.filter(af => 
+      filtered = filtered.filter(af =>
         af.icao.toLowerCase().includes(search) ||
         af.name.toLowerCase().includes(search) ||
         (af.city && af.city.toLowerCase().includes(search))
+      );
     }
     
     if (params.nearPoint) {
@@ -286,8 +288,9 @@ export class SIADataProvider extends AeroDataProvider {
     let filtered = [...this.navaids];
     
     if (params.types && params.types.length > 0) {
-      filtered = filtered.filter(navaid => 
+      filtered = filtered.filter(navaid =>
         params.types.some(type => navaid.type.includes(type))
+      );
     }
     
     return filtered;

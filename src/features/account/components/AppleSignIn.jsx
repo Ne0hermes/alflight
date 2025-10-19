@@ -131,3 +131,7 @@ export const AppleSignIn = ({ onSuccess, onError }) => {
         Sign in with Apple
       </div>
     </div>
+  );
+};
+
+export default AppleSignIn;

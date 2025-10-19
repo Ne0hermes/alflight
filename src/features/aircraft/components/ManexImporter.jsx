@@ -133,6 +133,7 @@ export const ManexImporter = memo(({
           `❌ Erreur lors de l'enregistrement: ${error.message || 'Erreur inconnue'}`,
           'error',
           7000
+        );
         setLoading(false);
       }
     };
@@ -153,6 +154,7 @@ export const ManexImporter = memo(({
           `🗑️ MANEX supprimé pour ${aircraft.registration}`,
           'info',
           4000
+        );
         onClose();
       } catch (error) {
         console.error('Erreur lors de la suppression du MANEX:', error);
@@ -160,6 +162,7 @@ export const ManexImporter = memo(({
           `❌ Erreur lors de la suppression du MANEX`,
           'error',
           5000
+        );
       }
     }
   };
@@ -183,8 +186,6 @@ export const ManexImporter = memo(({
         }
       }
 
-                  :', pdfDataToView ? pdfDataToView.substring(0, 100) : 'N/A');
-
       if (pdfDataToView) {
         // Si c'est un objet File ou Blob, on le convertit
         if (pdfDataToView instanceof File || pdfDataToView instanceof Blob) {
@@ -201,6 +202,7 @@ export const ManexImporter = memo(({
                   <embed src="${dataUrl}" type="application/pdf" style="width:100%; height:100%;" />
                 </body>
                 </html>`
+              );
               newWindow.document.close();
             }
           };
@@ -233,6 +235,7 @@ export const ManexImporter = memo(({
               <embed src="${pdfDataToView}" type="application/pdf" style="width:100%; height:100%;" />
             </body>
             </html>`
+          );
           newWindow.document.close();
         } else {
           showNotification('❌ Impossible d\'ouvrir une nouvelle fenêtre', 'error', 3000);
@@ -680,7 +683,7 @@ export const ManexImporter = memo(({
         </div>
       </div>
     </div>
-
+  );
 });
 
 ManexImporter.displayName = 'ManexImporter';

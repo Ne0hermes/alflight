@@ -91,7 +91,7 @@ export const AlternateSelector = memo(({ candidates = [], selected = [] }) => {
         )}
       </div>
     </div>
-
+  );
 });
 
 // Composant pour un alternate sélectionné
@@ -134,6 +134,7 @@ const SelectedAlternateItem = memo(({ alternate, index, onRemove }) => (
       <X size={16} />
     </button>
   </div>
+));
 
 // Composant pour un candidat
 const CandidateItem = memo(({ candidate, isSelected, onAdd, disabled }) => (
@@ -185,6 +186,7 @@ const CandidateItem = memo(({ candidate, isSelected, onAdd, disabled }) => (
       )}
     </button>
   </div>
+));
 
 // Composant pour afficher le score
 const ScoreBadge = memo(({ score }) => {

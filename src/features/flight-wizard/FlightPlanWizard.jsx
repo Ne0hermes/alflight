@@ -6,11 +6,12 @@ import { WizardConfigProvider } from './contexts/WizardConfigContext';
 
 // Import des étapes
 import { Step1GeneralInfo } from './steps/Step1GeneralInfo';
-import { Step2Aircraft, Step7Summary } from './steps/AllSteps';
+import { Step2Aircraft } from './steps/Step2Aircraft';
 import { Step3Route } from './steps/Step3Route';
 import { Step4Alternates } from './steps/Step4Alternates';
 import { Step5Fuel } from './steps/Step5Fuel';
 import { Step6WeightBalance } from './steps/Step6WeightBalance';
+import { Step7Summary } from './steps/Step7Summary';
 
 /**
  * Composant principal du wizard de préparation de vol

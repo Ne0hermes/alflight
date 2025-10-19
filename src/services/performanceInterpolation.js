@@ -135,6 +135,7 @@ class PerformanceInterpolationService {
           sortedTemps[tempHigh],
           v2,
           targetTemp
+        );
       }
     }
 
@@ -154,6 +155,7 @@ class PerformanceInterpolationService {
           sortedTemps[tempHigh],
           v2,
           targetTemp
+        );
       }
     }
 
@@ -172,6 +174,7 @@ class PerformanceInterpolationService {
       sortedAlts[altHigh],
       valueHighAlt,
       targetAlt
+    );
   }
 
   /**
@@ -261,7 +264,7 @@ class PerformanceInterpolationService {
 
           // Log pour debug si on trouve exactement 6000ft et 0°C
           if (alt === 6000 && temp === 0) {
-            :`, {
+            console.log('✅ Données trouvées pour 6000ft et 0°C:', {
               groundRoll,
               distance50ft,
               dataPoint
@@ -331,6 +334,7 @@ class PerformanceInterpolationService {
           groundRollMatrix,
           altitude,
           temperature
+        );
       }
 
       if (hasDistance50ft) {
@@ -340,6 +344,7 @@ class PerformanceInterpolationService {
           distance50ftMatrix,
           altitude,
           temperature
+        );
       }
     } catch (error) {
       console.error('Erreur lors de l\'interpolation:', error);
@@ -576,7 +581,7 @@ class PerformanceInterpolationService {
 
     return Math.round(correctedDistance);
   }
-);}
+}
 
 // Export singleton
 const performanceInterpolation = new PerformanceInterpolationService();

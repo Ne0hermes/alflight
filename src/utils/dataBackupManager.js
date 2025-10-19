@@ -48,8 +48,9 @@ class DataBackupManager {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
 
       request.onerror = (event) => {
-        console.error('❌ Erreur IndexedDB:', event.target.error);
-        reject(new Error('Erreur lors de l\'ouverture d\'IndexedDB'));
+        const error = event.target.error;
+        console.error('❌ Erreur IndexedDB:', error);
+        reject(new Error(`Erreur lors de l'ouverture d'IndexedDB: ${error?.message || error?.name || 'Unknown error'}`));
       };
 
       request.onsuccess = (event) => {

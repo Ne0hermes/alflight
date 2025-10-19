@@ -205,7 +205,8 @@ export const useOpenAIPStore = create(
           points.forEach(openAipPoint => {
             const vacPoint = vacChart.extractedData.reportingPoints.find(
               vp => vp.code === openAipPoint.code || vp.name === openAipPoint.name
-            
+            );
+
             if (vacPoint) {
               const latDiff = Math.abs(openAipPoint.coordinates.lat - vacPoint.coordinates.lat);
               const lonDiff = Math.abs(openAipPoint.coordinates.lon - vacPoint.coordinates.lon);
@@ -247,10 +248,11 @@ export const useOpenAIPStore = create(
       if (!searchQuery) return airports;
       
       const query = searchQuery.toLowerCase();
-      return airports.filter(airport => 
+      return airports.filter(airport =>
         airport.icao.toLowerCase().includes(query) ||
         airport.name.toLowerCase().includes(query) ||
         (airport.city && airport.city.toLowerCase().includes(query))
+      );
     },
     
     getVacStatus: (icao) => {
@@ -317,6 +319,8 @@ export const useOpenAIPStore = create(
         get().validateAllPoints();
       }
     }
+  }))
+);
 
 export const openAIPSelectors = {
   useAirports: () => useOpenAIPStore(state => state.airports),

@@ -265,11 +265,13 @@ export const AlternateSelectorDual = memo(({
                   </div>
                 </div>
               </div>
-
+            );
           })}
         </div>
       )}
     </div>
+  );
+  };
 
   return (
     <div>
@@ -296,7 +298,7 @@ export const AlternateSelectorDual = memo(({
         />
       </div>
     </div>
-
+  );
 });
 
 // Fonction pour obtenir la couleur selon le score

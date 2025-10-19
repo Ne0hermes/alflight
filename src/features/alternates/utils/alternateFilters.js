@@ -73,7 +73,8 @@ const checkDistanceCriteria = (airport, criteria) => {
     airport.coordinates,
     criteria.departure,
     criteria.arrival
-  
+  );
+
   return distanceFromRoute <= criteria.maxRadiusNM;
 };
 
@@ -201,13 +202,14 @@ const checkSideCriteria = (airport, criteria) => {
  */
 const hasATCService = (airport) => {
   if (airport.frequencies) {
-    return airport.frequencies.some(freq => 
-      freq.type === 'TWR' || 
-      freq.type === 'APP' || 
+    return airport.frequencies.some(freq =>
+      freq.type === 'TWR' ||
+      freq.type === 'APP' ||
       freq.type === 'AFIS'
+    );
   }
-  
-  return airport.type === 'medium_airport' || 
+
+  return airport.type === 'medium_airport' ||
          airport.type === 'large_airport';
 };
 
@@ -216,13 +218,14 @@ const hasATCService = (airport) => {
  */
 const hasNightLighting = (airport) => {
   if (airport.runways) {
-    return airport.runways.some(runway => 
-      runway.lighting === true || 
+    return airport.runways.some(runway =>
+      runway.lighting === true ||
       runway.lights === true ||
       runway.hasLighting === true
+    );
   }
-  
-  return airport.type !== 'small_airport' && 
+
+  return airport.type !== 'small_airport' &&
          airport.type !== 'closed';
 };
 

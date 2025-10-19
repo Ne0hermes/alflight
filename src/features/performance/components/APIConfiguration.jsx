@@ -215,7 +215,7 @@ const APIConfiguration = ({ onClose }) => {
         🔒 Votre clé API est stockée localement sur votre navigateur et n'est jamais partagée.
       </div>
     </div>
-
+  );
 };
 
 export default APIConfiguration;

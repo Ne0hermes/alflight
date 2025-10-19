@@ -117,7 +117,7 @@ export async function cleanDuplicatePresets() {
       throw deleteError;
     }
 
-     supprimé(s) avec succès!`);
+    console.log(`✅ ${idsToDelete.length} doublon(s) supprimé(s) avec succès!`);
 
     return {
       success: true,
@@ -173,7 +173,7 @@ export async function previewCleanDuplicatePresets() {
     });
 
     const duplicateCount = Object.keys(duplicates).length;
-     avec doublons`);
+    console.log(`🔍 ${duplicateCount} immatriculation(s) avec doublons`);
 
     if (duplicateCount === 0) {
       return {
@@ -205,7 +205,7 @@ export async function previewCleanDuplicatePresets() {
       error: error.message
     };
   }
-);}
+}
 
 // Export par défaut pour utilisation directe
 export default {

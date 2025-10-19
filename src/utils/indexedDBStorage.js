@@ -6,7 +6,7 @@
  */
 
 const DB_NAME = 'FlightManagementDB';
-const DB_VERSION = 5; // Synchronisé avec dataBackupManager.js
+const DB_VERSION = 6; // Synchronisé avec dataBackupManager.js
 const MANEX_STORE = 'manexPDFs';
 const VAC_STORE = 'vacPDFs';
 
@@ -28,8 +28,10 @@ class IndexedDBStorage {
 
       const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-      request.onerror = () => {
-        reject(new Error('Erreur lors de l\'ouverture d\'IndexedDB'));
+      request.onerror = (event) => {
+        const error = event.target.error;
+        console.error('IndexedDB error details:', error);
+        reject(new Error(`Erreur lors de l'ouverture d'IndexedDB: ${error?.message || error?.name || 'Unknown error'}`));
       };
 
       request.onsuccess = (event) => {

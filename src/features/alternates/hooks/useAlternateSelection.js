@@ -198,9 +198,10 @@ export const useAlternateSelection = () => {
         // Essayer d'obtenir les aérodromes depuis le store
         if (openAIPStore.airports && Array.isArray(openAIPStore.airports)) {
           // Filtrer les aérodromes français
-          loadedAirports = openAIPStore.airports.filter(apt => 
+          loadedAirports = openAIPStore.airports.filter(apt =>
             apt.icao && apt.icao.startsWith('LF')
-                  }
+          );
+        }
         
         if (!loadedAirports || loadedAirports.length === 0) {
           try {
@@ -284,9 +285,10 @@ export const useAlternateSelection = () => {
       navigationResults &&
       airports.length > 0 &&
       !isLoadingAirports
-    
+    );
     if (!ready) {
-      ` : 'Manquant',
+      console.log('Not ready:', {
+        departure: waypoints[0] ? `${waypoints[0].name || 'Sans nom'} (${waypoints[0].lat ? 'OK' : 'Pas de coordonnées'})` : 'Manquant',
         arrival: waypoints[waypoints.length - 1] ? `${waypoints[waypoints.length - 1].name || 'Sans nom'} (${waypoints[waypoints.length - 1].lat ? 'OK' : 'Pas de coordonnées'})` : 'Manquant',
         aircraft: selectedAircraft ? selectedAircraft.model : 'Aucun',
         navigationResults: !!navigationResults,
@@ -330,13 +332,17 @@ export const useAlternateSelection = () => {
       lat: waypoints[waypoints.length - 1].lat,
       lon: waypoints[waypoints.length - 1].lon
     };
-    
-        });
-    
+
+    console.log('Calculating search zone:', {
+      departure,
+      arrival
+    });
+
     // Zone normale basée sur la formule pilule
     const zone = calculateSearchZone(departure, arrival, waypoints, fuelDataForRadius);
     if (zone) {
-       + ' NM',
+      console.log('Search zone calculated:', {
+        radius: zone.dynamicRadius + ' NM',
         area: zone.area?.toFixed(0) + ' NM²',
         hasPerpendicular: !!zone.perpendicular
       });
@@ -352,8 +358,12 @@ export const useAlternateSelection = () => {
     const landingDistance = selectedAircraft.performances?.landingDistance || 200;
     const requiredRunwayLength = Math.ceil(landingDistance * 1.43);
     const minRunwayLength = 300; // Minimum acceptable
-    
-        
+
+    console.log('Dynamic params:', {
+      requiredRunwayLength: minRunwayLength,
+      maxRadiusNM: searchZone.dynamicRadius
+    });
+
     return {
       requiredRunwayLength: minRunwayLength,
       maxRadiusNM: searchZone.dynamicRadius,
@@ -365,7 +375,8 @@ export const useAlternateSelection = () => {
   // Fonction de recherche et scoring
   const findAlternates = useCallback(async () => {
     if (!searchZone || !selectedAircraft || !dynamicParams) {
-            return;
+      console.log('Cannot find alternates: missing requirements');
+      return;
     }
     
     // Vérifier qu'on a des aérodromes
@@ -376,14 +387,15 @@ export const useAlternateSelection = () => {
     
     const isSearching = useAlternatesStore.getState().isSearching;
     if (isSearching) {
-            return;
+      console.log('Search already in progress');
+      return;
     }
     
     try {
       useAlternatesStore.getState().setIsSearching?.(true);
-    
-                  } NM`);
-            
+
+      console.log(`Starting search with radius ${searchZone.dynamicRadius} NM`);
+
       // 1. Filtrer les aérodromes dans la zone
       const candidatesInZone = [];
       let testedCount = 0;
@@ -416,13 +428,14 @@ export const useAlternateSelection = () => {
           debugInfo.tooFar++;
         }
       }
-      
-                                    
+
+      console.log(`Found ${candidatesInZone.length} candidates in search zone`);
+
       if (candidatesInZone.length > 0) {
-                candidatesInZone.forEach((airport, index) => {
-                    }°, ${airport.position.lon.toFixed(4)}°`);
-          } NM`);
-                  });
+        candidatesInZone.forEach((airport, index) => {
+          console.log(`  ${index + 1}. ${airport.name || airport.icao} - ${airport.position.lat.toFixed(4)}°, ${airport.position.lon.toFixed(4)}°`);
+          console.log(`     Distance: ${airport.distance?.toFixed(1) || 'N/A'} NM`);
+        });
       }
       
       // 2. Filtrer selon les critères (accepter tous pour le moment)
@@ -495,11 +508,11 @@ export const useAlternateSelection = () => {
                         
       // Ne pas sélectionner automatiquement - laisser l'utilisateur choisir
       // Les alternates scorés sont disponibles dans scoredAlternates du store
-      
-            
+
+
       // RÉSUMÉ FINAL
-                                    if (SHOW_ONLY_UNCONTROLLED) {
-        : ${scoredToDisplay.length}`);
+      if (SHOW_ONLY_UNCONTROLLED) {
+        console.log(`Filtered to uncontrolled: ${scoredToDisplay.length}`);
       }
           
     } finally {

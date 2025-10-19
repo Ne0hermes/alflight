@@ -176,6 +176,8 @@ export const Chart: React.FC<ChartProps> = ({
           />
         ))}
       </g>
+    );
+  };
 
   const generateAxes = () => {
     const xTicks = xScale.ticks(10);
@@ -228,6 +230,8 @@ export const Chart: React.FC<ChartProps> = ({
           </text>
         </g>
       </>
+    );
+  };
 
   const renderCurve = (curve: Curve) => {
     const isSelected = curve.id === selectedCurveId;
@@ -241,6 +245,7 @@ export const Chart: React.FC<ChartProps> = ({
           const validPoints = curve.fitted.points.filter(p =>
             typeof p.x === 'number' && !isNaN(p.x) && isFinite(p.x) &&
             typeof p.y === 'number' && !isNaN(p.y) && isFinite(p.y)
+          );
 
           if (validPoints.length < 2) {
                         return null;
@@ -259,6 +264,7 @@ export const Chart: React.FC<ChartProps> = ({
               strokeLinejoin="round"
               strokeLinecap="round"
             />
+          );
         })()}
 
         {!curve.fitted && curve.points.length > 1 && (() => {
@@ -266,6 +272,7 @@ export const Chart: React.FC<ChartProps> = ({
           const validPoints = curve.points.filter(p =>
             typeof p.x === 'number' && !isNaN(p.x) && isFinite(p.x) &&
             typeof p.y === 'number' && !isNaN(p.y) && isFinite(p.y)
+          );
 
           if (validPoints.length < 2) return null;
 
@@ -278,6 +285,7 @@ export const Chart: React.FC<ChartProps> = ({
               strokeDasharray="5,5"
               opacity={0.5}
             />
+          );
         })()}
 
         {curve.points.map((point) => {
@@ -318,9 +326,11 @@ export const Chart: React.FC<ChartProps> = ({
                 </g>
               )}
             </g>
-
+          );
         })}
       </g>
+    );
+  };
 
   // La légende est maintenant rendue en dehors du SVG
 
@@ -409,4 +419,5 @@ export const Chart: React.FC<ChartProps> = ({
         </div>
       )}
     </div>
+  );
 };

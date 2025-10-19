@@ -280,7 +280,7 @@ class UnifiedPerformanceService {
         
 
         if (openBraces !== closeBraces) {
-          , tentative de réparation...');
+          console.warn('Accolades déséquilibrées, tentative de réparation...');
           // Ajouter les accolades manquantes
           while ((cleanContent.match(/{/g) || []).length > (cleanContent.match(/}/g) || []).length) {
             cleanContent += '}';
@@ -288,7 +288,7 @@ class UnifiedPerformanceService {
         }
 
         if (openBrackets !== closeBrackets) {
-          , tentative de réparation...');
+          console.warn('Crochets déséquilibrés, tentative de réparation...');
           // Ajouter les crochets manquants
           while ((cleanContent.match(/\[/g) || []).length > (cleanContent.match(/\]/g) || []).length) {
             cleanContent += ']';
@@ -350,9 +350,9 @@ class UnifiedPerformanceService {
         const incompleteArrayElement = cleanContent.match(/,\s*"[^"]*$/);
 
         if (incompleteLine || incompleteObject || incompleteArray || incompleteArrayElement || lastChar === '"' || lastChar === ':' || lastChar === ',') {
-          
-           || []).length, 'vs', (cleanContent.match(/}/g) || []).length);
-           || []).length, 'vs', (cleanContent.match(/\]/g) || []).length);
+          console.log('Incomplete JSON detected, attempting repair...');
+          console.log('Braces:', (cleanContent.match(/{/g) || []).length, 'vs', (cleanContent.match(/}/g) || []).length);
+          console.log('Brackets:', (cleanContent.match(/\[/g) || []).length, 'vs', (cleanContent.match(/\]/g) || []).length);
 
           // Si on a une chaîne non terminée dans un tableau
           if (incompleteArray) {
@@ -408,8 +408,8 @@ class UnifiedPerformanceService {
           for (let i = 0; i < needCloseBrackets; i++) cleanContent += ']';
           for (let i = 0; i < needCloseBraces; i++) cleanContent += '}';
 
-           || []).length, 'vs', (cleanContent.match(/}/g) || []).length);
-           || []).length, 'vs', (cleanContent.match(/\]/g) || []).length);
+          console.log('After closing - Braces:', (cleanContent.match(/{/g) || []).length, 'vs', (cleanContent.match(/}/g) || []).length);
+          console.log('After closing - Brackets:', (cleanContent.match(/\[/g) || []).length, 'vs', (cleanContent.match(/\]/g) || []).length);
         }
 
         // Tentative de réparation du JSON avant parsing
@@ -442,16 +442,15 @@ class UnifiedPerformanceService {
                 return parsed;
       } catch (parseError) {
         console.error('❌ Erreur de parsing JSON:', parseError.message);
-        :', content.substring(0, 500));
-        :', content.substring(Math.max(0, content.length - 500)));
-        
+        console.log('First 500 chars:', content.substring(0, 500));
+        console.log('Last 500 chars:', content.substring(Math.max(0, content.length - 500)));
+
 
         // Position de l'erreur dans le JSON
         const errorPosition = parseError.message.match(/position (\d+)/);
         if (errorPosition) {
           const pos = parseInt(errorPosition[1]);
-          
-          , Math.min(content.length, pos + 50)));
+          console.log('Error context:', content.substring(Math.max(0, pos - 50), Math.min(content.length, pos + 50)));
         }
 
         // Essayer de détecter si le contenu ressemble à une structure de tableau
@@ -730,9 +729,9 @@ class UnifiedPerformanceService {
     this.initialize();
     this.protocolHandler.reset();
     this.mode = 'abac';
-    
+
   }
-);}
+}
 
 // Export singleton
 const unifiedPerformanceService = new UnifiedPerformanceService();

@@ -97,7 +97,7 @@ export const DataSourceBadge = memo(({
         <span>{config.label}</span>
       )}
     </div>
-
+  );
 });
 
 DataSourceBadge.displayName = 'DataSourceBadge';

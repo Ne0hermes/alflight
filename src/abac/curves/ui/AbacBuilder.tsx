@@ -19,7 +19,8 @@ import {
   FitResult,
   AbacCurvesJSON,
   GraphConfig,
-  WindDirection
+  WindDirection,
+  InterpolationMethod
 } from '../core/types';
 import styles from './styles.module.css';
 
@@ -40,10 +41,12 @@ export interface AbacBuilderRef {
   getCurrentStep: () => Step;
 }
 
-export const AbacBuilder = React.forwardRef<AbacBuilderRef, AbacBuilderProps>(({ onSave, initialData, modelName, aircraftModel, onBack }, ref) => {
-    
+// Define the component function separately
+function AbacBuilderComponent(
+  { onSave, initialData, modelName, aircraftModel, onBack }: AbacBuilderProps,
+  ref: React.Ref<AbacBuilderRef>
+) {
   const managerRef = useRef(new AbacCurveManager());
-
   const [currentStep, setCurrentStep] = useState<Step>('axes');
 
   React.useEffect(() => {
@@ -95,6 +98,7 @@ export const AbacBuilder = React.forwardRef<AbacBuilderRef, AbacBuilderProps>(({
 
   const [modelNameInput, setModelNameInput] = useState<string>(
     modelName || SYSTEM_TYPES.find(t => t.value === 'takeoff_distance')?.label || ''
+  );
   const [aircraftModelDisplay, setAircraftModelDisplay] = useState<string>(aircraftModel || '');
   const [systemType, setSystemType] = useState<string>('takeoff_distance');
   const [importSuccess, setImportSuccess] = useState<boolean>(false);
@@ -144,6 +148,7 @@ export const AbacBuilder = React.forwardRef<AbacBuilderRef, AbacBuilderProps>(({
       yTitle.includes(keyword) ||
       xUnit.includes(keyword) ||
       yUnit.includes(keyword)
+    );
   };
 
   // Initialize with data if provided
@@ -334,6 +339,7 @@ export const AbacBuilder = React.forwardRef<AbacBuilderRef, AbacBuilderProps>(({
       g.id === selectedGraphId
         ? { ...g, curves: [...g.curves, newCurve] }
         : g
+    ));
 
     setSelectedCurveId(newCurve.id);
   }, [selectedGraphId]);
@@ -345,6 +351,7 @@ export const AbacBuilder = React.forwardRef<AbacBuilderRef, AbacBuilderProps>(({
       g.id === selectedGraphId
         ? { ...g, curves: g.curves.filter(c => c.id !== curveId) }
         : g
+    ));
 
     if (selectedCurveId === curveId) {
       setSelectedCurveId(null);
@@ -363,9 +370,10 @@ export const AbacBuilder = React.forwardRef<AbacBuilderRef, AbacBuilderProps>(({
             ...g,
             curves: g.curves.map(c =>
               c.id === curveId ? { ...c, ...updates } : c
+            )
           }
         : g
-
+    ));
   }, [selectedGraphId]);
 
   const handleReorderCurves = useCallback((newCurves: Curve[]) => {
@@ -375,7 +383,7 @@ export const AbacBuilder = React.forwardRef<AbacBuilderRef, AbacBuilderProps>(({
       g.id === selectedGraphId
         ? { ...g, curves: newCurves }
         : g
-
+    ));
   }, [selectedGraphId]);
 
   const handleAutoAdjustAxes = useCallback((graphId?: string) => {
@@ -427,8 +435,10 @@ export const AbacBuilder = React.forwardRef<AbacBuilderRef, AbacBuilderProps>(({
                 c.id === selectedCurveId
                   ? { ...c, points: [...c.points, point].sort((a, b) => a.x - b.x) }
                   : c
+              )
             }
           : g
+      );
 
       // Si l'ajustement automatique est activé, recalculer les limites
       if (autoAdjustEnabled) {
@@ -471,9 +481,10 @@ export const AbacBuilder = React.forwardRef<AbacBuilderRef, AbacBuilderProps>(({
                     ).sort((a, b) => a.x - b.x)
                   }
                 : c
+            )
           }
         : g
-
+    ));
   }, [selectedGraphId]);
 
   const handlePointDelete = useCallback((curveId: string, pointId: string) => {
@@ -487,9 +498,10 @@ export const AbacBuilder = React.forwardRef<AbacBuilderRef, AbacBuilderProps>(({
               c.id === curveId
                 ? { ...c, points: c.points.filter(p => p.id !== pointId) }
                 : c
+            )
           }
         : g
-
+    ));
   }, [selectedGraphId]);
 
   const handleFitCurve = useCallback((curveId: string, options: FitOptions) => {
@@ -502,13 +514,13 @@ export const AbacBuilder = React.forwardRef<AbacBuilderRef, AbacBuilderProps>(({
     const graph = graphs.find(g => g.id === selectedGraphId);
     
     const curve = graph?.curves.find(c => c.id === curveId);
-    
-    if (!curve || !curve.points || curve.points.length < 2) {
 
+    if (!curve || !curve.points || curve.points.length < 2) {
+      console.log('Cannot fit curve: not enough points');
       return;
     }
 
-        }, ${p.y.toFixed(2)})`).join(', '));
+    console.log('Points:', curve.points.map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`).join(', '));
 
     try {
             const tempManager = new AbacCurveManager();
@@ -596,28 +608,28 @@ export const AbacBuilder = React.forwardRef<AbacBuilderRef, AbacBuilderProps>(({
   }, [selectedGraphId, numIntermediateCurves]);
 
   const handleFitAll = useCallback((options: FitOptions = {}) => {
-            
+    console.log('Starting fit all curves');
     const newWarnings: Record<string, string[]> = {};
     const allResults: Record<string, FitResult> = {};
 
     // Interpoler toutes les courbes de tous les graphiques
     setGraphs(prev => {
-      
+      console.log('Fitting all graphs');
       return prev.map((graph, graphIndex) => {
-         ===`);
-        
-        const updatedCurves = graph.curves.map((curve, curveIndex) => {
+        console.log(`Processing graph ${graphIndex + 1}/${prev.length}: ${graph.name}`);
 
+        const updatedCurves = graph.curves.map((curve, curveIndex) => {
+          console.log(`  Curve ${curveIndex + 1}: ${curve.name}`);
           // Vérifier que la courbe a des points avant d'interpoler
           if (!curve.points || curve.points.length < 2) {
-
+            console.log('    Skipped: not enough points');
             return curve;
           }
 
-          }, ${p.y.toFixed(2)})`).join(', '));
+          console.log('    Points:', curve.points.map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`).join(', '));
 
           try {
-                        const tempManager = new AbacCurveManager();
+            const tempManager = new AbacCurveManager();
 
             // Ajouter la courbe et récupérer l'ID généré par le manager
             const tempCurveData = {
@@ -625,19 +637,19 @@ export const AbacBuilder = React.forwardRef<AbacBuilderRef, AbacBuilderProps>(({
               color: curve.color,
               points: curve.points
             };
-                        const tempCurveId = tempManager.addCurve(tempCurveData);
-            
+            const tempCurveId = tempManager.addCurve(tempCurveData);
+
             // Utiliser l'ID temporaire pour l'interpolation
-                        const result = tempManager.fitCurve(tempCurveId, {
+            const result = tempManager.fitCurve(tempCurveId, {
               ...options,
               method: interpolationMethod,
               numPoints: interpolationPoints
             });
 
-                                    }`);
-            
+            console.log(`    Interpolation result: ${result.fittedPoints.length} points`);
+
             if (result.fittedPoints.length > 0) {
-              .map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`).join(', '));
+              console.log('    Fitted points:', result.fittedPoints.slice(0, 3).map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`).join(', '));
             }
 
             allResults[curve.id] = result;
@@ -664,7 +676,7 @@ export const AbacBuilder = React.forwardRef<AbacBuilderRef, AbacBuilderProps>(({
           }
         });
 
-                .length}/${updatedCurves.length}`);
+        console.log(`  Graph ${graphIndex + 1}: ${updatedCurves.filter(c => c.fitted).length}/${updatedCurves.length} curves fitted`);
 
         return {
           ...graph,
@@ -673,13 +685,12 @@ export const AbacBuilder = React.forwardRef<AbacBuilderRef, AbacBuilderProps>(({
       });
     });
 
-        .length);
-    .length);
+    console.log('Total curves fitted:', Object.keys(allResults).length);
+    console.log('Total warnings:', Object.keys(newWarnings).length);
 
     setFitResults(allResults);
     setWarnings(newWarnings);
-
-      }, [graphs]);
+  }, [graphs, interpolationMethod, interpolationPoints]);
 
   const handleClearPoints = useCallback((curveId: string) => {
     if (!selectedGraphId) return;
@@ -697,6 +708,7 @@ export const AbacBuilder = React.forwardRef<AbacBuilderRef, AbacBuilderProps>(({
           ...graph,
           curves: graph.curves.map(c =>
             c.id === curveId ? { ...c, points: [], fitted: undefined } : c
+          )
         };
       }
       return graph;
@@ -725,21 +737,23 @@ export const AbacBuilder = React.forwardRef<AbacBuilderRef, AbacBuilderProps>(({
           points: c.points.length,
           fitted: !!c.fitted,
           needsFitting: c.points.length >= 2 && !c.fitted
-
+        }))
       }));
 
       
       const hasUnfittedCurves = graphs.some(g =>
         g.curves.some(c => c.points.length >= 2 && !c.fitted)
+      );
 
-      
+      console.log('Has unfitted curves:', hasUnfittedCurves);
       if (hasUnfittedCurves) {
-                // Marquer comme interpolé avant de lancer l'interpolation
+        // Marquer comme interpolé avant de lancer l'interpolation
         setHasAutoInterpolated(true);
         // Interpoler toutes les courbes automatiquement
         handleFitAll({ method: 'pchip' });
       } else {
-              }
+        console.log('All curves already fitted');
+      }
     }
 
     // Réinitialiser le flag quand on quitte l'étape 3
@@ -764,6 +778,7 @@ export const AbacBuilder = React.forwardRef<AbacBuilderRef, AbacBuilderProps>(({
             c.id === curveId
               ? { ...c, points: [...c.points, ...points].sort((a, b) => a.x - b.x) }
               : c
+          )
         };
       }
       return graph;
@@ -1017,7 +1032,7 @@ const renderStepContent = () => {
                       </div>
                     )}
                   </div>
-
+                );
               })}
 
               {/* Bouton Nouveau graphique après la liste */}
@@ -1107,6 +1122,7 @@ const renderStepContent = () => {
               </div>
             </div>
           </div>
+        );
 
       case 'points':
         return (
@@ -1262,7 +1278,7 @@ const renderStepContent = () => {
                         g.id === selectedGraphId
                           ? { ...g, curves: nonInterpolatedCurves }
                           : g
-
+                      ));
                     }}
                     style={{
                       width: '100%',
@@ -1408,7 +1424,7 @@ const renderStepContent = () => {
                                 <div key={fromId} style={{ color: '#2196F3' }}>
                                   ← {fromGraph.name} (Y → X)
                                 </div>
-
+                              );
                             })}
                             {graph.linkedTo?.map(toId => {
                               const toGraph = graphs.find(g => g.id === toId);
@@ -1416,7 +1432,7 @@ const renderStepContent = () => {
                                 <div key={toId} style={{ color: '#4CAF50' }}>
                                   → {toGraph.name} (Y → X)
                                 </div>
-
+                              );
                             })}
                           </div>
                         )}
@@ -1525,6 +1541,7 @@ const renderStepContent = () => {
               </button>
             </div>
           </div>
+        );
 
       case 'fit':
         // L'étape 3 est maintenant intégrée dans l'étape 2
@@ -1661,7 +1678,7 @@ const renderStepContent = () => {
                             g.id === selectedGraphId
                               ? { ...g, curves: nonInterpolatedCurves }
                               : g
-
+                          ));
                           // Reconstruire le manager
                           if (managerRef.current && currentGraph.axes) {
                             managerRef.current.clear();
@@ -1768,16 +1785,19 @@ const renderStepContent = () => {
               </button>
             </div>
           </div>
+        );
 
       case 'final':
-                graphs.forEach(graph => {
-          .length,
+        graphs.forEach(graph => {
+          console.log('Graph:', {
+            name: graph.name,
+            curves: graph.curves.length,
             points: graph.curves.map(c => ({
               name: c.name,
               originalPoints: c.points?.length,
               fittedPoints: c.fitted?.points?.length || 0,
               rmse: c.fitted?.rmse
-
+            }))
           });
         });
 
@@ -1981,7 +2001,7 @@ const renderStepContent = () => {
                         </div>
                       )}
                     </div>
-
+                  );
                 })}
               </div>
 
@@ -2010,7 +2030,7 @@ const renderStepContent = () => {
                           {curveWarnings.map((w, i) => <li key={i}>{w}</li>)}
                         </ul>
                       </div>
-
+                    );
                   })}
                 </div>
               )}
@@ -2064,6 +2084,7 @@ const renderStepContent = () => {
               </div>
             </div>
           </div>
+        );
     }
   };
 
@@ -2112,8 +2133,11 @@ const renderStepContent = () => {
         {renderStepContent()}
       </div>
     </div>
+  );
+}
 
-});
+// Wrap with forwardRef and export
+export const AbacBuilder = React.forwardRef<AbacBuilderRef, AbacBuilderProps>(AbacBuilderComponent);
 
 // Définir le displayName pour le composant avec forwardRef
 AbacBuilder.displayName = 'AbacBuilder';

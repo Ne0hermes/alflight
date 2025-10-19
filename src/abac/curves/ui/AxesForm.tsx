@@ -234,11 +234,13 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
 
   const [xAxisType, setXAxisType] = useState<string>(
     initialConfig ? getInitialAxisType(initialConfig.xAxis?.title, 'altitude_pression') : 'altitude_pression'
+  );
   const [yAxisType, setYAxisType] = useState<string>(
     initialConfig ? getInitialAxisType(initialConfig.yAxis?.title, 'distance') : 'distance'
+  );
 
-  const [customXTitle, setCustomXTitle] = useState(xAxisType === 'custom' ? (initialConfig?.xAxis?.title || '') : ''
-  const [customYTitle, setCustomYTitle] = useState(yAxisType === 'custom' ? (initialConfig?.yAxis?.title || '') : ''
+  const [customXTitle, setCustomXTitle] = useState(xAxisType === 'custom' ? (initialConfig?.xAxis?.title || '') : '');
+  const [customYTitle, setCustomYTitle] = useState(yAxisType === 'custom' ? (initialConfig?.yAxis?.title || '') : '');
 
   const [config, setConfig] = useState<AxesConfig>(() => {
     if (initialConfig) {
@@ -427,6 +429,7 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
       yUnit.includes(keyword) ||
       xAxisType === 'vent' ||
       yAxisType === 'vent'
+    );
 
     if (isWind !== isWindRelated && onWindRelatedChange) {
       onWindRelatedChange(isWind);
@@ -711,4 +714,5 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
         </div>
       )}
     </div>
+  );
 };
