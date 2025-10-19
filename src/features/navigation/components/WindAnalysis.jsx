@@ -26,8 +26,7 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
   useEffect(() => {
     const loadWeatherData = async () => {
       if (departureIcao && !departureWeather) {
-        console.log(`🌤️ Chargement automatique météo pour ${departureIcao}`);
-        setIsLoadingWeather(true);
+                setIsLoadingWeather(true);
         try {
           await fetchWeather(departureIcao);
         } catch (error) {
@@ -36,8 +35,7 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
       }
       
       if (arrivalIcao && !arrivalWeather && arrivalIcao !== departureIcao) {
-        console.log(`🌤️ Chargement automatique météo pour ${arrivalIcao}`);
-        try {
+                try {
           await fetchWeather(arrivalIcao);
         } catch (error) {
           console.error(`Erreur chargement météo ${arrivalIcao}:`, error);
@@ -53,13 +51,7 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
   
   // Debug: Afficher le contenu des données météo
   useEffect(() => {
-    if (departureWeather || arrivalWeather) {
-      console.log('📊 Données météo disponibles:', {
-        departure: departureWeather,
-        arrival: arrivalWeather
-      });
-    }
-  }, [departureWeather, arrivalWeather]);
+      }, [departureWeather, arrivalWeather]);
   
   // Calculer l'impact du vent
   const windAnalysis = useMemo(() => {
@@ -90,8 +82,7 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
       if (!weather) return null;
       
       // Debug pour voir la structure
-      console.log(`🌬️ Analyse vent ${label}:`, weather);
-      
+            
       // Essayer différents chemins pour accéder aux données de vent
       let windSpeed = 0;
       let windDirection = 0;

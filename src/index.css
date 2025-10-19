@@ -1,8 +1,5 @@
 /* Global styles for the Flight Management System */
 
-/* Import Leaflet CSS */
-@import 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-
 /* ============================================
    IMPORT DU FICHIER CSS UNIFIÉ 
    TOUS LES STYLES SONT MAINTENANT ICI

@@ -143,7 +143,7 @@ export const DataField = memo(({
         </button>
       )}
     </div>
-  );
+
 });
 
 DataField.displayName = 'DataField';
@@ -171,7 +171,7 @@ export const DataFieldGroup = memo(({
         {children}
       </div>
     </div>
-  );
+
 });
 
 DataFieldGroup.displayName = 'DataFieldGroup';

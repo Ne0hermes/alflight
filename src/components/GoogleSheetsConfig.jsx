@@ -70,8 +70,7 @@ const GoogleSheetsConfig = () => {
       setTestStatus('success');
     } catch (error) {
       setTestStatus('error');
-      console.error('Test échoué:', error);
-    }
+          }
 
     setTimeout(() => setTestStatus(null), 3000);
   };
@@ -413,7 +412,5 @@ const GoogleSheetsConfig = () => {
         </>
       )}
     </>
-  );
-};
 
 export default GoogleSheetsConfig;

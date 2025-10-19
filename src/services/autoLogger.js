@@ -16,8 +16,7 @@ class AutoLogger {
     // Démarrer le traitement automatique
     this.startAutoProcessing();
 
-    console.log('🚀 Service de logging automatique activé');
-  }
+      }
 
   /**
    * Envoie automatiquement un log vers Google Sheets
@@ -58,8 +57,7 @@ class AutoLogger {
 
       try {
         await this.sendToGoogleSheets(log);
-        console.log('✅ Log envoyé:', log.action);
-      } catch (error) {
+              } catch (error) {
         console.error('❌ Erreur envoi:', error);
         // Remettre dans la file pour réessayer plus tard
         this.queue.unshift(log);
@@ -118,8 +116,7 @@ class AutoLogger {
     if (savedQueue) {
       try {
         this.queue = JSON.parse(savedQueue);
-        console.log(`📋 ${this.queue.length} logs en attente chargés`);
-      } catch (e) {
+              } catch (e) {
         console.error('Erreur chargement queue:', e);
       }
     }
@@ -241,17 +238,7 @@ if (typeof window !== 'undefined') {
 
 // Fonction pour obtenir le script à déployer (une seule fois)
 export const getDeploymentScript = () => {
-  console.log('📋 INSTRUCTIONS DE DÉPLOIEMENT:');
-  console.log('1. Ouvrez: https://docs.google.com/spreadsheets/d/1Y26_Zf7-jHPgpjWasubXpzQE-k0eMl0pHIMpg8OHw_k');
-  console.log('2. Extensions → Apps Script');
-  console.log('3. Collez le script ci-dessous');
-  console.log('4. Déployez → Nouveau déploiement → Application Web');
-  console.log('5. Qui a accès: Tout le monde');
-  console.log('6. Copiez l\'URL et remplacez-la dans autoLogger.js ligne 10');
-  console.log('\n--- SCRIPT À COPIER ---\n');
-  console.log(GOOGLE_APPS_SCRIPT_CODE);
-  console.log('\n--- FIN DU SCRIPT ---\n');
-  return GOOGLE_APPS_SCRIPT_CODE;
+                      return GOOGLE_APPS_SCRIPT_CODE;
 };
 
 // Exports pour utilisation dans d'autres modules
@@ -272,6 +259,5 @@ autoLogger.logAction(
     details: 'Envoi automatique sans intervention manuelle',
     files: ['src/services/autoLogger.js']
   }
-);
 
 export default autoLogger;

@@ -447,7 +447,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
         </div>
       </div>
     </div>
-  );
+
 });
 
 VACDataEditor.displayName = 'VACDataEditor';

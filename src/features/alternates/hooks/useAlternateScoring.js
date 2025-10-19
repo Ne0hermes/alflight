@@ -40,7 +40,6 @@ export const scoreAlternates = async (candidates, context) => {
         recommendation: generateRecommendation(airport, scores, rank)
       };
     })
-  );
   
   // Trier par score décroissant
   return scored.sort((a, b) => b.score - a.score);
@@ -57,7 +56,6 @@ const calculateDistanceScore = (airport, context) => {
     airport.coordinates || airport.position,
     context.departure,
     context.arrival
-  );
   
   // Scoring par paliers
   if (distanceToRoute <= 5) return 1.0;      // Excellent (≤ 5 NM)
@@ -274,8 +272,7 @@ const calculateStrategicPosition = (airport, context) => {
     if (turnPoints.length > 0) {
       const minDistToTurn = Math.min(...turnPoints.map(tp => 
         calculateDistance(airport.coordinates || airport.position, { lat: tp.lat, lon: tp.lon })
-      ));
-      
+
       const turnProximityScore = Math.max(0, 1 - (minDistToTurn / 30));
       score += turnProximityScore * 0.3;
     } else {
@@ -394,7 +391,6 @@ const hasATCService = (airport) => {
   if (airport.frequencies) {
     return airport.frequencies.some(freq => 
       ['TWR', 'APP', 'AFIS', 'INFO', 'APRON'].includes(freq.type)
-    );
   }
   
   // Vérifier le type d'aérodrome
@@ -415,7 +411,6 @@ const hasNightLighting = (airport) => {
       runway.lights === true ||
       runway.hasLighting === true ||
       runway.lightingType !== undefined
-    );
   }
   
   // Par défaut selon le type
@@ -438,11 +433,9 @@ const identifyTurnPoints = (waypoints) => {
     const bearing1 = calculateBearing(
       { lat: prev.lat, lon: prev.lon },
       { lat: current.lat, lon: current.lon }
-    );
     const bearing2 = calculateBearing(
       { lat: current.lat, lon: current.lon },
       { lat: next.lat, lon: next.lon }
-    );
     
     const turnAngle = Math.abs((bearing2 - bearing1 + 180) % 360 - 180);
     

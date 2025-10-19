@@ -1,9 +1,9 @@
 // src/features/aircraft/components/AdvancedPerformanceAnalyzer.jsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { 
-  Upload, Loader, CheckCircle, AlertTriangle, Info, X, Brain, 
+import {
+  Upload, Loader, CheckCircle, AlertTriangle, Info, X, Brain,
   Download, Edit3, Plus, Minus, Save, FileText, Table, BarChart3,
-  Eye, EyeOff, Copy, Trash2, RefreshCw
+  Eye, EyeOff, Copy, Trash2, RefreshCw, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { sx } from '../../../shared/styles/styleSystem';
 import unifiedPerformanceService from '../../../features/performance/services/unifiedPerformanceService';
@@ -18,10 +18,10 @@ import testEnvVars from '../../../utils/testEnvVars';
  * Composant d'analyse avancée des performances aéronautiques
  * Traite images/PDFs de manuels de vol pour extraire et structurer les données
  */
-const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedImages, pageClassifications, autoExtract = false, hideUploadedImages = false, initialData }) => {
-  console.log('🚀 === ADVANCED PERFORMANCE ANALYZER INIT ===');
-  console.log('Aircraft:', aircraft?.registration || 'NO AIRCRAFT');
-  console.log('Performance update callback:', onPerformanceUpdate ? 'PROVIDED' : 'MISSING');
+const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedImages, pageClassifications, autoExtract = false, hideUploadedImages = false, initialData, onRetourClick }) => {
+  
+  
+  
   
   // États pour l'upload et l'analyse
   const [uploadedImages, setUploadedImages] = useState([]);
@@ -52,24 +52,23 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
   const [showMetadata, setShowMetadata] = useState(true);
   const [validationErrors, setValidationErrors] = useState([]);
   const [showAPIConfig, setShowAPIConfig] = useState(false);
+  const [showPredictionPanel, setShowPredictionPanel] = useState(false);
 
   // Test de connexion API au chargement
   useEffect(() => {
-    console.log('🔧 === INITIALISATION TABLE EXTRACTOR ===');
+    
 
     // Tester les variables d'environnement
     const testResult = testEnvVars();
-    console.log('📋 Résultat test env vars:', testResult);
+    
 
     // Forcer l'initialisation du gestionnaire de clés API
     apiKeyManager.initialize();
 
     // Récupérer directement la clé depuis l'environnement (sans le ?.)
     const envKey = import.meta.env.VITE_OPENAI_API_KEY;
-    console.log('🔍 Clé dans environnement:', envKey ? `Présente (${envKey.substring(0, 20)}...)` : 'Absente');
-
     if (envKey) {
-      console.log('🔑 Synchronisation forcée de la clé API depuis l\'environnement');
+      
       localStorage.setItem('alflight_ai_api_key', envKey);
       localStorage.setItem('openai_api_key', envKey);
 
@@ -84,39 +83,37 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
     const hasKey = apiKeyManager.getAPIKey();
 
     if (hasKey) {
-      console.log('✅ API configurée avec succès:', hasKey.substring(0, 20) + '...');
       setApiStatus({ success: true, message: 'Clé API configurée' });
     } else {
-      console.log('📡 No API key found, testing connection...');
-      console.log('🔍 Environment vars available:', Object.keys(import.meta?.env || {}));
+      
       testAPIConnection();
     }
   }, []);
 
   // Chargement des performances existantes
   useEffect(() => {
-    console.log('📊 Checking for existing performance data...');
+    
 
     // Priorité 1: Données initiales fournies (depuis localStorage)
     if (initialData?.advancedPerformance?.tables) {
-      console.log('✅ Found initial performance data (from localStorage):', initialData.advancedPerformance.tables.length, 'tables');
+      console.log('Loaded from initialData:', initialData.advancedPerformance.tables.length, 'tables');
       setExtractedTables(initialData.advancedPerformance.tables);
       setSelectedTableIndex(0);
     }
     // Priorité 2: Données dans l'aircraft
     else if (aircraft?.advancedPerformance) {
-      console.log('✅ Found performance data in aircraft:', aircraft.advancedPerformance.tables?.length || 0, 'tables');
+      
       setExtractedTables(aircraft.advancedPerformance.tables || []);
       setSelectedTableIndex(0);
     } else {
-      console.log('❌ No performance data found');
+      
     }
   }, [aircraft?.advancedPerformance, initialData]);
 
   // Chargement des images préchargées
   useEffect(() => {
     if (preloadedImages && preloadedImages.length > 0) {
-      console.log('📸 Loading preloaded images:', preloadedImages.length);
+      
       setUploadedImages(preloadedImages);
     }
   }, [preloadedImages]);
@@ -124,7 +121,7 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
   // Extraction automatique quand les images sont chargées et autoExtract est activé
   useEffect(() => {
     if (autoExtract && uploadedImages.length > 0 && !isAnalyzing && extractedTables.length === 0) {
-      console.log('🚀 Auto-extraction activée, lancement automatique avec', uploadedImages.length, 'images');
+      
       // Délai plus long pour éviter les conflits de rendu
       const timer = setTimeout(() => {
         analyzeImages();
@@ -177,7 +174,7 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
         const numValue = typeof firstValue === 'number' ? firstValue : parseFloat(firstValue);
         if (!isNaN(numValue)) {
           resultColumns.push(key);
-          console.log('Colonne de distance détectée:', key);
+          
         }
       }
     }
@@ -200,8 +197,8 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
               lowerCol.includes('poids'));
     });
     
-    console.log('Colonnes de paramètres:', paramColumns);
-    console.log('Valeurs de test:', testValues);
+    
+    
     
     // Calculer la distance euclidienne normalisée pour chaque point
     const pointsWithDistance = tableData.map((point, index) => {
@@ -247,7 +244,7 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
 
       // Log les points les plus proches pour debug
       if (distance < 0.1) {
-        console.log(`Point proche trouvé: distance=${distance.toFixed(4)}, params=[${paramDetails.join(', ')}]`);
+        }, params=[${paramDetails.join(', ')}]`);
       }
 
       return { ...point, _distance: distance };
@@ -276,7 +273,7 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
           if (point._distance < 0.001) {
             // Point exact trouvé - retourner directement cette valeur
             interpolatedDistances[resultCol] = numValue;
-            console.log(`Point exact trouvé pour ${resultCol}: ${numValue}`);
+            
             exactMatch = true;
             return; // Sortir de forEach pour ce point
           }
@@ -307,11 +304,11 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
   };
 
   const testAPIConnection = async () => {
-    console.log('🔌 Testing API connection...');
+    
     setIsTestingAPI(true);
     try {
       const result = await unifiedPerformanceService.testAPIConnection();
-      console.log('📡 API test result:', result);
+      
       setApiStatus(result);
     } catch (err) {
       console.error('❌ API test failed:', err);
@@ -327,7 +324,7 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
 
   const handleImageUpload = async (event) => {
     const files = Array.from(event.target.files);
-    console.log('📁 Files selected for upload:', files.length);
+    
     if (files.length === 0) return;
 
     const newImages = [];
@@ -335,7 +332,7 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
     for (const file of files) {
       try {
         if (pdfToImageConverter.isPDF(file)) {
-          console.log('📄 PDF détecté:', file.name);
+          
           setCurrentPdfFile(file);
 
           // Déterminer si c'est un gros PDF (>50 pages ou >5MB)
@@ -343,11 +340,11 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
           const useOptimized = sizeInMB > 5; // Réduit le seuil à 5MB pour activer le mode optimisé plus souvent
 
           if (useOptimized) {
-            console.log('📚 Manuel volumineux détecté, utilisation du mode optimisé');
+            
 
             // Analyse intelligente du PDF volumineux
             const analysis = await pdfToImageConverterOptimized.analyzeManualPDF(file);
-            console.log('📊 Résumé de l\'analyse:', analysis.summary);
+            
 
             // Afficher un résumé à l'utilisateur
             alert(`📚 Analyse du manuel terminée!\n\n` +
@@ -382,13 +379,9 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
             }
 
             // Sauvegarder l'analyse complète pour référence
-            if (analysis.relevantPages.length > 0) {
-              console.log('✅ Pages ajoutées depuis l\'analyse optimisée');
-            }
-
-          } else {
+                      } else {
             // Mode standard pour les petits PDFs
-            console.log('📄 PDF standard, utilisation du mode classique');
+            
 
             // Essayer de détecter automatiquement les pages avec tableaux de performances
             try {
@@ -406,7 +399,7 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
                   type: 'takeoff',
                   confidence: 'high'
                 });
-                console.log(`✅ Table de décollage trouvée page ${takeoffTable.pageNumber}`);
+                
             }
             
             // Ajouter la page d'atterrissage si trouvée et différente
@@ -418,12 +411,12 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
                 type: 'landing',
                 confidence: 'high'
               });
-              console.log(`✅ Table d'atterrissage trouvée page ${landingTable.pageNumber}`);
+              
             }
             
             // Si des pages ont été trouvées automatiquement
             if (performancePages.length > 0) {
-              console.log(`🎯 ${performancePages.length} tables détectées automatiquement`);
+              
               
               // Ajouter les pages trouvées
               for (const page of performancePages) {
@@ -448,13 +441,13 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
               
               // Afficher un message pour proposer d'ajouter d'autres pages
               if (allPages.length > performancePages.length) {
-                console.log(`📚 ${allPages.length - performancePages.length} autres pages disponibles`);
+                
                 setShowPdfPageSelector(true);
               }
               
             } else {
               // Aucune détection automatique, extraction de toutes les pages pour sélection manuelle
-              console.log('⚠️ Aucune table détectée automatiquement, extraction de toutes les pages...');
+              
               const allPages = await pdfToImageConverter.extractAllPages(file);
               setPdfPages(allPages);
               setSelectedPdfPages([]);
@@ -526,12 +519,12 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
     try {
       const results = [];
       
-      console.log(`📊 Début de l'analyse de ${uploadedImages.length} documents`);
+      
       
       for (let i = 0; i < uploadedImages.length; i++) {
         const image = uploadedImages[i];
-        console.log(`📄 Analyse du document ${i + 1}/${uploadedImages.length}: ${image.name}`);
-        setCurrentStep(`Analyse de ${image.name}... (${i + 1}/${uploadedImages.length})`);
+        
+
         setAnalysisProgress((i / uploadedImages.length) * 100);
 
         try {
@@ -553,13 +546,8 @@ If mass in header (900kg), add Masse:900 to row.`;
           const analysisResult = await unifiedPerformanceService.analyzeManualPerformance(
             image.base64,
             detailedPrompt
-          );
 
-          console.log(`✅ Résultat pour ${image.name}:`, {
-            tables: analysisResult.tables?.length || 0,
-            confidence: analysisResult.confidence,
-            fullResult: analysisResult // Afficher le résultat complet pour debug
-          });
+          
 
           if (analysisResult.tables && analysisResult.tables.length > 0) {
             const imageTables = analysisResult.tables.map(table => {
@@ -567,7 +555,7 @@ If mass in header (900kg), add Masse:900 to row.`;
               let tableData = table.data;
 
               if (!tableData && table.headers && table.rows) {
-                console.log('🔄 Conversion headers+rows vers format data');
+                
                 tableData = table.rows.map(row => {
                   const rowObj = {};
                   table.headers.forEach((header, index) => {
@@ -575,23 +563,18 @@ If mass in header (900kg), add Masse:900 to row.`;
                   });
                   return rowObj;
                 });
-              } else if (tableData) {
-                console.log('✅ Format data déjà fourni par l\'API');
-                console.log('📊 Colonnes disponibles:', Object.keys(tableData[0] || {}));
-              }
-
-              // Post-traitement pour s'assurer que la colonne "Masse" existe
+              } else               // Post-traitement pour s'assurer que la colonne "Masse" existe
               if (tableData && tableData.length > 0) {
                 const hasMasse = tableData.some(row => row.Masse !== undefined);
 
                 if (!hasMasse) {
-                  console.log('⚠️ Colonne "Masse" manquante, tentative de déduction...');
+                  
 
                   // Chercher la masse dans les headers (ex: "1100kg", "900kg")
                   const massHeaders = table.headers?.filter(h => /\d+\s*kg/i.test(h)) || [];
 
                   if (massHeaders.length > 0) {
-                    console.log('🔍 Headers de masse trouvés:', massHeaders);
+                    
                     // Créer des lignes séparées pour chaque masse
                     const expandedData = [];
 
@@ -612,19 +595,19 @@ If mass in header (900kg), add Masse:900 to row.`;
 
                     if (expandedData.length > 0) {
                       tableData = expandedData;
-                      console.log('✅ Données étendues avec colonne Masse:', tableData.length, 'lignes');
+                      
                     }
                   } else if (table.table_name?.match(/\d+\s*kg/i) || table.conditions?.match(/\d+\s*kg/i)) {
                     // Extraire la masse du titre ou des conditions
                     const massMatch = (table.table_name + ' ' + (table.conditions || '')).match(/(\d+)\s*kg/i);
                     if (massMatch) {
                       const massValue = massMatch[1];
-                      console.log('🔍 Masse trouvée dans le titre/conditions:', massValue);
+                      
                       tableData = tableData.map(row => ({ ...row, Masse: massValue }));
-                      console.log('✅ Colonne Masse ajoutée avec valeur:', massValue);
+                      
                     }
                   } else {
-                    console.log('⚠️ Impossible de déduire la masse, utilisation d\'une valeur par défaut');
+                    
                     // Ajouter une masse par défaut si aucune information n'est disponible
                     tableData = tableData.map(row => ({ ...row, Masse: '1050' }));
                   }
@@ -649,11 +632,10 @@ If mass in header (900kg), add Masse:900 to row.`;
             });
             
             results.push(...imageTables);
-            console.log(`📊 Ajout de ${imageTables.length} table(s) depuis ${image.name}`);
-            console.log(`📊 Tables ajoutées:`, imageTables.map(t => t.table_name));
+             depuis ${image.name}`);
           } else {
-            console.warn(`⚠️ Aucune table extraite de ${image.name}`);
-            console.warn(`⚠️ Résultat complet:`, analysisResult);
+            
+            
             
             // Créer une entrée "placeholder" pour pouvoir ré-analyser plus tard
             results.push({
@@ -709,7 +691,7 @@ If mass in header (900kg), add Masse:900 to row.`;
         }
       }
       
-      console.log(`📊 Total des tables extraites: ${results.length}`)
+      
       
       // Créer un résumé de l'analyse
       const analysisSummary = {
@@ -722,11 +704,11 @@ If mass in header (900kg), add Masse:900 to row.`;
         documentsUndetected: results.filter(r => r.table_type === 'undetected').map(r => r.sourceImage?.name)
       };
       
-      console.log('📋 Résumé de l\'analyse:', analysisSummary);
+      
       
       // Afficher un message récapitulatif
       if (analysisSummary.failedDocuments > 0) {
-        console.warn(`⚠️ ${analysisSummary.failedDocuments} document(s) n'ont pas pu être analysés`);
+         n'ont pas pu être analysés`);
       }
 
       setCurrentStep('Validation et structuration des données...');
@@ -743,13 +725,13 @@ If mass in header (900kg), add Masse:900 to row.`;
         // Fusionner avec les tableaux existants
         const mergedTables = [...extractedTables, ...validatedResults];
         setExtractedTables(mergedTables);
-        console.log(`🔄 Fusion: ${extractedTables.length} existants + ${validatedResults.length} nouveaux = ${mergedTables.length} total`);
+        
         
         // Les données seront sauvegardées automatiquement via useEffect
       } else {
         // Remplacer les tableaux existants
         setExtractedTables(validatedResults);
-        console.log(`🔄 Remplacement: ${validatedResults.length} nouveaux tableaux`);
+        
         
         // Les données seront sauvegardées automatiquement via useEffect
       }
@@ -901,12 +883,12 @@ If mass in header (900kg), add Masse:900 to row.`;
 
   // Mémoriser les fonctions pour éviter les re-renders
   const handleEditModeChange = useCallback((newEditMode) => {
-    console.log('🔄 Edit mode change:', newEditMode);
+    
     setIsEditMode(newEditMode);
   }, []);
 
   const handleTableUpdate = useCallback((updatedTable) => {
-    console.log('🔄 Table update triggered for index:', selectedTableIndex);
+    
     setExtractedTables(prevTables => {
       const newTables = [...prevTables];
       newTables[selectedTableIndex] = updatedTable;
@@ -936,7 +918,7 @@ If mass in header (900kg), add Masse:900 to row.`;
       return;
     }
 
-    console.log('🗑️ Suppression du tableau à l\'index:', indexToDelete);
+    
 
     // Confirmer la suppression
     if (!confirm(`Êtes-vous sûr de vouloir supprimer le tableau "${extractedTables[indexToDelete]?.table_name || 'Sans nom'}" ?`)) {
@@ -977,7 +959,7 @@ If mass in header (900kg), add Masse:900 to row.`;
   }, [extractedTables, selectedTableIndex, onPerformanceUpdate, tableViewMode]);
 
   const deleteAllTables = useCallback(() => {
-    console.log('🗑️ Suppression de tous les tableaux');
+    
     
     // Confirmer la suppression
     if (!confirm(`Êtes-vous sûr de vouloir supprimer TOUS les ${extractedTables.length} tableaux ?`)) {
@@ -1000,7 +982,7 @@ If mass in header (900kg), add Masse:900 to row.`;
       return;
     }
     
-    console.log('🔄 Ré-analyse du document:', table.sourceImage.name);
+    
     setIsAnalyzing(true);
     setCurrentStep(`Ré-analyse de ${table.sourceImage.name}...`);
     
@@ -1043,7 +1025,6 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
       const analysisResult = await unifiedPerformanceService.analyzeManualPerformance(
         table.sourceImage.preview.split(',')[1], // Extraire le base64 de la preview
         detailedPrompt
-      );
       
       if (analysisResult.tables && analysisResult.tables.length > 0) {
         // Remplacer l'entrée existante par les nouveaux résultats
@@ -1088,7 +1069,7 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
 
   // Fonction pour créer un tableau vide manuellement
   const createManualTable = useCallback(() => {
-    console.log('📝 Création d\'un tableau manuel vide');
+    
 
     const emptyTable = {
       table_name: 'Tableau de performance manuel',
@@ -1136,7 +1117,7 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
     });
 
     setGroupedTables(grouped);
-    console.log('📊 Tables groupées par classification:', Object.keys(grouped).map(k => `${k}: ${grouped[k].length} tables`));
+    .map(k => `${k}: ${grouped[k].length} tables`));
   }, []);
 
   // Effet pour regrouper les tableaux quand ils changent
@@ -1200,7 +1181,7 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
     combinedTable.sourceImages = sourceImages; // Garder la trace de toutes les images sources
     combinedTable.isCombined = true;
 
-    console.log(`✅ Tables combinées: ${tables.length} tables → ${allData.length} lignes de données`);
+    
     return combinedTable;
   }, []);
 
@@ -1223,106 +1204,6 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
 
   return (
     <div style={sx.combine(sx.components.card.base, sx.spacing.p(4))}>
-      {/* En-tête */}
-      <div style={sx.combine(sx.flex.between, sx.spacing.mb(4))}>
-        <h4 style={sx.combine(sx.text.lg, sx.text.bold)}>
-          <Brain size={20} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle' }} />
-          Analyse Avancée des Performances
-        </h4>
-      </div>
-
-      {/* Statut API */}
-      {apiStatus && (
-        <div style={sx.combine(
-          sx.components.alert.base,
-          apiStatus.success ? sx.components.alert.success : sx.components.alert.warning,
-          sx.spacing.mb(4)
-        )}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {isTestingAPI ? (
-                <Loader size={16} className="animate-spin" />
-              ) : apiStatus.success ? (
-                <CheckCircle size={16} />
-              ) : (
-                <AlertTriangle size={16} />
-              )}
-              <span style={sx.text.sm}>
-                {apiStatus.success ? 
-                  'API connectée' : 
-                  'API non configurée - Mode fallback'
-                }
-              </span>
-            </div>
-            
-            {!apiStatus.success && (
-              <button
-                onClick={() => setShowAPIConfig(true)}
-                style={sx.combine(sx.components.button.base, sx.components.button.primary, { padding: '4px 12px', fontSize: '12px' })}
-              >
-                Configurer API
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-
-      {/* Bannière d'assistance */}
-      <div style={sx.combine(
-        sx.components.alert.base,
-        { backgroundColor: '#e0f2fe', borderColor: '#0284c7', marginBottom: '16px' }
-      )}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ flex: 1 }}>
-            <p style={sx.combine(sx.text.sm, { color: '#0c4a6e', fontWeight: 'bold' })}>
-              🤔 Un problème dans la création des performances ?
-            </p>
-            <p style={sx.combine(sx.text.xs, { color: '#0369a1', marginTop: '4px' })}>
-              Laissez-nous gérer pour vous ! Envoyez votre manuel et nous extrairons automatiquement les tableaux de performance.
-            </p>
-          </div>
-          <button
-            onClick={() => {
-              // Récupérer le fichier PDF original depuis le contexte parent si disponible
-              const manualFile = uploadedImages.find(img => img.originalFile)?.originalFile;
-
-              if (manualFile) {
-                // Créer un formulaire pour envoyer le fichier
-                const formData = new FormData();
-                formData.append('manual', manualFile);
-                formData.append('aircraft', JSON.stringify(aircraft));
-
-                // Simuler l'envoi (vous devrez implémenter votre propre endpoint)
-                console.log('📤 Envoi du manuel pour assistance:', manualFile.name);
-
-                // Message de confirmation
-                alert(`Manuel "${manualFile.name}" envoyé pour traitement assisté.\nNous vous contacterons sous 24h avec les données extraites.`);
-              } else {
-                alert('Veuillez d\'abord charger un manuel PDF.');
-              }
-            }}
-            style={sx.combine(
-              sx.components.button.base,
-              sx.components.button.primary,
-              {
-                backgroundColor: '#0284c7',
-                color: 'white',
-                padding: '8px 16px',
-                fontSize: '14px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                marginLeft: '12px'
-              }
-            )}
-          >
-            <Upload size={16} />
-            Envoyer le manuel pour assistance
-          </button>
-        </div>
-      </div>
-
       {/* Zone d'extraction de tableaux IA */}
       <>
           {/* Zone d'upload pour extraction IA */}
@@ -1502,7 +1383,6 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
                         const result = await unifiedPerformanceService.analyzeManualPerformance(
                           base64Data,
                           detailedPrompt
-                        );
 
                         if (result && result.tables && result.tables.length > 0) {
                           // Remplacer le tableau non détecté par les nouveaux résultats
@@ -1619,9 +1499,9 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
                       tableViewMode === 'individual' ? sx.components.button.primary : sx.components.button.secondary,
                       { padding: '6px 12px', fontSize: '12px' }
                     )}
-                    title="Vue individuelle des tableaux"
+                    title="Modifier les extractions individuellement"
                   >
-                    Vue individuelle
+                    Modifier les extractions
                   </button>
                 </div>
               )}
@@ -1673,7 +1553,6 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
                         {classification === 'non-classified' ? '📁 Non classifié' : `✈️ ${classification}`}
                         {` (${tables.length} tableau${tables.length > 1 ? 'x' : ''}, ${tables.reduce((acc, t) => acc + (t.data?.length || 0), 0)} lignes)`}
                       </option>
-                    ))
                   ) : (
                     // Mode individuel : afficher seulement les tableaux valides
                     extractedTables
@@ -1686,7 +1565,6 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
                             {table.table_name || `Tableau ${filteredIndex + 1}`}
                             {table.data && table.data.length > 0 ? ` (${table.data.length} lignes)` : ''}
                           </option>
-                        );
                       })
                   )}
                 </select>
@@ -1765,12 +1643,30 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
                 onTableUpdate={tableViewMode === 'individual' ? handleTableUpdate : undefined}
               />
               
-              {/* Panneau de test de prédiction pour les données du tableau */}
+              {/* Panneau de test de prédiction pour les données du tableau - Accordéon */}
               {selectedTable.data && selectedTable.data.length > 0 && (
-                <div style={sx.combine(sx.components.card.base, sx.spacing.mt(3), sx.spacing.p(3))}>
-                  <h5 style={sx.combine(sx.text.md, sx.text.bold, sx.spacing.mb(3))}>
-                    🧪 Test de prédiction sur les données extraites
-                  </h5>
+                <div style={sx.combine(sx.components.card.base, sx.spacing.mt(3))}>
+                  <button
+                    onClick={() => setShowPredictionPanel(!showPredictionPanel)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      background: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '16px',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    <span>🧪 Test de prédiction sur les données extraites</span>
+                    {showPredictionPanel ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                  </button>
+
+                  {showPredictionPanel && (
+                  <div style={sx.spacing.p(3)}>
                   
                   <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mb(3))}>
                     <p style={sx.text.sm}>
@@ -1925,8 +1821,10 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
                   >
                     Prédire la distance
                   </button>
-                  
+
                   <div id="prediction-result"></div>
+                  </div>
+                  )}
                 </div>
               )}
             </>
@@ -1934,12 +1832,117 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
         </div>
       )}
 
-      {/* Message si pas de résultats */}
+      {/* Barre de navigation - Boutons Retour et Sauvegarder */}
+      {!isAnalyzing && extractedTables.filter(t => t.table_type !== 'undetected' && t.table_type !== 'error').length > 0 && (
+        <div style={{
+          ...sx.spacing.mt(4),
+          display: 'flex',
+          justifyContent: onRetourClick ? 'space-between' : 'flex-end',
+          alignItems: 'center',
+          gap: '16px'
+        }}>
+          {/* Bouton Retour - seulement si onRetourClick est fourni */}
+          {onRetourClick && (
+            <button
+              onClick={onRetourClick}
+              style={{
+                padding: '12px 24px',
+                backgroundColor: '#e5e7eb',
+                color: '#374151',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '16px',
+                cursor: 'pointer',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              ← Retour
+            </button>
+          )}
+
+          {/* Bouton Suivant */}
+          <button
+            onClick={() => {
+              const validTables = extractedTables.filter(t => t.table_type !== 'undetected' && t.table_type !== 'error');
+
+              if (validTables.length === 0) {
+                alert('Aucun tableau valide à sauvegarder');
+                return;
+              }
+
+              
+
+              // Afficher notification éphémère
+              const notification = document.createElement('div');
+              notification.textContent = '✅ Performances sauvegardées';
+              notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #10b981;
+                color: white;
+                padding: 16px 24px;
+                border-radius: 8px;
+                font-weight: 600;
+                font-size: 16px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                z-index: 10000;
+                animation: slideIn 0.3s ease-out;
+              `;
+              document.body.appendChild(notification);
+
+              // Supprimer après 3 secondes
+              setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => document.body.removeChild(notification), 300);
+              }, 3000);
+
+              // Préparer les données finales
+              const performanceData = {
+                tables: validTables,
+                extractionMetadata: {
+                  analyzedAt: new Date().toISOString(),
+                  totalTables: validTables.length,
+                  analysisVersion: '2.0',
+                  completedAt: new Date().toISOString()
+                }
+              };
+
+              // Sauvegarder et le parent naviguera automatiquement vers l'équipement
+              if (onPerformanceUpdate) {
+                onPerformanceUpdate({ advancedPerformance: performanceData });
+                
+              }
+            }}
+            style={sx.combine(
+              sx.components.button.base,
+              sx.components.button.primary,
+              {
+                padding: '14px 24px',
+                fontSize: '16px',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px',
+                flex: onRetourClick ? '0 1 auto' : '1'
+              }
+            )}
+          >
+            Suivant →
+          </button>
+        </div>
+      )}
+
+      {/* Message d'action si pages chargées mais pas analysées */}
       {!isAnalyzing && uploadedImages.length > 0 && extractedTables.length === 0 && (
         <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mt(4))}>
           <Info size={16} />
           <p style={sx.text.sm}>
-            Aucun tableau de performances détecté. Vérifiez que vos documents contiennent des tableaux structurés avec des données numériques.
+            Cliquez sur le bouton "🚀 Analyser les documents" pour lancer l'extraction automatique.
           </p>
         </div>
       )}
@@ -2035,7 +2038,6 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
                 const isSelected = selectedPdfPages.includes(page.pageNumber);
                 const isAutoDetected = uploadedImages.some(
                   img => img.pageNumber === page.pageNumber && img.autoDetected
-                );
                 
                 return (
                   <div
@@ -2112,7 +2114,7 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
                       {page.size} KB
                     </div>
                   </div>
-                );
+
               })}
             </div>
 
@@ -2130,7 +2132,6 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
                   // Ajouter les pages sélectionnées non encore ajoutées
                   const newPages = selectedPdfPages.filter(pageNum => 
                     !uploadedImages.some(img => img.pageNumber === pageNum)
-                  );
                   
                   const newImages = [];
                   for (const pageNum of newPages) {
@@ -2152,7 +2153,7 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
                   
                   if (newImages.length > 0) {
                     setUploadedImages(prev => [...prev, ...newImages]);
-                    console.log(`✅ ${newImages.length} page(s) ajoutée(s) manuellement`);
+                     ajoutée(s) manuellement`);
                   }
                   
                   setShowPdfPageSelector(false);
@@ -2168,7 +2169,7 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
         </div>
       )}
     </div>
-  );
+
 };
 
 export default AdvancedPerformanceAnalyzer;

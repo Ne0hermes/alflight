@@ -43,24 +43,8 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
       const existingData = chart.extractedData || {};
       
       // Debug: afficher les données reçues
-      console.log('📊 VACDataEditor - Chart reçu:', chart);
-      console.log('📊 VACDataEditor - ExtractedData:', existingData);
-      console.log('📊 VACDataEditor - Fréquences dans extractedData:', existingData.frequencies);
-      console.log('📊 VACDataEditor - Fréquences dans chart:', chart.frequencies);
-      console.log('📊 VACDataEditor - Fréquences dans chart.extractedData:', chart.extractedData?.frequencies);
-      console.log('🛬 VACDataEditor - Pistes dans extractedData:', existingData.runways);
-      if (existingData.runways && existingData.runways.length > 0) {
-        console.log('🛬 Détail de la première piste:', existingData.runways[0]);
-        console.log('🛬 Designation:', existingData.runways[0].designation);
-        console.log('🛬 Identifier:', existingData.runways[0].identifier);
-      }
-      console.log('🛬 VACDataEditor - Pistes dans chart:', chart.runways);
-      
-      // Log pour débugger le problème des fréquences
+                                                // Log pour débugger le problème des fréquences
       const allFrequencies = existingData.frequencies || chart.extractedData?.frequencies || chart.frequencies || {};
-      console.log('📻 VACDataEditor - Toutes les fréquences trouvées:', allFrequencies);
-      console.log('📻 VACDataEditor - Type des fréquences:', typeof allFrequencies);
-      console.log('📻 VACDataEditor - Clés des fréquences:', Object.keys(allFrequencies));
       
       // Créer une structure complète avec les données existantes et les valeurs par défaut
       const clonedData = {
@@ -93,8 +77,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
         // Les fréquences peuvent être dans chart.extractedData.frequencies ou chart.frequencies
         frequencies: (() => {
           const freq = existingData.frequencies || chart.extractedData?.frequencies || chart.frequencies || {};
-          console.log('🎯 Fréquences finalement assignées:', freq);
-          return freq;
+                    return freq;
         })(),
         
         // Aides à la navigation
@@ -372,7 +355,6 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                       <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
                         ✓ Carte à jour
                       </p>
-                    );
                   })()}
                 </div>
                 
@@ -529,14 +511,11 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
               </div>
             </section>
           </div>
-        );
         
       case 'runways':
         return <RunwaysEditor editedData={editedData} updateValue={updateValue} />;
       case 'frequencies':
-        console.log('🔍 Rendering frequencies tab - editedData.frequencies:', editedData.frequencies);
-        console.log('🔍 Frequencies keys:', Object.keys(editedData.frequencies || {}));
-        console.log('🔍 Frequencies length:', Object.keys(editedData.frequencies || {}).length);
+        .length);
         
         return (
           <div>
@@ -740,7 +719,6 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
               )}
             </div>
           </div>
-        );
         
       case 'vfr':
         return <VFREditor editedData={editedData} updateValue={updateValue} />;
@@ -779,7 +757,6 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
               />
             </div>
           </div>
-        );
         
       default:
         return null;
@@ -905,7 +882,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
         </div>
       </div>
     </div>
-  );
+
 });
 
 VACDataEditor.displayName = 'VACDataEditor';

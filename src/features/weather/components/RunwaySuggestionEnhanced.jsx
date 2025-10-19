@@ -62,8 +62,7 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, showCompact = false 
       try {
         // D'abord vérifier si on a des données VAC
         if (vacChart?.extractedData?.runways && vacChart.extractedData.runways.length > 0) {
-          console.log('Utilisation des données VAC pour', icao);
-          
+                    
           // Convertir le format VAC vers le format attendu
           const vacRunways = vacChart.extractedData.runways.map(rwy => {
             // Extraire les identifiants des seuils (ex: "05/23" -> ["05", "23"])
@@ -108,8 +107,7 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, showCompact = false 
             const fallbackAirport = getFallbackAirport(icao);
             
             if (fallbackRunways) {
-              console.log(`Utilisation des données de secours pour ${icao}`);
-              setRunways(fallbackRunways);
+                            setRunways(fallbackRunways);
               setAirport(fallbackAirport || { icao, name: icao, dataSource: 'fallback' });
             } else if (airportData) {
               // Si on a l'aérodrome mais pas les pistes

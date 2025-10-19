@@ -131,7 +131,7 @@ export const VACViewer = memo(() => {
         </div>
       </div>
     </div>
-  );
+
 });
 
 // Composant pour afficher les cartes importées manuellement
@@ -237,7 +237,7 @@ const CustomChartViewer = memo(({ chart, zoom, rotation }) => {
         CARTE IMPORTÉE
       </div>
     </div>
-  );
+
 });
 
 // Composant de démonstration pour simuler une carte VAC
@@ -491,7 +491,7 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
                             {freq.schedule && <span style={{ marginLeft: '10px', fontSize: '12px' }}>({freq.schedule})</span>}
                           </td>
                         </tr>
-                      ));
+                      );
                     }
                     // Si c'est une simple string (format ancien)
                     return (
@@ -499,7 +499,7 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
                         <td style={styles.tableCell}>{type.toUpperCase()} :</td>
                         <td style={styles.tableCell}><strong>{freqData} MHz</strong></td>
                       </tr>
-                    );
+
                   })}
               </tbody>
             </table>
@@ -658,7 +658,7 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
         </div>
       </div>
     </div>
-  );
+
 });
 
 // Styles

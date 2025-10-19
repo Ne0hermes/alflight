@@ -9,7 +9,7 @@
  * Export complet du profil pilote au format JSON
  */
 export const exportPilotData = () => {
-  console.log('=== DÉBUT EXPORT COMPLET ===');
+  
 
   try {
     // 1. Récupérer TOUTES les données du profil pilote
@@ -77,17 +77,17 @@ export const exportPilotData = () => {
     };
 
     // Logs de vérification
-    console.log('📊 Résumé de l\'export:');
-    console.log('  ✅ Informations personnelles:', exportData.stats.hasPersonalInfo ? 'Oui' : 'Non');
-    console.log('  ✅ Licences:', exportData.stats.licensesCount);
-    console.log('  ✅ Qualifications:', exportData.stats.qualificationsCount);
-    console.log('  ✅ Variantes:', exportData.stats.endorsementsCount);
-    console.log('  ✅ Formations:', exportData.stats.trainingsCount);
-    console.log('  ✅ Dossiers médicaux:', exportData.stats.medicalRecordsCount);
-    console.log('  ✅ Configuration unités:', exportData.stats.hasUnitsConfig ? 'Oui' : 'Non');
+    
+    
+    
+    
+    
+    
+    
+    
 
-    console.log('Export complet:', exportData);
-    console.log('=== FIN EXPORT ===');
+    
+    
 
     // Créer et télécharger le fichier
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
@@ -113,7 +113,7 @@ export const exportPilotData = () => {
  */
 export const importPilotData = (file) => {
   return new Promise((resolve, reject) => {
-    console.log('=== DÉBUT IMPORT COMPLET ===');
+    
 
     const reader = new FileReader();
 
@@ -121,7 +121,7 @@ export const importPilotData = (file) => {
       try {
         // Parser le JSON
         const importData = JSON.parse(e.target.result);
-        console.log('Données importées:', importData);
+        
 
         // Vérifier la version et le type
         if (!importData.version || !importData.type) {
@@ -138,13 +138,13 @@ export const importPilotData = (file) => {
         // 1. Importer les informations personnelles
         if (data.personalInfo) {
           localStorage.setItem('personalInfo', JSON.stringify(data.personalInfo));
-          console.log('✅ Informations personnelles importées');
+          
         }
 
         // 2. Importer le profil pilote
         if (data.pilotProfile) {
           localStorage.setItem('pilotProfile', JSON.stringify(data.pilotProfile));
-          console.log('✅ Profil pilote importé');
+          
         } else if (data.personalInfo?.photo) {
           // Si pas de pilotProfile mais une photo dans personalInfo
           localStorage.setItem('pilotProfile', JSON.stringify({ photo: data.personalInfo.photo }));
@@ -159,11 +159,11 @@ export const importPilotData = (file) => {
             training: data.certifications.training || []
           };
           localStorage.setItem('pilotCertifications', JSON.stringify(pilotCertifications));
-          console.log('✅ Certifications importées:');
-          console.log('  - Licences:', pilotCertifications.licenses.length);
-          console.log('  - Qualifications:', pilotCertifications.ratings.length);
-          console.log('  - Variantes:', pilotCertifications.endorsements.length);
-          console.log('  - Formations:', pilotCertifications.training.length);
+          
+          
+          
+          
+          
         }
 
         // Compatibilité avec l'ancien format
@@ -175,13 +175,12 @@ export const importPilotData = (file) => {
             training: data.training || []
           };
           localStorage.setItem('pilotCertifications', JSON.stringify(pilotCertifications));
-          console.log('✅ Certifications importées (ancien format)');
         }
 
         // 4. Importer le suivi médical
         if (data.medicalRecords) {
           localStorage.setItem('pilotMedicalRecords', JSON.stringify(data.medicalRecords));
-          console.log('✅ Suivi médical importé:', data.medicalRecords.length, 'dossiers');
+          
         }
 
         // 5. Importer la configuration des unités
@@ -196,11 +195,11 @@ export const importPilotData = (file) => {
           localStorage.setItem('units-preferences', JSON.stringify(unitsPreferences));
           // Marquer que les unités ont été configurées
           localStorage.setItem('unitsConfigured', 'true');
-          console.log('✅ Configuration des unités importée');
+          
         }
 
         // Vérification finale
-        console.log('📊 Résumé de l\'import:');
+        
         const verif = {
           personalInfo: localStorage.getItem('personalInfo') !== null,
           pilotProfile: localStorage.getItem('pilotProfile') !== null,
@@ -208,13 +207,13 @@ export const importPilotData = (file) => {
           medical: localStorage.getItem('pilotMedicalRecords') !== null,
           units: localStorage.getItem('units-preferences') !== null
         };
-        console.log('  ✅ Informations personnelles:', verif.personalInfo ? 'OK' : 'Manquant');
-        console.log('  ✅ Profil pilote:', verif.pilotProfile ? 'OK' : 'Manquant');
-        console.log('  ✅ Certifications:', verif.certifications ? 'OK' : 'Manquant');
-        console.log('  ✅ Suivi médical:', verif.medical ? 'OK' : 'Manquant');
-        console.log('  ✅ Configuration unités:', verif.units ? 'OK' : 'Manquant');
+        
+        
+        
+        
+        
 
-        console.log('=== FIN IMPORT ===');
+        
 
         resolve({
           success: true,
@@ -271,10 +270,10 @@ export const exportAircraft = async () => {
     const aircraft = aircraftStore.state?.aircraftList || [];
     const selectedId = aircraftStore.state?.selectedId || null;
 
-    console.log('📦 Export de', aircraft.length, 'avions');
+    
 
     // Charger les données volumineuses depuis IndexedDB
-    const { default: dataBackupManager } = await import('../../../core/services/dataBackupManager');
+    const { default: dataBackupManager } = await import('../../../utils/dataBackupManager');
     await dataBackupManager.initPromise;
 
     // Pour chaque avion, récupérer les données volumineuses si présentes
@@ -284,7 +283,7 @@ export const exportAircraft = async () => {
           try {
             const fullData = await dataBackupManager.getAircraftData(ac.id);
             if (fullData) {
-              console.log(`✅ Données volumineuses chargées pour ${ac.registration}`);
+              
               return {
                 ...ac,
                 photo: fullData.photo || null,
@@ -295,12 +294,11 @@ export const exportAircraft = async () => {
               };
             }
           } catch (error) {
-            console.warn(`⚠️ Impossible de charger les données volumineuses pour ${ac.registration}:`, error);
+            
           }
         }
         return ac;
-      })
-    );
+      });
 
     const exportData = {
       version: '2.0', // Version 2.0 pour inclure les performances
@@ -319,7 +317,7 @@ export const exportAircraft = async () => {
       }
     };
 
-    console.log('📊 Statistiques export:', exportData.stats);
+    
 
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     downloadFile(blob, `aircraft-fleet-${formatDateFile(new Date())}.json`);

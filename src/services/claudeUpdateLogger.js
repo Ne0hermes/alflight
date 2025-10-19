@@ -82,7 +82,7 @@ class ClaudeUpdateLogger {
    */
   async sendLog(logEntry) {
     if (!this.isEnabled) {
-      console.log('📝 Logging désactivé');
+      
       return false;
     }
 
@@ -104,13 +104,13 @@ class ClaudeUpdateLogger {
       // Afficher confirmation PowerShell
       this.showPowerShellConfirmation(logEntry);
 
-      console.log('✅ Log envoyé à Google Sheets:', logEntry.action);
+      
       return true;
 
     } catch (error) {
       console.error('❌ Erreur envoi log:', error);
       this.pendingLogs.push(logEntry);
-      console.log('📋 Log ajouté à la file d\'attente');
+      
       return false;
     }
   }
@@ -131,7 +131,7 @@ class ClaudeUpdateLogger {
 ╚════════════════════════════════════════════════════════════════╝
     `.trim();
 
-    console.log('\n' + message + '\n');
+    
   }
 
   /**
@@ -181,11 +181,11 @@ class ClaudeUpdateLogger {
    */
   async retryPendingLogs() {
     if (this.pendingLogs.length === 0) {
-      console.log('✅ Aucun log en attente');
+      
       return;
     }
 
-    console.log(`📋 Tentative d'envoi de ${this.pendingLogs.length} logs en attente...`);
+    
 
     const toRetry = [...this.pendingLogs];
     this.pendingLogs = [];
@@ -197,7 +197,7 @@ class ClaudeUpdateLogger {
       }
     }
 
-    console.log(`✅ Logs restants en attente: ${this.pendingLogs.length}`);
+    
   }
 
   /**
@@ -205,7 +205,7 @@ class ClaudeUpdateLogger {
    */
   setEnabled(enabled) {
     this.isEnabled = enabled;
-    console.log(`📝 Logging ${enabled ? 'activé' : 'désactivé'}`);
+    
   }
 }
 
@@ -215,7 +215,7 @@ const logger = new ClaudeUpdateLogger();
 // Exposer globalement
 if (typeof window !== 'undefined') {
   window.claudeLogger = logger;
-}
+);}
 
 // Exports
 export const logFileModification = (filePath, action, details) =>

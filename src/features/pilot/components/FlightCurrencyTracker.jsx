@@ -388,7 +388,6 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
             needsRenewal: true,
             daysRemaining: daysUntil
           };
-          console.log('🔴 Licence expirée détectée:', licenseType, '- Expirée depuis', Math.abs(daysUntil), 'jours');
         }
       }
     });
@@ -714,7 +713,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
           
           if (daysUntil < 0) {
             summary.licenses.expired++;
-            console.log('🔴 Licence expirée:', license.type, 'depuis', Math.abs(daysUntil), 'jours');
+            , 'jours');
           } else if (daysUntil < 90) {
             summary.licenses.expiring++;
           } else {
@@ -1259,11 +1258,10 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
                 </div>
               )}
             </>
-          );
         })()}
       </div>
     </div>
-  );
+
 };
 
 export default FlightCurrencyTracker;

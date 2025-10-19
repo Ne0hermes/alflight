@@ -35,10 +35,9 @@ export const SimpleAirportSelector = ({ label, value, onChange, placeholder, exc
   React.useEffect(() => {
     const lfst = airports.find(a => a.icao === 'LFST');
     if (lfst) {
-      console.log('✅ LFST trouvé:', lfst);
+      console.log('LFST found:', lfst);
     } else {
-      console.log('❌ LFST non trouvé. Total aéroports:', airports.length);
-      console.log('Exemples:', airports.slice(0, 5).map(a => a.icao));
+      console.log('LFST not found. Available airports:', airports.map(a => a.icao));
     }
   }, [airports]);
   
@@ -293,7 +292,8 @@ export const SimpleAirportSelector = ({ label, value, onChange, placeholder, exc
                 </div>
               </div>
             </div>
-          ))
+            ))
+
           )}
         </div>
       )}

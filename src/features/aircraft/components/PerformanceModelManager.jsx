@@ -134,7 +134,7 @@ const PerformanceModelManager = ({
   };
 
   const handleAddChart = (category) => {
-    console.log(`Ajout d'un abaque pour ${category}`);
+    
     setSelectedChart({ category, action: 'add' });
     setShowChartDialog(true);
   };
@@ -398,8 +398,6 @@ const PerformanceModelManager = ({
           </Paper>
         )}
       </Box>
-    );
-  };
 
   if (!model) {
     return (
@@ -493,7 +491,6 @@ const PerformanceModelManager = ({
         </DialogActions>
       </Dialog>
     </Paper>
-  );
 };
 
 export default PerformanceModelManager;

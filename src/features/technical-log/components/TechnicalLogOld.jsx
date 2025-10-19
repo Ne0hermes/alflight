@@ -444,7 +444,7 @@ const TechnicalLog = memo(({ selectedAircraft }) => {
         </div>
       )}
     </div>
-  );
+
 });
 
 TechnicalLog.displayName = 'TechnicalLog';

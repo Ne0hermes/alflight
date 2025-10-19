@@ -31,7 +31,7 @@ export const AccountPanel = () => {
 
   const handleAuthSuccess = () => {
     // Optionally refresh the page or navigate
-    console.log('Authentication successful');
+    
   };
 
   const handleAuthError = (error) => {

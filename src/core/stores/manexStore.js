@@ -62,18 +62,15 @@ export const useManexStore = create(
         if (state) {
           const dataStr = JSON.stringify(state.manexData || {});
           const sizeMb = (new Blob([dataStr]).size / (1024 * 1024)).toFixed(2);
-          console.log(`📚 MANEX Store loaded: ${sizeMb} MB`);
-          
+                    
           // Si la taille est trop grande (>10MB), on peut nettoyer les vieux PDF
           if (parseFloat(sizeMb) > 10) {
-            console.warn('⚠️ MANEX storage is large, consider cleaning old data');
-          }
+                      }
         }
       }
     }
   )
 );
-
 // Fonction utilitaire pour stocker les données MANEX de manière optimisée
 export const storeManexOptimized = async (aircraftId, manexData) => {
   const { setManexData } = useManexStore.getState();
@@ -85,8 +82,7 @@ export const storeManexOptimized = async (aircraftId, manexData) => {
     if (pdfData) {
       // Stocker le PDF dans IndexedDB
       await indexedDBStorage.saveManexPDF(aircraftId, manexData);
-      console.log('PDF MANEX stocké dans IndexedDB');
-    }
+          }
     
     // Stocker uniquement les métadonnées dans le localStorage via Zustand
     setManexData(aircraftId, {

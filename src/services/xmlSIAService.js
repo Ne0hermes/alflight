@@ -23,8 +23,7 @@ class XMLSIAService {
     }
 
     try {
-      console.log('🔄 Chargement des données SIA depuis GeoJSON...');
-      
+            
       // Charger les aérodromes
       const aerodromesResponse = await fetch(this.aerodromesPath);
       const aerodromesGeoJSON = await aerodromesResponse.json();
@@ -41,8 +40,7 @@ class XMLSIAService {
       this.aerodromes = this.processGeoJSONData(aerodromesGeoJSON, runwaysGeoJSON, airspacesGeoJSON);
       this.isLoaded = true;
       
-      console.log(`✅ ${this.aerodromes.length} aérodromes chargés depuis GeoJSON`);
-      return this.aerodromes;
+            return this.aerodromes;
       
     } catch (error) {
       console.error('❌ Erreur chargement GeoJSON:', error);
@@ -340,7 +338,6 @@ class XMLSIAService {
         ad.icao?.toLowerCase().includes(search) ||
         ad.name?.toLowerCase().includes(search) ||
         ad.city?.toLowerCase().includes(search)
-      );
     });
   }
 
@@ -359,9 +356,8 @@ class XMLSIAService {
     this.cache.clear();
     this.aerodromes = [];
     this.isLoaded = false;
-    console.log('🧹 Cache XML SIA nettoyé');
-  }
-}
+      }
+);}
 
 // Export singleton
 export const xmlSIAService = new XMLSIAService();

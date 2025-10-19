@@ -248,10 +248,9 @@ export const PointEditor: React.FC<PointEditorProps> = ({
                   ))}
                 </ul>
               </div>
-            );
+
           })}
         </div>
       )}
     </div>
-  );
 };

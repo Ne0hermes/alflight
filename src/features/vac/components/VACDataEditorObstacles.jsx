@@ -4,7 +4,7 @@ import { Plus, Trash2, AlertTriangle, Radio } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 
 export const ObstaclesEditor = ({ editedData, updateValue }) => {
-  console.log('⚠️ Rendering obstacles editor - obstacles:', editedData.obstacles);
+  
   
   const addObstacle = () => {
     const newObstacle = {
@@ -411,5 +411,3 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
         )}
       </div>
     </div>
-  );
-};

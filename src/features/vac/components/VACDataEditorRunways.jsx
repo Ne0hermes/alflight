@@ -4,7 +4,7 @@ import { Plus, Trash2, Info, Plane } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 
 export const RunwaysEditor = ({ editedData, updateValue }) => {
-  console.log('🛬 Rendering runways editor - runways:', editedData.runways);
+  
   
   const addRunway = () => {
     const newRunway = {
@@ -479,5 +479,3 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
         )}
       </div>
     </div>
-  );
-};

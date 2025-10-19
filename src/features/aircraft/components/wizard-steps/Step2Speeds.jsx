@@ -23,7 +23,7 @@ import {
   AccordionSummary,
   AccordionDetails
 } from '@mui/material';
-import { 
+import {
   Speed as SpeedIcon,
   Warning as WarningIcon,
   Info as InfoIcon,
@@ -32,13 +32,15 @@ import {
   PriorityHigh as CriticalIcon,
   CheckCircle as OptionalIcon,
   Add as AddIcon,
-  Delete as DeleteIcon
+  Delete as DeleteIcon,
+  ChevronRight as ChevronRightIcon,
+  ChevronLeft as ChevronLeftIcon
 } from '@mui/icons-material';
 import { useUnitsStore, unitsSelectors } from '@core/stores/unitsStore';
 import { getUnitSymbol } from '@utils/unitConversions';
 import { StyledTextField } from './FormFieldStyles';
 
-const Step2Speeds = ({ data, updateData, errors = {} }) => {
+const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
   const units = unitsSelectors.useUnits();
   const unit = units.speed; // Utiliser l'unité de vitesse depuis le store
   const [expandedPanels, setExpandedPanels] = useState({
@@ -1145,6 +1147,34 @@ const Step2Speeds = ({ data, updateData, errors = {} }) => {
       {/* Visualisation graphique */}
       {renderSpeedChart()}
 
+      {/* Boutons de navigation */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+        {/* Bouton Précédent */}
+        {onPrevious && (
+          <Button
+            variant="outlined"
+            color="primary"
+            size="large"
+            onClick={onPrevious}
+            startIcon={<ChevronLeftIcon />}
+          >
+            Précédent
+          </Button>
+        )}
+
+        {/* Bouton Suivant */}
+        {onNext && (
+          <Button
+            variant="contained"
+            color="primary"
+            size="large"
+            onClick={onNext}
+            endIcon={<ChevronRightIcon />}
+          >
+            Suivant
+          </Button>
+        )}
+      </Box>
     </Box>
   );
 };

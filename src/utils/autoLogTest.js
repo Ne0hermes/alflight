@@ -16,10 +16,8 @@ export function sendTestLog() {
         files: ['src/utils/autoLogTest.js'],
         timestamp: new Date().toISOString()
       }
-    );
 
-    console.log('📨 Log de test envoyé automatiquement vers Google Sheets');
-    return true;
+        return true;
   }
   return false;
 }
@@ -36,10 +34,8 @@ export function logZoomFix() {
         files: ['src/components/ImageEditor.jsx'],
         status: 'completed'
       }
-    );
 
-    console.log('✅ Correction du zoom loggée automatiquement');
-  }
+      }
 }
 
 // Appeler automatiquement au chargement

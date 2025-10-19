@@ -32,7 +32,7 @@ class GeoJSONDataService {
       // Mettre en cache
       this.cache.set(layer, data);
       
-      console.log(`✅ Couche ${layer} chargée: ${data.features?.length || 0} features`);
+      
       return data;
       
     } catch (error) {
@@ -154,12 +154,12 @@ class GeoJSONDataService {
       const vfrFeatures = vfrPointsExtractor.toGeoJSON();
       
       if (vfrFeatures.length > 0) {
-        console.log(`✅ ${vfrFeatures.length} points VFR extraits depuis AIXM`);
+        
         return vfrFeatures;
       }
       
       // Fallback: essayer depuis les points désignés
-      console.log('⚠️ Recherche de points VFR supplémentaires dans les points désignés...');
+      
       const designatedPoints = await this.getDesignatedPoints();
       
       // Filtrer les points qui contiennent VFR, VRP, ou des patterns typiques
@@ -184,7 +184,7 @@ class GeoJSONDataService {
           /^[NSEW]\d?$/.test(name) || // N, S, E, W, NE, SE, etc.
           /^(NORD|SUD|EST|OUEST|CENTRE)/.test(name) || // Points cardinaux en français
           /^(NOVEMBER|SIERRA|ECHO|WHISKEY)/.test(name) // Alphabet phonétique
-        );
+        )
       }).map(point => ({
         ...point,
         properties: {
@@ -193,8 +193,6 @@ class GeoJSONDataService {
           vfrType: 'VRP'
         }
       }));
-      
-      console.log(`✅ ${fallbackFeatures.length} points VFR trouvés (fallback)`);
       return fallbackFeatures;
       
     } catch (error) {
@@ -316,7 +314,7 @@ class GeoJSONDataService {
   clearCache() {
     this.cache.clear();
   }
-}
+ }
 
 // Export singleton
 export const geoJSONDataService = new GeoJSONDataService();

@@ -30,12 +30,47 @@ interface AbacBuilderProps {
   initialData?: AbacCurvesJSON;
   modelName?: string;
   aircraftModel?: string;
+  onBack?: () => void;
 }
 
-export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, modelName, aircraftModel }) => {
+// Exposer les méthodes via un ref
+export interface AbacBuilderRef {
+  goToNextStep: () => void;
+  goToPreviousStep: () => void;
+  getCurrentStep: () => Step;
+}
+
+export const AbacBuilder = React.forwardRef<AbacBuilderRef, AbacBuilderProps>(({ onSave, initialData, modelName, aircraftModel, onBack }, ref) => {
+    
   const managerRef = useRef(new AbacCurveManager());
 
   const [currentStep, setCurrentStep] = useState<Step>('axes');
+
+  React.useEffect(() => {
+        return () => {
+          };
+  }, []);
+
+  // Exposer les méthodes via useImperativeHandle
+  React.useImperativeHandle(ref, () => ({
+    goToNextStep: () => {
+      const steps: Step[] = ['axes', 'points', 'final'];
+      const currentIndex = steps.indexOf(currentStep);
+      if (currentIndex < steps.length - 1) {
+        const nextStep = steps[currentIndex + 1];
+                setCurrentStep(nextStep);
+      }
+    },
+    goToPreviousStep: () => {
+      const steps: Step[] = ['axes', 'points', 'final'];
+      const currentIndex = steps.indexOf(currentStep);
+      if (currentIndex > 0) {
+        const previousStep = steps[currentIndex - 1];
+                setCurrentStep(previousStep);
+      }
+    },
+    getCurrentStep: () => currentStep
+  }));
   const [graphs, setGraphs] = useState<GraphConfig[]>([]);
   const [selectedGraphId, setSelectedGraphId] = useState<string | null>(null);
   const [selectedCurveId, setSelectedCurveId] = useState<string | null>(null);
@@ -58,16 +93,18 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
     { value: 'crosswind_limits', label: 'Limites de vent travers' }
   ];
 
-  const [modelNameInput, setModelNameInput] = useState<string>(modelName || '');
+  const [modelNameInput, setModelNameInput] = useState<string>(
+    modelName || SYSTEM_TYPES.find(t => t.value === 'takeoff_distance')?.label || ''
   const [aircraftModelDisplay, setAircraftModelDisplay] = useState<string>(aircraftModel || '');
   const [systemType, setSystemType] = useState<string>('takeoff_distance');
   const [importSuccess, setImportSuccess] = useState<boolean>(false);
-  const [autoAdjustEnabled, setAutoAdjustEnabled] = useState(true); // Activé par défaut
+  const [autoAdjustEnabled, setAutoAdjustEnabled] = useState(false); // Désactivé par défaut
   const axesMargin = 5; // Marge fixe de 5 unités
   const [interpolationMethod, setInterpolationMethod] = useState<InterpolationMethod>('naturalSpline');
   const [interpolationPoints, setInterpolationPoints] = useState(200);
   const [numIntermediateCurves, setNumIntermediateCurves] = useState(1);
   const [windFilter, setWindFilter] = useState<'all' | 'headwind' | 'tailwind'>('all');
+  const [expandedGraphs, setExpandedGraphs] = useState<Record<string, boolean>>({});
 
   // Pour compatibilité avec l'ancien système
   const currentGraph = graphs.find(g => g.id === selectedGraphId);
@@ -107,7 +144,6 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
       yTitle.includes(keyword) ||
       xUnit.includes(keyword) ||
       yUnit.includes(keyword)
-    );
   };
 
   // Initialize with data if provided
@@ -148,9 +184,19 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
         setGraphs([graph]);
         setSelectedGraphId(graph.id);
       }
-      setCurrentStep('points');
+      // Rester à l'étape 'axes' pour permettre la modification de la configuration
+      // L'utilisateur pourra ensuite avancer manuellement vers 'points'
+      setCurrentStep('axes');
     }
   }, [initialData, aircraftModel]);
+
+  // Synchroniser modelNameInput avec systemType
+  React.useEffect(() => {
+    const label = SYSTEM_TYPES.find(t => t.value === systemType)?.label;
+    if (label && !modelName) {
+      setModelNameInput(label);
+    }
+  }, [systemType, modelName]);
 
   // Synchroniser le manager avec le graphique sélectionné
   React.useEffect(() => {
@@ -180,13 +226,23 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
       }
     });
 
-    console.log(`🔄 Manager synchronisé avec le graphique "${currentGraph.name}": ${nonInterpolatedCurves.length} courbes de base chargées`);
-  }, [selectedGraphId, graphs, interpolationMethod, interpolationPoints]);
+      }, [selectedGraphId, graphs, interpolationMethod, interpolationPoints]);
 
   // Gestionnaires pour les graphiques
   const handleAddGraph = useCallback((graph: GraphConfig) => {
     setGraphs(prev => [...prev, graph]);
     setSelectedGraphId(graph.id);
+    // Fermer tous les graphiques existants et ouvrir uniquement le nouveau
+    setExpandedGraphs(prev => {
+      const newExpanded: Record<string, boolean> = {};
+      // Fermer tous les graphiques existants
+      Object.keys(prev).forEach(id => {
+        newExpanded[id] = false;
+      });
+      // Ouvrir uniquement le nouveau graphique
+      newExpanded[graph.id] = true;
+      return newExpanded;
+    });
   }, []);
 
   const handleRemoveGraph = useCallback((graphId: string) => {
@@ -257,6 +313,12 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
     // Ne pas changer d'étape automatiquement
   }, [selectedGraphId, handleUpdateGraph]);
 
+  const handleWindRelatedChange = useCallback((isWindRelated: boolean) => {
+    if (selectedGraphId) {
+      handleUpdateGraph(selectedGraphId, { isWindRelated });
+    }
+  }, [selectedGraphId, handleUpdateGraph]);
+
   const handleAddCurve = useCallback((name: string, color: string, windDirection?: WindDirection) => {
     if (!selectedGraphId) return;
 
@@ -272,7 +334,7 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
       g.id === selectedGraphId
         ? { ...g, curves: [...g.curves, newCurve] }
         : g
-    ));
+
     setSelectedCurveId(newCurve.id);
   }, [selectedGraphId]);
 
@@ -283,7 +345,6 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
       g.id === selectedGraphId
         ? { ...g, curves: g.curves.filter(c => c.id !== curveId) }
         : g
-    ));
 
     if (selectedCurveId === curveId) {
       setSelectedCurveId(null);
@@ -302,10 +363,9 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
             ...g,
             curves: g.curves.map(c =>
               c.id === curveId ? { ...c, ...updates } : c
-            )
           }
         : g
-    ));
+
   }, [selectedGraphId]);
 
   const handleReorderCurves = useCallback((newCurves: Curve[]) => {
@@ -315,7 +375,7 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
       g.id === selectedGraphId
         ? { ...g, curves: newCurves }
         : g
-    ));
+
   }, [selectedGraphId]);
 
   const handleAutoAdjustAxes = useCallback((graphId?: string) => {
@@ -367,10 +427,8 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
                 c.id === selectedCurveId
                   ? { ...c, points: [...c.points, point].sort((a, b) => a.x - b.x) }
                   : c
-              )
             }
           : g
-      );
 
       // Si l'ajustement automatique est activé, recalculer les limites
       if (autoAdjustEnabled) {
@@ -413,10 +471,9 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
                     ).sort((a, b) => a.x - b.x)
                   }
                 : c
-            )
           }
         : g
-    ));
+
   }, [selectedGraphId]);
 
   const handlePointDelete = useCallback((curveId: string, pointId: string) => {
@@ -430,41 +487,31 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
               c.id === curveId
                 ? { ...c, points: c.points.filter(p => p.id !== pointId) }
                 : c
-            )
           }
         : g
-    ));
+
   }, [selectedGraphId]);
 
   const handleFitCurve = useCallback((curveId: string, options: FitOptions) => {
-    console.log('\n🌟 === handleFitCurve - Interpolation individuelle ===');
-    console.log('🆔 Courbe ID:', curveId);
-    console.log('📈 Options:', options);
-    console.log('📉 Graphique sélectionné:', selectedGraphId);
-
+                
     if (!selectedGraphId) {
-      console.warn('⚠️ Aucun graphique sélectionné');
-      return;
+            return;
     }
 
     // Trouver la courbe dans les graphiques
     const graph = graphs.find(g => g.id === selectedGraphId);
-    console.log('📈 Graphique trouvé:', graph ? graph.name : 'NON TROUVÉ');
-
+    
     const curve = graph?.curves.find(c => c.id === curveId);
-    console.log('📍 Courbe trouvée:', curve ? curve.name : 'NON TROUVÉE');
-
+    
     if (!curve || !curve.points || curve.points.length < 2) {
-      console.warn(`⚠️ Courbe ${curveId} non trouvée ou pas assez de points (${curve?.points?.length || 0} points)`);
+
       return;
     }
 
-    console.log(`📊 Points de la courbe "${curve.name}":`, curve.points.length);
-    console.log('📦 Points:', curve.points.map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`).join(', '));
+        }, ${p.y.toFixed(2)})`).join(', '));
 
     try {
-      console.log('🏭 Création d\'un manager temporaire pour cette courbe...');
-      const tempManager = new AbacCurveManager();
+            const tempManager = new AbacCurveManager();
 
       const tempCurveData = {
         name: curve.name,
@@ -472,30 +519,21 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
         points: curve.points
       };
 
-      console.log('➕ Ajout de la courbe au manager...');
-      const tempCurveId = tempManager.addCurve(tempCurveData);
-      console.log('🆔 ID temporaire généré:', tempCurveId);
-
-      console.log('🔧 Lancement de l\'interpolation...');
-      const result = tempManager.fitCurve(tempCurveId, {
+            const tempCurveId = tempManager.addCurve(tempCurveData);
+      
+            const result = tempManager.fitCurve(tempCurveId, {
         ...options,
         method: interpolationMethod,
         numPoints: interpolationPoints
       });
 
-      console.log('✅ Interpolation réussie!');
-      console.log('📊 Points interpolés:', result.fittedPoints.length);
-      console.log('📏 RMSE:', result.rmse.toFixed(4));
-      console.log('🔗 Méthode:', result.method);
-
+      
       setFitResults(prev => {
-        console.log('💾 Sauvegarde du résultat pour la courbe', curveId);
-        return { ...prev, [curveId]: result };
+                return { ...prev, [curveId]: result };
       });
 
       if (result.warnings.length > 0) {
-        console.warn('⚠️ Avertissements:', result.warnings);
-        setWarnings(prev => ({ ...prev, [curveId]: result.warnings }));
+                setWarnings(prev => ({ ...prev, [curveId]: result.warnings }));
       } else {
         setWarnings(prev => {
           const newWarnings = { ...prev };
@@ -505,16 +543,13 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
       }
 
       // Mettre à jour les graphiques
-      console.log('🔄 Mise à jour du graphique avec les données interpolées...');
-      setGraphs(prev => prev.map(g => {
+            setGraphs(prev => prev.map(g => {
         if (g.id === selectedGraphId) {
-          console.log(`🏦 Mise à jour du graphique "${g.name}"`);
-          return {
+                    return {
             ...g,
             curves: g.curves.map(c => {
               if (c.id === curveId) {
-                console.log(`✔️ Courbe "${c.name}" mise à jour avec fitted data`);
-                return {
+                                return {
                   ...c,
                   fitted: {
                     points: result.fittedPoints,
@@ -530,8 +565,7 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
         return g;
       }));
 
-      console.log('🎉 === Fin de handleFitCurve ===\n');
-    } catch (error) {
+          } catch (error) {
       console.error(`❌ Erreur lors de l'interpolation de la courbe ${curveId}:`, error);
       console.error('📦 Stack trace:', (error as Error).stack);
     }
@@ -540,8 +574,7 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
   const handleGenerateIntermediateCurves = useCallback(() => {
     if (!selectedGraphId || !managerRef.current) return;
 
-    console.log(`📊 Génération de ${numIntermediateCurves} courbes intermédiaires par paire...`);
-
+    
     // Générer les courbes intermédiaires
     const newCurveIds = managerRef.current.generateIntermediateCurves(numIntermediateCurves);
 
@@ -559,42 +592,32 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
         return graph;
       }));
 
-      console.log(`✅ ${newCurveIds.length} courbes intermédiaires créées`);
-    }
+          }
   }, [selectedGraphId, numIntermediateCurves]);
 
   const handleFitAll = useCallback((options: FitOptions = {}) => {
-    console.log('🌐 === Début de handleFitAll ===');
-    console.log('📈 Options d\'interpolation:', options);
-    console.log('📊 Nombre de graphiques à traiter:', graphs.length);
-
+            
     const newWarnings: Record<string, string[]> = {};
     const allResults: Record<string, FitResult> = {};
 
     // Interpoler toutes les courbes de tous les graphiques
     setGraphs(prev => {
-      console.log('🔄 Mise à jour des graphiques - Nombre:', prev.length);
-
+      
       return prev.map((graph, graphIndex) => {
-        console.log(`\n📉 === Traitement du graphique ${graphIndex + 1}/${prev.length}: "${graph.name}" (ID: ${graph.id}) ===`);
-        console.log(`📈 Nombre de courbes dans ce graphique: ${graph.curves.length}`);
-
+         ===`);
+        
         const updatedCurves = graph.curves.map((curve, curveIndex) => {
-          console.log(`\n  📍 Courbe ${curveIndex + 1}/${graph.curves.length}: "${curve.name}" (ID: ${curve.id})`);
-          console.log(`  🔵 Couleur: ${curve.color}`);
-          console.log(`  📊 Nombre de points: ${curve.points?.length || 0}`);
 
           // Vérifier que la courbe a des points avant d'interpoler
           if (!curve.points || curve.points.length < 2) {
-            console.warn(`  ⚠️ Pas assez de points pour interpoler (${curve.points?.length || 0} points)`);
+
             return curve;
           }
 
-          console.log(`  📦 Points de la courbe:`, curve.points.map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`).join(', '));
+          }, ${p.y.toFixed(2)})`).join(', '));
 
           try {
-            console.log('  🏭 Création d\'un manager temporaire...');
-            const tempManager = new AbacCurveManager();
+                        const tempManager = new AbacCurveManager();
 
             // Ajouter la courbe et récupérer l'ID généré par le manager
             const tempCurveData = {
@@ -602,33 +625,25 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
               color: curve.color,
               points: curve.points
             };
-            console.log('  ➕ Ajout de la courbe au manager temporaire...');
-            const tempCurveId = tempManager.addCurve(tempCurveData);
-            console.log(`  🆔 ID temporaire généré: ${tempCurveId}`);
-
+                        const tempCurveId = tempManager.addCurve(tempCurveData);
+            
             // Utiliser l'ID temporaire pour l'interpolation
-            console.log(`  🔧 Lancement de l'interpolation avec méthode: ${interpolationMethod}`);
-            const result = tempManager.fitCurve(tempCurveId, {
+                        const result = tempManager.fitCurve(tempCurveId, {
               ...options,
               method: interpolationMethod,
               numPoints: interpolationPoints
             });
 
-            console.log(`  ✅ Interpolation réussie!`);
-            console.log(`  📊 Points interpolés: ${result.fittedPoints.length}`);
-            console.log(`  📏 RMSE: ${result.rmse.toFixed(4)}`);
-            console.log(`  🔗 Méthode utilisée: ${result.method}`);
-
+                                    }`);
+            
             if (result.fittedPoints.length > 0) {
-              console.log(`  📦 Premiers points interpolés:`,
-                result.fittedPoints.slice(0, 3).map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`).join(', '));
+              .map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`).join(', '));
             }
 
             allResults[curve.id] = result;
 
             if (result.warnings.length > 0) {
-              console.warn(`  ⚠️ Avertissements:`, result.warnings);
-              newWarnings[curve.id] = result.warnings;
+                            newWarnings[curve.id] = result.warnings;
             }
 
             const updatedCurve = {
@@ -640,8 +655,7 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
               }
             };
 
-            console.log(`  ✔️ Courbe mise à jour avec les données interpolées`);
-            return updatedCurve;
+                        return updatedCurve;
 
           } catch (error) {
             console.error(`  ❌ Erreur lors de l'interpolation de la courbe "${curve.name}":`, error);
@@ -650,8 +664,7 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
           }
         });
 
-        console.log(`🏁 === Fin du traitement du graphique "${graph.name}" ===`);
-        console.log(`📊 Courbes interpolées: ${updatedCurves.filter(c => c.fitted).length}/${updatedCurves.length}`);
+                .length}/${updatedCurves.length}`);
 
         return {
           ...graph,
@@ -660,15 +673,13 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
       });
     });
 
-    console.log('\n🎆 === Résumé de l\'interpolation ===');
-    console.log('📊 Nombre total de résultats:', Object.keys(allResults).length);
-    console.log('⚠️ Nombre d\'avertissements:', Object.keys(newWarnings).length);
+        .length);
+    .length);
 
     setFitResults(allResults);
     setWarnings(newWarnings);
 
-    console.log('🎉 === Fin de handleFitAll ===\n');
-  }, [graphs]);
+      }, [graphs]);
 
   const handleClearPoints = useCallback((curveId: string) => {
     if (!selectedGraphId) return;
@@ -686,7 +697,6 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
           ...graph,
           curves: graph.curves.map(c =>
             c.id === curveId ? { ...c, points: [], fitted: undefined } : c
-          )
         };
       }
       return graph;
@@ -704,13 +714,9 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
   const [hasAutoInterpolated, setHasAutoInterpolated] = React.useState(false);
 
   React.useEffect(() => {
-    console.log('🔄 useEffect pour l\'interpolation automatique');
-    console.log('📌 Étape actuelle:', currentStep);
-    console.log('🏁 Déjà interpolé?:', hasAutoInterpolated);
-
+            
     if (currentStep === 'fit' && !hasAutoInterpolated) {
-      console.log('🎟️ Nous sommes à l\'étape "fit" et pas encore auto-interpolé');
-
+      
       // Vérifier si des courbes n'ont pas encore été interpolées
       const unfittedInfo = graphs.map(g => ({
         graphName: g.name,
@@ -719,34 +725,29 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
           points: c.points.length,
           fitted: !!c.fitted,
           needsFitting: c.points.length >= 2 && !c.fitted
-        }))
+
       }));
 
-      console.log('📈 État des courbes:', unfittedInfo);
-
+      
       const hasUnfittedCurves = graphs.some(g =>
         g.curves.some(c => c.points.length >= 2 && !c.fitted)
-      );
 
-      console.log('🤔 Courbes non interpolées trouvées?:', hasUnfittedCurves);
-
+      
       if (hasUnfittedCurves) {
-        console.log('🚀 Lancement de l\'interpolation automatique...');
-        // Marquer comme interpolé avant de lancer l'interpolation
+                // Marquer comme interpolé avant de lancer l'interpolation
         setHasAutoInterpolated(true);
         // Interpoler toutes les courbes automatiquement
         handleFitAll({ method: 'pchip' });
       } else {
-        console.log('✅ Toutes les courbes sont déjà interpolées ou n\'ont pas assez de points');
-      }
+              }
     }
 
     // Réinitialiser le flag quand on quitte l'étape 3
     if (currentStep !== 'fit') {
-      console.log('🔄 Réinitialisation du flag hasAutoInterpolated');
-      setHasAutoInterpolated(false);
+            setHasAutoInterpolated(false);
     }
-  }, [currentStep, graphs, handleFitAll]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep]);
 
   const handleImportPoints = useCallback((curveId: string, points: XYPoint[]) => {
     if (!selectedGraphId) return;
@@ -763,7 +764,6 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
             c.id === curveId
               ? { ...c, points: [...c.points, ...points].sort((a, b) => a.x - b.x) }
               : c
-          )
         };
       }
       return graph;
@@ -824,17 +824,7 @@ export const AbacBuilder: React.FC<AbacBuilderProps> = ({ onSave, initialData, m
       }
     };
 
-    const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    // Utiliser le systemName pour le nom du fichier pour éviter l'accumulation
-    const systemName = SYSTEM_TYPES.find(t => t.value === systemType)?.label || 'Système d\'abaques';
-    const modelNameForFile = aircraftModel || modelNameInput || 'modèle';
-    a.download = `${systemName}-${modelNameForFile}-${systemType}-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-
+    // Sauvegarder sans télécharger le fichier JSON
     if (onSave) {
       onSave(json, aircraftModel || modelNameInput);
     }
@@ -904,7 +894,7 @@ const renderStepContent = () => {
       case 'axes':
         return (
           <div className={styles.stepContent}>
-            <h2>Étape 1: Configuration du système - {SYSTEM_TYPES.find(t => t.value === systemType)?.label || 'Système d\'abaques'}</h2>
+            <h2>Étape 1: {SYSTEM_TYPES.find(t => t.value === systemType)?.label || 'Système d\'abaques'}</h2>
             {importSuccess && (
               <div style={{
                 marginBottom: '16px',
@@ -951,25 +941,88 @@ const renderStepContent = () => {
                 placeholder="Ex: Cessna 172"
                 helperText={aircraftModel ? "Modèle récupéré automatiquement depuis les informations de l'appareil" : "Aucun modèle d'avion configuré"}
               />
+            </div>
 
-              <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
+            {/* Liste de graphiques avec accordéons */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {graphs.map((graph, index) => {
+                const isExpanded = expandedGraphs[graph.id] === true; // Par défaut fermé
+                const xAxisTitle = graph.axes?.xAxis?.title || 'Personnalisé';
+                const yAxisTitle = graph.axes?.yAxis?.title || 'Personnalisé';
+
+                return (
+                  <div key={graph.id} style={{
+                    border: '1px solid #ddd',
+                    borderRadius: '8px',
+                    overflow: 'hidden'
+                  }}>
+                    {/* En-tête cliquable */}
+                    <div
+                      style={{
+                        padding: '16px',
+                        backgroundColor: '#f5f5f5',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        userSelect: 'none'
+                      }}
+                      onClick={() => {
+                        // Si on clique sur un graphique déjà ouvert, on le ferme
+                        // Si on clique sur un graphique fermé, on ferme tous les autres et on ouvre celui-ci
+                        setExpandedGraphs(prev => {
+                          if (isExpanded) {
+                            // Fermer le graphique actuel
+                            return {
+                              ...prev,
+                              [graph.id]: false
+                            };
+                          } else {
+                            // Fermer tous les autres et ouvrir celui-ci
+                            const newExpanded: Record<string, boolean> = {};
+                            Object.keys(prev).forEach(id => {
+                              newExpanded[id] = false;
+                            });
+                            newExpanded[graph.id] = true;
+                            return newExpanded;
+                          }
+                        });
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span style={{ fontSize: '18px' }}>{isExpanded ? '▼' : '▶'}</span>
+                        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>
+                          {graph.name} - {xAxisTitle} / {yAxisTitle}
+                        </h3>
+                      </div>
+                    </div>
+
+                    {/* Contenu du graphique */}
+                    {isExpanded && (
+                      <div className={styles.workspace} style={{ padding: '16px' }}>
+                        <AxesForm
+                          key={graph.id}
+                          onSubmit={(config: AxesConfig) => {
+                            handleUpdateGraph(graph.id, { axes: config });
+                          }}
+                          initialConfig={graph.axes || undefined}
+                          isWindRelated={graph.isWindRelated || false}
+                          onWindRelatedChange={(isWindRelated: boolean) => {
+                            handleUpdateGraph(graph.id, { isWindRelated });
+                          }}
+                          onDelete={() => handleRemoveGraph(graph.id)}
+                          graphName={graph.name}
+                          graphNumber={index + 1}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+              })}
+
+              {/* Bouton Nouveau graphique après la liste */}
+              <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
                 <button
-                  onClick={handleExportJSON}
-                  style={{
-                    padding: '8px 16px',
-                    backgroundColor: '#4CAF50',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    flex: 1
-                  }}
-                  disabled={graphs.length === 0}
-                >
-                  📥 Exporter la configuration
-                </button>
-                <label
                   style={{
                     padding: '8px 16px',
                     backgroundColor: '#2196F3',
@@ -978,90 +1031,82 @@ const renderStepContent = () => {
                     borderRadius: '4px',
                     cursor: 'pointer',
                     fontSize: '14px',
-                    flex: 1,
-                    textAlign: 'center'
+                    fontWeight: 500
+                  }}
+                  onClick={() => {
+                    const name = `Graphique ${graphs.length + 1}`;
+                    const newGraph: GraphConfig = {
+                      id: uuidv4(),
+                      name,
+                      isWindRelated: false,
+                      axes: {
+                        xAxis: { min: 0, max: 100, unit: '', title: 'Axe X' },
+                        yAxis: { min: 0, max: 100, unit: '', title: 'Axe Y' }
+                      },
+                      curves: []
+                    };
+                    handleAddGraph(newGraph);
                   }}
                 >
-                  📤 Importer une configuration
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={handleImportJSON}
-                    style={{ display: 'none' }}
-                  />
-                </label>
+                  Configurer un axe
+                </button>
               </div>
-            </div>
-            <div className={styles.workspace}>
-              <div className={styles.sidebar}>
-                <GraphManager
-                  graphs={graphs}
-                  selectedGraphId={selectedGraphId}
-                  onAddGraph={handleAddGraph}
-                  onRemoveGraph={handleRemoveGraph}
-                  onSelectGraph={setSelectedGraphId}
-                  onUpdateGraph={handleUpdateGraph}
-                  onLinkGraphs={handleLinkGraphs}
-                  onUnlinkGraphs={handleUnlinkGraphs}
-                />
-              </div>
-              <div className={styles.mainArea}>
-                {selectedGraphId ? (
-                  <>
-                    <div style={{
-                      marginBottom: '16px',
-                      padding: '12px',
-                      backgroundColor: '#e3f2fd',
+
+              {/* Boutons de navigation */}
+              <div style={{ marginTop: '24px', display: 'flex', justifyContent: onBack ? 'space-between' : 'flex-end' }}>
+                {/* Bouton Précédent pour retourner à la page d'accueil des performances */}
+                {onBack && (
+                  <button
+                    style={{
+                      padding: '10px 24px',
+                      backgroundColor: '#9E9E9E',
+                      color: 'white',
+                      border: 'none',
                       borderRadius: '6px',
-                      border: '1px solid #2196F3'
-                    }}>
-                      <h3 style={{ margin: 0, color: '#1976d2', fontSize: '16px', fontWeight: 600 }}>
-                        Configuration des axes pour : {currentGraph?.name}
-                      </h3>
-                      {currentGraph?.axes && (
-                        <div style={{ marginTop: '8px', fontSize: '13px', color: '#666' }}>
-                          <strong>X:</strong> {currentGraph.axes.xAxis.title}
-                          ({currentGraph.axes.xAxis.min} - {currentGraph.axes.xAxis.max} {currentGraph.axes.xAxis.unit})
-                          {currentGraph.axes.xAxis.reversed && (
-                            <span style={{ marginLeft: '8px', color: '#ff9800' }}>
-                              [← Décroissant]
-                            </span>
-                          )}
-                          <br />
-                          <strong>Y:</strong> {currentGraph.axes.yAxis.title}
-                          ({currentGraph.axes.yAxis.min} - {currentGraph.axes.yAxis.max} {currentGraph.axes.yAxis.unit})
-                          {currentGraph.axes.yAxis.reversed && (
-                            <span style={{ marginLeft: '8px', color: '#ff9800' }}>
-                              [↓ Décroissant]
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    <AxesForm
-                      key={selectedGraphId} // Force le rechargement du formulaire
-                      onSubmit={handleAxesSubmit}
-                      initialConfig={currentGraph?.axes || undefined}
-                    />
-                  </>
-                ) : (
-                  <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: '100%',
-                    color: '#999'
-                  }}>
-                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>📊</div>
-                    <h3>Créez votre premier graphique</h3>
-                    <p>Commencez par ajouter un graphique dans le panneau de gauche</p>
-                  </div>
+                      cursor: 'pointer',
+                      fontSize: '16px',
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                    onClick={onBack}
+                    title="Retourner à la sélection du type de données de performance"
+                  >
+                    <span style={{ fontSize: '18px' }}>←</span>
+                    Précédent
+                  </button>
                 )}
+
+                {/* Bouton Suivant pour aller à l'étape Construire et Interpoler */}
+                <button
+                  style={{
+                    padding: '10px 24px',
+                    backgroundColor: canProceed() ? '#4CAF50' : '#cccccc',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: canProceed() ? 'pointer' : 'not-allowed',
+                    fontSize: '16px',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                  onClick={() => {
+                    if (canProceed()) {
+                      setCurrentStep('points');
+                    }
+                  }}
+                  disabled={!canProceed()}
+                  title={canProceed() ? "Passer à l'étape suivante" : "Configurez au moins un graphique avec ses axes pour continuer"}
+                >
+                  Suivant
+                  <span style={{ fontSize: '18px' }}>→</span>
+                </button>
               </div>
             </div>
           </div>
-        );
 
       case 'points':
         return (
@@ -1119,7 +1164,49 @@ const renderStepContent = () => {
                 )}
               </div>
 
-              {/* Cartouche 2: Courbes intermédiaires */}
+              {/* Cartouche 2: Interpolation des courbes */}
+              <div style={{
+                flex: 1,
+                padding: '12px',
+                backgroundColor: '#e8f5e9',
+                borderRadius: '6px',
+                border: '1px solid #4CAF50'
+              }}>
+                <div style={{
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  marginBottom: '8px',
+                  color: '#2e7d32'
+                }}>
+                  💡 Interpolation
+                </div>
+                <button
+                  onClick={() => handleFitAll({ method: interpolationMethod, numPoints: interpolationPoints })}
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: '11px',
+                    backgroundColor: '#4CAF50',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    width: '100%',
+                    marginBottom: '6px'
+                  }}
+                  disabled={!currentGraph || currentGraph.curves.length === 0}
+                >
+                  🎯 Interpoler tout
+                </button>
+                <div style={{
+                  fontSize: '10px',
+                  color: '#666',
+                  textAlign: 'center'
+                }}>
+                  Lissage des courbes
+                </div>
+              </div>
+
+              {/* Cartouche 3: Courbes intermédiaires */}
               <div style={{
                 flex: 1,
                 padding: '12px',
@@ -1175,7 +1262,7 @@ const renderStepContent = () => {
                         g.id === selectedGraphId
                           ? { ...g, curves: nonInterpolatedCurves }
                           : g
-                      ));
+
                     }}
                     style={{
                       width: '100%',
@@ -1198,48 +1285,6 @@ const renderStepContent = () => {
                   marginTop: '4px'
                 }}>
                   Entre les courbes existantes
-                </div>
-              </div>
-
-              {/* Cartouche 3: Interpolation des courbes */}
-              <div style={{
-                flex: 1,
-                padding: '12px',
-                backgroundColor: '#e8f5e9',
-                borderRadius: '6px',
-                border: '1px solid #4CAF50'
-              }}>
-                <div style={{
-                  fontSize: '12px',
-                  fontWeight: 'bold',
-                  marginBottom: '8px',
-                  color: '#2e7d32'
-                }}>
-                  💡 Interpolation
-                </div>
-                <button
-                  onClick={() => handleFitAll({ method: interpolationMethod, numPoints: interpolationPoints })}
-                  style={{
-                    padding: '6px 12px',
-                    fontSize: '11px',
-                    backgroundColor: '#4CAF50',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    width: '100%',
-                    marginBottom: '6px'
-                  }}
-                  disabled={!currentGraph || currentGraph.curves.length === 0}
-                >
-                  🎯 Interpoler tout
-                </button>
-                <div style={{
-                  fontSize: '10px',
-                  color: '#666',
-                  textAlign: 'center'
-                }}>
-                  Lissage des courbes
                 </div>
               </div>
             </div>
@@ -1363,7 +1408,7 @@ const renderStepContent = () => {
                                 <div key={fromId} style={{ color: '#2196F3' }}>
                                   ← {fromGraph.name} (Y → X)
                                 </div>
-                              );
+
                             })}
                             {graph.linkedTo?.map(toId => {
                               const toGraph = graphs.find(g => g.id === toId);
@@ -1371,7 +1416,7 @@ const renderStepContent = () => {
                                 <div key={toId} style={{ color: '#4CAF50' }}>
                                   → {toGraph.name} (Y → X)
                                 </div>
-                              );
+
                             })}
                           </div>
                         )}
@@ -1427,8 +1472,59 @@ const renderStepContent = () => {
                 )}
               </div>
             </div>
+
+            {/* Boutons de navigation */}
+            <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'space-between' }}>
+              {/* Bouton Précédent pour retourner à Configurer les Axes */}
+              <button
+                style={{
+                  padding: '10px 24px',
+                  backgroundColor: '#9E9E9E',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+                onClick={() => setCurrentStep('axes')}
+                title="Retourner à l'étape de configuration des axes"
+              >
+                <span style={{ fontSize: '18px' }}>←</span>
+                Précédent
+              </button>
+
+              {/* Bouton Suivant pour aller à l'étape Validation */}
+              <button
+                style={{
+                  padding: '10px 24px',
+                  backgroundColor: canProceed() ? '#4CAF50' : '#cccccc',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: canProceed() ? 'pointer' : 'not-allowed',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+                onClick={() => {
+                  if (canProceed()) {
+                    setCurrentStep('final');
+                  }
+                }}
+                disabled={!canProceed()}
+                title={canProceed() ? "Passer à l'étape de validation" : "Ajoutez au moins 2 points à une courbe pour continuer"}
+              >
+                Suivant
+                <span style={{ fontSize: '18px' }}>→</span>
+              </button>
+            </div>
           </div>
-        );
 
       case 'fit':
         // L'étape 3 est maintenant intégrée dans l'étape 2
@@ -1565,7 +1661,7 @@ const renderStepContent = () => {
                             g.id === selectedGraphId
                               ? { ...g, curves: nonInterpolatedCurves }
                               : g
-                          ));
+
                           // Reconstruire le manager
                           if (managerRef.current && currentGraph.axes) {
                             managerRef.current.clear();
@@ -1672,21 +1768,16 @@ const renderStepContent = () => {
               </button>
             </div>
           </div>
-        );
 
       case 'final':
-        console.log('🎯 Étape finale - État des graphiques:');
-        graphs.forEach(graph => {
-          console.log(`📉 ${graph.name}:`, {
-            axes: !!graph.axes,
-            courbes: graph.curves.length,
-            courbesInterpolées: graph.curves.filter(c => c.fitted).length,
+                graphs.forEach(graph => {
+          .length,
             points: graph.curves.map(c => ({
               name: c.name,
               originalPoints: c.points?.length,
               fittedPoints: c.fitted?.points?.length || 0,
               rmse: c.fitted?.rmse
-            }))
+
           });
         });
 
@@ -1712,32 +1803,6 @@ const renderStepContent = () => {
                   <div style={{ marginTop: '8px', fontSize: '12px', color: '#666' }}>
                     Cet identifiant sera utilisé pour référencer ce système dans l'application
                   </div>
-                </div>
-
-                {/* Bouton Sauvegarder le modèle */}
-                <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
-                  <button
-                    className={`${styles.btn} ${styles.btnPrimary}`}
-                    onClick={handleExportJSON}
-                    disabled={!modelNameInput}
-                    title="Exporter le modèle complet"
-                    style={{
-                      padding: '10px 24px',
-                      fontSize: '14px',
-                      backgroundColor: '#2196F3',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: modelNameInput ? 'pointer' : 'not-allowed',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      fontWeight: 'bold',
-                      opacity: modelNameInput ? 1 : 0.6
-                    }}
-                  >
-                    💾 Sauvegarder le modèle
-                  </button>
                 </div>
               </div>
 
@@ -1916,7 +1981,7 @@ const renderStepContent = () => {
                         </div>
                       )}
                     </div>
-                  );
+
                 })}
               </div>
 
@@ -1945,13 +2010,60 @@ const renderStepContent = () => {
                           {curveWarnings.map((w, i) => <li key={i}>{w}</li>)}
                         </ul>
                       </div>
-                    );
+
                   })}
                 </div>
               )}
+
+              {/* Boutons de navigation */}
+              <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'space-between' }}>
+                {/* Bouton Précédent pour retourner à Construire et Interpoler */}
+                <button
+                  style={{
+                    padding: '10px 24px',
+                    backgroundColor: '#9E9E9E',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                  onClick={() => setCurrentStep('points')}
+                  title="Retourner à l'étape de construction et interpolation"
+                >
+                  <span style={{ fontSize: '18px' }}>←</span>
+                  Précédent
+                </button>
+
+                {/* Bouton Suivant pour sauvegarder et passer à l'équipement */}
+                <button
+                  style={{
+                    padding: '10px 24px',
+                    backgroundColor: modelNameInput ? '#4CAF50' : '#cccccc',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: modelNameInput ? 'pointer' : 'not-allowed',
+                    fontSize: '16px',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                  onClick={handleExportJSON}
+                  disabled={!modelNameInput}
+                  title="Sauvegarder et passer à l'étape suivante"
+                >
+                  Suivant
+                  <span style={{ fontSize: '18px' }}>→</span>
+                </button>
+              </div>
             </div>
           </div>
-        );
     }
   };
 
@@ -1999,26 +2111,9 @@ const renderStepContent = () => {
       <div className={styles.builderContent}>
         {renderStepContent()}
       </div>
-
-      <div className={styles.navigation}>
-        {currentStepIndex > 0 && (
-          <button
-            className={`${styles.btn} ${styles.btnSecondary}`}
-            onClick={() => setCurrentStep(steps[currentStepIndex - 1])}
-          >
-            Précédent
-          </button>
-        )}
-        {currentStepIndex < steps.length - 1 && (
-          <button
-            className={`${styles.btn} ${styles.btnPrimary}`}
-            onClick={() => setCurrentStep(steps[currentStepIndex + 1])}
-            disabled={!canProceed()}
-          >
-            {currentStep === 'axes' ? 'Construire les courbes' : 'Finaliser'}
-          </button>
-        )}
-      </div>
     </div>
-  );
-};
+
+});
+
+// Définir le displayName pour le composant avec forwardRef
+AbacBuilder.displayName = 'AbacBuilder';

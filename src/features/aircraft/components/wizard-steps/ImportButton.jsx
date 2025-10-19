@@ -122,8 +122,6 @@ const ImportButton = ({ onImport, variant = "outlined", size = "small" }) => {
           </Typography>
         )}
       </Box>
-    );
-  };
 
   return (
     <>
@@ -193,7 +191,5 @@ const ImportButton = ({ onImport, variant = "outlined", size = "small" }) => {
         </Alert>
       </Snackbar>
     </>
-  );
-};
 
 export default ImportButton;

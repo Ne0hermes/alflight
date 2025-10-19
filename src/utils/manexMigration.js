@@ -10,13 +10,11 @@ export const migrateManexData = () => {
   const { aircraftList } = useAircraftStore.getState();
   let migrated = 0;
   
-  console.log('🔄 Starting MANEX data migration...');
-  
+    
   aircraftList.forEach(aircraft => {
     // Si l'avion a des données MANEX complètes (pas juste les métadonnées)
     if (aircraft.manex && aircraft.manex.pdfData) {
-      console.log(`📦 Migrating MANEX for ${aircraft.registration}...`);
-      
+            
       // Stocker dans le store MANEX
       storeManexOptimized(aircraft.id, aircraft.manex);
       
@@ -38,12 +36,10 @@ export const migrateManexData = () => {
   });
   
   if (migrated > 0) {
-    console.log(`✅ Migration complete: ${migrated} MANEX files migrated`);
-    // Marquer la migration comme effectuée
+        // Marquer la migration comme effectuée
     localStorage.setItem('manex-migration-v1', 'completed');
   } else {
-    console.log('ℹ️ No MANEX data to migrate');
-  }
+      }
   
   return migrated;
 };
@@ -60,8 +56,7 @@ export const isMigrationNeeded = () => {
  */
 export const autoMigrateIfNeeded = () => {
   if (isMigrationNeeded()) {
-    console.log('🔍 MANEX migration needed, starting...');
-    migrateManexData();
+        migrateManexData();
   }
 };
 

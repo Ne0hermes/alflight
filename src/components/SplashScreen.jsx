@@ -69,8 +69,6 @@ export const SplashScreen = ({ onComplete }) => {
         <p style={styles.version}>Version 1.0.0</p>
       </div>
     </div>
-  );
-};
 
 const styles = {
   container: {

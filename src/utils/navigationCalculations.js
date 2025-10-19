@@ -137,12 +137,12 @@ export const calculateDestination = (origin, distanceNM, bearingDeg) => {
     Math.sin(lat1) * Math.cos(d) +
     Math.cos(lat1) * Math.sin(d) * Math.cos(brng)
   );
-  
+
   const lon2 = lon1 + Math.atan2(
     Math.sin(brng) * Math.sin(d) * Math.cos(lat1),
     Math.cos(d) - Math.sin(lat1) * Math.sin(lat2)
   );
-  
+
   return {
     lat: toDeg(lat2),
     lon: toDeg(lon2)
@@ -168,7 +168,7 @@ export const calculateMidpoint = (point1, point2) => {
     Math.sin(lat1) + Math.sin(lat2),
     Math.sqrt((Math.cos(lat1) + Bx) * (Math.cos(lat1) + Bx) + By * By)
   );
-  
+
   const lon3 = lon1 + Math.atan2(By, Math.cos(lat1) + Bx);
   
   return {
@@ -201,7 +201,7 @@ export const calculateWindEffect = (tas, heading, windSpeed, windDirection) => {
     Math.pow(tas * Math.cos(windCorrectionAngle * DEG_TO_RAD) - headwind, 2) +
     Math.pow(tas * Math.sin(windCorrectionAngle * DEG_TO_RAD), 2)
   );
-  
+
   return {
     groundSpeed,
     windCorrectionAngle,

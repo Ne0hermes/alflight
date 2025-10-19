@@ -10,7 +10,7 @@ interface PointsTableProps {
   onDeletePoint: (curveId: string, pointId: string) => void;
   onAddPoint?: (x: number, y: number) => void;
   onSelectCurve?: (curveId: string | null) => void;
-}
+);}
 
 const styles = {
   container: {
@@ -142,21 +142,13 @@ export const PointsTable: React.FC<PointsTableProps> = ({
 
   const handleSaveEdit = useCallback(() => {
     if (!editingPoint || !selectedCurveId) {
-      console.warn('⚠️ Impossible de sauvegarder: editingPoint ou selectedCurveId manquant');
-      return;
+            return;
     }
 
     const x = parseFloat(editX);
     const y = parseFloat(editY);
 
-    console.log('🔄 Tentative de sauvegarde du point:', {
-      x, y,
-      xLimits: [axesConfig.xAxis.min, axesConfig.xAxis.max],
-      yLimits: [axesConfig.yAxis.min, axesConfig.yAxis.max],
-      editingPoint,
-      selectedCurveId
-    });
-
+    
     if (isNaN(x) || isNaN(y)) {
       alert('Les valeurs doivent être des nombres valides');
       console.error('❌ Valeurs invalides:', { x, y, editX, editY });
@@ -179,8 +171,7 @@ export const PointsTable: React.FC<PointsTableProps> = ({
     setEditingPoint(null);
     setEditX('');
     setEditY('');
-    console.log('✅ Point sauvegardé avec succès');
-  }, [editingPoint, editX, editY, selectedCurveId, axesConfig, onUpdatePoint]);
+      }, [editingPoint, editX, editY, selectedCurveId, axesConfig, onUpdatePoint]);
 
   const handleCancelEdit = useCallback(() => {
     setEditingPoint(null);
@@ -198,15 +189,7 @@ export const PointsTable: React.FC<PointsTableProps> = ({
     const x = parseFloat(newX);
     const y = parseFloat(newY);
 
-    console.log('➕ Tentative d\'ajout de point:', {
-      x, y,
-      xLimits: [axesConfig.xAxis.min, axesConfig.xAxis.max],
-      yLimits: [axesConfig.yAxis.min, axesConfig.yAxis.max],
-      newX,
-      newY,
-      hasOnAddPoint: !!onAddPoint
-    });
-
+    
     if (isNaN(x) || isNaN(y)) {
       alert('Les valeurs doivent être des nombres valides');
       console.error('❌ Valeurs invalides:', { x, y, newX, newY });
@@ -230,8 +213,7 @@ export const PointsTable: React.FC<PointsTableProps> = ({
       setNewX('');
       setNewY('');
       setShowAddRow(false);
-      console.log('✅ Point ajouté avec succès');
-    } else {
+          } else {
       console.error('❌ onAddPoint n\'est pas défini');
     }
   }, [newX, newY, axesConfig, onAddPoint]);
@@ -430,5 +412,4 @@ export const PointsTable: React.FC<PointsTableProps> = ({
         </tbody>
       </table>
     </div>
-  );
 };

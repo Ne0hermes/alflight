@@ -11,6 +11,9 @@ import apiKeyManager from './utils/apiKeyManager';
 // Initialiser le gestionnaire de clés API au démarrage
 apiKeyManager.initialize();
 
+// Note: Le bucket Supabase 'manex-files' doit être créé manuellement via SQL
+// Voir docs/SETUP_SUPABASE_STORAGE.md pour les instructions
+
 // Test de la configuration API en développement
 if (import.meta.env.DEV) {
   import('./utils/testAPIKey');

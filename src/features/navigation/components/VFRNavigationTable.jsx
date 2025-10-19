@@ -28,9 +28,7 @@ const VFRNavigationTable = ({
     if (waypoints && waypoints.length > 0) {
       waypoints.forEach(wp => {
         if (wp.name && wp.name.match(/^[A-Z]{4}$/) && !weatherData[wp.name]) {
-          fetchWeather(wp.name).catch(err => 
-            console.warn(`Pas de données météo pour ${wp.name}`)
-          );
+          fetchWeather(wp.name).catch(() => {});
         }
       });
     }
@@ -48,8 +46,7 @@ const VFRNavigationTable = ({
       
       // Vérifier que les coordonnées sont valides
       if (!from.lat || !from.lon || !to.lat || !to.lon) {
-        console.warn(`Coordonnées manquantes pour le segment ${from.name} -> ${to.name}`);
-        continue;
+                continue;
       }
       
       // Calculer la distance

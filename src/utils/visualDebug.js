@@ -45,13 +45,13 @@ export const enableVisualDebug = () => {
     elem.title = `${elem.tagName} | ${Math.round(rect.width)}x${Math.round(rect.height)} | ${elem.className}`;
   });
   
-  console.log('🔍 Debug Visuel Activé - Appuyez sur Ctrl+D pour désactiver');
+  
 };
 
 export const disableVisualDebug = () => {
   const style = document.getElementById('visual-debug');
   if (style) style.remove();
-  console.log('Debug Visuel Désactivé');
+  
 };
 
 // Raccourci clavier Ctrl+D

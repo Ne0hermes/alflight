@@ -88,8 +88,7 @@ export const RunwayAnalyzer = ({ icao }) => {
         if (airportData) {
           setAirport(airportData);
           setRunways(airportData.runways || []);
-          console.log(`✅ ${airportData.runways?.length || 0} pistes trouvées`);
-        } else {
+                  } else {
           setError('Aérodrome non trouvé');
         }
       } catch (err) {

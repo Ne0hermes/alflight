@@ -41,7 +41,6 @@ export const DataBackupUI = () => {
         ? 'Protection des donn\u00e9es activ\u00e9e' 
         : 'Protection des donn\u00e9es d\u00e9sactiv\u00e9e - Attention !',
       newState ? 'success' : 'warning'
-    );
   };
 
   const handleManualBackup = async () => {
@@ -379,7 +378,6 @@ export const DataBackupUI = () => {
                     Restaurer
                   </button>
                 </div>
-              ))
             )}
           </div>
         )}
@@ -405,7 +403,5 @@ export const DataBackupUI = () => {
         </ul>
       </div>
     </div>
-  );
-};
 
 export default DataBackupUI;

@@ -76,7 +76,6 @@ const ExcelTrackerComponent = () => {
         'ExcelTracker',
         `Test ajouté à ${new Date().toLocaleTimeString('fr-FR')}`,
         'completed'
-      );
     }
   };
 
@@ -111,7 +110,6 @@ const ExcelTrackerComponent = () => {
         log.action?.toLowerCase().includes(filter.toLowerCase()) ||
         log.component?.toLowerCase().includes(filter.toLowerCase()) ||
         log.details?.toLowerCase().includes(filter.toLowerCase())
-      )
     : logs;
 
   return (
@@ -249,7 +247,6 @@ const ExcelTrackerComponent = () => {
         </Box>
       </CardContent>
     </Card>
-  );
 };
 
 export default ExcelTrackerComponent;

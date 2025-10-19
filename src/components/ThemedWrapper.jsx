@@ -13,8 +13,6 @@ export const ThemedWrapper = ({ children, title, className = '' }) => {
         {children}
       </div>
     </div>
-  );
-};
 
 const styles = {
   container: {

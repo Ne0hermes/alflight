@@ -100,7 +100,6 @@ export class NotImplementedProvider extends AeroDataProvider {
         a.icao.toLowerCase().includes(search) ||
         a.name.toLowerCase().includes(search) ||
         a.city?.toLowerCase().includes(search)
-      );
     }
 
     if (params?.icao) {

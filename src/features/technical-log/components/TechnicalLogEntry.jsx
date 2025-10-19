@@ -291,7 +291,6 @@ const TechnicalLogEntry = ({ entry, onSave, onDelete, isNew = false }) => {
         </Collapse>
       </CardContent>
     </Card>
-  );
 };
 
 export default TechnicalLogEntry;

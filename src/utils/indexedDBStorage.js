@@ -34,8 +34,7 @@ class IndexedDBStorage {
 
       request.onsuccess = (event) => {
         this.db = event.target.result;
-        console.log('IndexedDB initialisé avec succès');
-        resolve(this.db);
+                resolve(this.db);
       };
 
       request.onupgradeneeded = (event) => {
@@ -45,49 +44,42 @@ class IndexedDBStorage {
         if (!db.objectStoreNames.contains(MANEX_STORE)) {
           const manexStore = db.createObjectStore(MANEX_STORE, { keyPath: 'aircraftId' });
           manexStore.createIndex('uploadDate', 'uploadDate', { unique: false });
-          console.log('Store MANEX créé');
-        }
+                  }
 
         // Créer le store pour les VAC PDFs
         if (!db.objectStoreNames.contains(VAC_STORE)) {
           const vacStore = db.createObjectStore(VAC_STORE, { keyPath: 'icao' });
           vacStore.createIndex('uploadDate', 'uploadDate', { unique: false });
-          console.log('Store VAC créé');
-        }
+                  }
 
         // Créer les stores de dataBackupManager (pour éviter les conflits de version)
         if (!db.objectStoreNames.contains('dataBackups')) {
           const backupStore = db.createObjectStore('dataBackups', { keyPath: 'id' });
           backupStore.createIndex('timestamp', 'timestamp', { unique: false });
           backupStore.createIndex('type', 'type', { unique: false });
-          console.log('Store dataBackups créé');
-        }
+                  }
 
         if (!db.objectStoreNames.contains('protectedData')) {
           const protectedStore = db.createObjectStore('protectedData', { keyPath: 'id' });
           protectedStore.createIndex('type', 'type', { unique: false });
           protectedStore.createIndex('lastModified', 'lastModified', { unique: false });
-          console.log('Store protectedData créé');
-        }
+                  }
 
         if (!db.objectStoreNames.contains('aircraftData')) {
           const aircraftStore = db.createObjectStore('aircraftData', { keyPath: 'id' });
           aircraftStore.createIndex('registration', 'registration', { unique: false });
           aircraftStore.createIndex('lastModified', 'lastModified', { unique: false });
-          console.log('Store aircraftData créé');
-        }
+                  }
 
         if (!db.objectStoreNames.contains('vfrPoints')) {
           const vfrStore = db.createObjectStore('vfrPoints', { keyPath: 'id' });
           vfrStore.createIndex('name', 'name', { unique: false });
-          console.log('Store vfrPoints créé');
-        }
+                  }
 
         if (!db.objectStoreNames.contains('navigationData')) {
           const navStore = db.createObjectStore('navigationData', { keyPath: 'id' });
           navStore.createIndex('timestamp', 'timestamp', { unique: false });
-          console.log('Store navigationData créé');
-        }
+                  }
       };
     });
   }
@@ -128,8 +120,7 @@ class IndexedDBStorage {
 
       return new Promise((resolve, reject) => {
         request.onsuccess = () => {
-          console.log(`MANEX PDF stocké pour l'avion ${aircraftId}`);
-          
+                    
           // Retourner les métadonnées pour le localStorage
           resolve({
             ...metadata,
@@ -187,8 +178,7 @@ class IndexedDBStorage {
 
       return new Promise((resolve, reject) => {
         request.onsuccess = () => {
-          console.log(`MANEX PDF supprimé pour l'avion ${aircraftId}`);
-          resolve(true);
+                    resolve(true);
         };
 
         request.onerror = () => {
@@ -225,8 +215,7 @@ class IndexedDBStorage {
 
       return new Promise((resolve, reject) => {
         request.onsuccess = () => {
-          console.log(`VAC PDF stocké pour ${icao}`);
-          resolve({
+                    resolve({
             ...metadata,
             hasIndexedDBData: true,
             icao: icao.toUpperCase()
@@ -282,8 +271,7 @@ class IndexedDBStorage {
 
       return new Promise((resolve, reject) => {
         request.onsuccess = () => {
-          console.log(`VAC PDF supprimé pour ${icao}`);
-          resolve(true);
+                    resolve(true);
         };
 
         request.onerror = () => {
@@ -380,8 +368,7 @@ class IndexedDBStorage {
         };
       });
 
-      console.log(`${deleted} anciens documents supprimés`);
-      return deleted;
+            return deleted;
     } catch (error) {
       console.error('Erreur cleanOldData:', error);
       return 0;

@@ -10,7 +10,7 @@ export const useUnitsWatcher = () => {
   useEffect(() => {
     // Écouter l'événement custom pour les changements d'unités
     const handleUnitsUpdate = (event) => {
-      console.log('📐 Units updated, forcing component re-render');
+      
       // Le simple fait d'écouter cet événement dans useEffect
       // forcera un re-render des composants qui utilisent ce hook
     };

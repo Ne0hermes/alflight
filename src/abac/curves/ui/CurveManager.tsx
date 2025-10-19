@@ -377,9 +377,8 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                 </div>
               )}
             </div>
-          ))
+
         )}
       </div>
     </div>
-  );
 };

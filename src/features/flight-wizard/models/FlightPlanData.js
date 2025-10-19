@@ -89,6 +89,20 @@ export class FlightPlanData {
       withinLimits: true,   // Dans les limites ?
     };
 
+    // Étape 8 : Paramètres TOD (Top of Descent)
+    this.todParameters = {
+      cruiseAltitude: 3000,      // Altitude de croisière (ft)
+      descentRate: 500,          // Taux de descente (ft/min)
+      patternAltitude: 1500,     // Altitude pattern au-dessus du terrain (ft)
+      arrivalElevation: 0,       // Altitude terrain arrivée (ft)
+      groundSpeed: 120,          // Vitesse sol (kt)
+      // Résultats calculés
+      distanceToTod: 0,          // Distance au TOD (NM)
+      descentTime: 0,            // Temps de descente (min)
+      descentAngle: 0,           // Angle de descente (°)
+      altitudeToDescent: 0,      // Altitude à descendre (ft)
+    };
+
     // Métadonnées
     this.metadata = {
       createdAt: new Date(),
@@ -233,6 +247,57 @@ export class FlightPlanData {
   updateWeightBalance(data) {
     this.weightBalance = { ...this.weightBalance, ...data };
     this.calculateWeightBalance();
+  }
+
+  /**
+   * Calcule les paramètres TOD (Top of Descent)
+   */
+  calculateTOD() {
+    const { cruiseAltitude, descentRate, patternAltitude, arrivalElevation, groundSpeed } = this.todParameters;
+
+    // Altitude pattern réelle = terrain + offset pattern
+    const targetAltitude = arrivalElevation + patternAltitude;
+
+    // Altitude à descendre
+    const altitudeToDescent = cruiseAltitude - targetAltitude;
+
+    if (altitudeToDescent <= 0) {
+      // Pas de descente nécessaire ou montée requise
+      this.todParameters.altitudeToDescent = altitudeToDescent;
+      this.todParameters.distanceToTod = 0;
+      this.todParameters.descentTime = 0;
+      this.todParameters.descentAngle = 0;
+      return this.todParameters;
+    }
+
+    // Temps de descente (minutes)
+    const descentTime = altitudeToDescent / descentRate;
+
+    // Vitesse sol en NM/min
+    const groundSpeedNmPerMin = groundSpeed / 60;
+
+    // Distance au TOD (NM)
+    const distanceToTod = descentTime * groundSpeedNmPerMin;
+
+    // Angle de descente (degrés)
+    const descentAngle = Math.atan((altitudeToDescent / 6076.12) / distanceToTod) * 180 / Math.PI;
+
+    // Mise à jour des résultats
+    this.todParameters.altitudeToDescent = altitudeToDescent;
+    this.todParameters.distanceToTod = parseFloat(distanceToTod.toFixed(1));
+    this.todParameters.descentTime = Math.round(descentTime);
+    this.todParameters.descentAngle = parseFloat(descentAngle.toFixed(1));
+
+    this.updateTimestamp();
+    return this.todParameters;
+  }
+
+  /**
+   * Met à jour les paramètres TOD
+   */
+  updateTODParameters(data) {
+    this.todParameters = { ...this.todParameters, ...data };
+    this.calculateTOD();
   }
 
   /**

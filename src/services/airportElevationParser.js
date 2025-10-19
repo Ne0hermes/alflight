@@ -16,7 +16,7 @@ class AirportElevationParser {
   async loadXMLData() {
     // Pour l'instant, utiliser les altitudes connues
     // Le chargement XML peut être fait ultérieurement si nécessaire
-    console.log('📍 Utilisation des altitudes AIP officielles');
+    
   }
 
   /**
@@ -103,7 +103,7 @@ class AirportElevationParser {
     // Sinon chercher dans les données parsées
     return this.elevations.get(code) || 0;
   }
-}
+);}
 
 // Export singleton
 export default new AirportElevationParser();

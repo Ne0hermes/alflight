@@ -202,7 +202,7 @@ class ExcelTracker {
     // Mettre à jour le workbook
     this.initWorkbook();
 
-    console.log('📊 Log ajouté:', entry);
+    
 
     // Déclencher un événement custom pour notifier l'UI
     window.dispatchEvent(new CustomEvent('excel-log-added', { detail: entry }));
@@ -249,7 +249,7 @@ class ExcelTracker {
       const filename = `alflight_tracking_${new Date().toISOString().split('T')[0]}.xlsx`;
       XLSX.writeFile(this.workbook, filename);
 
-      console.log('✅ Fichier Excel exporté:', filename);
+      
       return true;
     } catch (error) {
       console.error('❌ Erreur export Excel:', error);
@@ -264,7 +264,7 @@ class ExcelTracker {
     // Sauvegarder toutes les 30 secondes
     this.autoSaveInterval = setInterval(() => {
       this.saveToStorage();
-      console.log('💾 Auto-save effectué');
+      
     }, 30000);
   }
 
@@ -313,7 +313,7 @@ class ExcelTracker {
       this.logs = [];
       this.saveToStorage();
       this.initWorkbook();
-      console.log('🗑️ Tous les logs effacés');
+      
     }
   }
 
@@ -334,11 +334,7 @@ class ExcelTracker {
 window.excelTracker = new ExcelTracker();
 
 // Commandes disponibles dans la console
-console.log(`
-📊 Excel Tracker Avancé disponible !
 
-Commandes:
-- excelTracker.log('Action', 'Composant', 'Détails')
 - excelTracker.exportToExcel()  // Télécharge le fichier .xlsx
 - excelTracker.getRecentLogs()  // Derniers 10 logs
 - excelTracker.getSummary()      // Résumé et stats
@@ -347,6 +343,4 @@ Commandes:
 
 Le fichier Excel est mis à jour automatiquement !
 Auto-save toutes les 30 secondes.
-`);
-
 export default ExcelTracker;

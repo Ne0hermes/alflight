@@ -85,7 +85,7 @@ export function checkAiracUpdate() {
     const daysUntilNext = Math.ceil((nextDate - today) / (1000 * 60 * 60 * 24));
     
     if (daysUntilNext <= 3) {
-      console.warn(`⚠️ Nouveau cycle AIRAC dans ${daysUntilNext} jour(s) : ${nextCycle.date}`);
+       : ${nextCycle.date}`);
       return {
         needsUpdate: true,
         daysUntilNext,
@@ -99,5 +99,5 @@ export function checkAiracUpdate() {
 
 // Log du cycle actuel au chargement
 const currentCycle = getCurrentAiracCycle();
-console.log(`📅 Cycle AIRAC actuel : ${currentCycle.date} (${currentCycle.folder})`);
+
 checkAiracUpdate();

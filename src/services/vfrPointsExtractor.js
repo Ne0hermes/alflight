@@ -30,7 +30,7 @@ class VFRPointsExtractor {
     this.loading = true;
     
     try {
-      console.log('🔄 Chargement des points VFR depuis AIXM...');
+      
       
       // Charger le fichier AIXM
       const response = await fetch('/src/data/AIXM4.5_all_FR_OM_2025-09-04.xml');
@@ -45,7 +45,7 @@ class VFRPointsExtractor {
       // Extraire les points VFR
       this.vfrPoints = this.extractVFRPointsFromAIXM(doc);
       
-      console.log(`✅ ${this.vfrPoints.length} points VFR extraits`);
+      
       this.loaded = true;
       
       return this.vfrPoints;
@@ -68,7 +68,7 @@ class VFRPointsExtractor {
     // Rechercher tous les points désignés
     const dpns = doc.querySelectorAll('Dpn');
     
-    console.log(`🔍 Analyse de ${dpns.length} points désignés dans AIXM...`);
+    
     
     for (const dpn of dpns) {
       const txtRmk = this.getTextContent(dpn, 'txtRmk');
@@ -97,8 +97,6 @@ class VFRPointsExtractor {
         codeId.match(/^[A-Z]{2,}$/) && // Au moins 2 lettres
         !codeId.match(/^[NSEW]$/) && // Exclure les points cardinaux simples
         (txtRmk?.includes('VFR') || txtRmk?.includes('VRP') || txtRmk?.includes('visual'))
-      ));
-      
       if (isVFR) {
         // Extraire les coordonnées
         const geoLat = this.getTextContent(dpn, 'geoLat');
@@ -140,7 +138,7 @@ class VFRPointsExtractor {
           
           // Log pour debug
           if (aerodromeId === 'LFST') {
-            console.log(`📍 Point VFR LFST trouvé: ${codeId} - ${txtName} @ ${coords.lat.toFixed(4)}, ${coords.lon.toFixed(4)}`);
+            }, ${coords.lon.toFixed(4)}`);
           }
           
           // Grouper par aérodrome si possible
@@ -156,7 +154,7 @@ class VFRPointsExtractor {
     
     // Log des points VFR par aérodrome
     for (const [aerodrome, points] of vfrPointsByAerodrome) {
-      console.log(`📍 ${aerodrome}: ${points.length} points VFR`);
+      
     }
     
     return vfrPoints;
@@ -226,7 +224,7 @@ class VFRPointsExtractor {
       }
     }));
   }
-}
+);}
 
 // Export singleton
 export const vfrPointsExtractor = new VFRPointsExtractor();

@@ -129,7 +129,7 @@ export const VACDownloadButton = memo(({ icao, size = 'normal' }) => {
         </div>
       )}
     </div>
-  );
+
 });
 
 const styles = {

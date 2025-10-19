@@ -28,14 +28,11 @@ import { useUnitsStore, unitsSelectors } from '@core/stores/unitsStore';
 import { convertValue, getUnitSymbol } from '@utils/unitConversions';
 
 const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
-  const [forwardPoints, setForwardPoints] = useState(
-    data.cgEnvelope?.forwardPoints && data.cgEnvelope.forwardPoints.length > 0
+  const [forwardPoints, setForwardPoints] = useState(data.cgEnvelope?.forwardPoints && data.cgEnvelope.forwardPoints.length > 0
       ? data.cgEnvelope.forwardPoints
       : [{ weight: '', cg: '', id: Date.now() + Math.random() }]
-  );
   const [additionalSeats, setAdditionalSeats] = useState(data.additionalSeats || []);
-  const [baggageCompartments, setBaggageCompartments] = useState(
-    data.baggageCompartments && data.baggageCompartments.length > 0
+  const [baggageCompartments, setBaggageCompartments] = useState(data.baggageCompartments && data.baggageCompartments.length > 0
       ? data.baggageCompartments
       : [
           { 
@@ -51,7 +48,6 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
             maxWeight: data.weights?.maxBaggageAft || '' 
           }
         ]
-  );
   const units = unitsSelectors.useUnits();
   const [previousUnits, setPreviousUnits] = useState(units);
 
@@ -77,7 +73,6 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
             previousUnits.weight,
             units.weight,
             'weight'
-          );
           if (convertedValue && convertedValue !== value) {
             updateData(field, Math.round(convertedValue * 10) / 10);
           }
@@ -108,7 +103,6 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
             previousUnits.armLength || 'mm',
             units.armLength || 'mm',
             'armLength'
-          );
           if (convertedValue && convertedValue !== value) {
             updateData(field, Math.round(convertedValue * 100) / 100);
           }
@@ -197,7 +191,6 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
   const updateForwardPoint = (pointId, field, value) => {
     const updatedPoints = forwardPoints.map(point => 
       point.id === pointId ? { ...point, [field]: value } : point
-    );
     setForwardPoints(updatedPoints);
     updateData('cgEnvelope.forwardPoints', updatedPoints);
   };
@@ -223,7 +216,6 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
   const updateSeat = (id, field, value) => {
     const updatedSeats = additionalSeats.map(seat => 
       seat.id === id ? { ...seat, [field]: value } : seat
-    );
     setAdditionalSeats(updatedSeats);
     updateData('additionalSeats', updatedSeats);
   };
@@ -250,7 +242,6 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
   const updateBaggageCompartment = (compartmentId, field, value) => {
     const updatedCompartments = baggageCompartments.map(c => 
       c.id === compartmentId ? { ...c, [field]: value } : c
-    );
     setBaggageCompartments(updatedCompartments);
     updateData('baggageCompartments', updatedCompartments);
   };
@@ -879,7 +870,6 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
         )}
       </Paper>
     </Box>
-  );
 };
 
 export default Step3WeightBalance;

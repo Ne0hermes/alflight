@@ -56,9 +56,8 @@ export class AbacCurveManager {
       };
     }
 
-    console.log(`🏭 Manager.addCurve: Ajout de "${curve.name}" avec ${curve.points.length} points`);
-    if (curve.points.length > 0) {
-      console.log(`  📦 Premiers points:`, curve.points.slice(0, 3).map(p => `(${p.x}, ${p.y})`));
+        if (curve.points.length > 0) {
+      .map(p => `(${p.x}, ${p.y})`));
     }
 
     this.curves.set(id, curve);
@@ -115,10 +114,6 @@ export class AbacCurveManager {
   }
 
   fitCurve(curveId: string, options: FitOptions = {}): FitResult {
-    console.log('\n🤖 === AbacCurveManager.fitCurve ===');
-    console.log('🆔 CurveId:', curveId);
-    console.log('📈 Options:', options);
-    console.log('🗂️ Courbes dans le manager:', Array.from(this.curves.keys()));
 
     const curve = this.curves.get(curveId);
     if (!curve) {
@@ -127,10 +122,7 @@ export class AbacCurveManager {
       throw new Error(`Curve ${curveId} not found`);
     }
 
-    console.log(`📍 Courbe trouvée: "${curve.name}"`);
-    console.log(`🔵 Couleur: ${curve.color}`);
-    console.log(`📊 Nombre de points: ${curve.points.length}`);
-
+            
     const {
       method = 'naturalSpline',
       monotonic = false,
@@ -138,17 +130,11 @@ export class AbacCurveManager {
       numPoints = 200
     } = options;
 
-    console.log('🔧 Paramètres d\'interpolation:');
-    console.log('  - Méthode:', method);
-    console.log('  - Monotone:', monotonic);
-    console.log('  - Lissage:', smoothing);
-    console.log('  - Nombre de points:', numPoints);
-
+                    
     const warnings: string[] = [];
 
     if (curve.points.length < 2) {
-      console.warn('⚠️ Points insuffisants pour l\'interpolation');
-      warnings.push('Insufficient points for interpolation (minimum 2 required)');
+            warnings.push('Insufficient points for interpolation (minimum 2 required)');
       return {
         curveId,
         originalPoints: curve.points,
@@ -160,35 +146,26 @@ export class AbacCurveManager {
     }
 
     if (method === 'akima' && curve.points.length < 5) {
-      console.warn('⚠️ Akima nécessite au moins 5 points, utilisation de PCHIP');
-      warnings.push('Akima requires at least 5 points, falling back to PCHIP');
+            warnings.push('Akima requires at least 5 points, falling back to PCHIP');
     }
 
     let fittedPoints: XYPoint[];
 
     try {
       if (method === 'akima' && curve.points.length >= 5) {
-        console.log('🌀 Utilisation de l\'interpolation Akima...');
-        fittedPoints = akimaInterpolate(curve.points, numPoints);
+                fittedPoints = akimaInterpolate(curve.points, numPoints);
       } else if (method === 'naturalSpline') {
-        console.log('🎨 Utilisation de l\'interpolation Spline Cubique Naturelle...');
-        fittedPoints = naturalCubicSplineInterpolate(curve.points, numPoints);
+                fittedPoints = naturalCubicSplineInterpolate(curve.points, numPoints);
       } else if (method === 'catmullRom') {
-        console.log('🎢 Utilisation de l\'interpolation Catmull-Rom...');
-        fittedPoints = catmullRomInterpolate(curve.points, numPoints, 0.5);
+                fittedPoints = catmullRomInterpolate(curve.points, numPoints, 0.5);
       } else {
-        console.log('🌁 Utilisation de l\'interpolation PCHIP...');
-        fittedPoints = pchipInterpolate(curve.points, numPoints);
+                fittedPoints = pchipInterpolate(curve.points, numPoints);
       }
 
-      console.log(`✅ Interpolation réussie! ${fittedPoints.length} points générés`);
-      if (fittedPoints.length > 0) {
-        console.log('📦 Premiers points interpolés:',
-          fittedPoints.slice(0, 3).map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`).join(', '));
+            if (fittedPoints.length > 0) {
+        .map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`).join(', '));
       } else {
-        console.warn(`⚠️ Aucun point interpolé généré pour la courbe "${curve.name}"`);
-        console.log('🔍 Points originaux:', curve.points);
-        // Utiliser les points originaux si l'interpolation échoue
+                        // Utiliser les points originaux si l'interpolation échoue
         fittedPoints = [...curve.points];
       }
 
@@ -213,13 +190,12 @@ export class AbacCurveManager {
         const hasExtrapolation = fittedPoints.some(p =>
           p.x < xAxis.min || p.x > xAxis.max ||
           p.y < yAxis.min || p.y > yAxis.max
-        );
         if (hasExtrapolation) {
           warnings.push('Some fitted points are outside the defined axes bounds');
         }
       }
 
-      console.log(`📏 RMSE calculé: ${rmse.toFixed(4)}`);
+      }`);
 
       curve.fitted = {
         points: fittedPoints,
@@ -227,8 +203,7 @@ export class AbacCurveManager {
         method
       };
 
-      console.log('💾 Données interpolées sauvegardées dans la courbe');
-      console.log('🎉 === Fin de AbacCurveManager.fitCurve (succès) ===\n');
+             ===\n');
 
       return {
         curveId,
@@ -243,7 +218,7 @@ export class AbacCurveManager {
       console.error('📦 Stack trace:', (error as Error).stack);
       warnings.push(`Interpolation failed: ${error.message}`);
 
-      console.log('🎉 === Fin de AbacCurveManager.fitCurve (erreur) ===\n');
+       ===\n');
 
       return {
         curveId,
@@ -308,7 +283,7 @@ export class AbacCurveManager {
 
     // Si aucune courbe de base, retourner vide
     if (baseCurves.length < 2) {
-      console.log(`⚠️ Pas assez de courbes de base (${baseCurves.length}), minimum 2 requis`);
+      , minimum 2 requis`);
       return newCurveIds;
     }
 
@@ -347,8 +322,7 @@ export class AbacCurveManager {
     // Si aucun paramètre trouvé, utiliser l'ordre des courbes
     const hasParams = curvesWithParams.some(cp => cp.param !== null);
     if (!hasParams) {
-      console.log(`⚠️ Aucun paramètre numérique trouvé dans les noms de courbes, utilisation de l'ordre des courbes`);
-      curvesWithParams = baseCurves.map((curve, index) => ({
+            curvesWithParams = baseCurves.map((curve, index) => ({
         curve,
         param: index * 100 // Utiliser un espacement de 100 entre les courbes
       }));
@@ -359,9 +333,8 @@ export class AbacCurveManager {
         .sort((a, b) => a.param! - b.param!);
     }
 
-    console.log(`🔧 Génération de courbes intermédiaires...`);
-    console.log(`   Courbes de base (${baseCurves.length}): ${baseCurves.map(c => c.name).join(', ')}`);
-    console.log(`   Courbes avec paramètres (${curvesWithParams.length}): ${curvesWithParams.map(cp => `${cp.curve.name}(${cp.param})`).join(', ')}`);
+        : ${baseCurves.map(c => c.name).join(', ')}`);
+    : ${curvesWithParams.map(cp => `${cp.curve.name}(${cp.param})`).join(', ')}`);
 
     // Pour chaque paire de courbes consécutives
     for (let i = 0; i < curvesWithParams.length - 1; i++) {
@@ -370,24 +343,21 @@ export class AbacCurveManager {
 
       // Interpoler automatiquement les courbes si nécessaire
       if (!lower.curve.fitted && lower.curve.points.length >= 2) {
-        console.log(`   🔄 Interpolation automatique de "${lower.curve.name}"`);
-        this.fitCurve(lower.curve.id, { method: 'pchip', numPoints: 100 });
+                this.fitCurve(lower.curve.id, { method: 'pchip', numPoints: 100 });
         lower.curve = this.getCurve(lower.curve.id)!;
       }
 
       if (!upper.curve.fitted && upper.curve.points.length >= 2) {
-        console.log(`   🔄 Interpolation automatique de "${upper.curve.name}"`);
-        this.fitCurve(upper.curve.id, { method: 'pchip', numPoints: 100 });
+                this.fitCurve(upper.curve.id, { method: 'pchip', numPoints: 100 });
         upper.curve = this.getCurve(upper.curve.id)!;
       }
 
       if (!lower.curve.fitted || !upper.curve.fitted) {
-        console.warn(`⚠️ Courbes ne peuvent pas être interpolées (pas assez de points), passage à la paire suivante`);
+        , passage à la paire suivante`);
         continue;
       }
 
-      console.log(`   📊 Entre "${lower.curve.name}" et "${upper.curve.name}"`);
-
+      
       // Générer les courbes intermédiaires
       for (let j = 1; j <= numIntermediateCurves; j++) {
         const ratio = j / (numIntermediateCurves + 1);
@@ -406,14 +376,13 @@ export class AbacCurveManager {
         const xMax = Math.min(
           lowerPoints[lowerPoints.length - 1].x,
           upperPoints[upperPoints.length - 1].x
-        );
 
         // Créer des points uniformément espacés
         const numPoints = Math.max(lowerPoints.length, upperPoints.length);
         const xStep = (xMax - xMin) / (numPoints - 1);
 
-        console.log(`      Création de courbe intermédiaire ${j}/${numIntermediateCurves} (ratio=${ratio.toFixed(2)})`);
-        console.log(`      Plage X commune: [${xMin.toFixed(2)}, ${xMax.toFixed(2)}]`);
+        })`);
+        }, ${xMax.toFixed(2)}]`);
 
         // Pour chaque valeur X, calculer la moyenne pondérée des Y
         for (let k = 0; k < numPoints; k++) {
@@ -464,13 +433,11 @@ export class AbacCurveManager {
           });
 
           newCurveIds.push(newId);
-          console.log(`      ✅ Créée: "${intermediateName}" avec ${intermediatePoints.length} points`);
-        }
+                  }
       }
     }
 
-    console.log(`✨ ${newCurveIds.length} courbes intermédiaires générées`);
-    return newCurveIds;
+        return newCurveIds;
   }
 
   /**

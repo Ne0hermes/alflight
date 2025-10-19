@@ -149,6 +149,69 @@ function analyzeChange(filePath, eventType) {
 }
 
 /**
+ * Créer un résumé formaté et lisible des changements
+ */
+function createFormattedSummary(changes, component) {
+  const gitInfo = getGitInfo();
+
+  // Grouper par fichier pour compter les opérations
+  const fileOps = {};
+  changes.forEach(change => {
+    if (!fileOps[change.relativePath]) {
+      fileOps[change.relativePath] = {
+        path: change.relativePath,
+        fileName: path.basename(change.relativePath),
+        operations: [],
+        eventTypes: new Set()
+      };
+    }
+    fileOps[change.relativePath].operations.push(change);
+    fileOps[change.relativePath].eventTypes.add(change.eventType);
+  });
+
+  // Créer la liste formatée
+  const filesList = Object.values(fileOps);
+  const summary = [];
+
+  summary.push(`📦 Modifications dans ${component}`);
+  summary.push(`\n🔹 ${filesList.length} fichier(s) modifié(s):`);
+  summary.push('');
+
+  filesList.forEach((file, index) => {
+    const status = file.eventTypes.has('add') ? '✅ (nouveau)' :
+                   file.eventTypes.has('unlink') ? '❌ (supprimé)' :
+                   '📝 (modifié)';
+
+    const changeCount = file.operations.length > 1 ? ` (${file.operations.length} modifications)` : '';
+
+    summary.push(`${index + 1}. ${file.path} ${status}${changeCount}`);
+
+    // Ajouter une description générique basée sur le type de fichier
+    const ext = path.extname(file.path);
+    let description = '';
+
+    if (ext === '.jsx' || ext === '.js') {
+      description = 'Code React/JavaScript';
+    } else if (ext === '.css') {
+      description = 'Styles CSS';
+    } else if (ext === '.json') {
+      description = 'Configuration';
+    }
+
+    if (description) {
+      summary.push(`   └─ ${description}`);
+    }
+  });
+
+  summary.push('');
+  summary.push(`📌 Branche: ${gitInfo.branch}`);
+  summary.push(`👤 Auteur: ${gitInfo.author}`);
+  summary.push(`📝 Dernier commit: ${gitInfo.lastCommit}`);
+
+  return summary.join('\n');
+}
+
+/**
  * Traiter la file d'attente des changements
  */
 async function processChanges() {
@@ -165,19 +228,27 @@ async function processChanges() {
     grouped[change.component].push(change);
   });
 
-  // Logger chaque groupe
+  // Logger chaque groupe avec un format lisible
   const gitInfo = getGitInfo();
 
   for (const [component, changes] of Object.entries(grouped)) {
-    const filesList = changes.map(c => c.relativePath).join(', ');
-    const categories = [...new Set(changes.map(c => c.category))].join(', ');
-    const eventTypes = [...new Set(changes.map(c => c.eventType))].join(', ');
+    // Créer la liste des fichiers pour la colonne F
+    const uniqueFiles = [...new Set(changes.map(c => c.relativePath))];
+    const filesList = uniqueFiles.join('\n');
 
-    const action = `Code update - ${component}`;
-    const summary = `${categories} (${eventTypes})`;
-    const details = `Branch: ${gitInfo.branch}, Auteur: ${gitInfo.author}`;
+    // Créer le résumé formaté
+    const formattedSummary = createFormattedSummary(changes, component);
 
-    await logToGoogleSheets(action, summary, details, component, filesList, 'completed');
+    // Action simple
+    const action = `Mise à jour - ${component}`;
+
+    // Résumé court (colonne D)
+    const shortSummary = `${uniqueFiles.length} fichier(s) modifié(s)`;
+
+    // Détails complets (colonne E) - Le résumé formaté
+    const details = formattedSummary;
+
+    await logToGoogleSheets(action, shortSummary, details, component, filesList, 'completed');
   }
 
   // Vider la file

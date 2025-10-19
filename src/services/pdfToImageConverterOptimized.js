@@ -6,7 +6,6 @@ import * as pdfjsLib from 'pdfjs-dist';
 // Configuration pour PDF.js
 if (typeof window !== 'undefined') {
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
-  console.log('📚 PDF.js worker configuré (optimisé)');
 }
 
 class PDFToImageConverterOptimized {
@@ -58,30 +57,30 @@ class PDFToImageConverterOptimized {
    */
   async analyzeManualPDF(pdfFile) {
     try {
-      console.log('📚 === ANALYSE INTELLIGENTE DU MANUEL ===');
-      console.log(`📄 Fichier: ${pdfFile.name}`);
-      console.log(`📊 Taille: ${(pdfFile.size / (1024 * 1024)).toFixed(2)} MB`);
+      
+      
+      ).toFixed(2)} MB`);
 
       const startTime = Date.now();
 
       // Charger le PDF (avec mise en cache)
       const pdf = await this.loadPDF(pdfFile);
-      console.log(`📖 Pages totales: ${pdf.numPages}`);
+      
 
       // Phase 1: Scan rapide du document
-      console.log('\n🔍 Phase 1: Scan rapide du document...');
+      
       const tableOfContents = await this.scanTableOfContents(pdf);
 
       // Phase 2: Recherche des sections de performances
-      console.log('\n🔎 Phase 2: Identification des sections de performances...');
+      
       const performanceSections = await this.findPerformanceSections(pdf, tableOfContents);
 
       // Phase 3: Extraction ciblée des pages pertinentes
-      console.log('\n📸 Phase 3: Extraction des pages pertinentes...');
+      
       const relevantPages = await this.extractRelevantPages(pdf, performanceSections, pdfFile);
 
       const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(1);
-      console.log(`\n✅ Analyse terminée en ${elapsedTime}s`);
+      
 
       return {
         fileName: pdfFile.name,
@@ -114,7 +113,7 @@ class PDFToImageConverterOptimized {
     const cacheKey = `${pdfFile.name}_${pdfFile.size}`;
 
     if (this.pdfCache.has(cacheKey)) {
-      console.log('♻️ PDF trouvé en cache');
+      
       return this.pdfCache.get(cacheKey);
     }
 
@@ -125,7 +124,7 @@ class PDFToImageConverterOptimized {
     if (this.pdfCache.size >= 3) {
       const firstKey = this.pdfCache.keys().next().value;
       this.pdfCache.delete(firstKey);
-      console.log('🗑️ Cache PDF nettoyé');
+      
     }
 
     this.pdfCache.set(cacheKey, pdf);
@@ -169,11 +168,11 @@ class PDFToImageConverterOptimized {
         }
 
       } catch (error) {
-        console.warn(`⚠️ Impossible de scanner la page ${i}`);
+        
       }
     }
 
-    console.log(`📑 ${toc.length} entrées trouvées dans la table des matières`);
+    
     return toc;
   }
 
@@ -191,7 +190,7 @@ class PDFToImageConverterOptimized {
 
     // Stratégie 1: Utiliser la table des matières si disponible
     if (toc.length > 0) {
-      console.log('📋 Utilisation de la table des matières...');
+      
       for (const entry of toc) {
         if (entry.type && sections[entry.type]) {
           sections[entry.type].push(entry.page);
@@ -200,7 +199,7 @@ class PDFToImageConverterOptimized {
     }
 
     // Stratégie 2: Recherche par mots-clés (échantillonnage)
-    console.log('🔍 Recherche par mots-clés...');
+    
     const samplesToCheck = this.generateSamplePages(pdf.numPages);
 
     for (const pageNum of samplesToCheck) {
@@ -216,13 +215,13 @@ class PDFToImageConverterOptimized {
           if (score > 0.5) { // Seuil de pertinence
             if (!sections[type].includes(pageNum)) {
               sections[type].push(pageNum);
-              console.log(`  ✓ Page ${pageNum}: ${type} (score: ${score.toFixed(2)})`);
+              })`);
             }
           }
         }
 
       } catch (error) {
-        console.warn(`⚠️ Impossible d'analyser la page ${pageNum}`);
+        
       }
     }
 
@@ -342,7 +341,7 @@ class PDFToImageConverterOptimized {
       pages.forEach(p => allPages.add(p));
     }
 
-    console.log(`📄 ${allPages.size} pages pertinentes à extraire`);
+    
 
     // Limiter l'extraction pour éviter la surcharge mémoire
     const pagesToExtract = Array.from(allPages)
@@ -357,7 +356,7 @@ class PDFToImageConverterOptimized {
 
         if (this.pageImageCache.has(cacheKey)) {
           base64 = this.pageImageCache.get(cacheKey);
-          console.log(`♻️ Page ${pageNum} trouvée en cache`);
+          
         } else {
           // Convertir la page
           base64 = await this.convertPageToImage(pdf, pageNum);
@@ -382,7 +381,7 @@ class PDFToImageConverterOptimized {
           confidence: types.length > 0 ? 'high' : 'medium'
         });
 
-        console.log(`✅ Page ${pageNum} extraite (${types.join(', ')})`);
+        })`);
 
       } catch (error) {
         console.error(`❌ Erreur page ${pageNum}:`, error);
@@ -424,7 +423,7 @@ class PDFToImageConverterOptimized {
     if (this.pageImageCache.size >= this.maxCacheSize) {
       const keysToDelete = Array.from(this.pageImageCache.keys()).slice(0, 10);
       keysToDelete.forEach(k => this.pageImageCache.delete(k));
-      console.log('🗑️ Cache d\'images nettoyé');
+      
     }
 
     this.pageImageCache.set(key, imageData);
@@ -473,7 +472,7 @@ class PDFToImageConverterOptimized {
   clearCache() {
     this.pdfCache.clear();
     this.pageImageCache.clear();
-    console.log('🗑️ Tous les caches ont été vidés');
+    
   }
 
   /**
@@ -493,7 +492,7 @@ class PDFToImageConverterOptimized {
   isPDF(file) {
     return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
   }
-}
+);}
 
 // Export singleton
 export default new PDFToImageConverterOptimized();

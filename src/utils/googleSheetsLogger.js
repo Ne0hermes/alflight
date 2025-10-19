@@ -45,11 +45,11 @@ export const logToGoogleSheets = async (action, details = '', options = {}) => {
     });
 
     if (!response.ok) {
-      console.warn('Impossible de logger vers Google Sheets:', response.status);
+      
     }
   } catch (error) {
     // Ne pas bloquer l'application si le logging échoue
-    console.debug('Google Sheets logging indisponible:', error.message);
+    
   }
 };
 

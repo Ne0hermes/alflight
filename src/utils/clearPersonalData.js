@@ -2,7 +2,7 @@
 // À utiliser dans la console du navigateur pour tester les imports
 
 export const clearPersonalData = () => {
-  console.log('=== SUPPRESSION DES DONNÉES PERSONNELLES ===');
+  
 
   const keysToRemove = [
     'personalInfo',
@@ -25,16 +25,15 @@ export const clearPersonalData = () => {
     if (data) {
       const sizeMB = (data.length / 1024 / 1024).toFixed(2);
       localStorage.removeItem(key);
-      console.log(`✅ Supprimé: ${key} (${sizeMB}MB)`);
       removedCount++;
     } else {
-      console.log(`⏭️ ${key} - déjà vide`);
+      
     }
   });
 
   // Afficher le résumé
-  console.log('\n📊 RÉSUMÉ:');
-  console.log(`${removedCount} clés supprimées`);
+  
+  
 
   // Calculer l'espace restant
   let totalSize = 0;
@@ -44,9 +43,9 @@ export const clearPersonalData = () => {
     }
   }
 
-  console.log(`Espace utilisé restant: ${(totalSize / 1024 / 1024).toFixed(2)}MB`);
-  console.log('\n✅ Données personnelles supprimées avec succès!');
-  console.log('Actualisez la page pour voir les changements.');
+  .toFixed(2)}MB`);
+  
+  
 
   return {
     success: true,
@@ -59,7 +58,7 @@ export const clearPersonalData = () => {
 export const clearAllStorage = () => {
   if (confirm('⚠️ ATTENTION: Ceci va supprimer TOUTES les données stockées. Continuer?')) {
     localStorage.clear();
-    console.log('🗑️ Tout le localStorage a été vidé');
+    
     alert('Toutes les données ont été supprimées. Rechargez la page.');
     return true;
   }

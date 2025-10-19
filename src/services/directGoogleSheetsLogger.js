@@ -18,8 +18,7 @@ class DirectGoogleSheetsLogger {
     // Vérifier la connexion au serveur
     this.checkServerHealth();
 
-    console.log('📊 Service Google Sheets Direct activé');
-  }
+      }
 
   /**
    * Vérifie que le serveur backend est accessible
@@ -29,14 +28,8 @@ class DirectGoogleSheetsLogger {
       const response = await fetch(`${this.serverUrl}/health`);
       const data = await response.json();
 
-      if (data.status === 'ok') {
-        console.log('✅ Serveur Google Sheets connecté');
-        console.log('🔄 Authentification:', data.authenticated ? 'OK' : 'En cours...');
-      }
-    } catch (error) {
-      console.warn('⚠️ Serveur Google Sheets non disponible. Les logs seront mis en file d\'attente.');
-      console.log('💡 Lancez le serveur avec: node server/googleSheetsServer.js');
-    }
+          } catch (error) {
+                }
   }
 
   /**
@@ -84,13 +77,12 @@ class DirectGoogleSheetsLogger {
         });
 
         if (response.ok) {
-          console.log(`✅ Log envoyé: ${entry.action}`);
-          this.queue.shift(); // Retirer de la file
+                    this.queue.shift(); // Retirer de la file
         } else {
           throw new Error('Erreur serveur');
         }
       } catch (error) {
-        console.log('📦 Mise en file d\'attente (serveur non disponible)');
+
         break; // Arrêter et réessayer plus tard
       }
 
@@ -120,8 +112,7 @@ class DirectGoogleSheetsLogger {
       if (saved) {
         try {
           this.queue = JSON.parse(saved);
-          console.log(`📋 ${this.queue.length} logs en attente`);
-        } catch (e) {
+                  } catch (e) {
           this.queue = [];
         }
       }
@@ -203,7 +194,6 @@ setTimeout(() => {
       component: 'directGoogleSheetsLogger.js',
       status: 'initialized'
     }
-  );
 
   // Logger la correction du zoom (dernière mise à jour)
   logger.log(
@@ -214,7 +204,6 @@ setTimeout(() => {
       files: ['src/components/ImageEditor.jsx'],
       details: 'Le zoom fonctionne maintenant correctement, les photos ne sont plus tronquées'
     }
-  );
 }, 3000);
 
 export default logger;

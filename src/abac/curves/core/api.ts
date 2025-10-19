@@ -201,7 +201,7 @@ class AbacCurvesAPI {
       `<circle cx="${xScale(p.x)}" cy="${yScale(p.y)}" r="4" fill="${color}" stroke="white" stroke-width="2"/>`
     ).join('');
   }
-}
+);}
 
 // Export singleton instance
 export const abacCurvesAPI = new AbacCurvesAPI();

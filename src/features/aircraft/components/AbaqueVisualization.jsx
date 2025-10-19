@@ -38,9 +38,7 @@ const AbaqueVisualization = ({
   onTestConditionsChange = null,
   interpolationPath = null 
 }) => {
-  console.log('🎨 AbaqueVisualization - Rendu avec:', {
-    points: extractedPoints.length,
-    axes: Object.keys(axes),
+  ,
     hasImage: !!chartImage,
     hasTest: !!testConditions
   });
@@ -80,7 +78,7 @@ const AbaqueVisualization = ({
       groups[key].sort((a, b) => a.temperature - b.temperature);
     });
 
-    console.log('📊 Courbes groupées:', Object.keys(groups).map(k => `${k}: ${groups[k].length} points`));
+    .map(k => `${k}: ${groups[k].length} points`));
     return groups;
   }, [extractedPoints]);
 
@@ -108,7 +106,7 @@ const AbaqueVisualization = ({
   const calculateInterpolation = () => {
     if (!extractedPoints || extractedPoints.length === 0) return;
 
-    console.log('🔮 Calcul interpolation pour:', activeTestConditions);
+    
 
     // Trouver les 4 points les plus proches (IDW)
     const distances = extractedPoints.map(point => {
@@ -122,7 +120,6 @@ const AbaqueVisualization = ({
         altDiff * altDiff + 
         massDiff * massDiff + 
         windDiff * windDiff
-      );
       
       return { point, distance };
     });
@@ -148,7 +145,7 @@ const AbaqueVisualization = ({
       confidence: Math.round((1 - nearestPoints[0].distance) * 100)
     });
 
-    console.log('✅ Résultat interpolation:', interpolatedDistance, 'm');
+    
     setShowInterpolation(true);
   };
 
@@ -515,7 +512,6 @@ const AbaqueVisualization = ({
         </Typography>
       </Alert>
     </Paper>
-  );
 };
 
 export default AbaqueVisualization;

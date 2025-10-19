@@ -30,7 +30,7 @@ export const SingleAccordion = ({
     >
       {children}
     </MuiAccordion>
-  );
+
 };
 
 export default SingleAccordion;

@@ -84,7 +84,6 @@ const ChartDataExtractor = ({
     // Vérifier qu'au moins un champ a une valeur
     const hasAnyValue = Object.values(currentPoint).some(value => 
       value !== undefined && value !== null && value !== ''
-    );
     
     if (!hasAnyValue) {
       alert('Veuillez remplir au moins un champ avant d\'ajouter le point');
@@ -436,7 +435,6 @@ const ChartDataExtractor = ({
         )}
       </Paper>
     </Box>
-  );
 };
 
 export default ChartDataExtractor;

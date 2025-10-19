@@ -17,19 +17,16 @@ export const useWeightBalanceStore = create(
     
     // Actions
     setLoads: (loads) => set(state => {
-      console.log('WeightBalanceStore - setLoads called with:', loads);
-      state.loads = loads;
+            state.loads = loads;
     }),
     
     updateLoad: (type, value) => set(state => {
-      console.log(`WeightBalanceStore - updateLoad: ${type} = ${value}`);
-      state.loads[type] = value;
+            state.loads[type] = value;
     }),
     
     updateFuelLoad: (fuelLiters, fuelDensity) => set(state => {
       const fuelWeight = parseFloat((fuelLiters * fuelDensity).toFixed(1));
-      console.log(`WeightBalanceStore - updateFuelLoad: ${fuelLiters}L * ${fuelDensity} = ${fuelWeight}kg`);
-      state.loads.fuel = fuelWeight;
+            state.loads.fuel = fuelWeight;
     }),
     
     // Méthode de calcul principale (pure function - no side effects)
@@ -56,8 +53,7 @@ export const useWeightBalanceStore = create(
       
       if (!wb || !wb.emptyWeightArm) {
         // Fallback vers armLengths si weightBalance n'existe pas
-        console.warn('WeightBalanceStore - Using armLengths as fallback for aircraft:', aircraft.registration);
-        wb = {
+                wb = {
           emptyWeightArm: aircraft.armLengths?.emptyMassArm || 2.00,
           frontLeftSeatArm: aircraft.armLengths?.frontSeat1Arm || 2.00,
           frontRightSeatArm: aircraft.armLengths?.frontSeat2Arm || 2.00,
@@ -97,8 +93,7 @@ export const useWeightBalanceStore = create(
       
       let loads = get().loads;
       
-      console.log('WeightBalanceStore - calculateWeightBalance with loads:', loads);
-
+      
       // Si fobFuel est fourni, utiliser ce poids de carburant pour le calcul
       // (sans modifier le state - cela doit être fait séparément)
       if (fobFuel?.ltr) {
@@ -167,8 +162,7 @@ export const useWeightBalanceStore = create(
         isWithinCG
       };
       
-      console.log('WeightBalanceStore - calculateWeightBalance result:', result);
-      
+
       return result;
     }
   }))

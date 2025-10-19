@@ -21,13 +21,13 @@ class OpenAIPAirspacesService {
     
     // Vérifier le cache
     if (this.cache.has(cacheKey) && this.cacheExpiry.get(cacheKey) > Date.now()) {
-      console.log('🔄 Espaces aériens chargés depuis le cache');
+      
       return this.cache.get(cacheKey);
     }
 
     try {
-      console.log('🌐 Chargement hybride des espaces aériens (OpenAIP + AIXM)...');
-      
+      console.log('Loading airspaces...');
+
       // Utiliser le service hybride
       const { hybridAirspacesService } = await import('./hybridAirspacesService.js');
       
@@ -38,7 +38,7 @@ class OpenAIPAirspacesService {
       this.cache.set(cacheKey, airspaces);
       this.cacheExpiry.set(cacheKey, Date.now() + this.CACHE_DURATION);
       
-      console.log(`✅ ${airspaces.length} espaces aériens hybrides chargés`);
+      
       return airspaces;
 
     } catch (error) {
@@ -53,7 +53,7 @@ class OpenAIPAirspacesService {
         this.cache.set(cacheKey, aixmData);
         this.cacheExpiry.set(cacheKey, Date.now() + this.CACHE_DURATION);
         
-        console.log(`📂 ${aixmData.length} espaces aériens AIXM (fallback) chargés`);
+         chargés`);
         return aixmData;
         
       } catch (aixmError) {
@@ -73,7 +73,7 @@ class OpenAIPAirspacesService {
    * Retourne des espaces aériens minimaux en cas d'erreur totale
    */
   getMinimalAirspaces() {
-    console.log('⚠️ Utilisation des espaces aériens minimaux');
+    
     return [
       {
         type: 'Feature',
@@ -394,7 +394,7 @@ class OpenAIPAirspacesService {
    * Utilise les données AIXM locales pour les espaces aériens
    */
   async getFallbackAirspaces() {
-    console.log('⚠️ Utilisation des données AIXM locales pour les espaces aériens');
+    
     
     try {
       // Importer le parser AIXM pour obtenir les espaces aériens
@@ -407,7 +407,7 @@ class OpenAIPAirspacesService {
       const airspaces = this.extractAirspacesFromAIXM(aixmData);
       
       if (airspaces && airspaces.length > 0) {
-        console.log(`✅ ${airspaces.length} espaces aériens chargés depuis AIXM local`);
+        
         return airspaces;
       }
     } catch (err) {
@@ -418,7 +418,7 @@ class OpenAIPAirspacesService {
     try {
       const { FRENCH_AIRSPACES_MANUAL } = await import('../data/frenchAirspacesManual.js');
       if (FRENCH_AIRSPACES_MANUAL && FRENCH_AIRSPACES_MANUAL.features) {
-        console.log(`📂 ${FRENCH_AIRSPACES_MANUAL.features.length} espaces aériens manuels chargés`);
+        
         return this.processAirspaces(FRENCH_AIRSPACES_MANUAL.features);
       }
     } catch (err) {
@@ -453,7 +453,6 @@ class OpenAIPAirspacesService {
     const airspaces = await this.getFrenchAirspaces(bbox);
     return airspaces.filter(airspace => 
       airspace.properties?.type === type
-    );
   }
 
   /**

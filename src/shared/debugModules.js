@@ -1,8 +1,7 @@
 // src/shared/debugModules.js
 
 export const debugModuleLoading = async () => {
-  console.log('🔍 Starting module debug...');
-  
+    
   const modules = [
     { name: 'Navigation', path: '@features/navigation' },
     { name: 'Aircraft', path: '@features/aircraft' },
@@ -18,8 +17,7 @@ export const debugModuleLoading = async () => {
   
   for (const module of modules) {
     try {
-      console.log(`📦 Testing ${module.name}...`);
-      const imported = await import(module.path);
+            const imported = await import(module.path);
       
       results.push({
         name: module.name,
@@ -29,9 +27,7 @@ export const debugModuleLoading = async () => {
         exports: Object.keys(imported)
       });
       
-      console.log(`✅ ${module.name} loaded successfully`);
-      console.log(`   - Has default export: ${!!imported.default}`);
-      console.log(`   - Exports: ${Object.keys(imported).join(', ')}`);
+                  .join(', ')}`);
       
     } catch (error) {
       results.push({

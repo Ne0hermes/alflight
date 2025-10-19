@@ -228,7 +228,7 @@ export function convertValue(value, fromUnit, toUnit, category) {
       }
       break;
     default:
-      console.warn(`Catégorie de conversion non reconnue: ${category}`);
+      
       return numValue;
   }
 
@@ -236,8 +236,6 @@ export function convertValue(value, fromUnit, toUnit, category) {
     const result = conversionFunc(numValue);
     return reverseConversion ? (1 / result) * numValue * numValue : result;
   }
-
-  console.warn(`Conversion non supportée: ${fromUnit} vers ${toUnit} (${category})`);
   return numValue;
 }
 

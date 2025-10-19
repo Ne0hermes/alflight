@@ -20,9 +20,9 @@ export const SIAReport = () => {
   const loadAllAerodromes = async () => {
     setLoading(true);
     try {
-      console.log('📊 Chargement des données SIA/AIXM...');
+      
       const data = await aixmParser.loadAndParse();
-      console.log(`✅ ${data.length} aérodromes chargés`);
+      
       setAerodromes(data);
       
       // Initialiser les données éditables
@@ -75,8 +75,8 @@ export const SIAReport = () => {
   };
 
   // Filtrer les aérodromes
-  const filteredAerodromes = aerodromes.filter(ad => 
-    !searchTerm || 
+  const filteredAerodromes = aerodromes.filter(ad =>
+    !searchTerm ||
     ad.icao?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     ad.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     ad.city?.toLowerCase().includes(searchTerm.toLowerCase())

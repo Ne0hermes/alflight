@@ -192,7 +192,7 @@ const CGEnvelopeChart = memo(({ cgEnvelope, massUnit = 'kg' }) => {
         </svg>
       </div>
     </div>
-  );
+
 });
 
 CGEnvelopeChart.displayName = 'CGEnvelopeChart';

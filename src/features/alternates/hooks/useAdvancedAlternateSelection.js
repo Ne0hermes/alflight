@@ -16,13 +16,7 @@ export const useAdvancedAlternateSelection = () => {
   
   // Log de debug
   useEffect(() => {
-    console.log('🔍 useAdvancedAlternateSelection - État:', {
-      selectedAlternatesCount: selectedAlternates?.length || 0,
-      scoredAlternatesCount: scoredAlternates?.length || 0,
-      candidatesCount: candidates?.length || 0,
-      isReady
-    });
-  }, [selectedAlternates, scoredAlternates, candidates, isReady]);
+      }, [selectedAlternates, scoredAlternates, candidates, isReady]);
   
   // Calcul des paramètres d'affichage
   const displayParams = useMemo(() => {
@@ -38,12 +32,10 @@ export const useAdvancedAlternateSelection = () => {
   // Formater les alternates pour l'affichage
   const formattedAlternates = useMemo(() => {
     if (!selectedAlternates || selectedAlternates.length === 0) {
-      console.log('❌ Pas d\'alternates sélectionnés à formater');
-      return [];
+            return [];
     }
     
-    console.log('📋 Formatage de', selectedAlternates.length, 'alternates');
-    
+        
     const formatted = selectedAlternates.map((alt, index) => {
       // S'assurer que toutes les propriétés requises existent
       const formatted = {
@@ -79,7 +71,7 @@ export const useAdvancedAlternateSelection = () => {
       return formatted;
     });
     
-    console.log('✅ Alternates formatés:', formatted.map(a => a.icao).join(', '));
+    .join(', '));
     return formatted;
   }, [selectedAlternates, searchZone]);
   
@@ -97,14 +89,12 @@ export const useAdvancedAlternateSelection = () => {
       arrivalSideCount: selectedAlternates?.filter(alt => alt.selectionType === 'arrival').length || 0
     };
     
-    console.log('📊 Statistiques calculées:', stats);
-    return stats;
+        return stats;
   }, [scoredAlternates, selectedAlternates, candidates]);
   
   // Fonction de rafraîchissement
   const refreshAlternates = useCallback(async () => {
-    console.log('🔄 Rafraîchissement des alternates demandé');
-    await findAlternates();
+        await findAlternates();
   }, [findAlternates]);
   
   // Retourner toutes les données nécessaires pour l'affichage
@@ -120,13 +110,7 @@ export const useAdvancedAlternateSelection = () => {
     statistics
   };
   
-  console.log('🎯 useAdvancedAlternateSelection - Résultat final:', {
-    hasSearchZone: !!result.searchZone,
-    selectedCount: result.selectedAlternates?.length || 0,
-    formattedCount: result.formattedAlternates?.length || 0,
-    isReady: result.isReady
-  });
-  
+    
   return result;
 };
 

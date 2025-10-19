@@ -163,7 +163,6 @@ Format charts as:
         pageImages[i].image,
         pageImages[i].pageNumber,
         options
-      );
       results.push(pageResult);
       
       // Petite pause pour éviter le rate limiting

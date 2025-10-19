@@ -69,6 +69,7 @@ const TechnicalLogModule = () => {
             <Badge badgeContent={deferredCount + defectsCount} color="error">
               Log technique
             </Badge>
+
           }
           iconPosition="start"
         />
@@ -78,6 +79,7 @@ const TechnicalLogModule = () => {
             <Badge badgeContent={maintenanceDueCount} color="warning">
               Programme maintenance
             </Badge>
+
           }
           iconPosition="start"
         />
@@ -92,6 +94,7 @@ const TechnicalLogModule = () => {
             <Badge badgeContent={Object.keys(dangerousZones).length} color="error">
               Zones dangereuses
             </Badge>
+
           }
           iconPosition="start"
         />
@@ -116,7 +119,7 @@ const TechnicalLogModule = () => {
         )}
       </Box>
     </Box>
-  );
+
 };
 
 export default TechnicalLogModule;

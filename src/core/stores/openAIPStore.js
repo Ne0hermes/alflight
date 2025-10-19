@@ -153,8 +153,7 @@ export const useOpenAIPStore = create(
       });
       
       try {
-        console.log('📍 Chargement des points de report VFR...');
-        // Pour l'instant, on charge point par point pour chaque aérodrome
+                // Pour l'instant, on charge point par point pour chaque aérodrome
         const airports = get().airports;
         const pointsByAirport = {};
         for (const airport of airports) {
@@ -164,8 +163,7 @@ export const useOpenAIPStore = create(
               pointsByAirport[airport.icao] = points;
             }
           } catch (err) {
-            console.warn(`Erreur chargement points pour ${airport.icao}:`, err);
-          }
+                      }
         }
         
         set(state => {
@@ -207,7 +205,6 @@ export const useOpenAIPStore = create(
           points.forEach(openAipPoint => {
             const vacPoint = vacChart.extractedData.reportingPoints.find(
               vp => vp.code === openAipPoint.code || vp.name === openAipPoint.name
-            );
             
             if (vacPoint) {
               const latDiff = Math.abs(openAipPoint.coordinates.lat - vacPoint.coordinates.lat);
@@ -254,7 +251,6 @@ export const useOpenAIPStore = create(
         airport.icao.toLowerCase().includes(query) ||
         airport.name.toLowerCase().includes(query) ||
         (airport.city && airport.city.toLowerCase().includes(query))
-      );
     },
     
     getVacStatus: (icao) => {
@@ -321,8 +317,6 @@ export const useOpenAIPStore = create(
         get().validateAllPoints();
       }
     }
-  }))
-);
 
 export const openAIPSelectors = {
   useAirports: () => useOpenAIPStore(state => state.airports),

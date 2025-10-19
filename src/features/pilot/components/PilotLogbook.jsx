@@ -49,12 +49,7 @@ const PilotLogbook = ({ showFormProp }) => {
 
   // Debug: surveiller les changements d'état
   useEffect(() => {
-    console.log('🔄 === CHANGEMENT D\'ÉTAT ===');
-    console.log('📊 showForm:', showForm);
-    console.log('📊 showFormProp:', showFormProp);
-    console.log('📊 isFormVisible:', isFormVisible);
-    console.log('📊 editingEntry:', editingEntry);
-  }, [showForm, showFormProp, isFormVisible, editingEntry]);
+                      }, [showForm, showFormProp, isFormVisible, editingEntry]);
   
   const [formData, setFormData] = useState({
     // Section 1: Date et Lieu
@@ -125,34 +120,30 @@ const PilotLogbook = ({ showFormProp }) => {
     // Charger dynamiquement les fonctions de test
     import('../../../utils/testFlightSegments').then(module => {
       window.testFlightSegments = module.default;
-      console.log('📊 Fonctions de test disponibles:');
-      console.log('  testFlightSegments.testFlightSegments() - Analyser les segments existants');
-      console.log('  testFlightSegments.addTestFlightWithSegments() - Ajouter un vol test avec segments');
-      console.log('  testFlightSegments.clearTestFlights() - Supprimer les vols test');
+      console.log('Test functions loaded. Available commands:');
+      console.log('  - Analyser les segments existants');
+      console.log('  - Ajouter un vol test avec segments');
+      console.log('  - Supprimer les vols test');
     }).catch(err => {
-      console.log('Fonctions de test non disponibles:', err);
+      console.error('Error loading test functions:', err);
     });
 
     // Charger les fonctions de debug pour l'édition
     import('../../../utils/debugEditLogbook').then(module => {
       window.debugLogbook = module.default;
-      console.log('🔧 Fonctions de debug disponibles:');
-      console.log('  debugLogbook.debugEditLogbook() - Analyser toutes les entrées');
-      console.log('  debugLogbook.testEditEntry(0) - Tester l\'édition de la première entrée');
-      console.log('  debugLogbook.fixMissingSegments() - Ajouter des segments aux anciennes entrées');
+             - Analyser toutes les entrées');
+       - Tester l\'édition de la première entrée');
+       - Ajouter des segments aux anciennes entrées');
     }).catch(err => {
-      console.log('Fonctions de debug non disponibles:', err);
-    });
+          });
 
     // Charger les fonctions pour forcer l'édition
     import('../../../utils/forceEditLogbook').then(module => {
       window.forceEditEntry = module.default;
-      console.log('✏️ Fonctions d\'édition forcée disponibles:');
-      console.log('  forceEditEntry.editByIndex(0) - Forcer l\'édition de l\'entrée par index');
-      console.log('  forceEditEntry.deleteEntry(0) - Supprimer une entrée par index');
+             - Forcer l\'édition de l\'entrée par index');
+       - Supprimer une entrée par index');
     }).catch(err => {
-      console.log('Fonctions d\'édition forcée non disponibles:', err);
-    });
+          });
   }, []);
 
   // Construire la liste des pilotes à partir des entrées et du profil
@@ -560,14 +551,7 @@ const PilotLogbook = ({ showFormProp }) => {
   };
 
   const handleEdit = (entry) => {
-    console.log('🔍 === DÉBUT ÉDITION ===');
-    console.log('📝 Entrée complète:', entry);
-    console.log('📅 Date:', entry.date);
-    console.log('✈️ Vol:', `${entry.departure} → ${entry.arrival}`);
-    console.log('🛩️ Avion:', entry.aircraft);
-    console.log('⏱️ Temps total:', entry.totalTime);
-    console.log('📊 Segments existants:', entry.flightSegments);
-
+                            
     // Logger vers Google Sheets
     logToGoogleSheets('Tentative édition', `${entry.date} - ${entry.departure} → ${entry.arrival}`, {
       component: 'Carnet de vol',
@@ -579,23 +563,19 @@ const PilotLogbook = ({ showFormProp }) => {
     setEditingEntry(entry);
     setShowForm(true);
 
-    console.log('📌 État formulaire:', { showForm: true, editingEntry: entry });
-
+    
     // Charger les segments de vol s'ils existent
     if (entry.flightSegments && Array.isArray(entry.flightSegments) && entry.flightSegments.length > 0) {
-      console.log('✅ Chargement des segments existants:', entry.flightSegments);
-      setFlightSegments(entry.flightSegments);
+            setFlightSegments(entry.flightSegments);
     } else {
-      console.log('⚠️ Pas de segments - création d\'un segment par défaut');
-      const defaultSegment = {
+            const defaultSegment = {
         id: 1,
         time: entry.totalTime ? (entry.totalTime.includes(':') ? HHMMToDecimal(entry.totalTime).toString() : entry.totalTime) : '',
         flightType: entry.flightType || '',
         functionOnBoard: entry.functionOnBoard || '',
         pilotInCommand: entry.pilotInCommand || ''
       };
-      console.log('📝 Segment créé:', defaultSegment);
-      // Si pas de segments, créer un segment par défaut avec les données existantes
+            // Si pas de segments, créer un segment par défaut avec les données existantes
       setFlightSegments([defaultSegment]);
     }
 
@@ -779,14 +759,10 @@ const PilotLogbook = ({ showFormProp }) => {
         sourceUnits = importedData.unitsConfig || {};
         needsConversion = JSON.stringify(sourceUnits) !== JSON.stringify(currentUnits);
 
-        console.log('Import avec métadonnées détecté:');
-        console.log('- Unités source:', sourceUnits);
-        console.log('- Unités actuelles:', currentUnits);
-        console.log('- Conversion nécessaire:', needsConversion);
-      } else if (Array.isArray(importedData)) {
+                                      } else if (Array.isArray(importedData)) {
         // Ancien format simple (tableau d'entrées)
         entries_to_import = importedData;
-        console.log('Import ancien format détecté (aucune conversion)');
+
       } else {
         alert('Format de fichier invalide. Le fichier doit contenir un tableau d\'entrées ou un objet avec métadonnées.');
         return;
@@ -795,7 +771,6 @@ const PilotLogbook = ({ showFormProp }) => {
       // Validation basique des entrées
       const validEntries = entries_to_import.filter(entry =>
         entry.date && (entry.departure || entry.arrival)
-      );
 
       if (validEntries.length === 0) {
         alert('Aucune entrée valide trouvée dans le fichier.');
@@ -807,14 +782,11 @@ const PilotLogbook = ({ showFormProp }) => {
       if (needsConversion) {
         processedEntries = validEntries.map(entry =>
           convertLogbookEntry(entry, sourceUnits, currentUnits)
-        );
-        console.log(`Conversion appliquée à ${processedEntries.length} entrées`);
-      }
+              }
 
       // Fusionner avec les entrées existantes (éviter les doublons basés sur date + départ + arrivée)
       const existingKeys = new Set(
         entries.map(e => `${e.date}_${e.departure}_${e.arrival}`)
-      );
 
       const newEntries = processedEntries.filter(entry => {
         const key = `${entry.date}_${entry.departure}_${entry.arrival}`;
@@ -823,7 +795,6 @@ const PilotLogbook = ({ showFormProp }) => {
 
       const mergedEntries = [...entries, ...newEntries].sort((a, b) =>
         new Date(b.date) - new Date(a.date)
-      );
 
       // Sauvegarder
       setEntries(mergedEntries);
@@ -1836,11 +1807,7 @@ const PilotLogbook = ({ showFormProp }) => {
                 <div style={{ display: 'flex', gap: '4px' }}>
                   <button
                     onClick={() => {
-                      console.log('🖱️ === CLIC BOUTON ÉDITION ===');
-                      console.log('🎯 Entrée sélectionnée:', entry);
-                      console.log('📋 ID:', entry.id);
-                      console.log('📅 Date:', entry.date);
-                      handleEdit(entry);
+                                                                                                              handleEdit(entry);
                     }}
                     style={{ padding: '4px 8px', backgroundColor: '#f3f4f6', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
                   >
@@ -1921,7 +1888,7 @@ const PilotLogbook = ({ showFormProp }) => {
         </div>
       ) : null}
     </div>
-  );
+
 };
 
 export default PilotLogbook;

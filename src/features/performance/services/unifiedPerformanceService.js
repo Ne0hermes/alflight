@@ -35,7 +35,7 @@ class UnifiedPerformanceService {
     this.validationService = new ABACValidationService();
     this.initialized = true;
     
-    console.log('🔧 Service unifié des performances initialisé avec clé:', this.apiKey ? 'Oui' : 'Non');
+    
   }
 
   // Obtenir la clé API de manière unifiée
@@ -45,9 +45,6 @@ class UnifiedPerformanceService {
     
     // Utiliser le gestionnaire centralisé
     const key = apiKeyManager.getAPIKey();
-    
-    console.log('🔑 Récupération de la clé API:', key ? `Trouvée (${key.substring(0, 10)}...)` : 'Non trouvée');
-    
     return key;
   }
 
@@ -180,7 +177,7 @@ class UnifiedPerformanceService {
         try {
           this.apiKey = import.meta.env.VITE_OPENAI_API_KEY;
         } catch (e) {
-          console.warn('Impossible d\'accéder aux variables d\'environnement');
+          
         }
       }
       
@@ -203,7 +200,7 @@ class UnifiedPerformanceService {
         // Par défaut, supposer JPEG
         formattedImage = `data:image/jpeg;base64,${imageBase64}`;
       }
-      console.log('📸 Image formatée avec le préfixe data URL');
+      
     }
 
     const messages = [
@@ -220,8 +217,8 @@ class UnifiedPerformanceService {
       }
     ];
 
-    console.log('📤 Envoi à OpenAI avec modèle:', this.model);
-    console.log('📤 Prompt length:', prompt.length, 'caractères');
+    
+    
 
     try {
       const response = await fetch(this.endpoint, {
@@ -245,9 +242,9 @@ class UnifiedPerformanceService {
       }
 
       const data = await response.json();
-      console.log('✅ Réponse API reçue');
+      
       const content = data.choices[0].message.content;
-      console.log('📝 Contenu de la réponse (100 premiers caractères):', content.substring(0, 100));
+      :', content.substring(0, 100));
 
       // Essayer de parser comme JSON
       try {
@@ -258,33 +255,32 @@ class UnifiedPerformanceService {
           const jsonMatch = content.match(/```json\s*([\s\S]*?)```/);
           if (jsonMatch && jsonMatch[1]) {
             cleanContent = jsonMatch[1].trim();
-            console.log('🧹 JSON extrait du markdown');
+            
           } else {
             // Fallback: enlever simplement les marqueurs
             cleanContent = content.replace(/```json\s*/g, '').replace(/```\s*$/g, '').trim();
-            console.log('🧹 Nettoyage basique du markdown');
+            
           }
         } else if (content.includes('```')) {
           // Gérer le cas où il y a juste ``` sans json
           const codeMatch = content.match(/```\s*([\s\S]*?)```/);
           if (codeMatch && codeMatch[1]) {
             cleanContent = codeMatch[1].trim();
-            console.log('🧹 Contenu extrait des backticks simples');
+            
           }
         }
 
-        console.log('🔍 Tentative de parse, premiers 500 caractères:', cleanContent.substring(0, 500));
-        console.log('📏 Longueur du contenu nettoyé:', cleanContent.length);
+        
 
         // Vérifier si le JSON semble complet
         const openBraces = (cleanContent.match(/{/g) || []).length;
         const closeBraces = (cleanContent.match(/}/g) || []).length;
         const openBrackets = (cleanContent.match(/\[/g) || []).length;
         const closeBrackets = (cleanContent.match(/\]/g) || []).length;
-        console.log(`🔍 Vérification structure: ${openBraces} { vs ${closeBraces} }, ${openBrackets} [ vs ${closeBrackets} ]`);
+        
 
         if (openBraces !== closeBraces) {
-          console.warn('⚠️ JSON incomplet détecté (accolades), tentative de réparation...');
+          , tentative de réparation...');
           // Ajouter les accolades manquantes
           while ((cleanContent.match(/{/g) || []).length > (cleanContent.match(/}/g) || []).length) {
             cleanContent += '}';
@@ -292,7 +288,7 @@ class UnifiedPerformanceService {
         }
 
         if (openBrackets !== closeBrackets) {
-          console.warn('⚠️ JSON incomplet détecté (crochets), tentative de réparation...');
+          , tentative de réparation...');
           // Ajouter les crochets manquants
           while ((cleanContent.match(/\[/g) || []).length > (cleanContent.match(/\]/g) || []).length) {
             cleanContent += ']';
@@ -302,50 +298,50 @@ class UnifiedPerformanceService {
         // Vérifier si le JSON se termine brutalement (valeur non terminée)
         const lastChars = cleanContent.trim().slice(-100);
 
-        console.log('🔍 Derniers 100 caractères du JSON:', lastChars);
+        
 
         // Nouvelle logique de réparation plus robuste pour les cas spécifiques rencontrés
         // Cas 1: Valeur tronquée avec fermetures multiples (ex: "840",}}}]])
         const truncatedValueWithClosures = cleanContent.match(/"[^"]*",?\s*[}\]]{2,}$/);
         if (truncatedValueWithClosures) {
-          console.warn('⚠️ Valeur tronquée avec fermetures multiples détectée:', truncatedValueWithClosures[0]);
+          
           // Garder la valeur mais retirer les fermetures excessives
           cleanContent = cleanContent.replace(/([^,])\s*[}\]]{2,}$/, '$1');
-          console.log('🔧 Fermetures excessives supprimées');
+          
         }
 
         // Cas 2: Valeur incomplète qui se termine par des fermetures (ex: "Distance_passage_15m": "}}}]])
         const incompleteValueWithClosures = cleanContent.match(/:\s*"[^"]*[}\]]+\s*$/);
         if (incompleteValueWithClosures) {
-          console.warn('⚠️ Valeur incomplète avec fermetures détectée:', incompleteValueWithClosures[0]);
+          
           // Remplacer par une chaîne vide
           cleanContent = cleanContent.replace(/:\s*"[^"]*[}\]]+\s*$/, ': ""');
-          console.log('🔧 Valeur incomplète remplacée par chaîne vide');
+          
         }
 
         // Cas 3: Nom de champ sans valeur suivi de fermetures (ex: "Distance_passage_15m}}}]])
         const fieldNameWithClosures = cleanContent.match(/"[^":,\s]+[}\]]+\s*$/);
         if (fieldNameWithClosures) {
-          console.warn('⚠️ Nom de champ sans valeur avec fermetures détecté:', fieldNameWithClosures[0]);
+          
           // Extraire le nom du champ et ajouter une valeur vide
           const fieldName = fieldNameWithClosures[0].match(/"([^"}\]]+)/);
           if (fieldName && fieldName[1]) {
             cleanContent = cleanContent.replace(/"[^":,\s]+[}\]]+\s*$/, `"${fieldName[1]}": ""`);
-            console.log('🔧 Champ complété avec valeur vide');
+            
           }
         }
 
         // Cas 4: Virgule suivie immédiatement de fermetures (ex: ,}}}]])
         const commaWithClosures = cleanContent.match(/,\s*[}\]]{2,}$/);
         if (commaWithClosures) {
-          console.warn('⚠️ Virgule avec fermetures multiples détectée');
+          
           cleanContent = cleanContent.replace(/,\s*[}\]]{2,}$/, '');
-          console.log('🔧 Virgule et fermetures supprimées');
+          
         }
 
         // Détecter les autres cas de troncature
         const lastChar = cleanContent.trim().slice(-1);
-        console.log('🔍 Dernier caractère:', lastChar);
+        
 
         // Cas généraux de réparation
         const incompleteLine = cleanContent.match(/:\s*"[^"]*$/);
@@ -354,43 +350,43 @@ class UnifiedPerformanceService {
         const incompleteArrayElement = cleanContent.match(/,\s*"[^"]*$/);
 
         if (incompleteLine || incompleteObject || incompleteArray || incompleteArrayElement || lastChar === '"' || lastChar === ':' || lastChar === ',') {
-          console.warn('⚠️ JSON tronqué détecté, tentative de réparation...');
-          console.log('📝 État avant réparation - Accolades:', (cleanContent.match(/{/g) || []).length, 'vs', (cleanContent.match(/}/g) || []).length);
-          console.log('📝 État avant réparation - Crochets:', (cleanContent.match(/\[/g) || []).length, 'vs', (cleanContent.match(/\]/g) || []).length);
+          
+           || []).length, 'vs', (cleanContent.match(/}/g) || []).length);
+           || []).length, 'vs', (cleanContent.match(/\]/g) || []).length);
 
           // Si on a une chaîne non terminée dans un tableau
           if (incompleteArray) {
-            console.log('🔧 Élément de tableau incomplet détecté:', incompleteArray[0]);
+            
             cleanContent = cleanContent.replace(/\[\s*"[^"]*$/, '[');
-            console.log('🔧 Suppression de l\'élément incomplet du tableau');
+            
           }
 
           // Si on a un élément de tableau incomplet après une virgule
           else if (incompleteArrayElement) {
-            console.log('🔧 Élément de tableau incomplet après virgule:', incompleteArrayElement[0]);
+            
             cleanContent = cleanContent.replace(/,\s*"[^"]*$/, '');
-            console.log('🔧 Suppression de l\'élément incomplet');
+            
           }
 
           // Si on a une chaîne non terminée
           else if (incompleteLine) {
-            console.log('🔧 Chaîne non terminée détectée:', incompleteLine[0]);
+            
             cleanContent = cleanContent.replace(/:\s*"[^"]*$/, ': ""');
-            console.log('🔧 Ajout d\'une chaîne vide pour terminer la valeur');
+            
           }
 
           // Si on a un objet incomplet
           else if (incompleteObject) {
-            console.log('🔧 Objet incomplet détecté');
+            
             // Fermer l'objet incomplet
             cleanContent = cleanContent.replace(/,\s*{\s*[^}]*$/, '');
-            console.log('🔧 Suppression de l\'objet incomplet');
+            
           }
 
           // Si on a une virgule en fin
           else if (lastChar === ',') {
             cleanContent = cleanContent.slice(0, -1);
-            console.log('🔧 Suppression de la virgule finale');
+            
           }
         }
 
@@ -404,7 +400,7 @@ class UnifiedPerformanceService {
         let needCloseBraces = (cleanContent.match(/{/g) || []).length - (cleanContent.match(/}/g) || []).length;
         let needCloseBrackets = (cleanContent.match(/\[/g) || []).length - (cleanContent.match(/\]/g) || []).length;
 
-        console.log('🔧 Structures à fermer - Accolades:', needCloseBraces, ', Crochets:', needCloseBrackets);
+        
 
         // Ajouter les fermetures manquantes dans le bon ordre
         if (needCloseBrackets > 0 || needCloseBraces > 0) {
@@ -412,8 +408,8 @@ class UnifiedPerformanceService {
           for (let i = 0; i < needCloseBrackets; i++) cleanContent += ']';
           for (let i = 0; i < needCloseBraces; i++) cleanContent += '}';
 
-          console.log('📝 État après ajout fermetures - Accolades:', (cleanContent.match(/{/g) || []).length, 'vs', (cleanContent.match(/}/g) || []).length);
-          console.log('📝 État après ajout fermetures - Crochets:', (cleanContent.match(/\[/g) || []).length, 'vs', (cleanContent.match(/\]/g) || []).length);
+           || []).length, 'vs', (cleanContent.match(/}/g) || []).length);
+           || []).length, 'vs', (cleanContent.match(/\]/g) || []).length);
         }
 
         // Tentative de réparation du JSON avant parsing
@@ -422,7 +418,7 @@ class UnifiedPerformanceService {
         // Vérifier si le JSON est tronqué
         const trimmed = fixedContent.trim();
         if (!trimmed.endsWith('}') && !trimmed.endsWith(']')) {
-          console.warn('⚠️ JSON potentiellement tronqué, tentative de réparation...');
+          
 
           // Compter les accolades et crochets ouverts
           const openBraces = (trimmed.match(/{/g) || []).length;
@@ -440,28 +436,22 @@ class UnifiedPerformanceService {
         }
 
         const parsed = JSON.parse(fixedContent);
-        console.log('✅ JSON parsé avec succès !');
-        console.log('📊 Structure parsée:', Object.keys(parsed));
-        console.log('📊 Tables trouvées:', parsed.tables?.length || 0);
+        
+        
 
-        if (parsed.tables && parsed.tables.length > 0) {
-          console.log('📋 Première table:', parsed.tables[0].table_name);
-          console.log('📋 Structure première table:', Object.keys(parsed.tables[0]));
-        }
-
-        return parsed;
+                return parsed;
       } catch (parseError) {
         console.error('❌ Erreur de parsing JSON:', parseError.message);
-        console.log('📝 Contenu brut (500 premiers caractères):', content.substring(0, 500));
-        console.log('📝 Contenu brut (500 derniers caractères):', content.substring(Math.max(0, content.length - 500)));
-        console.log('📏 Longueur totale:', content.length);
+        :', content.substring(0, 500));
+        :', content.substring(Math.max(0, content.length - 500)));
+        
 
         // Position de l'erreur dans le JSON
         const errorPosition = parseError.message.match(/position (\d+)/);
         if (errorPosition) {
           const pos = parseInt(errorPosition[1]);
-          console.log('📍 Erreur à la position:', pos);
-          console.log('📍 Contexte autour de l\'erreur:', content.substring(Math.max(0, pos - 50), Math.min(content.length, pos + 50)));
+          
+          , Math.min(content.length, pos + 50)));
         }
 
         // Essayer de détecter si le contenu ressemble à une structure de tableau
@@ -469,14 +459,14 @@ class UnifiedPerformanceService {
                               content.includes('rows') || content.includes('data');
 
         if (looksLikeTable) {
-          console.log('⚠️ Le contenu semble contenir des données de tableau mais n\'est pas du JSON valide');
+          
 
           // Tentative de récupération partielle du JSON tronqué
           try {
             // Si on a une erreur de position, essayer de tronquer avant
             if (errorPosition) {
               const pos = parseInt(errorPosition[1]);
-              console.log('🔧 Tentative de troncature avant l\'erreur à la position', pos);
+              
 
               // Trouver le dernier objet complet avant la position d'erreur
               let truncatedContent = content.substring(0, pos);
@@ -499,11 +489,11 @@ class UnifiedPerformanceService {
                 try {
                   const partialParsed = JSON.parse(truncatedContent);
                   if (partialParsed.tables && partialParsed.tables[0] && partialParsed.tables[0].data && partialParsed.tables[0].data.length > 0) {
-                    console.log(`✅ Récupération réussie: ${partialParsed.tables[0].data.length} entrées`);
+                    
                     return partialParsed;
                   }
                 } catch (e) {
-                  console.log('⚠️ Échec de la récupération par troncature');
+                  
                 }
               }
             }
@@ -511,7 +501,7 @@ class UnifiedPerformanceService {
             // Chercher le dernier objet complet dans "data"
             const dataArrayMatch = content.match(/"data"\s*:\s*\[([\s\S]*?)(?=\],|\]$|\]\})/);
             if (dataArrayMatch) {
-              console.log('🔧 Tentative de récupération des données depuis le JSON partiel');
+              
 
               const dataContent = dataArrayMatch[1];
               const objects = dataContent.split(/\},\s*\{/);
@@ -546,7 +536,7 @@ class UnifiedPerformanceService {
               }
 
               if (validData.length > 0) {
-                console.log(`✅ ${validData.length} entrées récupérées depuis le JSON partiel`);
+                
                 return {
                   tables: [{
                     table_name: content.includes('Take') ? 'Take-Off Distance' : 'Performance Data',
@@ -571,7 +561,7 @@ class UnifiedPerformanceService {
 
             // Si on ne peut pas récupérer les données, créer une structure minimale
             if (content.includes('Table') || content.includes('Landing') || content.includes('Takeoff')) {
-              console.log('🔧 Création d\'une structure de fallback minimale');
+              
               return {
                 tables: [{
                   table_name: 'Extracted Data (Manual Review Required)',
@@ -585,7 +575,7 @@ class UnifiedPerformanceService {
               };
             }
           } catch (e) {
-            console.log('❌ Impossible de créer une structure de fallback:', e.message);
+            
           }
         }
 
@@ -730,7 +720,7 @@ class UnifiedPerformanceService {
   setMode(mode) {
     if (['abac', 'legacy', 'manual'].includes(mode)) {
       this.mode = mode;
-      console.log(`🔄 Mode changé : ${mode}`);
+      
       return true;
     }
     return false;
@@ -740,9 +730,9 @@ class UnifiedPerformanceService {
     this.initialize();
     this.protocolHandler.reset();
     this.mode = 'abac';
-    console.log('🔄 Service réinitialisé');
+    
   }
-}
+);}
 
 // Export singleton
 const unifiedPerformanceService = new UnifiedPerformanceService();

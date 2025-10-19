@@ -89,41 +89,74 @@ const styles = {
   }
 };
 
-const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAtStep = 1 }) => {
-  console.log('🟦 PerformanceWizard - startAtStep reçu:', startAtStep);
-  console.log('🟦 PerformanceWizard - initialData reçu:', initialData);
+const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAtStep = 2, onCancel, abacBuilderRefCallback }) => {
+  
+  
+  
 
-  // États
+  // États - DÉMARRAGE PAR DÉFAUT À L'ÉTAPE 2 (le MANEX est déjà géré ailleurs)
   const [currentStep, setCurrentStep] = useState(startAtStep);
   const [manualFile, setManualFile] = useState(null);
   const [extractedPages, setExtractedPages] = useState([]);
   const [selectedPages, setSelectedPages] = useState([]);
   const [autoExtractPages, setAutoExtractPages] = useState(null);
   const [performanceType, setPerformanceType] = useState(null);
+  const [pageSystemTypes, setPageSystemTypes] = useState({}); // Type de système pour chaque page (table ou abaque)
   const [isProcessing, setIsProcessing] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [error, setError] = useState(null);
   const [detectionResult, setDetectionResult] = useState(null);
   const [thumbnailSize, setThumbnailSize] = useState(150); // Taille des miniatures
   const [pageClassifications, setPageClassifications] = useState({}); // Classifications des pages
+  const [showAnalyzer, setShowAnalyzer] = useState(false); // Pour basculer entre sélection et analyse
   const fileInputRef = useRef(null);
+  const abacBuilderRef = useRef(null);
+  const abacBuilderRefCallbackRef = useRef(abacBuilderRefCallback);
 
-  // Restaurer les données initiales si on démarre à l'étape 2
+  // Mettre à jour le callback ref quand il change
   useEffect(() => {
-    console.log('🟪 useEffect PerformanceWizard - startAtStep:', startAtStep, 'initialData:', !!initialData);
-    if (startAtStep === 2 && initialData) {
-      console.log('🔄 Restauration des données pour démarrage direct');
-      console.log('🔄 Données à restaurer:', initialData);
+    abacBuilderRefCallbackRef.current = abacBuilderRefCallback;
+  }, [abacBuilderRefCallback]);
 
-      // Simuler les pages extraites si on a des données
-      if (initialData.performanceTables || initialData.advancedPerformance) {
+  // Créer un callback mémorisé pour éviter les boucles infinies
+  const handleAbacBuilderRef = React.useCallback((ref) => {
+    if (ref && ref !== abacBuilderRef.current) {
+      abacBuilderRef.current = ref;
+      
+      if (abacBuilderRefCallbackRef.current) {
+        abacBuilderRefCallbackRef.current(ref);
+      }
+    }
+  }, []); // Dépendance vide car on utilise abacBuilderRefCallbackRef
+
+  // FUSIONNÉ: Restaurer les données initiales ET mettre à jour currentStep EN UN SEUL useEffect
+  useEffect(() => {
+    
+
+    if (startAtStep === 2 && initialData) {
+      
+      
+
+      // Si on édite un abaque existant
+      if (initialData.abacCurves && initialData.editingModelIndex !== undefined) {
+        
+        setPerformanceType('abacs');
+        setManualFile({ name: 'Manuel existant', restored: true });
+        setCurrentStep(4); // ✅ Changement d'état UNIQUE vers l'étape 4
+        return;
+      }
+
+      // Si on a des tables/performances avancées
+      if (initialData.advancedPerformance || initialData.performanceTables) {
+        
+
         // Créer des pages factices pour l'étape 2
         const mockPages = [];
         if (initialData.performanceTables) {
           initialData.performanceTables.forEach((table, index) => {
             mockPages.push({
               pageNumber: index + 1,
-              image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', // Image placeholder 1x1
+              image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
               category: table.table_type || 'performance'
             });
           });
@@ -132,30 +165,20 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
         if (mockPages.length > 0) {
           setExtractedPages(mockPages);
           setSelectedPages(mockPages.map((_, index) => index));
-          console.log(`📄 ${mockPages.length} pages restaurées`);
+          
         }
+
+        setManualFile({ name: 'Manuel existant', restored: true });
+        setPerformanceType('tables');
+        setCurrentStep(4); // ✅ Changement d'état UNIQUE vers l'étape 4
+        return;
       }
 
-      // Marquer qu'on a un manuel (nécessaire pour l'étape 2)
-      setManualFile({ name: 'Manuel existant', restored: true });
-
-      // IMPORTANT: Si on a des données de performance, définir le type et passer à l'étape 4
-      if (initialData.advancedPerformance || initialData.performanceTables) {
-        console.log('🚀 Configuration pour accès direct aux tableaux (étape 4)');
-        setPerformanceType('tables'); // Définir le type comme 'tables'
-        // Ne pas changer currentStep ici, il sera mis à jour par l'autre useEffect
-      }
-    }
-  }, [startAtStep, initialData]);
-
-  // Mettre à jour currentStep quand startAtStep change
-  useEffect(() => {
-    console.log('🔄 useEffect startAtStep change:', startAtStep);
-    if (startAtStep === 2 && initialData && (initialData.advancedPerformance || initialData.performanceTables)) {
-      // Si on démarre à l'étape 2 avec des données, aller directement à l'étape 4
-      console.log('🎯 Redirection vers étape 4 (AdvancedPerformanceAnalyzer)');
-      setCurrentStep(4);
+      // Cas par défaut
+      
+      setCurrentStep(startAtStep);
     } else {
+      
       setCurrentStep(startAtStep);
     }
   }, [startAtStep, initialData]);
@@ -187,23 +210,23 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
     try {
       // Déterminer si on utilise le mode optimisé
       const sizeInMB = file.size / (1024 * 1024);
-      console.log(`📚 Upload du manuel: ${file.name} (${sizeInMB.toFixed(2)} MB)`);
+      console.log(`File size: ${sizeInMB.toFixed(2)} MB`);
 
       // Toujours extraire toutes les pages pour permettre la navigation complète
-      console.log('📄 Extraction de toutes les pages du PDF...');
+      
       const allPages = await extractAllPages(file);
       setExtractedPages(allPages);
-      console.log(`✅ ${allPages.length} pages extraites`);
+      
 
       if (sizeInMB > 5) {
         // Pour les gros PDFs, essayer la détection automatique
-        console.log('🔍 Tentative de détection automatique des pages de performance...');
+        
 
         try {
           const analysis = await pdfToImageConverterOptimized.analyzeManualPDF(file);
 
           if (analysis.performancePages && analysis.performancePages.length > 0) {
-            console.log(`✅ ${analysis.performancePages.length} pages de performance détectées automatiquement`);
+            
 
             // Trouver les indices correspondants dans allPages
             const detectedIndices = [];
@@ -220,14 +243,14 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
               message: `${detectedIndices.length} pages présélectionnées (vous pouvez en ajouter ou retirer)`
             });
           } else {
-            console.log('⚠️ Aucune page de performance détectée automatiquement');
+            
             setDetectionResult({
               success: false,
               message: 'Sélectionnez manuellement les pages de performance dans le PDF'
             });
           }
         } catch (err) {
-          console.warn('Erreur lors de la détection automatique:', err);
+          
           setDetectionResult({
             success: false,
             message: 'Sélectionnez manuellement les pages de performance'
@@ -237,7 +260,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
         setCurrentStep(2);
       } else {
         // Petits PDFs : essayer de détecter automatiquement les pages
-        console.log('📄 PDF de petite taille - recherche automatique des pages de performance');
+        
 
         const performancePages = detectPerformancePages(allPages);
         if (performancePages.length > 0) {
@@ -327,11 +350,80 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
       const text = page.text.toLowerCase();
       const score = keywords.reduce((acc, keyword) =>
         acc + (text.includes(keyword) ? 1 : 0), 0
-      );
 
       return { ...page, index, score };
     }).filter(p => p.score > 2);
   };
+
+  // useEffect pour extraire automatiquement les pages du MANEX quand on arrive à l'étape 3
+  useEffect(() => {
+    const extractPagesFromManex = async () => {
+      // Ne rien faire si on n'est pas à l'étape 3 ou si les pages sont déjà extraites
+      if (currentStep !== 3 || extractedPages.length > 0) {
+        return;
+      }
+
+      // Vérifier qu'un MANEX est présent
+      if (!aircraft?.manex) {
+        
+        return;
+      }
+
+      
+      setIsProcessing(true);
+      setError(null);
+
+      try {
+        // Récupérer le PDF depuis différentes sources possibles
+        let pdfData = null;
+        let pdfFile = null;
+
+        if (aircraft.manex.pdfData) {
+          // Convertir base64 en blob
+          const base64Data = aircraft.manex.pdfData.includes(',')
+            ? aircraft.manex.pdfData.split(',')[1]
+            : aircraft.manex.pdfData;
+          const byteCharacters = atob(base64Data);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          pdfFile = new File([byteArray], aircraft.manex.fileName || 'manex.pdf', { type: 'application/pdf' });
+        } else if (aircraft.manex.file) {
+          pdfFile = aircraft.manex.file;
+        } else if (aircraft.manex.data) {
+          // data peut être déjà un File ou Blob
+          pdfFile = aircraft.manex.data;
+        }
+
+        if (!pdfFile) {
+          
+          setError('Impossible de récupérer le fichier PDF du MANEX');
+          setIsProcessing(false);
+          return;
+        }
+
+        
+        setManualFile(pdfFile);
+
+        // Extraire toutes les pages
+        const allPages = await extractAllPages(pdfFile);
+        setExtractedPages(allPages);
+        
+
+        // Ne pas présélectionner automatiquement - sélection manuelle uniquement
+        
+      } catch (error) {
+        console.error('❌ Erreur lors de l\'extraction des pages:', error);
+        setError(`Erreur lors de l'extraction: ${error.message}`);
+      } finally {
+        setIsProcessing(false);
+      }
+    };
+
+    extractPagesFromManex();
+  }, [currentStep, extractedPages.length, aircraft]);
 
   // Navigation vers l'outil approprié
   const handleToolSelection = async (type) => {
@@ -348,139 +440,66 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
 
   // Rendu des étapes
   const renderStep = () => {
-    console.log('🟧 renderStep - currentStep actuel:', currentStep);
+    
     switch (currentStep) {
-      case 1:
-        return (
-          <div style={styles.flexCol}>
-            <div style={{ ...styles.card, textAlign: 'center' }}>
-              <Upload size={48} style={{ margin: '0 auto 16px', color: '#1e40af' }} />
-
-              <h3 style={{ ...styles.text.lg, ...styles.text.bold, marginBottom: '8px' }}>
-                Étape 1 : Upload du manuel de vol
-              </h3>
-
-              <p style={{ ...styles.text.sm, ...styles.text.muted, marginBottom: '16px' }}>
-                Chargez le manuel de vol complet de votre {aircraft?.model || 'avion'} au format PDF.
-                Ce document sera archivé avec la configuration pour référence future.
-              </p>
-
-              {aircraft?.manex && (
-                <div style={{
-                  ...styles.alert,
-                  ...styles.alertSuccess,
-                  marginBottom: '16px',
-                  textAlign: 'left'
-                }}>
-                  <Check size={20} />
-                  <div>
-                    <strong>Un MANEX est déjà présent :</strong> {aircraft.manex.fileName}
-                    <div style={{ fontSize: '12px', marginTop: '4px' }}>
-                      Vous pouvez le conserver ou en uploader un nouveau.
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf"
-                onChange={handleManualUpload}
-                style={{ display: 'none' }}
-              />
-
-              {aircraft?.manex ? (
-                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                  <button
-                    onClick={() => setCurrentStep(2)}
-                    style={{
-                      ...styles.button,
-                      ...styles.buttonPrimary,
-                      minWidth: '200px'
-                    }}
-                  >
-                    <Check size={16} />
-                    Conserver le MANEX existant
-                  </button>
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isProcessing}
-                    style={{
-                      ...styles.button,
-                      ...styles.buttonSecondary,
-                      minWidth: '200px',
-                      opacity: isProcessing ? 0.5 : 1
-                    }}
-                  >
-                    <Upload size={16} />
-                    {isProcessing ? (loadingMessage || 'Traitement en cours...') : 'Remplacer le MANEX'}
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isProcessing}
-                  style={{
-                    ...styles.button,
-                    ...styles.buttonPrimary,
-                    width: '100%',
-                    maxWidth: '400px',
-                    opacity: isProcessing ? 0.5 : 1
-                  }}
-                >
-                  {isProcessing ? (loadingMessage || 'Traitement en cours...') : 'Sélectionner le manuel PDF'}
-                </button>
-              )}
-
-              {manualFile && (
-                <div style={{
-                  ...styles.card,
-                  marginTop: '16px',
-                  backgroundColor: '#f0f9ff'
-                }}>
-                  <FileText size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-                  <span style={styles.text.sm}>{manualFile.name}</span>
-                  <span style={{ ...styles.text.sm, ...styles.text.muted, marginLeft: '8px' }}>
-                    ({(manualFile.size / (1024 * 1024)).toFixed(2)} MB)
-                  </span>
-                </div>
-              )}
-
-              {error && (
-                <div style={{ ...styles.alert, ...styles.alertError, marginTop: '16px' }}>
-                  <AlertCircle size={16} />
-                  {error}
-                </div>
-              )}
-            </div>
-
-            <div style={{
-              ...styles.card,
-              backgroundColor: '#f0f9ff',
-              borderColor: '#1e40af'
-            }}>
-              <h4 style={{ ...styles.text.sm, ...styles.text.bold, marginBottom: '8px', color: '#1e40af' }}>
-                📕 Manuel de vol
-              </h4>
-              <ul style={{ ...styles.text.sm, paddingLeft: '20px', margin: 0 }}>
-                <li><strong>Le manuel sera conservé dans votre configuration</strong></li>
-                <li>Les données extraites seront vérifiées par rapport au manuel</li>
-                <li>Vous pourrez le consulter à tout moment depuis votre profil avion</li>
-                <li>Utilisez le manuel complet officiel du constructeur</li>
-                <li>Assurez-vous que le PDF n'est pas protégé par mot de passe</li>
-              </ul>
-            </div>
-          </div>
-        );
+      // ⚠️ STEP 1 RETIRÉ - Le MANEX est déjà géré dans l'étape "Informations générales" de l'avion
+      // Le wizard démarre maintenant directement à l'étape 2 (choix du type de données)
 
       case 2:
+        // Vérifier si un MANEX est présent (vérifier toutes les propriétés possibles)
+        
+        
+        
+
+        const hasManex = aircraft?.manex && (
+          aircraft.manex.file ||
+          aircraft.manex.url ||
+          aircraft.manex.data ||
+          aircraft.manex.pdfData ||
+          aircraft.manex.hasData ||
+          aircraft.manex.remoteUrl ||
+          aircraft.manex.uploadedToSupabase ||
+          aircraft.manex.fileName // Ajout: si un fileName existe, c'est qu'un MANEX est présent
+
+        // Vérifier si MANEX disponible dans Supabase mais téléchargement échoué
+        const hasManexInSupabase = aircraft?.manexAvailableInSupabase;
+
+        
+        
+
         return (
           <div style={styles.flexCol}>
             <div style={styles.card}>
               <h3 style={{ ...styles.text.lg, ...styles.text.bold, marginBottom: '16px' }}>
-                Étape 2 : Type de données de performance
+                Étape 2 : Sélection des sections de performance
               </h3>
+
+              {/* Alerte si MANEX disponible dans Supabase mais téléchargement échoué */}
+              {!hasManex && hasManexInSupabase && (
+                <div style={{ ...styles.alert, ...styles.alertWarning }}>
+                  <AlertCircle size={16} />
+                  <div>
+                    <strong>Téléchargement du MANEX en cours...</strong>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '13px' }}>
+                      Le MANEX est disponible dans Supabase ({hasManexInSupabase.fileName}). Rechargez la page (F5) pour réessayer le téléchargement.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Alerte si MANEX manquant */}
+              {!hasManex && !hasManexInSupabase && (
+                <div style={{ ...styles.alert, ...styles.alertError }}>
+                  <AlertCircle size={16} />
+                  <div>
+                    <strong>MANEX requis</strong>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '13px' }}>
+                      Vous devez d'abord ajouter un manuel de vol (MANEX) dans l'étape "Informations générales"
+                      avant de pouvoir extraire des données de performance.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {detectionResult?.success && (
                 <div style={{ ...styles.alert, ...styles.alertSuccess }}>
@@ -490,68 +509,247 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
               )}
 
               <p style={{ ...styles.text.sm, ...styles.text.muted, marginBottom: '24px' }}>
-                Quel type de données de performance souhaitez-vous extraire ?
+                Choisissez le type de données que vous souhaitez extraire du MANEX :
               </p>
 
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: '1fr 1fr',
-                gap: '24px'
+                gap: '16px',
+                marginBottom: '24px'
               }}>
+                {/* Carte Tableaux - CLIQUABLE - Navigation directe */}
                 <div
-                  onClick={() => handleToolSelection('tables')}
-                  style={styles.cardHover}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = '#1e40af'}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = '#e5e7eb'}
+                  onClick={() => {
+                    if (hasManex) {
+                      setPerformanceType('tables');
+                      setCurrentStep(3); // Aller directement à la sélection des pages
+                    }
+                  }}
+                  style={{
+                    padding: '16px',
+                    backgroundColor: '#eff6ff',
+                    border: '2px solid #3b82f6',
+                    borderRadius: '8px',
+                    cursor: hasManex ? 'pointer' : 'not-allowed',
+                    transition: 'all 0.2s',
+                    opacity: hasManex ? 1 : 0.4,
+                    transform: 'scale(1)',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (hasManex) {
+                      e.currentTarget.style.transform = 'scale(1.05)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(30, 64, 175, 0.3)';
+                      e.currentTarget.style.backgroundColor = '#dbeafe';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+                    e.currentTarget.style.backgroundColor = '#eff6ff';
+                  }}
                 >
-                  <Table size={48} style={{ margin: '0 auto 16px', color: '#1e40af' }} />
-                  <h4 style={{ ...styles.text.md, ...styles.text.bold, marginBottom: '8px' }}>
-                    Tableaux
-                  </h4>
-                  <p style={{ ...styles.text.sm, ...styles.text.muted }}>
-                    Données structurées en lignes et colonnes
-                    (distances de décollage/atterrissage, performances de montée).<br/>
-                    <strong>Extraction automatique avec OpenAI</strong>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <Table size={28} style={{ color: '#1e40af' }} />
+                    <h4 style={{ ...styles.text.md, ...styles.text.bold, color: '#1e40af', margin: 0 }}>
+                      Tableaux
+                    </h4>
+                  </div>
+                  <p style={{ ...styles.text.sm, color: '#6b7280', margin: 0 }}>
+                    Extraction automatique avec OpenAI
                   </p>
                 </div>
 
+                {/* Carte Graphiques/Abaques - CLIQUABLE - Navigation directe */}
                 <div
-                  onClick={() => handleToolSelection('abacs')}
-                  style={styles.cardHover}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = '#1e40af'}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = '#e5e7eb'}
+                  onClick={() => {
+                    if (hasManex) {
+                      setPerformanceType('abacs');
+                      setCurrentStep(4); // Aller directement à l'AbacBuilder
+                    }
+                  }}
+                  style={{
+                    padding: '16px',
+                    backgroundColor: '#f0fdf4',
+                    border: '2px solid #22c55e',
+                    borderRadius: '8px',
+                    cursor: hasManex ? 'pointer' : 'not-allowed',
+                    transition: 'all 0.2s',
+                    opacity: hasManex ? 1 : 0.4,
+                    transform: 'scale(1)',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (hasManex) {
+                      e.currentTarget.style.transform = 'scale(1.05)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(22, 163, 74, 0.3)';
+                      e.currentTarget.style.backgroundColor = '#dcfce7';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+                    e.currentTarget.style.backgroundColor = '#f0fdf4';
+                  }}
                 >
-                  <LineChart size={48} style={{ margin: '0 auto 16px', color: '#1e40af' }} />
-                  <h4 style={{ ...styles.text.md, ...styles.text.bold, marginBottom: '8px' }}>
-                    Abaques / Graphiques
-                  </h4>
-                  <p style={{ ...styles.text.sm, ...styles.text.muted }}>
-                    Courbes et graphiques de performance
-                    (graphiques avec axes et courbes).<br/>
-                    <strong>Construction manuelle</strong>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <LineChart size={28} style={{ color: '#16a34a' }} />
+                    <h4 style={{ ...styles.text.md, ...styles.text.bold, color: '#16a34a', margin: 0 }}>
+                      Graphiques/Abaques
+                    </h4>
+                  </div>
+                  <p style={{ ...styles.text.sm, color: '#6b7280', margin: 0 }}>
+                    Construction manuelle interactive
                   </p>
                 </div>
               </div>
 
-              <button
-                onClick={() => setCurrentStep(1)}
-                style={{ ...styles.button, ...styles.buttonSecondary, marginTop: '16px' }}
-              >
-                Retour
-              </button>
+              {/* Bouton Précédent pour revenir à la page d'accueil des performances */}
+              {onCancel && (
+                <div style={{ marginTop: '24px' }}>
+                  <button
+                    onClick={() => {
+                      
+                      onCancel();
+                    }}
+                    style={{
+                      ...styles.button,
+                      ...styles.buttonSecondary,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    ← Précédent
+                  </button>
+                </div>
+              )}
             </div>
           </div>
-        );
 
       case 3:
+        // Si l'analyseur est affiché, afficher directement l'AdvancedPerformanceAnalyzer
+        if (showAnalyzer) {
+          return (
+            <div>
+              <div style={{ ...styles.flexRow, marginBottom: '16px' }}>
+                <button
+                  onClick={() => setShowAnalyzer(false)}
+                  style={{ ...styles.button, ...styles.buttonSecondary }}
+                >
+                  ← Retour à la sélection
+                </button>
+                <h3 style={{ ...styles.text.lg, ...styles.text.bold }}>
+                  Extraction des tableaux de performance
+                </h3>
+              </div>
+
+              <AdvancedPerformanceAnalyzer
+                aircraft={aircraft}
+                initialData={initialData}
+                onPerformanceUpdate={(data) => {
+                  // Inclure le manuel de vol avec les données de performance
+                  if (onPerformanceUpdate) {
+                    onPerformanceUpdate({
+                      ...data,
+                      flightManual: manualFile
+                    });
+                  }
+                }}
+                preloadedImages={autoExtractPages || extractedPages
+                  .filter((_, idx) => selectedPages.includes(idx))
+                  .map((page, i) => {
+                    const originalIndex = selectedPages[i];
+                    return {
+                      id: `page_${page.pageNumber}`,
+                      name: `Page ${page.pageNumber}`,
+                      base64: page.image.replace(/^data:image\/\w+;base64,/, ''),
+                      preview: page.image,
+                      classification: pageClassifications[originalIndex] || 'non-classified'
+                    };
+                  })}
+                pageClassifications={pageClassifications}
+                autoExtract={true}
+                hideUploadedImages={true}
+              />
+            </div>
+          );
+        }
+
+        // Sinon, afficher la sélection des pages
         return (
           <div style={styles.flexCol}>
             <div style={styles.card}>
-              <h3 style={{ ...styles.text.lg, ...styles.text.bold, marginBottom: '16px' }}>
+              <h3 style={{ ...styles.text.lg, ...styles.text.bold, marginBottom: '8px' }}>
                 Étape 3 : Sélection des pages de performance
               </h3>
 
-              {detectionResult && !detectionResult.success && (
+              {/* Informations sur l'extraction */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px',
+                backgroundColor: '#f9fafb',
+                borderRadius: '8px',
+                marginBottom: '16px',
+                flexWrap: 'wrap'
+              }}>
+                {/* Statut API OpenAI */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Check size={14} style={{ color: '#10b981' }} />
+                  <span style={{ ...styles.text.sm, color: '#10b981', fontWeight: '500' }}>
+                    API connectée
+                  </span>
+                </div>
+
+                {/* Nombre de pages */}
+                {extractedPages.length > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <FileText size={14} style={{ color: '#3b82f6' }} />
+                    <span style={{ ...styles.text.sm, color: '#3b82f6', fontWeight: '500' }}>
+                      {extractedPages.length} page(s) chargée(s)
+                    </span>
+                  </div>
+                )}
+
+                {/* Message d'action */}
+                {selectedPages.length > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
+                    <span style={{ ...styles.text.sm, color: '#6b7280' }}>
+                      Cliquez sur le bouton "Continuer" pour lancer l'extraction automatique
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {isProcessing && (
+                <div style={{ ...styles.alert, ...styles.alertSuccess }}>
+                  <div style={{
+                    width: '16px',
+                    height: '16px',
+                    border: '2px solid #166534',
+                    borderTopColor: 'transparent',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                    marginRight: '8px'
+                  }} />
+                  <div>
+                    <strong>Extraction en cours...</strong>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '13px' }}>
+                      {loadingMessage || 'Extraction des pages du MANEX...'}
+                    </p>
+                  </div>
+                  <style>{`
+                    @keyframes spin {
+                      to { transform: rotate(360deg); }
+                    }
+                  `}</style>
+                </div>
+              )}
+
+              {detectionResult && !detectionResult.success && !isProcessing && (
                 <div style={{ ...styles.alert, ...styles.alertWarning }}>
                   <AlertCircle size={16} />
                   {detectionResult.message}
@@ -560,8 +758,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
 
               <p style={{ ...styles.text.sm, ...styles.text.muted, marginBottom: '16px' }}>
                 1️⃣ <strong>Cliquez sur les pages</strong> pour les sélectionner (bordure bleue)<br/>
-                2️⃣ <strong>Utilisez le menu déroulant</strong> qui apparaît sur chaque page sélectionnée pour classifier le type de données<br/>
-                3️⃣ <strong>Classifications disponibles</strong> : Take-off, Landing, Climb, etc.
+                2️⃣ <strong>Menu</strong> : Classifiez la section de performance (Distance de décollage, etc.)
               </p>
 
               {/* Afficher un résumé des classifications */}
@@ -574,18 +771,19 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                   border: '1px solid #3b82f6'
                 }}>
                   <h4 style={{ ...styles.text.sm, fontWeight: 'bold', marginBottom: '8px' }}>
-                    📋 Pages sélectionnées et leurs classifications :
+                    📋 Pages sélectionnées et leurs configurations :
                   </h4>
                   <ul style={{ ...styles.text.sm, paddingLeft: '20px', margin: 0 }}>
                     {selectedPages.map(idx => {
                       const page = extractedPages[idx];
                       const classification = pageClassifications[idx];
                       const type = performanceTypes.find(t => t.value === classification);
+
                       return (
                         <li key={idx}>
-                          Page {page.pageNumber} : <strong>{type?.label || 'Non classifié (sélectionnez dans le menu)'}</strong>
+                          Page {page.pageNumber} : <strong>{type?.label || 'Non classifié'}</strong>
                         </li>
-                      );
+
                     })}
                   </ul>
                 </div>
@@ -682,20 +880,21 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                     }}>
                       Page {page.pageNumber}
                     </div>
-                    {/* Menu déroulant pour classifier la page */}
+                    {/* Menu de classification de performance */}
                     {selectedPages.includes(index) && (
                       <>
+                        {/* Classification de performance */}
                         <select
                           style={{
                             position: 'absolute',
-                            bottom: '35px',
+                            bottom: '8px',
                             left: '4px',
                             right: '4px',
-                            padding: '6px 4px',
+                            padding: '8px 6px',
                             fontSize: '12px',
                             borderRadius: '6px',
                             border: '2px solid #1e40af',
-                            backgroundColor: '#fef3c7',
+                            backgroundColor: '#eff6ff',
                             color: '#1e40af',
                             fontWeight: 'bold',
                             cursor: 'pointer',
@@ -708,6 +907,11 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                             setPageClassifications(prev => ({
                               ...prev,
                               [index]: e.target.value
+                            }));
+                            // Définir automatiquement le type de système à 'table'
+                            setPageSystemTypes(prev => ({
+                              ...prev,
+                              [index]: 'table'
                             }));
                           }}
                           onClick={(e) => e.stopPropagation()}
@@ -723,33 +927,34 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                         {!pageClassifications[index] && (
                           <div style={{
                             position: 'absolute',
-                            top: '35px',
-                            left: '50%',
-                            transform: 'translateX(-50%)',
+                            top: '8px',
+                            left: '8px',
                             backgroundColor: '#ef4444',
                             color: 'white',
-                            padding: '2px 8px',
+                            padding: '3px 8px',
                             borderRadius: '4px',
                             fontSize: '10px',
                             fontWeight: 'bold',
                             whiteSpace: 'nowrap'
                           }}>
-                            ⚠️ À CLASSIFIER
+                            ⚠️ À CONFIGURER
                           </div>
                         )}
 
-                        <Check
-                          size={20}
-                          style={{
-                            position: 'absolute',
-                            bottom: '8px',
-                            right: '8px',
-                            backgroundColor: '#1e40af',
-                            color: 'white',
-                            borderRadius: '50%',
-                            padding: '2px'
-                          }}
-                        />
+                        {pageClassifications[index] && (
+                          <Check
+                            size={20}
+                            style={{
+                              position: 'absolute',
+                              top: '8px',
+                              right: '8px',
+                              backgroundColor: '#16a34a',
+                              color: 'white',
+                              borderRadius: '50%',
+                              padding: '2px'
+                            }}
+                          />
+                        )}
                       </>
                     )}
                   </div>
@@ -770,7 +975,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                 </button>
 
                 <button
-                  onClick={() => setCurrentStep(4)}
+                  onClick={() => setShowAnalyzer(true)}
                   disabled={selectedPages.length === 0}
                   style={{
                     ...styles.button,
@@ -778,90 +983,70 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                     opacity: selectedPages.length === 0 ? 0.5 : 1
                   }}
                 >
-                  Continuer ({selectedPages.length} page{selectedPages.length > 1 ? 's' : ''} sélectionnée{selectedPages.length > 1 ? 's' : ''})
-                  <ChevronRight size={16} />
+                  🚀 Analyser les documents ({selectedPages.length} page{selectedPages.length > 1 ? 's' : ''})
                 </button>
               </div>
             </div>
           </div>
-        );
 
       case 4:
-        // Rendu du composant approprié selon le type choisi
-        if (performanceType === 'tables') {
+        // Étape 4 : uniquement pour les abaques
+        if (performanceType === 'abacs') {
           return (
             <div>
-              <div style={{ ...styles.flexRow, marginBottom: '16px' }}>
-                <button
-                  onClick={() => setCurrentStep(3)}
-                  style={{ ...styles.button, ...styles.buttonSecondary }}
-                >
-                  ← Retour
-                </button>
-                <h3 style={{ ...styles.text.lg, ...styles.text.bold }}>
-                  Extraction des tableaux de performance
-                </h3>
-              </div>
-
-              <AdvancedPerformanceAnalyzer
-                aircraft={aircraft}
-                initialData={initialData}
-                onPerformanceUpdate={(data) => {
-                  // Inclure le manuel de vol avec les données de performance
-                  if (onPerformanceUpdate) {
-                    onPerformanceUpdate({
-                      ...data,
-                      flightManual: manualFile
-                    });
-                  }
-                }}
-                preloadedImages={autoExtractPages || extractedPages
-                  .filter((_, idx) => selectedPages.includes(idx))
-                  .map((page, i) => {
-                    const originalIndex = selectedPages[i];
-                    return {
-                      id: `page_${page.pageNumber}`,
-                      name: `Page ${page.pageNumber}`,
-                      base64: page.image.replace(/^data:image\/\w+;base64,/, ''),
-                      preview: page.image,
-                      classification: pageClassifications[originalIndex] || 'non-classified'
-                    };
-                  })}
-                pageClassifications={pageClassifications}
-                autoExtract={!!autoExtractPages}
-                hideUploadedImages={true}
-              />
-            </div>
-          );
-        } else if (performanceType === 'abacs') {
-          return (
-            <div>
-              <div style={{ ...styles.flexRow, marginBottom: '16px' }}>
-                <button
-                  onClick={() => setCurrentStep(2)}
-                  style={{ ...styles.button, ...styles.buttonSecondary }}
-                >
-                  ← Retour
-                </button>
-                <h3 style={{ ...styles.text.lg, ...styles.text.bold }}>
-                  Construction des courbes ABAC
-                </h3>
-              </div>
+              <h3 style={{ ...styles.text.lg, ...styles.text.bold, marginBottom: '16px' }}>
+                Construction des courbes ABAC
+              </h3>
 
               <AbacBuilder
+                ref={handleAbacBuilderRef}
                 aircraft={aircraft}
                 onSave={(abacData) => {
                   if (onPerformanceUpdate) {
+                    // Récupérer le systemType depuis la première page sélectionnée (ou 'abaque' par défaut)
+                    const firstSelectedPageIndex = selectedPages[0];
+                    const systemType = pageSystemTypes[firstSelectedPageIndex] || 'abaque';
+
+                    // Récupérer la classification depuis les métadonnées de l'abaque
+                    // Si aucune page n'est sélectionnée, utiliser le systemType de l'abaque lui-même
+                    let classificationLabel = 'Non classifié';
+                    let classificationValue = '';
+
+                    if (abacData.metadata?.systemName) {
+                      // Utiliser le nom du système de l'abaque comme classification
+                      classificationLabel = abacData.metadata.systemName;
+                      classificationValue = abacData.metadata.systemType || '';
+                    } else if (selectedPages.length > 0) {
+                      // Sinon, essayer de récupérer depuis pageClassifications
+                      classificationValue = pageClassifications[firstSelectedPageIndex];
+                      const classificationType = performanceTypes.find(t => t.value === classificationValue);
+                      classificationLabel = classificationType?.label || 'Non classifié';
+                    }
                     onPerformanceUpdate({
                       abacCurves: abacData,
-                      flightManual: manualFile
+                      flightManual: manualFile,
+                      systemType: systemType, // Passer le type de système (table ou abaque)
+                      classification: classificationLabel, // Passer la classification complète
+                      classificationValue: classificationValue, // Passer la valeur de la classification
+                      editingModelIndex: initialData?.editingModelIndex
                     });
                   }
                 }}
-                existingData={null}
+                onBack={() => {
+                  
+                  if (onCancel) {
+                    onCancel(); // Retourner à la page listant les données de performance
+                  } else {
+                    // Fallback si onCancel n'est pas fourni
+                    setCurrentStep(2);
+                    setPerformanceType(null);
+                  }
+                }}
+                initialData={initialData?.abacCurves || null}
+                modelName={initialData?.abacCurves?.metadata?.modelName || null}
+                aircraftModel={aircraft?.model || null}
               />
             </div>
-          );
         }
         break;
 
@@ -874,8 +1059,8 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
   const renderProgressIndicator = () => {
     if (currentStep > 3) return null;
 
+    // ⚠️ Step 1 retiré - Le MANEX est géré ailleurs
     const steps = [
-      { num: 1, label: 'Upload manuel' },
       { num: 2, label: 'Type de données' },
       { num: 3, label: 'Sélection pages' }
     ];
@@ -929,15 +1114,13 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
           </React.Fragment>
         ))}
       </div>
-    );
-  };
 
   return (
     <div style={styles.container}>
       {renderProgressIndicator()}
       {renderStep()}
     </div>
-  );
+
 };
 
 export default PerformanceWizard;

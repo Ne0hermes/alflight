@@ -52,7 +52,6 @@ const AirspaceFilters = ({ filters, onFilterChange, airspaceStats = {} }) => {
     const allTypeIds = [...airspaceTypes, ...airspaceClasses].map(t => t.id);
     const allSelected = allTypeIds.every(id => 
       filters.types.includes(id) || filters.classes.includes(id)
-    );
     
     if (allSelected) {
       onFilterChange({ ...filters, types: [], classes: [] });
@@ -330,7 +329,7 @@ const AirspaceFilters = ({ filters, onFilterChange, airspaceStats = {} }) => {
         }
       `}</style>
     </div>
-  );
+
 };
 
 export default AirspaceFilters;

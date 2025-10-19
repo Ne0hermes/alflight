@@ -6,7 +6,7 @@ import unifiedPerformanceService from '../../../features/performance/services/un
 import pdfToImageConverter from '../../../services/pdfToImageConverter';
 
 const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
-  console.log('🚀 PerformanceAnalyzer render - aircraft:', aircraft?.registration, 'ID:', aircraft?.id);
+  
   
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [takeoffImage, setTakeoffImage] = useState(null);
@@ -27,7 +27,7 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
   
   // Log de l'état actuel
   useEffect(() => {
-    console.log(`📊 État actuel (render #${renderCount.current}):`, {
+    :`, {
       isEditMode,
       editedValues,
       analysisResults: analysisResults ? 'Présent' : 'Absent',
@@ -38,10 +38,7 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
     });
     
     if (prevAircraftId.current !== aircraft?.id) {
-      console.log('⚠️ ATTENTION: L\'ID de l\'avion a changé!', {
-        ancien: prevAircraftId.current,
-        nouveau: aircraft?.id
-      });
+      
       prevAircraftId.current = aircraft?.id;
     }
   }, [isEditMode, editedValues, analysisResults, aircraft]);
@@ -70,7 +67,7 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
   // Synchroniser le ref avec l'état
   useEffect(() => {
     isEditModeRef.current = isEditMode;
-    console.log('🔄 isEditModeRef mis à jour:', isEditMode);
+    
   }, [isEditMode]);
   
   // Mémoriser l'ID de l'avion pour détecter les vrais changements
@@ -79,11 +76,11 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
   
   // Charger les performances existantes de l'avion
   useEffect(() => {
-    console.log('🔄 useEffect déclenché - aircraftId:', aircraftId, 'hasPerformance:', !!aircraftPerformance);
+    
     
     // Ne pas réinitialiser si on est en mode édition
     if (aircraftPerformance && !isEditModeRef.current) {
-      console.log('🔄 Chargement des performances de l\'avion');
+      
       setAnalysisResults(aircraftPerformance);
       // Initialiser les valeurs éditables seulement si elles sont vides
       if (Object.keys(editedValues).length === 0) {
@@ -95,15 +92,15 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
           lda15m: aircraftPerformance.landing?.lda15m || '',
           lda50ft: aircraftPerformance.landing?.lda50ft || ''
         };
-        console.log('🔄 Initialisation des valeurs:', newEditedValues);
+        
         setEditedValues(newEditedValues);
       } else {
-        console.log('📝 Valeurs déjà présentes, pas de réinitialisation');
+        
       }
     } else if (isEditModeRef.current) {
-      console.log('⚠️ Mode édition actif - pas de réinitialisation');
+      
     } else {
-      console.log('⚠️ Pas de performances dans l\'avion');
+      
     }
   }, [aircraftId, aircraftPerformance]); // Utiliser des valeurs primitives
 
@@ -287,19 +284,19 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
   };
 
   const handleValueChange = useCallback((field, value) => {
-    console.log(`📝 Modification du champ ${field}:`, value);
+    
     setEditedValues(prev => {
       const newValues = {
         ...prev,
         [field]: value
       };
-      console.log('📊 Nouvelles valeurs éditées:', newValues);
+      
       return newValues;
     });
   }, []);
 
   const handleSaveEditedValues = () => {
-    console.log('💾 Sauvegarde des valeurs éditées');
+    
     if (!onPerformanceUpdate) {
       console.error('❌ onPerformanceUpdate n\'est pas défini');
       return;
@@ -325,11 +322,11 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
         manuallyEdited: true
       };
       
-      console.log('📦 Données de performance à sauvegarder:', performanceData);
+      
       setAnalysisResults(performanceData);
       onPerformanceUpdate(performanceData);
       setIsEditMode(false);
-      console.log('✅ Sauvegarde réussie');
+      
     } catch (error) {
       console.error('❌ Erreur lors de la sauvegarde:', error);
     }
@@ -609,7 +606,7 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('🔄 Clic sur bouton modifier - isEditMode actuel:', isEditMode);
+                
                 
                 if (!isEditMode && analysisResults) {
                   // Initialiser les valeurs éditables en entrant en mode édition
@@ -621,14 +618,14 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
                     lda15m: analysisResults.landing?.lda15m || '',
                     lda50ft: analysisResults.landing?.lda50ft || ''
                   };
-                  console.log('📋 Entrée en mode édition - Initialisation des valeurs:', initValues);
+                  
                   setEditedValues(initValues);
                   setIsEditMode(true);
                 } else if (isEditMode) {
-                  console.log('📋 Sortie du mode édition');
+                  
                   setIsEditMode(false);
                 } else {
-                  console.log('⚠️ Pas de résultats d\'analyse disponibles');
+                  
                   setIsEditMode(!isEditMode);
                 }
               }}
@@ -657,11 +654,11 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
                       value={editedValues.tod}
                       onChange={(e) => {
                         e.persist && e.persist(); // Préserver l'événement
-                        console.log('🔧 onChange TOD - valeur:', e.target.value);
+                        
                         handleValueChange('tod', e.target.value);
                       }}
-                      onFocus={() => console.log('🎯 Focus sur TOD')}
-                      onBlur={() => console.log('👋 Blur sur TOD')}
+                      onFocus={() => }
+                      onBlur={() => }
                       style={{
                         width: '100%',
                         padding: '4px 8px',
@@ -763,7 +760,7 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('❌ Clic sur Annuler - Annulation de l\'édition');
+                    
                     setIsEditMode(false);
                     // Restaurer les valeurs originales
                     if (analysisResults) {
@@ -775,7 +772,7 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
                         lda15m: analysisResults.landing?.lda15m || '',
                         lda50ft: analysisResults.landing?.lda50ft || ''
                       };
-                      console.log('🔄 Restauration des valeurs:', restoredValues);
+                      
                       setEditedValues(restoredValues);
                     }
                   }}
@@ -788,7 +785,7 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('💾 Clic sur Sauvegarder');
+                    
                     handleSaveEditedValues();
                   }}
                   style={sx.combine(sx.components.button.base, sx.components.button.primary)}
@@ -872,7 +869,7 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
         </div>
       )}
     </div>
-  );
+
 });
 
 // Fonction de comparaison pour React.memo
@@ -887,10 +884,7 @@ const areEqual = (prevProps, nextProps) => {
                   JSON.stringify(prevPerformance) === JSON.stringify(nextPerformance);
   
   if (!isEqual) {
-    console.log('🔄 PerformanceAnalyzer props changed:', {
-      prevId,
-      nextId,
-      performanceChanged: JSON.stringify(prevPerformance) !== JSON.stringify(nextPerformance)
+     !== JSON.stringify(nextPerformance)
     });
   }
   

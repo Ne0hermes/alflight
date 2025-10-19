@@ -544,7 +544,7 @@ const SurvivalEquipmentChecklist = memo(({ aircraftReg, flightZones = {} }) => {
         )}
       </div>
     </div>
-  );
+
 });
 
 SurvivalEquipmentChecklist.displayName = 'SurvivalEquipmentChecklist';

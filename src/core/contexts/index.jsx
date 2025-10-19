@@ -58,17 +58,25 @@ export const AircraftProvider = memo(({ children }) => {
   const updateAircraft = useAircraftStore(state => state.updateAircraft);
   const deleteAircraft = useAircraftStore(state => state.deleteAircraft);
   const addAircraft = useAircraftStore(state => state.addAircraft);
+  const loadFromSupabase = useAircraftStore(state => state.loadFromSupabase);
+  const isInitialized = useAircraftStore(state => state.isInitialized);
+  const error = useAircraftStore(state => state.error);
+
+  // 🚀 INITIALISATION AUTOMATIQUE DEPUIS SUPABASE
+  React.useEffect(() => {
+    if (!isInitialized) {
+            loadFromSupabase().catch(err => {
+        console.error('❌ Échec du chargement initial Supabase:', err);
+      });
+    }
+  }, [isInitialized, loadFromSupabase]);
   
   // Wrapper pour debugger les appels addAircraft
   const debugAddAircraft = useCallback(async (aircraft) => {
-    // console.log('🚀 AircraftProvider - debugAddAircraft wrapper called with:', aircraft);
-    // console.log('🚀 AircraftProvider - addAircraft function type:', typeof addAircraft);
-    // console.log('🚀 AircraftProvider - addAircraft function:', addAircraft);
-    
+    //     //     //     
     try {
       const result = await addAircraft(aircraft);
-      // console.log('✅ AircraftProvider - addAircraft completed, result:', result);
-      return result;
+      //       return result;
     } catch (error) {
       console.error('❌ AircraftProvider - addAircraft error:', error);
       throw error;
@@ -76,7 +84,7 @@ export const AircraftProvider = memo(({ children }) => {
   }, [addAircraft]);
   
   // Debug: vérifier que le store est bien initialisé
-  // console.log('🚀 AircraftProvider - Render at', new Date().toISOString(), 'with:', {
+  // .toISOString(), 'with:', {
   //   aircraftListLength: aircraftList?.length,
   //   aircraftListIds: aircraftList?.map(a => a.id) || [],
   //   selectedAircraftId: selectedAircraftId,
@@ -86,21 +94,17 @@ export const AircraftProvider = memo(({ children }) => {
   
   // Effectuer une surveillance des changements de la liste d'avions
   React.useEffect(() => {
-    // console.log('🔄 AircraftProvider - aircraftList changed:', {
-    //   length: aircraftList?.length || 0,
-    //   ids: aircraftList?.map(a => a.id) || []
+    //  || []
     // });
   }, [aircraftList]);
   
   // Surveillance spécifique pour les nouvelles entrées
   React.useEffect(() => {
     const currentLength = aircraftList?.length || 0;
-    // console.log('🔍 AircraftProvider - Length monitoring:', currentLength);
-    
+    //     
     // Forcer un re-render si nécessaire
     if (currentLength !== (window.lastKnownAircraftCount || 2)) {
-      console.log('📈 AircraftProvider - Aircraft count changed from', window.lastKnownAircraftCount || 2, 'to', currentLength);
-      window.lastKnownAircraftCount = currentLength;
+            window.lastKnownAircraftCount = currentLength;
     }
   }, [aircraftList?.length]);
   

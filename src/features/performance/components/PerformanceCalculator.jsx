@@ -74,38 +74,38 @@ export const PerformanceCalculator = memo(() => {
       densityAlt,
       conditions.temperature,
       conditions.weight
-    );
 
+    );
     const baseTakeoffRoll = interpolatePerformance(
       charts.takeoffRoll,
       densityAlt,
       conditions.temperature,
       conditions.weight
-    );
 
+    );
     // Calcul des distances d'atterrissage
     const baseLandingDistance = interpolatePerformance(
       charts.landingDistance,
       densityAlt,
       conditions.temperature,
       conditions.weight * 0.95 // Masse à l'atterrissage typiquement plus faible
-    );
 
+    );
     const baseLandingRoll = interpolatePerformance(
       charts.landingRoll,
       densityAlt,
       conditions.temperature,
       conditions.weight * 0.95
-    );
 
+    );
     // Calcul du taux de montée
     const climbRate = interpolatePerformance(
       charts.climbRate,
       densityAlt,
       conditions.temperature,
       conditions.weight
-    );
 
+    );
     // Appliquer les corrections environnementales
     const envConditions = {
       headwind: conditions.headwind,
@@ -118,26 +118,26 @@ export const PerformanceCalculator = memo(() => {
       baseTakeoffDistance,
       charts.takeoffDistance.corrections,
       envConditions
-    );
 
+    );
     const correctedTakeoffRoll = applyEnvironmentalCorrections(
       baseTakeoffRoll,
       charts.takeoffRoll.corrections,
       envConditions
-    );
 
+    );
     const correctedLandingDistance = applyEnvironmentalCorrections(
       baseLandingDistance,
       charts.landingDistance.corrections,
       envConditions
-    );
 
+    );
     const correctedLandingRoll = applyEnvironmentalCorrections(
       baseLandingRoll,
       charts.landingRoll.corrections,
       envConditions
-    );
 
+    );
     return {
       densityAltitude: densityAlt,
       takeoff: {
@@ -653,6 +653,7 @@ export const PerformanceCalculator = memo(() => {
         </p>
       </div>
     </div>
+
   );
 });
 

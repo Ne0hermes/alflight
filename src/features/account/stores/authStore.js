@@ -358,6 +358,6 @@ export const useAuthStore = create(
         
         return true;
       };
-    },
+    }
   }))
-);
+);

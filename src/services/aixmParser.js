@@ -39,8 +39,7 @@ class AIXMParser {
   async loadAndParse() {
     try {
       // FORCER LE RECHARGEMENT POUR DEBUG
-      console.log('🔄 Forçage du rechargement des données AIXM/SIA pour debug...');
-      
+            
       // Si un chargement est déjà en cours, attendre qu'il se termine
       if (this.isLoading && this.loadPromise) {
         return await this.loadPromise;
@@ -55,8 +54,7 @@ class AIXMParser {
       // Marquer comme en cours de chargement
       this.isLoading = true;
       
-      console.log('🔄 Chargement initial des fichiers AIXM/SIA...');
-      
+            
       // Créer la promesse de chargement
       this.loadPromise = (async () => {
         // Charger les deux fichiers XML
@@ -86,8 +84,7 @@ class AIXMParser {
         this.parseAdminInfo(siaDoc); // Ajouter les informations administratives
         this.parseProcedures(siaDoc);
         
-        console.log(`✅ ${this.aerodromes.size} aérodromes chargés avec données complètes`);
-        
+                
         // Marquer comme chargé
         this.isLoading = false;
         
@@ -109,8 +106,7 @@ class AIXMParser {
   parseAerodromes(doc) {
     const ahps = doc.getElementsByTagName('Ahp');
     // Log désactivé pour éviter spam
-    // console.log(`🏢 Nombre d'aérodromes trouvés dans AIXM: ${ahps.length}`);
-    
+    //     
     let count = 0;
     for (const ahp of ahps) {
       // Le codeId est dans AhpUid, pas directement dans Ahp
@@ -122,11 +118,7 @@ class AIXMParser {
       
       count++;
       // Debug LFST activé temporairement
-      if (codeId === 'LFST' || codeId === 'LFGA') {
-        console.log(`✅ ${codeId} trouvé dans AIXM!`);
-      }
-      
-      const aerodrome = {
+            const aerodrome = {
         icao: String(codeId || ''),
         iata: this.getTextContent(ahp, 'codeIata'),
         name: this.getTextContent(ahp, 'txtName'),
@@ -159,21 +151,13 @@ class AIXMParser {
       
       // Debug pour LFST (désactivé)
       // if (codeId === 'LFST') {
-      //   console.log('📍 Données LFST extraites:', {
-      //     name: aerodrome.name,
-      //     city: aerodrome.city,
-      //     iata: aerodrome.iata
-      //   });
-      // }
+      //         // }
       
       this.aerodromes.set(codeId, aerodrome);
     }
     
     // Résumé final (conservé car utile)
-    if (count > 0) {
-      console.log(`✅ ${count} aérodromes français chargés`);
-    }
-  }
+      }
 
   /**
    * Parse les pistes depuis AIXM
@@ -195,11 +179,7 @@ class AIXMParser {
       const designation = this.getTextContent(rwyUid, 'txtDesig');
       
       // Debug pour LFST
-      if (aerodromeId === 'LFST') {
-        console.log(`🛬 Parsing runway for LFST: ${designation}`);
-      }
-      
-      const runway = {
+            const runway = {
         designation,
         length: parseFloat(this.getTextContent(rwy, 'valLen') || 0),
         width: parseFloat(this.getTextContent(rwy, 'valWid') || 0),
@@ -244,11 +224,7 @@ class AIXMParser {
       const direction = this.getTextContent(rdnUid, 'txtDesig');
       
       // Debug pour LFST
-      if (aerodromeId === 'LFST') {
-        console.log(`🛬 Parsing runway direction for LFST: ${rwyDesignation} - Direction: ${direction}`);
-      }
-      
-      const directionData = {
+            const directionData = {
         designation: direction,
         trueBearing: parseFloat(this.getTextContent(rdn, 'valTrueBrg') || 0),
         magneticBearing: parseFloat(this.getTextContent(rdn, 'valMagBrg') || 0),
@@ -298,8 +274,7 @@ class AIXMParser {
       
       // Debug pour LFST (désactivé pour éviter spam)
       // if (aerodromeId === 'LFST') {
-      //   console.log(`📏 LFST Distance: Piste ${rwyDesignation}, Direction ${direction}, ${distanceType}: ${distance}m`);
-      // }
+      //         // }
       
       // Trouver la direction correspondante
       const rwyKey = `${aerodromeId}_${rwyDesignation}`;
@@ -312,15 +287,10 @@ class AIXMParser {
           dir.distances[distanceType] = distance;
           
           // Debug uniquement pour LFST et uniquement si on assigne vraiment une valeur
-          if (aerodromeId === 'LFST' && distance > 0) {
-            console.log(`📏 LFST ${direction}: ${distanceType} = ${distance}m`);
-          }
         }
-      } else if (aerodromeId === 'LFST') {
-        console.log(`   ⚠️ Piste ${rwyDesignation} non trouvée dans la map`);
       }
     }
-    
+
     // Parser les ILS
     const ilss = doc.getElementsByTagName('Ils');
     
@@ -339,11 +309,7 @@ class AIXMParser {
       const direction = this.getTextContent(rdnUid, 'txtDesig');
       
       // Debug pour LFST
-      if (aerodromeId === 'LFST') {
-        console.log(`📡 Parsing ILS for LFST: Piste ${rwyDesignation} - Direction ${direction}`);
-      }
-      
-      const ilsData = {
+            const ilsData = {
         category: this.getTextContent(ils, 'codeCat'),
         frequency: parseFloat(this.getTextContent(ils.querySelector('Ilz'), 'valFreq') || 0),
         identifier: this.getTextContent(ils.querySelector('Ilz'), 'codeId'),
@@ -361,16 +327,9 @@ class AIXMParser {
         const dir = runway.directions.find(d => d.designation === direction);
         if (dir) {
           dir.ils = ilsData;
-          
+
           // Debug pour LFST
-          if (aerodromeId === 'LFST') {
-            console.log(`   → ILS assigné à direction ${direction}: CAT ${ilsData.category}, ${ilsData.frequency} MHz, ${ilsData.identifier}`);
-          }
-        } else if (aerodromeId === 'LFST') {
-          console.log(`   ⚠️ Direction ${direction} non trouvée pour la piste ${rwyDesignation}`);
         }
-      } else if (aerodromeId === 'LFST') {
-        console.log(`   ⚠️ Piste ${rwyDesignation} non trouvée dans la map`);
       }
     }
   }
@@ -381,8 +340,7 @@ class AIXMParser {
   parseFrequencies(doc) {
     const frequences = doc.getElementsByTagName('Frequence');
     // Log de début désactivé
-    // console.log(`🔍 Parsing des fréquences SIA - ${frequences.length} fréquences trouvées`);
-    
+    //     
     let count = 0;
     for (const freq of frequences) {
       const service = freq.querySelector('Service');
@@ -394,22 +352,19 @@ class AIXMParser {
       
       // Debug: afficher le format du service (désactivé pour éviter spam)
       // if (count < 10) {
-      //   console.log(`📻 Format service trouvé: "${serviceName}"`);
-      //   count++;
+      //         //   count++;
       // }
       
       // Chercher spécifiquement LFST (log désactivé)
       // if (serviceName.includes('[LF][ST]')) {
-      //   console.log(`🎯 Service LFST trouvé: "${serviceName}"`);
-      // }
+      //         // }
       
       // Extraire l'ICAO du service (format: [LF][ST][SERVICE])
       const icaoMatch = serviceName.match(/\[LF\]\[([A-Z]{2})\]/);
       if (!icaoMatch) {
         // Log désactivé pour éviter spam
         // if (count <= 10) {
-        //   console.log(`⚠️ Pas de match ICAO pour: "${serviceName}"`);
-        // }
+        //           // }
         continue;
       }
       
@@ -461,8 +416,7 @@ class AIXMParser {
    */
   parseAIXMFrequencies(doc) {
     const frequencies = doc.getElementsByTagName('Fqy');
-    console.log(`📻 Parsing des fréquences AIXM - ${frequencies.length} fréquences trouvées`);
-    
+        
     for (const freq of frequencies) {
       // Extraire les informations de base
       const valFreq = this.getTextContent(freq, 'valFreqTrans');
@@ -519,10 +473,10 @@ class AIXMParser {
       serviceType = serviceMap[codeType] || serviceType;
       
       // Ajouter la fréquence si elle n'existe pas déjà
-      const existingFreq = aerodrome.frequencies.find(f => 
+      const existingFreq = aerodrome.frequencies.find(f =>
         f.value === valFreq && f.type === serviceType
       );
-      
+
       if (!existingFreq) {
         aerodrome.frequencies.push({
           type: serviceType,
@@ -542,8 +496,7 @@ class AIXMParser {
         totalFreqs += ad.frequencies.length;
       }
     });
-    console.log(`✅ ${totalFreqs} fréquences AIXM ajoutées aux aérodromes`);
-  }
+      }
 
   /**
    * Parse les aides à la navigation
@@ -702,17 +655,7 @@ class AIXMParser {
     
     // Debug pour LFST
     const lfst = this.aerodromes.get('LFST');
-    if (lfst && lfst.services) {
-      console.log(`🛠️ Services trouvés pour LFST:`, {
-        fuel: lfst.services.fuel,
-        avgas100LL: lfst.services.avgas100LL,
-        jetA1: lfst.services.jetA1,
-        customs: lfst.services.customs,
-        hangar: lfst.services.hangar,
-        totalServices: lfst.services.details.length
-      });
-    }
-  }
+      }
 
   /**
    * Parse les consignes particulières depuis SIA
@@ -747,11 +690,7 @@ class AIXMParser {
       
       // Debug pour LFST
       if (icao === 'LFST' && (adRem || remarques.length > 0)) {
-        console.log(`📋 Consignes particulières trouvées pour LFST:`, {
-          specialInstructions: adRem,
-          additionalRemarks: aerodrome.additionalRemarks
-        });
-      }
+              }
     }
   }
 
@@ -852,7 +791,6 @@ class AIXMParser {
       
       // Debug pour LFST
       if (icao === 'LFST' && Object.keys(aerodrome.procedures).length > 0) {
-        console.log(`📋 Procédures trouvées pour LFST:`, Object.keys(aerodrome.procedures));
       }
     }
   }
@@ -902,17 +840,11 @@ class AIXMParser {
           vfrCount++;
           
           // Debug pour LFST
-          if (aerodromeId === 'LFST') {
-            console.log(`📍 Point VFR ajouté pour LFST: ${txtName} - ${vfrPoint.description}`);
-          }
-        }
+                  }
       }
     }
     
-    if (vfrCount > 0) {
-      console.log(`✅ ${vfrCount} points VFR chargés`);
-    }
-  }
+      }
 
   /**
    * Combine toutes les données
@@ -930,7 +862,7 @@ class AIXMParser {
           navaid.coordinates.lat,
           navaid.coordinates.lon
         );
-        
+
         if (distance <= 30) { // 30 NM de rayon
           aerodrome.navaids.push({
             ...navaid,
@@ -949,18 +881,10 @@ class AIXMParser {
       const processedRunways = [];
       
       // Debug pour LFST
-      if (icao === 'LFST') {
-        console.log(`🛬 Processing runways for LFST:`, aerodrome.runways);
-      }
-      
-      for (const runway of aerodrome.runways) {
+            for (const runway of aerodrome.runways) {
         if (runway.designation && runway.designation.includes('/')) {
           // Piste bidirectionnelle - créer une entrée pour chaque direction
-          if (icao === 'LFST') {
-            console.log(`🛬 LFST runway ${runway.designation} has ${runway.directions?.length || 0} directions`);
-            console.log('   Directions:', runway.directions);
-          }
-          for (const direction of runway.directions || []) {
+                    for (const direction of runway.directions || []) {
             // NE PAS inventer de données - utiliser null si pas de données
             let tora = direction.distances?.TORA || null;
             let toda = direction.distances?.TODA || null;
@@ -968,12 +892,7 @@ class AIXMParser {
             let lda = direction.distances?.LDA || null;
             
             // Log pour debug
-            if (icao === 'LFST') {
-              console.log(`📏 LFST ${direction.designation} distances:`, direction.distances || 'AUCUNE DISTANCE');
-              console.log(`📡 LFST ${direction.designation} ILS:`, direction.ils || 'AUCUN ILS');
-            }
-            
-            processedRunways.push({
+                        processedRunways.push({
               designation: direction.designation,
               identifier: direction.designation,
               length: runway.length || null,
@@ -994,10 +913,7 @@ class AIXMParser {
           }
         } else {
           // Piste unidirectionnelle ou format non standard
-          if (icao === 'LFST') {
-            console.log(`🛬 LFST runway ${runway.designation} is not bidirectional, has ${runway.directions?.length || 0} directions`);
-          }
-          processedRunways.push({
+                    processedRunways.push({
             ...runway,
             identifier: runway.designation,
             qfu: runway.directions?.[0]?.magneticBearing || null,
@@ -1141,11 +1057,7 @@ class AIXMParser {
     }
     
     const aerodrome = this.aerodromes.get(icao);
-    if (aerodrome) {
-      console.log(`📡 AIXM Parser - Aérodrome ${icao} trouvé:`, aerodrome);
-      console.log(`📡 AIXM Parser - Fréquences pour ${icao}:`, aerodrome.frequencies);
-    }
-    return aerodrome;
+        return aerodrome;
   }
   
   /**
@@ -1165,19 +1077,12 @@ if (typeof window !== 'undefined') {
   // Ne définir la fonction qu'une seule fois
   if (!window.testAIXMParser) {
     window.testAIXMParser = async () => {
-      console.log('🧪 Test du parser AIXM...');
-      await aixmParser.loadAndParse();
+            await aixmParser.loadAndParse();
       const lfst = aixmParser.aerodromes.get('LFST');
       const lfga = aixmParser.aerodromes.get('LFGA');
-      console.log('📡 Données LFST:', lfst);
-      console.log('📡 Données LFGA:', lfga);
-      console.log('📻 Fréquences LFST:', lfst?.frequencies);
-      console.log('📻 Fréquences LFGA:', lfga?.frequencies);
-      console.log('📊 Total aérodromes chargés:', aixmParser.aerodromes.size);
-      // Afficher quelques codes ICAO pour debug
+                                    // Afficher quelques codes ICAO pour debug
       const icaos = Array.from(aixmParser.aerodromes.keys()).slice(0, 10);
-      console.log('📋 Premiers codes ICAO:', icaos);
-      return { lfst, lfga, total: aixmParser.aerodromes.size };
+            return { lfst, lfga, total: aixmParser.aerodromes.size };
     };
   }
 

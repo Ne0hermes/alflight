@@ -27,8 +27,7 @@ class UpdateLoggerService {
    */
   async initialize() {
     if (!this.CLIENT_ID || !this.API_KEY) {
-      console.warn('Clés API Google non configurées');
-      return false;
+            return false;
     }
 
     try {
@@ -83,8 +82,7 @@ class UpdateLoggerService {
       const authInstance = window.gapi.auth2.getAuthInstance();
       await authInstance.signIn();
       this.isSignedIn = true;
-      console.log('Connecté à Google Drive');
-      return true;
+            return true;
     } catch (error) {
       console.error('Erreur de connexion:', error);
       return false;
@@ -126,8 +124,7 @@ class UpdateLoggerService {
    */
   async sendToGoogleDrive(log) {
     if (!this.isSignedIn) {
-      console.warn('Non connecté à Google Drive');
-      return false;
+            return false;
     }
 
     try {
@@ -142,8 +139,7 @@ class UpdateLoggerService {
         await this.moveToFolder(doc.id, this.folderId);
       }
 
-      console.log('Log envoyé vers Google Drive:', doc.id);
-      return doc;
+            return doc;
     } catch (error) {
       console.error('Erreur envoi Google Drive:', error);
       return false;
@@ -186,8 +182,7 @@ class UpdateLoggerService {
         addParents: folderId,
         fields: 'id, parents'
       });
-      console.log('Fichier déplacé dans le dossier');
-    } catch (error) {
+          } catch (error) {
       console.error('Erreur déplacement:', error);
     }
   }

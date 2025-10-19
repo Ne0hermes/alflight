@@ -14,6 +14,9 @@ import { execSync } from 'child_process';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Chemin pour le fichier de log local de secours
+const LOCAL_LOG_PATH = path.join(__dirname, '..', 'tracking', 'claude-updates.log');
+
 const app = express();
 const PORT = 3001;
 
@@ -126,48 +129,140 @@ app.post('/api/log', async (req, res) => {
       throw new Error('Google Sheets client non initialisé');
     }
 
+    // Fonction pour convertir les valeurs en chaînes simples pour Google Sheets
+    const formatValue = (value) => {
+      if (value === null || value === undefined) return '';
+      if (typeof value === 'string') return value;
+      if (typeof value === 'number') return String(value);
+      if (typeof value === 'boolean') return String(value);
+      // Pour les objets et arrays, convertir en JSON string
+      if (typeof value === 'object') {
+        try {
+          return JSON.stringify(value, null, 0); // Pas d'indentation
+        } catch (e) {
+          return String(value);
+        }
+      }
+      return String(value);
+    };
+
     const values = [[
       new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' }),
-      action || '',
-      component || '',
-      summary || '',
-      details || '',
-      files || '',
-      status || 'completed',
+      formatValue(action),
+      formatValue(component),
+      formatValue(summary),
+      formatValue(details),
+      formatValue(files),
+      formatValue(status) || 'completed',
       'Claude Assistant'
     ]];
 
-    const response = await sheetsClient.spreadsheets.values.append({
+    // D'abord, obtenir la prochaine ligne vide
+    const getResponse = await sheetsClient.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_NAME}!A:H`,
+      range: `${SHEET_NAME}!A:A`
+    });
+
+    const nextRow = (getResponse.data.values?.length || 0) + 1;
+    const targetRange = `${SHEET_NAME}!A${nextRow}:H${nextRow}`;
+
+    // Insérer directement à la ligne spécifique pour éviter tout décalage
+    const response = await sheetsClient.spreadsheets.values.update({
+      spreadsheetId: SPREADSHEET_ID,
+      range: targetRange,
       valueInputOption: 'RAW',
-      insertDataOption: 'INSERT_ROWS',
       resource: { values }
     });
 
-    console.log(`📝 Log ajouté à Google Sheets: ${action}`);
-    console.log(`✅ Ligne ajoutée:`, response.data.updates.updatedRange);
+    console.log(`📝 Log ajouté à Google Sheets: ${formatValue(action)}`);
+    console.log(`✅ Ligne ${nextRow} ajoutée:`, response.data.updatedRange);
 
-    // Afficher la notification PowerShell
+    // Afficher les détails du log pour débogage
+    console.log('');
+    console.log('================================================================================');
+    console.log('  LOG GOOGLE SHEETS ENREGISTRÉ                                                ');
+    console.log('================================================================================');
+    console.log(`  Date/Heure: ${values[0][0]}`);
+    console.log(`  Action:     ${values[0][1]}`);
+    console.log(`  Composant:  ${values[0][2]}`);
+    if (values[0][3]) console.log(`  Résumé:     ${values[0][3]}`);
+    if (values[0][4]) console.log(`  Détails:    ${values[0][4].substring(0, 100)}${values[0][4].length > 100 ? '...' : ''}`);
+    if (values[0][5]) console.log(`  Fichiers:   ${values[0][5]}`);
+    console.log('================================================================================');
+    console.log(`  Lien: https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/edit#gid=0            `);
+    console.log('================================================================================');
+    console.log('');
+
+    // Afficher la notification PowerShell avec formatage
+    const formattedFiles = typeof files === 'string' ? files : formatValue(files);
+    const formattedDetails = typeof details === 'string'
+      ? details.substring(0, 100)
+      : formatValue(details).substring(0, 100);
+
     showPowerShellNotification(
-      action || 'Mise à jour',
-      component || 'Application',
-      files || '',
-      details ? details.substring(0, 100) : ''
+      formatValue(action) || 'Mise à jour',
+      formatValue(component) || 'Application',
+      formattedFiles,
+      formattedDetails
     );
+
+    // Sauvegarder localement en backup
+    saveLocalLog({
+      timestamp: values[0][0],
+      action: values[0][1],
+      component: values[0][2],
+      summary: values[0][3],
+      details: values[0][4],
+      files: values[0][5],
+      status: values[0][6]
+    });
 
     res.json({
       success: true,
       message: 'Log ajouté à Google Sheets',
       spreadsheet: SPREADSHEET_ID,
-      range: response.data.updates.updatedRange
+      range: response.data.updatedRange || targetRange
     });
 
   } catch (error) {
     console.error('❌ Erreur ajout log:', error);
+
+    // En cas d'erreur, sauvegarder quand même localement
+    try {
+      saveLocalLog({
+        timestamp: new Date().toISOString(),
+        action: formatValue(action),
+        component: formatValue(component),
+        summary: formatValue(summary),
+        details: formatValue(details),
+        files: formatValue(files),
+        status: formatValue(status),
+        error: error.message
+      });
+    } catch (localError) {
+      console.error('❌ Impossible de sauvegarder localement:', localError.message);
+    }
+
     res.status(500).json({ success: false, error: error.message });
   }
 });
+
+// Fonction pour sauvegarder le log localement
+function saveLocalLog(logData) {
+  try {
+    // Créer le dossier tracking s'il n'existe pas
+    const trackingDir = path.dirname(LOCAL_LOG_PATH);
+    if (!fs.existsSync(trackingDir)) {
+      fs.mkdirSync(trackingDir, { recursive: true });
+    }
+
+    const logEntry = `[${new Date().toISOString()}] ${JSON.stringify(logData, null, 2)}\n\n`;
+    fs.appendFileSync(LOCAL_LOG_PATH, logEntry, 'utf8');
+    console.log(`Log local sauvegarde: ${LOCAL_LOG_PATH}`);
+  } catch (error) {
+    console.error('❌ Erreur sauvegarde locale:', error.message);
+  }
+}
 
 // Endpoint de test
 app.get('/api/test', async (req, res) => {

@@ -30,8 +30,7 @@ class GoogleSheetsService {
     if (savedCreds) {
       try {
         this.credentials = JSON.parse(savedCreds);
-        console.log('Credentials chargés depuis le localStorage');
-      } catch (e) {
+              } catch (e) {
         console.error('Erreur lors du chargement des credentials:', e);
       }
     }
@@ -43,8 +42,7 @@ class GoogleSheetsService {
   setCredentials(credentialsJson) {
     this.credentials = credentialsJson;
     localStorage.setItem('googleServiceAccountCreds', JSON.stringify(credentialsJson));
-    console.log('Credentials configurés pour:', credentialsJson.client_email);
-  }
+      }
 
   /**
    * Active/désactive le service
@@ -107,8 +105,7 @@ class GoogleSheetsService {
    */
   async appendToSheet(values) {
     if (!this.isEnabled) {
-      console.log('Service Google Sheets désactivé');
-      return false;
+            return false;
     }
 
     try {
@@ -130,8 +127,7 @@ class GoogleSheetsService {
     const webhookUrl = localStorage.getItem('googleScriptWebhookUrl') || '';
 
     if (!webhookUrl) {
-      console.warn('URL du webhook non configurée');
-      return false;
+            return false;
     }
 
     const payload = {
@@ -151,8 +147,7 @@ class GoogleSheetsService {
         body: JSON.stringify(payload)
       });
 
-      console.log('Données envoyées via webhook');
-      return true;
+            return true;
     } catch (error) {
       console.error('Erreur webhook:', error);
       return false;
@@ -168,7 +163,7 @@ class GoogleSheetsService {
       timestamp: new Date().toISOString()
     });
     localStorage.setItem('sheetsQueue', JSON.stringify(this.queue));
-    console.log(`Ajouté à la file d'attente (${this.queue.length} éléments)`);
+
   }
 
   /**
@@ -177,8 +172,7 @@ class GoogleSheetsService {
   async processQueue() {
     if (this.queue.length === 0) return;
 
-    console.log(`Traitement de ${this.queue.length} éléments...`);
-
+    
     const processed = [];
     const failed = [];
 
@@ -198,8 +192,7 @@ class GoogleSheetsService {
     this.queue = failed;
     localStorage.setItem('sheetsQueue', JSON.stringify(this.queue));
 
-    console.log(`Traité: ${processed.length}, Échoué: ${failed.length}`);
-  }
+      }
 
   /**
    * Envoie un résumé de tâche formaté
@@ -264,7 +257,7 @@ function doPost(e) {
         'result': 'success',
         'row': data.values,
         'timestamp': data.timestamp
-      }))
+
       .setMimeType(ContentService.MimeType.JSON);
 
   } catch(error) {
@@ -272,7 +265,7 @@ function doPost(e) {
       .createTextOutput(JSON.stringify({
         'result': 'error',
         'error': error.toString()
-      }))
+
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
@@ -290,7 +283,7 @@ const sheetsService = new GoogleSheetsService();
 // Exposer globalement pour debug
 if (typeof window !== 'undefined') {
   window.sheetsService = sheetsService;
-}
+);}
 
 // Exports
 export const configureSheetsService = (credentials) => {

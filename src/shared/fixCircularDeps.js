@@ -17,27 +17,20 @@
 // Test de résolution des modules
 export const testModuleResolution = async () => {
   try {
-    console.log('Testing module resolution...');
-    
+        
     // Test des imports directs
     const navigation = await import('@features/navigation');
-    console.log('✅ Navigation module loaded:', navigation.default ? 'OK' : 'FAIL');
-    
+        
     const fuel = await import('@features/fuel');
-    console.log('✅ Fuel module loaded:', fuel.default ? 'OK' : 'FAIL');
-    
+        
     const aircraft = await import('@features/aircraft');
-    console.log('✅ Aircraft module loaded:', aircraft.default ? 'OK' : 'FAIL');
-    
+        
     const weightBalance = await import('@features/weight-balance');
-    console.log('✅ WeightBalance module loaded:', weightBalance.default ? 'OK' : 'FAIL');
-    
+        
     const weather = await import('@features/weather');
-    console.log('✅ Weather module loaded:', weather.default ? 'OK' : 'FAIL');
-    
+        
     const vac = await import('@features/vac');
-    console.log('✅ VAC module loaded:', vac.default ? 'OK' : 'FAIL');
-    
+        
   } catch (error) {
     console.error('❌ Module resolution failed:', error);
   }

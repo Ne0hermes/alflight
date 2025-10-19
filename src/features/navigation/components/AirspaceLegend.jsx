@@ -51,5 +51,3 @@ export const AirspaceLegend = () => {
         G: Espace non contrôlé
       </div>
     </div>
-  );
-};

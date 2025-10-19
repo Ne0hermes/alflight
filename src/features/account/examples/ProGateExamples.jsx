@@ -15,7 +15,6 @@ export const PerformanceWithPaywall = () => {
     >
       <PerformanceCalculator />
     </ProGate>
-  );
 };
 
 /**
@@ -29,7 +28,6 @@ export const VACViewerWithPaywall = () => {
     >
       <VACViewer />
     </ProGate>
-  );
 };
 
 /**
@@ -42,7 +40,6 @@ export const ManexImporterWithPaywall = () => {
     >
       <ManexImporter />
     </ProGate>
-  );
 };
 
 /**
@@ -71,7 +68,6 @@ export const ExportWithPaywall = ({ onExport }) => {
         Export PDF Professionnel
       </button>
     </ProGate>
-  );
 };
 
 /**
@@ -102,5 +98,3 @@ export const ConditionalFeature = () => {
         </div>
       </ProGate>
     </div>
-  );
-};

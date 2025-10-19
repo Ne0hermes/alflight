@@ -67,7 +67,6 @@ export const ManexImporterFallback = memo(({
         `✅ Valeurs par défaut enregistrées pour ${aircraft.registration}`,
         'success',
         5000
-      );
       onClose();
     } catch (error) {
       console.error('Erreur lors de l\'enregistrement:', error);
@@ -75,7 +74,6 @@ export const ManexImporterFallback = memo(({
         `❌ Erreur lors de l'enregistrement des valeurs par défaut`,
         'error',
         5000
-      );
     }
   };
 
@@ -103,7 +101,6 @@ export const ManexImporterFallback = memo(({
           '⚠️ Veuillez entrer au moins quelques valeurs avant d\'enregistrer',
           'warning',
           4000
-        );
         return;
       }
 
@@ -112,7 +109,6 @@ export const ManexImporterFallback = memo(({
         `✅ Données manuelles enregistrées pour ${aircraft.registration}`,
         'success',
         5000
-      );
       onClose();
     } catch (error) {
       console.error('Erreur lors de l\'enregistrement:', error);
@@ -120,7 +116,6 @@ export const ManexImporterFallback = memo(({
         `❌ Erreur lors de l'enregistrement des données manuelles`,
         'error',
         5000
-      );
     }
   };
 
@@ -323,7 +318,7 @@ export const ManexImporterFallback = memo(({
         </div>
       </div>
     </div>
-  );
+
 });
 
 ManexImporterFallback.displayName = 'ManexImporterFallback';

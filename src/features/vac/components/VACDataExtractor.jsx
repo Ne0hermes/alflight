@@ -666,7 +666,7 @@ export const VACDataExtractor = memo(() => {
         </div>
       )}
     </div>
-  );
+
 });
 
 // Composant pour une section de données
@@ -679,7 +679,6 @@ const DataSection = memo(({ title, children }) => (
       {children}
     </div>
   </div>
-));
 
 // Composant pour un champ de donnée avec copie et édition
 const DataField = memo(({ label, value, onCopy, copied, editMode, onChange, type = 'text', isModified = false }) => {
@@ -770,7 +769,7 @@ const DataField = memo(({ label, value, onCopy, copied, editMode, onChange, type
       </button>
     )}
   </div>
-  );
+
 });
 
 // Export des display names

@@ -1048,8 +1048,7 @@ export class VACDataExtractorEnhanced {
     
     // Pour la France métropolitaine (approximatif)
     if (coords.lat < 41 || coords.lat > 52 || coords.lon < -6 || coords.lon > 10) {
-      console.warn('Coordonnées en dehors de la France métropolitaine:', coords);
-    }
+          }
     
     return coords;
   }
@@ -1065,8 +1064,7 @@ export class VACDataExtractorEnhanced {
         if (numFreq >= 118.0 && numFreq <= 137.0) {
           validated[type] = freq;
         } else {
-          console.warn(`Fréquence invalide pour ${type}: ${freq}`);
-        }
+                  }
       }
     }
     
@@ -1086,8 +1084,7 @@ export class VACDataExtractorEnhanced {
     oneYearFuture.setFullYear(now.getFullYear() + 1);
     
     if (date < twoYearsAgo || date > oneYearFuture) {
-      console.warn('Date suspecte:', dateStr);
-    }
+          }
     
     return dateStr;
   }
@@ -1239,7 +1236,7 @@ export class VACDataExtractorEnhanced {
       extractionMethod: 'enhanced'
     };
   }
-}
+);}
 
 // Export des deux versions
 export const vacDataExtractorEnhanced = new VACDataExtractorEnhanced();

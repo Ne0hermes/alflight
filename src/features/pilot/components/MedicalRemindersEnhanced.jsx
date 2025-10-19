@@ -530,7 +530,7 @@ const MedicalRemindersEnhanced = () => {
         </div>
       )}
     </div>
-  );
+
 };
 
 // Fonction helper pour obtenir le badge de statut
@@ -570,7 +570,7 @@ const getStatusBadge = (expiryDate) => {
       {daysUntilExpiry < 0 ? <AlertTriangle size={12} /> : <CheckCircle size={12} />}
       {text}
     </span>
-  );
+
 };
 
 // Fonction helper pour gérer la suppression

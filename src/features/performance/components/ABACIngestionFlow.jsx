@@ -156,7 +156,6 @@ const ABACIngestionFlow = ({ aircraft, onComplete }) => {
         exp: testCase.expected,
         abs_err: Math.random() * 20,
         pct_err: Math.random() * 5
-      }))
     };
     
     setTestResults(prev => [...prev, results]);
@@ -292,8 +291,6 @@ const ABACIngestionFlow = ({ aircraft, onComplete }) => {
           )}
         </div>
       </div>
-    );
-  };
 
   return (
     <div style={sx.spacing.p(6)}>
@@ -407,7 +404,7 @@ const ABACIngestionFlow = ({ aircraft, onComplete }) => {
                   <ChevronRight size={16} style={{ margin: '0 8px', color: '#9ca3af' }} />
                 )}
               </div>
-            );
+
           })}
         </div>
       </div>
@@ -610,7 +607,7 @@ const ABACIngestionFlow = ({ aircraft, onComplete }) => {
         </div>
       </div>
     </div>
-  );
+
 };
 
 export default ABACIngestionFlow;

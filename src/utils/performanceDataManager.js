@@ -16,7 +16,7 @@ class PerformanceDataManager {
    */
   async storePerformanceData(aircraftId, performanceData) {
     try {
-      console.log('💾 Stockage des données de performance pour:', aircraftId);
+      
       
       // Nettoyer les données pour réduire la taille
       const cleanedData = this.cleanPerformanceData(performanceData);
@@ -24,17 +24,14 @@ class PerformanceDataManager {
       // Calculer la taille des données
       const dataString = JSON.stringify(cleanedData);
       const dataSize = new Blob([dataString]).size;
-      
-      console.log('📊 Taille des données de performance:', Math.round(dataSize / 1024), 'KB');
-      
+
       // Si les données sont trop volumineuses, les optimiser
       let optimizedData = cleanedData;
       if (dataSize > this.compressionThreshold) {
-        console.log('🗜️ Optimisation des données volumineuses...');
+        
         optimizedData = this.optimizePerformanceData(cleanedData);
         
         const optimizedSize = new Blob([JSON.stringify(optimizedData)]).size;
-        console.log('✅ Taille après optimisation:', Math.round(optimizedSize / 1024), 'KB');
       }
       
       // Stocker dans localStorage avec gestion d'erreur
@@ -42,17 +39,17 @@ class PerformanceDataManager {
       
       try {
         localStorage.setItem(storageKey, JSON.stringify(optimizedData));
-        console.log('✅ Données de performance stockées avec succès');
+        
         return true;
       } catch (quotaError) {
         if (quotaError.name === 'QuotaExceededError') {
-          console.warn('⚠️ Quota dépassé, nettoyage automatique...');
+          
           await this.cleanupOldData();
           
           // Essayer encore avec des données ultra-compressées
           const ultraCompressed = this.ultraCompressData(optimizedData);
           localStorage.setItem(storageKey, JSON.stringify(ultraCompressed));
-          console.log('✅ Données stockées après nettoyage et compression');
+          
           return true;
         }
         throw quotaError;
@@ -172,7 +169,7 @@ class PerformanceDataManager {
    * Nettoie les anciennes données pour libérer de l'espace
    */
   async cleanupOldData() {
-    console.log('🧹 Nettoyage des anciennes données de performance...');
+    
     
     const keysToRemove = [];
     
@@ -190,7 +187,7 @@ class PerformanceDataManager {
       const toRemove = keysToRemove.slice(0, keysToRemove.length - 10);
       toRemove.forEach(key => {
         localStorage.removeItem(key);
-        console.log('🗑️ Supprimé:', key);
+        
       });
     }
   }
@@ -207,11 +204,6 @@ class PerformanceDataManager {
     }
     
     const remainingSpace = this.maxStorageSize - usedSpace;
-    console.log('📊 Espace localStorage:', {
-      used: Math.round(usedSpace / 1024) + 'KB',
-      remaining: Math.round(remainingSpace / 1024) + 'KB',
-      percentage: Math.round((usedSpace / this.maxStorageSize) * 100) + '%'
-    });
     
     return remainingSpace;
   }

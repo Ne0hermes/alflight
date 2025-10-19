@@ -34,7 +34,6 @@ export class VACAnalyzer {
         runway.qfu,
         weather.wind.direction,
         weather.wind.speed
-      );
       
       if (crosswind > 15) {
         results.warnings.push(`Vent traversier élevé: ${crosswind}kt`);

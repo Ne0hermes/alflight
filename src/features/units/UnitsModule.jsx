@@ -112,7 +112,7 @@ const UnitsModule = () => {
         <UnitsPreferences />
       </div>
     </div>
-  );
+
 };
 
 export default UnitsModule;

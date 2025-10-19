@@ -6,7 +6,7 @@
  */
 
 const DB_NAME = 'FlightManagementDB';
-const DB_VERSION = 5; // Incrémenté pour forcer la recréation du store BACKUP_STORE avec autoIncrement
+const DB_VERSION = 6; // Incrémenté pour migration vers système communautaire (nettoyage des avions de démo)
 const BACKUP_STORE = 'dataBackups';
 const PROTECTED_DATA_STORE = 'protectedData';
 const AIRCRAFT_DATA_STORE = 'aircraftData';
@@ -29,11 +29,11 @@ class DataBackupManager {
    * Initialise la base de données avec les nouveaux stores
    */
   async initDB() {
-    console.log('🔧 DataBackupManager.initDB - Début d\'initialisation');
+    
 
     // Si la base est déjà initialisée, retourner immédiatement
     if (this.db) {
-      console.log('✅ DataBackupManager.initDB - Base déjà initialisée, réutilisation');
+      
       return this.db;
     }
 
@@ -44,7 +44,7 @@ class DataBackupManager {
         return;
       }
 
-      console.log('🔧 DataBackupManager.initDB - Ouverture de la base de données:', DB_NAME, 'version:', DB_VERSION);
+      
       const request = indexedDB.open(DB_NAME, DB_VERSION);
 
       request.onerror = (event) => {
@@ -54,7 +54,7 @@ class DataBackupManager {
 
       request.onsuccess = (event) => {
         this.db = event.target.result;
-        console.log('✅ DataBackupManager: Base de données initialisée');
+        
 
         // Démarrer la sauvegarde automatique
         this.startAutoBackup();
@@ -63,21 +63,20 @@ class DataBackupManager {
       };
 
       request.onupgradeneeded = (event) => {
-        console.log('🔄 DataBackupManager.onupgradeneeded - Mise à niveau de la base de données');
+        
         const db = event.target.result;
         const oldVersion = event.oldVersion;
-        console.log('🔄 Ancienne version:', oldVersion, '→ Nouvelle version:', DB_VERSION);
-        console.log('🔄 Stores existants:', Array.from(db.objectStoreNames));
+        
 
         // Store pour les backups complets
         // Si on passe à la version 5, recréer le store pour corriger le problème autoIncrement
         if (oldVersion < 5 && db.objectStoreNames.contains(BACKUP_STORE)) {
-          console.log('🗑️ Suppression de l\'ancien store BACKUP_STORE');
+          
           db.deleteObjectStore(BACKUP_STORE);
         }
 
         if (!db.objectStoreNames.contains(BACKUP_STORE)) {
-          console.log('✨ Création du nouveau store BACKUP_STORE avec autoIncrement');
+          
           const backupStore = db.createObjectStore(BACKUP_STORE, { keyPath: 'id', autoIncrement: true });
           backupStore.createIndex('timestamp', 'timestamp', { unique: false });
           backupStore.createIndex('type', 'type', { unique: false });
@@ -111,8 +110,26 @@ class DataBackupManager {
           navStore.createIndex('name', 'name', { unique: false });
           navStore.createIndex('createdAt', 'createdAt', { unique: false });
         }
+
+        // Migration version 6: Nettoyer les avions de démo (F-DEMO, F-TEST)
+        if (oldVersion < 6 && db.objectStoreNames.contains(AIRCRAFT_DATA_STORE)) {
+          
+          const transaction = event.target.transaction;
+          const aircraftStore = transaction.objectStore(AIRCRAFT_DATA_STORE);
+
+          // Supprimer les avions de démo
+          const demoIds = ['da40ng-default', 'cessna-172-demo'];
+          demoIds.forEach(id => {
+            try {
+              aircraftStore.delete(id);
+              
+            } catch (error) {
+              
+            }
+          });
+        }
+
         
-        console.log('✅ Stores de sauvegarde créés');
       };
     });
   }
@@ -166,7 +183,7 @@ class DataBackupManager {
       // Garder seulement les 10 dernières sauvegardes automatiques
       await this.cleanOldBackups('auto', 10);
       
-      console.log('✅ Sauvegarde automatique créée:', backup.timestamp);
+      
     } catch (error) {
       console.error('❌ Erreur lors de la sauvegarde automatique:', error);
     }
@@ -195,7 +212,7 @@ class DataBackupManager {
       };
       
       await this.saveBackup(backup);
-      console.log('✅ Sauvegarde manuelle créée:', name);
+      
       return backup;
     } catch (error) {
       console.error('❌ Erreur lors de la sauvegarde manuelle:', error);
@@ -269,7 +286,7 @@ class DataBackupManager {
       }
     }
     
-    console.log('✅ Sauvegarde restaurée:', backup.timestamp);
+    
     
     // Recharger la page pour appliquer les changements
     window.location.reload();
@@ -279,13 +296,9 @@ class DataBackupManager {
    * Sauvegarde des données protégées
    */
   async saveProtectedData(key, data, type = 'general') {
-    console.log(`💾 saveProtectedData - Début: key="${key}", type="${type}"`);
+    
 
-    if (!this.isProtectionEnabled) {
-      console.warn('⚠️ Protection désactivée, les données ne sont pas protégées');
-    }
-
-    await this.initPromise;
+        await this.initPromise;
 
     const protectedItem = {
       id: key, // keyPath du store est 'id', pas 'key'
@@ -311,7 +324,7 @@ class DataBackupManager {
         request.onsuccess = () => {
           // Sauvegarder aussi dans localStorage pour compatibilité
           localStorage.setItem(key, JSON.stringify(data));
-          console.log('✅ Données protégées sauvegardées:', key);
+          
           resolve(request.result);
         };
 
@@ -349,9 +362,9 @@ class DataBackupManager {
    * Sauvegarde les données d'un avion
    */
   async saveAircraftData(aircraft) {
-    console.log('💾 dataBackupManager.saveAircraftData - Début', aircraft.id);
+    
     await this.initPromise;
-    console.log('💾 dataBackupManager.saveAircraftData - initPromise résolu');
+    
 
     const aircraftData = {
       ...aircraft,
@@ -359,17 +372,23 @@ class DataBackupManager {
       lastModified: new Date().toISOString()
     };
 
-    console.log('💾 dataBackupManager.saveAircraftData - Sauvegarde dans AIRCRAFT_DATA_STORE...');
-    // Sauvegarder dans IndexedDB
+    
+
+    
+    // Sauvegarder dans IndexedDB (avec toutes les données volumineuses)
     await this.saveToStore(AIRCRAFT_DATA_STORE, aircraftData);
-    console.log('💾 dataBackupManager.saveAircraftData - AIRCRAFT_DATA_STORE OK');
+    
 
-    console.log('💾 dataBackupManager.saveAircraftData - Sauvegarde dans PROTECTED_DATA_STORE...');
-    // Sauvegarder aussi dans les données protégées
-    await this.saveProtectedData(`aircraft_${aircraftData.id}`, aircraftData, 'aircraft');
-    console.log('💾 dataBackupManager.saveAircraftData - PROTECTED_DATA_STORE OK');
-
-    console.log('💾 dataBackupManager.saveAircraftData - Terminé avec succès');
+    
+    // Sauvegarder aussi dans les données protégées MAIS sans les données volumineuses
+    const { photo, manex, advancedPerformance, performanceTables, performanceModels, ...lightAircraft } = aircraftData;
+    const protectedData = {
+      ...lightAircraft,
+      hasPhoto: !!photo,
+      hasManex: !!manex,
+      hasPerformance: !!(advancedPerformance || performanceTables || performanceModels)
+    };
+    await this.saveProtectedData(`aircraft_${aircraftData.id}`, protectedData, 'aircraft');
     return aircraftData;
   }
 
@@ -377,9 +396,9 @@ class DataBackupManager {
    * Récupère les données d'un avion par son ID
    */
   async getAircraftData(aircraftId) {
-    console.log('📖 getAircraftData - Début pour ID:', aircraftId);
+    
     await this.initPromise;
-    console.log('📖 getAircraftData - initPromise résolu');
+    
 
     if (!this.db) {
       console.error('❌ getAircraftData - DB non initialisée');
@@ -388,19 +407,15 @@ class DataBackupManager {
 
     return new Promise((resolve, reject) => {
       try {
-        console.log('📖 getAircraftData - Création transaction...');
+        
         const transaction = this.db.transaction([AIRCRAFT_DATA_STORE], 'readonly');
         const store = transaction.objectStore(AIRCRAFT_DATA_STORE);
-        console.log('📖 getAircraftData - Store obtenu, keyPath:', store.keyPath);
+        
         const request = store.get(aircraftId);
 
         request.onsuccess = () => {
-          console.log('✅ getAircraftData - Succès, résultat:', request.result ? 'trouvé' : 'non trouvé');
-          if (request.result) {
-            console.log('📸 getAircraftData - Photo présente:', !!request.result.photo);
-            console.log('📚 getAircraftData - Manex présent:', !!request.result.manex);
-          }
-          resolve(request.result);
+          
+                    resolve(request.result);
         };
         request.onerror = () => {
           console.error('❌ getAircraftData - Erreur:', request.error);
@@ -411,6 +426,67 @@ class DataBackupManager {
         reject(error);
       }
     });
+  }
+
+  /**
+   * Supprime toutes les données d'un avion par son ID
+   */
+  async deleteAircraftData(aircraftId) {
+    
+    await this.initPromise;
+
+    if (!this.db) {
+      console.error('❌ deleteAircraftData - DB non initialisée');
+      return false;
+    }
+
+    try {
+      // 1. Supprimer de AIRCRAFT_DATA_STORE
+      await new Promise((resolve, reject) => {
+        const transaction = this.db.transaction([AIRCRAFT_DATA_STORE], 'readwrite');
+        const store = transaction.objectStore(AIRCRAFT_DATA_STORE);
+        const request = store.delete(aircraftId);
+
+        request.onsuccess = () => {
+          
+          resolve();
+        };
+        request.onerror = () => {
+          console.error('❌ deleteAircraftData - Erreur AIRCRAFT_DATA_STORE:', request.error);
+          reject(request.error);
+        };
+      });
+
+      // 2. Supprimer de PROTECTED_DATA_STORE
+      await new Promise((resolve, reject) => {
+        const transaction = this.db.transaction([PROTECTED_DATA_STORE], 'readwrite');
+        const store = transaction.objectStore(PROTECTED_DATA_STORE);
+        const protectedKey = `aircraft_${aircraftId}`;
+        const request = store.delete(protectedKey);
+
+        request.onsuccess = () => {
+          
+          resolve();
+        };
+        request.onerror = () => {
+          console.error('⚠️ deleteAircraftData - PROTECTED_DATA_STORE introuvable:', request.error);
+          resolve(); // Ne pas bloquer si l'entrée n'existe pas
+        };
+      });
+
+      // 3. Supprimer du localStorage (si présent)
+      try {
+        localStorage.removeItem(`aircraft_${aircraftId}`);
+        
+      } catch (error) {
+      }
+
+      
+      return true;
+    } catch (error) {
+      console.error('❌ deleteAircraftData - Erreur:', error);
+      return false;
+    }
   }
 
   /**
@@ -439,7 +515,7 @@ class DataBackupManager {
    * et en migrant les données volumineuses vers IndexedDB
    */
   async cleanupLocalStorage() {
-    console.log('🧹 Nettoyage du localStorage...');
+    
     
     try {
       // Sauvegarder d'abord les données importantes dans IndexedDB
@@ -450,7 +526,7 @@ class DataBackupManager {
           for (const aircraft of parsed.state.aircraftList) {
             await this.saveAircraftData(aircraft);
           }
-          console.log('✅ Données avions sauvegardées dans IndexedDB');
+          
         }
       }
       
@@ -474,7 +550,7 @@ class DataBackupManager {
       
       // Nettoyer le localStorage
       localStorage.clear();
-      console.log('✅ localStorage nettoyé');
+      
       
       // Restaurer les données essentielles
       for (const [key, value] of Object.entries(preservedData)) {
@@ -504,9 +580,9 @@ class DataBackupManager {
         }
       }
       
-      console.log('✅ Données essentielles restaurées');
-      console.log(`📊 Espace utilisé: ${this.getLocalStorageSize()} KB / ~5000 KB`);
-      
+
+      console.log(`✅ localStorage nettoyé: ${dataBackupManager.getLocalStorageSize()} KB / ~5000 KB`);
+
       return true;
     } catch (error) {
       console.error('❌ Erreur lors du nettoyage:', error);
@@ -553,7 +629,7 @@ class DataBackupManager {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
-    console.log('✅ Données exportées');
+    
     return data;
   }
 
@@ -599,7 +675,7 @@ class DataBackupManager {
         }
       }
       
-      console.log('✅ Données importées avec succès');
+      
       
       // Recharger la page
       window.location.reload();
@@ -615,7 +691,7 @@ class DataBackupManager {
   setProtection(enabled) {
     this.isProtectionEnabled = enabled;
     localStorage.setItem('dataProtectionEnabled', enabled.toString());
-    console.log(`🔒 Protection ${enabled ? 'activée' : 'désactivée'}`);
+    
   }
 
   /**
@@ -629,10 +705,10 @@ class DataBackupManager {
   // Méthodes utilitaires privées
 
   async saveToStore(storeName, data) {
-    console.log(`💾 saveToStore - Début: store="${storeName}", data.id="${data?.id}"`);
+    
 
     await this.initPromise;
-    console.log(`💾 saveToStore - initPromise résolu, db=`, this.db);
+    
 
     if (!this.db) {
       console.error('❌ saveToStore - La base de données n\'est pas initialisée');
@@ -641,7 +717,7 @@ class DataBackupManager {
 
     // Vérifier que le store existe
     const storeNames = Array.from(this.db.objectStoreNames);
-    console.log(`💾 saveToStore - Stores disponibles:`, storeNames);
+    
 
     if (!storeNames.includes(storeName)) {
       console.error(`❌ saveToStore - Store "${storeName}" introuvable!`);
@@ -650,7 +726,7 @@ class DataBackupManager {
 
     return new Promise((resolve, reject) => {
       try {
-        console.log(`💾 saveToStore - Création de la transaction pour "${storeName}"...`);
+        
         const transaction = this.db.transaction([storeName], 'readwrite');
 
         transaction.onerror = (event) => {
@@ -659,12 +735,12 @@ class DataBackupManager {
         };
 
         const store = transaction.objectStore(storeName);
-        console.log(`💾 saveToStore - Store obtenu, keyPath="${store.keyPath}"`);
+        
 
         const request = store.put(data);
 
         request.onsuccess = () => {
-          console.log(`✅ saveToStore - Succès pour "${storeName}", key=`, request.result);
+          
           resolve(request.result);
         };
 
@@ -689,10 +765,10 @@ class DataBackupManager {
 
     // Vérifier que le store existe
     const storeNames = Array.from(this.db.objectStoreNames);
-    console.log(`📖 getAllFromStore - Store demandé: "${storeName}", Stores disponibles:`, storeNames);
+    
 
     if (!storeNames.includes(storeName)) {
-      console.warn(`⚠️ getAllFromStore - Store "${storeName}" introuvable, retourne []`);
+      
       return [];
     }
 
@@ -780,12 +856,11 @@ if (typeof window !== 'undefined') {
   // Vérifier automatiquement la taille du localStorage au démarrage
   setTimeout(() => {
     const size = dataBackupManager.getLocalStorageSize();
-    console.log(`📊 localStorage: ${size} KB utilisés sur ~5000 KB`);
+    
     
     // Si localStorage dépasse 4MB, proposer un nettoyage automatique
     if (size > 4000) {
-      console.warn('⚠️ localStorage presque plein!');
-      console.warn('💡 Utilisez window.dataBackupManager.cleanupLocalStorage() pour nettoyer.');
+      console.warn(`⚠️ localStorage dépasse 4MB (${size} KB). Utilisez la fonction cleanupLocalStorage() pour nettoyer.`);
     }
   }, 1000);
 }

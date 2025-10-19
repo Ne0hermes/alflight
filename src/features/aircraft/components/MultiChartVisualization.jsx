@@ -270,8 +270,6 @@ const MultiChartVisualization = ({
         </ResponsiveContainer>
         </Box>
       </Paper>
-    );
-  };
 
   return (
     <Box>
@@ -468,7 +466,7 @@ const MultiChartVisualization = ({
         </Paper>
       )}
     </Box>
-  );
+
 };
 
 export default MultiChartVisualization;

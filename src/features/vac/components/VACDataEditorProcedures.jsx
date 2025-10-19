@@ -4,10 +4,7 @@ import { Plus, Trash2, PlaneTakeoff, PlaneLanding, Navigation2 } from 'lucide-re
 import { sx } from '@shared/styles/styleSystem';
 
 export const ProceduresEditor = ({ editedData, updateValue }) => {
-  console.log('✈️ Rendering procedures editor:', { 
-    departures: editedData.procedures?.departure,
-    arrivals: editedData.procedures?.arrival 
-  });
+  
   
   const addProcedure = (type) => {
     const newProcedure = {
@@ -414,13 +411,9 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
           </div>
         )}
       </div>
-    );
-  };
-  
+
   return (
     <div>
       {renderProcedureSection('departure')}
       {renderProcedureSection('arrival')}
     </div>
-  );
-};

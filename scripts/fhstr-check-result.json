@@ -1,0 +1,18 @@
+{
+  "carburant": {
+    "fuelType": "JET-A1",
+    "fuelCapacity": 148,
+    "fuelConsumption": 26
+  },
+  "performances": {
+    "hasPerformances": false,
+    "hasModels": true,
+    "hasTables": false
+  },
+  "photo": true,
+  "surfaces": [
+    "ASPH",
+    "CONC"
+  ],
+  "basicInfo": {}
+}

@@ -26,8 +26,7 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
 
   // Détecter automatiquement les zones basées sur les waypoints
   const detectedZones = useMemo(() => {
-    console.log('🔍 Analyse des zones dangereuses pour', waypoints?.length, 'waypoints');
-    
+        
     // Utiliser la fonction d'analyse complète
     const analysis = analyzeRoute(waypoints);
     
@@ -44,21 +43,7 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
     };
 
     // Log détaillé pour debug
-    if (analysis.maritime) {
-      console.log('🌊 Zone maritime détectée:', {
-        distance: analysis.maritimeDistance,
-        corsica: analysis.corsicaFlight,
-        coastal: analysis.coastalAirports
-      });
-    }
-    if (analysis.mountain) {
-      console.log('⛰️ Zone montagneuse détectée:', {
-        altitude: analysis.mountainAltitude,
-        zones: analysis.mountainZones
-      });
-    }
-
-    return detected;
+            return detected;
   }, [waypoints]);
 
   // Combiner les détections automatiques avec les override manuels
@@ -344,7 +329,7 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
         </p>
       </div>
     </div>
-  );
+
 };
 
 export default DangerousZonesDetector;

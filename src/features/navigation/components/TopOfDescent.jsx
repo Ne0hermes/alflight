@@ -402,7 +402,7 @@ const TopOfDescent = ({ currentAltitude = 0, waypoints = [] }) => {
         </div>
       )}
     </div>
-  );
+
 };
 
 export default TopOfDescent;

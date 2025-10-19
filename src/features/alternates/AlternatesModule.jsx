@@ -1,13 +1,12 @@
 // src/features/alternates/AlternatesModule.jsx
 // VERSION 5 - Module Déroutements avec sélection manuelle uniquement et suggestions visuelles
 
-console.log('🛬 AlternatesModule v5 - Chargement...'); // LOG DE VÉRIFICATION
+ // LOG DE VÉRIFICATION
 
 import React, { memo, useEffect, useState } from 'react';
 import { Navigation2, AlertTriangle, Fuel, Wind, Plane, Info, MapPin, RefreshCw } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useAdvancedAlternateSelection } from './hooks/useAdvancedAlternateSelection';
-import { AlternateMap } from './components/AlternateMap';
 import { AlternateSelectorDual } from './components/AlternateSelectorDual';
 import { useNavigationResults } from './hooks/useNavigationResults';
 import { WeatherRateLimitIndicator } from '@components/WeatherRateLimitIndicator';
@@ -46,8 +45,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
   // Déclencher automatiquement la recherche quand les conditions sont remplies
   useEffect(() => {
     if (isReady && !hasSearched) {
-      console.log('🚀 Déclenchement automatique de la recherche');
-      setHasSearched(true);
+            setHasSearched(true);
       refreshAlternates();
     }
   }, [isReady, hasSearched, refreshAlternates]);
@@ -206,18 +204,22 @@ const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
             marginBottom: '24px',
             alignItems: 'start'
           }}>
-            {/* Colonne gauche : Carte */}
+            {/* Colonne gauche : Carte - DÉSACTIVÉE */}
             <div style={sx.components.card.base}>
               <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(3))}>
                 📍 Visualisation de la zone de recherche
               </h4>
-              <AlternateMap 
-                searchZone={searchZone}
-                alternates={mapAlternates}
-                allCandidates={scoredAlternates}
-                showAllCandidates={true}
-                selectedIcaos={[manualSelection.departure?.icao, manualSelection.arrival?.icao].filter(Boolean)}
-              />
+              <div style={{
+                padding: '60px 40px',
+                textAlign: 'center',
+                backgroundColor: '#f9fafb',
+                borderRadius: '8px',
+                border: '2px dashed #d1d5db'
+              }}>
+                <p style={{ color: '#6b7280', fontSize: '14px' }}>
+                  La carte sera ajoutée ici
+                </p>
+              </div>
             </div>
             
             {/* Colonne droite : Interface de sélection */}
@@ -379,6 +381,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
         </div>
       </section>
     </div>
+
   );
 });
 
@@ -400,7 +403,6 @@ const StatCard = memo(({ icon, label, value, detail, dataSource = 'static' }) =>
 AlternatesModule.displayName = 'AlternatesModule';
 StatCard.displayName = 'StatCard';
 
-console.log('🛬 AlternatesModule v5 - Chargement terminé');
 
 // Export par défaut pour le lazy loading
 export default AlternatesModule;

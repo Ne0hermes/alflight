@@ -51,7 +51,7 @@ export class AircraftPerformanceModel {
         this.weightBalanceCharts.addChart(chartData);
         break;
       default:
-        console.warn(`Catégorie inconnue: ${category}`);
+        
     }
     
     this.metadata.lastUpdated = timestamp;
@@ -569,7 +569,7 @@ class WeightBalanceCharts extends PerformanceChartCategory {
   static fromJSON(json) {
     return PerformanceChartCategory.fromJSON(json, WeightBalanceCharts);
   }
-}
+);}
 
 // Export des classes
 export {

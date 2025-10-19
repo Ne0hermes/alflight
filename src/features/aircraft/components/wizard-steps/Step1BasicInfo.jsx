@@ -35,7 +35,9 @@ import {
   Terrain as TerrainIcon,
   Warning as WarningIcon,
   CloudDownload as CloudIcon,
-  Update as UpdateIcon
+  Update as UpdateIcon,
+  ChevronRight as ChevronRightIcon,
+  ChevronLeft as ChevronLeftIcon
 } from '@mui/icons-material';
 import FormHelperText from '@mui/material/FormHelperText';
 import { useUnitsStore, unitsSelectors } from '@core/stores/unitsStore';
@@ -43,20 +45,25 @@ import { convertValue, getUnitSymbol, fuelConsumptionConversions } from '@utils/
 import UpdateAircraftDialog from '../UpdateAircraftDialog';
 import aircraftVersioningService from '../../services/aircraftVersioningService';
 import ImageEditor from '../../../../components/ImageEditor';
+import { Description as DescriptionIcon, CloudUpload as CloudUploadIcon, Delete as DeleteIcon, CloudQueue as CloudQueueIcon } from '@mui/icons-material';
+import communityService from '../../../../services/communityService';
 
 // Import de la base de données communautaire mock (en production, sera un appel API)
 const COMMUNITY_DATABASE = [
   'F-GBYU', 'F-HXYZ', 'F-GJKL', 'F-GMNO', 'F-HABC', 'F-HDEF', 'F-GGHI'
 ];
 
-const Step1BasicInfo = ({ data, updateData, errors = {} }) => {
+const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
   const [photoPreview, setPhotoPreview] = useState(data.photo || null);
+  const [manexFile, setManexFile] = useState(data.manex || null);
+  const [uploadingToSupabase, setUploadingToSupabase] = useState(false);
   const units = unitsSelectors.useUnits();
   const [previousUnits, setPreviousUnits] = useState(units);
   const [expandedPanels, setExpandedPanels] = useState({
     identification: false,
     fuel: false,
-    surfaces: false
+    surfaces: false,
+    manex: false
   });
   const [isCheckingRegistration, setIsCheckingRegistration] = useState(false);
   const [registrationExists, setRegistrationExists] = useState(false);
@@ -71,11 +78,156 @@ const Step1BasicInfo = ({ data, updateData, errors = {} }) => {
         identification: false,
         fuel: false,
         surfaces: false,
+        manex: false,
         [panel]: true
       });
     } else {
       // Si on ferme un panneau, on le ferme simplement
       setExpandedPanels(prev => ({ ...prev, [panel]: false }));
+    }
+  };
+
+  // Gestionnaire pour l'upload du MANEX
+  const handleManexUpload = async (e) => {
+    const file = e.target.files[0];
+    if (file && file.type === 'application/pdf') {
+      if (file.size > 50 * 1024 * 1024) {
+        alert('Le fichier MANEX est trop volumineux. Veuillez choisir un fichier de moins de 50MB.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const manexData = {
+          fileName: file.name,
+          fileSize: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+          uploadDate: new Date().toISOString(),
+          hasData: true,
+          file: reader.result // Base64 encoded PDF
+        };
+        setManexFile(manexData);
+        updateData('manex', manexData);
+        
+      };
+      reader.readAsDataURL(file);
+    } else {
+      alert('Veuillez sélectionner un fichier PDF valide.');
+    }
+  };
+
+  const handleManexDelete = () => {
+    setManexFile(null);
+    updateData('manex', null);
+    
+  };
+
+  // Upload vers Supabase Storage
+  const handleUploadToSupabase = async () => {
+    if (!data.registration) {
+      alert('Veuillez d\'abord renseigner l\'immatriculation');
+      return;
+    }
+
+    // Récupérer le fichier depuis manexFile ou data.manex
+    const fileSource = manexFile || data.manex;
+
+    if (!fileSource) {
+      alert('Aucun fichier MANEX à uploader');
+      console.error('❌ Aucune source de fichier trouvée');
+      return;
+    }
+
+    try {
+      setUploadingToSupabase(true);
+      let blob;
+
+      // CAS 1: Le fichier existe déjà sur Supabase (remoteUrl présent)
+      // On le télécharge depuis Supabase et on le réupload avec la bonne immatriculation
+      if (fileSource.remoteUrl) {
+        
+
+        try {
+          // Si on a le filePath, utiliser downloadManex
+          if (fileSource.filePath) {
+            blob = await communityService.downloadManex(fileSource.filePath);
+          }
+          // Sinon, extraire le filePath depuis l'URL et télécharger
+          else {
+            // Extraire le filePath depuis l'URL publique
+            // Format: https://...supabase.co/storage/v1/object/public/manex-files/{filePath}
+            const urlParts = fileSource.remoteUrl.split('/manex-files/');
+            if (urlParts.length < 2) {
+              throw new Error('URL Supabase invalide');
+            }
+            const extractedFilePath = decodeURIComponent(urlParts[1]);
+            
+
+            blob = await communityService.downloadManex(extractedFilePath);
+          }
+
+          
+        } catch (downloadError) {
+          console.error('❌ Erreur téléchargement depuis Supabase:', downloadError);
+          throw new Error(`Impossible de télécharger le MANEX depuis Supabase: ${downloadError.message}`);
+        }
+      }
+      // CAS 2: Le fichier est en base64 local
+      else {
+        // Chercher les données dans différentes propriétés possibles
+        const fileData = fileSource.file || fileSource.data || fileSource.pdfData;
+
+        if (!fileData) {
+          console.error('❌ Aucune donnée trouvée dans:', {
+            hasFile: !!fileSource.file,
+            hasData: !!fileSource.data,
+            hasPdfData: !!fileSource.pdfData,
+            allKeys: Object.keys(fileSource)
+          });
+          throw new Error('Aucune donnée de fichier disponible (ni local ni Supabase)');
+        }
+
+        
+
+        // Convertir base64 en Blob
+        const base64Data = fileData.split(',')[1];
+        if (!base64Data) {
+          throw new Error('Données base64 invalides');
+        }
+
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        blob = new Blob([byteArray], { type: 'application/pdf' });
+      }
+
+      // Upload vers Supabase avec la bonne immatriculation
+      
+      const result = await communityService.uploadManex(data.registration, blob);
+
+      // Mettre à jour les données avec l'URL Supabase
+      const updatedManexData = {
+        fileName: fileSource.fileName,
+        fileSize: fileSource.fileSize,
+        uploadDate: fileSource.uploadDate || new Date().toISOString(),
+        hasData: true,
+        remoteUrl: result.publicUrl,
+        filePath: result.filePath,
+        uploadedToSupabase: true
+      };
+
+      setManexFile(updatedManexData);
+      updateData('manex', updatedManexData);
+
+      alert(`✅ MANEX uploadé sur Supabase!\nURL: ${result.publicUrl}`);
+      
+    } catch (error) {
+      console.error('❌ Erreur upload Supabase:', error);
+      alert(`❌ Erreur lors de l'upload: ${error.message}`);
+    } finally {
+      setUploadingToSupabase(false);
     }
   };
 
@@ -642,6 +794,227 @@ const Step1BasicInfo = ({ data, updateData, errors = {} }) => {
         </AccordionDetails>
       </Accordion>
 
+      {/* Accordion: Manuel d'exploitation (MANEX) */}
+      <Accordion
+        expanded={expandedPanels.manex}
+        onChange={handlePanelChange('manex')}
+        elevation={0}
+        sx={{
+          mb: 2,
+          border: '1px solid',
+          borderColor: 'divider',
+          '&:before': { display: 'none' }
+        }}
+      >
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          sx={{
+            minHeight: '40px',
+            '&.Mui-expanded': { minHeight: '40px' },
+            '& .MuiAccordionSummary-content': {
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              margin: '8px 0'
+            },
+            '& .MuiAccordionSummary-content.Mui-expanded': {
+              margin: '8px 0'
+            }
+          }}
+        >
+          <DescriptionIcon color="primary" />
+          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+            Manuel d'exploitation (MANEX)
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ pt: 1, pb: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 2 }}>
+            {/* Alerte: MANEX requis pour les performances */}
+            {!manexFile && (
+              <Alert severity="warning" sx={{ width: '100%', maxWidth: 500 }}>
+                <Typography variant="body2" fontWeight="600" gutterBottom>
+                  ⚠️ MANEX requis pour les données de performance
+                </Typography>
+                <Typography variant="caption">
+                  Pour extraire automatiquement les tableaux et abaques de performance à l'étape suivante,
+                  vous devez d'abord importer le manuel d'exploitation (MANEX) en PDF.
+                </Typography>
+              </Alert>
+            )}
+
+            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', maxWidth: 500 }}>
+              Le MANEX sera stocké avec l'avion pour référence future. Vous pourrez le consulter ou le télécharger à tout moment depuis la fiche de l'avion.
+            </Typography>
+
+            {manexFile ? (
+              <Paper
+                elevation={2}
+                sx={{
+                  p: 2,
+                  width: '100%',
+                  maxWidth: 400,
+                  bgcolor: manexFile.uploadedToSupabase ? 'success.50' : 'warning.50',
+                  border: '1px solid',
+                  borderColor: manexFile.uploadedToSupabase ? 'success.200' : 'warning.200'
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'start', gap: 2, mb: 2 }}>
+                  <DescriptionIcon
+                    color={manexFile.uploadedToSupabase ? 'success' : 'warning'}
+                    sx={{ fontSize: 40, mt: 0.5 }}
+                  />
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                      {manexFile.fileName}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      {manexFile.fileSize} • Importé le {new Date(manexFile.uploadDate).toLocaleDateString('fr-FR')}
+                    </Typography>
+                    {manexFile.uploadedToSupabase && (
+                      <Typography variant="caption" color="success.main" display="block" sx={{ mt: 0.5 }}>
+                        ✅ Uploadé sur Supabase
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    size="small"
+                    startIcon={<CloudIcon />}
+                    onClick={() => {
+                      // Télécharger le MANEX
+                      const fileData = manexFile.file || manexFile.data || manexFile.pdfData;
+
+                      if (fileData) {
+                        // Créer un lien de téléchargement
+                        const link = document.createElement('a');
+                        link.href = fileData;
+                        link.download = manexFile.fileName || 'MANEX.pdf';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      } else if (manexFile.remoteUrl) {
+                        // Ouvrir l'URL Supabase dans un nouvel onglet
+                        window.open(manexFile.remoteUrl, '_blank');
+                      } else {
+                        alert('Impossible de télécharger le MANEX');
+                      }
+                    }}
+                  >
+                    Télécharger
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    size="small"
+                    startIcon={<DeleteIcon />}
+                    onClick={handleManexDelete}
+                  >
+                    Supprimer
+                  </Button>
+                </Box>
+                {!manexFile.uploadedToSupabase && (
+                  <Typography variant="caption" color="info.main" display="block" sx={{ mt: 1 }}>
+                    ℹ️ Le MANEX pourra être uploadé sur Supabase à la fin du récapitulatif
+                  </Typography>
+                )}
+              </Paper>
+            ) : data.manexAvailableInSupabase ? (
+              // MANEX disponible dans Supabase mais pas téléchargé localement
+              <Paper
+                elevation={2}
+                sx={{
+                  p: 2,
+                  width: '100%',
+                  maxWidth: 400,
+                  bgcolor: 'info.50',
+                  border: '1px solid',
+                  borderColor: 'info.200'
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'start', gap: 2, mb: 2 }}>
+                  <CloudIcon color="info" sx={{ fontSize: 40, mt: 0.5 }} />
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                      MANEX disponible sur Supabase
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      {data.manexAvailableInSupabase.fileName}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      {(data.manexAvailableInSupabase.fileSize / 1024 / 1024).toFixed(2)} MB
+                    </Typography>
+                  </Box>
+                </Box>
+                <Button
+                  variant="contained"
+                  color="info"
+                  size="small"
+                  startIcon={<CloudIcon />}
+                  onClick={async () => {
+                    try {
+                      setUploadingToSupabase(true);
+                      
+
+                      // Télécharger le MANEX
+                      const blob = await communityService.downloadManex(data.manexAvailableInSupabase.filePath);
+
+                      // Convertir en base64
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        const manexData = {
+                          fileName: data.manexAvailableInSupabase.fileName,
+                          fileSize: `${(blob.size / 1024 / 1024).toFixed(2)} MB`,
+                          uploadDate: new Date().toISOString(),
+                          hasData: true,
+                          file: reader.result,
+                          uploadedToSupabase: true,
+                          remoteUrl: communityService.getManexDownloadUrl(data.manexAvailableInSupabase.filePath),
+                          filePath: data.manexAvailableInSupabase.filePath
+                        };
+                        setManexFile(manexData);
+                        updateData('manex', manexData);
+                        
+                        setUploadingToSupabase(false);
+                      };
+                      reader.readAsDataURL(blob);
+                    } catch (error) {
+                      console.error('❌ Erreur téléchargement MANEX:', error);
+                      alert(`❌ Erreur: ${error.message}`);
+                      setUploadingToSupabase(false);
+                    }
+                  }}
+                  disabled={uploadingToSupabase}
+                >
+                  {uploadingToSupabase ? 'Téléchargement...' : 'Télécharger depuis Supabase'}
+                </Button>
+              </Paper>
+            ) : (
+              <Button
+                variant="contained"
+                component="label"
+                startIcon={<CloudUploadIcon />}
+                size="large"
+              >
+                Importer le MANEX (PDF)
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  hidden
+                  onChange={handleManexUpload}
+                />
+              </Button>
+            )}
+
+            <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center', maxWidth: 500 }}>
+              Format: PDF uniquement (max 50MB)
+            </Typography>
+          </Box>
+        </AccordionDetails>
+      </Accordion>
+
       {/* Notification d'immatriculation existante intégrée */}
       {registrationExists && existingAircraftData && (
         <Paper elevation={2} sx={{ p: 3, mt: 3, border: '2px solid', borderColor: 'warning.main', bgcolor: 'warning.50' }}>
@@ -902,9 +1275,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {} }) => {
               Version: ${result.version}
 
               Votre proposition sera soumise à validation par la communauté.
-              ${updateInfo.mode === 'replace' ? '20' : '10'} votes positifs nets sont nécessaires pour l'approuver.
-            `);
-
+              ${updateInfo.mode === 'replace' ? '20' : '10'} votes positifs nets sont nécessaires pour l'approuver.`);
             // Optionnel : naviguer vers une page de suivi
             // window.location.href = '#/aircraft/updates/' + result.id;
           } catch (error) {
@@ -914,6 +1285,31 @@ const Step1BasicInfo = ({ data, updateData, errors = {} }) => {
         }}
       />
 
+      {/* Boutons de navigation */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+        {onPrevious && (
+          <Button
+            variant="outlined"
+            color="primary"
+            size="large"
+            onClick={onPrevious}
+            startIcon={<ChevronLeftIcon />}
+          >
+            Précédent
+          </Button>
+        )}
+        {onNext && (
+          <Button
+            variant="contained"
+            color="primary"
+            size="large"
+            onClick={onNext}
+            endIcon={<ChevronRightIcon />}
+          >
+            Suivant
+          </Button>
+        )}
+      </Box>
     </Box>
   );
 };

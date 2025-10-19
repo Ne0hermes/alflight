@@ -150,7 +150,7 @@ export function convertValue(value, fromUnit, toUnit, category) {
   // Chercher le facteur de conversion
   const factors = conversionFactors[category];
   if (!factors) {
-    console.warn(`Catégorie de conversion non reconnue: ${category}`);
+    
     return numValue;
   }
 
@@ -159,7 +159,6 @@ export function convertValue(value, fromUnit, toUnit, category) {
   const factor = factors[conversionKey];
 
   if (factor === undefined) {
-    console.warn(`Conversion non supportée: ${fromUnit} vers ${toUnit} (${category})`);
     return numValue;
   }
 
@@ -274,7 +273,6 @@ export function convertObject(values, conversions, units) {
         config.fromUnit,
         toUnit,
         config.category
-      );
     }
   });
 

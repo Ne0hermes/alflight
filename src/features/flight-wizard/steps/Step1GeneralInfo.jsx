@@ -1,6 +1,7 @@
 import React from 'react';
-import { Calendar, Radio, Plane, Sun, Moon, MapPin, Navigation } from 'lucide-react';
+import { Calendar, Radio, Plane, Sun, Moon, MapPin, Navigation, Fuel } from 'lucide-react';
 import { theme } from '../../../styles/theme';
+import { aircraftSelectors } from '../../../core/stores/aircraftStore';
 
 /**
  * Étape 1 : Informations générales du vol
@@ -9,6 +10,9 @@ import { theme } from '../../../styles/theme';
  * - Date prévue
  */
 export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
+  // Récupérer la liste des avions disponibles
+  const aircraftList = aircraftSelectors.useAircraftList();
+
   const handleChange = (field, value) => {
     flightPlan.updateGeneralInfo({ [field]: value });
     onUpdate();
@@ -20,25 +24,87 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
     return d.toISOString().split('T')[0];
   };
 
+  // Calculer la réserve réglementaire selon les règles
+  const calculateRegulatoryReserve = () => {
+    let regulationReserveMinutes = 30;
+
+    // Nuit = 45 minutes
+    if (flightPlan.generalInfo.dayNight === 'night') {
+      regulationReserveMinutes = 45;
+    }
+
+    // IFR = +15 minutes
+    if (flightPlan.generalInfo.flightType === 'IFR') {
+      regulationReserveMinutes += 15;
+    }
+
+    // Local + Jour = 20 minutes
+    if (flightPlan.generalInfo.flightNature === 'local' && flightPlan.generalInfo.dayNight === 'day') {
+      regulationReserveMinutes = 20;
+    }
+
+    return regulationReserveMinutes;
+  };
+
+  const reserveMinutes = calculateRegulatoryReserve();
+
+  // Description de la réserve
+  const getReserveDescription = () => {
+    const parts = [];
+
+    if (flightPlan.generalInfo.flightType) {
+      parts.push(flightPlan.generalInfo.flightType);
+    }
+
+    if (flightPlan.generalInfo.flightNature) {
+      parts.push(flightPlan.generalInfo.flightNature === 'local' ? 'LOCAL' : 'NAV');
+    }
+
+    if (flightPlan.generalInfo.dayNight) {
+      parts.push(flightPlan.generalInfo.dayNight === 'night' ? 'NUIT' : 'JOUR');
+    }
+
+    return parts.length > 0 ? parts.join(' - ') : 'Complétez les informations ci-dessus';
+  };
+
   return (
     <div style={styles.container}>
-      {/* Indicatif du vol */}
-      <div style={styles.field}>
-        <label style={styles.label}>
-          <Plane size={18} style={styles.icon} />
-          Quel est l'indicatif de votre vol ?
-        </label>
-        <input
-          type="text"
-          style={styles.input}
-          placeholder="Ex: AFR123, FGBCD"
-          value={flightPlan.generalInfo.callsign || ''}
-          onChange={(e) => handleChange('callsign', e.target.value.toUpperCase())}
-          maxLength={10}
-        />
-        <p style={styles.hint}>
-          Entrez l'indicatif radio ou l'immatriculation de l'aéronef
-        </p>
+      {/* Avion et Date côte à côte */}
+      <div style={styles.rowFields}>
+        {/* Sélection de l'avion */}
+        <div style={styles.field}>
+          <label style={styles.label}>
+            <Plane size={18} style={styles.icon} />
+            Quel avion allez-vous utiliser ?
+          </label>
+          <select
+            style={styles.select}
+            value={flightPlan.generalInfo.callsign || ''}
+            onChange={(e) => handleChange('callsign', e.target.value)}
+          >
+            <option value="">-- Sélectionnez un avion --</option>
+            {aircraftList.map((aircraft) => (
+              <option key={aircraft.id} value={aircraft.registration}>
+                {aircraft.registration} - {aircraft.model}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Date du vol */}
+        <div style={styles.field}>
+          <label style={styles.label}>
+            <Calendar size={18} style={styles.icon} />
+            Quelle est la date prévue du vol ?
+          </label>
+          <input
+            type="date"
+            style={styles.input}
+            value={formatDate(flightPlan.generalInfo.date)}
+            onChange={(e) => handleChange('date', new Date(e.target.value))}
+            min={formatDate(new Date())}
+          />
+        </div>
       </div>
 
       {/* Type de vol */}
@@ -60,7 +126,7 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
             <span style={styles.radioText}>VFR</span>
             <span style={styles.radioDescription}>Vol à vue</span>
           </label>
-          <label style={styles.radioLabel}>
+          <label style={styles.radioLabelDisabled} title="Fonctionnalité en développement">
             <input
               type="radio"
               name="flightType"
@@ -68,9 +134,11 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
               checked={flightPlan.generalInfo.flightType === 'IFR'}
               onChange={(e) => handleChange('flightType', e.target.value)}
               style={styles.radio}
+              disabled
             />
-            <span style={styles.radioText}>IFR</span>
+            <span style={styles.radioTextDisabled}>IFR</span>
             <span style={styles.radioDescription}>Vol aux instruments</span>
+            <span style={styles.badge}>À venir</span>
           </label>
         </div>
       </div>
@@ -94,7 +162,7 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
             <Sun size={18} style={{ color: theme.colors.primary }} />
             <span style={styles.radioText}>Jour</span>
           </label>
-          <label style={styles.radioLabel}>
+          <label style={styles.radioLabelDisabled} title="Fonctionnalité en développement">
             <input
               type="radio"
               name="dayNight"
@@ -102,9 +170,11 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
               checked={flightPlan.generalInfo.dayNight === 'night'}
               onChange={(e) => handleChange('dayNight', e.target.value)}
               style={styles.radio}
+              disabled
             />
-            <Moon size={18} style={{ color: theme.colors.primary }} />
-            <span style={styles.radioText}>Nuit</span>
+            <Moon size={18} style={{ color: 'rgba(255, 255, 255, 0.4)' }} />
+            <span style={styles.radioTextDisabled}>Nuit</span>
+            <span style={styles.badge}>À venir</span>
           </label>
         </div>
       </div>
@@ -145,62 +215,13 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
         </div>
       </div>
 
-      {/* Date du vol */}
-      <div style={styles.field}>
-        <label style={styles.label}>
-          <Calendar size={18} style={styles.icon} />
-          Quelle est la date prévue du vol ?
-        </label>
-        <input
-          type="date"
-          style={styles.input}
-          value={formatDate(flightPlan.generalInfo.date)}
-          onChange={(e) => handleChange('date', new Date(e.target.value))}
-          min={formatDate(new Date())}
-        />
-        <p style={styles.hint}>
-          Sélectionnez la date de départ prévue
-        </p>
-      </div>
-
-      {/* Résumé */}
-      <div style={styles.summary}>
-        <h3 style={styles.summaryTitle}>Résumé</h3>
-        <div style={styles.summaryContent}>
-          <div style={styles.summaryItem}>
-            <span style={styles.summaryLabel}>Indicatif :</span>
-            <span style={styles.summaryValue}>
-              {flightPlan.generalInfo.callsign || 'Non défini'}
-            </span>
-          </div>
-          <div style={styles.summaryItem}>
-            <span style={styles.summaryLabel}>Type :</span>
-            <span style={styles.summaryValue}>
-              {flightPlan.generalInfo.flightType}
-            </span>
-          </div>
-          <div style={styles.summaryItem}>
-            <span style={styles.summaryLabel}>Période :</span>
-            <span style={styles.summaryValue}>
-              {flightPlan.generalInfo.dayNight === 'day' ? 'Jour' : 
-               flightPlan.generalInfo.dayNight === 'night' ? 'Nuit' : 'Non défini'}
-            </span>
-          </div>
-          <div style={styles.summaryItem}>
-            <span style={styles.summaryLabel}>Nature :</span>
-            <span style={styles.summaryValue}>
-              {flightPlan.generalInfo.flightNature === 'local' ? 'Vol local' : 
-               flightPlan.generalInfo.flightNature === 'navigation' ? 'Navigation' : 'Non défini'}
-            </span>
-          </div>
-          <div style={styles.summaryItem}>
-            <span style={styles.summaryLabel}>Date :</span>
-            <span style={styles.summaryValue}>
-              {flightPlan.generalInfo.date 
-                ? new Date(flightPlan.generalInfo.date).toLocaleDateString('fr-FR')
-                : 'Non définie'}
-            </span>
-          </div>
+      {/* Réserve réglementaire calculée */}
+      <div style={styles.reserveCard}>
+        <Fuel size={16} style={styles.icon} />
+        <div style={styles.reserveContent}>
+          <span style={styles.reserveLabel}>Réserve réglementaire :</span>
+          <span style={styles.reserveMinutes}>{reserveMinutes} min</span>
+          <span style={styles.reserveDescription}>({getReserveDescription()})</span>
         </div>
       </div>
     </div>
@@ -213,10 +234,16 @@ const styles = {
     flexDirection: 'column',
     gap: '32px',
   },
+  rowFields: {
+    display: 'flex',
+    gap: '20px',
+    alignItems: 'flex-start',
+  },
   field: {
     display: 'flex',
     flexDirection: 'column',
     gap: '12px',
+    flex: 1,
   },
   label: {
     fontSize: '16px',
@@ -239,6 +266,18 @@ const styles = {
     fontFamily: theme.fonts.primary,
     transition: 'all 0.3s',
   },
+  select: {
+    padding: '14px 16px',
+    fontSize: '16px',
+    borderRadius: '8px',
+    border: `1px solid ${theme.colors.border}`,
+    backgroundColor: 'rgba(10, 10, 10, 0.8)',
+    color: theme.colors.textPrimary,
+    fontFamily: theme.fonts.primary,
+    transition: 'all 0.3s',
+    cursor: 'pointer',
+    minHeight: '48px',
+  },
   hint: {
     fontSize: '12px',
     color: theme.colors.textMuted,
@@ -260,6 +299,20 @@ const styles = {
     transition: 'all 0.3s',
     flex: 1,
   },
+  radioLabelDisabled: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '16px 20px',
+    borderRadius: '8px',
+    border: '1px solid rgba(128, 128, 128, 0.3)',
+    backgroundColor: 'rgba(10, 10, 10, 0.2)',
+    cursor: 'not-allowed',
+    opacity: 0.5,
+    transition: 'all 0.3s',
+    flex: 1,
+    position: 'relative',
+  },
   radio: {
     width: '20px',
     height: '20px',
@@ -270,42 +323,57 @@ const styles = {
     fontWeight: '600',
     color: theme.colors.textPrimary,
   },
+  radioTextDisabled: {
+    fontSize: '18px',
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.4)',
+  },
   radioDescription: {
     fontSize: '14px',
     color: theme.colors.textSecondary,
     marginLeft: 'auto',
   },
-  summary: {
-    marginTop: '20px',
-    padding: '20px',
-    backgroundColor: 'rgba(147, 22, 60, 0.05)',
-    borderRadius: '12px',
-    border: `1px solid ${theme.colors.border}`,
-  },
-  summaryTitle: {
-    fontSize: '14px',
+  badge: {
+    fontSize: '11px',
     fontWeight: '600',
-    color: theme.colors.primary,
-    marginBottom: '16px',
+    color: '#FFF',
+    backgroundColor: '#F59E0B',
+    padding: '4px 8px',
+    borderRadius: '6px',
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
+    whiteSpace: 'nowrap',
   },
-  summaryContent: {
+  reserveCard: {
     display: 'flex',
-    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '12px 16px',
+    borderRadius: '8px',
+    border: `1px solid ${theme.colors.border}`,
+    backgroundColor: 'rgba(59, 130, 246, 0.05)',
+  },
+  reserveContent: {
+    display: 'flex',
+    alignItems: 'center',
     gap: '8px',
+    flex: 1,
   },
-  summaryItem: {
-    display: 'flex',
-    justifyContent: 'space-between',
+  reserveLabel: {
     fontSize: '14px',
-  },
-  summaryLabel: {
+    fontWeight: '500',
     color: theme.colors.textSecondary,
   },
-  summaryValue: {
-    color: theme.colors.textPrimary,
-    fontWeight: '600',
+  reserveMinutes: {
+    fontSize: '18px',
+    fontWeight: '700',
+    color: theme.colors.primary,
+  },
+  reserveDescription: {
+    fontSize: '13px',
+    fontWeight: '500',
+    color: theme.colors.textMuted,
+    fontStyle: 'italic',
   },
 };
 

@@ -17,7 +17,11 @@ import {
   Chip,
   Collapse,
   IconButton,
-  Snackbar
+  Snackbar,
+  LinearProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -36,13 +40,11 @@ import {
   Update as UpdateIcon
 } from '@mui/icons-material';
 import { useAircraftStore } from '@core/stores/aircraftStore';
-import { COMMUNITY_AIRCRAFT_DATABASE } from '../../data/communityAircraftDatabase';
+import communityService from '../../../../services/communityService';
+import dataBackupManager from '../../../../utils/dataBackupManager';
+import CleanDuplicatesButton from '../../../../components/CleanDuplicatesButton';
 
-// Simulation de la base de données communautaire
-// En production, ceci sera remplacé par un appel API vers la base de données en ligne
-const MOCK_COMMUNITY_AIRCRAFT = COMMUNITY_AIRCRAFT_DATABASE;
-
-const Step0CommunityCheck = ({ data, updateData, onSkip, onComplete }) => {
+const Step0CommunityCheck = ({ data, updateData, onSkip, onComplete, onCancel }) => {
   const [searchValue, setSearchValue] = useState(data.searchRegistration || '');
   const [isLoading, setIsLoading] = useState(false);
   const [communityAircraft, setCommunityAircraft] = useState([]);
@@ -52,6 +54,9 @@ const Step0CommunityCheck = ({ data, updateData, onSkip, onComplete }) => {
   const [userVotes, setUserVotes] = useState({}); // Simule les votes de l'utilisateur
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadStatus, setDownloadStatus] = useState('');
+  const [showDownloadDialog, setShowDownloadDialog] = useState(false);
 
   // Récupérer les fonctions du store
   const { addAircraft } = useAircraftStore();
@@ -76,185 +81,295 @@ const Step0CommunityCheck = ({ data, updateData, onSkip, onComplete }) => {
 
   const loadCommunityAircraft = async () => {
     setIsLoading(true);
-    // Simuler un délai de chargement
-    setTimeout(() => {
-      setCommunityAircraft(MOCK_COMMUNITY_AIRCRAFT);
-      setIsLoading(false);
-    }, 1000);
+    try {
+      
+      const presets = await communityService.getAllPresets();
 
-    // En production, remplacer par :
-    // try {
-    //   const response = await fetch('https://api.alflight.com/aircraft/community');
-    //   const data = await response.json();
-    //   setCommunityAircraft(data);
-    // } catch (error) {
-    //   console.error('Erreur lors du chargement des avions:', error);
-    // } finally {
-    //   setIsLoading(false);
-    // }
+      // Transformer les presets Supabase au format attendu par le composant
+      // NOTE: communityService.getAllPresets() retourne déjà aircraftData (mappé)
+      const formattedAircraft = presets.map(preset => {
+        return {
+          ...preset,  // Garder TOUT ce qui vient de communityService (incluant aircraftData)
+          // Ajouter/overwrite seulement ce qui est nécessaire pour l'affichage
+          type: preset.type || preset.aircraftType
+        };
+      });
+
+      
+      setCommunityAircraft(formattedAircraft);
+    } catch (error) {
+      console.error('❌ Erreur lors du chargement des avions:', error);
+      setCommunityAircraft([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  /* DÉSACTIVÉ - Oblige l'utilisateur à vérifier les données via l'import personnalisé
   // Import direct sans passer par le wizard
   const handleDirectImport = async (aircraft) => {
     setIsImporting(true);
 
     try {
-      // Créer un nouvel avion avec TOUTES les données de l'avion communautaire
+      
+
+      // 1. Enregistrer le téléchargement dans Supabase
+      await communityService.recordDownload(aircraft.id, 'current-user-id');
+
+      // 2. Récupérer les données complètes depuis aircraft_data
+      const fullAircraftData = aircraft.aircraftData || {};
+
+      
+
+      // 3. Créer le nouvel avion avec TOUTES les données depuis aircraft_data
+      // IMPORTANT: Ne pas écraser les données de fullAircraftData, les utiliser telles quelles
+      const timestamp = Date.now();
       const newAircraft = {
-        ...aircraft, // Copier toutes les propriétés de l'avion
-        id: `aircraft-${Date.now()}`, // Format attendu par le store
+        // Données complètes depuis Supabase (PRIORITY)
+        ...fullAircraftData,
+
+        // Générer un nouvel ID local unique (ne pas réutiliser l'ID Supabase!)
+        id: `aircraft-${timestamp}`,
+        aircraftId: `aircraft-${timestamp}`,
+
+        // Métadonnées d'import (ne pas écraser les données existantes)
         importedFrom: 'community',
+        importedFromCommunity: true,
+        communityPresetId: aircraft.id,
+        originalCommunityId: aircraft.id,  // Conserver l'ID Supabase pour référence
+        communityVersion: aircraft.version,
         dateImported: new Date().toISOString(),
       };
 
-      // Ajouter l'avion au store
-      const result = addAircraft(newAircraft);
+      
 
-      if (result !== null) {
-        // Sélectionner automatiquement le nouvel avion
-        setSelectedAircraft(newAircraft);
-
-        // Afficher la notification de succès
-        setNotificationMessage(`✅ L'avion ${aircraft.registration} (${aircraft.model}) a été ajouté à votre liste d'avions`);
-        setShowSuccessNotification(true);
-
-        // Retourner à l'accueil après 2 secondes
-        setTimeout(() => {
-          if (onComplete) onComplete();
-        }, 2000);
-      } else {
-        // L'avion existe déjà
-        setNotificationMessage(`⚠️ L'avion ${aircraft.registration} existe déjà dans votre liste`);
-        setShowSuccessNotification(true);
-      }
+      // 4. Sauvegarder directement sans télécharger le MANEX
+      // Le MANEX sera uploadé manuellement par l'utilisateur dans l'étape 1 du wizard
+      await saveAndAddAircraft(newAircraft);
 
     } catch (error) {
-      console.error('Erreur lors de l\'import direct:', error);
-      setNotificationMessage(`❌ Erreur lors de l'import de l'avion`);
+      console.error('❌ Erreur lors de l\'import direct:', error);
+      setNotificationMessage(`❌ Erreur lors de l'import: ${error.message}`);
       setShowSuccessNotification(true);
-    } finally {
       setIsImporting(false);
     }
+  };
+  */
+
+  // Fonction helper pour sauvegarder et ajouter l'avion
+  const saveAndAddAircraft = async (aircraft) => {
+    await dataBackupManager.saveAircraftData(aircraft);
+    
+
+    const result = addAircraft(aircraft);
+
+    if (result !== null) {
+      setNotificationMessage(`✅ L'avion ${aircraft.registration} (${aircraft.model}) a été ajouté`);
+      setShowSuccessNotification(true);
+
+      setTimeout(() => {
+        if (onComplete) onComplete();
+      }, 2000);
+    } else {
+      setNotificationMessage(`⚠️ L'avion ${aircraft.registration} existe déjà dans votre liste`);
+      setShowSuccessNotification(true);
+    }
+
+    setIsImporting(false);
   };
 
   const handleImportAircraft = async (aircraft) => {
     setIsImporting(true);
     setSelectedAircraft(aircraft);
+    setShowDownloadDialog(true);
+    setDownloadProgress(0);
+    setDownloadStatus('Initialisation...');
 
-    // Simuler l'importation complète des données depuis la communauté
-    setTimeout(async () => {
+    try {
+      
+
+      // 1. Enregistrer le téléchargement dans Supabase
+      setDownloadStatus('Enregistrement du téléchargement...');
+      setDownloadProgress(10);
+      await communityService.recordDownload(aircraft.id, 'current-user-id');
+
+      // 2. Récupérer les données complètes depuis Supabase (avec téléchargement automatique du MANEX)
+      setDownloadStatus('Téléchargement des données de l\'avion...');
+      setDownloadProgress(30);
+      const fullAircraftData = await communityService.getPresetById(aircraft.id);
+
+      setDownloadProgress(70);
+
+      
+
+      // 3. Préparer les données pour le wizard
+      // IMPORTANT: Utiliser les données de fullAircraftData EN PRIORITÉ
+      const communityData = {
+        // Toutes les données depuis Supabase (PRIORITY)
+        ...fullAircraftData,
+
+        // Marqueurs d'import (ne pas écraser les données existantes)
+        importedFromCommunity: true,
+        communityPresetId: aircraft.id,
+        communityVersion: aircraft.version,
+        importDate: new Date().toISOString()
+      };
+
+      
+
+      // 4. Importer avec le MANEX s'il est disponible
+      setDownloadStatus(communityData.manex ? 'Préparation des données avec MANEX...' : 'Préparation des données...');
+      setDownloadProgress(90);
+      
+
+      // Petit délai pour afficher le statut final
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      setDownloadStatus('Terminé !');
+      setDownloadProgress(100);
+
+      // Logger vers Google Sheets
       try {
-        // En production, récupérer TOUTES les données de l'avion depuis l'API
-        // Pour la démo, on simule des données complètes
-        const communityData = {
-          // Identification
-          registration: aircraft.registration,
-          model: aircraft.model,
-          manufacturer: aircraft.manufacturer,
-          aircraftType: aircraft.type,
-          category: 'SEP',
-
-          // Vitesses (exemple de données communautaires)
-          speeds: {
-            vne: 154,
-            vno: 127,
-            va: 108,
-            vfe: 103,
-            vs0: 49,
-            vs1: 55,
-            vx: 64,
-            vy: 76,
-            vr: 60,
-            vapp: 75
+        const logData = {
+          action: 'DOWNLOAD_AIRCRAFT',
+          component: 'Step0CommunityCheck',
+          summary: `Téléchargement de l'avion ${aircraft.registration} (${aircraft.model})`,
+          details: {
+            registration: aircraft.registration,
+            model: aircraft.model,
+            manufacturer: aircraft.manufacturer || fullAircraftData.manufacturer,
+            hasManex: !!communityData.manex,
+            manexFileName: communityData.manex?.fileName,
+            manexFileSize: communityData.manex?.fileSize,
+            dataSize: JSON.stringify(fullAircraftData).length,
+            supabaseId: aircraft.id
           },
-
-          // Masses
-          weights: {
-            emptyWeight: 795,
-            maxTakeoffWeight: 1280,
-            maxLandingWeight: 1280,
-            baggageCapacity: 100
-          },
-
-          // Performances (si disponibles)
-          performance: {
-            cruise: { speed75: 127, endurance: 5.5 },
-            takeoff: { groundRoll: 335, fiftyFeet: 580 },
-            landing: { groundRoll: 295, fiftyFeet: 590 }
-          },
-
-          // Marqueur pour indiquer que c'est une importation communautaire
-          importedFromCommunity: true,
-          communityVersion: aircraft.version || 1,
-          importDate: new Date().toISOString()
+          status: 'success'
         };
 
-        // Importer toutes les données dans le wizard
-        Object.keys(communityData).forEach(key => {
-          updateData(key, communityData[key]);
-        });
-
-        // Marquer comme importé depuis la communauté
-        updateData('isImportedFromCommunity', true);
-        updateData('originalCommunityData', communityData);
-
-        setIsImporting(false);
-
-        // Message informatif
-        alert(`✅ Données importées depuis la communauté
-
-Les données de ${aircraft.registration} ont été chargées.
-
-Le wizard va continuer pour que vous puissiez :
-• Vérifier tous les paramètres importés
-• Modifier si nécessaire
-• Ajouter des informations manquantes
-
-À la fin, vous pourrez choisir entre :
-- Soumettre vos modifications à la communauté
-- Garder les changements en local uniquement`);
-
-        // Passer à l'étape suivante du wizard
-        if (onSkip) onSkip();
-      } catch (error) {
-        console.error('Erreur lors de l\'import:', error);
-        alert('Erreur lors de l\'importation des données');
-        setIsImporting(false);
+        await fetch('http://localhost:3001/api/log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(logData)
+        }).catch(err => console.error('Error logging to server:', err));
+      } catch (logError) {
+        console.error('Error in logging attempt:', logError);
       }
-    }, 1500);
+
+      // Fermer le dialog après un court délai
+      setTimeout(() => {
+        setShowDownloadDialog(false);
+        importAircraftData(communityData, aircraft);
+      }, 1000);
+
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'import:', error);
+      setDownloadStatus(`Erreur: ${error.message}`);
+      setDownloadProgress(0);
+
+      // Logger l'erreur vers Google Sheets
+      try {
+        const errorLogData = {
+          action: 'DOWNLOAD_AIRCRAFT_ERROR',
+          component: 'Step0CommunityCheck',
+          summary: `Erreur lors du téléchargement de ${aircraft.registration}`,
+          details: {
+            registration: aircraft.registration,
+            model: aircraft.model,
+            errorMessage: error.message,
+            errorStack: error.stack?.substring(0, 500)
+          },
+          status: 'error'
+        };
+
+        await fetch('http://localhost:3001/api/log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(errorLogData)
+        }).catch(err => console.error('Error logging to server:', err));
+      } catch (logError) {
+        console.error('Error in logging attempt:', logError);
+      }
+
+      setTimeout(() => {
+        setShowDownloadDialog(false);
+        alert(`Erreur lors de l'importation: ${error.message}`);
+        setIsImporting(false);
+      }, 2000);
+    }
   };
 
-  const handleVote = (aircraftReg, voteType) => {
-    // Simuler le vote de l'utilisateur
-    setUserVotes(prev => ({
-      ...prev,
-      [aircraftReg]: voteType
-    }));
+  // Fonction helper pour importer les données dans le wizard
+  const importAircraftData = (communityData, aircraft) => {
+    // Créer le snapshot baseAircraft AVANT toute modification
+    
+    const baseSnapshot = JSON.parse(JSON.stringify(communityData));
 
-    // Mettre à jour les votes dans la liste
-    setCommunityAircraft(prev =>
-      prev.map(aircraft => {
-        if (aircraft.registration === aircraftReg) {
-          const currentUserVote = userVotes[aircraftReg];
-          let updatedVotes = { ...aircraft.votes };
+    // Importer toutes les données dans le wizard
+    Object.keys(communityData).forEach(key => {
+      updateData(key, communityData[key]);
+    });
 
-          // Annuler le vote précédent
-          if (currentUserVote === 'up') updatedVotes.up--;
-          if (currentUserVote === 'down') updatedVotes.down--;
+    updateData('isImportedFromCommunity', true);
+    updateData('originalCommunityData', communityData);
+    updateData('baseAircraft', baseSnapshot); // Snapshot pour comparaison
 
-          // Appliquer le nouveau vote
-          if (voteType === 'up') updatedVotes.up++;
-          if (voteType === 'down') updatedVotes.down++;
+    setIsImporting(false);
 
-          // Vérifier si l'avion atteint le seuil de validation
-          const netVotes = updatedVotes.up - updatedVotes.down;
-          const verified = netVotes >= 10;
+    // Passer directement à l'étape suivante du wizard
+    if (onSkip) onSkip();
+  };
 
-          return { ...aircraft, votes: updatedVotes, verified };
-        }
-        return aircraft;
-      })
-    );
+  const handleVote = async (aircraftReg, voteType) => {
+    try {
+      // Trouver l'avion
+      const aircraft = communityAircraft.find(a => a.registration === aircraftReg);
+      if (!aircraft) return;
+
+      
+
+      // Envoyer le vote à Supabase
+      await communityService.votePreset(
+        aircraft.id,
+        'current-user-id', // En prod: récupérer l'ID utilisateur réel
+        voteType
+      );
+
+      // Mettre à jour l'état local du vote utilisateur
+      setUserVotes(prev => ({
+        ...prev,
+        [aircraftReg]: voteType
+      }));
+
+      // Mettre à jour les votes dans la liste localement
+      setCommunityAircraft(prev =>
+        prev.map(a => {
+          if (a.registration === aircraftReg) {
+            const currentUserVote = userVotes[aircraftReg];
+            let updatedVotes = { ...a.votes };
+
+            // Annuler le vote précédent
+            if (currentUserVote === 'up') updatedVotes.up--;
+            if (currentUserVote === 'down') updatedVotes.down--;
+
+            // Appliquer le nouveau vote
+            if (voteType === 'up') updatedVotes.up++;
+            if (voteType === 'down') updatedVotes.down++;
+
+            // Vérifier si l'avion atteint le seuil de validation
+            const netVotes = updatedVotes.up - updatedVotes.down;
+            const verified = netVotes >= 10;
+
+            return { ...a, votes: updatedVotes, verified };
+          }
+          return a;
+        })
+      );
+
+    } catch (error) {
+      console.error('❌ Erreur lors du vote:', error);
+      alert(`Erreur lors du vote: ${error.message}`);
+    }
   };
 
   return (
@@ -324,13 +439,6 @@ Le wizard va continuer pour que vous puissiez :
             </Box>
           </Box>
 
-          <Alert severity="success" sx={{ mt: 2 }}>
-            <Typography variant="body2">
-              <strong>Avantage :</strong> En utilisant une configuration validée, vous économisez du temps
-              et bénéficiez de données fiables testées par d'autres pilotes.
-            </Typography>
-          </Alert>
-
         </Paper>
       </Collapse>
 
@@ -366,8 +474,36 @@ Le wizard va continuer pour que vous puissiez :
           }}
           options={communityAircraft.map(ac => ac.registration)}
           loading={isLoading}
-          sx={{ mb: 2 }}
+          sx={{
+            mb: 2,
+            '& .MuiAutocomplete-endAdornment': {
+              right: '8px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+            },
+            '& .MuiAutocomplete-popupIndicator': {
+              padding: '4px',
+              width: '28px',
+              height: '28px',
+              '& .MuiSvgIcon-root': {
+                fontSize: '20px',
+              },
+              '& .MuiTouchRipple-root': {
+                width: '28px',
+                height: '28px',
+              }
+            },
+            '& .MuiAutocomplete-listbox': {
+              maxWidth: '400px',
+            }
+          }}
           size="small"
+          disableClearable
+          disablePortal
+          forcePopupIcon={false}
+          ListboxProps={{
+            style: { maxWidth: '400px' }
+          }}
           renderInput={(params) => (
             <TextField
               {...params}
@@ -377,6 +513,7 @@ Le wizard va continuer pour que vous puissiez :
               sx={{
                 '& .MuiOutlinedInput-root': {
                   height: '40px',
+                  paddingRight: '40px',
                 }
               }}
               InputProps={{
@@ -394,7 +531,7 @@ Le wizard va continuer pour que vous puissiez :
         />
 
         {/* Statistiques */}
-        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>
           <Chip
             icon={<FlightIcon />}
             label={`${communityAircraft.length} avions disponibles`}
@@ -467,6 +604,11 @@ Le wizard va continuer pour que vous puissiez :
               <Typography variant="body2">
                 <strong>Validation :</strong> {selectedAircraft.votes.up} ✓ / {selectedAircraft.votes.down} ✗
               </Typography>
+              {selectedAircraft.version && (
+                <Typography variant="body2">
+                  <strong>Version :</strong> {selectedAircraft.version}
+                </Typography>
+              )}
               {selectedAircraft.hasFlightManual && (
                 <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   <ManualIcon sx={{ fontSize: 16, color: 'primary.main' }} />
@@ -493,12 +635,9 @@ Le wizard va continuer pour que vous puissiez :
             )}
 
             {/* Options d'action */}
-            <Typography variant="subtitle2" sx={{ mt: 2, mb: 1, fontWeight: 'bold' }}>
-              Options disponibles :
-            </Typography>
-
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2, mt: 2 }}>
               {/* Importer directement les données */}
+              {/* DÉSACTIVÉ - Oblige l'utilisateur à vérifier les données via l'import personnalisé
               <Paper
                 elevation={0}
                 sx={{
@@ -528,6 +667,7 @@ Le wizard va continuer pour que vous puissiez :
                   </Box>
                 </Box>
               </Paper>
+              */}
 
               {/* Personnaliser/Créer une variante */}
               <Paper
@@ -556,10 +696,7 @@ Le wizard va continuer pour que vous puissiez :
                   <InfoIcon color="info" />
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="subtitle2" fontWeight="bold">
-                      Personnaliser cet avion
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Modifier les paramètres pour adapter à votre avion spécifique
+                      Vérifier la configuration
                     </Typography>
                   </Box>
                 </Box>
@@ -571,19 +708,75 @@ Le wizard va continuer pour que vous puissiez :
 
 
       {/* Option pour créer un nouvel avion */}
-      <Alert severity="info" sx={{ mt: 3 }}>
-        <Typography variant="body2">
+      <Box sx={{ mt: 5, mb: 3 }}>
+        <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <AddIcon color="primary" />
           Votre avion n'est pas dans la liste ? Pas de problème !
         </Typography>
         <Button
           variant="outlined"
           startIcon={<AddIcon />}
-          sx={{ mt: 1 }}
+          sx={{ mt: 2 }}
           onClick={onSkip}
         >
           Créer une nouvelle configuration
         </Button>
-      </Alert>
+      </Box>
+
+      {/* Bouton Annuler pour revenir à l'accueil */}
+      {onCancel && (
+        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
+          <Button
+            variant="outlined"
+            color="secondary"
+            onClick={onCancel}
+            sx={{ minWidth: 120 }}
+          >
+            Annuler
+          </Button>
+        </Box>
+      )}
+
+      {/* Dialog de progression du téléchargement */}
+      <Dialog
+        open={showDownloadDialog}
+        maxWidth="sm"
+        fullWidth
+        disableEscapeKeyDown
+      >
+        <DialogTitle sx={{ textAlign: 'center', pb: 1 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <CloudIcon sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
+            <span style={{ fontSize: '1.25rem', fontWeight: 500 }}>
+              Téléchargement en cours...
+            </span>
+          </Box>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 2, pb: 4 }}>
+          <Box sx={{ mb: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+              <Typography variant="body2" color="text.secondary">
+                {downloadStatus}
+              </Typography>
+              <Typography variant="body2" fontWeight="bold" color="primary">
+                {Math.round(downloadProgress)}%
+              </Typography>
+            </Box>
+            <LinearProgress
+              variant="determinate"
+              value={downloadProgress}
+              sx={{
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: 'grey.200',
+                '& .MuiLinearProgress-bar': {
+                  borderRadius: 4
+                }
+              }}
+            />
+          </Box>
+        </DialogContent>
+      </Dialog>
 
       {/* Notification de succès */}
       <Snackbar

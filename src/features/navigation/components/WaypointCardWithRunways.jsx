@@ -8,16 +8,18 @@ import { VFRPointInserter } from './VFRPointInserter';
 import { Conversions } from '@utils/conversions';
 
 // Composant pour une carte de waypoint avec analyse des pistes intégrée
-export const WaypointCardWithRunways = memo(({ 
-  waypoint, 
-  index, 
-  totalWaypoints, 
-  onSelect, 
-  onRemove, 
+export const WaypointCardWithRunways = memo(({
+  waypoint,
+  linkedVfrPoints = [], // Points VFR associés à cet aérodrome
+  index,
+  totalWaypoints,
+  onSelect,
+  onRemove,
   onShowReportingPoints,
   onInsertWaypoint,
   allWaypoints,
-  segmentAltitude // Altitude du segment précédent pour le calcul TOD
+  segmentAltitude, // Altitude du segment précédent pour le calcul TOD
+  onRemoveVfrPoint // Fonction pour supprimer un point VFR
 }) => {
   const { selectedAircraft } = useAircraft();
   const { waypoints, updateWaypoint, segmentAltitudes } = useNavigation();
@@ -47,15 +49,7 @@ export const WaypointCardWithRunways = memo(({
     const altitudeToDescent = cruiseAltitude - targetAltitude;
     
     // Debug logging
-    console.log('TOD Calculation:', {
-      isLast,
-      terrainElevation,
-      cruiseAltitude,
-      targetAltitude,
-      altitudeToDescent,
-      segmentAltitude
-    });
-    
+        
     // Si pas de descente nécessaire ou données insuffisantes
     if (altitudeToDescent <= 0) {
       return {
@@ -469,25 +463,155 @@ export const WaypointCardWithRunways = memo(({
           )}
         </div>
       )}
-      
+
+      {/* Points VFR liés à cet aérodrome - Cartouche unique regroupée */}
+      {linkedVfrPoints.length > 0 && (
+        <div style={sx.combine(
+          sx.spacing.mt(3),
+          sx.spacing.pt(3),
+          { borderTop: '1px solid #e5e7eb' }
+        )}>
+          {/* Cartouche unique pour tous les points VFR */}
+          <div
+            style={sx.combine(
+              sx.spacing.p(3),
+              sx.rounded.md,
+              {
+                background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                border: '2px solid #0ea5e9',
+                boxShadow: '0 2px 8px rgba(14, 165, 233, 0.1)'
+              }
+            )}
+          >
+            {/* En-tête de la cartouche */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '12px',
+              paddingBottom: '8px',
+              borderBottom: '1px solid #bae6fd'
+            }}>
+              <h5 style={{
+                fontSize: '13px',
+                fontWeight: '700',
+                color: '#0c4a6e',
+                margin: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                📍 Points VFR liés
+                <span style={{
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  color: '#0ea5e9',
+                  backgroundColor: '#ffffff',
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  border: '1px solid #0ea5e9'
+                }}>
+                  {linkedVfrPoints.length}
+                </span>
+              </h5>
+            </div>
+
+            {/* Liste des points VFR dans la cartouche */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {linkedVfrPoints.map((vfrPoint, vfrIdx) => (
+                <div
+                  key={vfrPoint.id}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '8px 10px',
+                    background: '#ffffff',
+                    borderRadius: '6px',
+                    border: '1px solid #bae6fd',
+                    fontSize: '12px'
+                  }}
+                >
+                  <div style={{ display: 'flex', gap: '10px', flex: 1, alignItems: 'center' }}>
+                    <div style={{
+                      fontWeight: '700',
+                      color: '#0284c7',
+                      minWidth: '60px',
+                      fontSize: '13px'
+                    }}>
+                      {vfrPoint.name}
+                    </div>
+                    {vfrPoint.lat && vfrPoint.lon && (
+                      <div style={{ color: '#64748b', fontSize: '11px' }}>
+                        📍 {vfrPoint.lat.toFixed(2)}°, {vfrPoint.lon.toFixed(2)}°
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Bouton de suppression du point VFR */}
+                  <button
+                    onClick={() => {
+                                            if (onRemoveVfrPoint) {
+                                                onRemoveVfrPoint(vfrPoint.id);
+                      } else {
+                        console.error('❌ Fonction onRemoveVfrPoint non disponible!');
+                      }
+                    }}
+                    style={{
+                      padding: '4px 6px',
+                      border: 'none',
+                      background: '#fee2e2',
+                      color: '#dc2626',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.2s',
+                      fontSize: '11px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#fca5a5';
+                      e.currentTarget.style.transform = 'scale(1.05)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#fee2e2';
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                    title="Supprimer ce point VFR"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Pied de carte avec boutons, label et bouton supprimer sur la même ligne */}
       <div style={sx.combine(
-        sx.flex.between, 
+        sx.flex.between,
         sx.spacing.mt(3),
         sx.spacing.pt(3),
         { borderTop: '1px solid #e5e7eb', alignItems: 'center' }
       )}>
-        {/* Boutons d'ajout */}
-        {!isLast && onInsertWaypoint && (
+        {/* Boutons d'ajout - disponibles pour tous les aérodromes */}
+        {onInsertWaypoint ? (
           <div style={{ display: 'flex', gap: '8px' }}>
             <VFRPointInserter
               waypoints={allWaypoints || waypoints}
+              currentAirportIcao={waypoint.name ? waypoint.name.split(' ')[0] : null}
               onInsertWaypoint={(newWaypoint, _) => {
-                // Insérer après ce waypoint
+                                // Insérer après ce waypoint
                 onInsertWaypoint(newWaypoint, index + 1);
               }}
               insertPosition={index + 1}
             />
+          </div>
+        ) : (
+          <div style={{ fontSize: '11px', color: '#9ca3af', fontStyle: 'italic' }}>
+            (Pas de fonction d'insertion disponible)
           </div>
         )}
         
@@ -516,7 +640,7 @@ export const WaypointCardWithRunways = memo(({
         </div>
       </div>
     </div>
-  );
+
 });
 
 WaypointCardWithRunways.displayName = 'WaypointCardWithRunways';

@@ -23,12 +23,12 @@ class HybridAirspacesService {
     
     // Vérifier le cache
     if (this.cache.has(cacheKey) && this.cacheExpiry.get(cacheKey) > Date.now()) {
-      console.log('🔄 Espaces aériens hybrides chargés depuis le cache');
+      
       return this.cache.get(cacheKey);
     }
 
     try {
-      console.log('🌐 Chargement hybride des espaces aériens...');
+      
       
       // 1. Charger les corrections depuis AIXM
       await this.loadAIXMCorrections();
@@ -43,7 +43,7 @@ class HybridAirspacesService {
       this.cache.set(cacheKey, hybridAirspaces);
       this.cacheExpiry.set(cacheKey, Date.now() + this.CACHE_DURATION);
       
-      console.log(`✅ ${hybridAirspaces.length} espaces aériens hybrides chargés`);
+      
       return hybridAirspaces;
 
     } catch (error) {
@@ -81,7 +81,7 @@ class HybridAirspacesService {
         });
       });
       
-      console.log(`📝 ${this.aixmCorrections.size} corrections AIXM chargées`);
+      
     } catch (error) {
       console.error('Erreur chargement corrections AIXM:', error);
     }
@@ -105,7 +105,7 @@ class HybridAirspacesService {
       format: 'geojson'
     });
 
-    console.log(`🔄 Tentative de connexion au proxy OpenAIP: ${url}?${params}`);
+    
 
     // Créer un contrôleur d'abandon avec timeout plus long
     const controller = new AbortController();
@@ -128,11 +128,11 @@ class HybridAirspacesService {
       const data = await response.json();
       
       if (!data.features || !Array.isArray(data.features)) {
-        console.warn('⚠️ Aucune donnée OpenAIP disponible');
+        
         return [];
       }
 
-      console.log(`✅ ${data.features.length} espaces aériens reçus d'OpenAIP`);
+      
       return data.features;
       
     } catch (error) {
@@ -322,7 +322,7 @@ class HybridAirspacesService {
    * Fallback vers AIXM uniquement
    */
   async getAIXMOnlyAirspaces() {
-    console.log('⚠️ Fallback vers AIXM uniquement');
+    
     
     try {
       const { aixmAirspacesParser } = await import('./aixmAirspacesParser.js');
@@ -347,7 +347,7 @@ class HybridAirspacesService {
       return false;
     }
   }
-}
+);}
 
 // Export singleton
 export const hybridAirspacesService = new HybridAirspacesService();

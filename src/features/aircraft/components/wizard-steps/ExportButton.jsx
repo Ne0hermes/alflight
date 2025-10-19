@@ -10,8 +10,8 @@ const ExportButton = ({ aircraftData, currentStep, variant = "outlined", size = 
   // Télécharger en JSON
   const handleDownloadJSON = () => {
     try {
-      console.log('📸 ExportButton - Photo présente:', !!aircraftData.photo);
-      console.log('📦 ExportButton - Données complètes:', aircraftData);
+      
+      
 
       const exportData = {
         aircraftData,
@@ -32,7 +32,7 @@ const ExportButton = ({ aircraftData, currentStep, variant = "outlined", size = 
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      console.log('✅ ExportButton - Fichier téléchargé avec succès');
+      
     } catch (error) {
       console.error('Erreur lors du téléchargement:', error);
     }
