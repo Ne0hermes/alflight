@@ -188,8 +188,7 @@ const getAirspacesBetweenWaypoints = (waypoint1, waypoint2, airspaces) => {
         type: airspace.type || 'Polygon',
         coordinates: airspace.coordinates
       };
-    }
-    
+    };
     if (!geometry?.coordinates) {
       // Debug: afficher les espaces sans géométrie
       if (properties.name && properties.name !== 'unknown') {
@@ -487,8 +486,7 @@ export const AirspaceAnalyzer = ({ waypoints, plannedAltitude, onAltitudeChange,
     if (lowerFeet === 0 && upperFeet === 999999) {
       // Espace sans limites définies, pas de conflit
       return null;
-    }
-    
+    });
     if (altitudeNum >= lowerFeet && altitudeNum <= upperFeet) {
       return 'inside';
     } else if (altitudeNum < lowerFeet && (lowerFeet - altitudeNum) < 1000) {

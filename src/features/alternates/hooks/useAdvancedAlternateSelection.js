@@ -71,7 +71,7 @@ export const useAdvancedAlternateSelection = () => {
       return formatted;
     });
     
-    .join(', '));
+    // .join(', '));
     return formatted;
   }, [selectedAlternates, searchZone]);
   

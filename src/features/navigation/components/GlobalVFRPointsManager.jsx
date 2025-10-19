@@ -754,8 +754,9 @@ const GlobalVFRPointsManager = () => {
                     )}
                   </div>
                 </div>
-              )}
+              ))
             </div>
+          )
         ) : (
           <div style={{
             padding: '40px',

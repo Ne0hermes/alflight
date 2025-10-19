@@ -124,6 +124,7 @@ export const ManexImporter = memo(({
           `✅ MANEX "${file.name}" enregistré pour ${aircraft.registration}`,
           'success',
           5000
+        );
         setLoading(false);
         setTimeout(() => onClose(), 1500);
       } catch (error) {

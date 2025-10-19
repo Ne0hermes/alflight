@@ -339,11 +339,13 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
               result.groundRollCorrected = performanceInterpolation.applyCorrections(
                 result.groundRoll,
                 corrections
+              );
             }
             if (result.distance50ft) {
               result.distance50ftCorrected = performanceInterpolation.applyCorrections(
                 result.distance50ft,
                 corrections
+              );
             }
             
             result.airport = arrivalAirport;

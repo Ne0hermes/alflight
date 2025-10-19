@@ -21,7 +21,9 @@ const TechnicalLogModule = () => {
   const { getDeferredEntries, getOpenDefects, getMaintenanceDue } = useTechnicalLogStore();
   const [activeTab, setActiveTab] = useState(0);
   const [flightZones, setFlightZones] = useState({});
-  const [dangerousZones, setDangerousZones] = useState({});
+  const [dangerousZones, setDangerousZones] = useState({
+  );
+});
   
   // Calculer les badges pour les onglets
   const deferredCount = getDeferredEntries().length;

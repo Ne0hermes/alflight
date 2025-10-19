@@ -244,7 +244,7 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
 
       // Log les points les plus proches pour debug
       if (distance < 0.1) {
-        }, params=[${paramDetails.join(', ')}]`);
+        console.log(`Point proche trouvé: distance=${distance.toFixed(4)}, params=[${paramDetails.join(', ')}]`);
       }
 
       return { ...point, _distance: distance };

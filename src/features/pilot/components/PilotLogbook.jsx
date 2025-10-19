@@ -131,7 +131,7 @@ const PilotLogbook = ({ showFormProp }) => {
     // Charger les fonctions de debug pour l'édition
     import('../../../utils/debugEditLogbook').then(module => {
       window.debugLogbook = module.default;
-             - Analyser toutes les entrées');
+    // - Analyser toutes les entrées');
        - Tester l\'édition de la première entrée');
        - Ajouter des segments aux anciennes entrées');
     }).catch(err => {
