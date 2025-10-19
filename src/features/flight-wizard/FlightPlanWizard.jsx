@@ -31,17 +31,8 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
 
   // État principal : instance du modèle de données
   const [flightPlan] = useState(() => {
-    // Essayer de restaurer depuis localStorage
-    const savedPlan = localStorage.getItem('flightPlanDraft');
-    if (savedPlan && !testMode) {
-      try {
-        return FlightPlanData.fromJSON(savedPlan);
-      } catch (error) {
-        console.warn('Impossible de restaurer le plan sauvegardé:', error);
-      }
-    }
+    let plan = new FlightPlanData();
 
-    const plan = new FlightPlanData();
     // Si mode test, pré-remplir avec des données de test
     if (testMode) {
       plan.generalInfo = {
@@ -85,32 +76,56 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
         totalWeight: 842,
         withinLimits: true
       };
+    } else {
+      // Restaurer depuis localStorage si disponible
+      try {
+        const savedDraft = localStorage.getItem('flightPlanDraft');
+        if (savedDraft) {
+          const draftData = JSON.parse(savedDraft);
+          plan = FlightPlanData.fromJSON(draftData);
+          console.log('✅ Brouillon restauré depuis localStorage');
+        }
+      } catch (error) {
+        console.error('❌ Erreur lors de la restauration du brouillon:', error);
+      }
     }
+
     return plan;
   });
 
-  // État de navigation
+  // État de navigation - Restaurer depuis localStorage
   const [currentStep, setCurrentStep] = useState(() => {
-    const saved = localStorage.getItem('flightPlanCurrentStep');
-    return saved ? parseInt(saved, 10) : 1;
+    try {
+      const saved = localStorage.getItem('flightPlanCurrentStep');
+      return saved ? parseInt(saved, 10) : 1;
+    } catch {
+      return 1;
+    }
   });
+
   const [completedSteps, setCompletedSteps] = useState(() => {
-    const saved = localStorage.getItem('flightPlanCompletedSteps');
-    return saved ? new Set(JSON.parse(saved)) : new Set();
+    try {
+      const saved = localStorage.getItem('flightPlanCompletedSteps');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch {
+      return new Set();
+    }
   });
   const [isLoading, setIsLoading] = useState(false);
   
   // Force le re-render quand le plan de vol change
   const [, forceUpdate] = useState({});
   const updateFlightPlan = useCallback(() => {
-    forceUpdate({});
-    // Sauvegarder automatiquement dans localStorage
+    // Sauvegarder dans localStorage
     try {
       localStorage.setItem('flightPlanDraft', flightPlan.toJSON());
-      console.log('✅ Plan de vol sauvegardé automatiquement');
+      console.log('💾 Brouillon sauvegardé automatiquement');
     } catch (error) {
-      console.error('❌ Erreur sauvegarde automatique:', error);
+      console.error('❌ Erreur lors de la sauvegarde:', error);
     }
+
+    // Forcer le re-render
+    forceUpdate({});
   }, [flightPlan]);
 
   // Configuration des étapes
@@ -182,11 +197,14 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
     if (currentStepConfig.validate()) {
       const newCompletedSteps = new Set([...completedSteps, currentStep]);
       setCompletedSteps(newCompletedSteps);
+
+      // Sauvegarder les étapes complétées
       localStorage.setItem('flightPlanCompletedSteps', JSON.stringify([...newCompletedSteps]));
 
       if (currentStep < steps.length) {
         const nextStep = currentStep + 1;
         setCurrentStep(nextStep);
+        // Sauvegarder l'étape courante
         localStorage.setItem('flightPlanCurrentStep', nextStep.toString());
       }
     } else {
@@ -199,23 +217,9 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
    */
   const handlePrevious = useCallback(() => {
     if (currentStep > 1) {
-      const prevStep = currentStep - 1;
-      setCurrentStep(prevStep);
-      localStorage.setItem('flightPlanCurrentStep', prevStep.toString());
+      setCurrentStep(currentStep - 1);
     }
   }, [currentStep]);
-
-  /**
-   * Réinitialiser le wizard et recommencer
-   */
-  const handleReset = useCallback(() => {
-    if (confirm('Voulez-vous vraiment recommencer ? Toutes les données non sauvegardées seront perdues.')) {
-      localStorage.removeItem('flightPlanDraft');
-      localStorage.removeItem('flightPlanCurrentStep');
-      localStorage.removeItem('flightPlanCompletedSteps');
-      window.location.reload();
-    }
-  }, []);
 
   /**
    * Navigation directe vers une étape
@@ -224,6 +228,8 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
     // On peut naviguer vers une étape déjà complétée ou l'étape suivante
     if (completedSteps.has(stepNumber) || stepNumber === currentStep + 1) {
       setCurrentStep(stepNumber);
+      // Sauvegarder l'étape courante
+      localStorage.setItem('flightPlanCurrentStep', stepNumber.toString());
     }
   }, [completedSteps, currentStep]);
 
@@ -236,9 +242,23 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
       // Génération du rapport final
       const summary = flightPlan.generateSummary();
 
-      // Marquer comme complété
-      flightPlan.metadata.status = 'completed';
-      localStorage.setItem('flightPlanDraft', flightPlan.toJSON());
+      // Archiver le plan complété
+      try {
+        const completedPlans = JSON.parse(localStorage.getItem('completedFlightPlans') || '[]');
+        completedPlans.push({
+          ...flightPlan,
+          completedAt: new Date().toISOString(),
+        });
+        localStorage.setItem('completedFlightPlans', JSON.stringify(completedPlans));
+
+        // Effacer le brouillon actuel
+        localStorage.removeItem('flightPlanDraft');
+        localStorage.removeItem('flightPlanCurrentStep');
+        localStorage.removeItem('flightPlanCompletedSteps');
+        console.log('✅ Plan archivé et brouillon effacé');
+      } catch (error) {
+        console.error('❌ Erreur lors de l\'archivage:', error);
+      }
 
       // Callback de complétion
       if (onComplete) {
@@ -249,15 +269,6 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
       console.log('Plan de vol complété:', summary);
       console.log('Données complètes:', flightPlan);
 
-      // Optionnel : archiver le plan complété
-      const completedPlans = JSON.parse(localStorage.getItem('completedFlightPlans') || '[]');
-      completedPlans.push({
-        ...summary,
-        completedAt: new Date().toISOString(),
-        fullData: flightPlan.toJSON()
-      });
-      localStorage.setItem('completedFlightPlans', JSON.stringify(completedPlans));
-
     } catch (error) {
       console.error('Erreur lors de la finalisation:', error);
       alert('Une erreur est survenue lors de la génération du rapport');
@@ -265,6 +276,21 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
       setIsLoading(false);
     }
   }, [flightPlan, onComplete]);
+
+  /**
+   * Recommencer le wizard en effaçant le brouillon
+   */
+  const handleRestart = useCallback(() => {
+    if (confirm('Voulez-vous vraiment recommencer ? Toutes les données actuelles seront perdues.')) {
+      localStorage.removeItem('flightPlanDraft');
+      localStorage.removeItem('flightPlanCurrentStep');
+      localStorage.removeItem('flightPlanCompletedSteps');
+      window.location.reload();
+    }
+  }, []);
+
+  // Vérifier si un brouillon existe
+  const hasDraft = Boolean(localStorage.getItem('flightPlanDraft'));
 
   return (
     <WizardConfigProvider>
@@ -288,9 +314,9 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
                 🧪 MODE TEST
               </span>
             )}
-            {flightPlan.metadata.updatedAt && !testMode && (
+            {hasDraft && !testMode && (
               <span style={{
-                fontSize: '12px',
+                fontSize: '14px',
                 marginLeft: '12px',
                 padding: '4px 12px',
                 backgroundColor: '#10b981',
@@ -303,13 +329,42 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
             )}
           </h1>
 
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {/* Bouton recommencer */}
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            {/* Bouton Recommencer */}
+            {hasDraft && !testMode && (
+              <button
+                onClick={handleRestart}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+                title="Effacer le brouillon et recommencer"
+              >
+                🔄 Recommencer
+              </button>
+            )}
+
+            {/* Bouton pour activer/désactiver le mode test */}
             <button
-              onClick={handleReset}
+              onClick={() => {
+                const newTestMode = !testMode;
+                setTestMode(newTestMode);
+                localStorage.setItem('flightWizardTestMode', newTestMode.toString());
+                if (newTestMode) {
+                  window.location.reload(); // Recharger pour appliquer les données de test
+                }
+              }}
               style={{
                 padding: '8px 16px',
-                backgroundColor: '#ef4444',
+                backgroundColor: testMode ? '#ef4444' : '#10b981',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
@@ -319,38 +374,12 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
                 alignItems: 'center',
                 gap: '8px'
               }}
-              title="Effacer le brouillon et recommencer"
+              title={testMode ? 'Désactiver le mode test' : 'Activer le mode test pour pré-remplir les données'}
             >
-              🗑️ Recommencer
+              <TestTube size={16} />
+              {testMode ? 'Désactiver Test' : 'Mode Test'}
             </button>
-
-            {/* Bouton pour activer/désactiver le mode test */}
-            <button
-            onClick={() => {
-              const newTestMode = !testMode;
-              setTestMode(newTestMode);
-              localStorage.setItem('flightWizardTestMode', newTestMode.toString());
-              if (newTestMode) {
-                window.location.reload(); // Recharger pour appliquer les données de test
-              }
-            }}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: testMode ? '#ef4444' : '#10b981',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}
-            title={testMode ? 'Désactiver le mode test' : 'Activer le mode test pour pré-remplir les données'}
-          >
-            <TestTube size={16} />
-            {testMode ? 'Désactiver Test' : 'Mode Test'}
-          </button>
+          </div>
         </div>
         
         {/* Indicateur de progression */}
