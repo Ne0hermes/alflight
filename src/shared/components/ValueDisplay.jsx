@@ -127,8 +127,6 @@ export const ValueDisplay = ({
         {showUnit && <span style={unitStyle}>{unit}</span>}
       </div>
     </div>
-  );
-};
 
 /**
  * Composant pour afficher plusieurs valeurs en ligne
@@ -145,7 +143,5 @@ export const ValueGroup = ({ values, style = {} }) => {
         <ValueDisplay key={index} {...valueProps} />
       ))}
     </div>
-  );
-};
 
 export default ValueDisplay;

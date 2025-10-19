@@ -62,38 +62,30 @@ export const useAlternatesForFuel = () => {
   
   const calculateAlternateFuel = useCallback(() => {
     if (!selectedAlternates.length || !selectedAircraft) {
-      console.log('🛢️ Pas de calcul: alternates=', selectedAlternates.length, 'aircraft=', !!selectedAircraft);
-      return 0;
+            return 0;
     }
     
     const departure = waypoints[0];
     const arrival = waypoints[waypoints.length - 1];
     
     if (!departure || !arrival) {
-      console.log('🛢️ Pas de calcul: waypoints manquants');
-      return 0;
+            return 0;
     }
     
-    console.log('🛢️ Points de référence:', {
-      departure: { name: departure.name, lat: departure.lat, lon: departure.lon || departure.lng },
-      arrival: { name: arrival.name, lat: arrival.lat, lon: arrival.lon || arrival.lng }
-    });
-    
+        
     // Calculer la distance maximale pour chaque type de déroutement
     let maxDistanceDeparture = 0;
     let maxDistanceArrival = 0;
     let selectedDepartureAlternate = null;
     let selectedArrivalAlternate = null;
     
-    console.log('🛢️ Alternates à analyser:', selectedAlternates.length, selectedAlternates);
-    
+        
     selectedAlternates.forEach(alt => {
       if (!alt.position || !alt.position.lat || !alt.position.lon) {
-        console.log(`🛢️ Position manquante pour ${alt.icao}:`, alt.position);
-        return;
+                return;
       }
       
-      console.log(`🛢️ Analyse de ${alt.icao} (${alt.selectionType}):`, {
+      :`, {
         position: alt.position,
         selectionType: alt.selectionType
       });
@@ -101,13 +93,8 @@ export const useAlternatesForFuel = () => {
       if (alt.selectionType === 'departure') {
         // Calculer la distance depuis le départ
         const departurePoint = { lat: departure.lat, lon: departure.lon || departure.lng };
-        console.log(`🛢️ Calcul distance ${alt.icao} depuis départ ${departure.name}:`, {
-          from: departurePoint,
-          to: alt.position
-        });
-        const distance = calculateDistance(departurePoint, alt.position);
-        console.log(`🛢️ Distance ${alt.icao} depuis départ: ${distance} NM`);
-        
+                const distance = calculateDistance(departurePoint, alt.position);
+                
         if (distance > maxDistanceDeparture) {
           maxDistanceDeparture = distance;
           selectedDepartureAlternate = alt;
@@ -115,35 +102,23 @@ export const useAlternatesForFuel = () => {
       } else if (alt.selectionType === 'arrival') {
         // Calculer la distance depuis l'arrivée
         const arrivalPoint = { lat: arrival.lat, lon: arrival.lon || arrival.lng };
-        console.log(`🛢️ Calcul distance ${alt.icao} depuis arrivée ${arrival.name}:`, {
-          from: arrivalPoint,
-          to: alt.position
-        });
-        const distance = calculateDistance(arrivalPoint, alt.position);
-        console.log(`🛢️ Distance ${alt.icao} depuis arrivée: ${distance} NM`);
-        
+                const distance = calculateDistance(arrivalPoint, alt.position);
+                
         if (distance > maxDistanceArrival) {
           maxDistanceArrival = distance;
           selectedArrivalAlternate = alt;
         }
       } else {
-        console.log(`🛢️ Type inconnu pour ${alt.icao}: ${alt.selectionType}`);
-      }
+              }
     });
     
     // Prendre la distance maximale entre les deux
     const maxDistance = Math.max(maxDistanceDeparture, maxDistanceArrival);
     
-    console.log('🛢️ Distances calculées:', {
-      departure: maxDistanceDeparture,
-      arrival: maxDistanceArrival,
-      max: maxDistance
-    });
-    
+        
     // Si aucune distance valide, retourner 0
     if (maxDistance === 0) {
-      console.log('🛢️ Aucune distance valide, retour 0');
-      return 0;
+            return 0;
     }
     
     // Calculer le carburant nécessaire pour la distance maximale
@@ -155,8 +130,7 @@ export const useAlternatesForFuel = () => {
     const totalFlightTime = flightTime + 0.5;
     const fuelRequired = totalFlightTime * fuelConsumption;
     
-    console.log('🛢️ Calcul final:', {
-      maxDistance: maxDistance.toFixed(2),
+    ,
       cruiseSpeed,
       flightTime: flightTime.toFixed(4),
       totalFlightTime: totalFlightTime.toFixed(4),
@@ -168,8 +142,7 @@ export const useAlternatesForFuel = () => {
     // Pour les très courtes distances, s'assurer d'avoir un minimum
     // Si on a une distance > 0, on retourne au minimum 1 litre
     if (maxDistance > 0 && fuelRequired < 1) {
-      console.log('🛢️ Distance très courte, application du minimum de 1L');
-      return 1;
+            return 1;
     }
     
     // Arrondir au litre supérieur
@@ -190,7 +163,6 @@ export const useAlternatesForFuel = () => {
     const distance = calculateDistance(
       { lat: referencePoint.lat, lon: referencePoint.lon || referencePoint.lng },
       alt.position
-    );
     
     return {
       icao: alt.icao,
@@ -205,12 +177,11 @@ export const useAlternatesForFuel = () => {
   const maxDistanceAlternate = alternateDistances.reduce((max, current) => 
     current.distance > max.distance ? current : max,
     { distance: 0 }
-  );
   
   // Calculer une seule fois le carburant avec useMemo pour éviter les recalculs
   const fuelRequired = useMemo(() => {
     const result = calculateAlternateFuel();
-    console.log('🛢️ Fuel calculé (useMemo):', result);
+
     return result;
   }, [calculateAlternateFuel]);
   
@@ -256,7 +227,6 @@ export const useAlternatesForPerformance = () => {
     if (selectedAircraft.compatibleRunwaySurfaces) {
       const hasCompatibleSurface = alternate.runways.some(rwy => 
         selectedAircraft.compatibleRunwaySurfaces.includes(rwy.surface)
-      );
       
       if (!hasCompatibleSurface) {
         compatible = false;
@@ -286,7 +256,7 @@ export const useAlternatesForPerformance = () => {
       .map(alt => ({
         ...alt,
         compatibility: checkAlternateCompatibility(alt)
-      }))
+
   };
   
   return {
@@ -297,7 +267,6 @@ export const useAlternatesForPerformance = () => {
     compatibilityByType,
     allAlternatesCompatible: selectedAlternates.every(alt => 
       checkAlternateCompatibility(alt).compatible
-    )
   };
 };
 
@@ -353,13 +322,7 @@ const calculateDistance = (point1, point2) => {
   
   // Debug: afficher les points pour comprendre pourquoi distance = 0
   if (Math.abs(dLat) < 0.0001 && Math.abs(dLon) < 0.0001) {
-    console.log('⚠️ Points identiques ou très proches:', {
-      point1,
-      point2,
-      dLat,
-      dLon
-    });
-  }
+      }
   
   const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
     Math.cos(point1.lat * Math.PI / 180) * Math.cos(point2.lat * Math.PI / 180) *

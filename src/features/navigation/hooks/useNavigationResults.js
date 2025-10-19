@@ -3,32 +3,19 @@ import { useMemo } from 'react';
 
 export const useNavigationResults = (waypoints, flightType, selectedAircraft) => {
   return useMemo(() => {
-    console.log('🔄 useNavigationResults called with:', {
-      waypoints: waypoints?.length,
-      flightType,
-      aircraft: selectedAircraft?.registration
-    });
-    
+        
     if (!selectedAircraft || !waypoints || waypoints.length < 2) {
-      console.log('🚫 NavigationResults: Missing data');
-      return null;
+            return null;
     }
     
     // Filtrer les waypoints valides (avec coordonnées)
     const validWaypoints = waypoints.filter(wp => wp.lat && wp.lon);
     
     if (validWaypoints.length < 2) {
-      console.log('🚫 NavigationResults: Not enough valid waypoints');
-      return null;
+            return null;
     }
     
-    console.log('📊 NavigationResults: Calculating with', {
-      validWaypoints: validWaypoints.length,
-      aircraft: selectedAircraft.registration,
-      cruiseSpeed: selectedAircraft.cruiseSpeedKt || selectedAircraft.cruiseSpeed,
-      fuelConsumption: selectedAircraft.fuelConsumption
-    });
-    
+        
     // Calcul de la distance totale
     let totalDistance = 0;
     for (let i = 0; i < validWaypoints.length - 1; i++) {
@@ -45,9 +32,8 @@ export const useNavigationResults = (waypoints, flightType, selectedAircraft) =>
         Math.sin(dLon/2) * Math.sin(dLon/2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
       const distance = R * c;
-      
+
       totalDistance += distance;
-      console.log(`📏 Leg ${i+1}: ${wp1.name || 'WP'} → ${wp2.name || 'WP'} = ${distance.toFixed(1)} NM`);
     }
     
     // Calcul du temps de vol
@@ -57,15 +43,7 @@ export const useNavigationResults = (waypoints, flightType, selectedAircraft) =>
     // Calcul du carburant nécessaire
     const fuelConsumption = selectedAircraft.fuelConsumption || 30; // L/h
     const fuelRequired = totalTime > 0 ? (totalTime / 60) * fuelConsumption : 0;
-    
-    console.log('📊 NavigationResults: Calculations', {
-      totalDistance: totalDistance.toFixed(1),
-      cruiseSpeed,
-      totalTime,
-      fuelConsumption,
-      fuelRequired: fuelRequired.toFixed(1)
-    });
-    
+
     // Calcul de la réserve réglementaire
     let regulationReserveMinutes = 30; // Base VFR jour
     
@@ -91,8 +69,7 @@ export const useNavigationResults = (waypoints, flightType, selectedAircraft) =>
       regulationReserveLiters: Math.round(regulationReserveLiters * 10) / 10
     };
     
-    console.log('📊 NavigationResults: Final result', result);
-    
+        
     return result;
   }, [waypoints, flightType, selectedAircraft]);
 };

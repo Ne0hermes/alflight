@@ -106,21 +106,13 @@ const PilotCertifications = () => {
 
   // Charger les certifications depuis localStorage
   useEffect(() => {
-    console.log('=== CHARGEMENT INITIAL CERTIFICATIONS ===');
-    const saved = localStorage.getItem('pilotCertifications');
-    console.log('Données brutes du localStorage:', saved);
-
+        const saved = localStorage.getItem('pilotCertifications');
+    
     if (saved) {
       const parsed = JSON.parse(saved);
-      console.log('Données parsées:', parsed);
-      console.log('  - licenses:', parsed.licenses?.length || 0, 'éléments');
-      console.log('  - ratings:', parsed.ratings?.length || 0, 'éléments');
-      console.log('  - endorsements:', parsed.endorsements?.length || 0, 'éléments');
-      console.log('  - training:', parsed.training?.length || 0, 'éléments');
-      setCertifications(parsed);
+                                    setCertifications(parsed);
     } else {
-      console.log('Aucune donnée existante - initialisation vide');
-    }
+          }
 
     // Ajouter les fonctions de debug au window pour faciliter le test
     if (typeof window !== 'undefined') {
@@ -130,13 +122,12 @@ const PilotCertifications = () => {
       window.runFullTest = runFullTest;
       window.resetCert = resetCertifications;
       window.validateCert = validateStructure;
-      console.log('💡 Fonctions de debug disponibles dans la console:');
-      console.log('   - debugCert() : affiche l\'état des certifications');
-      console.log('   - addTestLicense() : ajoute une licence de test');
-      console.log('   - addTestRating() : ajoute une qualification de test');
-      console.log('   - runFullTest() : lance un test complet avec données');
-      console.log('   - resetCert() : réinitialise les certifications');
-      console.log('   - validateCert() : valide la structure des données');
+             : affiche l\'état des certifications');
+       : ajoute une licence de test');
+       : ajoute une qualification de test');
+       : lance un test complet avec données');
+       : réinitialise les certifications');
+       : valide la structure des données');
     }
   }, []);
 
@@ -218,7 +209,6 @@ const PilotCertifications = () => {
           `(Le nom du fichier sera sauvegardé, mais pas son contenu)\n\n` +
           `OK = Sauvegarder la référence\n` +
           `Annuler = Ne pas ajouter le document`
-        );
 
         if (useReference) {
           // Sauvegarder juste la référence
@@ -235,7 +225,6 @@ const PilotCertifications = () => {
             `• smallpdf.com (PDF)\n` +
             `• tinypng.com (images)\n` +
             `• cloudconvert.com (général)`
-          );
         } else {
           e.target.value = '';
         }
@@ -251,7 +240,6 @@ const PilotCertifications = () => {
           `Total prévu: ${projectedTotal.toFixed(2)}MB\n` +
           `Limite: ~5MB\n\n` +
           `Voulez-vous effectuer un nettoyage complet pour faire de la place ?`
-        );
 
         if (confirmClean) {
           // Forcer un nettoyage complet
@@ -315,8 +303,7 @@ const PilotCertifications = () => {
             result = await compressImage(result, maxWidth);
             const compressedSizeMB = (result.length / 1024 / 1024).toFixed(2);
             const originalSizeMB = (file.size / 1024 / 1024).toFixed(2);
-            console.log(`Image compressée: ${originalSizeMB}MB → ${compressedSizeMB}MB`);
-          } catch (error) {
+                      } catch (error) {
             console.error('Erreur de compression:', error);
           }
         }
@@ -336,7 +323,6 @@ const PilotCertifications = () => {
             `1. Cliquez sur "Nettoyer le stockage"\n` +
             `2. Supprimez d'anciens documents\n` +
             `3. Compressez le fichier avant l'upload`
-          );
           e.target.value = '';
 
           // Proposer le nettoyage
@@ -350,7 +336,6 @@ const PilotCertifications = () => {
             `⚠️ Document volumineux: ${resultSizeMB}MB\n\n` +
             `Espace restant après ajout: ${(4.8 - newTotal).toFixed(2)}MB\n\n` +
             `Continuer ?`
-          );
           if (!confirmSave) {
             e.target.value = '';
             return;
@@ -368,10 +353,7 @@ const PilotCertifications = () => {
   };
 
   const handleSubmit = () => {
-    console.log('=== SAUVEGARDE CERTIFICATION ===');
-    console.log('Catégorie:', formData.category);
-    console.log('Type:', formData.type);
-
+            
     const item = {
       ...formData,
       id: editingItem ? editingItem.id : Date.now(),
@@ -393,15 +375,12 @@ const PilotCertifications = () => {
       newCertifications[category].push(itemWithoutCategory);
     }
 
-    console.log('Nouvelles certifications:', newCertifications);
-    console.log(`Nombre dans ${category}:`, newCertifications[category].length);
-
+        
     setCertifications(newCertifications);
 
     // Utiliser safeSetItem pour gérer les erreurs de quota
     const saved = safeSetItem('pilotCertifications', JSON.stringify(newCertifications));
-    console.log('Sauvegarde dans localStorage:', saved ? 'Succès' : 'Échec');
-
+    
     if (saved) {
       resetForm();
       alert(editingItem ? 'Certification modifiée !' : 'Certification ajoutée !');
@@ -451,7 +430,6 @@ const PilotCertifications = () => {
     link.target = '_blank';
     link.click();
   };
-
 
 
   const inputStyle = {
@@ -584,7 +562,6 @@ const PilotCertifications = () => {
         </button>
       </div>
     </div>
-  );
 
   return (
     <div>
@@ -800,7 +777,6 @@ const PilotCertifications = () => {
                   ))}
                 </div>
               </div>
-            );
           })
         }
         
@@ -822,7 +798,7 @@ const PilotCertifications = () => {
         )}
       </div>
     </div>
-  );
+
 };
 
 export default PilotCertifications;

@@ -16,44 +16,39 @@ export const weatherAPI = {
   // Récupérer le METAR
   async fetchMETAR(icao) {
     try {
-      console.log(`🌤️ Récupération METAR pour ${icao}...`);
-      
+            
       const response = await fetch(
         `${AVWX_CONFIG.baseUrl}/metar/${icao}?token=${AVWX_CONFIG.apiKey}`
       );
 
       if (!response.ok) {
         if (response.status === 404) {
-          console.warn(`⚠️ METAR non disponible pour ${icao} (404)`);
+
           return this.getMockMETAR(icao);
         }
         if (response.status === 400) {
-          console.warn(`⚠️ METAR non disponible pour ${icao} (code invalide ou pas de données)`);
+
           return this.getMockMETAR(icao);
         }
-        console.warn(`⚠️ Erreur API pour ${icao}: ${response.status}`);
-        return this.getMockMETAR(icao);
+                return this.getMockMETAR(icao);
       }
 
       // Vérifier que la réponse n'est pas vide
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
-        console.warn(`⚠️ Réponse non-JSON pour METAR ${icao}, utilisation des données simulées`);
-        return this.getMockMETAR(icao);
+                return this.getMockMETAR(icao);
       }
 
       // Vérifier la taille de la réponse
       const text = await response.text();
       if (!text || text.trim() === '') {
-        console.warn(`⚠️ Réponse vide pour METAR ${icao}, utilisation des données simulées`);
-        return this.getMockMETAR(icao);
+                return this.getMockMETAR(icao);
       }
 
       // Parser le JSON
       try {
         const data = JSON.parse(text);
-        console.log(`✅ METAR reçu pour ${icao}`);
-        console.log('Altimeter data:', data.altimeter); // Debug log
+                 // Debug log
         
         // Déterminer la pression correctement
         let pressure = null;
@@ -99,8 +94,7 @@ export const weatherAPI = {
           }
         };
       } catch (parseError) {
-        console.warn(`⚠️ Impossible de parser le METAR pour ${icao}:`, parseError);
-        return this.getMockMETAR(icao);
+                return this.getMockMETAR(icao);
       }
     } catch (error) {
       console.error(`❌ Erreur METAR ${icao}:`, error);
@@ -113,51 +107,44 @@ export const weatherAPI = {
   // Récupérer le TAF
   async fetchTAF(icao) {
     try {
-      console.log(`🌤️ Récupération TAF pour ${icao}...`);
-      
+            
       const response = await fetch(
         `${AVWX_CONFIG.baseUrl}/taf/${icao}?token=${AVWX_CONFIG.apiKey}`
       );
 
       if (!response.ok) {
         if (response.status === 404) {
-          console.log(`ℹ️ Pas de TAF disponible pour ${icao}`);
-          return null;
+                    return null;
         }
         if (response.status === 400) {
-          console.log(`ℹ️ TAF non disponible pour ${icao} (code invalide ou pas de données)`);
+
           return null;
         }
-        console.warn(`⚠️ Erreur TAF pour ${icao}: ${response.status}`);
-        return null;
+                return null;
       }
 
       // Vérifier que la réponse n'est pas vide
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
-        console.warn(`⚠️ Réponse non-JSON pour TAF ${icao}`);
-        return null;
+                return null;
       }
 
       // Vérifier la taille de la réponse
       const text = await response.text();
       if (!text || text.trim() === '') {
-        console.warn(`⚠️ Réponse vide pour TAF ${icao}`);
-        return null;
+                return null;
       }
 
       // Parser le JSON
       try {
         const data = JSON.parse(text);
-        console.log(`✅ TAF reçu pour ${icao}`);
-        
+                
         return {
           raw: data.raw || 'TAF non disponible',
           decoded: data
         };
       } catch (parseError) {
-        console.warn(`⚠️ Impossible de parser le TAF pour ${icao}:`, parseError);
-        return null;
+                return null;
       }
     } catch (error) {
       console.error(`❌ Erreur TAF ${icao}:`, error);
@@ -167,8 +154,7 @@ export const weatherAPI = {
 
   // Données simulées de secours
   getMockMETAR(icao) {
-    console.warn(`⚠️ Utilisation de données simulées pour ${icao}`);
-    
+        
     const mockData = {
       LFPN: {
         raw: `METAR LFPN ${new Date().toISOString().slice(0,10).replace(/-/g,'')}0800Z 27015KT 9999 SCT035 18/12 Q1013 NOSIG`,
@@ -254,12 +240,8 @@ export const weatherAPI = {
 
   // Vérifier le statut de l'API
   checkAPIStatus() {
-    console.log('✅ API Météo AVWX configurée');
-    console.log('🔑 Clé API active');
-    console.log('⚠️ Note: Cette clé est partagée et a des limites (850 requêtes/jour)');
-    console.log('⚠️ TAF non disponible pour tous les petits aérodromes');
-    console.log('💡 Pour votre propre clé gratuite: https://avwx.rest/account');
-  }
+
+          }
 };
 
 // Vérifier le statut au chargement

@@ -21,61 +21,33 @@ const commonStyles = {
     gap: '8px',
     marginBottom: '20px'
   },
-  moduleWrapper: {
-    // Style simple pour le wrapper du module
-    width: '100%'
+  section: {
+    marginBottom: '24px'
   }
 };
 
 // Composant principal de l'étape 3
 export const Step3Route = memo(({ flightPlan, onUpdate }) => {
-  // Configuration de ce qu'on veut afficher/masquer
-  const wizardConfig = {
-    showTitle: false, // Le titre est déjà dans le wizard
-    showTabs: false, // Pas besoin des tabs dans le wizard
-    showExportButtons: false, // Pas d'export dans le wizard
-    simplifiedView: true // Vue simplifiée pour le wizard
-  };
-
   return (
-    <div style={commonStyles.container}>
+    <div style={commonStyles.container} className="wizard-step-3-route">
       {/* Titre de l'étape */}
       <div style={commonStyles.label}>
         <Navigation size={20} />
         Planification de la navigation
       </div>
 
-      {/* Module de navigation avec configuration wizard */}
-      <div style={commonStyles.moduleWrapper}>
-        {/* On peut passer des props si le module les accepte */}
-        <NavigationModule 
+      {/* Module de navigation complet pour la gestion des waypoints */}
+      <div style={commonStyles.section}>
+        <NavigationModule
           wizardMode={true}
-          config={wizardConfig}
+          config={{
+            showTitle: false,
+            showTabs: false,
+            showExportButtons: false,
+            simplifiedView: true
+          }}
         />
       </div>
-
-      {/* CSS pour masquer certains éléments spécifiques */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        /* Masquer les éléments non nécessaires dans le wizard */
-        .navigation-module-title,
-        .navigation-module-tabs,
-        .navigation-module-export {
-          display: none !important;
-        }
-
-        /* Simplifier l'affichage */
-        .navigation-module-container {
-          padding: 0 !important;
-          margin: 0 !important;
-        }
-
-        /* Masquer certains boutons */
-        .btn-export,
-        .btn-print,
-        .btn-share {
-          display: none !important;
-        }
-      `}} />
     </div>
   );
 });

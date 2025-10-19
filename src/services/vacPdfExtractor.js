@@ -271,7 +271,6 @@ export class SIAVACExtractor {
           parseInt(lonMatch[2]),
           parseInt(lonMatch[3]),
           'E'
-        )
       };
     }
   }

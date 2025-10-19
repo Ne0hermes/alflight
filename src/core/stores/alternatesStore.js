@@ -36,8 +36,7 @@ export const useAlternatesStore = create((set, get) => ({
   
   addAlternate: (alternate) => set((state) => {
     if (state.selectedAlternates.length >= 3) {
-      console.warn('Maximum 3 alternates autorisés');
-      return state;
+            return state;
     }
     if (state.selectedAlternates.some(alt => alt.icao === alternate.icao)) {
       return state; // Déjà ajouté

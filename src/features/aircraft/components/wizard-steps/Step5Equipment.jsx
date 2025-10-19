@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { 
-  Box, 
+import {
+  Box,
   Typography,
   Accordion,
   AccordionSummary,
@@ -8,17 +8,20 @@ import {
   FormControlLabel,
   Checkbox,
   FormGroup,
-  TextField
+  TextField,
+  Button
 } from '@mui/material';
-import { 
+import {
   ExpandMore as ExpandMoreIcon,
   Radio as RadioIcon,
   Navigation as NavigationIcon,
   Radar as RadarIcon,
-  RadioButtonChecked as SpecialIcon
+  RadioButtonChecked as SpecialIcon,
+  ChevronRight as ChevronRightIcon,
+  ChevronLeft as ChevronLeftIcon
 } from '@mui/icons-material';
 
-const Step5Equipment = ({ data, updateData, errors = {} }) => {
+const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
   const [expandedPanels, setExpandedPanels] = useState({
     com: false,
     nav: false,
@@ -200,6 +203,7 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
                     <Typography variant="body2" sx={{ fontSize: '14px' }}>
                       CPDLC (Datalink)
                     </Typography>
+
                   }
                   sx={{ gridColumn: 'span 2' }}
                 />
@@ -786,6 +790,34 @@ const Step5Equipment = ({ data, updateData, errors = {} }) => {
         </AccordionDetails>
       </Accordion>
 
+      {/* Boutons de navigation */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+        {/* Bouton Précédent */}
+        {onPrevious && (
+          <Button
+            variant="outlined"
+            color="primary"
+            size="large"
+            onClick={onPrevious}
+            startIcon={<ChevronLeftIcon />}
+          >
+            Précédent
+          </Button>
+        )}
+
+        {/* Bouton Suivant */}
+        {onNext && (
+          <Button
+            variant="contained"
+            color="primary"
+            size="large"
+            onClick={onNext}
+            endIcon={<ChevronRightIcon />}
+          >
+            Suivant
+          </Button>
+        )}
+      </Box>
     </Box>
   );
 };

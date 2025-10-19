@@ -4,7 +4,7 @@ import { Plus, Trash2, Settings, Fuel, Wrench, Phone, Info } from 'lucide-react'
 import { sx } from '@shared/styles/styleSystem';
 
 export const ServicesEditor = ({ editedData, updateValue }) => {
-  console.log('🛠️ Rendering services editor - services:', editedData.services);
+  
   
   // Services de base avec leurs états
   const baseServices = [
@@ -130,7 +130,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
                   {service.label}
                 </span>
               </div>
-            );
+
           })}
         </div>
       </div>
@@ -385,5 +385,3 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
         />
       </div>
     </div>
-  );
-};

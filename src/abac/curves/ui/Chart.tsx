@@ -31,17 +31,7 @@ export const Chart: React.FC<ChartProps> = ({
 }) => {
   // Log pour débogage (désactivé pour éviter le spam)
   // React.useEffect(() => {
-  //   console.log('🖼️ Chart rendu avec:', {
-  //     axes: axesConfig?.xAxis?.title + ' / ' + axesConfig?.yAxis?.title,
-  //     width,
-  //     height,
-  //     curves: curves?.length || 0,
-  //     curvesDetails: curves?.map(c => ({
-  //       name: c.name,
-  //       points: c.points?.length || 0,
-  //       fitted: c.fitted?.points?.length || 0,
-  //       color: c.color
-  //     }))
+  //   )
   //   });
   // }, [axesConfig, curves, width, height]);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -54,14 +44,7 @@ export const Chart: React.FC<ChartProps> = ({
   const innerHeight = Math.max(100, height - margin.top - margin.bottom);
 
   // Log des dimensions calculées (désactivé)
-  // console.log('📏 Dimensions Chart:', {
-  //   width,
-  //   height,
-  //   innerWidth,
-  //   innerHeight,
-  //   margins: margin
-  // });
-
+  // 
   const xScale = useMemo(() => {
     const scale = scaleLinear()
       .domain([axesConfig.xAxis.min, axesConfig.xAxis.max]);
@@ -95,15 +78,13 @@ export const Chart: React.FC<ChartProps> = ({
       .x(d => {
         const scaled = xScale(d.x);
         if (isNaN(scaled)) {
-          console.warn(`⚠️ xScale produit NaN pour x=${d.x}`);
-        }
+                  }
         return scaled;
       })
       .y(d => {
         const scaled = yScale(d.y);
         if (isNaN(scaled)) {
-          console.warn(`⚠️ yScale produit NaN pour y=${d.y}`);
-        }
+                  }
         return scaled;
       })
       .curve(curveLinear);
@@ -195,8 +176,6 @@ export const Chart: React.FC<ChartProps> = ({
           />
         ))}
       </g>
-    );
-  };
 
   const generateAxes = () => {
     const xTicks = xScale.ticks(10);
@@ -249,23 +228,12 @@ export const Chart: React.FC<ChartProps> = ({
           </text>
         </g>
       </>
-    );
-  };
 
   const renderCurve = (curve: Curve) => {
     const isSelected = curve.id === selectedCurveId;
     const opacity = selectedCurveId && !isSelected ? 0.3 : 1;
 
-    // console.log(`🎨 Rendu de la courbe "${curve.name}":`, {
-    //   hasPoints: curve.points?.length > 0,
-    //   pointsCount: curve.points?.length || 0,
-    //   hasFitted: !!curve.fitted,
-    //   fittedPointsCount: curve.fitted?.points?.length || 0,
-    //   color: curve.color,
-    //   isSelected,
-    //   opacity
-    // });
-
+    // 
     return (
       <g key={curve.id} className="curve-group" opacity={opacity}>
         {curve.fitted && curve.fitted.points.length > 0 && (() => {
@@ -273,17 +241,13 @@ export const Chart: React.FC<ChartProps> = ({
           const validPoints = curve.fitted.points.filter(p =>
             typeof p.x === 'number' && !isNaN(p.x) && isFinite(p.x) &&
             typeof p.y === 'number' && !isNaN(p.y) && isFinite(p.y)
-          );
 
           if (validPoints.length < 2) {
-            console.warn(`Pas assez de points valides pour dessiner la courbe ${curve.name}`);
-            return null;
+                        return null;
           }
 
           const pathData = lineGenerator(validPoints);
-          // console.log(`🕰️ Path SVG généré pour "${curve.name}":`, {
-          //   pathLength: pathData?.length || 0,
-          //   pathStart: pathData?.substring(0, 50),
+          // ,
           //   hasPath: !!pathData
           // });
           return (
@@ -295,7 +259,6 @@ export const Chart: React.FC<ChartProps> = ({
               strokeLinejoin="round"
               strokeLinecap="round"
             />
-          );
         })()}
 
         {!curve.fitted && curve.points.length > 1 && (() => {
@@ -303,7 +266,6 @@ export const Chart: React.FC<ChartProps> = ({
           const validPoints = curve.points.filter(p =>
             typeof p.x === 'number' && !isNaN(p.x) && isFinite(p.x) &&
             typeof p.y === 'number' && !isNaN(p.y) && isFinite(p.y)
-          );
 
           if (validPoints.length < 2) return null;
 
@@ -316,7 +278,6 @@ export const Chart: React.FC<ChartProps> = ({
               strokeDasharray="5,5"
               opacity={0.5}
             />
-          );
         })()}
 
         {curve.points.map((point) => {
@@ -357,11 +318,9 @@ export const Chart: React.FC<ChartProps> = ({
                 </g>
               )}
             </g>
-          );
+
         })}
       </g>
-    );
-  };
 
   // La légende est maintenant rendue en dehors du SVG
 
@@ -450,5 +409,4 @@ export const Chart: React.FC<ChartProps> = ({
         </div>
       )}
     </div>
-  );
 };

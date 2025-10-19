@@ -294,11 +294,9 @@ const identifyTurnPoints = (waypoints) => {
     const bearing1 = calculateBearing(
       { lat: prev.lat, lon: prev.lon },
       { lat: current.lat, lon: current.lon }
-    );
     const bearing2 = calculateBearing(
       { lat: current.lat, lon: current.lon },
       { lat: next.lat, lon: next.lon }
-    );
     
     const turnAngle = Math.abs((bearing2 - bearing1 + 180) % 360 - 180);
     
@@ -441,19 +439,7 @@ export const isAirportInSearchZone = (airport, searchZone) => {
     const routeLength = calculateDistance(searchZone.departure, searchZone.arrival);
     
     // Debug pour LFAF
-    if (airport.icao === 'LFAF') {
-      console.log('🔍 DEBUG LFAF:', {
-        icao: airport.icao,
-        radius: searchZone.radius,
-        routeLength,
-        distToDeparture,
-        distToArrival,
-        sumDistances: distToDeparture + distToArrival,
-        maxAllowedSum: routeLength + 2 * searchZone.radius
-      });
-    }
-    
-    // Vérification stricte avec une tolérance réduite
+        // Vérification stricte avec une tolérance réduite
     // Un point est dans la pilule si la somme de ses distances aux extrémités
     // est inférieure à la longueur de la route + 2 * rayon
     // On applique une tolérance de 95% pour être plus strict
@@ -461,10 +447,7 @@ export const isAirportInSearchZone = (airport, searchZone) => {
     
     if (distToDeparture + distToArrival > maxDistanceSum) {
       // Le point est définitivement hors de la zone pilule
-      if (airport.icao === 'LFAF') {
-        console.log('❌ LFAF exclu par test de somme des distances');
-      }
-      return { isInZone: false, reason: 'Hors zone pilule (somme distances)', distToDeparture, distToArrival };
+            return { isInZone: false, reason: 'Hors zone pilule (somme distances)', distToDeparture, distToArrival };
     }
     
     // Calcul plus précis de la position dans la pilule

@@ -275,5 +275,3 @@ export const AirportSelectorSIA = ({
         </div>
       )}
     </div>
-  );
-};

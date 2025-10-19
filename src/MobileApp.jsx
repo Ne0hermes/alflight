@@ -30,11 +30,11 @@ import FlightPlanWizard from './features/flight-wizard/FlightPlanWizard';
 import AircraftCreationWizard from './features/aircraft/components/AircraftCreationWizard';
 
 // Import test Google Sheets (dev only)
-import './utils/testGoogleSheets';
-import './utils/fixSpecificEntry';
-import './utils/testLogbookIntegration';
-import './utils/analyzeFlightEntry';
-import './utils/debugIndexedDB';
+// import './utils/testGoogleSheets';
+// import './utils/fixSpecificEntry';
+// import './utils/testLogbookIntegration';
+// import './utils/analyzeFlightEntry';
+// import './utils/debugIndexedDB';
 
 // Wrap them in lazy loading
 const FlightWizardModule = FlightPlanWizard;

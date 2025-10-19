@@ -15,13 +15,7 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
   const { fuelData, fobFuel } = useFuel();
   
   // Log pour debug (désactivé - décommenter si besoin)
-  // console.log('🔧 PerformanceTableUploader - État initial:', {
-  //   waypoints,
-  //   weatherData,
-  //   getWeatherByIcao: typeof getWeatherByIcao,
-  //   fetchWeather: typeof fetchWeather,
-  //   selectedAircraft: selectedAircraft?.registration
-  // });
+  // 
   
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [takeoffImage, setTakeoffImage] = useState(null);
@@ -237,7 +231,7 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
     try {
       const result = await unifiedPerformanceService.testAPIConnection();
       setApiStatus(result);
-      console.log('API test result:', result);
+      
     } catch (err) {
       setApiStatus({
         success: false,
@@ -253,11 +247,11 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
   const handleImageUpload = async (event, type) => {
     const file = event.target.files[0];
     if (file) {
-      console.log(`📁 Fichier chargé: ${file.name}, Type: ${file.type}`);
+      
       
       // Vérifier si c'est un PDF
       if (pdfToImageConverter.isPDF(file)) {
-        console.log('📄 Détection d\'un fichier PDF');
+        
         
         try {
           // Afficher un indicateur de chargement
@@ -292,11 +286,7 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
             setLandingPreview(previewUrl);
           }
           
-          if (tableData.warning) {
-            console.log(`⚠️ ${tableData.warning}`);
-          }
-          
-        } catch (error) {
+                  } catch (error) {
           console.error('❌ Erreur conversion PDF:', error);
           setError(`Erreur lors de la conversion du PDF: ${error.message}`);
           if (type === 'takeoff') {
@@ -415,7 +405,7 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
         }
 
         // TODO: Mettre à jour l'avion avec les nouvelles distances
-        console.log('Distances extraites:', distances);
+        
       }
     } catch (err) {
       setError(`Erreur lors de l'analyse: ${err.message}`);
@@ -1151,7 +1141,7 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
         </div>
       </div>
     </div>
-  );
+
 };
 
 export default PerformanceTableUploader;

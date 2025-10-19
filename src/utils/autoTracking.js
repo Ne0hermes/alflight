@@ -17,7 +17,7 @@ let isProcessing = false;
  */
 async function logToTracking(action, details, category = 'Development') {
   if (!TRACKING_ENABLED) {
-    console.log('📊 Tracking désactivé, log ignoré:', action);
+    
     return { success: false, reason: 'disabled' };
   }
 
@@ -40,7 +40,7 @@ async function processQueue() {
   const { action, details, category, resolve } = logQueue.shift();
 
   try {
-    console.log(`📊 Tracking - Envoi: ${action}`);
+    
 
     const response = await fetch(TRACKING_ENDPOINT, {
       method: 'POST',
@@ -56,8 +56,8 @@ async function processQueue() {
 
     const result = await response.json();
 
-    console.log(`✅ Tracking - Confirmé: ${action}`);
-    console.log(`📍 Tracking - Range: ${result.range}`);
+    
+    
 
     resolve({ success: true, ...result });
   } catch (error) {
@@ -153,6 +153,31 @@ const trackingActions = {
       `Issue: ${issue}. Fix: ${fix}`
     ),
 
+  // Abaques de performance
+  abaqueAdded: (registration, abaqueName, graphCount, curveCount, pointCount) =>
+    logToTracking(
+      'Abaque added',
+      `Added performance chart "${abaqueName}" for ${registration}: ${graphCount} graph(s), ${curveCount} curve(s), ${pointCount} data points`
+    ),
+
+  abaqueUpdated: (registration, abaqueName, changes) =>
+    logToTracking(
+      'Abaque updated',
+      `Updated performance chart "${abaqueName}" for ${registration}: ${changes}`
+    ),
+
+  abaqueDeleted: (registration, abaqueName) =>
+    logToTracking(
+      'Abaque deleted',
+      `Removed performance chart "${abaqueName}" from ${registration}`
+    ),
+
+  performanceModelsConfigured: (registration, modelCount, totalGraphs, totalCurves, totalPoints) =>
+    logToTracking(
+      'Performance models configured',
+      `Configured ${modelCount} performance chart(s) for ${registration}: ${totalGraphs} graphs, ${totalCurves} curves, ${totalPoints} data points total`
+    ),
+
   // Custom log
   custom: (action, details) =>
     logToTracking(action, details)
@@ -177,7 +202,6 @@ class AutoTracker {
       log.action === action &&
       log.details === details &&
       Date.now() - log.timestamp < 5000 // Moins de 5 secondes
-    );
   }
 
   /**
@@ -185,7 +209,7 @@ class AutoTracker {
    */
   async log(action, details, category = 'Development') {
     if (this.isDuplicate(action, details)) {
-      console.log(`⏭️ Tracking - Doublon ignoré: ${action}`);
+      
       return { success: false, reason: 'duplicate' };
     }
 
@@ -224,7 +248,7 @@ class AutoTracker {
    */
   toggle(enabled) {
     this.enabled = enabled;
-    console.log(`📊 Tracking ${enabled ? 'activé' : 'désactivé'}`);
+    
   }
 }
 

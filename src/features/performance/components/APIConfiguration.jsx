@@ -23,7 +23,7 @@ const APIConfiguration = ({ onClose }) => {
       if (envKey && !localStorage.getItem('alflight_ai_api_key')) {
         localStorage.setItem('alflight_ai_api_key', envKey);
         localStorage.setItem('openai_api_key', envKey); // Pour compatibilité
-        console.log('✅ Clé API chargée depuis les variables d\'environnement');
+        
       }
     }
     setProvider(existingProvider);
@@ -215,7 +215,7 @@ const APIConfiguration = ({ onClose }) => {
         🔒 Votre clé API est stockée localement sur votre navigateur et n'est jamais partagée.
       </div>
     </div>
-  );
+
 };
 
 export default APIConfiguration;

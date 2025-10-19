@@ -17,8 +17,7 @@ export const useWeatherStore = create(
     fetchWeather: async (icao) => {
       const upperIcao = icao.toUpperCase();
       
-      console.log(`🌤️ Récupération météo pour ${upperIcao}...`);
-      
+            
       // Marquer comme en cours de chargement
       set(state => {
         state.loading[upperIcao] = true;
@@ -31,9 +30,9 @@ export const useWeatherStore = create(
           weatherAPI.fetchMETAR(upperIcao),
           weatherAPI.fetchTAF(upperIcao).catch(() => null)
         ]);
-        
-        console.log(`✅ Météo reçue pour ${upperIcao}:`, { metar: metar?.raw?.substring(0, 50) + '...' });
-        
+
+        console.log('✅ Weather fetched for ' + upperIcao + ': ' + metar?.raw?.substring(0, 50) + '...');
+
         set(state => {
           state.weatherData[upperIcao] = {
             icao: upperIcao,
@@ -95,7 +94,6 @@ export const useWeatherStore = create(
     }
   }))
 );
-
 // Sélecteurs optimisés
 export const weatherSelectors = {
   useWeatherByIcao: (icao) => useWeatherStore(state => state.getWeatherByIcao(icao)),
@@ -108,6 +106,5 @@ export const weatherSelectors = {
       clearWeather: state.clearWeather,
       clearAll: state.clearAll
     }),
-    (a, b) => Object.is(a, b)
-  )
+    (a, b) => Object.is(a, b))
 };

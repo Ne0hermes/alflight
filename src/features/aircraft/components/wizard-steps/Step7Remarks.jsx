@@ -1,14 +1,17 @@
 import React from 'react';
-import { 
-  Box, 
+import {
+  Box,
   Typography,
-  Paper
+  Paper,
+  Button
 } from '@mui/material';
-import { 
-  Notes as NotesIcon
+import {
+  Notes as NotesIcon,
+  ChevronRight as ChevronRightIcon,
+  ChevronLeft as ChevronLeftIcon
 } from '@mui/icons-material';
 
-const Step7Remarks = ({ data, updateData, errors = {} }) => {
+const Step7Remarks = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
   return (
     <Box sx={{ 
       maxWidth: 1000, 
@@ -112,6 +115,35 @@ const Step7Remarks = ({ data, updateData, errors = {} }) => {
           </Box>
         </Box>
       </Paper>
+
+      {/* Boutons de navigation */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+        {/* Bouton Précédent */}
+        {onPrevious && (
+          <Button
+            variant="outlined"
+            color="primary"
+            size="large"
+            onClick={onPrevious}
+            startIcon={<ChevronLeftIcon />}
+          >
+            Précédent
+          </Button>
+        )}
+
+        {/* Bouton Suivant */}
+        {onNext && (
+          <Button
+            variant="contained"
+            color="primary"
+            size="large"
+            onClick={onNext}
+            endIcon={<ChevronRightIcon />}
+          >
+            Suivant
+          </Button>
+        )}
+      </Box>
 
     </Box>
   );

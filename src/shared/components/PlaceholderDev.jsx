@@ -85,8 +85,6 @@ export const PlaceholderDev = ({
         )}
       </div>
     </div>
-  );
-};
 
 /**
  * Badge compact pour indiquer le statut de développement
@@ -143,8 +141,6 @@ export const DevOverlay = ({ children, message = "Cette section est en cours de 
         <div>{message}</div>
       </div>
     </div>
-  );
-};
 
 /**
  * Message inline pour remplacer du contenu manquant
@@ -164,7 +160,5 @@ export const DevInlineMessage = ({ text = "Données non disponibles", icon = tru
       {icon && <AlertCircle size={14} />}
       {text}
     </span>
-  );
-};
 
 export default PlaceholderDev;

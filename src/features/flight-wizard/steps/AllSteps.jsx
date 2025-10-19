@@ -103,7 +103,7 @@ export const Step2Aircraft = ({ flightPlan, onUpdate }) => {
     onUpdate();
   };
 
-  const filteredAircraft = availableAircraft.filter(ac => 
+  const filteredAircraft = availableAircraft.filter(ac =>
     ac.registration.toLowerCase().includes(searchTerm.toLowerCase()) ||
     ac.type.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -254,7 +254,7 @@ export const Step3Route = ({ flightPlan, onUpdate }) => {
       });
       
       setSuggestions(formatted);
-      console.log(`Recherche ${field}:`, search, 'Résultats:', formatted.length);
+      
     } catch (error) {
       console.error('Erreur recherche aérodromes:', error);
       setSuggestions([]);
@@ -740,19 +740,41 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
           </div>
 
           {/* Masse et centrage */}
-          <div>
+          <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
             <h5 style={{ fontSize: '14px', color: theme.colors.textSecondary, marginBottom: '8px' }}>
               Masse et centrage
             </h5>
             <div>Masse décollage: {flightPlan.weightBalance.takeoffWeight} kg</div>
-            <div style={{ 
-              fontSize: '14px', 
+            <div style={{
+              fontSize: '14px',
               color: flightPlan.weightBalance.withinLimits ? theme.colors.success : theme.colors.error,
               fontWeight: '600'
             }}>
               {flightPlan.weightBalance.withinLimits ? '✓ Dans les limites' : '✗ Hors limites'}
             </div>
           </div>
+
+          {/* TOD (Top of Descent) */}
+          {flightPlan.todParameters.distanceToTod > 0 && (
+            <div>
+              <h5 style={{ fontSize: '14px', color: theme.colors.textSecondary, marginBottom: '8px' }}>
+                Top of Descent (TOD)
+              </h5>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div>
+                  <span style={{ fontWeight: '600', color: theme.colors.warning }}>
+                    TOD à {flightPlan.todParameters.distanceToTod} NM
+                  </span> de l'arrivée
+                </div>
+                <div style={{ fontSize: '12px', color: theme.colors.textMuted }}>
+                  Altitude: {flightPlan.todParameters.cruiseAltitude} ft → {flightPlan.todParameters.arrivalElevation + flightPlan.todParameters.patternAltitude} ft
+                </div>
+                <div style={{ fontSize: '12px', color: theme.colors.textMuted }}>
+                  Descente: {flightPlan.todParameters.descentRate} ft/min • {flightPlan.todParameters.descentTime} min • {flightPlan.todParameters.descentAngle}°
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

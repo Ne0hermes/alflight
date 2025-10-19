@@ -1,6 +1,6 @@
 // Fonction pour réparer et éditer l'entrée du 2025-09-29
 export const fixAndEditEntry20250929 = () => {
-  console.log('🔧 === RÉPARATION ET ÉDITION ENTRÉE 2025-09-29 ===');
+  
 
   // Récupérer le carnet
   const logbook = JSON.parse(localStorage.getItem('pilotLogbook') || '[]');
@@ -10,17 +10,16 @@ export const fixAndEditEntry20250929 = () => {
     entry.date === '2025-09-29' &&
     entry.departure === 'LFSA' &&
     entry.arrival === 'LFGA'
-  );
 
   if (entryIndex === -1) {
-    console.log('❌ Entrée non trouvée. Recherche alternative...');
+    
 
     // Afficher toutes les entrées du 2025-09-29
     const entries29 = logbook.filter(e => e.date === '2025-09-29');
-    console.log('📅 Entrées du 2025-09-29:', entries29);
+    
 
     if (entries29.length === 0) {
-      console.log('❌ Aucune entrée pour le 2025-09-29');
+      
       return null;
     }
 
@@ -41,11 +40,11 @@ export const fixAndEditEntry20250929 = () => {
 const repairAndPrepareEntry = (logbook, index) => {
   const entry = { ...logbook[index] };
 
-  console.log('✅ Entrée trouvée:', entry);
+  
 
   // Vérifier et réparer les segments
   if (!entry.flightSegments || entry.flightSegments.length === 0) {
-    console.log('⚠️ Ajout de segments manquants...');
+    
 
     // Calculer le temps total
     let totalTime = 0;
@@ -110,18 +109,12 @@ const repairAndPrepareEntry = (logbook, index) => {
     // Sauvegarder l'entrée réparée
     logbook[index] = entry;
     localStorage.setItem('pilotLogbook', JSON.stringify(logbook));
-    console.log('✅ Segments ajoutés et sauvegardés');
+    
   }
 
   // Stocker l'entrée pour édition
   window.pendingEditEntry = entry;
   sessionStorage.setItem('editEntry2029', JSON.stringify(entry));
-
-  console.log('📝 Instructions pour éditer:');
-  console.log('1. L\'entrée est prête à être éditée');
-  console.log('2. Cliquez sur le bouton ✏️ à côté de l\'entrée');
-  console.log('3. Ou appelez: openEditForm()');
-
   return entry;
 };
 
@@ -143,7 +136,6 @@ export const openEditForm = () => {
   const entry = window.pendingEditEntry || JSON.parse(sessionStorage.getItem('editEntry2029') || 'null');
 
   if (!entry) {
-    console.log('❌ Aucune entrée à éditer. Appelez d\'abord: fixAndEditEntry20250929()');
     return;
   }
 
@@ -152,13 +144,13 @@ export const openEditForm = () => {
   for (const btn of editButtons) {
     const parent = btn.closest('tr') || btn.closest('div');
     if (parent && parent.textContent.includes('2025-09-29') && parent.textContent.includes('LFGA')) {
-      console.log('✅ Bouton d\'édition trouvé, ouverture...');
+      
       btn.click();
       return;
     }
   }
 
-  console.log('⚠️ Bouton non trouvé. Essayez de cliquer manuellement sur ✏️');
+  
 };
 
 // Fonction pour forcer l'ouverture avec les données
@@ -166,7 +158,7 @@ export const forceOpenWithData = () => {
   const entry = window.pendingEditEntry || JSON.parse(sessionStorage.getItem('editEntry2029') || 'null');
 
   if (!entry) {
-    console.log('❌ Aucune entrée préparée');
+    
     return;
   }
 
@@ -175,7 +167,7 @@ export const forceOpenWithData = () => {
     detail: entry
   }));
 
-  console.log('📤 Événement envoyé. Le formulaire devrait s\'ouvrir.');
+  
 };
 
 // Exporter pour la console

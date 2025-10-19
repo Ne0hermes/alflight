@@ -243,7 +243,7 @@ const UnitsPreferences = () => {
               <Icon size={16} />
               <span style={{ fontSize: '14px' }}>{config.title}</span>
             </button>
-          );
+
         })}
       </div>
 
@@ -401,7 +401,7 @@ const UnitsPreferences = () => {
         Les valeurs sont automatiquement converties dans les nouvelles unités sélectionnées.
       </div>
     </div>
-  );
+
 };
 
 export default UnitsPreferences;

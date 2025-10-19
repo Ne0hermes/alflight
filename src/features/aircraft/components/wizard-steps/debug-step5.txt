@@ -1,0 +1,1 @@
+console.log('🔍 DEBUG Step5Review - Section Performance'); console.log('🔍 data.performanceModels:', data.performanceModels); console.log('🔍 Longueur:', data.performanceModels?.length); console.log('🔍 Structure:', JSON.stringify(data.performanceModels?.[0], null, 2));

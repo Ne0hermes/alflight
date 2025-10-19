@@ -22,8 +22,7 @@ class SimpleTrackingService {
   setWebhookUrl(url) {
     this.webhookUrl = url;
     localStorage.setItem('googleScriptUrl', url);
-    console.log('URL du webhook configurée:', url);
-  }
+      }
 
   /**
    * Active/désactive le tracking
@@ -38,13 +37,11 @@ class SimpleTrackingService {
    */
   async sendTaskSummary(data) {
     if (!this.isEnabled) {
-      console.log('Tracking désactivé');
-      return false;
+            return false;
     }
 
     if (!this.webhookUrl) {
-      console.warn('URL du webhook non configurée. Ajout à la file d\'attente.');
-      this.addToQueue(data);
+            this.addToQueue(data);
       return false;
     }
 
@@ -71,8 +68,7 @@ class SimpleTrackingService {
         body: JSON.stringify(payload)
       });
 
-      console.log('Résumé envoyé vers Google Sheets');
-
+      
       // Traiter la file d'attente si succès
       if (this.queue.length > 0) {
         await this.processQueue();
@@ -92,7 +88,7 @@ class SimpleTrackingService {
   addToQueue(data) {
     this.queue.push(data);
     localStorage.setItem('trackingQueue', JSON.stringify(this.queue));
-    console.log(`Ajouté à la file d\'attente (${this.queue.length} éléments en attente)`);
+
   }
 
   /**
@@ -101,8 +97,7 @@ class SimpleTrackingService {
   async processQueue() {
     if (this.queue.length === 0 || !this.webhookUrl) return;
 
-    console.log(`Traitement de ${this.queue.length} éléments en file d\'attente...`);
-
+    
     const queueCopy = [...this.queue];
     this.queue = [];
 
@@ -117,8 +112,7 @@ class SimpleTrackingService {
           body: JSON.stringify(item)
         });
 
-        console.log('Élément de la file envoyé');
-      } catch (error) {
+              } catch (error) {
         console.error('Erreur lors de l\'envoi d\'un élément de la file:', error);
         this.queue.push(item);
       }

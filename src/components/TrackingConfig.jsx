@@ -244,7 +244,5 @@ const TrackingConfig = () => {
         </>
       )}
     </>
-  );
-};
 
 export default TrackingConfig;

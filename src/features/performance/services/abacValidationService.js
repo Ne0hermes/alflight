@@ -213,7 +213,7 @@ class ABACValidationService {
     if (!bounds) {
       // Extrapolation ou valeur par défaut
       if (abacData.interpolation?.extrapolation_policy === 'linear_warn') {
-        console.warn('Extrapolation requise pour:', inputs);
+        
         return this.linearExtrapolate(values, inputs);
       } else if (abacData.interpolation?.extrapolation_policy === 'clamp') {
         return this.clampToNearest(values, inputs);
@@ -320,7 +320,6 @@ class ABACValidationService {
     // Filtrer par masse proche
     const massFiltered = values.filter(v => 
       Math.abs(v.mass_kg - inputs.mass_kg) < 50
-    );
     
     if (massFiltered.length < 4) return null;
     
@@ -337,7 +336,6 @@ class ABACValidationService {
     const findValue = (px, py) => {
       const point = massFiltered.find(v => 
         v.pressure_alt_ft === px && v.oat_c === py
-      );
       return point ? point.value : null;
     };
     
@@ -375,7 +373,7 @@ class ABACValidationService {
       case 'forbid':
         throw new Error(`Valeurs hors domaine: ${JSON.stringify(inputs)}`);
       case 'linear_warn':
-        console.warn('Extrapolation linéaire appliquée pour:', inputs);
+        
         return this.linearExtrapolate(values, inputs);
       case 'clamp':
         return this.clampToNearest(values, inputs);

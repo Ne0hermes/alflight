@@ -71,7 +71,6 @@ export const getAirportFrequenciesSync = async (icao) => {
       // Retourner les fréquences principales (TWR et APP)
       return aerodrome.frequencies.filter(f => 
         f.type === 'twr' || f.type === 'app' || f.type === 'atis'
-      );
     }
   } catch (error) {
     console.error(`Erreur récupération fréquences ${icao}:`, error);

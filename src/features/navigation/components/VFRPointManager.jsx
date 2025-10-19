@@ -97,7 +97,7 @@ export const VFRPointManager = ({
       copyDepartureToArrival();
       
       // Optionnellement, ajouter un message
-      console.log('Circuit fermé créé : retour à', departure.name);
+      
     }
   };
 
@@ -366,8 +366,6 @@ export const VFRPointManager = ({
         </p>
       </div>
     </div>
-  );
-};
 
 VFRPointManager.displayName = 'VFRPointManager';
 

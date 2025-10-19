@@ -4,7 +4,7 @@
 export { default } from './NavigationModule';
 
 // Export des composants pour utilisation directe si nécessaire
-export { NavigationMap } from './components/NavigationMap';
+// export { NavigationMap } from './components/NavigationMap'; // Composant supprimé
 export { AirportSelector } from './components/AirportSelector';
 export { ReportingPointsSelector } from './components/ReportingPointsSelector';
 export { AirspaceAnalyzer } from './components/AirspaceAnalyzer';

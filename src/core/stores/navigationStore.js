@@ -143,7 +143,7 @@ export const useNavigationStore = create(
       
       updateWaypoint: (id, updates) => {
         set(state => ({
-          waypoints: state.waypoints.map(wp => 
+          waypoints: state.waypoints.map(wp =>
             wp.id === id ? { ...wp, ...updates } : wp
           )
         }));

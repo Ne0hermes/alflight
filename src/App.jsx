@@ -26,8 +26,10 @@ const PilotModule = lazy(() => import('@features/pilot'));
 const LogbookModule = lazy(() => import('@features/logbook'));
 const AccountModule = lazy(() => import('@features/account/components/AccountPanel').then(module => ({ default: module.AccountPanel })));
 const RegulationsModule = lazy(() => import('@features/regulations'));
+const AdminPanel = lazy(() => import('@features/admin/AdminPanel'));
 
 const TAB_CONFIG = [
+  { id: 'admin', label: 'Admin', icon: 'Settings', component: AdminPanel },
   { id: 'account', label: 'Compte', icon: 'UserCircle', component: AccountModule },
   { id: 'pilot', label: 'Pilote', icon: 'User', component: PilotModule },
   { id: 'logbook', label: 'Carnet de bord', icon: 'Book', component: LogbookModule },
@@ -59,8 +61,7 @@ const FlightSystemUI = memo(() => {
     const initBackupManager = async () => {
       try {
         await dataBackupManager.initPromise;
-        console.log('✅ Gestionnaire de sauvegarde initialisé');
-      } catch (error) {
+              } catch (error) {
         console.error('❌ Erreur initialisation gestionnaire de sauvegarde:', error);
       }
     };
@@ -110,14 +111,13 @@ const FlightSystemUI = memo(() => {
         </main>
       </div>
     </div>
-  );
+
 });
 
 const AppVersion = memo(() => (
   <div style={sx.combine(sx.text.sm, sx.text.muted)}>
     v3.0.0 - Architecture Zustand
   </div>
-));
 
 function App() {
   return (
@@ -125,8 +125,10 @@ function App() {
       <FlightSystemUI />
       <NotificationContainer />
     </FlightSystemProviders>
+
   );
-}
+
+);}
 
 const styles = {
   wrapper: {

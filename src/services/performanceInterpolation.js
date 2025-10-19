@@ -20,7 +20,7 @@ class PerformanceInterpolationService {
   bilinearInterpolate(altitudes, temperatures, values, targetAlt, targetTemp) {
     // Vérifier qu'on a assez de données
     if (!altitudes.length || !temperatures.length || !values.length) {
-      console.warn('Données insuffisantes pour interpolation');
+      
       return null;
     }
 
@@ -38,7 +38,7 @@ class PerformanceInterpolationService {
         // Correspondance exacte trouvée
         altLow = altHigh = i;
         exactAltMatch = true;
-        console.log(`✅ Correspondance exacte altitude: ${sortedAlts[i]}ft`);
+        
         break;
       } else if (sortedAlts[i] <= targetAlt && sortedAlts[i + 1] >= targetAlt) {
         altLow = i;
@@ -51,17 +51,17 @@ class PerformanceInterpolationService {
     if (!exactAltMatch && Math.abs(sortedAlts[sortedAlts.length - 1] - targetAlt) < 0.01) {
       altLow = altHigh = sortedAlts.length - 1;
       exactAltMatch = true;
-      console.log(`✅ Correspondance exacte altitude: ${sortedAlts[sortedAlts.length - 1]}ft`);
+      
     }
 
     // Si altitude hors limites
     if (!exactAltMatch) {
       if (targetAlt < sortedAlts[0]) {
         altLow = altHigh = 0;
-        console.log(`⚠️ Interpolation: altitude ${targetAlt}ft < min ${sortedAlts[0]}ft`);
+        
       } else if (targetAlt > sortedAlts[sortedAlts.length - 1]) {
         altLow = altHigh = sortedAlts.length - 1;
-        console.log(`⚠️ Interpolation: altitude ${targetAlt}ft > max ${sortedAlts[sortedAlts.length - 1]}ft`);
+        
       }
     }
 
@@ -74,7 +74,7 @@ class PerformanceInterpolationService {
         // Correspondance exacte trouvée
         tempLow = tempHigh = i;
         exactTempMatch = true;
-        console.log(`✅ Correspondance exacte température: ${sortedTemps[i]}°C`);
+        
         break;
       } else if (sortedTemps[i] <= targetTemp && sortedTemps[i + 1] >= targetTemp) {
         tempLow = i;
@@ -87,17 +87,17 @@ class PerformanceInterpolationService {
     if (!exactTempMatch && Math.abs(sortedTemps[sortedTemps.length - 1] - targetTemp) < 0.01) {
       tempLow = tempHigh = sortedTemps.length - 1;
       exactTempMatch = true;
-      console.log(`✅ Correspondance exacte température: ${sortedTemps[sortedTemps.length - 1]}°C`);
+      
     }
 
     // Si température hors limites
     if (!exactTempMatch) {
       if (targetTemp < sortedTemps[0]) {
         tempLow = tempHigh = 0;
-        console.log(`⚠️ Interpolation: température ${targetTemp}°C < min ${sortedTemps[0]}°C`);
+        
       } else if (targetTemp > sortedTemps[sortedTemps.length - 1]) {
         tempLow = tempHigh = sortedTemps.length - 1;
-        console.log(`⚠️ Interpolation: température ${targetTemp}°C > max ${sortedTemps[sortedTemps.length - 1]}°C`);
+        
       }
     }
 
@@ -109,14 +109,13 @@ class PerformanceInterpolationService {
 
     // Vérifier que les valeurs existent
     if (!values[origAltLow] || !values[origAltHigh]) {
-      console.warn('Valeurs manquantes pour les altitudes', origAltLow, origAltHigh);
+      
       return null;
     }
 
     // Si on est exactement sur un point de la grille
     if (exactAltMatch && exactTempMatch) {
       const exactValue = values[origAltLow][origTempLow];
-      console.log(`✅ Valeur exacte trouvée: ${exactValue} (alt: ${sortedAlts[altLow]}ft, temp: ${sortedTemps[tempLow]}°C)`);
       return exactValue;
     }
 
@@ -136,7 +135,6 @@ class PerformanceInterpolationService {
           sortedTemps[tempHigh],
           v2,
           targetTemp
-        );
       }
     }
 
@@ -156,7 +154,6 @@ class PerformanceInterpolationService {
           sortedTemps[tempHigh],
           v2,
           targetTemp
-        );
       }
     }
 
@@ -175,7 +172,6 @@ class PerformanceInterpolationService {
       sortedAlts[altHigh],
       valueHighAlt,
       targetAlt
-    );
   }
 
   /**
@@ -206,7 +202,7 @@ class PerformanceInterpolationService {
           // Si c'est "SL" ou contient "SL", remplacer par 0
           if (typeof value === 'string' && value.toUpperCase().includes('SL')) {
             cleanedRow[field] = 0;
-            console.log(`🔄 Conversion SL → 0 pour le champ ${field}`);
+            
           } else if (typeof value === 'string' && !isNaN(parseFloat(value))) {
             // Si c'est une chaîne numérique, la convertir en nombre
             cleanedRow[field] = parseFloat(value);
@@ -265,7 +261,7 @@ class PerformanceInterpolationService {
 
           // Log pour debug si on trouve exactement 6000ft et 0°C
           if (alt === 6000 && temp === 0) {
-            console.log(`📍 Point exact trouvé (6000ft, 0°C):`, {
+            :`, {
               groundRoll,
               distance50ft,
               dataPoint
@@ -297,16 +293,11 @@ class PerformanceInterpolationService {
    */
   calculatePerformance(extractedTable, altitude, temperature, weight = null) {
     if (!extractedTable || !extractedTable.data || extractedTable.data.length === 0) {
-      console.warn('Pas de données de performance disponibles');
+      
       return null;
     }
 
-    console.log('🎯 Calcul de performance pour:', {
-      altitude,
-      temperature,
-      weight,
-      tableName: extractedTable.table_name
-    });
+    
 
     // Préparer les données
     const preparedData = this.prepareTableData(extractedTable.data);
@@ -316,16 +307,11 @@ class PerformanceInterpolationService {
 
     const { altitudes, temperatures, groundRollMatrix, distance50ftMatrix } = preparedData;
 
-    console.log('📊 Données préparées:', {
-      altitudes,
-      temperatures,
-      groundRollMatrixSample: groundRollMatrix.length > 0 ? groundRollMatrix[0] : 'empty',
-      distance50ftMatrixSample: distance50ftMatrix.length > 0 ? distance50ftMatrix[0] : 'empty'
-    });
+    
 
     // Si pas assez de données pour interpoler
     if (altitudes.length === 0 || temperatures.length === 0) {
-      console.warn('Données insuffisantes pour l\'interpolation');
+      
       return null;
     }
 
@@ -345,7 +331,6 @@ class PerformanceInterpolationService {
           groundRollMatrix,
           altitude,
           temperature
-        );
       }
 
       if (hasDistance50ft) {
@@ -355,7 +340,6 @@ class PerformanceInterpolationService {
           distance50ftMatrix,
           altitude,
           temperature
-        );
       }
     } catch (error) {
       console.error('Erreur lors de l\'interpolation:', error);
@@ -400,12 +384,7 @@ class PerformanceInterpolationService {
   getInterpolationPoints(altitudes, temperatures, targetAlt, targetTemp, tableData) {
     const points = [];
     
-    console.log('🔍 Recherche points interpolation:', {
-      targetAlt,
-      targetTemp,
-      altitudesDisponibles: altitudes,
-      temperaturesDisponibles: temperatures
-    });
+    
     
     // Trouver les altitudes encadrantes
     let altLow = null, altHigh = null;
@@ -426,14 +405,14 @@ class PerformanceInterpolationService {
       if (targetAlt <= sortedAlts[0]) {
         // En dessous de la plage -> prendre la plus basse altitude
         altLow = altHigh = sortedAlts[0];
-        console.log(`⚠️ Altitude ${targetAlt}ft sous la plage, utilisation de ${altLow}ft`);
+        
       } else if (targetAlt >= sortedAlts[sortedAlts.length - 1]) {
         // Au-dessus de la plage -> prendre la plus haute altitude
         altLow = altHigh = sortedAlts[sortedAlts.length - 1];
-        console.log(`⚠️ Altitude ${targetAlt}ft au-dessus de la plage, utilisation de ${altLow}ft`);
+        
       }
     } else {
-      console.log(`✅ Altitudes encadrantes trouvées: ${altLow}ft - ${altHigh}ft`);
+      
     }
     
     // Trouver les températures encadrantes
@@ -454,13 +433,13 @@ class PerformanceInterpolationService {
     if (tempLow === null || tempHigh === null) {
       if (targetTemp <= sortedTemps[0]) {
         tempLow = tempHigh = sortedTemps[0];
-        console.log(`⚠️ Température ${targetTemp}°C sous la plage, utilisation de ${tempLow}°C`);
+        
       } else if (targetTemp >= sortedTemps[sortedTemps.length - 1]) {
         tempLow = tempHigh = sortedTemps[sortedTemps.length - 1];
-        console.log(`⚠️ Température ${targetTemp}°C au-dessus de la plage, utilisation de ${tempLow}°C`);
+        
       }
     } else {
-      console.log(`✅ Températures encadrantes trouvées: ${tempLow}°C - ${tempHigh}°C`);
+      
     }
     
     // Récupérer les 4 points d'interpolation
@@ -506,7 +485,7 @@ class PerformanceInterpolationService {
   findBestTable(tables, type, weight) {
     if (!tables || tables.length === 0) return null;
 
-    console.log(`🔍 Recherche de tableau ${type} pour poids ${weight}kg parmi ${tables.length} tableaux`);
+    
     
     // Filtrer par type (takeoff ou landing)
     const filteredTables = tables.filter(table => {
@@ -529,11 +508,11 @@ class PerformanceInterpolationService {
       return false;
     });
 
-    console.log(`📊 ${filteredTables.length} tableaux trouvés pour ${type}`);
+    
     
     if (filteredTables.length === 0) {
       // Si aucun tableau trouvé avec les critères stricts, essayer une recherche plus large
-      console.log('⚠️ Aucun tableau trouvé, recherche élargie...');
+      
       return tables[0]; // Retourner le premier tableau disponible
     }
     if (filteredTables.length === 1) return filteredTables[0];
@@ -597,7 +576,7 @@ class PerformanceInterpolationService {
 
     return Math.round(correctedDistance);
   }
-}
+);}
 
 // Export singleton
 const performanceInterpolation = new PerformanceInterpolationService();

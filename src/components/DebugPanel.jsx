@@ -44,7 +44,6 @@ export const DebugPanel = () => {
         addDebugStyles('borders', `
           * { outline: 1px solid rgba(255, 0, 0, 0.2) !important; }
           *:hover { outline: 2px solid rgba(255, 0, 0, 0.5) !important; }
-        `);
       } else {
         body.classList.remove('debug-borders');
         removeDebugStyles('borders');
@@ -68,7 +67,6 @@ export const DebugPanel = () => {
             pointer-events: none;
             z-index: 9999;
           }
-        `);
       } else {
         body.classList.remove('debug-grid');
         removeDebugStyles('grid');
@@ -83,7 +81,6 @@ export const DebugPanel = () => {
             padding: 2px !important;
             margin: 2px !important;
           }
-        `);
       } else {
         removeDebugStyles('spacing');
       }
@@ -118,7 +115,7 @@ export const DebugPanel = () => {
       userAgent: navigator.userAgent,
       timestamp: new Date().toISOString()
     };
-    console.log('🐛 Rapport de bug:', issue);
+    
     alert('Rapport de bug enregistré dans la console');
   };
 
@@ -252,8 +249,6 @@ export const DebugPanel = () => {
         </div>
       </div>
     </div>
-  );
-};
 
 const styles = {
   panel: {

@@ -100,8 +100,6 @@ export const ProGate = ({
         />
       )}
     </>
-  );
-};
 
 const styles = {
   loading: {

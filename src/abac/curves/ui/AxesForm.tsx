@@ -1,9 +1,14 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { AxesConfig } from '../core/types';
 
 interface AxesFormProps {
   onSubmit: (config: AxesConfig) => void;
   initialConfig?: AxesConfig;
+  isWindRelated?: boolean;
+  onWindRelatedChange?: (isWindRelated: boolean) => void;
+  onDelete?: () => void;
+  graphName?: string;
+  graphNumber?: number;
 }
 
 // Options prédéfinies pour les axes avec leurs unités par défaut
@@ -117,52 +122,60 @@ const AXIS_OPTIONS = {
 
 const styles = {
   form: {
-    padding: '20px',
+    padding: '32px',
     background: 'white',
     borderRadius: '8px',
-    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+    width: '100%',
+    maxWidth: '1200px',
+    margin: '0 auto'
   },
   section: {
-    marginBottom: '24px'
+    marginBottom: '32px'
   },
   sectionTitle: {
-    marginBottom: '16px',
+    marginBottom: '20px',
     color: '#333',
-    fontSize: '18px'
+    fontSize: '20px',
+    fontWeight: 600
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '16px'
+    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+    gap: '20px'
   },
   group: {
     display: 'flex',
     flexDirection: 'column' as const
   },
   label: {
-    marginBottom: '4px',
-    fontSize: '14px',
+    marginBottom: '6px',
+    fontSize: '15px',
     fontWeight: 500,
     color: '#555'
   },
   input: {
-    padding: '8px 12px',
+    padding: '10px 14px',
     border: '1px solid #ddd',
     borderRadius: '4px',
-    fontSize: '14px',
+    fontSize: '15px',
     transition: 'border-color 0.2s'
   },
   select: {
-    padding: '8px 12px',
+    padding: '10px 14px',
     border: '1px solid #ddd',
     borderRadius: '4px',
-    fontSize: '14px',
+    fontSize: '15px',
     transition: 'border-color 0.2s',
     backgroundColor: 'white',
     cursor: 'pointer'
   },
   inputError: {
-    borderColor: '#f44336'
+    padding: '10px 14px',
+    border: '1px solid #f44336',
+    borderRadius: '4px',
+    fontSize: '15px',
+    transition: 'border-color 0.2s'
   },
   errorMessage: {
     color: '#f44336',
@@ -190,11 +203,21 @@ const styles = {
     color: '#666',
     marginTop: '4px',
     fontStyle: 'italic'
+  },
+  formTitle: {
+    fontSize: '20px',
+    fontWeight: 600,
+    color: '#1976d2',
+    marginBottom: '20px',
+    paddingBottom: '12px',
+    borderBottom: '2px solid #e0e0e0'
   }
 };
 
-export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig }) => {
-  const [showSuccess, setShowSuccess] = useState(false);
+export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isWindRelated = false, onWindRelatedChange, onDelete, graphName, graphNumber }) => {
+  const [xAxisExpanded, setXAxisExpanded] = useState(true);
+  const [yAxisExpanded, setYAxisExpanded] = useState(true);
+  const isInitialMount = useRef(true);
 
   // Déterminer le type initial basé sur la config existante
   const getInitialAxisType = (axisTitle: string | undefined, defaultType: string) => {
@@ -211,17 +234,11 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig }) =
 
   const [xAxisType, setXAxisType] = useState<string>(
     initialConfig ? getInitialAxisType(initialConfig.xAxis?.title, 'altitude_pression') : 'altitude_pression'
-  );
   const [yAxisType, setYAxisType] = useState<string>(
     initialConfig ? getInitialAxisType(initialConfig.yAxis?.title, 'distance') : 'distance'
-  );
 
-  const [customXTitle, setCustomXTitle] = useState(
-    xAxisType === 'custom' ? (initialConfig?.xAxis?.title || '') : ''
-  );
-  const [customYTitle, setCustomYTitle] = useState(
-    yAxisType === 'custom' ? (initialConfig?.yAxis?.title || '') : ''
-  );
+  const [customXTitle, setCustomXTitle] = useState(xAxisType === 'custom' ? (initialConfig?.xAxis?.title || '') : ''
+  const [customYTitle, setCustomYTitle] = useState(yAxisType === 'custom' ? (initialConfig?.yAxis?.title || '') : ''
 
   const [config, setConfig] = useState<AxesConfig>(() => {
     if (initialConfig) {
@@ -244,10 +261,12 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig }) =
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const isLoadingInitialConfig = useRef(false);
 
   // Réinitialiser le formulaire quand initialConfig change
   useEffect(() => {
     if (initialConfig) {
+      isLoadingInitialConfig.current = true;
       setConfig(initialConfig);
       setXAxisType(getInitialAxisType(initialConfig.xAxis?.title, 'altitude_pression'));
       setYAxisType(getInitialAxisType(initialConfig.yAxis?.title, 'distance'));
@@ -255,6 +274,10 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig }) =
       const yType = getInitialAxisType(initialConfig.yAxis?.title, 'distance');
       setCustomXTitle(xType === 'custom' ? (initialConfig.xAxis?.title || '') : '');
       setCustomYTitle(yType === 'custom' ? (initialConfig.yAxis?.title || '') : '');
+      // Reset the flag after all state updates are done
+      setTimeout(() => {
+        isLoadingInitialConfig.current = false;
+      }, 0);
     }
   }, [initialConfig]);
 
@@ -388,10 +411,42 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig }) =
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Détection automatique du mode vent basé sur les axes
+  useEffect(() => {
+    const xTitle = config.xAxis.title?.toLowerCase() || '';
+    const yTitle = config.yAxis.title?.toLowerCase() || '';
+    const xUnit = config.xAxis.unit?.toLowerCase() || '';
+    const yUnit = config.yAxis.unit?.toLowerCase() || '';
+
+    const windKeywords = ['vent', 'wind', 'headwind', 'tailwind', 'crosswind'];
+
+    const isWind = windKeywords.some(keyword =>
+      xTitle.includes(keyword) ||
+      yTitle.includes(keyword) ||
+      xUnit.includes(keyword) ||
+      yUnit.includes(keyword) ||
+      xAxisType === 'vent' ||
+      yAxisType === 'vent'
+
+    if (isWind !== isWindRelated && onWindRelatedChange) {
+      onWindRelatedChange(isWind);
+    }
+  }, [config.xAxis.title, config.xAxis.unit, config.yAxis.title, config.yAxis.unit, xAxisType, yAxisType, isWindRelated, onWindRelatedChange]);
+
+  // Sauvegarder automatiquement les changements
+  useEffect(() => {
+    // Skip auto-save on initial mount to avoid infinite loops
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    // Skip auto-save when loading initial config
+    if (isLoadingInitialConfig.current) {
+      return;
+    }
+
     if (validate()) {
-      // Ajouter le type d'axe dans les métadonnées pour référence future
       const enrichedConfig = {
         ...config,
         xAxis: {
@@ -404,31 +459,65 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig }) =
         }
       };
       onSubmit(enrichedConfig);
-
-      // Afficher le message de succès
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config, xAxisType, yAxisType]);
 
   return (
-    <form onSubmit={handleSubmit} style={styles.form}>
-      {showSuccess && (
-        <div style={{
-          padding: '12px',
-          backgroundColor: '#4CAF50',
-          color: 'white',
-          borderRadius: '4px',
-          marginBottom: '16px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px'
-        }}>
-          ✓ Configuration des axes sauvegardée pour ce graphique
+    <div style={styles.form}>
+      {/* Titre du graphique avec bouton de suppression */}
+      {graphNumber && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '12px', borderBottom: '2px solid #e0e0e0' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: 600, color: '#1976d2', margin: 0 }}>
+            Graphique {graphNumber} - {AXIS_OPTIONS[xAxisType]?.label || config.xAxis.title} / {AXIS_OPTIONS[yAxisType]?.label || config.yAxis.title}
+          </h2>
+          {onDelete && (
+            <button
+              type="button"
+              onClick={() => {
+                if (confirm(`Supprimer le graphique "${graphName || 'ce graphique'}" ?\n\nToutes les courbes et points associés seront supprimés.`)) {
+                  onDelete();
+                }
+              }}
+              style={{
+                padding: '6px 10px',
+                backgroundColor: '#f44336',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '20px',
+                fontWeight: 'bold',
+                lineHeight: '1',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              title="Supprimer ce graphique"
+            >
+              ×
+            </button>
+          )}
         </div>
       )}
       <div style={styles.section}>
-        <h3 style={styles.sectionTitle}>Configuration Axe X</h3>
+        <h3
+          style={{
+            ...styles.sectionTitle,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            userSelect: 'none'
+          }}
+          onClick={() => setXAxisExpanded(!xAxisExpanded)}
+        >
+          <span>Configuration Axe X</span>
+          <span style={{ fontSize: '16px' }}>{xAxisExpanded ? '▼' : '▶'}</span>
+        </h3>
+        {xAxisExpanded && (
         <div style={styles.grid}>
           <div style={styles.group}>
             <label htmlFor="x-type" style={styles.label}>Type d'axe</label>
@@ -446,48 +535,6 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig }) =
             </select>
           </div>
 
-          {xAxisType === 'custom' && (
-            <div style={styles.group}>
-              <label htmlFor="x-custom-title" style={styles.label}>Titre personnalisé</label>
-              <input
-                id="x-custom-title"
-                type="text"
-                value={customXTitle}
-                onChange={(e) => handleCustomTitleChange('xAxis', e.target.value)}
-                style={{...styles.input, ...(errors.xTitle ? styles.inputError : {})}}
-                placeholder="Entrez le titre"
-              />
-              {errors.xTitle && <span style={styles.errorMessage}>{errors.xTitle}</span>}
-            </div>
-          )}
-
-          <div style={styles.group}>
-            <label htmlFor="x-unit" style={styles.label}>Unité</label>
-            {xAxisType !== 'custom' && AXIS_OPTIONS[xAxisType].alternativeUnits.length > 0 ? (
-              <select
-                id="x-unit"
-                value={config.xAxis.unit}
-                onChange={(e) => handleChange('xAxis', 'unit', e.target.value)}
-                style={styles.select}
-              >
-                {AXIS_OPTIONS[xAxisType].alternativeUnits.map(unit => (
-                  <option key={unit} value={unit}>
-                    {unit}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                id="x-unit"
-                type="text"
-                value={config.xAxis.unit}
-                onChange={(e) => handleChange('xAxis', 'unit', e.target.value)}
-                placeholder="Optionnel"
-                style={styles.input}
-              />
-            )}
-          </div>
-
           <div style={styles.group}>
             <label htmlFor="x-min" style={styles.label}>Min</label>
             <input
@@ -495,7 +542,7 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig }) =
               type="number"
               value={config.xAxis.min}
               onChange={(e) => handleChange('xAxis', 'min', e.target.value)}
-              style={{...styles.input, ...(errors.xMin ? styles.inputError : {})}}
+              style={errors.xMin ? styles.inputError : styles.input}
             />
             {errors.xMin && <span style={styles.errorMessage}>{errors.xMin}</span>}
           </div>
@@ -537,6 +584,8 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig }) =
             </div>
           </div>
         </div>
+        )}
+        {xAxisExpanded && (
         <div style={styles.helperText}>
           <strong>Variable système:</strong> <code style={{ backgroundColor: '#f5f5f5', padding: '2px 6px', borderRadius: '3px', fontFamily: 'monospace' }}>{xAxisType}</code>
           {xAxisType !== 'custom' && (
@@ -545,10 +594,25 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig }) =
             </span>
           )}
         </div>
+        )}
       </div>
 
       <div style={styles.section}>
-        <h3 style={styles.sectionTitle}>Configuration Axe Y</h3>
+        <h3
+          style={{
+            ...styles.sectionTitle,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            userSelect: 'none'
+          }}
+          onClick={() => setYAxisExpanded(!yAxisExpanded)}
+        >
+          <span>Configuration Axe Y</span>
+          <span style={{ fontSize: '16px' }}>{yAxisExpanded ? '▼' : '▶'}</span>
+        </h3>
+        {yAxisExpanded && (
         <div style={styles.grid}>
           <div style={styles.group}>
             <label htmlFor="y-type" style={styles.label}>Type d'axe</label>
@@ -566,48 +630,6 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig }) =
             </select>
           </div>
 
-          {yAxisType === 'custom' && (
-            <div style={styles.group}>
-              <label htmlFor="y-custom-title" style={styles.label}>Titre personnalisé</label>
-              <input
-                id="y-custom-title"
-                type="text"
-                value={customYTitle}
-                onChange={(e) => handleCustomTitleChange('yAxis', e.target.value)}
-                style={{...styles.input, ...(errors.yTitle ? styles.inputError : {})}}
-                placeholder="Entrez le titre"
-              />
-              {errors.yTitle && <span style={styles.errorMessage}>{errors.yTitle}</span>}
-            </div>
-          )}
-
-          <div style={styles.group}>
-            <label htmlFor="y-unit" style={styles.label}>Unité</label>
-            {yAxisType !== 'custom' && AXIS_OPTIONS[yAxisType].alternativeUnits.length > 0 ? (
-              <select
-                id="y-unit"
-                value={config.yAxis.unit}
-                onChange={(e) => handleChange('yAxis', 'unit', e.target.value)}
-                style={styles.select}
-              >
-                {AXIS_OPTIONS[yAxisType].alternativeUnits.map(unit => (
-                  <option key={unit} value={unit}>
-                    {unit}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                id="y-unit"
-                type="text"
-                value={config.yAxis.unit}
-                onChange={(e) => handleChange('yAxis', 'unit', e.target.value)}
-                placeholder="Optionnel"
-                style={styles.input}
-              />
-            )}
-          </div>
-
           <div style={styles.group}>
             <label htmlFor="y-min" style={styles.label}>Min</label>
             <input
@@ -615,7 +637,7 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig }) =
               type="number"
               value={config.yAxis.min}
               onChange={(e) => handleChange('yAxis', 'min', e.target.value)}
-              style={{...styles.input, ...(errors.yMin ? styles.inputError : {})}}
+              style={errors.yMin ? styles.inputError : styles.input}
             />
             {errors.yMin && <span style={styles.errorMessage}>{errors.yMin}</span>}
           </div>
@@ -657,6 +679,8 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig }) =
             </div>
           </div>
         </div>
+        )}
+        {yAxisExpanded && (
         <div style={styles.helperText}>
           <strong>Variable système:</strong> <code style={{ backgroundColor: '#f5f5f5', padding: '2px 6px', borderRadius: '3px', fontFamily: 'monospace' }}>{yAxisType}</code>
           {yAxisType !== 'custom' && (
@@ -665,13 +689,26 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig }) =
             </span>
           )}
         </div>
+        )}
       </div>
 
-      <div style={styles.actions}>
-        <button type="submit" style={styles.button}>
-          💾 Sauvegarder les axes pour ce graphique
-        </button>
-      </div>
-    </form>
-  );
+      {/* Indicateur automatique du mode vent */}
+      {isWindRelated && (
+        <div style={styles.section}>
+          <div style={{
+            padding: '12px',
+            backgroundColor: '#e3f2fd',
+            borderRadius: '6px',
+            border: '1px solid #2196F3'
+          }}>
+            <div style={{ fontWeight: 600, color: '#1976d2', marginBottom: '4px' }}>
+              💨 Mode vent activé automatiquement
+            </div>
+            <div style={{ fontSize: '12px', color: '#666' }}>
+              Ce graphique a été détecté comme lié au vent. Vous pourrez spécifier la direction du vent (vent de face/arrière) pour chaque courbe.
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
 };

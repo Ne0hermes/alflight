@@ -250,7 +250,6 @@ export class SIADataProvider extends AeroDataProvider {
         return airspace.geometry.some(coord => 
           coord[1] >= minLat && coord[1] <= maxLat &&
           coord[0] >= minLon && coord[0] <= maxLon
-        );
       });
     }
     
@@ -270,7 +269,6 @@ export class SIADataProvider extends AeroDataProvider {
         af.icao.toLowerCase().includes(search) ||
         af.name.toLowerCase().includes(search) ||
         (af.city && af.city.toLowerCase().includes(search))
-      );
     }
     
     if (params.nearPoint) {
@@ -290,7 +288,6 @@ export class SIADataProvider extends AeroDataProvider {
     if (params.types && params.types.length > 0) {
       filtered = filtered.filter(navaid => 
         params.types.some(type => navaid.type.includes(type))
-      );
     }
     
     return filtered;

@@ -8,8 +8,7 @@ export const AbacDemo: React.FC = () => {
 
   const handleSave = (json: AbacCurvesJSON) => {
     setSavedModel(json);
-    console.log('Model saved:', json);
-  };
+      };
 
   return (
     <div className={styles.abacDemoPage}>
@@ -28,7 +27,7 @@ export const AbacDemo: React.FC = () => {
         </div>
       )}
     </div>
-  );
+
 };
 
 export default AbacDemo;

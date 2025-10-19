@@ -19,7 +19,7 @@ interface CascadeCalculatorProps {
     name: string;
   }[];
   onClose?: () => void;
-}
+);}
 
 const styles = {
   container: {
@@ -307,10 +307,6 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
     setWarnings([]);
     setResult(null);
 
-    console.log('🎯 État du calcul:');
-    console.log('   Direction du vent sélectionnée:', windDirection);
-    console.log('   Graphiques dans la chaîne:', graphChain.map(g => ({name: g.name, isWindRelated: g.isWindRelated})));
-
     const value = parseFloat(initialValue);
     if (isNaN(value)) {
       setError('Veuillez entrer une valeur numérique valide');
@@ -359,8 +355,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
         }
 
         // Pour un graphique de vent, stocker la direction du vent
-        console.log(`🔍 Vérification pour graphique "${graph.name}": isWindRelated=${graph.isWindRelated}, windDirection=${windDirection}`);
-
+        
         // Vérifier si le paramètre est dans les bornes définies du graphique
         if (graph.axes) {
           const xMin = graph.axes.xAxis.min;
@@ -370,20 +365,13 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
             const unit = graph.axes.xAxis.unit ? ` ${graph.axes.xAxis.unit}` : '';
             warningsList.push(
               `⚠️ ${graph.axes.xAxis.title}: ${paramValue}${unit} est hors plage réglementaire [${xMin}${unit} - ${xMax}${unit}]. Résultat extrapolé.`
-            );
           }
         }
 
         // Passer la direction du vent dans les paramètres si c'est un graphique de vent
         const graphWindDirection = graph.isWindRelated && windDirection !== 'all' ? windDirection : undefined;
 
-        if (graphWindDirection) {
-          console.log(`📌 Graphique "${graph.name}" - Configuration vent:`);
-          console.log(`   Valeur du paramètre: ${paramValue}`);
-          console.log(`   Direction sélectionnée: ${graphWindDirection}`);
-        }
-
-        graphParameters.push({
+                graphParameters.push({
           graphId: graph.id,
           parameter: paramValue,
           parameterName: graph.axes?.xAxis.title,
@@ -476,27 +464,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
 
                 // Debug: Vérifier les axes du graphique
                 const isMassGraph = graph.name.toLowerCase().includes('masse');
-                console.log(`📊 Graphique ${index} "${graph.name}":`, {
-                  isMassGraph,
-                  xAxis: {
-                    min: graph.axes.xAxis.min,
-                    max: graph.axes.xAxis.max,
-                    reversed: graph.axes.xAxis.reversed,
-                    title: graph.axes.xAxis.title
-                  },
-                  yAxis: {
-                    min: graph.axes.yAxis.min,
-                    max: graph.axes.yAxis.max,
-                    reversed: graph.axes.yAxis.reversed,
-                    title: graph.axes.yAxis.title
-                  },
-                  step: {
-                    inputValue: step.inputValue,
-                    outputValue: step.outputValue,
-                    parameter: step.parameter
-                  }
-                });
-
+                
                 // Fonction de scaling X
                 const xScale = (value: number) => {
                   const ratio = (value - graph.axes.xAxis.min) / (graph.axes.xAxis.max - graph.axes.xAxis.min);
@@ -504,7 +472,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
 
                   // Debug pour le graphique de masse
                   if (graph.name.toLowerCase().includes('masse') && step.parameter) {
-                    console.log(`  xScale(${value}): ratio=${ratio.toFixed(3)}, reversed=${graph.axes.xAxis.reversed}, result=${scaled.toFixed(1)}`);
+                    : ratio=${ratio.toFixed(3)}, reversed=${graph.axes.xAxis.reversed}, result=${scaled.toFixed(1)}`);
                   }
 
                   return scaled;
@@ -517,7 +485,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
 
                   // Debug pour le graphique de masse
                   if (graph.name.toLowerCase().includes('masse')) {
-                    console.log(`  yScale(${value}): ratio=${ratio.toFixed(3)}, reversed=${graph.axes.yAxis.reversed}, result=${scaled.toFixed(1)}`);
+                    : ratio=${ratio.toFixed(3)}, reversed=${graph.axes.yAxis.reversed}, result=${scaled.toFixed(1)}`);
                   }
 
                   return scaled;
@@ -525,32 +493,14 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
 
                 // Debug: afficher les positions calculées pour le graphique de masse
                 if (graph.name.toLowerCase().includes('masse') && step.parameter) {
-                  console.log(`📍 Positions calculées pour le graphique de masse:`, {
-                    axes: {
-                      xRange: `[${graph.axes.xAxis.min}, ${graph.axes.xAxis.max}]`,
-                      yRange: `[${graph.axes.yAxis.min}, ${graph.axes.yAxis.max}]`
-                    },
-                    valeurs: {
-                      entreeY: step.inputValue,
-                      parametreX: step.parameter,
-                      sortieY: step.outputValue
-                    },
-                    pixels: {
-                      ligneHorizontaleY: yScale(step.inputValue),
+                  ,
                       ligneVerticaleX: xScale(step.parameter),
                       pointSortie: { x: xScale(step.parameter), y: yScale(step.outputValue) }
                     }
                   });
 
                   if (step.valuesAtCrossing) {
-                    console.log(`  Points d'interpolation:`, {
-                      valeurs: {
-                        lower: step.valuesAtCrossing.lowerValue,
-                        upper: step.valuesAtCrossing.upperValue
-                      },
-                      pixels: {
-                        lowerPoint: step.valuesAtCrossing.lowerValue ?
-                          { x: xScale(step.parameter), y: yScale(step.valuesAtCrossing.lowerValue) } : null,
+                    , y: yScale(step.valuesAtCrossing.lowerValue) } : null,
                         upperPoint: step.valuesAtCrossing.upperValue ?
                           { x: xScale(step.parameter), y: yScale(step.valuesAtCrossing.upperValue) } : null
                       }
@@ -564,8 +514,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                     return "✓ Visible";
                   };
 
-                  console.log(`  Visibilité:`, {
-                    ligneHorizontale: checkVisible(yScale(step.inputValue)),
+                  ),
                     pointSortie: checkVisible(yScale(step.outputValue)),
                     lowerPoint: step.valuesAtCrossing?.lowerValue ?
                       checkVisible(yScale(step.valuesAtCrossing.lowerValue)) : null,
@@ -768,7 +717,6 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                 </>
               )}
                   </>
-                );
               })()}
             </g>
           </svg>
@@ -859,8 +807,6 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
         )}
       </div>
     </div>
-    );
-  };
 
   return (
     <div style={styles.container}>
@@ -1123,5 +1069,4 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
         </div>
       )}
     </div>
-  );
 };

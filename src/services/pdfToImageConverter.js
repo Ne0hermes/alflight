@@ -6,7 +6,6 @@ import * as pdfjsLib from 'pdfjs-dist';
 if (typeof window !== 'undefined') {
   // En environnement browser - utiliser le worker local
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
-  console.log('📚 PDF.js worker configuré (local)');
 } else {
   // Node.js environment
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
@@ -25,16 +24,14 @@ class PDFToImageConverter {
    */
   async convertPDFToImage(pdfFile, pageNumber = 1) {
     try {
-      console.log('📄 Conversion PDF vers image...');
-      console.log(`📖 Fichier: ${pdfFile.name}, Taille: ${Math.round(pdfFile.size / 1024)} KB`);
+      
+      } KB`);
       
       // Lire le fichier PDF
       const arrayBuffer = await this.fileToArrayBuffer(pdfFile);
       
       // Charger le document PDF
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      console.log(`📚 PDF chargé: ${pdf.numPages} page(s)`);
-      
       // Vérifier que la page demandée existe
       if (pageNumber > pdf.numPages || pageNumber < 1) {
         throw new Error(`Page ${pageNumber} n'existe pas. Le PDF contient ${pdf.numPages} page(s).`);
@@ -53,7 +50,7 @@ class PDFToImageConverter {
       canvas.height = viewport.height;
       canvas.width = viewport.width;
       
-      console.log(`🖼️ Rendu de la page ${pageNumber} (${canvas.width}x${canvas.height}px)...`);
+      ...`);
       
       // Rendre la page PDF sur le canvas
       const renderContext = {
@@ -66,7 +63,7 @@ class PDFToImageConverter {
       // Convertir le canvas en base64
       const base64Image = canvas.toDataURL('image/jpeg', 0.95).split(',')[1];
       
-      console.log(`✅ Page ${pageNumber} convertie en image (${Math.round(base64Image.length / 1024)} KB)`);
+      } KB)`);
       
       return base64Image;
       
@@ -90,7 +87,7 @@ class PDFToImageConverter {
       const numPages = Math.min(pdf.numPages, maxPages);
       const images = [];
       
-      console.log(`📚 Extraction de ${numPages} page(s) du PDF...`);
+       du PDF...`);
       
       for (let i = 1; i <= numPages; i++) {
         const image = await this.convertPDFToImage(pdfFile, i);
@@ -116,7 +113,7 @@ class PDFToImageConverter {
    */
   async findPerformanceTablePage(pdfFile, tableType = 'takeoff') {
     try {
-      console.log(`🔍 Recherche du tableau de ${tableType === 'takeoff' ? 'décollage' : 'atterrissage'}...`);
+      
       
       const arrayBuffer = await this.fileToArrayBuffer(pdfFile);
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -137,7 +134,7 @@ class PDFToImageConverter {
         
         if (hasKeywords && (pageText.includes('kg') || pageText.includes('lbs')) && 
             (pageText.includes('°c') || pageText.includes('ft') || pageText.includes('altitude'))) {
-          console.log(`✅ Tableau trouvé à la page ${pageNum}`);
+          
           const image = await this.convertPDFToImage(pdfFile, pageNum);
           return {
             pageNumber: pageNum,
@@ -147,7 +144,7 @@ class PDFToImageConverter {
         }
       }
       
-      console.log(`⚠️ Tableau non trouvé automatiquement, utilisation de la page 1`);
+      
       const image = await this.convertPDFToImage(pdfFile, 1);
       return {
         pageNumber: 1,
@@ -181,14 +178,11 @@ class PDFToImageConverter {
    */
   async extractAllPages(pdfFile) {
     try {
-      console.log('📚 Extraction de toutes les pages du PDF...');
-      console.log(`📖 Fichier: ${pdfFile.name}, Taille: ${Math.round(pdfFile.size / 1024)} KB`);
+      
+      } KB`);
       
       const arrayBuffer = await this.fileToArrayBuffer(pdfFile);
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      
-      console.log(`📚 PDF chargé: ${pdf.numPages} page(s)`);
-      
       const pages = [];
       
       for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
@@ -205,7 +199,7 @@ class PDFToImageConverter {
           canvas.width = viewport.width;
           canvas.height = viewport.height;
           
-          console.log(`🖼️ Rendu de la page ${pageNum} (${viewport.width}x${viewport.height}px)...`);
+          ...`);
           
           const renderContext = {
             canvasContext: context,
@@ -217,9 +211,6 @@ class PDFToImageConverter {
           // Conversion en base64 avec qualité optimisée pour l'IA
           const base64 = canvas.toDataURL('image/jpeg', 0.95).split(',')[1];
           const sizeKB = Math.round((base64.length * 3/4) / 1024);
-          
-          console.log(`✅ Page ${pageNum} convertie en image (${sizeKB} KB)`);
-          
           pages.push({
             pageNumber: pageNum,
             base64: base64,
@@ -236,7 +227,7 @@ class PDFToImageConverter {
         }
       }
       
-      console.log(`✅ Extraction terminée: ${pages.length}/${pdf.numPages} pages converties`);
+      
       return pages;
       
     } catch (error) {
@@ -251,7 +242,7 @@ class PDFToImageConverter {
   isPDF(file) {
     return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
   }
-}
+);}
 
 // Export singleton
 export default new PDFToImageConverter();

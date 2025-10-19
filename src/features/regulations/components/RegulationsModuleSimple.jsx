@@ -3,8 +3,8 @@ import { Book } from 'lucide-react';
 import { regulationsData } from '../data/regulationsData';
 
 const RegulationsModuleSimple = () => {
-  console.log('RegulationsModuleSimple rendering');
-  console.log('Data available:', regulationsData);
+  
+  
 
   return (
     <div style={{ padding: '20px' }}>
@@ -33,7 +33,7 @@ const RegulationsModuleSimple = () => {
         </ul>
       </div>
     </div>
-  );
+
 };
 
 export default RegulationsModuleSimple;

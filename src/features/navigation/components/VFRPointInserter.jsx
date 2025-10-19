@@ -11,8 +11,9 @@ import { useCustomVFRStore } from '@core/stores/customVFRStore';
 
 // PAS DE POINTS PRÉDÉFINIS - Uniquement les données SIA/AIXM locales
 
-export const VFRPointInserter = ({ 
+export const VFRPointInserter = ({
   waypoints = [],
+  currentAirportIcao = null, // Code ICAO de l'aérodrome courant pour filtrer les points VFR
   onInsertWaypoint,
   insertPosition = null // Position où insérer le point (null = avant dernier)
 }) => {
@@ -29,7 +30,7 @@ export const VFRPointInserter = ({
       try {
         const vfrPoints = await geoJSONDataService.getAllVFRPoints();
         setLoadedVFRPoints(vfrPoints);
-        console.log(`Loaded ${vfrPoints.length} VFR points from service`);
+        
       } catch (error) {
         console.error('Error loading VFR points:', error);
       }
@@ -55,12 +56,7 @@ export const VFRPointInserter = ({
         airports.add(wp.name);
       }
     });
-    
-    // Debug pour voir ce qui est détecté
-    if (airports.size > 0) {
-      console.log('🛩️ Aérodromes détectés dans la navigation:', Array.from(airports));
-    }
-    
+
     return airports;
   }, [waypoints]);
 
@@ -105,8 +101,7 @@ export const VFRPointInserter = ({
           )) ||
           (props.type === 'VRP') ||
           (pointCode.length >= 2 && !pointCode.match(/^[NSEW]$/)) // Au moins 2 caractères et pas juste N/S/E/W
-        );
-        
+
         if (!addedIds.has(pointId) && isRealVFR) {
           const point = {
             id: pointId,
@@ -121,20 +116,29 @@ export const VFRPointInserter = ({
             searchName: `${props.aerodrome || ''} ${props.name || ''} ${props.identification || ''} ${props.description || ''}`.toLowerCase()
           };
           
-          // N'ajouter que les points VFR des aérodromes présents dans la navigation
-          if (props.aerodrome && airportsInRoute.has(props.aerodrome)) {
-            point.displayName = `${props.aerodrome} - ${point.displayName}`;
-            result.routeVFR.push(point);
+          // Filtrer les points VFR selon le contexte
+          if (props.aerodrome) {
+            // Si currentAirportIcao est fourni, ne montrer que les points VFR de cet aérodrome
+            if (currentAirportIcao) {
+              if (props.aerodrome === currentAirportIcao) {
+                point.displayName = `${props.aerodrome} - ${point.displayName}`;
+                result.routeVFR.push(point);
+              }
+            }
+            // Sinon, montrer tous les points VFR des aérodromes présents dans la route
+            else if (airportsInRoute.has(props.aerodrome)) {
+              point.displayName = `${props.aerodrome} - ${point.displayName}`;
+              result.routeVFR.push(point);
+            }
           }
-          // Ignorer tous les autres points (autres aérodromes ou sans aérodrome)
           
           addedIds.add(pointId);
         }
       }
     });
-    
+
     return result;
-  }, [customVFRPoints, loadedVFRPoints, airportsInRoute]);
+  }, [customVFRPoints, loadedVFRPoints, airportsInRoute, currentAirportIcao]);
 
   // Filtrer les points selon la recherche
   const filteredPoints = useMemo(() => {
@@ -144,20 +148,16 @@ export const VFRPointInserter = ({
     };
     
     const term = searchTerm.toLowerCase();
-    
+
     // Filtrer les points personnalisés
-    result.custom = organizedPoints.custom.filter(p => 
+    result.custom = organizedPoints.custom.filter(p =>
       !term || p.searchName.includes(term) ||
       p.code?.toLowerCase().includes(term)
-    );
-    
     // Filtrer les points VFR de la route
-    result.routeVFR = organizedPoints.routeVFR.filter(p => 
+    result.routeVFR = organizedPoints.routeVFR.filter(p =>
       !term || p.searchName.includes(term) ||
       p.code?.toLowerCase().includes(term) ||
       p.airportIcao?.toLowerCase().includes(term)
-    );
-    
     return result;
   }, [organizedPoints, searchTerm]);
 
@@ -172,7 +172,7 @@ export const VFRPointInserter = ({
       vfrPointId: point.id,
       description: point.description,
       displayName: point.displayName,
-      airportRef: point.airportIcao
+      aerodrome: point.airportIcao  // Propriété utilisée pour lier le point VFR à son aérodrome
     };
 
     // Déterminer la position d'insertion
@@ -439,7 +439,7 @@ export const VFRPointInserter = ({
         </div>
       )}
     </div>
-  );
+
 };
 
 export default VFRPointInserter;

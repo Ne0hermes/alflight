@@ -1,6 +1,5 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { GraphConfig } from '../core/types';
-import { v4 as uuidv4 } from 'uuid';
 
 interface GraphManagerProps {
   graphs: GraphConfig[];
@@ -11,7 +10,7 @@ interface GraphManagerProps {
   onUpdateGraph: (graphId: string, updates: Partial<GraphConfig>) => void;
   onLinkGraphs?: (fromId: string, toId: string) => void;
   onUnlinkGraphs?: (fromId: string, toId: string) => void;
-}
+);}
 
 
 const styles = {
@@ -20,26 +19,6 @@ const styles = {
     backgroundColor: '#e3f2fd',
     borderRadius: '6px',
     border: '1px solid #2196F3'
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '16px'
-  },
-  title: {
-    fontSize: '16px',
-    fontWeight: 600,
-    color: '#1976d2'
-  },
-  addButton: {
-    padding: '6px 12px',
-    backgroundColor: '#2196F3',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '13px'
   },
   graphList: {
     display: 'flex',
@@ -69,12 +48,6 @@ const styles = {
     display: 'flex',
     alignItems: 'center'
   },
-  graphMeta: {
-    fontSize: '12px',
-    color: '#666',
-    paddingTop: '4px',
-    borderTop: '1px solid #e0e0e0'
-  },
   deleteButton: {
     padding: '4px 8px',
     backgroundColor: '#f44336',
@@ -84,28 +57,6 @@ const styles = {
     cursor: 'pointer',
     fontSize: '12px'
   },
-  form: {
-    padding: '12px',
-    backgroundColor: '#f5f5f5',
-    borderRadius: '6px',
-    marginBottom: '12px'
-  },
-  formField: {
-    marginBottom: '12px'
-  },
-  label: {
-    display: 'block',
-    fontSize: '12px',
-    color: '#666',
-    marginBottom: '4px'
-  },
-  input: {
-    width: '100%',
-    padding: '6px 8px',
-    border: '1px solid #ddd',
-    borderRadius: '4px',
-    fontSize: '13px'
-  },
   select: {
     width: '100%',
     padding: '6px 8px',
@@ -113,11 +64,6 @@ const styles = {
     borderRadius: '4px',
     fontSize: '13px',
     backgroundColor: 'white'
-  },
-  formActions: {
-    display: 'flex',
-    gap: '8px',
-    justifyContent: 'flex-end'
   },
   emptyState: {
     textAlign: 'center' as const,
@@ -137,85 +83,12 @@ export const GraphManager: React.FC<GraphManagerProps> = ({
   onLinkGraphs,
   onUnlinkGraphs
 }) => {
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newGraphName, setNewGraphName] = useState('');
-  const [newGraphIsWindRelated, setNewGraphIsWindRelated] = useState(false);
   const [showLinkForm, setShowLinkForm] = useState(false);
   const [linkFromId, setLinkFromId] = useState<string>('');
   const [linkToId, setLinkToId] = useState<string>('');
 
-  const handleAddGraph = useCallback(() => {
-    const name = newGraphName.trim() || `Graphique ${graphs.length + 1}`;
-    const newGraph: GraphConfig = {
-      id: uuidv4(),
-      name,
-      isWindRelated: newGraphIsWindRelated,
-      axes: {
-        xAxis: { min: 0, max: 100, unit: '', title: 'Axe X' },
-        yAxis: { min: 0, max: 100, unit: '', title: 'Axe Y' }
-      },
-      curves: []
-    };
-
-    onAddGraph(newGraph);
-    setNewGraphName('');
-    setNewGraphIsWindRelated(false);
-    setShowAddForm(false);
-  }, [newGraphName, newGraphIsWindRelated, graphs.length, onAddGraph]);
-
-
   return (
     <div style={styles.container}>
-      <div style={styles.header}>
-        <h3 style={styles.title}>Graphiques du système</h3>
-        <button
-          style={styles.addButton}
-          onClick={() => setShowAddForm(!showAddForm)}
-        >
-          {showAddForm ? 'Annuler' : '+ Nouveau graphique'}
-        </button>
-      </div>
-
-      {showAddForm && (
-        <div style={styles.form}>
-          <div style={styles.formField}>
-            <label style={styles.label}>Nom du graphique</label>
-            <input
-              type="text"
-              value={newGraphName}
-              onChange={(e) => setNewGraphName(e.target.value)}
-              placeholder="Ex: Décollage, Atterrissage..."
-              style={styles.input}
-            />
-          </div>
-          <div style={styles.formField}>
-            <label style={{ ...styles.label, display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={newGraphIsWindRelated}
-                onChange={(e) => setNewGraphIsWindRelated(e.target.checked)}
-                style={{ marginRight: '8px' }}
-              />
-              Ce graphique concerne le vent (permet de spécifier vent de face/arrière pour chaque courbe)
-            </label>
-          </div>
-          <div style={styles.formActions}>
-            <button
-              onClick={() => setShowAddForm(false)}
-              style={{ ...styles.addButton, backgroundColor: '#999' }}
-            >
-              Annuler
-            </button>
-            <button
-              onClick={handleAddGraph}
-              style={styles.addButton}
-            >
-              Créer le graphique
-            </button>
-          </div>
-        </div>
-      )}
-
       <div style={styles.graphList}>
         {graphs.length === 0 ? (
           <div style={styles.emptyState}>
@@ -236,7 +109,7 @@ export const GraphManager: React.FC<GraphManagerProps> = ({
               }}
               onClick={() => onSelectGraph(graph.id)}
             >
-              {/* Ligne 1: Titre */}
+              {/* Titre */}
               <div style={styles.graphName}>
                 {graph.name}
                 {graph.isWindRelated && (
@@ -253,56 +126,8 @@ export const GraphManager: React.FC<GraphManagerProps> = ({
                   </span>
                 )}
               </div>
-
-              {/* Ligne 2: Méta-informations */}
-              <div style={styles.graphMeta}>
-                {graph.axes ? (
-                  <span style={{ color: '#4CAF50', marginRight: '8px' }}>✓ Axes configurés</span>
-                ) : (
-                  <span style={{ color: '#ff9800', marginRight: '8px' }}>⚠ Axes non configurés</span>
-                )}
-                • {graph.curves.length} courbe{graph.curves.length !== 1 ? 's' : ''}
-                {graph.linkedTo && graph.linkedTo.length > 0 && (
-                  <span> • Lié à {graph.linkedTo.length} graphique{graph.linkedTo.length > 1 ? 's' : ''}</span>
-                )}
-              </div>
-
-              {/* Ligne 3: Boutons */}
-              <div style={{ display: 'flex', gap: '4px', marginTop: '8px' }}>
-                <button
-                  style={{
-                    ...styles.deleteButton,
-                    backgroundColor: '#2196F3',
-                    padding: '4px',
-                    fontSize: '16px',
-                    flex: 1
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const newIsWindRelated = !graph.isWindRelated;
-                    onUpdateGraph(graph.id, { isWindRelated: newIsWindRelated });
-                  }}
-                  title={graph.isWindRelated ? "Désactiver le mode vent" : "Activer le mode vent"}
-                >
-                  {graph.isWindRelated ? '🚫' : '💨'}
-                </button>
-                <button
-                  style={{
-                    ...styles.deleteButton,
-                    flex: 2
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (confirm(`Supprimer le graphique "${graph.name}" ?`)) {
-                      onRemoveGraph(graph.id);
-                    }
-                  }}
-                >
-                  Supprimer
-                </button>
-              </div>
             </div>
-          ))
+
         )}
       </div>
 
@@ -319,7 +144,15 @@ export const GraphManager: React.FC<GraphManagerProps> = ({
                 </div>
               </div>
               <button
-                style={{ ...styles.addButton, backgroundColor: '#2196F3', fontSize: '12px', padding: '4px 10px' }}
+                style={{
+                  padding: '4px 10px',
+                  backgroundColor: '#2196F3',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
                 onClick={() => setShowLinkForm(!showLinkForm)}
               >
                 {showLinkForm ? 'Annuler' : 'Créer une liaison'}
@@ -369,16 +202,6 @@ export const GraphManager: React.FC<GraphManagerProps> = ({
                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                   <button
                     onClick={() => {
-                      setShowLinkForm(false);
-                      setLinkFromId('');
-                      setLinkToId('');
-                    }}
-                    style={{ ...styles.addButton, backgroundColor: '#999', fontSize: '11px', padding: '3px 8px' }}
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    onClick={() => {
                       if (linkFromId && linkToId && onLinkGraphs) {
                         onLinkGraphs(linkFromId, linkToId);
                         setShowLinkForm(false);
@@ -388,11 +211,13 @@ export const GraphManager: React.FC<GraphManagerProps> = ({
                     }}
                     disabled={!linkFromId || !linkToId}
                     style={{
-                      ...styles.addButton,
-                      backgroundColor: linkFromId && linkToId ? '#2196F3' : '#ccc',
-                      fontSize: '11px',
                       padding: '3px 8px',
-                      cursor: linkFromId && linkToId ? 'pointer' : 'not-allowed'
+                      backgroundColor: linkFromId && linkToId ? '#2196F3' : '#ccc',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: linkFromId && linkToId ? 'pointer' : 'not-allowed',
+                      fontSize: '11px'
                     }}
                   >
                     Créer la liaison
@@ -452,5 +277,4 @@ export const GraphManager: React.FC<GraphManagerProps> = ({
         </>
       )}
     </div>
-  );
 };

@@ -28,10 +28,9 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
       // Si on a une valeur explicite en mètres, la convertir
       const metersValue = airport.elevationM || airport.altitudeM;
       altValue = Math.round(metersValue * 3.28084);
-      console.log(`📏 ${sourceName}: conversion explicite ${metersValue}m → ${altValue}ft`);
+      
     } else {
       // Sinon, on suppose que c'est déjà en pieds (cas standard pour les données aéro)
-      console.log(`✈️ ${sourceName}: altitude ${altValue}ft (déjà en pieds)`);
     }
     
     return altValue;
@@ -54,9 +53,9 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
   
   // Debug des waypoints
   React.useEffect(() => {
-    console.log('📍 Waypoints:', waypoints);
-    console.log('📍 Departure airport:', departureAirport);
-    console.log('📍 Arrival airport:', arrivalAirport);
+    
+    
+    
   }, [waypoints, departureAirport, arrivalAirport]);
   
   // Récupérer les données météo - essayer plusieurs champs pour l'ICAO
@@ -116,26 +115,17 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
   const departureIcao = getDepartureIcao();
   const arrivalIcao = getArrivalIcao();
   
-  console.log('🔍 Extraction ICAO départ:', { 
-    airport: departureAirport,
-    extractedIcao: departureIcao 
-  });
-  console.log('🔍 Extraction ICAO arrivée:', { 
-    airport: arrivalAirport,
-    extractedIcao: arrivalIcao 
-  });
+  
+  
   
   const departureWeather = departureIcao && typeof departureIcao === 'string' ? getWeatherByIcao(departureIcao) : null;
   const arrivalWeather = arrivalIcao && typeof arrivalIcao === 'string' ? getWeatherByIcao(arrivalIcao) : null;
   
   // Debug des données météo
   React.useEffect(() => {
-    console.log('🌡️ Departure ICAO:', departureIcao, '→ Weather:', departureWeather);
-    console.log('🌡️ Arrival ICAO:', arrivalIcao, '→ Weather:', arrivalWeather);
-    if (departureWeather && !departureWeather.metar) {
-      console.log('⚠️ Weather data exists but no METAR field');
-    }
-  }, [departureWeather, arrivalWeather, departureIcao, arrivalIcao]);
+    
+    
+      }, [departureWeather, arrivalWeather, departureIcao, arrivalIcao]);
   
   // Poids actuel de l'avion
   const currentWeight = calculations?.totalWeight || aircraft?.maxTakeoffWeight || 1200;
@@ -143,38 +133,38 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
   // Fonction pour extraire la température du METAR
   const extractTemperature = (weather) => {
     if (!weather) {
-      console.log('⚠️ Pas d\'objet weather');
+      
       return null;
     }
     
     // D'abord, vérifier si la température est directement disponible dans l'objet weather
     if (weather.temperature !== undefined && weather.temperature !== null) {
-      console.log(`✅ Température directe depuis weather.temperature: ${weather.temperature}°C`);
+      
       return Math.round(weather.temperature); // Arrondir si c'est 13.99
     }
     
     // Vérifier d'autres champs possibles
     if (weather.temp !== undefined && weather.temp !== null) {
-      console.log(`✅ Température depuis weather.temp: ${weather.temp}°C`);
+      
       return Math.round(weather.temp);
     }
     
     // Si on a des données décodées
     if (weather.decoded) {
       if (weather.decoded.temperature !== undefined) {
-        console.log(`✅ Température depuis weather.decoded.temperature: ${weather.decoded.temperature}°C`);
+        
         return Math.round(weather.decoded.temperature);
       }
       if (weather.decoded.temp !== undefined) {
-        console.log(`✅ Température depuis weather.decoded.temp: ${weather.decoded.temp}°C`);
+        
         return Math.round(weather.decoded.temp);
       }
     }
     
     // Sinon, essayer d'extraire du METAR brut
     if (!weather.metar) {
-      console.log('⚠️ Pas de METAR dans l\'objet weather');
-      console.log('🔍 Structure weather reçue:', weather);
+      
+      
       return null;
     }
     
@@ -184,16 +174,16 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
     // Si c'est un objet avec une propriété raw ou text
     if (typeof metarString === 'object' && metarString !== null) {
       metarString = metarString.raw || metarString.text || metarString.metar || JSON.stringify(metarString);
-      console.log('📝 METAR était un objet, converti en:', metarString);
+      
     }
     
     // Vérifier que c'est maintenant une chaîne
     if (typeof metarString !== 'string') {
-      console.log('⚠️ METAR n\'est pas une chaîne:', typeof metarString, metarString);
+      
       return null;
     }
     
-    console.log('🌡️ METAR brut:', metarString);
+    
     
     // Chercher le pattern de température dans le METAR
     // Format standard METAR: ...vent... température/point_de_rosée ...QNH...
@@ -208,12 +198,8 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
       // Remplacer M par - pour les températures négatives
       temp = temp.replace('M', '-');
       const temperature = parseInt(temp);
-      console.log(`✅ Température extraite du METAR: ${temperature}°C (match: "${tempMatch[0]}")`);
       return temperature;
     }
-    
-    console.log('⚠️ Aucun pattern température trouvé dans le METAR');
-    console.log('⚠️ Format attendu: XX/YY (ex: 20/12)');
     return null;
   };
   
@@ -242,7 +228,6 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
           departureAirport,
           `Départ ${departureAirport.icao}`
         );
-        
         const metarTemp = extractTemperature(departureWeather);
         const isaTemp = performanceInterpolation.getISATemperature(altitudeFt);
         const temperature = metarTemp !== null ? metarTemp : isaTemp;
@@ -251,16 +236,7 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
           hasMetarTemp = true;
         }
         
-        console.log('🛫 Calcul décollage:', {
-          airport: departureIcao || 'Unknown',
-          altitudeFt,
-          metarTemp,
-          isaTemp,
-          temperatureUsed: temperature,
-          source: metarTemp !== null ? 'METAR' : 'ISA',
-          weight: currentWeight,
-          tablesCount: tables.length
-        });
+        
         
         // Trouver le bon tableau
         const takeoffTable = performanceInterpolation.findBestTable(tables, 'takeoff', currentWeight);
@@ -272,7 +248,6 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
             temperature,
             currentWeight
           );
-          
           if (result) {
             // Ajouter les corrections environnementales
             const metarStr = typeof departureWeather?.metar === 'string' 
@@ -289,14 +264,12 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
               result.groundRollCorrected = performanceInterpolation.applyCorrections(
                 result.groundRoll,
                 corrections
-              );
-            }
+            );
             if (result.distance50ft) {
               result.distance50ftCorrected = performanceInterpolation.applyCorrections(
                 result.distance50ft,
                 corrections
-              );
-            }
+            );
             
             result.airport = departureAirport;
             result.weather = departureWeather;
@@ -325,8 +298,7 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
         const altitudeFt = ensureAltitudeInFeet(
           arrivalAirport,
           `Arrivée ${arrivalAirport.icao}`
-        );
-        
+        );        
         const metarTemp = extractTemperature(arrivalWeather);
         const isaTemp = performanceInterpolation.getISATemperature(altitudeFt);
         const temperature = metarTemp !== null ? metarTemp : isaTemp;
@@ -335,15 +307,7 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
           hasMetarTemp = true;
         }
         
-        console.log('🛬 Calcul atterrissage:', {
-          airport: arrivalIcao || 'Unknown',
-          altitudeFt,
-          metarTemp,
-          isaTemp,
-          temperatureUsed: temperature,
-          source: metarTemp !== null ? 'METAR' : 'ISA',
-          tablesCount: tables.length
-        });
+        
         
         // Poids estimé à l'atterrissage (à améliorer avec le calcul de carburant)
         const landingWeight = currentWeight - 50; // Estimation simple
@@ -358,7 +322,7 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
             temperature,
             landingWeight
           );
-          
+
           if (result) {
             // Ajouter les corrections environnementales
             const metarStr = typeof arrivalWeather?.metar === 'string' 
@@ -375,13 +339,11 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
               result.groundRollCorrected = performanceInterpolation.applyCorrections(
                 result.groundRoll,
                 corrections
-              );
             }
             if (result.distance50ft) {
               result.distance50ftCorrected = performanceInterpolation.applyCorrections(
                 result.distance50ft,
                 corrections
-              );
             }
             
             result.airport = arrivalAirport;
@@ -415,7 +377,6 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
           const altitudeFt = ensureAltitudeInFeet(
             alternate,
             `Alternate ${altIcao || 'Unknown'}`
-          );
           const temperature = extractTemperature(altWeather) || 
                             performanceInterpolation.getISATemperature(altitudeFt);
           
@@ -427,7 +388,6 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
               altitudeFt,  // Utiliser l'altitude en pieds
               temperature,
               currentWeight - 30
-            );
             
             if (result) {
               result.airport = alternate;
@@ -790,9 +750,7 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
           </div>
         )}
       </div>
-    );
-  };
-  
+
   // Si pas de performances avancées
   if (!aircraft?.advancedPerformance?.tables || aircraft.advancedPerformance.tables.length === 0) {
     return (
@@ -979,7 +937,7 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
         </div>
       )}
     </div>
-  );
+
 };
 
 export default AdvancedPerformanceCalculator;

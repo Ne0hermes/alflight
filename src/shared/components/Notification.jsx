@@ -141,7 +141,7 @@ export const Notification = ({
       >
         <X size={18} />
       </button>
-      
+
     </div>
   );
 };

@@ -76,7 +76,5 @@ export const SimpleDebugButton = () => {
         </div>
       )}
     </>
-  );
-};
 
 export default SimpleDebugButton;

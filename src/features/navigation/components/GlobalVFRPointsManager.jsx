@@ -2,9 +2,10 @@
  * Gestionnaire des points VFR globaux (non liés à un aérodrome spécifique)
  */
 
-import React, { useState } from 'react';
-import { MapPin, Plus, Trash2, Edit2, Navigation, Search } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MapPin, Plus, Trash2, Edit2, Navigation, Search, Cloud, CloudOff, Upload, Download, RefreshCw } from 'lucide-react';
 import { useCustomVFRStore } from '@core/stores/customVFRStore';
+import vfrPointsService from '../../../services/vfrPointsService';
 
 const GlobalVFRPointsManager = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,6 +20,12 @@ const GlobalVFRPointsManager = () => {
     altitude: ''
   });
 
+  // États Supabase
+  const [supabasePoints, setSupabasePoints] = useState([]);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState(null);
+
   const { 
     getAllCustomVFRPoints, 
     addCustomVFRPoint, 
@@ -28,14 +35,21 @@ const GlobalVFRPointsManager = () => {
 
   // Récupérer uniquement les points non liés à un aérodrome
   const allPoints = getAllCustomVFRPoints();
-  const globalPoints = allPoints.filter(point => !point.aerodrome);
-  
+  const localGlobalPoints = allPoints.filter(point => !point.aerodrome);
+
+  // Combiner les points locaux et Supabase (éviter doublons par nom)
+  const localPointNames = new Set(localGlobalPoints.map(p => p.name.toLowerCase()));
+  const uniqueSupabasePoints = supabasePoints.filter(
+    p => !localPointNames.has(p.name.toLowerCase())
+  );
+
+  const globalPoints = [...localGlobalPoints, ...uniqueSupabasePoints];
+
   // Filtrer par terme de recherche
-  const filteredPoints = globalPoints.filter(point => 
+  const filteredPoints = globalPoints.filter(point =>
     point.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     point.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
   const handleAddPoint = async () => {
     if (!newPoint.name || !newPoint.lat || !newPoint.lon) {
       alert('Nom, latitude et longitude sont requis');
@@ -72,6 +86,91 @@ const GlobalVFRPointsManager = () => {
     });
 
     setEditingPoint(null);
+  };
+
+  // Synchroniser avec Supabase (télécharger les points partagés)
+  const handleSyncFromSupabase = async () => {
+    setIsSyncing(true);
+    try {
+      const points = await vfrPointsService.getAllPublicPoints();
+
+      // Transformer les points Supabase pour l'affichage local
+      const transformedPoints = points.map(point => ({
+        id: `supabase-${point.id}`,
+        name: point.name,
+        type: point.type,
+        lat: point.lat,
+        lon: point.lon,
+        altitude: point.altitude,
+        description: point.description,
+        fromSupabase: true,
+        supabaseId: point.id,
+        downloads_count: point.downloads_count,
+        uploaded_by: point.uploaded_by
+      }));
+
+      setSupabasePoints(transformedPoints);
+      setLastSyncTime(new Date());
+
+      alert(`✅ ${points.length} point(s) VFR synchronisé(s) depuis Supabase`);
+    } catch (error) {
+      console.error('Erreur sync:', error);
+      alert('❌ Erreur lors de la synchronisation');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  // Uploader les points locaux vers Supabase
+  const handleUploadToSupabase = async () => {
+    if (globalPoints.length === 0) {
+      alert('Aucun point local à uploader');
+      return;
+    }
+
+    if (!confirm(`Uploader ${globalPoints.length} point(s) local(aux) vers Supabase ?`)) {
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      // Filtrer les points qui ne viennent pas déjà de Supabase
+      const localOnlyPoints = globalPoints.filter(p => !p.fromSupabase);
+
+      if (localOnlyPoints.length === 0) {
+        alert('Tous vos points sont déjà sur Supabase');
+        setIsUploading(false);
+        return;
+      }
+
+      // Vérifier les doublons avant d'uploader
+      const pointsToUpload = [];
+      for (const point of localOnlyPoints) {
+        const exists = await vfrPointsService.pointExists(point.name, point.lat, point.lon);
+        if (!exists) {
+          pointsToUpload.push(point);
+        }
+      }
+
+      if (pointsToUpload.length === 0) {
+        alert('Tous vos points existent déjà sur Supabase');
+        setIsUploading(false);
+        return;
+      }
+
+      // Uploader les points
+      const result = await vfrPointsService.uploadMultiplePoints(pointsToUpload);
+
+      alert(`✅ ${result.length} point(s) uploadé(s) vers Supabase`);
+
+      // Re-synchroniser pour afficher les nouveaux points
+      await handleSyncFromSupabase();
+    } catch (error) {
+      console.error('Erreur upload:', error);
+      alert('❌ Erreur lors de l\'upload');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const formatCoordinates = (lat, lon) => {
@@ -111,37 +210,99 @@ const GlobalVFRPointsManager = () => {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '20px'
+        marginBottom: '20px',
+        flexWrap: 'wrap',
+        gap: '12px'
       }}>
-        <h2 style={{ 
-          fontSize: '18px', 
-          fontWeight: '600',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px'
-        }}>
-          <Navigation size={20} />
-          Points VFR Globaux
-        </h2>
-        
-        <button
-          onClick={() => setIsAdding(true)}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: '14px',
-            cursor: 'pointer',
+        <div>
+          <h2 style={{
+            fontSize: '18px',
+            fontWeight: '600',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px'
-          }}
-        >
-          <Plus size={16} />
-          Ajouter un point
-        </button>
+            gap: '8px',
+            marginBottom: '4px'
+          }}>
+            <Navigation size={20} />
+            Points VFR Globaux
+          </h2>
+          {lastSyncTime && (
+            <p style={{
+              fontSize: '11px',
+              color: '#6b7280',
+              margin: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              <Cloud size={12} />
+              Dernière synchro: {lastSyncTime.toLocaleTimeString()}
+            </p>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button
+            onClick={handleSyncFromSupabase}
+            disabled={isSyncing}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: isSyncing ? '#9ca3af' : '#10b981',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '14px',
+              cursor: isSyncing ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              opacity: isSyncing ? 0.6 : 1
+            }}
+          >
+            {isSyncing ? <RefreshCw size={16} className="spin" /> : <Download size={16} />}
+            {isSyncing ? 'Synchronisation...' : 'Synchroniser'}
+          </button>
+
+          <button
+            onClick={handleUploadToSupabase}
+            disabled={isUploading || localGlobalPoints.length === 0}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: isUploading || localGlobalPoints.length === 0 ? '#9ca3af' : '#f59e0b',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '14px',
+              cursor: isUploading || localGlobalPoints.length === 0 ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              opacity: isUploading || localGlobalPoints.length === 0 ? 0.6 : 1
+            }}
+          >
+            {isUploading ? <RefreshCw size={16} className="spin" /> : <Upload size={16} />}
+            {isUploading ? 'Upload...' : 'Partager'}
+          </button>
+
+          <button
+            onClick={() => setIsAdding(true)}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '14px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <Plus size={16} />
+            Ajouter
+          </button>
+        </div>
       </div>
 
       {/* Barre de recherche */}
@@ -462,7 +623,8 @@ const GlobalVFRPointsManager = () => {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px',
-                      marginBottom: '4px'
+                      marginBottom: '4px',
+                      flexWrap: 'wrap'
                     }}>
                       <MapPin size={16} style={{ color: vfrTypeColors[point.type] || '#6b7280' }} />
                       <span style={{
@@ -480,6 +642,35 @@ const GlobalVFRPointsManager = () => {
                       }}>
                         {point.type}
                       </span>
+                      {point.fromSupabase ? (
+                        <span style={{
+                          fontSize: '10px',
+                          padding: '2px 6px',
+                          backgroundColor: '#10b981',
+                          color: 'white',
+                          borderRadius: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '3px'
+                        }}>
+                          <Cloud size={10} />
+                          Supabase
+                        </span>
+                      ) : (
+                        <span style={{
+                          fontSize: '10px',
+                          padding: '2px 6px',
+                          backgroundColor: '#6b7280',
+                          color: 'white',
+                          borderRadius: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '3px'
+                        }}>
+                          <CloudOff size={10} />
+                          Local
+                        </span>
+                      )}
                     </div>
                     
                     <div style={{
@@ -514,41 +705,57 @@ const GlobalVFRPointsManager = () => {
                     display: 'flex',
                     gap: '4px'
                   }}>
-                    <button
-                      onClick={() => setEditingPoint(point)}
-                      style={{
-                        padding: '4px',
-                        backgroundColor: 'transparent',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: '#6b7280'
-                      }}
-                      title="Modifier"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm(`Supprimer le point "${point.name}" ?`)) {
-                          deleteCustomVFRPoint(point.id);
-                        }
-                      }}
-                      style={{
-                        padding: '4px',
-                        backgroundColor: 'transparent',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: '#ef4444'
-                      }}
-                      title="Supprimer"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    {!point.fromSupabase && (
+                      <>
+                        <button
+                          onClick={() => setEditingPoint(point)}
+                          style={{
+                            padding: '4px',
+                            backgroundColor: 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: '#6b7280'
+                          }}
+                          title="Modifier"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Supprimer le point "${point.name}" ?`)) {
+                              deleteCustomVFRPoint(point.id);
+                            }
+                          }}
+                          style={{
+                            padding: '4px',
+                            backgroundColor: 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: '#ef4444'
+                          }}
+                          title="Supprimer"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </>
+                    )}
+                    {point.fromSupabase && point.downloads_count !== undefined && (
+                      <div style={{
+                        padding: '4px 8px',
+                        fontSize: '11px',
+                        color: '#6b7280',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}>
+                        <Download size={12} />
+                        {point.downloads_count}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
             </div>
-          ))
         ) : (
           <div style={{
             padding: '40px',
@@ -577,18 +784,25 @@ const GlobalVFRPointsManager = () => {
           fontSize: '12px',
           color: '#1e40af'
         }}>
-          <strong>{globalPoints.length}</strong> point{globalPoints.length > 1 ? 's' : ''} VFR global{globalPoints.length > 1 ? 'aux' : ''}
-          {' • '}
-          {Object.entries(
-            globalPoints.reduce((acc, p) => {
-              acc[p.type] = (acc[p.type] || 0) + 1;
-              return acc;
-            }, {})
-          ).map(([type, count]) => `${count} ${type}`).join(', ')}
+          <div style={{ marginBottom: '8px' }}>
+            <strong>{globalPoints.length}</strong> point{globalPoints.length > 1 ? 's' : ''} VFR global{globalPoints.length > 1 ? 'aux' : ''}
+            {' • '}
+            <strong>{localGlobalPoints.length}</strong> local{localGlobalPoints.length > 1 ? 'aux' : ''}
+            {' • '}
+            <strong>{uniqueSupabasePoints.length}</strong> depuis Supabase
+          </div>
+          <div style={{ fontSize: '11px', opacity: 0.8 }}>
+            {Object.entries(
+              globalPoints.reduce((acc, p) => {
+                acc[p.type] = (acc[p.type] || 0) + 1;
+                return acc;
+              }, {})
+            ).map(([type, count]) => `${count} ${type}`).join(' • ')}
+          </div>
         </div>
       )}
     </div>
-  );
+
 };
 
 export default GlobalVFRPointsManager;

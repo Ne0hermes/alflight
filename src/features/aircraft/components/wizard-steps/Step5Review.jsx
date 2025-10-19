@@ -20,7 +20,8 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow
+  TableRow,
+  CircularProgress
 } from '@mui/material';
 import {
   CheckCircle as CheckCircleIcon,
@@ -35,15 +36,26 @@ import {
   CloudUpload as CloudUploadIcon,
   Save as SaveIcon,
   Difference as DifferenceIcon,
-  Warning as WarningIcon
+  Warning as WarningIcon,
+  Sync as SyncIcon,
+  Description as DescriptionIcon,
+  CloudQueue as CloudQueueIcon
 } from '@mui/icons-material';
 import CGEnvelopeChart from '../CgEnvelopeChart';
 import SpeedLimitationChart from '../SpeedLimitationChart';
+import communityService from '../../../../services/communityService';
+import { trackingActions } from '../../../../utils/autoTracking';
 
 const Step5Review = ({ data, setCurrentStep, onSave }) => {
   const [showDifferencesDialog, setShowDifferencesDialog] = useState(false);
   const [submissionMode, setSubmissionMode] = useState(null);
   const [differences, setDifferences] = useState([]);
+  const [isUpdatingSupabase, setIsUpdatingSupabase] = useState(false);
+  const [updateSuccess, setUpdateSuccess] = useState(false);
+  const [updateError, setUpdateError] = useState(null);
+  const [isUploadingManex, setIsUploadingManex] = useState(false);
+  const [manexUploadSuccess, setManexUploadSuccess] = useState(false);
+  const [manexUploadError, setManexUploadError] = useState(null);
 
   // Calculer les différences avec l'avion de base (pour les variantes)
   const calculateVariantDifferences = () => {
@@ -55,58 +67,219 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
     const current = data;
     const diffs = [];
 
-    // Mappage des champs pour un affichage plus clair avec unités
-    const fieldConfig = {
-      'registration': { label: 'Immatriculation', unit: '' },
-      'model': { label: 'Modèle', unit: '' },
-      'manufacturer': { label: 'Constructeur', unit: '' },
-      'year': { label: 'Année', unit: '' },
-      'mtow': { label: 'Masse max au décollage', unit: 'kg' },
-      'emptyWeight': { label: 'Masse à vide', unit: 'kg' },
-      'maxFuel': { label: 'Carburant max', unit: 'L' },
-      'cruiseSpeed': { label: 'Vitesse de croisière', unit: 'kt' },
-      'vne': { label: 'VNE', unit: 'kt' },
-      'vs0': { label: 'VS0', unit: 'kt' },
-      'vs1': { label: 'VS1', unit: 'kt' },
-      'vx': { label: 'VX', unit: 'kt' },
-      'vy': { label: 'VY', unit: 'kt' },
-      'serviceCeiling': { label: 'Plafond pratique', unit: 'ft' },
-      'takeoffDistance': { label: 'Distance de décollage', unit: 'm' },
-      'landingDistance': { label: 'Distance d\'atterrissage', unit: 'm' },
-      'fuelConsumption': { label: 'Consommation', unit: 'L/h' },
-      'range': { label: 'Autonomie', unit: 'nm' },
-      'engineType': { label: 'Type de moteur', unit: '' },
-      'enginePower': { label: 'Puissance moteur', unit: 'hp' },
-      'propType': { label: 'Type d\'hélice', unit: '' }
+    
+    
+    
+
+    // Labels et unités pour l'affichage (optionnel, avec fallback sur le nom du champ)
+    const fieldLabels = {
+      'registration': 'Immatriculation',
+      'model': 'Modèle',
+      'manufacturer': 'Constructeur',
+      'year': 'Année',
+      'mtow': 'Masse max au décollage (kg)',
+      'emptyWeight': 'Masse à vide (kg)',
+      'maxFuel': 'Carburant max (L)',
+      'cruiseSpeed': 'Vitesse de croisière (kt)',
+      'vne': 'VNE (kt)',
+      'vs0': 'VS0 (kt)',
+      'vs1': 'VS1 (kt)',
+      'vx': 'VX (kt)',
+      'vy': 'VY (kt)',
+      'va': 'VA (kt)',
+      'vfe': 'VFE (kt)',
+      'vno': 'VNO (kt)',
+      'vlo': 'VLO (kt)',
+      'vr': 'VR (kt)',
+      'serviceCeiling': 'Plafond pratique (ft)',
+      'takeoffDistance': 'Distance de décollage (m)',
+      'landingDistance': 'Distance d\'atterrissage (m)',
+      'fuelConsumption': 'Consommation (L/h)',
+      'range': 'Autonomie (nm)',
+      'engineType': 'Type de moteur',
+      'enginePower': 'Puissance moteur (hp)',
+      'propType': 'Type d\'hélice',
+      'remarks': 'Remarques',
+      'category': 'Catégorie',
+      'aircraftType': 'Type d\'appareil',
+      'fuelType': 'Type de carburant',
+      'seats': 'Nombre de sièges',
+      'maxLandingWeight': 'Masse max à l\'atterrissage (kg)',
+      'usefulLoad': 'Charge utile (kg)',
+      'maxRange': 'Autonomie max (nm)',
+      'fuelCapacity': 'Capacité carburant (L)',
+      'engineModel': 'Modèle moteur',
+      'minimumRunwayLength': 'Longueur piste minimale (m)',
+      'photo': 'Photo de l\'avion',
+      'manex': 'Manuel d\'exploitation (MANEX)',
+      'hasManex': 'Présence du MANEX',
+      // Sous-objets speeds
+      'speeds.vr': 'VR - Vitesse de rotation (kt)',
+      'speeds.v2': 'V2 - Vitesse de sécurité au décollage (kt)',
+      'speeds.vref': 'VREF - Vitesse de référence (kt)',
+      // Sous-objets specialCapabilities
+      'specialCapabilities.rnav': 'Capacité RNAV',
+      'specialCapabilities.rnavApproach': 'Approche RNAV',
+      'specialCapabilities.pbn': 'Navigation basée sur les performances (PBN)',
+      'specialCapabilities.mnps': 'Spécifications minimales de navigation (MNPS)',
+      'specialCapabilities.rvsm': 'Séparation verticale minimale réduite (RVSM)',
+      'specialCapabilities.catII': 'Atterrissage CAT II',
+      'specialCapabilities.catIII': 'Atterrissage CAT III',
+      'specialCapabilities.etops': 'Opérations bimoteur à distance (ETOPS)',
+      'specialCapabilities.tcas': 'Système anti-collision (TCAS)',
+      'specialCapabilities.ads': 'Surveillance dépendante automatique (ADS)',
+      // Sous-objets approvedOperations
+      'approvedOperations.svfr': 'Vol VFR spécial',
+      'approvedOperations.icing': 'Vol en conditions givrantes',
+      'approvedOperations.aerial': 'Travail aérien',
+      'approvedOperations.banner': 'Remorquage de banderoles',
+      'approvedOperations.glider': 'Remorquage de planeurs',
+      'approvedOperations.parachute': 'Largage de parachutistes',
+      'approvedOperations.night': 'Vol de nuit',
+      'approvedOperations.ifr': 'Vol IFR'
     };
 
-    // Formater la valeur avec unité
-    const formatFieldValue = (value, unit) => {
+    // Champs à ignorer dans la comparaison (métadonnées techniques)
+    const fieldsToIgnore = [
+      'id', 'baseAircraft', 'isImportedFromCommunity', 'originalCommunityData',
+      'communityPresetId', 'importedFromCommunity',
+      'createdAt', 'updatedAt', 'version',
+      // Métadonnées de la communauté
+      'type', 'addedBy', 'dateAdded', 'downloads', 'verified', 'adminVerified',
+      'hasFlightManual', 'manualVersion', 'description', 'aircraftId',
+      'isVariant', 'hasPerformance', 'communityVersion', 'importDate',
+      // Données internes
+      'baseFactor', 'wakeTurbulenceCategory', 'baggageCompartments',
+      'compatibleRunwaySurfaces', 'cruiseSpeedKt',
+      // Les abaques sont traités séparément dans le tableau comparatif
+      'performanceModels',
+      // MANEX et flightManual - ignorer car structure peut varier sans modification réelle
+      'manex', 'flightManual'
+    ];
+
+    // Normaliser les valeurs vides
+    const normalizeValue = (val) => {
+      if (val === null || val === undefined || val === '') return null;
+      if (Array.isArray(val) && val.length === 0) return null;
+      // Ne pas normaliser les objets (photo, manex, etc.) - ils seront comparés par leur présence/absence
+      return val;
+    };
+
+    // Formater la valeur pour affichage
+    const formatValue = (value) => {
       if (value === null || value === undefined || value === '') return '-';
-      if (unit) return `${value} ${unit}`;
-      return value;
+      if (Array.isArray(value)) return value.join(', ');
+      if (typeof value === 'object') {
+        // Pour les objets photo, afficher juste "Photo présente"
+        if (value.data || value.url || value.base64) return 'Photo présente';
+        // Pour les objets MANEX, afficher "MANEX présent"
+        if (value.fileName || value.fileUrl || value.uploadedAt) return 'MANEX présent';
+        return JSON.stringify(value);
+      }
+      return String(value);
     };
 
-    // Comparer les champs principaux
-    const compareField = (fieldName) => {
-      const config = fieldConfig[fieldName];
-      if (!config) return;
+    // Fonction récursive pour comparer les objets en profondeur
+    const compareNestedObjects = (basePath, baseObj, currentObj) => {
+      if (!baseObj && !currentObj) return;
+
+      // Si l'un des deux est null/undefined, créer un objet vide
+      const baseObject = baseObj || {};
+      const currentObject = currentObj || {};
+
+      const allKeys = new Set([...Object.keys(baseObject), ...Object.keys(currentObject)]);
+
+      allKeys.forEach(key => {
+        const fullPath = basePath ? `${basePath}.${key}` : key;
+
+        // Ignorer les champs exclus
+        if (fieldsToIgnore.includes(key)) return;
+
+        const baseValue = baseObject[key];
+        const currentValue = currentObject[key];
+
+        // Si les deux valeurs sont des objets (non-array, non-null), comparer récursivement
+        if (
+          typeof baseValue === 'object' && baseValue !== null && !Array.isArray(baseValue) &&
+          typeof currentValue === 'object' && currentValue !== null && !Array.isArray(currentValue)
+        ) {
+          compareNestedObjects(fullPath, baseValue, currentValue);
+          return;
+        }
+
+        const normalizedBase = normalizeValue(baseValue);
+        const normalizedCurrent = normalizeValue(currentValue);
+
+        // Comparer avec stringify pour les arrays et objets
+        const baseStr = JSON.stringify(normalizedBase);
+        const currentStr = JSON.stringify(normalizedCurrent);
+
+        // Détecter les modifications, ajouts et suppressions
+        if (baseStr !== currentStr) {
+          const isModification = normalizedBase !== null && normalizedCurrent !== null;
+          const isAddition = normalizedBase === null && normalizedCurrent !== null;
+          const isDeletion = normalizedBase !== null && normalizedCurrent === null;
+
+          if (isModification || isAddition || isDeletion) {
+            const label = fieldLabels[fullPath] || fieldLabels[key] || fullPath;
+            diffs.push({
+              field: label,
+              original: formatValue(baseValue),
+              modified: formatValue(currentValue)
+            });
+
+            const changeType = isAddition ? '➕ Ajout' : isDeletion ? '➖ Suppression' : '✏️ Modification';
+            
+          }
+        }
+      });
+    };
+
+    // Récupérer tous les champs uniques des deux objets
+    const allFields = new Set([...Object.keys(base), ...Object.keys(current)]);
+
+    // Comparer tous les champs
+    allFields.forEach(fieldName => {
+      // Ignorer les champs exclus
+      if (fieldsToIgnore.includes(fieldName)) return;
 
       const baseValue = base[fieldName];
       const currentValue = current[fieldName];
 
-      if (baseValue !== currentValue && currentValue !== undefined) {
-        diffs.push({
-          field: config.label,
-          original: formatFieldValue(baseValue, config.unit),
-          modified: formatFieldValue(currentValue, config.unit)
-        });
+      // Si les deux valeurs sont des objets (non-array, non-null), comparer récursivement
+      if (
+        typeof baseValue === 'object' && baseValue !== null && !Array.isArray(baseValue) &&
+        typeof currentValue === 'object' && currentValue !== null && !Array.isArray(currentValue)
+      ) {
+        compareNestedObjects(fieldName, baseValue, currentValue);
+        return;
       }
-    };
 
-    // Comparer tous les champs importants
-    Object.keys(fieldConfig).forEach(field => {
-      compareField(field);
+      const normalizedBase = normalizeValue(baseValue);
+      const normalizedCurrent = normalizeValue(currentValue);
+
+      // Comparer avec stringify pour les arrays
+      const baseStr = JSON.stringify(normalizedBase);
+      const currentStr = JSON.stringify(normalizedCurrent);
+
+      // Détecter les modifications, ajouts et suppressions
+      if (baseStr !== currentStr) {
+        const isModification = normalizedBase !== null && normalizedCurrent !== null;
+        const isAddition = normalizedBase === null && normalizedCurrent !== null;
+        const isDeletion = normalizedBase !== null && normalizedCurrent === null;
+
+        if (isModification || isAddition || isDeletion) {
+          const label = fieldLabels[fieldName] || fieldName;
+          diffs.push({
+            field: label,
+            original: formatValue(baseValue),
+            modified: formatValue(currentValue)
+          });
+
+          const changeType = isAddition ? '➕ Ajout' : isDeletion ? '➖ Suppression' : '✏️ Modification';
+          
+        }
+      }
     });
 
     return diffs;
@@ -154,10 +327,10 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
 
   // Gérer l'enregistrement avec options de soumission
   const handleSave = (saveMode = null) => {
-    console.log('🔵 Step5Review - handleSave appelé avec mode:', saveMode);
-    console.log('🔵 data.baseAircraft:', data.baseAircraft);
-    console.log('🔵 data.isImportedFromCommunity:', data.isImportedFromCommunity);
-    console.log('🔵 data.id:', data.id);
+    
+    
+    
+    
 
     // Si un mode est spécifié directement (pour les variantes)
     if (saveMode) {
@@ -171,7 +344,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
 
     // Si c'est une édition d'un avion existant (a un ID), sauvegarder localement
     if (data.id || data.aircraftId) {
-      console.log('🔵 Édition d\'un avion existant, sauvegarde locale');
+      
       handleLocalSave();
       return;
     }
@@ -179,29 +352,51 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
     if (data.isImportedFromCommunity) {
       const diffs = calculateDifferences();
       setDifferences(diffs);
-      console.log('🔵 Différences calculées:', diffs.length);
+      
 
       if (diffs.length > 0) {
         // Des modifications ont été apportées
-        console.log('🔵 Affichage du dialog des différences');
+        
         setShowDifferencesDialog(true);
       } else {
         // Pas de modifications, enregistrement local simple
-        console.log('🔵 Pas de modifications, enregistrement local');
+        
         handleLocalSave();
       }
     } else {
       // Nouvel avion, proposition directe à la communauté
-      console.log('🔵 Nouvel avion, soumission directe');
+      
       handleDirectSubmission();
     }
   };
 
   const handleLocalSave = () => {
-    console.log('🟢 handleLocalSave appelé');
-    console.log('🟢 onSave existe?', !!onSave);
+    
+    
+
+    // Logger les abaques si présents
+    if (data.performanceModels && data.performanceModels.length > 0) {
+      const totalGraphs = data.performanceModels.reduce((sum, model) =>
+        sum + (model.data?.graphs?.length || 0), 0);
+      const totalCurves = data.performanceModels.reduce((sum, model) =>
+        sum + (model.data?.graphs?.reduce((gSum, graph) =>
+          gSum + (graph.curves?.length || 0), 0) || 0), 0);
+      const totalPoints = data.performanceModels.reduce((sum, model) =>
+        sum + (model.data?.graphs?.reduce((gSum, graph) =>
+          gSum + (graph.curves?.reduce((cSum, curve) =>
+            cSum + (curve.points?.length || 0), 0) || 0), 0) || 0), 0);
+
+      trackingActions.performanceModelsConfigured(
+        data.registration || 'Unknown',
+        data.performanceModels.length,
+        totalGraphs,
+        totalCurves,
+        totalPoints
+      );
+    }
+
     if (onSave) {
-      console.log('🟢 Appel de onSave avec mode: local');
+      
       onSave({ mode: 'local', data });
     } else {
       console.error('❌ onSave n\'est pas défini!');
@@ -210,10 +405,10 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
   };
 
   const handleCommunitySubmission = () => {
-    console.log('🟡 handleCommunitySubmission appelé');
-    console.log('🟡 onSave existe?', !!onSave);
+    
+    
     if (onSave) {
-      console.log('🟡 Appel de onSave avec mode: community et différences');
+      
       onSave({
         mode: 'community',
         data,
@@ -227,10 +422,9 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
 
   // Gérer la soumission directe pour les nouveaux avions
   const handleDirectSubmission = () => {
-    console.log('🟠 handleDirectSubmission appelé');
-    console.log('🟠 onSave existe?', !!onSave);
+    
+    
     if (onSave) {
-      console.log('🟠 Appel de onSave avec mode: community (nouvel avion)');
       onSave({
         mode: 'community',
         data,
@@ -239,6 +433,155 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
     } else {
       console.error('❌ onSave n\'est pas défini!');
     }
+  };
+
+  // Mettre à jour les données dans Supabase
+  const handleUpdateSupabase = async () => {
+    if (!data.communityPresetId) {
+      setUpdateError('Impossible de trouver l\'ID du preset communautaire');
+      return;
+    }
+
+    setIsUpdatingSupabase(true);
+    setUpdateError(null);
+
+    try {
+      
+      
+
+      // IMPORTANT: Sauvegarder localement D'ABORD pour ne pas perdre les données
+      if (onSave) {
+        
+        onSave({ mode: 'local', data });
+      }
+
+      // Préparer les données à envoyer
+      const dataToUpdate = { ...data };
+
+      // Supprimer le MANEX des données (il ne doit pas être dans aircraft_data)
+      delete dataToUpdate.manex;
+
+      // Récupérer le MANEX s'il existe localement
+      let manexFile = null;
+      const manexData = data.manex?.pdfData || data.manex?.file;
+
+      if (manexData) {
+        // Convertir le base64 en blob avec le bon type MIME
+        try {
+          // Extraire la partie base64 de la data URL
+          const base64Data = manexData.includes(',') ? manexData.split(',')[1] : manexData;
+          const byteCharacters = atob(base64Data);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          // IMPORTANT: Spécifier explicitement le type MIME comme application/pdf
+          manexFile = new Blob([byteArray], { type: 'application/pdf' });
+          
+        } catch (conversionError) {
+          console.error('❌ Erreur conversion MANEX:', conversionError);
+          throw new Error('Erreur lors de la conversion du MANEX');
+        }
+      } else {
+        
+      }
+
+      // Appeler la fonction de mise à jour
+      await communityService.updateCommunityPreset(
+        data.communityPresetId,
+        dataToUpdate,
+        manexFile,
+        data.manex?.fileName || 'manex.pdf', // Nom du fichier MANEX
+        'current-user-id' // En prod: récupérer l'ID utilisateur réel
+      );
+
+      setUpdateSuccess(true);
+      setIsUpdatingSupabase(false);
+
+      // Afficher un message de succès pendant 3 secondes
+      setTimeout(() => {
+        setUpdateSuccess(false);
+      }, 3000);
+
+      
+    } catch (error) {
+      console.error('❌ Erreur lors de la mise à jour Supabase:', error);
+      setUpdateError(error.message || 'Erreur lors de la mise à jour');
+      setIsUpdatingSupabase(false);
+    }
+  };
+
+  // Uploader le MANEX vers Supabase
+  const handleUploadManexToSupabase = async () => {
+    if (!data.registration) {
+      setManexUploadError('Immatriculation requise pour uploader le MANEX');
+      return;
+    }
+
+    if (!data.manex || (!data.manex.file && !data.manex.pdfData)) {
+      setManexUploadError('Aucun MANEX à uploader');
+      return;
+    }
+
+    setIsUploadingManex(true);
+    setManexUploadError(null);
+
+    try {
+      
+
+      // IMPORTANT: Sauvegarder localement D'ABORD pour ne pas perdre les données
+      if (onSave) {
+        
+        onSave({ mode: 'local', data });
+      }
+
+      // Convertir base64 en blob
+      const fileData = data.manex.file || data.manex.pdfData;
+      const base64Data = fileData.split(',')[1];
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'application/pdf' });
+
+      // Upload vers Supabase
+      const result = await communityService.uploadManex(data.registration, blob);
+
+      setManexUploadSuccess(true);
+      setTimeout(() => setManexUploadSuccess(false), 3000);
+
+      
+    } catch (error) {
+      console.error('❌ Erreur upload MANEX:', error);
+      setManexUploadError(error.message);
+    } finally {
+      setIsUploadingManex(false);
+    }
+  };
+
+  // Fonction fusionnée : Sauvegarder localement ET uploader sur Supabase
+  const handleSaveAndUpload = async () => {
+    
+
+    // Si un MANEX est présent, uploader vers Supabase
+    if (data.manex && (data.manex.file || data.manex.pdfData)) {
+      
+
+      // Si c'est un avion de la communauté avec preset ID, mettre à jour
+      if (data.isImportedFromCommunity && data.communityPresetId) {
+        await handleUpdateSupabase();
+      } else {
+        // Sinon, uploader le MANEX
+        await handleUploadManexToSupabase();
+      }
+    }
+
+    // Toujours sauvegarder localement et naviguer vers le module aircraft
+    
+    handleLocalSave();
   };
 
   const formatValue = (value, unit = '') => {
@@ -340,10 +683,17 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
   const hasSpeedData = speedsData.vso || speedsData.vs1 || speedsData.vno || speedsData.vne;
   
   // Vérifier si nous avons des données CG
-  const hasCGData = (cgEnvelopeData.forwardPoints && cgEnvelopeData.forwardPoints.length > 0) || 
+  const hasCGData = (cgEnvelopeData.forwardPoints && cgEnvelopeData.forwardPoints.length > 0) ||
                     cgEnvelopeData.aftCG;
 
-  return (
+  // 🔍 DEBUG: Vérifier la présence du MANEX
+  
+
+  // 🔍 DEBUG: Vérifier la présence des abaques
+  
+  
+  
+    return (
     <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
       <Box sx={{ textAlign: 'center', mb: 4 }}>
         <Typography 
@@ -379,7 +729,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           <Typography variant="body2">
             Cet avion a été importé de la base de données communautaire (version {data.communityVersion || 1}).
             Vérifiez les informations et apportez vos modifications si nécessaire.
-            À la fin, vous pourrez choisir de soumettre vos modifications à la communauté ou de les conserver localement.
+            Vous pouvez les conserver localement ou mettre à jour la base communautaire.
           </Typography>
         </Alert>
       )}
@@ -474,18 +824,18 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
       )}
 
       {/* Performances */}
-      <Paper 
-        elevation={0} 
-        sx={{ 
+      <Paper
+        elevation={0}
+        sx={{
           mb: 3,
           border: '1px solid',
           borderColor: 'divider',
           overflow: 'hidden'
         }}
       >
-        <Box 
-          sx={{ 
-            p: 2, 
+        <Box
+          sx={{
+            p: 2,
             bgcolor: 'grey.50',
             display: 'flex',
             justifyContent: 'space-between',
@@ -509,10 +859,64 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
             Modifier
           </Button>
         </Box>
-        
+
         <Box sx={{ p: 3 }}>
-          {data.advancedPerformance || data.performanceTables ? (
+          {data.advancedPerformance || data.performanceTables || data.performanceModels ? (
             <Box>
+              {/* Affichage des abaques depuis performanceModels */}
+              {data.performanceModels && data.performanceModels.length > 0 && (
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
+                    Abaques de Performance ({data.performanceModels.length})
+                  </Typography>
+                  {data.performanceModels.map((model, index) => {
+                    // Compter les courbes et points
+                    const totalCurves = model.data?.graphs?.reduce((sum, graph) =>
+                      sum + (graph.curves?.length || 0), 0) || 0;
+                    const totalPoints = model.data?.graphs?.reduce((sum, graph) =>
+                      sum + (graph.curves?.reduce((curveSum, curve) =>
+                        curveSum + (curve.points?.length || 0), 0) || 0), 0) || 0;
+
+                    return (
+                      <Box
+                        key={index}
+                        sx={{
+                          mb: 2,
+                          p: 1.5,
+                          bgcolor: '#f0f9ff',
+                          borderRadius: '6px',
+                          border: '2px solid #2196F3'
+                        }}
+                      >
+                        <Typography sx={{ fontWeight: 500, mb: 1, fontSize: '15px' }}>
+                          {model.name || `Abaque ${index + 1}`}
+                        </Typography>
+                        <Typography sx={{ fontSize: '14px', color: '#6b7280' }}>
+                          Type: {model.type || 'abaque'}
+                        </Typography>
+                        {model.data?.graphs && (
+                          <>
+                            <Typography sx={{ fontSize: '14px', color: '#6b7280', mt: 0.5 }}>
+                              📊 {model.data.graphs.length} graphique(s)
+                            </Typography>
+                            {totalCurves > 0 && (
+                              <Typography sx={{ fontSize: '14px', color: '#6b7280', mt: 0.5 }}>
+                                📈 {totalCurves} courbe(s)
+                              </Typography>
+                            )}
+                            {totalPoints > 0 && (
+                              <Typography sx={{ fontSize: '14px', color: '#6b7280', mt: 0.5 }}>
+                                📍 {totalPoints} point(s) de données
+                              </Typography>
+                            )}
+                          </>
+                        )}
+                      </Box>
+                    );
+})}
+                </Box>
+              )}
+
               {/* Affichage des tableaux extraits depuis advancedPerformance */}
               {data.advancedPerformance?.tables && data.advancedPerformance.tables.length > 0 ? (
                 data.advancedPerformance.tables.map((table, tableIndex) => (
@@ -589,7 +993,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                       </Box>
                     )}
                   </Box>
-                ))
+              ))
               ) : (
                 <Box>
                   {/* Affichage des données de performance simple si pas de tableaux */}
@@ -680,8 +1084,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                       .filter(([_, value]) => value)
                       .map(([key, _]) => (
                         <Chip key={key} label={key.toUpperCase()} size="small" />
-                      ))
-                    }
+                    ))}
                   </Box>
                 </Grid>
               )}
@@ -695,8 +1098,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                       .filter(([key, value]) => value && typeof value === 'boolean' && key !== 'rnavTypes' && key !== 'rnpTypes')
                       .map(([key, _]) => (
                         <Chip key={key} label={key.toUpperCase()} size="small" />
-                      ))
-                    }
+                    ))}
                   </Box>
                 </Grid>
               )}
@@ -710,8 +1112,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                       .filter(([key, value]) => value && typeof value === 'boolean' && key !== 'transponderMode')
                       .map(([key, _]) => (
                         <Chip key={key} label={key.toUpperCase()} size="small" />
-                      ))
-                    }
+                    ))}
                     {data.equipmentSurv.transponderMode && (
                       <Chip label={`Mode ${data.equipmentSurv.transponderMode}`} size="small" color="primary" />
                     )}
@@ -850,18 +1251,18 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
 
       {/* Remarques */}
       {data.remarks && (
-        <Paper 
-          elevation={0} 
-          sx={{ 
+        <Paper
+          elevation={0}
+          sx={{
             mb: 3,
             border: '1px solid',
             borderColor: 'divider',
             overflow: 'hidden'
           }}
         >
-          <Box 
-            sx={{ 
-              p: 2, 
+          <Box
+            sx={{
+              p: 2,
               bgcolor: 'grey.50',
               display: 'flex',
               justifyContent: 'space-between',
@@ -885,11 +1286,11 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
               Modifier
             </Button>
           </Box>
-          
+
           <Box sx={{ p: 3 }}>
-            <Typography 
-              variant="body2" 
-              sx={{ 
+            <Typography
+              variant="body2"
+              sx={{
                 whiteSpace: 'pre-wrap',
                 lineHeight: 1.6
               }}
@@ -903,18 +1304,129 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
       {/* Message et tableau comparatif pour les variantes */}
       {data.baseAircraft && (
         <>
-          <Alert severity="info" sx={{ mb: 3, maxWidth: 800, mx: 'auto' }}>
-            <Typography variant="body2">
-              <strong>Configuration personnalisée</strong> - Cet avion est basé sur {data.baseAircraft.model} ({data.baseAircraft.registration}).
-              Vous pouvez choisir de sauvegarder cette configuration uniquement pour votre usage personnel,
-              ou de la proposer à la communauté comme une variante.
-            </Typography>
-          </Alert>
-
           {/* Tableau comparatif des modifications */}
           {(() => {
             const variantDiffs = calculateVariantDifferences();
-            if (variantDiffs.length > 0) {
+
+            // Détecter les modifications d'abaques - comparaison intelligente par NOM (pas par index)
+            const baseAbaques = data.baseAircraft?.performanceModels || [];
+            const currentAbaques = data.performanceModels || [];
+
+            // Créer des maps par nom pour faciliter la comparaison
+            const baseAbaquesMap = new Map(baseAbaques.map(a => [a.name, a]));
+            const currentAbaquesMap = new Map(currentAbaques.map(a => [a.name, a]));
+
+            // Déterminer quels abaques ont été ajoutés, modifiés ou supprimés
+            const modifiedAbaques = [];
+            let hasAbaqueChanges = false;
+
+            // Vérifier les abaques ajoutés et modifiés
+            currentAbaques.forEach(currentAbaque => {
+              const abaqueName = currentAbaque.name;
+              const baseAbaque = baseAbaquesMap.get(abaqueName);
+
+              if (!baseAbaque) {
+                // Abaque ajouté
+                hasAbaqueChanges = true;
+                modifiedAbaques.push(currentAbaque);
+                
+              } else {
+                // Abaque existe, vérifier s'il a été modifié
+                let isModified = false;
+
+                // Comparer type
+                if (baseAbaque.type !== currentAbaque.type) {
+                  isModified = true;
+                  
+                }
+
+                // Comparer le nombre de graphiques
+                const baseGraphCount = baseAbaque.data?.graphs?.length || 0;
+                const currentGraphCount = currentAbaque.data?.graphs?.length || 0;
+                if (baseGraphCount !== currentGraphCount) {
+                  isModified = true;
+                  
+                }
+
+                // Comparer chaque graphique en détail
+                if (baseAbaque.data?.graphs && currentAbaque.data?.graphs) {
+                  for (let j = 0; j < Math.max(baseGraphCount, currentGraphCount); j++) {
+                    const baseGraph = baseAbaque.data.graphs[j];
+                    const currentGraph = currentAbaque.data.graphs[j];
+
+                    if (!baseGraph || !currentGraph) {
+                      isModified = true;
+                      
+                      break;
+                    }
+
+                    // Comparer les axes
+                    const baseAxes = JSON.stringify(baseGraph.axes || {});
+                    const currentAxes = JSON.stringify(currentGraph.axes || {});
+                    if (baseAxes !== currentAxes) {
+                      isModified = true;
+                      
+                      break;
+                    }
+
+                    // Comparer le nombre de courbes
+                    const baseCurveCount = baseGraph.curves?.length || 0;
+                    const currentCurveCount = currentGraph.curves?.length || 0;
+                    if (baseCurveCount !== currentCurveCount) {
+                      isModified = true;
+                      
+                      break;
+                    }
+
+                    // Comparer chaque courbe (nombre de points)
+                    if (baseGraph.curves && currentGraph.curves) {
+                      for (let k = 0; k < baseGraph.curves.length; k++) {
+                        const baseCurve = baseGraph.curves[k];
+                        const currentCurve = currentGraph.curves[k];
+
+                        const basePointCount = baseCurve.points?.length || 0;
+                        const currentPointCount = currentCurve.points?.length || 0;
+                        if (basePointCount !== currentPointCount) {
+                          isModified = true;
+                          
+                          break;
+                        }
+                      }
+                    }
+
+                    if (isModified) break;
+                  }
+                }
+
+                if (isModified) {
+                  hasAbaqueChanges = true;
+                  modifiedAbaques.push(currentAbaque);
+                  
+                }
+              }
+            });
+
+            // Vérifier les abaques supprimés
+            baseAbaques.forEach(baseAbaque => {
+              if (!currentAbaquesMap.has(baseAbaque.name)) {
+                hasAbaqueChanges = true;
+                
+              }
+            });
+
+            // 🔍 DEBUG: Vérifier la comparaison des abaques
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+
+            if (variantDiffs.length > 0 || hasAbaqueChanges) {
               return (
                 <Paper elevation={2} sx={{ mb: 3, maxWidth: 1000, mx: 'auto', p: 2 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
@@ -923,39 +1435,103 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                       Tableau comparatif des modifications
                     </Typography>
                   </Box>
-                  <TableContainer>
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell><strong>Paramètre</strong></TableCell>
-                          <TableCell><strong>Valeur de base</strong></TableCell>
-                          <TableCell><strong>Votre modification</strong></TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {variantDiffs.map((diff, index) => (
-                          <TableRow key={index} sx={{
-                            '&:hover': { bgcolor: 'action.hover' },
-                            bgcolor: index % 2 === 0 ? 'grey.50' : 'white'
-                          }}>
-                            <TableCell>{diff.field}</TableCell>
-                            <TableCell sx={{ color: 'text.secondary' }}>
-                              {diff.original}
-                            </TableCell>
-                            <TableCell sx={{
-                              color: 'primary.main',
-                              fontWeight: 500
-                            }}>
-                              {diff.modified}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
+
+                  {/* Section Abaques si modifiés */}
+                  {hasAbaqueChanges && modifiedAbaques.length > 0 && (
+                    <Box sx={{ mb: 3 }}>
+                      <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1.5 }}>
+                        📊 Systèmes d'abaques ajoutés/modifiés
+                      </Typography>
+                      {modifiedAbaques.map((model, index) => {
+                        const totalCurves = model.data?.graphs?.reduce((sum, graph) =>
+                          sum + (graph.curves?.length || 0), 0) || 0;
+                        const totalPoints = model.data?.graphs?.reduce((sum, graph) =>
+                          sum + (graph.curves?.reduce((curveSum, curve) =>
+                            curveSum + (curve.points?.length || 0), 0) || 0), 0) || 0;
+
+                        return (
+                          <Box
+                            key={index}
+                            sx={{
+                              mb: 2,
+                              p: 1.5,
+                              bgcolor: '#f0f9ff',
+                              borderRadius: '6px',
+                              border: '2px solid #2196F3'
+                            }}
+                          >
+                            <Typography sx={{ fontWeight: 500, mb: 1, fontSize: '15px' }}>
+                              {model.name || `Abaque ${index + 1}`}
+                            </Typography>
+                            <Typography sx={{ fontSize: '14px', color: '#6b7280' }}>
+                              Type: {model.type || 'abaque'}
+                            </Typography>
+                            {model.data?.graphs && (
+                              <>
+                                <Typography sx={{ fontSize: '14px', color: '#6b7280', mt: 0.5 }}>
+                                  📊 {model.data.graphs.length} graphique(s)
+                                </Typography>
+                                {totalCurves > 0 && (
+                                  <Typography sx={{ fontSize: '14px', color: '#6b7280', mt: 0.5 }}>
+                                    📈 {totalCurves} courbe(s)
+                                  </Typography>
+                                )}
+                                {totalPoints > 0 && (
+                                  <Typography sx={{ fontSize: '14px', color: '#6b7280', mt: 0.5 }}>
+                                    📍 {totalPoints} point(s) de données
+                                  </Typography>
+                                )}
+                              </>
+                            )}
+                          </Box>
+                        );
+})}
+                    </Box>
+                  )}
+
+                  {/* Tableau des autres modifications */}
+                  {variantDiffs.length > 0 && (
+                    <>
+                      <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1.5 }}>
+                        Autres modifications
+                      </Typography>
+                      <TableContainer>
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell><strong>Paramètre</strong></TableCell>
+                              <TableCell><strong>Valeur de base</strong></TableCell>
+                              <TableCell><strong>Votre modification</strong></TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {variantDiffs.map((diff, index) => (
+                              <TableRow key={index} sx={{
+                                '&:hover': { bgcolor: 'action.hover' },
+                                bgcolor: index % 2 === 0 ? 'grey.50' : 'white'
+                              }}>
+                                <TableCell>{diff.field}</TableCell>
+                                <TableCell sx={{ color: 'text.secondary' }}>
+                                  {diff.original}
+                                </TableCell>
+                                <TableCell sx={{
+                                  color: 'primary.main',
+                                  fontWeight: 500
+                                }}>
+                                  {diff.modified}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </>
+                  )}
+
                   <Box sx={{ mt: 2, p: 1, bgcolor: 'info.50', borderRadius: 1 }}>
                     <Typography variant="caption" color="text.secondary">
-                      {variantDiffs.length} modification{variantDiffs.length > 1 ? 's' : ''} détectée{variantDiffs.length > 1 ? 's' : ''} par rapport à la configuration de base
+                      {variantDiffs.length + (hasAbaqueChanges ? modifiedAbaques.length : 0)} modification{(variantDiffs.length + (hasAbaqueChanges ? modifiedAbaques.length : 0)) > 1 ? 's' : ''} détectée{(variantDiffs.length + (hasAbaqueChanges ? modifiedAbaques.length : 0)) > 1 ? 's' : ''} par rapport à la configuration de base
+                      {hasAbaqueChanges && ` (dont ${modifiedAbaques.length} abaque${modifiedAbaques.length > 1 ? 's' : ''})`}
                     </Typography>
                   </Box>
                 </Paper>
@@ -968,50 +1544,49 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                   </Typography>
                 </Alert>
               );
-            }
+}
           })()}
         </>
       )}
 
+      {/* Messages de mise à jour Supabase */}
+      {updateError && (
+        <Alert severity="error" sx={{ mb: 3, maxWidth: 800, mx: 'auto' }}>
+          {updateError}
+        </Alert>
+      )}
+      {updateSuccess && (
+        <Alert severity="success" sx={{ mb: 3, maxWidth: 800, mx: 'auto' }}>
+          ✅ Mise à jour Supabase réussie ! La version a été incrémentée.
+        </Alert>
+      )}
+
+      {/* Messages d'upload MANEX */}
+      {manexUploadError && (
+        <Alert severity="error" sx={{ mb: 3, maxWidth: 800, mx: 'auto' }}>
+          {manexUploadError}
+        </Alert>
+      )}
+      {manexUploadSuccess && (
+        <Alert severity="success" sx={{ mb: 3, maxWidth: 800, mx: 'auto' }}>
+          ✅ MANEX uploadé vers Supabase avec succès !
+        </Alert>
+      )}
+
       {/* Boutons d'action */}
       <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 4 }}>
-        {data.baseAircraft ? (
-          // Si c'est une variante (Option 3), montrer deux options
-          <>
-            <Button
-              variant="contained"
-              color="primary"
-              size="large"
-              startIcon={<SaveIcon />}
-              onClick={() => handleSave('local')}
-              sx={{ px: 4 }}
-            >
-              Sauvegarder localement
-            </Button>
-            <Button
-              variant="contained"
-              color="secondary"
-              size="large"
-              startIcon={<CloudUploadIcon />}
-              onClick={() => handleSave('community')}
-              sx={{ px: 4 }}
-            >
-              Proposer à la communauté
-            </Button>
-          </>
-        ) : (
-          // Sinon, montrer le bouton unique
-          <Button
-            variant="contained"
-            color="primary"
-            size="large"
-            startIcon={<SaveIcon />}
-            onClick={() => handleSave()}
-            sx={{ px: 4 }}
-          >
-            Sauvegarder mon avion
-          </Button>
-        )}
+        {/* Bouton fusionné : Ajouter à ma liste d'avion + Upload Supabase */}
+        <Button
+          variant="contained"
+          color="primary"
+          size="large"
+          startIcon={(isUpdatingSupabase || isUploadingManex) ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+          onClick={handleSaveAndUpload}
+          disabled={isUpdatingSupabase || isUploadingManex}
+          sx={{ px: 4 }}
+        >
+          {isUpdatingSupabase || isUploadingManex ? 'Traitement en cours...' : 'Ajouter à ma liste d\'avion'}
+        </Button>
       </Box>
 
       {/* Dialog pour les différences */}
@@ -1046,25 +1621,51 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {differences.slice(0, 10).map((diff, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{diff.field}</TableCell>
-                      <TableCell>
-                        <Typography variant="body2" color="text.secondary">
-                          {typeof diff.original === 'object' && diff.original !== null
-                            ? JSON.stringify(diff.original)
-                            : (diff.original || 'Non défini')}
+                  {differences.slice(0, 10).map((diff, index) => {
+                    // Fonction pour afficher la valeur (texte ou image)
+                    const renderValue = (value, isOriginal = false) => {
+                      // Si c'est un objet photo
+                      if (typeof value === 'object' && value !== null &&
+                          (value.data || value.url || value.base64)) {
+                        const imgSrc = value.data || value.url || value.base64;
+                        return (
+                          <Box sx={{ display: 'flex', justifyContent: 'center', p: 1 }}>
+                            <img
+                              src={imgSrc}
+                              alt={isOriginal ? "Photo originale" : "Nouvelle photo"}
+                              style={{
+                                maxWidth: '150px',
+                                maxHeight: '150px',
+                                objectFit: 'contain',
+                                borderRadius: '4px',
+                                border: '1px solid #ddd'
+                              }}
+                            />
+                          </Box>
+                        );
+                      }
+                      // Sinon afficher le texte normalement
+                      return (
+                        <Typography variant="body2" color={isOriginal ? "text.secondary" : "primary"}>
+                          {typeof value === 'object' && value !== null
+                            ? JSON.stringify(value)
+                            : (value || 'Non défini')}
                         </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" color="primary">
-                          {typeof diff.modified === 'object' && diff.modified !== null
-                            ? JSON.stringify(diff.modified)
-                            : (diff.modified || 'Non défini')}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                      );
+                    };
+
+                    return (
+                      <TableRow key={index}>
+                        <TableCell>{diff.field}</TableCell>
+                        <TableCell>
+                          {renderValue(diff.original, true)}
+                        </TableCell>
+                        <TableCell>
+                          {renderValue(diff.modified, false)}
+                        </TableCell>
+                      </TableRow>
+                    );
+})}
                   {differences.length > 10 && (
                     <TableRow>
                       <TableCell colSpan={3} align="center">
@@ -1080,6 +1681,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           )}
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {/* DÉSACTIVÉ TEMPORAIREMENT - À réimplémenter plus tard
             <Paper
               sx={{
                 p: 2,
@@ -1103,6 +1705,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                 </Box>
               </Box>
             </Paper>
+            */}
 
             <Paper
               sx={{
@@ -1135,10 +1738,9 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           </Button>
           <Button
             variant="contained"
-            onClick={submissionMode === 'community' ? handleCommunitySubmission : handleLocalSave}
-            disabled={!submissionMode}
+            onClick={handleLocalSave}
           >
-            {submissionMode === 'community' ? 'Soumettre' : 'Enregistrer'}
+            Enregistrer
           </Button>
         </DialogActions>
       </Dialog>

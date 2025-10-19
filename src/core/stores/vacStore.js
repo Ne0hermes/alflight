@@ -50,8 +50,7 @@ const vacStore = create(
         }
         
         state.charts[upperIcao].customVfrPoints.push(newPoint);
-        console.log(`✅ Point VFR personnalisé ajouté à ${upperIcao}:`, newPoint.name);
-      }),
+              }),
       
       updateCustomVfrPoint: (icao, pointId, updates) => set(state => {
         const upperIcao = icao.toUpperCase();
@@ -74,7 +73,6 @@ const vacStore = create(
         state.charts[upperIcao].customVfrPoints = state.charts[upperIcao].customVfrPoints.filter(
           p => p.id !== pointId
         );
-        console.log(`🗑️ Point VFR personnalisé supprimé de ${upperIcao}:`, pointId);
       }),
       
       deleteChart: (icao) => set(state => {

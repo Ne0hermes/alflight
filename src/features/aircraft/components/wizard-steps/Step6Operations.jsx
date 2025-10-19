@@ -1,22 +1,25 @@
 import React, { useState } from 'react';
-import { 
-  Box, 
+import {
+  Box,
   Typography,
   Accordion,
   AccordionSummary,
   AccordionDetails,
   Checkbox,
   FormControlLabel,
-  FormGroup
+  FormGroup,
+  Button
 } from '@mui/material';
-import { 
+import {
   ExpandMore as ExpandMoreIcon,
   WbSunny as SunIcon,
   Stars as StarsIcon,
-  Terrain as TerrainIcon
+  Terrain as TerrainIcon,
+  ChevronRight as ChevronRightIcon,
+  ChevronLeft as ChevronLeftIcon
 } from '@mui/icons-material';
 
-const Step6Operations = ({ data, updateData, errors = {} }) => {
+const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
   const [expandedPanels, setExpandedPanels] = useState({
     flightRules: false,
     specialOps: false,
@@ -157,6 +160,7 @@ const Step6Operations = ({ data, updateData, errors = {} }) => {
                     <Typography variant="body2" sx={{ fontSize: '14px' }}>
                       VFR Spécial (SVFR)
                     </Typography>
+
                   }
                   sx={{ gridColumn: 'span 2' }}
                 />
@@ -299,6 +303,7 @@ const Step6Operations = ({ data, updateData, errors = {} }) => {
                     <Typography variant="body2" sx={{ fontSize: '14px' }}>
                       Photo/Surveillance
                     </Typography>
+
                   }
                   sx={{ gridColumn: 'span 2' }}
                 />
@@ -434,6 +439,35 @@ const Step6Operations = ({ data, updateData, errors = {} }) => {
           </Box>
         </AccordionDetails>
       </Accordion>
+
+      {/* Boutons de navigation */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+        {/* Bouton Précédent */}
+        {onPrevious && (
+          <Button
+            variant="outlined"
+            color="primary"
+            size="large"
+            onClick={onPrevious}
+            startIcon={<ChevronLeftIcon />}
+          >
+            Précédent
+          </Button>
+        )}
+
+        {/* Bouton Suivant */}
+        {onNext && (
+          <Button
+            variant="contained"
+            color="primary"
+            size="large"
+            onClick={onNext}
+            endIcon={<ChevronRightIcon />}
+          >
+            Suivant
+          </Button>
+        )}
+      </Box>
 
     </Box>
   );

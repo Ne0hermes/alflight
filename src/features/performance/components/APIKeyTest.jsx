@@ -47,7 +47,6 @@ const APIKeyTest = () => {
         const aiTestResult = await unifiedPerformanceService.callOpenAI(
           null,
           'Say "API connection successful" if you can read this.'
-        );
         
         setResult(prev => ({
           ...prev,
@@ -122,7 +121,7 @@ const APIKeyTest = () => {
         </Alert>
       )}
     </Paper>
-  );
+
 };
 
 export default APIKeyTest;

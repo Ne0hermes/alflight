@@ -3,30 +3,30 @@
  */
 
 export async function diagnoseIndexedDB() {
-  console.log('🔍 === DIAGNOSTIC INDEXEDDB ===');
+  
 
   // 1. Vérifier le support
   if (!window.indexedDB) {
     console.error('❌ IndexedDB non supporté par ce navigateur');
     return { supported: false };
   }
-  console.log('✅ IndexedDB supporté');
+  
 
   // 2. Lister toutes les bases de données
   try {
     if (indexedDB.databases) {
       const databases = await indexedDB.databases();
-      console.log('📊 Bases de données existantes:', databases);
+
     } else {
-      console.log('⚠️  indexedDB.databases() non disponible');
+      console.log('indexedDB.databases() non disponible');
     }
   } catch (error) {
-    console.warn('⚠️  Impossible de lister les bases:', error);
+    
   }
 
   // 3. Tester l'ouverture de FlightManagementDB
   const DB_NAME = 'FlightManagementDB';
-  console.log(`\n🔧 Test d'ouverture de ${DB_NAME}...`);
+  
 
   return new Promise((resolve) => {
     const request = indexedDB.open(DB_NAME);
@@ -59,9 +59,8 @@ export async function diagnoseIndexedDB() {
     request.onsuccess = (event) => {
       clearTimeout(timeout);
       const db = event.target.result;
-      console.log('✅ Base ouverte avec succès');
-      console.log('   Version:', db.version);
-      console.log('   Stores:', Array.from(db.objectStoreNames));
+      
+      
 
       // Vérifier les stores attendus
       const expectedStores = [
@@ -75,9 +74,9 @@ export async function diagnoseIndexedDB() {
       const missingStores = expectedStores.filter(store => !db.objectStoreNames.contains(store));
 
       if (missingStores.length > 0) {
-        console.warn('⚠️  Stores manquants:', missingStores);
+        
       } else {
-        console.log('✅ Tous les stores attendus sont présents');
+        
       }
 
       db.close();
@@ -94,7 +93,7 @@ export async function diagnoseIndexedDB() {
 
     request.onblocked = (event) => {
       clearTimeout(timeout);
-      console.warn('⚠️  Ouverture bloquée - une autre connexion est ouverte');
+      
       resolve({
         supported: true,
         canOpen: false,
@@ -106,12 +105,12 @@ export async function diagnoseIndexedDB() {
 }
 
 export async function deleteAndRecreateDB() {
-  console.log('🗑️  === SUPPRESSION ET RECREATION DE LA BASE ===');
+  
 
   const DB_NAME = 'FlightManagementDB';
 
   return new Promise((resolve, reject) => {
-    console.log(`🗑️  Suppression de ${DB_NAME}...`);
+    
     const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
 
     deleteRequest.onerror = (event) => {
@@ -120,8 +119,8 @@ export async function deleteAndRecreateDB() {
     };
 
     deleteRequest.onsuccess = () => {
-      console.log('✅ Base supprimée avec succès');
-      console.log('🔄 Rechargement de la page pour recréer la base...');
+      
+      
       resolve(true);
 
       // Recharger après 1 seconde
@@ -131,7 +130,7 @@ export async function deleteAndRecreateDB() {
     };
 
     deleteRequest.onblocked = () => {
-      console.warn('⚠️  Suppression bloquée - fermer les autres onglets');
+      
       alert('Fermez tous les autres onglets de cette application, puis réessayez.');
       reject(new Error('Blocked'));
     };
@@ -140,7 +139,7 @@ export async function deleteAndRecreateDB() {
 
 // Fonction rapide pour diagnostiquer et proposer une solution
 export async function autoFixIndexedDB() {
-  console.log('🔧 === AUTO-FIX INDEXEDDB ===');
+  
 
   const diagnosis = await diagnoseIndexedDB();
 
@@ -150,8 +149,8 @@ export async function autoFixIndexedDB() {
   }
 
   if (!diagnosis.canOpen) {
-    console.log('❌ Impossible d\'ouvrir la base');
-    console.log('💡 Recommandation:', diagnosis.recommendation);
+    
+    
 
     const confirm = window.confirm(
       '⚠️  La base de données IndexedDB est corrompue.\n\n' +
@@ -168,8 +167,8 @@ export async function autoFixIndexedDB() {
   }
 
   if (!diagnosis.healthy) {
-    console.log('⚠️  La base est ouverte mais des stores sont manquants');
-    console.log('💡 Stores manquants:', diagnosis.missingStores);
+    
+    
 
     const confirm = window.confirm(
       '⚠️  La base de données est incomplète.\n\n' +
@@ -184,7 +183,7 @@ export async function autoFixIndexedDB() {
     return false;
   }
 
-  console.log('✅ La base IndexedDB est saine');
+  
   alert('✅ La base de données IndexedDB fonctionne correctement.');
   return true;
 }

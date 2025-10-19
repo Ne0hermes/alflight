@@ -11,11 +11,15 @@ export function IndexedDBChecker({ children }) {
   const [diagnosis, setDiagnosis] = useState(null);
 
   useEffect(() => {
-    checkIndexedDB();
+    // Désactivé temporairement car le diagnostic bloque l'ouverture de la base
+    // checkIndexedDB();
+
+    // Laisser la base s'ouvrir normalement
+    setIsChecking(false);
   }, []);
 
   const checkIndexedDB = async () => {
-    console.log('🔍 IndexedDBChecker - Vérification de la santé d\'IndexedDB...');
+    
 
     try {
       const result = await diagnoseIndexedDB();
@@ -36,13 +40,13 @@ export function IndexedDBChecker({ children }) {
       }
 
       if (!result.healthy) {
-        console.warn('⚠️  IndexedDB incomplète');
+        
         setHasError(true);
         setIsChecking(false);
         return;
       }
 
-      console.log('✅ IndexedDB saine');
+      
       setIsChecking(false);
     } catch (error) {
       console.error('❌ Erreur lors du diagnostic IndexedDB:', error);
@@ -73,7 +77,7 @@ export function IndexedDBChecker({ children }) {
   };
 
   const handleContinueAnyway = () => {
-    console.warn('⚠️  L\'utilisateur a choisi de continuer malgré les erreurs IndexedDB');
+    
     setIsChecking(false);
     setHasError(false);
   };

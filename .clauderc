@@ -1,0 +1,5 @@
+{
+  "autoTrack": true,
+  "trackingScript": "scripts/track-change.ps1",
+  "projectRoot": "D:\\Applicator\\alflight"
+}

@@ -10,17 +10,14 @@ class APIKeyManager {
   initialize() {
     if (this.initialized) return;
 
-    console.log('🔑 Initialisation du gestionnaire de clés API...');
+    
 
     // Récupérer la clé depuis les variables d'environnement de manière sûre
     try {
       const envKey = import.meta.env.VITE_OPENAI_API_KEY;
 
-      console.log('🔍 Vérification de la clé dans l\'environnement:', envKey ? `Trouvée (${envKey.substring(0, 20)}...)` : 'Non trouvée');
-      console.log('🔍 Variables d\'environnement disponibles:', Object.keys(import.meta.env || {}));
-
       if (envKey) {
-        console.log('✅ Clé API trouvée dans les variables d\'environnement');
+        
 
         // Stocker dans localStorage pour un accès unifié
         localStorage.setItem('alflight_ai_api_key', envKey);
@@ -36,7 +33,7 @@ class APIKeyManager {
         return true;
       }
     } catch (e) {
-      console.log('⚠️ Erreur lors de l\'accès aux variables d\'environnement:', e.message);
+      
     }
     
     // Vérifier si une clé existe déjà dans localStorage
@@ -44,12 +41,12 @@ class APIKeyManager {
                      localStorage.getItem('openai_api_key');
     
     if (storedKey) {
-      console.log('✅ Clé API trouvée dans localStorage');
+      
       this.initialized = true;
       return true;
     }
     
-    console.warn('⚠️ Aucune clé API configurée');
+    
     this.initialized = true;
     return false;
   }
@@ -68,7 +65,7 @@ class APIKeyManager {
     try {
       return import.meta.env.VITE_OPENAI_API_KEY || null;
     } catch (e) {
-      console.warn('Variables d\'environnement non disponibles');
+      
       return null;
     }
   }
@@ -90,7 +87,7 @@ class APIKeyManager {
     if (key) {
       localStorage.setItem('alflight_ai_api_key', key);
       localStorage.setItem('openai_api_key', key); // Compatibilité
-      console.log('✅ Clé API mise à jour');
+      
       return true;
     }
     return false;
@@ -107,7 +104,7 @@ class APIKeyManager {
     localStorage.removeItem('alflight_ai_api_key');
     localStorage.removeItem('openai_api_key');
     localStorage.removeItem('alflight_ai_endpoint');
-    console.log('🗑️ Clés API effacées');
+
   }
 }
 
@@ -116,13 +113,13 @@ const apiKeyManager = new APIKeyManager();
 
 // Initialiser immédiatement au chargement du module
 try {
-  console.log('🚀 Initialisation automatique du gestionnaire de clés API...');
+  
   apiKeyManager.initialize();
 
   // Forcer la synchronisation de la clé si elle existe dans l'environnement
   const envKey = import.meta.env.VITE_OPENAI_API_KEY;
   if (envKey) {
-    console.log('✅ Synchronisation forcée de la clé depuis l\'environnement');
+    
     localStorage.setItem('alflight_ai_api_key', envKey);
     localStorage.setItem('openai_api_key', envKey);
 

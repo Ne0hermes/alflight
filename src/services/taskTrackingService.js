@@ -30,8 +30,7 @@ class TaskTrackingService {
       // Authentifier l'utilisateur
       await this.authenticate();
 
-      console.log('Service de tracking initialisé avec succès');
-      return true;
+            return true;
     } catch (error) {
       console.error('Erreur lors de l\'initialisation du service de tracking:', error);
       return false;
@@ -120,7 +119,7 @@ class TaskTrackingService {
       // Si pas authentifié, mettre en file d'attente
       if (!this.isAuthenticated) {
         this.taskQueue.push(row);
-        console.log('Tâche mise en file d\'attente (non authentifié)');
+
         return false;
       }
 
@@ -160,8 +159,7 @@ class TaskTrackingService {
       }
     });
 
-    console.log('Données envoyées vers Google Sheets:', response.result);
-    return response.result;
+        return response.result;
   }
 
   /**
@@ -170,8 +168,7 @@ class TaskTrackingService {
   async processQueue() {
     if (this.taskQueue.length === 0) return;
 
-    console.log(`Traitement de ${this.taskQueue.length} tâches en attente...`);
-
+    
     const rows = [...this.taskQueue];
     this.taskQueue = [];
 
@@ -188,8 +185,7 @@ class TaskTrackingService {
         }
       });
 
-      console.log(`${rows.length} tâches envoyées avec succès`);
-    } catch (error) {
+          } catch (error) {
       console.error('Erreur lors du traitement de la file d\'attente:', error);
       // Remettre les tâches en file d'attente
       this.taskQueue = [...rows, ...this.taskQueue];
@@ -237,8 +233,7 @@ class TaskTrackingService {
         await this.appendToSheet(row);
       } else {
         this.taskQueue.push(row);
-        console.log('Résumé mis en file d\'attente');
-      }
+              }
     } catch (error) {
       console.error('Erreur lors de l\'envoi du résumé:', error);
     }
@@ -253,8 +248,7 @@ class TaskTrackingService {
     const webhookUrl = process.env.REACT_APP_GOOGLE_SCRIPT_URL || '';
 
     if (!webhookUrl) {
-      console.warn('URL du webhook Google Scripts non configurée');
-      return false;
+            return false;
     }
 
     try {
@@ -271,8 +265,7 @@ class TaskTrackingService {
         })
       });
 
-      console.log('Données envoyées via webhook');
-      return true;
+            return true;
     } catch (error) {
       console.error('Erreur webhook:', error);
       return false;

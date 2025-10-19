@@ -13,8 +13,7 @@ export const useUnits = () => {
   // Écouter les changements d'unités via l'événement custom
   useEffect(() => {
     const handleUnitsUpdate = (event) => {
-      console.log('📐 Units updated via event:', event.detail);
-      // Forcer la mise à jour depuis le store
+            // Forcer la mise à jour depuis le store
       const newUnits = useUnitsStore.getState().units;
       setUnitsState(newUnits);
     };

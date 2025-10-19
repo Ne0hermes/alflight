@@ -271,7 +271,7 @@ export const RunwaySuggestion = memo(({ icao, wind }) => {
         </div>
       )}
     </div>
-  );
+
 });
 
 RunwaySuggestion.displayName = 'RunwaySuggestion';

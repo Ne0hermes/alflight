@@ -28,7 +28,7 @@ export const AlternateDetails = memo(({ alternates }) => {
         />
       ))}
     </div>
-  );
+
 });
 
 const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
@@ -277,7 +277,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
         </div>
       )}
     </div>
-  );
+
 });
 
 // Composant pour afficher un service
@@ -289,7 +289,6 @@ const ServiceIndicator = memo(({ available, label, icon }) => (
     </span>
     <span>{label}</span>
   </div>
-));
 
 // Composant pour le détail du score
 const ScoreBreakdown = memo(({ factors }) => (
@@ -320,7 +319,6 @@ const ScoreBreakdown = memo(({ factors }) => (
       </div>
     ))}
   </div>
-));
 
 // Fonctions utilitaires
 const getAlternateColor = (index) => {

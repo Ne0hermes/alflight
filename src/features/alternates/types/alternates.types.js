@@ -37,7 +37,7 @@ export const AirportType = PropTypes.shape({
   frequencies: PropTypes.arrayOf(PropTypes.shape({
     type: PropTypes.string,
     frequency: PropTypes.string
-  }))
+
 });
 
 // Type pour un aérodrome avec scoring
@@ -102,7 +102,7 @@ export const SearchZoneType = PropTypes.shape({
     lon: PropTypes.number,
     turnAngle: PropTypes.number,
     bufferRadius: PropTypes.number
-  }))
+
 });
 
 // Type pour les paramètres dynamiques
@@ -199,10 +199,11 @@ export const AlternatesModulePropTypes = {
   // Pas de props requises, utilise les contexts
 };
 
-export const AlternateMapPropTypes = {
-  searchZone: SearchZoneType,
-  alternates: PropTypes.arrayOf(ScoredAirportType)
-};
+// AlternateMap supprimé - carte désactivée
+// export const AlternateMapPropTypes = {
+//   searchZone: SearchZoneType,
+//   alternates: PropTypes.arrayOf(ScoredAirportType)
+// };
 
 export const AlternateDetailsPropTypes = {
   alternates: PropTypes.arrayOf(ScoredAirportType)

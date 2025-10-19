@@ -4,7 +4,7 @@
  * Ajoute des données de test complètes
  */
 export const addCompleteTestData = () => {
-  console.log('🚀 === AJOUT DE DONNÉES DE TEST COMPLÈTES ===');
+  
 
   // 1. Informations personnelles
   const personalInfo = {
@@ -24,7 +24,7 @@ export const addCompleteTestData = () => {
     emergencyPhone: '+33 6 98 76 54 32'
   };
   localStorage.setItem('personalInfo', JSON.stringify(personalInfo));
-  console.log('✅ Informations personnelles ajoutées');
+  
 
   // 2. Profil pilote
   const pilotProfile = {
@@ -34,7 +34,7 @@ export const addCompleteTestData = () => {
     homeBase: 'LFPG'
   };
   localStorage.setItem('pilotProfile', JSON.stringify(pilotProfile));
-  console.log('✅ Profil pilote ajouté');
+  
 
   // 3. Certifications complètes
   const pilotCertifications = {
@@ -135,11 +135,11 @@ export const addCompleteTestData = () => {
     ]
   };
   localStorage.setItem('pilotCertifications', JSON.stringify(pilotCertifications));
-  console.log('✅ Certifications ajoutées:');
-  console.log('  - 3 licences');
-  console.log('  - 3 qualifications');
-  console.log('  - 2 variantes');
-  console.log('  - 2 formations');
+  
+  
+  
+  
+  
 
   // 4. Suivi médical
   const medicalRecords = [
@@ -169,7 +169,7 @@ export const addCompleteTestData = () => {
     }
   ];
   localStorage.setItem('pilotMedicalRecords', JSON.stringify(medicalRecords));
-  console.log('✅ 2 dossiers médicaux ajoutés');
+  
 
   // 5. Configuration des unités
   const unitsConfig = {
@@ -183,16 +183,6 @@ export const addCompleteTestData = () => {
     visibility: 'km'
   };
   localStorage.setItem('unitsConfig', JSON.stringify(unitsConfig));
-  console.log('✅ Configuration des unités ajoutée');
-
-  console.log('\n📊 RÉSUMÉ DES DONNÉES AJOUTÉES:');
-  console.log('  ✅ Informations personnelles complètes');
-  console.log('  ✅ Profil pilote avec statistiques');
-  console.log('  ✅ 10 certifications (3 licences, 3 qualif., 2 variantes, 2 formations)');
-  console.log('  ✅ 2 dossiers médicaux');
-  console.log('  ✅ Configuration des unités');
-  console.log('\n✅ Toutes les données de test ont été ajoutées!');
-
   return {
     personalInfo,
     pilotProfile,
@@ -206,7 +196,7 @@ export const addCompleteTestData = () => {
  * Vérifie l'état complet du profil
  */
 export const verifyCompleteProfile = () => {
-  console.log('🔍 === VÉRIFICATION DU PROFIL COMPLET ===');
+  
 
   const results = {
     personalInfo: false,
@@ -221,9 +211,9 @@ export const verifyCompleteProfile = () => {
   if (personalInfo) {
     const data = JSON.parse(personalInfo);
     results.personalInfo = Object.keys(data).length > 0;
-    console.log('✅ Informations personnelles:', Object.keys(data).length, 'champs');
+    .length, 'champs');
   } else {
-    console.log('❌ Informations personnelles: MANQUANTES');
+    
   }
 
   // 2. Vérifier le profil pilote
@@ -231,9 +221,9 @@ export const verifyCompleteProfile = () => {
   if (pilotProfile) {
     const data = JSON.parse(pilotProfile);
     results.pilotProfile = Object.keys(data).length > 0;
-    console.log('✅ Profil pilote:', Object.keys(data).length, 'champs');
+    .length, 'champs');
   } else {
-    console.log('❌ Profil pilote: MANQUANT');
+    
   }
 
   // 3. Vérifier les certifications
@@ -245,13 +235,13 @@ export const verifyCompleteProfile = () => {
                   (data.endorsements?.length || 0) +
                   (data.training?.length || 0);
     results.certifications = total > 0;
-    console.log('✅ Certifications:', total, 'éléments');
-    console.log('  - Licences:', data.licenses?.length || 0);
-    console.log('  - Qualifications:', data.ratings?.length || 0);
-    console.log('  - Variantes:', data.endorsements?.length || 0);
-    console.log('  - Formations:', data.training?.length || 0);
+    
+    
+    
+    
+    
   } else {
-    console.log('❌ Certifications: MANQUANTES');
+    
   }
 
   // 4. Vérifier le suivi médical
@@ -259,9 +249,9 @@ export const verifyCompleteProfile = () => {
   if (medicalRecords) {
     const data = JSON.parse(medicalRecords);
     results.medical = data.length > 0;
-    console.log('✅ Suivi médical:', data.length, 'dossiers');
+    
   } else {
-    console.log('❌ Suivi médical: MANQUANT');
+    
   }
 
   // 5. Vérifier la configuration des unités
@@ -269,20 +259,20 @@ export const verifyCompleteProfile = () => {
   if (unitsConfig) {
     const data = JSON.parse(unitsConfig);
     results.units = Object.keys(data).length > 0;
-    console.log('✅ Configuration unités:', Object.keys(data).length, 'paramètres');
+    .length, 'paramètres');
   } else {
-    console.log('❌ Configuration unités: MANQUANTE');
+    
   }
 
   // Résumé
   const allOk = Object.values(results).every(v => v === true);
-  console.log('\n📊 RÉSUMÉ:');
-  console.log('  Informations personnelles:', results.personalInfo ? '✅' : '❌');
-  console.log('  Profil pilote:', results.pilotProfile ? '✅' : '❌');
-  console.log('  Certifications:', results.certifications ? '✅' : '❌');
-  console.log('  Suivi médical:', results.medical ? '✅' : '❌');
-  console.log('  Configuration unités:', results.units ? '✅' : '❌');
-  console.log('\nStatut global:', allOk ? '✅ COMPLET' : '⚠️ INCOMPLET');
+  
+  
+  
+  
+  
+  
+  
 
   return results;
 };
@@ -291,7 +281,7 @@ export const verifyCompleteProfile = () => {
  * Vide toutes les données du profil
  */
 export const clearAllProfileData = () => {
-  console.log('🗑️ === SUPPRESSION DE TOUTES LES DONNÉES ===');
+  
 
   const keys = [
     'personalInfo',
@@ -303,10 +293,10 @@ export const clearAllProfileData = () => {
 
   keys.forEach(key => {
     localStorage.removeItem(key);
-    console.log(`  ✅ ${key} supprimé`);
+    
   });
 
-  console.log('\n✅ Toutes les données ont été supprimées');
+  
   return true;
 };
 
@@ -314,29 +304,27 @@ export const clearAllProfileData = () => {
  * Test complet du système
  */
 export const runCompleteSystemTest = () => {
-  console.log('🧪 === TEST COMPLET DU SYSTÈME ===\n');
+  
 
-  console.log('📋 ÉTAPE 1: Ajout des données de test');
+  
   addCompleteTestData();
 
-  console.log('\n📋 ÉTAPE 2: Vérification des données');
+  
   const verification = verifyCompleteProfile();
 
-  console.log('\n📋 ÉTAPE 3: Instructions pour tester l\'export');
-  console.log('1. Cliquez sur "Exporter le profil pilote"');
-  console.log('2. Vérifiez que le fichier JSON contient:');
-  console.log('   - personalInfo avec toutes les infos');
-  console.log('   - certifications avec 10 éléments');
-  console.log('   - medicalRecords avec 2 dossiers');
-  console.log('   - unitsConfig avec la configuration');
+  
+  
+  
+  
+  
+  
+  
 
-  console.log('\n📋 ÉTAPE 4: Instructions pour tester l\'import');
-  console.log('1. Utilisez clearAllProfileData() pour vider les données');
-  console.log('2. Rafraîchissez la page (F5)');
-  console.log('3. Importez le fichier précédemment exporté');
-  console.log('4. Utilisez verifyCompleteProfile() pour vérifier');
+  
+   pour vider les données');
+   pour vérifier');
 
-  console.log('\n✅ TEST PRÊT - Suivez les instructions ci-dessus');
+  
 
   return verification;
 };

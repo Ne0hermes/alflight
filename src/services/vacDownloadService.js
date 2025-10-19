@@ -126,7 +126,6 @@ export class VACDownloadService {
             'X-API-Key': apiKey
           }
         }
-      );
 
       if (response.ok) {
         const data = await response.json();
@@ -300,7 +299,7 @@ export class VACDownloadService {
 
     return status;
   }
-}
+);}
 
 // Export singleton
 export const vacDownloadService = new VACDownloadService();

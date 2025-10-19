@@ -3,10 +3,12 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     VitePWA({
+      // DÉSACTIVER PWA en mode développement pour éviter le cache
+      disable: mode === 'development',
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico'],
       manifest: {
@@ -44,6 +46,11 @@ export default defineConfig({
             }
           }
         ]
+      },
+      // Options de développement
+      devOptions: {
+        enabled: false, // Désactiver complètement en dev
+        type: 'module'
       }
     })
   ],
@@ -73,10 +80,11 @@ export default defineConfig({
       protocol: 'ws',
       host: 'localhost'
     },
-    headers: {
-      'Cross-Origin-Embedder-Policy': 'require-corp',
-      'Cross-Origin-Opener-Policy': 'same-origin'
-    },
+    // DÉSACTIVÉ: Ces headers bloquent les requêtes Supabase
+    // headers: {
+    //   'Cross-Origin-Embedder-Policy': 'require-corp',
+    //   'Cross-Origin-Opener-Policy': 'same-origin'
+    // },
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:4001/',
@@ -120,4 +128,4 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 1000 // Augmenter la limite pour les PDFs
   }
-});
+}));

@@ -53,7 +53,7 @@ export const cleanOldData = (aggressive = false) => {
           localStorage.setItem(key, JSON.stringify(trimmed));
           const newSize = localStorage.getItem(key).length;
           freedSpace += originalSize - newSize;
-          console.log(`Nettoyé ${key}: gardé les ${limit} derniers éléments, libéré ${((originalSize - newSize) / 1024).toFixed(1)}KB`);
+           / 1024).toFixed(1)}KB`);
         }
 
         // Pour les certifications, supprimer les documents base64
@@ -62,7 +62,7 @@ export const cleanOldData = (aggressive = false) => {
           localStorage.setItem(key, JSON.stringify(cleaned));
           const newSize = localStorage.getItem(key).length;
           freedSpace += originalSize - newSize;
-          console.log(`Nettoyé ${key}: libéré ${((originalSize - newSize) / 1024).toFixed(1)}KB`);
+           / 1024).toFixed(1)}KB`);
         }
       }
     } catch (error) {
@@ -92,7 +92,7 @@ const cleanCertifications = (certifications, aggressive = false) => {
 
           // Supprimer les documents selon le seuil
           if (docSize > maxDocSize || (aggressive && totalSize > maxTotalSize)) {
-            console.log(`Document supprimé: ${item.name} (${(docSize / 1024 / 1024).toFixed(2)}MB)`);
+            .toFixed(2)}MB)`);
             removedCount++;
             return { ...item, document: null, documentName: `Document supprimé (>${(maxDocSize/1024/1024).toFixed(0)}MB)` };
           }
@@ -104,7 +104,7 @@ const cleanCertifications = (certifications, aggressive = false) => {
 
   // En mode agressif, supprimer TOUS les documents si l'espace est critique
   if (aggressive && totalSize > maxTotalSize) {
-    console.warn(`Nettoyage agressif: suppression de tous les documents`);
+    
     Object.keys(cleaned).forEach(category => {
       if (Array.isArray(cleaned[category])) {
         cleaned[category] = cleaned[category].map(item => ({
@@ -127,7 +127,7 @@ const cleanCertifications = (certifications, aggressive = false) => {
   });
 
   if (removedCount > 0) {
-    console.log(`${removedCount} documents supprimés pour libérer de l'espace`);
+    
   }
 
   return cleaned;
@@ -143,26 +143,26 @@ export const safeSetItem = (key, value) => {
     return true;
   } catch (e) {
     if (e.name === 'QuotaExceededError') {
-      console.warn('localStorage plein, tentative de nettoyage...');
+      
 
       // Nettoyer les vieilles données - mode normal
       let freedSpace = cleanOldData(false);
-      console.log(`Première phase: ${(freedSpace / 1024).toFixed(1)}KB libérés`);
+      .toFixed(1)}KB libérés`);
 
       // Deuxième tentative
       try {
         localStorage.setItem(key, value);
-        console.log('Sauvegarde réussie après nettoyage normal');
+        
         return true;
       } catch (e2) {
         // Nettoyage agressif
-        console.warn('Nettoyage agressif nécessaire...');
+        
         freedSpace = cleanOldData(true);
-        console.log(`Deuxième phase: ${(freedSpace / 1024).toFixed(1)}KB libérés`);
+        .toFixed(1)}KB libérés`);
 
         try {
           localStorage.setItem(key, value);
-          console.log('Sauvegarde réussie après nettoyage agressif');
+          
           return true;
         } catch (e3) {
           // Dernier recours : supprimer les plus grosses clés
@@ -179,13 +179,13 @@ export const safeSetItem = (key, value) => {
 
           for (let [k, size] of sorted) {
             if (!essentialKeys.includes(k) && k !== key) {
-              console.log(`Suppression forcée de ${k} (${(size/1024).toFixed(1)}KB)`);
+              .toFixed(1)}KB)`);
               localStorage.removeItem(k);
 
               // Réessayer
               try {
                 localStorage.setItem(key, value);
-                console.log('Sauvegarde réussie après suppression forcée');
+                
                 return true;
               } catch (e4) {
                 continue; // Continuer à supprimer
@@ -221,7 +221,7 @@ export const showStorageStats = () => {
   stats.sort((a, b) => parseFloat(b.size) - parseFloat(a.size));
 
   console.table(stats.slice(0, 10)); // Top 10
-  console.log(`Total utilisé: ${(total / 1024 / 1024).toFixed(2)} MB`);
+  .toFixed(2)} MB`);
 
   return {
     items: stats,
@@ -274,7 +274,7 @@ export const compressImage = (base64String, maxWidth = 800, targetQuality = 0.7)
       const originalSizeMB = (base64String.length / 1024 / 1024).toFixed(2);
       const compressedSizeMB = (compressed.length / 1024 / 1024).toFixed(2);
       const reduction = ((1 - compressed.length / base64String.length) * 100).toFixed(0);
-      console.log(`Compression: ${originalSizeMB}MB → ${compressedSizeMB}MB (-${reduction}%) [Qualité: ${quality.toFixed(1)}]`);
+       [Qualité: ${quality.toFixed(1)}]`);
 
       resolve(compressed);
     };
@@ -291,25 +291,25 @@ export const compressImage = (base64String, maxWidth = 800, targetQuality = 0.7)
  * Nettoyer manuellement le stockage (pour l'utilisateur)
  */
 export const manualCleanStorage = () => {
-  console.log('=== NETTOYAGE MANUEL DU STOCKAGE ===');
+  
 
   // Afficher l'état avant nettoyage
   const beforeStats = showStorageStats();
   const beforeSize = parseFloat(beforeStats.totalMB);
 
   // Phase 1: Nettoyage normal
-  console.log('\n📋 Phase 1: Nettoyage standard...');
+  
   let freedSpace = cleanOldData(false);
 
   // Phase 2: Nettoyage agressif si nécessaire
   const afterPhase1 = getLocalStorageSize();
   if (parseFloat(afterPhase1) > 2.5) { // Plus agressif: si > 2.5MB
-    console.log('\n🔥 Phase 2: Nettoyage agressif...');
+    
     freedSpace += cleanOldData(true);
   }
 
   // Phase 3: Suppression des clés non essentielles
-  console.log('\n🗑️ Phase 3: Suppression des données non essentielles...');
+  
   const nonEssentialKeys = [
     'flightPlans',
     'vacFavorites',
@@ -328,14 +328,14 @@ export const manualCleanStorage = () => {
       const size = item.length;
       localStorage.removeItem(key);
       freedSpace += size;
-      console.log(`Supprimé: ${key} (${(size/1024).toFixed(1)}KB)`);
+      .toFixed(1)}KB)`);
     }
   });
 
   // Phase 4: Suppression ultra-agressive si toujours > 3.5MB
   const afterPhase3 = getLocalStorageSize();
   if (parseFloat(afterPhase3) > 3.5) {
-    console.log('\n💥 Phase 4: Nettoyage ULTRA-AGRESSIF...');
+    
 
     // Supprimer TOUS les documents des certifications
     const certs = localStorage.getItem('pilotCertifications');
@@ -351,7 +351,7 @@ export const manualCleanStorage = () => {
         }
       });
       localStorage.setItem('pilotCertifications', JSON.stringify(parsed));
-      console.log('Tous les documents des certifications supprimés');
+      
     }
 
     // Limiter drastiquement les carnets de vol
@@ -361,7 +361,6 @@ export const manualCleanStorage = () => {
       if (parsed.length > 20) {
         const kept = parsed.slice(-20); // Garder seulement les 20 derniers
         localStorage.setItem('pilotLogbook', JSON.stringify(kept));
-        console.log(`Carnet de vol réduit à 20 entrées (de ${parsed.length})`);
       }
     }
   }
@@ -371,9 +370,9 @@ export const manualCleanStorage = () => {
   const afterSize = parseFloat(afterStats.totalMB);
   const totalFreed = beforeSize - afterSize;
 
-  console.log('\n✅ NETTOYAGE TERMINÉ');
-  console.log(`Espace libéré: ${totalFreed.toFixed(2)}MB`);
-  console.log(`Avant: ${beforeSize.toFixed(2)}MB → Après: ${afterSize.toFixed(2)}MB`);
+  
+  }MB`);
+  }MB → Après: ${afterSize.toFixed(2)}MB`);
 
   return {
     success: true,
@@ -425,7 +424,7 @@ export const getCleanupRecommendations = () => {
  * Nettoyer TOUT le localStorage sauf les données essentielles
  */
 export const emergencyCleanup = () => {
-  console.log('🚨 NETTOYAGE D\'URGENCE ACTIVÉ');
+  
 
   // Sauvegarder les données essentielles
   const essentialData = {
@@ -436,18 +435,18 @@ export const emergencyCleanup = () => {
 
   // Effacer TOUT
   localStorage.clear();
-  console.log('Tout le localStorage a été vidé');
+  
 
   // Restaurer les données essentielles
   Object.entries(essentialData).forEach(([key, value]) => {
     if (value) {
       localStorage.setItem(key, value);
-      console.log(`Restauré: ${key}`);
+      
     }
   });
 
   const afterSize = getLocalStorageSize();
-  console.log(`Nettoyage terminé. Nouvel espace utilisé: ${afterSize}MB`);
+  
 
   return {
     success: true,

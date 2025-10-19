@@ -56,9 +56,7 @@ export const AppleSignIn = ({ onSuccess, onError }) => {
         authorization.id_token,
         authorization.code
       );
-      
-      console.log('Apple sign in successful:', result);
-      
+
       if (onSuccess) {
         onSuccess(result);
       }
@@ -133,5 +131,3 @@ export const AppleSignIn = ({ onSuccess, onError }) => {
         Sign in with Apple
       </div>
     </div>
-  );
-};

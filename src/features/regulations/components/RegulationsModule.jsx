@@ -20,10 +20,7 @@ const iconMap = {
 
 const RegulationsModule = () => {
   // Debug logging
-  console.log('RegulationsModule - Component loaded');
-  console.log('RegulationsData available:', regulationsData);
-  console.log('Number of modules:', Object.keys(regulationsData || {}).length);
-  
+
   const [selectedModule, setSelectedModule] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedSections, setExpandedSections] = useState({});
@@ -43,7 +40,7 @@ const RegulationsModule = () => {
     const result = selectedModule === 'all' 
       ? Object.entries(regulationsData || {})
       : [[selectedModule, regulationsData?.[selectedModule]]].filter(([, val]) => val);
-    console.log('Modules to display:', result);
+    
     return result;
   }, [selectedModule]);
 
@@ -55,12 +52,12 @@ const RegulationsModule = () => {
       .map(([moduleId, module]) => {
         const filteredSections = module.sections
           .map(section => {
-            const filteredRegulations = section.regulations.filter(reg => 
+            const filteredRegulations = section.regulations.filter(reg =>
               reg.ref.toLowerCase().includes(searchTerm.toLowerCase()) ||
               reg.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
               reg.description?.toLowerCase().includes(searchTerm.toLowerCase())
             );
-            
+
             if (filteredRegulations.length > 0) {
               return { ...section, regulations: filteredRegulations };
             }

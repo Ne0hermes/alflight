@@ -24,7 +24,7 @@ export const applyTheme = () => {
     document.head.appendChild(style);
   }
   
-  console.log('🎨 Thème ALFlight fond blanc appliqué');
+  
 };
 
 // Applique le thème dès que possible

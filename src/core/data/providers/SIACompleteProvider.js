@@ -37,7 +37,7 @@ export class SIACompleteProvider extends AeroDataProvider {
     }
 
     // Sinon, commencer le chargement
-    console.log('🚀 Chargement des données SIA complètes...');
+    
     this.isLoading = true;
 
     loadingPromise = (async () => {
@@ -50,7 +50,6 @@ export class SIACompleteProvider extends AeroDataProvider {
         }
 
         const xmlText = await response.text();
-        console.log(`📦 Fichier AIXM chargé: ${(xmlText.length / 1024 / 1024).toFixed(2)} MB`);
 
         // Parser les données
         const parsedData = await this.parser.parseAIXM(xmlText);
@@ -62,16 +61,7 @@ export class SIACompleteProvider extends AeroDataProvider {
         cachedData = parsedData;
         this.data = parsedData;
 
-        console.log('✅ Données SIA chargées avec succès:', {
-          airports: parsedData.airports.length,
-          airspaces: parsedData.airspaces.length,
-          navaids: parsedData.navaids.length,
-          runways: parsedData.runways.length,
-          frequencies: parsedData.frequencies.length,
-          obstacles: parsedData.obstacles.length,
-          routes: parsedData.routes.length,
-          waypoints: parsedData.waypoints.length
-        });
+        
 
         return parsedData;
       } catch (error) {
@@ -137,7 +127,6 @@ export class SIACompleteProvider extends AeroDataProvider {
           n.identifier === navaid.identifier &&
           Math.abs(n.coordinates.lat - navaid.coordinates.lat) < 0.001 &&
           Math.abs(n.coordinates.lon - navaid.coordinates.lon) < 0.001
-        );
         if (dme) {
           navaid.type = 'VOR-DME';
           navaid.dmeChannel = dme.channel;
@@ -198,7 +187,6 @@ export class SIACompleteProvider extends AeroDataProvider {
         return airspace.geometry.coordinates[0].some(coord => 
           coord[1] >= minLat && coord[1] <= maxLat &&
           coord[0] >= minLon && coord[0] <= maxLon
-        );
       });
     }
     
@@ -225,7 +213,6 @@ export class SIACompleteProvider extends AeroDataProvider {
       filtered = filtered.filter(af => 
         af.icao?.toLowerCase().includes(search) ||
         af.name?.toLowerCase().includes(search)
-      );
     }
     
     if (params.nearPoint) {
@@ -258,7 +245,6 @@ export class SIACompleteProvider extends AeroDataProvider {
     if (params.types && params.types.length > 0) {
       filtered = filtered.filter(navaid => 
         params.types.some(type => navaid.type.includes(type))
-      );
     }
     
     if (params.bounds) {
@@ -266,7 +252,6 @@ export class SIACompleteProvider extends AeroDataProvider {
       filtered = filtered.filter(navaid => 
         navaid.coordinates.lat >= minLat && navaid.coordinates.lat <= maxLat &&
         navaid.coordinates.lon >= minLon && navaid.coordinates.lon <= maxLon
-      );
     }
     
     return filtered;
@@ -289,7 +274,6 @@ export class SIACompleteProvider extends AeroDataProvider {
       filtered = filtered.filter(wp => 
         wp.coordinates.lat >= minLat && wp.coordinates.lat <= maxLat &&
         wp.coordinates.lon >= minLon && wp.coordinates.lon <= maxLon
-      );
     }
     
     return filtered;
@@ -308,13 +292,11 @@ export class SIACompleteProvider extends AeroDataProvider {
       filtered = filtered.filter(obs => 
         obs.coordinates.lat >= minLat && obs.coordinates.lat <= maxLat &&
         obs.coordinates.lon >= minLon && obs.coordinates.lon <= maxLon
-      );
     }
     
     if (params.minHeight) {
       filtered = filtered.filter(obs => 
         (obs.height || 0) >= params.minHeight
-      );
     }
     
     return filtered;
@@ -355,7 +337,6 @@ export class SIACompleteProvider extends AeroDataProvider {
         airport.coordinates.lon,
         wp.coordinates.lat,
         wp.coordinates.lon
-      );
       return distance <= 15; // 15 km de rayon
     });
     

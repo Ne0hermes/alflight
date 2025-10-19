@@ -26,7 +26,7 @@ export const useCustomVFRStore = create(
         // Sauvegarder dans la base de données permanente
         try {
           await dataBackupManager.saveVFRPoint(newPoint);
-          console.log('✅ Point VFR sauvegardé dans le stockage permanent:', newPoint.id);
+          
         } catch (error) {
           console.error('❌ Erreur sauvegarde permanente point VFR:', error);
         }
@@ -35,7 +35,7 @@ export const useCustomVFRStore = create(
           customVFRPoints: [...state.customVFRPoints, newPoint]
         }));
         
-        console.log(`✅ Point VFR personnalisé ajouté: ${newPoint.name}`);
+        
         return newPoint;
       },
 
@@ -53,13 +53,13 @@ export const useCustomVFRStore = create(
           // Sauvegarder dans la base de données permanente
           try {
             await dataBackupManager.saveVFRPoint(updatedPoint);
-            console.log('✅ Point VFR mis à jour dans le stockage permanent:', id);
+            
           } catch (error) {
             console.error('❌ Erreur mise à jour permanente point VFR:', error);
           }
           
           set(state => ({
-            customVFRPoints: state.customVFRPoints.map(point => 
+            customVFRPoints: state.customVFRPoints.map(point =>
               point.id === id ? updatedPoint : point
             )
           }));
@@ -89,7 +89,7 @@ export const useCustomVFRStore = create(
       },
 
       getCustomVFRPointsByAerodrome: (aerodromeIcao) => {
-        return get().customVFRPoints.filter(point => 
+        return get().customVFRPoints.filter(point =>
           point.aerodrome === aerodromeIcao
         );
       },
@@ -135,7 +135,7 @@ export const useCustomVFRStore = create(
           const points = JSON.parse(jsonData);
           if (Array.isArray(points)) {
             set({ customVFRPoints: points });
-            console.log(`✅ ${points.length} points VFR personnalisés importés`);
+            
             return true;
           }
         } catch (error) {
@@ -158,7 +158,7 @@ export const useCustomVFRStore = create(
         }
         
         set({ customVFRPoints: [] });
-        console.log('🗑️ Tous les points VFR personnalisés supprimés');
+        
       }
     }),
     {
@@ -171,7 +171,7 @@ export const useCustomVFRStore = create(
             for (const point of state.customVFRPoints) {
               await dataBackupManager.saveVFRPoint(point);
             }
-            console.log('✅ Points VFR synchronisés avec le stockage permanent');
+
           } catch (error) {
             console.error('❌ Erreur synchronisation points VFR:', error);
           }
@@ -179,4 +179,4 @@ export const useCustomVFRStore = create(
       }
     }
   )
-);
+);

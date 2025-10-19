@@ -73,7 +73,6 @@ const checkDistanceCriteria = (airport, criteria) => {
     airport.coordinates,
     criteria.departure,
     criteria.arrival
-  );
   
   return distanceFromRoute <= criteria.maxRadiusNM;
 };
@@ -206,7 +205,6 @@ const hasATCService = (airport) => {
       freq.type === 'TWR' || 
       freq.type === 'APP' || 
       freq.type === 'AFIS'
-    );
   }
   
   return airport.type === 'medium_airport' || 
@@ -222,7 +220,6 @@ const hasNightLighting = (airport) => {
       runway.lighting === true || 
       runway.lights === true ||
       runway.hasLighting === true
-    );
   }
   
   return airport.type !== 'small_airport' && 

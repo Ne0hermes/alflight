@@ -33,7 +33,7 @@ class AirportDataService {
           });
         }
       } catch (err) {
-        console.warn('⚠️ Impossible de charger aerodromes.geojson');
+        
       }
 
       // Charger les données de pistes
@@ -56,11 +56,11 @@ class AirportDataService {
           });
         }
       } catch (err) {
-        console.warn('⚠️ Impossible de charger runways.geojson');
+        
       }
 
-      console.log(`📍 AirportDataService: ${this.aerodromes.size} aérodromes chargés`);
-      console.log(`🛬 AirportDataService: ${this.runways.size} aéroports avec pistes`);
+      
+      
     } catch (error) {
       console.error('❌ Erreur lors du chargement des données aéroport:', error);
     }
@@ -104,7 +104,7 @@ class AirportDataService {
       }
     }
 
-    console.log(`⚠️ Altitude non trouvée pour ${code} - utilisation de 0ft par défaut`);
+    
     return 0;
   }
 
@@ -156,7 +156,7 @@ class AirportDataService {
     
     return results;
   }
-}
+);}
 
 // Export singleton
 export default new AirportDataService();

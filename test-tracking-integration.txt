@@ -1,0 +1,4 @@
+Test de l'intégration automatique avec Google Sheets
+Ce fichier a été créé pour tester le système de tracking automatique.
+
+MODIFICATION: Test de l'édition avec synchronisation Google Sheets.

@@ -44,10 +44,7 @@ const DEFAULT_AIRCRAFT_VALUES = {
 export function validateAndRepairAircraft(aircraft) {
   if (!aircraft) return null;
 
-  // console.log('🔧 validateAndRepairAircraft - Input aircraft:', aircraft);
-  // console.log('🔧 validateAndRepairAircraft - Surfaces compatibles avant:', aircraft.compatibleRunwaySurfaces);
-  // console.log('🔧 validateAndRepairAircraft - Type des surfaces:', typeof aircraft.compatibleRunwaySurfaces);
-  // console.log('🔧 validateAndRepairAircraft - Aircraft complet:', JSON.stringify(aircraft, null, 2));
+  //   //   //   // );
 
   // Sauvegarder les données volumineuses AVANT le JSON parse/stringify qui les détruirait
   const savedPhoto = aircraft.photo;
@@ -79,8 +76,7 @@ export function validateAndRepairAircraft(aircraft) {
   // Réparer les propriétés de base SANS écraser les autres
   Object.keys(DEFAULT_AIRCRAFT_VALUES).forEach(key => {
     if (repairedAircraft[key] === undefined || repairedAircraft[key] === null) {
-      console.warn(`Aircraft ${aircraft.registration}: Missing ${key}, using default value`);
-      repairedAircraft[key] = DEFAULT_AIRCRAFT_VALUES[key];
+            repairedAircraft[key] = DEFAULT_AIRCRAFT_VALUES[key];
     }
   });
   
@@ -156,8 +152,7 @@ export function validateAndRepairAircraft(aircraft) {
 
   // Réparer les données de masse et centrage
   if (!repairedAircraft.weightBalance) {
-    console.warn(`Aircraft ${aircraft.registration}: Missing weightBalance data, using defaults`);
-    repairedAircraft.weightBalance = { ...DEFAULT_WEIGHT_BALANCE };
+        repairedAircraft.weightBalance = { ...DEFAULT_WEIGHT_BALANCE };
   } else {
     // Vérifier chaque propriété de weightBalance
     const wb = { ...repairedAircraft.weightBalance };
@@ -179,17 +174,14 @@ export function validateAndRepairAircraft(aircraft) {
           }
         }
       } else if (wb[key] === undefined || wb[key] === null) {
-        console.warn(`Aircraft ${aircraft.registration}: Missing weightBalance.${key}, using default value`);
-        wb[key] = DEFAULT_WEIGHT_BALANCE[key];
+                wb[key] = DEFAULT_WEIGHT_BALANCE[key];
       }
     });
     
     repairedAircraft.weightBalance = wb;
   }
   
-  // console.log('🔧 validateAndRepairAircraft - Output aircraft:', repairedAircraft);
-  // console.log('🔧 validateAndRepairAircraft - Surfaces compatibles après:', repairedAircraft.compatibleRunwaySurfaces);
-  
+  //   //   
   return repairedAircraft;
 }
 

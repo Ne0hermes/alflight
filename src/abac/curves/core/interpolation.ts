@@ -9,11 +9,9 @@ export function pchipInterpolate(points: XYPoint[], numOutputPoints: number = 10
   const validPoints = points.filter(p =>
     typeof p.x === 'number' && !isNaN(p.x) && isFinite(p.x) &&
     typeof p.y === 'number' && !isNaN(p.y) && isFinite(p.y)
-  );
 
   if (validPoints.length < 2) {
-    console.warn('Not enough valid points for PCHIP interpolation');
-    return validPoints;
+        return validPoints;
   }
 
   const sortedPoints = [...validPoints].sort((a, b) => a.x - b.x);
@@ -127,11 +125,9 @@ export function akimaInterpolate(points: XYPoint[], numOutputPoints: number = 10
   const validPoints = points.filter(p =>
     typeof p.x === 'number' && !isNaN(p.x) && isFinite(p.x) &&
     typeof p.y === 'number' && !isNaN(p.y) && isFinite(p.y)
-  );
 
   if (validPoints.length < 5) {
-    console.warn('Not enough valid points for Akima interpolation');
-    return pchipInterpolate(validPoints, numOutputPoints);
+        return pchipInterpolate(validPoints, numOutputPoints);
   }
 
   const sortedPoints = [...validPoints].sort((a, b) => a.x - b.x);
@@ -233,11 +229,9 @@ export function naturalCubicSplineInterpolate(points: XYPoint[], numOutputPoints
   const validPoints = points.filter(p =>
     typeof p.x === 'number' && !isNaN(p.x) && isFinite(p.x) &&
     typeof p.y === 'number' && !isNaN(p.y) && isFinite(p.y)
-  );
 
   if (validPoints.length < 2) {
-    console.warn('Not enough valid points for spline interpolation');
-    return validPoints;
+        return validPoints;
   }
 
   const sortedPoints = [...validPoints].sort((a, b) => a.x - b.x);
@@ -271,8 +265,7 @@ export function naturalCubicSplineInterpolate(points: XYPoint[], numOutputPoints
     h[i] = sortedPoints[i + 1].x - sortedPoints[i].x;
     // Vérifier que h[i] n'est pas zéro ou trop petit
     if (Math.abs(h[i]) < 1e-10) {
-      console.warn(`Points trop proches aux indices ${i} et ${i+1}`);
-      // Utiliser PCHIP comme fallback
+            // Utiliser PCHIP comme fallback
       return pchipInterpolate(sortedPoints, numOutputPoints);
     }
   }
@@ -298,8 +291,7 @@ export function naturalCubicSplineInterpolate(points: XYPoint[], numOutputPoints
     l[i] = 2 * (sortedPoints[i + 1].x - sortedPoints[i - 1].x) - h[i - 1] * mu[i - 1];
     // Vérifier la division par zéro
     if (Math.abs(l[i]) < 1e-10) {
-      console.warn(`Matrice singulière détectée à l'indice ${i}`);
-      // Utiliser PCHIP comme fallback
+            // Utiliser PCHIP comme fallback
       return pchipInterpolate(sortedPoints, numOutputPoints);
     }
     mu[i] = h[i] / l[i];
@@ -318,8 +310,7 @@ export function naturalCubicSplineInterpolate(points: XYPoint[], numOutputPoints
 
     // Vérifier que les coefficients sont valides
     if (!isFinite(b[j]) || !isFinite(c[j]) || !isFinite(d[j])) {
-      console.warn(`Coefficients invalides détectés à l'indice ${j}`);
-      // Utiliser PCHIP comme fallback
+            // Utiliser PCHIP comme fallback
       return pchipInterpolate(sortedPoints, numOutputPoints);
     }
   }
@@ -369,11 +360,9 @@ export function catmullRomInterpolate(points: XYPoint[], numOutputPoints: number
   const validPoints = points.filter(p =>
     typeof p.x === 'number' && !isNaN(p.x) && isFinite(p.x) &&
     typeof p.y === 'number' && !isNaN(p.y) && isFinite(p.y)
-  );
 
   if (validPoints.length < 2) {
-    console.warn('Not enough valid points for Catmull-Rom interpolation');
-    return validPoints;
+        return validPoints;
   }
 
   const sortedPoints = [...validPoints].sort((a, b) => a.x - b.x);

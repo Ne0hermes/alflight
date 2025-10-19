@@ -38,7 +38,7 @@ class ABACProtocolHandler {
 
   // Point d'entrée principal pour traiter les messages
   async processMessage(messageType, messageData) {
-    console.log(`📨 Processing message: ${messageType}`, messageData);
+    
     
     const handler = this.messageHandlers.get(messageType);
     if (handler) {
@@ -46,7 +46,7 @@ class ABACProtocolHandler {
       this.state.isWaitingForApp = false;
       return response;
     } else {
-      console.warn(`⚠️ Unknown message type: ${messageType}`);
+      
       return null;
     }
   }
@@ -425,7 +425,6 @@ class ABACProtocolHandler {
           expected: c.pred,
           tol_abs: 30,
           tol_pct: 10
-        }))
       }
     };
   }
@@ -524,7 +523,6 @@ class ABACProtocolHandler {
     // Passer à l'ABAC suivant dans la liste
     const currentIndex = this.state.abacIndex?.abacs.findIndex(
       a => a.id === this.state.currentAbacId
-    );
     
     if (currentIndex !== -1 && currentIndex < this.state.abacIndex.abacs.length - 1) {
       const nextAbac = this.state.abacIndex.abacs[currentIndex + 1];

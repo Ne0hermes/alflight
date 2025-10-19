@@ -21,24 +21,19 @@ class PerformanceTableAnalyzer {
         envEndpoint = import.meta.env.VITE_AI_API_ENDPOINT;
         
         // Debug: afficher les variables d'environnement disponibles
-        console.log('🔍 Variables d\'environnement Vite disponibles:', Object.keys(import.meta.env));
-        console.log('🔑 VITE_OPENAI_API_KEY présente?', !!envApiKey);
+        
         if (envApiKey) {
-          console.log('🔑 Clé API trouvée dans env (premiers caractères):', envApiKey.substring(0, 20) + '...');
+          :', envApiKey.substring(0, 20) + '...');
         }
       }
     } catch (e) {
-      console.log('⚠️ import.meta.env non disponible:', e.message);
+      
     }
     
     const windowApiKey = typeof window !== 'undefined' ? window.REACT_APP_OPENAI_API_KEY : null;
     const localApiKey = typeof localStorage !== 'undefined' ? localStorage.getItem('alflight_ai_api_key') : null;
     
-    console.log('🔍 Sources de clé API:', {
-      env: !!envApiKey,
-      window: !!windowApiKey,
-      localStorage: !!localApiKey
-    });
+    
     
     this.apiKey = envApiKey || windowApiKey || localApiKey;
     
@@ -157,9 +152,9 @@ class PerformanceTableAnalyzer {
    * Teste la validité de la clé API
    */
   async testAPIKey() {
-    console.log('🧪 Test de la clé API...');
-    console.log('📍 Endpoint:', this.apiEndpoint);
-    console.log('🔑 Clé (début):', this.apiKey ? this.apiKey.substring(0, 20) + '...' : 'NON DÉFINIE');
+    
+    
+    :', this.apiKey ? this.apiKey.substring(0, 20) + '...' : 'NON DÉFINIE');
     
     if (!this.apiKey) {
       return {
@@ -183,7 +178,7 @@ class PerformanceTableAnalyzer {
         temperature: 0
       };
       
-      console.log('📤 Envoi de la requête de test à OpenAI...');
+      
       
       const response = await fetch(this.apiEndpoint, {
         method: 'POST',
@@ -194,11 +189,11 @@ class PerformanceTableAnalyzer {
         body: JSON.stringify(testBody)
       });
 
-      console.log('📥 Réponse reçue:', response.status, response.statusText);
+      
 
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Test réussi, modèle:', data.model);
+        
         return {
           success: true,
           message: 'Clé API valide et fonctionnelle',
@@ -256,13 +251,13 @@ class PerformanceTableAnalyzer {
    */
   async callVisionAPI(base64Image, prompt) {
     if (!this.apiKey) {
-      console.log('⚠️ Pas de clé API, utilisation du fallback');
+      
       return this.fallbackAnalysis(prompt);
     }
 
-    console.log('🖼️ Appel API Vision avec image de', Math.round(base64Image.length / 1024), 'KB');
-    console.log('📝 Prompt length:', prompt.length, 'caractères');
-    console.log('🤖 Modèle utilisé:', this.model || 'gpt-4o');
+    , 'KB');
+    
+    
     
     const requestBody = {
       model: this.model || 'gpt-4o', // Utiliser le modèle configuré (gpt-4o par défaut)
@@ -289,7 +284,7 @@ class PerformanceTableAnalyzer {
     };
 
     try {
-      console.log('📤 Envoi de la requête Vision à OpenAI...');
+      
       const response = await fetch(this.apiEndpoint, {
         method: 'POST',
         headers: {
@@ -299,7 +294,7 @@ class PerformanceTableAnalyzer {
         body: JSON.stringify(requestBody)
       });
 
-      console.log('📥 Réponse Vision reçue:', response.status, response.statusText);
+      
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -317,7 +312,7 @@ class PerformanceTableAnalyzer {
       }
 
       const data = await response.json();
-      console.log('✅ Analyse Vision réussie');
+      
       
       if (!data.choices || !data.choices[0] || !data.choices[0].message) {
         throw new Error('Réponse API invalide');
@@ -434,7 +429,6 @@ class PerformanceTableAnalyzer {
           takeoffImage,
           takeoffConditions,
           'takeoff'
-        );
       } catch (error) {
         results.errors.push(`Takeoff analysis failed: ${error.message}`);
       }
@@ -447,7 +441,6 @@ class PerformanceTableAnalyzer {
           landingImage,
           landingConditions || takeoffConditions, // Utiliser les conditions d'atterrissage si fournies
           'landing'
-        );
       } catch (error) {
         results.errors.push(`Landing analysis failed: ${error.message}`);
       }
@@ -498,7 +491,7 @@ class PerformanceTableAnalyzer {
 
     return ((y2 - y) / (y2 - y1)) * fx1 + ((y - y1) / (y2 - y1)) * fx2;
   }
-}
+);}
 
 // Export singleton
 export default new PerformanceTableAnalyzer();

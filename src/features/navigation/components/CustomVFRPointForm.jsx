@@ -249,5 +249,3 @@ export const CustomVFRPointForm = ({
         </div>
       </form>
     </div>
-  );
-};

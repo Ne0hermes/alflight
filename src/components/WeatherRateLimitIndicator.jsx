@@ -37,7 +37,7 @@ export const WeatherRateLimitIndicator = memo(() => {
         </p>
       </div>
     </div>
-  );
+
 });
 
 WeatherRateLimitIndicator.displayName = 'WeatherRateLimitIndicator';

@@ -25,7 +25,7 @@ class ExcelLogger {
     this.logs.push(entry);
     this.save();
 
-    console.log('📝 Log ajouté:', entry);
+    
     return entry;
   }
 
@@ -63,7 +63,7 @@ class ExcelLogger {
     link.download = `alflight_logs_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
 
-    console.log('✅ Fichier CSV exporté pour Excel');
+    
   }
 
   /**
@@ -88,7 +88,7 @@ class ExcelLogger {
     if (confirm('Effacer tous les logs ?')) {
       this.logs = [];
       this.save();
-      console.log('🗑️ Logs effacés');
+      
     }
   }
 }
@@ -97,15 +97,9 @@ class ExcelLogger {
 window.excelLogger = new ExcelLogger();
 
 // Exemples d'utilisation
-console.log(`
-📊 Excel Logger disponible !
 
-Commandes:
-- excelLogger.log('Action', 'Composant', 'Détails')
 - excelLogger.exportToCSV()  // Télécharge le fichier Excel
 - excelLogger.showLogs()      // Affiche dans la console
 - excelLogger.getRecentLogs() // Derniers 10 logs
 - excelLogger.clearLogs()     // Effacer tout
-`);
-
 export default ExcelLogger;

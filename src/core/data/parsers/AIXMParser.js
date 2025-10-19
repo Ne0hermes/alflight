@@ -26,7 +26,7 @@ export class AIXMParser {
    * @returns {Object} Données structurées
    */
   async parseAIXM(xmlContent) {
-    console.log('🔄 Début du parsing AIXM...');
+    
     
     try {
       // Pour les gros fichiers, on utilise DOMParser natif du navigateur
@@ -49,16 +49,7 @@ export class AIXMParser {
       this.extractRoutes(xmlDoc);
       this.extractWaypoints(xmlDoc);
       
-      console.log('✅ Parsing AIXM terminé:', {
-        airports: this.data.airports.length,
-        airspaces: this.data.airspaces.length,
-        navaids: this.data.navaids.length,
-        runways: this.data.runways.length,
-        frequencies: this.data.frequencies.length,
-        obstacles: this.data.obstacles.length,
-        routes: this.data.routes.length,
-        waypoints: this.data.waypoints.length
-      });
+      
       
       return this.data;
     } catch (error) {
@@ -72,7 +63,7 @@ export class AIXMParser {
    */
   extractAirports(xmlDoc) {
     const airports = xmlDoc.querySelectorAll('Ahp');
-    console.log(`📍 Extraction de ${airports.length} aérodromes...`);
+    
     
     airports.forEach(ahp => {
       try {
@@ -150,7 +141,7 @@ export class AIXMParser {
         
         this.data.airports.push(airport);
       } catch (error) {
-        console.warn('Erreur extraction aérodrome:', error);
+        
       }
     });
   }
@@ -160,7 +151,7 @@ export class AIXMParser {
    */
   extractAirspaces(xmlDoc) {
     const airspaces = xmlDoc.querySelectorAll('Ase');
-    console.log(`🗺️ Extraction de ${airspaces.length} espaces aériens...`);
+    
     
     airspaces.forEach(ase => {
       try {
@@ -192,7 +183,7 @@ export class AIXMParser {
         
         this.data.airspaces.push(airspace);
       } catch (error) {
-        console.warn('Erreur extraction espace aérien:', error);
+        
       }
     });
   }
@@ -226,7 +217,7 @@ export class AIXMParser {
           range: parseFloat(vor.querySelector('valCoverageRadius')?.textContent)
         });
       } catch (error) {
-        console.warn('Erreur extraction VOR:', error);
+        
       }
     });
     
@@ -253,7 +244,7 @@ export class AIXMParser {
           range: parseFloat(ndb.querySelector('valCoverageRadius')?.textContent)
         });
       } catch (error) {
-        console.warn('Erreur extraction NDB:', error);
+        
       }
     });
     
@@ -281,11 +272,11 @@ export class AIXMParser {
           range: parseFloat(dme.querySelector('valCoverageRadius')?.textContent)
         });
       } catch (error) {
-        console.warn('Erreur extraction DME:', error);
+        
       }
     });
     
-    console.log(`📡 Extraction de ${this.data.navaids.length} navaids...`);
+    
   }
 
   /**
@@ -293,7 +284,7 @@ export class AIXMParser {
    */
   extractRunways(xmlDoc) {
     const runways = xmlDoc.querySelectorAll('Rwy');
-    console.log(`🛬 Extraction de ${runways.length} pistes...`);
+    
     
     runways.forEach(rwy => {
       try {
@@ -330,7 +321,7 @@ export class AIXMParser {
         
         this.data.runways.push(runway);
       } catch (error) {
-        console.warn('Erreur extraction piste:', error);
+        
       }
     });
   }
@@ -340,7 +331,7 @@ export class AIXMParser {
    */
   extractFrequencies(xmlDoc) {
     const frequencies = xmlDoc.querySelectorAll('Fqy');
-    console.log(`📻 Extraction de ${frequencies.length} fréquences...`);
+    
     
     frequencies.forEach(fqy => {
       try {
@@ -358,7 +349,7 @@ export class AIXMParser {
           hours: fqy.querySelector('txtRmkWorkHr')?.textContent
         });
       } catch (error) {
-        console.warn('Erreur extraction fréquence:', error);
+        
       }
     });
   }
@@ -368,7 +359,7 @@ export class AIXMParser {
    */
   extractObstacles(xmlDoc) {
     const obstacles = xmlDoc.querySelectorAll('Obs');
-    console.log(`⚠️ Extraction de ${obstacles.length} obstacles...`);
+    
     
     obstacles.forEach(obs => {
       try {
@@ -389,7 +380,7 @@ export class AIXMParser {
           marking: obs.querySelector('codeMarking')?.textContent
         });
       } catch (error) {
-        console.warn('Erreur extraction obstacle:', error);
+        
       }
     });
   }
@@ -399,7 +390,7 @@ export class AIXMParser {
    */
   extractRoutes(xmlDoc) {
     const routes = xmlDoc.querySelectorAll('Rte');
-    console.log(`🛤️ Extraction de ${routes.length} routes...`);
+    
     
     routes.forEach(rte => {
       try {
@@ -418,7 +409,7 @@ export class AIXMParser {
           remarks: rte.querySelector('txtRmk')?.textContent
         });
       } catch (error) {
-        console.warn('Erreur extraction route:', error);
+        
       }
     });
   }
@@ -428,7 +419,7 @@ export class AIXMParser {
    */
   extractWaypoints(xmlDoc) {
     const waypoints = xmlDoc.querySelectorAll('Dpn');
-    console.log(`📍 Extraction de ${waypoints.length} waypoints...`);
+    
     
     waypoints.forEach(dpn => {
       try {
@@ -448,7 +439,7 @@ export class AIXMParser {
           formation: dpn.querySelector('codeFormation')?.textContent
         });
       } catch (error) {
-        console.warn('Erreur extraction waypoint:', error);
+        
       }
     });
   }
@@ -486,7 +477,7 @@ export class AIXMParser {
         geometry.coordinates = [points];
       }
     } catch (error) {
-      console.warn('Erreur extraction géométrie:', error);
+      
     }
     
     return geometry;

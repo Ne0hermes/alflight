@@ -8,7 +8,6 @@ export const NavigationModule = lazy(() =>
     // Composant de secours si le module ne se charge pas
     return { default: () => <div>Erreur de chargement du module Navigation</div> };
   })
-);
 
 // Chargement paresseux du module Masse et Centrage (Weight & Balance)
 export const WeightBalanceModule = lazy(() =>
@@ -16,7 +15,6 @@ export const WeightBalanceModule = lazy(() =>
     console.error('Failed to load WeightBalanceModule');
     return { default: () => <div>Erreur de chargement du module Masse et Centrage</div> };
   })
-);
 
 // Chargement paresseux du module Carburant
 export const FuelModule = lazy(() =>
@@ -24,7 +22,6 @@ export const FuelModule = lazy(() =>
     console.error('Failed to load FuelModule');
     return { default: () => <div>Erreur de chargement du module Carburant</div> };
   })
-);
 
 // Chargement paresseux du module Gestion des Avions
 export const AircraftModule = lazy(() =>
@@ -32,7 +29,6 @@ export const AircraftModule = lazy(() =>
     console.error('Failed to load AircraftModule');
     return { default: () => <div>Erreur de chargement du module Avions</div> };
   })
-);
 
 // Chargement paresseux du module Météo
 export const WeatherModule = lazy(() =>
@@ -40,7 +36,6 @@ export const WeatherModule = lazy(() =>
     console.error('Failed to load WeatherModule');
     return { default: () => <div>Erreur de chargement du module Météo</div> };
   })
-);
 
 // Chargement paresseux du module VAC
 export const VACModule = lazy(() =>
@@ -48,4 +43,3 @@ export const VACModule = lazy(() =>
     console.error('Failed to load VACModule');
     return { default: () => <div>Erreur de chargement du module VAC</div> };
   })
-);

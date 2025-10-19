@@ -121,5 +121,4 @@ export const VACUploader = memo(({ icao }) => {
         )}
       </div>
     </>
-  );
 });

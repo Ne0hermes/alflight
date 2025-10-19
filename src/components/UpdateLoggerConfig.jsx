@@ -490,7 +490,5 @@ const UpdateLoggerConfig = () => {
         </>
       )}
     </>
-  );
-};
 
 export default UpdateLoggerConfig;

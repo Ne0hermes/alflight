@@ -87,7 +87,6 @@ const MedicalReminders = () => {
         updated.expiryDate = calculateExpiryDate(
           field === 'examDate' ? value : prev.examDate,
           field === 'type' ? value : prev.type
-        );
       }
       
       return updated;
@@ -290,7 +289,6 @@ const MedicalReminders = () => {
         }} />
       )}
     </div>
-  );
 
   // Trouver le certificat médical valide actuel
   const currentMedical = medicalRecords.find(record => {
@@ -510,7 +508,7 @@ const MedicalReminders = () => {
         )}
       </div>
     </div>
-  );
+
 };
 
 export default MedicalReminders;

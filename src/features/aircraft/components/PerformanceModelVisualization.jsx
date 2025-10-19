@@ -40,15 +40,12 @@ const PerformanceModelVisualization = ({
   modelType = 'takeoff',
   onUpdate 
 }) => {
-  console.log('📊 === VISUALISATION INIT ===');
-  console.log('Points reçus:', extractedPoints?.length || 0);
-  console.log('Type de modèle:', modelType);
-  console.log('Données du modèle:', modelData ? 'PRÉSENT' : 'ABSENT');
   
-  if (extractedPoints && extractedPoints.length > 0) {
-    console.log('Échantillon de points:', extractedPoints.slice(0, 3));
-  }
-  // États pour les paramètres de visualisation
+  
+  
+  
+  
+    // États pour les paramètres de visualisation
   const [viewMode, setViewMode] = useState('2d'); // Seulement '2d' maintenant
   const [selectedAxes, setSelectedAxes] = useState({
     x: 'temperature',
@@ -77,18 +74,18 @@ const PerformanceModelVisualization = ({
   
   // Générer les données pour la visualisation
   const generateVisualizationData = useMemo(() => {
-    console.log('🔄 === GÉNÉRATION DONNÉES VIZ ===');
-    console.log('extractedPoints:', extractedPoints);
-    console.log('Nombre de points:', extractedPoints?.length || 0);
+    
+    
+    
     
     // Si pas de points extraits, retourner un tableau vide
     if (!extractedPoints || extractedPoints.length === 0) {
-      console.warn('⚠️ Pas de points extraits pour la visualisation');
+      
       return [];
     }
     
-    console.log('✅ Génération des données de visualisation avec', extractedPoints.length, 'points');
-    console.log('Mode de vue actuel:', viewMode);
+    
+    
     const data = [];
     
     if (viewMode === '2d') {
@@ -116,7 +113,7 @@ const PerformanceModelVisualization = ({
       
       // Si pas assez de points filtrés, ajouter tous les points
       if (data.length < 5) {
-        console.log('Pas assez de points filtrés, ajout de tous les points');
+        
         extractedPoints.forEach(pt => {
           data.push({
             [xParam]: pt[xParam] || pt.temperature || 0,
@@ -164,7 +161,6 @@ const PerformanceModelVisualization = ({
               const dist = Math.sqrt(
                 Math.pow((pt[xParam] || pt.temperature || 0) - xValue, 2) +
                 Math.pow((pt[yParam] || pt.pressure_altitude || 0) - yValue, 2)
-              );
               if (!closest || dist < closest.dist) {
                 return { point: pt, dist };
               }
@@ -229,7 +225,6 @@ const PerformanceModelVisualization = ({
     levels.forEach(level => {
       const points = generateVisualizationData.filter(d => 
         Math.abs(d.distance - level) < 50
-      );
       
       if (points.length > 0) {
         contours.push({
@@ -257,7 +252,7 @@ const PerformanceModelVisualization = ({
   // Composant pour la visualisation 2D
   const Visualization2D = () => {
     const data = generateVisualizationData;
-    console.log('Visualization2D - données:', data?.length, 'points');
+    
     
     if (!data || data.length === 0) {
       return (
@@ -309,13 +304,11 @@ const PerformanceModelVisualization = ({
           />
         </ScatterChart>
       </ResponsiveContainer>
-    );
-  };
-  
+
   // Composant pour la visualisation 3D (simulée avec des contours)
   const Visualization3D = () => {
     const data = generateVisualizationData;
-    console.log('Visualization3D - données:', data?.length, 'points');
+    
     
     if (!data || data.length === 0) {
       return (
@@ -412,9 +405,7 @@ const PerformanceModelVisualization = ({
           )}
         </Box>
       </Box>
-    );
-  };
-  
+
   return (
     <Paper elevation={2} sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -479,8 +470,8 @@ const PerformanceModelVisualization = ({
                   ]}
                 />
               </Grid>
-            );
-          })}
+
+})}
       </Grid>
       
       {/* Zone de visualisation */}
@@ -543,7 +534,6 @@ const PerformanceModelVisualization = ({
         </Typography>
       </Alert>
     </Paper>
-  );
 };
 
 export default PerformanceModelVisualization;

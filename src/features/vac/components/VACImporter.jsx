@@ -37,10 +37,7 @@ export const VACImporter = memo(({
     setError(null);
     
     // Si on a un code ICAO extrait, l'utiliser
-    if (data.icao && !icao) {
-      console.log('Code ICAO détecté:', data.icao);
-    }
-  };
+      };
 
   // Callback pour les erreurs
   const handlePdfError = (errorMsg) => {
@@ -50,7 +47,6 @@ export const VACImporter = memo(({
       '❌ Erreur lors de l\'extraction de la carte VAC',
       'error',
       5000
-    );
   };
 
   const handleSave = () => {
@@ -64,7 +60,6 @@ export const VACImporter = memo(({
             '⚠️ Code ICAO non détecté. Veuillez l\'entrer manuellement.',
             'warning',
             5000
-          );
           return;
         }
 
@@ -75,7 +70,6 @@ export const VACImporter = memo(({
           `✅ Carte VAC ${targetIcao} importée avec succès`,
           'success',
           5000
-        );
         
         if (onImportComplete) {
           onImportComplete(targetIcao, extractedData);
@@ -90,7 +84,6 @@ export const VACImporter = memo(({
           `❌ Erreur lors de l'enregistrement: ${error.message}`,
           'error',
           5000
-        );
       }
     }
   };
@@ -555,7 +548,7 @@ export const VACImporter = memo(({
         `}</style>
       </div>
     </>
-  );
+
 });
 
 VACImporter.displayName = 'VACImporter';

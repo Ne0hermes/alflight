@@ -14,10 +14,7 @@ import { useWeatherStore, weatherSelectors } from '@core/stores/weatherStore';
 import { useNavigationResults } from './hooks/useNavigationResults';
 
 // Import des composants locaux
-import { NavigationMapSIAFixed } from './components/NavigationMapSIAFixed';
 import { SimpleAirportSelector } from './components/SimpleAirportSelector';
-// Utilisation de la carte SIA corrigée
-const NavigationMap = NavigationMapSIAFixed;
 const AirportSelector = SimpleAirportSelector;
 import { WaypointCardWithRunways } from './components/WaypointCardWithRunways';
 import { ReportingPointsSelector } from './components/ReportingPointsSelector';
@@ -39,14 +36,11 @@ const useAlternatesForNavigation = () => {
 };
 
 
-
-
 const NavigationModule = ({ wizardMode = false, config = {} }) => {
   const { selectedAircraft } = useAircraft();
   const { format, convert, getSymbol, getUnit, toStorage } = useUnits();
 
   // Debug: Afficher l'unité actuelle
-  console.log('🔧 Navigation Module - Current fuel unit:', getUnit('fuel'));
   const {
     waypoints,
     setWaypoints,
@@ -196,64 +190,66 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
 
   return (
     <div>
-      {/* Onglets */}
-      <div style={{
-        display: 'flex',
-        gap: '8px',
-        marginBottom: '20px',
-        borderBottom: '2px solid #e5e7eb',
-        paddingBottom: '0'
-      }}>
-        <button
-          onClick={() => setActiveTab('navigation')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '12px 20px',
-            backgroundColor: activeTab === 'navigation' ? '#93163C' : 'transparent',
-            color: activeTab === 'navigation' ? 'white' : '#6b7280',
-            border: 'none',
-            borderTopLeftRadius: '8px',
-            borderTopRightRadius: '8px',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            marginBottom: '-2px',
-            borderBottom: activeTab === 'navigation' ? '2px solid #93163C' : '2px solid transparent'
-          }}
-        >
-          <Navigation2 size={18} />
-          Navigation VFR
-        </button>
-        <button
-          onClick={() => setActiveTab('alternates')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '12px 20px',
-            backgroundColor: activeTab === 'alternates' ? '#93163C' : 'transparent',
-            color: activeTab === 'alternates' ? 'white' : '#6b7280',
-            border: 'none',
-            borderTopLeftRadius: '8px',
-            borderTopRightRadius: '8px',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            marginBottom: '-2px',
-            borderBottom: activeTab === 'alternates' ? '2px solid #93163C' : '2px solid transparent'
-          }}
-        >
-          <Plane size={18} />
-          Déroutements
-        </button>
-      </div>
+      {/* Onglets - masqués en mode wizard */}
+      {!wizardMode && (
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          marginBottom: '20px',
+          borderBottom: '2px solid #e5e7eb',
+          paddingBottom: '0'
+        }}>
+          <button
+            onClick={() => setActiveTab('navigation')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '12px 20px',
+              backgroundColor: activeTab === 'navigation' ? '#93163C' : 'transparent',
+              color: activeTab === 'navigation' ? 'white' : '#6b7280',
+              border: 'none',
+              borderTopLeftRadius: '8px',
+              borderTopRightRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              marginBottom: '-2px',
+              borderBottom: activeTab === 'navigation' ? '2px solid #93163C' : '2px solid transparent'
+            }}
+          >
+            <Navigation2 size={18} />
+            Navigation VFR
+          </button>
+          <button
+            onClick={() => setActiveTab('alternates')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '12px 20px',
+              backgroundColor: activeTab === 'alternates' ? '#93163C' : 'transparent',
+              color: activeTab === 'alternates' ? 'white' : '#6b7280',
+              border: 'none',
+              borderTopLeftRadius: '8px',
+              borderTopRightRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              marginBottom: '-2px',
+              borderBottom: activeTab === 'alternates' ? '2px solid #93163C' : '2px solid transparent'
+            }}
+          >
+            <Plane size={18} />
+            Déroutements
+          </button>
+        </div>
+      )}
 
-      {/* Contenu des onglets */}
-      {activeTab === 'alternates' ? (
+      {/* Contenu des onglets - En mode wizard, afficher toujours la navigation */}
+      {!wizardMode && activeTab === 'alternates' ? (
         <AlternatesModule wizardMode={wizardMode} config={config} />
       ) : (
         <>
@@ -285,72 +281,74 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
         </div>
       )}
 
-      {/* Section Type de vol */}
-      <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
-        <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4))}>
-          ✈️ Type de vol
-        </h3>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-          <div>
-            <label style={sx.components.label.base}>
-              {flightType.period === 'jour' ? <Sun size={14} /> : <Moon size={14} />} Période
-            </label>
-            <select
-              value={flightType.period}
-              onChange={(e) => setFlightType({ ...flightType, period: e.target.value })}
-              style={sx.components.input.base}
-            >
-              <option value="jour">Jour</option>
-              <option value="nuit">Nuit</option>
-            </select>
-          </div>
-          
-          <div>
-            <label style={sx.components.label.base}>
-              <Navigation2 size={14} /> Règles
-            </label>
-            <select
-              value={flightType.rules}
-              onChange={(e) => setFlightType({ ...flightType, rules: e.target.value })}
-              style={sx.components.input.base}
-            >
-              <option value="VFR">VFR</option>
-              <option value="IFR">IFR</option>
-            </select>
-          </div>
-          
-          <div>
-            <label style={sx.components.label.base}>
-              <Home size={14} /> Catégorie
-            </label>
-            <select
-              value={flightType.category}
-              onChange={(e) => setFlightType({ ...flightType, category: e.target.value })}
-              style={sx.components.input.base}
-            >
-              <option value="local">Local</option>
-              <option value="navigation">Navigation</option>
-            </select>
-          </div>
-        </div>
-        
-        {/* Info réserve réglementaire */}
-        <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mt(3))}>
-          <p style={sx.text.sm}>
-            Réserve réglementaire : <strong>{reserveInfo.minutes} minutes</strong>
-            {reserveInfo.description}
-          </p>
-        </div>
-      </section>
+      {/* Section Type de vol - masquée en mode wizard car définie en étape 1 */}
+      {!wizardMode && (
+        <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
+          <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4))}>
+            ✈️ Type de vol
+          </h3>
 
-      {/* Résultats de navigation */}
-      {selectedAircraft && navigationResults && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+            <div>
+              <label style={sx.components.label.base}>
+                {flightType.period === 'jour' ? <Sun size={14} /> : <Moon size={14} />} Période
+              </label>
+              <select
+                value={flightType.period}
+                onChange={(e) => setFlightType({ ...flightType, period: e.target.value })}
+                style={sx.components.input.base}
+              >
+                <option value="jour">Jour</option>
+                <option value="nuit">Nuit</option>
+              </select>
+            </div>
+
+            <div>
+              <label style={sx.components.label.base}>
+                <Navigation2 size={14} /> Règles
+              </label>
+              <select
+                value={flightType.rules}
+                onChange={(e) => setFlightType({ ...flightType, rules: e.target.value })}
+                style={sx.components.input.base}
+              >
+                <option value="VFR">VFR</option>
+                <option value="IFR">IFR</option>
+              </select>
+            </div>
+
+            <div>
+              <label style={sx.components.label.base}>
+                <Home size={14} /> Catégorie
+              </label>
+              <select
+                value={flightType.category}
+                onChange={(e) => setFlightType({ ...flightType, category: e.target.value })}
+                style={sx.components.input.base}
+              >
+                <option value="local">Local</option>
+                <option value="navigation">Navigation</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Info réserve réglementaire */}
+          <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mt(3))}>
+            <p style={sx.text.sm}>
+              Réserve réglementaire : <strong>{reserveInfo.minutes} minutes</strong>
+              {reserveInfo.description}
+            </p>
+          </div>
+        </section>
+      )}
+
+      {/* Résultats de navigation - masqués en mode wizard */}
+      {!wizardMode && selectedAircraft && navigationResults && (
         <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
           <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4))}>
             📊 Résultats de navigation
           </h3>
-          
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
             <div style={sx.components.card.base}>
               <ValueWithUnit
@@ -364,7 +362,7 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
                 emphasis={true}
               />
             </div>
-            
+
             <div style={sx.components.card.base}>
               <h4 style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>Temps de vol</h4>
               <p style={sx.combine(sx.text['2xl'], sx.text.bold, sx.text.primary)}>
@@ -380,7 +378,7 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
                 style={{ marginTop: '4px' }}
               />
             </div>
-            
+
             <div style={sx.components.card.base}>
               <ValueWithUnit
                 label="Carburant nécessaire"
@@ -393,7 +391,7 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
                 emphasis={true}
               />
             </div>
-            
+
             <div style={sx.components.card.base}>
               <ValueWithUnit
                 label="Réserve finale"
@@ -413,8 +411,8 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
         </section>
       )}
 
-      {/* Analyse du vent et impact sur le vol */}
-      {selectedAircraft && waypoints.length >= 2 && (
+      {/* Analyse du vent et impact sur le vol - masquée en mode wizard */}
+      {!wizardMode && selectedAircraft && waypoints.length >= 2 && (
         <>
           <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
             <WindAnalysis
@@ -423,7 +421,7 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
               plannedAltitude={plannedAltitude}
             />
           </section>
-          
+
         </>
       )}
 
@@ -433,23 +431,6 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
           <RunwayAnalyzer icao={arrivalIcao} />
         </section>
       )} */}
-
-
-      {/* Section Carte de navigation */}
-      <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
-        <NavigationMap 
-          waypoints={waypoints}
-          onWaypointUpdate={setWaypoints}
-          plannedAltitude={plannedAltitude}
-          onPlannedAltitudeChange={setPlannedAltitude}
-          segmentAltitudes={segmentAltitudes}
-        />
-        
-        <div style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mt(3))}>
-          💡 Glissez les marqueurs sur la carte pour ajuster les positions des waypoints. 
-          Utilisez le bouton "Afficher rayon" pour visualiser votre rayon d'action basé sur le carburant disponible.
-        </div>
-      </section>
 
       {/* Section Points de navigation et Gestion du trajet */}
       <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
@@ -461,46 +442,203 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
             </h3>
           </div>
           
-          {/* Liste des waypoints alternés avec les segments d'altitude */}
-          <div style={{ 
+          {/* Liste des waypoints - grouper les points VFR avec leur aérodrome */}
+          <div style={{
             display: 'flex',
             flexDirection: 'column',
             gap: '12px'
           }}>
+            {/* Bouton pour ajouter le premier aérodrome si la liste est vide */}
+            {waypoints.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                <p style={{ color: '#6b7280', marginBottom: '16px' }}>
+                  Aucun point de navigation défini
+                </p>
+                <button
+                  onClick={() => {
+                    const newWaypoint = {
+                      id: `waypoint-${Date.now()}`,
+                      name: '',
+                      lat: null,
+                      lon: null,
+                      type: 'waypoint'
+                    };
+                    addWaypointToStore(newWaypoint);
+                  }}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: '2px solid #3b82f6',
+                    background: '#3b82f6',
+                    color: 'white',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#2563eb';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#3b82f6';
+                  }}
+                >
+                  <Plus size={20} />
+                  Ajouter un aérodrome
+                </button>
+              </div>
+            )}
+
             {waypoints.map((waypoint, index) => {
-              const isLast = index === waypoints.length - 1;
-              const nextWaypoint = !isLast ? waypoints[index + 1] : null;
-              const segmentId = nextWaypoint ? `${waypoint.id}-${nextWaypoint.id}` : null;
-              const segmentAltitude = segmentId ? segmentAltitudes[segmentId] : null;
-              
-              // Pour le TOD, on prend l'altitude du segment qui arrive à ce waypoint
+              // Extraire le code ICAO de l'aérodrome
+              const currentIcao = waypoint.name ? waypoint.name.split(' ')[0] : null;
+
+              // Vérifier si ce waypoint est un point VFR lié à un aérodrome adjacent
               const prevWaypoint = index > 0 ? waypoints[index - 1] : null;
+              const nextWaypoint = index < waypoints.length - 1 ? waypoints[index + 1] : null;
+              const prevIcao = prevWaypoint?.name ? prevWaypoint.name.split(' ')[0] : null;
+              const nextIcao = nextWaypoint?.name ? nextWaypoint.name.split(' ')[0] : null;
+
+              // Si c'est un point VFR, vérifier s'il est lié à l'aérodrome précédent OU suivant
+              if (waypoint.type === 'vfr-point') {
+                // Cas 1: Lié à l'aérodrome précédent (ordre normal: LFST → STS)
+                const isLinkedToPrevious = prevWaypoint && prevWaypoint.type !== 'vfr-point' &&
+                                          (waypoint.aerodrome === prevWaypoint.name ||
+                                           waypoint.aerodrome === prevIcao ||
+                                           // Auto-détection par préfixe du nom (ex: STS lié à LFST)
+                                           (prevIcao && waypoint.name?.startsWith(prevIcao.substring(2))));
+
+                // Cas 2: Lié à l'aérodrome suivant (ordre inversé: STS → LFST)
+                const isLinkedToNext = nextWaypoint && nextWaypoint.type !== 'vfr-point' &&
+                                      (waypoint.aerodrome === nextWaypoint.name ||
+                                       waypoint.aerodrome === nextIcao ||
+                                       // Auto-détection par préfixe du nom
+                                       (nextIcao && waypoint.name?.startsWith(nextIcao.substring(2))));
+
+                if (isLinkedToPrevious || isLinkedToNext) {
+                  // Ce point VFR sera affiché avec son aérodrome parent, on le skip ici
+                  return null;
+                }
+              }
+
+              // Trouver tous les points VFR liés à cet aérodrome (avant ET après)
+              const linkedVfrPoints = [];
+              if (waypoint.type !== 'vfr-point') {
+                // 1. Points VFR qui PRÉCÈDENT cet aérodrome
+                for (let i = index - 1; i >= 0; i--) {
+                  const prevWp = waypoints[i];
+                  if (prevWp.type === 'vfr-point') {
+                    // Vérifier toutes les conditions de liaison
+                    const matchFullName = prevWp.aerodrome === waypoint.name;
+                    const matchIcao = prevWp.aerodrome === currentIcao;
+                    const matchPrefix = currentIcao && currentIcao.length >= 4 && prevWp.name?.startsWith(currentIcao.substring(2));
+                    const isLinked = matchFullName || matchIcao || matchPrefix;
+
+                    if (isLinked) {
+                      linkedVfrPoints.unshift(prevWp); // Ajouter au début
+                    } else {
+                      break;
+                    }
+                  } else {
+                    break; // Arrêter si on trouve un aérodrome
+                  }
+                }
+
+                // 2. Points VFR qui SUIVENT cet aérodrome
+                for (let i = index + 1; i < waypoints.length; i++) {
+                  const nextWp = waypoints[i];
+                  if (nextWp.type === 'vfr-point') {
+                    // Vérifier toutes les conditions de liaison
+                    const matchFullName = nextWp.aerodrome === waypoint.name;
+                    const matchIcao = nextWp.aerodrome === currentIcao;
+                    const matchPrefix = currentIcao && currentIcao.length >= 4 && nextWp.name?.startsWith(currentIcao.substring(2));
+                    const isLinked = matchFullName || matchIcao || matchPrefix;
+
+                    if (isLinked) {
+                      linkedVfrPoints.push(nextWp); // Ajouter à la fin
+                    } else {
+                      break;
+                    }
+                  } else {
+                    break; // Arrêter si on trouve un aérodrome
+                  }
+                }
+              }
+
+              // Calculer le vrai index suivant (en sautant TOUS les points VFR groupés)
+              // Il faut compter les VFR avant ET après cet aérodrome
+              let vfrAfter = 0;
+              for (let i = index + 1; i < waypoints.length; i++) {
+                const wp = waypoints[i];
+                if (wp.type === 'vfr-point') {
+                  const isLinked = wp.aerodrome === waypoint.name ||
+                                  wp.aerodrome === currentIcao ||
+                                  (currentIcao && wp.name?.startsWith(currentIcao.substring(2)));
+                  if (isLinked) {
+                    vfrAfter++;
+                  } else {
+                    break;
+                  }
+                } else {
+                  break;
+                }
+              }
+
+              const nextRealIndex = index + 1 + vfrAfter;
+              const isLast = nextRealIndex >= waypoints.length;
+              const nextWaypointForButton = !isLast ? waypoints[nextRealIndex] : null;
+
+              const segmentId = nextWaypointForButton ? `${waypoint.id}-${nextWaypointForButton.id}` : null;
+              const segmentAltitude = segmentId ? segmentAltitudes[segmentId] : null;
+
+              // Pour le TOD, on prend l'altitude du segment qui arrive à ce waypoint
               const incomingSegmentId = prevWaypoint ? `${prevWaypoint.id}-${waypoint.id}` : null;
               const incomingSegmentAltitude = incomingSegmentId ? segmentAltitudes[incomingSegmentId] : null;
-              
+
               return (
                 <React.Fragment key={waypoint.id}>
-                  {/* Carte du waypoint */}
+                  {/* Carte du waypoint avec ses points VFR intégrés */}
                   <WaypointCardWithRunways
                     waypoint={waypoint}
+                    linkedVfrPoints={linkedVfrPoints}
                     index={index}
                     totalWaypoints={waypoints.length}
                     allWaypoints={waypoints}
                     segmentAltitude={incomingSegmentAltitude}
                     onSelect={(airport) => handleAirportSelect(waypoint.id, airport)}
-                    onRemove={() => removeWaypoint(waypoint.id)}
+                    onRemove={() => {
+                      // Supprimer l'aérodrome et tous ses points VFR liés
+                      removeWaypoint(waypoint.id);
+                      linkedVfrPoints.forEach(vfr => removeWaypoint(vfr.id));
+                    }}
+                    onRemoveVfrPoint={(vfrId) => {
+                      // Supprimer un point VFR individuel
+                      try {
+                        removeWaypoint(vfrId);
+
+                        // Vérifier après un court délai que le waypoint a bien été supprimé
+                        setTimeout(() => {
+                          // Verification complete
+                        }, 100);
+                      } catch (error) {
+                        console.error('❌ NavigationModule: Erreur lors de la suppression:', error);
+                      }
+                    }}
                     onInsertWaypoint={insertWaypoint}
                     onShowReportingPoints={() => {
                       setSelectedWaypointId(waypoint.id);
                       setShowReportingPoints(true);
                     }}
                   />
-                  
-                  {/* Bouton pour ajouter un waypoint entre deux points */}
-                  {!isLast && nextWaypoint && (
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'center', 
+
+                  {/* Bouton pour ajouter un waypoint - toujours après l'ensemble aérodrome + VFR */}
+                  {!isLast && nextWaypointForButton && (
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'center',
                       margin: '16px 0'
                     }}>
                       <button
@@ -513,8 +651,8 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
                             lon: null,
                             type: 'waypoint'
                           };
-                          // Insérer après le waypoint actuel (position index + 1)
-                          insertWaypoint(newWaypoint, index + 1);
+                          // Insérer après l'aérodrome et tous ses points VFR
+                          insertWaypoint(newWaypoint, nextRealIndex);
                         }}
                         style={{
                           width: '40px',
@@ -547,72 +685,61 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
                       </button>
                     </div>
                   )}
-                  
-                  {/* Segment d'altitude entre ce waypoint et le suivant */}
-                  {!isLast && nextWaypoint && (
-                    <div style={sx.combine(
-                      sx.spacing.px(4),
-                      sx.spacing.py(2),
-                      sx.bg.gray,
-                      sx.rounded.md,
-                      {
-                        marginLeft: '40px',
-                        marginRight: '40px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '16px',
-                        borderLeft: '3px solid #3b82f6'
-                      }
-                    )}>
-                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <span style={sx.combine(sx.text.sm, sx.text.secondary)}>
-                          ➜ Segment vers {nextWaypoint.name || `Étape ${index + 2}`}
-                        </span>
-                        
-                        {/* Altitude du segment */}
-                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                          <div>
-                            <label style={sx.combine(sx.text.xs, sx.text.secondary)}>
-                              Altitude
-                            </label>
-                            <input
-                              type="number"
-                              value={segmentAltitude?.startAlt || plannedAltitude}
-                              onChange={(e) => {
-                                const value = parseInt(e.target.value) || 0;
-                                setSegmentAltitude(segmentId, {
-                                  startAlt: value,
-                                  endAlt: segmentAltitude?.endAlt || value,
-                                  type: value === (segmentAltitude?.endAlt || value) ? 'level' : 
-                                        value < (segmentAltitude?.endAlt || value) ? 'climb' : 'descent'
-                                });
-                              }}
-                              style={sx.combine(
-                                sx.components.input.base,
-                                { width: '100px', padding: '4px 8px', fontSize: '12px' }
-                              )}
-                              placeholder="ft"
-                              step="500"
-                            />
-                          </div>
-                          
-                          {/* Type de vol */}
-                          <div style={sx.combine(sx.text.xs, {
-                            color: segmentAltitude?.type === 'climb' ? '#10b981' :
-                                   segmentAltitude?.type === 'descent' ? '#f59e0b' : '#6b7280'
-                          })}>
-                            {segmentAltitude?.type === 'climb' ? '↗ Montée' :
-                             segmentAltitude?.type === 'descent' ? '↘ Descente' : '→ Palier'}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </React.Fragment>
               );
-            })}
+            }).filter(Boolean)}
+
+            {/* Bouton pour ajouter un aérodrome après le dernier */}
+            {waypoints.length > 0 && (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                margin: '16px 0'
+              }}>
+                <button
+                  onClick={() => {
+                    const newWaypoint = {
+                      id: `waypoint-${Date.now()}`,
+                      name: '',
+                      lat: null,
+                      lon: null,
+                      type: 'waypoint'
+                    };
+                    addWaypointToStore(newWaypoint);
+                  }}
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    border: '2px dashed #94a3b8',
+                    background: 'white',
+                    color: '#64748b',
+                    fontSize: '20px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = '#3b82f6';
+                    e.currentTarget.style.color = '#3b82f6';
+                    e.currentTarget.style.transform = 'scale(1.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = '#94a3b8';
+                    e.currentTarget.style.color = '#64748b';
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                  title="Ajouter un aérodrome"
+                >
+                  +
+                </button>
+              </div>
+            )}
           </div>
-          
+
           {/* Info sur le trajet */}
           {waypoints.length >= 2 && navigationResults && (
             <div style={sx.combine(
@@ -629,7 +756,6 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
         </div>
       </section>
 
-      
       {/* Tableau de navigation VFR */}
       {selectedAircraft && waypoints.length >= 2 && (
         <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
@@ -643,10 +769,12 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
         </section>
       )}
 
-          {/* Points VFR Globaux */}
-          <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
-            <GlobalVFRPointsManager />
-          </section>
+          {/* Points VFR Globaux - Masqués en mode wizard */}
+          {!wizardMode && (
+            <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
+              <GlobalVFRPointsManager />
+            </section>
+          )}
         </>
       )}
 

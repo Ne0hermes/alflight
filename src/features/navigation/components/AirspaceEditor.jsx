@@ -382,7 +382,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
         </div>
       )}
     </div>
-  );
+
 };
 
 export default AirspaceEditor;

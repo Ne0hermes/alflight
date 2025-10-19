@@ -50,7 +50,7 @@ export const GoogleSignIn = ({ onSuccess, onError }) => {
   const handleCredentialResponse = async (response) => {
     try {
       const result = await actions.signInGoogle(response.credential);
-      console.log('Google sign in successful:', result);
+      
       
       if (onSuccess) {
         onSuccess(result);
@@ -68,5 +68,3 @@ export const GoogleSignIn = ({ onSuccess, onError }) => {
     <div className="google-signin-container">
       <div ref={buttonRef} id="googleSignInButton"></div>
     </div>
-  );
-};

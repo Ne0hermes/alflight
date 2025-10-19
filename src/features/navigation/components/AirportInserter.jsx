@@ -32,7 +32,7 @@ export const AirportInserter = ({
       
       setLoading(true);
       try {
-        console.log('🔄 Chargement direct de TOUS les aérodromes depuis XML...');
+        
         const allAirports = [];
         const processedIcaos = new Set();
         
@@ -46,7 +46,7 @@ export const AirportInserter = ({
             
             // Extraire TOUS les aérodromes
             const aerodromes = doc.querySelectorAll('Ahp');
-            console.log(`📍 ${aerodromes.length} éléments Ahp trouvés dans AIXM`);
+            
             
             // Statistiques pour debug
             const typeStats = {};
@@ -54,7 +54,7 @@ export const AirportInserter = ({
               const codeType = ahp.querySelector('codeType')?.textContent || 'UNKNOWN';
               typeStats[codeType] = (typeStats[codeType] || 0) + 1;
             });
-            console.log('📊 Types d\'éléments trouvés:', typeStats);
+            
             
             aerodromes.forEach(ahp => {
               try {
@@ -135,7 +135,7 @@ export const AirportInserter = ({
               }
             });
             
-            console.log(`✅ ${allAirports.length} aérodromes valides extraits de AIXM`);
+            
           }
         } catch (e) {
           console.error('❌ Erreur chargement AIXM:', e);
@@ -151,7 +151,7 @@ export const AirportInserter = ({
               const doc = parser.parseFromString(xmlText, 'text/xml');
               
               const aerodromes = doc.querySelectorAll('Ahp');
-              console.log(`📍 ${aerodromes.length} éléments Ahp trouvés dans XML SIA`);
+              
               
               aerodromes.forEach(ahp => {
                 try {
@@ -213,7 +213,7 @@ export const AirportInserter = ({
                 }
               });
               
-              console.log(`✅ Total après XML SIA: ${allAirports.length} aérodromes`);
+              
             }
           } catch (e) {
             console.error('❌ Erreur chargement XML SIA:', e);
@@ -262,8 +262,8 @@ export const AirportInserter = ({
         allAirports.sort((a, b) => a.icao.localeCompare(b.icao));
         
         setAvailableAirports(allAirports);
-        console.log(`✅ TOTAL FINAL: ${allAirports.length} aérodromes chargés`);
-        console.log('Exemples:', allAirports.slice(0, 10).map(a => a.icao));
+        
+        .map(a => a.icao));
       } catch (error) {
         console.error('❌ Erreur chargement des aérodromes:', error);
         setAvailableAirports([]);
@@ -305,8 +305,6 @@ export const AirportInserter = ({
       !airportsInRoute.has(apt.icao) && (
         apt.searchName.includes(term) ||
         apt.icao.toLowerCase().includes(term)
-      )
-    );
   }, [availableAirports, searchTerm, airportsInRoute]);
 
   // Fonction pour insérer un aérodrome
@@ -560,7 +558,6 @@ export const AirportInserter = ({
                     </div>
                   </div>
                 </div>
-              ))
             )}
             {filteredAirports.length > 50 && (
               <div style={{
@@ -749,7 +746,7 @@ export const AirportInserter = ({
         </div>
       )}
     </div>
-  );
+
 };
 
 export default AirportInserter;

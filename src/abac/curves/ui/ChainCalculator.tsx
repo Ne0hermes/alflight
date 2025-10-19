@@ -187,7 +187,7 @@ export const ChainCalculator: React.FC<ChainCalculatorProps> = ({ graphs }) => {
                   <option key={index} value={chain.join(',')}>
                     {chainNames}
                   </option>
-                );
+
               })}
             </select>
           </div>
@@ -289,7 +289,7 @@ export const ChainCalculator: React.FC<ChainCalculatorProps> = ({ graphs }) => {
                           </div>
                         )}
                       </div>
-                    );
+
                   })}
 
                   {/* Résultat final */}
@@ -317,5 +317,4 @@ export const ChainCalculator: React.FC<ChainCalculatorProps> = ({ graphs }) => {
         </>
       )}
     </div>
-  );
 };

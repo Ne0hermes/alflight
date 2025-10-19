@@ -7,7 +7,7 @@ const PilotModuleSimple = () => {
       <h2>Module Pilote</h2>
       <p>Module en cours de chargement...</p>
     </div>
-  );
+
 };
 
 export default PilotModuleSimple;

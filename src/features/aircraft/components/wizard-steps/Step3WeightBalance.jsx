@@ -20,7 +20,7 @@ import {
   AccordionSummary,
   AccordionDetails
 } from '@mui/material';
-import { 
+import {
   Scale as ScaleIcon,
   Add as AddIcon,
   Delete as DeleteIcon,
@@ -31,14 +31,16 @@ import {
   AirlineSeatReclineNormal as SeatIcon,
   Luggage as LuggageIcon,
   FitnessCenter as WeightIcon,
-  CenterFocusStrong as CenterIcon
+  CenterFocusStrong as CenterIcon,
+  ChevronRight as ChevronRightIcon,
+  ChevronLeft as ChevronLeftIcon
 } from '@mui/icons-material';
 import { useUnitsStore, unitsSelectors } from '@core/stores/unitsStore';
 import { convertValue, getUnitSymbol } from '@utils/unitConversions';
 import CGEnvelopeChart from '../CgEnvelopeChart';
 import { StyledTextField } from './FormFieldStyles';
 
-const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
+const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
   const [expandedPanels, setExpandedPanels] = useState({
     fuel: false,
     seats: false,
@@ -101,12 +103,9 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
   });
 
   // État pour les points intermédiaires de l'enveloppe CG
-  const [intermediatePoints, setIntermediatePoints] = useState(
-    data.cgEnvelope?.intermediatePoints || []
-  );
+  const [intermediatePoints, setIntermediatePoints] = useState(data.cgEnvelope?.intermediatePoints || []);
   const [additionalSeats, setAdditionalSeats] = useState(data.additionalSeats || []);
-  const [baggageCompartments, setBaggageCompartments] = useState(
-    data.baggageCompartments && data.baggageCompartments.length > 0
+  const [baggageCompartments, setBaggageCompartments] = useState(data.baggageCompartments && data.baggageCompartments.length > 0
       ? data.baggageCompartments
       : [] // Vide par défaut
   );
@@ -374,7 +373,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
   };
 
   const updateSeat = (id, field, value) => {
-    const updatedSeats = additionalSeats.map(seat => 
+    const updatedSeats = additionalSeats.map(seat =>
       seat.id === id ? { ...seat, [field]: value } : seat
     );
     setAdditionalSeats(updatedSeats);
@@ -1101,6 +1100,35 @@ const Step3WeightBalance = ({ data, updateData, errors = {} }) => {
         }}
         massUnit={getUnitSymbol(units.weight)}
       />
+
+      {/* Boutons de navigation */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+        {/* Bouton Précédent */}
+        {onPrevious && (
+          <Button
+            variant="outlined"
+            color="primary"
+            size="large"
+            onClick={onPrevious}
+            startIcon={<ChevronLeftIcon />}
+          >
+            Précédent
+          </Button>
+        )}
+
+        {/* Bouton Suivant */}
+        {onNext && (
+          <Button
+            variant="contained"
+            color="primary"
+            size="large"
+            onClick={onNext}
+            endIcon={<ChevronRightIcon />}
+          >
+            Suivant
+          </Button>
+        )}
+      </Box>
     </Box>
   );
 };

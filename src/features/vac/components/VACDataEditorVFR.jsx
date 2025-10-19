@@ -4,7 +4,7 @@ import { Plus, Trash2, MapPin, Navigation } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 
 export const VFREditor = ({ editedData, updateValue }) => {
-  console.log('🗺️ Rendering VFR editor - points:', editedData.vfrPoints);
+  
   
   const addVFRPoint = () => {
     const newPoint = {
@@ -321,5 +321,3 @@ export const VFREditor = ({ editedData, updateValue }) => {
         )}
       </div>
     </div>
-  );
-};

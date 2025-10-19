@@ -98,7 +98,6 @@ export const SegmentAltitudeEditor = ({
         { value: 4500, label: "4500 ft - VFR Ouest (180-359°)" },
         { value: 5500, label: "5500 ft - VFR Est" },
         { value: 6500, label: "6500 ft - VFR Ouest" }
-      );
     } else {
       // Règles IFR
       suggestions.push(
@@ -106,7 +105,6 @@ export const SegmentAltitudeEditor = ({
         { value: 4000, label: "FL040 - IFR Est" },
         { value: 5000, label: "FL050 - IFR Ouest" },
         { value: 6000, label: "FL060 - IFR Est" }
-      );
     }
     
     return suggestions;
@@ -335,7 +333,7 @@ export const SegmentAltitudeEditor = ({
                 </div>
               )}
             </div>
-          );
+
         })}
       </div>
 
@@ -357,5 +355,3 @@ export const SegmentAltitudeEditor = ({
         </div>
       </div>
     </div>
-  );
-};

@@ -13,8 +13,6 @@ export const ThemedModule = ({ children, title }) => {
         {children}
       </div>
     </div>
-  );
-};
 
 const styles = {
   container: {

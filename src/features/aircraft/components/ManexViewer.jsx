@@ -81,21 +81,18 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
           `📥 Téléchargement du MANEX ${aircraft.registration} démarré`,
           'success',
           3000
-        );
       } catch (error) {
         console.error('Erreur lors du téléchargement:', error);
         showNotification(
           '❌ Erreur lors du téléchargement du PDF',
           'error',
           5000
-        );
       }
     } else {
       showNotification(
         '⚠️ Le fichier PDF original n\'est pas disponible',
         'warning',
         4000
-      );
     }
   };
 
@@ -131,14 +128,12 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
         `📊 Données MANEX exportées pour ${aircraft.registration}`,
         'success',
         3000
-      );
     } catch (error) {
       console.error('Erreur lors de l\'export:', error);
       showNotification(
         '❌ Erreur lors de l\'export des données',
         'error',
         5000
-      );
     }
   };
 
@@ -356,7 +351,6 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
                             )}
                           </div>
                         </div>
-                      )
                     ))}
                   </div>
                 ) : (
@@ -429,7 +423,7 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
         </div>
       </div>
     </div>
-  );
+
 });
 
 ManexViewer.displayName = 'ManexViewer';

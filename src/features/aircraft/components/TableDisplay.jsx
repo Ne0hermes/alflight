@@ -45,7 +45,7 @@ const TableDisplay = ({
   useEffect(() => {
     // Utiliser l'ID ou le nom de la table pour détecter les changements réels
     if (initialTable && (!editedTable || initialTable.table_name !== editedTable.table_name)) {
-      console.log('🔄 TableDisplay - Synchronisation avec nouvelle table:', initialTable.table_name);
+      
       setEditedTable(initialTable);
       setExpandedMetadata(false); // Réinitialiser l'état des métadonnées
       setSelectedCells(new Set()); // Réinitialiser la sélection des cellules
@@ -54,7 +54,7 @@ const TableDisplay = ({
 
   // Effet pour logger les changements du mode édition
   useEffect(() => {
-    console.log('🔄 TableDisplay - Mode édition changé:', isEditMode);
+    
   }, [isEditMode]);
 
   // Gérer les modifications de la table
@@ -72,7 +72,6 @@ const TableDisplay = ({
         index === rowIndex 
           ? { ...row, [columnKey]: value }
           : row
-      )
     }));
   }, []);
 
@@ -141,7 +140,6 @@ const TableDisplay = ({
       }),
       units: Object.fromEntries(
         Object.entries(prev.units || {}).filter(([key]) => key !== columnKey)
-      )
     }));
   }, []);
 
@@ -157,19 +155,17 @@ const TableDisplay = ({
       units: Object.fromEntries(
         Object.entries(prev.units || {}).map(([key, unit]) => 
           key === oldKey ? [newKey, unit] : [key, unit]
-        )
-      )
     }));
   }, []);
 
   const saveChanges = useCallback(() => {
-    console.log('💾 Sauvegarde des modifications de la table');
+    
     onTableUpdate(editedTable);
     onEditModeChange(false);
   }, [editedTable, onTableUpdate, onEditModeChange]);
 
   const cancelChanges = useCallback(() => {
-    console.log('❌ Annulation des modifications');
+    
     setEditedTable(initialTable);
     onEditModeChange(false);
   }, [initialTable, onEditModeChange]);
@@ -182,7 +178,6 @@ const TableDisplay = ({
       headers.join('\t'),
       ...editedTable.data.map(row => 
         headers.map(header => row[header] || '').join('\t')
-      )
     ].join('\n');
 
     navigator.clipboard.writeText(csvContent).then(() => {
@@ -550,7 +545,6 @@ const TableDisplay = ({
                             }}>
                               {editedTable.units[column]}
                             </span>
-                          )
                         )}
                         
                         {/* Bouton supprimer colonne */}
@@ -676,7 +670,7 @@ const TableDisplay = ({
         </div>
       )}
     </div>
-  );
+
 };
 
 // Mémoriser le composant pour éviter les re-renders inutiles
@@ -689,5 +683,4 @@ export default React.memo(TableDisplay, (prevProps, nextProps) => {
     prevProps.isEditMode === nextProps.isEditMode &&
     prevProps.onEditModeChange === nextProps.onEditModeChange &&
     prevProps.onTableUpdate === nextProps.onTableUpdate
-  );
 });

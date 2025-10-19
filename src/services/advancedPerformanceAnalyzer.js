@@ -14,13 +14,13 @@ class AdvancedPerformanceAnalyzer {
     try {
       if (import.meta && import.meta.env) {
         envApiKey = import.meta.env.VITE_OPENAI_API_KEY;
-        console.log('🔑 VITE_OPENAI_API_KEY présente?', !!envApiKey);
+        
         if (envApiKey) {
-          console.log('🔑 Clé API trouvée dans env (premiers caractères):', envApiKey.substring(0, 20) + '...');
+          :', envApiKey.substring(0, 20) + '...');
         }
       }
     } catch (e) {
-      console.warn('⚠️ Erreur lors de la lecture des variables d\'environnement:', e);
+      
     }
     
     // Priorité: localStorage (même clé que l'ancien système) puis variables d'environnement
@@ -29,14 +29,14 @@ class AdvancedPerformanceAnalyzer {
     this.model = 'gpt-4o'; // Modèle avec vision pour l'analyse d'images
     this.maxRetries = 3;
     
-    console.log('🧪 AdvancedPerformanceAnalyzer - API Key configurée:', !!this.apiKey);
+    
   }
 
   /**
    * Test de la connexion API
    */
   async testAPIKey() {
-    console.log('🧪 Test de la clé API avancée...');
+    
     
     if (!this.apiKey) {
       return {
@@ -91,7 +91,7 @@ class AdvancedPerformanceAnalyzer {
    * Analyse un document de performances (image ou page PDF)
    */
   async analyzePerformanceDocument({ imageBase64, fileName, imageType, pageNumber }) {
-    console.log('🔍 Analyse avancée du document:', fileName);
+    
     
     if (!this.apiKey) {
       throw new Error('Clé API OpenAI non configurée');
@@ -100,7 +100,7 @@ class AdvancedPerformanceAnalyzer {
     try {
       // Étape 1: Détection et classification du contenu
       const detectionResult = await this.detectPerformanceContent(imageBase64, fileName);
-      console.log('📊 Contenu détecté:', detectionResult.contentType);
+      
 
       // Étape 2: Extraction des données selon le type de contenu
       let extractionResult;
@@ -525,7 +525,7 @@ Sois créatif mais précis dans l'organisation des données.`;
         totalConfidence += (validatedData.confidence || 0.5);
         
       } catch (error) {
-        console.warn(`Table ignorée (${table.table_name}):`, error.message);
+        :`, error.message);
       }
     }
 
@@ -545,7 +545,7 @@ Sois créatif mais précis dans l'organisation des données.`;
    * Extrait les courbes et points de données
    */
   async analyzePerformanceChart({ imageBase64, chartType = 'takeoff', axes }) {
-    console.log('📊 Analyse de l\'abaque de performance:', chartType);
+    
     
     if (!this.apiKey) {
       throw new Error('Clé API OpenAI non configurée');
@@ -563,7 +563,7 @@ Sois créatif mais précis dans l'organisation des données.`;
       mimeType = 'webp';
     }
     
-    console.log(`🖼️ Type d'image détecté: ${mimeType}`);
+    
 
     const systemPrompt = `Tu es un expert en analyse d'abaques aéronautiques.
     Tu dois extraire précisément les points de données des courbes de performance.
@@ -688,7 +688,6 @@ Sois créatif mais précis dans l'organisation des données.`;
       const result = await response.json();
       const content = result.choices[0].message.content;
       
-      console.log('📝 Réponse brute de l\'API:', content.substring(0, 500));
       
       // Parser la réponse JSON avec gestion améliorée des erreurs
       let chartData;
@@ -696,7 +695,7 @@ Sois créatif mais précis dans l'organisation des données.`;
         // Essayer de parser directement
         chartData = JSON.parse(content);
       } catch (firstError) {
-        console.log('⚠️ Parsing direct échoué, tentative de nettoyage...');
+        
         
         // Nettoyer le contenu
         let cleanedContent = content
@@ -751,7 +750,7 @@ Sois créatif mais précis dans l'organisation des données.`;
         const closeBrackets = (cleanedContent.match(/\]/g) || []).length;
         
         if (openBraces > closeBraces || openBrackets > closeBrackets) {
-          console.warn('⚠️ JSON tronqué détecté, tentative de réparation...');
+          
           
           // Analyser la structure pour fermer proprement
           let stack = [];
@@ -801,26 +800,23 @@ Sois créatif mais précis dans l'organisation des données.`;
         
         try {
           chartData = JSON.parse(cleanedContent);
-          console.log('✅ JSON récupéré après nettoyage');
+          
         } catch (secondError) {
           console.error('❌ Impossible de parser le JSON même après nettoyage:', secondError);
           
           // Logs détaillés pour diagnostiquer le problème
           const errorPosition = parseInt(secondError.message.match(/position (\d+)/)?.[1] || 0);
-          console.log('Position d\'erreur:', errorPosition);
+          
           
           if (errorPosition > 0) {
-            console.log('Contexte autour de l\'erreur:');
-            console.log('Avant:', cleanedContent.substring(Math.max(0, errorPosition - 50), errorPosition));
-            console.log('>>> ERREUR ICI <<<');
-            console.log('Après:', cleanedContent.substring(errorPosition, Math.min(cleanedContent.length, errorPosition + 50)));
+            
+            , errorPosition));
           }
           
           // Afficher les 1000 premiers caractères pour analyse
-          console.log('Début du JSON problématique:', cleanedContent.substring(0, 1000));
           
           // Tentative de récupération ultime : extraire les points manuellement
-          console.log('🔧 Tentative de récupération manuelle des données...');
+          
           
           try {
             // Essayer d'extraire au moins le tableau de points
@@ -840,7 +836,7 @@ Sois créatif mais précis dans l'organisation des données.`;
               
               try {
                 const points = JSON.parse(pointsString);
-                console.log(`✅ ${points.length} points récupérés manuellement`);
+                
                 
                 // Créer une réponse avec les points récupérés
                 chartData = {
@@ -875,25 +871,20 @@ Sois créatif mais précis dans l'organisation des données.`;
         }
       }
       
-      console.log('📊 Données parsées:', {
-        chart_type: chartData.chart_type,
-        points_count: chartData.extracted_points?.length || 0,
-        axes_detected: chartData.axes_detected,
-        confidence: chartData.confidence
-      });
+      
       
       // Valider et enrichir les données
       if (chartData.extracted_points && Array.isArray(chartData.extracted_points)) {
-        console.log(`✅ ${chartData.extracted_points.length} points extraits au total`);
+        
         
         // Afficher les détails des abaques détectés
         if (chartData.abaques_detected && Array.isArray(chartData.abaques_detected)) {
-          console.log('📊 Abaques détectés:');
+          
           chartData.abaques_detected.forEach(abaque => {
-            console.log(`  - ${abaque.type}: ${abaque.curves_count} courbes`);
+            
             if (abaque.curves) {
               abaque.curves.forEach(curve => {
-                console.log(`    • ${curve.parameter} = ${curve.value}: ${curve.points_count} points`);
+                
               });
             }
           });
@@ -901,13 +892,12 @@ Sois créatif mais précis dans l'organisation des données.`;
         
         // Afficher les statistiques d'extraction
         if (chartData.extraction_quality) {
-          console.log('📈 Qualité d\'extraction:');
-          console.log(`  - Confiance: ${(chartData.extraction_quality.confidence * 100).toFixed(1)}%`);
-          console.log(`  - Points/courbe: ${chartData.extraction_quality.points_per_curve}`);
-          console.log(`  - Couverture: ${chartData.extraction_quality.coverage}`);
+          
+          .toFixed(1)}%`);
+          
+          
         }
         
-        console.log('🔍 Échantillon de points:', chartData.extracted_points.slice(0, 5));
         
         // Ajouter des métadonnées
         chartData.extraction_metadata = {
@@ -948,7 +938,6 @@ Sois créatif mais précis dans l'organisation des données.`;
             temp * 5 + 
             alt * 0.05 + 
             (mass - 1000) * 0.8
-          );
           
           points.push({
             temperature: temp,
@@ -1060,10 +1049,7 @@ Sois créatif mais précis dans l'organisation des données.`;
     const firstRowKeys = Object.keys(table.data[0]);
     for (let i = 1; i < table.data.length; i++) {
       const currentRowKeys = Object.keys(table.data[i]);
-      if (currentRowKeys.length !== firstRowKeys.length) {
-        console.warn(`Ligne ${i} a un nombre de colonnes différent`);
-      }
-    }
+          }
 
     return table;
   }
@@ -1166,7 +1152,7 @@ Sois créatif mais précis dans l'organisation des données.`;
     
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
       try {
-        console.log(`🔍 ${operation} - Tentative ${attempt}/${this.maxRetries}`);
+        
         
         const response = await fetch(this.endpoint, {
           method: 'POST',
@@ -1229,11 +1215,11 @@ Sois créatif mais précis dans l'organisation des données.`;
             .replace(/,(\s*)\]/g, '$1]');
           
           const result = JSON.parse(cleanedContent);
-          console.log(`✅ ${operation} réussi`);
+          
           
           // Vérifier que le résultat a bien des tables
           if (!result.tables && operation === 'table_extraction') {
-            console.warn('⚠️ Pas de tables dans le résultat, création d\'une structure vide');
+            
             return {
               tables: [],
               parse_warnings: ['Aucune table trouvée dans la réponse']
@@ -1243,10 +1229,10 @@ Sois créatif mais précis dans l'organisation des données.`;
           return result;
           
         } catch (parseError) {
-          console.warn(`⚠️ Erreur de parsing JSON pour ${operation}:`, parseError);
-          console.log('Contenu reçu (premiers 500 caractères):', content.substring(0, 500));
-          console.log('Contenu reçu (derniers 500 caractères):', content.substring(content.length - 500));
-          console.log('📏 Longueur totale du contenu:', content.length);
+          
+          :', content.substring(0, 500));
+          :', content.substring(content.length - 500));
+          
           
           // Tentative de récupération plus agressive
           try {
@@ -1259,7 +1245,7 @@ Sois créatif mais précis dans l'organisation des données.`;
               
               // Si le JSON semble tronqué (pas de } final trouvé ou déséquilibré)
               if (jsonEnd === -1 || jsonEnd <= jsonStart) {
-                console.warn('⚠️ JSON tronqué détecté, tentative de réparation...');
+                
                 
                 // Compter les accolades et crochets ouverts
                 let braceCount = 0;
@@ -1303,7 +1289,7 @@ Sois créatif mais précis dans l'organisation des données.`;
                   braceCount--;
                 }
                 
-                console.log('🔧 JSON réparé avec fermetures ajoutées');
+                
               } else {
                 jsonContent = content.substring(jsonStart, jsonEnd + 1);
               }
@@ -1319,13 +1305,13 @@ Sois créatif mais précis dans l'organisation des données.`;
                 .replace(/\/\*[\s\S]*?\*\//g, '');
               
               const result = JSON.parse(jsonContent);
-              console.log(`✅ ${operation} récupéré après nettoyage agressif`);
+              
               
               // Vérifier que le résultat a bien des tables
               if (result.tables && result.tables.length > 0) {
                 return result;
               } else {
-                console.warn('⚠️ Récupération réussie mais pas de tables trouvées');
+                
                 return {
                   tables: [],
                   parse_warnings: ['JSON récupéré mais aucune table détectée']
@@ -1333,11 +1319,11 @@ Sois créatif mais précis dans l'organisation des données.`;
               }
             }
           } catch (recoveryError) {
-            console.warn('Échec de récupération agressive:', recoveryError.message);
+            
           }
           
           // Si tout échoue, retourner une structure minimale
-          console.warn(`⚠️ Impossible de parser, retour d'une structure minimale`);
+          
           return {
             tables: [{
               table_name: `Extraction échouée - ${fileName}`,
@@ -1354,11 +1340,11 @@ Sois créatif mais précis dans l'organisation des données.`;
 
       } catch (error) {
         lastError = error;
-        console.warn(`❌ Tentative ${attempt} échouée pour ${operation}:`, error.message);
+        
         
         if (attempt < this.maxRetries) {
           const delay = Math.pow(2, attempt) * 1000; // Backoff exponentiel
-          console.log(`⏳ Attente de ${delay}ms avant retry...`);
+          
           await new Promise(resolve => setTimeout(resolve, delay));
         }
       }

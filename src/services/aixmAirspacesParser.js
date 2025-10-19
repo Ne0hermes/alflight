@@ -20,7 +20,7 @@ class AIXMAirspacesParser {
     }
 
     if (this.airspaces.length > 0 && !this.isLoading) {
-      console.log('📦 Espaces aériens AIXM déjà en cache');
+      
       return this.airspaces;
     }
 
@@ -28,7 +28,7 @@ class AIXMAirspacesParser {
     
     this.loadPromise = (async () => {
       try {
-        console.log('🔄 Chargement des espaces aériens depuis AIXM...');
+        
         
         // Charger le fichier AIXM
         const aixmResponse = await fetch('/src/data/AIXM4.5_all_FR_OM_2025-09-04.xml');
@@ -41,7 +41,7 @@ class AIXMAirspacesParser {
         // Extraire les espaces aériens
         this.parseAirspaces(aixmDoc);
         
-        console.log(`✅ ${this.airspaces.length} espaces aériens AIXM chargés`);
+        
         
         this.isLoading = false;
         return this.airspaces;
@@ -67,7 +67,7 @@ class AIXMAirspacesParser {
     
     // Récupérer tous les espaces aériens (balise Ase)
     const ases = doc.getElementsByTagName('Ase');
-    console.log(`📋 ${ases.length} espaces aériens trouvés dans AIXM`);
+    
     
     for (const ase of ases) {
       try {
@@ -138,7 +138,7 @@ class AIXMAirspacesParser {
     const geometry = this.parseGeometry(ase);
     
     if (!geometry) {
-      console.warn(`Pas de géométrie pour ${codeId}`);
+      
       return null;
     }
     
@@ -398,7 +398,7 @@ class AIXMAirspacesParser {
     const airspace = this.airspaces.find(a => a.id === id);
     if (airspace) {
       Object.assign(airspace.properties, updates, { modified: true });
-      console.log(`✏️ Espace aérien ${id} modifié`);
+      
       
       // Sauvegarder les modifications dans le localStorage
       this.saveModifications();
@@ -420,7 +420,7 @@ class AIXMAirspacesParser {
     });
     
     localStorage.setItem('aixm_airspaces_modifications', JSON.stringify(modifications));
-    console.log(`💾 ${Object.keys(modifications).length} modifications sauvegardées`);
+    .length} modifications sauvegardées`);
   }
 
   /**
@@ -438,7 +438,7 @@ class AIXMAirspacesParser {
         }
       });
       
-      console.log(`📂 ${Object.keys(modifications).length} modifications chargées`);
+      .length} modifications chargées`);
     }
   }
 
@@ -450,9 +450,9 @@ class AIXMAirspacesParser {
     this.airspaces.forEach(airspace => {
       airspace.properties.modified = false;
     });
-    console.log('🔄 Modifications réinitialisées');
+    
   }
-}
+);}
 
 // Export singleton
 export const aixmAirspacesParser = new AIXMAirspacesParser();

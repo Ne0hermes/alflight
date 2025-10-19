@@ -69,7 +69,6 @@ export const SimplePdfReader = ({ file, onExtracted, onError }) => {
           '📄 PDF enregistré. Les données de performances utilisent les valeurs par défaut de l\'application (extraction automatique non disponible).',
           'warning',
           7000
-        );
         onExtracted(extractedInfo);
       };
       reader.onerror = () => {
@@ -77,7 +76,6 @@ export const SimplePdfReader = ({ file, onExtracted, onError }) => {
           '❌ Erreur lors de la lecture du fichier PDF',
           'error',
           5000
-        );
         onError('Erreur lors de la lecture du fichier');
       };
       reader.readAsDataURL(pdfFile);

@@ -45,7 +45,7 @@ const InfoIcon = memo(({ tooltip }) => {
         </div>
       )}
     </span>
-  );
+
 });
 
 InfoIcon.displayName = 'InfoIcon';
@@ -65,7 +65,6 @@ const AircraftFormComplete = memo(({ aircraft, onSubmit, onCancel, onOpenManexIm
           timestamp: new Date().toISOString(),
           details: 'Test de vérification du système de logging automatique'
         }
-      );
     }
   }, []);
   
@@ -160,7 +159,7 @@ const AircraftFormComplete = memo(({ aircraft, onSubmit, onCancel, onOpenManexIm
   
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('📝 Soumission du formulaire avec les données:', formData);
+    
     
     // Convertir les valeurs au format de stockage
     const dataToSubmit = {
@@ -968,12 +967,12 @@ const AircraftFormComplete = memo(({ aircraft, onSubmit, onCancel, onOpenManexIm
                 advancedPerformance: aircraft?.advancedPerformance
               }}
               onPerformanceUpdate={async (performanceData) => {
-                console.log('📊 Mise à jour des performances IA:', performanceData);
+                
                 
                 try {
                   if (aircraft?.id) {
                     await performanceDataManager.storePerformanceData(aircraft.id, performanceData);
-                    console.log('✅ Données de performance stockées');
+                    
                   }
                   
                   setFormData(prev => ({
@@ -1013,7 +1012,7 @@ const AircraftFormComplete = memo(({ aircraft, onSubmit, onCancel, onOpenManexIm
         </button>
       </div>
     </form>
-  );
+
 });
 
 AircraftFormComplete.displayName = 'AircraftFormComplete';

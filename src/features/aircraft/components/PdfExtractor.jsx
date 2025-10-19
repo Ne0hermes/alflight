@@ -33,8 +33,7 @@ export const PdfExtractor = ({ file, onExtracted, onError }) => {
       const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
       const pdf = await loadingTask.promise;
       
-      console.log(`PDF chargé: ${pdf.numPages} pages`);
-      
+            
       // Créer l'objet de données extraites
       const extractedInfo = {
         fileName: pdfFile.name,
@@ -70,12 +69,8 @@ export const PdfExtractor = ({ file, onExtracted, onError }) => {
           fullText += pageText + '\n';
           
           // Mise à jour du progrès
-          if (i % 10 === 0) {
-            console.log(`Extraction: ${i}/${maxPages} pages`);
-          }
-        } catch (pageError) {
-          console.warn(`Erreur page ${i}:`, pageError);
-        }
+                  } catch (pageError) {
+                  }
       }
 
       // Analyser le contenu extrait
@@ -88,8 +83,7 @@ export const PdfExtractor = ({ file, onExtracted, onError }) => {
       const perfSectionMatch = fullText.match(/(?:SECTION\s*4|PERFORMANCES|CERTIFIED LIMITATION)[\s\S]{0,5000}/i);
       if (perfSectionMatch) {
         performanceText = perfSectionMatch[0] + '\n' + fullText; // Ajouter au texte complet
-        console.log('Section performances trouvée');
-      }
+              }
       
       const { data: performanceData, details: performanceDetails } = extractPerformanceData(performanceText);
       extractedInfo.performances = performanceData;
@@ -131,14 +125,12 @@ export const PdfExtractor = ({ file, onExtracted, onError }) => {
             `✅ Données extraites avec succès du PDF (${Object.keys(extractedInfo.performances).length} performances trouvées)`,
             'success',
             5000
-          );
         } else {
           extractedInfo.dataSource = 'PDF stocké - Extraction limitée (valeurs par défaut utilisées)';
           showNotification(
             '⚠️ Extraction partielle du PDF. Utilisation de valeurs par défaut pour les données manquantes.',
             'warning',
             6000
-          );
           
           // Ajouter des valeurs par défaut si rien n'a été extrait
           if (Object.keys(extractedInfo.performances).length === 0) {
@@ -191,7 +183,6 @@ export const PdfExtractor = ({ file, onExtracted, onError }) => {
         `❌ Erreur lors de l'extraction: ${err.message}`,
         'error',
         5000
-      );
       
       // En cas d'erreur, utiliser le SimplePdfReader comme fallback
       if (onError) {
@@ -254,7 +245,6 @@ export const PdfExtractor = ({ file, onExtracted, onError }) => {
         const regex = new RegExp(
           `${pattern}[^0-9]{0,200}(\\d{2,3})\\s*(?:kt|KT|kts|KTS|KIAS|knots|KCAS)?`,
           'i'
-        );
         
         const match = text.match(regex);
         if (match && match[1]) {
@@ -262,7 +252,7 @@ export const PdfExtractor = ({ file, onExtracted, onError }) => {
           if (value > 20 && value < 500 && !data[speedKey]) {
             data[speedKey] = value;
             details[speedKey] = 'extracted'; // Marquer comme extrait du PDF
-            console.log(`Trouvé ${speedKey}: ${value} kt (pattern: ${pattern})`);
+
           }
         }
       }
@@ -283,8 +273,7 @@ export const PdfExtractor = ({ file, onExtracted, onError }) => {
         if (value > 0 && value < 10000) { // Validation basique
           data[key] = value;
           details[key] = 'extracted';
-          console.log(`Trouvé ${key}: ${value}`);
-        }
+                  }
       }
     });
 
@@ -308,8 +297,7 @@ export const PdfExtractor = ({ file, onExtracted, onError }) => {
         if (value > 0 && value < 100) {
           limitations[key] = value;
           details[key] = 'extracted';
-          console.log(`Trouvé ${key}: ${value} kt`);
-        }
+                  }
       }
     });
 
@@ -327,8 +315,7 @@ export const PdfExtractor = ({ file, onExtracted, onError }) => {
         if (value > 100 && value < 1000000) {
           limitations[key] = value;
           details[key] = 'extracted';
-          console.log(`Trouvé ${key}: ${value}`);
-        }
+                  }
       }
     });
 

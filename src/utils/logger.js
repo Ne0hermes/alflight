@@ -22,20 +22,17 @@ const createLogger = (prefix = '') => {
   return {
     debug: (...args) => {
       if (currentLogLevel <= LOG_LEVELS.DEBUG && isDebugEnabled) {
-        console.log(`[DEBUG]${prefix}`, ...args);
-      }
+              }
     },
     
     info: (...args) => {
       if (currentLogLevel <= LOG_LEVELS.INFO) {
-        console.info(`[INFO]${prefix}`, ...args);
-      }
+              }
     },
     
     warn: (...args) => {
       if (currentLogLevel <= LOG_LEVELS.WARN) {
-        console.warn(`[WARN]${prefix}`, ...args);
-      }
+              }
     },
     
     error: (...args) => {
@@ -53,8 +50,8 @@ const createLogger = (prefix = '') => {
       const start = performance.now();
       const result = fn();
       const end = performance.now();
-      
-      console.log(`[PERF]${prefix} ${label}: ${(end - start).toFixed(2)}ms`);
+
+      console.log(`${prefix} ${label}: ${(end - start).toFixed(2)}ms`);
       return result;
     },
     
