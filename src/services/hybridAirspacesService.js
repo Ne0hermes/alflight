@@ -5,7 +5,7 @@
  */
 
 // Utiliser 127.0.0.1 au lieu de localhost pour éviter les problèmes CORS
-const OPENAIP_PROXY_URL = import.meta.env.VITE_OPENAIP_PROXY_URL?.replace('localhost', '127.0.0.1') || 'http://127.0.0.1:3001';
+const OPENAIP_PROXY_URL = import.meta.env.VITE_OPENAIP_PROXY_URL?.replace('localhost', '127.0.0.1') || 'http://127.0.0.1:3002';
 
 class HybridAirspacesService {
   constructor() {
@@ -347,7 +347,7 @@ class HybridAirspacesService {
       return false;
     }
   }
-);}
+}
 
 // Export singleton
 export const hybridAirspacesService = new HybridAirspacesService();

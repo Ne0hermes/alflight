@@ -11,7 +11,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.OPENAIP_PROXY_PORT || 3001;
+const PORT = process.env.OPENAIP_PROXY_PORT || 3002;
 
 // Configuration CORS pour permettre les requêtes depuis le frontend
 app.use(cors({

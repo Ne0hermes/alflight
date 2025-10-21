@@ -140,6 +140,8 @@ export const NavigationProvider = memo(({ children }) => {
   const removeWaypoint = useNavigationStore(state => state.removeWaypoint);
   const updateWaypoint = useNavigationStore(state => state.updateWaypoint);
   const clearRoute = useNavigationStore(state => state.clearRoute);
+  const moveWaypointUp = useNavigationStore(state => state.moveWaypointUp);
+  const moveWaypointDown = useNavigationStore(state => state.moveWaypointDown);
   const segmentAltitudes = useNavigationStore(state => state.segmentAltitudes);
   const setSegmentAltitude = useNavigationStore(state => state.setSegmentAltitude);
   const getSegmentAltitude = useNavigationStore(state => state.getSegmentAltitude);
@@ -166,13 +168,15 @@ export const NavigationProvider = memo(({ children }) => {
     removeWaypoint,
     updateWaypoint,
     clearRoute,
+    moveWaypointUp,
+    moveWaypointDown,
     getNavigationResults,
     // Altitudes par segment
     segmentAltitudes,
     setSegmentAltitude,
     getSegmentAltitude
   }), [waypoints, setWaypoints, flightParams, setFlightParams, flightType, setFlightType,
-      navigationResults, addWaypoint, removeWaypoint, updateWaypoint, clearRoute, getNavigationResults,
+      navigationResults, addWaypoint, removeWaypoint, updateWaypoint, clearRoute, moveWaypointUp, moveWaypointDown, getNavigationResults,
       segmentAltitudes, setSegmentAltitude, getSegmentAltitude]);
 
   return <NavigationContext.Provider value={value}>{children}</NavigationContext.Provider>;

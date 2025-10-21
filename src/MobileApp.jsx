@@ -56,7 +56,7 @@ const TAB_CONFIG = [
   { id: 'regulations', label: 'Références réglementaires', icon: 'Shield', component: RegulationsModule }
 ];
 
-export const MobileApp = () => {
+const MobileApp = () => {
   const [activeTab, setActiveTab] = useState('landing');
   const [isMobile, setIsMobile] = useState(false);
   const [showSplash, setShowSplash] = useState(false); // Désactivé temporairement

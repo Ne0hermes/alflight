@@ -329,7 +329,7 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
         </p>
       </div>
     </div>
-
+  );
 };
 
 export default DangerousZonesDetector;

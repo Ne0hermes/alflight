@@ -25,6 +25,7 @@ import WindAnalysis from './components/WindAnalysis';
 import VFRNavigationTable from './components/VFRNavigationTable';
 import GlobalVFRPointsManager from './components/GlobalVFRPointsManager';
 import AlternatesModule from '../alternates/AlternatesModule';
+import WaypointSelectorModal from './components/WaypointSelectorModal';
 
 // Hook temporaire pour remplacer useAlternatesForNavigation
 const useAlternatesForNavigation = () => {
@@ -71,6 +72,8 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
   const [selectedVFRPoints, setSelectedVFRPoints] = useState({}); // Points VFR par waypoint
   const [dangerousZones, setDangerousZones] = useState({});
   const [activeTab, setActiveTab] = useState('navigation'); // Nouvel état pour les onglets
+  const [showWaypointModal, setShowWaypointModal] = useState(false);
+  const [waypointInsertIndex, setWaypointInsertIndex] = useState(null);
 
   // Charger les aérodromes au montage - Supprimé
   // useEffect(() => {
@@ -126,6 +129,56 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
     newWaypoints.splice(index, 0, waypoint);
     setWaypoints(newWaypoints);
   }, [waypoints, setWaypoints]);
+
+  // Handler pour la sélection depuis le modal
+  const handleWaypointSelection = useCallback((selection) => {
+    console.log('📍 handleWaypointSelection appelé avec:', selection);
+
+    if (selection.type === 'aerodrome') {
+      const airport = selection.data;
+      const newWaypoint = {
+        id: `waypoint-${Date.now()}`,
+        name: airport.icao,
+        lat: airport.coordinates.lat,
+        lon: airport.coordinates.lon || airport.coordinates.lng,
+        elevation: airport.elevation,
+        airportName: airport.name,
+        city: airport.city,
+        type: 'waypoint'
+      };
+
+      if (waypointInsertIndex !== null) {
+        insertWaypoint(newWaypoint, waypointInsertIndex);
+      } else {
+        addWaypointToStore(newWaypoint);
+      }
+    } else if (selection.type === 'community') {
+      // Point communautaire VFR
+      const communityPoint = selection.data;
+      const newWaypoint = {
+        id: `vfr-community-${Date.now()}`,
+        name: communityPoint.name,
+        lat: communityPoint.lat,
+        lon: communityPoint.lon,
+        elevation: communityPoint.altitude || 0, // Altitude en pieds (standard aviation)
+        altitude: communityPoint.altitude,
+        description: communityPoint.description,
+        type: 'vfr', // Type VFR pour l'affichage sur la carte
+        vfrType: communityPoint.type, // Type de point VFR (VRP, Landmark, etc.)
+        fromCommunity: true
+      };
+
+      console.log('✅ Point communautaire créé:', newWaypoint);
+
+      if (waypointInsertIndex !== null) {
+        insertWaypoint(newWaypoint, waypointInsertIndex);
+      } else {
+        addWaypointToStore(newWaypoint);
+      }
+    }
+    // Réinitialiser
+    setWaypointInsertIndex(null);
+  }, [waypointInsertIndex, insertWaypoint, addWaypointToStore]);
 
   // Calcul de la réserve carburant affichée
   const getReserveInfo = () => {
@@ -456,14 +509,8 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
                 </p>
                 <button
                   onClick={() => {
-                    const newWaypoint = {
-                      id: `waypoint-${Date.now()}`,
-                      name: '',
-                      lat: null,
-                      lon: null,
-                      type: 'waypoint'
-                    };
-                    addWaypointToStore(newWaypoint);
+                    setWaypointInsertIndex(null); // null = ajouter à la fin
+                    setShowWaypointModal(true);
                   }}
                   style={{
                     padding: '12px 24px',
@@ -493,101 +540,14 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
             )}
 
             {waypoints.map((waypoint, index) => {
-              // Extraire le code ICAO de l'aérodrome
-              const currentIcao = waypoint.name ? waypoint.name.split(' ')[0] : null;
+              // NOUVELLE LOGIQUE SIMPLIFIÉE :
+              // Chaque waypoint (aérodrome OU point VFR) a sa propre carte indépendante
+              // L'utilisateur organise l'ordre manuellement avec les boutons ⬆️⬇️
 
-              // Vérifier si ce waypoint est un point VFR lié à un aérodrome adjacent
+              // Plus de regroupement automatique, plus de masquage
+              const linkedVfrPoints = []; // Toujours vide maintenant
               const prevWaypoint = index > 0 ? waypoints[index - 1] : null;
-              const nextWaypoint = index < waypoints.length - 1 ? waypoints[index + 1] : null;
-              const prevIcao = prevWaypoint?.name ? prevWaypoint.name.split(' ')[0] : null;
-              const nextIcao = nextWaypoint?.name ? nextWaypoint.name.split(' ')[0] : null;
-
-              // Si c'est un point VFR, vérifier s'il est lié à l'aérodrome précédent OU suivant
-              if (waypoint.type === 'vfr-point') {
-                // Cas 1: Lié à l'aérodrome précédent (ordre normal: LFST → STS)
-                const isLinkedToPrevious = prevWaypoint && prevWaypoint.type !== 'vfr-point' &&
-                                          (waypoint.aerodrome === prevWaypoint.name ||
-                                           waypoint.aerodrome === prevIcao ||
-                                           // Auto-détection par préfixe du nom (ex: STS lié à LFST)
-                                           (prevIcao && waypoint.name?.startsWith(prevIcao.substring(2))));
-
-                // Cas 2: Lié à l'aérodrome suivant (ordre inversé: STS → LFST)
-                const isLinkedToNext = nextWaypoint && nextWaypoint.type !== 'vfr-point' &&
-                                      (waypoint.aerodrome === nextWaypoint.name ||
-                                       waypoint.aerodrome === nextIcao ||
-                                       // Auto-détection par préfixe du nom
-                                       (nextIcao && waypoint.name?.startsWith(nextIcao.substring(2))));
-
-                if (isLinkedToPrevious || isLinkedToNext) {
-                  // Ce point VFR sera affiché avec son aérodrome parent, on le skip ici
-                  return null;
-                }
-              }
-
-              // Trouver tous les points VFR liés à cet aérodrome (avant ET après)
-              const linkedVfrPoints = [];
-              if (waypoint.type !== 'vfr-point') {
-                // 1. Points VFR qui PRÉCÈDENT cet aérodrome
-                for (let i = index - 1; i >= 0; i--) {
-                  const prevWp = waypoints[i];
-                  if (prevWp.type === 'vfr-point') {
-                    // Vérifier toutes les conditions de liaison
-                    const matchFullName = prevWp.aerodrome === waypoint.name;
-                    const matchIcao = prevWp.aerodrome === currentIcao;
-                    const matchPrefix = currentIcao && currentIcao.length >= 4 && prevWp.name?.startsWith(currentIcao.substring(2));
-                    const isLinked = matchFullName || matchIcao || matchPrefix;
-
-                    if (isLinked) {
-                      linkedVfrPoints.unshift(prevWp); // Ajouter au début
-                    } else {
-                      break;
-                    }
-                  } else {
-                    break; // Arrêter si on trouve un aérodrome
-                  }
-                }
-
-                // 2. Points VFR qui SUIVENT cet aérodrome
-                for (let i = index + 1; i < waypoints.length; i++) {
-                  const nextWp = waypoints[i];
-                  if (nextWp.type === 'vfr-point') {
-                    // Vérifier toutes les conditions de liaison
-                    const matchFullName = nextWp.aerodrome === waypoint.name;
-                    const matchIcao = nextWp.aerodrome === currentIcao;
-                    const matchPrefix = currentIcao && currentIcao.length >= 4 && nextWp.name?.startsWith(currentIcao.substring(2));
-                    const isLinked = matchFullName || matchIcao || matchPrefix;
-
-                    if (isLinked) {
-                      linkedVfrPoints.push(nextWp); // Ajouter à la fin
-                    } else {
-                      break;
-                    }
-                  } else {
-                    break; // Arrêter si on trouve un aérodrome
-                  }
-                }
-              }
-
-              // Calculer le vrai index suivant (en sautant TOUS les points VFR groupés)
-              // Il faut compter les VFR avant ET après cet aérodrome
-              let vfrAfter = 0;
-              for (let i = index + 1; i < waypoints.length; i++) {
-                const wp = waypoints[i];
-                if (wp.type === 'vfr-point') {
-                  const isLinked = wp.aerodrome === waypoint.name ||
-                                  wp.aerodrome === currentIcao ||
-                                  (currentIcao && wp.name?.startsWith(currentIcao.substring(2)));
-                  if (isLinked) {
-                    vfrAfter++;
-                  } else {
-                    break;
-                  }
-                } else {
-                  break;
-                }
-              }
-
-              const nextRealIndex = index + 1 + vfrAfter;
+              const nextRealIndex = index + 1;
               const isLast = nextRealIndex >= waypoints.length;
               const nextWaypointForButton = !isLast ? waypoints[nextRealIndex] : null;
 
@@ -616,12 +576,17 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
                     }}
                     onRemoveVfrPoint={(vfrId) => {
                       // Supprimer un point VFR individuel
+                      console.log('🗑️ NavigationModule - onRemoveVfrPoint appelé avec ID:', vfrId);
+                      console.log('🗑️ Waypoints avant suppression:', waypoints.map(w => ({ id: w.id, name: w.name })));
+
                       try {
+                        console.log('🗑️ Appel de removeWaypoint...');
                         removeWaypoint(vfrId);
+                        console.log('🗑️ removeWaypoint appelé avec succès');
 
                         // Vérifier après un court délai que le waypoint a bien été supprimé
                         setTimeout(() => {
-                          // Verification complete
+                          console.log('🗑️ Vérification post-suppression - Waypoints actuels:', waypoints.map(w => ({ id: w.id, name: w.name })));
                         }, 100);
                       } catch (error) {
                         console.error('❌ NavigationModule: Erreur lors de la suppression:', error);
@@ -639,20 +604,12 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
                     <div style={{
                       display: 'flex',
                       justifyContent: 'center',
-                      margin: '16px 0'
+                      margin: '5px 0'
                     }}>
                       <button
                         onClick={() => {
-                          // Créer un nouveau waypoint vide
-                          const newWaypoint = {
-                            id: `waypoint-${Date.now()}`,
-                            name: '',
-                            lat: null,
-                            lon: null,
-                            type: 'waypoint'
-                          };
-                          // Insérer après l'aérodrome et tous ses points VFR
-                          insertWaypoint(newWaypoint, nextRealIndex);
+                          setWaypointInsertIndex(nextRealIndex);
+                          setShowWaypointModal(true);
                         }}
                         style={{
                           width: '40px',
@@ -694,18 +651,12 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
               <div style={{
                 display: 'flex',
                 justifyContent: 'center',
-                margin: '16px 0'
+                margin: '5px 0'
               }}>
                 <button
                   onClick={() => {
-                    const newWaypoint = {
-                      id: `waypoint-${Date.now()}`,
-                      name: '',
-                      lat: null,
-                      lon: null,
-                      type: 'waypoint'
-                    };
-                    addWaypointToStore(newWaypoint);
+                    setWaypointInsertIndex(null); // null = ajouter à la fin
+                    setShowWaypointModal(true);
                   }}
                   style={{
                     width: '40px',
@@ -740,19 +691,7 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
             )}
           </div>
 
-          {/* Info sur le trajet */}
-          {waypoints.length >= 2 && navigationResults && (
-            <div style={sx.combine(
-              sx.components.alert.base,
-              sx.components.alert.info,
-              sx.spacing.mt(4)
-            )}>
-              <p style={sx.text.sm}>
-                <strong>Trajet :</strong> {waypoints.filter(w => w.name).map(w => w.name).join(' → ')}
-                {waypoints[0]?.name === waypoints[waypoints.length - 1]?.name && ' (Circuit fermé)'}
-              </p>
-            </div>
-          )}
+          {/* Info sur le trajet - RETIRÉ */}
         </div>
       </section>
 
@@ -765,6 +704,8 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
             plannedAltitude={plannedAltitude}
             flightType={flightType}
             navigationResults={navigationResults}
+            segmentAltitudes={segmentAltitudes}
+            setSegmentAltitude={setSegmentAltitude}
           />
         </section>
       )}
@@ -777,6 +718,16 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
           )}
         </>
       )}
+
+      {/* Modal de sélection de waypoint */}
+      <WaypointSelectorModal
+        isOpen={showWaypointModal}
+        onClose={() => {
+          setShowWaypointModal(false);
+          setWaypointInsertIndex(null);
+        }}
+        onSelect={handleWaypointSelection}
+      />
 
     </div>
   );

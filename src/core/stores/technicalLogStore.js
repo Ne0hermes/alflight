@@ -60,6 +60,7 @@ export const useTechnicalLogStore = create(
       updateEntry: (id, updates) => set(state => ({
         entries: state.entries.map(entry =>
           entry.id === id ? { ...entry, ...updates, updatedAt: new Date().toISOString() } : entry
+        )
       })),
 
       deleteEntry: (id) => set(state => ({
@@ -77,6 +78,7 @@ export const useTechnicalLogStore = create(
       updateMaintenanceItem: (id, updates) => set(state => ({
         maintenanceItems: state.maintenanceItems.map(item =>
           item.id === id ? { ...item, ...updates } : item
+        )
       })),
 
       deleteMaintenanceItem: (id) => set(state => ({
@@ -93,8 +95,9 @@ export const useTechnicalLogStore = create(
       },
 
       getOpenDefects: () => {
-        return get().entries.filter(entry => 
+        return get().entries.filter(entry =>
           entry.type === 'defect' && !entry.resolved
+        );
       },
 
       // Statistiques
@@ -184,8 +187,10 @@ export const useTechnicalLogStore = create(
         entries: [],
         maintenanceItems: []
       })
-    }),
+        }),
     {
       name: 'technical-log-storage',
       version: 1
-    }
+    }
+  )
+);

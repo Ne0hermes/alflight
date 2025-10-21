@@ -771,6 +771,7 @@ const PilotLogbook = ({ showFormProp }) => {
       // Validation basique des entrées
       const validEntries = entries_to_import.filter(entry =>
         entry.date && (entry.departure || entry.arrival)
+      );
 
       if (validEntries.length === 0) {
         alert('Aucune entrée valide trouvée dans le fichier.');
@@ -782,11 +783,13 @@ const PilotLogbook = ({ showFormProp }) => {
       if (needsConversion) {
         processedEntries = validEntries.map(entry =>
           convertLogbookEntry(entry, sourceUnits, currentUnits)
-              }
+        );
+      }
 
       // Fusionner avec les entrées existantes (éviter les doublons basés sur date + départ + arrivée)
       const existingKeys = new Set(
         entries.map(e => `${e.date}_${e.departure}_${e.arrival}`)
+      );
 
       const newEntries = processedEntries.filter(entry => {
         const key = `${entry.date}_${entry.departure}_${entry.arrival}`;
@@ -795,6 +798,7 @@ const PilotLogbook = ({ showFormProp }) => {
 
       const mergedEntries = [...entries, ...newEntries].sort((a, b) =>
         new Date(b.date) - new Date(a.date)
+      );
 
       // Sauvegarder
       setEntries(mergedEntries);
@@ -1888,7 +1892,7 @@ const PilotLogbook = ({ showFormProp }) => {
         </div>
       ) : null}
     </div>
-
+  );
 };
 
 export default PilotLogbook;

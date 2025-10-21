@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import {
   AlertTriangle, CheckCircle, Calendar, Heart, Activity,
   Clock, TrendingUp, AlertCircle, Shield, Award, Plane,
-  Moon, Sun, Cloud, Navigation, ChevronDown, ChevronUp, Eye, RefreshCw, Wand2, X
+  Moon, Sun, Cloud, Navigation, ChevronDown, ChevronUp, Eye, RefreshCw, Wand2, X, Database
 } from 'lucide-react';
 import { theme } from '../styles/theme';
+import { getAIXMDataStatus, formatAIXMAlert } from '../utils/aixmDataValidator';
 
 export const PilotDashboard = ({ onNavigate }) => {
   const [medicalStatus, setMedicalStatus] = useState(null);
@@ -27,6 +28,7 @@ export const PilotDashboard = ({ onNavigate }) => {
     recentFlights: []
   });
   const [wizardDraft, setWizardDraft] = useState(null);
+  const [aixmDataStatus, setAixmDataStatus] = useState(null);
 
   useEffect(() => {
     checkPilotAge();
@@ -36,7 +38,14 @@ export const PilotDashboard = ({ onNavigate }) => {
     checkQualificationStatus();
     calculateFlightStats();
     checkWizardDraft();
+    loadAIXMStatus();
   }, []);
+
+  // Charger le statut des données AIXM
+  const loadAIXMStatus = async () => {
+    const status = await getAIXMDataStatus();
+    setAixmDataStatus(status);
+  };
 
   // Vérifier s'il y a un brouillon d'assistant de création
   const checkWizardDraft = () => {
@@ -629,6 +638,59 @@ export const PilotDashboard = ({ onNavigate }) => {
             >
               Configurer les unités
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Alerte statut base de données AIXM - Toujours afficher */}
+      {aixmDataStatus && (
+        <div style={{
+          ...styles.ageErrorAlert,
+          backgroundColor: formatAIXMAlert(aixmDataStatus.status).bgColor,
+          borderColor: formatAIXMAlert(aixmDataStatus.status).color,
+          border: `2px solid ${formatAIXMAlert(aixmDataStatus.status).color}`
+        }}>
+          <div style={{
+            ...styles.ageErrorContent,
+            color: formatAIXMAlert(aixmDataStatus.status).color,
+            alignItems: 'flex-start'
+          }}>
+            <div style={{ fontSize: '20px', marginTop: '2px' }}>
+              {formatAIXMAlert(aixmDataStatus.status).icon}
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={styles.ageErrorTitle}>
+                <Database size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
+                {formatAIXMAlert(aixmDataStatus.status).title}
+              </p>
+              <p style={styles.ageErrorMessage}>
+                {aixmDataStatus.message}
+              </p>
+              <div style={{ fontSize: '11px', color: '#6b7280', lineHeight: '1.6', marginTop: '8px' }}>
+                <div><strong>Fichier :</strong> {aixmDataStatus.filename}</div>
+                <div><strong>Date effective :</strong> {aixmDataStatus.effectiveDate}</div>
+                <div><strong>Date expiration :</strong> {aixmDataStatus.expiryDate}</div>
+                {aixmDataStatus.nextAIRACDate && (
+                  <div><strong>Prochain cycle AIRAC :</strong> {aixmDataStatus.nextAIRACDate}</div>
+                )}
+              </div>
+            </div>
+            {(aixmDataStatus.status === 'expired' || aixmDataStatus.status === 'warning' || aixmDataStatus.status === 'expiring-today') && (
+              <a
+                href={aixmDataStatus.downloadUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  ...styles.configureButton,
+                  backgroundColor: formatAIXMAlert(aixmDataStatus.status).color,
+                  textDecoration: 'none',
+                  display: 'inline-block',
+                  fontSize: '12px'
+                }}
+              >
+                📥 Télécharger
+              </a>
+            )}
           </div>
         </div>
       )}

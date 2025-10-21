@@ -297,7 +297,6 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
   );
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [debugMode, setDebugMode] = useState(false); // Mode temporaire pour ignorer les validations
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success', closeable: true, duration: 6000 });
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
@@ -509,14 +508,8 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
 
   // Navigation
   const handleNext = () => {
-    // En mode debug, ignorer la validation
-    if (debugMode) {
-      setCurrentStep(prev => Math.min(prev + 1, steps.length - 1));
-      return;
-    }
-
     const isValid = validateStep(currentStep);
-    
+
     if (isValid) {
       setCurrentStep(prev => Math.min(prev + 1, steps.length - 1));
     } else {
@@ -754,7 +747,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
           variant="h3"
           sx={{
             fontWeight: 700,
-            color: debugMode ? 'warning.main' : 'primary.main',
+            color: 'primary.main',
             mb: 1,
             display: 'flex',
             alignItems: 'center',
@@ -764,31 +757,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         >
           <FlightIcon sx={{ fontSize: 40 }} />
           Assistant de création d'avion
-          {debugMode && (
-            <Typography
-              component="span"
-              sx={{
-                ml: 2,
-                px: 2,
-                py: 0.5,
-                bgcolor: 'warning.light',
-                color: 'white',
-                borderRadius: 2,
-                fontSize: '0.4em',
-                fontWeight: 'normal'
-              }}
-            >
-              MODE TEST
-            </Typography>
-          )}
         </Typography>
-
-
-        {debugMode && (
-          <Typography variant="body1" color="warning.main">
-            🧪 Mode test activé - Navigation libre entre les sections
-          </Typography>
-        )}
       </Box>
 
       {/* Stepper - Vue desktop */}
@@ -827,8 +796,8 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
                       fontSize: { xs: '0.9rem', sm: '1rem' }
                     }}
                     onClick={() => {
-                      // En mode debug, permettre de naviguer vers n'importe quelle étape
-                      if (debugMode || index < currentStep) {
+                      // Permettre de naviguer vers les étapes précédentes
+                      if (index < currentStep) {
                         setCurrentStep(index);
                       }
                     }}
@@ -937,31 +906,6 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
               Précédent
             </Button>
           )}
-
-          {/* Bouton Mode Debug */}
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={debugMode}
-                onChange={(e) => setDebugMode(e.target.checked)}
-                color="warning"
-              />
-            }
-            label={
-              <Typography variant="caption" color="warning.main">
-                Mode Test (ignorer validations)
-              </Typography>
-            }
-            sx={{
-              ml: 2,
-              border: '1px dashed',
-              borderColor: 'warning.main',
-              borderRadius: 1,
-              px: 1,
-              py: 0.5,
-              bgcolor: debugMode ? 'warning.50' : 'transparent'
-            }}
-          />
         </Box>
 
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
