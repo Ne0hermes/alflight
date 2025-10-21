@@ -294,8 +294,8 @@ const MaintenanceSchedule = () => {
                       />
                     </TableCell>
                   </TableRow>
-
-})}
+                );
+              })}
             </TableBody>
           </Table>
         </TableContainer>
@@ -370,6 +370,7 @@ const MaintenanceSchedule = () => {
         </DialogActions>
       </Dialog>
     </Box>
+  );
 };
 
 export default MaintenanceSchedule;

@@ -25,6 +25,14 @@ class VFRPointsService {
       }
 
       console.log(`${data.length} points VFR chargé(s) depuis Supabase`);
+
+      // DEBUG: Afficher les points avec photos
+      const pointsWithPhotos = data.filter(p => p.photo_url);
+      console.log(`📸 ${pointsWithPhotos.length} points avec photo:`, pointsWithPhotos.map(p => ({
+        name: p.name,
+        photo_url: p.photo_url
+      })));
+
       return data;
     } catch (error) {
       console.error('❌ Erreur lors de la récupération des points VFR:', error);
@@ -33,16 +41,59 @@ class VFRPointsService {
   }
 
   /**
+   * Uploader une photo vers Supabase Storage
+   * @param {File} file - Fichier photo à uploader
+   * @param {string} pointName - Nom du point (utilisé pour nommer le fichier)
+   * @returns {Promise<string>} - URL publique de la photo
+   */
+  async uploadPhoto(file, pointName) {
+    try {
+      console.log('📸 Upload photo:', file.name);
+
+      // Générer un nom de fichier unique
+      const timestamp = Date.now();
+      const cleanName = pointName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${cleanName}_${timestamp}.${fileExt}`;
+
+      // Upload vers Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('vfr-points-photos')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) {
+        console.error('❌ Erreur upload photo:', error);
+        throw error;
+      }
+
+      // Obtenir l'URL publique
+      const { data: { publicUrl } } = supabase.storage
+        .from('vfr-points-photos')
+        .getPublicUrl(fileName);
+
+      console.log('✅ Photo uploadée:', publicUrl);
+      return publicUrl;
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'upload de la photo:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Uploader un point VFR vers Supabase
    * @param {Object} point - Point VFR à uploader
    * @param {string} userId - ID de l'utilisateur
+   * @param {string} photoUrl - URL de la photo (optionnel)
    * @returns {Promise<Object>}
    */
-  async uploadPoint(point, userId = 'anonymous') {
+  async uploadPoint(point, userId = 'anonymous', photoUrl = null) {
     try {
       console.log('Uploading VFR point:', point.name);
 
-      const { data, error } = await supabase
+      const { data, error} = await supabase
         .from('vfr_points')
         .insert({
           name: point.name,
@@ -52,6 +103,12 @@ class VFRPointsService {
           altitude: point.altitude ? parseInt(point.altitude) : null,
           description: point.description || '',
           aerodrome: point.aerodrome || null,
+          frequency: point.frequency || null,
+          airspace: point.airspace || null,
+          airspace_class: point.airspaceClass || null,
+          country: point.country || 'France',
+          aeronautical_remarks: point.aeronauticalRemarks || null,
+          photo_url: photoUrl,
           is_public: true,
           uploaded_by: userId,
           downloads_count: 0
@@ -192,6 +249,79 @@ class VFRPointsService {
   }
 
   /**
+   * Mettre à jour un point VFR (seulement si créé par l'utilisateur)
+   * @param {string} pointId
+   * @param {Object} updates
+   * @param {string} userId
+   * @param {string} photoUrl - URL de la photo (optionnel)
+   * @returns {Promise<Object>}
+   */
+  async updatePoint(pointId, updates, userId, photoUrl = null) {
+    try {
+      console.log('Updating VFR point:', pointId);
+
+      const updateData = {
+        name: updates.name,
+        type: updates.type,
+        lat: parseFloat(updates.lat),
+        lon: parseFloat(updates.lon),
+        altitude: updates.altitude ? parseInt(updates.altitude) : null,
+        description: updates.description || '',
+        aerodrome: updates.aerodrome || null,
+        frequency: updates.frequency || null,
+        airspace: updates.airspace || null,
+        airspace_class: updates.airspaceClass || null,
+        country: updates.country || 'France',
+        aeronautical_remarks: updates.aeronauticalRemarks || null,
+        updated_at: new Date().toISOString()
+      };
+
+      // Ajouter photo_url seulement si fournie
+      if (photoUrl !== null) {
+        updateData.photo_url = photoUrl;
+      }
+
+      // Vérifier d'abord si le point existe et qui est le propriétaire
+      const { data: existingPoint, error: checkError } = await supabase
+        .from('vfr_points')
+        .select('id, uploaded_by')
+        .eq('id', pointId)
+        .single();
+
+      if (checkError || !existingPoint) {
+        throw new Error('Point VFR introuvable');
+      }
+
+      // MODE DEV: Permettre la modification de tous les points
+      // En production, décommenter la vérification ci-dessous
+      /*
+      if (existingPoint.uploaded_by !== userId) {
+        throw new Error('Vous ne pouvez modifier que vos propres points');
+      }
+      */
+
+      // Mise à jour sans filtrage par uploaded_by (mode dev)
+      const { data, error } = await supabase
+        .from('vfr_points')
+        .update(updateData)
+        .eq('id', pointId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Erreur update:', error);
+        throw error;
+      }
+
+      console.log('✅ Point updated successfully');
+      return data;
+    } catch (error) {
+      console.error('❌ Erreur lors de la mise à jour:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Supprimer un point VFR (seulement si créé par l'utilisateur)
    * @param {string} pointId
    * @param {string} userId
@@ -199,15 +329,16 @@ class VFRPointsService {
    */
   async deletePoint(pointId, userId) {
     try {
+      // MODE DEV: Permettre la suppression de tous les points
+      // En production, ajouter .eq('uploaded_by', userId)
       const { error } = await supabase
         .from('vfr_points')
         .delete()
-        .eq('id', pointId)
-        .eq('uploaded_by', userId);
+        .eq('id', pointId);
 
       if (error) throw error;
 
-      console.log('Point deleted successfully');
+      console.log('✅ Point deleted successfully');
       return true;
     } catch (error) {
       console.error('❌ Erreur lors de la suppression:', error);

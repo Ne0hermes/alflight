@@ -53,8 +53,23 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
               Aéronef
             </h5>
             <div>{flightPlan.aircraft.registration} - {flightPlan.aircraft.type}</div>
-            <div style={{ fontSize: '12px', color: theme.colors.textMuted }}>
-              Carburant: {flightPlan.fuel.confirmed} L
+
+            {/* Détails carburant */}
+            <div style={{
+              marginTop: '8px',
+              padding: '8px',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              borderRadius: '6px',
+              fontSize: '13px'
+            }}>
+              <div style={{ fontWeight: '600', color: theme.colors.primary, marginBottom: '4px' }}>
+                ⛽ Carburant
+              </div>
+              <div style={{ fontSize: '12px', color: theme.colors.textMuted }}>
+                Requis: {flightPlan.fuel.required || 0}L |
+                Réserve: {flightPlan.fuel.reserveTime || '30min'} ({flightPlan.fuel.reserve || 0}L) |
+                Total: <strong>{flightPlan.fuel.confirmed || 0}L</strong>
+              </div>
             </div>
           </div>
 

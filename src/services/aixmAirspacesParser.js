@@ -420,7 +420,6 @@ class AIXMAirspacesParser {
     });
     
     localStorage.setItem('aixm_airspaces_modifications', JSON.stringify(modifications));
-    .length} modifications sauvegardées`);
   }
 
   /**
@@ -437,8 +436,6 @@ class AIXMAirspacesParser {
           Object.assign(airspace.properties, modifications[id]);
         }
       });
-      
-      .length} modifications chargées`);
     }
   }
 
@@ -450,9 +447,8 @@ class AIXMAirspacesParser {
     this.airspaces.forEach(airspace => {
       airspace.properties.modified = false;
     });
-    
   }
-);}
+}
 
 // Export singleton
 export const aixmAirspacesParser = new AIXMAirspacesParser();

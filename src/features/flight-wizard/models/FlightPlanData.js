@@ -372,18 +372,48 @@ export class FlightPlanData {
   /**
    * Export vers JSON - retourne l'objet (pas le string)
    * JavaScript utilisera automatiquement cette méthode lors de JSON.stringify()
+   * Nettoie les références circulaires et objets complexes
    */
   toJSON() {
+    // Helper pour nettoyer un objet et éviter les références circulaires
+    const cleanObject = (obj) => {
+      if (obj === null || obj === undefined) return obj;
+      if (typeof obj !== 'object') return obj;
+
+      // Convertir Date en string ISO
+      if (obj instanceof Date) {
+        return obj.toISOString();
+      }
+
+      // Pour les arrays
+      if (Array.isArray(obj)) {
+        return obj.map(item => cleanObject(item));
+      }
+
+      // Pour les objets simples
+      const cleaned = {};
+      for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          const value = obj[key];
+          // Ignorer les fonctions et références circulaires potentielles
+          if (typeof value !== 'function' && key !== 'parent' && key !== '_parent') {
+            cleaned[key] = cleanObject(value);
+          }
+        }
+      }
+      return cleaned;
+    };
+
     return {
-      generalInfo: this.generalInfo,
-      aircraft: this.aircraft,
-      route: this.route,
-      alternates: this.alternates,
-      weather: this.weather,
-      fuel: this.fuel,
-      weightBalance: this.weightBalance,
-      todParameters: this.todParameters,
-      metadata: this.metadata,
+      generalInfo: cleanObject(this.generalInfo),
+      aircraft: cleanObject(this.aircraft),
+      route: cleanObject(this.route),
+      alternates: cleanObject(this.alternates),
+      weather: cleanObject(this.weather),
+      fuel: cleanObject(this.fuel),
+      weightBalance: cleanObject(this.weightBalance),
+      todParameters: cleanObject(this.todParameters),
+      metadata: cleanObject(this.metadata),
     };
   }
 
@@ -400,7 +430,35 @@ export class FlightPlanData {
   static fromJSON(json) {
     const data = typeof json === 'string' ? JSON.parse(json) : json;
     const flightPlan = new FlightPlanData();
-    Object.assign(flightPlan, data);
+
+    // Restaurer chaque section
+    if (data.generalInfo) {
+      flightPlan.generalInfo = { ...data.generalInfo };
+      // Reconvertir la date en objet Date
+      if (data.generalInfo.date) {
+        flightPlan.generalInfo.date = new Date(data.generalInfo.date);
+      }
+    }
+
+    if (data.aircraft) flightPlan.aircraft = { ...data.aircraft };
+    if (data.route) flightPlan.route = { ...data.route };
+    if (data.alternates) flightPlan.alternates = [...data.alternates];
+    if (data.weather) flightPlan.weather = { ...data.weather };
+    if (data.fuel) flightPlan.fuel = { ...data.fuel };
+    if (data.weightBalance) flightPlan.weightBalance = { ...data.weightBalance };
+    if (data.todParameters) flightPlan.todParameters = { ...data.todParameters };
+
+    if (data.metadata) {
+      flightPlan.metadata = { ...data.metadata };
+      // Reconvertir les dates des metadata
+      if (data.metadata.createdAt) {
+        flightPlan.metadata.createdAt = new Date(data.metadata.createdAt);
+      }
+      if (data.metadata.updatedAt) {
+        flightPlan.metadata.updatedAt = new Date(data.metadata.updatedAt);
+      }
+    }
+
     return flightPlan;
   }
 }

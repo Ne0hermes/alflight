@@ -157,6 +157,32 @@ export const useNavigationStore = create(
           ]
         });
       },
+
+      // Déplacer un waypoint vers le haut
+      moveWaypointUp: (id) => {
+        const waypoints = get().waypoints;
+        const index = waypoints.findIndex(wp => wp.id === id);
+
+        // Ne pas déplacer si c'est le premier ou si le précédent est le départ
+        if (index <= 1) return;
+
+        const newWaypoints = [...waypoints];
+        [newWaypoints[index - 1], newWaypoints[index]] = [newWaypoints[index], newWaypoints[index - 1]];
+        set({ waypoints: newWaypoints });
+      },
+
+      // Déplacer un waypoint vers le bas
+      moveWaypointDown: (id) => {
+        const waypoints = get().waypoints;
+        const index = waypoints.findIndex(wp => wp.id === id);
+
+        // Ne pas déplacer si c'est l'avant-dernier ou dernier (l'arrivée doit rester à la fin)
+        if (index >= waypoints.length - 2) return;
+
+        const newWaypoints = [...waypoints];
+        [newWaypoints[index], newWaypoints[index + 1]] = [newWaypoints[index + 1], newWaypoints[index]];
+        set({ waypoints: newWaypoints });
+      },
       
       // Getter pour les résultats (calculé à la volée)
       getNavigationResults: (selectedAircraft) => {

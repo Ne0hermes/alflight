@@ -1,12 +1,11 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Check, Plane, TestTube } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Plane } from 'lucide-react';
 import { theme } from '../../styles/theme';
 import { FlightPlanData } from './models/FlightPlanData';
 import { WizardConfigProvider } from './contexts/WizardConfigContext';
 
 // Import des étapes
 import { Step1GeneralInfo } from './steps/Step1GeneralInfo';
-import { Step2Aircraft } from './steps/Step2Aircraft';
 import { Step3Route } from './steps/Step3Route';
 import { Step4Alternates } from './steps/Step4Alternates';
 import { Step5Fuel } from './steps/Step5Fuel';
@@ -18,71 +17,22 @@ import { Step7Summary } from './steps/Step7Summary';
  * Gère la navigation entre les étapes et l'état global du plan de vol
  */
 export const FlightPlanWizard = ({ onComplete, onCancel }) => {
-  // Mode test activé via URL param ou localStorage
-  const [testMode, setTestMode] = useState(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('testMode') === 'true' || localStorage.getItem('flightWizardTestMode') === 'true';
-  });
+  console.log('🚀🚀🚀 FLIGHT PLAN WIZARD MONTAGE - Début du composant');
 
   // État principal : instance du modèle de données
   const [flightPlan] = useState(() => {
     let plan = new FlightPlanData();
 
-    // Si mode test, pré-remplir avec des données de test
-    if (testMode) {
-      plan.generalInfo = {
-        callsign: 'F-TEST',
-        date: new Date().toISOString().split('T')[0],
-        flightType: 'VFR',
-        pilotName: 'Test Pilot',
-        remarks: 'Vol de test'
-      };
-      plan.aircraft = {
-        registration: 'F-GKXS',
-        type: 'DR400',
-        cruiseSpeed: 120,
-        fuelCapacity: 110,
-        emptyWeight: 640,
-        maxTakeoffWeight: 1100
-      };
-      plan.route = {
-        departure: { icao: 'LFST', name: 'Strasbourg' },
-        arrival: { icao: 'LFGA', name: 'Colmar' },
-        waypoints: [],
-        cruiseLevel: 3500,
-        distance: 45,
-        estimatedTime: 25
-      };
-      plan.alternates = [{ icao: 'LFGC', name: 'Strasbourg Neuhof' }];
-      plan.fuel = {
-        trip: 15,
-        contingency: 2,
-        reserve: 10,
-        alternate: 5,
-        extra: 5,
-        confirmed: 37
-      };
-      plan.weightBalance = {
-        emptyWeight: 640,
-        pilot: 80,
-        passenger: 75,
-        baggage: 20,
-        fuel: 27,
-        totalWeight: 842,
-        withinLimits: true
-      };
-    } else {
-      // Restaurer depuis localStorage si disponible
-      try {
-        const savedDraft = localStorage.getItem('flightPlanDraft');
-        if (savedDraft) {
-          const draftData = JSON.parse(savedDraft);
-          plan = FlightPlanData.fromJSON(draftData);
-          console.log('✅ Brouillon restauré depuis localStorage');
-        }
-      } catch (error) {
-        console.error('❌ Erreur lors de la restauration du brouillon:', error);
+    // Restaurer depuis localStorage si disponible
+    try {
+      const savedDraft = localStorage.getItem('flightPlanDraft');
+      if (savedDraft) {
+        const draftData = JSON.parse(savedDraft);
+        plan = FlightPlanData.fromJSON(draftData);
+        console.log('✅ Brouillon restauré depuis localStorage');
       }
+    } catch (error) {
+      console.error('❌ Erreur lors de la restauration du brouillon:', error);
     }
 
     return plan;
@@ -92,8 +42,11 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
   const [currentStep, setCurrentStep] = useState(() => {
     try {
       const saved = localStorage.getItem('flightPlanCurrentStep');
-      return saved ? parseInt(saved, 10) : 1;
+      const step = saved ? parseInt(saved, 10) : 1;
+      console.log('🔧 WIZARD - currentStep restauré depuis localStorage:', step);
+      return step;
     } catch {
+      console.log('🔧 WIZARD - currentStep par défaut: 1');
       return 1;
     }
   });
@@ -113,10 +66,13 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
   const updateFlightPlan = useCallback(() => {
     // Sauvegarder dans localStorage
     try {
-      localStorage.setItem('flightPlanDraft', flightPlan.toJSON());
+      // Convertir explicitement en JSON string
+      const jsonData = JSON.stringify(flightPlan.toJSON());
+      localStorage.setItem('flightPlanDraft', jsonData);
       console.log('💾 Brouillon sauvegardé automatiquement');
     } catch (error) {
       console.error('❌ Erreur lors de la sauvegarde:', error);
+      console.error('   Détails:', error.message);
     }
 
     // Forcer le re-render
@@ -132,18 +88,12 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
       component: Step1GeneralInfo,
       validate: () => Boolean(
         flightPlan.generalInfo.callsign &&
-        flightPlan.generalInfo.date
+        flightPlan.generalInfo.date &&
+        flightPlan.aircraft.registration
       )
     },
     {
       number: 2,
-      title: 'Sélection de l\'Aéronef',
-      description: 'Choisir votre appareil',
-      component: Step2Aircraft,
-      validate: () => Boolean(flightPlan.aircraft.registration)
-    },
-    {
-      number: 3,
       title: 'Définition du Trajet',
       description: 'Départ, arrivée et waypoints',
       component: Step3Route,
@@ -153,28 +103,28 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
       )
     },
     {
-      number: 4,
+      number: 3,
       title: 'Aérodromes de Déroutement',
       description: 'Sélectionner les alternates',
       component: Step4Alternates,
       validate: () => flightPlan.alternates.length > 0
     },
     {
-      number: 5,
+      number: 4,
       title: 'Bilan Carburant',
       description: 'CRM et complément',
       component: Step5Fuel,
       validate: () => flightPlan.fuel.confirmed > 0
     },
     {
-      number: 6,
+      number: 5,
       title: 'Masse et Centrage',
       description: 'Passagers et bagages',
       component: Step6WeightBalance,
       validate: () => flightPlan.weightBalance.withinLimits !== false
     },
     {
-      number: 7,
+      number: 6,
       title: 'Synthèse',
       description: 'Vérifier et générer',
       component: Step7Summary,
@@ -184,6 +134,10 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
 
   const currentStepConfig = steps[currentStep - 1];
   const StepComponent = currentStepConfig.component;
+
+  console.log('🔧 WIZARD - currentStep actuel:', currentStep);
+  console.log('🔧 WIZARD - currentStepConfig:', currentStepConfig?.title);
+  console.log('🔧 WIZARD - StepComponent:', StepComponent?.name || StepComponent?.displayName || 'Anonyme');
 
   /**
    * Marque l'étape courante comme complétée et passe à la suivante
@@ -296,20 +250,7 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
           <h1 style={styles.title}>
             <Plane size={24} style={{ marginRight: '12px' }} />
             Je prépare mon vol
-            {testMode && (
-              <span style={{
-                fontSize: '14px',
-                marginLeft: '12px',
-                padding: '4px 12px',
-                backgroundColor: '#fbbf24',
-                color: '#000',
-                borderRadius: '12px',
-                fontWeight: 'normal'
-              }}>
-                🧪 MODE TEST
-              </span>
-            )}
-            {hasDraft && !testMode && (
+            {hasDraft && (
               <span style={{
                 fontSize: '14px',
                 marginLeft: '12px',
@@ -326,7 +267,7 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
 
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
             {/* Bouton Recommencer */}
-            {hasDraft && !testMode && (
+            {hasDraft && (
               <button
                 onClick={handleRestart}
                 style={{
@@ -346,34 +287,6 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
                 🔄 Recommencer
               </button>
             )}
-
-            {/* Bouton pour activer/désactiver le mode test */}
-            <button
-              onClick={() => {
-                const newTestMode = !testMode;
-                setTestMode(newTestMode);
-                localStorage.setItem('flightWizardTestMode', newTestMode.toString());
-                if (newTestMode) {
-                  window.location.reload(); // Recharger pour appliquer les données de test
-                }
-              }}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: testMode ? '#ef4444' : '#10b981',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
-              title={testMode ? 'Désactiver le mode test' : 'Activer le mode test pour pré-remplir les données'}
-            >
-              <TestTube size={16} />
-              {testMode ? 'Désactiver Test' : 'Mode Test'}
-            </button>
           </div>
         </div>
         
@@ -416,6 +329,7 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
         </div>
 
         <div style={styles.stepContent}>
+          {console.log('🔧 Rendering step:', currentStep, 'Component:', currentStepConfig.title, 'StepComponent:', StepComponent.name || StepComponent.displayName)}
           <StepComponent
             flightPlan={flightPlan}
             onUpdate={updateFlightPlan}

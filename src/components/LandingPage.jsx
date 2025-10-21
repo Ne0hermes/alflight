@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Plane, User, Settings, Navigation, BookOpen,
   Info, Shield, ChevronRight, Map, Grid, ChevronDown,
@@ -13,7 +13,7 @@ export const LandingPage = ({ onNavigate }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   // Gérer le redimensionnement de la fenêtre
-  React.useEffect(() => {
+  useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
     };

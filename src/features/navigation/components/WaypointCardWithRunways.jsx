@@ -1,5 +1,5 @@
 import React, { memo, useState, useEffect, useMemo } from 'react';
-import { Trash2, Navigation2, ChevronDown, ChevronUp, TrendingDown } from 'lucide-react';
+import { Trash2, Navigation2, ChevronDown, ChevronUp, ArrowUp, ArrowDown } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { aeroDataProvider } from '@core/data';
 import { useAircraft, useNavigation } from '@core/contexts';
@@ -22,7 +22,7 @@ export const WaypointCardWithRunways = memo(({
   onRemoveVfrPoint // Fonction pour supprimer un point VFR
 }) => {
   const { selectedAircraft } = useAircraft();
-  const { waypoints, updateWaypoint, segmentAltitudes } = useNavigation();
+  const { waypoints, updateWaypoint, segmentAltitudes, moveWaypointUp, moveWaypointDown } = useNavigation();
   const [airport, setAirport] = useState(null);
   const [runways, setRunways] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -32,59 +32,7 @@ export const WaypointCardWithRunways = memo(({
   const isFirst = index === 0;
   const isLast = index === totalWaypoints - 1;
   const canDelete = totalWaypoints > 2;
-  
-  // Calcul du TOD pour l'arrivée
-  const todCalculation = useMemo(() => {
-    if (!isLast) return null;
-    
-    // Utiliser l'altitude du terrain ou une valeur par défaut
-    const terrainElevation = waypoint.elevation || vacData?.elevation || 0;
-    
-    // Altitude de croisière (depuis le segment ou altitude planifiée par défaut)
-    const cruiseAltitude = segmentAltitude?.startAlt || segmentAltitude?.endAlt || 3000;
-    
-    // Altitude pattern (1000ft au-dessus du terrain, ou 1500ft si aérodrome au niveau de la mer)
-    const targetAltitude = terrainElevation + (terrainElevation > 0 ? 1000 : 1500);
-    
-    const altitudeToDescent = cruiseAltitude - targetAltitude;
-    
-    // Debug logging
-        
-    // Si pas de descente nécessaire ou données insuffisantes
-    if (altitudeToDescent <= 0) {
-      return {
-        error: true,
-        message: altitudeToDescent === 0 ? "Déjà à l'altitude pattern" : "Montée requise pour le pattern",
-        cruiseAltitude,
-        targetAltitude,
-        terrainElevation
-      };
-    }
-    
-    // Paramètres standard
-    const descentRate = 500; // ft/min (taux standard)
-    const groundSpeed = selectedAircraft?.cruiseSpeedKt || 100; // kt
-    
-    // Calculs
-    const descentTimeMinutes = altitudeToDescent / descentRate;
-    const groundSpeedNmPerMin = groundSpeed / 60;
-    const distanceToTod = descentTimeMinutes * groundSpeedNmPerMin;
-    const descentAngle = Math.atan((altitudeToDescent / 6076.12) / distanceToTod) * 180 / Math.PI;
-    
-    return {
-      altitudeToDescent,
-      descentTimeMinutes,
-      distanceToTod: distanceToTod.toFixed(1),
-      descentAngle: descentAngle.toFixed(1),
-      targetAltitude,
-      cruiseAltitude,
-      terrainElevation,
-      descentRate,
-      groundSpeed,
-      error: false
-    };
-  }, [isLast, waypoint.elevation, vacData?.elevation, segmentAltitude, selectedAircraft]);
-  
+
   const getLabel = () => {
     if (isFirst) return { text: 'Départ', color: '#10b981' };
     if (isLast) return { text: 'Arrivée', color: '#f59e0b' };
@@ -247,52 +195,27 @@ export const WaypointCardWithRunways = memo(({
               )}
             >
             <div style={{ display: 'flex', gap: '12px', flex: 1, flexWrap: 'wrap' }}>
-              {/* TOD pour l'arrivée */}
-              {isLast && todCalculation && !todCalculation.error ? (
-                <>
-                  <div style={sx.combine({ minWidth: '110px' }, sx.text.warning)}>
-                    <TrendingDown size={12} style={{ display: 'inline', marginRight: '4px' }} />
-                    TOD: {todCalculation.distanceToTod} NM
-                  </div>
-                  <div style={sx.combine({ minWidth: '90px' }, sx.text.secondary)}>
-                    ⏱️ {Math.round(todCalculation.descentTimeMinutes)} min
-                  </div>
-                  <div style={sx.combine({ minWidth: '100px' }, sx.text.secondary)}>
-                    ↘️ {todCalculation.descentRate} ft/min
-                  </div>
-                </>
-              ) : isLast && todCalculation?.error ? (
-                <div style={sx.combine({ minWidth: '200px' }, sx.text.secondary)}>
-                  <TrendingDown size={12} style={{ display: 'inline', marginRight: '4px' }} />
-                  {todCalculation.message}
-                </div>
-              ) : runways.length > 0 && compatibility && selectedAircraft ? (
+              {/* Compatibilité des pistes */}
+              {runways.length > 0 && compatibility && selectedAircraft && (
                 <div style={sx.combine(
                   { minWidth: '140px' },
                   compatibility.compatible > 0 ? sx.text.success : sx.text.danger
                 )}>
                   ✈️ {compatibility.compatible} piste{compatibility.compatible > 1 ? 's' : ''} compatible{compatibility.compatible > 1 ? 's' : ''}
                 </div>
-              ) : isLast ? (
-                <div style={sx.combine({ minWidth: '140px' }, sx.text.secondary)}>
-                  <TrendingDown size={12} style={{ display: 'inline', marginRight: '4px' }} />
-                  TOD: En attente altitude
-                </div>
-              ) : null}
-              
+              )}
+
               {/* Altitude - toujours affichée */}
               {(waypoint.elevation || vacData?.elevation) && (
                 <div style={{ minWidth: '70px' }}>
                   ⛰️ {vacData?.elevation || waypoint.elevation} ft
                 </div>
               )}
-              
-              {/* Coordonnées - affichées si pas d'arrivée ou pas de place pour TOD */}
-              {(!isLast || !todCalculation || todCalculation.error) && (
-                <div style={{ minWidth: '110px' }}>
-                  📍 {waypoint.lat.toFixed(2)}°, {waypoint.lon.toFixed(2)}°
-                </div>
-              )}
+
+              {/* Coordonnées - toujours affichées */}
+              <div style={{ minWidth: '110px' }}>
+                📍 {waypoint.lat.toFixed(2)}°, {waypoint.lon.toFixed(2)}°
+              </div>
             </div>
             {/* Chevron */}
             <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -351,66 +274,6 @@ export const WaypointCardWithRunways = memo(({
             </div>
           )}
           
-          {/* Calcul TOD pour l'arrivée */}
-          {isLast && (
-            <div style={sx.spacing.mb(3)}>
-              <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-                <TrendingDown size={14} style={{ display: 'inline', marginRight: '4px', color: '#f59e0b' }} />
-                Top of Descent (TOD)
-              </h5>
-              {todCalculation ? (
-                <div style={sx.combine(
-                  sx.spacing.p(2),
-                  sx.rounded.sm,
-                  { 
-                    background: todCalculation.error ? '#fee2e2' : '#fef3c7', 
-                    border: todCalculation.error ? '1px solid #ef4444' : '1px solid #fbbf24' 
-                  }
-                )}>
-                  {!todCalculation.error ? (
-                    <>
-                      <div style={sx.text.sm}>
-                        <strong>Distance TOD : {todCalculation.distanceToTod} NM</strong> avant l'arrivée
-                      </div>
-                      <div style={sx.combine(sx.text.xs, sx.spacing.mt(2))}>
-                        <strong>Paramètres utilisés :</strong>
-                      </div>
-                      <div style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
-                        • Altitude croisière : {todCalculation.cruiseAltitude} ft<br/>
-                        • Altitude terrain : {todCalculation.terrainElevation} ft<br/>
-                        • Altitude pattern : {todCalculation.targetAltitude} ft (terrain + 1000 ft)<br/>
-                        • Descente totale : {todCalculation.altitudeToDescent} ft<br/>
-                        • Taux de descente : {todCalculation.descentRate} ft/min<br/>
-                        • Vitesse sol : {todCalculation.groundSpeed} kt<br/>
-                        • Temps de descente : {Math.round(todCalculation.descentTimeMinutes)} min<br/>
-                        • Angle de descente : {todCalculation.descentAngle}°
-                      </div>
-                    </>
-                  ) : (
-                    <div style={sx.text.sm}>
-                      <strong>{todCalculation.message}</strong>
-                      <div style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
-                        • Altitude actuelle : {todCalculation.cruiseAltitude} ft<br/>
-                        • Altitude terrain : {todCalculation.terrainElevation} ft<br/>
-                        • Altitude pattern requise : {todCalculation.targetAltitude} ft
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div style={sx.combine(
-                  sx.spacing.p(2),
-                  sx.rounded.sm,
-                  sx.text.sm,
-                  sx.text.secondary,
-                  { background: '#f3f4f6', border: '1px solid #d1d5db' }
-                )}>
-                  ⚠️ Définissez l'altitude du segment précédent pour calculer le TOD
-                </div>
-              )}
-            </div>
-          )}
-          
           {/* Pistes détaillées */}
           {runways.length > 0 && (
             <div>
@@ -420,39 +283,77 @@ export const WaypointCardWithRunways = memo(({
               {Object.entries(runwayGroups).map(([orientation, groupRunways]) => (
                 <div key={orientation} style={sx.spacing.mb(2)}>
                   {groupRunways.map((runway, idx) => {
-                    const isCompatible = selectedAircraft && selectedAircraft.runwayRequirements && 
-                      Math.round((runway.dimensions?.toda || 0) * 3.28084) >= selectedAircraft.runwayRequirements.takeoffDistance &&
-                      Math.round((runway.dimensions?.lda || 0) * 3.28084) >= selectedAircraft.runwayRequirements.landingDistance;
-                    
+                    // Calcul compatibilité
+                    const todaFeet = Math.round((runway.dimensions?.toda || runway.dimensions?.length || 0) * 3.28084);
+                    const ldaFeet = Math.round((runway.dimensions?.lda || runway.dimensions?.length || 0) * 3.28084);
+                    const isCompatible = selectedAircraft && selectedAircraft.runwayRequirements &&
+                      todaFeet >= selectedAircraft.runwayRequirements.takeoffDistance &&
+                      ldaFeet >= selectedAircraft.runwayRequirements.landingDistance;
+
+                    // Extraction QFU/Numéro de piste
+                    let qfu = runway.designator || '';
+                    if (!qfu && runway.le_ident && runway.he_ident) {
+                      qfu = `${runway.le_ident}/${runway.he_ident}`;
+                    }
+                    if (!qfu) {
+                      qfu = 'Piste inconnue';
+                    }
+
+                    // Longueur de la piste
+                    const lengthM = runway.dimensions?.length || 0;
+                    const lengthFt = Math.round(lengthM * 3.28084);
+
+                    // Surface de la piste
+                    const surfaceType = runway.surface?.type || runway.surface || 'Non spécifiée';
+
+                    // Surfaces compatibles de l'avion
+                    const aircraftSurfaces = selectedAircraft?.runwayRequirements?.surfaceTypes || [];
+                    const surfaceCompatible = aircraftSurfaces.length === 0 ||
+                      aircraftSurfaces.some(s => surfaceType.toLowerCase().includes(s.toLowerCase()));
+
                     return (
                       <div key={idx} style={sx.combine(
-                        sx.text.xs, 
+                        sx.text.xs,
                         sx.spacing.p(2),
                         sx.spacing.mb(1),
                         sx.rounded.sm,
                         {
-                          background: isCompatible ? '#dcfce7' : '#fee2e2',
-                          borderLeft: `3px solid ${isCompatible ? '#10b981' : '#ef4444'}`
+                          background: isCompatible && surfaceCompatible ? '#dcfce7' : '#fee2e2',
+                          borderLeft: `3px solid ${isCompatible && surfaceCompatible ? '#10b981' : '#ef4444'}`
                         }
                       )}>
-                        <strong>{runway.designator || `${runway.le_ident}/${runway.he_ident}`}</strong>
-                        {runway.dimensions && (
+                        {/* QFU et longueur */}
+                        <div style={{ marginBottom: '4px' }}>
+                          <strong>QFU {qfu}</strong>
                           <span style={sx.text.secondary}>
-                            {' '}• {runway.dimensions.length} m × {runway.dimensions.width} m
+                            {' '}• Longueur: {lengthFt} ft ({lengthM} m)
                           </span>
-                        )}
-                        {runway.surface?.type && (
-                          <span style={sx.text.secondary}>
-                            {' '}• {runway.surface.type}
-                          </span>
-                        )}
-                        {selectedAircraft && (
-                          <span style={sx.combine(
-                            sx.spacing.ml(1),
-                            isCompatible ? sx.text.success : sx.text.danger
+                        </div>
+
+                        {/* Surface */}
+                        <div style={{ marginBottom: '4px' }}>
+                          <span style={sx.text.secondary}>Surface: {surfaceType}</span>
+                          {selectedAircraft && aircraftSurfaces.length > 0 && (
+                            <span style={sx.text.secondary}>
+                              {' '}• Avion compatible: {aircraftSurfaces.join(', ')}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Conclusion compatibilité */}
+                        {selectedAircraft && selectedAircraft.runwayRequirements && (
+                          <div style={sx.combine(
+                            { fontWeight: 'bold' },
+                            isCompatible && surfaceCompatible ? sx.text.success : sx.text.danger
                           )}>
-                            {isCompatible ? ' ✓ Compatible' : ' ✗ Trop courte'}
-                          </span>
+                            {isCompatible && surfaceCompatible ? (
+                              '✓ Piste compatible avec cet avion'
+                            ) : !isCompatible ? (
+                              `✗ Piste trop courte (requis: ${selectedAircraft.runwayRequirements.takeoffDistance} ft décollage)`
+                            ) : (
+                              '✗ Surface incompatible avec cet avion'
+                            )}
+                          </div>
                         )}
                       </div>
                     );
@@ -551,8 +452,11 @@ export const WaypointCardWithRunways = memo(({
                   {/* Bouton de suppression du point VFR */}
                   <button
                     onClick={() => {
-                                            if (onRemoveVfrPoint) {
-                                                onRemoveVfrPoint(vfrPoint.id);
+                      console.log('🗑️ Clic sur suppression VFR - Point:', vfrPoint.name, 'ID:', vfrPoint.id);
+                      if (onRemoveVfrPoint) {
+                        console.log('🗑️ Appel de onRemoveVfrPoint avec ID:', vfrPoint.id);
+                        onRemoveVfrPoint(vfrPoint.id);
+                        console.log('🗑️ onRemoveVfrPoint appelé avec succès');
                       } else {
                         console.error('❌ Fonction onRemoveVfrPoint non disponible!');
                       }
@@ -615,7 +519,7 @@ export const WaypointCardWithRunways = memo(({
           </div>
         )}
         
-        {/* Étiquette et bouton supprimer */}
+        {/* Étiquette et boutons d'action */}
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <span style={{
             fontSize: '12px',
@@ -627,7 +531,46 @@ export const WaypointCardWithRunways = memo(({
           }}>
             {label.text}
           </span>
-          
+
+          {/* Boutons de réorganisation */}
+          {/* Déplacer vers le haut (désactivé si départ ou juste après départ) */}
+          <button
+            onClick={() => moveWaypointUp(waypoint.id)}
+            disabled={index <= 1}
+            style={sx.combine(
+              sx.components.button.base,
+              {
+                padding: '6px',
+                backgroundColor: index <= 1 ? '#e5e7eb' : '#dbeafe',
+                color: index <= 1 ? '#9ca3af' : '#1e40af',
+                cursor: index <= 1 ? 'not-allowed' : 'pointer',
+                opacity: index <= 1 ? 0.5 : 1
+              }
+            )}
+            title={index <= 1 ? "Impossible de remonter plus haut" : "Déplacer vers le haut"}
+          >
+            <ArrowUp size={14} />
+          </button>
+
+          {/* Déplacer vers le bas (désactivé si arrivée ou juste avant arrivée) */}
+          <button
+            onClick={() => moveWaypointDown(waypoint.id)}
+            disabled={index >= totalWaypoints - 2}
+            style={sx.combine(
+              sx.components.button.base,
+              {
+                padding: '6px',
+                backgroundColor: index >= totalWaypoints - 2 ? '#e5e7eb' : '#dbeafe',
+                color: index >= totalWaypoints - 2 ? '#9ca3af' : '#1e40af',
+                cursor: index >= totalWaypoints - 2 ? 'not-allowed' : 'pointer',
+                opacity: index >= totalWaypoints - 2 ? 0.5 : 1
+              }
+            )}
+            title={index >= totalWaypoints - 2 ? "Impossible de descendre plus bas" : "Déplacer vers le bas"}
+          >
+            <ArrowDown size={14} />
+          </button>
+
           {canDelete && (
             <button
               onClick={onRemove}

@@ -3,7 +3,7 @@
  * Intégration spécialisée pour récupérer les vraies géométries
  */
 
-const OPENAIP_PROXY_URL = import.meta.env.VITE_OPENAIP_PROXY_URL || 'http://localhost:3001';
+const OPENAIP_PROXY_URL = import.meta.env.VITE_OPENAIP_PROXY_URL || 'http://localhost:3002';
 
 class OpenAIPAirspacesService {
   constructor() {
@@ -17,9 +17,9 @@ class OpenAIPAirspacesService {
    * Géométries depuis OpenAIP + Corrections depuis AIXM
    */
   async getFrenchAirspaces(bbox = null) {
-    const cacheKey = `airspaces_${bbox || 'france'}`;
-    
-    // Vérifier le cache
+    const cacheKey = 'airspaces_' + (bbox || 'france');
+
+    // Verifier le cache
     if (this.cache.has(cacheKey) && this.cacheExpiry.get(cacheKey) > Date.now()) {
       
       return this.cache.get(cacheKey);
@@ -52,8 +52,7 @@ class OpenAIPAirspacesService {
         // Mise en cache
         this.cache.set(cacheKey, aixmData);
         this.cacheExpiry.set(cacheKey, Date.now() + this.CACHE_DURATION);
-        
-         chargés`);
+
         return aixmData;
         
       } catch (aixmError) {
@@ -156,11 +155,11 @@ class OpenAIPAirspacesService {
       return { value: 0, raw: 'SFC', object: { value: 0, unit: 'FT', referenceDatum: 'GND' } };
     }
     
-    // Si c'est déjà une valeur simple (nombre ou chaîne)
+    // Si c'est deja une valeur simple (nombre ou chaine)
     if (typeof altitude === 'number') {
-      return { 
-        value: altitude, 
-        raw: altitude === 0 ? 'SFC' : `${altitude} ft`,
+      return {
+        value: altitude,
+        raw: altitude === 0 ? 'SFC' : altitude + ' ft',
         object: { value: altitude, unit: 'FT', referenceDatum: 'MSL' }
       };
     }
@@ -198,16 +197,16 @@ class OpenAIPAirspacesService {
         valueFeet = value * 100;
       }
       
-      // Formater la chaîne d'affichage
+      // Formater la chaine d'affichage
       let raw = '';
       if (value === 0 || ref === 'GND') {
         raw = 'SFC';
       } else if (value === 999999 || value === 'UNLIMITED') {
         raw = 'UNLIMITED';
       } else if (unit === 'FL' || ref === 'STD') {
-        raw = `FL${String(value).padStart(3, '0')}`;
+        raw = 'FL' + String(value).padStart(3, '0');
       } else {
-        raw = `${valueFeet} ft ${ref}`;
+        raw = valueFeet + ' ft ' + ref;
       }
       
       return { 
@@ -278,7 +277,7 @@ class OpenAIPAirspacesService {
         20: 'ATZ',
         21: 'OTHER'
       };
-      return numericTypeMap[type] || `TYPE_${type}`;
+      return numericTypeMap[type] || 'TYPE_' + type;
     }
     
     // Si le type est une chaîne (ancien format)
@@ -355,7 +354,7 @@ class OpenAIPAirspacesService {
           
           airspaces.push({
             type: 'Feature',
-            id: `CTR_${aerodrome.icao}`,
+            id: 'CTR_' + aerodrome.icao,
             geometry: {
               type: 'Polygon',
               coordinates: [[
@@ -367,7 +366,7 @@ class OpenAIPAirspacesService {
               ]]
             },
             properties: {
-              name: `${aerodrome.icao} CTR`,
+              name: aerodrome.icao + ' CTR',
               type: 'CTR',
               class: aerodrome.type === 'AD' ? 'D' : 'G',
               floor: 0,
@@ -451,8 +450,9 @@ class OpenAIPAirspacesService {
    */
   async getAirspacesByType(type, bbox = null) {
     const airspaces = await this.getFrenchAirspaces(bbox);
-    return airspaces.filter(airspace => 
+    return airspaces.filter(airspace =>
       airspace.properties?.type === type
+    );
   }
 
   /**

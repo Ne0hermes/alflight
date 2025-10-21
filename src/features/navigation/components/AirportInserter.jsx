@@ -294,18 +294,18 @@ export const AirportInserter = ({
     return airports;
   }, [waypoints]);
 
-  // Filtrer les aérodromes selon la recherche et exclure ceux déjà présents
+  // Filtrer les aérodromes selon la recherche (permettre les doublons pour navigation circulaire)
   const filteredAirports = useMemo(() => {
     if (!searchTerm) {
-      return availableAirports.filter(apt => !airportsInRoute.has(apt.icao));
+      return availableAirports;
     }
-    
+
     const term = searchTerm.toLowerCase();
-    return availableAirports.filter(apt => 
-      !airportsInRoute.has(apt.icao) && (
-        apt.searchName.includes(term) ||
-        apt.icao.toLowerCase().includes(term)
-  }, [availableAirports, searchTerm, airportsInRoute]);
+    return availableAirports.filter(apt =>
+      apt.searchName.includes(term) ||
+      apt.icao.toLowerCase().includes(term)
+    );
+  }, [availableAirports, searchTerm]);
 
   // Fonction pour insérer un aérodrome
   const handleInsertAirport = (airport) => {

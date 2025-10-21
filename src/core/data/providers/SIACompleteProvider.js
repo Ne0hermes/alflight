@@ -42,8 +42,9 @@ export class SIACompleteProvider extends AeroDataProvider {
 
     loadingPromise = (async () => {
       try {
-        // Charger le fichier AIXM
-        const response = await fetch('/src/data/AIXM4.5_all_FR_OM_2025-09-04.xml');
+        // Charger le fichier AIXM depuis la configuration
+        const { CURRENT_AIXM_FILE } = await import('../../../data/aixm.config.js');
+        const response = await fetch(`/src/data/${CURRENT_AIXM_FILE}`);
         
         if (!response.ok) {
           throw new Error(`Erreur chargement AIXM: ${response.status}`);
@@ -66,10 +67,19 @@ export class SIACompleteProvider extends AeroDataProvider {
         return parsedData;
       } catch (error) {
         console.error('❌ Erreur chargement données SIA:', error);
-        // En cas d'erreur, utiliser les données statiques de base
-        cachedData = this.getFallbackData();
+        // En cas d'erreur, retourner une structure vide
+        cachedData = {
+          airports: [],
+          airspaces: [],
+          navaids: [],
+          runways: [],
+          frequencies: [],
+          obstacles: [],
+          routes: [],
+          waypoints: []
+        };
         this.data = cachedData;
-        return this.data;
+        throw error; // Propager l'erreur pour que l'utilisateur sache qu'il y a un problème
       } finally {
         this.isLoading = false;
         loadingPromise = null;
@@ -136,27 +146,6 @@ export class SIACompleteProvider extends AeroDataProvider {
     });
   }
 
-  /**
-   * Données de secours si le chargement AIXM échoue
-   */
-  getFallbackData() {
-    return {
-      airports: [
-        { icao: 'LFPG', name: 'Paris CDG', coordinates: { lat: 49.0097, lon: 2.5478 }, elevation: 392, type: 'AIRPORT' },
-        { icao: 'LFPO', name: 'Paris Orly', coordinates: { lat: 48.7233, lon: 2.3794 }, elevation: 291, type: 'AIRPORT' },
-        { icao: 'LFST', name: 'Strasbourg', coordinates: { lat: 48.5444, lon: 7.6283 }, elevation: 505, type: 'AIRPORT' },
-        { icao: 'LFMN', name: 'Nice', coordinates: { lat: 43.6584, lon: 7.2158 }, elevation: 13, type: 'AIRPORT' },
-        { icao: 'LFML', name: 'Marseille', coordinates: { lat: 43.4367, lon: 5.2150 }, elevation: 69, type: 'AIRPORT' }
-      ],
-      airspaces: [],
-      navaids: [],
-      runways: [],
-      frequencies: [],
-      obstacles: [],
-      routes: [],
-      waypoints: []
-    };
-  }
 
   /**
    * Assure que les données sont chargées avant de répondre aux requêtes

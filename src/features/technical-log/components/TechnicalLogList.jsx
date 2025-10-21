@@ -65,6 +65,7 @@ const TechnicalLogList = () => {
           entry.action?.toLowerCase().includes(searchLower) ||
           entry.mechanic?.toLowerCase().includes(searchLower) ||
           entry.deferralRef?.toLowerCase().includes(searchLower)
+        );
       }
 
       return true;
@@ -96,6 +97,7 @@ const TechnicalLogList = () => {
         {title}
       </Typography>
     </Paper>
+  );
 
   return (
     <Box>
@@ -155,6 +157,7 @@ const TechnicalLogList = () => {
                   <InputAdornment position="start">
                     <SearchIcon />
                   </InputAdornment>
+                )
               }}
             />
           </Grid>
@@ -252,6 +255,7 @@ const TechnicalLogList = () => {
                     onDelete={() => deleteEntry(entry.id)}
                   />
                 </Grid>
+              ))
             ) : (
               filteredEntries.map(entry => (
                 <Grid item xs={12} key={entry.id}>

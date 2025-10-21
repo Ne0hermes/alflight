@@ -30,10 +30,11 @@ class VFRPointsExtractor {
     this.loading = true;
     
     try {
-      
-      
-      // Charger le fichier AIXM
-      const response = await fetch('/src/data/AIXM4.5_all_FR_OM_2025-09-04.xml');
+      // Charger le fichier AIXM depuis la configuration
+      const { CURRENT_AIXM_FILE } = await import('../data/aixm.config.js');
+      console.log('🔧 vfrPointsExtractor - Chargement du fichier AIXM:', CURRENT_AIXM_FILE);
+
+      const response = await fetch(`/src/data/${CURRENT_AIXM_FILE}`);
       if (!response.ok) {
         throw new Error(`Erreur chargement AIXM: ${response.status}`);
       }
@@ -225,6 +226,16 @@ class VFRPointsExtractor {
         reference: point.reference
       }
     }));
+  }
+
+  /**
+   * Réinitialise le cache pour forcer le rechargement
+   */
+  clearCache() {
+    this.vfrPoints = [];
+    this.loaded = false;
+    this.loading = false;
+    console.log('✅ Cache VFR points cleared - will reload on next request');
   }
 }
 

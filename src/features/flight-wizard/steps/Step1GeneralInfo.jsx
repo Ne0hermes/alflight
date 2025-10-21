@@ -18,6 +18,32 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
     onUpdate();
   };
 
+  // Gérer la sélection d'avion : pré-remplir automatiquement les données de l'aéronef
+  const handleAircraftSelection = (registration) => {
+    // Mettre à jour le callsign dans generalInfo
+    flightPlan.updateGeneralInfo({ callsign: registration });
+
+    // Trouver l'avion complet dans la liste
+    const selectedAircraft = aircraftList.find(ac => ac.registration === registration);
+
+    if (selectedAircraft) {
+      // Pré-remplir automatiquement toutes les données de l'avion
+      flightPlan.updateAircraft({
+        registration: selectedAircraft.registration,
+        type: selectedAircraft.aircraftType || selectedAircraft.type || '',
+        model: selectedAircraft.model || '',
+        cruiseSpeed: selectedAircraft.cruiseSpeed || 0,
+        fuelConsumption: selectedAircraft.fuelConsumption || 0,
+        fuelCapacity: selectedAircraft.fuelCapacity || 0,
+        emptyWeight: selectedAircraft.emptyWeight || 0,
+        maxWeight: selectedAircraft.maxWeight || selectedAircraft.maxTakeoffWeight || 0,
+      });
+      console.log('✅ Avion pré-rempli automatiquement:', selectedAircraft.registration);
+    }
+
+    onUpdate();
+  };
+
   const formatDate = (date) => {
     if (!date) return '';
     const d = new Date(date);
@@ -80,7 +106,7 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
           <select
             style={styles.select}
             value={flightPlan.generalInfo.callsign || ''}
-            onChange={(e) => handleChange('callsign', e.target.value)}
+            onChange={(e) => handleAircraftSelection(e.target.value)}
           >
             <option value="">-- Sélectionnez un avion --</option>
             {aircraftList.map((aircraft) => (
