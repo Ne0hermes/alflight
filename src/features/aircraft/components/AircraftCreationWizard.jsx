@@ -52,7 +52,6 @@ import Step5Equipment from './wizard-steps/Step5Equipment';
 import Step6Operations from './wizard-steps/Step6Operations';
 import Step7Remarks from './wizard-steps/Step7Remarks';
 import Step5Review from './wizard-steps/Step5Review';
-import ExportButton from './wizard-steps/ExportButton';
 
 // Style personnalisé pour le Stepper
 const CustomStepIcon = styled(StepIcon)(({ theme, ownerState }) => ({
@@ -909,14 +908,6 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         </Box>
 
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          {/* Bouton Export - visible à toutes les étapes */}
-          <ExportButton
-            aircraftData={aircraftData}
-            currentStep={currentStep}
-            variant="outlined"
-            size="medium"
-          />
-
           {currentStep !== steps.length - 1 && (
             <Button
               variant="contained"

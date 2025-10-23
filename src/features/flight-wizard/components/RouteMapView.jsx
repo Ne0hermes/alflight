@@ -1,8 +1,66 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useNavigation } from '@core/contexts';
+
+// Fonction pour appliquer un offset perpendiculaire à une ligne
+// Cela permet de séparer visuellement les lignes qui se superposent
+const applyPerpendicularOffset = (coordinates, offsetMeters = 50) => {
+  if (coordinates.length < 2) return coordinates;
+
+  const offsetCoords = [];
+
+  for (let i = 0; i < coordinates.length; i++) {
+    const [lat, lon] = coordinates[i];
+
+    // Calculer la direction perpendiculaire
+    let perpLat, perpLon;
+
+    if (i === 0) {
+      // Premier point : utiliser la direction vers le point suivant
+      const [nextLat, nextLon] = coordinates[i + 1];
+      const deltaLat = nextLat - lat;
+      const deltaLon = nextLon - lon;
+      perpLat = -deltaLon;
+      perpLon = deltaLat;
+    } else if (i === coordinates.length - 1) {
+      // Dernier point : utiliser la direction depuis le point précédent
+      const [prevLat, prevLon] = coordinates[i - 1];
+      const deltaLat = lat - prevLat;
+      const deltaLon = lon - prevLon;
+      perpLat = -deltaLon;
+      perpLon = deltaLat;
+    } else {
+      // Points intermédiaires : moyenne des deux directions
+      const [prevLat, prevLon] = coordinates[i - 1];
+      const [nextLat, nextLon] = coordinates[i + 1];
+      const deltaLat1 = lat - prevLat;
+      const deltaLon1 = lon - prevLon;
+      const deltaLat2 = nextLat - lat;
+      const deltaLon2 = nextLon - lon;
+      perpLat = -(deltaLon1 + deltaLon2) / 2;
+      perpLon = (deltaLat1 + deltaLat2) / 2;
+    }
+
+    // Normaliser et appliquer l'offset
+    const length = Math.sqrt(perpLat * perpLat + perpLon * perpLon);
+    if (length > 0) {
+      // Convertir les mètres en degrés (approximation)
+      const metersToDegreesLat = offsetMeters / 111000; // 1 degré ≈ 111 km
+      const metersToDegreesLon = offsetMeters / (111000 * Math.cos(lat * Math.PI / 180));
+
+      const normPerpLat = (perpLat / length) * metersToDegreesLat;
+      const normPerpLon = (perpLon / length) * metersToDegreesLon;
+
+      offsetCoords.push([lat + normPerpLat, lon + normPerpLon]);
+    } else {
+      offsetCoords.push([lat, lon]);
+    }
+  }
+
+  return offsetCoords;
+};
 
 // Composant pour ajuster automatiquement la vue de la carte
 const MapBoundsUpdater = ({ waypoints }) => {
@@ -19,6 +77,60 @@ const MapBoundsUpdater = ({ waypoints }) => {
       }
     }
   }, [waypoints, map]);
+
+  return null;
+};
+
+// Composant pour ajouter des flèches sur les polylines
+const PolylineWithArrows = ({ positions, color, weight, opacity, dashArray, isReturn }) => {
+  const map = useMap();
+  const polylineRef = useRef(null);
+
+  useEffect(() => {
+    if (!map || !positions || positions.length < 2) return;
+
+    // Créer la polyline
+    const polyline = L.polyline(positions, {
+      color: color,
+      weight: weight,
+      opacity: opacity,
+      dashArray: dashArray
+    }).addTo(map);
+
+    polylineRef.current = polyline;
+
+    // Ajouter des flèches le long de la ligne
+    const arrowCount = Math.max(2, Math.floor(positions.length));
+
+    for (let i = 0; i < positions.length - 1; i++) {
+      const start = positions[i];
+      const end = positions[i + 1];
+      const mid = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2];
+
+      // Calculer l'angle de la flèche
+      const angle = Math.atan2(end[1] - start[1], end[0] - start[0]) * 180 / Math.PI;
+
+      // Créer l'icône de flèche
+      const arrowIcon = L.divIcon({
+        html: `
+          <svg width="20" height="20" viewBox="0 0 20 20" style="transform: rotate(${angle + 90}deg);">
+            <path d="M10 0 L5 10 L10 8 L15 10 Z" fill="${color}" stroke="none"/>
+          </svg>
+        `,
+        className: 'arrow-marker',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
+      });
+
+      L.marker(mid, { icon: arrowIcon }).addTo(map);
+    }
+
+    return () => {
+      if (polylineRef.current) {
+        map.removeLayer(polylineRef.current);
+      }
+    };
+  }, [map, positions, color, weight, opacity, dashArray]);
 
   return null;
 };
@@ -103,13 +215,6 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null }) => {
     }
   }, [departure, arrival, intermediateWaypoints.length]);
 
-  // Filtrer les points VFR visibles
-  const visibleVFRPoints = vfrPoints.filter(point =>
-    point.coordinates?.lat &&
-    point.coordinates?.lng &&
-    point.visible !== false
-  );
-
   // Préparer les coordonnées pour la ligne de route
   const routeCoordinates = validWaypoints.map(wp => [wp.lat, wp.lon]);
 
@@ -159,6 +264,34 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null }) => {
       }
     }
   }, [flightPlan, arrival, routeCoordinates]);
+
+  // Calculer les positions des flèches le long de la route
+  const arrowMarkers = useMemo(() => {
+    if (routeCoordinates.length < 2) return [];
+
+    const markers = [];
+
+    // Placer une flèche au milieu de chaque segment
+    for (let i = 0; i < routeCoordinates.length - 1; i++) {
+      const [lat1, lon1] = routeCoordinates[i];
+      const [lat2, lon2] = routeCoordinates[i + 1];
+
+      // Point au milieu du segment
+      const midLat = (lat1 + lat2) / 2;
+      const midLon = (lon1 + lon2) / 2;
+
+      // Calculer l'angle de rotation pour la flèche
+      const angle = Math.atan2(lon2 - lon1, lat2 - lat1) * (180 / Math.PI);
+
+      markers.push({
+        position: [midLat, midLon],
+        angle: angle,
+        segmentIndex: i
+      });
+    }
+
+    return markers;
+  }, [routeCoordinates]);
 
   // Afficher un loader pendant le chargement initial
   if (isInitialLoad) {
@@ -212,6 +345,7 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null }) => {
         zoom={zoom}
         style={{ height: '100%', width: '100%' }}
         scrollWheelZoom={true}
+        zoomControl={false}
       >
         {/* Couche de tuiles OpenStreetMap */}
         <TileLayer
@@ -222,7 +356,7 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null }) => {
         {/* Ajuster automatiquement la vue */}
         <MapBoundsUpdater waypoints={validWaypoints} />
 
-        {/* Ligne de route - Différencier aller et retour */}
+        {/* Ligne de route avec flèches - Différencier aller et retour */}
         {routeCoordinates.length > 1 && (() => {
           // Détecter si c'est une navigation circulaire (retour au départ)
           const isCircular = departure && arrival &&
@@ -237,34 +371,40 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null }) => {
             const outboundRoute = routeCoordinates.slice(0, midpointIndex + 1);
             const returnRoute = routeCoordinates.slice(midpointIndex);
 
+            // Appliquer un offset perpendiculaire à la ligne de retour pour éviter la superposition
+            const offsetReturnRoute = applyPerpendicularOffset(returnRoute, 50);
+
             return (
               <>
-                {/* Aller (bordeaux) */}
-                <Polyline
+                {/* Aller (bordeaux) avec flèches */}
+                <PolylineWithArrows
                   positions={outboundRoute}
                   color="#93163c"
                   weight={3}
                   opacity={0.7}
                   dashArray="10, 0"
+                  isReturn={false}
                 />
-                {/* Retour (bleu) */}
-                <Polyline
-                  positions={returnRoute}
+                {/* Retour (bleu) avec flèches */}
+                <PolylineWithArrows
+                  positions={offsetReturnRoute}
                   color="#1e40af"
                   weight={3}
                   opacity={0.7}
                   dashArray="5, 5"
+                  isReturn={true}
                 />
               </>
             );
           } else {
-            // Route simple (pas circulaire)
+            // Route simple (pas circulaire) avec flèches
             return (
-              <Polyline
+              <PolylineWithArrows
                 positions={routeCoordinates}
                 color="#93163c"
                 weight={3}
                 opacity={0.7}
+                isReturn={false}
               />
             );
           }
@@ -309,27 +449,6 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null }) => {
             </Popup>
           </CircleMarker>
         )}
-
-        {/* Marqueurs des points VFR */}
-        {visibleVFRPoints.map((point, index) => (
-          <CircleMarker
-            key={`vfr-${index}`}
-            center={[point.coordinates.lat, point.coordinates.lng]}
-            radius={6}
-            pathOptions={{
-              color: '#93163c',
-              fillColor: '#93163c',
-              fillOpacity: 0.8,
-              weight: 2
-            }}
-          >
-            <Popup>
-              <div style={{ padding: '4px' }}>
-                <strong style={{ fontSize: '13px' }}>📍 {point.name || 'Point VFR'}</strong>
-              </div>
-            </Popup>
-          </CircleMarker>
-        ))}
 
         {/* Marqueurs des waypoints intermédiaires (points VFR, waypoints, etc.) */}
         {intermediateWaypoints.map((waypoint, index) => (

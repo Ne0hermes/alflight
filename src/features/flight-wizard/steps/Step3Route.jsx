@@ -1,9 +1,11 @@
 // src/features/flight-wizard/steps/Step3Route.jsx
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import NavigationModule from '@features/navigation/NavigationModule';
 import { Navigation, Map } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import RouteMapView from '../components/RouteMapView';
+import { useNavigation } from '@core/contexts';
+import { vfrPointsExtractor } from '@services/vfrPointsExtractor';
 
 // Styles communs
 const commonStyles = {
@@ -55,10 +57,100 @@ const commonStyles = {
 export const Step3Route = memo(({ flightPlan, onUpdate }) => {
   console.log('📍📍📍 Step3Route MONTÉ');
 
-  // Points VFR (à connecter avec votre store de points VFR)
-  const [vfrPoints] = useState([]);
+  // Récupérer les waypoints depuis le contexte Navigation
+  const { waypoints } = useNavigation();
+
+  // Points VFR chargés depuis AIXM
+  const [vfrPoints, setVfrPoints] = useState([]);
+  const [loadingVFR, setLoadingVFR] = useState(false);
+
+  // Synchroniser les waypoints du NavigationContext avec le flightPlan
+  useEffect(() => {
+    if (!waypoints || waypoints.length === 0) return;
+
+    // Trouver le départ et l'arrivée
+    const departure = waypoints.find(wp => wp.type === 'departure');
+    const arrival = waypoints.find(wp => wp.type === 'arrival');
+
+    console.log('🔄 Synchronisation waypoints avec flightPlan:', { departure, arrival });
+
+    // Mettre à jour le flightPlan si les données sont disponibles
+    if (departure || arrival) {
+      if (departure && departure.icao !== flightPlan.route.departure.icao) {
+        flightPlan.route.departure = {
+          icao: departure.icao || departure.name || '',
+          name: departure.name || departure.icao || '',
+          coordinates: departure.lat && departure.lon ? { lat: departure.lat, lng: departure.lon } : null,
+          elevation: departure.elevation || 0
+        };
+        console.log('✅ Départ mis à jour dans flightPlan:', flightPlan.route.departure);
+      }
+
+      if (arrival && arrival.icao !== flightPlan.route.arrival.icao) {
+        flightPlan.route.arrival = {
+          icao: arrival.icao || arrival.name || '',
+          name: arrival.name || arrival.icao || '',
+          coordinates: arrival.lat && arrival.lon ? { lat: arrival.lat, lng: arrival.lon } : null,
+          elevation: arrival.elevation || 0
+        };
+        console.log('✅ Arrivée mise à jour dans flightPlan:', flightPlan.route.arrival);
+      }
+
+      // Notifier le wizard de la mise à jour
+      if (onUpdate) {
+        onUpdate();
+      }
+    }
+  }, [waypoints, flightPlan, onUpdate]);
+
+  // Charger les points VFR au montage du composant
+  useEffect(() => {
+    const loadVFRPoints = async () => {
+      setLoadingVFR(true);
+      try {
+        console.log('🔍 Chargement des points VFR depuis AIXM...');
+        const allVFRPoints = await vfrPointsExtractor.loadVFRPoints();
+        console.log('✅ Points VFR chargés:', allVFRPoints.length);
+
+        // Extraire les codes OACI des aérodromes dans les waypoints
+        const aerodromeICAOs = waypoints
+          .filter(wp => wp.name && wp.name.match(/^LF[A-Z]{2}$/))
+          .map(wp => wp.name);
+
+        console.log('🛫 Aérodromes détectés dans les waypoints:', aerodromeICAOs);
+
+        // Filtrer les points VFR pour les aérodromes sélectionnés
+        const filteredPoints = allVFRPoints
+          .filter(point => aerodromeICAOs.includes(point.aerodrome))
+          .map(point => ({
+            name: point.name,
+            coordinates: {
+              lat: point.coordinates.lat,
+              lng: point.coordinates.lon
+            },
+            description: point.description,
+            aerodrome: point.aerodrome,
+            visible: true
+          }));
+
+        console.log('📍 Points VFR filtrés pour les aérodromes:', filteredPoints.length);
+        filteredPoints.forEach(p => {
+          console.log(`  - ${p.name} (${p.aerodrome}): ${p.coordinates.lat.toFixed(4)}, ${p.coordinates.lng.toFixed(4)}`);
+        });
+
+        setVfrPoints(filteredPoints);
+      } catch (error) {
+        console.error('❌ Erreur chargement points VFR:', error);
+      } finally {
+        setLoadingVFR(false);
+      }
+    };
+
+    loadVFRPoints();
+  }, [waypoints]);
 
   console.log('📍 Step3Route - About to render RouteMapView');
+  console.log('📍 vfrPoints à passer:', vfrPoints.length);
 
   return (
     <div style={commonStyles.container} className="wizard-step-3-route">
@@ -73,9 +165,6 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
         <div style={commonStyles.mapLabel}>
           <Map size={18} />
           Carte du trajet
-        </div>
-        <div style={commonStyles.infoText}>
-          📍 Visualisation de votre route avec les aérodromes et waypoints sélectionnés
         </div>
         <RouteMapView vfrPoints={vfrPoints} flightPlan={flightPlan} />
       </div>

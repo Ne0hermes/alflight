@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, MapPin } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
+import { SimpleAirportSelector } from './SimpleAirportSelector';
 
 export const CustomVFRPointForm = ({ 
   position, // [lat, lon]
@@ -20,6 +21,25 @@ export const CustomVFRPointForm = ({
     ...existingPoint
   });
 
+  // État séparé pour l'aérodrome sélectionné (objet complet)
+  const [selectedAerodrome, setSelectedAerodrome] = useState(null);
+
+  // Initialiser selectedAerodrome si existingPoint a un aérodrome
+  useEffect(() => {
+    if (existingPoint?.aerodrome) {
+      // Si c'est déjà un objet avec icao, on le garde
+      if (typeof existingPoint.aerodrome === 'object' && existingPoint.aerodrome.icao) {
+        setSelectedAerodrome(existingPoint.aerodrome);
+      } else if (typeof existingPoint.aerodrome === 'string') {
+        // Sinon c'est juste le code ICAO en string
+        setSelectedAerodrome({
+          icao: existingPoint.aerodrome,
+          name: `Aéroport ${existingPoint.aerodrome}`
+        });
+      }
+    }
+  }, [existingPoint]);
+
   useEffect(() => {
     if (existingPoint) {
       setFormData(existingPoint);
@@ -28,7 +48,7 @@ export const CustomVFRPointForm = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!formData.name.trim()) {
       alert('Le nom du point est obligatoire');
       return;
@@ -37,7 +57,9 @@ export const CustomVFRPointForm = ({
     const pointData = {
       ...formData,
       lat: position ? position[0] : existingPoint?.lat,
-      lon: position ? position[1] : existingPoint?.lon
+      lon: position ? position[1] : existingPoint?.lon,
+      // Sauvegarder le code ICAO de l'aérodrome si sélectionné
+      aerodrome: selectedAerodrome ? selectedAerodrome.icao : formData.aerodrome
     };
 
     onSave(pointData);
@@ -160,24 +182,11 @@ export const CustomVFRPointForm = ({
 
         <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
           <div style={{ flex: 1 }}>
-            <label style={sx.combine(sx.text.sm, sx.text.secondary)}>
-              Aérodrome associé
-            </label>
-            <input
-              type="text"
-              value={formData.aerodrome}
-              onChange={(e) => setFormData({ ...formData, aerodrome: e.target.value.toUpperCase() })}
-              placeholder="LFST"
-              pattern="[A-Z]{4}"
-              maxLength={4}
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                border: '1px solid #d1d5db',
-                borderRadius: '6px',
-                fontSize: '14px',
-                textTransform: 'uppercase'
-              }}
+            <SimpleAirportSelector
+              label="Aérodrome associé (optionnel)"
+              value={selectedAerodrome}
+              onChange={setSelectedAerodrome}
+              placeholder="Code OACI ou nom..."
             />
           </div>
           

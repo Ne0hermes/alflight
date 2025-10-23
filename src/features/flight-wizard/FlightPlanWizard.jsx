@@ -9,6 +9,7 @@ import { Step1GeneralInfo } from './steps/Step1GeneralInfo';
 import { Step3Route } from './steps/Step3Route';
 import { Step4Alternates } from './steps/Step4Alternates';
 import { Step5Fuel } from './steps/Step5Fuel';
+import { Step5Performance } from './steps/Step5Performance';
 import { Step6WeightBalance } from './steps/Step6WeightBalance';
 import { Step7Summary } from './steps/Step7Summary';
 
@@ -125,6 +126,13 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
     },
     {
       number: 6,
+      title: 'Performances',
+      description: 'Décollage et atterrissage',
+      component: Step5Performance,
+      validate: () => true // Toujours valide, données calculées automatiquement
+    },
+    {
+      number: 7,
       title: 'Synthèse',
       description: 'Vérifier et générer',
       component: Step7Summary,
