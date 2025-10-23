@@ -30,13 +30,7 @@ export const Step5Fuel = memo(({ flightPlan, onUpdate }) => {
   
   return (
     <div style={commonStyles.container}>
-      {/* Titre de l'étape */}
-      <div style={commonStyles.label}>
-        <Fuel size={20} />
-        Carburant
-      </div>
-
-      {/* Module de carburant complet */}
+      {/* Module de carburant complet - le titre est affiché par le module */}
       <FuelModule />
     </div>
   );

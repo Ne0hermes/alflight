@@ -105,7 +105,7 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
     },
     {
       number: 3,
-      title: 'Carburant',
+      title: 'Bilan Carburant',
       description: '',
       component: Step5Fuel,
       validate: () => flightPlan.fuel.confirmed > 0
