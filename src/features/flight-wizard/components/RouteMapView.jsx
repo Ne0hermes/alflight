@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet-polylinedecorator';
 import { useNavigation } from '@core/contexts';
 
 // Fonction pour appliquer un offset perpendiculaire à une ligne
@@ -81,10 +82,11 @@ const MapBoundsUpdater = ({ waypoints }) => {
   return null;
 };
 
-// Composant pour ajouter des flèches sur les polylines
+// Composant pour ajouter des flèches sur les polylines avec polylineDecorator
 const PolylineWithArrows = ({ positions, color, weight, opacity, dashArray, isReturn }) => {
   const map = useMap();
   const polylineRef = useRef(null);
+  const decoratorRef = useRef(null);
 
   useEffect(() => {
     if (!map || !positions || positions.length < 2) return;
@@ -99,35 +101,37 @@ const PolylineWithArrows = ({ positions, color, weight, opacity, dashArray, isRe
 
     polylineRef.current = polyline;
 
-    // Ajouter des flèches le long de la ligne
-    const arrowCount = Math.max(2, Math.floor(positions.length));
+    // Ajouter des flèches avec polylineDecorator
+    const decorator = L.polylineDecorator(polyline, {
+      patterns: [
+        {
+          offset: '50%',
+          repeat: 150, // Distance en pixels entre les flèches
+          symbol: L.Symbol.arrowHead({
+            pixelSize: 12,
+            polygon: false,
+            pathOptions: {
+              stroke: true,
+              color: color,
+              weight: 2,
+              opacity: opacity,
+              fill: true,
+              fillColor: color,
+              fillOpacity: opacity
+            }
+          })
+        }
+      ]
+    }).addTo(map);
 
-    for (let i = 0; i < positions.length - 1; i++) {
-      const start = positions[i];
-      const end = positions[i + 1];
-      const mid = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2];
-
-      // Calculer l'angle de la flèche
-      const angle = Math.atan2(end[1] - start[1], end[0] - start[0]) * 180 / Math.PI;
-
-      // Créer l'icône de flèche
-      const arrowIcon = L.divIcon({
-        html: `
-          <svg width="20" height="20" viewBox="0 0 20 20" style="transform: rotate(${angle + 90}deg);">
-            <path d="M10 0 L5 10 L10 8 L15 10 Z" fill="${color}" stroke="none"/>
-          </svg>
-        `,
-        className: 'arrow-marker',
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
-      });
-
-      L.marker(mid, { icon: arrowIcon }).addTo(map);
-    }
+    decoratorRef.current = decorator;
 
     return () => {
       if (polylineRef.current) {
         map.removeLayer(polylineRef.current);
+      }
+      if (decoratorRef.current) {
+        map.removeLayer(decoratorRef.current);
       }
     };
   }, [map, positions, color, weight, opacity, dashArray]);

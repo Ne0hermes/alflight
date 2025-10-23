@@ -66,6 +66,7 @@
     "idb-keyval": "^6.2.2",
     "immer": "^10.1.1",
     "leaflet": "^1.9.4",
+    "leaflet-polylinedecorator": "^1.6.0",
     "lucide-react": "^0.263.1",
     "node-fetch": "^3.3.2",
     "pdf-lib": "^1.17.1",
