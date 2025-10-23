@@ -105,17 +105,17 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
     },
     {
       number: 3,
-      title: 'Aérodromes de Déroutement',
-      description: 'Sélectionner les alternates',
-      component: Step4Alternates,
-      validate: () => flightPlan.alternates.length > 0
-    },
-    {
-      number: 4,
       title: 'Bilan Carburant',
       description: 'CRM et complément',
       component: Step5Fuel,
       validate: () => flightPlan.fuel.confirmed > 0
+    },
+    {
+      number: 4,
+      title: 'Aérodromes de Déroutement',
+      description: 'Sélectionner les alternates',
+      component: Step4Alternates,
+      validate: () => flightPlan.alternates.length > 0
     },
     {
       number: 5,
