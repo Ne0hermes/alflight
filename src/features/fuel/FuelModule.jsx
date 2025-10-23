@@ -329,23 +329,6 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
         </div>
       )}
 
-      {/* Alerte automatisation */}
-      {(navigationResults?.fuelRequired > 0 || hasAlternates) && (
-        <div style={sx.combine(sx.components.alert.base, sx.components.alert.success, sx.spacing.mb(4))}>
-          <div style={sx.flex.col}>
-            <p style={sx.combine(sx.text.sm, sx.text.bold)}>
-              🚀 Automatisation activée
-            </p>
-            <p style={sx.text.sm}>
-              {navigationResults?.fuelRequired > 0 && 'Trip, Contingency et Final Reserve calculés depuis Navigation.'}
-              {navigationResults?.fuelRequired > 0 && hasAlternates && ' '}
-              {hasAlternates && `Carburant Alternate calculé pour ${alternatesCount} déroutement${alternatesCount > 1 ? 's' : ''}.`}
-            </p>
-          </div>
-        </div>
-      )}
-
-
       {/* Tableau principal */}
       <div style={sx.combine(sx.components.card.base, sx.spacing.mb(6))}>
         <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4), sx.flex.start)}>
