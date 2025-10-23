@@ -301,9 +301,22 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
     return `${maxDistanceAlternate.icao} depuis ${refPoint} (${maxDistanceAlternate.distance.toFixed(1)} NM)`;
   };
 
+  const getTripFuelDescription = () => {
+    if (!navigationResults || navigationResults.totalDistance === 0) {
+      return 'Aucune route définie';
+    }
+
+    const distance = Math.round(navigationResults.totalDistance);
+    const cruiseSpeed = selectedAircraft?.cruiseSpeedKt || selectedAircraft?.cruiseSpeed || 100;
+    const timeHours = (navigationResults.totalDistance / cruiseSpeed).toFixed(1);
+    const consumption = selectedAircraft?.fuelConsumption || 30;
+
+    return `${distance} NM ÷ ${cruiseSpeed} kt = ${timeHours}h × ${consumption} L/h`;
+  };
+
   const fuelTypes = [
     { key: 'roulage', label: 'Roulage', description: 'Taxi et attente' },
-    { key: 'trip', label: 'Trip Fuel', description: `Calculé depuis Navigation (${Math.round(navigationResults?.totalDistance || 0)} NM)`, readonly: true, automatic: true },
+    { key: 'trip', label: 'Trip Fuel', description: getTripFuelDescription(), readonly: true, automatic: true },
     { key: 'contingency', label: 'Contingency', description: '5% du trip (min 1 gal)', readonly: true },
     { key: 'alternate', label: 'Alternate', description: getAlternateDescription(), readonly: true, automatic: true },
     { key: 'finalReserve', label: 'Final Reserve', description: getReserveDescription(), readonly: true },
@@ -449,16 +462,6 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
               </div>
             </>
           )}
-        </div>
-
-        {/* Note sur le rayon d'action */}
-        <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mt(3))}>
-          <Info size={16} />
-          <p style={sx.text.sm}>
-            💡 Pour visualiser votre rayon d'action, consultez la carte dans l'onglet Navigation. 
-            Le bouton "Afficher rayon" affichera les cercles de distance maximale et aller-retour 
-            basés sur votre carburant utilisable.
-          </p>
         </div>
 
         {/* Détails des déroutements si sélectionnés */}
