@@ -283,45 +283,202 @@ export class AIXMParser {
    * Extrait les pistes
    */
   extractRunways(xmlDoc) {
+    console.log('🚨🚨🚨 AIXMParser.extractRunways() - VERSION 2025-10-22-16:12 - AVEC EXTRACTION RDN');
+
+    // Extraire d'abord tous les Rdn (Runway Direction) car ils sont séparés des Rwy
+    const rdnMap = new Map(); // Map<airportId_designation_direction, RdnData>
+
+    const rdns = xmlDoc.querySelectorAll('Rdn');
+    console.log(`🚨 Nombre d'éléments Rdn trouvés: ${rdns.length}`);
+    rdns.forEach(rdn => {
+      try {
+        const rdnUid = rdn.querySelector('RdnUid');
+        const rwyUid = rdnUid?.querySelector('RwyUid');
+        const airportId = rwyUid?.querySelector('AhpUid > codeId')?.textContent?.trim();
+        const rwyDesig = rwyUid?.querySelector(':scope > txtDesig')?.textContent?.trim(); // Enfant direct de RwyUid
+        const rdnDesig = rdnUid?.querySelector(':scope > txtDesig')?.textContent?.trim(); // Enfant direct de RdnUid
+
+        if (!airportId || !rwyDesig || !rdnDesig) return;
+
+        const key = `${airportId}_${rwyDesig}_${rdnDesig}`;
+
+        // Debug pour LFST
+        if (airportId === 'LFST') {
+          console.log(`🔑 CLÉ CRÉÉE POUR LFST:`, {
+            key,
+            airportId,
+            rwyDesig,
+            rdnDesig,
+            valTrueBrg: rdn.querySelector('valTrueBrg')?.textContent,
+            valMagBrg: rdn.querySelector('valMagBrg')?.textContent
+          });
+        }
+
+        rdnMap.set(key, {
+          valTrueBrg: rdn.querySelector('valTrueBrg')?.textContent,
+          valMagBrg: rdn.querySelector('valMagBrg')?.textContent,
+          geoLat: rdn.querySelector('geoLat')?.textContent,
+          geoLong: rdn.querySelector('geoLong')?.textContent
+        });
+      } catch (error) {
+        // Ignorer les erreurs silencieusement
+      }
+    });
+
+    // Debug : afficher les clés LFST créées dans la Map
+    const lfstKeysCreated = Array.from(rdnMap.keys()).filter(k => k.startsWith('LFST'));
+    console.log('🔧 AIXM Parser - Clés LFST créées dans rdnMap:', lfstKeysCreated);
+
+    // Extraire les distances déclarées (Rdd - Runway Declared Distances)
+    const rddMap = new Map(); // Map<airportId_rwyDesig_direction_type, distance>
+
+    const rdds = xmlDoc.querySelectorAll('Rdd');
+    console.log(`🚨 Nombre d'éléments Rdd trouvés: ${rdds.length}`);
+
+    rdds.forEach(rdd => {
+      try {
+        const rddUid = rdd.querySelector('RddUid');
+        const rdnUid = rddUid?.querySelector('RdnUid');
+        const rwyUid = rdnUid?.querySelector('RwyUid');
+        const airportId = rwyUid?.querySelector('AhpUid > codeId')?.textContent?.trim();
+        const rwyDesig = rwyUid?.querySelector(':scope > txtDesig')?.textContent?.trim();
+        const rdnDesig = rdnUid?.querySelector(':scope > txtDesig')?.textContent?.trim();
+        const distanceType = rddUid?.querySelector('codeType')?.textContent?.trim(); // TORA, TODA, ASDA, LDA
+        const valDist = rdd.querySelector('valDist')?.textContent?.trim();
+
+        if (!airportId || !rwyDesig || !rdnDesig || !distanceType || !valDist) return;
+
+        const key = `${airportId}_${rwyDesig}_${rdnDesig}_${distanceType}`;
+        rddMap.set(key, parseFloat(valDist));
+
+        // Debug pour LFST
+        if (airportId === 'LFST') {
+          console.log(`📏 DISTANCE LFST: ${rwyDesig} direction ${rdnDesig} - ${distanceType}: ${valDist}m`);
+        }
+      } catch (error) {
+        // Ignorer les erreurs silencieusement
+      }
+    });
+
     const runways = xmlDoc.querySelectorAll('Rwy');
-    
-    
+
     runways.forEach(rwy => {
       try {
         const uid = rwy.querySelector('RwyUid');
-        const airportId = uid?.querySelector('AhpUid > codeId')?.textContent;
-        const designation = uid?.querySelector('txtDesig')?.textContent;
-        
+        const airportId = uid?.querySelector('AhpUid > codeId')?.textContent?.trim();
+        const designation = uid?.querySelector('txtDesig')?.textContent?.trim();
+
         if (!airportId || !designation) return;
-        
+
+        // Récupérer le type de revêtement (composition)
+        const composition = rwy.querySelector('codeComposition')?.textContent;
+
+        // Récupérer la résistance PCN
+        const pcnNote = rwy.querySelector('txtPcnNote')?.textContent;
+
+        // Récupérer les dimensions de bande de piste si disponibles
+        const stripLength = parseFloat(rwy.querySelector('valLenStrip')?.textContent);
+        const stripWidth = parseFloat(rwy.querySelector('valWidStrip')?.textContent);
+        const stripUnit = rwy.querySelector('uomDimStrip')?.textContent;
+
+        // En AIXM 4.5, les orientations sont dans les éléments Rdn séparés
+        // On récupère les données pour chaque direction
+        const directions = designation.includes('/') ? designation.split('/') : [designation];
+        const firstDir = directions[0]?.trim();
+        const rdnKey = `${airportId}_${designation}_${firstDir}`;
+        const rdnData = rdnMap.get(rdnKey);
+
+        // Debug pour LFST
+        if (airportId === 'LFST') {
+          // Afficher toutes les clés LFST dans la Map
+          const lfstKeys = Array.from(rdnMap.keys()).filter(k => k.startsWith('LFST'));
+          console.log('🛬 AIXM Parser - LFST:', {
+            designation,
+            firstDir,
+            rdnKey,
+            rdnData,
+            rdnMapSize: rdnMap.size,
+            rdnMapHasKey: rdnMap.has(rdnKey),
+            lfstKeysInMap: lfstKeys
+          });
+        }
+
+        const valBrgTrue = rdnData?.valTrueBrg;
+        const valBrgMag = rdnData?.valMagBrg;
+
+        // Récupérer les distances déclarées pour TOUTES les directions
+        const distancesByDirection = {};
+        directions.forEach(dir => {
+          const dirTrim = dir.trim();
+          distancesByDirection[dirTrim] = {
+            tora: rddMap.get(`${airportId}_${designation}_${dirTrim}_TORA`),
+            toda: rddMap.get(`${airportId}_${designation}_${dirTrim}_TODA`),
+            asda: rddMap.get(`${airportId}_${designation}_${dirTrim}_ASDA`),
+            lda: rddMap.get(`${airportId}_${designation}_${dirTrim}_LDA`)
+          };
+        });
+
+        // Utiliser firstDir déjà déclaré plus haut (ligne 387)
+        const toraKey = `${airportId}_${designation}_${firstDir}_TORA`;
+        const todaKey = `${airportId}_${designation}_${firstDir}_TODA`;
+        const asdaKey = `${airportId}_${designation}_${firstDir}_ASDA`;
+        const ldaKey = `${airportId}_${designation}_${firstDir}_LDA`;
+
         const runway = {
           airportId: airportId,
-          designation: designation,
+          designator: designation,
+          designation: designation, // Alias pour compatibilité
           dimensions: {
-            length: parseFloat(rwy.querySelector('valLen')?.textContent),
-            width: parseFloat(rwy.querySelector('valWid')?.textContent),
-            lengthUnit: rwy.querySelector('uomDimRwy')?.textContent || 'M'
+            length: parseFloat(rwy.querySelector('valLen')?.textContent) || 0,
+            width: parseFloat(rwy.querySelector('valWid')?.textContent) || 0,
+            lengthUnit: rwy.querySelector('uomDimRwy')?.textContent || 'M',
+            // LDA par défaut = longueur totale (sera précisé par distances déclarées)
+            lda: rddMap.get(ldaKey) || parseFloat(rwy.querySelector('valLen')?.textContent) || 0
           },
-          surface: rwy.querySelector('codeSfc')?.textContent,
+          // Distances déclarées pour la première direction
+          tora: rddMap.get(toraKey),
+          toda: rddMap.get(todaKey),
+          asda: rddMap.get(asdaKey),
+          lda: rddMap.get(ldaKey),
+          // Distances par direction (pour séparation ultérieure)
+          distancesByDirection: distancesByDirection,
+          surface: {
+            type: composition || rwy.querySelector('codeSfc')?.textContent || 'Non spécifiée'
+          },
           strength: rwy.querySelector('codeStrength')?.textContent,
+          pcn: pcnNote,
           threshold: {
             lat: this.parseCoordinate(rwy.querySelector('geoLatThr')?.textContent),
             lon: this.parseCoordinate(rwy.querySelector('geoLongThr')?.textContent),
             elevation: parseFloat(rwy.querySelector('valElevThr')?.textContent)
           },
-          magneticBearing: parseFloat(rwy.querySelector('valBrgMag')?.textContent),
-          trueBearing: parseFloat(rwy.querySelector('valBrgTrue')?.textContent)
+          magneticBearing: parseFloat(valBrgMag),
+          trueBearing: parseFloat(valBrgTrue),
+          bearing: parseFloat(valBrgTrue), // Alias pour orientation
+          orientation: parseFloat(valBrgTrue), // Orientation géographique
+          // Debug: valeurs brutes
+          _debug_valBrgTrue: valBrgTrue,
+          _debug_valBrgMag: valBrgMag,
+          // Dimensions de la bande de piste
+          stripDimensions: stripLength && stripWidth ? `${Math.round(stripLength)}x${Math.round(stripWidth)} ${stripUnit || 'M'}` : null,
+          // Déterminer si c'est la piste principale (pistes > 1500m considérées principales)
+          isPrimary: (parseFloat(rwy.querySelector('valLen')?.textContent) || 0) >= 1500
         };
-        
+
         // Convertir les dimensions en mètres si nécessaire
         if (runway.dimensions.lengthUnit === 'FT') {
           runway.dimensions.length = Math.round(runway.dimensions.length * 0.3048);
           runway.dimensions.width = Math.round(runway.dimensions.width * 0.3048);
+          runway.dimensions.lda = Math.round(runway.dimensions.lda * 0.3048);
         }
-        
+
+        // Ajouter la largeur au niveau racine pour compatibilité
+        runway.width = runway.dimensions.width;
+        runway.lda = runway.dimensions.lda;
+
         this.data.runways.push(runway);
       } catch (error) {
-        
+
       }
     });
   }

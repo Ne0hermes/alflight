@@ -288,6 +288,34 @@ app.get('/api/test', async (req, res) => {
   }
 });
 
+// Endpoint pour servir le fichier AIXM
+app.get('/api/aixm/:filename', (req, res) => {
+  try {
+    const filename = req.params.filename;
+    const aixmPath = path.join(__dirname, '..', 'src', 'data', filename);
+
+    console.log(`📄 Requête AIXM: ${filename}`);
+
+    if (!fs.existsSync(aixmPath)) {
+      console.error(`❌ Fichier AIXM non trouvé: ${aixmPath}`);
+      return res.status(404).json({ error: 'Fichier AIXM non trouvé' });
+    }
+
+    // Définir les headers pour XML
+    res.setHeader('Content-Type', 'application/xml');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    // Streamer le fichier pour ne pas charger tout en mémoire
+    const fileStream = fs.createReadStream(aixmPath);
+    fileStream.pipe(res);
+
+    console.log(`✅ Fichier AIXM servi: ${filename}`);
+  } catch (error) {
+    console.error('❌ Erreur serveur AIXM:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Endpoint de santé
 app.get('/health', (req, res) => {
   res.json({

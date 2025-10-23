@@ -5,8 +5,9 @@
 
 class AIXMParser {
   constructor() {
-    this.aixmPath = '/src/data/AIXM4.5_all_FR_OM_2025-09-04.xml';
-    this.siaPath = '/src/data/XML_SIA_2025-09-04.xml';
+    console.log('🚨🚨🚨 AIXMParser CONSTRUCTOR - VERSION 2025-11-27 (Cycle AIRAC Novembre)');
+    this.aixmPath = '/src/data/AIXM4.5_all_FR_OM_2025-11-27.xml';
+    this.siaPath = '/src/data/XML_SIA_2025-11-27.xml';
     this.aerodromes = new Map();
     this.runways = new Map();
     this.frequencies = new Map();
@@ -37,11 +38,18 @@ class AIXMParser {
    * Charge et parse les fichiers XML
    */
   async loadAndParse() {
+    console.log('🚨🚨🚨 loadAndParse() APPELÉ - VERSION 2025-10-22-17:03');
+
     try {
-      // FORCER LE RECHARGEMENT POUR DEBUG
-            
+      // FORCER LE RECHARGEMENT POUR DEBUG - ACTIVÉ !
+      if (this.aerodromes.size > 0) {
+        console.log('⚠️ Données déjà chargées, mais RECHARGEMENT FORCÉ pour mise à jour');
+        this.loadPromise = null;  // Forcer le rechargement
+      }
+
       // Si un chargement est déjà en cours, attendre qu'il se termine
       if (this.isLoading && this.loadPromise) {
+        console.log('⏳ Chargement déjà en cours, attente...');
         return await this.loadPromise;
       }
       
@@ -222,12 +230,33 @@ class AIXMParser {
       
       const rwyDesignation = this.getTextContent(rwyUid, 'txtDesig');
       const direction = this.getTextContent(rdnUid, 'txtDesig');
-      
-      // Debug pour LFST
-            const directionData = {
+
+      // Debug pour LFST - DÉTAILLÉ
+      if (aerodromeId === 'LFST') {
+        console.log(`🔍 EXTRACTION - aerodromeId: ${aerodromeId}`, {
+          rwyDesignation,
+          direction,
+          rdnUidChildren: Array.from(rdnUid.children).map(c => `${c.tagName}: ${c.textContent.substring(0, 20)}`),
+          rwyUidChildren: Array.from(rwyUid.children).map(c => `${c.tagName}: ${c.textContent.substring(0, 20)}`)
+        });
+      }
+
+      const valTrueBrgText = this.getTextContent(rdn, 'valTrueBrg');
+      const valMagBrgText = this.getTextContent(rdn, 'valMagBrg');
+
+      if (aerodromeId === 'LFST') {
+        console.log(`🛬 parseRunwayDistances - LFST ${rwyDesignation} direction ${direction}:`, {
+          valTrueBrgText,
+          valMagBrgText,
+          parsedTrue: parseFloat(valTrueBrgText || 0),
+          parsedMag: parseFloat(valMagBrgText || 0)
+        });
+      }
+
+      const directionData = {
         designation: direction,
-        trueBearing: parseFloat(this.getTextContent(rdn, 'valTrueBrg') || 0),
-        magneticBearing: parseFloat(this.getTextContent(rdn, 'valMagBrg') || 0),
+        trueBearing: parseFloat(valTrueBrgText || 0),
+        magneticBearing: parseFloat(valMagBrgText || 0),
         coordinates: {
           lat: this.convertDMSToDecimal(this.getTextContent(rdn, 'geoLat')),
           lon: this.convertDMSToDecimal(this.getTextContent(rdn, 'geoLong'))

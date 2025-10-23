@@ -34,7 +34,11 @@ class VFRPointsExtractor {
       const { CURRENT_AIXM_FILE } = await import('../data/aixm.config.js');
       console.log('🔧 vfrPointsExtractor - Chargement du fichier AIXM:', CURRENT_AIXM_FILE);
 
-      const response = await fetch(`/src/data/${CURRENT_AIXM_FILE}`);
+      // Charger depuis le serveur backend qui sert les fichiers AIXM
+      const aixmUrl = `http://localhost:3001/api/aixm/${CURRENT_AIXM_FILE}`;
+      console.log('🔧 Chargement depuis le serveur backend:', aixmUrl);
+
+      const response = await fetch(aixmUrl);
       if (!response.ok) {
         throw new Error(`Erreur chargement AIXM: ${response.status}`);
       }
