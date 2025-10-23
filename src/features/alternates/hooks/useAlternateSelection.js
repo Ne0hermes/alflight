@@ -282,12 +282,13 @@ export const useAlternateSelection = () => {
       waypoints[0].lat && waypoints[0].lon &&
       waypoints[waypoints.length - 1].lat && waypoints[waypoints.length - 1].lon &&
       selectedAircraft &&
-      navigationResults &&
+      // navigationResults est maintenant optionnel - permet de sélectionner les alternates avant le calcul complet
       airports.length > 0 &&
       !isLoadingAirports
     );
     if (!ready) {
-      console.log('Not ready:', {
+      console.log('Alternates not ready:', {
+        waypointsCount: waypoints.length,
         departure: waypoints[0] ? `${waypoints[0].name || 'Sans nom'} (${waypoints[0].lat ? 'OK' : 'Pas de coordonnées'})` : 'Manquant',
         arrival: waypoints[waypoints.length - 1] ? `${waypoints[waypoints.length - 1].name || 'Sans nom'} (${waypoints[waypoints.length - 1].lat ? 'OK' : 'Pas de coordonnées'})` : 'Manquant',
         aircraft: selectedAircraft ? selectedAircraft.model : 'Aucun',
@@ -296,7 +297,7 @@ export const useAlternateSelection = () => {
         loadingAirports: isLoadingAirports
       });
     }
-    
+
     return ready;
   }, [waypoints, selectedAircraft, navigationResults, airports, isLoadingAirports]);
   
