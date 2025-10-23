@@ -333,7 +333,7 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
       <div style={sx.combine(sx.components.card.base, sx.spacing.mb(6))}>
         <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4), sx.flex.start)}>
           <Fuel size={20} style={{ marginRight: '8px' }} />
-          Bilan carburant
+          Carburant
         </h3>
 
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
