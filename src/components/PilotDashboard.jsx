@@ -29,6 +29,7 @@ export const PilotDashboard = ({ onNavigate }) => {
   });
   const [wizardDraft, setWizardDraft] = useState(null);
   const [aixmDataStatus, setAixmDataStatus] = useState(null);
+  const [aixmDetailsExpanded, setAixmDetailsExpanded] = useState(false);
 
   useEffect(() => {
     checkPilotAge();
@@ -642,7 +643,7 @@ export const PilotDashboard = ({ onNavigate }) => {
         </div>
       )}
 
-      {/* Alerte statut base de données AIXM - Toujours afficher */}
+      {/* Alerte statut base de données AIXM - Réductible */}
       {aixmDataStatus && (
         <div style={{
           ...styles.ageErrorAlert,
@@ -659,21 +660,50 @@ export const PilotDashboard = ({ onNavigate }) => {
               {formatAIXMAlert(aixmDataStatus.status).icon}
             </div>
             <div style={{ flex: 1 }}>
-              <p style={styles.ageErrorTitle}>
-                <Database size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
-                {formatAIXMAlert(aixmDataStatus.status).title}
-              </p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <p style={{ ...styles.ageErrorTitle, margin: 0 }}>
+                  <Database size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
+                  {formatAIXMAlert(aixmDataStatus.status).title}
+                </p>
+                <button
+                  onClick={() => setAixmDetailsExpanded(!aixmDetailsExpanded)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: formatAIXMAlert(aixmDataStatus.status).color,
+                    padding: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '12px',
+                    fontWeight: '600'
+                  }}
+                >
+                  {aixmDetailsExpanded ? (
+                    <>
+                      Masquer <ChevronUp size={16} />
+                    </>
+                  ) : (
+                    <>
+                      Détails <ChevronDown size={16} />
+                    </>
+                  )}
+                </button>
+              </div>
               <p style={styles.ageErrorMessage}>
                 {aixmDataStatus.message}
               </p>
-              <div style={{ fontSize: '11px', color: '#6b7280', lineHeight: '1.6', marginTop: '8px' }}>
-                <div><strong>Fichier :</strong> {aixmDataStatus.filename}</div>
-                <div><strong>Date effective :</strong> {aixmDataStatus.effectiveDate}</div>
-                <div><strong>Date expiration :</strong> {aixmDataStatus.expiryDate}</div>
-                {aixmDataStatus.nextAIRACDate && (
-                  <div><strong>Prochain cycle AIRAC :</strong> {aixmDataStatus.nextAIRACDate}</div>
-                )}
-              </div>
+              {aixmDetailsExpanded && (
+                <div style={{ fontSize: '11px', color: '#6b7280', lineHeight: '1.6', marginTop: '8px' }}>
+                  <div><strong>Fichier :</strong> {aixmDataStatus.filename}</div>
+                  <div><strong>Date effective :</strong> {aixmDataStatus.effectiveDate}</div>
+                  <div><strong>Date expiration :</strong> {aixmDataStatus.expiryDate}</div>
+                  {aixmDataStatus.nextAIRACDate && (
+                    <div><strong>Prochain cycle AIRAC :</strong> {aixmDataStatus.nextAIRACDate}</div>
+                  )}
+                </div>
+              )}
             </div>
             {(aixmDataStatus.status === 'expired' || aixmDataStatus.status === 'warning' || aixmDataStatus.status === 'expiring-today') && (
               <a
