@@ -254,6 +254,9 @@ const VFRNavigationTable = ({
         // 🚨 Zones réglementées/interdites
         restrictedZones: segmentAirspaceData?.restrictedZones || [],
         hasRestrictedZones: segmentAirspaceData?.hasRestrictedZones || false,
+        // ℹ️ Espaces informatifs (FIR, ATZ, SIV, etc.)
+        informationalAirspaces: segmentAirspaceData?.informationalAirspaces || [],
+        hasInformationalAirspaces: segmentAirspaceData?.hasInformationalAirspaces || false,
         // ⏰ Heures d'arrivée calculées
         cumulativeETEMinutes: cumulativeETEMinutes
       });
@@ -418,12 +421,10 @@ const VFRNavigationTable = ({
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>CAP (°)</th>
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>DIST ({getSymbol('distance')})</th>
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>ETE</th>
-                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', backgroundColor: '#fef3c7' }}>ATE</th>
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', backgroundColor: '#f0f9ff' }}>HEURE THÉORIQUE</th>
+                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', backgroundColor: '#fef3c7' }}>ATE</th>
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', backgroundColor: '#fef3c7' }}>HEURE RÉELLE</th>
-                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>MSA ({getSymbol('altitude')})</th>
-                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', backgroundColor: '#dbeafe' }}>ESPACES AÉRIENS</th>
-                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', backgroundColor: '#dbeafe' }}>FRÉQ CTR/TMA</th>
+                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', backgroundColor: '#dbeafe' }}>ESPACES AÉRIENS & FRÉQUENCES</th>
                 </tr>
               </thead>
               <tbody>
@@ -480,15 +481,6 @@ const VFRNavigationTable = ({
                       padding: '8px',
                       border: '1px solid #e5e7eb',
                       textAlign: 'center',
-                      backgroundColor: '#fef3c7',
-                      minWidth: '60px'
-                    }}>
-                      {/* Champ vide pour remplir pendant le vol */}
-                    </td>
-                    <td style={{
-                      padding: '8px',
-                      border: '1px solid #e5e7eb',
-                      textAlign: 'center',
                       backgroundColor: '#f0f9ff',
                       minWidth: '80px',
                       color: '#1e40af',
@@ -501,19 +493,25 @@ const VFRNavigationTable = ({
                       border: '1px solid #e5e7eb',
                       textAlign: 'center',
                       backgroundColor: '#fef3c7',
+                      minWidth: '60px'
+                    }}>
+                      {/* Champ vide pour remplir pendant le vol */}
+                    </td>
+                    <td style={{
+                      padding: '8px',
+                      border: '1px solid #e5e7eb',
+                      textAlign: 'center',
+                      backgroundColor: '#fef3c7',
                       minWidth: '80px'
                     }}>
                       {/* Champ vide à remplir manuellement */}
-                    </td>
-                    <td style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>
-                      {format(seg.msa, 'altitude', 0)}
                     </td>
                     {/* 🛫 Colonne Espaces aériens */}
                     <td style={{
                       padding: '6px',
                       border: '1px solid #e5e7eb',
                       fontSize: '11px',
-                      backgroundColor: seg.hasRestrictedZones ? '#fef2f2' : (seg.hasAirspaceConflict ? '#fee2e2' : '#f0f9ff'),
+                      backgroundColor: '#f0f9ff',
                       maxWidth: '200px'
                     }}>
                       {/* 🚨 ZONES RÉGLEMENTÉES/INTERDITES - Priorité 1 */}
@@ -521,8 +519,8 @@ const VFRNavigationTable = ({
                         <div style={{
                           marginBottom: '8px',
                           padding: '6px',
-                          backgroundColor: '#fee2e2',
-                          border: '2px solid #dc2626',
+                          backgroundColor: '#e0f2fe',
+                          border: '2px solid #0284c7',
                           borderRadius: '4px'
                         }}>
                           <div style={{
@@ -530,7 +528,7 @@ const VFRNavigationTable = ({
                             alignItems: 'center',
                             gap: '4px',
                             marginBottom: '4px',
-                            color: '#991b1b',
+                            color: '#0369a1',
                             fontWeight: 'bold',
                             fontSize: '12px'
                           }}>
@@ -541,11 +539,11 @@ const VFRNavigationTable = ({
                             <div key={idx} style={{
                               marginTop: '4px',
                               padding: '4px',
-                              backgroundColor: '#fecaca',
+                              backgroundColor: '#e0f2fe',
                               borderRadius: '3px',
-                              border: '1px solid #dc2626'
+                              border: '1px solid #0284c7'
                             }}>
-                              <strong style={{ color: '#991b1b' }}>
+                              <strong style={{ color: '#0369a1' }}>
                                 {zone.type === 'P' && '🚫 INTERDITE'}
                                 {zone.type === 'R' && '⚠️ RÉGLEMENTÉE'}
                                 {zone.type === 'D' && '⚠️ DANGEREUSE'}
@@ -555,13 +553,13 @@ const VFRNavigationTable = ({
                               </strong>
                               {' '}{zone.name}
                               <br />
-                              <span style={{ fontSize: '10px', color: '#7f1d1d' }}>
+                              <span style={{ fontSize: '10px', color: '#075985' }}>
                                 {zone.floor_raw} - {zone.ceiling_raw}
                               </span>
                               {zone.activity && (
                                 <>
                                   <br />
-                                  <span style={{ fontSize: '9px', color: '#7f1d1d', fontStyle: 'italic' }}>
+                                  <span style={{ fontSize: '9px', color: '#075985', fontStyle: 'italic' }}>
                                     Activité: {zone.activity}
                                   </span>
                                 </>
@@ -569,7 +567,7 @@ const VFRNavigationTable = ({
                               {zone.schedule && (
                                 <>
                                   <br />
-                                  <span style={{ fontSize: '9px', color: '#7f1d1d', fontStyle: 'italic' }}>
+                                  <span style={{ fontSize: '9px', color: '#075985', fontStyle: 'italic' }}>
                                     Horaires: {zone.schedule}
                                   </span>
                                 </>
@@ -579,84 +577,100 @@ const VFRNavigationTable = ({
                         </div>
                       )}
 
-                      {/* ⚠️ CONFLIT ALTITUDE - Priorité 2 */}
-                      {seg.hasAirspaceConflict && !seg.hasRestrictedZones && (
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          marginBottom: '4px',
-                          color: '#dc2626',
-                          fontWeight: 'bold'
-                        }}>
-                          <AlertTriangle size={14} />
-                          <span>CONFLIT ALTITUDE</span>
-                        </div>
-                      )}
-
-                      {/* 🗺️ ESPACES CONTRÔLÉS (CTR/TMA/CTA) */}
+                      {/* 🗺️ ESPACES CONTRÔLÉS (CTR/TMA/CTA) avec FRÉQUENCES */}
                       {seg.airspaces.length > 0 ? (
                         <div>
                           {seg.airspaces.map((airspace, idx) => (
                             <div key={idx} style={{
-                              marginBottom: '2px',
-                              padding: '2px 4px',
-                              backgroundColor: seg.hasAirspaceConflict ? '#fecaca' : '#e0f2fe',
-                              borderRadius: '3px'
+                              marginBottom: '4px',
+                              padding: '4px',
+                              backgroundColor: '#e0f2fe',
+                              borderRadius: '3px',
+                              border: '1px solid #0284c7'
                             }}>
-                              <strong>{airspace.type}</strong> {airspace.name}
-                              <br />
-                              <span style={{ fontSize: '10px', color: '#666' }}>
-                                Classe {airspace.class} | {airspace.floor_raw} - {airspace.ceiling_raw}
-                              </span>
+                              <div style={{ marginBottom: '2px' }}>
+                                <strong>{airspace.type}</strong> {airspace.name}
+                                <br />
+                                <span style={{ fontSize: '10px', color: '#666' }}>
+                                  Classe {airspace.class} | {airspace.floor_raw} ({airspace.floor}ft) - {airspace.ceiling_raw} ({airspace.ceiling}ft)
+                                </span>
+                              </div>
+                              {/* 📻 Fréquences de cet espace */}
+                              {airspace.frequencies && airspace.frequencies.length > 0 && (
+                                <div style={{
+                                  marginTop: '3px',
+                                  paddingTop: '3px',
+                                  borderTop: '1px solid #94a3b8'
+                                }}>
+                                  {airspace.frequencies.map((freq, fIdx) => (
+                                    <div key={fIdx} style={{
+                                      fontSize: '10px',
+                                      fontWeight: 'bold',
+                                      color: '#1e40af',
+                                      marginBottom: '1px'
+                                    }}>
+                                      📻 {freq.frequency} ({freq.type})
+                                      {freq.schedule && (
+                                        <span style={{ fontSize: '9px', fontWeight: 'normal', color: '#64748b', marginLeft: '4px' }}>
+                                          {freq.schedule}
+                                        </span>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
-                      ) : !seg.hasRestrictedZones && (
+                      ) : !seg.hasRestrictedZones && !seg.hasInformationalAirspaces && (
                         <span style={{ color: '#9ca3af' }}>-</span>
                       )}
 
-                      {/* 📝 MESSAGES DE CONFLIT */}
-                      {seg.hasAirspaceConflict && seg.airspaceConflicts.length > 0 && (
-                        <div style={{
-                          marginTop: '4px',
-                          fontSize: '10px',
-                          color: '#dc2626',
-                          fontStyle: 'italic'
-                        }}>
-                          {seg.airspaceConflicts.map((conflict, idx) => (
-                            <div key={idx}>
-                              ⚠️ {conflict.message}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </td>
-                    {/* 🛫 Colonne Fréquences CTR/TMA */}
-                    <td style={{
-                      padding: '6px',
-                      border: '1px solid #e5e7eb',
-                      fontSize: '11px',
-                      backgroundColor: '#f0f9ff'
-                    }}>
-                      {seg.airspaceFrequencies.length > 0 ? (
-                        <div>
-                          {seg.airspaceFrequencies.map((freq, idx) => (
+                      {/* ℹ️ ESPACES INFORMATIFS (FIR, ATZ, SIV, etc.) */}
+                      {seg.informationalAirspaces && seg.informationalAirspaces.length > 0 && (
+                        <div style={{ marginTop: seg.airspaces.length > 0 ? '8px' : '0' }}>
+                          {seg.informationalAirspaces.map((airspace, idx) => (
                             <div key={idx} style={{
-                              marginBottom: '2px',
-                              fontWeight: 'bold',
-                              color: '#1e40af'
+                              marginBottom: '4px',
+                              padding: '4px',
+                              backgroundColor: '#f3f4f6',
+                              borderRadius: '3px',
+                              border: '1px solid #9ca3af'
                             }}>
-                              📻 {freq.frequency} ({freq.type})
-                              <br />
-                              <span style={{ fontSize: '10px', color: '#666', fontWeight: 'normal' }}>
-                                {freq.airspace}
-                              </span>
+                              <div style={{ marginBottom: '2px' }}>
+                                <strong>{airspace.type}</strong> {airspace.name}
+                                <br />
+                                <span style={{ fontSize: '10px', color: '#666' }}>
+                                  Classe {airspace.class} | {airspace.floor_raw} ({airspace.floor}ft) - {airspace.ceiling_raw} ({airspace.ceiling}ft)
+                                </span>
+                              </div>
+                              {/* 📻 Fréquences de cet espace */}
+                              {airspace.frequencies && airspace.frequencies.length > 0 && (
+                                <div style={{
+                                  marginTop: '3px',
+                                  paddingTop: '3px',
+                                  borderTop: '1px solid #9ca3af'
+                                }}>
+                                  {airspace.frequencies.map((freq, fIdx) => (
+                                    <div key={fIdx} style={{
+                                      fontSize: '10px',
+                                      fontWeight: 'bold',
+                                      color: '#4b5563',
+                                      marginBottom: '1px'
+                                    }}>
+                                      📻 {freq.frequency} ({freq.type})
+                                      {freq.schedule && (
+                                        <span style={{ fontSize: '9px', fontWeight: 'normal', color: '#64748b', marginLeft: '4px' }}>
+                                          {freq.schedule}
+                                        </span>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
-                      ) : (
-                        <span style={{ color: '#9ca3af' }}>-</span>
                       )}
                     </td>
                   </tr>
@@ -673,7 +687,7 @@ const VFRNavigationTable = ({
                   <td style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>
                     {formatTime(totals?.estimatedTime || 0)}
                   </td>
-                  <td colSpan="7" style={{ padding: '8px', border: '1px solid #e5e7eb' }}></td>
+                  <td colSpan="4" style={{ padding: '8px', border: '1px solid #e5e7eb' }}></td>
                 </tr>
               </tbody>
             </table>
@@ -719,25 +733,6 @@ const VFRNavigationTable = ({
                   <span style={{ fontSize: '11px', fontWeight: 'normal' }}>
                     Vérifiez les horaires d'activation et obtenez les autorisations nécessaires avant le vol.
                   </span>
-                </span>
-              </div>
-            )}
-
-            {/* ⚠️ Bannière conflits d'altitude - Priorité 2 */}
-            {airspaceAnalysis && airspaceAnalysis.some(seg => seg.hasConflicts) && (
-              <div style={{
-                marginTop: '12px',
-                padding: '8px',
-                backgroundColor: '#fee2e2',
-                borderLeft: '4px solid #dc2626',
-                borderRadius: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <AlertTriangle size={16} color="#dc2626" />
-                <span style={{ color: '#dc2626', fontWeight: 'bold' }}>
-                  ⚠️ ATTENTION : Des conflits d'altitude ont été détectés avec des espaces aériens contrôlés !
                 </span>
               </div>
             )}
@@ -875,19 +870,6 @@ const VFRNavigationTable = ({
             </div>
           )}
 
-          {/* Informations supplémentaires */}
-          <div style={{
-            marginTop: '12px',
-            padding: '12px',
-            backgroundColor: '#eff6ff',
-            border: '1px solid #3b82f6',
-            borderRadius: '6px',
-            fontSize: '12px'
-          }}>
-            <strong>Carburant:</strong> Requis: {Math.round(totals?.fuelRequired || 0)}L | 
-            Réserve: {navigationResults?.regulationReserveMinutes || 30}min ({Math.round(navigationResults?.regulationReserveLiters || 0)}L) | 
-            Total: {Math.round((totals?.fuelRequired || 0) + (navigationResults?.regulationReserveLiters || 0))}L
-          </div>
         </>
       )}
     </div>

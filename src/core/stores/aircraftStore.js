@@ -5,6 +5,8 @@ import { subscribeWithSelector } from 'zustand/middleware';
 import communityService from '@services/communityService';
 import { createModuleLogger } from '@utils/logger';
 import { validateAndRepairAircraft } from '@utils/aircraftValidation';
+import { prepareAircraftExport } from '@utils/aircraftNormalizer';
+import { useUnitsStore } from '@core/stores/unitsStore';
 
 const logger = createModuleLogger('AircraftStore');
 
@@ -143,15 +145,44 @@ export const useAircraftStore = create(
         // Valider les données
         const validatedAircraft = validateAndRepairAircraft(aircraftData);
 
+        // Récupérer les préférences d'unités de l'utilisateur
+        const userUnits = useUnitsStore.getState().units;
+
+        // 🔧 FIX CRITIQUE : Les données venant du formulaire sont en unités UTILISATEUR
+        // Il faut d'abord les normaliser vers les unités de STOCKAGE
+        console.log('🔧 [AircraftStore] Normalizing aircraft from user units to storage units');
+
+        // Créer une copie avec métadonnées pour la normalisation
+        const aircraftWithUserMetadata = {
+          ...validatedAircraft,
+          _metadata: {
+            version: '1.0.0',
+            units: userUnits,
+            exportedAt: new Date().toISOString()
+          }
+        };
+
+        // Normaliser vers unités de stockage
+        const { normalizeAircraftImport } = await import('@utils/aircraftNormalizer');
+        const normalizedAircraft = normalizeAircraftImport(aircraftWithUserMetadata);
+
+        // Maintenant préparer pour l'export (ajoute métadonnées utilisateur pour Supabase)
+        const aircraftWithMetadata = prepareAircraftExport(normalizedAircraft, userUnits);
+
+        console.log('📤 [AircraftStore] Preparing aircraft for Supabase upload with metadata:', {
+          registration: aircraftWithMetadata.registration,
+          metadata: aircraftWithMetadata._metadata
+        });
+
         // Préparer les données pour Supabase
         const presetData = {
-          registration: validatedAircraft.registration,
-          model: validatedAircraft.model,
-          manufacturer: validatedAircraft.manufacturer || 'Inconnu',
-          aircraft_type: validatedAircraft.aircraftType || 'Avion',
-          category: validatedAircraft.category || 'SEP',
-          aircraft_data: validatedAircraft,
-          description: `Configuration ${validatedAircraft.model} - ${validatedAircraft.registration}`,
+          registration: aircraftWithMetadata.registration,
+          model: aircraftWithMetadata.model,
+          manufacturer: aircraftWithMetadata.manufacturer || 'Inconnu',
+          aircraft_type: aircraftWithMetadata.aircraftType || 'Avion',
+          category: aircraftWithMetadata.category || 'SEP',
+          aircraft_data: aircraftWithMetadata,  // Contient maintenant _metadata
+          description: `Configuration ${aircraftWithMetadata.model} - ${aircraftWithMetadata.registration}`,
           submitted_by: 'current-user-id'
         };
 

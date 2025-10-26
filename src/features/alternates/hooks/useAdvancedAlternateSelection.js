@@ -11,7 +11,7 @@ import { calculateDistance } from '@utils/navigationCalculations';
  * Fournit toutes les données nécessaires pour l'affichage dans AlternatesModule
  */
 export const useAdvancedAlternateSelection = () => {
-  const { searchZone, dynamicParams, findAlternates, isReady } = useAlternateSelection();
+  const { searchZone, dynamicParams, findAlternates, isReady, isLoadingAircraft, isLoadingAirports } = useAlternateSelection();
   const { scoredAlternates, candidates, selectedAlternates } = useAlternatesStore();
   
   // Log de debug
@@ -102,6 +102,8 @@ export const useAdvancedAlternateSelection = () => {
     searchZone,
     selectedAlternates,
     isReady,
+    isLoadingAircraft,     // Nouveau : indique si l'avion est en cours de chargement
+    isLoadingAirports,     // Nouveau : indique si les aérodromes sont en cours de chargement
     dynamicRadius: displayParams?.dynamicRadius || searchZone?.radius || 25,
     triangleArea: displayParams?.triangleArea || 0,
     turnPointBuffers: displayParams?.turnPointBuffers || [],
@@ -109,8 +111,8 @@ export const useAdvancedAlternateSelection = () => {
     formattedAlternates,
     statistics
   };
-  
-    
+
+
   return result;
 };
 

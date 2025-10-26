@@ -1,10 +1,11 @@
 // src/features/alternates/components/AlternateDetails.jsx
-import React, { memo } from 'react';
-import { Info, Fuel, Wind, Radio, Download, MapPin, Ruler, AlertTriangle } from 'lucide-react';
+import React, { memo, useState } from 'react';
+import { Info, Fuel, Wind, Radio, Download, MapPin, Ruler, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useVACStore, vacSelectors } from '@core/stores/vacStore';
 import { useWeatherStore, weatherSelectors } from '@core/stores/weatherStore';
 import { Conversions } from '@utils/conversions';
+import { useAircraft } from '@core/contexts';
 
 export const AlternateDetails = memo(({ alternates }) => {
   const { downloadChart } = useVACStore();
@@ -35,6 +36,8 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
   const weather = weatherSelectors.useWeatherByIcao(alternate.icao);
   const vacChart = vacSelectors.useChartByIcao(alternate.icao);
   const isVacDownloading = vacSelectors.useIsDownloading(alternate.icao);
+  const { selectedAircraft } = useAircraft();
+  const [showRunwayDetails, setShowRunwayDetails] = useState(false);
   
   return (
     <div style={sx.combine(
@@ -160,16 +163,206 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
       
       {/* Grille d'informations */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-        {/* Pistes */}
+        {/* Pistes avec accordéon */}
         <div style={sx.components.card.base}>
-          <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-            🛬 Pistes disponibles
-          </h5>
-          {alternate.runways.map((runway, idx) => (
-            <div key={idx} style={sx.combine(sx.text.sm, sx.spacing.mb(1))}>
-              <strong>{runway.id}</strong> : {runway.length}×{runway.width}m • {runway.surface}
+          <button
+            onClick={() => setShowRunwayDetails(!showRunwayDetails)}
+            style={{
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              background: 'none',
+              borderWidth: '0',
+              borderStyle: 'none',
+              padding: 0,
+              cursor: 'pointer',
+              marginBottom: showRunwayDetails ? '12px' : '8px'
+            }}
+          >
+            <h5 style={sx.combine(sx.text.sm, sx.text.bold)}>
+              🛬 Pistes disponibles ({alternate.runways.length})
+            </h5>
+            {showRunwayDetails ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
+
+          {!showRunwayDetails ? (
+            // Vue compacte
+            <div>
+              {alternate.runways.slice(0, 2).map((runway, idx) => (
+                <div key={idx} style={sx.combine(sx.text.sm, sx.spacing.mb(1))}>
+                  <strong>{runway.id || runway.designator}</strong> : {runway.length || Math.round((runway.dimensions?.length || 0))}m
+                </div>
+              ))}
+              {alternate.runways.length > 2 && (
+                <div style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
+                  ... et {alternate.runways.length - 2} autre{alternate.runways.length - 2 > 1 ? 's' : ''}
+                </div>
+              )}
             </div>
-          ))}
+          ) : (
+            // Vue détaillée par direction
+            <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+              {(() => {
+                // Séparer les pistes en directions individuelles
+                const runwayDirections = [];
+                alternate.runways.forEach(runway => {
+                  const designator = runway.designator || runway.designation || runway.id || '';
+                  const baseOrientation = runway.orientation || runway.bearing || runway.trueBearing || null;
+
+                  if (designator.includes('/')) {
+                    const [rwy1, rwy2] = designator.split('/');
+                    const dir1Distances = runway.distancesByDirection?.[rwy1.trim()] || {};
+                    const dir2Distances = runway.distancesByDirection?.[rwy2.trim()] || {};
+
+                    runwayDirections.push({
+                      ...runway,
+                      runwayNumber: rwy1.trim(),
+                      qfu: baseOrientation,
+                      tora: dir1Distances.tora,
+                      toda: dir1Distances.toda,
+                      asda: dir1Distances.asda,
+                      lda: dir1Distances.lda
+                    });
+
+                    const oppositeQfu = baseOrientation !== null ? (baseOrientation + 180) % 360 : null;
+                    runwayDirections.push({
+                      ...runway,
+                      runwayNumber: rwy2.trim(),
+                      qfu: oppositeQfu,
+                      tora: dir2Distances.tora,
+                      toda: dir2Distances.toda,
+                      asda: dir2Distances.asda,
+                      lda: dir2Distances.lda
+                    });
+                  } else {
+                    runwayDirections.push({
+                      ...runway,
+                      runwayNumber: designator,
+                      qfu: baseOrientation
+                    });
+                  }
+                });
+
+                return runwayDirections.map((runway, idx) => {
+                  const runwayNumber = runway.runwayNumber || 'XX';
+                  const qfu = runway.qfu !== null && runway.qfu !== undefined ? Math.round(runway.qfu) : null;
+                  const lengthM = typeof runway.dimensions?.length === 'number' ? runway.dimensions.length :
+                                  (typeof runway.length === 'number' ? runway.length : 0);
+                  const lengthFt = Math.round(lengthM * 3.28084);
+                  const widthM = typeof runway.dimensions?.width === 'number' ? runway.dimensions.width :
+                                 (typeof runway.width === 'number' ? runway.width : 0);
+                  const surfaceType = typeof runway.surface?.type === 'string' ? runway.surface.type :
+                                      (typeof runway.surface === 'string' ? runway.surface : 'Non spécifiée');
+                  const orientation = runway.orientation || runway.bearing || runway.trueBearing || '';
+
+                  // Compatibilité avec l'avion sélectionné
+                  const aircraftSurfaces = selectedAircraft?.compatibleRunwaySurfaces || [];
+                  const normalizeSurface = (surface) => {
+                    if (!surface || typeof surface !== 'string') return null;
+                    const s = surface.toUpperCase();
+                    if (s.includes('ASPH') || s === 'ASPHALT') return 'ASPH';
+                    if (s.includes('CONC') || s === 'CONCRETE') return 'CONC';
+                    if (s.includes('GRASS') || s === 'TURF') return 'GRASS';
+                    if (s.includes('DIRT') || s === 'EARTH') return 'DIRT';
+                    return s;
+                  };
+
+                  const runwaySurface = normalizeSurface(surfaceType);
+                  const surfaceCompatible = aircraftSurfaces.length > 0 &&
+                    aircraftSurfaces.some(s => normalizeSurface(s) === runwaySurface);
+
+                  // Vérifier longueur minimale si spécifiée
+                  const minLength = selectedAircraft?.minimumRunwayLength ?
+                    parseInt(selectedAircraft.minimumRunwayLength) : 0;
+                  const lengthCompatible = minLength > 0 ? lengthM >= minLength : true;
+
+                  const isCompatible = surfaceCompatible && lengthCompatible;
+
+                  return (
+                    <div key={idx} style={sx.combine(
+                      sx.text.xs,
+                      sx.spacing.p(2),
+                      sx.spacing.mb(2),
+                      sx.rounded.sm,
+                      {
+                        background: '#f9fafb',
+                        borderLeft: `3px solid #3b82f6`
+                      }
+                    )}>
+                      {/* Ligne 1: Piste, QFU et Orientation */}
+                      <div style={{ marginBottom: '4px' }}>
+                        <strong>Piste {runwayNumber}</strong>
+                        {qfu !== null && (
+                          <span style={{ color: '#6b7280' }}>
+                            {' '}• QFU {qfu}°
+                          </span>
+                        )}
+                        {orientation && (
+                          <span style={{ color: '#6b7280' }}>
+                            {' '}• Orientation: {orientation}°
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Ligne 2: Longueur et Largeur */}
+                      <div style={{ marginBottom: '4px' }}>
+                        <span style={{ color: '#6b7280' }}>
+                          Longueur: {lengthFt} ft ({lengthM} m)
+                        </span>
+                        {widthM > 0 && (
+                          <span style={{ color: '#6b7280' }}>
+                            {' '}• Largeur: {widthM} m
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Ligne 3: Revêtement */}
+                      <div style={{ marginBottom: '4px' }}>
+                        <span style={{ color: '#6b7280' }}>
+                          Revêtement: {surfaceType}
+                        </span>
+                      </div>
+
+                      {/* Distances déclarées */}
+                      {(
+                        (typeof runway.tora === 'number') ||
+                        (typeof runway.toda === 'number') ||
+                        (typeof runway.asda === 'number') ||
+                        (typeof runway.lda === 'number')
+                      ) && (
+                        <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #e5e7eb' }}>
+                          <div style={{ fontWeight: 'bold', marginBottom: '3px' }}>
+                            Distances déclarées :
+                          </div>
+                          {typeof runway.tora === 'number' && (
+                            <div style={{ color: '#6b7280' }}>
+                              • TORA: {runway.tora} m ({Math.round(runway.tora * 3.28084)} ft)
+                            </div>
+                          )}
+                          {typeof runway.toda === 'number' && (
+                            <div style={{ color: '#6b7280' }}>
+                              • TODA: {runway.toda} m ({Math.round(runway.toda * 3.28084)} ft)
+                            </div>
+                          )}
+                          {typeof runway.asda === 'number' && (
+                            <div style={{ color: '#6b7280' }}>
+                              • ASDA: {runway.asda} m ({Math.round(runway.asda * 3.28084)} ft)
+                            </div>
+                          )}
+                          {typeof runway.lda === 'number' && (
+                            <div style={{ color: '#6b7280' }}>
+                              • LDA: {runway.lda} m ({Math.round(runway.lda * 3.28084)} ft)
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          )}
         </div>
         
         {/* Services */}

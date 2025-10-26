@@ -70,8 +70,9 @@ InfoIcon.displayName = 'InfoIcon';
 
 export const AircraftModule = memo(() => {
   const aircraftContext = useAircraft();
-  
-  
+  const { getSymbol } = useUnits();
+
+
   // Vérifier si le contexte est valide
   if (!aircraftContext) {
     console.error('❌ AircraftModule - useAircraft returned null/undefined');
@@ -1155,9 +1156,9 @@ export const AircraftModule = memo(() => {
                       )}
                     </h4>
                     <div style={{ fontSize: '14px', color: '#6B7280' }}>
-                      <p>Carburant: {aircraft.fuelType} • Capacité: {aircraft.fuelCapacity}L</p>
-                      <p>Vitesse: {aircraft.cruiseSpeed || aircraft.cruiseSpeedKt}kt • Conso: {aircraft.fuelConsumption}L/h</p>
-                      <p>MTOW: {aircraft.maxTakeoffWeight}kg</p>
+                      <p>Carburant: {aircraft.fuelType} • Capacité: {aircraft.fuelCapacity} {getSymbol('fuel')}</p>
+                      <p>Vitesse: {aircraft.cruiseSpeed || aircraft.cruiseSpeedKt} {getSymbol('speed')} • Conso: {aircraft.fuelConsumption} {getSymbol('fuelConsumption')}</p>
+                      <p>MTOW: {aircraft.maxTakeoffWeight || aircraft.weights?.mtow} {getSymbol('weight')}</p>
                       {/* Affichage des informations MANEX si présent */}
                       {(aircraft.hasManex || aircraft.manex) && (
                         <p style={{ color: '#059669', fontSize: '12px', marginTop: '4px' }}>
@@ -1166,12 +1167,12 @@ export const AircraftModule = memo(() => {
                       )}
                       {aircraft.masses?.emptyMass && (
                         <p style={{ color: '#3182CE' }}>
-                          ⚖️ Masse à vide: {aircraft.masses.emptyMass}kg • MLM: {aircraft.limitations?.maxLandingMass || 'N/A'}kg
+                          ⚖️ Masse à vide: {aircraft.masses.emptyMass || aircraft.weights?.emptyWeight} {getSymbol('weight')} • MLM: {aircraft.limitations?.maxLandingMass || aircraft.weights?.mlw ? `${aircraft.limitations?.maxLandingMass || aircraft.weights?.mlw} ${getSymbol('weight')}` : 'N/A'}
                         </p>
                       )}
                       {aircraft.armLengths?.emptyMassArm && (
                         <p style={{ color: '#7C3AED' }}>
-                          📏 Bras masse à vide: {aircraft.armLengths.emptyMassArm}m • Carburant: {aircraft.armLengths.fuelArm}m
+                          📏 Bras masse à vide: {aircraft.armLengths.emptyMassArm || aircraft.arms?.empty} {getSymbol('armLength')} • Carburant: {aircraft.armLengths.fuelArm || aircraft.arms?.fuelMain} {getSymbol('armLength')}
                         </p>
                       )}
                       {/* Types de pistes compatibles */}

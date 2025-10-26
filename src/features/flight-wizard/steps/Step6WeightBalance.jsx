@@ -45,16 +45,47 @@ const commonStyles = {
 
 // Composant principal de l'étape 6
 export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
-  const { selectedAircraft, setSelectedAircraft } = useAircraft();
+  const { setSelectedAircraft } = useAircraft();
   const { fobFuel, fuelData, setFobFuel } = useFuel();
   const { loads, updateLoad, calculations } = useWeightBalance();
 
-  // Synchroniser l'avion sélectionné avec le plan de vol
+  // Utiliser l'avion depuis flightPlan (défini en Step1) au lieu du contexte global
+  // Cela garantit que les données de masse et centrage viennent de l'avion sélectionné en Step1
+  const aircraft = flightPlan?.aircraft;
+
+  // 🔧 FIX CRITIQUE : Synchroniser l'avion complet avec le contexte
+  // Si l'avion du flightPlan manque weightBalance (brouillon ancien), récupérer depuis le store
   useEffect(() => {
-    if (flightPlan?.aircraft && !selectedAircraft) {
-      setSelectedAircraft(flightPlan.aircraft);
+    if (aircraft?.registration) {
+      // Si weightBalance manque, récupérer l'avion complet depuis le store
+      if (!aircraft.weightBalance) {
+        console.warn('⚠️ [Step6] weightBalance manquant - Récupération avion complet depuis le store');
+
+        import('@core/stores/aircraftStore').then(({ useAircraftStore }) => {
+          const store = useAircraftStore.getState();
+          const fullAircraft = store.aircraftList.find(
+            ac => ac.registration === aircraft.registration
+          );
+
+          if (fullAircraft) {
+            console.log('✅ [Step6] Avion complet récupéré:', fullAircraft.registration);
+
+            // Mettre à jour flightPlan avec l'avion complet
+            flightPlan.updateAircraft({ ...fullAircraft });
+
+            // Synchroniser avec le contexte
+            setSelectedAircraft(fullAircraft);
+          } else {
+            console.error('❌ [Step6] Avion non trouvé dans le store:', aircraft.registration);
+          }
+        });
+      } else {
+        // weightBalance existe déjà, juste synchroniser avec le contexte
+        setSelectedAircraft(aircraft);
+        console.log('✅ [Step6] Avion synchronisé avec contexte:', aircraft.registration);
+      }
     }
-  }, [flightPlan, selectedAircraft, setSelectedAircraft]);
+  }, [aircraft?.registration, aircraft?.weightBalance, setSelectedAircraft, flightPlan]);
 
   // Synchroniser le carburant
   useEffect(() => {
@@ -65,11 +96,11 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
 
   // Calcul des scénarios
   const scenarios = useMemo(() => {
-    if (!selectedAircraft || !calculations || typeof calculations.totalWeight !== 'number') {
+    if (!aircraft || !calculations || typeof calculations.totalWeight !== 'number') {
       return null;
     }
-    return calculateScenarios(selectedAircraft, calculations, loads, fobFuel, fuelData);
-  }, [selectedAircraft, calculations, loads, fobFuel, fuelData]);
+    return calculateScenarios(aircraft, calculations, loads, fobFuel, fuelData);
+  }, [aircraft, calculations, loads, fobFuel, fuelData]);
 
   // Handler pour la mise à jour des charges
   const handleLoadChange = useCallback((type, value) => {
@@ -96,12 +127,12 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
     }
   }, [updateLoad, loads, flightPlan, onUpdate]);
 
-  if (!selectedAircraft) {
+  if (!aircraft) {
     return (
       <div style={commonStyles.container}>
         <div style={{ textAlign: 'center', padding: '40px' }}>
           <p style={{ fontSize: '16px', color: theme.colors.textSecondary }}>
-            Aucun avion sélectionné. Veuillez sélectionner un avion à l'étape précédente.
+            Aucun avion sélectionné. Veuillez sélectionner un avion à l'étape 1.
           </p>
         </div>
       </div>
@@ -120,13 +151,13 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
       {/* Section Chargement */}
       <LoadingSection
         loads={loads}
-        aircraft={selectedAircraft}
+        aircraft={aircraft}
         onLoadChange={handleLoadChange}
       />
 
       {/* Tableau récapitulatif */}
       <WeightBalanceTable
-        aircraft={selectedAircraft}
+        aircraft={aircraft}
         loads={loads}
         calculations={calculations}
       />
@@ -142,14 +173,14 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
 
       {/* Graphique du domaine de vol */}
       <WeightBalanceChart
-        aircraft={selectedAircraft}
+        aircraft={aircraft}
         scenarios={scenarios}
         calculations={calculations}
       />
 
       {/* Informations supplémentaires */}
       <WeightBalanceInfo
-        aircraft={selectedAircraft}
+        aircraft={aircraft}
         fobFuel={fobFuel}
         fuelData={fuelData}
       />
@@ -160,19 +191,24 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
 // Composant pour la section de chargement
 const LoadingSection = memo(({ loads, aircraft, onLoadChange }) => {
   // Gérer les bras de levier de l'avion
+  // ⚠️ PAS DE VALEURS PAR DÉFAUT - Tout doit venir de Supabase via aircraft.weightBalance
   const wb = aircraft.weightBalance || {};
   const armLengths = aircraft.armLengths || {};
-  
+
+  // 🚫 VALEURS STATIQUES EXTERMINÉES - Extraction exclusive depuis Supabase
   const arms = {
-    empty: wb.emptyWeightArm || armLengths.emptyMassArm || 2.00,
-    frontLeft: wb.frontLeftSeatArm || armLengths.frontSeat1Arm || 2.00,
-    frontRight: wb.frontRightSeatArm || armLengths.frontSeat2Arm || 2.00,
-    rearLeft: wb.rearLeftSeatArm || armLengths.rearSeat1Arm || 2.90,
-    rearRight: wb.rearRightSeatArm || armLengths.rearSeat2Arm || 2.90,
-    baggage: wb.baggageArm || armLengths.standardBaggageArm || 3.50,
-    auxiliary: wb.auxiliaryArm || armLengths.aftBaggageExtensionArm || armLengths.baggageTubeArm || 3.70,
-    fuel: wb.fuelArm || armLengths.fuelArm || 2.18
+    empty: wb.emptyWeightArm || armLengths.emptyMassArm || 0,
+    frontLeft: wb.frontLeftSeatArm || armLengths.frontSeat1Arm || 0,
+    frontRight: wb.frontRightSeatArm || armLengths.frontSeat2Arm || 0,
+    rearLeft: wb.rearLeftSeatArm || armLengths.rearSeat1Arm || 0,
+    rearRight: wb.rearRightSeatArm || armLengths.rearSeat2Arm || 0,
+    baggage: wb.baggageArm || armLengths.standardBaggageArm || 0,
+    auxiliary: wb.auxiliaryArm || armLengths.aftBaggageExtensionArm || armLengths.baggageTubeArm || 0,
+    fuel: wb.fuelArm || armLengths.fuelArm || 0
   };
+
+  // Debug: afficher les bras chargés depuis Supabase
+  console.log('🔍 Bras de levier chargés depuis Supabase:', arms);
 
   // S'assurer que toutes les valeurs sont numériques
   const safeLoads = {

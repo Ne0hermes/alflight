@@ -45,8 +45,12 @@ import CGEnvelopeChart from '../CgEnvelopeChart';
 import SpeedLimitationChart from '../SpeedLimitationChart';
 import communityService from '../../../../services/communityService';
 import { trackingActions } from '../../../../utils/autoTracking';
+import { useUnitsStore } from '@core/stores/unitsStore';
+import { getUnitSymbol } from '@utils/unitConversions';
 
 const Step5Review = ({ data, setCurrentStep, onSave }) => {
+  // Récupérer les préférences d'unités de l'utilisateur
+  const units = useUnitsStore(state => state.units);
   const [showDifferencesDialog, setShowDifferencesDialog] = useState(false);
   const [submissionMode, setSubmissionMode] = useState(null);
   const [differences, setDifferences] = useState([]);
@@ -94,7 +98,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
       'serviceCeiling': 'Plafond pratique (ft)',
       'takeoffDistance': 'Distance de décollage (m)',
       'landingDistance': 'Distance d\'atterrissage (m)',
-      'fuelConsumption': 'Consommation (L/h)',
+      'fuelConsumption': `Consommation (${getUnitSymbol(units.fuelConsumption)})`,
       'range': 'Autonomie (nm)',
       'engineType': 'Type de moteur',
       'enginePower': 'Puissance moteur (hp)',
@@ -107,7 +111,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
       'maxLandingWeight': 'Masse max à l\'atterrissage (kg)',
       'usefulLoad': 'Charge utile (kg)',
       'maxRange': 'Autonomie max (nm)',
-      'fuelCapacity': 'Capacité carburant (L)',
+      'fuelCapacity': `Capacité carburant (${getUnitSymbol(units.fuel)})`,
       'engineModel': 'Modèle moteur',
       'minimumRunwayLength': 'Longueur piste minimale (m)',
       'photo': 'Photo de l\'avion',
@@ -761,8 +765,8 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           { label: 'Type de moteur', value: data.engineType || '-' },
           { label: 'Catégorie de turbulence', value: data.wakeTurbulenceCategory || '-' },
           { label: 'Type de carburant', value: data.fuelType || '-' },
-          { label: 'Capacité carburant', value: formatValue(data.fuelCapacity, data.units?.fuel === 'gal' ? 'gal' : 'L') },
-          { label: 'Consommation', value: formatValue(data.fuelConsumption, data.units?.fuel === 'gal' ? 'gal/h' : 'L/h') },
+          { label: 'Capacité carburant', value: formatValue(data.fuelCapacity, getUnitSymbol(units.fuel)) },
+          { label: 'Consommation', value: formatValue(data.fuelConsumption, getUnitSymbol(units.fuelConsumption)) },
           { label: 'Vitesse de croisière', value: formatValue(data.cruiseSpeedKt, 'kt') },
           { label: 'Base Factor', value: data.baseFactor || '-' }
         ]
@@ -794,18 +798,18 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
         <ScaleIcon color="primary" />,
         4,
         [
-          { label: 'Masse à vide', value: formatValue(data.weights?.emptyWeight, data.units?.weight === 'lbs' ? 'lbs' : 'kg') },
-          { label: 'Bras de levier à vide', value: formatValue(data.arms?.empty, data.units?.armLength || 'mm') },
-          { label: 'MTOW', value: formatValue(data.weights?.mtow, data.units?.weight === 'lbs' ? 'lbs' : 'kg') },
-          { label: 'MLW', value: formatValue(data.weights?.mlw, data.units?.weight === 'lbs' ? 'lbs' : 'kg') },
-          { label: 'MZFW', value: formatValue(data.weights?.mzfw, data.units?.weight === 'lbs' ? 'lbs' : 'kg') },
-          { label: 'Carburant max', value: formatValue(data.fuel?.maxCapacity || data.fuelCapacity, data.units?.fuel === 'gal' ? 'gal' : 'L') },
-          { label: 'Bras carburant', value: formatValue(data.arms?.fuel, data.units?.armLength || 'mm') },
-          { label: 'Bras sièges avant', value: formatValue(data.arms?.frontSeats, data.units?.armLength || 'mm') },
-          { label: 'Bras sièges arrière', value: formatValue(data.arms?.rearSeats, data.units?.armLength || 'mm') },
-          { label: 'Bras bagages', value: formatValue(data.arms?.baggage, data.units?.armLength || 'mm') },
-          { label: 'CG limite avant min', value: formatValue(data.cgEnvelope?.forwardPoints?.[0]?.cg, data.units?.armLength || 'mm') },
-          { label: 'CG limite arrière', value: formatValue(data.cgEnvelope?.aftCG, data.units?.armLength || 'mm') }
+          { label: 'Masse à vide', value: formatValue(data.weights?.emptyWeight, getUnitSymbol(units.weight)) },
+          { label: 'Bras de levier à vide', value: formatValue(data.arms?.empty, getUnitSymbol(units.armLength)) },
+          { label: 'MTOW', value: formatValue(data.weights?.mtow, getUnitSymbol(units.weight)) },
+          { label: 'MLW', value: formatValue(data.weights?.mlw, getUnitSymbol(units.weight)) },
+          { label: 'MZFW', value: formatValue(data.weights?.mzfw, getUnitSymbol(units.weight)) },
+          { label: 'Carburant max', value: formatValue(data.fuel?.maxCapacity || data.fuelCapacity, getUnitSymbol(units.fuel)) },
+          { label: 'Bras carburant', value: formatValue(data.arms?.fuel, getUnitSymbol(units.armLength)) },
+          { label: 'Bras sièges avant', value: formatValue(data.arms?.frontSeats, getUnitSymbol(units.armLength)) },
+          { label: 'Bras sièges arrière', value: formatValue(data.arms?.rearSeats, getUnitSymbol(units.armLength)) },
+          { label: 'Bras bagages', value: formatValue(data.arms?.baggage, getUnitSymbol(units.armLength)) },
+          { label: 'CG limite avant min', value: formatValue(data.cgEnvelope?.forwardPoints?.[0]?.cg, getUnitSymbol(units.armLength)) },
+          { label: 'CG limite arrière', value: formatValue(data.cgEnvelope?.aftCG, getUnitSymbol(units.armLength)) }
         ],
         hasCGData ? (
           <Box sx={{ 

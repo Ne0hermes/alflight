@@ -908,7 +908,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         </Box>
 
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          {currentStep !== steps.length - 1 && (
+          {currentStep !== 0 && currentStep !== steps.length - 1 && (
             <Button
               variant="contained"
               onClick={handleNext}

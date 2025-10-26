@@ -106,7 +106,7 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
     {
       number: 3,
       title: 'Aérodromes de Déroutement',
-      description: 'Sélectionner les alternates',
+      description: '',
       component: Step4Alternates,
       validate: () => true // Optionnel - peut continuer sans alternates
     },
@@ -151,6 +151,13 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
    * Marque l'étape courante comme complétée et passe à la suivante
    */
   const handleNext = useCallback(() => {
+    console.log('🔍 [Wizard] Validation étape', currentStep, ':', currentStepConfig.title);
+
+    // Ajouter des logs spécifiques pour l'étape carburant
+    if (currentStep === 4) {
+      console.log('🔍 [Wizard] Validation carburant - fuel.confirmed:', flightPlan.fuel.confirmed);
+    }
+
     if (currentStepConfig.validate()) {
       const newCompletedSteps = new Set([...completedSteps, currentStep]);
       setCompletedSteps(newCompletedSteps);
@@ -165,9 +172,17 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
         localStorage.setItem('flightPlanCurrentStep', nextStep.toString());
       }
     } else {
-      alert('Veuillez compléter tous les champs requis');
+      // Message d'erreur personnalisé selon l'étape
+      let errorMessage = 'Veuillez compléter tous les champs requis';
+
+      if (currentStep === 4) {
+        errorMessage = 'Veuillez confirmer la quantité de carburant à embarquer (FOB - Fuel On Board) avant de continuer.';
+      }
+
+      console.error('❌ [Wizard] Validation échouée pour étape', currentStep);
+      alert(errorMessage);
     }
-  }, [currentStep, currentStepConfig, steps.length, completedSteps]);
+  }, [currentStep, currentStepConfig, steps.length, completedSteps, flightPlan]);
 
   /**
    * Retour à l'étape précédente
@@ -282,7 +297,8 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
                   padding: '8px 16px',
                   backgroundColor: '#ef4444',
                   color: 'white',
-                  border: 'none',
+                  borderWidth: '0',
+                  borderStyle: 'none',
                   borderRadius: '8px',
                   cursor: 'pointer',
                   fontSize: '14px',
@@ -437,7 +453,9 @@ const styles = {
     transition: 'all 0.3s ease',
     minWidth: '80px',
     background: theme.colors.backgroundCard,
-    border: `1px solid ${theme.colors.border}`,
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: theme.colors.border,
   },
   progressStepActive: {
     background: 'rgba(147, 22, 60, 0.1)',
@@ -517,7 +535,8 @@ const styles = {
     gap: '8px',
     padding: '12px 24px',
     borderRadius: '9999px',
-    border: 'none',
+    borderWidth: '0',
+    borderStyle: 'none',
     background: theme.gradients.primary,
     color: '#FFFFFF',
     fontSize: '14px',
