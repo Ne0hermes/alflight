@@ -13,6 +13,7 @@ class HybridAirspacesService {
     this.cacheExpiry = new Map();
     this.CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
     this.aixmCorrections = new Map(); // Corrections depuis AIXM
+    this.aerodromeFrequencies = new Map(); // Fréquences des aérodromes par ICAO
   }
 
   /**
@@ -32,7 +33,10 @@ class HybridAirspacesService {
       
       // 1. Charger les corrections depuis AIXM
       await this.loadAIXMCorrections();
-      
+
+      // 1b. Charger les fréquences des aérodromes
+      await this.loadAerodromeFrequencies();
+
       // 2. Récupérer les géométries depuis OpenAIP
       const openAIPData = await this.fetchOpenAIPAirspaces(bbox);
       
@@ -81,9 +85,61 @@ class HybridAirspacesService {
         });
       });
       
-      
+
     } catch (error) {
       console.error('Erreur chargement corrections AIXM:', error);
+    }
+  }
+
+  /**
+   * Charge les fréquences des aérodromes AIXM
+   */
+  async loadAerodromeFrequencies() {
+    if (this.aerodromeFrequencies.size > 0) {
+      return; // Déjà chargé
+    }
+
+    try {
+      // Charger les aérodromes AIXM
+      const { aixmParser } = await import('./aixmParser.js');
+      const aerodromes = await aixmParser.loadAndParse();
+
+      // Extraire les fréquences par code ICAO
+      aerodromes.forEach(aerodrome => {
+        const icao = aerodrome.icao;
+        const frequenciesObj = aerodrome.frequencies || {}; // C'est un objet, pas un array !
+
+        if (icao && Object.keys(frequenciesObj).length > 0) {
+          // Convertir l'objet de fréquences en array avec types
+          const relevantFreqs = [];
+
+          // Types de fréquences pertinents pour CTR/TMA
+          const relevantTypes = ['twr', 'app', 'afis', 'info', 'atis'];
+
+          for (const [type, freqArray] of Object.entries(frequenciesObj)) {
+            if (relevantTypes.includes(type.toLowerCase())) {
+              // Chaque type peut avoir plusieurs fréquences
+              freqArray.forEach(freqData => {
+                relevantFreqs.push({
+                  type: type.toUpperCase(),
+                  frequency: freqData.frequency,
+                  schedule: freqData.schedule,
+                  remarks: freqData.remarks
+                });
+              });
+            }
+          }
+
+          if (relevantFreqs.length > 0) {
+            this.aerodromeFrequencies.set(icao, relevantFreqs);
+          }
+        }
+      });
+
+      console.log(`✅ Chargé ${this.aerodromeFrequencies.size} aérodromes avec fréquences`);
+
+    } catch (error) {
+      console.error('Erreur chargement fréquences aérodromes:', error);
     }
   }
 
@@ -157,46 +213,56 @@ class HybridAirspacesService {
       // Chercher les corrections AIXM
       const key = this.makeKey(name, type);
       const corrections = this.aixmCorrections.get(key) || {};
-      
+
       // Convertir la classe OpenAIP
       let airspaceClass = this.convertOpenAIPClass(props.icaoClass);
-      
+
       // Appliquer les corrections spécifiques
       if (corrections.class) {
         airspaceClass = corrections.class;
       }
-      
+
       // Corrections spéciales
       if (type === 'TMA' && name && name.includes('STRASBOURG')) {
         airspaceClass = 'D'; // TMA Strasbourg est en classe D
       }
-      
+
       // Formater les altitudes
       const floor = this.parseOpenAIPAltitude(props.lowerLimit);
       const ceiling = this.parseOpenAIPAltitude(props.upperLimit);
-      
+
+      // 🆕 Enrichir les fréquences pour CTR/TMA depuis les aérodromes
+      let frequencies = corrections.frequencies || [];
+      if ((type === 'CTR' || type === 'TMA') && frequencies.length === 0) {
+        // Extraire le code ICAO depuis le nom de l'espace aérien
+        const icaoCode = this.extractICAOFromAirspaceName(name);
+        if (icaoCode && this.aerodromeFrequencies.has(icaoCode)) {
+          frequencies = this.aerodromeFrequencies.get(icaoCode);
+        }
+      }
+
       return {
         ...feature,
         id: `${type}_${props.id}`.replace(/\s+/g, '_'),
         properties: {
           // Données OpenAIP
           ...props,
-          
+
           // Conversion et normalisation
           type: type,
           name: name,
           class: airspaceClass,
-          
+
           // Altitudes
           floor: floor.value,
           ceiling: ceiling.value,
           floor_raw: corrections.floor_raw || floor.raw,
           ceiling_raw: corrections.ceiling_raw || ceiling.raw,
-          
+
           // Corrections AIXM
           remarks: corrections.remarks || props.remarks,
-          frequencies: corrections.frequencies || [],
-          
+          frequencies: frequencies,
+
           // Métadonnées
           source: 'HYBRID',
           openAIPId: props.id,
@@ -316,6 +382,102 @@ class HybridAirspacesService {
    */
   makeKey(name, type) {
     return `${type}_${name}`.toUpperCase().replace(/\s+/g, '_');
+  }
+
+  /**
+   * Extrait le code ICAO depuis le nom d'un espace aérien CTR/TMA
+   * Exemples: "CTR STRASBOURG" → "LFST", "TMA PARIS" → "LFPG"
+   */
+  extractICAOFromAirspaceName(airspaceName) {
+    if (!airspaceName) return null;
+
+    const upperName = airspaceName.toUpperCase();
+
+    // Mapping des noms d'espaces aériens vers codes ICAO
+    const nameToICAO = {
+      // Grandes villes
+      'PARIS': 'LFPG',
+      'MARSEILLE': 'LFML',
+      'LYON': 'LFLL',
+      'TOULOUSE': 'LFBO',
+      'NICE': 'LFMN',
+      'NANTES': 'LFRS',
+      'STRASBOURG': 'LFST',
+      'BORDEAUX': 'LFBD',
+      'LILLE': 'LFQQ',
+      'MONTPELLIER': 'LFMT',
+      'RENNES': 'LFRN',
+      'TOULON': 'LFTH',
+      'GRENOBLE': 'LFLS',
+      'BREST': 'LFRB',
+      'BÂLE-MULHOUSE': 'LFSB',
+      'BASEL-MULHOUSE': 'LFSB',
+      'CLERMONT-FERRAND': 'LFLC',
+      'BEAUVAIS': 'LFOB',
+      'PAU': 'LFBP',
+      'AJACCIO': 'LFKJ',
+      'BASTIA': 'LFKB',
+      'FIGARI': 'LFKF',
+      'CALVI': 'LFKC',
+      'PERPIGNAN': 'LFMP',
+      'DEAUVILLE': 'LFRG',
+      'CHAMBÉRY': 'LFLB',
+      'ANNECY': 'LFLP',
+      'METZ': 'LFSF',
+      'NANCY': 'LFSN',
+      'DIJON': 'LFSD',
+      'LIMOGES': 'LFBL',
+      'POITIERS': 'LFBI',
+      'LA ROCHELLE': 'LFBH',
+      'BIARRITZ': 'LFBZ',
+      'LOURDES': 'LFBT',
+      'TARBES': 'LFBT',
+      'RODEZ': 'LFCR',
+      'AURILLAC': 'LFLW',
+      'LE PUY': 'LFHP',
+      'BRIVE': 'LFSL',
+      'BERGERAC': 'LFBE',
+      'AGEN': 'LFBA',
+      'PÉRIGUEUX': 'LFBX',
+      'ANGOULÊME': 'LFBU',
+      'COGNAC': 'LFBG',
+      'ROYAN': 'LFCY',
+      'NIORT': 'LFBN',
+      'CHÂTEAUROUX': 'LFLX',
+      'BOURGES': 'LFLD',
+      'NEVERS': 'LFQG',
+      'AUXERRE': 'LFLA',
+      'TROYES': 'LFQB',
+      'EPINAL': 'LFSG',
+      'COLMAR': 'LFGA',
+      'BELFORT': 'LFJL',
+      'DOLE': 'LFGJ',
+      'BESANÇON': 'LFSA',
+      'PONTARLIER': 'LFSP',
+      'ANNEMASSE': 'LFLI',
+      'ALBERTVILLE': 'LFKA',
+      'COURCHEVEL': 'LFLJ',
+      'MEGÈVE': 'LFHM',
+      'VALENCE': 'LFLU',
+      'ALPES-ISÈRE': 'LFLS', // Grenoble-Isère
+      'AVIGNON': 'LFMV',
+      'NîMES': 'LFTW',
+      'CARCASSONNE': 'LFMK',
+      'BÉZIERS': 'LFMU',
+      'ALBI': 'LFCI',
+      'CASTRES': 'LFCK',
+      'MILLAU': 'LFCM'
+    };
+
+    // Chercher une correspondance dans le nom
+    for (const [city, icao] of Object.entries(nameToICAO)) {
+      if (upperName.includes(city)) {
+        return icao;
+      }
+    }
+
+    // Si aucune correspondance trouvée
+    return null;
   }
 
   /**

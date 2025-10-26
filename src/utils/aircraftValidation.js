@@ -152,11 +152,14 @@ export function validateAndRepairAircraft(aircraft) {
 
   // Réparer les données de masse et centrage
   if (!repairedAircraft.weightBalance) {
-        repairedAircraft.weightBalance = { ...DEFAULT_WEIGHT_BALANCE };
+    console.warn('⚠️ [Validation] weightBalance is missing - using DEFAULT values (should NOT happen if normalizer ran)');
+    console.log('Aircraft has arms?', !!aircraft.arms);
+    repairedAircraft.weightBalance = { ...DEFAULT_WEIGHT_BALANCE };
   } else {
+    console.log('✓ [Validation] weightBalance exists:', repairedAircraft.weightBalance);
     // Vérifier chaque propriété de weightBalance
     const wb = { ...repairedAircraft.weightBalance };
-    
+
     Object.keys(DEFAULT_WEIGHT_BALANCE).forEach(key => {
       if (key === 'cgLimits') {
         // Traiter cgLimits séparément
@@ -174,10 +177,11 @@ export function validateAndRepairAircraft(aircraft) {
           }
         }
       } else if (wb[key] === undefined || wb[key] === null) {
-                wb[key] = DEFAULT_WEIGHT_BALANCE[key];
+        console.log(`  Filling missing ${key}: ${DEFAULT_WEIGHT_BALANCE[key]}`);
+        wb[key] = DEFAULT_WEIGHT_BALANCE[key];
       }
     });
-    
+
     repairedAircraft.weightBalance = wb;
   }
   

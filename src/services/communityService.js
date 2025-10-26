@@ -1,6 +1,7 @@
 // Service pour gérer les interactions avec la base de données communautaire Supabase
 
 import { createClient } from '@supabase/supabase-js';
+import { normalizeAircraftImport } from '@utils/aircraftNormalizer';
 
 // ⚠️ IMPORTANT: Remplacer par vos vraies clés Supabase
 // Obtenir ces clés depuis: https://app.supabase.com/project/YOUR_PROJECT/settings/api
@@ -38,6 +39,11 @@ class CommunityService {
       // Log du premier preset pour debug
             // Transformer les données pour correspondre au format attendu
       return data.map(preset => {
+        // Normaliser aircraft_data si présent
+        const normalizedAircraftData = preset.aircraft_data
+          ? normalizeAircraftImport(preset.aircraft_data)
+          : null;
+
         const mapped = {
           id: preset.id,
           registration: preset.registration,
@@ -55,14 +61,14 @@ class CommunityService {
           verified: preset.verified,
           adminVerified: preset.admin_verified,
           description: preset.description,
-          // Données complètes de l'avion - CRITICAL!
-          aircraftData: preset.aircraft_data,
+          // Données complètes de l'avion - NORMALIZED!
+          aircraftData: normalizedAircraftData,
           version: preset.version || 1,
           // Indiquer si le MANEX est disponible dans Supabase
           hasManex: preset.has_manex || false
         };
 
-        
+
         return mapped;
       });
     } catch (error) {
@@ -172,8 +178,15 @@ class CommunityService {
         }
       }
 
-      
-      return fullAircraft;
+      // Normaliser les unités à l'import
+      const normalizedAircraft = normalizeAircraftImport(fullAircraft);
+
+      console.log('📥 [CommunityService] Aircraft imported and normalized:', {
+        registration: normalizedAircraft.registration,
+        hadMetadata: !!fullAircraft._metadata
+      });
+
+      return normalizedAircraft;
     } catch (error) {
       console.error('Erreur lors de la récupération du preset:', error);
       throw error;

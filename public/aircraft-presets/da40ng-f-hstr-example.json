@@ -8,7 +8,7 @@
     "fuelCapacity": 148,
     "cruiseSpeedKt": 120,
     "baseFactor": "0.500",
-    "fuelConsumption": 26,
+    "fuelConsumption": 26.5,
     "wakeTurbulenceCategory": "L",
     "engineType": "singleEngine",
     "compatibleRunwaySurfaces": [
@@ -19995,5 +19995,18 @@
   },
   "currentStep": 8,
   "exportDate": "2025-10-05T16:49:51.547Z",
-  "version": "1.0"
+  "version": "1.0",
+  "_metadata": {
+    "version": "1.0",
+    "units": {
+      "fuelConsumption": "lph",
+      "fuelCapacity": "ltr",
+      "cruiseSpeedKt": "kt",
+      "weight": "kg",
+      "emptyWeight": "kg",
+      "maxTakeoffWeight": "kg"
+    },
+    "note": "Storage units - all values stored in L/h, L, kt, kg",
+    "updatedAt": "2025-10-24T11:33:20.943Z"
+  }
 }

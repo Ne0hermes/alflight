@@ -228,33 +228,12 @@ const Step0CommunityCheck = ({ data, updateData, onSkip, onComplete, onCancel })
       setDownloadStatus('Terminé !');
       setDownloadProgress(100);
 
-      // Logger vers Google Sheets
-      try {
-        const logData = {
-          action: 'DOWNLOAD_AIRCRAFT',
-          component: 'Step0CommunityCheck',
-          summary: `Téléchargement de l'avion ${aircraft.registration} (${aircraft.model})`,
-          details: {
-            registration: aircraft.registration,
-            model: aircraft.model,
-            manufacturer: aircraft.manufacturer || fullAircraftData.manufacturer,
-            hasManex: !!communityData.manex,
-            manexFileName: communityData.manex?.fileName,
-            manexFileSize: communityData.manex?.fileSize,
-            dataSize: JSON.stringify(fullAircraftData).length,
-            supabaseId: aircraft.id
-          },
-          status: 'success'
-        };
-
-        await fetch('http://localhost:3001/api/log', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(logData)
-        }).catch(err => console.error('Error logging to server:', err));
-      } catch (logError) {
-        console.error('Error in logging attempt:', logError);
-      }
+      // Log local (serveur de logging désactivé)
+      console.log('✅ [Aircraft Download] Success:', {
+        registration: aircraft.registration,
+        model: aircraft.model,
+        hasManex: !!communityData.manex
+      });
 
       // Fermer le dialog après un court délai
       setTimeout(() => {
@@ -267,29 +246,12 @@ const Step0CommunityCheck = ({ data, updateData, onSkip, onComplete, onCancel })
       setDownloadStatus(`Erreur: ${error.message}`);
       setDownloadProgress(0);
 
-      // Logger l'erreur vers Google Sheets
-      try {
-        const errorLogData = {
-          action: 'DOWNLOAD_AIRCRAFT_ERROR',
-          component: 'Step0CommunityCheck',
-          summary: `Erreur lors du téléchargement de ${aircraft.registration}`,
-          details: {
-            registration: aircraft.registration,
-            model: aircraft.model,
-            errorMessage: error.message,
-            errorStack: error.stack?.substring(0, 500)
-          },
-          status: 'error'
-        };
-
-        await fetch('http://localhost:3001/api/log', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(errorLogData)
-        }).catch(err => console.error('Error logging to server:', err));
-      } catch (logError) {
-        console.error('Error in logging attempt:', logError);
-      }
+      // Log d'erreur local
+      console.error('❌ [Aircraft Download] Error:', {
+        registration: aircraft.registration,
+        model: aircraft.model,
+        error: error.message
+      });
 
       setTimeout(() => {
         setShowDownloadDialog(false);

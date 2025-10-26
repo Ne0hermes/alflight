@@ -323,9 +323,28 @@ class DataBackupManager {
         const request = store.put(protectedItem);
 
         request.onsuccess = () => {
-          // Sauvegarder aussi dans localStorage pour compatibilité
-          localStorage.setItem(key, JSON.stringify(data));
-          
+          // Sauvegarder aussi dans localStorage pour compatibilité (mais sans les données volumineuses)
+          try {
+            const dataForLocalStorage = { ...data };
+            // Supprimer les champs volumineux pour éviter QuotaExceededError
+            if (dataForLocalStorage.photo) {
+              delete dataForLocalStorage.photo;
+            }
+            if (dataForLocalStorage.manex) {
+              delete dataForLocalStorage.manex;
+            }
+            if (dataForLocalStorage.performanceTables) {
+              delete dataForLocalStorage.performanceTables;
+            }
+            if (dataForLocalStorage.advancedPerformance) {
+              delete dataForLocalStorage.advancedPerformance;
+            }
+            localStorage.setItem(key, JSON.stringify(dataForLocalStorage));
+          } catch (quotaError) {
+            // Si le localStorage est plein, ce n'est pas grave - IndexedDB contient toujours les données complètes
+            console.warn(`⚠️ localStorage quota exceeded for ${key}, data saved in IndexedDB only`);
+          }
+
           resolve(request.result);
         };
 

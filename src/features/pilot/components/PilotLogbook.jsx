@@ -117,7 +117,8 @@ const PilotLogbook = ({ showFormProp }) => {
       setEntries(JSON.parse(saved));
     }
 
-    // Charger dynamiquement les fonctions de test
+    // Charger dynamiquement les fonctions de test (désactivé temporairement - fichiers avec erreurs de syntaxe)
+    /*
     import('../../../utils/testFlightSegments').then(module => {
       window.testFlightSegments = module.default;
       console.log('Test functions loaded. Available commands:');
@@ -145,6 +146,8 @@ const PilotLogbook = ({ showFormProp }) => {
     }).catch(err => {
       console.error('Failed to load force edit tools:', err);
     });
+    */
+  }, []);
 
   // Construire la liste des pilotes à partir des entrées et du profil
   useEffect(() => {

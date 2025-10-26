@@ -317,72 +317,89 @@ const identifyTurnPoints = (waypoints) => {
  * Calcule la zone de recherche pour les alternates
  */
 export const calculateSearchZone = (departure, arrival, waypoints = [], fuelData = null, options = {}) => {
-  const distance = calculateDistance(departure, arrival);
-  
+
+  console.log('🎯 CALCUL SEARCH ZONE - PARAMÈTRES REÇUS:', {
+    departure: departure,
+    arrival: arrival,
+    hasDeparture: !!departure,
+    hasArrival: !!arrival,
+    departureLat: departure?.lat,
+    departureLon: departure?.lon,
+    arrivalLat: arrival?.lat,
+    arrivalLon: arrival?.lon,
+    options: options
+  });
+
+  // Utiliser totalDistance si fourni (cas d'un circuit fermé)
+  // Sinon calculer la distance directe départ→arrivée
+  let distance;
+  if (options.totalDistance !== undefined && options.totalDistance > 0) {
+    distance = options.totalDistance;
+    console.log('🔄 CIRCUIT FERMÉ DÉTECTÉ - Utilisation distance totale:', {
+      distanceTotale: distance.toFixed(1) + ' NM',
+      distanceDirecte: calculateDistance(departure, arrival).toFixed(1) + ' NM'
+    });
+  } else {
+    distance = calculateDistance(departure, arrival);
+    console.log('📏 DISTANCE DIRECTE CALCULÉE:', {
+      distance: distance.toFixed(1) + ' NM',
+      isZero: distance === 0,
+      departure: `${departure?.lat?.toFixed(4)}, ${departure?.lon?.toFixed(4)}`,
+      arrival: `${arrival?.lat?.toFixed(4)}, ${arrival?.lon?.toFixed(4)}`
+    });
+  }
+
   const config = {
     method: 'pill',
     ...options
   };
-  
-  // Calculer le rayon selon la méthode
-  let radius;
-  
-  if (config.method === 'pill') {
-    // Pour la zone pilule, utiliser une formule adaptative avec des limites très strictes
-    // Objectif : zone de recherche réaliste et pratique pour les déroutements
-    
-    if (distance <= 30) {
-      // Distances très courtes : rayon de 30-35% de la distance
-      radius = Math.max(10, distance * 0.35);
-    } else if (distance <= 60) {
-      // Distances courtes : rayon de 25-30% de la distance  
-      radius = 10.5 + (distance - 30) * 0.25;
-    } else if (distance <= 120) {
-      // Distances moyennes : rayon de 18-22% de la distance
-      radius = 18 + (distance - 60) * 0.18;
-    } else if (distance <= 250) {
-      // Distances longues : rayon de 12-15% de la distance
-      radius = 28.8 + (distance - 120) * 0.12;
-    } else if (distance <= 500) {
-      // Distances très longues : rayon de 8-10% de la distance
-      radius = 44.4 + (distance - 250) * 0.08;
-    } else {
-      // Distances extrêmes : plafond très strict
-      // Maximum 80 NM de rayon (au lieu de 120)
-      radius = Math.min(80, 64.4 + (distance - 500) * 0.03);
-    }
-    
-    // Ajustement supplémentaire : ne jamais dépasser 20% de la distance totale (au lieu de 30%)
-    radius = Math.min(radius, distance * 0.20);
-    
-    // Minimum absolu pour assurer une zone viable mais raisonnable
-    radius = Math.max(8, radius);
-  } else {
-    // Pour les autres méthodes, calculer le rayon proportionnel à la distance
-    if (distance < 20) {
-      radius = Math.max(10, distance * 0.8);
-    } else if (distance < 50) {
-      radius = distance * 0.6;
-    } else if (distance < 100) {
-      radius = distance * 0.4;
-    } else {
-      radius = Math.min(50, distance * 0.3);
-    }
-  }
-  
-  // Ajustement par carburant si disponible (optionnel)
+
+  // NOUVELLE LOGIQUE : Rayon = distance totale / 2
+  // Cela crée une zone de recherche circulaire ample autour du trajet
+  let radius = distance / 2;
+
+  // Minimum absolu pour assurer une zone viable (10 NM)
+  radius = Math.max(10, radius);
+
+  console.log('🔍 CALCUL RAYON FINAL:', {
+    distance: distance.toFixed(1) + ' NM',
+    radiusCalcule: (distance / 2).toFixed(1) + ' NM',
+    radiusFinal: radius.toFixed(1) + ' NM',
+    formule: 'distance / 2 (sans limitation carburant)'
+  });
+
+  // DÉSACTIVÉ : Ajustement par carburant
+  // L'utilisateur a demandé une formule simple : distance totale / 2
+  // Sans limitation liée au carburant disponible
+  /*
   if (fuelData && fuelData.aircraft && fuelData.fuelRemaining !== undefined && config.limitByFuel !== false) {
     const finalReserve = fuelData.reserves?.final || 0;
     const alternateReserve = fuelData.reserves?.alternate || 0;
     const usableFuel = fuelData.fuelRemaining - finalReserve - alternateReserve;
-    
+
+    console.log('⛽ DONNÉES CARBURANT:', {
+      fuelRemaining: fuelData.fuelRemaining,
+      finalReserve,
+      alternateReserve,
+      usableFuel
+    });
+
     if (usableFuel > 0 && fuelData.aircraft.fuelConsumption && fuelData.aircraft.cruiseSpeedKt) {
       const enduranceHours = usableFuel / fuelData.aircraft.fuelConsumption;
       const fuelRadius = enduranceHours * fuelData.aircraft.cruiseSpeedKt * 0.3;
       const oldRadius = radius;
       radius = Math.min(radius, Math.max(10, fuelRadius));
+
+      console.log('🛢️ AJUSTEMENT CARBURANT:', {
+        enduranceHours: enduranceHours.toFixed(2) + ' h',
+        fuelRadius: fuelRadius.toFixed(1) + ' NM',
+        radiusAvant: oldRadius.toFixed(1) + ' NM',
+        radiusApres: radius.toFixed(1) + ' NM',
+        LIMITED: radius < oldRadius ? '⚠️ RAYON LIMITÉ PAR CARBURANT!' : '✓ OK'
+      });
     }
   }
+  */
   
   let zone;
   

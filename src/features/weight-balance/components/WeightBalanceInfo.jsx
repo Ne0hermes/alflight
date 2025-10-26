@@ -7,6 +7,12 @@ import { FUEL_DENSITIES } from '@utils/constants';
 export const WeightBalanceInfo = memo(({ aircraft, fobFuel, fuelData }) => {
   if (!aircraft) return null;
 
+  // ⚠️ PROTECTION: Vérifier que weightBalance existe
+  if (!aircraft.weightBalance) {
+    console.error('❌ [WeightBalanceInfo] aircraft.weightBalance is undefined');
+    return null;
+  }
+
   const fuelDensity = FUEL_DENSITIES[aircraft.fuelType];
   const wb = aircraft.weightBalance;
   

@@ -8,18 +8,268 @@ import { Navigation2, AlertTriangle, Fuel, Wind, Plane, Info, MapPin, RefreshCw 
 import { sx } from '@shared/styles/styleSystem';
 import { useAdvancedAlternateSelection } from './hooks/useAdvancedAlternateSelection';
 import { AlternateSelectorDual } from './components/AlternateSelectorDual';
+import { AlternatesMapView } from './components/AlternatesMapView';
 import { useNavigationResults } from './hooks/useNavigationResults';
 import { WeatherRateLimitIndicator } from '@components/WeatherRateLimitIndicator';
 import { useAlternatesStore } from '@core/stores/alternatesStore';
 import { DataSourceBadge, DataField } from '@shared/components';
 import { calculateDistance } from '@utils/navigationCalculations';
 import { useWeatherStore } from '@core/stores/weatherStore';
+import { Conversions } from '@utils/conversions';
+
+// Composant pour afficher une carte de statistique
+const StatCard = memo(({ icon, label, value, detail, dataSource = 'static' }) => (
+  <div style={sx.combine(sx.spacing.p(3), sx.bg.gray, sx.rounded.lg)}>
+    <div style={sx.combine(sx.flex.start, sx.spacing.gap(2), sx.spacing.mb(2))}>
+      <div style={{ color: '#3b82f6' }}>{icon}</div>
+      <span style={sx.combine(sx.text.sm, sx.text.muted)}>{label}</span>
+      {dataSource !== 'static' && (
+        <DataSourceBadge source={dataSource} size="xs" showLabel={false} inline={true} />
+      )}
+    </div>
+    <p style={sx.combine(sx.text.lg, sx.text.bold)}>{value}</p>
+    <p style={sx.combine(sx.text.xs, sx.text.secondary)}>{detail}</p>
+  </div>
+));
+
+// Composant pour afficher les détails complets d'un aérodrome sélectionné
+const AerodromeDetailsCard = memo(({ airport, side, sideColor, sideEmoji, sideLabel, distanceLabel, distanceValue }) => {
+  // Fonction pour séparer les pistes bidirectionnelles en directions
+  const separateRunwayDirections = () => {
+    if (!airport.runways || airport.runways.length === 0) {
+      return [];
+    }
+
+    const directions = [];
+
+    airport.runways.forEach(runway => {
+      const designator = runway.designator || runway.designation || runway.id || '';
+      const baseOrientation = runway.orientation || runway.bearing || runway.trueBearing || null;
+
+      // Si c'est une piste bidirectionnelle (ex: "08/26")
+      if (designator.includes('/')) {
+        const [rwy1, rwy2] = designator.split('/');
+
+        // Récupérer les distances par direction
+        const dir1Distances = runway.distancesByDirection?.[rwy1.trim()] || {};
+        const dir2Distances = runway.distancesByDirection?.[rwy2.trim()] || {};
+
+        // Direction 1
+        directions.push({
+          ...runway,
+          runwayNumber: rwy1.trim(),
+          qfu: baseOrientation,
+          tora: dir1Distances.tora,
+          toda: dir1Distances.toda,
+          asda: dir1Distances.asda,
+          lda: dir1Distances.lda
+        });
+
+        // Direction 2 (QFU opposé)
+        const oppositeQfu = baseOrientation !== null ? (baseOrientation + 180) % 360 : null;
+        directions.push({
+          ...runway,
+          runwayNumber: rwy2.trim(),
+          qfu: oppositeQfu,
+          tora: dir2Distances.tora,
+          toda: dir2Distances.toda,
+          asda: dir2Distances.asda,
+          lda: dir2Distances.lda
+        });
+      } else {
+        // Piste unidirectionnelle
+        directions.push({
+          ...runway,
+          runwayNumber: designator,
+          qfu: baseOrientation
+        });
+      }
+    });
+
+    return directions;
+  };
+
+  const runwayDirections = separateRunwayDirections();
+  const position = airport.position || airport.coordinates || { lat: airport.lat, lon: airport.lon || airport.lng };
+  const dmsCoords = position ? Conversions.coordinatesToDMS(position.lat, position.lon) : null;
+
+  return (
+    <div style={{
+      padding: '20px',
+      borderWidth: '2px',
+      borderStyle: 'solid',
+      borderColor: sideColor,
+      borderRadius: '12px',
+      backgroundColor: side === 'departure' ? '#fef2f2' : '#f0fdf4'
+    }}>
+      <p style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
+        {sideEmoji} {sideLabel}
+      </p>
+
+      {/* Aérodrome */}
+      <DataField
+        label="Aérodrome"
+        value={`${airport.icao} - ${airport.name}`}
+        dataSource={airport.dataSource || 'static'}
+        emphasis={true}
+      />
+
+      {/* Distance et Score */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '12px' }}>
+        <DataField
+          label="Distance"
+          value={distanceValue?.toFixed(1) || '?'}
+          unit={distanceLabel}
+          dataSource={airport.dataSource || 'static'}
+          size="sm"
+        />
+        <DataField
+          label="Score"
+          value={`${((airport.score || 0) * 100).toFixed(0)}%`}
+          dataSource="calculated"
+          size="sm"
+        />
+      </div>
+
+      {/* Coordonnées */}
+      {position && (
+        <div style={sx.spacing.mt(3)}>
+          <p style={sx.combine(sx.text.xs, sx.text.bold, sx.spacing.mb(1))}>📍 Coordonnées complètes</p>
+          <div style={sx.combine(sx.text.xs, sx.text.secondary)}>
+            <p>{position.lat.toFixed(4)}°, {position.lon.toFixed(4)}°</p>
+            {dmsCoords && dmsCoords.lat && dmsCoords.lon && (
+              <p style={sx.spacing.mt(1)}>
+                {dmsCoords.lat.degrees}°{dmsCoords.lat.minutes}'{(dmsCoords.lat.seconds || 0).toFixed(0)}"{dmsCoords.lat.direction} - {' '}
+                {dmsCoords.lon.degrees}°{dmsCoords.lon.minutes}'{(dmsCoords.lon.seconds || 0).toFixed(0)}"{dmsCoords.lon.direction}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Altitude terrain */}
+      {airport.elevation !== undefined && (
+        <div style={sx.spacing.mt(3)}>
+          <p style={sx.combine(sx.text.xs, sx.text.bold, sx.spacing.mb(1))}>⛰️ Altitude terrain</p>
+          <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
+            {Math.round(airport.elevation)} ft
+          </p>
+        </div>
+      )}
+
+      {/* Pistes par direction */}
+      {runwayDirections.length > 0 && (
+        <div style={sx.spacing.mt(4)}>
+          <p style={sx.combine(sx.text.xs, sx.text.bold, sx.spacing.mb(2))}>✈️ Détails des pistes (par direction)</p>
+          <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+            {runwayDirections.map((runway, idx) => {
+              const lengthM = typeof runway.length === 'number' ? runway.length : 0;
+              const lengthFt = Math.round(lengthM * 3.28084);
+              const widthM = typeof runway.width === 'number' ? runway.width : 0;
+              const surfaceType = typeof runway.surface === 'string' ? runway.surface :
+                                  (typeof runway.composition === 'string' ? runway.composition : 'N/A');
+
+              return (
+                <div
+                  key={idx}
+                  style={{
+                    padding: '12px',
+                    marginBottom: '8px',
+                    backgroundColor: 'white',
+                    borderWidth: '1px',
+                    borderStyle: 'solid',
+                    borderColor: '#e5e7eb',
+                    borderRadius: '6px'
+                  }}
+                >
+                  <div style={sx.combine(sx.flex.between, sx.spacing.mb(2))}>
+                    <strong style={sx.text.sm}>Piste {runway.runwayNumber}</strong>
+                    {runway.designation && (
+                      <span style={sx.combine(sx.text.xs, {
+                        padding: '2px 6px',
+                        backgroundColor: '#f3f4f6',
+                        borderRadius: '4px'
+                      })}>
+                        {runway.designation}
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                    {runway.qfu !== null && (
+                      <div style={sx.combine(sx.flex.between, sx.spacing.mb(1))}>
+                        <span>• QFU :</span>
+                        <strong style={{ color: sideColor }}>{Math.round(runway.qfu)}° • Orientation: {runway.orientation?.toFixed(2)}°</strong>
+                      </div>
+                    )}
+                    <div style={sx.flex.between}>
+                      <span>Longueur :</span>
+                      <strong>{lengthFt} ft ({lengthM} m)</strong>
+                    </div>
+                    {widthM > 0 && (
+                      <div style={sx.combine(sx.flex.between, sx.spacing.mt(1))}>
+                        <span>Largeur :</span>
+                        <strong>{widthM} m</strong>
+                      </div>
+                    )}
+                    <div style={sx.combine(sx.flex.between, sx.spacing.mt(1))}>
+                      <span>Revêtement :</span>
+                      <strong>{surfaceType}</strong>
+                    </div>
+
+                    {/* Distances déclarées */}
+                    {(
+                      (typeof runway.tora === 'number') ||
+                      (typeof runway.toda === 'number') ||
+                      (typeof runway.asda === 'number') ||
+                      (typeof runway.lda === 'number')
+                    ) && (
+                      <div style={sx.spacing.mt(2)}>
+                        <p style={sx.combine(sx.text.xs, sx.text.bold, sx.spacing.mb(1))}>Distances déclarées :</p>
+                        {typeof runway.tora === 'number' && (
+                          <div style={sx.flex.between}>
+                            <span>• TORA :</span>
+                            <strong>{runway.tora} m ({Math.round(runway.tora * 3.28084)} ft)</strong>
+                          </div>
+                        )}
+                        {typeof runway.toda === 'number' && (
+                          <div style={sx.combine(sx.flex.between, sx.spacing.mt(1))}>
+                            <span>• TODA :</span>
+                            <strong>{runway.toda} m ({Math.round(runway.toda * 3.28084)} ft)</strong>
+                          </div>
+                        )}
+                        {typeof runway.asda === 'number' && (
+                          <div style={sx.combine(sx.flex.between, sx.spacing.mt(1))}>
+                            <span>• ASDA :</span>
+                            <strong>{runway.asda} m ({Math.round(runway.asda * 3.28084)} ft)</strong>
+                          </div>
+                        )}
+                        {typeof runway.lda === 'number' && (
+                          <div style={sx.combine(sx.flex.between, sx.spacing.mt(1))}>
+                            <span>• LDA :</span>
+                            <strong>{runway.lda} m ({Math.round(runway.lda * 3.28084)} ft)</strong>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+});
 
 const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
-  
+
   const {
     searchZone,
     isReady,
+    isLoadingAircraft,
+    isLoadingAirports,
     dynamicRadius,
     triangleArea,
     turnPointBuffers,
@@ -50,16 +300,26 @@ const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
     }
   }, [isReady, hasSearched, refreshAlternates]);
   
-  // Réinitialiser hasSearched si la route change
+  // Réinitialiser et relancer la recherche quand la route change
   useEffect(() => {
     if (searchZone) {
       const routeKey = `${searchZone.departure.lat}-${searchZone.departure.lon}-${searchZone.arrival.lat}-${searchZone.arrival.lon}`;
       const previousKey = useAlternatesStore.getState().lastRouteKey;
       if (routeKey !== previousKey) {
+        // Mettre à jour la clé de route
+        useAlternatesStore.getState().setLastRouteKey(routeKey);
+        // Réinitialiser et relancer la recherche
         setHasSearched(false);
+        // Relancer immédiatement la recherche si ready
+        if (isReady) {
+          setTimeout(() => {
+            setHasSearched(true);
+            refreshAlternates();
+          }, 0);
+        }
       }
     }
-  }, [searchZone]);
+  }, [searchZone, isReady, refreshAlternates]);
   
   // Gérer la sélection manuelle - DOIT être défini AVANT le return conditionnel
   const handleManualSelection = React.useCallback((selection) => {
@@ -96,9 +356,12 @@ const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
   // Récupérer les METAR pour les aérodromes sélectionnés
   useEffect(() => {
     if (selectedAlternates && selectedAlternates.length > 0) {
-      // Extraire les codes ICAO
-      const icaoCodes = selectedAlternates.map(alt => alt.icao).filter(Boolean);
-      
+      // Extraire les codes ICAO et filtrer uniquement les codes valides (4 lettres alphabétiques)
+      const icaoCodes = selectedAlternates
+        .map(alt => alt.icao)
+        .filter(Boolean)
+        .filter(icao => /^[A-Z]{4}$/.test(icao)); // Uniquement codes ICAO valides
+
       if (icaoCodes.length > 0) {
         // Récupérer les METAR en parallèle
         fetchMultiple(icaoCodes).catch(error => {
@@ -109,6 +372,60 @@ const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
   }, [selectedAlternates, fetchMultiple]);
   
   // Rendu conditionnel - DOIT être APRÈS tous les hooks
+
+  // Loader pour le chargement de l'avion
+  if (isLoadingAircraft) {
+    return (
+      <div style={sx.combine(sx.components.card.base, sx.text.center, sx.spacing.p(8))}>
+        <div style={{
+          display: 'inline-block',
+          animation: 'spin 2s linear infinite'
+        }}>
+          <Plane size={48} style={{ color: '#3b82f6' }} />
+        </div>
+        <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mt(4), sx.spacing.mb(2))}>
+          Chargement de l'avion...
+        </h4>
+        <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
+          Récupération des données de l'avion depuis la base de données
+        </p>
+        <style>{`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // Loader pour le chargement des aérodromes
+  if (isLoadingAirports) {
+    return (
+      <div style={sx.combine(sx.components.card.base, sx.text.center, sx.spacing.p(8))}>
+        <div style={{
+          display: 'inline-block',
+          animation: 'spin 2s linear infinite'
+        }}>
+          <MapPin size={48} style={{ color: '#10b981' }} />
+        </div>
+        <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mt(4), sx.spacing.mb(2))}>
+          Chargement des aérodromes...
+        </h4>
+        <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
+          Chargement de la base de données des aérodromes français
+        </p>
+        <style>{`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // Alerte si les données ne sont pas prêtes
   if (!isReady) {
     return (
       <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning)}>
@@ -127,12 +444,6 @@ const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
       
       {/* En-tête avec résumé et statistiques */}
       <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
-        <div style={sx.spacing.mb(4)}>
-          <h3 style={sx.combine(sx.text.xl, sx.text.bold)}>
-            🛬 Sélection des aérodromes de déroutement
-          </h3>
-        </div>
-        
         {/* Statistiques de recherche */}
         <div style={sx.combine(sx.components.card.base, sx.spacing.mb(4))}>
           <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
@@ -140,44 +451,17 @@ const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
           </h4>
           
           {/* Calcul de la distance et du rayon de la pilule */}
-          {searchZone && (
-            <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mb(3))}>
-              <Info size={16} />
-              <div>
-                <p style={sx.combine(sx.text.sm, sx.text.bold)}>
-                  Calcul de la zone de recherche (pilule)
-                </p>
-                <div style={sx.combine(sx.text.sm, sx.spacing.mt(1))}>
-                  <p>Distance départ-arrivée : <strong>{Math.round(calculateDistance(searchZone.departure, searchZone.arrival))} NM</strong></p>
-                  <p>Formule adaptative :</p>
-                  <ul style={{ paddingLeft: '20px', fontSize: '12px', marginTop: '4px' }}>
-                    <li>0-100 NM : h = (√3/2) × distance (formule classique)</li>
-                    <li>100-200 NM : croissance réduite à 50%</li>
-                    <li>200-400 NM : croissance réduite à 30%</li>
-                    <li>&gt;400 NM : croissance minimale (10%), max 250 NM</li>
-                  </ul>
-                  <p style={sx.spacing.mt(1)}>Rayon calculé : <strong>{dynamicRadius || 25} NM</strong></p>
-                  {dynamicRadius && searchZone.radius && dynamicRadius < searchZone.radius && (
-                    <p style={sx.combine(sx.text.warning, sx.spacing.mt(1))}>
-                      ⚠️ Rayon limité par le carburant disponible : <strong>{dynamicRadius} NM</strong>
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-          
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
             <StatCard
               icon={<Navigation2 size={20} />}
               label="Zone principale"
               value="Capsule (pilule)"
-              detail={`Rayon: ${dynamicRadius || 25} NM`}
+              detail={`Rayon: ${Math.ceil(dynamicRadius || 25)} NM`}
             />
             <StatCard
               icon={<Fuel size={20} />}
               label="Rayon dynamique"
-              value={`${dynamicRadius || 25} NM`}
+              value={`${Math.ceil(dynamicRadius || 25)} NM`}
               detail="Basé sur carburant"
             />
             <StatCard
@@ -204,22 +488,17 @@ const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
             marginBottom: '24px',
             alignItems: 'start'
           }}>
-            {/* Colonne gauche : Carte - DÉSACTIVÉE */}
+            {/* Colonne gauche : Carte */}
             <div style={sx.components.card.base}>
               <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(3))}>
-                📍 Visualisation de la zone de recherche
+                📍 Visualisation de la route et des déroutements
               </h4>
-              <div style={{
-                padding: '60px 40px',
-                textAlign: 'center',
-                backgroundColor: '#f9fafb',
-                borderRadius: '8px',
-                border: '2px dashed #d1d5db'
-              }}>
-                <p style={{ color: '#6b7280', fontSize: '14px' }}>
-                  La carte sera ajoutée ici
-                </p>
-              </div>
+              <AlternatesMapView
+                searchZone={searchZone}
+                selectedAlternates={selectedAlternates}
+                scoredAlternates={scoredAlternates}
+                dynamicRadius={dynamicRadius}
+              />
             </div>
             
             {/* Colonne droite : Interface de sélection */}
@@ -266,8 +545,8 @@ const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
             </div>
           </div>
         )}
-        
-        {/* Résumé de la sélection actuelle */}
+
+        {/* Détails complets des aérodromes sélectionnés */}
         {(manualSelection.departure || manualSelection.arrival) && (
           <div style={sx.combine(sx.components.card.base, sx.spacing.mt(4))}>
             <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
@@ -275,133 +554,40 @@ const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
             </h4>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               {manualSelection.departure && (
-                <div style={{
-                  padding: '16px',
-                  border: '2px solid #dc2626',
-                  borderRadius: '8px',
-                  backgroundColor: '#fef2f2'
-                }}>
-                  <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(1))}>
-                    🔴 Déroutement côté départ
-                  </p>
-                  <DataField
-                    label="Aérodrome"
-                    value={`${manualSelection.departure.icao} - ${manualSelection.departure.name}`}
-                    dataSource={manualSelection.departure.dataSource || 'static'}
-                    emphasis={true}
-                  />
-                  <DataField
-                    label="Distance"
-                    value={manualSelection.departure.distanceToDeparture?.toFixed(1) || '?'}
-                    unit="NM depuis le départ"
-                    dataSource={manualSelection.departure.dataSource || 'static'}
-                    size="sm"
-                    style={{ marginTop: '8px' }}
-                  />
-                  <DataField
-                    label="Score"
-                    value={`${((manualSelection.departure.score || 0) * 100).toFixed(0)}%`}
-                    dataSource="calculated"
-                    size="sm"
-                    style={{ marginTop: '4px' }}
-                  />
-                </div>
+                <AerodromeDetailsCard
+                  airport={manualSelection.departure}
+                  side="departure"
+                  sideColor="#dc2626"
+                  sideEmoji="🔴"
+                  sideLabel="Déroutement côté départ"
+                  distanceLabel="NM depuis le départ"
+                  distanceValue={manualSelection.departure.distanceToDeparture}
+                />
               )}
-              
+
               {manualSelection.arrival && (
-                <div style={{
-                  padding: '16px',
-                  border: '2px solid #059669',
-                  borderRadius: '8px',
-                  backgroundColor: '#f0fdf4'
-                }}>
-                  <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(1))}>
-                    🟢 Déroutement côté arrivée
-                  </p>
-                  <DataField
-                    label="Aérodrome"
-                    value={`${manualSelection.arrival.icao} - ${manualSelection.arrival.name}`}
-                    dataSource={manualSelection.arrival.dataSource || 'static'}
-                    emphasis={true}
-                  />
-                  <DataField
-                    label="Distance"
-                    value={manualSelection.arrival.distanceToArrival?.toFixed(1) || '?'}
-                    unit="NM depuis l'arrivée"
-                    dataSource={manualSelection.arrival.dataSource || 'static'}
-                    size="sm"
-                    style={{ marginTop: '8px' }}
-                  />
-                  <DataField
-                    label="Score"
-                    value={`${((manualSelection.arrival.score || 0) * 100).toFixed(0)}%`}
-                    dataSource="calculated"
-                    size="sm"
-                    style={{ marginTop: '4px' }}
-                  />
-                </div>
+                <AerodromeDetailsCard
+                  airport={manualSelection.arrival}
+                  side="arrival"
+                  sideColor="#059669"
+                  sideEmoji="🟢"
+                  sideLabel="Déroutement côté arrivée"
+                  distanceLabel="NM depuis l'arrivée"
+                  distanceValue={manualSelection.arrival.distanceToArrival}
+                />
               )}
             </div>
           </div>
         )}
-      </section>
-      
-      {/* Informations détaillées */}
-      <section style={sx.components.section.base}>
-        <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(3))}>
-          ℹ️ Méthodologie de sélection
-        </h4>
-        <div style={sx.components.card.base}>
-          <div style={sx.text.sm}>
-            <p style={sx.spacing.mb(2)}>
-              <strong>Système dual :</strong> La zone est divisée par la médiatrice du segment [départ, arrivée]. 
-              Vous pouvez sélectionner un aérodrome de chaque côté pour garantir une couverture complète.
-            </p>
-            <p style={sx.spacing.mb(2)}>
-              <strong>Zone de recherche :</strong> Capsule (pilule) autour de la route avec rayon adaptatif. 
-              Pour les vols courts (&lt;100 NM), la formule classique h = (√3/2) × distance est utilisée. 
-              Pour les vols plus longs, la croissance du rayon est progressivement réduite pour éviter des zones 
-              de recherche démesurées, avec un maximum de 250 NM. Des tampons de 5-10 NM sont ajoutés autour 
-              des points tournants critiques.
-            </p>
-            <p style={sx.spacing.mb(2)}>
-              <strong>Garantie :</strong> Aucun chemin de déroutement n'est plus long que la navigation initiale
-            </p>
-            <p style={sx.spacing.mb(2)}>
-              <strong>Critères de scoring :</strong>
-            </p>
-            <ul style={{ marginLeft: '20px', listStyleType: 'disc' }}>
-              <li>Distance à la route (30%)</li>
-              <li>Infrastructure piste (25%)</li>
-              <li>Services disponibles (20%)</li>
-              <li>Conditions météo (15%)</li>
-              <li>Position stratégique (10%)</li>
-            </ul>
-          </div>
-        </div>
       </section>
     </div>
 
   );
 });
 
-// Composant pour afficher une carte de statistique
-const StatCard = memo(({ icon, label, value, detail, dataSource = 'static' }) => (
-  <div style={sx.combine(sx.spacing.p(3), sx.bg.gray, sx.rounded.lg)}>
-    <div style={sx.combine(sx.flex.start, sx.spacing.gap(2), sx.spacing.mb(2))}>
-      <div style={{ color: '#3b82f6' }}>{icon}</div>
-      <span style={sx.combine(sx.text.sm, sx.text.muted)}>{label}</span>
-      {dataSource !== 'static' && (
-        <DataSourceBadge source={dataSource} size="xs" showLabel={false} inline={true} />
-      )}
-    </div>
-    <p style={sx.combine(sx.text.lg, sx.text.bold)}>{value}</p>
-    <p style={sx.combine(sx.text.xs, sx.text.secondary)}>{detail}</p>
-  </div>
-));
-
 AlternatesModule.displayName = 'AlternatesModule';
 StatCard.displayName = 'StatCard';
+AerodromeDetailsCard.displayName = 'AerodromeDetailsCard';
 
 
 // Export par défaut pour le lazy loading

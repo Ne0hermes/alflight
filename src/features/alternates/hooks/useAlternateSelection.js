@@ -171,7 +171,17 @@ export const useAlternateSelection = () => {
   const navigationResults = useNavigationResults();
   const weatherStore = useWeatherStore();
   const vacStore = useVACStore();
-  
+
+  // DEBUG: Log de l'avion sélectionné
+  useEffect(() => {
+    console.log('🛩️ [useAlternateSelection] selectedAircraft:', {
+      aircraft: selectedAircraft,
+      registration: selectedAircraft?.registration,
+      model: selectedAircraft?.model,
+      id: selectedAircraft?.id
+    });
+  }, [selectedAircraft]);
+
   // État pour les aérodromes
   const [airports, setAirports] = useState([]);
   const [isLoadingAirports, setIsLoadingAirports] = useState(true);
@@ -287,14 +297,30 @@ export const useAlternateSelection = () => {
       !isLoadingAirports
     );
     if (!ready) {
-      console.log('Alternates not ready:', {
+      console.log('🚨 Alternates not ready:', {
         waypointsCount: waypoints.length,
         departure: waypoints[0] ? `${waypoints[0].name || 'Sans nom'} (${waypoints[0].lat ? 'OK' : 'Pas de coordonnées'})` : 'Manquant',
         arrival: waypoints[waypoints.length - 1] ? `${waypoints[waypoints.length - 1].name || 'Sans nom'} (${waypoints[waypoints.length - 1].lat ? 'OK' : 'Pas de coordonnées'})` : 'Manquant',
-        aircraft: selectedAircraft ? selectedAircraft.model : 'Aucun',
+        aircraft: selectedAircraft ? `${selectedAircraft.registration} (${selectedAircraft.model})` : '❌ AUCUN',
+        aircraftId: selectedAircraft?.id || 'N/A',
+        aircraftObject: selectedAircraft ? 'EXISTS' : 'NULL/UNDEFINED',
         navigationResults: !!navigationResults,
         airportsLoaded: airports.length,
         loadingAirports: isLoadingAirports
+      });
+
+      // Log additionnel pour debugger le problème
+      console.log('🔍 DEBUG selectedAircraft:', {
+        value: selectedAircraft,
+        type: typeof selectedAircraft,
+        isNull: selectedAircraft === null,
+        isUndefined: selectedAircraft === undefined
+      });
+    } else {
+      console.log('✅ Alternates ready!', {
+        aircraft: `${selectedAircraft.registration} (${selectedAircraft.model})`,
+        waypointsCount: waypoints.length,
+        airportsCount: airports.length
       });
     }
 
@@ -324,7 +350,18 @@ export const useAlternateSelection = () => {
   // Calcul de la zone de recherche
   const searchZone = useMemo(() => {
     if (!isReady) return null;
-    
+
+    console.log('🛣️ WAYPOINTS DISPONIBLES:', {
+      nbWaypoints: waypoints.length,
+      waypoints: waypoints.map((wp, idx) => ({
+        index: idx,
+        icao: wp.icao,
+        name: wp.name,
+        lat: wp.lat,
+        lon: wp.lon
+      }))
+    });
+
     const departure = {
       lat: waypoints[0].lat,
       lon: waypoints[0].lon
@@ -334,13 +371,33 @@ export const useAlternateSelection = () => {
       lon: waypoints[waypoints.length - 1].lon
     };
 
-    console.log('Calculating search zone:', {
-      departure,
-      arrival
+    // CALCUL DE LA DISTANCE TOTALE DU CIRCUIT
+    // Pour une navigation circulaire (retour au point de départ),
+    // on doit sommer tous les segments au lieu de calculer départ→arrivée
+    let totalDistance = 0;
+    for (let i = 0; i < waypoints.length - 1; i++) {
+      const segmentDist = calculateDistance(
+        { lat: waypoints[i].lat, lon: waypoints[i].lon },
+        { lat: waypoints[i + 1].lat, lon: waypoints[i + 1].lon }
+      );
+      totalDistance += segmentDist;
+    }
+
+    console.log('📍 ANALYSE CIRCUIT:', {
+      departure: departure,
+      arrival: arrival,
+      samePoint: waypoints[0].icao === waypoints[waypoints.length - 1].icao,
+      distanceDirecte: calculateDistance(departure, arrival).toFixed(1) + ' NM',
+      distanceTotaleCircuit: totalDistance.toFixed(1) + ' NM',
+      nbSegments: waypoints.length - 1,
+      isCircuit: waypoints[0].icao === waypoints[waypoints.length - 1].icao
     });
 
     // Zone normale basée sur la formule pilule
-    const zone = calculateSearchZone(departure, arrival, waypoints, fuelDataForRadius);
+    // IMPORTANT : Pour un circuit fermé, on passe la distance totale via options
+    const zone = calculateSearchZone(departure, arrival, waypoints, fuelDataForRadius, {
+      totalDistance: totalDistance  // Passer la distance totale du circuit
+    });
     if (zone) {
       console.log('Search zone calculated:', {
         radius: zone.dynamicRadius + ' NM',
@@ -438,9 +495,64 @@ export const useAlternateSelection = () => {
           console.log(`     Distance: ${airport.distance?.toFixed(1) || 'N/A'} NM`);
         });
       }
-      
-      // 2. Filtrer selon les critères (accepter tous pour le moment)
-      const filtered = candidatesInZone;
+
+      // 2. Filtrer selon les critères de compatibilité de piste
+      const filtered = candidatesInZone.filter(airport => {
+        // Si l'avion n'a pas de critères de compatibilité, accepter tous les aérodromes
+        if (!selectedAircraft.compatibleRunwaySurfaces ||
+            selectedAircraft.compatibleRunwaySurfaces.length === 0) {
+          return true;
+        }
+
+        // Vérifier que l'aérodrome a au moins une piste compatible
+        if (!airport.runways || airport.runways.length === 0) {
+          return false; // Pas de piste = non compatible
+        }
+
+        // Fonction pour normaliser le type de surface
+        const normalizeSurface = (surface) => {
+          if (!surface) return null;
+          // Vérifier que surface est bien une string
+          if (typeof surface !== 'string') {
+            // Si c'est un objet avec une propriété type, l'utiliser
+            if (surface && typeof surface === 'object' && surface.type) {
+              surface = surface.type;
+            } else {
+              return null;
+            }
+          }
+          const s = surface.toUpperCase();
+          if (s.includes('ASPH') || s === 'ASPHALT') return 'ASPH';
+          if (s.includes('CONC') || s === 'CONCRETE') return 'CONC';
+          if (s.includes('GRASS') || s === 'TURF') return 'GRASS';
+          if (s.includes('DIRT') || s === 'EARTH') return 'DIRT';
+          return s;
+        };
+
+        // Vérifier si au moins une piste a une surface compatible
+        const hasCompatibleRunway = airport.runways.some(runway => {
+          const runwaySurface = normalizeSurface(runway.surface);
+          if (!runwaySurface) return false;
+
+          // Vérifier la compatibilité de surface
+          const isSurfaceCompatible = selectedAircraft.compatibleRunwaySurfaces.some(
+            compatible => normalizeSurface(compatible) === runwaySurface
+          );
+
+          // Vérifier la longueur minimale si spécifiée
+          if (isSurfaceCompatible && selectedAircraft.minimumRunwayLength &&
+              selectedAircraft.minimumRunwayLength !== '') {
+            const minLength = parseInt(selectedAircraft.minimumRunwayLength);
+            return runway.length >= minLength;
+          }
+
+          return isSurfaceCompatible;
+        });
+
+        return hasCompatibleRunway;
+      });
+
+      console.log(`Filtered to ${filtered.length} compatible airports (runway surface check)`);
       
             
       setCandidates(filtered);
@@ -559,12 +671,19 @@ export const useAlternateSelection = () => {
     }
   }, [searchZone, waypoints, findAlternates, setSearchZone, setScoredAlternates, hasSearchedOnce]);
   
+  // État de chargement : true si l'avion n'est pas encore chargé
+  const isLoadingAircraft = useMemo(() => {
+    return !selectedAircraft && !isLoadingAirports;
+  }, [selectedAircraft, isLoadingAirports]);
+
   return {
     searchZone,
     dynamicParams,
     selectedAlternates,
     findAlternates,
-    isReady
+    isReady,
+    isLoadingAircraft,  // Nouveau : indique si on attend le chargement de l'avion
+    isLoadingAirports   // Export de l'état de chargement des aérodromes
   };
 };
 

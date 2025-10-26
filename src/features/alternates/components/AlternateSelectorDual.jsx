@@ -1,9 +1,11 @@
 // src/features/alternates/components/AlternateSelectorDual.jsx
-import React, { memo, useMemo } from 'react';
-import { MapPin, Plane, Navigation, Check, X } from 'lucide-react';
+import React, { memo, useMemo, useState } from 'react';
+import { MapPin, Plane, Navigation, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { calculateDistance } from '@utils/navigationCalculations';
 import { DataSourceBadge } from '@shared/components';
+import { Conversions } from '@utils/conversions';
+import { useAircraft } from '@core/contexts';
 
 /**
  * Composant de sélection duale des aérodromes de déroutement
@@ -20,49 +22,56 @@ export const AlternateSelectorDual = memo(({
   const selectedDeparture = currentSelection.departure;
   const selectedArrival = currentSelection.arrival;
   
-  // Séparer les candidats par côté
+  // Séparer les candidats par côté (liste unique sans séparation contrôlé/non contrôlé)
   const candidatesBySide = useMemo(() => {
     const departure = [];
     const arrival = [];
-    
+
     candidates.forEach(airport => {
-      // Filtrer les aéroports sans code ICAO
-      if (!airport.icao) {
+      // Filtrer les aéroports sans code ICAO ou avec code ICAO invalide
+      if (!airport.icao || !/^[A-Z]{4}$/.test(airport.icao)) {
         return;
       }
-      
+
       // S'assurer que l'aéroport a une position valide
       const position = airport.position || airport.coordinates || { lat: airport.lat, lon: airport.lon || airport.lng };
-      
+
       if (!position || !position.lat || !position.lon) {
         return;
       }
-      
+
       // Calculer les distances depuis départ et arrivée
       const distToDeparture = calculateDistance(position, searchZone.departure);
       const distToArrival = calculateDistance(position, searchZone.arrival);
-      
-      // Enrichir avec les distances
+
+      // Déterminer si l'aérodrome est contrôlé
+      const isControlled = airport.services?.atc === true ||
+                          (airport.frequencies && airport.frequencies.some(f => f.type === 'TWR')) ||
+                          airport.type === 'large_airport' ||
+                          airport.type === 'medium_airport';
+
+      // Enrichir avec les distances et le statut de contrôle
       const enrichedAirport = {
         ...airport,
         position: position,
         distanceToDeparture: distToDeparture,
         distanceToArrival: distToArrival,
-        side: airport.side || (distToDeparture < distToArrival ? 'departure' : 'arrival')
+        side: airport.side || (distToDeparture < distToArrival ? 'departure' : 'arrival'),
+        isControlled: isControlled
       };
-      
-      // Classer selon le côté
+
+      // Classer selon le côté (liste unique)
       if (enrichedAirport.side === 'departure') {
         departure.push(enrichedAirport);
       } else {
         arrival.push(enrichedAirport);
       }
     });
-    
+
     // Trier par score décroissant
     departure.sort((a, b) => (b.score || 0) - (a.score || 0));
     arrival.sort((a, b) => (b.score || 0) - (a.score || 0));
-    
+
     return { departure, arrival };
   }, [candidates, searchZone]);
   
@@ -85,7 +94,10 @@ export const AlternateSelectorDual = memo(({
   
   // Composant pour afficher un côté avec indicateur visuel de sélection
   const SideSelector = ({ title, airports, selectedAirport, onSelect, side, referencePoint, sideColor }) => {
-    
+    const [hoveredIcao, setHoveredIcao] = React.useState(null);
+    const [showDetails, setShowDetails] = React.useState(false);
+    const { selectedAircraft } = useAircraft();
+
     return (
     <div style={sx.components.card.base}>
       <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2), { color: sideColor })}>
@@ -100,13 +112,14 @@ export const AlternateSelectorDual = memo(({
         <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
           {airports.map((airport, index) => {
             const isSelected = selectedAirport?.icao === airport.icao;
-            const distanceFromRef = side === 'departure' 
-              ? airport.distanceToDeparture 
+            const isHovered = hoveredIcao === airport.icao;
+            const distanceFromRef = side === 'departure'
+              ? airport.distanceToDeparture
               : airport.distanceToArrival;
-            
+
             // Vérifier si le déroutement est plus court que le vol initial
             const isDiversionShorter = distanceFromRef < totalFlightDistance;
-            
+
             return (
               <div
                 key={airport.icao}
@@ -115,17 +128,20 @@ export const AlternateSelectorDual = memo(({
                 style={{
                   padding: '10px',
                   marginBottom: '6px',
-                  border: '2px solid',
-                  borderColor: isSelected ? sideColor : '#e5e7eb',
+                  borderWidth: '2px',
+                  borderStyle: 'solid',
+                  borderColor: isSelected ? sideColor : (isHovered ? `${sideColor}60` : '#e5e7eb'),
                   borderRadius: '6px',
-                  backgroundColor: isSelected ? (side === 'departure' ? '#fef2f2' : '#f0fdf4') : '#ffffff',
+                  backgroundColor: isSelected ? (side === 'departure' ? '#fef2f2' : '#f0fdf4') : (isHovered ? '#fafafa' : '#ffffff'),
                   cursor: 'pointer',
                   transition: 'all 0.2s',
                   position: 'relative',
                   overflow: 'hidden',
                   userSelect: 'none',
                   pointerEvents: 'auto',
-                  zIndex: 1
+                  zIndex: 1,
+                  transform: isHovered && !isSelected ? 'translateY(-1px)' : 'translateY(0)',
+                  boxShadow: isHovered && !isSelected ? '0 2px 6px rgba(0,0,0,0.08)' : 'none'
                 }}
                 onClick={() => {
                   if (onSelect) {
@@ -139,22 +155,8 @@ export const AlternateSelectorDual = memo(({
                     }
                   }
                 }}
-                onMouseEnter={(e) => {
-                  if (!isSelected) {
-                    e.currentTarget.style.borderColor = `${sideColor}60`;
-                    e.currentTarget.style.backgroundColor = '#fafafa';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                    e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isSelected) {
-                    e.currentTarget.style.borderColor = '#e5e7eb';
-                    e.currentTarget.style.backgroundColor = '#ffffff';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }
-                }}
+                onMouseEnter={() => setHoveredIcao(airport.icao)}
+                onMouseLeave={() => setHoveredIcao(null)}
               >
                 {/* Indicateur visuel de sélection */}
                 {isSelected && (
@@ -189,7 +191,9 @@ export const AlternateSelectorDual = memo(({
                         fontSize: '11px',
                         fontWeight: 'bold',
                         marginRight: '6px',
-                        border: isSelected ? 'none' : `1px solid ${sideColor}`,
+                        borderWidth: isSelected ? '0' : '1px',
+                        borderStyle: isSelected ? 'none' : 'solid',
+                        borderColor: isSelected ? 'transparent' : sideColor,
                         flexShrink: 0
                       }}>
                         {index + 1}
@@ -248,7 +252,9 @@ export const AlternateSelectorDual = memo(({
                       style={{
                         width: '40px',
                         height: '40px',
-                        border: isSelected ? 'none' : `2px solid ${sideColor}30`,
+                        borderWidth: isSelected ? '0' : '2px',
+                        borderStyle: isSelected ? 'none' : 'solid',
+                        borderColor: isSelected ? 'transparent' : `${sideColor}30`,
                         borderRadius: '50%',
                         backgroundColor: isSelected ? sideColor : 'white',
                         color: isSelected ? 'white' : sideColor,
@@ -275,8 +281,9 @@ export const AlternateSelectorDual = memo(({
 
   return (
     <div>
-      {/* Sélecteurs par côté */}
+      {/* Sélecteurs par côté (liste unique) */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        {/* Côté départ */}
         <SideSelector
           title="🔴 Départ"
           airports={candidatesBySide.departure}
@@ -286,7 +293,8 @@ export const AlternateSelectorDual = memo(({
           referencePoint={searchZone.departure}
           sideColor="#dc2626"
         />
-        
+
+        {/* Côté arrivée */}
         <SideSelector
           title="🟢 Arrivée"
           airports={candidatesBySide.arrival}

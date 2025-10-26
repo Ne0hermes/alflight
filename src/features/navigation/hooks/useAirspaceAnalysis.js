@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { openAIPAirspacesService } from '../../../services/openAIPAirspacesService.js';
+import { hybridAirspacesService } from '../../../services/hybridAirspacesService.js';
 
 /**
  * Vérifie si un segment (ligne) traverse un espace aérien (polygone)
@@ -96,6 +97,32 @@ function checkAltitudeConflict(segmentAltitude, airspaceFloor, airspaceCeiling) 
 }
 
 /**
+ * Extrait l'ICAO d'un nom d'espace aérien et récupère les fréquences associées
+ */
+async function enrichWithAerodromeFrequencies(airspaceName) {
+  try {
+    // Chercher un code ICAO à 4 lettres dans le nom (ex: "FIR LFEE" → "LFEE")
+    const icaoMatch = airspaceName.match(/\b(LF[A-Z]{2})\b/);
+    if (!icaoMatch) {
+      return [];
+    }
+
+    const icao = icaoMatch[1];
+
+    // Charger les fréquences AIXM si pas déjà fait
+    await hybridAirspacesService.loadAerodromeFrequencies();
+
+    // Récupérer les fréquences de cet aérodrome
+    const freqs = hybridAirspacesService.aerodromeFrequencies.get(icao);
+
+    return freqs || [];
+  } catch (error) {
+    console.error('Erreur enrichissement fréquences:', error);
+    return [];
+  }
+}
+
+/**
  * Hook principal
  */
 export function useAirspaceAnalysis(waypoints, segmentAltitudes = {}, plannedAltitude = 3000) {
@@ -148,10 +175,11 @@ export function useAirspaceAnalysis(waypoints, segmentAltitudes = {}, plannedAlt
       return;
     }
 
-    const segmentsAnalysis = [];
+    async function analyzeSegments() {
+      const segmentsAnalysis = [];
 
-    // Analyser chaque segment
-    for (let i = 0; i < waypoints.length - 1; i++) {
+      // Analyser chaque segment
+      for (let i = 0; i < waypoints.length - 1; i++) {
       const from = waypoints[i];
       const to = waypoints[i + 1];
 
@@ -172,9 +200,18 @@ export function useAirspaceAnalysis(waypoints, segmentAltitudes = {}, plannedAlt
       const frequencies = [];
       const controlledAirspaces = [];
       const restrictedZones = []; // 🚨 Zones réglementées/interdites
+      const informationalAirspaces = []; // ℹ️ Espaces informatifs (FIR, ATZ, SIV, etc.)
 
       crossedAirspaces.forEach(airspace => {
         const props = airspace.properties;
+
+        // ✅ FILTRAGE PAR ALTITUDE : Ne garder que les espaces concernés par l'altitude du segment
+        const isAltitudeConcerned = checkAltitudeConflict(segmentAlt, props.floor, props.ceiling);
+
+        // Si l'altitude du segment n'est pas concernée par cet espace, passer au suivant
+        if (!isAltitudeConcerned) {
+          return;
+        }
 
         // 🚨 Vérifier si c'est une zone réglementée/interdite/dangereuse
         const isRestricted = ['R', 'P', 'D', 'RESTRICTED', 'PROHIBITED', 'DANGER'].includes(props.type);
@@ -198,6 +235,19 @@ export function useAirspaceAnalysis(waypoints, segmentAltitudes = {}, plannedAlt
         const isControlled = ['A', 'B', 'C', 'D', 'E'].includes(props.class);
 
         if (isControlled) {
+          // Extraire les fréquences pour cet espace
+          const airspaceFreqs = [];
+          if (props.frequencies && props.frequencies.length > 0) {
+            props.frequencies.forEach(freq => {
+              airspaceFreqs.push({
+                type: freq.type || 'COM',
+                frequency: freq.frequency || freq.freq,
+                schedule: freq.schedule,
+                remarks: freq.remarks
+              });
+            });
+          }
+
           controlledAirspaces.push({
             name: props.name,
             type: props.type,
@@ -205,14 +255,31 @@ export function useAirspaceAnalysis(waypoints, segmentAltitudes = {}, plannedAlt
             floor: props.floor,
             ceiling: props.ceiling,
             floor_raw: props.floor_raw,
-            ceiling_raw: props.ceiling_raw
+            ceiling_raw: props.ceiling_raw,
+            frequencies: airspaceFreqs // 🆕 Fréquences attachées à l'espace
+          });
+        } else if (!isRestricted) {
+          // ℹ️ Espace informatif (ni contrôlé, ni restreint) : FIR, ATZ, SIV, classe G, etc.
+          informationalAirspaces.push({
+            name: props.name,
+            type: props.type,
+            class: props.class || 'N/A',
+            floor: props.floor,
+            ceiling: props.ceiling,
+            floor_raw: props.floor_raw,
+            ceiling_raw: props.ceiling_raw,
+            frequencies: [] // Sera enrichi plus tard avec AIXM
           });
         }
 
-        // Vérifier conflit d'altitude
-        const hasConflict = checkAltitudeConflict(segmentAlt, props.floor, props.ceiling);
+        // ✅ CONFLIT uniquement pour espaces contrôlés A/B/C/D ou zones réglementées P/R/D
+        // Classe E, FIR, ATZ, SIV ne sont pas des conflits (information seulement)
+        const isRealConflict = (
+          ['A', 'B', 'C', 'D'].includes(props.class) || // Espaces très contrôlés
+          isRestricted // Zones réglementées/interdites/dangereuses
+        );
 
-        if (hasConflict) {
+        if (isRealConflict) {
           conflicts.push({
             airspaceName: props.name,
             airspaceType: props.type,
@@ -227,7 +294,7 @@ export function useAirspaceAnalysis(waypoints, segmentAltitudes = {}, plannedAlt
           });
         }
 
-        // Extraire les fréquences
+        // Extraire les fréquences (uniquement pour les espaces concernés par l'altitude)
         if (props.frequencies && props.frequencies.length > 0) {
           props.frequencies.forEach(freq => {
             frequencies.push({
@@ -238,6 +305,12 @@ export function useAirspaceAnalysis(waypoints, segmentAltitudes = {}, plannedAlt
           });
         }
       });
+
+      // 🔄 Enrichir les espaces informatifs avec les fréquences AIXM
+      await Promise.all(informationalAirspaces.map(async (airspace) => {
+        const freqs = await enrichWithAerodromeFrequencies(airspace.name);
+        airspace.frequencies = freqs;
+      }));
 
       segmentsAnalysis.push({
         segmentId,
@@ -254,12 +327,18 @@ export function useAirspaceAnalysis(waypoints, segmentAltitudes = {}, plannedAlt
         hasControlledAirspace: controlledAirspaces.length > 0,
         // 🚨 Zones réglementées/interdites
         restrictedZones,
-        hasRestrictedZones: restrictedZones.length > 0
+        hasRestrictedZones: restrictedZones.length > 0,
+        // ℹ️ Espaces informatifs (FIR, ATZ, SIV, etc.)
+        informationalAirspaces,
+        hasInformationalAirspaces: informationalAirspaces.length > 0
       });
     }
 
-    console.log('📊 Analyse des espaces aériens:', segmentsAnalysis);
-    setAnalysis(segmentsAnalysis);
+      console.log('📊 Analyse des espaces aériens:', segmentsAnalysis);
+      setAnalysis(segmentsAnalysis);
+    }
+
+    analyzeSegments();
 
   }, [airspaces, waypoints, segmentAltitudes, plannedAltitude]);
 

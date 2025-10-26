@@ -4,6 +4,8 @@ import { useAlternatesStore } from '@core/stores/alternatesStore';
 import { useNavigation, useAircraft } from '@core/contexts';
 import { useVACStore } from '@core/stores/vacStore';
 import { useCallback, useMemo } from 'react';
+import { calculateDistanceFromRoute } from '../utils/geometryCalculations';
+import { useUnits } from '@hooks/useUnits';
 
 /**
  * Hook pour intégration dans le module Navigation
@@ -59,82 +61,83 @@ export const useAlternatesForFuel = () => {
   const { selectedAlternates } = useAlternatesStore();
   const { selectedAircraft } = useAircraft();
   const { waypoints } = useNavigation();
-  
+  const { getUnit } = useUnits();
+
   const calculateAlternateFuel = useCallback(() => {
     if (!selectedAlternates.length || !selectedAircraft) {
             return 0;
     }
-    
+
     const departure = waypoints[0];
     const arrival = waypoints[waypoints.length - 1];
-    
+
     if (!departure || !arrival) {
             return 0;
     }
-    
-        
-    // Calculer la distance maximale pour chaque type de déroutement
-    let maxDistanceDeparture = 0;
-    let maxDistanceArrival = 0;
-    let selectedDepartureAlternate = null;
-    let selectedArrivalAlternate = null;
-    
-        
+
+    const departurePoint = { lat: departure.lat, lon: departure.lon || departure.lng };
+    const arrivalPoint = { lat: arrival.lat, lon: arrival.lon || arrival.lng };
+
+    // Calculer la distance PERPENDICULAIRE minimale depuis la route pour chaque alternate
+    let maxDistanceToRoute = 0;
+    let selectedAlternate = null;
+
     selectedAlternates.forEach(alt => {
       if (!alt.position || !alt.position.lat || !alt.position.lon) {
                 return;
       }
 
+      // ✅ CORRECTION : Utiliser la distance perpendiculaire depuis la ROUTE
+      const distanceToRoute = calculateDistanceFromRoute(
+        alt.position,
+        departurePoint,
+        arrivalPoint
+      );
+
       console.log(`Alternate: ${alt.icao}`, {
         position: alt.position,
-        selectionType: alt.selectionType
+        selectionType: alt.selectionType,
+        distanceToRoute: distanceToRoute.toFixed(1) + ' NM (perpendiculaire)'
       });
 
-      if (alt.selectionType === 'departure') {
-        // Calculer la distance depuis le départ
-        const departurePoint = { lat: departure.lat, lon: departure.lon || departure.lng };
-                const distance = calculateDistance(departurePoint, alt.position);
-                
-        if (distance > maxDistanceDeparture) {
-          maxDistanceDeparture = distance;
-          selectedDepartureAlternate = alt;
-        }
-      } else if (alt.selectionType === 'arrival') {
-        // Calculer la distance depuis l'arrivée
-        const arrivalPoint = { lat: arrival.lat, lon: arrival.lon || arrival.lng };
-                const distance = calculateDistance(arrivalPoint, alt.position);
-                
-        if (distance > maxDistanceArrival) {
-          maxDistanceArrival = distance;
-          selectedArrivalAlternate = alt;
-        }
-      } else {
-              }
+      if (distanceToRoute > maxDistanceToRoute) {
+        maxDistanceToRoute = distanceToRoute;
+        selectedAlternate = alt;
+      }
     });
-    
-    // Prendre la distance maximale entre les deux
-    const maxDistance = Math.max(maxDistanceDeparture, maxDistanceArrival);
-    
-        
+
+    // Utiliser la distance perpendiculaire maximale
+    const maxDistance = maxDistanceToRoute;
+
     // Si aucune distance valide, retourner 0
     if (maxDistance === 0) {
             return 0;
     }
-    
+
     // Calculer le carburant nécessaire pour la distance maximale
-    const fuelConsumption = selectedAircraft.fuelConsumption || 30; // L/h par défaut
+    const GAL_TO_LTR = 3.78541;
+    const currentUnit = getUnit('fuelConsumption');
+    let fuelConsumptionLph;
+
+    if (currentUnit === 'gph') {
+      // Consommation en gal/h, convertir en L/h pour les calculs
+      fuelConsumptionLph = (selectedAircraft.fuelConsumption || 30) * GAL_TO_LTR;
+    } else {
+      // Consommation déjà en L/h
+      fuelConsumptionLph = selectedAircraft.fuelConsumption || 30;
+    }
+
     const cruiseSpeed = selectedAircraft.cruiseSpeedKt || selectedAircraft.cruiseSpeed || 100; // kt par défaut
     const flightTime = maxDistance / cruiseSpeed; // en heures
-    
-    // Ajouter 30 minutes de réserve pour l'approche et l'atterrissage
-    const totalFlightTime = flightTime + 0.5;
-    const fuelRequired = totalFlightTime * fuelConsumption;
 
-    console.log('Fuel calculation:', {
+    // Ne pas ajouter de réserve d'approche - la réserve finale (final reserve) est comptée séparément
+    const fuelRequired = flightTime * fuelConsumptionLph;
+
+    console.log('Fuel calculation (alternate):', {
       cruiseSpeed,
       flightTime: flightTime.toFixed(4),
-      totalFlightTime: totalFlightTime.toFixed(4),
-      fuelConsumption,
+      currentUnit,
+      fuelConsumptionLph,
       fuelRequired: fuelRequired.toFixed(2),
       fuelRequiredCeil: Math.ceil(fuelRequired)
     });
@@ -147,30 +150,30 @@ export const useAlternatesForFuel = () => {
     
     // Arrondir au litre supérieur
     return Math.ceil(fuelRequired);
-  }, [selectedAlternates, selectedAircraft, waypoints]);
+  }, [selectedAlternates, selectedAircraft, waypoints, getUnit]);
   
-  // Calculer les distances pour chaque alternate depuis son point de référence
+  // Calculer les distances perpendiculaires pour chaque alternate depuis la route
   const alternateDistances = selectedAlternates.map(alt => {
     if (!alt.position) return { icao: alt.icao, distance: 0, type: alt.selectionType, name: alt.name };
-    
-    // Utiliser le point de départ ou d'arrivée selon le type
-    const referencePoint = alt.selectionType === 'departure' 
-      ? waypoints[0] 
-      : waypoints[waypoints.length - 1];
-    
-    if (!referencePoint) return { icao: alt.icao, distance: 0, type: alt.selectionType, name: alt.name };
-    
-    const distance = calculateDistance(
-      { lat: referencePoint.lat, lon: referencePoint.lon || referencePoint.lng },
-      alt.position
+
+    const departure = waypoints[0];
+    const arrival = waypoints[waypoints.length - 1];
+
+    if (!departure || !arrival) return { icao: alt.icao, distance: 0, type: alt.selectionType, name: alt.name };
+
+    // ✅ CORRECTION : Utiliser la distance perpendiculaire depuis la ROUTE
+    const distanceToRoute = calculateDistanceFromRoute(
+      alt.position,
+      { lat: departure.lat, lon: departure.lon || departure.lng },
+      { lat: arrival.lat, lon: arrival.lon || arrival.lng }
     );
 
     return {
       icao: alt.icao,
-      distance: distance,
+      distance: distanceToRoute,
       type: alt.selectionType,
       name: alt.name,
-      referencePoint: alt.selectionType === 'departure' ? 'Départ' : 'Arrivée'
+      referencePoint: 'Route' // Plus pertinent car c'est la distance perpendiculaire
     };
   });
   

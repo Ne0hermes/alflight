@@ -2,6 +2,7 @@ import React from 'react';
 import { Calendar, Radio, Plane, Sun, Moon, MapPin, Navigation, Fuel } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import { aircraftSelectors } from '../../../core/stores/aircraftStore';
+import { useAircraft } from '@core/contexts';
 
 /**
  * Étape 1 : Informations générales du vol
@@ -12,6 +13,8 @@ import { aircraftSelectors } from '../../../core/stores/aircraftStore';
 export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
   // Récupérer la liste des avions disponibles
   const aircraftList = aircraftSelectors.useAircraftList();
+  // Récupérer le contexte Aircraft pour mettre à jour l'avion sélectionné globalement
+  const { setSelectedAircraft } = useAircraft();
 
   const handleChange = (field, value) => {
     flightPlan.updateGeneralInfo({ [field]: value });
@@ -27,8 +30,27 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
     const selectedAircraft = aircraftList.find(ac => ac.registration === registration);
 
     if (selectedAircraft) {
-      // Pré-remplir automatiquement toutes les données de l'avion
+      // 🔧 CORRECTION : Mettre à jour le contexte Aircraft global pour les autres modules (alternates, etc.)
+      // IMPORTANT: Passer l'OBJET complet, pas seulement l'ID
+      setSelectedAircraft(selectedAircraft);
+      console.log('🛩️ Contexte Aircraft mis à jour:', selectedAircraft.registration);
+
+      // 🔍 DEBUG : Vérifier si weightBalance existe dans selectedAircraft
+      console.log('🔍 [Step1] selectedAircraft has weightBalance?', !!selectedAircraft.weightBalance);
+      console.log('🔍 [Step1] selectedAircraft has arms?', !!selectedAircraft.arms);
+      if (selectedAircraft.weightBalance) {
+        console.log('✓ [Step1] weightBalance exists:', selectedAircraft.weightBalance);
+      } else if (selectedAircraft.arms) {
+        console.log('⚠️ [Step1] arms exists but NOT mapped to weightBalance:', selectedAircraft.arms);
+      } else {
+        console.error('❌ [Step1] NO weightBalance NOR arms in selectedAircraft');
+      }
+
+      // Pré-remplir automatiquement TOUTES les données de l'avion dans le flightPlan
+      // Copier l'objet complet pour que Step6 (Weight & Balance) ait accès à toutes les propriétés
       flightPlan.updateAircraft({
+        ...selectedAircraft, // Copier TOUTES les propriétés de l'avion
+        // S'assurer que les propriétés essentielles sont bien définies
         registration: selectedAircraft.registration,
         type: selectedAircraft.aircraftType || selectedAircraft.type || '',
         model: selectedAircraft.model || '',
@@ -37,8 +59,16 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
         fuelCapacity: selectedAircraft.fuelCapacity || 0,
         emptyWeight: selectedAircraft.emptyWeight || 0,
         maxWeight: selectedAircraft.maxWeight || selectedAircraft.maxTakeoffWeight || 0,
+        // Les propriétés suivantes sont maintenant incluses via ...selectedAircraft :
+        // - weightBalance (bras de levier et limites CG)
+        // - armLengths (bras de levier depuis AIXM)
+        // - baggageCompartments (compartiments bagages dynamiques)
+        // - masses (masses diverses)
+        // - limitations (limitations diverses)
+        // - cgEnvelope (enveloppe de centrage)
+        // Et toutes les autres propriétés de l'avion
       });
-      console.log('✅ Avion pré-rempli automatiquement:', selectedAircraft.registration);
+      console.log('✅ Avion pré-rempli automatiquement avec toutes les propriétés:', selectedAircraft.registration);
     }
 
     onUpdate();

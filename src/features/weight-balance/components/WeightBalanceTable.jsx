@@ -3,11 +3,21 @@ import React, { memo, useMemo } from 'react';
 import { sx } from '@shared/styles/styleSystem';
 
 export const WeightBalanceTable = memo(({ aircraft, loads, calculations }) => {
+  // ⚠️ PROTECTION: Vérifier que weightBalance existe
+  if (!aircraft || !aircraft.weightBalance) {
+    console.error('❌ [WeightBalanceTable] aircraft.weightBalance is undefined');
+    return (
+      <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning)}>
+        <p>⚠️ Données de masse et centrage non disponibles pour cet avion</p>
+      </div>
+    );
+  }
+
   const wb = aircraft.weightBalance;
-  
+
   console.log('WeightBalanceTable - Current loads:', loads);
   console.log('WeightBalanceTable - Current calculations:', calculations);
-  
+
   // Données du tableau mémorisées
   const tableData = useMemo(() => {
     const items = [];

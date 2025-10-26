@@ -1,9 +1,10 @@
 // src/features/flight-wizard/steps/Step4Alternates.jsx
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useEffect } from 'react';
 import AlternatesModule from '@features/alternates/AlternatesModule';
 import { AlertTriangle, Fuel, Navigation } from 'lucide-react';
 import { theme } from '../../../styles/theme';
-import { useNavigation } from '@core/contexts';
+import { useNavigation, useAircraft } from '@core/contexts';
+import { useUnits } from '@hooks/useUnits';
 
 // Styles communs
 const commonStyles = {
@@ -50,28 +51,72 @@ const commonStyles = {
 // Composant principal de l'étape 4 - Utilise directement le AlternatesModule complet
 export const Step4Alternates = memo(({ flightPlan, onUpdate }) => {
   const { waypoints } = useNavigation();
+  const { setSelectedAircraft } = useAircraft();
+  const { convert, getSymbol } = useUnits();
+
+  // 🔧 FIX: Synchroniser l'avion du flightPlan avec le contexte Aircraft global
+  // Nécessaire pour que AlternatesModule (via useAlternateSelection) puisse accéder à l'avion
+  useEffect(() => {
+    if (flightPlan?.aircraft?.registration) {
+      // Si l'avion du flightPlan a déjà un ID, il vient du store - utiliser directement
+      if (flightPlan.aircraft.id) {
+        setSelectedAircraft(flightPlan.aircraft);
+        console.log('✅ [Step4] Avion synchronisé depuis flightPlan:', flightPlan.aircraft.registration);
+        return;
+      }
+
+      // Sinon, essayer de le trouver dans le store (pour récupérer les données complètes)
+      import('@core/stores/aircraftStore').then(({ useAircraftStore }) => {
+        const store = useAircraftStore.getState();
+
+        // Vérifier si le store est initialisé
+        if (!store.isInitialized) {
+          console.log('⏳ [Step4] Store non initialisé, utilisation de l\'avion du flightPlan');
+          setSelectedAircraft(flightPlan.aircraft);
+          return;
+        }
+
+        const fullAircraft = store.aircraftList.find(
+          ac => ac.registration === flightPlan.aircraft.registration
+        );
+
+        if (fullAircraft) {
+          setSelectedAircraft(fullAircraft);
+          console.log('✅ [Step4] Avion trouvé dans le store:', fullAircraft.registration);
+        } else {
+          // Avion custom ou non encore dans le store - utiliser celui du flightPlan
+          console.log('⚠️ [Step4] Avion non trouvé dans le store, utilisation du flightPlan:', flightPlan.aircraft.registration);
+          setSelectedAircraft(flightPlan.aircraft);
+        }
+      });
+    }
+  }, [flightPlan?.aircraft?.registration, setSelectedAircraft]);
 
   // Calculer le rayon de sélection basé sur le carburant restant à l'arrivée
   const searchRadius = useMemo(() => {
-    // Carburant total confirmé (L)
+    // Carburant total confirmé (L) - valeur de stockage
     const totalFuel = flightPlan.fuel.confirmed || 0;
 
-    // Carburant consommé pendant le vol (L)
+    // Carburant consommé pendant le vol (L) - valeur de stockage
     const fuelUsed = (flightPlan.fuel.taxi || 0) +
                      (flightPlan.fuel.climb || 0) +
                      (flightPlan.fuel.cruise || 0);
 
-    // Carburant restant à l'arrivée (L)
+    // Carburant restant à l'arrivée (L) - valeur de stockage
     const remainingFuel = totalFuel - fuelUsed;
 
-    // Consommation de l'avion (L/h)
-    const fuelConsumption = flightPlan.aircraft.fuelConsumption || 40;
+    // Consommation de l'avion stockée en L/h (lph)
+    const fuelConsumptionStorage = flightPlan.aircraft.fuelConsumption || 40;
+
+    // Conversion pour affichage selon préférences utilisateur
+    const fuelConsumptionDisplay = convert(fuelConsumptionStorage, 'fuelConsumption', 'lph');
+    const fuelRemainingDisplay = convert(remainingFuel, 'fuel', 'ltr');
 
     // Vitesse de croisière (kt)
     const cruiseSpeed = flightPlan.aircraft.cruiseSpeed || 120;
 
-    // Autonomie restante (heures)
-    const remainingEndurance = remainingFuel / fuelConsumption;
+    // Autonomie restante (heures) - UTILISER la valeur de stockage pour les calculs
+    const remainingEndurance = remainingFuel / fuelConsumptionStorage;
 
     // Rayon en NM (distance franchissable avec carburant restant)
     const radiusNM = remainingEndurance * cruiseSpeed;
@@ -80,14 +125,16 @@ export const Step4Alternates = memo(({ flightPlan, onUpdate }) => {
     const radiusKM = radiusNM * 1.852;
 
     return {
-      fuelRemaining: remainingFuel,
+      fuelRemaining: remainingFuel,           // Stockage (L)
+      fuelRemainingDisplay: fuelRemainingDisplay,  // Affichage converti
       endurance: remainingEndurance,
       radiusNM: radiusNM,
       radiusKM: radiusKM,
       cruiseSpeed: cruiseSpeed,
-      fuelConsumption: fuelConsumption
+      fuelConsumption: fuelConsumptionStorage,     // Stockage (L/h) pour calculs
+      fuelConsumptionDisplay: fuelConsumptionDisplay // Affichage converti
     };
-  }, [flightPlan.fuel, flightPlan.aircraft]);
+  }, [flightPlan.fuel, flightPlan.aircraft, convert]);
 
   // Trouver l'aérodrome d'arrivée
   const arrivalAirport = useMemo(() => {
@@ -96,53 +143,6 @@ export const Step4Alternates = memo(({ flightPlan, onUpdate }) => {
 
   return (
     <div style={commonStyles.container}>
-      {/* Titre de l'étape */}
-      <div style={commonStyles.label}>
-        <AlertTriangle size={20} />
-        Sélection des aérodromes de déroutement
-      </div>
-
-      {/* Informations sur la zone de recherche */}
-      {arrivalAirport && searchRadius.radiusNM > 0 && (
-        <div style={commonStyles.infoBox}>
-          <div style={commonStyles.infoRow}>
-            <Fuel size={18} color="#93163c" />
-            <span style={commonStyles.infoLabel}>Carburant restant à l'arrivée :</span>
-            <span style={commonStyles.infoValue}>
-              {searchRadius.fuelRemaining.toFixed(1)} L
-            </span>
-          </div>
-          <div style={commonStyles.infoRow}>
-            <Navigation size={18} color="#93163c" />
-            <span style={commonStyles.infoLabel}>Autonomie restante :</span>
-            <span style={commonStyles.infoValue}>
-              {(searchRadius.endurance * 60).toFixed(0)} minutes
-              ({searchRadius.endurance.toFixed(1)}h)
-            </span>
-          </div>
-          <div style={commonStyles.infoRow}>
-            <AlertTriangle size={18} color="#93163c" />
-            <span style={commonStyles.infoLabel}>Rayon de recherche :</span>
-            <span style={commonStyles.infoValue}>
-              {searchRadius.radiusNM.toFixed(0)} NM ({searchRadius.radiusKM.toFixed(0)} km)
-            </span>
-          </div>
-          <div style={{
-            marginTop: '12px',
-            paddingTop: '12px',
-            borderTop: '1px solid #93163c33',
-            fontSize: '13px',
-            color: '#6b7280',
-            fontStyle: 'italic'
-          }}>
-            💡 Les aérodromes de déroutement seront recherchés dans un rayon de{' '}
-            <strong>{searchRadius.radiusNM.toFixed(0)} NM</strong> autour de l'aérodrome d'arrivée{' '}
-            <strong>{arrivalAirport.icao || arrivalAirport.name}</strong>,
-            correspondant à votre autonomie disponible.
-          </div>
-        </div>
-      )}
-
       {/* Module de déroutement complet */}
       <AlternatesModule
         customRadius={searchRadius.radiusKM}

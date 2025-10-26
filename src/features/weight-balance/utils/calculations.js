@@ -3,41 +3,55 @@
 export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelData) => {
   if (!aircraft || !calculations) return null;
 
+  // ⚠️ PROTECTION CRITIQUE : Vérifier que weightBalance existe
+  // Si pas de weightBalance, les calculs ne peuvent pas être effectués
+  if (!aircraft.weightBalance) {
+    console.error('❌ aircraft.weightBalance is undefined - cannot calculate scenarios');
+    console.error('Aircraft data:', aircraft);
+    return null;
+  }
+
   const wb = aircraft.weightBalance;
   const fuelDensity = aircraft.fuelType === 'JET A-1' ? 0.84 : 0.72;
-  
+
   // Valeurs par défaut pour éviter les NaN
   const safeTotalWeight = calculations.totalWeight || 0;
   const safeTotalMoment = calculations.totalMoment || 0;
   const safeFuel = loads.fuel || 0;
   const safeCG = calculations.cg || 0;
-  
+
+  // S'assurer que fuelArm existe
+  const fuelArm = wb.fuelArm || 0;
+  if (fuelArm === 0) {
+    console.warn('⚠️ wb.fuelArm is 0 or undefined - using 0 for calculations');
+  }
+
   // Calcul du carburant restant
   const fuelBalance = fuelData ? Object.values(fuelData).reduce((sum, f) => sum + (f?.ltr || 0), 0) : 0;
   const remainingFuelL = Math.max(0, (fobFuel?.ltr || 0) - fuelBalance);
   const remainingFuelKg = remainingFuelL * fuelDensity;
-  
+
   // Poids sans carburant
   const zeroFuelWeight = Math.max(0, safeTotalWeight - safeFuel);
-  
+
   // Moment sans carburant
-  const zeroFuelMoment = safeTotalMoment - (safeFuel * wb.fuelArm);
+  const zeroFuelMoment = safeTotalMoment - (safeFuel * fuelArm);
   
   // Scénario 1: FULLTANK
   const fulltankFuelKg = aircraft.fuelCapacity * fuelDensity;
   const fulltankWeight = zeroFuelWeight + fulltankFuelKg;
-  const fulltankMoment = zeroFuelMoment + (fulltankFuelKg * wb.fuelArm);
+  const fulltankMoment = zeroFuelMoment + (fulltankFuelKg * fuelArm);
   const fulltankCG = fulltankWeight > 0 ? fulltankMoment / fulltankWeight : 0;
-  
+
   // Scénario 2: T/O CRM (actuel)
   const toCrmWeight = safeTotalWeight;
   const toCrmCG = safeCG;
   const toCrmFuel = safeFuel;
-  
+
   // Scénario 3: LANDING
   const landingFuelKg = fobFuel?.ltr > 0 ? remainingFuelKg : 0;
   const landingWeight = zeroFuelWeight + landingFuelKg;
-  const landingMoment = zeroFuelMoment + (landingFuelKg * wb.fuelArm);
+  const landingMoment = zeroFuelMoment + (landingFuelKg * fuelArm);
   const landingCG = landingWeight > 0 ? landingMoment / landingWeight : 0;
   
   // Scénario 4: ZFW
