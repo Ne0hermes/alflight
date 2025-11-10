@@ -268,93 +268,9 @@ const PerformanceTableCalculator = ({
       {/* Corps du calculateur (affiché si expanded) */}
       {isExpanded && (
         <div style={sx.spacing.p(4)}>
-          {/* Section 1: Plages disponibles dans le tableau */}
-          <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3), sx.spacing.mb(4))}>
-            <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-              📊 Plages disponibles dans {displayData?.isGroup ? 'le groupe' : 'le tableau'}
-            </h5>
-            <div style={{ display: 'grid', gridTemplateColumns: displayData?.isGroup ? '1fr 1fr 1fr' : '1fr 1fr', gap: '12px', fontSize: '12px' }}>
-              <div>
-                <p style={sx.text.bold}>Altitudes (ft):</p>
-                <p>{altitudes.join(', ')}</p>
-              </div>
-              <div>
-                <p style={sx.text.bold}>Températures (°C):</p>
-                <p>{temperatures.join(', ')}</p>
-              </div>
-              {displayData?.isGroup && displayData.masses && (
-                <div>
-                  <p style={sx.text.bold}>Masses (kg):</p>
-                  <p>{displayData.masses.join(', ')}</p>
-                </div>
-              )}
-            </div>
-          </div>
+          {/* 🔧 SECTIONS RETIRÉES: Plages disponibles et Conditions de calcul */}
+          {/* Informations déjà affichées dans les sections Décollage/Atterrissage en haut */}
 
-          {/* Section 2: Conditions de calcul (éditables) */}
-          <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3), sx.spacing.mb(4))}>
-            <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(3))}>
-              ⚙️ Conditions de calcul
-            </h5>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-              {/* Altitude */}
-              <div>
-                <label style={sx.combine(sx.components.label.base, sx.text.xs)}>
-                  Altitude (ft)
-                </label>
-                <input
-                  type="number"
-                  value={conditions.altitude}
-                  onChange={(e) => setConditions(prev => ({ ...prev, altitude: parseFloat(e.target.value) || 0 }))}
-                  style={sx.components.input.base}
-                />
-                <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
-                  Source: {departureAirport?.name || arrivalAirport?.name || 'Manuel'}
-                </p>
-              </div>
-
-              {/* Température */}
-              <div>
-                <label style={sx.combine(sx.components.label.base, sx.text.xs, conditions.temperature === null && { color: '#ef4444' })}>
-                  Température (°C) {conditions.temperature === null && '⚠️'}
-                </label>
-                <input
-                  type="number"
-                  value={conditions.temperature !== null ? conditions.temperature : ''}
-                  onChange={(e) => setConditions(prev => ({ ...prev, temperature: e.target.value ? parseFloat(e.target.value) : null }))}
-                  placeholder={conditions.temperature === null ? "NON DISPONIBLE - Saisir manuellement" : ""}
-                  style={sx.combine(
-                    sx.components.input.base,
-                    conditions.temperature === null && { borderColor: '#ef4444', backgroundColor: '#fef2f2' }
-                  )}
-                />
-                <p style={sx.combine(sx.text.xs, conditions.temperature === null ? { color: '#ef4444' } : sx.text.secondary, sx.spacing.mt(1))}>
-                  {conditions.temperature === null ? (
-                    '⚠️ Température METAR non trouvée - Consulter météo et saisir manuellement'
-                  ) : (
-                    `ISA à ${conditions.altitude}ft: ${performanceInterpolation.getISATemperature(conditions.altitude).toFixed(1)}°C`
-                  )}
-                </p>
-              </div>
-
-              {/* Masse */}
-              <div>
-                <label style={sx.combine(sx.components.label.base, sx.text.xs)}>
-                  Masse (kg)
-                </label>
-                <input
-                  type="number"
-                  value={conditions.weight || ''}
-                  onChange={(e) => setConditions(prev => ({ ...prev, weight: parseFloat(e.target.value) || null }))}
-                  placeholder={defaultWeight ? `Défaut: ${defaultWeight}` : 'Non défini'}
-                  style={sx.components.input.base}
-                />
-                <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
-                  Source: Masse et centrage
-                </p>
-              </div>
-            </div>
-          </div>
 
           {/* Section 3: Détails du calcul d'interpolation */}
           {result && result.interpolationDetails && (
