@@ -42,6 +42,9 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   const departureTemp = useMemo(() => {
     if (!departureAirport) return null;
 
+    // 🔧 FIX: Essayer de restaurer depuis flightPlan d'abord (pour rechargement page)
+    const savedTemp = flightPlan?.performance?.departure?.temperature;
+
     // 🔧 FIX: Chemin correct vers température METAR = metar.decoded.temperature
     // weatherAPI.js ligne 91: { decoded: { temperature: data.temperature?.value ?? null } }
     const metarTemp = departureWeather?.metar?.decoded?.temperature ||
@@ -49,9 +52,11 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
                       departureWeather?.temp ||
                       flightPlan?.weather?.departure?.metar?.decoded?.temperature;
 
-    // 🚨 CRITIQUE: Si pas de METAR → null (afficher "NON DISPONIBLE")
+    // 🚨 CRITIQUE: Si pas de METAR → utiliser savedTemp si disponible (rechargement page)
     // NE PAS utiliser ISA comme fallback (erreur grave de sécurité)
-    const finalTemp = metarTemp !== undefined && metarTemp !== null ? metarTemp : null;
+    const finalTemp = (metarTemp !== undefined && metarTemp !== null) ? metarTemp :
+                      (savedTemp !== undefined && savedTemp !== null) ? savedTemp :
+                      null;
 
     console.log('🌡️ [PerformanceModule] Départ temp DEBUG:', {
       icao: departureAirport?.icao?.toUpperCase(),
@@ -75,6 +80,9 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   const arrivalTemp = useMemo(() => {
     if (!arrivalAirport) return null;
 
+    // 🔧 FIX: Essayer de restaurer depuis flightPlan d'abord (pour rechargement page)
+    const savedTemp = flightPlan?.performance?.arrival?.temperature;
+
     // 🔧 FIX: Chemin correct vers température METAR = metar.decoded.temperature
     // weatherAPI.js ligne 91: { decoded: { temperature: data.temperature?.value ?? null } }
     const metarTemp = arrivalWeather?.metar?.decoded?.temperature ||
@@ -82,8 +90,10 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
                       arrivalWeather?.temp ||
                       flightPlan?.weather?.arrival?.metar?.decoded?.temperature;
 
-    // 🚨 CRITIQUE: Si pas de METAR → null (afficher "NON DISPONIBLE")
-    const finalTemp = metarTemp !== undefined && metarTemp !== null ? metarTemp : null;
+    // 🚨 CRITIQUE: Si pas de METAR → utiliser savedTemp si disponible (rechargement page)
+    const finalTemp = (metarTemp !== undefined && metarTemp !== null) ? metarTemp :
+                      (savedTemp !== undefined && savedTemp !== null) ? savedTemp :
+                      null;
 
     console.log('🌡️ [PerformanceModule] Arrivée temp DEBUG:', {
       icao: arrivalAirport?.icao?.toUpperCase(),
@@ -142,6 +152,38 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     // 3. Valeur par défaut pour DA40 NG
     return 1310; // kg (MTOW typique DA40 NG)
   }, [selectedAircraft, takeoffGroups]);
+
+  // 🔧 FIX: Sauvegarder les températures dans flightPlan pour persistance
+  useEffect(() => {
+    if (!flightPlan || (!departureTemp && !arrivalTemp)) return;
+
+    // Initialiser performance s'il n'existe pas
+    if (!flightPlan.performance) {
+      flightPlan.performance = {};
+    }
+
+    // Sauvegarder températures de départ
+    if (departureTemp !== null && departureTemp !== undefined) {
+      if (!flightPlan.performance.departure) {
+        flightPlan.performance.departure = {};
+      }
+      if (flightPlan.performance.departure.temperature !== departureTemp) {
+        flightPlan.performance.departure.temperature = departureTemp;
+        console.log('💾 [PerformanceModule] Température départ sauvegardée:', departureTemp);
+      }
+    }
+
+    // Sauvegarder températures d'arrivée
+    if (arrivalTemp !== null && arrivalTemp !== undefined) {
+      if (!flightPlan.performance.arrival) {
+        flightPlan.performance.arrival = {};
+      }
+      if (flightPlan.performance.arrival.temperature !== arrivalTemp) {
+        flightPlan.performance.arrival.temperature = arrivalTemp;
+        console.log('💾 [PerformanceModule] Température arrivée sauvegardée:', arrivalTemp);
+      }
+    }
+  }, [departureTemp, arrivalTemp, flightPlan]);
 
   // Si aucun avion sélectionné, afficher un message
   if (!selectedAircraft) {
