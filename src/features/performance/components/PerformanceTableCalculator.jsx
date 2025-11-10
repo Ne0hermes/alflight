@@ -4,7 +4,7 @@ import { Calculator, ChevronDown, ChevronUp, AlertCircle, Info, CheckCircle } fr
 import { sx } from '../../../shared/styles/styleSystem';
 import performanceInterpolation from '../../../services/performanceInterpolation';
 import { getCombinedDataForGroup } from '../../../services/performanceTableGrouping';
-import { calculatePerformanceDistance } from '../../../services/performanceTrilinearInterpolation';
+import { calculatePerformanceDistance, calculatePerformanceWithExtrapolation } from '../../../services/performanceTrilinearInterpolation';
 
 /**
  * Calculateur de performance pour UN tableau extrait
@@ -85,7 +85,7 @@ const PerformanceTableCalculator = ({
       return null;
     }
 
-    // 🔧 NOUVEAU: Utiliser l'interpolation trilinéaire si groupe disponible
+    // 🔧 NOUVEAU: Utiliser l'interpolation trilinéaire avec extrapolation si groupe disponible
     if (combinedGroupData && conditions.weight !== null) {
       console.log('🔄 [Calculator] Calcul trilinéaire avec:', {
         altitude: conditions.altitude,
@@ -93,7 +93,8 @@ const PerformanceTableCalculator = ({
         weight: conditions.weight
       });
 
-      const groundRoll = calculatePerformanceDistance(
+      // Utiliser la fonction avec extrapolation
+      const groundRollResult = calculatePerformanceWithExtrapolation(
         combinedGroupData,
         'Distance_roulement',
         conditions.weight,
@@ -101,7 +102,7 @@ const PerformanceTableCalculator = ({
         conditions.temperature
       );
 
-      const distance15m = calculatePerformanceDistance(
+      const distance15mResult = calculatePerformanceWithExtrapolation(
         combinedGroupData,
         'Distance_passage_15m',
         conditions.weight,
@@ -109,13 +110,50 @@ const PerformanceTableCalculator = ({
         conditions.temperature
       );
 
-      if (groundRoll !== null || distance15m !== null) {
-        return {
-          groundRoll: groundRoll ? Math.round(groundRoll) : null,
-          distance50ft: distance15m ? Math.round(distance15m) : null,
-          interpolated: true,
-          trilinear: true // Flag pour indiquer qu'on a utilisé l'interpolation 3D
-        };
+      // Si on a des résultats (interpolés ou extrapolés)
+      if (groundRollResult || distance15mResult) {
+        // Déterminer si on a une valeur simple (interpolation normale) ou multiple (extrapolation)
+        const hasExtrapolation =
+          (groundRollResult?.extrapolated || groundRollResult?.clamped) ||
+          (distance15mResult?.extrapolated || distance15mResult?.clamped);
+
+        if (hasExtrapolation) {
+          // Masse hors limites - retourner les deux calculs
+          return {
+            groundRoll: {
+              extrapolated: groundRollResult?.extrapolated ? {
+                value: Math.round(groundRollResult.extrapolated.value),
+                warning: groundRollResult.extrapolated.warning
+              } : null,
+              clamped: groundRollResult?.clamped ? {
+                value: Math.round(groundRollResult.clamped.value),
+                massUsed: groundRollResult.clamped.massUsed,
+                warning: groundRollResult.clamped.warning
+              } : null
+            },
+            distance50ft: {
+              extrapolated: distance15mResult?.extrapolated ? {
+                value: Math.round(distance15mResult.extrapolated.value),
+                warning: distance15mResult.extrapolated.warning
+              } : null,
+              clamped: distance15mResult?.clamped ? {
+                value: Math.round(distance15mResult.clamped.value),
+                massUsed: distance15mResult.clamped.massUsed,
+                warning: distance15mResult.clamped.warning
+              } : null
+            },
+            outOfRange: true,
+            trilinear: true
+          };
+        } else {
+          // Interpolation normale
+          return {
+            groundRoll: groundRollResult?.value ? Math.round(groundRollResult.value) : null,
+            distance50ft: distance15mResult?.value ? Math.round(distance15mResult.value) : null,
+            interpolated: true,
+            trilinear: true
+          };
+        }
       }
       return null;
     }
@@ -246,10 +284,10 @@ const PerformanceTableCalculator = ({
         </div>
 
         {/* 🔧 RÉSULTATS INTÉGRÉS - Toujours visibles */}
-        {result && (
+        {result && !result.outOfRange && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginTop: '16px' }}>
-            {/* Distance de roulage */}
-            {result.groundRoll && (
+            {/* Distance de roulage - Interpolation normale */}
+            {result.groundRoll && typeof result.groundRoll === 'number' && (
               <div style={sx.combine(sx.components.card.base, { backgroundColor: '#f0fdf4', padding: '12px' })}>
                 <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mb(1))}>
                   Distance de roulage (ground roll)
@@ -257,16 +295,11 @@ const PerformanceTableCalculator = ({
                 <p style={sx.combine(sx.text.xl, sx.text.bold, { color: tableType.color })}>
                   {result.groundRoll} m
                 </p>
-                {result.groundRollWithMargin && (
-                  <p style={sx.combine(sx.text.sm, { color: '#f59e0b' })}>
-                    Avec marge 15%: {result.groundRollWithMargin} m
-                  </p>
-                )}
               </div>
             )}
 
-            {/* Distance 50ft */}
-            {result.distance50ft && (
+            {/* Distance 50ft - Interpolation normale */}
+            {result.distance50ft && typeof result.distance50ft === 'number' && (
               <div style={sx.combine(sx.components.card.base, { backgroundColor: '#f0fdf4', padding: '12px' })}>
                 <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mb(1))}>
                   Distance passage 50ft / 15m
@@ -274,13 +307,110 @@ const PerformanceTableCalculator = ({
                 <p style={sx.combine(sx.text.xl, sx.text.bold, { color: tableType.color })}>
                   {result.distance50ft} m
                 </p>
-                {result.distance50ftWithMargin && (
-                  <p style={sx.combine(sx.text.sm, { color: '#f59e0b' })}>
-                    Avec marge 15%: {result.distance50ftWithMargin} m
-                  </p>
-                )}
               </div>
             )}
+          </div>
+        )}
+
+        {/* 🚨 RÉSULTATS HORS LIMITES - Affichage des 2 calculs */}
+        {result && result.outOfRange && (
+          <div style={{ marginTop: '16px' }}>
+            {/* Avertissement masse hors limites */}
+            <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning, sx.spacing.mb(3))}>
+              <AlertCircle size={16} />
+              <div>
+                <p style={sx.combine(sx.text.sm, sx.text.bold)}>
+                  ⚠️ MASSE HORS LIMITES DU TABLEAU
+                </p>
+                <p style={sx.text.xs}>
+                  Masse: {conditions.weight} kg • Plage tableau: {displayData?.masses?.[0]} - {displayData?.masses?.[displayData.masses.length - 1]} kg
+                </p>
+                <p style={sx.text.xs}>
+                  Deux calculs affichés : Extrapolation linéaire + Calcul avec masse limite
+                </p>
+              </div>
+            </div>
+
+            {/* Grille 2x2 : Roulage et 50ft, chacun avec 2 calculs */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+              {/* Distance de roulage */}
+              {result.groundRoll && (
+                <div>
+                  <p style={sx.combine(sx.text.xs, sx.text.bold, sx.spacing.mb(2), { color: tableType.color })}>
+                    Distance de roulage
+                  </p>
+
+                  {/* Extrapolée */}
+                  {result.groundRoll.extrapolated && (
+                    <div style={sx.combine(sx.components.card.base, { backgroundColor: '#fef3c7', padding: '12px', marginBottom: '8px' })}>
+                      <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                        📊 Extrapolée ({conditions.weight} kg)
+                      </p>
+                      <p style={sx.combine(sx.text.lg, sx.text.bold, { color: '#f59e0b' })}>
+                        {result.groundRoll.extrapolated.value} m
+                      </p>
+                      <p style={sx.combine(sx.text.xs, { color: '#92400e', marginTop: '4px' })}>
+                        {result.groundRoll.extrapolated.warning}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Masse limite */}
+                  {result.groundRoll.clamped && (
+                    <div style={sx.combine(sx.components.card.base, { backgroundColor: '#e0e7ff', padding: '12px' })}>
+                      <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                        📌 Masse limite ({result.groundRoll.clamped.massUsed} kg)
+                      </p>
+                      <p style={sx.combine(sx.text.lg, sx.text.bold, { color: '#4f46e5' })}>
+                        {result.groundRoll.clamped.value} m
+                      </p>
+                      <p style={sx.combine(sx.text.xs, { color: '#312e81', marginTop: '4px' })}>
+                        {result.groundRoll.clamped.warning}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Distance 50ft */}
+              {result.distance50ft && (
+                <div>
+                  <p style={sx.combine(sx.text.xs, sx.text.bold, sx.spacing.mb(2), { color: tableType.color })}>
+                    Distance passage 50ft / 15m
+                  </p>
+
+                  {/* Extrapolée */}
+                  {result.distance50ft.extrapolated && (
+                    <div style={sx.combine(sx.components.card.base, { backgroundColor: '#fef3c7', padding: '12px', marginBottom: '8px' })}>
+                      <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                        📊 Extrapolée ({conditions.weight} kg)
+                      </p>
+                      <p style={sx.combine(sx.text.lg, sx.text.bold, { color: '#f59e0b' })}>
+                        {result.distance50ft.extrapolated.value} m
+                      </p>
+                      <p style={sx.combine(sx.text.xs, { color: '#92400e', marginTop: '4px' })}>
+                        {result.distance50ft.extrapolated.warning}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Masse limite */}
+                  {result.distance50ft.clamped && (
+                    <div style={sx.combine(sx.components.card.base, { backgroundColor: '#e0e7ff', padding: '12px' })}>
+                      <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                        📌 Masse limite ({result.distance50ft.clamped.massUsed} kg)
+                      </p>
+                      <p style={sx.combine(sx.text.lg, sx.text.bold, { color: '#4f46e5' })}>
+                        {result.distance50ft.clamped.value} m
+                      </p>
+                      <p style={sx.combine(sx.text.xs, { color: '#312e81', marginTop: '4px' })}>
+                        {result.distance50ft.clamped.warning}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
