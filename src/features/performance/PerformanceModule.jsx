@@ -336,13 +336,14 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               <Wind size={16} style={{ marginRight: '6px', color: '#06b6d4' }} />
               <h4 style={sx.combine(sx.text.xs, sx.text.bold)}>Vent</h4>
             </div>
-            {departureWeather?.metar?.wind ? (
+            {/* 🔧 FIX: Chemin correct = metar.decoded.wind (weatherAPI.js lignes 81-85) */}
+            {departureWeather?.metar?.decoded?.wind ? (
               <>
                 <p style={sx.combine(sx.text.lg, sx.text.bold)}>
-                  {departureWeather.metar.wind.speed || 0} kt
+                  {departureWeather.metar.decoded.wind.speed || 0} kt
                 </p>
                 <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
-                  {departureWeather.metar.wind.direction || '---'}°
+                  {departureWeather.metar.decoded.wind.direction || '---'}°
                 </p>
               </>
             ) : (
@@ -435,13 +436,14 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               <Wind size={16} style={{ marginRight: '6px', color: '#06b6d4' }} />
               <h4 style={sx.combine(sx.text.xs, sx.text.bold)}>Vent</h4>
             </div>
-            {arrivalWeather?.metar?.wind ? (
+            {/* 🔧 FIX: Chemin correct = metar.decoded.wind (weatherAPI.js lignes 81-85) */}
+            {arrivalWeather?.metar?.decoded?.wind ? (
               <>
                 <p style={sx.combine(sx.text.lg, sx.text.bold)}>
-                  {arrivalWeather.metar.wind.speed || 0} kt
+                  {arrivalWeather.metar.decoded.wind.speed || 0} kt
                 </p>
                 <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
-                  {arrivalWeather.metar.wind.direction || '---'}°
+                  {arrivalWeather.metar.decoded.wind.direction || '---'}°
                 </p>
               </>
             ) : (
@@ -546,28 +548,30 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
           </div>
 
           {/* Pistes recommandées pour le départ */}
-          {departureWeather?.metar?.wind && departureAirport?.name && (
+          {/* 🔧 FIX: Chemin correct = metar.decoded.wind */}
+          {departureWeather?.metar?.decoded?.wind && departureAirport?.name && (
             <div style={sx.spacing.mb(4)}>
               <h4 style={sx.combine(sx.text.md, sx.text.bold, sx.spacing.mb(2))}>
                 ✈️ Départ - {departureAirport.name}
               </h4>
               <RunwaySuggestionEnhanced
                 icao={departureAirport.name}
-                wind={departureWeather.metar.wind}
+                wind={departureWeather.metar.decoded.wind}
                 showDetails={true}
               />
             </div>
           )}
 
           {/* Pistes recommandées pour l'arrivée */}
-          {arrivalWeather?.metar?.wind && arrivalAirport?.name && (
+          {/* 🔧 FIX: Chemin correct = metar.decoded.wind */}
+          {arrivalWeather?.metar?.decoded?.wind && arrivalAirport?.name && (
             <div>
               <h4 style={sx.combine(sx.text.md, sx.text.bold, sx.spacing.mb(2))}>
                 🛬 Arrivée - {arrivalAirport.name}
               </h4>
               <RunwaySuggestionEnhanced
                 icao={arrivalAirport.name}
-                wind={arrivalWeather.metar.wind}
+                wind={arrivalWeather.metar.decoded.wind}
                 showDetails={true}
               />
             </div>
