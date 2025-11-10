@@ -30,7 +30,24 @@ export const Step5Fuel = memo(({ flightPlan, onUpdate }) => {
   // Il calcule automatiquement les besoins en fonction de la navigation et des alternates
 
   // Récupérer le FOB (Fuel On Board) depuis le contexte
-  const { fobFuel, calculateTotal } = useFuel();
+  const { fobFuel, calculateTotal, setFobFuel } = useFuel();
+
+  // 🔧 FIX: Restaurer fobFuel depuis flightPlan au montage
+  const hasRestored = React.useRef(false);
+  useEffect(() => {
+    if (hasRestored.current) return;
+
+    const savedFuel = flightPlan?.fuel?.confirmed;
+    if (savedFuel && savedFuel > 0) {
+      // Restaurer fobFuel depuis flightPlan
+      console.log('🔄 [Step5Fuel] Restauration CRM depuis flightPlan:', savedFuel, 'L');
+      setFobFuel({
+        ltr: savedFuel,
+        gal: savedFuel / 3.78541
+      });
+      hasRestored.current = true;
+    }
+  }, [flightPlan?.fuel?.confirmed, setFobFuel]);
 
   // Synchroniser le FOB avec flightPlan.fuel.confirmed pour la validation du wizard
   useEffect(() => {

@@ -66,16 +66,49 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
 
   // Synchroniser les waypoints du NavigationContext avec le flightPlan
   useEffect(() => {
-    if (!waypoints || waypoints.length === 0) return;
+    // 🔧 FIX CRITIQUE: Ne PAS écraser si waypoints vide ET flightPlan a déjà des données
+    // Cela évite d'effacer les waypoints sauvegardés lors du remontage du composant
+    const hasWaypointsInContext = waypoints && waypoints.length > 0;
+    const hasWaypointsInFlightPlan = flightPlan.route.waypoints && flightPlan.route.waypoints.length > 0;
+
+    if (!hasWaypointsInContext && hasWaypointsInFlightPlan) {
+      // Waypoints vides dans le contexte mais présents dans flightPlan
+      // → Ne rien faire, laisser la restauration se faire
+      console.log('⏳ [Step3Route] Waypoints en attente de restauration depuis flightPlan');
+      return;
+    }
+
+    if (!hasWaypointsInContext && !hasWaypointsInFlightPlan) {
+      // Aucun waypoint nulle part → OK, rien à faire
+      return;
+    }
+
+    if (!hasWaypointsInContext && flightPlan.route.waypoints?.length > 0) {
+      // Waypoints présents dans flightPlan mais pas dans contexte → vider flightPlan
+      flightPlan.route.waypoints = [];
+      console.log('🔄 Waypoints vidés dans flightPlan');
+      if (onUpdate) onUpdate();
+      return;
+    }
 
     // Trouver le départ et l'arrivée
     const departure = waypoints.find(wp => wp.type === 'departure');
     const arrival = waypoints.find(wp => wp.type === 'arrival');
 
-    console.log('🔄 Synchronisation waypoints avec flightPlan:', { departure, arrival });
+    // 🔧 FIX: Extraire les waypoints intermédiaires (ni départ ni arrivée)
+    const intermediates = waypoints.filter(wp =>
+      wp.type !== 'departure' &&
+      wp.type !== 'arrival'
+    );
+
+    console.log('🔄 Synchronisation waypoints avec flightPlan:', {
+      departure,
+      arrival,
+      intermediates: intermediates.length
+    });
 
     // Mettre à jour le flightPlan si les données sont disponibles
-    if (departure || arrival) {
+    if (departure || arrival || intermediates.length > 0) {
       if (departure && departure.icao !== flightPlan.route.departure.icao) {
         flightPlan.route.departure = {
           icao: departure.icao || departure.name || '',
@@ -94,6 +127,23 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
           elevation: arrival.elevation || 0
         };
         console.log('✅ Arrivée mise à jour dans flightPlan:', flightPlan.route.arrival);
+      }
+
+      // 🔧 FIX: Sauvegarder les waypoints intermédiaires dans flightPlan
+      if (intermediates.length > 0) {
+        flightPlan.route.waypoints = intermediates.map(wp => ({
+          type: wp.type || 'waypoint',
+          icao: wp.icao || wp.name,
+          name: wp.name,
+          coordinates: wp.lat && wp.lon ? { lat: wp.lat, lng: wp.lon } : null,
+          lat: wp.lat,
+          lon: wp.lon,
+          elevation: wp.elevation || 0
+        }));
+        console.log('✅ Waypoints intermédiaires sauvegardés dans flightPlan:', flightPlan.route.waypoints.length);
+      } else {
+        // Vider les waypoints si plus aucun intermédiaire
+        flightPlan.route.waypoints = [];
       }
 
       // Notifier le wizard de la mise à jour
