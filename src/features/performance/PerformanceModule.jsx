@@ -191,22 +191,16 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
 
   return (
     <div style={sx.spacing.p(6)}>
-      {/* Section: Tableaux extraits et calculateurs */}
-      <div style={sx.combine(sx.components.card.base, sx.spacing.mb(6))}>
-        <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4), sx.flex.start)}>
-          <Table size={20} style={{ marginRight: '8px' }} />
-          Tableaux de performances ({tableGroups.length} groupe{tableGroups.length > 1 ? 's' : ''})
-        </h3>
+      {/* Section Décollage */}
+      {takeoffGroups.length > 0 && (
+        <div style={sx.combine(sx.components.card.base, sx.spacing.mb(6))}>
+          <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4), sx.flex.start)}>
+            <Plane size={20} style={{ marginRight: '8px', color: '#3b82f6', transform: 'rotate(-45deg)' }} />
+            Décollage
+          </h3>
 
-        {/* Groupes de tableaux de décollage */}
-        {takeoffGroups.length > 0 && (
-          <>
-            <h4 style={sx.combine(sx.text.md, sx.text.bold, sx.spacing.mb(3))}>
-              ✈️ Décollage ({takeoffGroups.length} groupe{takeoffGroups.length > 1 ? 's' : ''})
-            </h4>
-
-            {/* Paramètres de décollage */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '16px' }}>
+          {/* Paramètres de décollage */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '16px' }}>
               {/* Masse décollage */}
               <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
                 <div style={sx.combine(sx.flex.start, sx.spacing.mb(2))}>
@@ -298,27 +292,28 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               </div>
             </div>
 
-            {takeoffGroups.map((group, index) => (
-              <PerformanceTableCalculator
-                key={`takeoff-group-${index}`}
-                tableGroup={group}
-                index={index}
-                defaultAltitude={departureAirport?.elevation || 0}
-                defaultTemperature={departureTemp}
-                defaultWeight={calculations?.totalWeight || fallbackWeight}
-                departureAirport={departureAirport}
-                isExpanded={index === 0} // Premier groupe ouvert par défaut
-              />
-            ))}
-          </>
-        )}
+          {takeoffGroups.map((group, index) => (
+            <PerformanceTableCalculator
+              key={`takeoff-group-${index}`}
+              tableGroup={group}
+              index={index}
+              defaultAltitude={departureAirport?.elevation || 0}
+              defaultTemperature={departureTemp}
+              defaultWeight={calculations?.totalWeight || fallbackWeight}
+              departureAirport={departureAirport}
+              isExpanded={index === 0} // Premier groupe ouvert par défaut
+            />
+          ))}
+        </div>
+      )}
 
-        {/* Groupes de tableaux d'atterrissage */}
-        {landingGroups.length > 0 && (
-          <>
-            <h4 style={sx.combine(sx.text.md, sx.text.bold, sx.spacing.mb(3), sx.spacing.mt(4))}>
-              🛬 Atterrissage ({landingGroups.length} groupe{landingGroups.length > 1 ? 's' : ''})
-            </h4>
+      {/* Section Atterrissage */}
+      {landingGroups.length > 0 && (
+        <div style={sx.combine(sx.components.card.base, sx.spacing.mb(6))}>
+          <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4), sx.flex.start)}>
+            <Plane size={20} style={{ marginRight: '8px', color: '#10b981', transform: 'rotate(45deg)' }} />
+            Atterrissage
+          </h3>
 
             {/* Paramètres d'atterrissage */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '16px' }}>
@@ -410,21 +405,20 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               </div>
             </div>
 
-            {landingGroups.map((group, index) => (
-              <PerformanceTableCalculator
-                key={`landing-group-${index}`}
-                tableGroup={group}
-                index={index}
-                defaultAltitude={arrivalAirport?.elevation || 0}
-                defaultTemperature={arrivalTemp}
-                defaultWeight={(calculations?.totalWeight || fallbackWeight) - 50} // Estimation masse atterrissage (moins carburant)
-                arrivalAirport={arrivalAirport}
-                isExpanded={index === 0} // Premier groupe ouvert par défaut
-              />
-            ))}
-          </>
-        )}
-      </div>
+          {landingGroups.map((group, index) => (
+            <PerformanceTableCalculator
+              key={`landing-group-${index}`}
+              tableGroup={group}
+              index={index}
+              defaultAltitude={arrivalAirport?.elevation || 0}
+              defaultTemperature={arrivalTemp}
+              defaultWeight={(calculations?.totalWeight || fallbackWeight) - 50} // Estimation masse atterrissage (moins carburant)
+              arrivalAirport={arrivalAirport}
+              isExpanded={index === 0} // Premier groupe ouvert par défaut
+            />
+          ))}
+        </div>
+      )}
 
       {/* Section Analyse du vent et pistes recommandées */}
       {(departureWeather || arrivalWeather) && (
