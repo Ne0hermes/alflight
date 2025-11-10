@@ -42,22 +42,29 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   const departureTemp = useMemo(() => {
     if (!departureAirport) return null;
 
-    // 🔧 FIX: Essayer plusieurs sources pour la température METAR
-    const metarTemp = departureWeather?.metar?.temp ||
+    // 🔧 FIX: Chemin correct vers température METAR = metar.decoded.temperature
+    // weatherAPI.js ligne 91: { decoded: { temperature: data.temperature?.value ?? null } }
+    const metarTemp = departureWeather?.metar?.decoded?.temperature ||
+                      departureWeather?.decoded?.temperature ||
                       departureWeather?.temp ||
-                      flightPlan?.weather?.departure?.metar?.temp;
+                      flightPlan?.weather?.departure?.metar?.decoded?.temperature;
 
     // 🚨 CRITIQUE: Si pas de METAR → null (afficher "NON DISPONIBLE")
     // NE PAS utiliser ISA comme fallback (erreur grave de sécurité)
     const finalTemp = metarTemp !== undefined && metarTemp !== null ? metarTemp : null;
 
-    console.log('🌡️ [PerformanceModule] Départ temp:', {
-      metarTemp,
-      finalTemp,
+    console.log('🌡️ [PerformanceModule] Départ temp DEBUG:', {
+      icao: departureAirport?.icao?.toUpperCase(),
       hasWeather: !!departureWeather,
       hasMETAR: !!departureWeather?.metar,
-      weatherDataKeys: Object.keys(weatherData),
-      searchedKey: departureAirport?.icao?.toUpperCase(),
+      hasDecoded: !!departureWeather?.metar?.decoded,
+      metarTemp,
+      finalTemp,
+      weatherStructure: departureWeather ? {
+        keys: Object.keys(departureWeather),
+        metarKeys: departureWeather.metar ? Object.keys(departureWeather.metar) : 'pas de metar',
+        decodedKeys: departureWeather.metar?.decoded ? Object.keys(departureWeather.metar.decoded) : 'pas de decoded'
+      } : 'pas de weather',
       verdict: finalTemp !== null ? '✅ METAR trouvé' : '❌ PAS DE METAR - NON DISPONIBLE'
     });
 
@@ -68,19 +75,28 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   const arrivalTemp = useMemo(() => {
     if (!arrivalAirport) return null;
 
-    // 🔧 FIX: Essayer plusieurs sources pour la température METAR
-    const metarTemp = arrivalWeather?.metar?.temp ||
+    // 🔧 FIX: Chemin correct vers température METAR = metar.decoded.temperature
+    // weatherAPI.js ligne 91: { decoded: { temperature: data.temperature?.value ?? null } }
+    const metarTemp = arrivalWeather?.metar?.decoded?.temperature ||
+                      arrivalWeather?.decoded?.temperature ||
                       arrivalWeather?.temp ||
-                      flightPlan?.weather?.arrival?.metar?.temp;
+                      flightPlan?.weather?.arrival?.metar?.decoded?.temperature;
 
     // 🚨 CRITIQUE: Si pas de METAR → null (afficher "NON DISPONIBLE")
     const finalTemp = metarTemp !== undefined && metarTemp !== null ? metarTemp : null;
 
-    console.log('🌡️ [PerformanceModule] Arrivée temp:', {
-      metarTemp,
-      finalTemp,
+    console.log('🌡️ [PerformanceModule] Arrivée temp DEBUG:', {
+      icao: arrivalAirport?.icao?.toUpperCase(),
       hasWeather: !!arrivalWeather,
       hasMETAR: !!arrivalWeather?.metar,
+      hasDecoded: !!arrivalWeather?.metar?.decoded,
+      metarTemp,
+      finalTemp,
+      weatherStructure: arrivalWeather ? {
+        keys: Object.keys(arrivalWeather),
+        metarKeys: arrivalWeather.metar ? Object.keys(arrivalWeather.metar) : 'pas de metar',
+        decodedKeys: arrivalWeather.metar?.decoded ? Object.keys(arrivalWeather.metar.decoded) : 'pas de decoded'
+      } : 'pas de weather',
       verdict: finalTemp !== null ? '✅ METAR trouvé' : '❌ PAS DE METAR - NON DISPONIBLE'
     });
 
