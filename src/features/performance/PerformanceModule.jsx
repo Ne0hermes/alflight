@@ -198,17 +198,6 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
           Tableaux de performances ({tableGroups.length} groupe{tableGroups.length > 1 ? 's' : ''})
         </h3>
 
-        <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mb(4))}>
-          <p style={sx.text.sm}>
-            <strong>{tableGroups.length} groupe{tableGroups.length > 1 ? 's' : ''}</strong> de tableaux de performances extraits par IA.
-            Chaque groupe peut contenir plusieurs masses. L'interpolation est automatique.
-          </p>
-          <p style={sx.combine(sx.text.xs, sx.spacing.mt(1))}>
-            Les valeurs par défaut (altitude, température, masse) sont automatiquement remplies depuis les autres modules.
-            Vous pouvez les modifier manuellement dans chaque calculateur.
-          </p>
-        </div>
-
         {/* Groupes de tableaux de décollage */}
         {takeoffGroups.length > 0 && (
           <>
