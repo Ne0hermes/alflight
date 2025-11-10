@@ -37,56 +37,55 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     flightPlan?.weather?.arrival
   );
 
-  // Calculer température par défaut
+  // 🚨 SÉCURITÉ CRITIQUE : Température depuis METAR uniquement
+  // NE JAMAIS utiliser ISA comme fallback → DANGER performances incorrectes
   const departureTemp = useMemo(() => {
-    if (!departureAirport) return 15;
-    const altitude = departureAirport.elevation || 0;
-    const isaTemp = calculateISATemperature(altitude);
+    if (!departureAirport) return null;
 
-    // 🔧 FIX: Essayer plusieurs sources pour la température
+    // 🔧 FIX: Essayer plusieurs sources pour la température METAR
     const metarTemp = departureWeather?.metar?.temp ||
                       departureWeather?.temp ||
                       flightPlan?.weather?.departure?.metar?.temp;
 
-    const finalTemp = metarTemp ?? isaTemp;
+    // 🚨 CRITIQUE: Si pas de METAR → null (afficher "NON DISPONIBLE")
+    // NE PAS utiliser ISA comme fallback (erreur grave de sécurité)
+    const finalTemp = metarTemp !== undefined && metarTemp !== null ? metarTemp : null;
 
     console.log('🌡️ [PerformanceModule] Départ temp:', {
-      altitude,
-      isaTemp,
       metarTemp,
       finalTemp,
       hasWeather: !!departureWeather,
       hasMETAR: !!departureWeather?.metar,
       weatherDataKeys: Object.keys(weatherData),
-      searchedKey: departureAirport?.icao?.toUpperCase()
+      searchedKey: departureAirport?.icao?.toUpperCase(),
+      verdict: finalTemp !== null ? '✅ METAR trouvé' : '❌ PAS DE METAR - NON DISPONIBLE'
     });
 
     return finalTemp;
-  }, [departureAirport, departureWeather, calculateISATemperature, weatherData, flightPlan]);
+  }, [departureAirport, departureWeather, weatherData, flightPlan]);
 
+  // 🚨 SÉCURITÉ CRITIQUE : Température depuis METAR uniquement
   const arrivalTemp = useMemo(() => {
-    if (!arrivalAirport) return 15;
-    const altitude = arrivalAirport.elevation || 0;
-    const isaTemp = calculateISATemperature(altitude);
+    if (!arrivalAirport) return null;
 
-    // 🔧 FIX: Essayer plusieurs sources pour la température
+    // 🔧 FIX: Essayer plusieurs sources pour la température METAR
     const metarTemp = arrivalWeather?.metar?.temp ||
                       arrivalWeather?.temp ||
                       flightPlan?.weather?.arrival?.metar?.temp;
 
-    const finalTemp = metarTemp ?? isaTemp;
+    // 🚨 CRITIQUE: Si pas de METAR → null (afficher "NON DISPONIBLE")
+    const finalTemp = metarTemp !== undefined && metarTemp !== null ? metarTemp : null;
 
     console.log('🌡️ [PerformanceModule] Arrivée temp:', {
-      altitude,
-      isaTemp,
       metarTemp,
       finalTemp,
       hasWeather: !!arrivalWeather,
-      hasMETAR: !!arrivalWeather?.metar
+      hasMETAR: !!arrivalWeather?.metar,
+      verdict: finalTemp !== null ? '✅ METAR trouvé' : '❌ PAS DE METAR - NON DISPONIBLE'
     });
 
     return finalTemp;
-  }, [arrivalAirport, arrivalWeather, calculateISATemperature, flightPlan]);
+  }, [arrivalAirport, arrivalWeather, flightPlan]);
 
   // 🔧 NOUVEAU: Regrouper les tableaux par nom de base (sans masse)
   const tableGroups = useMemo(() => {
@@ -294,12 +293,25 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               <Thermometer size={16} style={{ marginRight: '6px', color: '#f59e0b' }} />
               <h4 style={sx.combine(sx.text.xs, sx.text.bold)}>Température</h4>
             </div>
-            <p style={sx.combine(sx.text.lg, sx.text.bold)}>
-              {departureTemp}°C
-            </p>
-            <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
-              {departureWeather?.metar?.temp ? 'METAR' : 'ISA'}
-            </p>
+            {departureTemp !== null ? (
+              <>
+                <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+                  {departureTemp}°C
+                </p>
+                <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                  METAR
+                </p>
+              </>
+            ) : (
+              <>
+                <p style={sx.combine(sx.text.lg, sx.text.bold, { color: '#ef4444' })}>
+                  NON DISPONIBLE
+                </p>
+                <p style={sx.combine(sx.text.xs, { color: '#ef4444' })}>
+                  ⚠️ Consulter météo
+                </p>
+              </>
+            )}
           </div>
 
           {/* Vent décollage */}
@@ -380,12 +392,25 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               <Thermometer size={16} style={{ marginRight: '6px', color: '#f59e0b' }} />
               <h4 style={sx.combine(sx.text.xs, sx.text.bold)}>Température</h4>
             </div>
-            <p style={sx.combine(sx.text.lg, sx.text.bold)}>
-              {arrivalTemp}°C
-            </p>
-            <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
-              {arrivalWeather?.metar?.temp ? 'METAR' : 'ISA'}
-            </p>
+            {arrivalTemp !== null ? (
+              <>
+                <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+                  {arrivalTemp}°C
+                </p>
+                <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                  METAR
+                </p>
+              </>
+            ) : (
+              <>
+                <p style={sx.combine(sx.text.lg, sx.text.bold, { color: '#ef4444' })}>
+                  NON DISPONIBLE
+                </p>
+                <p style={sx.combine(sx.text.xs, { color: '#ef4444' })}>
+                  ⚠️ Consulter météo
+                </p>
+              </>
+            )}
           </div>
 
           {/* Vent atterrissage */}
