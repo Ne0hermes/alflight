@@ -274,7 +274,6 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
     {
       number: 7,
       title: 'Performances',
-      description: 'Décollage et atterrissage',
       component: Step5Performance,
       validate: () => true // Toujours valide, données calculées automatiquement
     },
