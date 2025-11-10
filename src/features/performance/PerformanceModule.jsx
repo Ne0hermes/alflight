@@ -161,35 +161,6 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   if (!selectedAircraft.advancedPerformance?.tables || selectedAircraft.advancedPerformance.tables.length === 0) {
     return (
       <div style={sx.spacing.p(6)}>
-        {/* Header du module */}
-        <div style={sx.combine(sx.components.card.base, sx.spacing.mb(6))}>
-          <div style={sx.combine(sx.flex.between, sx.spacing.mb(4))}>
-            <h2 style={sx.combine(sx.text.xl, sx.text.bold, sx.flex.start)}>
-              <TrendingUp size={24} style={{ marginRight: '8px', color: '#10b981' }} />
-              Calcul des performances
-            </h2>
-          </div>
-
-          {/* Info avion */}
-          <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
-            <div style={sx.combine(sx.flex.between)}>
-              <div>
-                <h4 style={sx.text.bold}>{selectedAircraft.registration}</h4>
-                <p style={sx.text.secondary}>{selectedAircraft.model}</p>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <p style={sx.text.sm}>
-                  <span style={sx.text.secondary}>MTOW: </span>
-                  <span style={sx.text.bold}>{selectedAircraft.maxTakeoffWeight || 'N/A'} kg</span>
-                </p>
-                <p style={sx.text.sm}>
-                  <span style={sx.text.secondary}>Vitesse: </span>
-                  <span style={sx.text.bold}>{selectedAircraft.cruiseSpeedKt || selectedAircraft.cruiseSpeed || 'N/A'} kt</span>
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Message: Aucun tableau extrait */}
         <div style={sx.combine(sx.components.card.base, sx.spacing.p(6), sx.text.center)}>
@@ -220,45 +191,8 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
 
   return (
     <div style={sx.spacing.p(6)}>
-      {/* Header du module */}
-      <div style={sx.combine(sx.components.card.base, sx.spacing.mb(6))}>
-        <div style={sx.combine(sx.flex.between, sx.spacing.mb(4))}>
-          <h2 style={sx.combine(sx.text.xl, sx.text.bold, sx.flex.start)}>
-            <TrendingUp size={24} style={{ marginRight: '8px', color: '#10b981' }} />
-            Calcul des performances
-          </h2>
-        </div>
-
-        {/* Info avion */}
-        <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
-          <div style={sx.combine(sx.flex.between)}>
-            <div>
-              <h4 style={sx.text.bold}>{selectedAircraft.registration}</h4>
-              <p style={sx.text.secondary}>{selectedAircraft.model}</p>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <p style={sx.text.sm}>
-                <span style={sx.text.secondary}>MTOW: </span>
-                <span style={sx.text.bold}>{selectedAircraft.maxTakeoffWeight || 'N/A'} kg</span>
-              </p>
-              <p style={sx.text.sm}>
-                <span style={sx.text.secondary}>Vitesse: </span>
-                <span style={sx.text.bold}>{selectedAircraft.cruiseSpeedKt || selectedAircraft.cruiseSpeed || 'N/A'} kt</span>
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Section: Données de DÉCOLLAGE */}
       <div style={sx.combine(sx.components.card.base, sx.spacing.mb(4))}>
-        <div style={sx.combine(sx.flex.between, sx.spacing.mb(4))}>
-          <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.flex.start)}>
-            <Plane size={20} style={{ marginRight: '8px', color: '#3b82f6', transform: 'rotate(-45deg)' }} />
-            Décollage - {departureAirport?.name || 'Non défini'}
-          </h3>
-        </div>
-
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
           {/* Masse décollage */}
           <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
@@ -355,13 +289,6 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
 
       {/* Section: Données d'ATTERRISSAGE */}
       <div style={sx.combine(sx.components.card.base, sx.spacing.mb(6))}>
-        <div style={sx.combine(sx.flex.between, sx.spacing.mb(4))}>
-          <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.flex.start)}>
-            <Plane size={20} style={{ marginRight: '8px', color: '#10b981', transform: 'rotate(45deg)' }} />
-            Atterrissage - {arrivalAirport?.name || 'Non défini'}
-          </h3>
-        </div>
-
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
           {/* Masse atterrissage */}
           <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
