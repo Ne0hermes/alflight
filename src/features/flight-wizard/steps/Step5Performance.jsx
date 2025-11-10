@@ -30,14 +30,8 @@ export const Step5Performance = memo(({ flightPlan, onUpdate }) => {
 
   return (
     <div style={commonStyles.container}>
-      {/* Titre de l'étape */}
-      <div style={commonStyles.label}>
-        <Gauge size={20} />
-        Performances de décollage et atterrissage
-      </div>
-
-      {/* Module de performance complet */}
-      <PerformanceModule />
+      {/* Module de performance complet - 🔧 FIX: Passer flightPlan pour accès aux données calculées */}
+      <PerformanceModule wizardMode={true} config={{ flightPlan }} />
     </div>
   );
 });
