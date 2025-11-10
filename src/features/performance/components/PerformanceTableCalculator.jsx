@@ -211,18 +211,9 @@ const PerformanceTableCalculator = ({
 
   return (
     <div style={sx.combine(sx.components.card.base, sx.spacing.mb(4))}>
-      {/* Header du tableau */}
-      <div
-        style={sx.combine(
-          sx.spacing.p(4),
-          sx.flex.between,
-          {
-            cursor: 'pointer',
-            borderBottom: isExpanded ? '1px solid #e5e7eb' : 'none'
-          }
-        )}
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
+      {/* Header du tableau avec résultats intégrés */}
+      <div style={sx.spacing.p(4)}>
+        {/* Titre et informations */}
         <div style={sx.flex.start}>
           <div
             style={{
@@ -235,7 +226,7 @@ const PerformanceTableCalculator = ({
               flexShrink: 0
             }}
           />
-          <div>
+          <div style={{ flex: 1 }}>
             <h4 style={sx.combine(sx.text.md, sx.text.bold)}>
               {tableType.label} - {tableGroup?.baseName || table.table_name || `Tableau ${index + 1}`}
               {displayData?.isGroup && <span style={{ color: '#8b5cf6', marginLeft: '8px', fontSize: '12px' }}>⚡ Interpolation 3D</span>}
@@ -253,196 +244,54 @@ const PerformanceTableCalculator = ({
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {result && (
-            <div style={sx.combine(sx.text.sm, sx.text.bold, { color: tableType.color })}>
-              {result.groundRoll && <span>{result.groundRoll}m</span>}
-              {result.groundRoll && result.distance50ft && <span> / </span>}
-              {result.distance50ft && <span>{result.distance50ft}m</span>}
-            </div>
-          )}
-          {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-        </div>
+
+        {/* 🔧 RÉSULTATS INTÉGRÉS - Toujours visibles */}
+        {result && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginTop: '16px' }}>
+            {/* Distance de roulage */}
+            {result.groundRoll && (
+              <div style={sx.combine(sx.components.card.base, { backgroundColor: '#f0fdf4', padding: '12px' })}>
+                <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mb(1))}>
+                  Distance de roulage (ground roll)
+                </p>
+                <p style={sx.combine(sx.text.xl, sx.text.bold, { color: tableType.color })}>
+                  {result.groundRoll} m
+                </p>
+                {result.groundRollWithMargin && (
+                  <p style={sx.combine(sx.text.sm, { color: '#f59e0b' })}>
+                    Avec marge 15%: {result.groundRollWithMargin} m
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Distance 50ft */}
+            {result.distance50ft && (
+              <div style={sx.combine(sx.components.card.base, { backgroundColor: '#f0fdf4', padding: '12px' })}>
+                <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mb(1))}>
+                  Distance passage 50ft / 15m
+                </p>
+                <p style={sx.combine(sx.text.xl, sx.text.bold, { color: tableType.color })}>
+                  {result.distance50ft} m
+                </p>
+                {result.distance50ftWithMargin && (
+                  <p style={sx.combine(sx.text.sm, { color: '#f59e0b' })}>
+                    Avec marge 15%: {result.distance50ftWithMargin} m
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Corps du calculateur (affiché si expanded) */}
-      {isExpanded && (
+      {/* 🔧 SECTIONS DÉTAILS SUPPRIMÉES - Interface simplifiée */}
+      {/* Les résultats sont maintenant toujours visibles dans le header */}
+
+      {/* 🚨 SÉCURITÉ: Avertissement si pas de résultat */}
+      {!result && (
         <div style={sx.spacing.p(4)}>
-          {/* 🔧 SECTIONS RETIRÉES: Plages disponibles et Conditions de calcul */}
-          {/* Informations déjà affichées dans les sections Décollage/Atterrissage en haut */}
-
-
-          {/* Section 3: Détails du calcul d'interpolation */}
-          {result && result.interpolationDetails && (
-            <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3), sx.spacing.mb(4))}>
-              <div style={sx.combine(sx.flex.between, sx.spacing.mb(3))}>
-                <h5 style={sx.combine(sx.text.sm, sx.text.bold)}>
-                  🔬 Détails du calcul d'interpolation
-                </h5>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowCalculationDetails(!showCalculationDetails);
-                  }}
-                  style={sx.combine(
-                    sx.components.button.base,
-                    sx.components.button.secondary,
-                    { padding: '4px 8px', fontSize: '11px' }
-                  )}
-                >
-                  {showCalculationDetails ? 'Masquer' : 'Afficher'}
-                </button>
-              </div>
-
-              {showCalculationDetails && (
-                <>
-                  {/* Méthode d'interpolation */}
-                  <div style={sx.spacing.mb(3)}>
-                    <p style={sx.combine(sx.text.xs, sx.text.bold)}>
-                      Méthode: {result.interpolationDetails.method}
-                    </p>
-                    <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
-                      {result.interpolationDetails.method === 'Bilinéaire 2D'
-                        ? 'Interpolation sur 2 axes (altitude + température) utilisant 4 points du tableau'
-                        : 'Interpolation linéaire sur 1 axe utilisant 2 points du tableau'}
-                    </p>
-                  </div>
-
-                  {/* Valeurs cibles */}
-                  <div style={sx.spacing.mb(3)}>
-                    <p style={sx.combine(sx.text.xs, sx.text.bold)}>Valeurs cibles:</p>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '4px' }}>
-                      <p style={sx.text.xs}>• Altitude: <strong>{result.interpolationDetails.targetAltitude} ft</strong></p>
-                      <p style={sx.text.xs}>• Température: <strong>{result.interpolationDetails.targetTemperature}°C</strong></p>
-                    </div>
-                  </div>
-
-                  {/* Points du tableau utilisés */}
-                  {result.interpolationDetails.dataPointsUsed && result.interpolationDetails.dataPointsUsed.length > 0 && (
-                    <div>
-                      <p style={sx.combine(sx.text.xs, sx.text.bold, sx.spacing.mb(2))}>
-                        Points du tableau utilisés pour l'interpolation:
-                      </p>
-                      <div style={{ overflowX: 'auto' }}>
-                        <table style={{
-                          width: '100%',
-                          fontSize: '11px',
-                          borderCollapse: 'collapse',
-                          backgroundColor: 'white',
-                          borderRadius: '4px'
-                        }}>
-                          <thead>
-                            <tr style={{ backgroundColor: '#f3f4f6', borderBottom: '2px solid #e5e7eb' }}>
-                              <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600' }}>Altitude (ft)</th>
-                              <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600' }}>Température (°C)</th>
-                              <th style={{ padding: '8px', textAlign: 'right', fontWeight: '600' }}>Roulage (m)</th>
-                              <th style={{ padding: '8px', textAlign: 'right', fontWeight: '600' }}>Distance 50ft (m)</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {result.interpolationDetails.dataPointsUsed.map((point, idx) => (
-                              <tr key={idx} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                                <td style={{ padding: '8px', fontWeight: '500' }}>{point.altitude}</td>
-                                <td style={{ padding: '8px', fontWeight: '500' }}>{point.temperature}</td>
-                                <td style={{ padding: '8px', textAlign: 'right' }}>
-                                  {point.groundRoll !== null ? point.groundRoll : '—'}
-                                </td>
-                                <td style={{ padding: '8px', textAlign: 'right' }}>
-                                  {point.distance50ft !== null ? point.distance50ft : '—'}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      {/* Formule d'interpolation */}
-                      <div style={sx.combine(sx.spacing.mt(3), sx.spacing.p(2), { backgroundColor: '#fef3c7', borderRadius: '4px' })}>
-                        <p style={sx.combine(sx.text.xs, sx.text.bold, sx.spacing.mb(1))}>
-                          📐 Formule appliquée:
-                        </p>
-                        {result.interpolationDetails.method === 'Bilinéaire 2D' ? (
-                          <div style={sx.text.xs}>
-                            <p>1. Interpolation linéaire sur la température pour altitude basse</p>
-                            <p>2. Interpolation linéaire sur la température pour altitude haute</p>
-                            <p>3. Interpolation linéaire sur l'altitude entre les deux résultats</p>
-                            <p style={sx.spacing.mt(1)}>
-                              <code style={{ fontFamily: 'monospace', fontSize: '10px' }}>
-                                f(alt,temp) = lerp_alt(lerp_temp(v1,v2), lerp_temp(v3,v4))
-                              </code>
-                            </p>
-                          </div>
-                        ) : (
-                          <div style={sx.text.xs}>
-                            <p>Interpolation linéaire: y = y₁ + (y₂ - y₁) × (x - x₁) / (x₂ - x₁)</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Section 4: Résultats */}
-          {result && (
-            <div style={sx.combine(sx.components.card.base, sx.spacing.p(4), { backgroundColor: '#f0fdf4' })}>
-              <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(3), sx.flex.start)}>
-                <CheckCircle size={16} style={{ marginRight: '6px', color: '#10b981' }} />
-                Résultats calculés
-              </h5>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-                {/* Distance de roulage */}
-                {result.groundRoll && (
-                  <div>
-                    <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mb(1))}>
-                      Distance de roulage (ground roll)
-                    </p>
-                    <p style={sx.combine(sx.text.xl, sx.text.bold)}>
-                      {result.groundRoll} m
-                    </p>
-                    {result.groundRollWithMargin && (
-                      <p style={sx.combine(sx.text.sm, { color: '#f59e0b' })}>
-                        Avec marge 15%: {result.groundRollWithMargin} m
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* Distance 50ft */}
-                {result.distance50ft && (
-                  <div>
-                    <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mb(1))}>
-                      Distance passage 50ft / 15m
-                    </p>
-                    <p style={sx.combine(sx.text.xl, sx.text.bold)}>
-                      {result.distance50ft} m
-                    </p>
-                    {result.distance50ftWithMargin && (
-                      <p style={sx.combine(sx.text.sm, { color: '#f59e0b' })}>
-                        Avec marge 15%: {result.distance50ftWithMargin} m
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Confiance de l'extraction */}
-              {result.confidence && (
-                <div style={sx.combine(sx.spacing.mt(3), sx.text.xs)}>
-                  <p>
-                    <strong>Niveau de confiance de l'extraction IA:</strong> {Math.round(result.confidence * 100)}%
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* 🚨 SÉCURITÉ: Avertissement si pas de résultat */}
-          {!result && (
-            <div style={sx.combine(
+          <div style={sx.combine(
               sx.components.alert.base,
               conditions.temperature === null ? sx.components.alert.danger : sx.components.alert.warning
             )}>
@@ -466,7 +315,6 @@ const PerformanceTableCalculator = ({
                 )}
               </div>
             </div>
-          )}
         </div>
       )}
     </div>
