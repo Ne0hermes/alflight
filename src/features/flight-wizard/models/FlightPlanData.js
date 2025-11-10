@@ -87,6 +87,7 @@ export class FlightPlanData {
         landing: 0,
       },
       withinLimits: true,   // Dans les limites ?
+      loads: {},            // 🔧 FIX: Charges individuelles (frontLeft, frontRight, rearLeft, rearRight, baggage_*)
     };
 
     // Étape 8 : Paramètres TOD (Top of Descent)
