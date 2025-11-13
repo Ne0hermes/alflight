@@ -129,11 +129,11 @@ export const WaypointCardWithRunways = memo(({
         requiredDistances
       });
     }
-    // Sinon, utiliser les valeurs statiques de runwayRequirements (legacy)
-    else if (selectedAircraft.runwayRequirements) {
+    // Sinon, utiliser les valeurs statiques depuis distances (legacy)
+    else if (selectedAircraft.distances) {
       requiredDistances = {
-        takeoffDistance: selectedAircraft.runwayRequirements.takeoffDistance,
-        landingDistance: selectedAircraft.runwayRequirements.landingDistance
+        takeoffDistance: selectedAircraft.distances.takeoffDistance50ft || selectedAircraft.distances.takeoffDistance15m,
+        landingDistance: selectedAircraft.distances.landingDistance50ft || selectedAircraft.distances.landingDistance15m
       };
 
       console.log('⚠️ Utilisation distances statiques (legacy):', requiredDistances);
@@ -146,19 +146,18 @@ export const WaypointCardWithRunways = memo(({
     }
 
     const compatibleCount = runways.filter(runway => {
-      // Si l'avion n'a pas de surfaces définies, aucune piste n'est compatible
-      const aircraftSurfaces = selectedAircraft.runwayRequirements?.surfaceTypes || [];
-      if (aircraftSurfaces.length === 0) {
-        console.log('❌ Aucune surface définie pour l\'avion');
-        return false;
-      }
-
-      // Vérifier la surface
+      // Vérifier la surface si l'avion a des restrictions définies
+      const aircraftSurfaces = selectedAircraft.compatibleRunwaySurfaces || [];
       const surfaceType = runway.surface?.type || runway.surface || '';
-      const surfaceCompatible = aircraftSurfaces.some(s =>
-        surfaceType.toLowerCase().includes(s.toLowerCase())
-      );
-      if (!surfaceCompatible) return false;
+
+      // Si l'avion a des restrictions de surface, vérifier la compatibilité
+      if (aircraftSurfaces.length > 0) {
+        const surfaceCompatible = aircraftSurfaces.includes(surfaceType);
+        if (!surfaceCompatible) {
+          console.log(`❌ Surface ${surfaceType} non compatible avec ${aircraftSurfaces.join(', ')}`);
+          return false;
+        }
+      }
 
       const todaFeet = Math.round((runway.dimensions?.toda || runway.dimensions?.length || 0) * 3.28084);
       const ldaFeet = Math.round((runway.dimensions?.lda || runway.dimensions?.length || 0) * 3.28084);
@@ -389,12 +388,12 @@ export const WaypointCardWithRunways = memo(({
                     const ldaFeet = Math.round((runway.dimensions?.lda || runway.dimensions?.length || 0) * 3.28084);
 
                     // Surfaces compatibles de l'avion
-                    const aircraftSurfaces = selectedAircraft?.runwayRequirements?.surfaceTypes || [];
+                    const aircraftSurfaces = selectedAircraft?.compatibleRunwaySurfaces || [];
                     const surfaceType = runway.surface?.type || runway.surface || 'Non spécifiée';
 
-                    // Si aircraftSurfaces est vide, aucune surface n'est compatible
-                    const surfaceCompatible = aircraftSurfaces.length > 0 &&
-                      aircraftSurfaces.some(s => surfaceType.toLowerCase().includes(s.toLowerCase()));
+                    // Si aircraftSurfaces est vide, toutes surfaces sont considérées compatibles (pas de restriction)
+                    // Sinon, vérifier que la surface est dans la liste
+                    const surfaceCompatible = aircraftSurfaces.length === 0 || aircraftSurfaces.includes(surfaceType);
 
                     // Calculer les distances requises (même logique que getRunwayCompatibility)
                     const airportAltitude = waypoint.elevation || vacData?.elevation || 0;
@@ -403,10 +402,10 @@ export const WaypointCardWithRunways = memo(({
                     if (selectedAircraft?.performances?.takeoffDistance) {
                       const isaTemp = 15 - (airportAltitude * 0.002);
                       requiredDistances = calculateCorrectedDistances(airportAltitude, isaTemp, null);
-                    } else if (selectedAircraft?.runwayRequirements) {
+                    } else if (selectedAircraft?.distances) {
                       requiredDistances = {
-                        takeoffDistance: selectedAircraft.runwayRequirements.takeoffDistance,
-                        landingDistance: selectedAircraft.runwayRequirements.landingDistance
+                        takeoffDistance: selectedAircraft.distances.takeoffDistance50ft || selectedAircraft.distances.takeoffDistance15m,
+                        landingDistance: selectedAircraft.distances.landingDistance50ft || selectedAircraft.distances.landingDistance15m
                       };
                     }
 
@@ -491,7 +490,7 @@ export const WaypointCardWithRunways = memo(({
                         {/* Ligne 3: Revêtement + Compatibilité */}
                         <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span style={sx.text.secondary}>Revêtement: {surfaceType}</span>
-                          {selectedAircraft && selectedAircraft.runwayRequirements && (
+                          {selectedAircraft && selectedAircraft.distances && (
                             <span style={{
                               fontSize: '10px',
                               fontWeight: 'bold',
@@ -549,7 +548,7 @@ export const WaypointCardWithRunways = memo(({
                         )}
 
                         {/* Conclusion compatibilité */}
-                        {selectedAircraft && selectedAircraft.runwayRequirements && (
+                        {selectedAircraft && selectedAircraft.distances && (
                           <div style={sx.combine(
                             { fontWeight: 'bold' },
                             isCompatible && surfaceCompatible ? sx.text.success : sx.text.danger
@@ -557,7 +556,7 @@ export const WaypointCardWithRunways = memo(({
                             {isCompatible && surfaceCompatible ? (
                               '✓ Piste compatible avec cet avion'
                             ) : !isCompatible ? (
-                              `✗ Piste trop courte (requis: ${selectedAircraft.runwayRequirements.takeoffDistance} ft décollage)`
+                              `✗ Piste trop courte (requis: ${requiredDistances?.takeoffDistance || 'N/A'} ft décollage)`
                             ) : (
                               '✗ Surface incompatible avec cet avion'
                             )}

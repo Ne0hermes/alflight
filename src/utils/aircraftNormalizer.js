@@ -1,7 +1,7 @@
 // src/utils/aircraftNormalizer.js
 // Système de normalisation des unités pour les avions importés/exportés
 
-import { Conversions } from './conversions';
+import { convertValue as convertUnit } from './unitConversions';
 
 /**
  * Unités de stockage interne (normalisées)
@@ -50,7 +50,10 @@ export function normalizeAircraftImport(aircraftData) {
   Object.keys(STORAGE_UNITS).forEach(property => {
     if (aircraftData[property] !== undefined && aircraftData[property] !== null) {
       const value = aircraftData[property];
-      const sourceUnit = sourceUnits[property] || STORAGE_UNITS[property];
+
+      // 🔧 FIX: Utiliser getUserUnit pour mapper property → catégorie → unité
+      // property = 'fuelCapacity' → category = 'fuel' → sourceUnits['fuel'] = 'gal'
+      const sourceUnit = getUserUnit(property, sourceUnits);
       const targetUnit = STORAGE_UNITS[property];
 
       // Si l'unité source est différente de l'unité de stockage, convertir
@@ -77,7 +80,14 @@ export function normalizeAircraftImport(aircraftData) {
       return isNaN(parsed) ? defaultValue : parsed;
     };
 
-    normalized.weightBalance = {
+    // Helper pour parser null values (permettre null mais pas NaN)
+    const parseOrNull = (value) => {
+      if (!value || value === '' || value === '0') return null;
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? null : parsed;
+    };
+
+    const armsToWB = {
       emptyWeightArm: parseArm(aircraftData.arms.empty),
       fuelArm: parseArm(aircraftData.arms.fuelMain),
       frontLeftSeatArm: parseArm(aircraftData.arms.frontSeats),
@@ -85,10 +95,48 @@ export function normalizeAircraftImport(aircraftData) {
       rearLeftSeatArm: parseArm(aircraftData.arms.rearSeats),
       rearRightSeatArm: parseArm(aircraftData.arms.rearSeats),
       baggageArm: parseArm(aircraftData.arms.baggageFwd),
-      auxiliaryArm: parseArm(aircraftData.arms.baggageAft),
-      // Conserver aussi les données CG limits si présentes
-      ...(aircraftData.weightBalance || {})
+      auxiliaryArm: parseArm(aircraftData.arms.baggageAft)
     };
+
+    console.log('  - Mapped from arms:', armsToWB);
+    console.log('  - Existing weightBalance:', aircraftData.weightBalance);
+
+    // 🔧 FIX CRITIQUE: Créer cgLimits depuis cgEnvelope si manquant
+    let cgLimits = aircraftData.weightBalance?.cgLimits || aircraftData.cgLimits;
+
+    // Si cgLimits n'existe pas ou est invalide, mapper depuis cgEnvelope
+    if (!cgLimits || (cgLimits.forward === undefined && cgLimits.aft === undefined)) {
+      console.log('  ⚠️ cgLimits manquant, tentative de mapping depuis cgEnvelope...');
+
+      if (aircraftData.cgEnvelope) {
+        cgLimits = {
+          forward: parseOrNull(aircraftData.cgEnvelope.forwardPoints?.[0]?.cg),
+          aft: parseOrNull(aircraftData.cgEnvelope.aftCG),
+          forwardVariable: aircraftData.cgEnvelope.forwardPoints || []
+        };
+        console.log('  ✅ cgLimits créé depuis cgEnvelope:', cgLimits);
+      } else {
+        // Dernier fallback: null (désactive la vérification CG)
+        cgLimits = {
+          forward: null,
+          aft: null,
+          forwardVariable: []
+        };
+        console.warn('  ⚠️ Aucune donnée cgEnvelope disponible, cgLimits = null');
+      }
+    } else {
+      console.log('  ✅ cgLimits déjà présent:', cgLimits);
+    }
+
+    // ✅ FIX: Only preserve cgLimits from old weightBalance, arms data is source of truth
+    normalized.weightBalance = {
+      ...armsToWB,
+      cgLimits: cgLimits
+    };
+
+    console.log('  - Final weightBalance after merge:', normalized.weightBalance);
+    console.log('  ✅ [Normalizer] Arms data preserved as source of truth');
+
     console.log('✓ [Normalizer] Mapped arms → weightBalance:', normalized.weightBalance);
   } else {
     console.warn('⚠️ [Normalizer] No arms data found in aircraftData');
@@ -109,10 +157,29 @@ export function normalizeAircraftImport(aircraftData) {
     console.log('✓ Preserved baggageCompartments:', normalized.baggageCompartments.length);
   }
 
-  // Supprimer _metadata de l'objet normalisé (déjà utilisé pour la conversion)
-  delete normalized._metadata;
+  // 🔧 AJOUTER métadonnées avec unités de STOCKAGE
+  // Supabase stocke TOUJOURS en unités standard (L, L/h, kg, kt)
+  // Les conversions se font LOCALEMENT selon les préférences de chaque utilisateur
+  const storageUnitsMetadata = {
+    fuel: 'ltr',           // fuelCapacity → ltr
+    fuelConsumption: 'lph', // fuelConsumption → lph
+    speed: 'kt',           // cruiseSpeed, maxSpeed → kt
+    verticalSpeed: 'fpm',  // climbRate → fpm
+    altitude: 'ft',        // serviceCeiling → ft
+    distance: 'nm',        // range → nm
+    weight: 'kg'           // emptyWeight, maxTakeoffWeight → kg
+  };
 
-  console.log('✅ [Normalizer] Aircraft normalized for storage');
+  normalized._metadata = {
+    version: '1.0.0',
+    units: storageUnitsMetadata,  // Format préférences (fuel, fuelConsumption, etc.)
+    normalizedAt: new Date().toISOString(),
+    sourceUnits: sourceUnits  // Conserver trace des unités source (optionnel)
+  };
+
+  console.log('✅ [Normalizer] Aircraft normalized for storage with metadata:', {
+    units: storageUnitsMetadata
+  });
 
   return normalized;
 }
@@ -143,7 +210,16 @@ export function prepareAircraftExport(aircraftData, userUnits) {
 
       // Convertir si nécessaire
       if (sourceUnit !== targetUnit) {
-        exported[property] = convertValue(value, property, sourceUnit, targetUnit);
+        let converted = convertValue(value, property, sourceUnit, targetUnit);
+
+        // 🔧 FIX: Arrondir intelligemment pour éviter 38.99997 → 39.00
+        // Si la valeur est très proche d'un entier (< 0.01), arrondir
+        const rounded = Math.round(converted);
+        if (Math.abs(converted - rounded) < 0.01) {
+          converted = rounded;
+        }
+
+        exported[property] = converted;
 
         console.log(`  ✓ ${property}: ${value} ${sourceUnit} → ${exported[property].toFixed(2)} ${targetUnit}`);
       } else {
@@ -198,8 +274,8 @@ function convertValue(value, property, fromUnit, toUnit) {
   }
 
   try {
-    // Utiliser le système de conversion existant
-    return Conversions[category](value, fromUnit, toUnit);
+    // Utiliser le système de conversion existant (unitConversions.js)
+    return convertUnit(value, fromUnit, toUnit, category);
   } catch (error) {
     console.error(`❌ Conversion error for ${property}:`, error);
     return value; // Retourner la valeur originale en cas d'erreur
@@ -252,6 +328,68 @@ function buildUnitsMetadata(userUnits) {
 }
 
 /**
+ * Convertir un avion d'un système d'unités à un autre
+ * @param {Object} aircraftData - Données de l'avion
+ * @param {Object} sourceUnits - Unités source (format: { fuel: 'gal', fuelConsumption: 'gph', ... })
+ * @param {Object} targetUnits - Unités cible (format: { fuel: 'ltr', fuelConsumption: 'lph', ... })
+ * @returns {Object} Avion avec valeurs converties
+ */
+export function convertAircraftUnits(aircraftData, sourceUnits, targetUnits) {
+  if (!aircraftData) return null;
+
+  console.log('🔄 [convertAircraftUnits] Converting aircraft:', {
+    registration: aircraftData.registration,
+    from: sourceUnits,
+    to: targetUnits
+  });
+
+  // Créer une copie de l'avion
+  const converted = { ...aircraftData };
+
+  // Mapping des préférences d'unités vers les propriétés aircraft
+  const unitsToPropertiesMap = {
+    fuel: ['fuelCapacity'],
+    fuelConsumption: ['fuelConsumption'],
+    speed: ['cruiseSpeed', 'maxSpeed'],
+    verticalSpeed: ['climbRate'],
+    altitude: ['serviceCeiling'],
+    distance: ['range'],
+    weight: ['weight', 'emptyWeight', 'maxTakeoffWeight']
+  };
+
+  // Convertir chaque catégorie d'unités
+  Object.keys(unitsToPropertiesMap).forEach(category => {
+    const sourceUnit = sourceUnits[category];
+    const targetUnit = targetUnits[category];
+
+    // Si les unités sont différentes, convertir toutes les propriétés de cette catégorie
+    if (sourceUnit && targetUnit && sourceUnit !== targetUnit) {
+      unitsToPropertiesMap[category].forEach(property => {
+        if (aircraftData[property] !== undefined && aircraftData[property] !== null) {
+          const value = parseFloat(aircraftData[property]);
+
+          if (!isNaN(value)) {
+            const convertedValue = convertValue(value, property, sourceUnit, targetUnit);
+            converted[property] = convertedValue;
+
+            console.log(`  ✓ ${property}: ${value} ${sourceUnit} → ${convertedValue.toFixed(2)} ${targetUnit}`);
+          }
+        }
+      });
+    }
+  });
+
+  // Mettre à jour les métadonnées avec les nouvelles unités
+  converted._metadata = {
+    ...converted._metadata,
+    units: targetUnits,
+    convertedAt: new Date().toISOString()
+  };
+
+  return converted;
+}
+
+/**
  * Vérifier si un avion a des métadonnées d'unités
  * @param {Object} aircraftData - Données de l'avion
  * @returns {boolean}
@@ -272,6 +410,7 @@ export function getAircraftMetadata(aircraftData) {
 export default {
   normalizeAircraftImport,
   prepareAircraftExport,
+  convertAircraftUnits,
   hasUnitsMetadata,
   getAircraftMetadata,
   STORAGE_UNITS,

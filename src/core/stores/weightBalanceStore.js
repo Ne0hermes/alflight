@@ -1,12 +1,13 @@
 // src/core/stores/weightBalanceStore.js
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
+import { FUEL_DENSITIES } from '@utils/constants';
 
 export const useWeightBalanceStore = create(
   immer((set, get) => ({
     // État
     loads: {
-      frontLeft: 75,
+      frontLeft: 0,  // 🔧 FIX: Pas de valeur par défaut (utilisateur doit saisir)
       frontRight: 0,
       rearLeft: 0,
       rearRight: 0,
@@ -34,9 +35,15 @@ export const useWeightBalanceStore = create(
       if (!aircraft) return null;
       
       // Utiliser les masses directement depuis aircraft ou depuis masses
-      const emptyWeight = aircraft.emptyWeight || aircraft.masses?.emptyMass || 600;
-      const minTakeoffWeight = aircraft.minTakeoffWeight || aircraft.masses?.minTakeoffMass || 600;
-      const maxTakeoffWeight = aircraft.maxTakeoffWeight || 1150;
+      // Prioriser weights.emptyWeight (nouveau format) puis emptyWeight (legacy)
+      const emptyWeight = parseFloat(
+        aircraft.weights?.emptyWeight ||
+        aircraft.emptyWeight ||
+        aircraft.masses?.emptyMass ||
+        600
+      );
+      const minTakeoffWeight = parseFloat(aircraft.minTakeoffWeight || aircraft.masses?.minTakeoffMass || 600);
+      const maxTakeoffWeight = parseFloat(aircraft.weights?.mtow || aircraft.maxTakeoffWeight || 1150);
       
       // Vérifier les propriétés requises de l'avion
       if (!emptyWeight || !minTakeoffWeight || !maxTakeoffWeight) {
@@ -47,10 +54,18 @@ export const useWeightBalanceStore = create(
         });
         return null;
       }
-      
+
       // Utiliser weightBalance s'il existe, sinon créer depuis armLengths
       let wb = aircraft.weightBalance;
-      
+
+      // 🐛 DEBUG CG CALCULATION
+      console.log('🔍 [WB-STORE] Aircraft:', aircraft.registration);
+      console.log('  - aircraft.arms:', aircraft.arms);
+      console.log('  - aircraft.weightBalance:', aircraft.weightBalance);
+      console.log('  - aircraft.cgEnvelope:', aircraft.cgEnvelope);
+      console.log('  - aircraft.cgLimits (racine):', aircraft.cgLimits);
+      console.log('  - wb?.cgLimits:', wb?.cgLimits);
+
       if (!wb || !wb.emptyWeightArm) {
         // Fallback vers armLengths si weightBalance n'existe pas
                 wb = {
@@ -70,13 +85,52 @@ export const useWeightBalanceStore = create(
             aft: 2.45
           }
         };
+        console.log('  ⚠️ Using fallback weightBalance from armLengths');
       }
+
+      // 🔧 FIX CRITIQUE: TOUJOURS utiliser cgEnvelope comme source de vérité
+      // cgEnvelope est plus précis (varie avec la masse) que cgLimits (valeur fixe)
+      const parseOrNull = (value) => {
+        if (!value || value === '' || value === '0') return null;
+        const parsed = parseFloat(value);
+        return isNaN(parsed) ? null : parsed;
+      };
+
+      if (aircraft.cgEnvelope) {
+        // PRIORITÉ 1: cgEnvelope (source de vérité)
+        wb.cgLimits = {
+          forward: parseOrNull(aircraft.cgEnvelope.forwardPoints?.[0]?.cg),
+          aft: parseOrNull(aircraft.cgEnvelope.aftCG),
+          forwardVariable: aircraft.cgEnvelope.forwardPoints || []
+        };
+        console.log('  ✅ [WB-STORE] cgLimits créé depuis cgEnvelope (source de vérité):', wb.cgLimits);
+      } else if (!wb.cgLimits && aircraft.cgLimits) {
+        // PRIORITÉ 2: aircraft.cgLimits (racine)
+        wb.cgLimits = {
+          forward: parseOrNull(aircraft.cgLimits.forward),
+          aft: parseOrNull(aircraft.cgLimits.aft),
+          forwardVariable: aircraft.cgLimits.forwardVariable || []
+        };
+        console.log('  ✅ [WB-STORE] cgLimits créé depuis aircraft.cgLimits:', wb.cgLimits);
+      } else if (!wb.cgLimits) {
+        // PRIORITÉ 3: Aucune donnée disponible
+        wb.cgLimits = { forward: null, aft: null, forwardVariable: [] };
+        console.warn('  ⚠️ [WB-STORE] Aucune donnée cgEnvelope/cgLimits, cgLimits = null');
+      } else {
+        // wb.cgLimits existe déjà - le garder tel quel
+        console.log('  ℹ️ [WB-STORE] wb.cgLimits existe déjà, conservation:', wb.cgLimits);
+      }
+
+      console.log('  - wb.emptyWeightArm:', wb.emptyWeightArm);
+      console.log('  - wb.fuelArm:', wb.fuelArm);
+      console.log('  - wb.frontLeftSeatArm:', wb.frontLeftSeatArm);
+      console.log('  - wb.cgLimits (final):', wb.cgLimits);
       
       // Vérifier que toutes les propriétés requises existent
+      // NOTE: baggageArm et auxiliaryArm ne sont plus requis (compartiments dynamiques)
       const requiredProps = [
         'emptyWeightArm', 'frontLeftSeatArm', 'frontRightSeatArm',
-        'rearLeftSeatArm', 'rearRightSeatArm', 'baggageArm',
-        'auxiliaryArm', 'fuelArm', 'cgLimits'
+        'rearLeftSeatArm', 'rearRightSeatArm', 'fuelArm', 'cgLimits'
       ];
       
       for (const prop of requiredProps) {
@@ -86,9 +140,15 @@ export const useWeightBalanceStore = create(
         }
       }
       
-      if (!wb.cgLimits.forward || !wb.cgLimits.aft) {
-        console.error('WeightBalanceStore - Missing CG limits for aircraft:', aircraft.registration);
+      // Vérifier cgLimits - accepter null mais pas undefined
+      if (!wb.cgLimits || (wb.cgLimits.forward === undefined && wb.cgLimits.aft === undefined)) {
+        console.error('WeightBalanceStore - Missing CG limits structure for aircraft:', aircraft.registration);
         return null;
+      }
+
+      // Si les valeurs sont null, log warning mais continuer (pas de vérif CG disponible)
+      if (wb.cgLimits.forward === null || wb.cgLimits.aft === null) {
+        console.warn('⚠️ WeightBalanceStore - CG limits are null for aircraft:', aircraft.registration, 'calculations will proceed but CG envelope check disabled');
       }
       
       let loads = get().loads;
@@ -97,7 +157,12 @@ export const useWeightBalanceStore = create(
       // Si fobFuel est fourni, utiliser ce poids de carburant pour le calcul
       // (sans modifier le state - cela doit être fait séparément)
       if (fobFuel?.ltr) {
-        const fuelDensity = aircraft.fuelType === 'JET A-1' ? 0.84 : 0.72;
+        // Utiliser FUEL_DENSITIES pour une détection robuste du type de carburant
+        const normalizedFuelType = aircraft.fuelType?.replace(/-/g, ' ');
+        const fuelDensity = FUEL_DENSITIES[aircraft.fuelType] ||
+                            FUEL_DENSITIES[normalizedFuelType] ||
+                            FUEL_DENSITIES['JET A-1'] ||
+                            0.84;
         const fuelWeight = parseFloat((fobFuel.ltr * fuelDensity).toFixed(1));
         // Créer une copie des loads avec le nouveau poids de carburant pour ce calcul
         loads = { ...loads, fuel: fuelWeight };
@@ -132,17 +197,37 @@ export const useWeightBalanceStore = create(
         (loads.fuel || 0);
       
       // Calcul du moment total
-      const totalMoment = 
-        emptyWeight * wb.emptyWeightArm +
-        (loads.frontLeft || 0) * wb.frontLeftSeatArm +
-        (loads.frontRight || 0) * wb.frontRightSeatArm +
-        (loads.rearLeft || 0) * wb.rearLeftSeatArm +
-        (loads.rearRight || 0) * wb.rearRightSeatArm +
+      const emptyMoment = emptyWeight * wb.emptyWeightArm;
+      const frontLeftMoment = (loads.frontLeft || 0) * wb.frontLeftSeatArm;
+      const frontRightMoment = (loads.frontRight || 0) * wb.frontRightSeatArm;
+      const rearLeftMoment = (loads.rearLeft || 0) * wb.rearLeftSeatArm;
+      const rearRightMoment = (loads.rearRight || 0) * wb.rearRightSeatArm;
+      const fuelMoment = (loads.fuel || 0) * wb.fuelArm;
+
+      const totalMoment =
+        emptyMoment +
+        frontLeftMoment +
+        frontRightMoment +
+        rearLeftMoment +
+        rearRightMoment +
         baggageMoment +
-        (loads.fuel || 0) * wb.fuelArm;
-      
+        fuelMoment;
+
+      // 🐛 DEBUG MOMENT CALCULATION
+      console.log('📊 [WB-STORE] Moment calculation:');
+      console.log(`  - Empty: ${emptyWeight} kg × ${wb.emptyWeightArm} m = ${emptyMoment.toFixed(1)} kg.m`);
+      console.log(`  - Front L: ${loads.frontLeft || 0} kg × ${wb.frontLeftSeatArm} m = ${frontLeftMoment.toFixed(1)} kg.m`);
+      console.log(`  - Front R: ${loads.frontRight || 0} kg × ${wb.frontRightSeatArm} m = ${frontRightMoment.toFixed(1)} kg.m`);
+      console.log(`  - Rear L: ${loads.rearLeft || 0} kg × ${wb.rearLeftSeatArm} m = ${rearLeftMoment.toFixed(1)} kg.m`);
+      console.log(`  - Rear R: ${loads.rearRight || 0} kg × ${wb.rearRightSeatArm} m = ${rearRightMoment.toFixed(1)} kg.m`);
+      console.log(`  - Baggage: ${baggageWeight} kg (moment: ${baggageMoment.toFixed(1)} kg.m)`);
+      console.log(`  - Fuel: ${loads.fuel || 0} kg × ${wb.fuelArm} m = ${fuelMoment.toFixed(1)} kg.m`);
+      console.log(`  - TOTAL MOMENT: ${totalMoment.toFixed(1)} kg.m`);
+
       // Calcul du CG
       const cg = totalWeight > 0 ? totalMoment / totalWeight : 0;
+      console.log(`  - TOTAL WEIGHT: ${totalWeight.toFixed(1)} kg`);
+      console.log(`  - CG: ${totalMoment.toFixed(1)} ÷ ${totalWeight.toFixed(1)} = ${cg.toFixed(4)} m (${(cg * 1000).toFixed(0)} mm)`);
       
       // Vérification des limites
       const isWithinWeight = 

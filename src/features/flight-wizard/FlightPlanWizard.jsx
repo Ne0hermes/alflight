@@ -9,8 +9,7 @@ import { aircraftSelectors } from '../../core/stores/aircraftStore';
 // Import des étapes
 import { Step1GeneralInfo } from './steps/Step1GeneralInfo';
 import { Step3Route } from './steps/Step3Route';
-import { Step4Alternates } from './steps/Step4Alternates';
-import { Step4Weather } from './steps/Step4Weather';
+import { Step3VAC } from './steps/Step3VAC';
 import { Step5Fuel } from './steps/Step5Fuel';
 import { Step5Performance } from './steps/Step5Performance';
 import { Step6WeightBalance } from './steps/Step6WeightBalance';
@@ -229,8 +228,8 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
     },
     {
       number: 2,
-      title: 'Définition du Trajet',
-      description: 'Départ, arrivée et waypoints',
+      title: 'Définition du Trajet et Déroutements',
+      description: 'Départ, arrivée, waypoints et aérodromes de déroutement',
       component: Step3Route,
       validate: () => Boolean(
         flightPlan.route.departure.icao &&
@@ -239,27 +238,20 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
     },
     {
       number: 3,
-      title: 'Aérodromes de Déroutement',
-      description: '',
-      component: Step4Alternates,
-      validate: () => true // Optionnel - peut continuer sans alternates
+      title: 'Informations aérodromes et Météo',
+      description: 'Données détaillées, cartes VAC et météo',
+      component: Step3VAC,
+      validate: () => true // Optionnel - peut continuer sans VAC
     },
     {
       number: 4,
-      title: 'Météo',
-      description: 'METAR et TAF',
-      component: Step4Weather,
-      validate: () => true // Optionnel - consultative seulement
-    },
-    {
-      number: 5,
       title: 'Bilan Carburant',
       description: '',
       component: Step5Fuel,
       validate: () => flightPlan.fuel.confirmed > 0
     },
     {
-      number: 6,
+      number: 5,
       title: 'Masse et Centrage',
       description: 'Passagers et bagages',
       component: Step6WeightBalance,
@@ -272,13 +264,13 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
       }
     },
     {
-      number: 7,
+      number: 6,
       title: 'Performances',
       component: Step5Performance,
       validate: () => true // Toujours valide, données calculées automatiquement
     },
     {
-      number: 8,
+      number: 7,
       title: 'Synthèse',
       description: 'Vérifier et générer',
       component: Step7Summary,
@@ -307,6 +299,8 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
     } else if (currentStep === 2) {
       console.log('  - departure.icao:', flightPlan.route.departure.icao);
       console.log('  - arrival.icao:', flightPlan.route.arrival.icao);
+    } else if (currentStep === 3) {
+      console.log('  - VAC step (optionnel)');
     } else if (currentStep === 5) {
       console.log('  - fuel.confirmed:', flightPlan.fuel.confirmed);
       console.log('  - fuel.confirmed > 0:', flightPlan.fuel.confirmed > 0);
@@ -414,9 +408,19 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
    */
   const handleRestart = useCallback(() => {
     if (confirm('Voulez-vous vraiment recommencer ? Toutes les données actuelles seront perdues.')) {
+      // Supprimer le brouillon du wizard
       localStorage.removeItem('flightPlanDraft');
       localStorage.removeItem('flightPlanCurrentStep');
       localStorage.removeItem('flightPlanCompletedSteps');
+
+      // 🔧 FIX: Supprimer aussi les données persistées des stores
+      // Step 2 - Waypoints (Navigation)
+      localStorage.removeItem('navigation-storage');
+
+      // Step 3 - Alternates
+      localStorage.removeItem('alternates-storage');
+
+      console.log('🔄 [Wizard] Toutes les données effacées - Redémarrage...');
       window.location.reload();
     }
   }, []);

@@ -62,18 +62,53 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
   
   // Calcul des échelles avec les données cgEnvelope
   const scales = useMemo(() => {
-    const forwardCGs = cgEnvelope.forwardPoints.map(p => p.cg);
-    const aftCG = cgEnvelope.aftCG;
-    
+    // 🔧 FIX CRITIQUE: Convertir les valeurs CG en nombres pour éviter comparaison lexicographique
+    const forwardCGs = cgEnvelope.forwardPoints
+      .map(p => parseFloat(p.cg))
+      .filter(cg => !isNaN(cg));
+    const aftCG = parseFloat(cgEnvelope.aftCG);
+
     const cgMin = Math.min(...forwardCGs, aftCG);
     const cgMax = Math.max(...forwardCGs, aftCG);
     const cgRange = cgMax - cgMin;
-    
+
+    // 🔧 FIX: Inclure TOUTES les limites (enveloppe CG + limites opérationnelles)
+    // pour que le graphique affiche correctement les lignes MTOW/MLW/Min
+    const envelopeWeights = [
+      ...forwardCGs.length > 0 ? cgEnvelope.forwardPoints.map(p => parseFloat(p.weight)).filter(w => !isNaN(w)) : [],
+      parseFloat(cgEnvelope.aftMinWeight),
+      parseFloat(cgEnvelope.aftMaxWeight)
+    ].filter(w => !isNaN(w) && w > 0);
+
+    // Ajouter les limites opérationnelles de l'avion
+    const operationalLimits = [
+      parseFloat(aircraft.weights?.minTakeoffWeight || aircraft.minTakeoffWeight),
+      parseFloat(aircraft.weights?.mtow || aircraft.maxTakeoffWeight),
+      parseFloat(aircraft.weights?.mlw || aircraft.maxLandingWeight)
+    ].filter(w => !isNaN(w) && w > 0);
+
+    // Combiner enveloppe CG + limites opérationnelles pour les échelles
+    const allWeights = [...envelopeWeights, ...operationalLimits];
+    const minWeight = allWeights.length > 0 ? Math.min(...allWeights) : 600;
+    const maxWeight = allWeights.length > 0 ? Math.max(...allWeights) : 1150;
+
+    console.log('📊 Échelles calculées:', {
+      cgMin: cgMin.toFixed(4),
+      cgMax: cgMax.toFixed(4),
+      cgRange: cgRange.toFixed(4),
+      envelopeWeights,
+      operationalLimits,
+      minWeight,
+      maxWeight,
+      forwardCGs,
+      aftCG
+    });
+
     return {
       cgMin: (cgMin - cgRange * 0.1) * 1000,
       cgMax: (cgMax + cgRange * 0.1) * 1000,
-      weightMin: aircraft.minTakeoffWeight - 50,
-      weightMax: aircraft.maxTakeoffWeight + 50
+      weightMin: minWeight - 50,
+      weightMax: maxWeight + 50
     };
   }, [aircraft, cgEnvelope]);
 
@@ -90,14 +125,8 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
   const isPointWithinEnvelope = (weight, cg) => {
     // Le CG est déjà en mètres, pas besoin de conversion
     const cgInMeters = cg;
-    
+
     console.log(`🔍 Vérification point: ${weight}kg / ${(cg * 1000).toFixed(0)}mm (${cgInMeters.toFixed(4)}m)`);
-    
-    // Vérifier les limites de poids MTOW
-    if (weight < aircraft.minTakeoffWeight || weight > aircraft.maxTakeoffWeight) {
-      console.log(`❌ Poids hors MTOW: ${weight}kg (min: ${aircraft.minTakeoffWeight}kg, max: ${aircraft.maxTakeoffWeight}kg)`);
-      return false;
-    }
     
     // Vérifier la limite arrière (cgEnvelope.aftCG)
     const aftCG = parseFloat(cgEnvelope.aftCG);
@@ -248,14 +277,14 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
       </div>
       
       <div style={sx.combine(sx.components.card.base)}>
-        <svg viewBox="0 0 600 480" style={{ width: '100%', maxWidth: '800px', height: 'auto', margin: '0 auto', display: 'block' }}>
+        <svg viewBox="0 0 600 420" style={{ width: '100%', maxWidth: '800px', height: 'auto', margin: '0 auto', display: 'block' }}>
           {/* Grille */}
           <defs>
             <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
               <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#e5e7eb" strokeWidth="1"/>
             </pattern>
           </defs>
-          <rect width="600" height="480" fill="url(#grid)" />
+          <rect width="600" height="420" fill="url(#grid)" />
           
           {/* Lignes de grille secondaires correspondant aux graduations */}
           {(() => {
@@ -328,7 +357,143 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
           {/* Labels axes (taille réduite) */}
           <text x="300" y="385" textAnchor="middle" fontSize="10" fill="#374151">Centre de Gravité (mm)</text>
           <text x="15" y="200" textAnchor="middle" fontSize="10" fill="#374151" transform="rotate(-90 15 200)">Masse (kg)</text>
-          
+
+          {/* 🔧 LIGNES DE LIMITES OPÉRATIONNELLES */}
+          {(() => {
+            const limits = [];
+
+            // 🔧 FIX CRITIQUE: Chercher dans plusieurs emplacements avec fallback correct
+            // Helper pour obtenir la première valeur valide (non-null, non-vide, > 0)
+            const getValidWeight = (...values) => {
+              for (const val of values) {
+                if (val === null || val === undefined || val === '') continue;
+                const parsed = parseFloat(val);
+                if (!isNaN(parsed) && parsed > 0) return parsed;
+              }
+              return NaN;
+            };
+
+            const minTakeoffWeight = getValidWeight(
+              aircraft.weights?.minTakeoffWeight,
+              aircraft.minTakeoffWeight
+            );
+
+            const maxTakeoffWeight = getValidWeight(
+              aircraft.weights?.mtow,
+              aircraft.maxTakeoffWeight,
+              aircraft.mtow,
+              aircraft.weights?.maxTakeoffWeight
+            );
+
+            const maxLandingWeight = getValidWeight(
+              aircraft.weights?.mlw,
+              aircraft.maxLandingWeight,
+              aircraft.mlw,
+              aircraft.weights?.maxLandingWeight
+            );
+
+            console.log('🔍 [Chart] Limites opérationnelles:', {
+              'aircraft.weights': aircraft.weights,
+              'aircraft.maxTakeoffWeight': aircraft.maxTakeoffWeight,
+              'aircraft.mtow': aircraft.mtow,
+              'aircraft.maxLandingWeight': aircraft.maxLandingWeight,
+              'aircraft.mlw': aircraft.mlw,
+              'Valeurs parsées:': {
+                minTakeoffWeight,
+                maxTakeoffWeight,
+                maxLandingWeight
+              },
+              'isNaN checks:': {
+                minTakeoffWeight: isNaN(minTakeoffWeight),
+                maxTakeoffWeight: isNaN(maxTakeoffWeight),
+                maxLandingWeight: isNaN(maxLandingWeight)
+              }
+            });
+
+            // Ligne masse minimale de vol (rouge)
+            if (!isNaN(minTakeoffWeight)) {
+              const y = toSvgY(minTakeoffWeight);
+              limits.push(
+                <g key="min-weight">
+                  <line
+                    x1="50"
+                    y1={y}
+                    x2="550"
+                    y2={y}
+                    stroke="#dc2626"
+                    strokeWidth="2"
+                    strokeDasharray="8,4"
+                  />
+                  <text
+                    x="555"
+                    y={y + 4}
+                    fontSize="9"
+                    fill="#dc2626"
+                    fontWeight="600"
+                  >
+                    Masse min: {minTakeoffWeight} kg
+                  </text>
+                </g>
+              );
+            }
+
+            // Ligne MTOW (rouge)
+            if (!isNaN(maxTakeoffWeight)) {
+              const y = toSvgY(maxTakeoffWeight);
+              limits.push(
+                <g key="mtow">
+                  <line
+                    x1="50"
+                    y1={y}
+                    x2="550"
+                    y2={y}
+                    stroke="#dc2626"
+                    strokeWidth="2"
+                    strokeDasharray="8,4"
+                  />
+                  <text
+                    x="555"
+                    y={y + 4}
+                    fontSize="9"
+                    fill="#dc2626"
+                    fontWeight="600"
+                  >
+                    MTOW: {maxTakeoffWeight} kg
+                  </text>
+                </g>
+              );
+            }
+
+            // Ligne MLW (orange)
+            if (!isNaN(maxLandingWeight)) {
+              const y = toSvgY(maxLandingWeight);
+              limits.push(
+                <g key="mlw">
+                  <line
+                    x1="50"
+                    y1={y}
+                    x2="550"
+                    y2={y}
+                    stroke="#f59e0b"
+                    strokeWidth="2"
+                    strokeDasharray="4,4"
+                  />
+                  <text
+                    x="555"
+                    y={y + 4}
+                    fontSize="9"
+                    fill="#f59e0b"
+                    fontWeight="600"
+                  >
+                    MLW: {maxLandingWeight} kg
+                  </text>
+                </g>
+              );
+            }
+
+            return limits;
+          })()}
+
           {/* Enveloppe */}
           <polygon points={createEnvelopePoints()} fill="#dbeafe" fillOpacity="0.5" stroke="#3b82f6" strokeWidth="2" />
           
@@ -380,76 +545,66 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
           {(() => {
             // Calculer toutes les positions d'abord pour détecter les chevauchements
             const labelPositions = {};
-            
+
             scenarioConfig.forEach(({ key }) => {
               const scenario = scenarios[key];
               if (!scenario || isNaN(scenario.cg) || isNaN(scenario.w)) return;
-              
+
               const x = toSvgX(scenario.cg);
               const y = toSvgY(scenario.w);
               labelPositions[key] = { x, y };
             });
-            
+
             return scenarioConfig.map(({ key, label, color }, index) => {
               const scenario = scenarios[key];
               if (!scenario || isNaN(scenario.cg) || isNaN(scenario.w)) {
                 return null;
               }
-              
+
               const x = toSvgX(scenario.cg);
               const y = toSvgY(scenario.w);
-              
+
               // Vérifier si ce point est dans les limites
               const isInLimits = isPointWithinEnvelope(scenario.w, scenario.cg);
-              
-              // Position du label avec déport intelligent pour éviter le chevauchement
-              const labelOffset = 90;
+
+              // Position du label avec déport intelligent - AUGMENTÉ pour éviter superposition
+              const labelOffset = 110;
+              const verticalOffset = 60;
               let labelX, labelY;
-            
-            // Positionnement spécifique pour chaque scénario
+
+            // Positionnement spécifique pour chaque scénario avec SÉPARATION MAXIMALE
             switch(key) {
               case 'fulltank':
-                // En haut à gauche ou droite selon position
-                labelX = x > 300 ? x + labelOffset : x - labelOffset;
-                labelY = y - 45;
+                // En haut à droite, bien séparé
+                labelX = x + labelOffset + 30;
+                labelY = y - verticalOffset;
                 break;
               case 'toCrm':
-                // En haut à l'opposé de fulltank
-                labelX = x > 300 ? x + labelOffset + 10 : x - labelOffset - 10;
-                labelY = y - 45;
-                // Si proche de fulltank, décaler verticalement
-                if (scenarios.fulltank && Math.abs(y - toSvgY(scenarios.fulltank.w)) < 40) {
-                  labelY = y - 70;
-                }
+                // En haut à gauche, opposé de fulltank
+                labelX = x - labelOffset - 30;
+                labelY = y - verticalOffset;
                 break;
               case 'landing':
-                // En bas, mais avec décalage horizontal pour éviter ZFW
-                labelX = x - labelOffset - 20; // Toujours à gauche
-                labelY = y + 45;
-                // Si très proche verticalement de ZFW, décaler encore plus
-                if (scenarios.zfw && Math.abs(x - toSvgX(scenarios.zfw.cg)) < 50) {
-                  labelX = x - labelOffset - 40;
-                }
+                // En bas à gauche, bien espacé de ZFW
+                labelX = x - labelOffset - 30;
+                labelY = y + verticalOffset + 10;
                 break;
               case 'zfw':
-                // En bas, mais à droite pour éviter landing
-                labelX = x + labelOffset + 20; // Toujours à droite
-                labelY = y + 45;
-                // Si très proche verticalement de landing, décaler encore plus
-                if (scenarios.landing && Math.abs(x - toSvgX(scenarios.landing.cg)) < 50) {
-                  labelX = x + labelOffset + 40;
-                }
+                // En bas à droite, opposé de landing
+                labelX = x + labelOffset + 30;
+                labelY = y + verticalOffset + 10;
                 break;
               default:
                 labelX = x + (x > 300 ? labelOffset : -labelOffset);
-                labelY = y + (index % 2 === 0 ? -45 : 45);
+                labelY = y + (index % 2 === 0 ? -verticalOffset : verticalOffset);
             }
-            
-            // Ajuster si proche des bords
-            if (labelX < 60) labelX = 60;
-            if (labelX > 540) labelX = 540;
-            if (labelY < 30) labelY = 30;
-            if (labelY > 340) labelY = 340;
+
+            // 🔧 FIX: Ajuster si proche des bords (tenir compte de la taille du label)
+            // Rectangle label: width=120, height=48-56 (centré sur labelY)
+            if (labelX < 100) labelX = 100; // 60 + marge de sécurité
+            if (labelX > 500) labelX = 500; // 600 - 60 - marge
+            if (labelY < 70) labelY = 70;   // 28 (moitié hauteur) + 40 marge
+            if (labelY > 370) labelY = 370; // 420 - 28 - marge
             
             return (
               <g key={key}>
@@ -492,25 +647,27 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
                 
                 {/* Label avec valeurs */}
                 <g transform={`translate(${labelX}, ${labelY})`}>
-                  <rect 
-                    x="-45" 
-                    y="-12" 
-                    width="90" 
-                    height={isInLimits ? "24" : "32"} 
-                    fill="white" 
-                    fillOpacity="0.95" 
-                    stroke={isInLimits ? color : '#ef4444'} 
-                    strokeWidth={isInLimits ? "1" : "2"} 
-                    rx="3"
+                  <rect
+                    x="-60"
+                    y="-20"
+                    width="120"
+                    height={isInLimits ? "48" : "56"}
+                    fill="white"
+                    fillOpacity="0.95"
+                    stroke={isInLimits ? color : '#ef4444'}
+                    strokeWidth={isInLimits ? "1.5" : "2"}
+                    rx="4"
                   />
-                  <text textAnchor="middle" fontSize="8" fill={isInLimits ? color : '#ef4444'} fontWeight="600">
-                    <tspan x="0" y="-2">{label}</tspan>
-                    <tspan x="0" y="9" fontSize="7" fontWeight="400">
-                      {scenario.w.toFixed(0)}kg / {(scenario.cg * 1000).toFixed(0)}mm
-                    </tspan>
+                  <text textAnchor="middle" fontSize="9" fill={isInLimits ? color : '#ef4444'} fontWeight="700">
+                    <tspan x="0" y="-8">{label}</tspan>
+                  </text>
+                  <text textAnchor="middle" fontSize="7.5" fill="#374151" fontWeight="500">
+                    <tspan x="0" y="2">Masse: {scenario.w.toFixed(1)} kg</tspan>
+                    <tspan x="0" y="11">Moment: {(scenario.w * scenario.cg).toFixed(1)} kg.m</tspan>
+                    <tspan x="0" y="20">CG: {scenario.cg.toFixed(3)} m ({(scenario.cg * 1000).toFixed(0)} mm)</tspan>
                   </text>
                   {!isInLimits && (
-                    <text x="0" y="19" textAnchor="middle" fontSize="7" fill="#ef4444" fontWeight="600">
+                    <text x="0" y="32" textAnchor="middle" fontSize="7" fill="#ef4444" fontWeight="700">
                       ⚠️ HORS LIMITES
                     </text>
                   )}
@@ -527,22 +684,6 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
           <text x="300" y="40" textAnchor="middle" fontSize="10" fill="#6b7280">
             {aircraft.registration} - {aircraft.model}
           </text>
-          
-          {/* Légende des scénarios */}
-          <g transform="translate(60, 440)">
-            <text fontSize="9" fill="#6b7280" fontWeight="600">Légende:</text>
-            {scenarioConfig.map((config, index) => {
-              const scenario = scenarios[config.key];
-              const isInLimits = scenario && !isNaN(scenario.w) && !isNaN(scenario.cg) && isPointWithinEnvelope(scenario.w, scenario.cg);
-              
-              return (
-                <g key={`legend-${config.key}`} transform={`translate(${80 + index * 120}, 0)`}>
-                  <circle cx="0" cy="-3" r="3" fill={isInLimits ? config.color : '#ef4444'} />
-                  <text x="8" y="0" fontSize="8" fill="#6b7280">{config.label}</text>
-                </g>
-              );
-            })}
-          </g>
         </svg>
       </div>
     </div>

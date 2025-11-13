@@ -247,7 +247,7 @@ const RegulationsModule = () => {
                 <div style={styles.sectionsContainer}>
                   {module.sections.map((section) => {
                     const sectionKey = `${moduleId}-${section.id}`;
-                    const isExpanded = expandedSections[sectionKey] === undefined ? true : expandedSections[sectionKey]; // Par défaut ouvert
+                    const isExpanded = expandedSections[sectionKey] === undefined ? false : expandedSections[sectionKey]; // Par défaut fermé
 
                     return (
                       <div key={section.id} style={styles.section}>

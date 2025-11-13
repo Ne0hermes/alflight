@@ -258,6 +258,16 @@ export function calculatePerformanceDistance(groupData, field, mass, altitude, t
  * @returns {Object|null} { value, method, massUsed, warning }
  */
 export function calculatePerformanceWithExtrapolation(groupData, field, mass, altitude, temperature) {
+  console.log('🔍 [calculatePerformanceWithExtrapolation] Début calcul:', {
+    field,
+    mass,
+    altitude,
+    temperature,
+    hasGroupData: !!groupData,
+    hasValues: !!groupData?.values,
+    hasField: !!groupData?.values?.[field]
+  });
+
   if (!groupData || !groupData.values || !groupData.values[field]) {
     console.warn('[PerformanceDistance] Données de groupe invalides');
     return null;
@@ -267,32 +277,53 @@ export function calculatePerformanceWithExtrapolation(groupData, field, mass, al
   const minMass = masses[0];
   const maxMass = masses[masses.length - 1];
 
-  // Essayer l'interpolation normale d'abord
-  const interpolated = trilinearInterpolate(
+  const massInRange = mass >= minMass && mass <= maxMass;
+  console.log('📊 [calculatePerformanceWithExtrapolation] Plages disponibles:', {
     masses,
-    altitudes,
-    temperatures,
-    values[field],
+    minMass,
+    maxMass,
     mass,
-    altitude,
-    temperature
-  );
+    massInRange
+  });
 
-  // Si l'interpolation a réussi (masse dans la plage)
-  if (interpolated !== null) {
-    return {
-      value: interpolated,
-      method: 'interpolation',
-      massUsed: mass,
-      warning: null
-    };
+  // 🔍 VÉRIFICATION: Si masse hors limites, passer directement à l'extrapolation
+  if (!massInRange) {
+    console.log('⚠️ [calculatePerformanceWithExtrapolation] Masse hors limites détectée AVANT interpolation - Skip vers extrapolation');
+    // Ne PAS appeler trilinearInterpolate car il va clamper automatiquement
+    // Aller directement au code d'extrapolation/clamped en bas
+  } else {
+    // Masse dans la plage - interpolation normale
+    const interpolated = trilinearInterpolate(
+      masses,
+      altitudes,
+      temperatures,
+      values[field],
+      mass,
+      altitude,
+      temperature
+    );
+
+    // Si l'interpolation a réussi (masse dans la plage)
+    if (interpolated !== null) {
+      console.log('✅ [calculatePerformanceWithExtrapolation] Interpolation normale réussie');
+      return {
+        value: interpolated,
+        method: 'interpolation',
+        massUsed: mass,
+        warning: null
+      };
+    }
   }
 
   // Masse hors limites - calculer avec extrapolation ET masse limite
+  console.log('⚠️ [calculatePerformanceWithExtrapolation] Masse hors limites détectée');
   const results = {};
 
   // 1. Extrapolation linéaire
+  console.log('📐 [calculatePerformanceWithExtrapolation] Tentative extrapolation linéaire...');
   const extrapolated = extrapolateMass(masses, altitudes, temperatures, values[field], mass, altitude, temperature);
+  console.log('📐 [calculatePerformanceWithExtrapolation] Résultat extrapolation:', extrapolated);
+
   if (extrapolated !== null) {
     results.extrapolated = {
       value: extrapolated,
@@ -302,10 +333,15 @@ export function calculatePerformanceWithExtrapolation(groupData, field, mass, al
         ? `Masse ${mass} kg inférieure à la masse minimale du tableau (${minMass} kg). Valeur extrapolée.`
         : `Masse ${mass} kg supérieure à la masse maximale du tableau (${maxMass} kg). Valeur extrapolée.`
     };
+    console.log('✅ [calculatePerformanceWithExtrapolation] Extrapolation ajoutée aux résultats');
+  } else {
+    console.warn('❌ [calculatePerformanceWithExtrapolation] Extrapolation échouée (null)');
   }
 
   // 2. Calcul avec masse limite (min ou max)
   const clampedMass = mass < minMass ? minMass : (mass > maxMass ? maxMass : mass);
+  console.log('📌 [calculatePerformanceWithExtrapolation] Tentative calcul avec masse limite:', clampedMass);
+
   const clamped = trilinearInterpolate(
     masses,
     altitudes,
@@ -315,6 +351,7 @@ export function calculatePerformanceWithExtrapolation(groupData, field, mass, al
     altitude,
     temperature
   );
+  console.log('📌 [calculatePerformanceWithExtrapolation] Résultat masse limite:', clamped);
 
   if (clamped !== null) {
     results.clamped = {
@@ -325,10 +362,15 @@ export function calculatePerformanceWithExtrapolation(groupData, field, mass, al
         ? `Masse réelle ${mass} kg < masse min ${minMass} kg. Calcul avec masse minimale.`
         : `Masse réelle ${mass} kg > masse max ${maxMass} kg. Calcul avec masse maximale.`
     };
+    console.log('✅ [calculatePerformanceWithExtrapolation] Calcul masse limite ajouté aux résultats');
+  } else {
+    console.warn('❌ [calculatePerformanceWithExtrapolation] Calcul masse limite échoué (null)');
   }
 
-  console.log('[PerformanceDistance] Résultats hors limites:', results);
-  return Object.keys(results).length > 0 ? results : null;
+  console.log('🎯 [calculatePerformanceWithExtrapolation] Résultats finaux hors limites:', results);
+  const finalResult = Object.keys(results).length > 0 ? results : null;
+  console.log('🎯 [calculatePerformanceWithExtrapolation] Retourne:', finalResult ? 'Objet avec résultats' : 'null');
+  return finalResult;
 }
 
 export default {

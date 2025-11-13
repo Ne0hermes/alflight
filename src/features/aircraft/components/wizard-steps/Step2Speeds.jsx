@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { 
-  Box, 
-  Typography, 
-  TextField, 
-  Grid, 
-  Paper, 
-  Alert, 
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  TextField,
+  Grid,
+  Paper,
+  Alert,
   Button,
   InputAdornment,
   Divider,
@@ -21,7 +21,11 @@ import {
   TableRow,
   Accordion,
   AccordionSummary,
-  AccordionDetails
+  AccordionDetails,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel
 } from '@mui/material';
 import {
   Speed as SpeedIcon,
@@ -75,6 +79,90 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
     { minWeight: '', maxWeight: '', speed: '', saved: false }
   ]);
   const [voTempRanges, setVoTempRanges] = useState(voRanges.map(r => ({ ...r })));
+
+  // 🔧 FIX: Synchroniser voRanges avec data.speeds?.voRanges quand les données changent
+  useEffect(() => {
+    const newVoRanges = data.speeds?.voRanges || [
+      { minWeight: '', maxWeight: '', speed: '', saved: false }
+    ];
+    // Comparer le contenu réel (pas juste la référence)
+    const currentSerialized = JSON.stringify(voRanges);
+    const newSerialized = JSON.stringify(newVoRanges);
+
+    if (currentSerialized !== newSerialized) {
+      setVoRanges(newVoRanges);
+      setVoTempRanges(newVoRanges.map(r => ({ ...r })));
+      console.log('🔄 [Step2Speeds] VO ranges synchronized:', {
+        old: voRanges,
+        new: newVoRanges
+      });
+    }
+  }, [JSON.stringify(data.speeds?.voRanges)]);
+
+  // 🆕 État pour les limitations de vent dynamiques
+  const [windLimits, setWindLimits] = useState(data.windLimits?.limits || []);
+  const [windTempLimits, setWindTempLimits] = useState(windLimits.map(l => ({ ...l })));
+
+  // Types de limitations de vent disponibles
+  const windLimitTypes = [
+    { value: 'maxCrosswind', label: 'Vent de travers max' },
+    { value: 'maxTailwind', label: 'Vent arrière max' },
+    { value: 'maxCrosswindWet', label: 'Vent travers piste mouillée' },
+    { value: 'maxCrosswindIce', label: 'Vent travers piste contaminée' },
+    { value: 'maxHeadwind', label: 'Vent de face max' },
+    { value: 'maxGustDifferential', label: 'Différentiel de rafale max' },
+    { value: 'maxDemonstrated', label: 'Vent de travers démontré' }
+  ];
+
+  // Synchroniser windLimits avec data
+  useEffect(() => {
+    const newLimits = data.windLimits?.limits || [];
+    const currentSerialized = JSON.stringify(windLimits);
+    const newSerialized = JSON.stringify(newLimits);
+
+    if (currentSerialized !== newSerialized) {
+      setWindLimits(newLimits);
+      setWindTempLimits(newLimits.map(l => ({ ...l })));
+      console.log('🔄 [Step2Speeds] Wind limits synchronized:', newLimits);
+    }
+  }, [JSON.stringify(data.windLimits?.limits)]);
+
+  const addWindLimit = () => {
+    const newLimit = { type: 'maxCrosswind', value: '', saved: false };
+    const newLimits = [...windLimits, newLimit];
+    setWindLimits(newLimits);
+    setWindTempLimits([...windTempLimits, { ...newLimit }]);
+  };
+
+  const removeWindLimit = (index) => {
+    const newLimits = windLimits.filter((_, i) => i !== index);
+    setWindLimits(newLimits);
+    setWindTempLimits(windTempLimits.filter((_, i) => i !== index));
+    updateData('windLimits.limits', newLimits);
+  };
+
+  const updateWindLimitTemp = (index, field, value) => {
+    const newTempLimits = [...windTempLimits];
+    newTempLimits[index][field] = value;
+    setWindTempLimits(newTempLimits);
+  };
+
+  const saveWindLimit = (index) => {
+    const tempLimit = windTempLimits[index];
+    const newLimits = [...windLimits];
+    newLimits[index] = {
+      type: tempLimit.type,
+      value: tempLimit.value,
+      saved: true
+    };
+    setWindLimits(newLimits);
+
+    const newTempLimits = [...windTempLimits];
+    newTempLimits[index] = { ...newLimits[index] };
+    setWindTempLimits(newTempLimits);
+
+    updateData('windLimits.limits', newLimits);
+  };
 
   const addVoRange = () => {
     const newRange = { minWeight: '', maxWeight: '', speed: '', saved: false };
@@ -1038,11 +1126,11 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
       </Accordion>
 
       {/* 6. Limitations de vent */}
-      <Accordion 
+      <Accordion
         expanded={expandedPanels.wind}
         onChange={handlePanelChange('wind')}
         elevation={0}
-        sx={{ 
+        sx={{
           mb: 2,
           border: '1px solid',
           borderColor: 'divider',
@@ -1051,12 +1139,12 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
       >
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
-          sx={{ 
+          sx={{
             minHeight: '40px',
             '&.Mui-expanded': { minHeight: '40px' },
-            '& .MuiAccordionSummary-content': { 
-              display: 'flex', 
-              alignItems: 'center', 
+            '& .MuiAccordionSummary-content': {
+              display: 'flex',
+              alignItems: 'center',
               gap: 1,
               margin: '8px 0'
             },
@@ -1072,74 +1160,99 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 1.5 }}>
-            <Grid item xs={12} sx={{ width: '100%', maxWidth: 350 }}>
-              <StyledTextField
-                fullWidth
-                variant="outlined"
-                label="Vent de travers max *"
-                type="number"
-                value={data.windLimits?.maxCrosswind || ''}
-                onChange={(e) => updateData('windLimits.maxCrosswind', e.target.value)}
-                placeholder="Ex: 17"
-                required
-                error={!!errors['windLimits.maxCrosswind']}
-                helperText={errors['windLimits.maxCrosswind']}
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                InputProps={{
-                  endAdornment: <InputAdornment position="end">{getUnitSymbol(units.speed)}</InputAdornment>,
-                  sx: { height: '56px' }
-                }}
-                sx={{ '& .MuiOutlinedInput-root': { height: '56px' } }}
-              />
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2, textAlign: 'center' }}>
+              Définissez les limitations de vent selon le manuel de vol
+            </Typography>
+
+            <Grid container spacing={2} justifyContent="center">
+              {windTempLimits.map((limit, index) => (
+                <Grid item xs={12} key={index} sx={{ maxWidth: 800 }}>
+                  <Box sx={{
+                    display: 'flex',
+                    gap: 1.5,
+                    alignItems: 'flex-start',
+                    p: 2,
+                    bgcolor: 'background.default',
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'divider'
+                  }}>
+                    <Grid container spacing={1.5} sx={{ flex: 1 }}>
+                      <Grid item xs={12} sm={6}>
+                        <FormControl fullWidth size="small">
+                          <InputLabel>Type de limitation *</InputLabel>
+                          <Select
+                            value={limit.type || 'maxCrosswind'}
+                            onChange={(e) => updateWindLimitTemp(index, 'type', e.target.value)}
+                            label="Type de limitation *"
+                          >
+                            {windLimitTypes.map(type => (
+                              <MenuItem key={type.value} value={type.value}>
+                                {type.label}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+
+                      <Grid item xs={12} sm={4}>
+                        <StyledTextField
+                          fullWidth
+                          label="Valeur *"
+                          type="number"
+                          value={limit.value || ''}
+                          onChange={(e) => updateWindLimitTemp(index, 'value', e.target.value)}
+                          placeholder="Ex: 17"
+                          variant="outlined"
+                          size="small"
+                          required
+                          InputProps={{
+                            endAdornment: <InputAdornment position="end">{getUnitSymbol(units.speed)}</InputAdornment>,
+                          }}
+                        />
+                      </Grid>
+
+                      <Grid item xs={12} sm={2} sx={{ display: 'flex', gap: 1 }}>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          size="small"
+                          onClick={() => saveWindLimit(index)}
+                          sx={{ flex: 1 }}
+                        >
+                          Sauvegarder
+                        </Button>
+                      </Grid>
+                    </Grid>
+
+                    <IconButton
+                      onClick={() => removeWindLimit(index)}
+                      disabled={windLimits.length === 0}
+                      color="error"
+                      size="small"
+                      sx={{ mt: 0.5 }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
+                </Grid>
+              ))}
             </Grid>
-            
-            <Grid item xs={12} sx={{ width: '100%', maxWidth: 350 }}>
-              <StyledTextField
-                fullWidth
+
+            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+              <Button
                 variant="outlined"
-                label="Vent arrière max *"
-                type="number"
-                value={data.windLimits?.maxTailwind || ''}
-                onChange={(e) => updateData('windLimits.maxTailwind', e.target.value)}
-                placeholder="Ex: 10"
-                required
-                error={!!errors['windLimits.maxTailwind']}
-                helperText={errors['windLimits.maxTailwind']}
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                InputProps={{
-                  endAdornment: <InputAdornment position="end">{getUnitSymbol(units.speed)}</InputAdornment>,
-                  sx: { height: '56px' }
-                }}
-                sx={{ '& .MuiOutlinedInput-root': { height: '56px' } }}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sx={{ width: '100%', maxWidth: 350 }}>
-              <StyledTextField
-                fullWidth
-                variant="outlined"
-                label="Vent travers piste mouillée *"
-                type="number"
-                value={data.windLimits?.maxCrosswindWet || ''}
-                onChange={(e) => updateData('windLimits.maxCrosswindWet', e.target.value)}
-                placeholder="Ex: 13"
-                required
-                error={!!errors['windLimits.maxCrosswindWet']}
-                helperText={errors['windLimits.maxCrosswindWet']}
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                InputProps={{
-                  endAdornment: <InputAdornment position="end">{getUnitSymbol(units.speed)}</InputAdornment>,
-                  sx: { height: '56px' }
-                }}
-                sx={{ '& .MuiOutlinedInput-root': { height: '56px' } }}
-              />
-            </Grid>
+                startIcon={<AddIcon />}
+                onClick={addWindLimit}
+                size="small"
+              >
+                Ajouter une limitation
+              </Button>
+            </Box>
+
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block', textAlign: 'center' }}>
+              Ajoutez les limitations de vent définies dans le manuel de vol
+            </Typography>
           </Box>
         </AccordionDetails>
       </Accordion>

@@ -19,36 +19,60 @@ const SURFACE_TYPES = {
 const metersToFeet = (meters) => Math.round(meters * 3.28084);
 
 const analyzeRunwayCompatibility = (runway, aircraft) => {
-  if (!aircraft || !aircraft.runwayRequirements) {
+  if (!aircraft) {
     return { compatible: 'unknown', reasons: ['Avion non sélectionné'] };
   }
 
   const reasons = [];
   let compatible = true;
 
+  // 🛫 Vérification distance de décollage (TODA)
   const todaFeet = metersToFeet(runway.dimensions?.toda || runway.dimensions?.length || 0);
-  if (todaFeet < aircraft.runwayRequirements.takeoffDistance) {
-    compatible = false;
-    reasons.push(`TODA insuffisante: ${todaFeet} ft < ${aircraft.runwayRequirements.takeoffDistance} ft requis`);
+  const requiredTakeoffDistance = aircraft.distances?.takeoffDistance50ft || aircraft.distances?.takeoffDistance15m;
+
+  if (requiredTakeoffDistance && todaFeet > 0) {
+    if (todaFeet < requiredTakeoffDistance) {
+      compatible = false;
+      reasons.push(`❌ TODA insuffisante: ${todaFeet} ft < ${requiredTakeoffDistance} ft requis`);
+    }
   }
 
+  // 🛬 Vérification distance d'atterrissage (LDA)
   const ldaFeet = metersToFeet(runway.dimensions?.lda || runway.dimensions?.length || 0);
-  if (ldaFeet < aircraft.runwayRequirements.landingDistance) {
-    compatible = false;
-    reasons.push(`LDA insuffisante: ${ldaFeet} ft < ${aircraft.runwayRequirements.landingDistance} ft requis`);
+  const requiredLandingDistance = aircraft.distances?.landingDistance50ft || aircraft.distances?.landingDistance15m;
+
+  if (requiredLandingDistance && ldaFeet > 0) {
+    if (ldaFeet < requiredLandingDistance) {
+      compatible = false;
+      reasons.push(`❌ LDA insuffisante: ${ldaFeet} ft < ${requiredLandingDistance} ft requis`);
+    }
   }
 
+  // 🏗️ Vérification surface de piste
   const surface = runway.surface?.type || 'UNKNOWN';
-  const surfaceInfo = SURFACE_TYPES[surface] || { quality: 0.5 };
-  
-  if (aircraft.runwayRequirements.surfaceTypes && 
-      !aircraft.runwayRequirements.surfaceTypes.includes(surface)) {
-    compatible = false;
-    reasons.push(`Surface ${surfaceInfo.name} non compatible`);
+  const surfaceInfo = SURFACE_TYPES[surface] || { name: surface, icon: '❓', quality: 0.5 };
+
+  // Utiliser compatibleRunwaySurfaces depuis les données d'avion
+  if (aircraft.compatibleRunwaySurfaces && aircraft.compatibleRunwaySurfaces.length > 0) {
+    if (!aircraft.compatibleRunwaySurfaces.includes(surface)) {
+      compatible = false;
+      reasons.push(`❌ Surface ${surfaceInfo.name || surface} non autorisée pour cet avion`);
+    } else {
+      // Surface autorisée mais performances réduites si qualité < 0.8
+      if (surfaceInfo.quality < 0.8) {
+        reasons.push(`⚠️ Surface ${surfaceInfo.name} autorisée - performances réduites (${Math.round(surfaceInfo.quality * 100)}%)`);
+      }
+    }
+  } else {
+    // Pas de restriction définie - avertissement si surface de faible qualité
+    if (surfaceInfo.quality < 0.8) {
+      reasons.push(`⚠️ Surface ${surfaceInfo.name} - performances réduites (${Math.round(surfaceInfo.quality * 100)}%)`);
+    }
   }
 
-  if (compatible && surfaceInfo.quality < 0.8) {
-    reasons.push(`⚠️ Surface ${surfaceInfo.name} - performances réduites`);
+  // Message si compatible
+  if (compatible && reasons.length === 0) {
+    reasons.push(`✅ Piste compatible avec ${aircraft.registration || 'l\'avion'}`);
   }
 
   return {

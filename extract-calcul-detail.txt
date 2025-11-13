@@ -1,0 +1,46 @@
+// CODE POUR EXTRAIRE LES VALEURS EXACTES DU TABLEAU
+// Copie dans la console de l'app (Step 7, F12)
+
+(async () => {
+  const { useAircraftStore } = await import('/src/core/stores/aircraftStore.js');
+  const aircraft = useAircraftStore.getState().aircraftList.find(a => a.registration === 'F-HSTR');
+  const table = aircraft.advancedPerformance.tables.find(t => t.table_name.includes('Landing Distance - Flaps LDG'));
+
+  // Extraire les points nécessaires pour le calcul
+  const points = table.data.filter(p =>
+    (p.Masse === 1100 || p.Masse === 1200) &&
+    (p.Altitude === 0 || p.Altitude === 305 || p.Altitude === 610 || p.Altitude === 1000) &&
+    (p.Temperature === 0 || p.Temperature === 10 || p.Temperature === 20)
+  ).sort((a,b) =>
+    a.Masse - b.Masse || a.Altitude - b.Altitude || a.Temperature - b.Temperature
+  );
+
+  console.log('=== VALEURS DU TABLEAU POUR LE CALCUL ===\n');
+  console.log('Conditions cibles: Masse 960.1 kg, Altitude 505 ft, Température 7°C\n');
+
+  console.log('--- MASSE 1100 kg ---');
+  points.filter(p => p.Masse === 1100).forEach(p => {
+    console.log(`Alt: ${p.Altitude} ft | Temp: ${p.Temperature}°C | Roulage: ${p.Distance_roulement} m | 15m: ${p.Distance_passage_15m} m`);
+  });
+
+  console.log('\n--- MASSE 1200 kg ---');
+  points.filter(p => p.Masse === 1200).forEach(p => {
+    console.log(`Alt: ${p.Altitude} ft | Temp: ${p.Temperature}°C | Roulage: ${p.Distance_roulement} m | 15m: ${p.Distance_passage_15m} m`);
+  });
+
+  // Retourner les données pour analyse
+  return {
+    conditions: {
+      masse_cible: '960.1 kg',
+      altitude_cible: '505 ft',
+      temperature_cible: '7°C'
+    },
+    donnees_tableau: points.map(p => ({
+      masse_kg: p.Masse,
+      altitude_ft: p.Altitude,
+      temperature_C: p.Temperature,
+      distance_roulage_m: p.Distance_roulement,
+      distance_15m_m: p.Distance_passage_15m
+    }))
+  };
+})();

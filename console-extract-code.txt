@@ -1,0 +1,30 @@
+// INSTRUCTIONS:
+// 1. Ouvre l'app: http://localhost:4001
+// 2. Va sur Step 7 - Performances
+// 3. Ouvre la console (F12)
+// 4. Copie tout le code ci-dessous et colle-le dans la console
+// 5. Appuie sur Entrée
+// 6. Copie ce qui s'affiche et envoie-le à Claude
+
+// CODE A COPIER DANS LA CONSOLE:
+
+const store = window.__AIRCRAFT_STORE__ || JSON.parse(localStorage.getItem('aircraft-store-v2') || '{}');
+const aircraft = store?.state?.aircraftList?.find(a => a.registration === 'F-HSTR');
+
+if (aircraft) {
+  const table = aircraft.advancedPerformance.tables.find(t => t.table_name.includes('Landing Distance - Flaps LDG'));
+
+  console.log('=== MASSE 1100 KG - Points autour de 505 ft et 7°C ===');
+  table.data
+    .filter(p => p.Masse === 1100 && p.Altitude >= 0 && p.Altitude <= 1000 && p.Temperature >= 0 && p.Temperature <= 20)
+    .sort((a,b) => a.Altitude - b.Altitude || a.Temperature - b.Temperature)
+    .forEach(p => console.log(`${p.Altitude}ft | ${p.Temperature}°C | Roulage: ${p.Distance_roulement}m | 15m: ${p.Distance_passage_15m}m`));
+
+  console.log('\n=== MASSE 1200 KG - Points autour de 505 ft et 7°C ===');
+  table.data
+    .filter(p => p.Masse === 1200 && p.Altitude >= 0 && p.Altitude <= 1000 && p.Temperature >= 0 && p.Temperature <= 20)
+    .sort((a,b) => a.Altitude - b.Altitude || a.Temperature - b.Temperature)
+    .forEach(p => console.log(`${p.Altitude}ft | ${p.Temperature}°C | Roulage: ${p.Distance_roulement}m | 15m: ${p.Distance_passage_15m}m`));
+} else {
+  console.log('❌ Avion non trouvé');
+}

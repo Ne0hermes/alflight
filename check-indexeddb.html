@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Check IndexedDB F-HSTR</title>
+</head>
+<body>
+  <h1>Vérification IndexedDB F-HSTR</h1>
+  <pre id="output"></pre>
+
+  <script>
+    const output = document.getElementById('output');
+
+    async function checkFHSTR() {
+      try {
+        output.textContent = 'Ouverture IndexedDB...\n';
+
+        const request = indexedDB.open('alflight-aircraft-db', 1);
+
+        request.onsuccess = (event) => {
+          const db = event.target.result;
+          output.textContent += '✅ DB ouverte\n\n';
+
+          const transaction = db.transaction(['aircraftData'], 'readonly');
+          const store = transaction.objectStore('aircraftData');
+          const getAllRequest = store.getAll();
+
+          getAllRequest.onsuccess = () => {
+            const allAircraft = getAllRequest.result;
+            output.textContent += `Total avions: ${allAircraft.length}\n\n`;
+
+            // Chercher F-HSTR
+            const fhstr = allAircraft.find(a => a.registration === 'F-HSTR');
+
+            if (fhstr) {
+              output.textContent += '📊 F-HSTR trouvé!\n\n';
+              output.textContent += 'weightBalance:\n';
+              output.textContent += JSON.stringify(fhstr.weightBalance, null, 2) + '\n\n';
+              output.textContent += 'cgEnvelope:\n';
+              output.textContent += JSON.stringify(fhstr.cgEnvelope, null, 2) + '\n\n';
+              output.textContent += 'cgLimits (racine):\n';
+              output.textContent += JSON.stringify(fhstr.cgLimits, null, 2) + '\n\n';
+              output.textContent += 'arms:\n';
+              output.textContent += JSON.stringify(fhstr.arms, null, 2) + '\n';
+            } else {
+              output.textContent += '❌ F-HSTR non trouvé dans IndexedDB\n';
+              output.textContent += 'Avions présents: ' + allAircraft.map(a => a.registration).join(', ');
+            }
+          };
+
+          getAllRequest.onerror = () => {
+            output.textContent += '❌ Erreur lecture store: ' + getAllRequest.error;
+          };
+        };
+
+        request.onerror = () => {
+          output.textContent += '❌ Erreur ouverture DB: ' + request.error;
+        };
+
+      } catch (error) {
+        output.textContent += '❌ Exception: ' + error.message;
+      }
+    }
+
+    checkFHSTR();
+  </script>
+</body>
+</html>

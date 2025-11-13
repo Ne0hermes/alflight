@@ -1,11 +1,13 @@
 // src/features/flight-wizard/steps/Step3Route.jsx
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo, useState, useEffect, useMemo } from 'react';
 import NavigationModule from '@features/navigation/NavigationModule';
-import { Navigation, Map } from 'lucide-react';
+import AlternatesModule from '@features/alternates/AlternatesModule';
+import { Navigation, Map, Plane } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import RouteMapView from '../components/RouteMapView';
-import { useNavigation } from '@core/contexts';
+import { useNavigation, useAircraft } from '@core/contexts';
 import { vfrPointsExtractor } from '@services/vfrPointsExtractor';
+import { useUnits } from '@hooks/useUnits';
 
 // Styles communs
 const commonStyles = {
@@ -50,6 +52,23 @@ const commonStyles = {
     color: '#6b7280',
     marginBottom: '12px',
     fontStyle: 'italic'
+  },
+  alternatesSection: {
+    marginTop: '48px',
+    paddingTop: '32px',
+    borderTop: '2px solid #e5e7eb',
+  },
+  alternatesHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    marginBottom: '24px',
+  },
+  alternatesTitle: {
+    fontSize: '20px',
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
+    margin: 0,
   }
 };
 
@@ -57,12 +76,133 @@ const commonStyles = {
 export const Step3Route = memo(({ flightPlan, onUpdate }) => {
   console.log('📍📍📍 Step3Route MONTÉ');
 
-  // Récupérer les waypoints depuis le contexte Navigation
-  const { waypoints } = useNavigation();
+  // Récupérer les waypoints et altitudes depuis le contexte Navigation
+  const { waypoints, segmentAltitudes } = useNavigation();
+
+  // Récupérer l'avion sélectionné
+  const { selectedAircraft, setSelectedAircraft } = useAircraft();
+  const { convert, getSymbol } = useUnits();
 
   // Points VFR chargés depuis AIXM
   const [vfrPoints, setVfrPoints] = useState([]);
   const [loadingVFR, setLoadingVFR] = useState(false);
+
+  // Altitude planifiée par défaut (même valeur que NavigationModule)
+  const [plannedAltitude] = useState(3000);
+
+  // 📐 Calcul du TOD (Top of Descent) pour affichage sur la carte
+  const todCalculation = useMemo(() => {
+    if (!waypoints || waypoints.length < 2) return null;
+
+    const lastWaypoint = waypoints[waypoints.length - 1];
+    const secondLastWaypoint = waypoints[waypoints.length - 2];
+
+    // Élévation du terrain de destination
+    const terrainElevation = lastWaypoint.elevation || 0;
+
+    // Altitude de croisière (depuis le dernier segment ou plannedAltitude)
+    const fromId = secondLastWaypoint.id || secondLastWaypoint.name || `wp${waypoints.length - 2}`;
+    const toId = lastWaypoint.id || lastWaypoint.name || `wp${waypoints.length - 1}`;
+    const lastSegmentId = `${fromId}-${toId}`;
+    const cruiseAltitude = segmentAltitudes[lastSegmentId]?.startAlt || plannedAltitude;
+
+    // Altitude cible par défaut : terrain + 1000 ft
+    const targetAltitude = terrainElevation + 1000;
+
+    // Descente totale
+    const altitudeToDescent = cruiseAltitude - targetAltitude;
+
+    // Si pas de descente nécessaire
+    if (altitudeToDescent <= 0) {
+      return {
+        error: true,
+        message: altitudeToDescent === 0 ? "Déjà à l'altitude pattern" : "Montée requise pour le pattern",
+        cruiseAltitude,
+        targetAltitude,
+        terrainElevation,
+        arrivalAerodrome: lastWaypoint.name || 'Destination'
+      };
+    }
+
+    // Paramètres par défaut
+    const descentRate = 500; // ft/min
+    const groundSpeed = selectedAircraft?.cruiseSpeedKt || 120; // kt
+
+    // Calculs
+    const descentTimeMinutes = altitudeToDescent / descentRate;
+    const groundSpeedNmPerMin = groundSpeed / 60;
+    const distanceToTod = descentTimeMinutes * groundSpeedNmPerMin;
+    const descentAngle = Math.atan((altitudeToDescent / 6076.12) / distanceToTod) * 180 / Math.PI;
+
+    return {
+      altitudeToDescent,
+      descentTimeMinutes,
+      distanceToTod: distanceToTod.toFixed(1),
+      descentAngle: descentAngle.toFixed(1),
+      targetAltitude,
+      cruiseAltitude,
+      terrainElevation,
+      descentRate,
+      groundSpeed,
+      arrivalAerodrome: lastWaypoint.name || 'Destination',
+      error: false
+    };
+  }, [waypoints, segmentAltitudes, plannedAltitude, selectedAircraft]);
+
+  // 🔧 FIX: Synchroniser l'avion du flightPlan avec le contexte Aircraft global
+  useEffect(() => {
+    if (flightPlan?.aircraft?.registration) {
+      if (flightPlan.aircraft.id) {
+        setSelectedAircraft(flightPlan.aircraft);
+        return;
+      }
+
+      import('@core/stores/aircraftStore').then(({ useAircraftStore }) => {
+        const store = useAircraftStore.getState();
+        if (!store.isInitialized) {
+          setSelectedAircraft(flightPlan.aircraft);
+          return;
+        }
+
+        const fullAircraft = store.aircraftList.find(
+          ac => ac.registration === flightPlan.aircraft.registration
+        );
+
+        if (fullAircraft) {
+          setSelectedAircraft(fullAircraft);
+        } else {
+          setSelectedAircraft(flightPlan.aircraft);
+        }
+      });
+    }
+  }, [flightPlan?.aircraft?.registration, setSelectedAircraft]);
+
+  // Calculer le rayon de sélection pour les déroutements
+  const searchRadius = useMemo(() => {
+    const totalFuel = flightPlan.fuel.confirmed || 0;
+    const fuelUsed = (flightPlan.fuel.taxi || 0) +
+                     (flightPlan.fuel.climb || 0) +
+                     (flightPlan.fuel.cruise || 0);
+    const remainingFuel = totalFuel - fuelUsed;
+    const fuelConsumptionStorage = flightPlan.aircraft.fuelConsumption || 40;
+    const fuelConsumptionDisplay = convert(fuelConsumptionStorage, 'fuelConsumption', 'lph');
+    const fuelRemainingDisplay = convert(remainingFuel, 'fuel', 'ltr');
+    const cruiseSpeed = flightPlan.aircraft.cruiseSpeed || 120;
+    const remainingEndurance = remainingFuel / fuelConsumptionStorage;
+    const radiusNM = remainingEndurance * cruiseSpeed;
+    const radiusKM = radiusNM * 1.852;
+
+    return {
+      fuelRemaining: remainingFuel,
+      fuelRemainingDisplay: fuelRemainingDisplay,
+      endurance: remainingEndurance,
+      radiusNM: radiusNM,
+      radiusKM: radiusKM,
+      cruiseSpeed: cruiseSpeed,
+      fuelConsumption: fuelConsumptionStorage,
+      fuelConsumptionDisplay: fuelConsumptionDisplay
+    };
+  }, [flightPlan.fuel, flightPlan.aircraft, convert]);
 
   // Synchroniser les waypoints du NavigationContext avec le flightPlan
   useEffect(() => {
@@ -216,7 +356,11 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
           <Map size={18} />
           Carte du trajet
         </div>
-        <RouteMapView vfrPoints={vfrPoints} flightPlan={flightPlan} />
+        <RouteMapView
+          vfrPoints={vfrPoints}
+          flightPlan={flightPlan}
+          todCalculation={null}
+        />
       </div>
 
       {/* Module de navigation complet pour la gestion des waypoints */}
@@ -229,6 +373,19 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
             showExportButtons: false,
             simplifiedView: true
           }}
+        />
+      </div>
+
+      {/* Section Aérodromes de Déroutement */}
+      <div style={commonStyles.alternatesSection}>
+        <div style={commonStyles.alternatesHeader}>
+          <Plane size={20} style={{ color: theme.colors.primary }} />
+          <h3 style={commonStyles.alternatesTitle}>Aérodromes de Déroutement</h3>
+        </div>
+
+        <AlternatesModule
+          customRadius={searchRadius.radiusKM}
+          showRadiusCircle={true}
         />
       </div>
     </div>

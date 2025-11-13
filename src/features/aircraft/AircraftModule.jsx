@@ -70,7 +70,7 @@ InfoIcon.displayName = 'InfoIcon';
 
 export const AircraftModule = memo(() => {
   const aircraftContext = useAircraft();
-  const { getSymbol } = useUnits();
+  const { getSymbol, format } = useUnits();
 
 
   // Vérifier si le contexte est valide
@@ -84,9 +84,12 @@ export const AircraftModule = memo(() => {
     );
   };
   const { aircraftList, selectedAircraft, setSelectedAircraft, addAircraft, updateAircraft, deleteAircraft } = aircraftContext;
-  
+
   // Importer la fonction de migration depuis le store
   const migrateAircraftSurfaces = useAircraftStore(state => state.migrateAircraftSurfaces);
+
+  // Importer refreshFromSupabase depuis le store pour recharger après sauvegarde
+  const refreshFromSupabase = useAircraftStore(state => state.refreshFromSupabase);
   
   // Vérifier les avions ayant des données manquantes
   const [showIncompleteDataAlert, setShowIncompleteDataAlert] = useState(false);
@@ -147,16 +150,16 @@ export const AircraftModule = memo(() => {
       const photosMap = {};
 
       for (const aircraft of aircraftList) {
-        if (aircraft.hasPhoto || aircraft.hasManex) {
-          try {
-            const fullData = await dataBackupManager.getAircraftData(aircraft.id);
-            if (fullData && fullData.photo) {
-              photosMap[aircraft.id] = fullData.photo;
-              console.log(`📸 Photo chargée pour ${aircraft.registration}`);
-            }
-          } catch (error) {
-            console.warn(`⚠️ Erreur lors du chargement de la photo pour ${aircraft.registration}:`, error);
+        // 🔧 FIX: Toujours essayer de charger la photo depuis IndexedDB
+        // Même si hasPhoto est false (pour compatibilité avec anciens avions)
+        try {
+          const fullData = await dataBackupManager.getAircraftData(aircraft.id);
+          if (fullData && fullData.photo) {
+            photosMap[aircraft.id] = fullData.photo;
+            console.log(`📸 Photo chargée pour ${aircraft.registration}`);
           }
+        } catch (error) {
+          console.warn(`⚠️ Erreur lors du chargement de la photo pour ${aircraft.registration}:`, error);
         }
       }
 
@@ -472,7 +475,7 @@ export const AircraftModule = memo(() => {
           ['Bras à vide', fullAircraft.arms?.empty, 'mm'],
           ['MTOW', fullAircraft.weights?.mtow || fullAircraft.maxTakeoffWeight, 'kg'],
           ['MLW', fullAircraft.weights?.mlw, 'kg'],
-          ['MZFW', fullAircraft.weights?.mzfw, 'kg'],
+          ['MZFW', fullAircraft.weights?.mzfw || fullAircraft.weights?.zfm, 'kg'],
           ['Carburant max', fullAircraft.fuel?.maxCapacity || fullAircraft.fuelCapacity, 'L'],
           ['Bras carburant', fullAircraft.arms?.fuel, 'mm'],
           ['Bras sièges avant', fullAircraft.arms?.frontSeats, 'mm'],
@@ -1156,9 +1159,9 @@ export const AircraftModule = memo(() => {
                       )}
                     </h4>
                     <div style={{ fontSize: '14px', color: '#6B7280' }}>
-                      <p>Carburant: {aircraft.fuelType} • Capacité: {aircraft.fuelCapacity} {getSymbol('fuel')}</p>
-                      <p>Vitesse: {aircraft.cruiseSpeed || aircraft.cruiseSpeedKt} {getSymbol('speed')} • Conso: {aircraft.fuelConsumption} {getSymbol('fuelConsumption')}</p>
-                      <p>MTOW: {aircraft.maxTakeoffWeight || aircraft.weights?.mtow} {getSymbol('weight')}</p>
+                      <p>Carburant: {aircraft.fuelType} • Capacité: {aircraft.fuelCapacity ? Number(aircraft.fuelCapacity).toFixed(1) : 'N/A'} {getSymbol('fuel')}</p>
+                      <p>Vitesse: {(aircraft.cruiseSpeed || aircraft.cruiseSpeedKt) ? Number(aircraft.cruiseSpeed || aircraft.cruiseSpeedKt).toFixed(0) : 'N/A'} {getSymbol('speed')} • Conso: {aircraft.fuelConsumption ? Number(aircraft.fuelConsumption).toFixed(1) : 'N/A'} {getSymbol('fuelConsumption')}</p>
+                      <p>MTOW: {(aircraft.maxTakeoffWeight || aircraft.weights?.mtow) ? Number(aircraft.maxTakeoffWeight || aircraft.weights?.mtow).toFixed(0) : 'N/A'} {getSymbol('weight')}</p>
                       {/* Affichage des informations MANEX si présent */}
                       {(aircraft.hasManex || aircraft.manex) && (
                         <p style={{ color: '#059669', fontSize: '12px', marginTop: '4px' }}>
@@ -1607,6 +1610,17 @@ export const AircraftModule = memo(() => {
 
                     console.log('💾 Wizard - Updating aircraft with photo:', !!photo, 'manex:', !!manex);
 
+                    if (manex) {
+                      console.log('📦 MANEX à sauvegarder (update):', {
+                        fileName: manex.fileName,
+                        hasPdfData: !!manex.pdfData,
+                        hasFile: !!manex.file,
+                        pdfDataLength: manex.pdfData ? manex.pdfData.length : 0,
+                        fileLength: manex.file ? manex.file.length : 0,
+                        keys: Object.keys(manex)
+                      });
+                    }
+
                     // Sauvegarder les données volumineuses dans IndexedDB
                     await dataBackupManager.saveAircraftData(updatedAircraft);
                     console.log('✅ Wizard - Données volumineuses sauvegardées dans IndexedDB');
@@ -1646,6 +1660,57 @@ export const AircraftModule = memo(() => {
 
                     addAircraft(lightData);
                     console.log('✅ Wizard - New aircraft added');
+                  }
+
+                  // 🔧 FIX: Recharger la liste des avions depuis Supabase pour synchroniser
+                  console.log('🔄 Rechargement de la liste des avions depuis Supabase...');
+                  await refreshFromSupabase();
+                  console.log('✅ Liste des avions rechargée');
+
+                  // 🔧 FIX CRITIQUE: Copier les données volumineuses de l'ID temporaire vers l'ID Supabase
+                  const tempId = wizardAircraft?.id || lightData?.id;
+                  const aircraftRegistration = wizardAircraft?.registration || lightData?.registration;
+
+                  // Récupérer la liste à jour depuis le store (pas depuis le contexte qui n'est pas encore mis à jour)
+                  const updatedAircraftList = useAircraftStore.getState().aircraftList;
+                  const supabaseAircraft = updatedAircraftList.find(a => a.registration === aircraftRegistration);
+                  const supabaseId = supabaseAircraft?.id;
+
+                  console.log('🔄 Migration données volumineuses:', {
+                    tempId,
+                    aircraftRegistration,
+                    supabaseId,
+                    hasPhoto: !!photo,
+                    hasManex: !!manex,
+                    updatedListLength: updatedAircraftList.length
+                  });
+
+                  if (tempId && supabaseId && tempId !== supabaseId && (photo || manex)) {
+                    try {
+                      // Récupérer les données de l'ID temporaire
+                      const tempData = await dataBackupManager.getAircraftData(tempId);
+                      console.log('📦 Données temp récupérées:', {
+                        hasData: !!tempData,
+                        hasPhoto: !!tempData?.photo,
+                        hasManex: !!tempData?.manex
+                      });
+
+                      if (tempData) {
+                        // Sauvegarder avec le nouvel ID Supabase
+                        const migratedData = {
+                          ...tempData,
+                          id: supabaseId
+                        };
+                        await dataBackupManager.saveAircraftData(migratedData);
+                        console.log('✅ Données migrées vers ID Supabase:', supabaseId);
+
+                        // Supprimer l'ancienne entrée avec l'ID temporaire
+                        await dataBackupManager.deleteAircraftData(tempId);
+                        console.log('🗑️ Anciennes données temp supprimées:', tempId);
+                      }
+                    } catch (err) {
+                      console.error('⚠️ Erreur migration données volumineuses:', err);
+                    }
                   }
 
                   setShowWizard(false);

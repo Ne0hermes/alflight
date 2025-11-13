@@ -450,14 +450,11 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
     setUpdateError(null);
 
     try {
-      
-      
 
-      // IMPORTANT: Sauvegarder localement D'ABORD pour ne pas perdre les données
-      if (onSave) {
-        
-        onSave({ mode: 'local', data });
-      }
+
+
+      // 🔧 FIX: Ne pas sauvegarder localement ici - handleSaveAndUpload s'en charge
+      // Cela évite le double appel à handleAircraftSave
 
       // Préparer les données à envoyer
       const dataToUpdate = { ...data };
@@ -465,11 +462,13 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
       // Supprimer le MANEX des données (il ne doit pas être dans aircraft_data)
       delete dataToUpdate.manex;
 
-      // Récupérer le MANEX s'il existe localement
+      // 🔧 FIX: Ne pas uploader le MANEX s'il est déjà sur Supabase
       let manexFile = null;
       const manexData = data.manex?.pdfData || data.manex?.file;
+      const manexAlreadyOnSupabase = data.manex?.uploadedToSupabase || false;
 
-      if (manexData) {
+      if (manexData && !manexAlreadyOnSupabase) {
+        console.log('📤 Conversion MANEX pour upload Supabase...');
         // Convertir le base64 en blob avec le bon type MIME
         try {
           // Extraire la partie base64 de la data URL
@@ -482,13 +481,13 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           const byteArray = new Uint8Array(byteNumbers);
           // IMPORTANT: Spécifier explicitement le type MIME comme application/pdf
           manexFile = new Blob([byteArray], { type: 'application/pdf' });
-          
+
         } catch (conversionError) {
           console.error('❌ Erreur conversion MANEX:', conversionError);
           throw new Error('Erreur lors de la conversion du MANEX');
         }
-      } else {
-        
+      } else if (manexAlreadyOnSupabase) {
+        console.log('ℹ️ MANEX déjà sur Supabase - Skip upload');
       }
 
       // Appeler la fonction de mise à jour
@@ -500,6 +499,46 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
         'current-user-id' // En prod: récupérer l'ID utilisateur réel
       );
 
+      // 🔧 FIX: Sauvegarder le MANEX dans IndexedDB localement après upload Supabase
+      if (data.manex && data.id) {
+        console.log('💾 Sauvegarde du MANEX dans IndexedDB après upload Supabase...');
+        console.log('📦 MANEX à sauvegarder:', {
+          fileName: data.manex.fileName,
+          fileSize: data.manex.fileSize,
+          hasPdfData: !!data.manex.pdfData,
+          hasFile: !!data.manex.file,
+          pdfDataLength: data.manex.pdfData ? data.manex.pdfData.length : 0,
+          fileLength: data.manex.file ? data.manex.file.length : 0,
+          keys: Object.keys(data.manex)
+        });
+
+        // 🔧 FIX: Normaliser le format - le champ peut s'appeler "file" ou "pdfData"
+        const normalizedManex = {
+          ...data.manex,
+          pdfData: data.manex.pdfData || data.manex.file,
+          hasData: true
+        };
+
+        console.log('✅ MANEX normalisé:', {
+          hasPdfData: !!normalizedManex.pdfData,
+          pdfDataLength: normalizedManex.pdfData ? normalizedManex.pdfData.length : 0
+        });
+
+        try {
+          const { default: dataBackupManager } = await import('@utils/dataBackupManager');
+          const currentData = await dataBackupManager.getAircraftData(data.id) || {};
+          await dataBackupManager.saveAircraftData({
+            ...currentData,
+            ...data,
+            hasManex: true,
+            manex: normalizedManex
+          });
+          console.log('✅ MANEX sauvegardé dans IndexedDB');
+        } catch (err) {
+          console.error('⚠️ Erreur sauvegarde MANEX IndexedDB:', err);
+        }
+      }
+
       setUpdateSuccess(true);
       setIsUpdatingSupabase(false);
 
@@ -508,7 +547,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
         setUpdateSuccess(false);
       }, 3000);
 
-      
+
     } catch (error) {
       console.error('❌ Erreur lors de la mise à jour Supabase:', error);
       setUpdateError(error.message || 'Erreur lors de la mise à jour');
@@ -532,13 +571,10 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
     setManexUploadError(null);
 
     try {
-      
 
-      // IMPORTANT: Sauvegarder localement D'ABORD pour ne pas perdre les données
-      if (onSave) {
-        
-        onSave({ mode: 'local', data });
-      }
+
+      // 🔧 FIX: Ne pas sauvegarder localement ici - handleSaveAndUpload s'en charge
+      // Cela évite le double appel à handleAircraftSave
 
       // Convertir base64 en blob
       const fileData = data.manex.file || data.manex.pdfData;
@@ -793,39 +829,57 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
       )}
 
       {/* Masse et centrage avec graphique intégré */}
-      {renderSection(
-        'Masse et centrage',
-        <ScaleIcon color="primary" />,
-        4,
-        [
+      {(() => {
+        // Construire dynamiquement la liste des champs
+        const weightBalanceFields = [
           { label: 'Masse à vide', value: formatValue(data.weights?.emptyWeight, getUnitSymbol(units.weight)) },
           { label: 'Bras de levier à vide', value: formatValue(data.arms?.empty, getUnitSymbol(units.armLength)) },
           { label: 'MTOW', value: formatValue(data.weights?.mtow, getUnitSymbol(units.weight)) },
           { label: 'MLW', value: formatValue(data.weights?.mlw, getUnitSymbol(units.weight)) },
           { label: 'MZFW', value: formatValue(data.weights?.mzfw, getUnitSymbol(units.weight)) },
           { label: 'Carburant max', value: formatValue(data.fuel?.maxCapacity || data.fuelCapacity, getUnitSymbol(units.fuel)) },
-          { label: 'Bras carburant', value: formatValue(data.arms?.fuel, getUnitSymbol(units.armLength)) },
+          { label: 'Bras carburant', value: formatValue(data.arms?.fuelMain, getUnitSymbol(units.armLength)) },
           { label: 'Bras sièges avant', value: formatValue(data.arms?.frontSeats, getUnitSymbol(units.armLength)) },
-          { label: 'Bras sièges arrière', value: formatValue(data.arms?.rearSeats, getUnitSymbol(units.armLength)) },
-          { label: 'Bras bagages', value: formatValue(data.arms?.baggage, getUnitSymbol(units.armLength)) },
+          { label: 'Bras sièges arrière', value: formatValue(data.arms?.rearSeats, getUnitSymbol(units.armLength)) }
+        ];
+
+        // Ajouter dynamiquement les compartiments bagages configurés par le pilote
+        if (data.baggageCompartments && data.baggageCompartments.length > 0) {
+          data.baggageCompartments.forEach(compartment => {
+            weightBalanceFields.push({
+              label: `${compartment.name || 'Compartiment'}${compartment.maxWeight ? ` (max ${compartment.maxWeight} ${getUnitSymbol(units.weight)})` : ''}`,
+              value: formatValue(compartment.arm, getUnitSymbol(units.armLength))
+            });
+          });
+        }
+
+        // Ajouter les limites CG
+        weightBalanceFields.push(
           { label: 'CG limite avant min', value: formatValue(data.cgEnvelope?.forwardPoints?.[0]?.cg, getUnitSymbol(units.armLength)) },
           { label: 'CG limite arrière', value: formatValue(data.cgEnvelope?.aftCG, getUnitSymbol(units.armLength)) }
-        ],
-        hasCGData ? (
-          <Box sx={{ 
-            p: 2, 
-            bgcolor: 'grey.50', 
-            borderRadius: 1,
-            border: '1px solid',
-            borderColor: 'divider'
-          }}>
-            <CGEnvelopeChart 
-              cgEnvelope={cgEnvelopeData}
-              massUnit={data.units?.weight === 'lbs' ? 'lbs' : 'kg'}
-            />
-          </Box>
-        ) : null
-      )}
+        );
+
+        return renderSection(
+          'Masse et centrage',
+          <ScaleIcon color="primary" />,
+          4,
+          weightBalanceFields,
+          hasCGData ? (
+            <Box sx={{
+              p: 2,
+              bgcolor: 'grey.50',
+              borderRadius: 1,
+              border: '1px solid',
+              borderColor: 'divider'
+            }}>
+              <CGEnvelopeChart
+                cgEnvelope={cgEnvelopeData}
+                massUnit={data.units?.weight === 'lbs' ? 'lbs' : 'kg'}
+              />
+            </Box>
+          ) : null
+        );
+      })()}
 
       {/* Performances */}
       <Paper

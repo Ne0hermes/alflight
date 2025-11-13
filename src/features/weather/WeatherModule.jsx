@@ -334,13 +334,36 @@ export const WeatherModule = memo(({ wizardMode = false, config = {} }) => {
           
           <div style={{ display: 'grid', gap: '16px' }}>
             {/* Waypoints (Départ, Étapes, Arrivée) */}
-            {waypointIcaos.map((icao, index) => (
-              <WeatherCard 
-                key={icao} 
-                icao={icao} 
-                label={index === 0 ? 'Départ' : index === waypointIcaos.length - 1 ? 'Arrivée' : 'Étape'}
-              />
-            ))}
+            {/* 🔧 FIX: Retirer les doublons si départ = arrivée (vol local) */}
+            {(() => {
+              // Créer un Map pour garder seulement la première occurrence de chaque ICAO
+              const uniqueWaypoints = [];
+              const seen = new Set();
+
+              waypointIcaos.forEach((icao, index) => {
+                if (!seen.has(icao)) {
+                  seen.add(icao);
+                  uniqueWaypoints.push({
+                    icao,
+                    index,
+                    label: index === 0 ? 'Départ' : index === waypointIcaos.length - 1 ? 'Arrivée' : 'Étape'
+                  });
+                }
+              });
+
+              // Si départ = arrivée (vol local), afficher "Départ/Arrivée"
+              if (waypointIcaos.length >= 2 && waypointIcaos[0] === waypointIcaos[waypointIcaos.length - 1]) {
+                uniqueWaypoints[0].label = 'Départ/Arrivée';
+              }
+
+              return uniqueWaypoints.map(({ icao, label }) => (
+                <WeatherCard
+                  key={icao}
+                  icao={icao}
+                  label={label}
+                />
+              ));
+            })()}
             
             {/* Aérodromes de déroutement - affichés en ligne */}
             {selectedAlternates && selectedAlternates.length > 0 && (

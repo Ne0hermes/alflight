@@ -22,7 +22,6 @@ import { ReportingPointsSelector } from './components/ReportingPointsSelector';
 // import { default as TechnicalLog } from './components/TechnicalLog';
 import { default as RunwayAnalyzer } from './components/RunwayAnalyzer';
 import WindAnalysis from './components/WindAnalysis';
-import VFRNavigationTable from './components/VFRNavigationTable';
 import GlobalVFRPointsManager from './components/GlobalVFRPointsManager';
 import AlternatesModule from '../alternates/AlternatesModule';
 import WaypointSelectorModal from './components/WaypointSelectorModal';
@@ -694,21 +693,6 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
           {/* Info sur le trajet - RETIRÉ */}
         </div>
       </section>
-
-      {/* Tableau de navigation VFR */}
-      {selectedAircraft && waypoints.length >= 2 && (
-        <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
-          <VFRNavigationTable
-            waypoints={waypoints}
-            selectedAircraft={selectedAircraft}
-            plannedAltitude={plannedAltitude}
-            flightType={flightType}
-            navigationResults={navigationResults}
-            segmentAltitudes={segmentAltitudes}
-            setSegmentAltitude={setSegmentAltitude}
-          />
-        </section>
-      )}
 
           {/* Points VFR Globaux - Masqués en mode wizard */}
           {!wizardMode && (

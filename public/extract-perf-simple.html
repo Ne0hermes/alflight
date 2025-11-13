@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Extract Performance Data</title>
+</head>
+<body>
+    <h1>Extraction données performance F-HSTR</h1>
+    <button onclick="extract()" style="padding: 20px; font-size: 18px; cursor: pointer;">
+        📥 Télécharger les données
+    </button>
+    <div id="status" style="margin-top: 20px;"></div>
+
+    <script type="module">
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
+
+        window.extract = async function() {
+            const status = document.getElementById('status');
+            status.innerHTML = '⏳ Chargement...';
+
+            const supabase = createClient(
+                'https://lzdnrhrrvacfpkcwhafg.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZG5yaHJydmFjZnBrY3doYWZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU1NjM2MzUsImV4cCI6MjA1MTEzOTYzNX0.xA5LXVAe3Q1D3hk5xHbZxkgJmZ8F8IwMHnJ0YvdBNRE'
+            );
+
+            try {
+                const { data, error } = await supabase
+                    .from('aircraft_presets')
+                    .select('*')
+                    .eq('registration', 'F-HSTR')
+                    .single();
+
+                if (error) throw error;
+
+                const aircraft = data.aircraftData || data;
+                const table = aircraft.advancedPerformance.tables.find(t =>
+                    t.table_name.includes('Landing Distance - Flaps LDG')
+                );
+
+                let output = '=== DONNÉES PERFORMANCE F-HSTR - LANDING FLAPS LDG ===\n\n';
+
+                // Grouper par masse
+                const byMass = {};
+                table.data.forEach(point => {
+                    const m = point.Masse;
+                    if (!byMass[m]) byMass[m] = [];
+                    byMass[m].push(point);
+                });
+
+                // Masse 1100 kg
+                output += '--- MASSE 1100 KG ---\n';
+                output += 'Alt(ft) | Temp(°C) | Roulage(m) | 15m(m)\n';
+                byMass[1100].sort((a,b) => a.Altitude - b.Altitude || a.Temperature - b.Temperature).forEach(p => {
+                    output += `${p.Altitude} | ${p.Temperature} | ${p.Distance_roulement} | ${p.Distance_passage_15m}\n`;
+                });
+
+                output += '\n--- MASSE 1200 KG ---\n';
+                output += 'Alt(ft) | Temp(°C) | Roulage(m) | 15m(m)\n';
+                byMass[1200].sort((a,b) => a.Altitude - b.Altitude || a.Temperature - b.Temperature).forEach(p => {
+                    output += `${p.Altitude} | ${p.Temperature} | ${p.Distance_roulement} | ${p.Distance_passage_15m}\n`;
+                });
+
+                // Télécharger
+                const blob = new Blob([output], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'performance-data.txt';
+                a.click();
+
+                status.innerHTML = '✅ Fichier téléchargé ! Ouvre performance-data.txt';
+            } catch (err) {
+                status.innerHTML = '❌ Erreur: ' + err.message;
+            }
+        };
+    </script>
+</body>
+</html>

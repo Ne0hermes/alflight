@@ -5,6 +5,7 @@ import PerformanceTableCalculator from './components/PerformanceTableCalculator'
 import { RunwaySuggestionEnhanced } from '../weather/components/RunwaySuggestionEnhanced';
 import { useAircraft, useWeightBalance, useNavigation, useWeather, useFuel } from '../../core/contexts';
 import { useWeatherStore } from '../../core/stores/weatherStore';
+import { useAlternatesStore } from '../../core/stores/alternatesStore';
 import { usePerformanceCalculations } from '../../shared/hooks/usePerformanceCalculations';
 import { groupTablesByBaseName, filterGroupsByType } from '../../services/performanceTableGrouping';
 
@@ -15,6 +16,8 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   const { getWeatherByIcao } = useWeather();
   const { fuelData, fobFuel } = useFuel();
   const weatherData = useWeatherStore(state => state.weatherData || {});
+  const fetchWeather = useWeatherStore(state => state.fetchWeather);
+  const selectedAlternates = useAlternatesStore(state => state.selectedAlternates);
   const { calculateISATemperature } = usePerformanceCalculations();
 
   // 🔧 Récupérer les données depuis flightPlan si en mode wizard
@@ -23,6 +26,59 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   // Récupérer les aérodromes de départ et d'arrivée
   const departureAirport = waypoints?.[0];
   const arrivalAirport = waypoints?.[waypoints?.length - 1];
+
+  // 🔧 FIX: Charger automatiquement la météo des aérodromes
+  useEffect(() => {
+    const loadWeather = async () => {
+      const icaosToLoad = [];
+
+      // Vérifier si météo départ existe et est valide
+      if (departureAirport?.icao) {
+        const depIcao = departureAirport.icao.toUpperCase();
+        const depWeather = weatherData[depIcao];
+
+        // Charger si pas de METAR ou météo trop ancienne (> 30 min)
+        if (!depWeather?.metar || (Date.now() - (depWeather.timestamp || 0) > 30 * 60 * 1000)) {
+          icaosToLoad.push(depIcao);
+          console.log('🌤️ [PerformanceModule] Chargement météo départ:', depIcao);
+        }
+      }
+
+      // Vérifier si météo arrivée existe et est valide
+      if (arrivalAirport?.icao && arrivalAirport.icao !== departureAirport?.icao) {
+        const arrIcao = arrivalAirport.icao.toUpperCase();
+        const arrWeather = weatherData[arrIcao];
+
+        if (!arrWeather?.metar || (Date.now() - (arrWeather.timestamp || 0) > 30 * 60 * 1000)) {
+          icaosToLoad.push(arrIcao);
+          console.log('🌤️ [PerformanceModule] Chargement météo arrivée:', arrIcao);
+        }
+      }
+
+      // Charger météo des alternates
+      if (selectedAlternates && selectedAlternates.length > 0) {
+        selectedAlternates.forEach(alternate => {
+          if (alternate.icao) {
+            const altIcao = alternate.icao.toUpperCase();
+            const altWeather = weatherData[altIcao];
+
+            if (!altWeather?.metar || (Date.now() - (altWeather.timestamp || 0) > 30 * 60 * 1000)) {
+              icaosToLoad.push(altIcao);
+              console.log('🌤️ [PerformanceModule] Chargement météo alternate:', altIcao);
+            }
+          }
+        });
+      }
+
+      // Charger en parallèle
+      if (icaosToLoad.length > 0) {
+        console.log('🌤️ [PerformanceModule] Chargement météo:', icaosToLoad.join(', '));
+        await Promise.all(icaosToLoad.map(icao => fetchWeather(icao)));
+      }
+    };
+
+    loadWeather();
+  }, [departureAirport?.icao, arrivalAirport?.icao, selectedAlternates, fetchWeather]);
 
   // Récupérer la météo pour les aérodromes (indexé par ICAO, pas par name)
   // 🔧 FIX: Essayer plusieurs sources pour trouver la météo
@@ -346,6 +402,18 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               isExpanded={index === 0} // Premier groupe ouvert par défaut
             />
           ))}
+
+          {/* Analyse des pistes pour le départ */}
+          {departureWeather?.metar?.decoded?.wind && departureAirport?.icao && (
+            <div style={sx.spacing.mt(4)}>
+              <RunwaySuggestionEnhanced
+                icao={departureAirport.icao}
+                wind={departureWeather.metar.decoded.wind}
+                aircraft={selectedAircraft}
+                showCompact={false}
+              />
+            </div>
+          )}
         </div>
       )}
 
@@ -459,71 +527,56 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               isExpanded={index === 0} // Premier groupe ouvert par défaut
             />
           ))}
+
+          {/* Analyse des pistes pour l'arrivée */}
+          {arrivalWeather?.metar?.decoded?.wind && arrivalAirport?.icao && (
+            <div style={sx.spacing.mt(4)}>
+              <RunwaySuggestionEnhanced
+                icao={arrivalAirport.icao}
+                wind={arrivalWeather.metar.decoded.wind}
+                aircraft={selectedAircraft}
+                showCompact={false}
+              />
+            </div>
+          )}
         </div>
       )}
 
-      {/* Section Analyse du vent et pistes recommandées */}
-      {(departureWeather || arrivalWeather) && (
+      {/* Section Aérodromes de déroutement */}
+      {selectedAlternates && selectedAlternates.length > 0 && (
         <div style={sx.combine(sx.components.card.base, sx.spacing.mb(6))}>
           <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4), sx.flex.start)}>
             <Wind size={20} style={{ marginRight: '8px' }} />
-            Analyse du vent et pistes recommandées
+            Aérodromes de déroutement
           </h3>
 
-          {/* Explication des calculs */}
-          <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mb(4))}>
-            <h4 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-              <Compass size={16} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
-              Calcul des composantes de vent
-            </h4>
-            <div style={sx.text.xs}>
-              <p style={sx.spacing.mb(1)}>
-                <strong>Vent de face (Headwind):</strong> VF = V × cos(α) où α = angle entre vent et piste
-              </p>
-              <p style={sx.spacing.mb(1)}>
-                <strong>Vent traversier (Crosswind):</strong> VT = V × sin(α)
-              </p>
-              <p style={sx.spacing.mb(1)}>
-                <strong>Critères de sélection:</strong>
-              </p>
-              <ul style={{ marginLeft: '20px', marginTop: '4px' }}>
-                <li>Piste recommandée = vent de face maximal (meilleure performance)</li>
-                <li>Vent traversier {'<'} 15 kt = acceptable</li>
-                <li>Vent traversier {'>'} 20 kt = attention requise</li>
-                <li>Vent arrière {'>'} 10 kt = déconseillé (augmente distance de décollage/atterrissage)</li>
-              </ul>
-            </div>
-          </div>
+          {selectedAlternates.map((alternate, idx) => {
+            const altWeather = weatherData[alternate.icao?.toUpperCase()];
 
-          {/* Pistes recommandées pour le départ */}
-          {/* 🔧 FIX: Chemin correct = metar.decoded.wind */}
-          {departureWeather?.metar?.decoded?.wind && departureAirport?.name && (
-            <div style={sx.spacing.mb(4)}>
-              <h4 style={sx.combine(sx.text.md, sx.text.bold, sx.spacing.mb(2))}>
-                ✈️ Départ - {departureAirport.name}
-              </h4>
-              <RunwaySuggestionEnhanced
-                icao={departureAirport.name}
-                wind={departureWeather.metar.decoded.wind}
-                showDetails={true}
-              />
-            </div>
-          )}
-
-          {/* Pistes recommandées pour l'arrivée */}
-          {/* 🔧 FIX: Chemin correct = metar.decoded.wind */}
-          {arrivalWeather?.metar?.decoded?.wind && arrivalAirport?.name && (
-            <div>
-              <h4 style={sx.combine(sx.text.md, sx.text.bold, sx.spacing.mb(2))}>
-                🛬 Arrivée - {arrivalAirport.name}
-              </h4>
-              <RunwaySuggestionEnhanced
-                icao={arrivalAirport.name}
-                wind={arrivalWeather.metar.decoded.wind}
-                showDetails={true}
-              />
-            </div>
-          )}
+            return (
+              <div key={idx} style={sx.spacing.mb(3)}>
+                <h4 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(1))}>
+                  {alternate.name || alternate.icao} ({alternate.icao})
+                  <span style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.ml(2), { fontWeight: 'normal' })}>
+                    Distance: {alternate.distanceFromRoute?.toFixed(1)} NM •
+                    Élévation: {alternate.elevation || 'N/A'} ft
+                  </span>
+                </h4>
+                {altWeather?.metar?.decoded?.wind ? (
+                  <RunwaySuggestionEnhanced
+                    icao={alternate.icao}
+                    wind={altWeather.metar.decoded.wind}
+                    aircraft={selectedAircraft}
+                    showCompact={false}
+                  />
+                ) : (
+                  <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                    Météo non disponible - impossible d'analyser les pistes
+                  </p>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

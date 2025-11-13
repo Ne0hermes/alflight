@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Debug Table Structure</title>
+  <style>
+    body { font-family: monospace; background: #1e1e1e; color: #d4d4d4; padding: 20px; }
+    pre { background: #252526; padding: 15px; border-radius: 4px; overflow-x: auto; }
+    button { background: #007acc; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
+    button:hover { background: #005a9e; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Debug Structure Tableaux</h1>
+  <button onclick="debugTable()">Analyser Table 0</button>
+  <div id="output"></div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    window.debugTable = async function() {
+      const output = document.getElementById('output');
+      output.innerHTML = '<p>Chargement...</p>';
+
+      try {
+        const supabase = createClient(
+          'https://bgmscwckawgybymbimga.supabase.co',
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJnbXNjd2NrYXdneWJ5bWJpbWdhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3NTk0MDAsImV4cCI6MjA3NTMzNTQwMH0.2J6nlClW_4GCdKaHrtjbf4AgdbDMpd_6auSzcMQnCMc'
+        );
+
+        const { data, error } = await supabase
+          .from('community_presets')
+          .select('*')
+          .eq('registration', 'F-HSTR')
+          .single();
+
+        if (error) {
+          output.innerHTML = `<pre>Erreur: ${error.message}</pre>`;
+          return;
+        }
+
+        const tables = data.aircraft_data.advancedPerformance?.tables || [];
+
+        let html = `<h2>Total: ${tables.length} tableaux</h2>`;
+
+        // Analyser chaque tableau
+        tables.forEach((table, idx) => {
+          html += `<h3>Table ${idx}: ${table.table_name || 'Sans nom'}</h3>`;
+          html += '<pre>';
+          html += `Clés disponibles: ${Object.keys(table).join(', ')}\n\n`;
+
+          // Vérifier data_points
+          if (table.data_points) {
+            html += `data_points: ${typeof table.data_points}\n`;
+            html += `Longueur: ${Array.isArray(table.data_points) ? table.data_points.length : 'N/A'}\n`;
+            if (Array.isArray(table.data_points) && table.data_points.length > 0) {
+              html += `Premier point: ${JSON.stringify(table.data_points[0], null, 2)}\n`;
+            }
+          } else {
+            html += 'data_points: MANQUANT\n';
+          }
+
+          // Vérifier extracted_data
+          if (table.extracted_data) {
+            html += `\nextracted_data: ${typeof table.extracted_data}\n`;
+            html += `Clés: ${Object.keys(table.extracted_data).join(', ')}\n`;
+
+            if (table.extracted_data.altitudes) {
+              html += `Altitudes: ${JSON.stringify(table.extracted_data.altitudes)}\n`;
+            }
+            if (table.extracted_data.temperatures) {
+              html += `Températures: ${JSON.stringify(table.extracted_data.temperatures)}\n`;
+            }
+            if (table.extracted_data.values) {
+              html += `Values (type): ${typeof table.extracted_data.values}\n`;
+              if (Array.isArray(table.extracted_data.values)) {
+                html += `Values (longueur): ${table.extracted_data.values.length}\n`;
+                html += `Values (extrait): ${JSON.stringify(table.extracted_data.values.slice(0, 2), null, 2)}\n`;
+              }
+            }
+          } else {
+            html += '\nextracted_data: MANQUANT\n';
+          }
+
+          // Vérifier conditions
+          if (table.conditions) {
+            html += `\nconditions: ${JSON.stringify(table.conditions, null, 2)}\n`;
+          }
+
+          // Structure complète (tronquée)
+          html += `\nStructure complète:\n${JSON.stringify(table, null, 2).substring(0, 1000)}...\n`;
+          html += '</pre>';
+          html += '<hr>';
+        });
+
+        output.innerHTML = html;
+
+      } catch (err) {
+        output.innerHTML = `<pre>Erreur: ${err.message}\n${err.stack}</pre>`;
+      }
+    };
+  </script>
+</body>
+</html>

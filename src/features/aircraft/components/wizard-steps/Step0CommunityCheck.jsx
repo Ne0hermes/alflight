@@ -44,7 +44,7 @@ import communityService from '../../../../services/communityService';
 import dataBackupManager from '../../../../utils/dataBackupManager';
 import CleanDuplicatesButton from '../../../../components/CleanDuplicatesButton';
 
-const Step0CommunityCheck = ({ data, updateData, onSkip, onComplete, onCancel }) => {
+const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onComplete, onCancel }) => {
   const [searchValue, setSearchValue] = useState(data.searchRegistration || '');
   const [isLoading, setIsLoading] = useState(false);
   const [communityAircraft, setCommunityAircraft] = useState([]);
@@ -68,13 +68,15 @@ const Step0CommunityCheck = ({ data, updateData, onSkip, onComplete, onCancel })
 
   // Si on revient de l'étape 1 avec une immatriculation, la pré-sélectionner
   useEffect(() => {
-    if (data.searchRegistration && communityAircraft.length > 0) {
+    // 🔧 FIX INFINITE LOOP: Ajouter une condition pour éviter la boucle
+    // Ne traiter que si searchRegistration est défini ET non vide
+    if (data.searchRegistration && data.searchRegistration !== '' && communityAircraft.length > 0) {
       const found = communityAircraft.find(ac => ac.registration === data.searchRegistration);
       if (found) {
         setSelectedAircraft(found);
         setSearchValue(data.searchRegistration);
       }
-      // Nettoyer après utilisation
+      // Nettoyer après utilisation (ne se déclenchera qu'une seule fois)
       updateData('searchRegistration', '');
     }
   }, [data.searchRegistration, communityAircraft]);
@@ -82,21 +84,42 @@ const Step0CommunityCheck = ({ data, updateData, onSkip, onComplete, onCancel })
   const loadCommunityAircraft = async () => {
     setIsLoading(true);
     try {
-      
+      console.log('🔍 [DEBUG] Chargement des presets...');
+
       const presets = await communityService.getAllPresets();
+      console.log(`🔍 [DEBUG] Presets reçus: ${presets.length}`);
+
+      // 🔧 DEBUG: Limiter à 2 presets maximum pour tester
+      const limitedPresets = presets.slice(0, 2);
+      console.log(`🔍 [DEBUG] Presets limités: ${limitedPresets.length}`);
 
       // Transformer les presets Supabase au format attendu par le composant
-      // NOTE: communityService.getAllPresets() retourne déjà aircraftData (mappé)
-      const formattedAircraft = presets.map(preset => {
+      // NOTE: communityService.getAllPresets() retourne déjà SEULEMENT les métadonnées
+      const formattedAircraft = limitedPresets.map(preset => {
+        // Ne PAS spread ...preset pour éviter de copier des champs non nécessaires
         return {
-          ...preset,  // Garder TOUT ce qui vient de communityService (incluant aircraftData)
-          // Ajouter/overwrite seulement ce qui est nécessaire pour l'affichage
-          type: preset.type || preset.aircraftType
+          id: preset.id,
+          registration: preset.registration,
+          model: preset.model,
+          manufacturer: preset.manufacturer,
+          type: preset.type || preset.aircraftType,
+          category: preset.category,
+          addedBy: preset.addedBy,
+          dateAdded: preset.dateAdded,
+          downloads: preset.downloads,
+          votes: preset.votes,
+          verified: preset.verified,
+          adminVerified: preset.adminVerified,
+          description: preset.description,
+          version: preset.version,
+          hasManex: preset.hasManex,
+          requiresFullDataLoad: preset.requiresFullDataLoad
         };
       });
 
-      
+      console.log('🔍 [DEBUG] Presets formatés, mise à jour état...');
       setCommunityAircraft(formattedAircraft);
+      console.log('✅ [DEBUG] État mis à jour avec succès');
     } catch (error) {
       console.error('❌ Erreur lors du chargement des avions:', error);
       setCommunityAircraft([]);
@@ -256,11 +279,14 @@ const Step0CommunityCheck = ({ data, updateData, onSkip, onComplete, onCancel })
         console.error('Error in logging attempt:', logError);
       }
 
-      // Fermer le dialog après un court délai
+      // Importer les données (MANEX inclus si disponible)
+      // Le dialog reste ouvert pendant le téléchargement du MANEX
+      await importAircraftData(communityData, aircraft);
+
+      // Fermer le dialog après import complet (délai pour voir le message de succès)
       setTimeout(() => {
         setShowDownloadDialog(false);
-        importAircraftData(communityData, aircraft);
-      }, 1000);
+      }, 1500);
 
     } catch (error) {
       console.error('❌ Erreur lors de l\'import:', error);
@@ -300,19 +326,89 @@ const Step0CommunityCheck = ({ data, updateData, onSkip, onComplete, onCancel })
   };
 
   // Fonction helper pour importer les données dans le wizard
-  const importAircraftData = (communityData, aircraft) => {
-    // Créer le snapshot baseAircraft AVANT toute modification
-    
-    const baseSnapshot = JSON.parse(JSON.stringify(communityData));
+  const importAircraftData = async (communityData, aircraft) => {
+    console.log('🔧 [MEMORY FIX] Import groupé des données avion');
 
-    // Importer toutes les données dans le wizard
-    Object.keys(communityData).forEach(key => {
-      updateData(key, communityData[key]);
-    });
+    // 🔧 FIX MEMORY: Utiliser updateDataBulk pour UNE SEULE mise à jour
+    // Au lieu de 50+ appels updateData (50+ copies de l'état)
 
-    updateData('isImportedFromCommunity', true);
-    updateData('originalCommunityData', communityData);
-    updateData('baseAircraft', baseSnapshot); // Snapshot pour comparaison
+    // Créer une référence légère au lieu d'une copie profonde JSON.stringify
+    // On garde juste la référence pour comparaison si nécessaire
+    const baseReference = {
+      id: communityData.communityPresetId,  // 🔧 FIX: Ajouter l'ID pour la détection UPDATE vs CREATE
+      registration: communityData.registration,
+      model: communityData.model,
+      communityPresetId: communityData.communityPresetId,
+      version: communityData.version
+    };
+
+    // 🔧 FIX CRITIQUE: Convertir depuis STORAGE units vers USER units pour l'affichage dans le wizard
+    // Les données venant de Supabase sont en STORAGE units (ltr/lph/kg/kt)
+    // Le wizard doit les afficher en USER units (gal/gph selon préférences)
+    const { prepareAircraftExport } = await import('@utils/aircraftNormalizer');
+    const { useUnitsStore } = await import('@core/stores/unitsStore');
+    const userUnits = useUnitsStore.getState().units;
+
+    console.log('🔄 [Step0] Converting aircraft from STORAGE to USER units for wizard display');
+    const displayData = prepareAircraftExport(communityData, userUnits);
+
+    // Préparer TOUTES les données pour UNE SEULE mise à jour groupée
+    const bulkData = {
+      ...displayData,  // ✅ Données converties vers USER units (gal/gph)
+      isImportedFromCommunity: true,
+      baseAircraft: baseReference, // Référence légère au lieu de copie complète
+      // Ne PAS stocker originalCommunityData (doublon inutile)
+    };
+
+    // UNE SEULE mise à jour au lieu de 50+
+    if (updateDataBulk) {
+      updateDataBulk(bulkData);
+    } else {
+      // Fallback si updateDataBulk n'est pas disponible (ancien code)
+      console.warn('⚠️ updateDataBulk non disponible, utilisation de updateData (moins performant)');
+      Object.keys(bulkData).forEach(key => {
+        updateData(key, bulkData[key]);
+      });
+    }
+
+    console.log('✅ Import groupé terminé - 1 seule mise à jour au lieu de 50+');
+
+    // 📥 Télécharger le MANEX IMMÉDIATEMENT si disponible (pour accès hors ligne)
+    if (communityData.hasManex && communityData.manexAvailableInSupabase?.filePath) {
+      console.log('📥 Démarrage téléchargement MANEX immédiat...');
+
+      setDownloadStatus('Téléchargement du manuel de vol (11.82 MB)...');
+      setDownloadProgress(95);
+
+      try {
+        const manexData = await communityService.downloadManexLazy(
+          communityData.manexAvailableInSupabase.filePath
+        );
+
+        // Ajouter le MANEX aux données de l'avion
+        const manexObject = {
+          fileName: communityData.manexAvailableInSupabase.fileName,
+          fileSize: communityData.manexAvailableInSupabase.fileSize,
+          pdfData: manexData.pdfData,
+          uploadDate: new Date().toISOString(),
+          uploadedToSupabase: true,
+          supabasePath: communityData.manexAvailableInSupabase.filePath,
+          hasData: true
+        };
+
+        // Mettre à jour avec le MANEX téléchargé
+        updateData('manex', manexObject);
+
+        console.log('✅ MANEX téléchargé et disponible hors ligne');
+        setDownloadStatus('✅ Manuel de vol disponible hors ligne !');
+        setDownloadProgress(100);
+      } catch (error) {
+        console.error('❌ Erreur téléchargement MANEX:', error);
+        setDownloadStatus('⚠️ Échec téléchargement manuel - L\'avion sera importé sans MANEX');
+        setDownloadProgress(100);
+        // Continuer même en cas d'erreur - l'avion sera importé sans MANEX
+      }
+    }
 
     setIsImporting(false);
 

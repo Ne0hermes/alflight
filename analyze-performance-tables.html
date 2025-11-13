@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analyse Tableaux Performance</title>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 { color: #4ec9b0; }
+    button {
+      background: #007acc;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    button:hover { background: #005a9e; }
+    #log {
+      background: #252526;
+      border: 1px solid #3c3c3c;
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 4px;
+      min-height: 200px;
+      font-size: 12px;
+      white-space: pre-wrap;
+    }
+    .success { color: #4ec9b0; }
+    .error { color: #f48771; }
+    .warning { color: #dcdcaa; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      background: #252526;
+    }
+    th, td {
+      border: 1px solid #3c3c3c;
+      padding: 8px;
+      text-align: left;
+    }
+    th { background: #1e1e1e; color: #4ec9b0; }
+    .group { background: #2d2d30; }
+  </style>
+</head>
+<body>
+  <h1>📊 Analyse des Tableaux de Performance</h1>
+  <p>Analyse la structure des tableaux F-HSTR et identifie les groupes par masse</p>
+
+  <button onclick="analyzeTablesStructure()">▶️ Analyser les tableaux</button>
+
+  <div id="log"></div>
+  <div id="results"></div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const logDiv = document.getElementById('log');
+    const resultsDiv = document.getElementById('results');
+
+    function log(message, type = 'info') {
+      const className = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : '';
+      logDiv.innerHTML += `<div class="${className}">${message}</div>`;
+      console.log(message);
+    }
+
+    window.analyzeTablesStructure = async function() {
+      logDiv.innerHTML = '';
+      resultsDiv.innerHTML = '';
+      log('🔧 Analyse de la structure des tableaux...');
+
+      try {
+        const SUPABASE_URL = 'https://bgmscwckawgybymbimga.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJnbXNjd2NrYXdneWJ5bWJpbWdhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3NTk0MDAsImV4cCI6MjA3NTMzNTQwMH0.2J6nlClW_4GCdKaHrtjbf4AgdbDMpd_6auSzcMQnCMc';
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Récupérer F-HSTR
+        const { data: preset, error } = await supabase
+          .from('community_presets')
+          .select('*')
+          .eq('registration', 'F-HSTR')
+          .eq('status', 'active')
+          .single();
+
+        if (error || !preset) {
+          log('❌ Erreur lors de la récupération de F-HSTR: ' + (error?.message || 'Non trouvé'), 'error');
+          return;
+        }
+
+        const tables = preset.aircraft_data.advancedPerformance?.tables || [];
+        log(`✅ ${tables.length} tableaux trouvés`, 'success');
+
+        // Analyser chaque tableau
+        const analysis = [];
+        const takeoffTables = [];
+        const landingTables = [];
+
+        tables.forEach((table, idx) => {
+          const name = table.table_name || 'Sans nom';
+          const type = table.table_type || 'unknown';
+          const dataPoints = table.data_points?.length || 0;
+
+          // Essayer d'extraire la masse du nom
+          const massMatch = name.match(/(\d+)\s*(kg|lb)/i);
+          const mass = massMatch ? parseInt(massMatch[1]) : null;
+          const massUnit = massMatch ? massMatch[2].toLowerCase() : null;
+
+          const info = {
+            index: idx,
+            name,
+            type,
+            dataPoints,
+            mass,
+            massUnit,
+            hasConditions: !!table.conditions,
+            conditions: table.conditions || {},
+            baseName: name.replace(/\s*-?\s*\d+\s*(kg|lb).*$/i, '').trim()
+          };
+
+          analysis.push(info);
+
+          if (type === 'takeoff' || name.toLowerCase().includes('take') || name.toLowerCase().includes('décollage')) {
+            takeoffTables.push(info);
+          } else if (type === 'landing' || name.toLowerCase().includes('land') || name.toLowerCase().includes('atterrissage')) {
+            landingTables.push(info);
+          }
+        });
+
+        // Grouper par baseName
+        const groupedTakeoff = {};
+        takeoffTables.forEach(t => {
+          if (!groupedTakeoff[t.baseName]) {
+            groupedTakeoff[t.baseName] = [];
+          }
+          groupedTakeoff[t.baseName].push(t);
+        });
+
+        const groupedLanding = {};
+        landingTables.forEach(t => {
+          if (!groupedLanding[t.baseName]) {
+            groupedLanding[t.baseName] = [];
+          }
+          groupedLanding[t.baseName].push(t);
+        });
+
+        // Afficher les résultats
+        log('');
+        log('📋 TABLEAUX DE DÉCOLLAGE:', 'success');
+        Object.keys(groupedTakeoff).forEach(baseName => {
+          const group = groupedTakeoff[baseName];
+          log(`\n  ${baseName} (${group.length} tableaux)`, 'warning');
+          group.forEach(t => {
+            const massInfo = t.mass ? ` [${t.mass} ${t.massUnit}]` : ' [Masse inconnue]';
+            log(`    - Table ${t.index}: ${t.name}${massInfo} (${t.dataPoints} points)`);
+          });
+        });
+
+        log('');
+        log('📋 TABLEAUX D\'ATTERRISSAGE:', 'success');
+        Object.keys(groupedLanding).forEach(baseName => {
+          const group = groupedLanding[baseName];
+          log(`\n  ${baseName} (${group.length} tableaux)`, 'warning');
+          group.forEach(t => {
+            const massInfo = t.mass ? ` [${t.mass} ${t.massUnit}]` : ' [Masse inconnue]';
+            log(`    - Table ${t.index}: ${t.name}${massInfo} (${t.dataPoints} points)`);
+          });
+        });
+
+        // Créer un tableau HTML
+        let html = '<h2>Tableaux de Décollage (Groupés)</h2>';
+        Object.keys(groupedTakeoff).forEach(baseName => {
+          const group = groupedTakeoff[baseName];
+          html += `<table><thead><tr><th colspan="5" class="group">${baseName} (${group.length} tableaux)</th></tr>`;
+          html += '<tr><th>Index</th><th>Nom</th><th>Masse</th><th>Points</th><th>Conditions</th></tr></thead><tbody>';
+          group.forEach(t => {
+            const massInfo = t.mass ? `${t.mass} ${t.massUnit}` : 'N/A';
+            const conditionsInfo = JSON.stringify(t.conditions);
+            html += `<tr><td>${t.index}</td><td>${t.name}</td><td>${massInfo}</td><td>${t.dataPoints}</td><td>${conditionsInfo}</td></tr>`;
+          });
+          html += '</tbody></table>';
+        });
+
+        html += '<h2>Tableaux d\'Atterrissage (Groupés)</h2>';
+        Object.keys(groupedLanding).forEach(baseName => {
+          const group = groupedLanding[baseName];
+          html += `<table><thead><tr><th colspan="5" class="group">${baseName} (${group.length} tableaux)</th></tr>`;
+          html += '<tr><th>Index</th><th>Nom</th><th>Masse</th><th>Points</th><th>Conditions</th></tr></thead><tbody>';
+          group.forEach(t => {
+            const massInfo = t.mass ? `${t.mass} ${t.massUnit}` : 'N/A';
+            const conditionsInfo = JSON.stringify(t.conditions);
+            html += `<tr><td>${t.index}</td><td>${t.name}</td><td>${t.massInfo}</td><td>${t.dataPoints}</td><td>${conditionsInfo}</td></tr>`;
+          });
+          html += '</tbody></table>';
+        });
+
+        resultsDiv.innerHTML = html;
+
+        log('\n✅ Analyse terminée !', 'success');
+
+      } catch (error) {
+        log('❌ Erreur: ' + error.message, 'error');
+        console.error(error);
+      }
+    };
+  </script>
+</body>
+</html>

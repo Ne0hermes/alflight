@@ -60,18 +60,46 @@
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
     
-    <!-- Service Worker Registration -->
+    <!-- Service Worker Registration - DÉSACTIVÉ en développement -->
     <script>
-      if ('serviceWorker' in navigator) {
+      // ⚠️ IMPORTANT : Service Worker DÉSACTIVÉ en mode développement
+      // pour éviter le cache qui force Ctrl+Shift+R à chaque changement
+      const isDevelopment = window.location.hostname === 'localhost' ||
+                            window.location.hostname === '127.0.0.1' ||
+                            window.location.port === '4001';
+
+      if (!isDevelopment && 'serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/service-worker.js')
             .then(registration => {
-              console.log('Service Worker registered:', registration);
+              console.log('✅ Service Worker registered:', registration);
             })
             .catch(error => {
-              console.log('Service Worker registration failed:', error);
+              console.error('❌ Service Worker registration failed:', error);
             });
         });
+      } else if (isDevelopment) {
+        console.log('🔧 Mode développement : Service Worker DÉSACTIVÉ');
+
+        // Désenregistrer tous les service workers existants en dev
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(registrations => {
+            registrations.forEach(registration => {
+              registration.unregister();
+              console.log('🗑️ Service Worker désenregistré:', registration);
+            });
+          });
+        }
+
+        // Nettoyer les caches existants en dev
+        if ('caches' in window) {
+          caches.keys().then(names => {
+            names.forEach(name => {
+              caches.delete(name);
+              console.log('🗑️ Cache supprimé:', name);
+            });
+          });
+        }
       }
     </script>
   </body>

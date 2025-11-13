@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Debug Performance Units - F-HSTR</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
+        h1 { color: #4ec9b0; }
+        h2 { color: #569cd6; margin-top: 30px; }
+        .table-info { background: #252526; padding: 15px; margin: 10px 0; border-left: 3px solid #007acc; }
+        .data-point { background: #2d2d30; padding: 8px; margin: 5px 0; }
+        .warning { color: #ce9178; font-weight: bold; }
+        .success { color: #4ec9b0; }
+        pre { background: #1e1e1e; border: 1px solid #3c3c3c; padding: 10px; overflow-x: auto; }
+        button {
+            background: #007acc; color: white; border: none; padding: 10px 20px;
+            cursor: pointer; margin: 10px 5px; border-radius: 3px;
+        }
+        button:hover { background: #005a9e; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug: Unités des tableaux de performance F-HSTR</h1>
+    <button onclick="loadAndAnalyze()">Charger les données depuis Supabase</button>
+    <button onclick="analyzeConsoleData()">Analyser données depuis Console</button>
+
+    <div id="output"></div>
+
+    <script type="module">
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
+
+        const SUPABASE_URL = 'https://lzdnrhrrvacfpkcwhafg.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZG5yaHJydmFjZnBrY3doYWZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU1NjM2MzUsImV4cCI6MjA1MTEzOTYzNX0.xA5LXVAe3Q1D3hk5xHbZxkgJmZ8F8IwMHnJ0YvdBNRE';
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        window.loadAndAnalyze = async function() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<p>⏳ Chargement des données F-HSTR depuis Supabase...</p>';
+
+            try {
+                const { data, error } = await supabase
+                    .from('aircraft_presets')
+                    .select('*')
+                    .eq('registration', 'F-HSTR')
+                    .single();
+
+                if (error) throw error;
+
+                output.innerHTML = '<h2>✅ Données chargées</h2>';
+
+                const aircraft = data.aircraftData || data;
+                const tables = aircraft.advancedPerformance?.tables || [];
+
+                output.innerHTML += `<p class="success">Avion: ${data.registration} - ${data.model}</p>`;
+                output.innerHTML += `<p>Nombre de tableaux: ${tables.length}</p>`;
+
+                if (tables.length === 0) {
+                    output.innerHTML += '<p class="warning">⚠️ Aucun tableau de performance trouvé!</p>';
+                    return;
+                }
+
+                // Analyser le premier tableau
+                const firstTable = tables[0];
+                output.innerHTML += `<div class="table-info">
+                    <h3>📊 Premier tableau: ${firstTable.table_name}</h3>
+                    <p>Type: ${firstTable.table_type || 'non défini'}</p>
+                    <p>Nombre de points: ${firstTable.data?.length || 0}</p>
+                </div>`;
+
+                if (firstTable.data && firstTable.data.length > 0) {
+                    const firstPoint = firstTable.data[0];
+
+                    output.innerHTML += '<h3>🔍 Structure du premier point de données:</h3>';
+                    output.innerHTML += '<pre>' + JSON.stringify(firstPoint, null, 2) + '</pre>';
+
+                    // Analyser les valeurs
+                    output.innerHTML += '<h3>📐 Analyse des unités:</h3>';
+
+                    const altitudes = [...new Set(firstTable.data.map(p => p.Altitude))].sort((a,b) => a-b);
+                    const temperatures = [...new Set(firstTable.data.map(p => p.Temperature))].sort((a,b) => a-b);
+                    const masses = [...new Set(firstTable.data.map(p => p.Masse))].sort((a,b) => a-b);
+
+                    output.innerHTML += `<div class="data-point">
+                        <p><strong>Altitudes:</strong> ${altitudes.join(', ')}</p>
+                        <p class="warning">❓ Unité: ${altitudes[0] < 100 ? 'Probablement MÈTRES' : 'Probablement PIEDS'}</p>
+                    </div>`;
+
+                    output.innerHTML += `<div class="data-point">
+                        <p><strong>Températures:</strong> ${temperatures.join(', ')}°C</p>
+                    </div>`;
+
+                    output.innerHTML += `<div class="data-point">
+                        <p><strong>Masses:</strong> ${masses.join(', ')} kg</p>
+                    </div>`;
+
+                    // Vérifier s'il y a des champs avec unités duales
+                    const allKeys = Object.keys(firstPoint);
+                    output.innerHTML += '<h3>🔑 Tous les champs disponibles:</h3>';
+                    output.innerHTML += '<pre>' + allKeys.join('\n') + '</pre>';
+
+                    // Chercher des patterns de double unités
+                    const duplicatePatterns = allKeys.filter(key =>
+                        allKeys.some(other =>
+                            other !== key &&
+                            (other.toLowerCase().includes(key.toLowerCase()) ||
+                             key.toLowerCase().includes(other.toLowerCase()))
+                        )
+                    );
+
+                    if (duplicatePatterns.length > 0) {
+                        output.innerHTML += '<p class="warning">⚠️ Champs potentiellement dupliqués (double unité):</p>';
+                        output.innerHTML += '<pre>' + duplicatePatterns.join('\n') + '</pre>';
+                    }
+                }
+
+                // Afficher tous les tableaux
+                output.innerHTML += '<h2>📋 Liste complète des tableaux:</h2>';
+                tables.forEach((table, idx) => {
+                    const altitudes = table.data ? [...new Set(table.data.map(p => p.Altitude))].sort((a,b) => a-b) : [];
+                    output.innerHTML += `<div class="table-info">
+                        <strong>${idx + 1}. ${table.table_name}</strong><br>
+                        Type: ${table.table_type}<br>
+                        Points: ${table.data?.length || 0}<br>
+                        Altitudes: ${altitudes.slice(0, 5).join(', ')}${altitudes.length > 5 ? '...' : ''}
+                    </div>`;
+                });
+
+            } catch (error) {
+                output.innerHTML += `<p class="warning">❌ Erreur: ${error.message}</p>`;
+                console.error(error);
+            }
+        };
+
+        window.analyzeConsoleData = function() {
+            const output = document.getElementById('output');
+            output.innerHTML = `<div class="warning">
+                <h2>📋 Instructions:</h2>
+                <ol>
+                    <li>Ouvre la console (F12)</li>
+                    <li>Va sur Step 7 - Performances dans l'app</li>
+                    <li>Dans la console, tape: <code>copy(combinedGroupData)</code></li>
+                    <li>Colle les données ici et on analysera les unités</li>
+                </ol>
+            </div>`;
+        };
+    </script>
+</body>
+</html>

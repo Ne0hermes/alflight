@@ -1,0 +1,42 @@
+// VERSION 3 - Retourne les données au lieu de console.log
+// Copie ce code dans la console de l'app (Step 7, F12)
+
+(async function() {
+  const storeModule = await import('/src/core/stores/aircraftStore.js');
+  const aircraftStore = storeModule.useAircraftStore.getState();
+  const aircraft = aircraftStore.aircraftList.find(a => a.registration === 'F-HSTR');
+
+  if (!aircraft) {
+    return 'Avion non trouvé';
+  }
+
+  const table = aircraft.advancedPerformance?.tables?.find(t => t.table_name.includes('Landing Distance - Flaps LDG'));
+
+  if (!table) {
+    return 'Tableau non trouvé';
+  }
+
+  const data1100 = table.data
+    .filter(p => p.Masse === 1100 && p.Altitude >= 0 && p.Altitude <= 1000 && p.Temperature >= 0 && p.Temperature <= 20)
+    .sort((a,b) => a.Altitude - b.Altitude || a.Temperature - b.Temperature);
+
+  const data1200 = table.data
+    .filter(p => p.Masse === 1200 && p.Altitude >= 0 && p.Altitude <= 1000 && p.Temperature >= 0 && p.Temperature <= 20)
+    .sort((a,b) => a.Altitude - b.Altitude || a.Temperature - b.Temperature);
+
+  // Retourner les données - elles s'afficheront dans la console
+  return {
+    masse_1100: data1100.map(p => ({
+      altitude: p.Altitude,
+      temperature: p.Temperature,
+      roulage: p.Distance_roulement,
+      passage_15m: p.Distance_passage_15m
+    })),
+    masse_1200: data1200.map(p => ({
+      altitude: p.Altitude,
+      temperature: p.Temperature,
+      roulage: p.Distance_roulement,
+      passage_15m: p.Distance_passage_15m
+    }))
+  };
+})();

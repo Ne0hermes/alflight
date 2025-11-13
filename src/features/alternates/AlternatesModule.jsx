@@ -7,7 +7,7 @@ import React, { memo, useEffect, useState } from 'react';
 import { Navigation2, AlertTriangle, Fuel, Wind, Plane, Info, MapPin, RefreshCw } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useAdvancedAlternateSelection } from './hooks/useAdvancedAlternateSelection';
-import { AlternateSelectorDual } from './components/AlternateSelectorDual';
+import { AlternateSelectorUnified } from './components/AlternateSelectorUnified';
 import { AlternatesMapView } from './components/AlternatesMapView';
 import { useNavigationResults } from './hooks/useNavigationResults';
 import { WeatherRateLimitIndicator } from '@components/WeatherRateLimitIndicator';
@@ -285,12 +285,47 @@ const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
   
   // Dériver la sélection manuelle depuis le store
   const manualSelection = React.useMemo(() => {
-    const selection = {
-      departure: selectedAlternates?.find(alt => alt.selectionType === 'departure') || null,
-      arrival: selectedAlternates?.find(alt => alt.selectionType === 'arrival') || null
-    };
-    return selection;
-  }, [selectedAlternates]);
+    const depAlt = selectedAlternates?.find(alt => alt.selectionType === 'departure') || null;
+    const arrAlt = selectedAlternates?.find(alt => alt.selectionType === 'arrival') || null;
+
+    // Calculer les distances si elles ne sont pas déjà présentes
+    let departure = depAlt;
+    let arrival = arrAlt;
+
+    if (depAlt && searchZone && depAlt.position) {
+      const needsDistances = depAlt.distanceToDeparture === undefined || depAlt.distanceToArrival === undefined;
+
+      if (needsDistances) {
+        departure = {
+          ...depAlt,
+          distanceToDeparture: depAlt.distanceToDeparture !== undefined
+            ? depAlt.distanceToDeparture
+            : calculateDistance(depAlt.position, searchZone.departure),
+          distanceToArrival: depAlt.distanceToArrival !== undefined
+            ? depAlt.distanceToArrival
+            : calculateDistance(depAlt.position, searchZone.arrival)
+        };
+      }
+    }
+
+    if (arrAlt && searchZone && arrAlt.position) {
+      const needsDistances = arrAlt.distanceToDeparture === undefined || arrAlt.distanceToArrival === undefined;
+
+      if (needsDistances) {
+        arrival = {
+          ...arrAlt,
+          distanceToDeparture: arrAlt.distanceToDeparture !== undefined
+            ? arrAlt.distanceToDeparture
+            : calculateDistance(arrAlt.position, searchZone.departure),
+          distanceToArrival: arrAlt.distanceToArrival !== undefined
+            ? arrAlt.distanceToArrival
+            : calculateDistance(arrAlt.position, searchZone.arrival)
+        };
+      }
+    }
+
+    return { departure, arrival };
+  }, [selectedAlternates, searchZone]);
   
   // Déclencher automatiquement la recherche quand les conditions sont remplies
   useEffect(() => {
@@ -329,20 +364,20 @@ const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
       // S'assurer que la position est correctement définie
       const depAirport = selection.departure;
       const position = depAirport.position || depAirport.coordinates || { lat: depAirport.lat, lon: depAirport.lon || depAirport.lng };
-      newSelection.push({ 
-        ...depAirport, 
+      newSelection.push({
+        ...depAirport,
         position: position,
-        selectionType: 'departure' 
+        selectionType: 'departure'
       });
     }
     if (selection.arrival) {
       // S'assurer que la position est correctement définie
       const arrAirport = selection.arrival;
       const position = arrAirport.position || arrAirport.coordinates || { lat: arrAirport.lat, lon: arrAirport.lon || arrAirport.lng };
-      newSelection.push({ 
-        ...arrAirport, 
+      newSelection.push({
+        ...arrAirport,
         position: position,
-        selectionType: 'arrival' 
+        selectionType: 'arrival'
       });
     }
     setSelectedAlternates(newSelection);
@@ -444,41 +479,6 @@ const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
       
       {/* En-tête avec résumé et statistiques */}
       <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
-        {/* Statistiques de recherche */}
-        <div style={sx.combine(sx.components.card.base, sx.spacing.mb(4))}>
-          <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
-            Zone de recherche géométrique
-          </h4>
-          
-          {/* Calcul de la distance et du rayon de la pilule */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-            <StatCard
-              icon={<Navigation2 size={20} />}
-              label="Zone principale"
-              value="Capsule (pilule)"
-              detail={`Rayon: ${Math.ceil(dynamicRadius || 25)} NM`}
-            />
-            <StatCard
-              icon={<Fuel size={20} />}
-              label="Rayon dynamique"
-              value={`${Math.ceil(dynamicRadius || 25)} NM`}
-              detail="Basé sur carburant"
-            />
-            <StatCard
-              icon={<Plane size={20} />}
-              label="Points tournants"
-              value={turnPointBuffers?.length || 0}
-              detail={turnPointBuffers?.length > 0 ? "Avec tampons 5-10 NM" : "Aucun détecté"}
-            />
-            <StatCard
-              icon={<Info size={20} />}
-              label="Candidats trouvés"
-              value={statistics?.scoredCandidates || 0}
-              detail={`Sur ${statistics?.totalCandidates || 0} total`}
-            />
-          </div>
-        </div>
-        
         {/* Conteneur pour la carte et la sélection côte à côte */}
         {searchZone && (
           <div style={{ 
@@ -490,14 +490,25 @@ const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
           }}>
             {/* Colonne gauche : Carte */}
             <div style={sx.components.card.base}>
-              <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(3))}>
+              <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(2))}>
                 📍 Visualisation de la route et des déroutements
               </h4>
+              <p style={{
+                fontSize: '13px',
+                fontStyle: 'italic',
+                color: '#6b7280',
+                marginBottom: '16px',
+                marginTop: '0'
+              }}>
+                Zone : Capsule (pilule) - Corridor de {Math.ceil(dynamicRadius || 25)} NM de rayon autour de la route
+              </p>
               <AlternatesMapView
                 searchZone={searchZone}
                 selectedAlternates={selectedAlternates}
                 scoredAlternates={scoredAlternates}
                 dynamicRadius={dynamicRadius}
+                onSelectionChange={handleManualSelection}
+                currentSelection={manualSelection}
               />
             </div>
             
@@ -507,7 +518,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
                 ✈️ Sélection des aérodromes
               </h4>
               {scoredAlternates && scoredAlternates.length > 0 ? (
-                <AlternateSelectorDual
+                <AlternateSelectorUnified
                   candidates={scoredAlternates}
                   searchZone={searchZone}
                   onSelectionChange={handleManualSelection}

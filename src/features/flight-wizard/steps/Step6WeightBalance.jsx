@@ -294,6 +294,82 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
     return calculateScenarios(aircraft, calculations, loads, fobFuel, fuelData, fuelUnit);
   }, [aircraft, calculations, loads, fobFuel, fuelData, getUnit]);
 
+  // 🔧 SÉCURITÉ CRITIQUE: Vérifier les limites opérationnelles de masse
+  const weightLimitViolations = useMemo(() => {
+    if (!aircraft || !scenarios) return null;
+
+    const violations = [];
+    const minTakeoffWeight = parseFloat(aircraft.weights?.minTakeoffWeight);
+    const maxTakeoffWeight = parseFloat(aircraft.weights?.mtow || aircraft.maxTakeoffWeight);
+    const maxLandingWeight = parseFloat(aircraft.weights?.mlw);
+
+    const takeoffWeight = scenarios.toCrm?.w || calculations?.totalWeight || 0;
+    const landingWeight = scenarios.landing?.w || 0;
+
+    // Vérifier masse minimale de vol (DÉCOLLAGE)
+    if (!isNaN(minTakeoffWeight) && takeoffWeight < minTakeoffWeight) {
+      violations.push({
+        type: 'critical',
+        phase: 'Décollage',
+        message: `⚠️ MASSE INSUFFISANTE AU DÉCOLLAGE : ${takeoffWeight.toFixed(1)} kg < ${minTakeoffWeight} kg minimum`,
+        detail: `La masse au décollage est INFÉRIEURE à la masse minimale de vol. VOL INTERDIT.`,
+        value: takeoffWeight,
+        limit: minTakeoffWeight,
+        icon: '🚫'
+      });
+    }
+
+    // 🔧 FIX CRITIQUE: Vérifier AUSSI la masse minimale à l'ATTERRISSAGE
+    if (!isNaN(minTakeoffWeight) && landingWeight > 0 && landingWeight < minTakeoffWeight) {
+      violations.push({
+        type: 'critical',
+        phase: 'Atterrissage',
+        message: `⚠️ MASSE INSUFFISANTE À L'ATTERRISSAGE : ${landingWeight.toFixed(1)} kg < ${minTakeoffWeight} kg minimum`,
+        detail: `La masse à l'atterrissage est INFÉRIEURE à la masse minimale de vol. ATTERRISSAGE INTERDIT.`,
+        value: landingWeight,
+        limit: minTakeoffWeight,
+        icon: '🚫'
+      });
+    }
+
+    // Vérifier MTOW
+    if (!isNaN(maxTakeoffWeight) && takeoffWeight > maxTakeoffWeight) {
+      violations.push({
+        type: 'critical',
+        phase: 'Décollage',
+        message: `⚠️ SURCHARGE : ${takeoffWeight.toFixed(1)} kg > ${maxTakeoffWeight} kg maximum`,
+        detail: `La masse au décollage DÉPASSE la masse maximale autorisée (MTOW). VOL INTERDIT.`,
+        value: takeoffWeight,
+        limit: maxTakeoffWeight,
+        icon: '🚫'
+      });
+    }
+
+    // Vérifier MLW
+    if (!isNaN(maxLandingWeight) && landingWeight > maxLandingWeight) {
+      violations.push({
+        type: 'critical',
+        phase: 'Atterrissage',
+        message: `⚠️ SURCHARGE ATTERRISSAGE : ${landingWeight.toFixed(1)} kg > ${maxLandingWeight} kg maximum`,
+        detail: `La masse à l'atterrissage DÉPASSE la masse maximale autorisée (MLW). Consommez plus de carburant avant d'atterrir.`,
+        value: landingWeight,
+        limit: maxLandingWeight,
+        icon: '⚠️'
+      });
+    }
+
+    console.log('🔍 [Step6] Vérification limites de masse:', {
+      takeoffWeight,
+      landingWeight,
+      minTakeoffWeight,
+      maxTakeoffWeight,
+      maxLandingWeight,
+      violations: violations.length
+    });
+
+    return violations.length > 0 ? violations : null;
+  }, [aircraft, scenarios, calculations]);
+
   // Synchroniser withinLimits du flightPlan avec calculations.isWithinLimits
   useEffect(() => {
     if (calculations && flightPlan && scenarios && calculations.isWithinLimits !== undefined) {
@@ -418,6 +494,57 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
           Configuration détaillée de masse et centrage
         </label>
       </div>
+
+      {/* 🚨 ALERTES SÉCURITÉ: Limites de masse opérationnelles */}
+      {weightLimitViolations && weightLimitViolations.map((violation, index) => (
+        <div
+          key={index}
+          style={{
+            padding: '16px 20px',
+            marginBottom: '16px',
+            backgroundColor: violation.type === 'critical' ? '#fef2f2' : '#fff7ed',
+            border: `2px solid ${violation.type === 'critical' ? '#dc2626' : '#f59e0b'}`,
+            borderRadius: '8px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '24px' }}>{violation.icon}</span>
+            <div style={{ flex: 1 }}>
+              <div style={{
+                fontSize: '16px',
+                fontWeight: '700',
+                color: violation.type === 'critical' ? '#991b1b' : '#c2410c',
+                marginBottom: '4px'
+              }}>
+                {violation.message}
+              </div>
+              <div style={{
+                fontSize: '14px',
+                color: violation.type === 'critical' ? '#7f1d1d' : '#9a3412',
+                lineHeight: '1.5'
+              }}>
+                {violation.detail}
+              </div>
+            </div>
+          </div>
+          <div style={{
+            fontSize: '12px',
+            color: '#6b7280',
+            padding: '8px 12px',
+            backgroundColor: 'white',
+            borderRadius: '4px',
+            border: '1px solid #e5e7eb'
+          }}>
+            <strong>Phase:</strong> {violation.phase} |
+            <strong> Masse actuelle:</strong> {violation.value.toFixed(1)} kg |
+            <strong> Limite:</strong> {violation.limit} kg |
+            <strong> Écart:</strong> {Math.abs(violation.value - violation.limit).toFixed(1)} kg
+          </div>
+        </div>
+      ))}
 
       {/* Section Chargement */}
       <LoadingSection

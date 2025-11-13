@@ -57,7 +57,23 @@ const PerformanceTableCalculator = ({
   const combinedGroupData = useMemo(() => {
     if (!tableGroup) return null;
     const combined = getCombinedDataForGroup(tableGroup);
-    console.log('📊 [Calculator] Données combinées du groupe:', combined);
+
+    // 🔍 DEBUG: Analyser les unités des altitudes
+    if (combined && combined.altitudes) {
+      const minAlt = Math.min(...combined.altitudes);
+      const maxAlt = Math.max(...combined.altitudes);
+      const probableUnit = maxAlt > 500 ? 'PIEDS (ft)' : 'MÈTRES (m)';
+
+      console.log('📊 [Calculator] Données combinées du groupe:', combined);
+      console.log('📐 [Calculator] ANALYSE UNITÉS ALTITUDE:', {
+        altitudes: combined.altitudes,
+        min: minAlt,
+        max: maxAlt,
+        probableUnit,
+        warning: probableUnit === 'MÈTRES (m)' ? '⚠️ ATTENTION: Altitudes semblent être en MÈTRES mais conditions.altitude est en PIEDS!' : '✅ OK'
+      });
+    }
+
     return combined;
   }, [tableGroup]);
 
@@ -101,6 +117,7 @@ const PerformanceTableCalculator = ({
         conditions.altitude,
         conditions.temperature
       );
+      console.log('🎯 [Calculator] groundRollResult:', groundRollResult);
 
       const distance15mResult = calculatePerformanceWithExtrapolation(
         combinedGroupData,
@@ -109,8 +126,15 @@ const PerformanceTableCalculator = ({
         conditions.altitude,
         conditions.temperature
       );
+      console.log('🎯 [Calculator] distance15mResult:', distance15mResult);
 
       // Si on a des résultats (interpolés ou extrapolés)
+      console.log('🎯 [Calculator] Vérification résultats:', {
+        hasGroundRoll: !!groundRollResult,
+        hasDistance15m: !!distance15mResult,
+        willProceed: !!(groundRollResult || distance15mResult)
+      });
+
       if (groundRollResult || distance15mResult) {
         // Déterminer si on a une valeur simple (interpolation normale) ou multiple (extrapolation)
         const hasExtrapolation =

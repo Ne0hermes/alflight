@@ -617,9 +617,15 @@ If mass in header (900kg), add Masse:900 to row.`;
                 }
               }
 
+              // 🔧 FIX: Extraire le numéro de page depuis image.name pour la fusion
+              // Format attendu: "Page 177", "Page 178", etc.
+              const pageMatch = image.name.match(/Page\s+(\d+)/i);
+              const pageNumber = pageMatch ? parseInt(pageMatch[1], 10) : undefined;
+
               return {
                 ...table,
                 data: tableData || [],
+                pageNumber, // 🔧 AJOUT: Numéro de page pour éviter doublons lors de la fusion
                 sourceImage: {
                   id: image.id,
                   name: image.name,

@@ -1,0 +1,76 @@
+// 🔧 Script de correction cgLimits F-HSTR
+// À copier/coller dans la console du navigateur (F12)
+
+(async function fixFHSTRCgLimits() {
+  console.log('🔧 [FIX] Démarrage de la correction cgLimits pour F-HSTR...');
+
+  // Importer Supabase depuis le CDN
+  const { createClient } = window.supabase;
+
+  if (!createClient) {
+    console.error('❌ Supabase non disponible. Ouvrez cette page: http://localhost:4001/fix-cglimits-supabase.html');
+    return;
+  }
+
+  const SUPABASE_URL = 'https://yawivlfiebsemtsxgmqz.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlhd2l2bGZpZWJzZW10c3hnbXF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjgxNTE5NjcsImV4cCI6MjA0MzcyNzk2N30.QX5c9P7WUTQg5rHTTMp0D57HWmRxQXlNqHIGksMO-hY';
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Étape 1 : Vérifier l'état actuel
+  console.log('🔍 Vérification de l\'état actuel de F-HSTR...');
+  const { data: current, error: checkError } = await supabase
+    .from('aircraft')
+    .select('registration, model, cgLimits')
+    .eq('registration', 'F-HSTR')
+    .single();
+
+  if (checkError) {
+    console.error('❌ Erreur lors de la vérification:', checkError);
+    return;
+  }
+
+  console.log(`✅ Avion trouvé: ${current.registration} (${current.model})`);
+
+  if (current.cgLimits) {
+    console.log(`✅ cgLimits déjà présents:`, current.cgLimits);
+    console.log('ℹ️  Aucune correction nécessaire');
+    return;
+  }
+
+  console.log('❌ cgLimits MANQUANTS - Correction en cours...');
+
+  // Étape 2 : Corriger les cgLimits
+  const cgLimits = {
+    forward: 2.05,  // DA40 NG typical forward CG limit (m)
+    aft: 2.31       // DA40 NG typical aft CG limit (m)
+  };
+
+  const { data, error } = await supabase
+    .from('aircraft')
+    .update({ cgLimits })
+    .eq('registration', 'F-HSTR')
+    .select();
+
+  if (error) {
+    console.error('❌ Erreur lors de la mise à jour:', error);
+    return;
+  }
+
+  console.log(`✅ cgLimits ajoutés avec succès:`, cgLimits);
+  console.log('✅ F-HSTR mis à jour dans Supabase');
+
+  // Étape 3 : Vider IndexedDB
+  console.log('🗑️  Suppression de IndexedDB...');
+  const deleteRequest = indexedDB.deleteDatabase('alflight-aircraft-db');
+
+  deleteRequest.onsuccess = function() {
+    console.log('✅ IndexedDB supprimée avec succès');
+    console.log('🔄 Rechargez la page pour voir les modifications');
+  };
+
+  deleteRequest.onerror = function() {
+    console.error('❌ Erreur lors de la suppression de IndexedDB');
+    console.log('ℹ️  Exécutez manuellement: indexedDB.deleteDatabase("alflight-aircraft-db")');
+  };
+})();

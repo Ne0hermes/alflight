@@ -10,36 +10,62 @@ import { openAIPAirspacesService } from '../../../services/openAIPAirspacesServi
 import { hybridAirspacesService } from '../../../services/hybridAirspacesService.js';
 
 /**
+ * Vérifie si deux segments se croisent (test d'intersection de segments)
+ */
+function segmentsIntersect(p1, p2, p3, p4) {
+  const det = (p2.lon - p1.lon) * (p4.lat - p3.lat) - (p4.lon - p3.lon) * (p2.lat - p1.lat);
+
+  if (det === 0) {
+    return false; // Segments parallèles ou colinéaires
+  }
+
+  const lambda = ((p4.lat - p3.lat) * (p4.lon - p1.lon) + (p3.lon - p4.lon) * (p4.lat - p1.lat)) / det;
+  const gamma = ((p1.lat - p2.lat) * (p4.lon - p1.lon) + (p2.lon - p1.lon) * (p4.lat - p1.lat)) / det;
+
+  return (lambda > 0 && lambda < 1) && (gamma > 0 && gamma < 1);
+}
+
+/**
  * Vérifie si un segment (ligne) traverse un espace aérien (polygone)
+ * Algorithme CORRECT - teste l'intersection réelle avec les bords du polygone
  */
 function segmentIntersectsPolygon(fromLat, fromLon, toLat, toLon, airspaceGeometry) {
   if (!airspaceGeometry || airspaceGeometry.type !== 'Polygon') {
     return false;
   }
 
-  // Algorithme simplifié : vérifier si l'un des points est dans le polygone
-  // OU si la ligne traverse les bords du polygone
   const coordinates = airspaceGeometry.coordinates[0];
 
-  // Vérifier si le point de départ ou d'arrivée est dans le polygone
+  // ✅ TEST 1 : Vérifier si un des waypoints est DANS le polygone
   if (pointInPolygon(fromLat, fromLon, coordinates) ||
       pointInPolygon(toLat, toLon, coordinates)) {
     return true;
   }
 
-  // Vérifier si la ligne traverse les bords du polygone (algorithme simplifié)
-  // Pour une version complète, il faudrait tester toutes les intersections de segments
-  // Version simplifiée : si les deux points sont proches du polygone, on considère une traversée
-  const bbox = getPolygonBbox(coordinates);
-  const segmentBbox = {
-    minLat: Math.min(fromLat, toLat),
-    maxLat: Math.max(fromLat, toLat),
-    minLon: Math.min(fromLon, toLon),
-    maxLon: Math.max(fromLon, toLon)
+  // ✅ TEST 2 : Vérifier si la LIGNE traverse un des BORDS du polygone
+  // (Algorithme correct d'intersection segment-segment)
+  const flightSegment = {
+    p1: { lat: fromLat, lon: fromLon },
+    p2: { lat: toLat, lon: toLon }
   };
 
-  // Si les bboxes se chevauchent, il y a une forte probabilité de traversée
-  return bboxesOverlap(bbox, segmentBbox);
+  // Tester l'intersection avec chaque segment du polygone
+  for (let i = 0; i < coordinates.length - 1; i++) {
+    const polySegment = {
+      p1: { lat: coordinates[i][1], lon: coordinates[i][0] },
+      p2: { lat: coordinates[i + 1][1], lon: coordinates[i + 1][0] }
+    };
+
+    if (segmentsIntersect(
+      flightSegment.p1, flightSegment.p2,
+      polySegment.p1, polySegment.p2
+    )) {
+      return true; // Intersection trouvée !
+    }
+  }
+
+  // ❌ Aucune intersection détectée
+  return false;
 }
 
 /**
@@ -61,32 +87,6 @@ function pointInPolygon(lat, lon, polygonCoords) {
   return inside;
 }
 
-/**
- * Calcule la bounding box d'un polygone
- */
-function getPolygonBbox(coordinates) {
-  let minLat = Infinity, maxLat = -Infinity;
-  let minLon = Infinity, maxLon = -Infinity;
-
-  coordinates.forEach(([lon, lat]) => {
-    minLat = Math.min(minLat, lat);
-    maxLat = Math.max(maxLat, lat);
-    minLon = Math.min(minLon, lon);
-    maxLon = Math.max(maxLon, lon);
-  });
-
-  return { minLat, maxLat, minLon, maxLon };
-}
-
-/**
- * Vérifie si deux bboxes se chevauchent
- */
-function bboxesOverlap(bbox1, bbox2) {
-  return !(bbox1.maxLat < bbox2.minLat ||
-           bbox1.minLat > bbox2.maxLat ||
-           bbox1.maxLon < bbox2.minLon ||
-           bbox1.minLon > bbox2.maxLon);
-}
 
 /**
  * Vérifie si l'altitude crée un conflit avec un espace aérien
@@ -187,7 +187,10 @@ export function useAirspaceAnalysis(waypoints, segmentAltitudes = {}, plannedAlt
         continue;
       }
 
-      const segmentId = `${from.id}-${to.id}`;
+      // 🔧 FIX: Créer un segmentId basé sur les noms ou l'index si pas d'ID
+      const fromId = from.id || from.name || `wp${i}`;
+      const toId = to.id || to.name || `wp${i+1}`;
+      const segmentId = `${fromId}-${toId}`;
       const segmentAlt = segmentAltitudes[segmentId]?.startAlt || plannedAltitude;
 
       // Trouver les espaces aériens traversés

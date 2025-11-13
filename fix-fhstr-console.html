@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Correction cgLimits F-HSTR</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      background: #1e1e1e;
+      color: #d4d4d4;
+    }
+    button {
+      background: #0e639c;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    button:hover {
+      background: #1177bb;
+    }
+    pre {
+      background: #252526;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    .warning {
+      background: #433715;
+      border-left: 4px solid #f59e0b;
+      padding: 10px;
+      margin: 10px 0;
+    }
+    .success {
+      background: #1e3a1e;
+      border-left: 4px solid #10b981;
+      padding: 10px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔧 Correction cgLimits F-HSTR</h1>
+
+  <div class="warning">
+    <strong>⚠️ ATTENTION:</strong> Les valeurs actuelles dans Supabase sont FAUSSES:<br>
+    - forward: 2.05 (devrait être 2.40)<br>
+    - aft: 2.31 (devrait être 2.59)<br>
+    <br>
+    Cliquez sur le bouton ci-dessous pour corriger avec les VRAIES valeurs du DA40 NG F-HSTR.
+  </div>
+
+  <button onclick="fixCgLimits()">✅ Corriger cgLimits F-HSTR</button>
+
+  <h2>📊 Nouvelles valeurs (correctes):</h2>
+  <pre id="newValues">{
+  "cgEnvelope": {
+    "forwardPoints": [
+      { "mass": 780, "cg": 2.40 },   // 780-980kg: CG avant = 2.40
+      { "mass": 980, "cg": 2.40 },   // Point intermédiaire
+      { "mass": 1150, "cg": 2.46 }   // 980-1150kg: CG avant = 2.46
+    ],
+    "aftCG": 2.59                    // Limite arrière FIXE
+  },
+  "cgLimits": {
+    "forward": 2.40,                 // Limite avant la plus restrictive
+    "aft": 2.59                      // Limite arrière
+  }
+}</pre>
+
+  <h2>📝 Résultat:</h2>
+  <pre id="output">En attente de correction...</pre>
+
+  <script>
+    async function fixCgLimits() {
+      const output = document.getElementById('output');
+      output.textContent = '⏳ Correction en cours...\n';
+
+      const url = 'https://yawivlfiebsemtsxgmqz.supabase.co';
+      const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlhd2l2bGZpZWJzZW10c3hnbXF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjgxNTE5NjcsImV4cCI6MjA0MzcyNzk2N30.QX5c9P7WUTQg5rHTTMp0D57HWmRxQXlNqHIGksMO-hY';
+
+      try {
+        const response = await fetch(`${url}/rest/v1/aircraft?registration=eq.F-HSTR`, {
+          method: 'PATCH',
+          headers: {
+            'apikey': key,
+            'Authorization': `Bearer ${key}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify({
+            cgEnvelope: {
+              forwardPoints: [
+                { mass: 780, cg: 2.40 },
+                { mass: 980, cg: 2.40 },
+                { mass: 1150, cg: 2.46 }
+              ],
+              aftCG: 2.59
+            },
+            cgLimits: {
+              forward: 2.40,
+              aft: 2.59
+            }
+          })
+        });
+
+        const data = await response.json();
+        output.textContent = '✅ Supabase mis à jour!\n\n';
+        output.textContent += JSON.stringify(data, null, 2);
+        output.textContent += '\n\n🗑️ Suppression IndexedDB...';
+
+        // Supprimer IndexedDB
+        indexedDB.deleteDatabase('alflight-aircraft-db').onsuccess = () => {
+          output.textContent += '\n✅ IndexedDB vidée!\n\n';
+          output.textContent += '🔄 Rechargez maintenant votre application (Ctrl+R)';
+
+          // Afficher alerte
+          alert('✅ cgLimits F-HSTR corrigés!\n\nLimites AVANT corrigées:\n- Ancien: 2.05 ❌\n- Nouveau: 2.40 ✅\n\nLimites ARRIÈRE corrigées:\n- Ancien: 2.31 ❌\n- Nouveau: 2.59 ✅\n\nRechargez votre application maintenant (Ctrl+R)');
+        };
+
+      } catch (error) {
+        output.textContent = '❌ Erreur: ' + error.message;
+      }
+    }
+  </script>
+</body>
+</html>

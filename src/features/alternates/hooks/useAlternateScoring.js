@@ -24,13 +24,13 @@ export const scoreAlternates = async (candidates, context) => {
         weather: await calculateWeatherScore(airport, context),
         strategic: calculateStrategicPosition(airport, context)
       };
-      
+
       // Calcul du score total pondéré
       const totalScore = calculateTotalScore(scores);
-      
+
       // Détermination du rang
       const rank = determineRank(totalScore);
-      
+
       return {
         ...airport,
         score: totalScore,
@@ -77,15 +77,38 @@ const calculateDistanceScore = (airport, context) => {
 const calculateInfrastructureScore = (airport, context) => {
   let score = 0;
   const aircraft = context.aircraft;
-  
+
   if (!aircraft || !airport.runways || airport.runways.length === 0) {
     return 0;
   }
-  
+
   // 1. Longueur de piste (50% du score infrastructure)
   const requiredLength = aircraft.performances?.landingDistance * 1.43 || 800;
-  const longestRunway = Math.max(...airport.runways.map(r => r.length || 0));
-  
+
+  // 🔧 FIX: Utiliser TORA si length = 0 (comme dans AlternateSelectorUnified)
+  const longestRunway = Math.max(...airport.runways.map(r => {
+    // Essayer runway.length d'abord
+    if (r.length && r.length > 0) {
+      return r.length;
+    }
+
+    // Si length = 0, chercher dans TORA (distances déclarées)
+    if (r.tora && r.tora > 0) {
+      return r.tora;
+    }
+
+    // Chercher aussi dans distancesByDirection
+    if (r.distancesByDirection) {
+      const maxTora = Math.max(
+        ...Object.values(r.distancesByDirection)
+          .map(dir => dir.tora || 0)
+      );
+      if (maxTora > 0) return maxTora;
+    }
+
+    return 0;
+  }));
+
   const runwayRatio = longestRunway / requiredLength;
   let runwayScore = 0;
   
@@ -121,7 +144,7 @@ const calculateInfrastructureScore = (airport, context) => {
     return ['asphalt', 'concrete', 'paved', 'revêtue'].includes(r.surface.toLowerCase());
   });
   score += hasPavedRunway ? 0.15 : 0.05;
-  
+
   return Math.min(score, 1.0);
 };
 
@@ -257,11 +280,22 @@ const calculateWeatherScore = async (airport, context) => {
  */
 const calculateStrategicPosition = (airport, context) => {
   let score = 0;
-  
+
+  // Vérifier que les coordonnées existent
+  const airportPos = airport.coordinates || airport.position;
+  if (!airportPos || !context.departure || !context.arrival) {
+    return 0;
+  }
+
   const totalRouteDistance = calculateDistance(context.departure, context.arrival);
-  const distFromDeparture = calculateDistance(context.departure, airport.coordinates || airport.position);
-  const distFromArrival = calculateDistance(context.arrival, airport.coordinates || airport.position);
-  
+  const distFromDeparture = calculateDistance(context.departure, airportPos);
+  const distFromArrival = calculateDistance(context.arrival, airportPos);
+
+  // 🔧 FIX: Protection contre division par zéro si départ = arrivée
+  if (totalRouteDistance === 0 || isNaN(totalRouteDistance)) {
+    return 0.5; // Score neutre
+  }
+
   // 1. Position par rapport au milieu de route (60% du score)
   const midPointRatio = Math.abs(distFromDeparture - distFromArrival) / totalRouteDistance;
   const midPointScore = 1 - Math.min(midPointRatio * 2, 1);
@@ -293,7 +327,7 @@ const calculateStrategicPosition = (airport, context) => {
   } else {
     score += 0.10;
   }
-  
+
   return Math.min(score, 1.0);
 };
 
