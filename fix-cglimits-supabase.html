@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fix F-HSTR cgLimits in Supabase</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 { color: #2563eb; margin-bottom: 20px; }
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 5px;
+    }
+    button:hover { background: #1d4ed8; }
+    button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+    .log {
+      background: #1f2937;
+      color: #10b981;
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 20px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .error { color: #ef4444; }
+    .success { color: #10b981; }
+    .info { color: #3b82f6; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔧 Fix F-HSTR cgLimits in Supabase</h1>
+    <p>Cet outil ajoute les cgLimits manquants pour F-HSTR dans Supabase.</p>
+
+    <button id="checkBtn">1. Vérifier l'état actuel</button>
+    <button id="fixBtn" disabled>2. Corriger cgLimits</button>
+    <button id="clearCacheBtn">3. Vider IndexedDB</button>
+
+    <div id="log" class="log"></div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://yawivlfiebsemtsxgmqz.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlhd2l2bGZpZWJzZW10c3hnbXF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjgxNTE5NjcsImV4cCI6MjA0MzcyNzk2N30.QX5c9P7WUTQg5rHTTMp0D57HWmRxQXlNqHIGksMO-hY';
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const log = document.getElementById('log');
+    const checkBtn = document.getElementById('checkBtn');
+    const fixBtn = document.getElementById('fixBtn');
+    const clearCacheBtn = document.getElementById('clearCacheBtn');
+
+    function addLog(message, type = 'info') {
+      const timestamp = new Date().toLocaleTimeString();
+      const color = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+      log.innerHTML += `<span class="${color}">[${timestamp}] ${message}</span>\n`;
+      log.scrollTop = log.scrollHeight;
+    }
+
+    async function checkCurrentState() {
+      try {
+        addLog('🔍 Vérification de l\'état actuel de F-HSTR...', 'info');
+
+        const { data, error } = await supabase
+          .from('aircraft')
+          .select('registration, model, cgLimits')
+          .eq('registration', 'F-HSTR')
+          .single();
+
+        if (error) throw error;
+
+        addLog(`✅ Avion trouvé: ${data.registration} (${data.model})`, 'success');
+
+        if (data.cgLimits) {
+          addLog(`✅ cgLimits présents: ${JSON.stringify(data.cgLimits)}`, 'success');
+          addLog('ℹ️  Aucune correction nécessaire', 'info');
+          fixBtn.disabled = true;
+        } else {
+          addLog('❌ cgLimits MANQUANTS - Correction nécessaire', 'error');
+          fixBtn.disabled = false;
+        }
+
+      } catch (error) {
+        addLog(`❌ Erreur: ${error.message}`, 'error');
+      }
+    }
+
+    async function fixCgLimits() {
+      try {
+        addLog('🔧 Correction des cgLimits pour F-HSTR...', 'info');
+
+        const cgLimits = {
+          forward: 2.05,  // DA40 NG typical forward CG limit
+          aft: 2.31       // DA40 NG typical aft CG limit
+        };
+
+        const { data, error } = await supabase
+          .from('aircraft')
+          .update({ cgLimits })
+          .eq('registration', 'F-HSTR')
+          .select();
+
+        if (error) throw error;
+
+        addLog(`✅ cgLimits ajoutés avec succès: ${JSON.stringify(cgLimits)}`, 'success');
+        addLog('✅ F-HSTR mis à jour dans Supabase', 'success');
+        addLog('ℹ️  Vider IndexedDB pour recharger les données', 'info');
+
+        fixBtn.disabled = true;
+
+      } catch (error) {
+        addLog(`❌ Erreur lors de la correction: ${error.message}`, 'error');
+      }
+    }
+
+    async function clearIndexedDB() {
+      try {
+        addLog('🗑️  Suppression de la base IndexedDB...', 'info');
+
+        const request = indexedDB.deleteDatabase('alflight-aircraft-db');
+
+        request.onsuccess = function() {
+          addLog('✅ Base IndexedDB supprimée avec succès', 'success');
+          addLog('ℹ️  Rechargez la page pour charger les nouvelles données', 'info');
+        };
+
+        request.onerror = function() {
+          addLog('❌ Erreur lors de la suppression de IndexedDB', 'error');
+        };
+
+        request.onblocked = function() {
+          addLog('⚠️  Suppression bloquée - Fermez tous les onglets et réessayez', 'error');
+        };
+
+      } catch (error) {
+        addLog(`❌ Erreur: ${error.message}`, 'error');
+      }
+    }
+
+    checkBtn.addEventListener('click', checkCurrentState);
+    fixBtn.addEventListener('click', fixCgLimits);
+    clearCacheBtn.addEventListener('click', clearIndexedDB);
+
+    // Auto-check au chargement
+    addLog('🚀 Outil de correction cgLimits chargé', 'success');
+    addLog('➡️  Cliquez sur "1. Vérifier l\'état actuel" pour commencer', 'info');
+  </script>
+</body>
+</html>

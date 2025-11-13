@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Radio, Plane, Sun, Moon, MapPin, Navigation, Fuel } from 'lucide-react';
+import { Calendar, Radio, Plane, Sun, Moon, MapPin, Navigation } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import { aircraftSelectors } from '../../../core/stores/aircraftStore';
 import { useAircraft } from '@core/contexts';
@@ -48,7 +48,7 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
 
       // Pré-remplir automatiquement TOUTES les données de l'avion dans le flightPlan
       // Copier l'objet complet pour que Step6 (Weight & Balance) ait accès à toutes les propriétés
-      flightPlan.updateAircraft({
+      const aircraftData = {
         ...selectedAircraft, // Copier TOUTES les propriétés de l'avion
         // S'assurer que les propriétés essentielles sont bien définies
         registration: selectedAircraft.registration,
@@ -59,16 +59,86 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
         fuelCapacity: selectedAircraft.fuelCapacity || 0,
         emptyWeight: selectedAircraft.emptyWeight || 0,
         maxWeight: selectedAircraft.maxWeight || selectedAircraft.maxTakeoffWeight || 0,
-        // Les propriétés suivantes sont maintenant incluses via ...selectedAircraft :
-        // - weightBalance (bras de levier et limites CG)
-        // - armLengths (bras de levier depuis AIXM)
-        // - baggageCompartments (compartiments bagages dynamiques)
-        // - masses (masses diverses)
-        // - limitations (limitations diverses)
-        // - cgEnvelope (enveloppe de centrage)
-        // Et toutes les autres propriétés de l'avion
-      });
-      console.log('✅ Avion pré-rempli automatiquement avec toutes les propriétés:', selectedAircraft.registration);
+      };
+
+      // 🔧 FIX: S'assurer explicitement que weightBalance est copié ou créé
+      if (selectedAircraft.weightBalance) {
+        aircraftData.weightBalance = selectedAircraft.weightBalance;
+        console.log('✅ [Step1] weightBalance copié explicitement:', aircraftData.weightBalance);
+      } else if (selectedAircraft.arms) {
+        // Créer weightBalance depuis arms (compatibilité structure F-HSTR)
+        // ⚠️ SÉCURITÉ : AUCUNE valeur par défaut - null si données manquantes
+        const arms = selectedAircraft.arms;
+
+        // Helper pour parser ou retourner null
+        const parseOrNull = (value) => {
+          if (!value || value === '' || value === '0') return null;
+          const parsed = parseFloat(value);
+          return isNaN(parsed) ? null : parsed;
+        };
+
+        aircraftData.weightBalance = {
+          // Bras pour les sièges (gauche = droit pour chaque rangée)
+          frontLeftSeatArm: parseOrNull(arms.frontSeats) || parseOrNull(arms.frontSeat),
+          frontRightSeatArm: parseOrNull(arms.frontSeats) || parseOrNull(arms.frontSeat),
+          rearLeftSeatArm: parseOrNull(arms.rearSeats) || parseOrNull(arms.rearSeat),
+          rearRightSeatArm: parseOrNull(arms.rearSeats) || parseOrNull(arms.rearSeat),
+
+          // Bras carburant
+          fuelArm: parseOrNull(arms.fuelMain) || parseOrNull(arms.fuel),
+
+          // Bras masse à vide
+          emptyWeightArm: parseOrNull(arms.empty),
+
+          // Copier cgLimits depuis selectedAircraft
+          // Si cgLimits existe mais que forward/aft sont vides, utiliser cgEnvelope
+          cgLimits: (() => {
+            const hasValidCgLimits = selectedAircraft.cgLimits &&
+              selectedAircraft.cgLimits.forward !== '' &&
+              selectedAircraft.cgLimits.aft !== '';
+
+            if (hasValidCgLimits) {
+              return selectedAircraft.cgLimits;
+            }
+
+            // Utiliser cgEnvelope comme fallback
+            if (selectedAircraft.cgEnvelope) {
+              return {
+                forward: parseOrNull(selectedAircraft.cgEnvelope.forwardPoints?.[0]?.cg),
+                aft: parseOrNull(selectedAircraft.cgEnvelope.aftCG),
+                forwardVariable: selectedAircraft.cgEnvelope.forwardPoints || []
+              };
+            }
+
+            // Dernier fallback
+            return {
+              forward: null,
+              aft: null,
+              forwardVariable: []
+            };
+          })(),
+
+          // Préserver arms original pour référence
+          _originalArms: arms
+        };
+
+        console.log('✅ [Step1] weightBalance créé depuis arms (null si manquant):', aircraftData.weightBalance);
+      } else {
+        console.error('❌ [Step1] Aucun weightBalance ni arms trouvé dans selectedAircraft');
+      }
+
+      // Copier aussi arms et baggageCompartments si disponibles
+      if (selectedAircraft.arms) {
+        aircraftData.arms = selectedAircraft.arms;
+      }
+      if (selectedAircraft.baggageCompartments) {
+        aircraftData.baggageCompartments = selectedAircraft.baggageCompartments;
+      }
+
+      flightPlan.updateAircraft(aircraftData);
+      console.log('✅ Avion pré-rempli avec toutes les propriétés:', selectedAircraft.registration);
+      console.log('🔍 [Step1] flightPlan.aircraft.weightBalance:', flightPlan.aircraft.weightBalance);
+      console.log('🔍 [Step1] flightPlan.aircraft.arms:', flightPlan.aircraft.arms);
     }
 
     onUpdate();
@@ -78,49 +148,6 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
     if (!date) return '';
     const d = new Date(date);
     return d.toISOString().split('T')[0];
-  };
-
-  // Calculer la réserve réglementaire selon les règles
-  const calculateRegulatoryReserve = () => {
-    let regulationReserveMinutes = 30;
-
-    // Nuit = 45 minutes
-    if (flightPlan.generalInfo.dayNight === 'night') {
-      regulationReserveMinutes = 45;
-    }
-
-    // IFR = +15 minutes
-    if (flightPlan.generalInfo.flightType === 'IFR') {
-      regulationReserveMinutes += 15;
-    }
-
-    // Local + Jour = 20 minutes
-    if (flightPlan.generalInfo.flightNature === 'local' && flightPlan.generalInfo.dayNight === 'day') {
-      regulationReserveMinutes = 20;
-    }
-
-    return regulationReserveMinutes;
-  };
-
-  const reserveMinutes = calculateRegulatoryReserve();
-
-  // Description de la réserve
-  const getReserveDescription = () => {
-    const parts = [];
-
-    if (flightPlan.generalInfo.flightType) {
-      parts.push(flightPlan.generalInfo.flightType);
-    }
-
-    if (flightPlan.generalInfo.flightNature) {
-      parts.push(flightPlan.generalInfo.flightNature === 'local' ? 'LOCAL' : 'NAV');
-    }
-
-    if (flightPlan.generalInfo.dayNight) {
-      parts.push(flightPlan.generalInfo.dayNight === 'night' ? 'NUIT' : 'JOUR');
-    }
-
-    return parts.length > 0 ? parts.join(' - ') : 'Complétez les informations ci-dessus';
   };
 
   return (
@@ -270,16 +297,6 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
           </label>
         </div>
       </div>
-
-      {/* Réserve réglementaire calculée */}
-      <div style={styles.reserveCard}>
-        <Fuel size={16} style={styles.icon} />
-        <div style={styles.reserveContent}>
-          <span style={styles.reserveLabel}>Réserve réglementaire :</span>
-          <span style={styles.reserveMinutes}>{reserveMinutes} min</span>
-          <span style={styles.reserveDescription}>({getReserveDescription()})</span>
-        </div>
-      </div>
     </div>
   );
 };
@@ -399,37 +416,6 @@ const styles = {
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
     whiteSpace: 'nowrap',
-  },
-  reserveCard: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '12px 16px',
-    borderRadius: '8px',
-    border: `1px solid ${theme.colors.border}`,
-    backgroundColor: 'rgba(59, 130, 246, 0.05)',
-  },
-  reserveContent: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    flex: 1,
-  },
-  reserveLabel: {
-    fontSize: '14px',
-    fontWeight: '500',
-    color: theme.colors.textSecondary,
-  },
-  reserveMinutes: {
-    fontSize: '18px',
-    fontWeight: '700',
-    color: theme.colors.primary,
-  },
-  reserveDescription: {
-    fontSize: '13px',
-    fontWeight: '500',
-    color: theme.colors.textMuted,
-    fontStyle: 'italic',
   },
 };
 

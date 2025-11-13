@@ -1,9 +1,11 @@
 // src/core/stores/fuelStore.js
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 export const useFuelStore = create(
-  immer((set, get) => ({
+  persist(
+    immer((set, get) => ({
     // État
     fuelData: {
       roulage: { gal: 1.0, ltr: 3.79 },
@@ -92,5 +94,15 @@ export const useFuelStore = create(
       };
       state.fobFuel = { gal: 0, ltr: 0 };
     })
-  }))
+  })),
+  {
+    name: 'fuel-storage', // Nom unique pour localStorage
+    storage: createJSONStorage(() => localStorage),
+    // Persister toutes les données
+    partialize: (state) => ({
+      fuelData: state.fuelData,
+      fobFuel: state.fobFuel
+    })
+  }
+  )
 );

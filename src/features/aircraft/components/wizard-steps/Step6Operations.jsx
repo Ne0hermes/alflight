@@ -16,13 +16,15 @@ import {
   Stars as StarsIcon,
   Terrain as TerrainIcon,
   ChevronRight as ChevronRightIcon,
-  ChevronLeft as ChevronLeftIcon
+  ChevronLeft as ChevronLeftIcon,
+  LocalHospital as SearchRescueIcon
 } from '@mui/icons-material';
 
 const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
   const [expandedPanels, setExpandedPanels] = useState({
     flightRules: false,
     specialOps: false,
+    searchRescue: false,
     environment: false
   });
   
@@ -32,6 +34,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
       setExpandedPanels({
         flightRules: false,
         specialOps: false,
+        searchRescue: false,
         environment: false,
         [panel]: true
       });
@@ -306,6 +309,189 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
 
                   }
                   sx={{ gridColumn: 'span 2' }}
+                />
+              </Box>
+            </FormGroup>
+          </Box>
+        </AccordionDetails>
+      </Accordion>
+
+      {/* Search and Rescue */}
+      <Accordion
+        expanded={expandedPanels.searchRescue}
+        onChange={handlePanelChange('searchRescue')}
+        elevation={0}
+        sx={{
+          mb: 2,
+          border: '1px solid',
+          borderColor: 'divider',
+          '&:before': { display: 'none' }
+        }}
+      >
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          sx={{
+            minHeight: '40px',
+            '&.Mui-expanded': { minHeight: '40px' },
+            '& .MuiAccordionSummary-content': {
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              margin: '8px 0'
+            },
+            '& .MuiAccordionSummary-content.Mui-expanded': {
+              margin: '8px 0'
+            }
+          }}
+        >
+          <SearchRescueIcon color="primary" />
+          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+            Search and Rescue (Équipements de sauvetage)
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ pt: 2, pb: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+            <FormGroup sx={{ width: '100%', maxWidth: 600 }}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={approvedOps.elt || false}
+                      onChange={() => handleOperationChange('elt')}
+                      size="small"
+                    />
+                  }
+                  label={
+                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                      ELT 121.5/406 MHz
+                    </Typography>
+                  }
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={approvedOps.lifeVests || false}
+                      onChange={() => handleOperationChange('lifeVests')}
+                      size="small"
+                    />
+                  }
+                  label={
+                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                      Gilets de sauvetage
+                    </Typography>
+                  }
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={approvedOps.lifeRaft || false}
+                      onChange={() => handleOperationChange('lifeRaft')}
+                      size="small"
+                    />
+                  }
+                  label={
+                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                      Radeau de survie
+                    </Typography>
+                  }
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={approvedOps.survivalKit || false}
+                      onChange={() => handleOperationChange('survivalKit')}
+                      size="small"
+                    />
+                  }
+                  label={
+                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                      Trousse de survie
+                    </Typography>
+                  }
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={approvedOps.plb || false}
+                      onChange={() => handleOperationChange('plb')}
+                      size="small"
+                    />
+                  }
+                  label={
+                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                      Balise PLB
+                    </Typography>
+                  }
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={approvedOps.signalMirror || false}
+                      onChange={() => handleOperationChange('signalMirror')}
+                      size="small"
+                    />
+                  }
+                  label={
+                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                      Miroir de signalisation
+                    </Typography>
+                  }
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={approvedOps.flares || false}
+                      onChange={() => handleOperationChange('flares')}
+                      size="small"
+                    />
+                  }
+                  label={
+                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                      Fusées de détresse
+                    </Typography>
+                  }
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={approvedOps.survivalRadio || false}
+                      onChange={() => handleOperationChange('survivalRadio')}
+                      size="small"
+                    />
+                  }
+                  label={
+                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                      Radio de survie
+                    </Typography>
+                  }
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={approvedOps.firstAidKit || false}
+                      onChange={() => handleOperationChange('firstAidKit')}
+                      size="small"
+                    />
+                  }
+                  label={
+                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                      Kit de premiers secours
+                    </Typography>
+                  }
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={approvedOps.survivalClothing || false}
+                      onChange={() => handleOperationChange('survivalClothing')}
+                      size="small"
+                    />
+                  }
+                  label={
+                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                      Vêtements de survie
+                    </Typography>
+                  }
                 />
               </Box>
             </FormGroup>

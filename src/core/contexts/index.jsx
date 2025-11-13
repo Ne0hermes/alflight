@@ -62,21 +62,193 @@ export const AircraftProvider = memo(({ children }) => {
   const isInitialized = useAircraftStore(state => state.isInitialized);
   const error = useAircraftStore(state => state.error);
 
-  // 🚀 INITIALISATION AUTOMATIQUE DEPUIS SUPABASE
+  // 🔧 FIX: DÉSACTIVATION CHARGEMENT AUTOMATIQUE DEPUIS SUPABASE
+  // L'utilisateur doit créer ses avions via le wizard uniquement
+  // React.useEffect(() => {
+  //   if (!isInitialized) {
+  //     loadFromSupabase().catch(err => {
+  //       console.error('❌ Échec du chargement initial Supabase:', err);
+  //     });
+  //   }
+  // }, [isInitialized, loadFromSupabase]);
+
+  // 🔧 FIX: Charger les avions depuis IndexedDB au démarrage (pas localStorage - Out of Memory)
   React.useEffect(() => {
     if (!isInitialized) {
-            loadFromSupabase().catch(err => {
-        console.error('❌ Échec du chargement initial Supabase:', err);
-      });
+      const loadFromIndexedDB = async () => {
+        console.log('📂 [AircraftProvider] Chargement depuis IndexedDB...');
+        try {
+          const { default: dataBackupManager } = await import('@utils/dataBackupManager');
+
+          // 🔧 FIX: Charger TOUS les avions mais SANS les données volumineuses
+          const allAircraft = await dataBackupManager.getAllFromStore('aircraftData');
+
+          // 🔧 FIX CRITIQUE: Ne charger QUE les métadonnées légères (pas MANEX/photos/images)
+          // Sinon: 6 avions × 12 MB MANEX = 72 MB en mémoire → Out of Memory!
+          const lightAircraft = allAircraft.map(aircraft => {
+            const light = { ...aircraft };
+
+            // 🔧 FIX: Ajouter les flags AVANT de supprimer les données
+            light.hasPhoto = !!(aircraft.photo || aircraft.profilePhoto);
+            light.hasManex = !!aircraft.manex;
+
+            // Supprimer les données volumineuses (on les chargera à la demande)
+            delete light.manex;           // ❌ 12 MB par avion
+            delete light.photo;           // ❌ Photos base64
+            delete light.profilePhoto;    // ❌ Photos base64
+
+            // Supprimer les images des performance tables
+            if (light.advancedPerformance?.tables) {
+              light.advancedPerformance.tables = light.advancedPerformance.tables.map(table => {
+                const lightTable = { ...table };
+                delete lightTable.sourceImage;
+                return lightTable;
+              });
+            }
+
+            // Supprimer les images des performance models
+            if (light.performanceModels) {
+              light.performanceModels = light.performanceModels.map(model => {
+                const lightModel = { ...model };
+                if (lightModel.data?.graphs) {
+                  lightModel.data.graphs = lightModel.data.graphs.map(graph => {
+                    const lightGraph = { ...graph };
+                    delete lightGraph.sourceImage;
+                    return lightGraph;
+                  });
+                }
+                return lightModel;
+              });
+            }
+
+            // 🔧 FIX CRITIQUE: Mapper weights.emptyWeight → emptyWeight pour les anciens avions
+            // Les avions créés avant la correction ont weights.emptyWeight mais pas emptyWeight (propriété racine)
+            // Le code WeightBalanceStore et WeightBalanceTable s'attendent à aircraft.emptyWeight
+            if (!light.emptyWeight && light.weights?.emptyWeight) {
+              light.emptyWeight = parseFloat(light.weights.emptyWeight);
+              console.log(`✅ [AircraftProvider] Mapped weights.emptyWeight → emptyWeight for ${light.registration}: ${light.emptyWeight} kg`);
+            }
+            if (!light.maxTakeoffWeight && light.weights?.mtow) {
+              light.maxTakeoffWeight = parseFloat(light.weights.mtow);
+              console.log(`✅ [AircraftProvider] Mapped weights.mtow → maxTakeoffWeight for ${light.registration}: ${light.maxTakeoffWeight} kg`);
+            }
+            // 🔧 FIX: Mapper minTakeoffWeight depuis weights ou utiliser emptyWeight comme fallback
+            if (!light.minTakeoffWeight) {
+              // Si weights.minTakeoffWeight existe, l'utiliser
+              if (light.weights?.minTakeoffWeight) {
+                light.minTakeoffWeight = parseFloat(light.weights.minTakeoffWeight);
+              }
+              // Sinon, utiliser emptyWeight comme valeur minimale
+              else if (light.emptyWeight) {
+                light.minTakeoffWeight = light.emptyWeight;
+              }
+              // Dernière option : valeur par défaut
+              else {
+                light.minTakeoffWeight = 600;
+              }
+              console.log(`✅ [AircraftProvider] Set minTakeoffWeight for ${light.registration}: ${light.minTakeoffWeight} kg`);
+            }
+
+            // 🔧 FIX CRITIQUE: Créer weightBalance depuis arms si manquant
+            // Les anciens avions ont arms mais pas weightBalance
+            // Le code WeightBalanceStore vérifie weightBalance.emptyWeightArm et weightBalance.cgLimits
+            if (light.arms && (!light.weightBalance || !light.weightBalance.emptyWeightArm)) {
+              const parseOrNull = (value) => {
+                if (!value || value === '' || value === '0') return null;
+                const parsed = parseFloat(value);
+                return isNaN(parsed) ? null : parsed;
+              };
+
+              light.weightBalance = {
+                frontLeftSeatArm: parseOrNull(light.arms.frontSeats) || parseOrNull(light.arms.frontSeat),
+                frontRightSeatArm: parseOrNull(light.arms.frontSeats) || parseOrNull(light.arms.frontSeat),
+                rearLeftSeatArm: parseOrNull(light.arms.rearSeats) || parseOrNull(light.arms.rearSeat),
+                rearRightSeatArm: parseOrNull(light.arms.rearSeats) || parseOrNull(light.arms.rearSeat),
+                fuelArm: parseOrNull(light.arms.fuelMain) || parseOrNull(light.arms.fuel),
+                emptyWeightArm: parseOrNull(light.arms.empty),
+                baggageArm: parseOrNull(light.arms.baggage) || 3.50,
+                auxiliaryArm: parseOrNull(light.arms.auxiliaryBaggage) || 3.70,
+                cgLimits: (() => {
+                  // Vérifier si cgLimits existe et est valide
+                  const hasValidCgLimits = light.cgLimits &&
+                    light.cgLimits.forward !== '' &&
+                    light.cgLimits.aft !== '';
+
+                  if (hasValidCgLimits) {
+                    return light.cgLimits;
+                  }
+
+                  // Utiliser cgEnvelope comme fallback
+                  if (light.cgEnvelope) {
+                    return {
+                      forward: parseOrNull(light.cgEnvelope.forwardPoints?.[0]?.cg),
+                      aft: parseOrNull(light.cgEnvelope.aftCG),
+                      forwardVariable: light.cgEnvelope.forwardPoints || []
+                    };
+                  }
+
+                  // Dernier fallback
+                  return {
+                    forward: null,
+                    aft: null,
+                    forwardVariable: []
+                  };
+                })()
+              };
+              console.log(`✅ [AircraftProvider] Created weightBalance from arms for ${light.registration}`);
+            }
+
+            return light;
+          });
+
+          console.log('✅ [AircraftProvider] Métadonnées légères chargées depuis IndexedDB:', {
+            count: lightAircraft.length,
+            registrations: lightAircraft.map(a => a.registration)
+          });
+
+          // 🔧 NE PAS CONVERTIR ICI : Les données restent en STORAGE units
+          // La conversion vers USER units se fera automatiquement via useUnits().format()
+          // lors de l'affichage dans les composants
+          console.log('📦 [AircraftProvider] Avions chargés en STORAGE units (ltr/lph/kg/kt):', {
+            count: lightAircraft.length,
+            note: 'Conversion → USER units faite par format() lors de l\'affichage'
+          });
+
+          // Charger les avions dans le store (en STORAGE units)
+          useAircraftStore.setState({
+            aircraftList: lightAircraft,
+            isInitialized: true,
+            selectedAircraftId: null
+          });
+
+        } catch (error) {
+          console.error('❌ [AircraftProvider] Erreur chargement IndexedDB:', error);
+          // Marquer comme initialisé même en cas d'erreur
+          useAircraftStore.setState({
+            isInitialized: true,
+            aircraftList: [],
+            selectedAircraftId: null
+          });
+        }
+
+        console.log('ℹ️ [AircraftProvider] Chargement Supabase DÉSACTIVÉ - Utilisez le wizard pour créer des avions');
+      };
+
+      loadFromIndexedDB();
     }
-  }, [isInitialized, loadFromSupabase]);
+  }, [isInitialized]);
   
   // Wrapper pour debugger les appels addAircraft
   const debugAddAircraft = useCallback(async (aircraft) => {
-    //     //     //     
+    console.log('🔧 [AircraftProvider.debugAddAircraft] Appel addAircraft');
     try {
       const result = await addAircraft(aircraft);
-      //       return result;
+      console.log('✅ [AircraftProvider.debugAddAircraft] Résultat:', {
+        id: result?.id,
+        registration: result?.registration,
+        hasResult: !!result
+      });
+      return result;
     } catch (error) {
       console.error('❌ AircraftProvider - addAircraft error:', error);
       throw error;
@@ -231,10 +403,10 @@ export const WeightBalanceProvider = memo(({ children }) => {
   const updateLoad = useWeightBalanceStore(state => state.updateLoad);
   const updateFuelLoad = useWeightBalanceStore(state => state.updateFuelLoad);
   const calculateWeightBalance = useWeightBalanceStore(state => state.calculateWeightBalance);
-  
+
   const { selectedAircraft } = useAircraft();
   const { fobFuel } = useFuel();
-  
+
   // Mise à jour du poids du carburant
   React.useEffect(() => {
     if (selectedAircraft && fobFuel?.ltr) {
@@ -242,24 +414,30 @@ export const WeightBalanceProvider = memo(({ children }) => {
       updateFuelLoad(fobFuel.ltr, fuelDensity);
     }
   }, [selectedAircraft, fobFuel?.ltr, updateFuelLoad]);
-  
-  // Extraire les valeurs individuelles des loads pour les dépendances
-  const { frontLeft, frontRight, rearLeft, rearRight, baggage, auxiliary, fuel } = loads;
-  
-  // Calculs mémorisés avec dépendances correctes
+
+  // 🔧 FIX: Créer une chaîne de dépendance incluant TOUS les chargements (dynamiques inclus)
+  // Cette approche garantit que les changements des compartiments bagages dynamiques
+  // (baggage_0, baggage_1, etc.) déclenchent bien le recalcul
+  const loadsSignature = useMemo(() => {
+    return JSON.stringify(loads);
+  }, [loads]);
+
+  // Calculs mémorisés avec dépendances correctes incluant loadsSignature
   const calculations = useMemo(() => {
     if (!selectedAircraft) return null;
-    
+
+    console.log('🔄 [WeightBalanceProvider] Recalcul avec loads:', loads);
     return calculateWeightBalance(selectedAircraft, fobFuel);
-  }, [selectedAircraft, frontLeft, frontRight, rearLeft, rearRight, baggage, auxiliary, fuel, fobFuel, calculateWeightBalance]);
+  }, [selectedAircraft, loadsSignature, fobFuel, calculateWeightBalance]);
 
   const value = useMemo(() => ({
     loads,
     setLoads,
     updateLoad,
+    updateFuelLoad,
     calculations,
     isWithinLimits: calculations?.isWithinLimits || false
-  }), [loads, setLoads, updateLoad, calculations]);
+  }), [loads, setLoads, updateLoad, updateFuelLoad, calculations]);
 
   return <WeightBalanceContext.Provider value={value}>{children}</WeightBalanceContext.Provider>;
 });

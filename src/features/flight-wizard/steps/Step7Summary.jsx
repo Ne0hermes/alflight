@@ -1,143 +1,152 @@
-import React, { useMemo } from 'react';
-import { MapContainer, TileLayer, Circle, CircleMarker, Popup, useMap } from 'react-leaflet';
-import { FileText, CheckCircle, Map } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { FileText, CheckCircle, Fuel, Navigation, Table } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import RouteMapView from '../components/RouteMapView';
-import { useNavigation } from '@core/contexts';
-import 'leaflet/dist/leaflet.css';
-
-/**
- * Composant de carte affichant les rayons d'action
- */
-const ActionRadiusMap = ({ waypoints, maxRadiusKM, roundTripRadiusKM }) => {
-  // Trouver l'aérodrome de départ
-  const departure = waypoints.find(wp => wp.type === 'departure');
-
-  if (!departure || !departure.lat || !departure.lon) {
-    return (
-      <div style={{
-        height: '400px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#f9fafb',
-        borderRadius: '6px',
-        color: '#6b7280',
-        fontSize: '14px'
-      }}>
-        📍 Aucun aérodrome de départ défini
-      </div>
-    );
-  }
-
-  const centerPosition = [departure.lat, departure.lon];
-
-  return (
-    <div style={{ height: '400px', width: '100%', borderRadius: '6px', overflow: 'hidden', border: '1px solid #ddd' }}>
-      <MapContainer
-        center={centerPosition}
-        zoom={7}
-        style={{ height: '100%', width: '100%' }}
-        scrollWheelZoom={true}
-        zoomControl={false}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-
-        {/* Cercle bleu : distance maximale (aller simple) */}
-        <Circle
-          center={centerPosition}
-          radius={maxRadiusKM * 1000} // Convertir km en mètres
-          pathOptions={{
-            color: '#1e40af',
-            fillColor: '#1e40af',
-            fillOpacity: 0.1,
-            weight: 2,
-            dashArray: '5, 5'
-          }}
-        >
-          <Popup>
-            <div style={{ padding: '4px' }}>
-              <strong style={{ fontSize: '13px', color: '#1e40af' }}>
-                🔵 Distance maximale (aller simple)
-              </strong>
-              <div style={{ fontSize: '12px', marginTop: '4px', color: '#6b7280' }}>
-                Rayon: {(maxRadiusKM * 0.539957).toFixed(0)} NM ({maxRadiusKM.toFixed(0)} km)
-              </div>
-            </div>
-          </Popup>
-        </Circle>
-
-        {/* Cercle vert : distance maximale (aller-retour) */}
-        <Circle
-          center={centerPosition}
-          radius={roundTripRadiusKM * 1000} // Convertir km en mètres
-          pathOptions={{
-            color: '#16a34a',
-            fillColor: '#16a34a',
-            fillOpacity: 0.15,
-            weight: 2
-          }}
-        >
-          <Popup>
-            <div style={{ padding: '4px' }}>
-              <strong style={{ fontSize: '13px', color: '#16a34a' }}>
-                🟢 Distance maximale (aller-retour)
-              </strong>
-              <div style={{ fontSize: '12px', marginTop: '4px', color: '#6b7280' }}>
-                Rayon: {(roundTripRadiusKM * 0.539957).toFixed(0)} NM ({roundTripRadiusKM.toFixed(0)} km)
-              </div>
-            </div>
-          </Popup>
-        </Circle>
-
-        {/* Marqueur de l'aérodrome de départ */}
-        <CircleMarker
-          center={centerPosition}
-          radius={8}
-          pathOptions={{
-            color: '#93163c',
-            fillColor: '#93163c',
-            fillOpacity: 1,
-            weight: 2
-          }}
-        >
-          <Popup>
-            <div style={{ padding: '4px' }}>
-              <strong style={{ fontSize: '13px' }}>
-                🛫 {departure.icao || departure.name || 'Départ'}
-              </strong>
-              <div style={{ fontSize: '11px', marginTop: '4px', color: '#6b7280' }}>
-                Centre des rayons d'action
-              </div>
-            </div>
-          </Popup>
-        </CircleMarker>
-      </MapContainer>
-    </div>
-  );
-};
+import { useNavigation, useAircraft } from '@core/contexts';
+import VFRNavigationTable from '@features/navigation/components/VFRNavigationTable';
+import { useNavigationResults } from '@features/navigation/hooks/useNavigationResults';
+import { useUnits } from '@hooks/useUnits';
+import { useFuelStore } from '@core/stores/fuelStore';
+import { useWeatherStore } from '@core/stores/weatherStore';
+import { calculateAeronauticalNight, formatTime as formatSunTime } from '@services/dayNightCalculator';
 
 /**
  * Étape 7 : Synthèse du vol
  */
 export const Step7Summary = ({ flightPlan, onUpdate }) => {
   const summary = flightPlan.generateSummary();
-  const { waypoints } = useNavigation();
+  const { waypoints, segmentAltitudes, setSegmentAltitude } = useNavigation();
+  const { selectedAircraft } = useAircraft();
+  const { format } = useUnits();
+
+  // State pour le temps de départ théorique
+  const [departureTimeTheoretical, setDepartureTimeTheoretical] = useState('');
+
+  // States pour TOD (Top of Descent)
+  const [descentRate, setDescentRate] = useState(500); // ft/min
+  const [targetAltitude, setTargetAltitude] = useState(0); // ft
+
+  // Altitude planifiée par défaut (définie avant todCalculation pour éviter erreur d'initialisation)
+  const plannedAltitude = 3000;
+
+  // Initialiser l'altitude cible basée sur le terrain de destination + 1000 ft
+  React.useEffect(() => {
+    if (waypoints && waypoints.length >= 2) {
+      const lastWaypoint = waypoints[waypoints.length - 1];
+      const terrainElevation = lastWaypoint.elevation || 0;
+      // Initialiser seulement si pas encore défini
+      if (targetAltitude === 0) {
+        setTargetAltitude(terrainElevation + 1000);
+      }
+    }
+  }, [waypoints, targetAltitude]);
+
+  // 🌅 Calculer les heures de nuit aéronautique pour l'aérodrome de départ
+  const sunTimes = useMemo(() => {
+    if (!waypoints || waypoints.length === 0) return null;
+
+    const departureWaypoint = waypoints[0];
+    if (!departureWaypoint.lat || !departureWaypoint.lon) return null;
+
+    const date = flightPlan.generalInfo.date ? new Date(flightPlan.generalInfo.date) : new Date();
+    return calculateAeronauticalNight(departureWaypoint.lat, departureWaypoint.lon, date);
+  }, [waypoints, flightPlan.generalInfo.date]);
+
+  // 📐 Calcul du TOD (Top of Descent) pour l'arrivée
+  const todCalculation = useMemo(() => {
+    if (!waypoints || waypoints.length < 2) return null;
+
+    const lastWaypoint = waypoints[waypoints.length - 1];
+    const secondLastWaypoint = waypoints[waypoints.length - 2];
+
+    // Élévation du terrain de destination
+    const terrainElevation = lastWaypoint.elevation || 0;
+
+    // Altitude de croisière (depuis le dernier segment ou plannedAltitude)
+    const lastSegmentId = `${secondLastWaypoint.id}-${lastWaypoint.id}`;
+    const cruiseAltitude = segmentAltitudes[lastSegmentId]?.startAlt || plannedAltitude;
+
+    // Descente totale (utilise l'altitude cible modifiable)
+    const altitudeToDescent = cruiseAltitude - targetAltitude;
+
+    // Si pas de descente nécessaire
+    if (altitudeToDescent <= 0) {
+      return null; // Pas de TOD à afficher
+    }
+
+    // Paramètres (utilise le taux de descente modifiable)
+    const groundSpeed = selectedAircraft?.cruiseSpeedKt || 120; // kt
+
+    // Calculs
+    const descentTimeMinutes = altitudeToDescent / descentRate;
+    const groundSpeedNmPerMin = groundSpeed / 60;
+    const distanceToTod = descentTimeMinutes * groundSpeedNmPerMin;
+    const descentAngle = Math.atan((altitudeToDescent / 6076.12) / distanceToTod) * 180 / Math.PI;
+
+    return {
+      distanceToTod: distanceToTod.toFixed(1),
+      descentTime: Math.round(descentTimeMinutes),
+      descentAngle: descentAngle.toFixed(1),
+      cruiseAltitude,
+      arrivalElevation: terrainElevation,
+      patternAltitude: targetAltitude,
+      altitudeToDescent,
+      descentRate,
+      groundSpeed,
+      arrivalAerodrome: lastWaypoint.icao || lastWaypoint.name || 'Destination'
+    };
+  }, [waypoints, segmentAltitudes, selectedAircraft, descentRate, targetAltitude, plannedAltitude]);
+
+  // Récupérer les informations du pilote depuis localStorage
+  const pilotProfile = JSON.parse(localStorage.getItem('pilotProfile') || '{}');
+  const pilotName = pilotProfile.firstName && pilotProfile.lastName
+    ? `${pilotProfile.firstName} ${pilotProfile.lastName}`
+    : 'Non renseigné';
+
+  // Récupérer les données de carburant depuis le store
+  const { fuelData, fobFuel, calculateTotal } = useFuelStore();
+
+  // Récupérer les données météo depuis le store
+  const weatherData = useWeatherStore(state => state.weatherData || {});
+
+  // Données pour le tableau de navigation VFR (provenant de l'étape 2)
+  const flightType = flightPlan.generalInfo.flightType || 'VFR';
+  const navigationResults = useNavigationResults(waypoints, flightType, selectedAircraft);
+
+  // Calculer les vraies valeurs de carburant
+  const fuelInfo = useMemo(() => {
+    const totalRequired = calculateTotal('ltr');
+    const totalConfirmed = fobFuel.ltr || 0;
+    const reserveFuel = fuelData.finalReserve.ltr || 0;
+
+    // Déterminer le temps de réserve selon le type de vol
+    const reserveTime = flightPlan.generalInfo.flightType === 'VFR' ? '30min' : '45min';
+
+    return {
+      required: totalRequired,
+      reserve: reserveFuel,
+      reserveTime: reserveTime,
+      confirmed: totalConfirmed
+    };
+  }, [fuelData, fobFuel, calculateTotal, flightPlan.generalInfo.flightType]);
 
   // Calculer les rayons d'action basés sur le carburant
   const actionRadii = useMemo(() => {
     // Carburant utilisable (confirmé - réserve)
-    const usableFuel = (flightPlan.fuel.confirmed || 0) - (flightPlan.fuel.reserve || 0);
+    const usableFuel = (fuelInfo.confirmed || 0) - (fuelInfo.reserve || 0);
+
+    // 🔧 FIX: Carburant disponible pour le rayon d'action
+    // = Carburant utilisable - Roulage - Contingence
+    const taxiFuel = fuelData?.roulage?.ltr || 0;
+    const contingencyFuel = fuelData?.contingency?.ltr || 0;
+    const fuelForRange = Math.max(0, usableFuel - taxiFuel - contingencyFuel);
 
     // Consommation et vitesse de l'avion
     const fuelConsumption = flightPlan.aircraft.fuelConsumption || 40; // L/h
-    const cruiseSpeed = flightPlan.aircraft.cruiseSpeed || 120; // kt
+    const cruiseSpeed = flightPlan.aircraft.cruiseSpeedKt || 120; // kt
 
-    // Autonomie avec carburant utilisable (heures)
-    const endurance = usableFuel / fuelConsumption;
+    // Autonomie avec carburant disponible pour le vol (heures)
+    const endurance = fuelForRange / fuelConsumption;
 
     // Rayon maximum (distance simple)
     const maxRadiusNM = endurance * cruiseSpeed;
@@ -149,13 +158,14 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
     return {
       usableFuel,
+      fuelForRange,
       endurance,
       maxRadiusNM,
       maxRadiusKM,
       roundTripRadiusNM,
       roundTripRadiusKM
     };
-  }, [flightPlan.fuel, flightPlan.aircraft]);
+  }, [fuelInfo, fuelData, flightPlan.aircraft]);
 
   return (
     <div style={styles.container}>
@@ -172,163 +182,651 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
         </h4>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {/* Informations générales */}
+          {/* Date, Pilote, Aéronef, Vol */}
           <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
-            <h5 style={{ fontSize: '14px', color: theme.colors.textSecondary, marginBottom: '8px' }}>
-              Vol
-            </h5>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div>{flightPlan.generalInfo.callsign} - {flightPlan.generalInfo.flightType}</div>
-              <div>{flightPlan.generalInfo.dayNight === 'day' ? 'Jour' : 'Nuit'} - {flightPlan.generalInfo.flightNature === 'local' ? 'Local' : 'Navigation'}</div>
+            <div style={{ fontSize: '14px', fontWeight: '500' }}>
+              <strong style={{ fontWeight: '600' }}>
+                {new Date(flightPlan.generalInfo.date).toLocaleDateString('fr-FR', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric'
+                })}
+              </strong>
+              <span> | </span>
+              <strong style={{ fontWeight: '600' }}>{pilotName}</strong>
+              <span> | </span>
+              <span>{flightPlan.generalInfo.flightType} {flightPlan.generalInfo.dayNight === 'day' ? 'Jour' : 'Nuit'} - {flightPlan.generalInfo.flightNature === 'local' ? 'Local' : 'Navigation'}</span>
             </div>
           </div>
 
-          {/* Route */}
+          {/* Route détaillée avec tous les waypoints */}
           <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
-            <h5 style={{ fontSize: '14px', color: theme.colors.textSecondary, marginBottom: '8px' }}>
-              Trajet
-            </h5>
-            <div>{flightPlan.route.departure.icao} → {flightPlan.route.arrival.icao}</div>
-            {flightPlan.alternates.length > 0 && (
-              <div style={{ fontSize: '12px', color: theme.colors.textMuted }}>
-                Déroutement: {flightPlan.alternates.map(a => a.icao).join(', ')}
-              </div>
-            )}
+            <div style={{ fontSize: '14px' }}>
+              <span style={{ color: theme.colors.textSecondary }}>Trajet complet: </span>
+              {/* Afficher tous les waypoints */}
+              {waypoints.length > 0 ? (
+                <>
+                  <span style={{ fontWeight: '500' }}>
+                    {waypoints.map((wp, index) => (
+                      <span key={index}>
+                        <span style={{
+                          color: wp.type === 'departure' ? '#10b981' : wp.type === 'arrival' ? '#ef4444' : theme.colors.textPrimary,
+                          fontWeight: wp.type === 'departure' || wp.type === 'arrival' ? '600' : '500'
+                        }}>
+                          {wp.name || wp.icao}
+                        </span>
+                        {index < waypoints.length - 1 && (
+                          <span style={{ margin: '0 4px', color: '#6b7280' }}>→</span>
+                        )}
+                      </span>
+                    ))}
+                  </span>
+                  {navigationResults?.totalDistance > 0 && (
+                    <span style={{
+                      marginLeft: '8px',
+                      fontSize: '13px',
+                      color: '#f59e0b',
+                      fontWeight: '600'
+                    }}>
+                      ({format(navigationResults.totalDistance, 'distance', 0)})
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span style={{ fontWeight: '500' }}>
+                  {flightPlan.route.departure.icao} → {flightPlan.route.arrival.icao}
+                </span>
+              )}
+              {flightPlan.alternates.length > 0 && (
+                <span style={{
+                  fontSize: '13px',
+                  color: theme.colors.textMuted,
+                  marginLeft: '8px',
+                  fontStyle: 'italic'
+                }}>
+                  (Déroutement: {flightPlan.alternates.map(a => a.icao).join(', ')})
+                </span>
+              )}
+            </div>
           </div>
 
-          {/* Aéronef et carburant */}
+          {/* Temps de départ théorique + Heures nuit aéronautique */}
           <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
-            <h5 style={{ fontSize: '14px', color: theme.colors.textSecondary, marginBottom: '8px' }}>
-              Aéronef
-            </h5>
-            <div>{flightPlan.aircraft.registration} - {flightPlan.aircraft.type}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'nowrap' }}>
+              {/* Label */}
+              <span style={{ fontSize: '14px', color: theme.colors.textSecondary, whiteSpace: 'nowrap' }}>
+                ⏰ Temps de départ théorique:
+              </span>
 
-            {/* Détails carburant */}
-            <div style={{
-              marginTop: '8px',
-              padding: '8px',
-              backgroundColor: 'rgba(59, 130, 246, 0.1)',
-              borderRadius: '6px',
-              fontSize: '13px'
-            }}>
-              <div style={{ fontWeight: '600', color: theme.colors.primary, marginBottom: '4px' }}>
-                ⛽ Carburant
-              </div>
-              <div style={{ fontSize: '12px', color: theme.colors.textMuted }}>
-                Requis: {flightPlan.fuel.required || 0}L |
-                Réserve: {flightPlan.fuel.reserveTime || '30min'} ({flightPlan.fuel.reserve || 0}L) |
-                Total: <strong>{flightPlan.fuel.confirmed || 0}L</strong>
+              {/* Input */}
+              <input
+                type="time"
+                value={departureTimeTheoretical}
+                onChange={(e) => setDepartureTimeTheoretical(e.target.value)}
+                style={{
+                  padding: '4px 6px',
+                  border: '2px solid #3b82f6',
+                  borderRadius: '4px',
+                  fontSize: '13px',
+                  fontWeight: 'bold',
+                  backgroundColor: 'white',
+                  width: '85px',
+                  flexShrink: 0
+                }}
+              />
+
+              {/* Badge heures de nuit aéronautique */}
+              {sunTimes && (
+                <div style={{
+                  display: 'flex',
+                  gap: '12px',
+                  fontSize: '11px',
+                  color: '#78350f',
+                  backgroundColor: '#fef3c7',
+                  padding: '4px 10px',
+                  borderRadius: '4px',
+                  border: '1px solid #f59e0b',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0
+                }}>
+                  <span style={{ whiteSpace: 'nowrap' }}>
+                    🌅 <strong>Coucher:</strong> {formatSunTime(sunTimes.sunset)}
+                  </span>
+                  <span style={{ whiteSpace: 'nowrap' }}>
+                    🌙 <strong>Nuit:</strong> {formatSunTime(sunTimes.nightStart)}
+                  </span>
+                  <span style={{ whiteSpace: 'nowrap' }}>
+                    🌄 <strong>Lever:</strong> {formatSunTime(sunTimes.sunrise)}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Section Informations Avion */}
+      <div style={{ ...styles.card, marginTop: '24px', backgroundColor: 'rgba(16, 185, 129, 0.05)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+          <CheckCircle size={20} style={{ color: theme.colors.primary }} />
+          <h4 style={{ fontSize: '16px', color: theme.colors.primary, margin: 0 }}>
+            {flightPlan.aircraft.registration} {flightPlan.aircraft.type || flightPlan.aircraft.model ? `(${flightPlan.aircraft.type || flightPlan.aircraft.model})` : ''}
+          </h4>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {/* Équipements SAR */}
+          <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+              <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                Équipements SAR:
+              </span>
+              <div style={{ fontSize: '14px', textAlign: 'right', flex: '1 1 auto', minWidth: '200px' }}>
+                {(() => {
+                  // Lire les équipements SAR depuis aircraft.approvedOperations
+                  const ops = flightPlan.aircraft.approvedOperations || {};
+                  const survEquip = flightPlan.aircraft.equipmentSurv || {};
+
+                  // Collecter les équipements SAR cochés
+                  const sarEquipment = [];
+
+                  // ELT (via transponder mode ou explicite)
+                  if (survEquip.transponderMode) {
+                    sarEquipment.push(`ELT (${survEquip.transponderMode})`);
+                  }
+
+                  // Canot de sauvetage
+                  if (ops.lifeRaft) {
+                    sarEquipment.push('Canot');
+                  }
+
+                  // Kit de survie
+                  if (ops.survivalKit) {
+                    sarEquipment.push('Kit survie');
+                  }
+
+                  // PLB (Personal Locator Beacon)
+                  if (ops.plb) {
+                    sarEquipment.push('PLB');
+                  }
+
+                  // Radio de survie
+                  if (ops.survivalRadio) {
+                    sarEquipment.push('Radio survie');
+                  }
+
+                  // Trousse premiers secours
+                  if (ops.firstAidKit) {
+                    sarEquipment.push('Trousse secours');
+                  }
+
+                  // Extincteur
+                  if (ops.fireExtinguisherPowder) {
+                    sarEquipment.push('Extincteur');
+                  }
+
+                  // Fusées de détresse
+                  if (ops.flares) {
+                    sarEquipment.push('Fusées détresse');
+                  }
+
+                  // Miroir de signalisation
+                  if (ops.signalMirror) {
+                    sarEquipment.push('Miroir');
+                  }
+
+                  // Vêtements de survie
+                  if (ops.survivalClothing) {
+                    sarEquipment.push('Vêtements survie');
+                  }
+
+                  // Bouteilles d'oxygène
+                  if (ops.oxygenBottles) {
+                    sarEquipment.push('O₂');
+                  }
+
+                  if (sarEquipment.length > 0) {
+                    return <strong style={{ fontWeight: '600' }}>{sarEquipment.join(' • ')}</strong>;
+                  }
+
+                  // Pas de données SAR
+                  return <span style={{ color: '#f59e0b', fontStyle: 'italic' }}>Non renseignés</span>;
+                })()}
               </div>
             </div>
           </div>
 
-          {/* Masse et centrage */}
-          <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
-            <h5 style={{ fontSize: '14px', color: theme.colors.textSecondary, marginBottom: '8px' }}>
-              Masse et centrage
-            </h5>
-            <div>Masse décollage: {flightPlan.weightBalance.takeoffWeight} kg</div>
-            <div style={{
-              fontSize: '14px',
-              color: flightPlan.weightBalance.withinLimits ? theme.colors.success : theme.colors.error,
-              fontWeight: '600'
-            }}>
-              {flightPlan.weightBalance.withinLimits ? '✓ Dans les limites' : '✗ Hors limites'}
+          {/* Vitesse de croisière */}
+          {selectedAircraft?.cruiseSpeedKt && (
+            <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                  Vitesse de croisière:
+                </span>
+                <strong style={{ fontSize: '15px' }}>
+                  {format(selectedAircraft.cruiseSpeedKt, 'speed', 0)}
+                </strong>
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* TOD (Top of Descent) */}
-          {flightPlan.todParameters && flightPlan.todParameters.distanceToTod > 0 && (
+          {/* Facteur de base */}
+          {selectedAircraft?.baseFactor && (
+            <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                  Facteur de base:
+                </span>
+                <strong style={{ fontSize: '15px' }}>
+                  {parseFloat(selectedAircraft.baseFactor).toFixed(3)}
+                </strong>
+              </div>
+            </div>
+          )}
+
+          {/* Volume réservoir */}
+          {selectedAircraft?.fuelCapacity && (
+            <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                  Volume réservoir:
+                </span>
+                <strong style={{ fontSize: '15px' }}>
+                  {format(selectedAircraft.fuelCapacity, 'fuel', 1)}
+                </strong>
+              </div>
+            </div>
+          )}
+
+          {/* Consommation moyenne */}
+          {selectedAircraft?.fuelConsumption && (
+            <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                  Consommation moyenne:
+                </span>
+                <strong style={{ fontSize: '15px' }}>
+                  {format(selectedAircraft.fuelConsumption, 'fuelConsumption', 1)}
+                </strong>
+              </div>
+            </div>
+          )}
+
+          {/* Type de carburant */}
+          {selectedAircraft?.fuelType && (
             <div>
-              <h5 style={{ fontSize: '14px', color: theme.colors.textSecondary, marginBottom: '8px' }}>
-                Top of Descent (TOD)
-              </h5>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <div>
-                  <span style={{ fontWeight: '600', color: theme.colors.warning }}>
-                    TOD à {flightPlan.todParameters.distanceToTod} NM
-                  </span> de l'arrivée
-                </div>
-                <div style={{ fontSize: '12px', color: theme.colors.textMuted }}>
-                  Altitude: {flightPlan.todParameters.cruiseAltitude} ft → {flightPlan.todParameters.arrivalElevation + flightPlan.todParameters.patternAltitude} ft
-                </div>
-                <div style={{ fontSize: '12px', color: theme.colors.textMuted }}>
-                  Descente: {flightPlan.todParameters.descentRate} ft/min • {flightPlan.todParameters.descentTime} min • {flightPlan.todParameters.descentAngle}°
-                </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                  Type de carburant:
+                </span>
+                <strong style={{ fontSize: '15px' }}>
+                  {selectedAircraft.fuelType}
+                </strong>
               </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Carte des rayons d'action basés sur le carburant */}
-      {actionRadii.usableFuel > 0 && waypoints.length > 0 && (
-        <div style={{ ...styles.card, marginTop: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-            <Map size={20} style={{ color: theme.colors.primary }} />
-            <h4 style={{ fontSize: '16px', color: theme.colors.primary, margin: 0 }}>
-              Rayons d'action
-            </h4>
-          </div>
+      {/* Section Météo (METAR) - Séparée */}
+      {(() => {
+        // Récupérer les codes ICAO de départ et arrivée
+        const departureIcao = waypoints[0]?.icao?.toUpperCase();
+        const arrivalIcao = waypoints[waypoints.length - 1]?.icao?.toUpperCase();
 
-          {/* Informations sur les rayons */}
-          <div style={{
-            padding: '12px',
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            borderRadius: '6px',
-            marginBottom: '16px',
-            fontSize: '13px'
-          }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontWeight: '600', color: theme.colors.textSecondary }}>
-                  ⛽ Carburant utilisable :
-                </span>
-                <span style={{ color: theme.colors.primary, fontWeight: '700' }}>
-                  {actionRadii.usableFuel.toFixed(1)} L
-                </span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontWeight: '600', color: theme.colors.textSecondary }}>
-                  ⏱️ Autonomie :
-                </span>
-                <span style={{ color: theme.colors.primary, fontWeight: '700' }}>
-                  {(actionRadii.endurance * 60).toFixed(0)} minutes ({actionRadii.endurance.toFixed(1)}h)
-                </span>
-              </div>
-              <div style={{
-                paddingTop: '8px',
-                borderTop: '1px solid rgba(59, 130, 246, 0.3)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '6px'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontWeight: '600', color: theme.colors.textSecondary }}>
-                    🔵 Distance maximale (aller simple) :
-                  </span>
-                  <span style={{ color: '#1e40af', fontWeight: '700' }}>
-                    {actionRadii.maxRadiusNM.toFixed(0)} NM ({actionRadii.maxRadiusKM.toFixed(0)} km)
-                  </span>
+        // Vérifier s'il y a des données météo
+        const hasWeatherData = (departureIcao && weatherData[departureIcao]?.metar?.raw) ||
+                               (arrivalIcao && arrivalIcao !== departureIcao && weatherData[arrivalIcao]?.metar?.raw);
+
+        if (!hasWeatherData) {
+          return null; // Ne rien afficher si pas de données météo
+        }
+
+        return (
+          <div style={{ ...styles.card, marginTop: '24px', backgroundColor: 'rgba(59, 130, 246, 0.05)' }}>
+            <h4 style={{ fontSize: '16px', color: theme.colors.primary, marginBottom: '16px' }}>
+              Météo (METAR)
+            </h4>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {/* METAR Départ */}
+              {departureIcao && weatherData[departureIcao]?.metar?.raw && (
+                <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
+                  <div style={{ fontSize: '14px', marginBottom: '8px' }}>
+                    <strong style={{ color: '#10b981', fontSize: '15px' }}>{departureIcao}</strong>
+                    <span style={{ marginLeft: '8px', color: theme.colors.textSecondary, fontSize: '13px' }}>
+                      {departureIcao === arrivalIcao ? '(Départ/Arrivée)' : '(Départ)'}
+                    </span>
+                  </div>
+                  <div style={{
+                    fontFamily: 'monospace',
+                    fontSize: '13px',
+                    backgroundColor: '#f9fafb',
+                    padding: '12px',
+                    borderRadius: '6px',
+                    border: '1px solid #e5e7eb',
+                    lineHeight: '1.6',
+                    color: '#1f2937'
+                  }}>
+                    {weatherData[departureIcao].metar.raw}
+                  </div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontWeight: '600', color: theme.colors.textSecondary }}>
-                    🟢 Distance maximale (aller-retour) :
-                  </span>
-                  <span style={{ color: '#16a34a', fontWeight: '700' }}>
-                    {actionRadii.roundTripRadiusNM.toFixed(0)} NM ({actionRadii.roundTripRadiusKM.toFixed(0)} km)
-                  </span>
+              )}
+
+              {/* METAR Arrivée (si différent du départ) */}
+              {arrivalIcao && arrivalIcao !== departureIcao && weatherData[arrivalIcao]?.metar?.raw && (
+                <div>
+                  <div style={{ fontSize: '14px', marginBottom: '8px' }}>
+                    <strong style={{ color: '#ef4444', fontSize: '15px' }}>{arrivalIcao}</strong>
+                    <span style={{ marginLeft: '8px', color: theme.colors.textSecondary, fontSize: '13px' }}>
+                      (Arrivée)
+                    </span>
+                  </div>
+                  <div style={{
+                    fontFamily: 'monospace',
+                    fontSize: '13px',
+                    backgroundColor: '#f9fafb',
+                    padding: '12px',
+                    borderRadius: '6px',
+                    border: '1px solid #e5e7eb',
+                    lineHeight: '1.6',
+                    color: '#1f2937'
+                  }}>
+                    {weatherData[arrivalIcao].metar.raw}
+                  </div>
                 </div>
-              </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Section Bilan Carburant */}
+      <div style={{ ...styles.card, marginTop: '24px', backgroundColor: 'rgba(245, 158, 11, 0.05)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+          <Fuel size={20} style={{ color: theme.colors.primary }} />
+          <h4 style={{ fontSize: '16px', color: theme.colors.primary, margin: 0 }}>
+            Bilan Carburant et Autonomie
+          </h4>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {/* Carburant requis */}
+          <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                Carburant total requis:
+              </span>
+              <strong style={{ fontSize: '15px', color: '#f59e0b' }}>
+                {format(fuelInfo.required, 'fuel', 1)}
+              </strong>
             </div>
           </div>
 
-          {/* Carte avec les cercles de rayon d'action */}
-          <ActionRadiusMap
-            waypoints={waypoints}
-            maxRadiusKM={actionRadii.maxRadiusKM}
-            roundTripRadiusKM={actionRadii.roundTripRadiusKM}
-          />
+          {/* Carburant confirmé (FOB) */}
+          <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                Carburant à bord (FOB):
+              </span>
+              <strong style={{
+                fontSize: '15px',
+                color: fuelInfo.confirmed >= fuelInfo.required ? '#10b981' : '#ef4444'
+              }}>
+                {format(fuelInfo.confirmed, 'fuel', 1)}
+              </strong>
+            </div>
+          </div>
+
+          {/* Détail des composantes */}
+          <div style={{
+            backgroundColor: '#f9fafb',
+            padding: '12px',
+            borderRadius: '6px',
+            fontSize: '13px'
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {/* Carburant trajet */}
+              {fuelData?.trip?.ltr > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: theme.colors.textSecondary }}>• Trajet:</span>
+                  <span style={{ fontWeight: '500' }}>{format(fuelData.trip.ltr, 'fuel', 1)}</span>
+                </div>
+              )}
+
+              {/* Carburant réserve réglementaire */}
+              {fuelData?.finalReserve?.ltr > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: theme.colors.textSecondary }}>• Réserve réglementaire:</span>
+                  <span style={{ fontWeight: '500' }}>{format(fuelData.finalReserve.ltr, 'fuel', 1)}</span>
+                </div>
+              )}
+
+              {/* Carburant déroutement */}
+              {fuelData?.alternate?.ltr > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: theme.colors.textSecondary }}>• Déroutement:</span>
+                  <span style={{ fontWeight: '500' }}>{format(fuelData.alternate.ltr, 'fuel', 1)}</span>
+                </div>
+              )}
+
+              {/* Carburant contingence */}
+              {fuelData?.contingency?.ltr > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: theme.colors.textSecondary }}>• Contingence:</span>
+                  <span style={{ fontWeight: '500' }}>{format(fuelData.contingency.ltr, 'fuel', 1)}</span>
+                </div>
+              )}
+
+              {/* Carburant taxi/roulage */}
+              {fuelData?.roulage?.ltr > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: theme.colors.textSecondary }}>• Roulage:</span>
+                  <span style={{ fontWeight: '500' }}>{format(fuelData.roulage.ltr, 'fuel', 1)}</span>
+                </div>
+              )}
+
+              {/* Carburant additionnel */}
+              {fuelData?.additional?.ltr > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: theme.colors.textSecondary }}>• Additionnel:</span>
+                  <span style={{ fontWeight: '500' }}>{format(fuelData.additional.ltr, 'fuel', 1)}</span>
+                </div>
+              )}
+
+              {/* Carburant extra */}
+              {fuelData?.extra?.ltr > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: theme.colors.textSecondary }}>• Extra:</span>
+                  <span style={{ fontWeight: '500' }}>{format(fuelData.extra.ltr, 'fuel', 1)}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Statut suffisance carburant */}
+          <div style={{
+            padding: '10px 12px',
+            borderRadius: '6px',
+            backgroundColor: fuelInfo.confirmed >= fuelInfo.required ? '#d1fae5' : '#fee2e2',
+            border: `1px solid ${fuelInfo.confirmed >= fuelInfo.required ? '#10b981' : '#ef4444'}`
+          }}>
+            <div style={{ fontSize: '14px', fontWeight: '600', textAlign: 'center', color: fuelInfo.confirmed >= fuelInfo.required ? '#065f46' : '#991b1b' }}>
+              {fuelInfo.confirmed >= fuelInfo.required ?
+                `✓ Carburant suffisant (+${format(fuelInfo.confirmed - fuelInfo.required, 'fuel', 1)} de marge)` :
+                `✗ Carburant insuffisant (${format(fuelInfo.required - fuelInfo.confirmed, 'fuel', 1)} manquant)`
+              }
+            </div>
+          </div>
+
+          {/* Autonomie et rayons d'action */}
+          {actionRadii.fuelForRange > 0 && (
+            <>
+              {/* Carburant pour le vol */}
+              <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                    Carburant pour le vol:
+                  </span>
+                  <div style={{ textAlign: 'right' }}>
+                    <strong style={{ fontSize: '15px' }}>
+                      {format(actionRadii.fuelForRange, 'fuel', 1)}
+                    </strong>
+                    <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>
+                      (hors roulage/contingence)
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Autonomie */}
+              <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                    Autonomie:
+                  </span>
+                  <strong style={{ fontSize: '15px' }}>
+                    {(actionRadii.endurance * 60).toFixed(0)} min ({actionRadii.endurance.toFixed(1)}h)
+                  </strong>
+                </div>
+              </div>
+
+              {/* Distance maximale aller simple */}
+              <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                    Distance maximale (aller simple):
+                  </span>
+                  <strong style={{ fontSize: '15px', color: '#1e40af' }}>
+                    {format(actionRadii.maxRadiusNM, 'distance', 0)}
+                  </strong>
+                </div>
+              </div>
+
+              {/* Distance maximale aller-retour */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                    Distance maximale (aller-retour):
+                  </span>
+                  <strong style={{ fontSize: '15px', color: '#15803d' }}>
+                    {format(actionRadii.roundTripRadiusNM, 'distance', 0)}
+                  </strong>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Section TOD (Top of Descent) - Indépendante */}
+      {todCalculation && (
+        <div style={{ ...styles.card, marginTop: '24px', backgroundColor: 'rgba(251, 146, 60, 0.05)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <Navigation size={20} style={{ color: '#fb923c' }} />
+            <h4 style={{ fontSize: '16px', color: '#fb923c', margin: 0 }}>
+              Top of Descent (TOD) - Arrivée {todCalculation.arrivalAerodrome}
+            </h4>
+          </div>
+
+          {/* Inputs pour ajuster les paramètres TOD */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+            <div>
+              <label style={{ fontSize: '13px', color: theme.colors.textSecondary, display: 'block', marginBottom: '4px' }}>
+                Taux de descente (ft/min)
+              </label>
+              <input
+                type="number"
+                value={descentRate}
+                onChange={(e) => setDescentRate(Number(e.target.value))}
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  fontSize: '14px',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '6px',
+                  backgroundColor: 'white'
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '13px', color: theme.colors.textSecondary, display: 'block', marginBottom: '4px' }}>
+                Altitude cible (ft)
+              </label>
+              <input
+                type="number"
+                value={targetAltitude}
+                onChange={(e) => setTargetAltitude(Number(e.target.value))}
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  fontSize: '14px',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '6px',
+                  backgroundColor: 'white'
+                }}
+              />
+            </div>
+          </div>
+
+          <div style={{ padding: '12px', backgroundColor: 'rgba(251, 146, 60, 0.1)', borderRadius: '6px', border: '1px solid rgba(251, 146, 60, 0.3)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ fontSize: '14px', fontWeight: '500' }}>
+                <span style={{ fontWeight: '600', color: theme.colors.warning }}>
+                  Distance TOD : {todCalculation.distanceToTod} NM
+                </span> avant {todCalculation.arrivalAerodrome}
+              </div>
+              <div style={{ fontSize: '13px', color: theme.colors.textMuted }}>
+                <strong>Paramètres utilisés :</strong>
+              </div>
+              <div style={{ fontSize: '13px', color: theme.colors.textMuted, paddingLeft: '12px' }}>
+                • Altitude croisière : {todCalculation.cruiseAltitude} ft<br />
+                • Altitude terrain : {todCalculation.arrivalElevation} ft<br />
+                • Altitude pattern : {todCalculation.patternAltitude} ft<br />
+                • Descente totale : {todCalculation.altitudeToDescent} ft<br />
+                • Taux de descente : {todCalculation.descentRate} ft/min<br />
+                • Vitesse sol : {todCalculation.groundSpeed} kt<br />
+                • Temps de descente : {todCalculation.descentTime} min<br />
+                • Angle de descente : {todCalculation.descentAngle}°
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Carte statique de navigation avec points VFR */}
+      {waypoints.length > 0 && (
+        <div style={{ ...styles.card, marginTop: '24px', backgroundColor: 'rgba(59, 130, 246, 0.05)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <Navigation size={20} style={{ color: theme.colors.primary }} />
+            <h4 style={{ fontSize: '16px', color: theme.colors.primary, margin: 0 }}>
+              Navigation VFR
+            </h4>
+          </div>
+
+          {/* Carte interactive avec waypoints et points VFR */}
+          <div style={{ marginBottom: '24px' }}>
+            <RouteMapView
+              flightPlan={flightPlan}
+              todCalculation={todCalculation}
+            />
+          </div>
+
+          {/* Tableau de navigation VFR */}
+          {selectedAircraft && waypoints.length >= 2 && (
+            <VFRNavigationTable
+              waypoints={waypoints}
+              selectedAircraft={selectedAircraft}
+              plannedAltitude={plannedAltitude}
+              flightType={flightType}
+              navigationResults={navigationResults}
+              segmentAltitudes={segmentAltitudes}
+              setSegmentAltitude={setSegmentAltitude}
+              departureTimeTheoretical={departureTimeTheoretical}
+              flightDate={flightPlan.generalInfo.date}
+              hideToggleButton={true}
+            />
+          )}
         </div>
       )}
 

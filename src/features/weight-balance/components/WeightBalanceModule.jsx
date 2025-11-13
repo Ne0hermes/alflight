@@ -1,11 +1,10 @@
 // src/features/weight-balance/components/WeightBalanceModule.jsx
 import React, { memo, useMemo, useCallback } from 'react';
 import { useAircraft, useFuel, useWeightBalance, useNavigation } from '@core/contexts';
+import { useUnits } from '@hooks/useUnits';
 import { LoadInput } from './LoadInput';
 import { WeightBalanceChart } from './WeightBalanceChart';
-import { WeightBalanceTable } from './WeightBalanceTable';
 import { ScenarioCards } from './ScenarioCards';
-import { WeightBalanceInfo } from './WeightBalanceInfo';
 import { calculateScenarios } from '../utils/calculations';
 import { sx } from '@shared/styles/styleSystem';
 
@@ -15,6 +14,7 @@ export const WeightBalanceModule = memo(() => {
   const { fobFuel, fuelData } = useFuel();
   const { loads, updateLoad, calculations } = useWeightBalance();
   const { navigationResults } = useNavigation();
+  const { getUnit } = useUnits();
 
   // Log pour déboguer
   console.log('Current loads state:', loads);
@@ -25,8 +25,9 @@ export const WeightBalanceModule = memo(() => {
     if (!selectedAircraft || !calculations || typeof calculations.totalWeight !== 'number' || typeof calculations.totalMoment !== 'number') {
       return null;
     }
-    return calculateScenarios(selectedAircraft, calculations, loads, fobFuel, fuelData);
-  }, [selectedAircraft, calculations, loads, fobFuel, fuelData]);
+    const fuelUnit = getUnit('fuel');
+    return calculateScenarios(selectedAircraft, calculations, loads, fobFuel, fuelData, fuelUnit);
+  }, [selectedAircraft, calculations, loads, fobFuel, fuelData, getUnit]);
 
   // Handler mémorisé pour updateLoad
   const handleLoadChange = useCallback((type, value) => {
@@ -47,19 +48,13 @@ export const WeightBalanceModule = memo(() => {
         onLoadChange={handleLoadChange}
       />
 
-      {/* Tableau récapitulatif */}
-      <WeightBalanceTable
-        aircraft={selectedAircraft}
-        loads={loads}
-        calculations={calculations}
-      />
-
       {/* Scénarios */}
       {scenarios && (
         <ScenarioCards
           scenarios={scenarios}
           fobFuel={fobFuel}
           fuelData={fuelData}
+          aircraft={selectedAircraft}
         />
       )}
 
@@ -68,13 +63,6 @@ export const WeightBalanceModule = memo(() => {
         aircraft={selectedAircraft}
         scenarios={scenarios}
         calculations={calculations}
-      />
-
-      {/* Informations */}
-      <WeightBalanceInfo
-        aircraft={selectedAircraft}
-        fobFuel={fobFuel}
-        fuelData={fuelData}
       />
     </div>
   );

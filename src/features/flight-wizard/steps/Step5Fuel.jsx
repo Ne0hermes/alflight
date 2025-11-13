@@ -24,6 +24,18 @@ const commonStyles = {
   }
 };
 
+// Style pour la carte de réserve réglementaire
+const reserveCardStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '12px',
+  padding: '12px 16px',
+  marginBottom: '20px',
+  borderRadius: '8px',
+  border: `1px solid ${theme.colors.border}`,
+  backgroundColor: 'rgba(59, 130, 246, 0.05)',
+};
+
 // Composant principal de l'étape 5 - Utilise directement le FuelModule complet
 export const Step5Fuel = memo(({ flightPlan, onUpdate }) => {
   // Le FuelModule gère tout en interne via les contextes et stores
@@ -31,6 +43,49 @@ export const Step5Fuel = memo(({ flightPlan, onUpdate }) => {
 
   // Récupérer le FOB (Fuel On Board) depuis le contexte
   const { fobFuel, calculateTotal, setFobFuel } = useFuel();
+
+  // Calculer la réserve réglementaire selon les règles (depuis Step1)
+  const calculateRegulatoryReserve = () => {
+    let regulationReserveMinutes = 30;
+
+    // Nuit = 45 minutes
+    if (flightPlan.generalInfo.dayNight === 'night') {
+      regulationReserveMinutes = 45;
+    }
+
+    // IFR = +15 minutes
+    if (flightPlan.generalInfo.flightType === 'IFR') {
+      regulationReserveMinutes += 15;
+    }
+
+    // Local + Jour = 20 minutes
+    if (flightPlan.generalInfo.flightNature === 'local' && flightPlan.generalInfo.dayNight === 'day') {
+      regulationReserveMinutes = 20;
+    }
+
+    return regulationReserveMinutes;
+  };
+
+  const reserveMinutes = calculateRegulatoryReserve();
+
+  // Description de la réserve
+  const getReserveDescription = () => {
+    const parts = [];
+
+    if (flightPlan.generalInfo.flightType) {
+      parts.push(flightPlan.generalInfo.flightType);
+    }
+
+    if (flightPlan.generalInfo.flightNature) {
+      parts.push(flightPlan.generalInfo.flightNature === 'local' ? 'LOCAL' : 'NAV');
+    }
+
+    if (flightPlan.generalInfo.dayNight) {
+      parts.push(flightPlan.generalInfo.dayNight === 'night' ? 'NUIT' : 'JOUR');
+    }
+
+    return parts.length > 0 ? parts.join(' - ') : 'Complétez les informations de l\'étape 1';
+  };
 
   // 🔧 FIX: Restaurer fobFuel depuis flightPlan au montage
   const hasRestored = React.useRef(false);
@@ -73,6 +128,22 @@ export const Step5Fuel = memo(({ flightPlan, onUpdate }) => {
 
   return (
     <div style={commonStyles.container}>
+      {/* Réserve réglementaire calculée */}
+      <div style={reserveCardStyle}>
+        <Fuel size={16} style={{ color: theme.colors.primary }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '14px', color: theme.colors.textSecondary, fontWeight: '500' }}>
+            Réserve réglementaire :
+          </span>
+          <span style={{ fontSize: '18px', color: theme.colors.primary, fontWeight: '700' }}>
+            {reserveMinutes} min
+          </span>
+          <span style={{ fontSize: '13px', color: theme.colors.textMuted, fontStyle: 'italic' }}>
+            ({getReserveDescription()})
+          </span>
+        </div>
+      </div>
+
       {/* Module de carburant complet - le titre est affiché par le module */}
       <FuelModule />
     </div>

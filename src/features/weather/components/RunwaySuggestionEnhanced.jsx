@@ -46,7 +46,7 @@ const getCrosswindSide = (windDirection, runwayHeading) => {
   return diff > 0 ? 'droite' : 'gauche';
 };
 
-export const RunwaySuggestionEnhanced = memo(({ icao, wind, showCompact = false }) => {
+export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompact = false }) => {
   const [airport, setAirport] = useState(null);
   const [runways, setRunways] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -57,12 +57,22 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, showCompact = false 
   useEffect(() => {
     const loadAirportData = async () => {
       if (!icao) return;
-      
+
+      console.log('🔍 [RunwaySuggestionEnhanced] Chargement pistes pour:', icao);
+
       setLoading(true);
       try {
         // D'abord vérifier si on a des données VAC
+        console.log('🔍 [RunwaySuggestionEnhanced] VAC chart:', {
+          hasVacChart: !!vacChart,
+          hasExtractedData: !!vacChart?.extractedData,
+          hasRunways: !!vacChart?.extractedData?.runways,
+          runwaysCount: vacChart?.extractedData?.runways?.length || 0
+        });
+
         if (vacChart?.extractedData?.runways && vacChart.extractedData.runways.length > 0) {
-                    
+          console.log('✅ [RunwaySuggestionEnhanced] Utilisation des données VAC');
+
           // Convertir le format VAC vers le format attendu
           const vacRunways = vacChart.extractedData.runways.map(rwy => {
             // Extraire les identifiants des seuils (ex: "05/23" -> ["05", "23"])
@@ -94,25 +104,47 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, showCompact = false 
             dataSource: 'vac'
           });
         } else {
+          console.log('⚠️ [RunwaySuggestionEnhanced] Pas de VAC - Essai aeroDataProvider');
+
           // Sinon essayer le provider de données
           const airports = await aeroDataProvider.getAirfields({ icao });
           const airportData = airports.find(a => a.icao === icao);
-          
+
+          console.log('🔍 [RunwaySuggestionEnhanced] aeroDataProvider résultat:', {
+            hasAirportData: !!airportData,
+            hasRunways: !!airportData?.runways,
+            runwaysCount: airportData?.runways?.length || 0,
+            runways: airportData?.runways,
+            airportData: airportData
+          });
+
           if (airportData && airportData.runways && airportData.runways.length > 0) {
+            console.log('✅ [RunwaySuggestionEnhanced] Utilisation données aeroDataProvider');
             setAirport(airportData);
             setRunways(airportData.runways);
           } else {
+            console.log('⚠️ [RunwaySuggestionEnhanced] Pas de données aeroDataProvider - Essai fallback');
+
             // En dernier recours, utiliser les données de secours
             const fallbackRunways = getFallbackRunways(icao);
             const fallbackAirport = getFallbackAirport(icao);
-            
+
+            console.log('🔍 [RunwaySuggestionEnhanced] Fallback résultat:', {
+              hasFallbackRunways: !!fallbackRunways,
+              hasFallbackAirport: !!fallbackAirport
+            });
+
             if (fallbackRunways) {
-                            setRunways(fallbackRunways);
+              console.log('✅ [RunwaySuggestionEnhanced] Utilisation données fallback');
+              setRunways(fallbackRunways);
               setAirport(fallbackAirport || { icao, name: icao, dataSource: 'fallback' });
             } else if (airportData) {
+              console.log('❌ [RunwaySuggestionEnhanced] Aérodrome trouvé mais SANS PISTES');
               // Si on a l'aérodrome mais pas les pistes
               setAirport(airportData);
               setRunways([]);
+            } else {
+              console.log('❌ [RunwaySuggestionEnhanced] AUCUNE DONNÉE disponible pour', icao);
             }
           }
         }
@@ -125,18 +157,13 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, showCompact = false 
     
     loadAirportData();
   }, [icao, vacChart]);
-  
-  if (!wind || wind.direction === 'Calme' || wind.direction === 'Variable') {
-    return (
-      <div style={sx.combine(sx.spacing.mt(3), sx.spacing.pt(3), { borderTop: '1px solid #e5e7eb' })}>
-        <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
-          <Wind size={14} style={{ display: 'inline', marginRight: '4px' }} />
-          Vent calme ou variable - Toutes pistes utilisables
-        </p>
-      </div>
-    );
-  }
-  
+
+  // Détecter vent calme/variable et créer un vent fictif minimal pour l'analyse
+  const isWindCalm = !wind || wind.direction === 'Calme' || wind.direction === 'Variable' || wind.speed < 1;
+  const effectiveWind = isWindCalm
+    ? { direction: 360, speed: 1 }  // Vent fictif 1kt Nord pour afficher le tableau
+    : wind;
+
   if (!runways.length && !loading) {
     return (
       <div style={sx.combine(sx.spacing.mt(3), sx.spacing.pt(3), { borderTop: '1px solid #e5e7eb' })}>
@@ -147,7 +174,7 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, showCompact = false 
       </div>
     );
   }
-  
+
   // Analyser chaque piste par rapport au vent
   const analyzedRunways = [];
   const processedRunways = new Set(); // Pour éviter les doublons
@@ -164,10 +191,10 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, showCompact = false 
         // Analyser le premier seuil
         const baseHeading = runway.qfu || parseInt(baseIdent.replace(/[LRC]/, '')) * 10;
         if (baseIdent && baseHeading !== undefined) {
-          const headwind = calculateHeadwindComponent(wind.direction, wind.speed, baseHeading);
-          const crosswind = calculateCrosswindComponent(wind.direction, wind.speed, baseHeading);
-          const crosswindSide = getCrosswindSide(wind.direction, baseHeading);
-          const angleDiff = calculateAngleDifference(wind.direction, baseHeading);
+          const headwind = calculateHeadwindComponent(effectiveWind.direction, effectiveWind.speed, baseHeading);
+          const crosswind = calculateCrosswindComponent(effectiveWind.direction, effectiveWind.speed, baseHeading);
+          const crosswindSide = getCrosswindSide(effectiveWind.direction, baseHeading);
+          const angleDiff = calculateAngleDifference(effectiveWind.direction, baseHeading);
           
           analyzedRunways.push({
             ident: baseIdent,
@@ -188,10 +215,10 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, showCompact = false 
         // Analyser le seuil opposé
         const oppositeHeading = (baseHeading + 180) % 360;
         if (oppositeIdent && oppositeHeading !== undefined) {
-          const headwind = calculateHeadwindComponent(wind.direction, wind.speed, oppositeHeading);
-          const crosswind = calculateCrosswindComponent(wind.direction, wind.speed, oppositeHeading);
-          const crosswindSide = getCrosswindSide(wind.direction, oppositeHeading);
-          const angleDiff = calculateAngleDifference(wind.direction, oppositeHeading);
+          const headwind = calculateHeadwindComponent(effectiveWind.direction, effectiveWind.speed, oppositeHeading);
+          const crosswind = calculateCrosswindComponent(effectiveWind.direction, effectiveWind.speed, oppositeHeading);
+          const crosswindSide = getCrosswindSide(effectiveWind.direction, oppositeHeading);
+          const angleDiff = calculateAngleDifference(effectiveWind.direction, oppositeHeading);
           
           analyzedRunways.push({
             ident: oppositeIdent,
@@ -219,10 +246,10 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, showCompact = false 
         
         // Analyser le seuil "le" (lower end)
         if (runway.le_ident && runway.le_heading !== undefined) {
-          const headwind = calculateHeadwindComponent(wind.direction, wind.speed, runway.le_heading);
-          const crosswind = calculateCrosswindComponent(wind.direction, wind.speed, runway.le_heading);
-          const crosswindSide = getCrosswindSide(wind.direction, runway.le_heading);
-          const angleDiff = calculateAngleDifference(wind.direction, runway.le_heading);
+          const headwind = calculateHeadwindComponent(effectiveWind.direction, effectiveWind.speed, runway.le_heading);
+          const crosswind = calculateCrosswindComponent(effectiveWind.direction, effectiveWind.speed, runway.le_heading);
+          const crosswindSide = getCrosswindSide(effectiveWind.direction, runway.le_heading);
+          const angleDiff = calculateAngleDifference(effectiveWind.direction, runway.le_heading);
           
           analyzedRunways.push({
             ident: runway.le_ident,
@@ -242,10 +269,10 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, showCompact = false 
         
         // Analyser le seuil "he" (higher end)
         if (runway.he_ident && runway.he_heading !== undefined) {
-          const headwind = calculateHeadwindComponent(wind.direction, wind.speed, runway.he_heading);
-          const crosswind = calculateCrosswindComponent(wind.direction, wind.speed, runway.he_heading);
-          const crosswindSide = getCrosswindSide(wind.direction, runway.he_heading);
-          const angleDiff = calculateAngleDifference(wind.direction, runway.he_heading);
+          const headwind = calculateHeadwindComponent(effectiveWind.direction, effectiveWind.speed, runway.he_heading);
+          const crosswind = calculateCrosswindComponent(effectiveWind.direction, effectiveWind.speed, runway.he_heading);
+          const crosswindSide = getCrosswindSide(effectiveWind.direction, runway.he_heading);
+          const angleDiff = calculateAngleDifference(effectiveWind.direction, runway.he_heading);
           
           analyzedRunways.push({
             ident: runway.he_ident,
@@ -265,9 +292,23 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, showCompact = false 
       }
     }
   });
-  
+
+  // 🔧 FIX CRITIQUE: Filtrer les pistes incompatibles avec l'avion AVANT de recommander
+  const compatibleRunways = analyzedRunways.filter(analysis => {
+    // Si pas d'avion ou pas de restrictions de surface, tout est acceptable
+    if (!aircraft || !aircraft.compatibleRunwaySurfaces || aircraft.compatibleRunwaySurfaces.length === 0) {
+      return true;
+    }
+
+    // Vérifier la compatibilité de surface
+    const surfaceType = analysis.runway?.surface?.type || analysis.runway?.surface || 'UNKNOWN';
+    const isCompatible = aircraft.compatibleRunwaySurfaces.includes(surfaceType);
+
+    return isCompatible;
+  });
+
   // Trier par score (meilleur en premier)
-  const sortedRunways = analyzedRunways.sort((a, b) => b.score - a.score);
+  const sortedRunways = compatibleRunways.sort((a, b) => b.score - a.score);
   const optimalRunways = sortedRunways.filter(r => r.isOptimal && !r.isTailwind);
   const goodRunways = sortedRunways.filter(r => r.isGood && !r.isTailwind);
   const bestRunway = sortedRunways[0];
@@ -352,20 +393,26 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, showCompact = false 
           )}
         </>
       )}
-      
+
       {/* Tableau détaillé de toutes les pistes - TOUJOURS VISIBLE */}
       <div style={sx.combine(sx.spacing.mt(3))}>
         <h6 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2), sx.flex.start)}>
           <Navigation size={16} style={{ marginRight: '6px' }} />
           Analyse des pistes
           <span style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.ml(2), { fontWeight: 'normal' })}>
-            Vent: {wind.direction}°/{wind.speed}kt
-            {wind.gust && ` G${wind.gust}kt`}
+            {isWindCalm ? (
+              'Vent: Calme'
+            ) : (
+              <>
+                Vent: {wind.direction}°/{wind.speed}kt
+                {wind.gust && ` G${wind.gust}kt`}
+              </>
+            )}
           </span>
         </h6>
-        
+
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
             <thead>
               <tr style={{ backgroundColor: '#f3f4f6' }}>
                 <th style={{ padding: '6px', textAlign: 'left', borderBottom: '2px solid #d1d5db' }}>
@@ -373,6 +420,12 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, showCompact = false 
                 </th>
                 <th style={{ padding: '6px', textAlign: 'center', borderBottom: '2px solid #d1d5db' }}>
                   QFU
+                </th>
+                <th style={{ padding: '6px', textAlign: 'center', borderBottom: '2px solid #d1d5db' }}>
+                  Surface
+                </th>
+                <th style={{ padding: '6px', textAlign: 'center', borderBottom: '2px solid #d1d5db' }}>
+                  LDA
                 </th>
                 <th style={{ padding: '6px', textAlign: 'center', borderBottom: '2px solid #d1d5db' }}>
                   Angle vent
@@ -401,8 +454,8 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, showCompact = false 
                     borderBottom: '1px solid #e5e7eb'
                   }}
                 >
-                  <td style={{ 
-                    padding: '6px', 
+                  <td style={{
+                    padding: '6px',
                     fontWeight: analysis === takeoffRunway || analysis === landingRunway ? 'bold' : 'normal'
                   }}>
                     {analysis.ident}
@@ -412,16 +465,22 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, showCompact = false 
                   <td style={{ padding: '6px', textAlign: 'center' }}>
                     {analysis.heading}°
                   </td>
+                  <td style={{ padding: '6px', textAlign: 'center', fontSize: '10px' }}>
+                    {analysis.runway?.surface?.type || analysis.runway?.surface || 'N/A'}
+                  </td>
+                  <td style={{ padding: '6px', textAlign: 'center' }}>
+                    {analysis.runway?.lda ? `${Math.round(analysis.runway.lda)}m` : 'N/A'}
+                  </td>
                   <td style={{ padding: '6px', textAlign: 'center' }}>
                     <span style={{
                       padding: '2px 6px',
                       borderRadius: '4px',
-                      backgroundColor: 
-                        analysis.isOptimal ? '#d1fae5' : 
+                      backgroundColor:
+                        analysis.isOptimal ? '#d1fae5' :
                         analysis.isGood ? '#fef3c7' :
                         analysis.isAcceptable ? '#fed7aa' : '#fee2e2',
-                      color: 
-                        analysis.isOptimal ? '#059669' : 
+                      color:
+                        analysis.isOptimal ? '#059669' :
                         analysis.isGood ? '#ca8a04' :
                         analysis.isAcceptable ? '#ea580c' : '#dc2626'
                     }}>

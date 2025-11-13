@@ -34,9 +34,18 @@ export const LoadInput = memo(({ label, value, onChange, max, highlight = false 
     }
   }, [value, currentUnit, convert]); // Ne pas inclure localValue et label dans les dépendances
 
+  // Vérifier si la valeur dépasse le maximum autorisé
+  const currentValue = parseFloat(localValue) || 0;
+  const exceedsMax = max && currentValue > max;
+
   const inputStyle = sx.combine(
     sx.components.input.base,
-    highlight && {
+    exceedsMax && {
+      borderColor: sx.theme.colors.danger[500],
+      backgroundColor: sx.theme.colors.danger[50],
+      borderWidth: '2px'
+    },
+    highlight && !exceedsMax && {
       borderColor: sx.theme.colors.primary[500],
       backgroundColor: sx.theme.colors.primary[50]
     }
@@ -87,6 +96,20 @@ export const LoadInput = memo(({ label, value, onChange, max, highlight = false 
         step="1"
         min="0"
       />
+      {exceedsMax && (
+        <div style={{
+          marginTop: '4px',
+          padding: '6px 8px',
+          backgroundColor: sx.theme.colors.danger[50],
+          borderLeft: `3px solid ${sx.theme.colors.danger[500]}`,
+          borderRadius: '4px',
+          fontSize: '12px',
+          color: sx.theme.colors.danger[700],
+          fontWeight: '600'
+        }}>
+          ⚠️ Dépassement : {currentValue} {getSymbol('weight')} &gt; {max} {getSymbol('weight')} (max autorisé)
+        </div>
+      )}
     </div>
   );
 });

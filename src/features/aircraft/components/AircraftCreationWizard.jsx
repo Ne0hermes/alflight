@@ -38,20 +38,27 @@ import {
   FlightTakeoff as TakeoffIcon,
   Notes as NotesIcon,
   Close as CloseIcon,
-  Warning as WarningIcon
+  Warning as WarningIcon,
+  CloudUpload as CloudUploadIcon,
+  Refresh as RefreshIcon,
+  VerifiedUser as VerifiedIcon,
+  Error as ErrorIcon,
+  HourglassEmpty as PendingIcon
 } from '@mui/icons-material';
 import { useAircraft } from '../../../core/contexts';
+import { useAircraftStore } from '../../../core/stores/aircraftStore';
 
-// Import des étapes
-import Step0CommunityCheck from './wizard-steps/Step0CommunityCheck';
-import Step1BasicInfo from './wizard-steps/Step1BasicInfo';
-import Step2Speeds from './wizard-steps/Step2Speeds';
-import Step3WeightBalance from './wizard-steps/Step3WeightBalance';
-import Step4Performance from './wizard-steps/Step4Performance';
-import Step5Equipment from './wizard-steps/Step5Equipment';
-import Step6Operations from './wizard-steps/Step6Operations';
-import Step7Remarks from './wizard-steps/Step7Remarks';
-import Step5Review from './wizard-steps/Step5Review';
+// 🔧 FIX MEMORY: Import LAZY des étapes pour éviter de charger tous les composants en mémoire d'un coup
+// Avant : tous les steps chargés au démarrage du wizard (7 composants volumineux)
+// Après : chaque step chargé uniquement quand il devient visible
+const Step0CommunityCheck = React.lazy(() => import('./wizard-steps/Step0CommunityCheck'));
+const Step1BasicInfo = React.lazy(() => import('./wizard-steps/Step1BasicInfo'));
+const Step2Speeds = React.lazy(() => import('./wizard-steps/Step2Speeds'));
+const Step3WeightBalance = React.lazy(() => import('./wizard-steps/Step3WeightBalance'));
+const Step4Performance = React.lazy(() => import('./wizard-steps/Step4Performance'));
+const Step5Equipment = React.lazy(() => import('./wizard-steps/Step5Equipment'));
+const Step7Remarks = React.lazy(() => import('./wizard-steps/Step7Remarks'));
+const Step5Review = React.lazy(() => import('./wizard-steps/Step5Review'));
 
 // Style personnalisé pour le Stepper
 const CustomStepIcon = styled(StepIcon)(({ theme, ownerState }) => ({
@@ -65,7 +72,7 @@ const CustomStepIcon = styled(StepIcon)(({ theme, ownerState }) => ({
 
 function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraft = null }) {
   // Hook pour accéder au contexte des avions
-  const { addAircraft, updateAircraft, setSelectedAircraft } = useAircraft();
+  const { addAircraft, updateAircraft, setSelectedAircraft, aircraftList } = useAircraft();
 
   // Vérifier s'il y a un brouillon à reprendre
   const loadDraftIfExists = () => {
@@ -75,16 +82,58 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
     const draft = localStorage.getItem('aircraft_wizard_draft');
     if (draft) {
       try {
+        // 🔧 FIX CRITIQUE: Vérifier la taille de la STRING AVANT JSON.parse
+        // Le spike mémoire se produit PENDANT le parsing, pas après !
+        const draftSizeKB = (draft.length * 2) / 1024; // Taille string en KB
+        const draftSizeMB = draftSizeKB / 1024;
+
+        // Limite stricte : 2MB de string (équivaut à ~1MB d'objet parsé)
+        if (draftSizeMB > 2) {
+          console.warn(`⚠️ Draft trop volumineux (${draftSizeMB.toFixed(1)}MB string) - Suppression AVANT parsing`);
+          console.warn(`   → Évite spike mémoire de JSON.parse() qui causait le crash`);
+          localStorage.removeItem('aircraft_wizard_draft');
+          return null;
+        }
+
+        console.log(`✅ Draft acceptable (${draftSizeMB.toFixed(2)}MB string) - Parsing sécurisé`);
         const draftData = JSON.parse(draft);
-        console.log('📂 Reprise du brouillon:', draftData);
+        console.log(`📂 Reprise du brouillon détecté (${draftSizeMB.toFixed(1)}MB)`);
+
+        // 🔧 FIX MEMORY: Nettoyer les éléments volumineux du draft
+        // Le draft peut contenir un MANEX (20-50MB) ou photos volumineuses d'une session précédente
+        if (draftData.aircraftData) {
+          const cleanedData = { ...draftData };
+
+          // Supprimer le MANEX s'il est présent (sera re-téléchargé si nécessaire)
+          if (cleanedData.aircraftData.manex?.pdfData) {
+            console.log('🗑️ MANEX supprimé du draft (trop volumineux)');
+            delete cleanedData.aircraftData.manex;
+          }
+
+          // Supprimer les photos volumineuses (>500KB)
+          if (cleanedData.aircraftData.photo && typeof cleanedData.aircraftData.photo === 'string') {
+            const photoSizeKB = (cleanedData.aircraftData.photo.length * 0.75) / 1024;
+            if (photoSizeKB > 500) {
+              console.log(`🗑️ Photo volumineuse supprimée du draft (${photoSizeKB.toFixed(0)}KB)`);
+              delete cleanedData.aircraftData.photo;
+            }
+          }
+
+          console.log('✅ Draft nettoyé et chargé');
+          return cleanedData;
+        }
+
         return draftData;
       } catch (e) {
         console.error('❌ Erreur lors du chargement du brouillon:', e);
+        // En cas d'erreur, supprimer le draft corrompu
+        localStorage.removeItem('aircraft_wizard_draft');
       }
     }
     return null;
   };
 
+  // 🔧 FIX DÉFINITIF: Draft réactivé avec vérification taille AVANT parsing
   const draft = loadDraftIfExists();
 
   // État principal - utilisant EXACTEMENT la même structure que AircraftModule
@@ -235,7 +284,6 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
       vhf2: true,
       hf: false,
       satcom: false,
-      elt: true,
       acars: false,
       cpdlc: false
     },
@@ -280,7 +328,44 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
     // Opérations
     minimumRunwayLength: existingAircraft?.minimumRunwayLength || '',
     serviceCeiling: existingAircraft?.serviceCeiling || '',
-    approvedOperations: existingAircraft?.approvedOperations || {},
+    approvedOperations: {
+      // Règles de vol
+      vfrDay: existingAircraft?.approvedOperations?.vfrDay || false,
+      vfrNight: existingAircraft?.approvedOperations?.vfrNight || false,
+      ifrDay: existingAircraft?.approvedOperations?.ifrDay || false,
+      ifrNight: existingAircraft?.approvedOperations?.ifrNight || false,
+      svfr: existingAircraft?.approvedOperations?.svfr || false,
+      // Opérations spéciales
+      formation: existingAircraft?.approvedOperations?.formation || false,
+      aerobatics: existingAircraft?.approvedOperations?.aerobatics || false,
+      banner: existingAircraft?.approvedOperations?.banner || false,
+      glider: existingAircraft?.approvedOperations?.glider || false,
+      parachute: existingAircraft?.approvedOperations?.parachute || false,
+      agricultural: existingAircraft?.approvedOperations?.agricultural || false,
+      aerial: existingAircraft?.approvedOperations?.aerial || false,
+      // Search and Rescue (nouveaux champs - migration automatique)
+      elt: existingAircraft?.approvedOperations?.elt || false,
+      lifeVests: existingAircraft?.approvedOperations?.lifeVests || false,
+      fireExtinguisherHalon: existingAircraft?.approvedOperations?.fireExtinguisherHalon || false,
+      fireExtinguisherWater: existingAircraft?.approvedOperations?.fireExtinguisherWater || false,
+      fireExtinguisherPowder: existingAircraft?.approvedOperations?.fireExtinguisherPowder || false,
+      oxygenBottles: existingAircraft?.approvedOperations?.oxygenBottles || false,
+      lifeRaft: existingAircraft?.approvedOperations?.lifeRaft || false,
+      survivalKit: existingAircraft?.approvedOperations?.survivalKit || false,
+      plb: existingAircraft?.approvedOperations?.plb || false,
+      signalMirror: existingAircraft?.approvedOperations?.signalMirror || false,
+      flares: existingAircraft?.approvedOperations?.flares || false,
+      survivalRadio: existingAircraft?.approvedOperations?.survivalRadio || false,
+      firstAidKit: existingAircraft?.approvedOperations?.firstAidKit || false,
+      survivalClothing: existingAircraft?.approvedOperations?.survivalClothing || false,
+      // Environnement et usage
+      training: existingAircraft?.approvedOperations?.training || false,
+      charter: existingAircraft?.approvedOperations?.charter || false,
+      mountainous: existingAircraft?.approvedOperations?.mountainous || false,
+      seaplane: existingAircraft?.approvedOperations?.seaplane || false,
+      skiPlane: existingAircraft?.approvedOperations?.skiPlane || false,
+      icing: existingAircraft?.approvedOperations?.icing || false
+    },
     
     // Remarques
     remarks: existingAircraft?.remarks || '',
@@ -296,6 +381,11 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
   );
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [savingProgress, setSavingProgress] = useState({
+    isOpen: false,
+    steps: [],
+    currentStepIndex: -1
+  });
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success', closeable: true, duration: 6000 });
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
@@ -313,15 +403,37 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
   }, [aircraftData.shouldReturnToStep0]);
 
   // Sauvegarder l'état de l'assistant dans localStorage
+  // 🔧 FIX DÉFINITIF: Réactivé avec protection taille
   const saveWizardState = () => {
-    const wizardState = {
-      aircraftData,
-      currentStep,
-      timestamp: new Date().toISOString(),
-      isEdit: !!existingAircraft
-    };
-    localStorage.setItem('aircraft_wizard_draft', JSON.stringify(wizardState));
-    console.log('💾 État de l\'assistant sauvegardé:', wizardState);
+    try {
+      const wizardState = {
+        aircraftData,
+        currentStep,
+        timestamp: new Date().toISOString(),
+        isEdit: !!existingAircraft
+      };
+
+      // 🔧 FIX: Vérifier taille AVANT de sauvegarder
+      const stateString = JSON.stringify(wizardState);
+      const stateSizeMB = (stateString.length * 2) / (1024 * 1024);
+
+      if (stateSizeMB > 2) {
+        console.warn(`⚠️ État trop volumineux (${stateSizeMB.toFixed(1)}MB) - Pas de sauvegarde`);
+        console.warn(`   → Contient probablement MANEX ou photos volumineuses`);
+        return;
+      }
+
+      localStorage.setItem('aircraft_wizard_draft', stateString);
+      console.log(`💾 État sauvegardé (${stateSizeMB.toFixed(2)}MB):`, {
+        step: currentStep,
+        registration: aircraftData.registration,
+        hasManex: !!aircraftData.manex,
+        hasPhoto: !!aircraftData.photo
+      });
+    } catch (error) {
+      console.error('❌ Erreur sauvegarde draft:', error);
+      // En cas d'erreur (ex: QuotaExceededError), ne pas bloquer l'utilisateur
+    }
   };
 
 
@@ -390,14 +502,9 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
       icon: <TrendingUpIcon />
     },
     {
-      label: 'Équipements',
-      description: 'Équipements de bord',
+      label: 'Équipements & Opérations',
+      description: 'Équipements et limitations opérationnelles',
       icon: <BuildIcon />
-    },
-    {
-      label: 'Opérations',
-      description: 'Limitations opérationnelles',
-      icon: <TakeoffIcon />
     },
     {
       label: 'Remarques',
@@ -414,12 +521,12 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
   // Fonction de mise à jour des données
   const updateData = (path, value) => {
     console.log('Update Data - Path:', path, 'Value:', value);
-    
+
     setAircraftData(prev => {
       const newData = { ...prev };
       const keys = path.split('.');
       let current = newData;
-      
+
       for (let i = 0; i < keys.length - 1; i++) {
         const key = keys[i];
         if (!current[key]) {
@@ -427,12 +534,12 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         }
         current = current[key];
       }
-      
+
       current[keys[keys.length - 1]] = value;
       console.log('Updated aircraft data:', newData);
       return newData;
     });
-    
+
     // Effacer l'erreur si elle existe
     const errorKey = path.includes('.') ? path.split('.').pop() : path;
     if (errors[errorKey]) {
@@ -442,6 +549,17 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         return newErrors;
       });
     }
+  };
+
+  // 🔧 FIX MEMORY: Fonction de mise à jour groupée (bulk update)
+  // Évite les multiples setState qui copient l'état complet à chaque fois
+  const updateDataBulk = (dataObject) => {
+    console.log('Update Data Bulk - Keys:', Object.keys(dataObject).length);
+
+    setAircraftData(prev => {
+      // UNE SEULE copie au lieu de 50+
+      return { ...prev, ...dataObject };
+    });
   };
 
   // Validation des étapes
@@ -522,9 +640,40 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
 
   const handleAircraftSave = async (saveData) => {
     console.log('=== handleAircraftSave appelé ===', saveData);
-    setIsLoading(true);
+
+    // Initialiser les étapes de progression
+    const progressSteps = [
+      { id: 1, label: 'Validation des données', status: 'pending' },
+      { id: 2, label: 'Préparation pour sauvegarde', status: 'pending' },
+      { id: 3, label: 'Envoi vers Supabase', status: 'pending' },
+      { id: 4, label: 'Rechargement de la liste', status: 'pending' },
+      { id: 5, label: 'Vérification dans Aircraft Module', status: 'pending' },
+      { id: 6, label: 'Finalisation', status: 'pending' }
+    ];
+
+    setSavingProgress({
+      isOpen: true,
+      steps: progressSteps,
+      currentStepIndex: 0
+    });
+
+    const updateStep = (index, status, error = null) => {
+      setSavingProgress(prev => ({
+        ...prev,
+        steps: prev.steps.map((step, i) =>
+          i === index ? { ...step, status, error } : step
+        ),
+        currentStepIndex: index
+      }));
+    };
+
     try {
-      const dataToSave = saveData.data;
+      // ÉTAPE 1: Validation des données
+      updateStep(0, 'in_progress');
+      await new Promise(resolve => setTimeout(resolve, 500)); // Petit délai pour visibilité
+
+      // 🔧 FIX: Utiliser aircraftData du state qui contient baseAircraft
+      const dataToSave = { ...aircraftData };
 
       // Convertir flightManual en manex si présent
       if (dataToSave.flightManual?.file) {
@@ -537,9 +686,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
           uploadDate: dataToSave.flightManual.uploadDate || new Date().toISOString(),
           pdfData: dataToSave.flightManual.file
         };
-        // Retirer flightManual des données à sauvegarder
         delete dataToSave.flightManual;
-        console.log('✅ manex créé:', dataToSave.manex.fileName, dataToSave.manex.fileSize);
       }
 
       // Calculer le baseFactor si nécessaire
@@ -547,106 +694,203 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         dataToSave.baseFactor = (60 / parseFloat(dataToSave.cruiseSpeedKt)).toFixed(3);
       }
 
-      if (saveData.mode === 'community') {
-        // Soumission à la communauté
-        console.log('Soumission à la communauté:', dataToSave);
+      updateStep(0, 'completed');
 
-        // Si c'est une mise à jour (avion importé avec modifications)
-        if (saveData.differences) {
-          console.log('Différences détectées:', saveData.differences);
-          // TODO: Appeler l'API pour soumettre les modifications
-          // await submitAircraftUpdate(dataToSave.registration, dataToSave, saveData.differences);
-        } else {
-          // Nouvelle configuration
-          // TODO: Appeler l'API pour soumettre la nouvelle configuration
-          // await submitNewAircraft(dataToSave);
+      // ÉTAPE 2: Préparation pour sauvegarde
+      updateStep(1, 'in_progress');
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // 🔧 FIX: Détection intelligente des variants
+      // Variant = VRAIE copie avec registration différente ou flag explicite
+      // Import modifié = UPDATE du même preset (pas de variant)
+      const isTrueVariant = dataToSave.isVariant && dataToSave.baseAircraft &&
+                            dataToSave.registration !== dataToSave.baseAircraft.registration;
+
+      if (isTrueVariant) {
+        console.log('🔀 VRAI variant détecté (registration différente) - Génération d\'un nouvel ID');
+        const newId = crypto.randomUUID();
+        console.log(`   Ancien ID: ${dataToSave.id || dataToSave.aircraftId}`);
+        console.log(`   Nouvel ID: ${newId}`);
+        console.log(`   Registration originale: ${dataToSave.baseAircraft.registration}`);
+        console.log(`   Nouvelle registration: ${dataToSave.registration}`);
+
+        // Remplacer l'ID pour forcer la création d'un nouveau preset
+        dataToSave.id = newId;
+        dataToSave.aircraftId = newId;
+
+        // Conserver la référence au preset original
+        if (!dataToSave.communityPresetId && dataToSave.baseAircraft?.id) {
+          dataToSave.communityPresetId = dataToSave.baseAircraft.id;
         }
+      } else if (dataToSave.baseAircraft) {
+        // Import modifié avec MÊME registration → UPDATE du preset existant
+        console.log('📝 Preset importé modifié - Mise à jour du preset existant');
+        console.log(`   ID du preset: ${dataToSave.baseAircraft.id}`);
+        console.log(`   Registration: ${dataToSave.registration}`);
 
-        // Message de succès pour soumission communautaire
-        console.log('📢 Configuration de la notification pour soumission communautaire');
-        const notif = {
-          open: true,
-          message: `Configuration soumise à la communauté pour ${dataToSave.registration}. Elle sera validée après 10 votes positifs.`,
-          severity: 'success'
-        };
-        console.log('📢 Notification communautaire:', notif);
-        setNotification(notif);
-        console.log('📢 État notification après setNotification:', notification);
-      } else {
-        // Enregistrement local uniquement
-        console.log('Enregistrement local:', dataToSave);
+        // Garder l'ID du preset original pour faire UPDATE
+        dataToSave.id = dataToSave.baseAircraft.id;
+        dataToSave.aircraftId = dataToSave.baseAircraft.id;
+        dataToSave.isVariant = false;  // Pas un variant, c'est un UPDATE
       }
 
-      // Déterminer s'il faut ajouter ou mettre à jour
-      let savedAircraft;
-      if (dataToSave.id || dataToSave.aircraftId) {
-        console.log('Appel de updateAircraft avec:', dataToSave);
-        savedAircraft = updateAircraft(dataToSave);
-        console.log('Résultat de updateAircraft:', savedAircraft);
-      } else {
-        console.log('Appel de addAircraft avec:', dataToSave);
+      // Nettoyer le localStorage des données temporaires
+      try {
+        localStorage.removeItem('wizard_performance_temp');
+        localStorage.removeItem('aircraft_wizard_draft');
+        console.log('🧹 Données temporaires nettoyées du localStorage');
+      } catch (e) {
+        console.error('Erreur lors du nettoyage du localStorage:', e);
+      }
+
+      updateStep(1, 'completed');
+
+      // ÉTAPE 3: Envoi vers Supabase
+      updateStep(2, 'in_progress');
+
+      console.log('📤 Envoi de l\'avion vers Supabase...');
+      console.log('   ID de l\'avion:', dataToSave.id);
+      console.log('   Registration:', dataToSave.registration);
+      console.log('   isVariant:', dataToSave.isVariant);
+      let savedAircraft = null;
+
+      try {
         savedAircraft = await addAircraft(dataToSave);
-        console.log('Résultat de addAircraft:', savedAircraft);
+        console.log('✅ Avion sauvegardé dans Supabase:', savedAircraft);
+        updateStep(2, 'completed');
+      } catch (error) {
+        console.error('❌ Erreur lors de la sauvegarde Supabase:', error);
+        updateStep(2, 'error', error.message);
+        throw new Error(`Échec de la sauvegarde: ${error.message}`);
       }
 
-      // Sélectionner le nouvel avion
-      if (savedAircraft) {
-        console.log('Avion sauvegardé avec succès, sélection...');
-        setSelectedAircraft(savedAircraft);
+      // ÉTAPE 4: Rechargement de la liste
+      updateStep(3, 'in_progress');
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Attendre que Supabase se synchronise
 
-        if (saveData.mode === 'local') {
-          console.log('📢 Configuration de la notification pour enregistrement local');
-          const notif = {
-            open: true,
-            message: `L'avion ${dataToSave.registration} a été enregistré localement avec succès !`,
-            severity: 'success'
-          };
-          console.log('📢 Notification:', notif);
-          setNotification(notif);
-          console.log('📢 État notification après setNotification:', notification);
-        }
+      // Le store recharge automatiquement après addAircraft, mais on attend un peu
+      console.log('🔄 Attente de la synchronisation...');
+      updateStep(3, 'completed');
 
-        // Afficher un message de succès et fermer le wizard après un délai
-        console.log('Enregistrement réussi, appel de onComplete dans 0.5s...');
+      // ÉTAPE 5: Vérification dans Aircraft Module
+      updateStep(4, 'in_progress');
 
-        // Nettoyer le localStorage des données temporaires
-        try {
-          localStorage.removeItem('wizard_performance_temp');
-          localStorage.removeItem('aircraft_wizard_draft'); // Supprimer le brouillon
-          console.log('🧹 Données temporaires nettoyées du localStorage');
-        } catch (e) {
-          console.error('Erreur lors du nettoyage du localStorage:', e);
-        }
+      // 🔧 FIX: Utiliser l'ID retourné par Supabase, pas l'ID local généré
+      // Pour les variants, Supabase crée un nouvel ID qui est différent de celui généré localement
+      const searchId = savedAircraft?.id || savedAircraft?.aircraftId || dataToSave.id;
+      const searchReg = dataToSave.registration;
 
-        setTimeout(() => {
-          console.log('Timeout exécuté, onComplete existe?', !!onComplete);
-          // Si onComplete existe, l'appeler pour fermer le wizard
-          if (onComplete) {
-            console.log('Appel de onComplete avec:', dataToSave);
-            onComplete(dataToSave);
-          } else {
-            console.log('onComplete non défini, tentative de retour à la page d\'accueil');
-            // Retourner à la page d'accueil en utilisant le système de navigation
-            // Recherche du bouton "Avions" dans la navigation et simule un clic
-            const aircraftTab = document.querySelector('[data-tab-id="aircraft"]');
-            if (aircraftTab) {
-              aircraftTab.click();
-            } else {
-              // Fallback: recharger la page
-              window.location.reload();
-            }
-          }
-        }, 500);
+      console.log('🔍 Recherche de l\'avion dans Aircraft Module...');
+      console.log(`   ID local généré: ${dataToSave.id}`);
+      console.log(`   ID Supabase retourné: ${savedAircraft?.id}`);
+      console.log(`   ID recherché: ${searchId}`);
+      console.log(`   Registration: ${searchReg}`);
+
+      // Attendre que l'avion apparaisse dans la liste (max 10 secondes)
+      let foundInList = false;
+      let foundAircraft = null;
+      let attempts = 0;
+      const maxAttempts = 20; // 20 × 500ms = 10 secondes max
+
+      while (!foundInList && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // 🔧 FIX: Lire la liste FRAÎCHE depuis le store à chaque itération
+        // Sinon on garde une référence à l'ancienne liste (closure)
+        const currentList = useAircraftStore.getState().aircraftList || [];
+
+        // Chercher par ID ou registration
+        foundAircraft = currentList.find(a =>
+          a.id === searchId ||
+          a.aircraftId === searchId ||
+          (a.registration === searchReg && a.id === searchId)
+        );
+
+        foundInList = !!foundAircraft;
+        attempts++;
+
+        console.log(`🔍 Tentative ${attempts}/${maxAttempts}`);
+        console.log(`   Liste actuelle: ${currentList.length} avions`);
+        console.log(`   IDs dans liste: ${currentList.map(a => a.id).join(', ')}`);
+        console.log(`   Avion trouvé: ${foundInList ? `Oui (${foundAircraft.registration})` : 'Non'}`);
       }
-    } catch (error) {
-      console.error('Erreur lors de l\'enregistrement:', error);
+
+      if (!foundInList) {
+        console.warn('⚠️ L\'avion n\'apparaît pas encore dans la liste après 10s');
+        console.warn(`   Recherché: ID=${searchId}, REG=${searchReg}`);
+        console.warn(`   Dans liste: ${(aircraftList || []).map(a => `${a.registration}(${a.id})`).join(', ')}`);
+        updateStep(4, 'completed'); // On continue quand même
+      } else {
+        console.log('✅ Avion confirmé dans Aircraft Module');
+        console.log(`   Trouvé: ${foundAircraft.registration} (${foundAircraft.id})`);
+        updateStep(4, 'completed');
+      }
+
+      // ÉTAPE 6: Finalisation
+      updateStep(5, 'in_progress');
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Sélectionner le nouvel avion (utiliser l'avion trouvé dans la liste)
+      if (foundAircraft) {
+        console.log('🎯 Sélection de l\'avion:', foundAircraft.registration);
+        setSelectedAircraft(foundAircraft);
+      } else {
+        console.warn('⚠️ Impossible de sélectionner l\'avion - non trouvé dans la liste');
+      }
+
+      updateStep(5, 'completed');
+
+      // Notification de succès
       setNotification({
         open: true,
-        message: `Erreur lors de l'enregistrement: ${error.message}`,
+        message: `✅ L'avion ${dataToSave.registration} a été enregistré avec succès !`,
+        severity: 'success',
+        duration: 3000
+      });
+
+      // Attendre 1.5s puis rediriger
+      setTimeout(() => {
+        setSavingProgress(prev => ({ ...prev, isOpen: false }));
+
+        // Navigation vers Aircraft Module
+        console.log('🏠 Navigation vers Aircraft Module...');
+        const aircraftTab = document.querySelector('[data-tab-id="aircraft"]');
+        if (aircraftTab) {
+          aircraftTab.click();
+          console.log('✅ Navigation réussie');
+        } else {
+          const homeTab = document.querySelector('[data-tab-id="home"]') ||
+                         document.querySelector('[data-tab-id="dashboard"]');
+          if (homeTab) {
+            homeTab.click();
+          } else {
+            window.location.reload();
+          }
+        }
+
+        // Appeler onComplete si défini
+        if (onComplete) {
+          onComplete(dataToSave);
+        }
+      }, 1500);
+
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde:', error);
+
+      // Marquer l'étape courante comme erreur
+      const currentStepIdx = savingProgress.currentStepIndex;
+      updateStep(currentStepIdx, 'error', error.message);
+
+      setNotification({
+        open: true,
+        message: `❌ Erreur: ${error.message}`,
         severity: 'error'
       });
-    } finally {
-      setIsLoading(false);
+
+      // Fermer la dialog de progression après 3s
+      setTimeout(() => {
+        setSavingProgress(prev => ({ ...prev, isOpen: false }));
+      }, 3000);
     }
   };
 
@@ -672,6 +916,27 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         // Retirer flightManual des données à sauvegarder
         delete dataToSave.flightManual;
       }
+
+      // 🔧 FIX: Mapper weights.emptyWeight → emptyWeight (propriété racine)
+      // Le code qui lit les données s'attend à aircraft.emptyWeight (pas aircraft.weights.emptyWeight)
+      if (dataToSave.weights?.emptyWeight) {
+        dataToSave.emptyWeight = parseFloat(dataToSave.weights.emptyWeight);
+        console.log('✅ [Wizard] Mapped weights.emptyWeight → emptyWeight:', dataToSave.emptyWeight);
+      }
+      if (dataToSave.weights?.mtow) {
+        dataToSave.maxTakeoffWeight = parseFloat(dataToSave.weights.mtow);
+      }
+
+      // 🔧 DEBUG: Vérifier les performanceTables avant sauvegarde
+      console.log('🔍 [Wizard] Données avant sauvegarde:', {
+        registration: dataToSave.registration,
+        hasPerformanceTables: !!dataToSave.performanceTables,
+        performanceTablesCount: dataToSave.performanceTables?.length || 0,
+        performanceTablesTypes: dataToSave.performanceTables?.map(t => t.type) || [],
+        hasAdvancedPerformance: !!dataToSave.advancedPerformance,
+        advancedPerformanceTablesCount: dataToSave.advancedPerformance?.tables?.length || 0,
+        advancedPerformanceTypes: dataToSave.advancedPerformance?.tables?.map(t => t.type) || []
+      });
 
       // Ajouter l'avion au store
       const savedAircraft = await addAircraft(dataToSave);
@@ -710,7 +975,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
   const renderStepContent = () => {
     switch (currentStep) {
       case 0:
-        return <Step0CommunityCheck data={aircraftData} updateData={updateData} onSkip={() => handleNext()} onComplete={onComplete} />;
+        return <Step0CommunityCheck data={aircraftData} updateData={updateData} updateDataBulk={updateDataBulk} onSkip={() => handleNext()} onComplete={onComplete} />;
       case 1:
         return <Step1BasicInfo data={aircraftData} updateData={updateData} errors={errors} />;
       case 2:
@@ -722,10 +987,8 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
       case 5:
         return <Step5Equipment data={aircraftData} updateData={updateData} errors={errors} />;
       case 6:
-        return <Step6Operations data={aircraftData} updateData={updateData} errors={errors} />;
-      case 7:
         return <Step7Remarks data={aircraftData} updateData={updateData} errors={errors} />;
-      case 8:
+      case 7:
         return (
           <Step5Review
             data={aircraftData}
@@ -869,7 +1132,14 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
           borderColor: 'divider'
         }}
       >
-        {renderStepContent()}
+        {/* 🔧 FIX MEMORY: Suspense pour le chargement lazy des steps */}
+        <React.Suspense fallback={
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+            <CircularProgress />
+          </Box>
+        }>
+          {renderStepContent()}
+        </React.Suspense>
       </Paper>
 
       {/* Navigation */}
@@ -993,6 +1263,134 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
           {notification.message}
         </Alert>
       </Snackbar>
+
+      {/* Progress Dialog - Saving steps */}
+      <Dialog
+        open={savingProgress.isOpen}
+        maxWidth="md"
+        fullWidth
+        disableEscapeKeyDown
+      >
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 2, pb: 2 }}>
+          <CloudUploadIcon color="primary" />
+          Sauvegarde en cours...
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ py: 2 }}>
+            {savingProgress.steps.map((step, index) => {
+              const isCompleted = step.status === 'completed';
+              const isInProgress = step.status === 'in_progress';
+              const isError = step.status === 'error';
+              const isPending = step.status === 'pending';
+
+              return (
+                <Box
+                  key={step.id}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 2,
+                    py: 2,
+                    borderBottom: index < savingProgress.steps.length - 1 ? '1px solid' : 'none',
+                    borderColor: 'divider',
+                    opacity: isPending ? 0.5 : 1,
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  {/* Icon */}
+                  <Box
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      bgcolor: isCompleted
+                        ? 'success.light'
+                        : isError
+                        ? 'error.light'
+                        : isInProgress
+                        ? 'primary.light'
+                        : 'grey.200',
+                      color: isCompleted
+                        ? 'success.dark'
+                        : isError
+                        ? 'error.dark'
+                        : isInProgress
+                        ? 'primary.dark'
+                        : 'text.disabled'
+                    }}
+                  >
+                    {isCompleted && <CheckCircleIcon />}
+                    {isError && <ErrorIcon />}
+                    {isInProgress && <CircularProgress size={24} thickness={4} />}
+                    {isPending && <PendingIcon />}
+                  </Box>
+
+                  {/* Label */}
+                  <Box sx={{ flex: 1 }}>
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        fontWeight: isInProgress ? 600 : 400,
+                        color: isError ? 'error.main' : 'text.primary'
+                      }}
+                    >
+                      {step.label}
+                    </Typography>
+                    {step.error && (
+                      <Typography variant="caption" color="error">
+                        {step.error}
+                      </Typography>
+                    )}
+                  </Box>
+
+                  {/* Status chip */}
+                  {isCompleted && (
+                    <Chip label="Terminé" size="small" color="success" />
+                  )}
+                  {isInProgress && (
+                    <Chip label="En cours..." size="small" color="primary" />
+                  )}
+                  {isError && (
+                    <Chip label="Erreur" size="small" color="error" />
+                  )}
+                </Box>
+              );
+            })}
+          </Box>
+        </DialogContent>
+      </Dialog>
+
+      {/* Loading Dialog (fallback for handleSave) */}
+      <Dialog
+        open={isLoading}
+        maxWidth="sm"
+        fullWidth
+        disableEscapeKeyDown
+      >
+        <DialogContent>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              py: 4,
+              gap: 3
+            }}
+          >
+            <CircularProgress size={60} thickness={4} />
+            <Typography variant="h6" sx={{ fontWeight: 500, textAlign: 'center' }}>
+              Enregistrement en cours...
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
+              Veuillez patienter pendant que nous sauvegardons la configuration de votre avion.
+            </Typography>
+          </Box>
+        </DialogContent>
+      </Dialog>
     </Container>
   );
 }

@@ -1,11 +1,17 @@
 // src/features/navigation/components/VFRNavigationTable.jsx
 import React, { useState, useMemo, useEffect } from 'react';
-import { Table, RefreshCw, Navigation2, Clock, Radio, Map, AlertTriangle, TrendingDown } from 'lucide-react';
+import { Table, RefreshCw, Navigation2, Clock, Radio, Map, AlertTriangle, Sun, Sunset, Moon } from 'lucide-react';
 import { useWeatherStore } from '@core/stores/weatherStore';
 import { useVACStore } from '@core/stores/vacStore';
 import { useUnits } from '@hooks/useUnits';
 import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
 import { useAirspaceAnalysis } from '../hooks/useAirspaceAnalysis';
+import {
+  calculateAeronauticalNight,
+  parseTimeString,
+  analyzeSegmentDayNight,
+  formatTime as formatSunTime
+} from '@services/dayNightCalculator';
 
 const VFRNavigationTable = ({
   waypoints,
@@ -14,26 +20,14 @@ const VFRNavigationTable = ({
   flightType,
   navigationResults,
   segmentAltitudes = {},
-  setSegmentAltitude
+  setSegmentAltitude,
+  departureTimeTheoretical = '', // Reçu depuis Step7Summary
+  flightDate = null, // Date du vol (optionnel, sinon aujourd'hui)
+  hideToggleButton = false // Masquer le bouton Afficher/Masquer (utilisé dans Step7)
 }) => {
-  const [showTable, setShowTable] = useState(false);
-  const [departureTimeTheoretical, setDepartureTimeTheoretical] = useState('');
-  const [descentRate, setDescentRate] = useState(500); // ft/min - Modifiable
-  const [targetAltitude, setTargetAltitude] = useState(0); // Altitude cible - Sera initialisée avec terrain + 1000
+  const [showTable, setShowTable] = useState(true);
   const { format, convert, getSymbol } = useUnits();
   const units = useUnitsWatcher(); // Force re-render on units change
-
-  // Initialiser l'altitude cible avec terrain + 1000 quand le dernier waypoint change
-  useEffect(() => {
-    if (waypoints && waypoints.length >= 2) {
-      const lastWaypoint = waypoints[waypoints.length - 1];
-      const terrainElevation = lastWaypoint.elevation || 0;
-      // Initialiser seulement si targetAltitude n'a pas été définie (0)
-      if (targetAltitude === 0) {
-        setTargetAltitude(terrainElevation + 1000);
-      }
-    }
-  }, [waypoints]);
 
   // Récupérer les données météo et VAC
   const weatherData = useWeatherStore(state => state.weatherData) || {};
@@ -46,70 +40,6 @@ const VFRNavigationTable = ({
     segmentAltitudes,
     plannedAltitude
   );
-
-  // 📐 Calcul du TOD (Top of Descent) pour l'arrivée
-  const todCalculation = useMemo(() => {
-    if (!waypoints || waypoints.length < 2) return null;
-
-    const lastWaypoint = waypoints[waypoints.length - 1];
-    const secondLastWaypoint = waypoints[waypoints.length - 2];
-
-    // Élévation du terrain de destination
-    const terrainElevation = lastWaypoint.elevation || 0;
-
-    // Altitude de croisière (depuis le dernier segment ou plannedAltitude)
-    const lastSegmentId = `${secondLastWaypoint.id}-${lastWaypoint.id}`;
-    const cruiseAltitude = segmentAltitudes[lastSegmentId]?.startAlt || plannedAltitude;
-
-    // Utiliser l'altitude cible depuis l'état (ou terrain + 1000 par défaut)
-    const finalTargetAltitude = targetAltitude || (terrainElevation + 1000);
-
-    // Descente totale
-    const altitudeToDescent = cruiseAltitude - finalTargetAltitude;
-
-    // Si pas de descente nécessaire
-    if (altitudeToDescent <= 0) {
-      return {
-        error: true,
-        message: altitudeToDescent === 0 ? "Déjà à l'altitude pattern" : "Montée requise pour le pattern",
-        cruiseAltitude,
-        targetAltitude: finalTargetAltitude,
-        terrainElevation,
-        arrivalAerodrome: lastWaypoint.name || 'Destination'
-      };
-    }
-
-    // Paramètres
-    const groundSpeed = selectedAircraft?.cruiseSpeedKt || 120; // kt
-
-    // Calculs (utilise le taux de descente modifiable depuis l'état)
-    const descentTimeMinutes = altitudeToDescent / descentRate;
-    const groundSpeedNmPerMin = groundSpeed / 60;
-    const distanceToTod = descentTimeMinutes * groundSpeedNmPerMin;
-    const descentAngle = Math.atan((altitudeToDescent / 6076.12) / distanceToTod) * 180 / Math.PI;
-
-    // Log pour vérifier la connexion avec le tableau
-    console.log('🛬 TOD Calculation:', {
-      arrivalAerodrome: lastWaypoint.name,
-      lastSegmentId,
-      cruiseAltitudeFromSegment: segmentAltitudes[lastSegmentId]?.startAlt,
-      cruiseAltitudeUsed: cruiseAltitude
-    });
-
-    return {
-      altitudeToDescent,
-      descentTimeMinutes,
-      distanceToTod: distanceToTod.toFixed(1),
-      descentAngle: descentAngle.toFixed(1),
-      targetAltitude: finalTargetAltitude,
-      cruiseAltitude,
-      terrainElevation,
-      descentRate,
-      groundSpeed,
-      arrivalAerodrome: lastWaypoint.name || 'Destination',
-      error: false
-    };
-  }, [waypoints, segmentAltitudes, plannedAltitude, selectedAircraft, descentRate, targetAltitude]);
   
   // Charger automatiquement les données météo pour tous les waypoints
   useEffect(() => {
@@ -213,12 +143,24 @@ const VFRNavigationTable = ({
         to.elevation || 0
       ) + 1000;
 
-      // Récupérer l'altitude du segment (ou plannedAltitude par défaut)
-      const segmentId = `${from.id}-${to.id}`;
+      // 🔧 FIX: Créer un segmentId basé sur les noms ou l'index si pas d'ID
+      const fromId = from.id || from.name || `wp${i}`;
+      const toId = to.id || to.name || `wp${i+1}`;
+      const segmentId = `${fromId}-${toId}`;
       const segmentAlt = segmentAltitudes[segmentId]?.startAlt || plannedAltitude;
 
       // 🛫 Récupérer les données d'espaces aériens pour ce segment
       const segmentAirspaceData = airspaceAnalysis?.find(a => a.segmentId === segmentId);
+
+      // 🔍 Debug: Log segment matching
+      if (airspaceAnalysis && airspaceAnalysis.length > 0) {
+        console.log(`🔍 Segment ${segmentId}:`, {
+          found: !!segmentAirspaceData,
+          hasRestrictedZones: segmentAirspaceData?.hasRestrictedZones,
+          restrictedZones: segmentAirspaceData?.restrictedZones?.length || 0,
+          availableSegments: airspaceAnalysis.map(a => a.segmentId)
+        });
+      }
 
       // Cumuler les temps pour calculer les heures d'arrivée
       cumulativeETEMinutes += Math.round(timeMinutes);
@@ -264,6 +206,57 @@ const VFRNavigationTable = ({
 
     return segments;
   }, [waypoints, selectedAircraft, plannedAltitude, weatherData, vacData, segmentAltitudes, airspaceAnalysis]);
+
+  // 🌅 Calculer la nuit aéronautique et analyser chaque segment
+  const dayNightAnalysis = useMemo(() => {
+    if (!waypoints || waypoints.length === 0 || !departureTimeTheoretical) {
+      return { sunTimes: null, segments: [], hasWarnings: false };
+    }
+
+    // Utiliser la position du premier waypoint (aérodrome de départ)
+    const departureWaypoint = waypoints[0];
+    if (!departureWaypoint.lat || !departureWaypoint.lon) {
+      return { sunTimes: null, segments: [], hasWarnings: false };
+    }
+
+    // Date du vol (ou aujourd'hui si non spécifié)
+    const date = flightDate ? new Date(flightDate) : new Date();
+
+    // Calculer les heures de lever/coucher du soleil
+    const sunTimes = calculateAeronauticalNight(
+      departureWaypoint.lat,
+      departureWaypoint.lon,
+      date
+    );
+
+    // Analyser chaque segment
+    const segmentsAnalysis = navigationData.map(seg => {
+      // Calculer les heures de départ et d'arrivée du segment
+      const departureTime = parseTimeString(departureTimeTheoretical, date);
+      if (!departureTime) return { ...seg, dayNightStatus: null };
+
+      const arrivalTime = new Date(departureTime.getTime() + seg.cumulativeETEMinutes * 60 * 1000);
+
+      // Analyser jour/nuit pour ce segment
+      const analysis = analyzeSegmentDayNight(departureTime, arrivalTime, sunTimes);
+
+      return {
+        ...seg,
+        dayNightStatus: analysis
+      };
+    });
+
+    // Détecter les warnings
+    const hasWarnings = segmentsAnalysis.some(seg =>
+      seg.dayNightStatus?.warning || seg.dayNightStatus?.twilightWarning
+    );
+
+    return {
+      sunTimes,
+      segments: segmentsAnalysis,
+      hasWarnings
+    };
+  }, [waypoints, navigationData, departureTimeTheoretical, flightDate]);
 
   // Calculer les totaux
   const totals = useMemo(() => {
@@ -311,14 +304,14 @@ const VFRNavigationTable = ({
       boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
     }}>
       {/* En-tête */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: '20px'
       }}>
-        <h3 style={{ 
-          fontSize: '18px', 
+        <h3 style={{
+          fontSize: '18px',
           fontWeight: 'bold',
           display: 'flex',
           alignItems: 'center',
@@ -327,83 +320,62 @@ const VFRNavigationTable = ({
           <Table size={20} />
           Tableau de Navigation VFR
         </h3>
-        
-        <button
-          onClick={() => setShowTable(!showTable)}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px'
-          }}
-        >
-          {showTable ? 'Masquer' : 'Afficher'} le tableau
-        </button>
+
+        {!hideToggleButton && (
+          <button
+            onClick={() => setShowTable(!showTable)}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            {showTable ? 'Masquer' : 'Afficher'} le tableau
+          </button>
+        )}
       </div>
 
       {showTable && (
         <>
-          {/* Informations de vol */}
-          <div style={{
-            backgroundColor: '#f9fafb',
-            padding: '12px',
-            borderRadius: '6px',
-            marginBottom: '16px',
-            fontSize: '13px'
-          }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-              <div>
-                <strong>Avion:</strong> {selectedAircraft.registration}
-              </div>
-              <div>
-                <strong>Facteur de base:</strong> {selectedAircraft.baseFactor || (selectedAircraft.cruiseSpeedKt ? (60 / selectedAircraft.cruiseSpeedKt).toFixed(1) : 'N/A')}
-              </div>
-            </div>
-          </div>
-
-          {/* Mini-tableau : Heure de départ théorique */}
-          <div style={{
-            backgroundColor: '#f0f9ff',
-            padding: '12px',
-            borderRadius: '6px',
-            marginBottom: '16px',
-            border: '2px solid #3b82f6'
-          }}>
+          {/* 🌅 Alerte jour/nuit si warnings détectés */}
+          {dayNightAnalysis.hasWarnings && dayNightAnalysis.sunTimes && (
             <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '16px'
+              backgroundColor: '#fef3c7',
+              border: '2px solid #f59e0b',
+              borderLeft: '6px solid #d97706',
+              borderRadius: '6px',
+              padding: '12px',
+              marginBottom: '16px'
             }}>
               <div style={{
-                fontWeight: 'bold',
-                color: '#1e40af',
-                fontSize: '14px'
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginBottom: '8px'
               }}>
-                ⏰ Temps de départ théorique:
+                <Sunset size={18} color="#d97706" />
+                <span style={{ fontWeight: 'bold', color: '#92400e', fontSize: '14px' }}>
+                  ⚠️ ALERTE JOUR/NUIT : Une partie du vol se déroulera au crépuscule ou de nuit
+                </span>
               </div>
-              <input
-                type="time"
-                value={departureTimeTheoretical}
-                onChange={(e) => setDepartureTimeTheoretical(e.target.value)}
-                style={{
-                  padding: '6px 8px',
-                  border: '2px solid #3b82f6',
-                  borderRadius: '4px',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  backgroundColor: 'white',
-                  minWidth: '100px'
-                }}
-              />
+              <div style={{ fontSize: '12px', color: '#78350f', lineHeight: '1.5' }}>
+                <div><strong>Coucher du soleil :</strong> {formatSunTime(dayNightAnalysis.sunTimes.sunset)}</div>
+                <div><strong>Début nuit aéronautique :</strong> {formatSunTime(dayNightAnalysis.sunTimes.nightStart)} (coucher + 30min)</div>
+                <div><strong>Lever du soleil :</strong> {formatSunTime(dayNightAnalysis.sunTimes.sunrise)}</div>
+                <div style={{ marginTop: '8px', fontWeight: '500' }}>
+                  Vérifiez que vous êtes qualifié pour le vol de nuit et que l'avion est équipé en conséquence.
+                </div>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Tableau de navigation */}
           <div style={{ overflowX: 'auto' }}>
@@ -422,6 +394,7 @@ const VFRNavigationTable = ({
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>DIST ({getSymbol('distance')})</th>
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>ETE</th>
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', backgroundColor: '#f0f9ff' }}>HEURE THÉORIQUE</th>
+                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', backgroundColor: '#fef9e5' }}>JOUR/NUIT</th>
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', backgroundColor: '#fef3c7' }}>ATE</th>
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', backgroundColor: '#fef3c7' }}>HEURE RÉELLE</th>
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb', backgroundColor: '#dbeafe' }}>ESPACES AÉRIENS & FRÉQUENCES</th>
@@ -488,6 +461,45 @@ const VFRNavigationTable = ({
                     }}>
                       {departureTimeTheoretical ? addMinutesToTime(departureTimeTheoretical, seg.cumulativeETEMinutes) : '-'}
                     </td>
+
+                    {/* Indicateur jour/nuit */}
+                    <td style={{
+                      padding: '8px',
+                      border: '1px solid #e5e7eb',
+                      textAlign: 'center',
+                      backgroundColor: '#fef9e5'
+                    }}>
+                      {(() => {
+                        const segAnalysis = dayNightAnalysis.segments[idx];
+                        if (!segAnalysis?.dayNightStatus) return '-';
+
+                        const status = segAnalysis.dayNightStatus.status;
+                        if (status === 'day') {
+                          return (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                              <Sun size={14} color="#f59e0b" />
+                              <span style={{ fontSize: '11px', color: '#92400e' }}>Jour</span>
+                            </div>
+                          );
+                        } else if (status === 'twilight') {
+                          return (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                              <Sunset size={14} color="#f59e0b" />
+                              <span style={{ fontSize: '11px', color: '#d97706', fontWeight: 'bold' }}>Crépuscule</span>
+                            </div>
+                          );
+                        } else if (status === 'night') {
+                          return (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                              <Moon size={14} color="#7c3aed" />
+                              <span style={{ fontSize: '11px', color: '#5b21b6', fontWeight: 'bold' }}>Nuit</span>
+                            </div>
+                          );
+                        }
+                        return '-';
+                      })()}
+                    </td>
+
                     <td style={{
                       padding: '8px',
                       border: '1px solid #e5e7eb',
@@ -693,180 +705,164 @@ const VFRNavigationTable = ({
             </table>
           </div>
 
-          {/* Légende */}
-          <div style={{
-            marginTop: '16px',
-            padding: '12px',
-            backgroundColor: '#f9fafb',
-            borderRadius: '6px',
-            fontSize: '11px'
-          }}>
-            <strong>Légende:</strong>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginTop: '8px' }}>
-              <div><strong>Alt:</strong> Altitude de vol</div>
-              <div><strong>CAP:</strong> Cap magnétique corrigé</div>
-              <div><strong>ETE:</strong> Temps estimé (Estimated)</div>
-              <div style={{ backgroundColor: '#fef3c7', padding: '2px 4px', borderRadius: '3px' }}>
-                <strong>ATE:</strong> Temps réel (à remplir)
-              </div>
-              <div style={{ backgroundColor: '#fef3c7', padding: '2px 4px', borderRadius: '3px' }}>
-                <strong>HEURE RÉELLE:</strong> Heure d'arrivée réelle
-              </div>
-            </div>
-            {/* 🚨 Bannière zones réglementées/interdites - Priorité 1 */}
-            {airspaceAnalysis && airspaceAnalysis.some(seg => seg.hasRestrictedZones) && (
-              <div style={{
-                marginTop: '12px',
-                padding: '10px',
-                backgroundColor: '#fef2f2',
-                border: '2px solid #dc2626',
-                borderLeft: '6px solid #991b1b',
-                borderRadius: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <AlertTriangle size={20} color="#991b1b" />
-                <span style={{ color: '#991b1b', fontWeight: 'bold', fontSize: '13px' }}>
-                  🚫 ALERTE CRITIQUE : Votre route traverse des zones RÉGLEMENTÉES, INTERDITES ou DANGEREUSES !
-                  <br />
-                  <span style={{ fontSize: '11px', fontWeight: 'normal' }}>
-                    Vérifiez les horaires d'activation et obtenez les autorisations nécessaires avant le vol.
-                  </span>
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Bloc TOD (Top of Descent) */}
-          {todCalculation && (
+          {/* 🚨 Bannière zones réglementées/interdites - DÉTAILLÉE avec localisation */}
+          {airspaceAnalysis && airspaceAnalysis.some(seg => seg.hasRestrictedZones) && (
             <div style={{
-              backgroundColor: todCalculation.error ? '#fef2f2' : '#fef3c7',
-              padding: '12px',
-              borderRadius: '6px',
               marginTop: '16px',
-              border: todCalculation.error ? '2px solid #ef4444' : '2px solid #f59e0b'
+              padding: '12px',
+              backgroundColor: '#fef2f2',
+              border: '2px solid #dc2626',
+              borderLeft: '6px solid #991b1b',
+              borderRadius: '4px'
             }}>
-              <div style={{
-                fontWeight: 'bold',
-                color: '#92400e',
-                fontSize: '14px',
-                marginBottom: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}>
-                <TrendingDown size={16} />
-                Top of Descent (TOD) - Arrivée {todCalculation.arrivalAerodrome}
-              </div>
-
-              {/* Paramètres modifiables */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                marginBottom: '12px',
-                padding: '8px',
-                backgroundColor: 'rgba(255, 255, 255, 0.5)',
-                borderRadius: '4px'
-              }}>
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '10px',
-                    fontWeight: 'bold',
-                    color: '#78350f',
-                    marginBottom: '4px'
-                  }}>
-                    Taux de descente (ft/min)
-                  </label>
-                  <input
-                    type="number"
-                    value={descentRate}
-                    onChange={(e) => setDescentRate(parseInt(e.target.value) || 500)}
-                    min="100"
-                    max="1000"
-                    step="50"
-                    style={{
-                      width: '100%',
-                      padding: '4px 6px',
-                      border: '1px solid #d97706',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      fontWeight: 'bold',
-                      backgroundColor: 'white'
-                    }}
-                  />
-                </div>
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '10px',
-                    fontWeight: 'bold',
-                    color: '#78350f',
-                    marginBottom: '4px'
-                  }}>
-                    Altitude cible (ft)
-                  </label>
-                  <input
-                    type="number"
-                    value={targetAltitude}
-                    onChange={(e) => setTargetAltitude(parseInt(e.target.value) || 0)}
-                    min="0"
-                    max="15000"
-                    step="100"
-                    style={{
-                      width: '100%',
-                      padding: '4px 6px',
-                      border: '1px solid #d97706',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      fontWeight: 'bold',
-                      backgroundColor: 'white'
-                    }}
-                  />
-                </div>
-              </div>
-
-              {!todCalculation.error ? (
-                <>
-                  <div style={{
-                    fontSize: '13px',
-                    fontWeight: 'bold',
-                    color: '#92400e',
-                    marginBottom: '8px'
-                  }}>
-                    Distance TOD : {todCalculation.distanceToTod} NM avant {todCalculation.arrivalAerodrome}
-                  </div>
-                  <div style={{
-                    fontSize: '11px',
-                    color: '#78350f',
-                    lineHeight: '1.6'
-                  }}>
-                    <strong>Paramètres utilisés :</strong><br />
-                    • Altitude croisière : {todCalculation.cruiseAltitude} ft<br />
-                    • Altitude terrain : {todCalculation.terrainElevation} ft<br />
-                    • Altitude pattern : {todCalculation.targetAltitude} ft<br />
-                    • Descente totale : {todCalculation.altitudeToDescent} ft<br />
-                    • Taux de descente : {descentRate} ft/min<br />
-                    • Vitesse sol : {todCalculation.groundSpeed} kt<br />
-                    • Temps de descente : {Math.round(todCalculation.descentTimeMinutes)} min<br />
-                    • Angle de descente : {todCalculation.descentAngle}°
-                  </div>
-                </>
-              ) : (
                 <div style={{
-                  fontSize: '13px',
-                  color: '#991b1b'
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginBottom: '10px'
                 }}>
-                  <strong>{todCalculation.message}</strong>
-                  <div style={{ fontSize: '11px', marginTop: '8px' }}>
-                    • Altitude actuelle : {todCalculation.cruiseAltitude} ft<br />
-                    • Altitude terrain : {todCalculation.terrainElevation} ft<br />
-                    • Altitude pattern requise : {todCalculation.targetAltitude} ft
-                  </div>
+                  <AlertTriangle size={20} color="#991b1b" />
+                  <span style={{ color: '#991b1b', fontWeight: 'bold', fontSize: '14px' }}>
+                    🚫 ALERTE CRITIQUE : Votre route traverse des zones RÉGLEMENTÉES, INTERDITES ou DANGEREUSES !
+                  </span>
                 </div>
-              )}
+
+                {/* Liste détaillée des zones par segment */}
+                <div style={{
+                  backgroundColor: 'white',
+                  padding: '10px',
+                  borderRadius: '4px',
+                  marginTop: '8px',
+                  maxHeight: '300px',
+                  overflowY: 'auto'
+                }}>
+                  {(() => {
+                    const segmentsWithZones = navigationData.filter(seg => seg.hasRestrictedZones);
+                    console.log('🚨 Segments avec zones restreintes:', {
+                      total: navigationData.length,
+                      withZones: segmentsWithZones.length,
+                      segments: segmentsWithZones.map(s => ({
+                        id: s.segmentId,
+                        from: s.from,
+                        to: s.to,
+                        zones: s.restrictedZones?.length || 0
+                      })),
+                      airspaceAnalysisAvailable: !!airspaceAnalysis,
+                      airspaceAnalysisCount: airspaceAnalysis?.length || 0
+                    });
+
+                    // 🔍 Si aucun segment avec zones trouvé, afficher message debug
+                    if (segmentsWithZones.length === 0) {
+                      return (
+                        <div style={{ color: '#dc2626', fontSize: '11px', padding: '8px' }}>
+                          🔍 DEBUG: Aucun segment avec zones trouvé dans navigationData
+                          <br />
+                          <strong>Total segments:</strong> {navigationData.length}
+                          <br />
+                          <strong>AirspaceAnalysis disponible:</strong> {airspaceAnalysis ? 'Oui' : 'Non'}
+                          <br />
+                          <strong>Segments dans airspaceAnalysis:</strong> {airspaceAnalysis?.length || 0}
+                          <br />
+                          <strong>Segments avec hasRestrictedZones dans airspaceAnalysis:</strong>{' '}
+                          {airspaceAnalysis?.filter(a => a.hasRestrictedZones).length || 0}
+                          <br />
+                          <em>Vérifiez la console pour plus de détails</em>
+                        </div>
+                      );
+                    }
+
+                    return segmentsWithZones.map((seg, idx) => (
+                      <div key={idx} style={{
+                        marginBottom: '12px',
+                        paddingBottom: '12px',
+                        borderBottom: idx < navigationData.filter(s => s.hasRestrictedZones).length - 1 ? '1px solid #fee2e2' : 'none'
+                      }}>
+                        {/* En-tête du segment */}
+                        <div style={{
+                          fontWeight: 'bold',
+                          color: '#dc2626',
+                          fontSize: '12px',
+                          marginBottom: '6px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}>
+                          <span style={{
+                            backgroundColor: '#dc2626',
+                            color: 'white',
+                            padding: '2px 6px',
+                            borderRadius: '3px',
+                            fontSize: '11px'
+                          }}>
+                            Segment {seg.index + 1}
+                          </span>
+                          <span>{seg.from} → {seg.to}</span>
+                          <span style={{ fontSize: '11px', fontWeight: 'normal', color: '#7f1d1d' }}>
+                            (Alt: {seg.altitude} ft)
+                          </span>
+                        </div>
+
+                        {/* Liste des zones pour ce segment */}
+                        {seg.restrictedZones.map((zone, zIdx) => (
+                          <div key={zIdx} style={{
+                            marginLeft: '12px',
+                            marginTop: '6px',
+                            padding: '8px',
+                            backgroundColor: '#fef2f2',
+                            border: '1px solid #fca5a5',
+                            borderRadius: '4px'
+                          }}>
+                            {/* Type et nom de la zone */}
+                            <div style={{
+                              fontSize: '11px',
+                              fontWeight: 'bold',
+                              color: '#991b1b',
+                              marginBottom: '4px'
+                            }}>
+                              {zone.type === 'P' && '🚫 ZONE INTERDITE (P)'}
+                              {zone.type === 'R' && '⚠️ ZONE RÉGLEMENTÉE (R)'}
+                              {zone.type === 'D' && '⚠️ ZONE DANGEREUSE (D)'}
+                              {zone.type === 'PROHIBITED' && '🚫 ZONE INTERDITE'}
+                              {zone.type === 'RESTRICTED' && '⚠️ ZONE RÉGLEMENTÉE'}
+                              {zone.type === 'DANGER' && '⚠️ ZONE DANGEREUSE'}
+                              {' - '}{zone.name}
+                            </div>
+
+                            {/* Détails de la zone */}
+                            <div style={{ fontSize: '10px', color: '#7f1d1d', lineHeight: '1.4' }}>
+                              <div>
+                                <strong>Altitudes:</strong> {zone.floor_raw} ({zone.floor}ft) - {zone.ceiling_raw} ({zone.ceiling}ft)
+                              </div>
+                              {zone.activity && (
+                                <div>
+                                  <strong>Activité:</strong> {zone.activity}
+                                </div>
+                              )}
+                              {zone.schedule && (
+                                <div>
+                                  <strong>Horaires activation:</strong> {zone.schedule}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ));
+                  })()}
+                </div>
+
+                {/* Message d'action */}
+                <div style={{
+                  marginTop: '10px',
+                  padding: '8px',
+                  backgroundColor: '#fee2e2',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  color: '#7f1d1d',
+                  fontWeight: '500'
+                }}>
+                  ⚠️ <strong>ACTION REQUISE:</strong> Vérifiez les horaires d'activation, obtenez les autorisations nécessaires (clairances) ou modifiez votre route pour contourner ces zones avant le vol.
+                </div>
             </div>
           )}
 

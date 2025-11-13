@@ -98,10 +98,41 @@ export class SIACompleteProvider extends AeroDataProvider {
     data.airports.forEach(airport => {
       airport.runways = data.runways.filter(rwy => rwy.airportId === airport.icao);
       airport.frequencies = data.frequencies.filter(freq => freq.airportId === airport.icao);
-      
+
+      // 🔧 FIX: Normaliser le format des pistes pour compatibilité RunwaySuggestionEnhanced
+      airport.runways.forEach(rwy => {
+        // Ajouter identifier (alias de designation)
+        if (rwy.designation && !rwy.identifier) {
+          rwy.identifier = rwy.designation;
+        }
+
+        // Extraire le_ident et he_ident depuis designation (ex: "05/23" → "05", "23")
+        if (rwy.designation && rwy.designation.includes('/')) {
+          const [le, he] = rwy.designation.split('/');
+          rwy.le_ident = le.trim();
+          rwy.he_ident = he.trim();
+
+          // Calculer les QFU (caps magnétiques)
+          const leQfu = parseInt(le.replace(/[LRC]/, '')) * 10;
+          const heQfu = (leQfu + 180) % 360;
+
+          rwy.le_heading = leQfu;
+          rwy.he_heading = heQfu;
+          rwy.qfu = leQfu; // QFU du premier seuil
+        }
+
+        // Normaliser dimensions (si pas déjà fait)
+        if (!rwy.dimensions && (rwy.length || rwy.width)) {
+          rwy.dimensions = {
+            length: rwy.length || 0,
+            width: rwy.width || 0
+          };
+        }
+      });
+
       // Ajouter le type d'aérodrome basé sur les pistes
       if (airport.runways.length > 0) {
-        const maxLength = Math.max(...airport.runways.map(r => r.dimensions?.length || 0));
+        const maxLength = Math.max(...airport.runways.map(r => r.dimensions?.length || r.length || 0));
         if (maxLength > 2000) {
           airport.category = 'large';
         } else if (maxLength > 1000) {

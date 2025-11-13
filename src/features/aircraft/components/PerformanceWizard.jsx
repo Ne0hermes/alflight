@@ -292,7 +292,24 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
     const pdfjsLib = window.pdfjsLib;
     if (!pdfjsLib) throw new Error('PDF.js non chargé');
 
-    const arrayBuffer = await file.arrayBuffer();
+    // 🔧 FIX: Support plusieurs formats de données (File, Blob, ArrayBuffer, Uint8Array)
+    let arrayBuffer;
+    if (file instanceof Uint8Array) {
+      // Déjà un Uint8Array, utiliser directement
+      arrayBuffer = file;
+    } else if (file instanceof ArrayBuffer) {
+      // Déjà un ArrayBuffer, utiliser directement
+      arrayBuffer = file;
+    } else if (file.arrayBuffer && typeof file.arrayBuffer === 'function') {
+      // File ou Blob standard avec méthode arrayBuffer()
+      arrayBuffer = await file.arrayBuffer();
+    } else if (file instanceof Blob) {
+      // Blob sans méthode arrayBuffer (navigateurs anciens)
+      arrayBuffer = await new Response(file).arrayBuffer();
+    } else {
+      throw new Error('Format de fichier non supporté');
+    }
+
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
     const pages = [];
 
@@ -380,7 +397,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
         let pdfFile = null;
 
         if (aircraft.manex.pdfData) {
-          // Convertir base64 en blob
+          // 🔧 FIX: Convertir base64 en Uint8Array directement (plus efficace)
           const base64Data = aircraft.manex.pdfData.includes(',')
             ? aircraft.manex.pdfData.split(',')[1]
             : aircraft.manex.pdfData;
@@ -390,23 +407,31 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
             byteNumbers[i] = byteCharacters.charCodeAt(i);
           }
           const byteArray = new Uint8Array(byteNumbers);
-          pdfFile = new File([byteArray], aircraft.manex.fileName || 'manex.pdf', { type: 'application/pdf' });
+
+          // Passer directement le byteArray (évite conversion File inutile)
+          pdfFile = byteArray;
+
+          // Créer un File pour setManualFile (UI uniquement)
+          const fileForUI = new File([byteArray], aircraft.manex.fileName || 'manex.pdf', { type: 'application/pdf' });
+          setManualFile(fileForUI);
         } else if (aircraft.manex.file) {
           pdfFile = aircraft.manex.file;
+          setManualFile(pdfFile);
         } else if (aircraft.manex.data) {
           // data peut être déjà un File ou Blob
           pdfFile = aircraft.manex.data;
+          setManualFile(pdfFile);
         }
 
         if (!pdfFile) {
-          
+
           setError('Impossible de récupérer le fichier PDF du MANEX');
           setIsProcessing(false);
           return;
         }
 
-        
-        setManualFile(pdfFile);
+
+        // Note: setManualFile déjà appelé ci-dessus selon le cas
 
         // Extraire toutes les pages
         const allPages = await extractAllPages(pdfFile);

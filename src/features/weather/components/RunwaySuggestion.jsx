@@ -28,7 +28,7 @@ const calculateCrosswindComponent = (windDirection, windSpeed, runwayHeading) =>
   return Math.abs(windSpeed * Math.sin(angleRad));
 };
 
-export const RunwaySuggestion = memo(({ icao, wind }) => {
+export const RunwaySuggestion = memo(({ icao, wind, aircraft }) => {
   const [airport, setAirport] = useState(null);
   const [runways, setRunways] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -64,13 +64,13 @@ export const RunwaySuggestion = memo(({ icao, wind }) => {
   // Analyser chaque piste par rapport au vent
   const analyzedRunways = runways.flatMap(runway => {
     const results = [];
-    
+
     // Analyser chaque seuil de la piste
     if (runway.le_ident && runway.le_heading !== undefined) {
       const headwind = calculateHeadwindComponent(wind.direction, wind.speed, runway.le_heading);
       const crosswind = calculateCrosswindComponent(wind.direction, wind.speed, runway.le_heading);
       const angleDiff = calculateAngleDifference(wind.direction, runway.le_heading);
-      
+
       results.push({
         ident: runway.le_ident,
         heading: runway.le_heading,
@@ -83,12 +83,12 @@ export const RunwaySuggestion = memo(({ icao, wind }) => {
         isTailwind: headwind < 0
       });
     }
-    
+
     if (runway.he_ident && runway.he_heading !== undefined) {
       const headwind = calculateHeadwindComponent(wind.direction, wind.speed, runway.he_heading);
       const crosswind = calculateCrosswindComponent(wind.direction, wind.speed, runway.he_heading);
       const angleDiff = calculateAngleDifference(wind.direction, runway.he_heading);
-      
+
       results.push({
         ident: runway.he_ident,
         heading: runway.he_heading,
@@ -101,12 +101,26 @@ export const RunwaySuggestion = memo(({ icao, wind }) => {
         isTailwind: headwind < 0
       });
     }
-    
+
     return results;
   });
-  
+
+  // 🔧 FIX CRITIQUE: Filtrer les pistes incompatibles avec l'avion AVANT de recommander
+  const compatibleRunways = analyzedRunways.filter(analysis => {
+    // Si pas d'avion ou pas de restrictions de surface, tout est acceptable
+    if (!aircraft || !aircraft.compatibleRunwaySurfaces || aircraft.compatibleRunwaySurfaces.length === 0) {
+      return true;
+    }
+
+    // Vérifier la compatibilité de surface
+    const surfaceType = analysis.runway.surface?.type || 'UNKNOWN';
+    const isCompatible = aircraft.compatibleRunwaySurfaces.includes(surfaceType);
+
+    return isCompatible;
+  });
+
   // Trier par composante vent de face (meilleur en premier)
-  const sortedRunways = analyzedRunways.sort((a, b) => b.headwind - a.headwind);
+  const sortedRunways = compatibleRunways.sort((a, b) => b.headwind - a.headwind);
   const optimalRunways = sortedRunways.filter(r => r.isOptimal && !r.isTailwind);
   const bestRunway = sortedRunways[0];
   

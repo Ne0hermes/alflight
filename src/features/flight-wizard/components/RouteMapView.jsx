@@ -140,10 +140,69 @@ const PolylineWithArrows = ({ positions, color, weight, opacity, dashArray, isRe
 };
 
 /**
+ * Calcule la position géographique du point TOD sur la trajectoire
+ * @param {Object} arrival - Waypoint d'arrivée
+ * @param {number} distanceToTodNM - Distance du TOD en NM avant l'arrivée
+ * @param {Array} waypoints - Tous les waypoints de la route
+ * @returns {Object|null} - {lat, lon} du point TOD
+ */
+function calculateTodPosition(arrival, distanceToTodNM, waypoints) {
+  if (!arrival || !distanceToTodNM || distanceToTodNM <= 0 || !waypoints || waypoints.length < 2) {
+    return null;
+  }
+
+  // Convertir NM en km
+  const distanceToTodKM = distanceToTodNM * 1.852;
+
+  // Parcourir la route en sens inverse depuis l'arrivée
+  let remainingDistance = distanceToTodKM;
+
+  for (let i = waypoints.length - 1; i > 0; i--) {
+    const to = waypoints[i];
+    const from = waypoints[i - 1];
+
+    if (!to.lat || !to.lon || !from.lat || !from.lon) continue;
+
+    // Calculer la distance de ce segment
+    const segmentDistance = calculateDistanceKM(from.lat, from.lon, to.lat, to.lon);
+
+    if (remainingDistance <= segmentDistance) {
+      // Le point TOD est sur ce segment
+      const ratio = remainingDistance / segmentDistance;
+
+      // Interpolation linéaire
+      const todLat = to.lat - (to.lat - from.lat) * ratio;
+      const todLon = to.lon - (to.lon - from.lon) * ratio;
+
+      return { lat: todLat, lon: todLon };
+    }
+
+    remainingDistance -= segmentDistance;
+  }
+
+  // Si on arrive ici, le TOD est avant le premier waypoint
+  return null;
+}
+
+/**
+ * Calcule la distance entre deux points en km
+ */
+function calculateDistanceKM(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Rayon de la Terre en km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+/**
  * Composant de carte interactive pour la planification de route
  * Affiche les waypoints de navigation et les points VFR sélectionnés
  */
-export const RouteMapView = ({ vfrPoints = [], flightPlan = null }) => {
+export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation = null }) => {
   console.log('🗺️🗺️🗺️ RouteMapView MONTÉ - Début du composant');
 
   // Récupérer les waypoints depuis le NavigationContext (source de vérité)
@@ -162,7 +221,10 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null }) => {
   // Les waypoints du NavigationContext incluent déjà départ, arrivée et points intermédiaires
   // Structure: { id, name, lat, lon, type, icao, ... }
   // Filtrer seulement les waypoints avec coordonnées valides
-  const validWaypoints = (waypoints || []).filter(wp => wp.lat && wp.lon);
+  // Utilisation de useMemo pour éviter une boucle infinie dans le useEffect ligne 285
+  const validWaypoints = React.useMemo(() => {
+    return (waypoints || []).filter(wp => wp.lat && wp.lon);
+  }, [waypoints]);
 
   // Attendre un court délai pour laisser le temps aux données de charger depuis localStorage
   useEffect(() => {
@@ -222,52 +284,41 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null }) => {
   // Préparer les coordonnées pour la ligne de route
   const routeCoordinates = validWaypoints.map(wp => [wp.lat, wp.lon]);
 
-  // Calculer le point de TOD si les données sont disponibles
+  // 🛬 Calculer le point de TOD si les données sont disponibles
   useEffect(() => {
-    if (flightPlan?.todParameters && arrival) {
-      const { distanceToTod } = flightPlan.todParameters;
-      if (distanceToTod > 0 && routeCoordinates.length >= 2) {
-        // Calculer le point de TOD sur la route
-        // Prendre les 2 derniers points de la route (avant l'arrivée)
-        const lastSegmentIndex = routeCoordinates.length - 2;
-        const pointBeforeArrival = routeCoordinates[lastSegmentIndex];
-        const arrivalPoint = routeCoordinates[routeCoordinates.length - 1];
+    if (todCalculation && !todCalculation.error && arrival && validWaypoints.length >= 2) {
+      const distanceToTodNM = parseFloat(todCalculation.distanceToTod);
 
-        // Calculer le bearing entre les deux points
-        const lat1 = pointBeforeArrival[0] * Math.PI / 180;
-        const lat2 = arrivalPoint[0] * Math.PI / 180;
-        const dLon = (arrivalPoint[1] - pointBeforeArrival[0]) * Math.PI / 180;
-
-        const y = Math.sin(dLon) * Math.cos(lat2);
-        const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
-        const bearing = Math.atan2(y, x);
-
-        // Convertir la distance NM en kilomètres (1 NM = 1.852 km)
-        const distanceKm = distanceToTod * 1.852;
-        const R = 6371; // Rayon de la Terre en km
-
-        // Calculer le nouveau point depuis l'arrivée en reculant
-        const lat = arrivalPoint[0] * Math.PI / 180;
-        const lon = arrivalPoint[1] * Math.PI / 180;
-
-        const todLat = Math.asin(
-          Math.sin(lat) * Math.cos(distanceKm / R) +
-          Math.cos(lat) * Math.sin(distanceKm / R) * Math.cos(bearing + Math.PI)
-        );
-
-        const todLon = lon + Math.atan2(
-          Math.sin(bearing + Math.PI) * Math.sin(distanceKm / R) * Math.cos(lat),
-          Math.cos(distanceKm / R) - Math.sin(lat) * Math.sin(todLat)
-        );
-
-        setTodPoint({
-          lat: todLat * 180 / Math.PI,
-          lon: todLon * 180 / Math.PI,
-          distanceToTod
+      if (distanceToTodNM > 0) {
+        console.log('🛬 Calcul position TOD:', {
+          distanceToTodNM,
+          arrivalName: arrival.name || arrival.icao,
+          waypointsCount: validWaypoints.length
         });
+
+        const todPosition = calculateTodPosition(arrival, distanceToTodNM, validWaypoints);
+
+        if (todPosition) {
+          setTodPoint({
+            ...todPosition,
+            distanceToTod: distanceToTodNM,
+            arrivalName: arrival.name || arrival.icao,
+            cruiseAltitude: todCalculation.cruiseAltitude,
+            targetAltitude: todCalculation.targetAltitude,
+            descentRate: todCalculation.descentRate
+          });
+          console.log('✅ Point TOD calculé:', todPosition);
+        } else {
+          console.warn('⚠️ Impossible de calculer la position TOD');
+          setTodPoint(null);
+        }
+      } else {
+        setTodPoint(null);
       }
+    } else {
+      setTodPoint(null);
     }
-  }, [flightPlan, arrival, routeCoordinates]);
+  }, [todCalculation, arrival, validWaypoints]);
 
   // Calculer les positions des flèches le long de la route
   const arrowMarkers = useMemo(() => {
@@ -481,21 +532,39 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null }) => {
         {todPoint && (
           <CircleMarker
             center={[todPoint.lat, todPoint.lon]}
-            radius={8}
+            radius={10}
             pathOptions={{
               color: '#f59e0b',
-              fillColor: '#f59e0b',
+              fillColor: '#fef3c7',
               fillOpacity: 0.9,
               weight: 3
             }}
           >
             <Popup>
-              <div style={{ padding: '6px' }}>
-                <strong style={{ fontSize: '13px', color: '#f59e0b' }}>
+              <div style={{ padding: '8px', minWidth: '200px' }}>
+                <strong style={{ fontSize: '14px', color: '#f59e0b', display: 'block', marginBottom: '6px' }}>
                   ⬇️ Top of Descent (TOD)
                 </strong>
-                <div style={{ fontSize: '11px', marginTop: '4px', color: '#6b7280' }}>
-                  À {todPoint.distanceToTod.toFixed(1)} NM de l'arrivée
+                <div style={{ fontSize: '11px', color: '#374151', lineHeight: '1.6' }}>
+                  <div style={{ marginBottom: '4px' }}>
+                    <strong>Arrivée :</strong> {todPoint.arrivalName}
+                  </div>
+                  <div style={{ marginBottom: '4px' }}>
+                    <strong>Distance TOD :</strong> {todPoint.distanceToTod.toFixed(1)} NM
+                  </div>
+                  {todPoint.cruiseAltitude && (
+                    <>
+                      <div style={{ marginBottom: '4px' }}>
+                        <strong>Altitude croisière :</strong> {todPoint.cruiseAltitude} ft
+                      </div>
+                      <div style={{ marginBottom: '4px' }}>
+                        <strong>Altitude cible :</strong> {todPoint.targetAltitude} ft
+                      </div>
+                      <div>
+                        <strong>Taux descente :</strong> {todPoint.descentRate} ft/min
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </Popup>

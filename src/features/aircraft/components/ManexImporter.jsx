@@ -21,27 +21,42 @@ export const ManexImporter = memo(({
 
   // Charger le MANEX depuis IndexedDB au montage
   useEffect(() => {
-            
+    console.log('🔍 [ManexImporter] useEffect triggered for aircraft:', aircraft?.id, aircraft?.registration);
+
     const loadManexData = async () => {
       if (aircraft?.id) {
         try {
-                    await dataBackupManager.initPromise;
+          console.log('⏳ [ManexImporter] Loading MANEX data from IndexedDB...');
+          await dataBackupManager.initPromise;
           const fullAircraft = await dataBackupManager.getAircraftData(aircraft.id);
-                    
+
+          console.log('📦 [ManexImporter] Full aircraft data:', {
+            hasData: !!fullAircraft,
+            hasManex: !!fullAircraft?.manex,
+            hasPdfData: !!fullAircraft?.manex?.pdfData,
+            hasRemoteUrl: !!fullAircraft?.manex?.remoteUrl,
+            manexKeys: fullAircraft?.manex ? Object.keys(fullAircraft.manex) : []
+          });
+
           if (fullAircraft && fullAircraft.manex) {
+            console.log('✅ [ManexImporter] MANEX found in IndexedDB');
             setManexData(fullAircraft.manex);
-            
-            // Si le PDF n'est pas en local mais qu'on a une URL distante, le télécharger
+
+            // 🔧 FIX: Ne PAS télécharger automatiquement le MANEX
+            // L'utilisateur doit cliquer manuellement sur "Télécharger depuis Supabase"
             if (!fullAircraft.manex.pdfData && fullAircraft.manex.remoteUrl) {
-                            await downloadRemoteManex(fullAircraft.manex.remoteUrl, fullAircraft);
+              console.log('ℹ️ [ManexImporter] MANEX disponible sur Supabase (pas de téléchargement auto)');
+              console.log('💡 [ManexImporter] Cliquez sur "Télécharger depuis Supabase" pour obtenir le PDF');
             }
           } else {
-                      }
+            console.warn('⚠️ [ManexImporter] No MANEX data found in IndexedDB');
+          }
         } catch (error) {
-          console.error('❌ Erreur lors du chargement du MANEX:', error);
+          console.error('❌ [ManexImporter] Erreur lors du chargement du MANEX:', error);
         }
       } else {
-              }
+        console.warn('⚠️ [ManexImporter] No aircraft ID provided');
+      }
     };
     loadManexData();
   }, [aircraft?.id]);
@@ -396,7 +411,7 @@ export const ManexImporter = memo(({
         </div>
 
         {/* Affichage du MANEX existant */}
-        {aircraft.manex && !loading && (
+        {(manexData || aircraft.manex) && !loading && (
           <div style={{
             backgroundColor: manexData?.pdfData ? '#f0f9ff' : '#fef3c7',
             border: `1px solid ${manexData?.pdfData ? '#3b82f6' : '#f59e0b'}`,
@@ -407,9 +422,9 @@ export const ManexImporter = memo(({
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
               <FileText size={20} style={{ marginRight: '8px', color: manexData?.pdfData ? '#3b82f6' : '#f59e0b' }} />
               <div style={{ flex: 1 }}>
-                <p style={{ fontWeight: '600', marginBottom: '4px' }}>{aircraft.manex.fileName}</p>
+                <p style={{ fontWeight: '600', marginBottom: '4px' }}>{manexData?.fileName || aircraft.manex?.fileName || 'MANEX'}</p>
                 <p style={{ fontSize: '14px', color: '#6b7280' }}>
-                  {aircraft.manex.fileSize} • Importé le {new Date(aircraft.manex.uploadDate).toLocaleDateString('fr-FR')}
+                  {manexData?.fileSize || aircraft.manex?.fileSize} • Importé le {new Date(manexData?.uploadDate || aircraft.manex?.uploadDate || Date.now()).toLocaleDateString('fr-FR')}
                 </p>
                 {!manexData?.pdfData && (
                   <div style={{
@@ -423,7 +438,7 @@ export const ManexImporter = memo(({
                       ⚠️ PDF non disponible localement
                     </p>
                     <p style={{ fontSize: '12px', color: '#78350f', margin: '4px 0 0 0' }}>
-                      {aircraft.manex.remoteUrl
+                      {(manexData?.remoteUrl || aircraft.manex?.remoteUrl)
                         ? '→ Cliquez sur "Récupérer le PDF" pour le télécharger, puis vous pourrez l\'uploader sur Supabase'
                         : '→ Cliquez sur "Remplacer le MANEX" pour réimporter le PDF, puis vous pourrez l\'uploader sur Supabase'
                       }
@@ -485,29 +500,29 @@ export const ManexImporter = memo(({
                 onClick={async () => {
                   if (manexData?.pdfData) {
                     handleDownloadManex();
-                  } else if (aircraft.manex.remoteUrl) {
+                  } else if (manexData?.remoteUrl || aircraft.manex?.remoteUrl) {
                     const fullAircraft = await dataBackupManager.getAircraftData(aircraft.id);
-                    await downloadRemoteManex(aircraft.manex.remoteUrl, fullAircraft);
+                    await downloadRemoteManex(manexData?.remoteUrl || aircraft.manex?.remoteUrl, fullAircraft);
                   }
                 }}
-                disabled={!manexData?.pdfData && !aircraft.manex.remoteUrl}
+                disabled={!manexData?.pdfData && !(manexData?.remoteUrl || aircraft.manex?.remoteUrl)}
                 style={{
                   padding: '6px 12px',
-                  backgroundColor: (manexData?.pdfData || aircraft.manex.remoteUrl) ? '#3b82f6' : 'white',
-                  color: (manexData?.pdfData || aircraft.manex.remoteUrl) ? 'white' : '#6b7280',
-                  border: `1px solid ${(manexData?.pdfData || aircraft.manex.remoteUrl) ? '#3b82f6' : '#d1d5db'}`,
+                  backgroundColor: (manexData?.pdfData || manexData?.remoteUrl || aircraft.manex?.remoteUrl) ? '#3b82f6' : 'white',
+                  color: (manexData?.pdfData || manexData?.remoteUrl || aircraft.manex?.remoteUrl) ? 'white' : '#6b7280',
+                  border: `1px solid ${(manexData?.pdfData || manexData?.remoteUrl || aircraft.manex?.remoteUrl) ? '#3b82f6' : '#d1d5db'}`,
                   borderRadius: '6px',
                   fontSize: '14px',
-                  cursor: (manexData?.pdfData || aircraft.manex.remoteUrl) ? 'pointer' : 'not-allowed',
+                  cursor: (manexData?.pdfData || manexData?.remoteUrl || aircraft.manex?.remoteUrl) ? 'pointer' : 'not-allowed',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  opacity: (manexData?.pdfData || aircraft.manex.remoteUrl) ? 1 : 0.5
+                  opacity: (manexData?.pdfData || manexData?.remoteUrl || aircraft.manex?.remoteUrl) ? 1 : 0.5
                 }}
                 title={
                   manexData?.pdfData
                     ? 'Télécharger le PDF'
-                    : aircraft.manex.remoteUrl
+                    : (manexData?.remoteUrl || aircraft.manex?.remoteUrl)
                       ? 'Télécharger le PDF depuis le serveur'
                       : 'Fichier PDF manquant - Cliquez sur Remplacer pour réimporter le PDF'
                 }
@@ -516,171 +531,34 @@ export const ManexImporter = memo(({
                 {loading ? 'Téléchargement...' : (manexData?.pdfData ? 'Télécharger' : 'Récupérer le PDF')}
               </button>
 
-              {/* Bouton Upload Supabase */}
-              {manexData?.pdfData && !manexData?.uploadedToSupabase && (
-                <button
-                  onClick={handleUploadToSupabase}
-                  disabled={uploadingToSupabase}
-                  style={{
-                    padding: '6px 12px',
-                    backgroundColor: '#3b82f6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontSize: '14px',
-                    cursor: uploadingToSupabase ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    opacity: uploadingToSupabase ? 0.6 : 1
-                  }}
-                  title="Uploader le MANEX sur Supabase Storage"
-                >
-                  <Cloud size={16} />
-                  {uploadingToSupabase ? 'Upload...' : 'Uploader sur Supabase'}
-                </button>
-              )}
-
-              {aircraft.manex && (
-                <button
-                  onClick={() => !loading && fileInputRef.current?.click()}
-                  disabled={loading}
-                  style={{
-                    padding: '6px 12px',
-                    backgroundColor: 'white',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    fontSize: '14px',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    opacity: loading ? 0.5 : 1
-                  }}
-                  title="Remplacer le MANEX par un nouveau fichier"
-                >
-                  <Upload size={16} />
-                  Remplacer
-                </button>
-              )}
-
-              <button
-                onClick={handleRemoveManex}
-                style={{
-                  padding: '6px 12px',
-                  backgroundColor: '#fee2e2',
-                  color: '#991b1b',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
-              >
-                <Trash2 size={16} />
-                Supprimer
-              </button>
+              {/* 🔧 DÉSACTIVÉ: Boutons de modification (Upload, Remplacer, Supprimer) */}
+              {/* Ces actions se font dans le wizard de création/édition d'avion */}
+              {/* Ici on affiche uniquement le MANEX en lecture seule */}
             </div>
           </div>
         )}
 
-        {/* Bouton d'import - si pas de MANEX */}
-        {!aircraft.manex && (
-          <div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf"
-              onChange={handleFileSelect}
-              style={{ display: 'none' }}
-              disabled={loading}
-            />
-
-            <button
-              onClick={() => !loading && fileInputRef.current?.click()}
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '12px 16px',
-                backgroundColor: '#3b82f6',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '16px',
-                fontWeight: '600',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                opacity: loading ? 0.6 : 1,
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                if (!loading) {
-                  e.currentTarget.style.backgroundColor = '#2563eb';
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#3b82f6';
-              }}
-            >
-              <Upload size={20} />
-              Importer le MANEX
-            </button>
-          </div>
-        )}
-
-        {/* Input caché partagé */}
-        {aircraft.manex && (
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf"
-            onChange={handleFileSelect}
-            style={{ display: 'none' }}
-            disabled={loading}
-          />
-        )}
-
-        {/* Message de chargement */}
-        {loading && (
-          <div style={{ textAlign: 'center', marginTop: '16px' }}>
-            <p style={{ color: '#3b82f6', fontWeight: '500' }}>
-              Enregistrement du MANEX en cours...
+        {/* 🔧 DÉSACTIVÉ: Bouton d'import */}
+        {/* L'import se fait uniquement dans le wizard de création/édition d'avion */}
+        {!manexData && !aircraft.manex && (
+          <div style={{
+            backgroundColor: '#fef3c7',
+            border: '1px solid #f59e0b',
+            borderRadius: '8px',
+            padding: '16px',
+            textAlign: 'center'
+          }}>
+            <p style={{ color: '#92400e', fontWeight: '500', marginBottom: '8px' }}>
+              ⚠️ Aucun MANEX importé pour cet avion
+            </p>
+            <p style={{ fontSize: '14px', color: '#78350f', margin: 0 }}>
+              → Utilisez le wizard de création/édition d'avion pour importer un MANEX
             </p>
           </div>
         )}
 
-        {/* Bouton Mettre à jour Supabase - uniquement si avion importé de la communauté */}
-        {aircraft.communityPresetId && (
-          <div style={{ marginTop: '20px', marginBottom: '10px' }}>
-            <SupabaseUpdater
-              aircraft={aircraft}
-              onUpdateComplete={() => {
-                showNotification('✅ Données Supabase mises à jour!', 'success', 3000);
-              }}
-            />
-          </div>
-        )}
-
-        {/* Note informative */}
-        <div style={{
-          marginTop: '20px',
-          padding: '12px',
-          backgroundColor: '#f3f4f6',
-          borderRadius: '6px',
-          fontSize: '14px',
-          color: '#6b7280'
-        }}>
-          <p style={{ display: 'flex', alignItems: 'flex-start' }}>
-            <span style={{ marginRight: '8px' }}>ℹ️</span>
-            Le MANEX sera stocké avec l'avion pour référence future.
-            Vous pourrez le consulter ou le télécharger à tout moment depuis la fiche de l'avion.
-          </p>
-        </div>
+        {/* 🔧 DÉSACTIVÉ: Input file et SupabaseUpdater */}
+        {/* Ces fonctionnalités sont uniquement dans le wizard */}
       </div>
     </div>
   );

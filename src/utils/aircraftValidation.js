@@ -2,37 +2,25 @@
 // Utilitaires pour valider et réparer les données d'avion
 
 /**
- * Valeurs par défaut pour les données de masse et centrage
+ * ⚠️ SÉCURITÉ CRITIQUE : PAS DE VALEURS PAR DÉFAUT POUR MASSE & CENTRAGE
+ *
+ * Les bras de levier et limites CG sont spécifiques à chaque avion.
+ * Utiliser des valeurs par défaut pourrait causer un décentrage critique
+ * et rendre l'avion INCONTRÔLABLE en vol.
+ *
+ * Si les données manquent → AFFICHER UN AVERTISSEMENT CLAIR
+ * Ne JAMAIS générer de valeurs fictives.
  */
-const DEFAULT_WEIGHT_BALANCE = {
-  frontLeftSeatArm: 2.00,
-  frontRightSeatArm: 2.00,
-  rearLeftSeatArm: 2.90,
-  rearRightSeatArm: 2.90,
-  baggageArm: 3.50,
-  auxiliaryArm: 3.70,
-  fuelArm: 2.40,
-  emptyWeightArm: 2.30,
-  cgLimits: {
-    forward: 2.00,
-    aft: 2.45,
-    forwardVariable: []
-  }
-};
 
 /**
- * Valeurs par défaut pour les données de base d'un avion
+ * ⚠️ Valeurs par défaut NON CRITIQUES uniquement
+ * Ces valeurs sont des estimations génériques pour l'affichage seulement
+ * et ne doivent JAMAIS être utilisées pour des calculs de sécurité
  */
 const DEFAULT_AIRCRAFT_VALUES = {
-  emptyWeight: 870,
-  minTakeoffWeight: 900,
-  maxTakeoffWeight: 1200,
-  maxLandingWeight: 1200,
-  maxBaggageWeight: 50,
-  maxAuxiliaryWeight: 20,
-  fuelCapacity: 150,
-  fuelConsumptionLph: 30,
-  cruiseSpeedKt: 100,
+  // Ces valeurs sont indicatives uniquement
+  maxBaggageWeight: 50,  // Indicatif - vérifier manuel avion
+  maxAuxiliaryWeight: 20, // Indicatif - vérifier manuel avion
   fuelType: 'AVGAS 100LL'
 };
 
@@ -150,39 +138,54 @@ export function validateAndRepairAircraft(aircraft) {
     repairedAircraft.flightManual = aircraft.flightManual;
   }
 
-  // Réparer les données de masse et centrage
+  // ⚠️ SÉCURITÉ : Préserver weightBalance tel quel, AUCUNE valeur par défaut
   if (!repairedAircraft.weightBalance) {
-    console.warn('⚠️ [Validation] weightBalance is missing - using DEFAULT values (should NOT happen if normalizer ran)');
+    console.warn('⚠️ [Validation] weightBalance is missing - NO DEFAULT VALUES (per safety requirements)');
     console.log('Aircraft has arms?', !!aircraft.arms);
-    repairedAircraft.weightBalance = { ...DEFAULT_WEIGHT_BALANCE };
+    // Ne PAS créer de weightBalance - laisser undefined
+    // L'interface affichera "⚠️ MANQUANT" pour les valeurs manquantes
   } else {
-    console.log('✓ [Validation] weightBalance exists:', repairedAircraft.weightBalance);
-    // Vérifier chaque propriété de weightBalance
-    const wb = { ...repairedAircraft.weightBalance };
+    console.log('✅ [Validation] weightBalance exists - preserving as-is');
+    // Préserver weightBalance exactement tel quel
+    // NE PAS remplir les propriétés manquantes avec des valeurs par défaut
 
-    Object.keys(DEFAULT_WEIGHT_BALANCE).forEach(key => {
-      if (key === 'cgLimits') {
-        // Traiter cgLimits séparément
-        if (!wb.cgLimits) {
-          wb.cgLimits = { ...DEFAULT_WEIGHT_BALANCE.cgLimits };
-        } else {
-          if (wb.cgLimits.forward === undefined) {
-            wb.cgLimits.forward = DEFAULT_WEIGHT_BALANCE.cgLimits.forward;
-          }
-          if (wb.cgLimits.aft === undefined) {
-            wb.cgLimits.aft = DEFAULT_WEIGHT_BALANCE.cgLimits.aft;
-          }
-          if (!Array.isArray(wb.cgLimits.forwardVariable)) {
-            wb.cgLimits.forwardVariable = [];
-          }
-        }
-      } else if (wb[key] === undefined || wb[key] === null) {
-        console.log(`  Filling missing ${key}: ${DEFAULT_WEIGHT_BALANCE[key]}`);
-        wb[key] = DEFAULT_WEIGHT_BALANCE[key];
+    // 🔧 FIX CRITIQUE: Créer cgLimits depuis cgEnvelope si manquant
+    // Cela garantit que tous les avions (Supabase, IndexedDB, etc.) ont cgLimits
+    if (!repairedAircraft.weightBalance.cgLimits ||
+        (repairedAircraft.weightBalance.cgLimits.forward === undefined &&
+         repairedAircraft.weightBalance.cgLimits.aft === undefined)) {
+
+      console.warn('⚠️ [Validation] cgLimits manquant, tentative de mapping depuis cgEnvelope...');
+
+      // Helper pour parser null values
+      const parseOrNull = (value) => {
+        if (!value || value === '' || value === '0') return null;
+        const parsed = parseFloat(value);
+        return isNaN(parsed) ? null : parsed;
+      };
+
+      if (repairedAircraft.cgEnvelope) {
+        repairedAircraft.weightBalance.cgLimits = {
+          forward: parseOrNull(repairedAircraft.cgEnvelope.forwardPoints?.[0]?.cg),
+          aft: parseOrNull(repairedAircraft.cgEnvelope.aftCG),
+          forwardVariable: repairedAircraft.cgEnvelope.forwardPoints || []
+        };
+        console.log('✅ [Validation] cgLimits créé depuis cgEnvelope:', repairedAircraft.weightBalance.cgLimits);
+      } else {
+        // Dernier fallback: null (désactive la vérification CG)
+        repairedAircraft.weightBalance.cgLimits = {
+          forward: null,
+          aft: null,
+          forwardVariable: []
+        };
+        console.warn('⚠️ [Validation] Aucune donnée cgEnvelope disponible, cgLimits = null');
       }
-    });
-
-    repairedAircraft.weightBalance = wb;
+    } else {
+      // Juste s'assurer que forwardVariable est un tableau s'il existe
+      if (!Array.isArray(repairedAircraft.weightBalance.cgLimits.forwardVariable)) {
+        repairedAircraft.weightBalance.cgLimits.forwardVariable = [];
+      }
+    }
   }
   
   //   //   

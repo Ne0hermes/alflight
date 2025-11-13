@@ -143,9 +143,55 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
     };
     // Mise à jour des données selon le type
     if (performanceData.advancedPerformance) {
-      
-      updateData('advancedPerformance', performanceData.advancedPerformance);
-      dataToSave.advancedPerformance = performanceData.advancedPerformance;
+      console.log('📊 Nouveaux tableaux reçus:', performanceData.advancedPerformance.tables?.length || 0);
+
+      // 🔧 FIX: Fusionner les nouveaux tableaux avec les existants au lieu de les remplacer
+      const existingTables = data.advancedPerformance?.tables || [];
+      const newTables = performanceData.advancedPerformance.tables || [];
+
+      console.log('📊 Tableaux existants:', existingTables.length);
+      console.log('📊 Fusion en cours...');
+
+      // Fusionner les tableaux (éviter les doublons par page + type + nom)
+      const mergedTables = [...existingTables];
+      newTables.forEach(newTable => {
+        // 🔧 FIX: Identifiant unique combinant pageNumber + type + nom
+        // Plusieurs tableaux peuvent venir de la même page
+        const newTableId = `${newTable.pageNumber || 'nopage'}_${newTable.table_type || 'notype'}_${newTable.table_name || 'noname'}`;
+
+        // Chercher un tableau avec le même identifiant unique
+        const existingIndex = mergedTables.findIndex(t => {
+          const existingId = `${t.pageNumber || 'nopage'}_${t.table_type || 'notype'}_${t.table_name || 'noname'}`;
+          return existingId === newTableId;
+        });
+
+        if (existingIndex >= 0) {
+          // Remplacer le tableau existant (ré-analyse)
+          console.log(`📊 Remplacement tableau ${newTable.table_name} (page ${newTable.pageNumber})`);
+          mergedTables[existingIndex] = newTable;
+        } else {
+          // Ajouter le nouveau tableau
+          console.log(`📊 Ajout nouveau tableau ${newTable.table_name} (page ${newTable.pageNumber})`);
+          mergedTables.push(newTable);
+        }
+      });
+
+      console.log('✅ Tableaux après fusion:', mergedTables.length);
+
+      // Créer l'objet advancedPerformance fusionné
+      const mergedAdvancedPerformance = {
+        ...performanceData.advancedPerformance,
+        tables: mergedTables,
+        extractionMetadata: {
+          ...(data.advancedPerformance?.extractionMetadata || {}),
+          ...performanceData.advancedPerformance.extractionMetadata,
+          totalTables: mergedTables.length,
+          lastModified: new Date().toISOString()
+        }
+      };
+
+      updateData('advancedPerformance', mergedAdvancedPerformance);
+      dataToSave.advancedPerformance = mergedAdvancedPerformance;
     }
 
     if (performanceData.abacCurves) {
@@ -406,6 +452,9 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                 const typeInfo = performanceTypes.find(t => t.value === classification);
                 const displayName = typeInfo?.label || classification;
 
+                // Utiliser le nom du premier tableau comme titre principal
+                const mainTableName = tables[0]?.table_name || displayName;
+
                 return (
                   <div key={index} style={{
                     backgroundColor: '#f0f9ff',
@@ -418,10 +467,10 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                     alignItems: 'center'
                   }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: '600', marginBottom: '4px' }}>
-                        {displayName}
+                      <div style={{ fontWeight: '600', marginBottom: '4px', fontSize: '15px' }}>
+                        {mainTableName}
                       </div>
-                      <div style={{ fontSize: '14px', color: '#6b7280' }}>
+                      <div style={{ fontSize: '13px', color: '#6b7280' }}>
                         {tables.length} tableau(x) extrait(s)
                       </div>
                     </div>

@@ -119,6 +119,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
       'weights.emptyWeight',
       'weights.mtow',
       'weights.mlw',
+      'weights.mzfw',
       'weights.minTakeoffWeight',
       'weights.maxBaggageFwd',
       'weights.maxBaggageAft'
@@ -798,18 +799,18 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-            {/* Masse à vide carburant + Bras de levier sur la même ligne */}
+            {/* Masse à vide + Bras de levier sur la même ligne */}
             <Box sx={{ width: '100%', maxWidth: 700, mb: 1.5 }}>
               <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
                 <StyledTextField
                   fullWidth
                   size="small"
-                  label="Masse maximale à vide carburant *"
+                  label="Masse à vide *"
                   type="number"
                   value={data.weights?.emptyWeight || ''}
                   onChange={(e) => updateData('weights.emptyWeight', e.target.value)}
                   error={!!errors['weights.emptyWeight']}
-                  helperText={errors['weights.emptyWeight'] || "Max Zero Fuel Mass"}
+                  helperText={errors['weights.emptyWeight'] || "Empty Weight - Masse de l'avion vide (sans carburant, passagers, bagages)"}
                   required
                   InputProps={{
                     endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
@@ -858,6 +859,22 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                 onChange={(e) => updateData('weights.mlw', e.target.value)}
                 error={!!errors['weights.mlw']}
                 helperText={errors['weights.mlw'] || "Masse maximale à l'atterrissage"}
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
+                }}
+              />
+            </Box>
+
+            <Box sx={{ width: '100%', maxWidth: 700, mb: 1.5 }}>
+              <StyledTextField
+                fullWidth
+                size="small"
+                label="MZFW"
+                type="number"
+                value={data.weights?.mzfw || ''}
+                onChange={(e) => updateData('weights.mzfw', e.target.value)}
+                error={!!errors['weights.mzfw']}
+                helperText={errors['weights.mzfw'] || "Maximum Zero Fuel Weight (MZFW)"}
                 InputProps={{
                   endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
                 }}

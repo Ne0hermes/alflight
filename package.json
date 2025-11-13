@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"vite\" \"node server/googleSheetsServer.js\"",
-    "dev:frontend": "vite",
-    "dev:logger": "node server/googleSheetsServer.js",
+    "dev": "concurrently \"vite --host\" \"node --max-old-space-size=4096 server/googleSheetsServer.js\"",
+    "dev:frontend": "vite --host",
+    "dev:logger": "node --max-old-space-size=4096 server/googleSheetsServer.js",
     "dev:tracker": "node scripts/autoTracker.cjs",
     "dev:claude-tracker": "node scripts/claude-code-tracker.cjs",
     "dev:tracked": "concurrently \"vite\" \"node scripts/autoTracker.cjs\"",
@@ -76,6 +76,7 @@
     "react-leaflet": "^4.2.1",
     "react-router-dom": "^7.8.1",
     "recharts": "^3.1.2",
+    "suncalc": "^1.9.0",
     "uuid": "^13.0.0",
     "xlsx": "^0.18.5",
     "zustand": "^4.5.7"

@@ -3,15 +3,14 @@
 import { createClient } from '@supabase/supabase-js';
 import { normalizeAircraftImport } from '@utils/aircraftNormalizer';
 
-// ⚠️ IMPORTANT: Remplacer par vos vraies clés Supabase
-// Obtenir ces clés depuis: https://app.supabase.com/project/YOUR_PROJECT/settings/api
+// Configuration Supabase
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'YOUR_SUPABASE_URL';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY';
 
-// Debug: vérifier les variables d'environnement chargées
-
 // Initialiser le client Supabase
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+console.log('🔗 Connexion Supabase:', SUPABASE_URL);
 
 /**
  * Service pour gérer les presets communautaires
@@ -23,10 +22,30 @@ class CommunityService {
    */
   async getAllPresets() {
     try {
-      
+      // 🔧 FIX MEMORY: Charger SEULEMENT les métadonnées, PAS aircraft_data !
+      // aircraft_data peut contenir des photos en base64 (plusieurs MB par avion)
+      // Charger aircraft_data complet uniquement lors de getPresetById()
       const { data, error } = await supabase
         .from('community_presets')
-        .select('*')
+        .select(`
+          id,
+          registration,
+          model,
+          manufacturer,
+          aircraft_type,
+          category,
+          submitted_by,
+          submitted_at,
+          downloads_count,
+          votes_up,
+          votes_down,
+          verified,
+          admin_verified,
+          description,
+          version,
+          has_manex,
+          status
+        `)
         .eq('status', 'active')
         .order('created_at', { ascending: false });
 
@@ -35,15 +54,10 @@ class CommunityService {
         throw error;
       }
 
-      
-      // Log du premier preset pour debug
-            // Transformer les données pour correspondre au format attendu
-      return data.map(preset => {
-        // Normaliser aircraft_data si présent
-        const normalizedAircraftData = preset.aircraft_data
-          ? normalizeAircraftImport(preset.aircraft_data)
-          : null;
+      console.log(`✅ [CommunityService] Chargé ${data.length} presets (métadonnées seulement)`);
 
+      // Transformer les données pour correspondre au format attendu
+      return data.map(preset => {
         const mapped = {
           id: preset.id,
           registration: preset.registration,
@@ -61,13 +75,12 @@ class CommunityService {
           verified: preset.verified,
           adminVerified: preset.admin_verified,
           description: preset.description,
-          // Données complètes de l'avion - NORMALIZED!
-          aircraftData: normalizedAircraftData,
+          // PAS de aircraftData ici - sera chargé à la sélection
           version: preset.version || 1,
-          // Indiquer si le MANEX est disponible dans Supabase
-          hasManex: preset.has_manex || false
+          hasManex: preset.has_manex || false,
+          // Flag pour indiquer que les données complètes doivent être chargées
+          requiresFullDataLoad: true
         };
-
 
         return mapped;
       });
@@ -127,9 +140,24 @@ class CommunityService {
 
       if (error) throw error;
 
+      // 🔧 FIX MEMORY: Supprimer la photo si elle est volumineuse (>500KB en base64)
+      // Les photos peuvent causer des crashes "out of memory"
+      const aircraftDataCopy = { ...data.aircraft_data };
+
+      if (aircraftDataCopy.photo && typeof aircraftDataCopy.photo === 'string') {
+        const photoSizeKB = (aircraftDataCopy.photo.length * 0.75) / 1024; // Taille approximative en KB
+
+        if (photoSizeKB > 500) {
+          console.log(`🗑️ Photo volumineuse détectée (${photoSizeKB.toFixed(0)}KB) - Suppression pour éviter crash`);
+          delete aircraftDataCopy.photo;
+        } else {
+          console.log(`✅ Photo conservée (${photoSizeKB.toFixed(0)}KB)`);
+        }
+      }
+
       // Retourner les données complètes de aircraft_data avec les métadonnées
       const fullAircraft = {
-        ...data.aircraft_data,
+        ...aircraftDataCopy,
         // Ne PAS écraser les données de aircraft_data, les garder intactes
         // Les champs ci-dessous sont uniquement pour référence/tracking
         importedFromCommunity: true,
@@ -138,52 +166,45 @@ class CommunityService {
         hasManex: data.has_manex || false
       };
 
-      // Télécharger automatiquement le MANEX s'il existe
+      // 🔧 FIX MEMORY LEAK: NE PAS télécharger automatiquement le MANEX
+      // Le MANEX peut être très volumineux (10-50MB) et causer un crash "out of memory"
+      // À la place, stocker seulement les métadonnées pour téléchargement différé
       if (data.has_manex && data.manex_files && data.manex_files.file_path) {
-        
-        try {
-          // Télécharger le MANEX depuis Supabase Storage
-          const manexBlob = await this.downloadManex(data.manex_files.file_path);
-
-          // Convertir le blob en base64
-          const base64Data = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(manexBlob);
-          });
-
-          // Ajouter le MANEX aux données de l'avion
-          fullAircraft.manex = {
-            fileName: data.manex_files.filename,
-            fileSize: data.manex_files.file_size,
-            pdfData: base64Data, // Format base64 pour stockage
-            uploadDate: new Date().toISOString(),
-            uploadedToSupabase: true,
-            supabasePath: data.manex_files.file_path,
-            hasData: true
-          };
-          // Confirmer explicitement que le MANEX est présent
-          fullAircraft.hasManex = true;
-
-                  } catch (manexError) {
-          console.error('⚠️ Erreur lors du téléchargement du MANEX (non-bloquant):', manexError);
-          // Ne pas bloquer si le téléchargement du MANEX échoue
-          // Ajouter juste les métadonnées
-          fullAircraft.manexAvailableInSupabase = {
-            fileName: data.manex_files.filename,
-            filePath: data.manex_files.file_path,
-            fileSize: data.manex_files.file_size
-          };
-        }
+        console.log('📋 MANEX disponible - Métadonnées stockées pour téléchargement différé');
+        // Ajouter les métadonnées du MANEX sans le télécharger
+        fullAircraft.manexAvailableInSupabase = {
+          fileName: data.manex_files.filename,
+          filePath: data.manex_files.file_path,
+          fileSize: data.manex_files.file_size
+        };
+        fullAircraft.hasManex = true;
       }
 
-      // Normaliser les unités à l'import
+      // 🔧 FIX CRITIQUE: Forcer les métadonnées à STORAGE units
+      // Supabase stocke TOUJOURS en lph/ltr/kg/kt (règle absolue)
+      // Les métadonnées dans aircraft_data peuvent être incorrectes (legacy/corrupted)
+      fullAircraft._metadata = {
+        ...fullAircraft._metadata,
+        units: {
+          fuel: 'ltr',
+          fuelConsumption: 'lph',
+          weight: 'kg',
+          speed: 'kt',
+          distance: 'nm',
+          altitude: 'ft',
+          verticalSpeed: 'fpm'
+        },
+        loadedFromSupabase: true,
+        storageFormat: 'STORAGE_UNITS (ltr/lph/kg/kt)'
+      };
+
+      // Normaliser les unités à l'import (aucune conversion car déjà en STORAGE units)
       const normalizedAircraft = normalizeAircraftImport(fullAircraft);
 
       console.log('📥 [CommunityService] Aircraft imported and normalized:', {
         registration: normalizedAircraft.registration,
-        hadMetadata: !!fullAircraft._metadata
+        hadMetadata: !!fullAircraft._metadata,
+        hasPhoto: !!normalizedAircraft.photo
       });
 
       return normalizedAircraft;
@@ -204,6 +225,41 @@ class CommunityService {
       .getPublicUrl(filePath);
 
     return data.publicUrl;
+  }
+
+  /**
+   * Télécharger le MANEX et le convertir en base64 (lazy loading)
+   * Utilisé pour télécharger le MANEX seulement quand nécessaire
+   * @param {string} filePath - Chemin du fichier dans Supabase Storage
+   * @returns {Promise<Object>} Objet MANEX avec pdfData en base64
+   */
+  async downloadManexLazy(filePath) {
+    try {
+      console.log('📥 Téléchargement différé du MANEX:', filePath);
+
+      // Télécharger le MANEX depuis Supabase Storage
+      const manexBlob = await this.downloadManex(filePath);
+
+      // Convertir le blob en base64
+      const base64Data = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(manexBlob);
+      });
+
+      console.log('✅ MANEX téléchargé et converti en base64');
+
+      return {
+        pdfData: base64Data,
+        hasData: true,
+        uploadedToSupabase: true,
+        supabasePath: filePath
+      };
+    } catch (error) {
+      console.error('❌ Erreur lors du téléchargement différé du MANEX:', error);
+      throw error;
+    }
   }
 
   /**
@@ -297,7 +353,7 @@ class CommunityService {
       // 1. Vérifier si un preset existe déjà pour cette immatriculation
       const { data: existingPresets, error: searchError } = await supabase
         .from('community_presets')
-        .select('id, version')
+        .select('id, version, has_manex')  // 🔧 FIX: Récupérer has_manex pour éviter re-upload
         .eq('registration', presetData.registration)
         .eq('status', 'active')
         .limit(1);
@@ -307,19 +363,46 @@ class CommunityService {
         throw searchError;
       }
 
-      // 2. Si le preset existe déjà, faire une mise à jour au lieu d'une création
+      // 2. Si le preset existe déjà, décider UPDATE vs CREATE
       if (existingPresets && existingPresets.length > 0) {
         const existingPreset = existingPresets[0];
-        console.log('✅ Preset existant trouvé - Mise à jour au lieu de création');
 
-        // Utiliser la méthode updateCommunityPreset existante
-        return await this.updateCommunityPreset(
-          existingPreset.id,
-          presetData.aircraft_data || presetData,
-          manexFile,
-          manexFile?.name,
-          userId
-        );
+        // 🔧 FIX: Si l'ID fourni est différent du preset existant OU si isVariant=true,
+        // c'est un variant → créer un NOUVEAU preset au lieu de mettre à jour
+        const isVariant = presetData.isVariant || (presetData.id && presetData.id !== existingPreset.id);
+
+        console.log('🔍 [CommunityService] Analyse preset existant:', {
+          existingId: existingPreset.id,
+          providedId: presetData.id,
+          isVariantFlag: presetData.isVariant,
+          idsDifferent: presetData.id && presetData.id !== existingPreset.id,
+          finalIsVariant: isVariant
+        });
+
+        if (isVariant) {
+          console.log('🔀 Variant détecté - Création d\'un nouveau preset au lieu de mise à jour');
+          console.log(`   ID fourni: ${presetData.id}`);
+          console.log(`   ID existant: ${existingPreset.id}`);
+          // Ne pas faire UPDATE, continuer vers CREATE (ligne 364+)
+        } else {
+          console.log('✅ Preset existant trouvé - Mise à jour au lieu de création');
+          console.log(`   Preset a déjà un MANEX: ${existingPreset.has_manex}`);
+
+          // 🔧 FIX: Ne pas re-uploader le MANEX s'il existe déjà
+          const shouldUploadManex = manexFile && !existingPreset.has_manex;
+          if (existingPreset.has_manex && manexFile) {
+            console.log('ℹ️ MANEX déjà présent - Skip upload pour éviter doublon');
+          }
+
+          // Utiliser la méthode updateCommunityPreset existante
+          return await this.updateCommunityPreset(
+            existingPreset.id,
+            presetData.aircraft_data || presetData,
+            shouldUploadManex ? manexFile : null,  // Upload seulement si nécessaire
+            manexFile?.name,
+            userId
+          );
+        }
       }
 
       
@@ -374,6 +457,9 @@ class CommunityService {
       delete cleanedData.isImportedFromCommunity;
       delete cleanedData.originalCommunityData;
       delete cleanedData.importDate;
+      delete cleanedData.id;  // 🔧 FIX: L'ID local n'est pas une colonne de aircraft_data
+      delete cleanedData.aircraftId;  // 🔧 FIX: Idem
+      delete cleanedData.isVariant;  // 🔧 FIX: Flag temporaire, pas à stocker
 
       // 5. Créer le preset
       const { data, error } = await supabase
@@ -396,7 +482,13 @@ class CommunityService {
 
       if (error) throw error;
 
-            return data;
+      console.log('✅ [CommunityService] Nouveau preset créé:', {
+        id: data?.id,
+        registration: data?.registration,
+        hasId: !!data?.id
+      });
+
+      return data;
     } catch (error) {
       console.error('Erreur lors de la soumission du preset:', error);
       throw error;
@@ -565,6 +657,9 @@ class CommunityService {
       delete cleanedData.isImportedFromCommunity;
       delete cleanedData.originalCommunityData;
       delete cleanedData.importDate;
+      delete cleanedData.id;  // 🔧 FIX: L'ID local n'est pas une colonne de aircraft_data
+      delete cleanedData.aircraftId;  // 🔧 FIX: Idem
+      delete cleanedData.isVariant;  // 🔧 FIX: Flag temporaire, pas à stocker
 
       // 3. Mettre à jour le preset dans Supabase
       const updatePayload = {
@@ -583,6 +678,11 @@ class CommunityService {
       if (manexFileId) {
         updatePayload.manex_file_id = manexFileId;
         updatePayload.has_manex = true;
+      } else if (updatedData.hasManex || updatedData.manex) {
+        // 🔧 FIX: Préserver le flag has_manex si l'avion avait déjà un MANEX
+        // même si on n'en uploade pas un nouveau
+        updatePayload.has_manex = true;
+        console.log('✅ Préservation du flag has_manex existant');
       }
 
       const { data, error } = await supabase
