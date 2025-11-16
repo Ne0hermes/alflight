@@ -8,6 +8,7 @@ import {
 import { aixmParser } from '@services/aixmParser';
 import { useVACStore } from '@core/stores/vacStore';
 import { useCustomVFRStore } from '@core/stores/customVFRStore';
+import { vacPdfStorage } from '@services/vacPdfStorage';
 // REMOVED: import { getCircuitAltitudes } from '@data/circuitAltitudesComplete'; - File deleted, data must come from official XML
 
 export const SIAReportEnhanced = () => {
@@ -56,6 +57,35 @@ export const SIAReportEnhanced = () => {
   useEffect(() => {
     loadAllAerodromes();
   }, []);
+
+  // Restaurer les URLs des PDFs depuis IndexedDB au chargement
+  useEffect(() => {
+    const restorePDFUrls = async () => {
+      try {
+        // Parcourir toutes les cartes qui ont un PDF stocké
+        for (const [icao, chart] of Object.entries(charts)) {
+          if (chart?.hasPdf && !chart?.url) {
+            // Le PDF existe dans IndexedDB mais pas d'URL blob
+            const pdfUrl = await vacPdfStorage.getPDFUrl(icao);
+            if (pdfUrl) {
+              // Mettre à jour le store avec l'URL
+              await addCustomChart(icao, {
+                ...chart,
+                url: pdfUrl
+              });
+              console.log(`✅ URL PDF restaurée pour ${icao}`);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('❌ Erreur restauration URLs PDF:', error);
+      }
+    };
+
+    if (Object.keys(charts).length > 0) {
+      restorePDFUrls();
+    }
+  }, [charts]);
 
   const loadAllAerodromes = async () => {
     setLoading(true);
@@ -287,38 +317,46 @@ export const SIAReportEnhanced = () => {
   const handleVACImport = (icao) => async (event) => {
     const file = event.target.files[0];
     if (!file) return;
-    
+
     // Debug: voir ce qui est passé
     console.log('handleVACImport called with icao:', icao, 'type:', typeof icao);
-    
+
     // Vérifier que l'ICAO est valide
     if (!icao || typeof icao !== 'string') {
       console.error('ICAO invalide:', icao, 'type:', typeof icao);
       return;
     }
-    
+
     try {
-      // Créer une URL pour le fichier
+      // 1. Stocker le PDF dans IndexedDB pour persistance
+      await vacPdfStorage.storePDF(icao, file);
+      console.log(`✅ PDF stocké dans IndexedDB pour ${icao}`);
+
+      // 2. Créer une URL blob pour affichage immédiat (sera rechargée depuis IndexedDB au prochain refresh)
       const fileUrl = URL.createObjectURL(file);
-      
-      // Ajouter la carte au store pour cet aérodrome spécifique
+
+      // 3. Ajouter la carte au store pour cet aérodrome spécifique
       await addCustomChart(icao, {
         name: file.name,
         url: fileUrl,
-        file: file,
+        fileName: file.name,
+        fileSize: (file.size / 1024).toFixed(1) + ' KB',
+        fileType: file.type,
+        hasPdf: true,
         isDownloaded: true,
-        downloadDate: Date.now(),
+        downloadDate: new Date().toISOString(),
         needsManualExtraction: true
       });
-      
+
       // Forcer le re-render pour voir le badge VAC mis à jour
       setEditedData(prev => ({...prev}));
-      
+
       console.log(`✅ Carte VAC importée pour ${icao}`);
     } catch (error) {
       console.error('Erreur import VAC:', error);
+      alert(`❌ Erreur lors de l'import: ${error.message}`);
     }
-    
+
     // Réinitialiser l'input pour permettre de réimporter
     event.target.value = '';
   };
