@@ -58,34 +58,54 @@ export const SIAReportEnhanced = () => {
     loadAllAerodromes();
   }, []);
 
-  // Restaurer les URLs des PDFs depuis IndexedDB au chargement
+  // Restaurer les URLs des PDFs depuis IndexedDB au chargement (une seule fois)
   useEffect(() => {
     const restorePDFUrls = async () => {
       try {
+        console.log('🔄 Restauration des URLs PDF depuis IndexedDB...');
+
+        // Obtenir toutes les cartes du store
+        const currentCharts = useVACStore.getState().charts || {};
+        let restoredCount = 0;
+
         // Parcourir toutes les cartes qui ont un PDF stocké
-        for (const [icao, chart] of Object.entries(charts)) {
-          if (chart?.hasPdf && !chart?.url) {
-            // Le PDF existe dans IndexedDB mais pas d'URL blob
-            const pdfUrl = await vacPdfStorage.getPDFUrl(icao);
-            if (pdfUrl) {
-              // Mettre à jour le store avec l'URL
-              await addCustomChart(icao, {
-                ...chart,
-                url: pdfUrl
-              });
-              console.log(`✅ URL PDF restaurée pour ${icao}`);
+        for (const [icao, chart] of Object.entries(currentCharts)) {
+          if (chart?.hasPdf) {
+            try {
+              // Toujours restaurer l'URL depuis IndexedDB après refresh
+              // (les URLs blob ne persistent pas entre sessions)
+              const pdfUrl = await vacPdfStorage.getPDFUrl(icao);
+              if (pdfUrl) {
+                // Mettre à jour le store avec la nouvelle URL
+                addCustomChart(icao, {
+                  ...chart,
+                  url: pdfUrl
+                });
+                console.log(`✅ URL PDF restaurée pour ${icao}`);
+                restoredCount++;
+              } else {
+                console.warn(`⚠️ PDF marqué présent mais non trouvé dans IndexedDB pour ${icao}`);
+              }
+            } catch (error) {
+              console.error(`❌ Erreur restauration PDF pour ${icao}:`, error);
             }
           }
+        }
+
+        if (restoredCount > 0) {
+          console.log(`✅ ${restoredCount} PDF(s) restauré(s) depuis IndexedDB`);
+        } else {
+          console.log('ℹ️ Aucun PDF à restaurer');
         }
       } catch (error) {
         console.error('❌ Erreur restauration URLs PDF:', error);
       }
     };
 
-    if (Object.keys(charts).length > 0) {
-      restorePDFUrls();
-    }
-  }, [charts]);
+    // Restaurer après un court délai pour laisser le store se charger
+    const timer = setTimeout(restorePDFUrls, 500);
+    return () => clearTimeout(timer);
+  }, []); // Dépendance vide = une seule fois au montage
 
   const loadAllAerodromes = async () => {
     setLoading(true);
