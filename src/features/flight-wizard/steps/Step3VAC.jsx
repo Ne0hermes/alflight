@@ -116,6 +116,43 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
     loadAerodromeData();
   }, [waypoints, flightPlan?.alternates]);
 
+  // Fonction pour enrichir un aérodrome avec les données extraites du vacStore
+  const getEnrichedAerodrome = (aerodrome) => {
+    const upperIcao = aerodrome.icao?.toUpperCase();
+    const chart = charts[upperIcao];
+
+    if (!chart) return aerodrome;
+
+    // Enrichir avec les données extraites de la VAC
+    const enriched = { ...aerodrome };
+
+    // Priorité aux données extraites du vacStore
+    if (chart.extractedData) {
+      if (chart.extractedData.transitionAltitude !== undefined) {
+        enriched.transitionAltitude = chart.extractedData.transitionAltitude;
+      }
+      if (chart.extractedData.circuitAltitude !== undefined) {
+        enriched.circuitAltitude = chart.extractedData.circuitAltitude;
+      }
+      if (chart.extractedData.integrationAltitude !== undefined) {
+        enriched.integrationAltitude = chart.extractedData.integrationAltitude;
+      }
+    } else {
+      // Fallback: utiliser les données au niveau racine du chart
+      if (chart.transitionAltitude !== undefined) {
+        enriched.transitionAltitude = chart.transitionAltitude;
+      }
+      if (chart.circuitAltitude !== undefined) {
+        enriched.circuitAltitude = chart.circuitAltitude;
+      }
+      if (chart.integrationAltitude !== undefined) {
+        enriched.integrationAltitude = chart.integrationAltitude;
+      }
+    }
+
+    return enriched;
+  };
+
   // Vérifier si un PDF VAC existe pour un aérodrome
   const hasVAC = (icao) => {
     const upperIcao = icao?.toUpperCase();
@@ -260,7 +297,10 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
       )}
 
       <div style={styles.aerodromeList}>
-        {aerodromeData.map(aerodrome => {
+        {aerodromeData.map(aerodromeBase => {
+          // Enrichir l'aérodrome avec les données du vacStore
+          const aerodrome = getEnrichedAerodrome(aerodromeBase);
+
           const hasChart = hasVAC(aerodrome.icao);
           const isExpanded = expandedAerodrome === aerodrome.icao;
           const currentSection = expandedSection[aerodrome.icao];
