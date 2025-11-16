@@ -390,51 +390,34 @@ export const SIAReportEnhanced = () => {
       // 2. Créer une URL blob pour affichage immédiat (sera rechargée depuis IndexedDB au prochain refresh)
       const fileUrl = URL.createObjectURL(file);
 
-      // 3. Extraire automatiquement les données du PDF
-      console.log(`🔍 Extraction automatique des données VAC pour ${icao}...`);
+      // 3. Calculer automatiquement les altitudes par défaut
+      console.log(`🔍 Calcul automatique des altitudes pour ${icao}...`);
+
+      // Récupérer l'élévation terrain depuis AIXM
+      const aerodromeData = aerodromes.find(ad => ad.icao === icao.toUpperCase());
+      const elevationFt = aerodromeData?.elevation?.value;
+
       let extractedData = null;
-
-      try {
-        // Import dynamique de pdfjs-dist
-        const pdfjsLib = await import('pdfjs-dist');
-
-        // Configuration du worker
-        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-          'pdfjs-dist/build/pdf.worker.min.js',
-          import.meta.url
-        ).toString();
-
-        // Lire le PDF
-        const arrayBuffer = await file.arrayBuffer();
-        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-        const pdf = await loadingTask.promise;
-
-        // Extraire le texte de toutes les pages
-        let fullText = '';
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const textContent = await page.getTextContent();
-          const pageText = textContent.items.map(item => item.str).join(' ');
-          fullText += pageText + '\n';
-        }
-
-        console.log(`📄 Texte extrait (${fullText.length} caractères)`);
-
-        // Extraire les données avec regex
-        const transitionMatch = fullText.match(/(?:TRANSITION|TA|Altitude de transition)[:\s]*(\d{3,5})\s*(?:ft|FT)?/i);
-        const circuitMatch = fullText.match(/(?:TDP|TOUR DE PISTE|Circuit|Pattern)[:\s]*(\d{3,4})\s*(?:ft|FT)?/i);
-        const integrationMatch = fullText.match(/(?:INT|Intégration|Integration)[:\s]*(\d{3,4})\s*(?:ft|FT)?/i);
-
+      if (elevationFt) {
         extractedData = {
-          transitionAltitude: transitionMatch ? parseInt(transitionMatch[1]) : undefined,
-          circuitAltitude: circuitMatch ? parseInt(circuitMatch[1]) : undefined,
-          integrationAltitude: integrationMatch ? parseInt(integrationMatch[1]) : undefined
+          // Altitude transition: depuis AIXM si disponible
+          transitionAltitude: aerodromeData.transitionAltitude,
+          // Tour de piste: +1000 ft AAL par défaut
+          circuitAltitude: 1000,
+          // Intégration: +1500 ft AAL par défaut
+          integrationAltitude: 1500
         };
 
-        console.log(`✅ Données extraites:`, extractedData);
-      } catch (extractError) {
-        console.warn(`⚠️ Extraction automatique échouée:`, extractError);
-        extractedData = null;
+        console.log(`✅ Altitudes calculées pour ${icao}:`, {
+          elevationFt: elevationFt,
+          transitionAltitude: extractedData.transitionAltitude,
+          circuitAltitudeAAL: extractedData.circuitAltitude,
+          circuitAltitudeAMSL: elevationFt + extractedData.circuitAltitude,
+          integrationAltitudeAAL: extractedData.integrationAltitude,
+          integrationAltitudeAMSL: elevationFt + extractedData.integrationAltitude
+        });
+      } else {
+        console.warn(`⚠️ Élévation non trouvée pour ${icao}, calcul impossible`);
       }
 
       // 4. Ajouter la carte au store pour cet aérodrome spécifique
