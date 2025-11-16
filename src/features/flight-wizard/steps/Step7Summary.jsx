@@ -14,7 +14,6 @@ import { ScenarioCards } from '@features/weight-balance/components/ScenarioCards
 import { FUEL_DENSITIES } from '@utils/constants';
 import { useVACStore } from '@core/stores/vacStore';
 import { aixmParser } from '@services/aixmParser';
-import { vacPdfStorage } from '@services/vacPdfStorage';
 // REMOVED: import { getCircuitAltitudes } from '@data/circuitAltitudesComplete'; - File deleted, data must come from official XML
 import { CollapsibleSection } from './components/CollapsibleSection';
 import { FlightRecapTable } from '../components/FlightRecapTable';
@@ -39,9 +38,6 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
   // State pour les données d'aérodromes VAC
   const [aerodromeData, setAerodromeData] = useState([]);
-
-  // State pour les URLs des PDFs VAC (pour l'impression)
-  const [vacPdfUrls, setVacPdfUrls] = useState({});
 
   // Altitude planifiée par défaut (définie avant todCalculation pour éviter erreur d'initialisation)
   const plannedAltitude = 3000;
@@ -154,48 +150,6 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
     loadAerodromeData();
   }, [waypoints, flightPlan?.alternates, charts]);
-
-  // Charger les URLs des PDFs VAC pour l'impression
-  useEffect(() => {
-    const loadVACPdfs = async () => {
-      if (!aerodromeData || aerodromeData.length === 0) {
-        setVacPdfUrls({});
-        return;
-      }
-
-      const urls = {};
-
-      for (const aerodrome of aerodromeData) {
-        const upperIcao = aerodrome.icao?.toUpperCase();
-        if (!upperIcao) continue;
-
-        // Vérifier si un PDF existe pour cet aérodrome
-        const chart = charts[upperIcao];
-        if (chart && chart.isDownloaded) {
-          try {
-            const pdfUrl = await vacPdfStorage.getPDFUrl(upperIcao);
-            if (pdfUrl) {
-              urls[upperIcao] = pdfUrl;
-              console.log(`✅ [Step7Summary] PDF VAC chargé pour ${upperIcao}`);
-            }
-          } catch (error) {
-            console.error(`❌ Erreur chargement PDF VAC ${upperIcao}:`, error);
-          }
-        }
-      }
-
-      setVacPdfUrls(urls);
-    };
-
-    loadVACPdfs();
-
-    // Cleanup: révoquer les URLs quand le composant est démonté
-    return () => {
-      Object.values(vacPdfUrls).forEach(url => {
-        if (url) URL.revokeObjectURL(url);
-      });
-    };
-  }, [aerodromeData, charts]);
 
   // 🌅 Calculer les heures de nuit aéronautique pour l'aérodrome de départ
   const sunTimes = useMemo(() => {
@@ -1607,56 +1561,78 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
         onUpdate={onUpdate}
       />
 
-      {/* Section Cartes VAC pour impression PDF uniquement */}
-      {Object.keys(vacPdfUrls).length > 0 && (
-        <div className="vac-pdfs-print-only" style={{
-          display: 'none' // Caché par défaut, visible seulement en impression
-        }}>
-          <style>{`
-            @media print {
-              .vac-pdfs-print-only {
-                display: block !important;
-              }
-
-              .vac-pdf-page {
-                page-break-before: always;
-                page-break-after: always;
-                page-break-inside: avoid;
-                position: relative;
-                width: 100%;
-                min-height: 100vh;
-              }
-
-              .vac-pdf-iframe {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100vh;
-                border: none;
-              }
+      {/* Page de rappel pour documents à joindre */}
+      <div className="documents-reminder-print-only" style={{
+        display: 'none' // Caché par défaut, visible seulement en impression
+      }}>
+        <style>{`
+          @media print {
+            .documents-reminder-print-only {
+              display: block !important;
+              page-break-before: always;
+              page-break-inside: avoid;
+              min-height: 100vh;
+              padding: 40px;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              align-items: center;
             }
-          `}</style>
 
-          {aerodromeData.map(aerodrome => {
-            const upperIcao = aerodrome.icao?.toUpperCase();
-            const pdfUrl = vacPdfUrls[upperIcao];
+            .reminder-title {
+              font-size: 24px;
+              font-weight: 700;
+              color: #1e293b;
+              margin-bottom: 40px;
+              text-align: center;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+            }
 
-            if (!pdfUrl) return null;
+            .reminder-list {
+              list-style: none;
+              padding: 0;
+              margin: 0;
+              width: 100%;
+              max-width: 600px;
+            }
 
-            return (
-              <div key={upperIcao} className="vac-pdf-page">
-                <iframe
-                  className="vac-pdf-iframe"
-                  src={pdfUrl}
-                  type="application/pdf"
-                  title={`VAC ${upperIcao}`}
-                />
-              </div>
-            );
-          })}
+            .reminder-item {
+              background-color: #f8fafc;
+              border: 2px solid #3b82f6;
+              border-radius: 8px;
+              padding: 20px 24px;
+              margin-bottom: 20px;
+              font-size: 16px;
+              font-weight: 600;
+              color: #334155;
+              display: flex;
+              align-items: center;
+              gap: 12px;
+            }
+
+            .reminder-icon {
+              font-size: 24px;
+              flex-shrink: 0;
+            }
+          }
+        `}</style>
+
+        <div className="reminder-title">
+          📋 Documents à joindre au dossier de vol
         </div>
-      )}
+
+        <ul className="reminder-list">
+          <li className="reminder-item">
+            <span className="reminder-icon">🗺️</span>
+            <span>Ajouter les cartes VAC de la navigation</span>
+          </li>
+          <li className="reminder-item">
+            <span className="reminder-icon">☁️</span>
+            <span>Ajouter le dossier météo (TEMSI/WINTEM) du dossier SIA</span>
+          </li>
+        </ul>
+      </div>
     </div>
     </>
   );
