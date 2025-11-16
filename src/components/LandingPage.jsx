@@ -128,6 +128,14 @@ export const LandingPage = ({ onNavigate }) => {
       icon: Plane,
       color: '#06b6d4',
       action: () => onNavigate('aircraft')
+    },
+    {
+      id: 'vac',
+      title: 'Cartes VAC',
+      description: 'Importer et gérer les cartes VAC',
+      icon: Map,
+      color: '#8b5cf6',
+      action: () => onNavigate('vac')
     }
   ];
 
