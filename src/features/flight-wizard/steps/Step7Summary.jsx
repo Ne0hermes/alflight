@@ -174,8 +174,23 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
     // Altitude de croisière : utiliser l'altitude du segment juste avant l'arrivée
     // (c'est l'altitude depuis laquelle la descente commence réellement)
-    const lastSegmentId = `${secondLastWaypoint.id}-${lastWaypoint.id}`;
+    // 🔧 FIX: Créer segmentId comme dans VFRNavigationTable (id || name || fallback)
+    const fromId = secondLastWaypoint.id || secondLastWaypoint.name || `wp${waypoints.length - 2}`;
+    const toId = lastWaypoint.id || lastWaypoint.name || `wp${waypoints.length - 1}`;
+    const lastSegmentId = `${fromId}-${toId}`;
     const lastSegmentAlt = segmentAltitudes[lastSegmentId]?.startAlt;
+
+    // Log pour debug
+    console.log('🔍 [TOD] Calcul altitude croisière:', {
+      secondLastWaypoint: secondLastWaypoint.name,
+      lastWaypoint: lastWaypoint.name,
+      fromId,
+      toId,
+      lastSegmentId,
+      lastSegmentAlt,
+      segmentAltitudes,
+      plannedAltitude
+    });
 
     // Utiliser l'altitude du dernier segment, ou plannedAltitude par défaut
     const cruiseAltitude = lastSegmentAlt || plannedAltitude;
