@@ -1632,11 +1632,11 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
         <ul className="reminder-list">
           <li className="reminder-item">
             <span className="reminder-icon">🗺️</span>
-            <span>Ajouter les cartes VAC de la navigation</span>
+            <span>Ajouter les cartes VAC des aérodromes de la nav</span>
           </li>
           <li className="reminder-item">
             <span className="reminder-icon">☁️</span>
-            <span>Ajouter le dossier météo (TEMSI/WINTEM) du dossier SIA</span>
+            <span>Ajouter les cartes météo Wind Temp et TEMSI du SIA</span>
           </li>
         </ul>
       </div>
