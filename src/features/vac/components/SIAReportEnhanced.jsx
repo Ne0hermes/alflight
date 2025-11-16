@@ -8,7 +8,7 @@ import {
 import { aixmParser } from '@services/aixmParser';
 import { useVACStore } from '@core/stores/vacStore';
 import { useCustomVFRStore } from '@core/stores/customVFRStore';
-import { getCircuitAltitudes } from '@data/circuitAltitudesComplete';
+// REMOVED: import { getCircuitAltitudes } from '@data/circuitAltitudesComplete'; - File deleted, data must come from official XML
 
 export const SIAReportEnhanced = () => {
   // États principaux
@@ -74,17 +74,16 @@ export const SIAReportEnhanced = () => {
       const date = aixmParser.getDataDate();
       setDataDate(date);
       
-      // Enrichir les données avec les points VFR, services et altitudes de circuit
+      // Enrichir les données avec les points VFR et services
       const enrichedData = data.map(ad => {
         // Vérifier que l'aérodrome a un ICAO valide
         if (!ad || !ad.icao || typeof ad.icao !== 'string') {
           console.warn('Aérodrome avec ICAO invalide dans les données:', ad);
           return null;
         }
-        
-        // Récupérer les altitudes de circuit depuis notre base de données
-        const circuitData = getCircuitAltitudes(ad.icao);
-        
+
+        // TODO: circuitAltitude, integrationAltitude, circuitRemarks must be extracted from official AIXM XML
+
         return {
           ...ad,
           icao: ad.icao, // S'assurer que l'ICAO est toujours présent
@@ -115,11 +114,8 @@ export const SIAReportEnhanced = () => {
           // Ajouter les obstacles
           obstacles: ad.obstacles || [],
           // Ajouter les procédures
-          procedures: ad.procedures || { departure: [], arrival: [] },
-          // Ajouter les altitudes de circuit
-          circuitAltitude: circuitData.circuitAltitude,
-          integrationAltitude: circuitData.integrationAltitude,
-          circuitRemarks: circuitData.remarks
+          procedures: ad.procedures || { departure: [], arrival: [] }
+          // circuitAltitude, integrationAltitude, circuitRemarks will be undefined for now
         };
       }).filter(ad => ad !== null); // Filtrer les entrées nulles
       
@@ -513,6 +509,7 @@ export const SIAReportEnhanced = () => {
     },
     sectionTabs: {
       display: 'flex',
+      flexWrap: 'wrap', // Permet aux onglets de passer à la ligne si nécessaire
       gap: '2px',
       marginBottom: '12px',
       borderBottom: '1px solid #e5e7eb'
