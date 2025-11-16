@@ -462,53 +462,6 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
         </div>
       </div>
 
-      {/* Section Notes du Pilote */}
-      <div style={{
-        ...styles.card,
-        backgroundColor: 'white',
-        marginTop: '16px',
-        border: `2px solid ${theme.colors.primary}`
-      }}>
-        <label style={{
-          fontSize: '14px',
-          fontWeight: '600',
-          color: theme.colors.primary,
-          marginBottom: '8px',
-          display: 'block'
-        }}>
-          ✍️ Notes du Pilote
-        </label>
-        <textarea
-          value={flightPlan.notes || ''}
-          onChange={(e) => {
-            flightPlan.notes = e.target.value;
-            onUpdate();
-          }}
-          placeholder="Ajouter vos notes pré-vol (météo, NOTAMs, clairances, fréquences VOR/ATIS, QNH, vent, etc.)"
-          style={{
-            width: '100%',
-            minHeight: '120px',
-            padding: '12px',
-            fontSize: '14px',
-            border: `1px solid ${theme.colors.border}`,
-            borderRadius: '6px',
-            fontFamily: 'inherit',
-            resize: 'vertical',
-            backgroundColor: '#f9fafb',
-            color: theme.colors.textPrimary,
-            lineHeight: '1.5'
-          }}
-        />
-        <div style={{
-          fontSize: '11px',
-          color: theme.colors.textMuted,
-          marginTop: '6px',
-          fontStyle: 'italic'
-        }}>
-          Ces notes apparaîtront dans le tableau récapitulatif du PDF
-        </div>
-      </div>
-
       {/* Section Informations Avion */}
       <CollapsibleSection
         title={`${flightPlan.aircraft.registration} ${flightPlan.aircraft.type || flightPlan.aircraft.model ? `(${flightPlan.aircraft.type || flightPlan.aircraft.model})` : ''}`}
@@ -1655,6 +1608,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
         setDescentRate={setDescentRate}
         targetAltitude={targetAltitude}
         setTargetAltitude={setTargetAltitude}
+        onUpdate={onUpdate}
       />
     </div>
     </>
