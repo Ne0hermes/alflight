@@ -326,7 +326,45 @@ export const FlightRecapTable = ({
     const plannedAltitude = 3000; // Altitude par défaut
 
     return (
-      <div style={{ marginBottom: '12px' }}>
+      <div style={{ marginBottom: '12px' }} className="vfr-table-pdf-style">
+        <style>{`
+          .vfr-table-pdf-style {
+            font-size: 8px !important;
+          }
+          .vfr-table-pdf-style table {
+            font-size: 8px !important;
+            border-collapse: collapse !important;
+          }
+          .vfr-table-pdf-style th {
+            padding: 4px 6px !important;
+            font-size: 8px !important;
+            font-weight: 700 !important;
+            background-color: #eff6ff !important;
+            border-bottom: 1px solid #d1d5db !important;
+          }
+          .vfr-table-pdf-style td {
+            padding: 3px 6px !important;
+            font-size: 8px !important;
+            border-bottom: 1px solid #e5e7eb !important;
+          }
+          .vfr-table-pdf-style .vfr-nav-header {
+            background-color: #3b82f6 !important;
+            color: white !important;
+            padding: 4px 8px !important;
+            font-size: 10px !important;
+            font-weight: 700 !important;
+          }
+          .vfr-table-pdf-style tr:nth-child(even) {
+            background-color: #f9fafb !important;
+          }
+          .vfr-table-pdf-style tr:nth-child(odd) {
+            background-color: white !important;
+          }
+          .vfr-table-pdf-style .total-row {
+            background-color: #dbeafe !important;
+            font-weight: 700 !important;
+          }
+        `}</style>
         <VFRNavigationTable
           waypoints={waypoints}
           selectedAircraft={selectedAircraft}
