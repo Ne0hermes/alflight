@@ -1610,44 +1610,29 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
       {/* Section Cartes VAC pour impression PDF uniquement */}
       {Object.keys(vacPdfUrls).length > 0 && (
         <div className="vac-pdfs-print-only" style={{
-          display: 'none', // Caché par défaut, visible seulement en impression
-          marginTop: '40px'
+          display: 'none' // Caché par défaut, visible seulement en impression
         }}>
           <style>{`
             @media print {
               .vac-pdfs-print-only {
                 display: block !important;
-                page-break-before: always;
               }
 
               .vac-pdf-page {
                 page-break-before: always;
                 page-break-after: always;
                 page-break-inside: avoid;
+                position: relative;
+                width: 100%;
+                min-height: 100vh;
+              }
+
+              .vac-pdf-iframe {
+                position: absolute;
+                top: 0;
+                left: 0;
                 width: 100%;
                 height: 100vh;
-                display: flex;
-                flex-direction: column;
-              }
-
-              .vac-pdf-page:first-child {
-                page-break-before: auto;
-              }
-
-              .vac-pdf-title {
-                text-align: center;
-                font-size: 18px;
-                font-weight: bold;
-                color: #1f2937;
-                margin-bottom: 16px;
-                padding: 12px;
-                background-color: #f3f4f6;
-                border-bottom: 3px solid #3b82f6;
-              }
-
-              .vac-pdf-embed {
-                flex: 1;
-                width: 100%;
                 border: none;
               }
             }
@@ -1661,15 +1646,11 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
             return (
               <div key={upperIcao} className="vac-pdf-page">
-                <div className="vac-pdf-title">
-                  CARTE VAC - {upperIcao} ({aerodrome.name})
-                </div>
-                <embed
-                  className="vac-pdf-embed"
+                <iframe
+                  className="vac-pdf-iframe"
                   src={pdfUrl}
                   type="application/pdf"
-                  width="100%"
-                  height="100%"
+                  title={`VAC ${upperIcao}`}
                 />
               </div>
             );
