@@ -1718,6 +1718,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
         aerodromeData={aerodromeData}
         todCalculation={todCalculation}
         navigationResults={navigationResults}
+        segmentAltitudes={segmentAltitudes}
+        setSegmentAltitude={setSegmentAltitude}
+        departureTimeTheoretical={departureTimeTheoretical}
+        flightType={flightType}
       />
     </div>
     </>

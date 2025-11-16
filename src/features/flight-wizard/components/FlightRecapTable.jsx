@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plane, MapPin, Navigation as NavigationIcon, Radio, Phone } from 'lucide-react';
 import { theme } from '../../../styles/theme';
+import VFRNavigationTable from '@features/navigation/components/VFRNavigationTable';
 
 /**
  * Tableau récapitulatif pour le PDF
@@ -12,7 +13,11 @@ export const FlightRecapTable = ({
   selectedAircraft,
   aerodromeData,
   todCalculation,
-  navigationResults
+  navigationResults,
+  segmentAltitudes,
+  setSegmentAltitude,
+  departureTimeTheoretical,
+  flightType
 }) => {
   // Récupérer les performances de l'avion
   const departurePerf = flightPlan?.performance?.departure;
@@ -313,81 +318,27 @@ export const FlightRecapTable = ({
   };
 
   /**
-   * Tableau de navigation détaillé waypoint par waypoint
+   * Tableau de navigation VFR
    */
   const renderNavigationTable = () => {
-    if (!waypoints || waypoints.length === 0) return null;
+    if (!waypoints || waypoints.length === 0 || !selectedAircraft) return null;
+
+    const plannedAltitude = 3000; // Altitude par défaut
 
     return (
-      <div style={{
-        border: '2px solid #3b82f6',
-        borderRadius: '6px',
-        overflow: 'hidden',
-        backgroundColor: 'white',
-        marginBottom: '12px'
-      }}>
-        {/* En-tête tableau */}
-        <div style={{
-          backgroundColor: '#3b82f6',
-          color: 'white',
-          padding: '4px 8px',
-          fontWeight: '700',
-          fontSize: '10px'
-        }}>
-          TABLEAU DE NAVIGATION DÉTAILLÉ
-        </div>
-
-        {/* Table */}
-        <table style={{
-          width: '100%',
-          fontSize: '8px',
-          borderCollapse: 'collapse'
-        }}>
-          <thead>
-            <tr style={{ backgroundColor: '#eff6ff' }}>
-              <th style={{ padding: '4px 6px', borderBottom: '1px solid #d1d5db', fontWeight: '700', textAlign: 'left' }}>Vert</th>
-              <th style={{ padding: '4px 6px', borderBottom: '1px solid #d1d5db', fontWeight: '700', textAlign: 'left' }}>Alt</th>
-              <th style={{ padding: '4px 6px', borderBottom: '1px solid #d1d5db', fontWeight: '700', textAlign: 'left' }}>CAP</th>
-              <th style={{ padding: '4px 6px', borderBottom: '1px solid #d1d5db', fontWeight: '700', textAlign: 'left' }}>POS</th>
-              <th style={{ padding: '4px 6px', borderBottom: '1px solid #d1d5db', fontWeight: '700', textAlign: 'right' }}>DIST</th>
-              <th style={{ padding: '4px 6px', borderBottom: '1px solid #d1d5db', fontWeight: '700', textAlign: 'left' }}>SS</th>
-              <th style={{ padding: '4px 6px', borderBottom: '1px solid #d1d5db', fontWeight: '700', textAlign: 'left' }}>VENT</th>
-              <th style={{ padding: '4px 6px', borderBottom: '1px solid #d1d5db', fontWeight: '700', textAlign: 'left' }}>ESTIME</th>
-              <th style={{ padding: '4px 6px', borderBottom: '1px solid #d1d5db', fontWeight: '700', textAlign: 'left' }}>Tps Réel</th>
-              <th style={{ padding: '4px 6px', borderBottom: '1px solid #d1d5db', fontWeight: '700', textAlign: 'left' }}>Freq</th>
-            </tr>
-          </thead>
-          <tbody>
-            {waypoints.map((wp, idx) => {
-              const nextWp = waypoints[idx + 1];
-              const segment = navigationResults?.segments?.[idx];
-
-              return (
-                <tr key={idx} style={{
-                  backgroundColor: idx % 2 === 0 ? 'white' : '#f9fafb',
-                  borderBottom: '1px solid #e5e7eb'
-                }}>
-                  <td style={{ padding: '3px 6px', fontWeight: '600' }}>{wp.name || wp.icao}</td>
-                  <td style={{ padding: '3px 6px' }}>{segment?.altitude || '___'}</td>
-                  <td style={{ padding: '3px 6px' }}>{segment?.heading ? `${Math.round(segment.heading)}°` : '___'}</td>
-                  <td style={{ padding: '3px 6px', fontSize: '7px' }}>
-                    {wp.lat && wp.lon ? `${wp.lat.toFixed(2)}°/${wp.lon.toFixed(2)}°` : '___'}
-                  </td>
-                  <td style={{ padding: '3px 6px', textAlign: 'right' }}>
-                    {segment?.distance ? `${segment.distance.toFixed(1)} NM` : '___'}
-                  </td>
-                  <td style={{ padding: '3px 6px' }}>{segment?.groundSpeed ? `${Math.round(segment.groundSpeed)} kt` : '___'}</td>
-                  <td style={{ padding: '3px 6px' }}>___</td>
-                  <td style={{ padding: '3px 6px' }}>
-                    {segment?.time ? `${Math.round(segment.time)} min` : '___'}
-                  </td>
-                  <td style={{ padding: '3px 6px' }}>___</td>
-                  <td style={{ padding: '3px 6px' }}>___</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <div style={{ marginBottom: '12px' }}>
+        <VFRNavigationTable
+          waypoints={waypoints}
+          selectedAircraft={selectedAircraft}
+          plannedAltitude={plannedAltitude}
+          flightType={flightType || 'VFR'}
+          navigationResults={navigationResults}
+          segmentAltitudes={segmentAltitudes}
+          setSegmentAltitude={setSegmentAltitude}
+          departureTimeTheoretical={departureTimeTheoretical}
+          flightDate={flightPlan?.generalInfo?.date}
+          hideToggleButton={true}
+        />
       </div>
     );
   };
