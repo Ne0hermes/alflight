@@ -1035,6 +1035,15 @@ export const SIAReportEnhanced = () => {
                     >
                       <Settings size={12} /> Services
                     </button>
+                    <button
+                      onClick={() => setExpandedSection('vac')}
+                      style={{
+                        ...styles.sectionTab,
+                        ...(expandedSection === 'vac' ? styles.sectionTabActive : {})
+                      }}
+                    >
+                      <FileText size={12} /> VAC
+                    </button>
                   </div>
 
                   {/* Contenu selon l'onglet actif */}
@@ -1968,6 +1977,174 @@ export const SIAReportEnhanced = () => {
                         Consulter AIP, VAC et NOTAM pour les informations complètes
                       </div>
                     </div>
+                      </div>
+                    )}
+
+                    {/* Section VAC - Gestion des cartes */}
+                    {expandedSection === 'vac' && (
+                      <div>
+                        <div style={{
+                          padding: '12px',
+                          backgroundColor: '#f0f9ff',
+                          borderRadius: '6px',
+                          border: '1px solid #3b82f6',
+                          marginBottom: '12px'
+                        }}>
+                          <h4 style={{
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            color: '#1e40af',
+                            marginBottom: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                          }}>
+                            <FileText size={14} />
+                            Carte VAC pour {aerodrome.icao}
+                          </h4>
+
+                          {/* Vérifier si une carte VAC existe */}
+                          {charts[aerodrome.icao] ? (
+                            <div>
+                              <div style={{ fontSize: '11px', marginBottom: '8px' }}>
+                                ✅ Carte VAC importée
+                                {charts[aerodrome.icao].downloadDate && (
+                                  <span style={{ color: '#6b7280', marginLeft: '8px' }}>
+                                    {new Date(charts[aerodrome.icao].downloadDate).toLocaleDateString('fr-FR')}
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Informations de la carte */}
+                              {charts[aerodrome.icao].extractedData && (
+                                <div style={{
+                                  fontSize: '11px',
+                                  padding: '8px',
+                                  backgroundColor: 'white',
+                                  borderRadius: '4px',
+                                  marginBottom: '8px'
+                                }}>
+                                  {charts[aerodrome.icao].extractedData.circuitAltitude && (
+                                    <div>Circuit: {charts[aerodrome.icao].extractedData.circuitAltitude} ft AAL</div>
+                                  )}
+                                  {charts[aerodrome.icao].extractedData.runways?.length > 0 && (
+                                    <div>{charts[aerodrome.icao].extractedData.runways.length} piste(s) extraite(s)</div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Actions */}
+                              <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (charts[aerodrome.icao]?.url) {
+                                      window.open(charts[aerodrome.icao].url, '_blank');
+                                    }
+                                  }}
+                                  style={{
+                                    padding: '6px 12px',
+                                    backgroundColor: '#3b82f6',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    fontSize: '11px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
+                                  }}
+                                >
+                                  <FileText size={12} />
+                                  Visualiser
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const inputId = `vac-input-${aerodrome.icao}`;
+                                    if (!fileInputRefs.current[inputId]) {
+                                      const input = document.createElement('input');
+                                      input.type = 'file';
+                                      input.accept = '.pdf,image/*';
+                                      input.style.display = 'none';
+                                      input.id = inputId;
+                                      input.onchange = handleVACImport(aerodrome.icao);
+                                      document.body.appendChild(input);
+                                      fileInputRefs.current[inputId] = input;
+                                    }
+                                    fileInputRefs.current[inputId].click();
+                                  }}
+                                  style={{
+                                    padding: '6px 12px',
+                                    backgroundColor: '#10b981',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    fontSize: '11px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
+                                  }}
+                                >
+                                  <Upload size={12} />
+                                  Remplacer
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div>
+                              <div style={{ fontSize: '11px', marginBottom: '8px', color: '#6b7280' }}>
+                                ℹ️ Aucune carte VAC importée pour cet aérodrome
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const inputId = `vac-input-${aerodrome.icao}`;
+                                  if (!fileInputRefs.current[inputId]) {
+                                    const input = document.createElement('input');
+                                    input.type = 'file';
+                                    input.accept = '.pdf,image/*';
+                                    input.style.display = 'none';
+                                    input.id = inputId;
+                                    input.onchange = handleVACImport(aerodrome.icao);
+                                    document.body.appendChild(input);
+                                    fileInputRefs.current[inputId] = input;
+                                  }
+                                  fileInputRefs.current[inputId].click();
+                                }}
+                                style={{
+                                  padding: '8px 16px',
+                                  backgroundColor: '#3b82f6',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  fontSize: '12px',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '6px'
+                                }}
+                              >
+                                <Upload size={14} />
+                                Importer carte VAC
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Avertissement */}
+                        <div style={{
+                          fontSize: '10px',
+                          color: '#6b7280',
+                          padding: '8px',
+                          backgroundColor: '#fef3c7',
+                          borderRadius: '4px',
+                          border: '1px solid #f59e0b'
+                        }}>
+                          ⚠️ Les cartes VAC doivent être téléchargées depuis le site officiel du SIA.
+                          Les données affichées sont indicatives.
+                        </div>
                       </div>
                     )}
                   </div>
