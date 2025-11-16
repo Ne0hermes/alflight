@@ -673,24 +673,6 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             {console.log('📊 Step7Summary - selectedAircraft:', selectedAircraft)}
             {console.log('📊 Step7Summary - waypoints.length:', waypoints?.length)}
           </div>
-
-          {/* Tableau de navigation VFR */}
-          {selectedAircraft && waypoints.length >= 2 && (
-            <div className="vfr-nav-table-wrapper">
-              <VFRNavigationTable
-                waypoints={waypoints}
-                selectedAircraft={selectedAircraft}
-                plannedAltitude={plannedAltitude}
-                flightType={flightType}
-                navigationResults={navigationResults}
-                segmentAltitudes={segmentAltitudes}
-                setSegmentAltitude={setSegmentAltitude}
-                departureTimeTheoretical={departureTimeTheoretical}
-                flightDate={flightPlan.generalInfo.date}
-                hideToggleButton={true}
-              />
-            </div>
-          )}
         </CollapsibleSection>
       )}
 
