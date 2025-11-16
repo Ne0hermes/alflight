@@ -121,34 +121,63 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
     const upperIcao = aerodrome.icao?.toUpperCase();
     const chart = charts[upperIcao];
 
-    if (!chart) return aerodrome;
+    console.log(`🔍 [Step3VAC] getEnrichedAerodrome pour ${upperIcao}:`, {
+      hasChart: !!chart,
+      chart: chart,
+      aerodrome: aerodrome
+    });
+
+    if (!chart) {
+      console.log(`⚠️ [Step3VAC] Pas de chart dans vacStore pour ${upperIcao}`);
+      return aerodrome;
+    }
 
     // Enrichir avec les données extraites de la VAC
     const enriched = { ...aerodrome };
 
     // Priorité aux données extraites du vacStore
     if (chart.extractedData) {
+      console.log(`📋 [Step3VAC] Enrichissement ${upperIcao} avec extractedData:`, chart.extractedData);
+
       if (chart.extractedData.transitionAltitude !== undefined) {
         enriched.transitionAltitude = chart.extractedData.transitionAltitude;
+        console.log(`  ✅ transitionAltitude: ${chart.extractedData.transitionAltitude}`);
       }
       if (chart.extractedData.circuitAltitude !== undefined) {
         enriched.circuitAltitude = chart.extractedData.circuitAltitude;
+        console.log(`  ✅ circuitAltitude: ${chart.extractedData.circuitAltitude}`);
       }
       if (chart.extractedData.integrationAltitude !== undefined) {
         enriched.integrationAltitude = chart.extractedData.integrationAltitude;
+        console.log(`  ✅ integrationAltitude: ${chart.extractedData.integrationAltitude}`);
       }
     } else {
+      console.log(`⚠️ [Step3VAC] Pas de extractedData pour ${upperIcao}, utilisation niveau racine`);
+
       // Fallback: utiliser les données au niveau racine du chart
       if (chart.transitionAltitude !== undefined) {
         enriched.transitionAltitude = chart.transitionAltitude;
+        console.log(`  ✅ transitionAltitude (racine): ${chart.transitionAltitude}`);
       }
       if (chart.circuitAltitude !== undefined) {
         enriched.circuitAltitude = chart.circuitAltitude;
+        console.log(`  ✅ circuitAltitude (racine): ${chart.circuitAltitude}`);
       }
       if (chart.integrationAltitude !== undefined) {
         enriched.integrationAltitude = chart.integrationAltitude;
+        console.log(`  ✅ integrationAltitude (racine): ${chart.integrationAltitude}`);
       }
     }
+
+    console.log(`🔍 [Step3VAC] Aérodrome enrichi ${upperIcao}:`, {
+      original: aerodrome,
+      enriched: enriched,
+      différences: {
+        transitionAltitude: `${aerodrome.transitionAltitude} → ${enriched.transitionAltitude}`,
+        circuitAltitude: `${aerodrome.circuitAltitude} → ${enriched.circuitAltitude}`,
+        integrationAltitude: `${aerodrome.integrationAltitude} → ${enriched.integrationAltitude}`
+      }
+    });
 
     return enriched;
   };

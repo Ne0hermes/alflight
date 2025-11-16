@@ -33,9 +33,11 @@ export const SIAReportEnhanced = () => {
   const fileInputRefs = useRef({});
   
   // Store VAC pour gérer les cartes importées
-  const { charts, addCustomChart } = useVACStore(state => ({
+  const { charts, addCustomChart, updateExtractedData, updateChartData } = useVACStore(state => ({
     charts: state.charts || {},
-    addCustomChart: state.addCustomChart
+    addCustomChart: state.addCustomChart,
+    updateExtractedData: state.updateExtractedData,
+    updateChartData: state.updateChartData
   }));
   
   // Store pour les points VFR personnalisés
@@ -2072,6 +2074,114 @@ export const SIAReportEnhanced = () => {
                                   {charts[aerodrome.icao].extractedData.runways?.length > 0 && (
                                     <div>{charts[aerodrome.icao].extractedData.runways.length} piste(s) extraite(s)</div>
                                   )}
+                                </div>
+                              )}
+
+                              {/* Formulaire d'extraction manuelle si nécessaire */}
+                              {charts[aerodrome.icao].needsManualExtraction && (
+                                <div style={{
+                                  padding: '12px',
+                                  backgroundColor: '#fef3c7',
+                                  borderRadius: '4px',
+                                  marginTop: '12px',
+                                  marginBottom: '12px',
+                                  border: '1px solid #f59e0b'
+                                }}>
+                                  <div style={{ fontSize: '11px', fontWeight: '600', color: '#92400e', marginBottom: '8px' }}>
+                                    ⚠️ Extraction manuelle requise
+                                  </div>
+                                  <div style={{ fontSize: '10px', color: '#78350f', marginBottom: '12px' }}>
+                                    Entrez les données depuis la carte VAC :
+                                  </div>
+                                  <div style={{ display: 'grid', gap: '8px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '8px', alignItems: 'center' }}>
+                                      <label style={{ fontSize: '10px', color: '#78350f' }}>Altitude transition:</label>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <input
+                                          type="number"
+                                          placeholder="ex: 5000"
+                                          id={`transition-${aerodrome.icao}`}
+                                          style={{
+                                            padding: '4px 8px',
+                                            fontSize: '11px',
+                                            border: '1px solid #d97706',
+                                            borderRadius: '4px',
+                                            width: '100px'
+                                          }}
+                                        />
+                                        <span style={{ fontSize: '10px', color: '#78350f' }}>ft</span>
+                                      </div>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '8px', alignItems: 'center' }}>
+                                      <label style={{ fontSize: '10px', color: '#78350f' }}>Alt. tour de piste:</label>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <input
+                                          type="number"
+                                          placeholder="ex: 1000"
+                                          id={`circuit-${aerodrome.icao}`}
+                                          style={{
+                                            padding: '4px 8px',
+                                            fontSize: '11px',
+                                            border: '1px solid #d97706',
+                                            borderRadius: '4px',
+                                            width: '100px'
+                                          }}
+                                        />
+                                        <span style={{ fontSize: '10px', color: '#78350f' }}>ft AAL</span>
+                                      </div>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '8px', alignItems: 'center' }}>
+                                      <label style={{ fontSize: '10px', color: '#78350f' }}>Alt. intégration:</label>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <input
+                                          type="number"
+                                          placeholder="ex: 2000"
+                                          id={`integration-${aerodrome.icao}`}
+                                          style={{
+                                            padding: '4px 8px',
+                                            fontSize: '11px',
+                                            border: '1px solid #d97706',
+                                            borderRadius: '4px',
+                                            width: '100px'
+                                          }}
+                                        />
+                                        <span style={{ fontSize: '10px', color: '#78350f' }}>ft AAL</span>
+                                      </div>
+                                    </div>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const transition = document.getElementById(`transition-${aerodrome.icao}`).value;
+                                        const circuit = document.getElementById(`circuit-${aerodrome.icao}`).value;
+                                        const integration = document.getElementById(`integration-${aerodrome.icao}`).value;
+
+                                        const extractedData = {
+                                          transitionAltitude: transition ? parseInt(transition) : undefined,
+                                          circuitAltitude: circuit ? parseInt(circuit) : undefined,
+                                          integrationAltitude: integration ? parseInt(integration) : undefined
+                                        };
+
+                                        updateExtractedData(aerodrome.icao, extractedData);
+
+                                        // Mettre à jour le flag needsManualExtraction
+                                        updateChartData(aerodrome.icao, { needsManualExtraction: false });
+
+                                        alert(`✅ Données VAC enregistrées pour ${aerodrome.icao}`);
+                                      }}
+                                      style={{
+                                        padding: '6px 12px',
+                                        backgroundColor: '#10b981',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        fontSize: '11px',
+                                        cursor: 'pointer',
+                                        marginTop: '8px'
+                                      }}
+                                    >
+                                      ✓ Enregistrer les données
+                                    </button>
+                                  </div>
                                 </div>
                               )}
 
