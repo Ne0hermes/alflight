@@ -406,59 +406,6 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
               )}
             </div>
           </div>
-
-          {/* Temps de départ théorique + Heures nuit aéronautique */}
-          <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
-            <div className="departure-time-container" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'nowrap' }}>
-              {/* Label */}
-              <span className="departure-time-label" style={{ fontSize: '14px', color: theme.colors.textSecondary, whiteSpace: 'nowrap' }}>
-                ⏰ Temps de départ théorique:
-              </span>
-
-              {/* Input */}
-              <input
-                type="time"
-                value={departureTimeTheoretical}
-                onChange={(e) => setDepartureTimeTheoretical(e.target.value)}
-                style={{
-                  padding: '4px 6px',
-                  border: '2px solid #3b82f6',
-                  borderRadius: '4px',
-                  fontSize: '13px',
-                  fontWeight: 'bold',
-                  backgroundColor: 'white',
-                  width: '85px',
-                  flexShrink: 0
-                }}
-              />
-
-              {/* Badge heures de nuit aéronautique */}
-              {sunTimes && (
-                <div className="sun-times-badge" style={{
-                  display: 'flex',
-                  gap: '12px',
-                  fontSize: '11px',
-                  color: '#78350f',
-                  backgroundColor: '#fef3c7',
-                  padding: '4px 10px',
-                  borderRadius: '4px',
-                  border: '1px solid #f59e0b',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0
-                }}>
-                  <span className="sun-time-item" style={{ whiteSpace: 'nowrap' }}>
-                    🌅 <strong>Coucher:</strong> {formatSunTime(sunTimes.sunset)}
-                  </span>
-                  <span className="sun-time-item" style={{ whiteSpace: 'nowrap' }}>
-                    🌙 <strong>Nuit:</strong> {formatSunTime(sunTimes.nightStart)}
-                  </span>
-                  <span className="sun-time-item" style={{ whiteSpace: 'nowrap' }}>
-                    🌄 <strong>Lever:</strong> {formatSunTime(sunTimes.sunrise)}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       </div>
 
@@ -1603,11 +1550,14 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
         segmentAltitudes={segmentAltitudes}
         setSegmentAltitude={setSegmentAltitude}
         departureTimeTheoretical={departureTimeTheoretical}
+        setDepartureTimeTheoretical={setDepartureTimeTheoretical}
         flightType={flightType}
         descentRate={descentRate}
         setDescentRate={setDescentRate}
         targetAltitude={targetAltitude}
         setTargetAltitude={setTargetAltitude}
+        sunTimes={sunTimes}
+        formatSunTime={formatSunTime}
         onUpdate={onUpdate}
       />
     </div>
