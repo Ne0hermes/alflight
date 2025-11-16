@@ -5,6 +5,10 @@ import { FlightPlanData } from './models/FlightPlanData';
 import { WizardConfigProvider } from './contexts/WizardConfigContext';
 import { useAircraft, useNavigation, useFuel, useWeather } from '@core/contexts';
 import { aircraftSelectors } from '../../core/stores/aircraftStore';
+import { flightPlanSupabaseService } from '../../services/flightPlanSupabaseService';
+import { validatedPdfService } from '../../services/validatedPdfService';
+import { useNavigationResults } from '@features/navigation/hooks/useNavigationResults';
+import html2pdf from 'html2pdf.js';
 
 // Import des étapes
 import { Step1GeneralInfo } from './steps/Step1GeneralInfo';
@@ -25,9 +29,10 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
   // Contextes pour la synchronisation et restauration
   const { setSelectedAircraft } = useAircraft();
   const aircraftList = aircraftSelectors.useAircraftList();
-  const { setWaypoints } = useNavigation();
+  const { setWaypoints, waypoints, segmentAltitudes } = useNavigation();
   const { setFobFuel } = useFuel();
   const { setWeatherData } = useWeather();
+  const navigationResults = useNavigationResults();
 
   // État principal : instance du modèle de données
   const [flightPlan] = useState(() => {
@@ -368,12 +373,29 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
       // Génération du rapport final
       const summary = flightPlan.generateSummary();
 
-      // Archiver le plan complété
+      // 1. 💾 SAUVEGARDE SUPABASE - Navigation complète
+      console.log('📤 [Wizard] Sauvegarde sur Supabase...');
+      const supabaseResult = await flightPlanSupabaseService.saveFlightPlan(
+        flightPlan,
+        waypoints || [],
+        segmentAltitudes || {},
+        navigationResults,
+        flightPlan.generalInfo.callsign || '' // Utiliser le callsign comme nom de pilote
+      );
+
+      if (supabaseResult.success) {
+        console.log('✅ [Wizard] Plan de vol sauvegardé sur Supabase:', supabaseResult.data.id);
+      } else {
+        console.warn('⚠️ [Wizard] Échec sauvegarde Supabase (continuera avec localStorage):', supabaseResult.error);
+      }
+
+      // 2. Archiver le plan complété (localStorage)
       try {
         const completedPlans = JSON.parse(localStorage.getItem('completedFlightPlans') || '[]');
         completedPlans.push({
-          ...flightPlan,
+          ...flightPlan.toJSON(),
           completedAt: new Date().toISOString(),
+          supabaseId: supabaseResult.data?.id || null
         });
         localStorage.setItem('completedFlightPlans', JSON.stringify(completedPlans));
 
@@ -386,7 +408,105 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
         console.error('❌ Erreur lors de l\'archivage:', error);
       }
 
-      // Callback de complétion
+      // 3. 📄 GÉNÉRATION PDF - Générer et sauvegarder automatiquement
+      const shouldGeneratePdf = confirm(
+        '✅ Plan de vol sauvegardé avec succès !\n\n' +
+        'Voulez-vous générer et sauvegarder le PDF du plan de vol ?'
+      );
+
+      if (shouldGeneratePdf) {
+        console.log('📄 [Wizard] Génération et sauvegarde PDF...');
+
+        try {
+          // Trouver l'élément contenant le Step7Summary (tout le contenu à imprimer)
+          const element = document.querySelector('.wizard-content');
+
+          if (!element) {
+            console.error('❌ Élément .wizard-content non trouvé');
+            alert('Erreur: impossible de trouver le contenu à convertir en PDF');
+            return;
+          }
+
+          // Options de génération PDF
+          const opt = {
+            margin: [10, 10, 10, 10],
+            filename: `plan-de-vol-${flightPlan.aircraft.registration || 'unknown'}-${new Date().toISOString().split('T')[0]}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: {
+              scale: 2,
+              useCORS: true,
+              logging: false
+            },
+            jsPDF: {
+              unit: 'mm',
+              format: 'a4',
+              orientation: 'portrait'
+            }
+          };
+
+          // Générer le PDF et obtenir le blob
+          const pdfBlob = await html2pdf()
+            .from(element)
+            .set(opt)
+            .outputPdf('blob');
+
+          console.log('✅ [Wizard] PDF généré:', (pdfBlob.size / 1024).toFixed(2), 'KB');
+
+          // Télécharger le PDF pour l'utilisateur
+          const url = URL.createObjectURL(pdfBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = opt.filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+
+          console.log('✅ [Wizard] PDF téléchargé pour l\'utilisateur');
+
+          // Préparer les métadonnées pour Supabase
+          const pdfMetadata = {
+            flightPlanId: supabaseResult.data?.id || null,
+            pilotName: flightPlan.generalInfo.callsign || 'Pilote inconnu',
+            flightDate: flightPlan.generalInfo.date || new Date().toISOString().split('T')[0],
+            callsign: flightPlan.generalInfo.callsign,
+            aircraftRegistration: flightPlan.aircraft.registration,
+            aircraftType: flightPlan.aircraft.type,
+            departureIcao: flightPlan.route.departure.icao,
+            departureName: flightPlan.route.departure.name,
+            arrivalIcao: flightPlan.route.arrival.icao,
+            arrivalName: flightPlan.route.arrival.name,
+            tags: [flightPlan.generalInfo.flightType, flightPlan.generalInfo.flightNature],
+            notes: flightPlan.notes || null
+          };
+
+          // Sauvegarder le PDF dans Supabase
+          console.log('📤 [Wizard] Sauvegarde PDF dans Supabase...');
+          const pdfResult = await validatedPdfService.uploadValidatedPdf(pdfBlob, pdfMetadata);
+
+          if (pdfResult.success) {
+            console.log('✅ [Wizard] PDF sauvegardé dans Supabase:', pdfResult.data.flight_number);
+            alert(
+              `✅ PDF généré et sauvegardé avec succès !\n\n` +
+              `Numéro de vol: ${pdfResult.data.flight_number}\n` +
+              `Le PDF a été téléchargé et archivé dans la base de données.`
+            );
+          } else {
+            console.warn('⚠️ [Wizard] Échec sauvegarde PDF dans Supabase:', pdfResult.error);
+            alert(
+              '⚠️ Le PDF a été téléchargé avec succès,\n' +
+              'mais n\'a pas pu être sauvegardé dans la base de données.\n\n' +
+              'Erreur: ' + (pdfResult.error?.message || 'Erreur inconnue')
+            );
+          }
+
+        } catch (error) {
+          console.error('❌ [Wizard] Erreur génération/sauvegarde PDF:', error);
+          alert('❌ Erreur lors de la génération du PDF: ' + error.message);
+        }
+      }
+
+      // 4. Callback de complétion
       if (onComplete) {
         await onComplete(flightPlan, summary);
       }
@@ -397,11 +517,11 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
 
     } catch (error) {
       console.error('Erreur lors de la finalisation:', error);
-      alert('Une erreur est survenue lors de la génération du rapport');
+      alert('Une erreur est survenue lors de la génération du rapport: ' + error.message);
     } finally {
       setIsLoading(false);
     }
-  }, [flightPlan, onComplete]);
+  }, [flightPlan, onComplete, waypoints, segmentAltitudes, navigationResults]);
 
   /**
    * Recommencer le wizard en effaçant le brouillon
@@ -430,9 +550,70 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
 
   return (
     <WizardConfigProvider>
+      {/* Styles pour l'impression PDF */}
+      <style>{`
+        @page {
+          size: A4 portrait;
+          margin: 1.5cm 1cm;
+        }
+
+        @media print {
+          * {
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+          }
+
+          body {
+            margin: 0;
+            padding: 0;
+          }
+
+          .wizard-navigation {
+            display: none !important;
+          }
+          .wizard-header {
+            display: none !important;
+          }
+          .wizard-step-header {
+            display: none !important;
+          }
+
+          /* Responsive A4 portrait */
+          div, p, span, strong {
+            max-width: 100% !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+          }
+
+          /* Réduire tailles police si nécessaire */
+          h1, h2, h3, h4, h5, h6 {
+            font-size: 14pt !important;
+          }
+
+          p, div, span {
+            font-size: 10pt !important;
+            line-height: 1.3 !important;
+          }
+
+          /* Tableaux responsifs */
+          table {
+            width: 100% !important;
+            font-size: 9pt !important;
+          }
+
+          /* Réduire padding/margin */
+          * {
+            padding-left: 4px !important;
+            padding-right: 4px !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+          }
+        }
+      `}</style>
+
       <div style={styles.container}>
         {/* Header avec progression */}
-        <div style={styles.header}>
+        <div className="wizard-header" style={styles.header}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h1 style={styles.title}>
             <Plane size={24} style={{ marginRight: '12px' }} />
@@ -507,7 +688,7 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
 
       {/* Contenu de l'étape courante */}
       <div style={styles.content}>
-        <div style={styles.stepHeader}>
+        <div className="wizard-step-header" style={styles.stepHeader}>
           <h2 style={styles.stepTitle}>
             Étape {currentStep} : {currentStepConfig.title}
           </h2>
@@ -526,7 +707,7 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
       </div>
 
       {/* Barre de navigation */}
-      <div style={styles.navigation}>
+      <div className="wizard-navigation" style={styles.navigation}>
         <button
           style={{
             ...styles.navButton,
@@ -559,7 +740,7 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
               ...styles.navButtonComplete,
             }}
             onClick={handleComplete}
-            disabled={!flightPlan.isComplete() || isLoading}
+            disabled={isLoading}
           >
             {isLoading ? 'Génération...' : 'Terminer et Générer'}
             <Check size={20} />
