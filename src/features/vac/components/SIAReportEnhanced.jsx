@@ -859,86 +859,37 @@ export const SIAReportEnhanced = () => {
                         FERMÉ
                       </span>
                     )}
+                    {/* Indicateur VAC simple (non-cliquable) */}
                     {hasVAC ? (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Options : visualiser ou réimporter
-                          const action = confirm('Carte VAC présente.\n\nOK = Visualiser\nAnnuler = Réimporter');
-                          if (action) {
-                            // Visualiser la carte
-                            const chart = charts[aerodrome.icao];
-                            if (chart?.url) {
-                              window.open(chart.url, '_blank');
-                            } else {
-                              console.log('Pas d\'URL disponible pour cette carte');
-                            }
-                          } else {
-                            // Réimporter
-                            const inputId = `vac-input-${aerodrome.icao}`;
-                            if (!fileInputRefs.current[inputId]) {
-                              const input = document.createElement('input');
-                              input.type = 'file';
-                              input.accept = '.pdf,image/*';
-                              input.style.display = 'none';
-                              input.id = inputId;
-                              console.log('Setting up VAC import for aerodrome:', aerodrome, 'icao:', aerodrome.icao);
-                            input.onchange = handleVACImport(aerodrome.icao);
-                              document.body.appendChild(input);
-                              fileInputRefs.current[inputId] = input;
-                            }
-                            fileInputRefs.current[inputId].click();
-                          }
-                        }}
-                        style={{ 
-                          ...styles.badge, 
-                          backgroundColor: '#10b981', 
-                          color: 'white',
-                          cursor: 'pointer',
-                          border: 'none',
-                          padding: '2px 8px',
-                          fontSize: '10px'
-                        }}
-                        title="Carte VAC importée - Cliquer pour voir ou réimporter"
-                      >
-                        VAC ✓
-                      </button>
-                    ) : (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const inputId = `vac-input-${aerodrome.icao}`;
-                          if (!fileInputRefs.current[inputId]) {
-                            // Créer l'input s'il n'existe pas
-                            const input = document.createElement('input');
-                            input.type = 'file';
-                            input.accept = '.pdf,image/*';
-                            input.style.display = 'none';
-                            input.id = inputId;
-                            console.log('Setting up VAC import for aerodrome:', aerodrome, 'icao:', aerodrome.icao);
-                            input.onchange = handleVACImport(aerodrome.icao);
-                            document.body.appendChild(input);
-                            fileInputRefs.current[inputId] = input;
-                          }
-                          fileInputRefs.current[inputId].click();
-                        }}
+                      <div
                         style={{
                           ...styles.badge,
-                          backgroundColor: '#f3f4f6',
-                          color: '#6b7280',
-                          cursor: 'pointer',
-                          border: '1px solid #d1d5db',
+                          backgroundColor: '#10b981',
+                          color: 'white',
                           padding: '2px 8px',
                           fontSize: '10px',
                           display: 'flex',
                           alignItems: 'center',
                           gap: '3px'
                         }}
-                        title="Importer carte VAC"
+                        title="Carte VAC importée"
                       >
-                        <Upload size={10} />
+                        ✓ VAC
+                      </div>
+                    ) : (
+                      <div
+                        style={{
+                          ...styles.badge,
+                          backgroundColor: '#f3f4f6',
+                          color: '#9ca3af',
+                          border: '1px solid #d1d5db',
+                          padding: '2px 8px',
+                          fontSize: '10px'
+                        }}
+                        title="Aucune carte VAC"
+                      >
                         VAC
-                      </button>
+                      </div>
                     )}
                   </div>
                   <div style={styles.cardSubtitle}>
