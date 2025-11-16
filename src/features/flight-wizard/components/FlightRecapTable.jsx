@@ -21,7 +21,8 @@ export const FlightRecapTable = ({
   descentRate,
   setDescentRate,
   targetAltitude,
-  setTargetAltitude
+  setTargetAltitude,
+  onUpdate
 }) => {
   // Récupérer les performances de l'avion
   const departurePerf = flightPlan?.performance?.departure;
@@ -643,7 +644,7 @@ export const FlightRecapTable = ({
               </div>
             </div>
 
-            {/* ATIS, Notes et Clairances */}
+            {/* Notes du Pilote - Éditable */}
             <div>
               <div style={{
                 fontSize: '11px',
@@ -651,22 +652,30 @@ export const FlightRecapTable = ({
                 color: '#6366f1',
                 marginBottom: '6px'
               }}>
-                📝 ATIS, NOTES ET CLAIRANCES
+                ✍️ NOTES DU PILOTE
               </div>
 
-              <div style={{
-                border: '2px solid #6366f1',
-                borderRadius: '6px',
-                padding: '8px',
-                backgroundColor: '#eff6ff',
-                fontSize: '9px',
-                minHeight: '60px',
-                whiteSpace: 'pre-wrap',
-                lineHeight: '1.5',
-                color: '#1e293b'
-              }}>
-                {flightPlan.notes || 'Aucune note ajoutée'}
-              </div>
+              <textarea
+                value={flightPlan.notes || ''}
+                onChange={(e) => {
+                  flightPlan.notes = e.target.value;
+                  if (onUpdate) onUpdate();
+                }}
+                placeholder="Ajouter vos notes pré-vol (météo, NOTAMs, clairances, fréquences VOR/ATIS, QNH, vent, etc.)"
+                style={{
+                  width: '100%',
+                  minHeight: '80px',
+                  padding: '8px',
+                  fontSize: '9px',
+                  border: '2px solid #6366f1',
+                  borderRadius: '6px',
+                  fontFamily: 'inherit',
+                  resize: 'vertical',
+                  backgroundColor: '#eff6ff',
+                  color: '#1e293b',
+                  lineHeight: '1.5'
+                }}
+              />
             </div>
           </div>
         </div>
