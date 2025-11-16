@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plane, MapPin, Navigation as NavigationIcon, Radio, Phone } from 'lucide-react';
+import { Plane, MapPin, Navigation as NavigationIcon, Radio, Phone, Clock } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import VFRNavigationTable from '@features/navigation/components/VFRNavigationTable';
 
@@ -17,11 +17,14 @@ export const FlightRecapTable = ({
   segmentAltitudes,
   setSegmentAltitude,
   departureTimeTheoretical,
+  setDepartureTimeTheoretical,
   flightType,
   descentRate,
   setDescentRate,
   targetAltitude,
   setTargetAltitude,
+  sunTimes,
+  formatSunTime,
   onUpdate
 }) => {
   // Récupérer les performances de l'avion
@@ -494,6 +497,86 @@ export const FlightRecapTable = ({
 
           {/* Colonne droite : Navigation */}
           <div>
+            {/* Temps de départ théorique + Heures nuit aéronautique */}
+            <div style={{
+              marginBottom: '12px',
+              pageBreakInside: 'avoid',
+              border: '2px solid #3b82f6',
+              borderRadius: '8px',
+              overflow: 'hidden',
+              backgroundColor: 'white'
+            }}>
+              <div style={{
+                backgroundColor: '#3b82f6',
+                color: 'white',
+                padding: '6px 10px',
+                fontWeight: '700',
+                fontSize: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                <Clock size={14} />
+                <span>HORAIRES DE VOL</span>
+              </div>
+
+              <div style={{ padding: '8px' }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  flexWrap: 'wrap',
+                  fontSize: '9px'
+                }}>
+                  {/* Label + Input temps de départ */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ color: '#6b7280', fontWeight: '600', whiteSpace: 'nowrap' }}>
+                      ⏰ Départ théorique:
+                    </span>
+                    <input
+                      type="time"
+                      value={departureTimeTheoretical}
+                      onChange={(e) => setDepartureTimeTheoretical && setDepartureTimeTheoretical(e.target.value)}
+                      style={{
+                        padding: '3px 5px',
+                        border: '1px solid #3b82f6',
+                        borderRadius: '3px',
+                        fontSize: '9px',
+                        fontWeight: '600',
+                        backgroundColor: 'white',
+                        width: '70px'
+                      }}
+                    />
+                  </div>
+
+                  {/* Badge heures de nuit aéronautique */}
+                  {sunTimes && formatSunTime && (
+                    <div style={{
+                      display: 'flex',
+                      gap: '8px',
+                      fontSize: '8px',
+                      color: '#78350f',
+                      backgroundColor: '#fef3c7',
+                      padding: '3px 8px',
+                      borderRadius: '3px',
+                      border: '1px solid #f59e0b',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      <span style={{ whiteSpace: 'nowrap' }}>
+                        🌅 <strong>Coucher:</strong> {formatSunTime(sunTimes.sunset)}
+                      </span>
+                      <span style={{ whiteSpace: 'nowrap' }}>
+                        🌙 <strong>Nuit:</strong> {formatSunTime(sunTimes.nightStart)}
+                      </span>
+                      <span style={{ whiteSpace: 'nowrap' }}>
+                        🌄 <strong>Lever:</strong> {formatSunTime(sunTimes.sunrise)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Tableau de navigation VFR */}
             {renderNavigationTable()}
 
