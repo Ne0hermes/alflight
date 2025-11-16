@@ -1569,73 +1569,72 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
       />
 
       {/* Page de rappel pour documents à joindre */}
-      <div className="documents-reminder-print-only" style={{
-        display: 'none' // Caché par défaut, visible seulement en impression
-      }}>
-        <style>{`
-          @media print {
-            .documents-reminder-print-only {
-              display: block !important;
-              page-break-before: always;
-              page-break-inside: avoid;
-              min-height: 100vh;
-              padding: 40px;
-              display: flex;
-              flex-direction: column;
-              justify-content: center;
-              align-items: center;
-            }
-
-            .reminder-title {
-              font-size: 24px;
-              font-weight: 700;
-              color: #1e293b;
-              margin-bottom: 40px;
-              text-align: center;
-              text-transform: uppercase;
-              letter-spacing: 1px;
-            }
-
-            .reminder-list {
-              list-style: none;
-              padding: 0;
-              margin: 0;
-              width: 100%;
-              max-width: 600px;
-            }
-
-            .reminder-item {
-              background-color: #f8fafc;
-              border: 2px solid #3b82f6;
-              border-radius: 8px;
-              padding: 20px 24px;
-              margin-bottom: 20px;
-              font-size: 16px;
-              font-weight: 600;
-              color: #334155;
-              display: flex;
-              align-items: center;
-              gap: 12px;
-            }
-
-            .reminder-icon {
-              font-size: 24px;
-              flex-shrink: 0;
-            }
-          }
-        `}</style>
-
-        <div className="reminder-title">
+      <div
+        className="documents-reminder-page"
+        style={{
+          marginTop: '48px',
+          padding: '40px',
+          minHeight: '400px',
+          backgroundColor: '#f8fafc',
+          border: '3px solid #3b82f6',
+          borderRadius: '12px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          pageBreakBefore: 'always',
+          pageBreakInside: 'avoid'
+        }}
+      >
+        <div style={{
+          fontSize: '24px',
+          fontWeight: '700',
+          color: '#1e293b',
+          marginBottom: '40px',
+          textAlign: 'center',
+          textTransform: 'uppercase',
+          letterSpacing: '1px'
+        }}>
           📋 Documents à joindre au dossier de vol
         </div>
 
-        <ul className="reminder-list">
-          <li className="reminder-item">
-            <span className="reminder-icon">🗺️</span>
+        <ul style={{
+          listStyle: 'none',
+          padding: 0,
+          margin: 0,
+          width: '100%',
+          maxWidth: '600px'
+        }}>
+          <li style={{
+            backgroundColor: '#ffffff',
+            border: '2px solid #3b82f6',
+            borderRadius: '8px',
+            padding: '20px 24px',
+            marginBottom: '20px',
+            fontSize: '16px',
+            fontWeight: '600',
+            color: '#334155',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <span style={{ fontSize: '24px', flexShrink: 0 }}>🗺️</span>
             <span>Ajouter les cartes VAC des aérodromes de la nav</span>
           </li>
-          <li className="reminder-item">
-            <span className="reminder-icon">☁️</span>
+          <li style={{
+            backgroundColor: '#ffffff',
+            border: '2px solid #3b82f6',
+            borderRadius: '8px',
+            padding: '20px 24px',
+            marginBottom: '20px',
+            fontSize: '16px',
+            fontWeight: '600',
+            color: '#334155',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <span style={{ fontSize: '24px', flexShrink: 0 }}>☁️</span>
             <span>Ajouter les cartes météo Wind Temp et TEMSI du SIA</span>
           </li>
         </ul>
