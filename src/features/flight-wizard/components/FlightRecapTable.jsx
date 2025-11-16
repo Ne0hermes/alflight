@@ -17,7 +17,11 @@ export const FlightRecapTable = ({
   segmentAltitudes,
   setSegmentAltitude,
   departureTimeTheoretical,
-  flightType
+  flightType,
+  descentRate,
+  setDescentRate,
+  targetAltitude,
+  setTargetAltitude
 }) => {
   // Récupérer les performances de l'avion
   const departurePerf = flightPlan?.performance?.departure;
@@ -518,6 +522,26 @@ export const FlightRecapTable = ({
                 </div>
 
                 <div style={{ padding: '8px' }}>
+                  {/* Input modifiable pour le taux de descente */}
+                  <div style={{ marginBottom: '8px' }}>
+                    <label style={{ fontSize: '9px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                      Taux de descente (ft/min)
+                    </label>
+                    <input
+                      type="number"
+                      value={descentRate}
+                      onChange={(e) => setDescentRate(Number(e.target.value))}
+                      style={{
+                        width: '100%',
+                        padding: '4px 6px',
+                        fontSize: '9px',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '4px',
+                        backgroundColor: 'white'
+                      }}
+                    />
+                  </div>
+
                   <div style={{
                     display: 'grid',
                     gridTemplateColumns: '1fr 1fr',

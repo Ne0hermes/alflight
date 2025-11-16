@@ -172,9 +172,13 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
     // Élévation du terrain de destination
     const terrainElevation = lastWaypoint.elevation || 0;
 
-    // Altitude de croisière (depuis le dernier segment ou plannedAltitude)
+    // Altitude de croisière : utiliser l'altitude du segment juste avant l'arrivée
+    // (c'est l'altitude depuis laquelle la descente commence réellement)
     const lastSegmentId = `${secondLastWaypoint.id}-${lastWaypoint.id}`;
-    const cruiseAltitude = segmentAltitudes[lastSegmentId]?.startAlt || plannedAltitude;
+    const lastSegmentAlt = segmentAltitudes[lastSegmentId]?.startAlt;
+
+    // Utiliser l'altitude du dernier segment, ou plannedAltitude par défaut
+    const cruiseAltitude = lastSegmentAlt || plannedAltitude;
 
     // Descente totale (utilise l'altitude cible modifiable)
     const altitudeToDescent = cruiseAltitude - targetAltitude;
@@ -1632,6 +1636,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
         setSegmentAltitude={setSegmentAltitude}
         departureTimeTheoretical={departureTimeTheoretical}
         flightType={flightType}
+        descentRate={descentRate}
+        setDescentRate={setDescentRate}
+        targetAltitude={targetAltitude}
+        setTargetAltitude={setTargetAltitude}
       />
     </div>
     </>
