@@ -327,6 +327,39 @@ export const SIAReportEnhanced = () => {
       return;
     }
 
+    // SÉCURITÉ : Vérifier que l'ICAO dans le nom du fichier correspond
+    const fileName = file.name.toUpperCase();
+    const expectedIcao = icao.toUpperCase();
+
+    // Chercher des codes ICAO (4 lettres majuscules) dans le nom du fichier
+    const icaoPattern = /\b[A-Z]{4}\b/g;
+    const foundIcaos = fileName.match(icaoPattern) || [];
+
+    // Vérifier si l'ICAO attendu est dans le nom du fichier
+    const icaoInFileName = foundIcaos.some(code => code === expectedIcao);
+
+    if (foundIcaos.length > 0 && !icaoInFileName) {
+      // Un autre ICAO trouvé dans le nom du fichier
+      const message = `⚠️ ATTENTION - Vérification de sécurité\n\n` +
+        `Vous importez une carte pour : ${expectedIcao}\n` +
+        `Mais le fichier contient : ${foundIcaos.join(', ')}\n\n` +
+        `Le fichier sélectionné : "${file.name}"\n\n` +
+        `Êtes-vous sûr de vouloir continuer ?\n\n` +
+        `Cliquez "OK" pour forcer l'import ou "Annuler" pour abandonner.`;
+
+      if (!confirm(message)) {
+        console.log('❌ Import annulé par l\'utilisateur (ICAO mismatch)');
+        event.target.value = ''; // Réinitialiser l'input
+        return;
+      }
+
+      console.warn(`⚠️ Import forcé malgré ICAO différent: fichier=${foundIcaos.join(', ')}, attendu=${expectedIcao}`);
+    } else if (icaoInFileName) {
+      console.log(`✅ Vérification ICAO OK: ${expectedIcao} trouvé dans le nom du fichier`);
+    } else {
+      console.log(`ℹ️ Aucun code ICAO trouvé dans le nom du fichier, import autorisé`);
+    }
+
     try {
       // 1. Stocker le PDF dans IndexedDB pour persistance
       await vacPdfStorage.storePDF(icao, file);
