@@ -390,7 +390,54 @@ export const SIAReportEnhanced = () => {
       // 2. Créer une URL blob pour affichage immédiat (sera rechargée depuis IndexedDB au prochain refresh)
       const fileUrl = URL.createObjectURL(file);
 
-      // 3. Ajouter la carte au store pour cet aérodrome spécifique
+      // 3. Extraire automatiquement les données du PDF
+      console.log(`🔍 Extraction automatique des données VAC pour ${icao}...`);
+      let extractedData = null;
+
+      try {
+        // Import dynamique de pdfjs-dist
+        const pdfjsLib = await import('pdfjs-dist');
+
+        // Configuration du worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+          'pdfjs-dist/build/pdf.worker.min.js',
+          import.meta.url
+        ).toString();
+
+        // Lire le PDF
+        const arrayBuffer = await file.arrayBuffer();
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+        const pdf = await loadingTask.promise;
+
+        // Extraire le texte de toutes les pages
+        let fullText = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map(item => item.str).join(' ');
+          fullText += pageText + '\n';
+        }
+
+        console.log(`📄 Texte extrait (${fullText.length} caractères)`);
+
+        // Extraire les données avec regex
+        const transitionMatch = fullText.match(/(?:TRANSITION|TA|Altitude de transition)[:\s]*(\d{3,5})\s*(?:ft|FT)?/i);
+        const circuitMatch = fullText.match(/(?:TDP|TOUR DE PISTE|Circuit|Pattern)[:\s]*(\d{3,4})\s*(?:ft|FT)?/i);
+        const integrationMatch = fullText.match(/(?:INT|Intégration|Integration)[:\s]*(\d{3,4})\s*(?:ft|FT)?/i);
+
+        extractedData = {
+          transitionAltitude: transitionMatch ? parseInt(transitionMatch[1]) : undefined,
+          circuitAltitude: circuitMatch ? parseInt(circuitMatch[1]) : undefined,
+          integrationAltitude: integrationMatch ? parseInt(integrationMatch[1]) : undefined
+        };
+
+        console.log(`✅ Données extraites:`, extractedData);
+      } catch (extractError) {
+        console.warn(`⚠️ Extraction automatique échouée:`, extractError);
+        extractedData = null;
+      }
+
+      // 4. Ajouter la carte au store pour cet aérodrome spécifique
       await addCustomChart(icao, {
         name: file.name,
         url: fileUrl,
@@ -400,8 +447,14 @@ export const SIAReportEnhanced = () => {
         hasPdf: true,
         isDownloaded: true,
         downloadDate: new Date().toISOString(),
-        needsManualExtraction: true
+        needsManualExtraction: !extractedData || (!extractedData.transitionAltitude && !extractedData.circuitAltitude)
       });
+
+      // 5. Sauvegarder les données extraites si disponibles
+      if (extractedData && (extractedData.transitionAltitude || extractedData.circuitAltitude || extractedData.integrationAltitude)) {
+        updateExtractedData(icao, extractedData);
+        console.log(`✅ Données extraites enregistrées dans vacStore pour ${icao}`);
+      }
 
       // Forcer le re-render pour voir le badge VAC mis à jour
       setEditedData(prev => ({...prev}));
