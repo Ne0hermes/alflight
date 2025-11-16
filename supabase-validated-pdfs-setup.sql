@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS validated_flight_pdfs (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 
   -- Référence au plan de vol (optionnel si le plan n'a pas été sauvegardé)
-  flight_plan_id UUID REFERENCES flight_plans(id) ON DELETE SET NULL,
+  -- Note: La foreign key vers flight_plans sera ajoutée plus tard si nécessaire
+  flight_plan_id UUID,
 
   -- Informations du PDF
   pdf_filename TEXT NOT NULL,
