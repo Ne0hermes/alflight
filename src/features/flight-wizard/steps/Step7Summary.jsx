@@ -411,6 +411,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
       {/* Section Informations Avion */}
       <CollapsibleSection
+        defaultExpanded={true}
         title={`${flightPlan.aircraft.registration} ${flightPlan.aircraft.type || flightPlan.aircraft.model ? `(${flightPlan.aircraft.type || flightPlan.aircraft.model})` : ''}`}
         containerStyle={{ marginTop: '24px' }}
       >
@@ -578,6 +579,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
       {/* Carte statique de navigation avec points VFR */}
       {waypoints.length > 0 && (
         <CollapsibleSection
+        defaultExpanded={true}
           title="Navigation VFR"
           containerStyle={{ marginTop: '24px' }}
         >
@@ -611,6 +613,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
         return (
           <CollapsibleSection
+        defaultExpanded={true}
             title="Météo (METAR)"
             containerStyle={{ marginTop: '24px' }}
           >
@@ -670,6 +673,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
       {/* Section Performances */}
       {flightPlan?.performance && (flightPlan.performance.departure || flightPlan.performance.arrival) && (
         <CollapsibleSection
+        defaultExpanded={true}
           title="Performances Décollage / Atterrissage"
           containerStyle={{ marginTop: '24px' }}
         >
@@ -831,6 +835,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
       {/* Section Bilan Carburant */}
       <CollapsibleSection
+        defaultExpanded={true}
         title="Bilan Carburant et Autonomie"
         containerStyle={{ marginTop: '24px' }}
       >
@@ -1014,6 +1019,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
         return true;
       })() && (
         <CollapsibleSection
+        defaultExpanded={true}
           title="Masse et Centrage"
           containerStyle={{ marginTop: '24px' }}
         >
@@ -1041,6 +1047,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
       {/* Section Informations Aérodromes (VAC) */}
       {aerodromeData.length > 0 && (
         <CollapsibleSection
+        defaultExpanded={true}
           title="Informations Aérodromes (VAC)"
           containerStyle={{ marginTop: '24px' }}
           titleColor='#6366f1'
