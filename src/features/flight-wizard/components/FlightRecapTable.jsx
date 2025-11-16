@@ -318,7 +318,7 @@ export const FlightRecapTable = ({
   };
 
   /**
-   * Tableau de navigation VFR
+   * Tableau de navigation VFR avec style identique aux sections aérodromes
    */
   const renderNavigationTable = () => {
     if (!waypoints || waypoints.length === 0 || !selectedAircraft) return null;
@@ -326,57 +326,76 @@ export const FlightRecapTable = ({
     const plannedAltitude = 3000; // Altitude par défaut
 
     return (
-      <div style={{ marginBottom: '12px' }} className="vfr-table-pdf-style">
-        <style>{`
-          .vfr-table-pdf-style {
-            font-size: 8px !important;
-          }
-          .vfr-table-pdf-style table {
-            font-size: 8px !important;
-            border-collapse: collapse !important;
-          }
-          .vfr-table-pdf-style th {
-            padding: 4px 6px !important;
-            font-size: 8px !important;
-            font-weight: 700 !important;
-            background-color: #eff6ff !important;
-            border-bottom: 1px solid #d1d5db !important;
-          }
-          .vfr-table-pdf-style td {
-            padding: 3px 6px !important;
-            font-size: 8px !important;
-            border-bottom: 1px solid #e5e7eb !important;
-          }
-          .vfr-table-pdf-style .vfr-nav-header {
-            background-color: #3b82f6 !important;
-            color: white !important;
-            padding: 4px 8px !important;
-            font-size: 10px !important;
-            font-weight: 700 !important;
-          }
-          .vfr-table-pdf-style tr:nth-child(even) {
-            background-color: #f9fafb !important;
-          }
-          .vfr-table-pdf-style tr:nth-child(odd) {
-            background-color: white !important;
-          }
-          .vfr-table-pdf-style .total-row {
-            background-color: #dbeafe !important;
-            font-weight: 700 !important;
-          }
-        `}</style>
-        <VFRNavigationTable
-          waypoints={waypoints}
-          selectedAircraft={selectedAircraft}
-          plannedAltitude={plannedAltitude}
-          flightType={flightType || 'VFR'}
-          navigationResults={navigationResults}
-          segmentAltitudes={segmentAltitudes}
-          setSegmentAltitude={setSegmentAltitude}
-          departureTimeTheoretical={departureTimeTheoretical}
-          flightDate={flightPlan?.generalInfo?.date}
-          hideToggleButton={true}
-        />
+      <div style={{
+        marginBottom: '12px',
+        pageBreakInside: 'avoid',
+        border: '2px solid #e5e7eb',
+        borderRadius: '8px',
+        overflow: 'hidden',
+        backgroundColor: 'white'
+      }}>
+        {/* En-tête tableau navigation - style identique aux aérodromes */}
+        <div style={{
+          backgroundColor: '#3b82f6',
+          color: 'white',
+          padding: '6px 10px',
+          fontWeight: '700',
+          fontSize: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px'
+        }}>
+          <NavigationIcon size={14} />
+          <span>TABLEAU DE NAVIGATION VFR</span>
+        </div>
+
+        {/* Contenu avec padding identique */}
+        <div style={{ padding: '8px' }} className="vfr-table-pdf-style">
+          <style>{`
+            .vfr-table-pdf-style {
+              font-size: 9px !important;
+            }
+            .vfr-table-pdf-style table {
+              font-size: 9px !important;
+              border-collapse: collapse !important;
+            }
+            .vfr-table-pdf-style th {
+              padding: 4px 6px !important;
+              font-size: 9px !important;
+              font-weight: 600 !important;
+              background-color: #f9fafb !important;
+              border-bottom: 1px solid #d1d5db !important;
+              color: #6b7280 !important;
+            }
+            .vfr-table-pdf-style td {
+              padding: 3px 6px !important;
+              font-size: 9px !important;
+              border-bottom: 1px solid #e5e7eb !important;
+            }
+            .vfr-table-pdf-style tr:nth-child(even) {
+              background-color: #f9fafb !important;
+            }
+            .vfr-table-pdf-style tr:nth-child(odd) {
+              background-color: white !important;
+            }
+            .vfr-table-pdf-style .total-row {
+              background-color: #dbeafe !important;
+              font-weight: 700 !important;
+            }
+          `}</style>
+          <VFRNavigationTable
+            waypoints={waypoints}
+            selectedAircraft={selectedAircraft}
+            plannedAltitude={plannedAltitude}
+            flightType={flightType || 'VFR'}
+            navigationResults={navigationResults}
+            segmentAltitudes={segmentAltitudes}
+            setSegmentAltitude={setSegmentAltitude}
+            departureTimeTheoretical={departureTimeTheoretical}
+            flightDate={flightPlan?.generalInfo?.date}
+            hideToggleButton={true}
+          />
+        </div>
       </div>
     );
   };
