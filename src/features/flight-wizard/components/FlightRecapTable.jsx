@@ -411,41 +411,57 @@ export const FlightRecapTable = ({
 
   return (
     <>
-      {/* CSS pour impression paysage */}
+      {/* CSS pour impression compacte */}
       <style>{`
-        @media print {
-          .flight-recap-table-container {
-            page-break-before: always !important;
-            page-break-after: always !important;
-          }
+        .flight-recap-table-container {
+          page-break-before: always !important;
+          page-break-after: always !important;
+          page-break-inside: avoid !important;
+        }
 
-          @page recap-landscape {
-            size: A4 landscape;
-            margin: 0.5cm;
-          }
+        .flight-recap-table-container * {
+          box-sizing: border-box !important;
+        }
 
-          .flight-recap-table-container {
-            page: recap-landscape;
-          }
+        .recap-compact-section {
+          page-break-inside: avoid !important;
+        }
+
+        .recap-grid-2col {
+          display: grid !important;
+          grid-template-columns: 1fr 1fr !important;
+          gap: 8px !important;
+        }
+
+        .recap-text-xs {
+          font-size: 7px !important;
+          line-height: 1.2 !important;
+        }
+
+        .recap-text-sm {
+          font-size: 8px !important;
+          line-height: 1.3 !important;
         }
       `}</style>
 
       <div className="flight-recap-table-container" style={{
         backgroundColor: 'white',
-        padding: '12px',
+        padding: '8px',
         borderRadius: '8px',
         border: `2px solid ${theme.colors.primary}`,
-        marginTop: '24px'
+        marginTop: '24px',
+        maxWidth: '100%',
+        fontSize: '8px'
       }}>
         {/* Titre principal */}
         <div style={{
           textAlign: 'center',
-          marginBottom: '12px',
-          paddingBottom: '8px',
-          borderBottom: `3px solid ${theme.colors.primary}`
+          marginBottom: '6px',
+          paddingBottom: '4px',
+          borderBottom: `2px solid ${theme.colors.primary}`
         }}>
           <h2 style={{
-            fontSize: '16px',
+            fontSize: '12px',
             fontWeight: '700',
             color: theme.colors.primary,
             margin: 0
@@ -453,7 +469,7 @@ export const FlightRecapTable = ({
             📋 TABLEAU RÉCAPITULATIF DE VOL
           </h2>
           <div style={{
-            fontSize: '10px',
+            fontSize: '8px',
             color: theme.colors.textSecondary,
             marginTop: '2px'
           }}>
@@ -462,10 +478,10 @@ export const FlightRecapTable = ({
         </div>
 
         {/* Grille principale : Aérodromes à gauche, Navigation à droite */}
-        <div style={{
+        <div className="recap-grid-2col" style={{
           display: 'grid',
-          gridTemplateColumns: '40% 60%',
-          gap: '12px'
+          gridTemplateColumns: '35% 65%',
+          gap: '8px'
         }}>
           {/* Colonne gauche : Aérodromes */}
           <div>
