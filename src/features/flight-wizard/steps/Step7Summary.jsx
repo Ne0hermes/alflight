@@ -14,6 +14,7 @@ import { ScenarioCards } from '@features/weight-balance/components/ScenarioCards
 import { FUEL_DENSITIES } from '@utils/constants';
 import { useVACStore } from '@core/stores/vacStore';
 import { aixmParser } from '@services/aixmParser';
+import { vacPdfStorage } from '@services/vacPdfStorage';
 // REMOVED: import { getCircuitAltitudes } from '@data/circuitAltitudesComplete'; - File deleted, data must come from official XML
 import { CollapsibleSection } from './components/CollapsibleSection';
 import { FlightRecapTable } from '../components/FlightRecapTable';
@@ -38,6 +39,9 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
   // State pour les données d'aérodromes VAC
   const [aerodromeData, setAerodromeData] = useState([]);
+
+  // State pour les URLs des PDFs VAC (pour l'impression)
+  const [vacPdfUrls, setVacPdfUrls] = useState({});
 
   // Altitude planifiée par défaut (définie avant todCalculation pour éviter erreur d'initialisation)
   const plannedAltitude = 3000;
@@ -150,6 +154,48 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
     loadAerodromeData();
   }, [waypoints, flightPlan?.alternates, charts]);
+
+  // Charger les URLs des PDFs VAC pour l'impression
+  useEffect(() => {
+    const loadVACPdfs = async () => {
+      if (!aerodromeData || aerodromeData.length === 0) {
+        setVacPdfUrls({});
+        return;
+      }
+
+      const urls = {};
+
+      for (const aerodrome of aerodromeData) {
+        const upperIcao = aerodrome.icao?.toUpperCase();
+        if (!upperIcao) continue;
+
+        // Vérifier si un PDF existe pour cet aérodrome
+        const chart = charts[upperIcao];
+        if (chart && chart.isDownloaded) {
+          try {
+            const pdfUrl = await vacPdfStorage.getPDFUrl(upperIcao);
+            if (pdfUrl) {
+              urls[upperIcao] = pdfUrl;
+              console.log(`✅ [Step7Summary] PDF VAC chargé pour ${upperIcao}`);
+            }
+          } catch (error) {
+            console.error(`❌ Erreur chargement PDF VAC ${upperIcao}:`, error);
+          }
+        }
+      }
+
+      setVacPdfUrls(urls);
+    };
+
+    loadVACPdfs();
+
+    // Cleanup: révoquer les URLs quand le composant est démonté
+    return () => {
+      Object.values(vacPdfUrls).forEach(url => {
+        if (url) URL.revokeObjectURL(url);
+      });
+    };
+  }, [aerodromeData, charts]);
 
   // 🌅 Calculer les heures de nuit aéronautique pour l'aérodrome de départ
   const sunTimes = useMemo(() => {
@@ -1560,6 +1606,76 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
         formatSunTime={formatSunTime}
         onUpdate={onUpdate}
       />
+
+      {/* Section Cartes VAC pour impression PDF uniquement */}
+      {Object.keys(vacPdfUrls).length > 0 && (
+        <div className="vac-pdfs-print-only" style={{
+          display: 'none', // Caché par défaut, visible seulement en impression
+          marginTop: '40px'
+        }}>
+          <style>{`
+            @media print {
+              .vac-pdfs-print-only {
+                display: block !important;
+                page-break-before: always;
+              }
+
+              .vac-pdf-page {
+                page-break-before: always;
+                page-break-after: always;
+                page-break-inside: avoid;
+                width: 100%;
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+              }
+
+              .vac-pdf-page:first-child {
+                page-break-before: auto;
+              }
+
+              .vac-pdf-title {
+                text-align: center;
+                font-size: 18px;
+                font-weight: bold;
+                color: #1f2937;
+                margin-bottom: 16px;
+                padding: 12px;
+                background-color: #f3f4f6;
+                border-bottom: 3px solid #3b82f6;
+              }
+
+              .vac-pdf-embed {
+                flex: 1;
+                width: 100%;
+                border: none;
+              }
+            }
+          `}</style>
+
+          {aerodromeData.map(aerodrome => {
+            const upperIcao = aerodrome.icao?.toUpperCase();
+            const pdfUrl = vacPdfUrls[upperIcao];
+
+            if (!pdfUrl) return null;
+
+            return (
+              <div key={upperIcao} className="vac-pdf-page">
+                <div className="vac-pdf-title">
+                  CARTE VAC - {upperIcao} ({aerodrome.name})
+                </div>
+                <embed
+                  className="vac-pdf-embed"
+                  src={pdfUrl}
+                  type="application/pdf"
+                  width="100%"
+                  height="100%"
+                />
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
     </>
   );
