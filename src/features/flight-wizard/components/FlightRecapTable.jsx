@@ -394,6 +394,7 @@ export const FlightRecapTable = ({
             departureTimeTheoretical={departureTimeTheoretical}
             flightDate={flightPlan?.generalInfo?.date}
             hideToggleButton={true}
+            hideTitle={true}
           />
         </div>
       </div>
@@ -501,20 +502,7 @@ export const FlightRecapTable = ({
 
           {/* Colonne droite : Navigation */}
           <div>
-            <h3 style={{
-              fontSize: '11px',
-              fontWeight: '700',
-              color: '#111827',
-              marginBottom: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}>
-              <NavigationIcon size={12} />
-              NAVIGATION
-            </h3>
-
-            {/* Tableau de navigation détaillé */}
+            {/* Tableau de navigation VFR */}
             {renderNavigationTable()}
 
             {/* TOD (Top of Descent) */}

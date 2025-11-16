@@ -23,7 +23,8 @@ const VFRNavigationTable = ({
   setSegmentAltitude,
   departureTimeTheoretical = '', // Reçu depuis Step7Summary
   flightDate = null, // Date du vol (optionnel, sinon aujourd'hui)
-  hideToggleButton = false // Masquer le bouton Afficher/Masquer (utilisé dans Step7)
+  hideToggleButton = false, // Masquer le bouton Afficher/Masquer (utilisé dans Step7)
+  hideTitle = false // Masquer le titre (utilisé dans FlightRecapTable)
 }) => {
   const [showTable, setShowTable] = useState(true);
   const { format, convert, getSymbol } = useUnits();
@@ -310,16 +311,18 @@ const VFRNavigationTable = ({
         alignItems: 'center',
         marginBottom: '20px'
       }}>
-        <h3 style={{
-          fontSize: '18px',
-          fontWeight: 'bold',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px'
-        }}>
-          <Table size={20} />
-          Tableau de Navigation VFR
-        </h3>
+        {!hideTitle && (
+          <h3 style={{
+            fontSize: '18px',
+            fontWeight: 'bold',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <Table size={20} />
+            Tableau de Navigation VFR
+          </h3>
+        )}
 
         {!hideToggleButton && (
           <button
