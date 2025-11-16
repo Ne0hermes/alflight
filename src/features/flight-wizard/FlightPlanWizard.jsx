@@ -373,20 +373,27 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
       // Génération du rapport final
       const summary = flightPlan.generateSummary();
 
-      // 1. 💾 SAUVEGARDE SUPABASE - Navigation complète
-      console.log('📤 [Wizard] Sauvegarde sur Supabase...');
-      const supabaseResult = await flightPlanSupabaseService.saveFlightPlan(
-        flightPlan,
-        waypoints || [],
-        segmentAltitudes || {},
-        navigationResults,
-        flightPlan.generalInfo.callsign || '' // Utiliser le callsign comme nom de pilote
-      );
+      // 1. 💾 SAUVEGARDE SUPABASE - Navigation complète (optionnel)
+      let supabaseResult = { success: false, data: null, error: null };
 
-      if (supabaseResult.success) {
-        console.log('✅ [Wizard] Plan de vol sauvegardé sur Supabase:', supabaseResult.data.id);
-      } else {
-        console.warn('⚠️ [Wizard] Échec sauvegarde Supabase (continuera avec localStorage):', supabaseResult.error);
+      try {
+        console.log('📤 [Wizard] Tentative sauvegarde plan de vol sur Supabase...');
+        supabaseResult = await flightPlanSupabaseService.saveFlightPlan(
+          flightPlan,
+          waypoints || [],
+          segmentAltitudes || {},
+          navigationResults,
+          flightPlan.generalInfo.callsign || '' // Utiliser le callsign comme nom de pilote
+        );
+
+        if (supabaseResult.success) {
+          console.log('✅ [Wizard] Plan de vol sauvegardé sur Supabase:', supabaseResult.data.id);
+        } else {
+          console.warn('⚠️ [Wizard] Échec sauvegarde plan de vol Supabase:', supabaseResult.error);
+        }
+      } catch (error) {
+        console.warn('⚠️ [Wizard] Exception sauvegarde plan de vol (table flight_plans manquante?):', error);
+        // Continuer quand même - la table flight_plans est optionnelle
       }
 
       // 2. Archiver le plan complété (localStorage)
@@ -419,10 +426,10 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
 
         try {
           // Trouver l'élément contenant le Step7Summary (tout le contenu à imprimer)
-          const element = document.querySelector('.wizard-content');
+          const element = document.getElementById('flight-plan-summary');
 
           if (!element) {
-            console.error('❌ Élément .wizard-content non trouvé');
+            console.error('❌ Élément #flight-plan-summary non trouvé');
             alert('Erreur: impossible de trouver le contenu à convertir en PDF');
             return;
           }
@@ -697,7 +704,10 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
           </p>
         </div>
 
-        <div style={styles.stepContent}>
+        <div
+          id={currentStep === 7 ? 'flight-plan-summary' : undefined}
+          style={styles.stepContent}
+        >
           {console.log('🔧 Rendering step:', currentStep, 'Component:', currentStepConfig.title, 'StepComponent:', StepComponent.name || StepComponent.displayName)}
           <StepComponent
             flightPlan={flightPlan}
