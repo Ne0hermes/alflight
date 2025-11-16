@@ -492,30 +492,89 @@ export const FlightRecapTable = ({
             {/* Tableau de navigation VFR */}
             {renderNavigationTable()}
 
-            {/* TOD (Top of Descent) */}
+            {/* TOD (Top of Descent) - Style identique aux sections aérodromes */}
             {todCalculation && (
               <div style={{
-                border: '2px solid #fb923c',
-                borderRadius: '6px',
-                padding: '8px',
-                backgroundColor: 'rgba(251, 146, 60, 0.1)',
-                fontSize: '9px',
-                marginBottom: '12px'
+                marginBottom: '12px',
+                pageBreakInside: 'avoid',
+                border: '2px solid #e5e7eb',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                backgroundColor: 'white'
               }}>
-                <div style={{ fontWeight: '700', color: '#fb923c', marginBottom: '4px' }}>
-                  🛬 TOP OF DESCENT (TOD)
+                {/* En-tête TOD */}
+                <div style={{
+                  backgroundColor: '#fb923c',
+                  color: 'white',
+                  padding: '6px 10px',
+                  fontWeight: '700',
+                  fontSize: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
+                  <NavigationIcon size={14} />
+                  <span>TOP OF DESCENT (TOD) - {todCalculation.arrivalAerodrome}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-                  <span style={{ color: '#78350f', fontWeight: '600' }}>Distance TOD:</span>
-                  <span style={{ fontWeight: '700' }}>
-                    {todCalculation.distanceToTod} NM avant {todCalculation.arrivalAerodrome}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#78350f' }}>Descente:</span>
-                  <span style={{ fontWeight: '600' }}>
-                    {todCalculation.altitudeToDescent} ft @ {todCalculation.descentRate} ft/min ({todCalculation.descentTime} min)
-                  </span>
+
+                <div style={{ padding: '8px' }}>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '6px',
+                    fontSize: '9px',
+                    backgroundColor: '#f9fafb',
+                    padding: '6px',
+                    borderRadius: '4px'
+                  }}>
+                    {/* Distance TOD */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#6b7280', fontWeight: '600' }}>Distance TOD:</span>
+                      <span style={{ fontWeight: '700', color: '#111827' }}>
+                        {todCalculation.distanceToTod} NM
+                      </span>
+                    </div>
+
+                    {/* Descente totale */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#6b7280', fontWeight: '600' }}>Descente:</span>
+                      <span style={{ fontWeight: '700', color: '#111827' }}>
+                        {todCalculation.altitudeToDescent} ft
+                      </span>
+                    </div>
+
+                    {/* Taux descente */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#6b7280', fontWeight: '600' }}>Taux:</span>
+                      <span style={{ fontWeight: '700', color: '#111827' }}>
+                        {todCalculation.descentRate} ft/min
+                      </span>
+                    </div>
+
+                    {/* Temps descente */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#6b7280', fontWeight: '600' }}>Temps:</span>
+                      <span style={{ fontWeight: '700', color: '#111827' }}>
+                        {todCalculation.descentTime} min
+                      </span>
+                    </div>
+
+                    {/* Altitude croisière */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#6b7280', fontWeight: '600' }}>Alt. croisière:</span>
+                      <span style={{ fontWeight: '700', color: '#111827' }}>
+                        {todCalculation.cruiseAltitude} ft
+                      </span>
+                    </div>
+
+                    {/* Altitude pattern */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#6b7280', fontWeight: '600' }}>Alt. pattern:</span>
+                      <span style={{ fontWeight: '700', color: '#111827' }}>
+                        {todCalculation.patternAltitude} ft
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
