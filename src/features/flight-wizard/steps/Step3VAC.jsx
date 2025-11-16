@@ -1,14 +1,14 @@
 // src/features/flight-wizard/steps/Step3VAC.jsx
-import React, { memo, useState, useEffect, useRef } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import {
-  FileText, Upload, CheckCircle, XCircle, Download, ChevronDown, ChevronUp,
-  MapPin, Radio, Plane, Navigation, Settings, AlertCircle, Cloud
+  FileText, CheckCircle, XCircle, Download, ChevronDown, ChevronUp,
+  MapPin, Radio, Plane, Navigation, Settings, AlertCircle, Cloud, ExternalLink
 } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import { useNavigation, useWeather } from '@core/contexts';
 import { useVACStore } from '@core/stores/vacStore';
 import { aixmParser } from '@services/aixmParser';
-import { getCircuitAltitudes } from '@data/circuitAltitudesComplete';
+// REMOVED: import { getCircuitAltitudes } from '@data/circuitAltitudesComplete'; - File deleted, data must come from official XML
 
 /**
  * Étape 3 : Informations aérodromes et Météo
@@ -17,18 +17,15 @@ import { getCircuitAltitudes } from '@data/circuitAltitudesComplete';
 export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
   const { waypoints } = useNavigation();
   const { weatherData, fetchMultiple } = useWeather();
-  const { charts, addCustomChart } = useVACStore(state => ({
-    charts: state.charts || {},
-    addCustomChart: state.addCustomChart
+  const { charts } = useVACStore(state => ({
+    charts: state.charts || {}
   }));
 
   const [aerodromeData, setAerodromeData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState({});
   const [expandedAerodrome, setExpandedAerodrome] = useState(null);
   const [expandedSection, setExpandedSection] = useState({});
   const [hasAutoOpened, setHasAutoOpened] = useState(false);
-  const fileInputRefs = useRef({});
 
   // Ouvrir le premier aérodrome par défaut (une seule fois)
   useEffect(() => {
@@ -48,6 +45,13 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
     }
   }, [aerodromeData, fetchMultiple]);
 
+  // Calculer les VAC manquantes
+  const getMissingVACs = () => {
+    return aerodromeData
+      .filter(ad => !hasVAC(ad.icao))
+      .map(ad => ad.icao);
+  };
+
   // Récupérer les aérodromes depuis les waypoints
   useEffect(() => {
     const loadAerodromeData = async () => {
@@ -65,30 +69,40 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
           .map(wp => wp.icao || wp.name)
           .filter(Boolean);
 
+        console.log('🔍 [Step3VAC] Waypoints départ/arrivée:', aerodromeIcaos);
+        console.log('🔍 [Step3VAC] flightPlan.alternates:', flightPlan?.alternates);
+
         // Ajouter les alternates depuis le flightPlan
         if (flightPlan?.alternates) {
           flightPlan.alternates.forEach(alt => {
+            console.log('🔍 [Step3VAC] Processing alternate:', alt);
             if (alt.icao && !aerodromeIcaos.includes(alt.icao)) {
+              console.log('✅ [Step3VAC] Adding alternate ICAO:', alt.icao);
               aerodromeIcaos.push(alt.icao);
+            } else {
+              console.warn('⚠️ [Step3VAC] Alternate skipped:', {
+                icao: alt.icao,
+                alreadyIncluded: aerodromeIcaos.includes(alt.icao),
+                alternate: alt
+              });
             }
           });
+        } else {
+          console.warn('⚠️ [Step3VAC] No alternates in flightPlan');
         }
+
+        console.log('🔍 [Step3VAC] Final aerodromeIcaos array:', aerodromeIcaos);
 
         // Charger les données AIXM pour ces aérodromes
         const aixmData = await aixmParser.loadAndParse();
-        const filteredData = aixmData
-          .filter(ad => ad && ad.icao && aerodromeIcaos.includes(ad.icao))
-          .map(ad => {
-            // Enrichir avec les altitudes de circuit
-            const circuitData = getCircuitAltitudes(ad.icao);
-            return {
-              ...ad,
-              circuitAltitude: circuitData.circuitAltitude,
-              integrationAltitude: circuitData.integrationAltitude,
-              circuitRemarks: circuitData.remarks
-            };
-          });
+        console.log('🔍 [Step3VAC] Total AIXM aerodromes:', aixmData.length);
 
+        const filteredData = aixmData
+          .filter(ad => ad && ad.icao && aerodromeIcaos.includes(ad.icao));
+        // TODO: circuitAltitude must be extracted from official AIXM XML files
+        // For now, it will be undefined
+
+        console.log('✅ [Step3VAC] Filtered aerodromes:', filteredData.map(ad => ad.icao));
         setAerodromeData(filteredData);
         console.log('✅ Données aérodromes chargées pour Step3VAC:', filteredData.length);
       } catch (error) {
@@ -102,56 +116,24 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
     loadAerodromeData();
   }, [waypoints, flightPlan?.alternates]);
 
-  // Handler pour la sélection de fichier
-  const handleFileSelect = async (event, icao, aerodromeName) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    // Vérifier le type de fichier
-    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
-      alert('Veuillez sélectionner une image (PNG, JPG) ou un fichier PDF');
-      event.target.value = '';
-      return;
-    }
-
-    setUploading(prev => ({ ...prev, [icao]: true }));
-
-    try {
-      // Créer une URL pour le fichier
-      const fileUrl = URL.createObjectURL(file);
-
-      // Créer l'objet carte VAC selon le format du store
-      const chartData = {
-        name: file.name,
-        url: fileUrl,
-        file: file,
-        isDownloaded: true,
-        downloadDate: Date.now(),
-        needsManualExtraction: true,
-        type: file.type,
-        uploadDate: new Date().toISOString()
-      };
-
-      // Ajouter la carte au store avec les bons paramètres (icao, chartData)
-      addCustomChart(icao, chartData);
-
-      console.log(`✅ Carte VAC importée pour ${icao}:`, chartData);
-
-      // Forcer le re-render pour mettre à jour l'indicateur
-      setUploading(prev => ({ ...prev, [icao]: false }));
-      event.target.value = '';
-    } catch (error) {
-      console.error('❌ Erreur import VAC:', error);
-      alert('Erreur lors de l\'import de la carte VAC');
-      setUploading(prev => ({ ...prev, [icao]: false }));
-      event.target.value = '';
-    }
-  };
-
   // Vérifier si un PDF VAC existe pour un aérodrome
   const hasVAC = (icao) => {
     const upperIcao = icao?.toUpperCase();
-    return charts[upperIcao]?.isDownloaded || charts[upperIcao]?.isCustom;
+    const chart = charts[upperIcao];
+
+    // Vérifier que la carte existe et qu'elle a des données réelles
+    if (!chart) return false;
+    if (!chart.isDownloaded && !chart.isCustom) return false;
+
+    // Vérifier qu'il y a au moins un PDF OU des données extraites valides
+    const hasPDF = chart.hasPdf || chart.url || chart.pdfFileName;
+    const hasExtractedData = chart.extractedData && (
+      chart.extractedData.airportElevation > 0 ||
+      chart.extractedData.circuitAltitude > 0 ||
+      (chart.extractedData.runways && chart.extractedData.runways.length > 0)
+    );
+
+    return hasPDF || hasExtractedData;
   };
 
   // Visualiser une carte VAC
@@ -223,12 +205,63 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
     );
   }
 
+  const missingVACs = getMissingVACs();
+
   return (
     <div style={styles.container}>
+      {/* Alerte si des VAC manquent */}
+      {missingVACs.length > 0 && (
+        <div style={{
+          backgroundColor: '#fef3c7',
+          border: '2px solid #f59e0b',
+          borderRadius: '8px',
+          padding: '16px',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '16px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+            <AlertCircle size={24} style={{ color: '#f59e0b', flexShrink: 0 }} />
+            <div>
+              <p style={{ margin: 0, fontWeight: 'bold', color: '#92400e', marginBottom: '4px' }}>
+                {missingVACs.length} carte(s) VAC manquante(s)
+              </p>
+              <p style={{ margin: 0, fontSize: '14px', color: '#78350f' }}>
+                Aérodromes : {missingVACs.join(', ')}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => window.location.href = '/vac'}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 16px',
+              backgroundColor: '#f59e0b',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#d97706'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f59e0b'}
+          >
+            <ExternalLink size={16} />
+            Gérer les VAC
+          </button>
+        </div>
+      )}
+
       <div style={styles.aerodromeList}>
         {aerodromeData.map(aerodrome => {
           const hasChart = hasVAC(aerodrome.icao);
-          const isUploading = uploading[aerodrome.icao];
           const isExpanded = expandedAerodrome === aerodrome.icao;
           const currentSection = expandedSection[aerodrome.icao];
           const coordsDMS = formatCoordinatesDMS(aerodrome.coordinates?.lat, aerodrome.coordinates?.lon);
@@ -263,32 +296,8 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
                   </div>
                 </div>
 
-                {/* Actions VAC */}
+                {/* Actions VAC - Lecture seule */}
                 <div style={styles.aerodromeActions}>
-                  <input
-                    ref={el => fileInputRefs.current[aerodrome.icao] = el}
-                    type="file"
-                    accept="image/*,application/pdf"
-                    onChange={(e) => handleFileSelect(e, aerodrome.icao, aerodrome.name)}
-                    style={{ display: 'none' }}
-                  />
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      fileInputRefs.current[aerodrome.icao]?.click();
-                    }}
-                    disabled={isUploading}
-                    style={{
-                      ...styles.uploadButton,
-                      opacity: isUploading ? 0.5 : 1,
-                      cursor: isUploading ? 'not-allowed' : 'pointer'
-                    }}
-                  >
-                    <Upload size={16} />
-                    {isUploading ? 'Import en cours...' : hasChart ? 'Remplacer' : 'Importer VAC'}
-                  </button>
-
                   {/* Bouton Visualiser */}
                   {hasChart && (
                     <button
@@ -943,7 +952,7 @@ const styles = {
   },
   sectionTabActive: {
     color: '#3b82f6',
-    borderBottomColor: '#3b82f6',
+    borderBottom: '2px solid #3b82f6',
     backgroundColor: 'white'
   },
   sectionContent: {
