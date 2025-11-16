@@ -461,19 +461,6 @@ export const FlightRecapTable = ({
         }}>
           {/* Colonne gauche : Aérodromes */}
           <div>
-            <h3 style={{
-              fontSize: '11px',
-              fontWeight: '700',
-              color: '#111827',
-              marginBottom: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}>
-              <MapPin size={12} />
-              AÉRODROMES
-            </h3>
-
             {/* Départ */}
             {departureAerodrome && renderAerodromeSection(
               departureAerodrome,
