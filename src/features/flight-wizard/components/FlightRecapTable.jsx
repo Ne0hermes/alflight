@@ -166,11 +166,11 @@ export const FlightRecapTable = ({
               </span>
             </div>
 
-            {/* TdP (Tour de piste - altitude absolue calculée) */}
+            {/* TdP (Tour de piste - altitude AMSL) */}
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: '#6b7280', fontWeight: '600' }}>TdP:</span>
               <span style={{ fontWeight: '700', color: tdpAlt ? '#111827' : '#9ca3af' }}>
-                {tdpAlt ? `${Math.round(tdpAlt)} ft` : 'N/A'}
+                {tdpAlt && elevation ? `${Math.round(elevation + tdpAlt)} ft` : 'N/A'}
               </span>
             </div>
 
@@ -182,11 +182,11 @@ export const FlightRecapTable = ({
               </span>
             </div>
 
-            {/* Vert T (Vertical Terrain = TdP + 500ft) */}
+            {/* Vert T (Vertical Terrain - altitude AMSL) */}
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: '#6b7280', fontWeight: '600' }}>Vert T:</span>
               <span style={{ fontWeight: '700', color: vertT ? '#111827' : '#9ca3af' }}>
-                {vertT ? `${Math.round(vertT)} ft` : 'N/A'}
+                {vertT && elevation ? `${Math.round(elevation + vertT)} ft` : 'N/A'}
               </span>
             </div>
           </div>
