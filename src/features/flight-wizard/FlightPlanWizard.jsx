@@ -452,12 +452,15 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
           };
 
           // Générer le PDF et obtenir le blob
-          const pdfBlob = await html2pdf()
+          const rawBlob = await html2pdf()
             .from(element)
             .set(opt)
             .outputPdf('blob');
 
-          console.log('✅ [Wizard] PDF généré:', (pdfBlob.size / 1024).toFixed(2), 'KB');
+          // Convertir le Blob en File avec un nom valide
+          const pdfBlob = new File([rawBlob], opt.filename, { type: 'application/pdf' });
+
+          console.log('✅ [Wizard] PDF généré:', (pdfBlob.size / 1024).toFixed(2), 'KB', '- Nom:', pdfBlob.name);
 
           // Télécharger le PDF pour l'utilisateur
           const url = URL.createObjectURL(pdfBlob);

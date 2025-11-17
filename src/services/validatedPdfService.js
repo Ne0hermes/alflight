@@ -57,6 +57,8 @@ export const validatedPdfService = {
       const filename = storagePath.split('/').pop();
 
       console.log('📁 [ValidatedPDF] Chemin de stockage:', storagePath);
+      console.log('📄 [ValidatedPDF] Filename extrait:', filename);
+      console.log('✅ [ValidatedPDF] Filename valide (.pdf):', filename.endsWith('.pdf'));
 
       // 1. Upload du PDF dans le bucket storage
       const { data: uploadData, error: uploadError } = await supabase.storage
