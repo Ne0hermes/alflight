@@ -54,11 +54,19 @@ export const validatedPdfService = {
         metadata.flightDate
       );
 
-      const filename = storagePath.split('/').pop();
+      let filename = storagePath.split('/').pop();
 
       console.log('📁 [ValidatedPDF] Chemin de stockage:', storagePath);
       console.log('📄 [ValidatedPDF] Filename extrait:', filename);
-      console.log('✅ [ValidatedPDF] Filename valide (.pdf):', filename.endsWith('.pdf'));
+      console.log('✅ [ValidatedPDF] Filename valide (.pdf):', filename?.endsWith('.pdf'));
+
+      // Vérification et correction du filename si nécessaire
+      if (!filename || !filename.endsWith('.pdf')) {
+        console.warn('⚠️ [ValidatedPDF] Filename invalide, génération d\'un nom par défaut');
+        const timestamp = Date.now();
+        filename = `flight-plan-${metadata.aircraftRegistration || 'UNKNOWN'}-${timestamp}.pdf`;
+        console.log('📄 [ValidatedPDF] Nouveau filename:', filename);
+      }
 
       // 1. Upload du PDF dans le bucket storage
       const { data: uploadData, error: uploadError } = await supabase.storage
