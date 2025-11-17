@@ -104,6 +104,11 @@ export const validatedPdfService = {
         tags: metadata.tags || []
       };
 
+      console.log('💾 [ValidatedPDF] Métadonnées à insérer:', JSON.stringify(pdfMetadata, null, 2));
+      console.log('📄 [ValidatedPDF] pdf_filename dans metadata:', pdfMetadata.pdf_filename);
+      console.log('✅ [ValidatedPDF] pdf_filename non vide:', !!pdfMetadata.pdf_filename);
+      console.log('✅ [ValidatedPDF] pdf_filename se termine par .pdf:', pdfMetadata.pdf_filename?.endsWith('.pdf'));
+
       const { data: insertData, error: insertError } = await supabase
         .from('validated_flight_pdfs')
         .insert([pdfMetadata])
