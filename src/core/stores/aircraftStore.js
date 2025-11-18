@@ -220,21 +220,33 @@ export const useAircraftStore = create(
 
         // 🔧 STRATÉGIE CORRECTE : Supabase = unités STANDARD (normalisées)
         // Chaque utilisateur fait la conversion LOCALEMENT selon ses préférences
-        console.log('📤 [AircraftStore] Normalizing aircraft to STORAGE units for Supabase');
 
-        // Créer une copie avec métadonnées indiquant les unités SOURCE (utilisateur)
-        const aircraftWithUserMetadata = {
-          ...validatedAircraft,
-          _metadata: {
-            version: '1.0.0',
-            units: userUnits,  // Unités SOURCE (avant normalisation)
-            exportedAt: new Date().toISOString()
-          }
-        };
+        // 🔧 FIX CRITIQUE: Vérifier si les données sont DÉJÀ en STORAGE units
+        const currentMetadata = validatedAircraft._metadata?.units;
+        const isAlreadyStorageUnits = currentMetadata?.fuel === 'ltr' && currentMetadata?.fuelConsumption === 'lph';
 
-        // Normaliser vers unités de STOCKAGE pour Supabase
-        const { normalizeAircraftImport } = await import('@utils/aircraftNormalizer');
-        const normalizedAircraft = normalizeAircraftImport(aircraftWithUserMetadata);
+        let normalizedAircraft;
+
+        if (isAlreadyStorageUnits) {
+          console.log('✅ [AircraftStore] Data already in STORAGE units - skipping normalization');
+          normalizedAircraft = validatedAircraft;
+        } else {
+          console.log('📤 [AircraftStore] Normalizing aircraft to STORAGE units for Supabase');
+
+          // Créer une copie avec métadonnées indiquant les unités SOURCE (utilisateur)
+          const aircraftWithUserMetadata = {
+            ...validatedAircraft,
+            _metadata: {
+              version: '1.0.0',
+              units: userUnits,  // Unités SOURCE (avant normalisation)
+              exportedAt: new Date().toISOString()
+            }
+          };
+
+          // Normaliser vers unités de STOCKAGE pour Supabase
+          const { normalizeAircraftImport } = await import('@utils/aircraftNormalizer');
+          normalizedAircraft = normalizeAircraftImport(aircraftWithUserMetadata);
+        }
 
         console.log('📤 [AircraftStore] Normalized aircraft for Supabase (STORAGE units):', {
           registration: normalizedAircraft.registration,

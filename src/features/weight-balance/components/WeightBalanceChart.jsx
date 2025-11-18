@@ -189,17 +189,33 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
     return true;
   };
 
-  // Vérifier que TOUS les scénarios sont dans les limites
-  const allScenariosWithinLimits = useMemo(() => {
+  // 🔧 FIX: Séparer scénarios critiques (bloquants) et non-critiques (avertissement)
+  const criticalScenariosWithinLimits = useMemo(() => {
     if (!scenarios) return false;
-    
-    const scenariosToCheck = ['fulltank', 'toCrm', 'landing', 'zfw'];
-    return scenariosToCheck.every(key => {
+
+    // Scénarios CRITIQUES (doivent être dans les limites)
+    const criticalScenarios = ['toCrm', 'landing'];
+    return criticalScenarios.every(key => {
       const scenario = scenarios[key];
       if (!scenario || isNaN(scenario.w) || isNaN(scenario.cg)) return false;
       return isPointWithinEnvelope(scenario.w, scenario.cg);
     });
   }, [scenarios]);
+
+  // Scénarios NON-CRITIQUES (avertissement seulement)
+  const hasNonCriticalWarnings = useMemo(() => {
+    if (!scenarios) return false;
+
+    const nonCriticalScenarios = ['zfw', 'fulltank'];
+    return nonCriticalScenarios.some(key => {
+      const scenario = scenarios[key];
+      if (!scenario || isNaN(scenario.w) || isNaN(scenario.cg)) return false;
+      return !isPointWithinEnvelope(scenario.w, scenario.cg);
+    });
+  }, [scenarios]);
+
+  // Pour compatibilité avec le code existant
+  const allScenariosWithinLimits = criticalScenariosWithinLimits && !hasNonCriticalWarnings;
 
   // Création des points de l'enveloppe avec cgEnvelope
   const envelopeData = useMemo(() => {
@@ -261,17 +277,35 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
         📈 Enveloppe de centrage
       </h3>
       
-      <div style={sx.combine(
-        sx.components.alert.base,
-        allScenariosWithinLimits ? sx.components.alert.success : sx.components.alert.danger,
-        sx.spacing.mb(4)
-      )}>
+      <div
+        className="weight-balance-alert"
+        style={{
+          ...sx.combine(
+            sx.components.alert.base,
+            // 🔧 FIX: Affichage différencié selon criticité
+            criticalScenariosWithinLimits
+              ? (hasNonCriticalWarnings ? sx.components.alert.warning : sx.components.alert.success)
+              : sx.components.alert.danger,
+            sx.spacing.mb(4)
+          ),
+          display: 'none' // Masquer complètement le message de validation
+        }}
+      >
         <p style={sx.combine(sx.text.lg, sx.text.bold)}>
-          {allScenariosWithinLimits ? '✅ Tous les scénarios dans les limites' : '❌ Un ou plusieurs scénarios hors limites'}
+          {criticalScenariosWithinLimits
+            ? (hasNonCriticalWarnings
+                ? '⚠️ Scénarios critiques OK - Avertissements non-bloquants'
+                : '✅ Tous les scénarios dans les limites')
+            : '❌ Un ou plusieurs scénarios critiques hors limites'}
         </p>
-        {!allScenariosWithinLimits && (
+        {!criticalScenariosWithinLimits && (
           <p style={sx.combine(sx.text.sm, sx.spacing.mt(2))}>
-            Vérifiez les points signalés en rouge sur le graphique
+            <strong>Vérifiez les points signalés en rouge sur le graphique.</strong> Les scénarios <strong>Masse au décollage (CRM)</strong> et <strong>Masse à l'atterrissage</strong> doivent être dans les limites.
+          </p>
+        )}
+        {criticalScenariosWithinLimits && hasNonCriticalWarnings && (
+          <p style={sx.combine(sx.text.sm, sx.spacing.mt(2))}>
+            Les scénarios <strong>Masse sans carburant (ZFW)</strong> et/ou <strong>Réservoirs pleins</strong> sont hors limites (non-bloquant). Vous pouvez continuer si les scénarios critiques sont OK.
           </p>
         )}
       </div>

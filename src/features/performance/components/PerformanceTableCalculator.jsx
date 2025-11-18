@@ -19,7 +19,8 @@ const PerformanceTableCalculator = ({
   defaultWeight,
   departureAirport,
   arrivalAirport,
-  isExpanded: initialExpanded = false
+  isExpanded: initialExpanded = false,
+  onResultsCalculated // Callback pour sauvegarder les résultats calculés
 }) => {
   const [isExpanded, setIsExpanded] = useState(initialExpanded);
   const [showCalculationDetails, setShowCalculationDetails] = useState(true);
@@ -192,6 +193,54 @@ const PerformanceTableCalculator = ({
       conditions.weight
     );
   }, [table, conditions, preparedData, combinedGroupData]);
+
+  // 💾 SAUVEGARDE AUTOMATIQUE : Appeler le callback quand les résultats changent
+  useEffect(() => {
+    console.log('🔍 [PerformanceTableCalculator] useEffect déclenché:', {
+      hasCallback: !!onResultsCalculated,
+      hasResult: !!result,
+      result,
+      departureAirport: departureAirport?.icao,
+      arrivalAirport: arrivalAirport?.icao
+    });
+
+    if (!onResultsCalculated || !result) {
+      console.warn('⚠️ [PerformanceTableCalculator] Pas de callback ou résultat:', {
+        hasCallback: !!onResultsCalculated,
+        hasResult: !!result
+      });
+      return;
+    }
+
+    // Préparer les données formatées pour la sauvegarde
+    let formattedResult;
+
+    if (result.outOfRange) {
+      // Utiliser les valeurs extrapolées si disponibles, sinon clamped
+      formattedResult = {
+        groundRoll: result.groundRoll?.extrapolated?.value || result.groundRoll?.clamped?.value || null,
+        distance50ft: result.distance50ft?.extrapolated?.value || result.distance50ft?.clamped?.value || null,
+        outOfRange: true
+      };
+    } else {
+      // Interpolation normale
+      formattedResult = {
+        groundRoll: result.groundRoll,
+        distance50ft: result.distance50ft,
+        interpolated: result.interpolated
+      };
+    }
+
+    console.log('✅ [PerformanceTableCalculator] Appel callback avec:', formattedResult);
+
+    // Appeler le callback avec les résultats formatés
+    onResultsCalculated(formattedResult, {
+      conditions,
+      departureAirport,
+      arrivalAirport,
+      tableType: tableGroup?.baseName || table?.metadata?.tableType
+    });
+  }, [result, onResultsCalculated, conditions, departureAirport, arrivalAirport, tableGroup, table]);
 
   // Identifier le type de tableau
   const tableType = useMemo(() => {

@@ -1,10 +1,81 @@
 // src/features/vac/VACModule.jsx
-import React, { memo } from 'react';
+import React, { memo, useState, useEffect } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { SIAReportEnhanced } from './components/SIAReportEnhanced';
 
 export const VACModule = memo(({ wizardMode = false, config = {} }) => {
-  // Afficher directement le rapport SIA amélioré
-  return <SIAReportEnhanced />;
+  const [showWizardReturn, setShowWizardReturn] = useState(false);
+
+  // Vérifier si on vient du wizard
+  useEffect(() => {
+    const hasTempDraft = localStorage.getItem('flightPlanDraft_temp');
+    if (hasTempDraft) {
+      setShowWizardReturn(true);
+    }
+  }, []);
+
+  const handleReturnToWizard = () => {
+    if (window.restoreFlightPlanWizard) {
+      window.restoreFlightPlanWizard();
+    }
+  };
+
+  return (
+    <div>
+      {/* Bandeau de retour au wizard */}
+      {showWizardReturn && (
+        <div style={{
+          backgroundColor: '#3b82f6',
+          color: 'white',
+          padding: '12px 16px',
+          marginBottom: '16px',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '24px' }}>✈️</span>
+            <div>
+              <div style={{ fontWeight: '600', fontSize: '15px' }}>
+                Préparation de vol en cours
+              </div>
+              <div style={{ fontSize: '13px', opacity: 0.9 }}>
+                Après avoir mis à jour vos VAC, cliquez sur le bouton pour continuer votre préparation
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={handleReturnToWizard}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 20px',
+              backgroundColor: 'white',
+              color: '#3b82f6',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              transition: 'transform 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            <ArrowLeft size={18} />
+            Retour au wizard
+          </button>
+        </div>
+      )}
+
+      {/* Afficher directement le rapport SIA amélioré */}
+      <SIAReportEnhanced />
+    </div>
+  );
 });
 
 // Code original conservé mais désactivé

@@ -128,22 +128,6 @@ export const Step5Fuel = memo(({ flightPlan, onUpdate }) => {
 
   return (
     <div style={commonStyles.container}>
-      {/* Réserve réglementaire calculée */}
-      <div style={reserveCardStyle}>
-        <Fuel size={16} style={{ color: theme.colors.primary }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '14px', color: theme.colors.textSecondary, fontWeight: '500' }}>
-            Réserve réglementaire :
-          </span>
-          <span style={{ fontSize: '18px', color: theme.colors.primary, fontWeight: '700' }}>
-            {reserveMinutes} min
-          </span>
-          <span style={{ fontSize: '13px', color: theme.colors.textMuted, fontStyle: 'italic' }}>
-            ({getReserveDescription()})
-          </span>
-        </div>
-      </div>
-
       {/* Module de carburant complet - le titre est affiché par le module */}
       <FuelModule />
     </div>

@@ -267,52 +267,113 @@ export const FlightRecapTable = ({
                       <span style={{ fontWeight: '700', color: '#111827' }}>{toda}m</span>
                     </div>
 
+                    {/* TORA - Affiché ici uniquement pour ARRIVÉE */}
+                    {type === 'arrival' && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                        <span style={{ color: '#6b7280', fontWeight: '600' }}>TORA:</span>
+                        <span style={{ fontWeight: '700', color: '#111827' }}>{tora}m</span>
+                      </div>
+                    )}
+
+                    {/* LDA - Affiché ici pour DÉPART et ARRIVÉE */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                      <span style={{ color: '#6b7280', fontWeight: '600' }}>LDA:</span>
+                      <span style={{ fontWeight: '700', color: '#111827' }}>{lda}m</span>
+                    </div>
+
                     {/* ASDA */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
                       <span style={{ color: '#6b7280', fontWeight: '600' }}>ASDA:</span>
                       <span style={{ fontWeight: '700', color: '#111827' }}>{asda}m</span>
                     </div>
 
-                    {/* TORA avec performance */}
+                    {/* Séparateur avant TORA + performances */}
                     <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      marginBottom: '3px'
+                      borderTop: '2px solid #d1d5db',
+                      margin: '6px 0',
+                      paddingTop: '6px'
                     }}>
-                      <span style={{ color: '#6b7280', fontWeight: '600' }}>TORA:</span>
-                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                        <span style={{ fontWeight: '700', color: '#111827' }}>{tora}m</span>
-                        {type === 'departure' && performanceData?.takeoff?.groundRoll && (
-                          <span style={{
-                            fontSize: '8px',
-                            color: tora >= performanceData.takeoff.groundRoll ? '#059669' : '#dc2626',
-                            fontWeight: '700'
+                      {/* TORA + Performances de décollage (DÉPART) */}
+                      {type === 'departure' && (
+                        <>
+                          <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            marginBottom: '3px'
                           }}>
-                            ({Math.round(performanceData.takeoff.groundRoll)}m)
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                            <span style={{ color: '#6b7280', fontWeight: '600' }}>TORA:</span>
+                            <span style={{ fontWeight: '700', color: '#111827' }}>{tora}m</span>
+                          </div>
 
-                    {/* LDA avec performance */}
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      marginBottom: '3px'
-                    }}>
-                      <span style={{ color: '#6b7280', fontWeight: '600' }}>LDA:</span>
-                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                        <span style={{ fontWeight: '700', color: '#111827' }}>{lda}m</span>
-                        {type === 'arrival' && performanceData?.landing?.groundRoll && (
-                          <span style={{
-                            fontSize: '8px',
-                            color: lda >= performanceData.landing.groundRoll ? '#059669' : '#dc2626',
-                            fontWeight: '700'
+                          {/* Performances de décollage (abaques) */}
+                          {performanceData?.takeoff?.abaques && performanceData.takeoff.abaques.length > 0 && (
+                            <div style={{
+                              marginTop: '4px',
+                              paddingTop: '4px',
+                              paddingLeft: '8px',
+                              borderLeft: '3px solid #3b82f6',
+                              backgroundColor: '#eff6ff'
+                            }}>
+                              <div style={{ fontSize: '8px', fontWeight: '700', color: '#3b82f6', marginBottom: '2px' }}>
+                                📊 Décollage
+                              </div>
+                              {performanceData.takeoff.abaques.map((abaque, aIdx) => (
+                                <div key={aIdx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                                  <span style={{ color: '#6b7280', fontSize: '8px' }}>{abaque.name}:</span>
+                                  <span style={{
+                                    fontWeight: '700',
+                                    color: tora >= abaque.distance ? '#059669' : '#dc2626',
+                                    fontSize: '8px'
+                                  }}>
+                                    {Math.round(abaque.distance)}m
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {/* LDA + Performances d'atterrissage (ARRIVÉE) */}
+                      {type === 'arrival' && (
+                        <>
+                          <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            marginBottom: '3px'
                           }}>
-                            ({Math.round(performanceData.landing.groundRoll)}m)
-                          </span>
-                        )}
-                      </div>
+                            <span style={{ color: '#6b7280', fontWeight: '600' }}>LDA:</span>
+                            <span style={{ fontWeight: '700', color: '#111827' }}>{lda}m</span>
+                          </div>
+
+                          {/* Performances d'atterrissage (abaques) */}
+                          {performanceData?.landing?.abaques && performanceData.landing.abaques.length > 0 && (
+                            <div style={{
+                              marginTop: '4px',
+                              paddingTop: '4px',
+                              paddingLeft: '8px',
+                              borderLeft: '3px solid #10b981',
+                              backgroundColor: '#f0fdf4'
+                            }}>
+                              <div style={{ fontSize: '8px', fontWeight: '700', color: '#10b981', marginBottom: '2px' }}>
+                                📊 Atterrissage
+                              </div>
+                              {performanceData.landing.abaques.map((abaque, aIdx) => (
+                                <div key={aIdx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                                  <span style={{ color: '#6b7280', fontSize: '8px' }}>{abaque.name}:</span>
+                                  <span style={{
+                                    fontWeight: '700',
+                                    color: lda >= abaque.distance ? '#059669' : '#dc2626',
+                                    fontSize: '8px'
+                                  }}>
+                                    {Math.round(abaque.distance)}m
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      )}
                     </div>
 
                   </div>

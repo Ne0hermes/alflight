@@ -293,6 +293,53 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
     }
   }, [waypoints, flightPlan, onUpdate]);
 
+  // 🔧 FIX: Synchroniser les alternates du store avec flightPlan
+  useEffect(() => {
+    const syncAlternates = async () => {
+      // Importer le store
+      const { useAlternatesStore } = await import('@core/stores/alternatesStore');
+      const selectedAlternates = useAlternatesStore.getState().selectedAlternates;
+
+      console.log('🔄 [Step3Route] Synchronisation alternates:', {
+        storeCount: selectedAlternates.length,
+        flightPlanCount: flightPlan.alternates.length
+      });
+
+      // Vérifier si les alternates ont changé
+      const alternatesChanged = selectedAlternates.length !== flightPlan.alternates.length ||
+        selectedAlternates.some((alt, index) => alt.icao !== flightPlan.alternates[index]?.icao);
+
+      if (alternatesChanged) {
+        // Mettre à jour flightPlan.alternates
+        flightPlan.alternates = selectedAlternates.map(alt => ({
+          icao: alt.icao,
+          name: alt.name,
+          coordinates: alt.coordinates || { lat: alt.lat, lon: alt.lon },
+          distance: alt.distance || 0
+        }));
+
+        console.log('✅ [Step3Route] Alternates synchronisés dans flightPlan:', flightPlan.alternates);
+
+        // Notifier le wizard de la mise à jour
+        if (onUpdate) {
+          onUpdate();
+        }
+      }
+    };
+
+    // S'abonner aux changements du store
+    import('@core/stores/alternatesStore').then(({ useAlternatesStore }) => {
+      const unsubscribe = useAlternatesStore.subscribe((state) => {
+        syncAlternates();
+      });
+
+      // Synchroniser au montage
+      syncAlternates();
+
+      return () => unsubscribe();
+    });
+  }, [flightPlan, onUpdate]);
+
   // Charger les points VFR au montage du composant
   useEffect(() => {
     const loadVFRPoints = async () => {

@@ -47,7 +47,29 @@ const TAB_CONFIG = [
 
 const FlightSystemUI = memo(() => {
   const [activeTab, setActiveTab] = useState('navigation');
-  
+
+  // Vérifier si on doit naviguer vers VAC au démarrage
+  useEffect(() => {
+    const shouldNavigateToVAC = localStorage.getItem('navigateToVAC');
+    if (shouldNavigateToVAC === 'true') {
+      console.log('🔧 [App] Navigation automatique vers VAC détectée');
+      localStorage.removeItem('navigateToVAC');
+      setActiveTab('vac');
+
+      // Afficher un message pour retourner au wizard
+      const tempDraft = localStorage.getItem('flightPlanDraft_temp');
+      if (tempDraft) {
+        console.log('💾 [App] Brouillon temporaire détecté');
+        // Créer un gestionnaire global pour restaurer le wizard
+        window.restoreFlightPlanWizard = () => {
+          localStorage.setItem('flightPlanDraft', tempDraft);
+          localStorage.removeItem('flightPlanDraft_temp');
+          setActiveTab('navigation');
+        };
+      }
+    }
+  }, []);
+
   useEffect(() => {
     try {
       autoMigrateIfNeeded();

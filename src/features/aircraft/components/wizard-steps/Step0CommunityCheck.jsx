@@ -342,19 +342,14 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
       version: communityData.version
     };
 
-    // 🔧 FIX CRITIQUE: Convertir depuis STORAGE units vers USER units pour l'affichage dans le wizard
-    // Les données venant de Supabase sont en STORAGE units (ltr/lph/kg/kt)
-    // Le wizard doit les afficher en USER units (gal/gph selon préférences)
-    const { prepareAircraftExport } = await import('@utils/aircraftNormalizer');
-    const { useUnitsStore } = await import('@core/stores/unitsStore');
-    const userUnits = useUnitsStore.getState().units;
-
-    console.log('🔄 [Step0] Converting aircraft from STORAGE to USER units for wizard display');
-    const displayData = prepareAircraftExport(communityData, userUnits);
+    // 🔧 FIX: Garder les données en STORAGE units (ltr/lph/kg/kt)
+    // Step1BasicInfo fera la conversion vers USER units lors de l'affichage
+    // Cela évite la double conversion qui causait 148 L → 39 gal → 10.3 gal
+    console.log('📦 [Step0] Keeping aircraft data in STORAGE units (ltr/lph/kg/kt)');
 
     // Préparer TOUTES les données pour UNE SEULE mise à jour groupée
     const bulkData = {
-      ...displayData,  // ✅ Données converties vers USER units (gal/gph)
+      ...communityData,  // ✅ Données en STORAGE units (ltr/lph/kg/kt)
       isImportedFromCommunity: true,
       baseAircraft: baseReference, // Référence légère au lieu de copie complète
       // Ne PAS stocker originalCommunityData (doublon inutile)

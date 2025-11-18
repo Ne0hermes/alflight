@@ -345,9 +345,9 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
     if (previousUnits.fuel !== units.fuel && data.fuelCapacity) {
       const convertedCapacity = convertValue(
         data.fuelCapacity,
+        'fuel',
         previousUnits.fuel,
-        units.fuel,
-        'fuel'
+        units.fuel
       );
       if (convertedCapacity && convertedCapacity !== data.fuelCapacity) {
         updateData('fuelCapacity', Math.round(convertedCapacity * 100) / 100);
@@ -358,9 +358,9 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
     if (previousUnits.fuelConsumption !== units.fuelConsumption && data.fuelConsumption) {
       const convertedConsumption = convertValue(
         data.fuelConsumption,
+        'fuelConsumption',
         previousUnits.fuelConsumption,
-        units.fuelConsumption,
-        'fuelConsumption'
+        units.fuelConsumption
       );
       if (convertedConsumption && convertedConsumption !== data.fuelConsumption) {
         updateData('fuelConsumption', Math.round(convertedConsumption * 100) / 100);
@@ -617,8 +617,28 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                 variant="outlined"
                 label="Capacité carburant *"
                 type="number"
-                value={data.fuelCapacity || ''}
-                onChange={(e) => updateData('fuelCapacity', e.target.value)}
+                value={
+                  data.fuelCapacity
+                    ? (() => {
+                        const converted = Math.round(convertValue(data.fuelCapacity, 'fuel', 'ltr', units.fuel) * 10) / 10;
+                        console.log('🔵 [Step1] DISPLAY fuelCapacity:', {
+                          storage: data.fuelCapacity,
+                          userUnit: units.fuel,
+                          displayed: converted
+                        });
+                        return converted;
+                      })()
+                    : ''
+                }
+                onChange={(e) => {
+                  const valueInStorageUnit = convertValue(e.target.value, 'fuel', units.fuel, 'ltr');
+                  console.log('🟢 [Step1] SAVE fuelCapacity:', {
+                    userInput: e.target.value,
+                    userUnit: units.fuel,
+                    storageValue: valueInStorageUnit
+                  });
+                  updateData('fuelCapacity', valueInStorageUnit);
+                }}
                 placeholder="Ex: 200"
                 error={!!errors.fuelCapacity}
                 helperText={errors.fuelCapacity || "Capacité totale des réservoirs"}
@@ -635,8 +655,28 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                 variant="outlined"
                 label="Consommation"
                 type="number"
-                value={data.fuelConsumption || ''}
-                onChange={(e) => updateData('fuelConsumption', e.target.value)}
+                value={
+                  data.fuelConsumption
+                    ? (() => {
+                        const converted = Math.round(convertValue(data.fuelConsumption, 'fuelConsumption', 'lph', units.fuelConsumption) * 10) / 10;
+                        console.log('🔵 [Step1] DISPLAY fuelConsumption:', {
+                          storage: data.fuelConsumption,
+                          userUnit: units.fuelConsumption,
+                          displayed: converted
+                        });
+                        return converted;
+                      })()
+                    : ''
+                }
+                onChange={(e) => {
+                  const valueInStorageUnit = convertValue(e.target.value, 'fuelConsumption', units.fuelConsumption, 'lph');
+                  console.log('🟢 [Step1] SAVE fuelConsumption:', {
+                    userInput: e.target.value,
+                    userUnit: units.fuelConsumption,
+                    storageValue: valueInStorageUnit
+                  });
+                  updateData('fuelConsumption', valueInStorageUnit);
+                }}
                 placeholder="Ex: 35"
                 helperText="Consommation moyenne en croisière"
                 InputProps={{

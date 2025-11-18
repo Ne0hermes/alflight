@@ -4,6 +4,7 @@ import { Upload, FileText, CheckCircle, AlertTriangle, X, Map, Radio, Plane, Nav
 import VACPdfExtractor from './VACPdfExtractor';
 import { showNotification } from '../../../shared/components/Notification';
 import { useVACStore } from '../../../core/stores/vacStore';
+import { vacPdfStorage } from '../../../services/vacPdfStorage';
 
 export const VACImporter = memo(({ 
   icao,
@@ -16,7 +17,7 @@ export const VACImporter = memo(({
   const [pdfFile, setPdfFile] = useState(null);
   const [usePdfJs, setUsePdfJs] = useState(true);
   const fileInputRef = useRef(null);
-  const { updateExtractedData } = useVACStore();
+  const { addCustomChart, updateExtractedData } = useVACStore();
 
   const handleFileSelect = async (event) => {
     const file = event.target.files[0];
@@ -49,32 +50,75 @@ export const VACImporter = memo(({
       5000
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (extractedData) {
       try {
         // Utiliser le code ICAO extrait ou celui fourni
         const targetIcao = extractedData.icao || icao;
-        
+
         if (!targetIcao) {
           showNotification(
             '⚠️ Code ICAO non détecté. Veuillez l\'entrer manuellement.',
             'warning',
             5000
+          );
           return;
         }
 
-        // Mettre à jour le store VAC
-        updateExtractedData(targetIcao, extractedData);
-        
+        // 1. Stocker le PDF dans IndexedDB (si disponible)
+        if (pdfFile) {
+          try {
+            await vacPdfStorage.storePDF(targetIcao, pdfFile);
+            console.log(`✅ PDF VAC ${targetIcao} stocké dans IndexedDB`);
+          } catch (error) {
+            console.error('⚠️ Erreur stockage PDF:', error);
+            // Continuer même si le stockage PDF échoue
+          }
+        }
+
+        // 2. Créer la carte VAC avec les données extraites
+        const chartData = {
+          icao: targetIcao,
+          name: `${targetIcao} - ${extractedData.airportName || 'VAC importée'}`,
+          isDownloaded: true,
+          isCustom: true,
+          downloadDate: new Date().toISOString(),
+          uploadDate: new Date().toISOString(),
+          fileName: pdfFile?.name,
+          fileType: pdfFile?.type,
+          fileSize: pdfFile ? (pdfFile.size / 1024).toFixed(1) + ' KB' : '0 KB',
+          hasPdf: !!pdfFile,
+          pdfFileName: pdfFile?.name,
+          pdfFileSize: pdfFile?.size,
+          // Données extraites complètes
+          extractedData: {
+            ...extractedData,
+            icao: targetIcao,
+            fileName: pdfFile?.name,
+            dataSource: extractedData.dataSource || 'PDF VAC importé',
+            extractionDate: new Date().toISOString()
+          },
+          // Ajouter aussi circuitAltitude au niveau racine pour compatibilité
+          circuitAltitude: extractedData.circuitAltitude,
+          integrationAltitude: extractedData.integrationAltitude,
+          coordinates: extractedData.coordinates || { lat: 0, lon: 0 }
+        };
+
+        // Utiliser addCustomChart pour CRÉER ou REMPLACER la carte
+        addCustomChart(targetIcao, chartData);
+
+        console.log(`✅ Carte VAC ${targetIcao} sauvegardée dans le store:`, chartData);
+
         showNotification(
-          `✅ Carte VAC ${targetIcao} importée avec succès`,
+          `✅ Carte VAC ${targetIcao} importée avec succès ${pdfFile ? '(PDF + données)' : '(données seulement)'}`,
           'success',
           5000
-        
+        );
+
         if (onImportComplete) {
-          onImportComplete(targetIcao, extractedData);
+          onImportComplete(targetIcao, dataWithPdfRef);
         }
-        
+
         if (onClose) {
           onClose();
         }
@@ -84,6 +128,7 @@ export const VACImporter = memo(({
           `❌ Erreur lors de l'enregistrement: ${error.message}`,
           'error',
           5000
+        );
       }
     }
   };

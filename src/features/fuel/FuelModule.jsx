@@ -321,21 +321,12 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
     const reserveMinutes = navigationResults.regulationReserveMinutes || 30;
     const reserveHours = (reserveMinutes / 60).toFixed(1);
 
-    // 🔧 FIX: Utiliser _metadata (avec underscore) pour accéder aux métadonnées
+    // 🔧 FIX: Toujours stocker en lph, convertir pour affichage
     const consumptionStorage = parseFloat(selectedAircraft?.fuelConsumption) || 30;
-    const storedUnit = selectedAircraft?._metadata?.units?.fuelConsumption || 'lph';
-    const userUnit = getUnit('fuelConsumption');
     const consumptionSymbol = getSymbol('fuelConsumption');
 
-    // Convertir si nécessaire
-    let consumptionDisplay = consumptionStorage;
-    if (storedUnit !== userUnit) {
-      if (storedUnit === 'lph' && userUnit === 'gph') {
-        consumptionDisplay = consumptionStorage / GAL_TO_LTR;
-      } else if (storedUnit === 'gph' && userUnit === 'lph') {
-        consumptionDisplay = consumptionStorage * GAL_TO_LTR;
-      }
-    }
+    // Convertir depuis lph (unité de stockage) vers l'unité préférée de l'utilisateur
+    const consumptionDisplay = convert(consumptionStorage, 'fuelConsumption', 'lph');
 
     let desc = `${reserveMinutes} min = ${reserveHours}h × ${consumptionDisplay.toFixed(1)} ${consumptionSymbol} - `;
     desc += `${flightType.rules} `;
@@ -359,21 +350,12 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
     // Arrondir à 2 décimales pour éviter d'afficher "0.0h"
     const timeFormatted = timeHours.toFixed(2);
 
-    // 🔧 FIX: Utiliser _metadata (avec underscore) pour accéder aux métadonnées
+    // 🔧 FIX: Toujours stocker en lph, convertir pour affichage
     const consumptionStorage = parseFloat(selectedAircraft?.fuelConsumption) || 30;
-    const storedUnit = selectedAircraft?._metadata?.units?.fuelConsumption || 'lph';
-    const userUnit = getUnit('fuelConsumption');
     const consumptionSymbol = getSymbol('fuelConsumption');
 
-    // Convertir si nécessaire
-    let consumptionDisplay = consumptionStorage;
-    if (storedUnit !== userUnit) {
-      if (storedUnit === 'lph' && userUnit === 'gph') {
-        consumptionDisplay = consumptionStorage / GAL_TO_LTR;
-      } else if (storedUnit === 'gph' && userUnit === 'lph') {
-        consumptionDisplay = consumptionStorage * GAL_TO_LTR;
-      }
-    }
+    // Convertir depuis lph (unité de stockage) vers l'unité préférée de l'utilisateur
+    const consumptionDisplay = convert(consumptionStorage, 'fuelConsumption', 'lph');
 
     // Formule simplifiée : la réserve finale (final reserve) est comptée séparément
     // Afficher l'ICAO de l'alternate de référence (le plus éloigné)
@@ -390,23 +372,12 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
     const cruiseSpeed = selectedAircraft?.cruiseSpeedKt || selectedAircraft?.cruiseSpeed || 100;
     const timeHours = (navigationResults.totalDistance / cruiseSpeed).toFixed(1);
 
-    // 🔧 FIX: Utiliser _metadata (avec underscore) pour accéder aux métadonnées
+    // 🔧 FIX: Toujours stocker en lph, convertir pour affichage
     const consumptionStorage = parseFloat(selectedAircraft?.fuelConsumption) || 30;
-    const storedUnit = selectedAircraft?._metadata?.units?.fuelConsumption || 'lph';
-    const userUnit = getUnit('fuelConsumption');
     const consumptionSymbol = getSymbol('fuelConsumption');
 
-    // Convertir si nécessaire
-    let consumptionDisplay = consumptionStorage;
-    if (storedUnit !== userUnit) {
-      if (storedUnit === 'lph' && userUnit === 'gph') {
-        // Litres/h → Gallons/h
-        consumptionDisplay = consumptionStorage / GAL_TO_LTR;
-      } else if (storedUnit === 'gph' && userUnit === 'lph') {
-        // Gallons/h → Litres/h
-        consumptionDisplay = consumptionStorage * GAL_TO_LTR;
-      }
-    }
+    // Convertir depuis lph (unité de stockage) vers l'unité préférée de l'utilisateur
+    const consumptionDisplay = convert(consumptionStorage, 'fuelConsumption', 'lph');
 
     return `${distance} NM ÷ ${cruiseSpeed} kt = ${timeHours}h × ${consumptionDisplay.toFixed(1)} ${consumptionSymbol}`;
   };
@@ -544,18 +515,8 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
         {/* Statut */}
         {(() => {
           // Vérifier si le carburant dépasse la capacité de l'avion
-          // fuelCapacity est stocké dans l'unité de préférence utilisateur, le convertir en litres
-          const userFuelUnit = getUnit('fuel');
-          let fuelCapacityLtr = selectedAircraft?.fuelCapacity || 0;
-
-          if (userFuelUnit === 'gal') {
-            fuelCapacityLtr = fuelCapacityLtr * GAL_TO_LTR;
-          } else if (userFuelUnit === 'kg') {
-            fuelCapacityLtr = fuelCapacityLtr / 0.8; // kg → L (densité ~0.8)
-          } else if (userFuelUnit === 'lbs') {
-            fuelCapacityLtr = (fuelCapacityLtr * 0.453592) / 0.8; // lbs → kg → L
-          }
-          // Si 'ltr', pas de conversion nécessaire
+          // 🔧 FIX: fuelCapacity est TOUJOURS stocké en litres (unité de stockage standard)
+          const fuelCapacityLtr = selectedAircraft?.fuelCapacity || 0;
 
           const exceedsCapacity = selectedAircraft && selectedAircraft.fuelCapacity && safeFobFuel.ltr > fuelCapacityLtr;
           const fillRatio = fuelCapacityLtr > 0 ? ((safeFobFuel.ltr / fuelCapacityLtr) * 100).toFixed(0) : 0;
@@ -576,7 +537,7 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
                       Excédent par rapport à la capacité: {convert(Math.abs(safeFobFuel.ltr - fuelCapacityLtr), 'fuel', 'ltr').toFixed(1)} {getSymbol('fuel')}
                     </p>
                     <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
-                      Capacité max: {parseFloat(selectedAircraft.fuelCapacity).toFixed(1)} {getSymbol('fuel')} •
+                      Capacité max: {convert(fuelCapacityLtr, 'fuel', 'ltr').toFixed(1)} {getSymbol('fuel')} •
                       Remplissage: {fillRatio}% (impossible)
                     </p>
                   </div>
@@ -591,7 +552,7 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
                     </p>
                     {selectedAircraft && selectedAircraft.fuelCapacity && (
                       <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
-                        Capacité max: {parseFloat(selectedAircraft.fuelCapacity).toFixed(1)} {getSymbol('fuel')} •
+                        Capacité max: {convert(fuelCapacityLtr, 'fuel', 'ltr').toFixed(1)} {getSymbol('fuel')} •
                         Remplissage: {fillRatio}%
                       </p>
                     )}
@@ -607,7 +568,7 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
                     </p>
                     {selectedAircraft && selectedAircraft.fuelCapacity && (
                       <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
-                        Capacité max: {parseFloat(selectedAircraft.fuelCapacity).toFixed(1)} {getSymbol('fuel')} •
+                        Capacité max: {convert(fuelCapacityLtr, 'fuel', 'ltr').toFixed(1)} {getSymbol('fuel')} •
                         Remplissage: {fillRatio}%
                       </p>
                     )}

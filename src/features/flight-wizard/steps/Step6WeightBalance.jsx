@@ -415,14 +415,19 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
             totalMoment: calculations.totalMoment,
             totalWeight: calculations.totalWeight,
             cg: calculations.cg
-          }
+          },
+          // Sauvegarder les 4 scénarios pour l'étape 7
+          scenarios: scenarios
         };
         console.log('✅ [Step6WB] Sauvegarde complète Weight & Balance dans flightPlan:', {
           takeoffWeight: takeoffWeight,
           landingWeight: landingWeight,
           takeoffCG: calculations.cg,
           landingCG: landingCG,
-          withinLimits: calculations.isWithinLimits
+          withinLimits: calculations.isWithinLimits,
+          scenarios: scenarios,
+          hasScenarios: !!scenarios,
+          scenarioKeys: scenarios ? Object.keys(scenarios) : []
         });
         if (onUpdate) {
           onUpdate();

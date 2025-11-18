@@ -52,6 +52,27 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
       .map(ad => ad.icao);
   };
 
+  // Fonction pour déterminer le rôle d'un aérodrome
+  const getAerodromeRole = (icao) => {
+    // Vérifier si c'est le départ
+    const isDeparture = waypoints?.find(wp =>
+      wp.type === 'departure' && (wp.icao === icao || wp.name === icao)
+    );
+    if (isDeparture) return { role: 'departure', label: 'Départ', color: '#10b981' };
+
+    // Vérifier si c'est l'arrivée
+    const isArrival = waypoints?.find(wp =>
+      wp.type === 'arrival' && (wp.icao === icao || wp.name === icao)
+    );
+    if (isArrival) return { role: 'arrival', label: 'Arrivée', color: '#3b82f6' };
+
+    // Vérifier si c'est un déroutement
+    const isAlternate = flightPlan?.alternates?.find(alt => alt.icao === icao);
+    if (isAlternate) return { role: 'alternate', label: 'Déroutement', color: '#f59e0b' };
+
+    return { role: 'unknown', label: 'Autre', color: '#6b7280' };
+  };
+
   // Récupérer les aérodromes depuis les waypoints
   useEffect(() => {
     const loadAerodromeData = async () => {
@@ -260,46 +281,38 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
           border: '2px solid #f59e0b',
           borderRadius: '8px',
           padding: '16px',
-          marginBottom: '20px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '16px'
+          marginBottom: '20px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-            <AlertCircle size={24} style={{ color: '#f59e0b', flexShrink: 0 }} />
-            <div>
-              <p style={{ margin: 0, fontWeight: 'bold', color: '#92400e', marginBottom: '4px' }}>
-                {missingVACs.length} carte(s) VAC manquante(s)
-              </p>
-              <p style={{ margin: 0, fontSize: '14px', color: '#78350f' }}>
-                Aérodromes : {missingVACs.join(', ')}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => window.location.href = '/vac'}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '10px 16px',
-              backgroundColor: '#f59e0b',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '14px',
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            marginBottom: '12px'
+          }}>
+            <AlertCircle size={22} color="#d97706" />
+            <span style={{
               fontWeight: 'bold',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#d97706'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f59e0b'}
-          >
-            <ExternalLink size={16} />
-            Gérer les VAC
-          </button>
+              fontSize: '16px',
+              color: '#92400e'
+            }}>
+              {missingVACs.length} carte(s) VAC manquante(s)
+            </span>
+          </div>
+          <div style={{
+            fontSize: '14px',
+            color: '#78350f',
+            lineHeight: '1.6'
+          }}>
+            <p style={{ margin: '0 0 8px 0', fontWeight: '500' }}>
+              <strong>Aérodromes concernés :</strong> {missingVACs.join(', ')}
+            </p>
+            <p style={{ margin: '0', display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+              <span style={{ fontSize: '16px', marginTop: '2px' }}>ℹ️</span>
+              <span>
+                Veuillez télécharger les cartes VAC manquantes via le module <strong>"Cartes VAC"</strong> (menu de gauche) avant de générer le PDF final.
+              </span>
+            </p>
+          </div>
         </div>
       )}
 
@@ -313,6 +326,8 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
           const currentSection = expandedSection[aerodrome.icao];
           const coordsDMS = formatCoordinatesDMS(aerodrome.coordinates?.lat, aerodrome.coordinates?.lon);
 
+          const aerodromeRole = getAerodromeRole(aerodrome.icao);
+
           return (
             <div key={aerodrome.icao} style={styles.aerodromeCard}>
               {/* En-tête de la carte */}
@@ -321,8 +336,28 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
                 onClick={() => setExpandedAerodrome(isExpanded ? null : aerodrome.icao)}
               >
                 <div style={styles.aerodromeInfo}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     <span style={styles.aerodromeIcao}>{aerodrome.icao}</span>
+
+                    {/* Badge Rôle (Départ/Arrivée/Déroutement) */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '4px 10px',
+                      backgroundColor: aerodromeRole.color,
+                      color: '#ffffff',
+                      borderRadius: '12px',
+                      fontSize: '11px',
+                      fontWeight: '600',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px'
+                    }}>
+                      {aerodromeRole.role === 'departure' && <Plane size={12} style={{ transform: 'rotate(-45deg)' }} />}
+                      {aerodromeRole.role === 'arrival' && <Plane size={12} style={{ transform: 'rotate(45deg)' }} />}
+                      {aerodromeRole.role === 'alternate' && <Navigation size={12} />}
+                      <span>{aerodromeRole.label}</span>
+                    </div>
 
                     {/* Badge VAC */}
                     {hasChart ? (

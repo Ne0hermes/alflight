@@ -82,8 +82,8 @@ export const ScenarioCards = memo(({ scenarios, fobFuel, fuelData, aircraft }) =
           🔄 Scénarios de centrage
         </h3>
 
-        {/* Informations carburant */}
-        {fuelInfo && (
+        {/* Informations avion */}
+        {aircraft && (
           <div style={{
             display: 'flex',
             gap: '16px',
@@ -94,9 +94,8 @@ export const ScenarioCards = memo(({ scenarios, fobFuel, fuelData, aircraft }) =
             borderRadius: '6px',
             border: '1px solid #e5e7eb'
           }}>
-            <span>⛽ <strong>{fuelInfo.fuelType}</strong>: {fuelInfo.density} kg/L</span>
-            <span>📦 Capacité: {fuelInfo.capacity} L ({fuelInfo.capacityKg.toFixed(1)} kg)</span>
-            <span>📏 Bras: {fuelInfo.arm} m</span>
+            {aircraft.equipment && <span>📦 Équipements SAR: {aircraft.equipment}</span>}
+            {aircraft.cruiseSpeed && <span>⚡ Vitesse de croisière: {aircraft.cruiseSpeed} kt</span>}
           </div>
         )}
       </div>
