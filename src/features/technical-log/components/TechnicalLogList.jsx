@@ -265,11 +265,13 @@ const TechnicalLogList = () => {
                     onDelete={() => deleteEntry(entry.id)}
                   />
                 </Grid>
+              ))
             )}
           </Grid>
         )}
       </Box>
     </Box>
+  );
 };
 
 export default TechnicalLogList;
