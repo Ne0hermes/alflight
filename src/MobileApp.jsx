@@ -137,18 +137,31 @@ const MobileApp = () => {
     <IndexedDBChecker>
       <ThemeProvider theme={muiTheme}>
         <CssBaseline />
+
+        {/* Styles pour l'impression PDF - Masquer le menu de navigation */}
+        <style>{`
+          @media print {
+            .MuiBottomNavigation-root,
+            .app-navigation,
+            nav,
+            [role="navigation"] {
+              display: none !important;
+            }
+          }
+        `}</style>
+
         <FlightSystemProviders>
         <div style={styles.app}>
         {/* Navigation */}
         {isMobile ? (
-          <MobileNavigation 
+          <MobileNavigation
             tabs={TAB_CONFIG}
             activeTab={activeTab}
             onTabChange={setActiveTab}
           />
         ) : (
-          <div style={styles.desktopNav}>
-            <TabNavigation 
+          <div className="app-navigation" style={styles.desktopNav}>
+            <TabNavigation
               tabs={TAB_CONFIG}
               activeTab={activeTab}
               onTabChange={setActiveTab}

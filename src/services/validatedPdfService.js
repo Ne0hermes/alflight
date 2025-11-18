@@ -56,8 +56,13 @@ export const validatedPdfService = {
 
       let filename = storagePath.split('/').pop();
 
+      // Nettoyer le filename (trim, normaliser)
+      filename = filename?.trim() || '';
+
       console.log('📁 [ValidatedPDF] Chemin de stockage:', storagePath);
       console.log('📄 [ValidatedPDF] Filename extrait:', filename);
+      console.log('📄 [ValidatedPDF] Filename length:', filename.length);
+      console.log('📄 [ValidatedPDF] Filename charCodes:', Array.from(filename).map(c => c.charCodeAt(0)).join(','));
       console.log('✅ [ValidatedPDF] Filename valide (.pdf):', filename?.endsWith('.pdf'));
 
       // Vérification et correction du filename si nécessaire
@@ -84,6 +89,13 @@ export const validatedPdfService = {
       console.log('✅ [ValidatedPDF] PDF uploadé avec succès:', uploadData.path);
 
       // 2. Sauvegarder les métadonnées dans la table
+      // Construire le trajet complet avec waypoints
+      const fullRoute = [
+        metadata.departureIcao,
+        ...(metadata.waypoints || []),
+        metadata.arrivalIcao
+      ].filter(Boolean).join('→');
+
       const pdfMetadata = {
         flight_plan_id: metadata.flightPlanId || null,
         pdf_filename: filename,
@@ -98,6 +110,7 @@ export const validatedPdfService = {
         departure_name: metadata.departureName || null,
         arrival_icao: metadata.arrivalIcao || null,
         arrival_name: metadata.arrivalName || null,
+        full_route: fullRoute, // Trajet complet avec waypoints
         validation_timestamp: new Date().toISOString(),
         version: '1.0',
         notes: metadata.notes || null,

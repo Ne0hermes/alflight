@@ -19,7 +19,26 @@ export const FALLBACK_RUNWAYS = {
       }
     ]
   },
-  
+
+  // LFST - Strasbourg-Entzheim
+  LFST: {
+    icao: 'LFST',
+    name: 'Strasbourg-Entzheim',
+    runways: [
+      {
+        identifier: '05/23',
+        le_ident: '05',
+        he_ident: '23',
+        le_heading: 50,
+        he_heading: 230,
+        length: 2440,
+        width: 45,
+        surface: 'ASPH',
+        lda: 2440
+      }
+    ]
+  },
+
   // Ajouter d'autres aérodromes au besoin
   LFHM: {
     icao: 'LFHM',
@@ -119,10 +138,16 @@ export const FALLBACK_RUNWAYS = {
 
 // Fonction pour obtenir les pistes d'un aérodrome
 export const getFallbackRunways = (icao) => {
-  return FALLBACK_RUNWAYS[icao]?.runways || null;
+  if (!icao) return null;
+  const upperIcao = icao.toUpperCase();
+  console.log('🔍 [fallbackRunways] getFallbackRunways:', { icao, upperIcao, found: !!FALLBACK_RUNWAYS[upperIcao] });
+  return FALLBACK_RUNWAYS[upperIcao]?.runways || null;
 };
 
 // Fonction pour obtenir les données complètes d'un aérodrome
 export const getFallbackAirport = (icao) => {
-  return FALLBACK_RUNWAYS[icao] || null;
+  if (!icao) return null;
+  const upperIcao = icao.toUpperCase();
+  console.log('🔍 [fallbackRunways] getFallbackAirport:', { icao, upperIcao, found: !!FALLBACK_RUNWAYS[upperIcao] });
+  return FALLBACK_RUNWAYS[upperIcao] || null;
 };

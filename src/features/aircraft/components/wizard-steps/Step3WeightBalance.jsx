@@ -810,7 +810,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                   value={data.weights?.emptyWeight || ''}
                   onChange={(e) => updateData('weights.emptyWeight', e.target.value)}
                   error={!!errors['weights.emptyWeight']}
-                  helperText={errors['weights.emptyWeight'] || "Empty Weight - Masse de l'avion vide (sans carburant, passagers, bagages)"}
+                  helperText={errors['weights.emptyWeight'] || "récupérer l'information dans le rapport de masse et centrage joint au manex"}
                   required
                   InputProps={{
                     endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
@@ -824,7 +824,6 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                   value={data.arms?.empty || ''}
                   onChange={(e) => updateData('arms.empty', e.target.value)}
                   error={!!errors['arms.empty']}
-                  helperText="Distance depuis la référence"
                   InputProps={{
                     endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
                   }}

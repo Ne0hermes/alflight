@@ -2,7 +2,7 @@
 import React, { memo, useState, useEffect } from 'react';
 import { useAircraft } from '@core/contexts';
 import { useAircraftStore } from '@core/stores/aircraftStore';
-import { Plus, Edit2, Trash2, Info, AlertTriangle, FileText, Eye, X, ChevronDown, ChevronUp, Wand2, FileDown } from 'lucide-react';
+import { Plus, Edit2, Trash2, Info, AlertTriangle, FileText, Eye, X, ChevronDown, ChevronUp, Wand2, FileDown, CheckCircle } from 'lucide-react';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { sx } from '@shared/styles/styleSystem';
 import AccordionButton from '@shared/components/AccordionButton';
@@ -70,7 +70,7 @@ InfoIcon.displayName = 'InfoIcon';
 
 export const AircraftModule = memo(() => {
   const aircraftContext = useAircraft();
-  const { getSymbol, format } = useUnits();
+  const { getSymbol, format, getUnit, convert } = useUnits();
 
 
   // Vérifier si le contexte est valide
@@ -1159,8 +1159,26 @@ export const AircraftModule = memo(() => {
                       )}
                     </h4>
                     <div style={{ fontSize: '14px', color: '#6B7280' }}>
-                      <p>Carburant: {aircraft.fuelType} • Capacité: {aircraft.fuelCapacity ? Number(aircraft.fuelCapacity).toFixed(1) : 'N/A'} {getSymbol('fuel')}</p>
-                      <p>Vitesse: {(aircraft.cruiseSpeed || aircraft.cruiseSpeedKt) ? Number(aircraft.cruiseSpeed || aircraft.cruiseSpeedKt).toFixed(0) : 'N/A'} {getSymbol('speed')} • Conso: {aircraft.fuelConsumption ? Number(aircraft.fuelConsumption).toFixed(1) : 'N/A'} {getSymbol('fuelConsumption')}</p>
+                      <p>Carburant: {aircraft.fuelType} • Capacité: {aircraft.fuelCapacity ? (() => {
+                        const converted = convert(aircraft.fuelCapacity, 'fuel', 'ltr');
+                        console.log('🟣 [AircraftModule] DISPLAY fuelCapacity:', {
+                          storage: aircraft.fuelCapacity,
+                          metadata: aircraft._metadata?.units?.fuel,
+                          userUnit: getUnit('fuel'),
+                          converted: converted
+                        });
+                        return converted.toFixed(1);
+                      })() : 'N/A'} {getSymbol('fuel')}</p>
+                      <p>Vitesse: {(aircraft.cruiseSpeed || aircraft.cruiseSpeedKt) ? Number(aircraft.cruiseSpeed || aircraft.cruiseSpeedKt).toFixed(0) : 'N/A'} {getSymbol('speed')} • Conso: {aircraft.fuelConsumption ? (() => {
+                        const converted = convert(aircraft.fuelConsumption, 'fuelConsumption', 'lph');
+                        console.log('🟣 [AircraftModule] DISPLAY fuelConsumption:', {
+                          storage: aircraft.fuelConsumption,
+                          metadata: aircraft._metadata?.units?.fuelConsumption,
+                          userUnit: getUnit('fuelConsumption'),
+                          converted: converted
+                        });
+                        return converted.toFixed(1);
+                      })() : 'N/A'} {getSymbol('fuelConsumption')}</p>
                       <p>MTOW: {(aircraft.maxTakeoffWeight || aircraft.weights?.mtow) ? Number(aircraft.maxTakeoffWeight || aircraft.weights?.mtow).toFixed(0) : 'N/A'} {getSymbol('weight')}</p>
                       {/* Affichage des informations MANEX si présent */}
                       {(aircraft.hasManex || aircraft.manex) && (
@@ -1301,6 +1319,24 @@ export const AircraftModule = memo(() => {
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '4px' }}>
+                    {/* Bouton Sélectionner */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('✅ AircraftModule - Select button clicked for:', aircraft.registration);
+                        setSelectedAircraft(aircraft);
+                      }}
+                      style={{
+                        ...window.buttonSectionStyle,
+                        padding: '8px',
+                        background: selectedAircraft?.id === aircraft.id ? '#dcfce7' : 'rgba(55, 65, 81, 0.35)',
+                        borderColor: selectedAircraft?.id === aircraft.id ? '#10b981' : 'rgba(0, 0, 0, 0.7)'
+                      }}
+                      title={selectedAircraft?.id === aircraft.id ? "Avion sélectionné" : "Sélectionner cet avion"}
+                    >
+                      <CheckCircle size={16} color={selectedAircraft?.id === aircraft.id ? '#10b981' : undefined} />
+                    </button>
+
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

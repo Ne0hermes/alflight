@@ -41,12 +41,11 @@ export const LoadInput = memo(({ label, value, onChange, max, highlight = false 
   const inputStyle = sx.combine(
     sx.components.input.base,
     exceedsMax && {
-      borderColor: sx.theme.colors.danger[500],
-      backgroundColor: sx.theme.colors.danger[50],
-      borderWidth: '2px'
+      border: `2px solid ${sx.theme.colors.danger[500]}`,
+      backgroundColor: sx.theme.colors.danger[50]
     },
     highlight && !exceedsMax && {
-      borderColor: sx.theme.colors.primary[500],
+      border: `1px solid ${sx.theme.colors.primary[500]}`,
       backgroundColor: sx.theme.colors.primary[50]
     }
   );

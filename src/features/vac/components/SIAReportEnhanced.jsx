@@ -783,6 +783,48 @@ export const SIAReportEnhanced = () => {
         </div>
       </div>
 
+      {/* Bouton de téléchargement VAC officielles */}
+      <div style={{
+        marginBottom: '16px',
+        display: 'flex',
+        justifyContent: 'center'
+      }}>
+        <a
+          href="https://www.sia.aviation-civile.gouv.fr/media/dvd/eAIP_30_OCT_2025/Atlas-VAC/FR/VACProduitPartieframeset.htm"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '14px 24px',
+            backgroundColor: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '15px',
+            fontWeight: '600',
+            textDecoration: 'none',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#2563eb';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.4)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#3b82f6';
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
+          }}
+        >
+          <FileText size={20} />
+          <span>📥 Télécharger les VAC officielles (SIA)</span>
+        </a>
+      </div>
+
       {/* En-tête avec onglets et contrôles */}
       <div style={styles.header}>
         <h1 style={styles.title}>

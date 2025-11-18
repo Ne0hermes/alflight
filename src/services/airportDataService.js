@@ -153,10 +153,10 @@ class AirportDataService {
         });
       }
     });
-    
+
     return results;
   }
-);}
+}
 
 // Export singleton
 export default new AirportDataService();

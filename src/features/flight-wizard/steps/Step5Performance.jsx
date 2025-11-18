@@ -30,8 +30,8 @@ export const Step5Performance = memo(({ flightPlan, onUpdate }) => {
 
   return (
     <div style={commonStyles.container}>
-      {/* Module de performance complet - 🔧 FIX: Passer flightPlan pour accès aux données calculées */}
-      <PerformanceModule wizardMode={true} config={{ flightPlan }} />
+      {/* Module de performance complet - 🔧 FIX: Passer flightPlan ET onUpdate pour sauvegarde automatique */}
+      <PerformanceModule wizardMode={true} config={{ flightPlan, onUpdate }} />
     </div>
   );
 });

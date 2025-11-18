@@ -140,6 +140,8 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
   const [aircraftData, setAircraftData] = useState(draft?.aircraftData || {
     id: existingAircraft?.id || existingAircraft?.aircraftId || undefined,
     aircraftId: existingAircraft?.aircraftId || existingAircraft?.id || undefined,
+    // Conserver une copie de l'avion original pour détecter les modifications
+    baseAircraft: existingAircraft ? JSON.parse(JSON.stringify(existingAircraft)) : undefined,
     registration: existingAircraft?.registration || '',
     model: existingAircraft?.model || '',
     fuelType: existingAircraft?.fuelType || 'AVGAS',
@@ -752,6 +754,26 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
       console.log('   ID de l\'avion:', dataToSave.id);
       console.log('   Registration:', dataToSave.registration);
       console.log('   isVariant:', dataToSave.isVariant);
+
+      // 🔧 FIX CRITIQUE: Forcer les métadonnées à STORAGE units
+      // Les données dans dataToSave sont DÉJÀ en STORAGE units (converties par Step1BasicInfo)
+      // Mais les métadonnées peuvent dire 'gal'/'gph' ce qui causera une double conversion
+      dataToSave._metadata = {
+        ...dataToSave._metadata,
+        units: {
+          fuel: 'ltr',
+          fuelConsumption: 'lph',
+          weight: 'kg',
+          speed: 'kt',
+          distance: 'nm',
+          altitude: 'ft',
+          verticalSpeed: 'fpm'
+        },
+        note: 'STORAGE units - all values in ltr/lph/kg/kt',
+        updatedAt: new Date().toISOString()
+      };
+      console.log('🔧 Métadonnées forcées à STORAGE units:', dataToSave._metadata.units);
+
       let savedAircraft = null;
 
       try {

@@ -63,6 +63,62 @@ const applyPerpendicularOffset = (coordinates, offsetMeters = 50) => {
   return offsetCoords;
 };
 
+// Composant pour forcer le recalcul de la taille de la carte
+// Utile quand la carte est dans une section collapsible
+const MapSizeInvalidator = () => {
+  const map = useMap();
+
+  useEffect(() => {
+    // Fonction pour invalider la taille
+    const invalidate = () => {
+      try {
+        map.invalidateSize({ pan: false });
+      } catch (e) {
+        console.warn('Map invalidateSize error:', e);
+      }
+    };
+
+    // Invalider immédiatement et de manière répétée
+    invalidate();
+    const timer1 = setTimeout(invalidate, 100);
+    const timer2 = setTimeout(invalidate, 300);
+    const timer3 = setTimeout(invalidate, 500);
+    const timer4 = setTimeout(invalidate, 1000);
+    const timer5 = setTimeout(invalidate, 2000);
+
+    // Invalider sur resize de la fenêtre
+    const handleResize = () => invalidate();
+    window.addEventListener('resize', handleResize);
+
+    // Observer pour détecter changements de visibilité
+    const container = map.getContainer();
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          invalidate();
+          setTimeout(invalidate, 100);
+        }
+      });
+    });
+
+    if (container) {
+      observer.observe(container);
+    }
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+      clearTimeout(timer4);
+      clearTimeout(timer5);
+      window.removeEventListener('resize', handleResize);
+      observer.disconnect();
+    };
+  }, [map]);
+
+  return null;
+};
+
 // Composant pour ajuster automatiquement la vue de la carte
 const MapBoundsUpdater = ({ waypoints }) => {
   const map = useMap();
@@ -394,19 +450,56 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
   }
 
   return (
-    <div style={{ height: '500px', width: '100%', borderRadius: '8px', overflow: 'hidden', borderWidth: '1px', borderStyle: 'solid', borderColor: '#ddd' }}>
-      <MapContainer
-        center={center}
-        zoom={zoom}
-        style={{ height: '100%', width: '100%' }}
-        scrollWheelZoom={true}
-        zoomControl={false}
+    <>
+      {/* Styles pour l'impression PDF */}
+      <style>{`
+        @media print {
+          .route-map-container {
+            height: 800px !important;
+            min-height: 800px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            page-break-inside: avoid !important;
+            overflow: visible !important;
+            display: block !important;
+          }
+          .route-map-container .leaflet-container {
+            height: 800px !important;
+            min-height: 800px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+        }
+
+        @media screen {
+          .route-map-container {
+            min-height: 500px !important;
+          }
+          .route-map-container .leaflet-container {
+            min-height: 500px !important;
+          }
+        }
+      `}</style>
+
+      <div
+        className="route-map-container"
+        style={{ height: '500px', width: '100%', borderRadius: '8px', overflow: 'hidden', borderWidth: '1px', borderStyle: 'solid', borderColor: '#ddd' }}
       >
+        <MapContainer
+          center={center}
+          zoom={zoom}
+          style={{ height: '100%', width: '100%' }}
+          scrollWheelZoom={true}
+          zoomControl={false}
+        >
         {/* Couche de tuiles OpenStreetMap */}
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+
+        {/* Forcer le recalcul de la taille (pour sections collapsibles) */}
+        <MapSizeInvalidator />
 
         {/* Ajuster automatiquement la vue */}
         <MapBoundsUpdater waypoints={validWaypoints} />
@@ -572,6 +665,7 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
         )}
       </MapContainer>
     </div>
+    </>
   );
 };
 

@@ -29,6 +29,7 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
   // Contextes pour la synchronisation et restauration
   const { setSelectedAircraft } = useAircraft();
   const aircraftList = aircraftSelectors.useAircraftList();
+  const selectedAircraft = aircraftSelectors.useSelectedAircraft(); // Hook pour récupérer l'avion sélectionné
   const { setWaypoints, waypoints, segmentAltitudes } = useNavigation();
   const { setFobFuel } = useFuel();
   const { setWeatherData } = useWeather();
@@ -475,19 +476,37 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
           console.log('✅ [Wizard] PDF téléchargé pour l\'utilisateur');
 
           // Préparer les métadonnées pour Supabase
+          // selectedAircraft vient du hook défini au niveau du composant (ligne 32)
+
+          // Extraire les waypoints intermédiaires depuis le flightPlan
+          // Les waypoints sont stockés dans flightPlan.route.waypoints (sans départ ni arrivée)
+          let waypointsNames = [];
+
+          if (flightPlan.route?.waypoints && Array.isArray(flightPlan.route.waypoints)) {
+            waypointsNames = flightPlan.route.waypoints
+              .map(wp => wp.name || wp.icao || wp.id)
+              .filter(Boolean);
+
+            console.log('🗺️ [Wizard] Waypoints intermédiaires extraits depuis flightPlan.route.waypoints:', waypointsNames);
+          } else {
+            console.log('⚠️ [Wizard] Aucun waypoint trouvé dans flightPlan.route.waypoints');
+          }
+
           const pdfMetadata = {
             flightPlanId: supabaseResult.data?.id || null,
-            pilotName: flightPlan.generalInfo.callsign || 'Pilote inconnu',
+            pilotName: flightPlan.generalInfo.pilotName || flightPlan.generalInfo.callsign || 'Pilote inconnu',
             flightDate: flightPlan.generalInfo.date || new Date().toISOString().split('T')[0],
             callsign: flightPlan.generalInfo.callsign,
             aircraftRegistration: flightPlan.aircraft.registration,
-            aircraftType: flightPlan.aircraft.type,
+            aircraftType: selectedAircraft?.type || flightPlan.aircraft.type || flightPlan.aircraft.model || 'Type inconnu',
             departureIcao: flightPlan.route.departure.icao,
             departureName: flightPlan.route.departure.name,
             arrivalIcao: flightPlan.route.arrival.icao,
             arrivalName: flightPlan.route.arrival.name,
             tags: [flightPlan.generalInfo.flightType, flightPlan.generalInfo.flightNature],
-            notes: flightPlan.notes || null
+            notes: flightPlan.notes || null,
+            // Ajouter les waypoints pour reconstituer le trajet complet
+            waypoints: waypointsNames
           };
 
           // Sauvegarder le PDF dans Supabase

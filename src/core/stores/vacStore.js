@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+import { vacPdfStorage } from '../../services/vacPdfStorage';
 
 // Créer le store simplifié pour l'import manuel uniquement
 const vacStore = create(
@@ -75,19 +76,30 @@ const vacStore = create(
         );
       }),
       
-      deleteChart: (icao) => set(state => {
+      deleteChart: async (icao) => {
         const upperIcao = icao.toUpperCase();
-        
-        // Si c'est une carte custom, la supprimer
-        if (state.charts[upperIcao]?.isCustom) {
-          delete state.charts[upperIcao];
-          
-          // Supprimer du localStorage aussi
-          const storedCharts = JSON.parse(localStorage.getItem('customVACCharts') || '{}');
-          delete storedCharts[upperIcao];
-          localStorage.setItem('customVACCharts', JSON.stringify(storedCharts));
+
+        // Supprimer le PDF de IndexedDB
+        try {
+          await vacPdfStorage.deletePDF(upperIcao);
+          console.log(`✅ PDF VAC ${upperIcao} supprimé de IndexedDB`);
+        } catch (error) {
+          console.error('⚠️ Erreur suppression PDF:', error);
         }
-      }),
+
+        // Supprimer du store
+        set(state => {
+          // Si c'est une carte custom, la supprimer
+          if (state.charts[upperIcao]?.isCustom) {
+            delete state.charts[upperIcao];
+
+            // Supprimer du localStorage aussi
+            const storedCharts = JSON.parse(localStorage.getItem('customVACCharts') || '{}');
+            delete storedCharts[upperIcao];
+            localStorage.setItem('customVACCharts', JSON.stringify(storedCharts));
+          }
+        });
+      },
       
       selectChart: (icao) => set(state => {
         state.selectedChart = icao;
@@ -96,7 +108,30 @@ const vacStore = create(
       updateExtractedData: (icao, data) => set(state => {
         const upperIcao = icao.toUpperCase();
         if (state.charts[upperIcao]) {
+          // Mettre à jour les données extraites si la carte existe
           state.charts[upperIcao].extractedData = data;
+          // Mettre à jour aussi circuitAltitude au niveau racine pour compatibilité
+          if (data.circuitAltitude !== undefined) {
+            state.charts[upperIcao].circuitAltitude = data.circuitAltitude;
+          }
+          if (data.integrationAltitude !== undefined) {
+            state.charts[upperIcao].integrationAltitude = data.integrationAltitude;
+          }
+        } else {
+          // CRÉER la carte si elle n'existe pas (fallback)
+          console.warn(`⚠️ updateExtractedData: Carte ${upperIcao} n'existe pas, création automatique`);
+          state.charts[upperIcao] = {
+            icao: upperIcao,
+            name: data.airportName || upperIcao,
+            isCustom: true,
+            isDownloaded: true,
+            downloadDate: new Date().toISOString(),
+            extractedData: data,
+            circuitAltitude: data.circuitAltitude,
+            integrationAltitude: data.integrationAltitude,
+            coordinates: data.coordinates || { lat: 0, lon: 0 },
+            customVfrPoints: []
+          };
         }
       }),
       

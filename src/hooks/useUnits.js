@@ -59,10 +59,31 @@ export const useUnits = () => {
     
     const from = fromUnit || storageUnits[category];
     const to = options.toUnit || units[category];
-    
-    if (!from || !to || from === to) return value;
-    
-    return convertValue(value, category, from, to, options);
+
+    const shouldSkip = !from || !to || from === to;
+
+    console.log('🔧 [useUnits.convert]', {
+      value,
+      category,
+      from,
+      to,
+      fromType: typeof from,
+      toType: typeof to,
+      fromTrimmed: String(from).trim(),
+      toTrimmed: String(to).trim(),
+      areEqual: from === to,
+      shouldSkip,
+      unitsState: units
+    });
+
+    if (shouldSkip) {
+      console.warn('⚠️ [useUnits.convert] SKIPPING conversion:', { from, to, shouldSkip });
+      return value;
+    }
+
+    const converted = convertValue(value, category, from, to);
+    console.log('✅ [useUnits.convert] Result:', converted);
+    return converted;
   };
   
   /**
@@ -103,9 +124,9 @@ export const useUnits = () => {
     
     const from = units[category];
     const to = storageUnits[category];
-    
+
     if (!from || !to || from === to) return value;
-    
+
     return convertValue(value, category, from, to);
   };
   

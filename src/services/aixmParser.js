@@ -3,6 +3,16 @@
  * depuis les fichiers XML AIXM 4.5 et SIA
  */
 
+// Fonction pour obtenir le store VAC (import dynamique pour éviter les imports circulaires)
+let getVACStore = null;
+const ensureVACStore = async () => {
+  if (!getVACStore) {
+    const module = await import('../core/stores/vacStore.js');
+    getVACStore = () => module.useVACStore.getState();
+  }
+  return getVACStore();
+};
+
 class AIXMParser {
   constructor() {
     console.log('🚨🚨🚨 AIXMParser CONSTRUCTOR - VERSION 2025-11-27 (Cycle AIRAC Novembre)');
@@ -95,8 +105,10 @@ class AIXMParser {
                 
         // Marquer comme chargé
         this.isLoading = false;
-        
-        return this.combineData();
+
+        // Combiner les données et enrichir avec les données VAC
+        const combinedData = this.combineData();
+        return await this.enrichWithVACData(combinedData);
       })();
       
       return await this.loadPromise;
@@ -953,12 +965,59 @@ class AIXMParser {
           });
         }
       }
-      
+
       aerodrome.runways = processedRunways;
       result.push(aerodrome);
     }
-    
+
     return result;
+  }
+
+  /**
+   * Enrichit les données des aérodromes avec les données VAC importées
+   * (circuitAltitude, integrationAltitude, etc.)
+   */
+  async enrichWithVACData(aerodromes) {
+    try {
+      const vacStore = await ensureVACStore();
+      const vacCharts = vacStore.charts || {};
+
+      for (const aerodrome of aerodromes) {
+        const icao = aerodrome.icao?.toUpperCase();
+        if (!icao) continue;
+
+        const vacChart = vacCharts[icao];
+        if (vacChart) {
+          // Les données peuvent être à la racine OU dans extractedData
+          const vacData = vacChart.extractedData || vacChart;
+
+          // Enrichir avec les données VAC si disponibles
+          if (vacData.circuitAltitude !== undefined && vacData.circuitAltitude !== null) {
+            aerodrome.circuitAltitude = vacData.circuitAltitude;
+            console.log(`✅ ${icao}: circuitAltitude enrichi depuis VAC: ${vacData.circuitAltitude} ft`);
+          }
+
+          if (vacData.integrationAltitude !== undefined && vacData.integrationAltitude !== null) {
+            aerodrome.integrationAltitude = vacData.integrationAltitude;
+            console.log(`✅ ${icao}: integrationAltitude enrichi depuis VAC: ${vacData.integrationAltitude} ft`);
+          }
+
+          if (vacData.circuitRemarks) {
+            aerodrome.circuitRemarks = vacData.circuitRemarks;
+          }
+
+          // Indiquer que les données VAC sont disponibles
+          aerodrome.hasVACData = true;
+          aerodrome.vacImportDate = vacChart.uploadDate || vacChart.importDate;
+        }
+      }
+
+      return aerodromes;
+    } catch (error) {
+      console.error('⚠️ Erreur enrichissement VAC:', error);
+      // Retourner les données sans enrichissement en cas d'erreur
+      return aerodromes;
+    }
   }
 
   /**

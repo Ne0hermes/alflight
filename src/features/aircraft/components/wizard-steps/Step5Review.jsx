@@ -117,6 +117,16 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
       'photo': 'Photo de l\'avion',
       'manex': 'Manuel d\'exploitation (MANEX)',
       'hasManex': 'Présence du MANEX',
+      // Sous-objets weights
+      'weights.emptyWeight': `Masse à vide (${getUnitSymbol(units.weight)})`,
+      'weights.mtow': `Masse max au décollage (${getUnitSymbol(units.weight)})`,
+      'weights.mlw': `Masse max à l'atterrissage (${getUnitSymbol(units.weight)})`,
+      'weights.mzfw': `Masse max sans carburant (${getUnitSymbol(units.weight)})`,
+      // Sous-objets arms
+      'arms.empty': `Bras de levier à vide (${getUnitSymbol(units.armLength)})`,
+      'arms.fuelMain': `Bras carburant (${getUnitSymbol(units.armLength)})`,
+      'arms.frontSeats': `Bras sièges avant (${getUnitSymbol(units.armLength)})`,
+      'arms.rearSeats': `Bras sièges arrière (${getUnitSymbol(units.armLength)})`,
       // Sous-objets speeds
       'speeds.vr': 'VR - Vitesse de rotation (kt)',
       'speeds.v2': 'V2 - Vitesse de sécurité au décollage (kt)',
@@ -147,7 +157,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
     const fieldsToIgnore = [
       'id', 'baseAircraft', 'isImportedFromCommunity', 'originalCommunityData',
       'communityPresetId', 'importedFromCommunity',
-      'createdAt', 'updatedAt', 'version',
+      'createdAt', 'updatedAt', 'version', 'lastModified',
       // Métadonnées de la communauté
       'type', 'addedBy', 'dateAdded', 'downloads', 'verified', 'adminVerified',
       'hasFlightManual', 'manualVersion', 'description', 'aircraftId',
@@ -155,6 +165,14 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
       // Données internes
       'baseFactor', 'wakeTurbulenceCategory', 'baggageCompartments',
       'compatibleRunwaySurfaces', 'cruiseSpeedKt',
+      // Métadonnées et flags internes
+      '_metadata', 'hasPhoto', 'hasManex', 'manexAvailableInSupabase', 'weightBalance',
+      'maxBaggageWeight', 'maxAuxiliaryWeight', 'maxTakeoffWeight', 'minTakeoffWeight',
+      // Champs redondants ou calculés
+      'maxPayload', 'maxBaggageFwd', 'maxBaggageAft',
+      // Champs de premier niveau (anciens formats) - doublons avec sous-objets
+      'emptyWeight', 'mtow', 'mlw', 'mzfw',
+      'vso', 'vs1', 'vne', 'vno', 'vfe', 'vr', 'vx', 'vy', 'va', 'vlo', 'vle',
       // Les abaques sont traités séparément dans le tableau comparatif
       'performanceModels',
       // MANEX et flightManual - ignorer car structure peut varier sans modification réelle
@@ -169,8 +187,8 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
       return val;
     };
 
-    // Formater la valeur pour affichage
-    const formatValue = (value) => {
+    // Formater la valeur pour affichage avec conversion d'unités
+    const formatValue = (value, fieldPath) => {
       if (value === null || value === undefined || value === '') return '-';
       if (Array.isArray(value)) return value.join(', ');
       if (typeof value === 'object') {
@@ -180,6 +198,27 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
         if (value.fileName || value.fileUrl || value.uploadedAt) return 'MANEX présent';
         return JSON.stringify(value);
       }
+
+      // 🔧 FIX: Convertir les champs de carburant depuis l'unité de stockage (ltr/lph)
+      // vers l'unité préférée de l'utilisateur (gal/gph)
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue)) {
+        // Capacité carburant : stockée en litres
+        if (fieldPath === 'fuelCapacity') {
+          const convertedValue = units.fuel !== 'ltr'
+            ? numValue / 3.78541  // ltr → gal
+            : numValue;
+          return convertedValue.toFixed(1);
+        }
+        // Consommation carburant : stockée en L/h
+        if (fieldPath === 'fuelConsumption') {
+          const convertedValue = units.fuelConsumption !== 'lph'
+            ? numValue / 3.78541  // lph → gal/h
+            : numValue;
+          return convertedValue.toFixed(1);
+        }
+      }
+
       return String(value);
     };
 
@@ -228,8 +267,8 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
             const label = fieldLabels[fullPath] || fieldLabels[key] || fullPath;
             diffs.push({
               field: label,
-              original: formatValue(baseValue),
-              modified: formatValue(currentValue)
+              original: formatValue(baseValue, fullPath),
+              modified: formatValue(currentValue, fullPath)
             });
 
             const changeType = isAddition ? '➕ Ajout' : isDeletion ? '➖ Suppression' : '✏️ Modification';
@@ -276,8 +315,8 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           const label = fieldLabels[fieldName] || fieldName;
           diffs.push({
             field: label,
-            original: formatValue(baseValue),
-            modified: formatValue(currentValue)
+            original: formatValue(baseValue, fieldName),
+            modified: formatValue(currentValue, fieldName)
           });
 
           const changeType = isAddition ? '➕ Ajout' : isDeletion ? '➖ Suppression' : '✏️ Modification';
@@ -794,7 +833,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
       {renderSection(
         'Informations générales',
         <FlightIcon color="primary" />,
-        2,
+        1,
         [
           { label: 'Immatriculation', value: data.registration || '-' },
           { label: 'Modèle', value: data.model || '-' },
@@ -862,7 +901,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
         return renderSection(
           'Masse et centrage',
           <ScaleIcon color="primary" />,
-          4,
+          2,
           weightBalanceFields,
           hasCGData ? (
             <Box sx={{
@@ -1213,12 +1252,12 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
             size="small"
             variant="outlined"
             startIcon={<EditIcon />}
-            onClick={() => setCurrentStep(6)}
+            onClick={() => setCurrentStep(5)}
           >
             Modifier
           </Button>
         </Box>
-        
+
         <Box sx={{ p: 3 }}>
           <Grid container spacing={3}>
             {/* Règles de vol */}
@@ -1339,7 +1378,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
               size="small"
               variant="outlined"
               startIcon={<EditIcon />}
-              onClick={() => setCurrentStep(7)}
+              onClick={() => setCurrentStep(6)}
             >
               Modifier
             </Button>

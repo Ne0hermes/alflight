@@ -151,6 +151,15 @@ export function convertValue(value, fromUnit, toUnit, category) {
   const conversionKey = `${fromUnit}To${toUnit.charAt(0).toUpperCase() + toUnit.slice(1)}`;
   const reverseKey = `${toUnit}To${fromUnit.charAt(0).toUpperCase() + fromUnit.slice(1)}`;
 
+  console.log('🔍 [convertValue]', {
+    value: numValue,
+    fromUnit,
+    toUnit,
+    category,
+    conversionKey,
+    reverseKey
+  });
+
   let conversionFunc = null;
   let reverseConversion = false;
 
@@ -232,10 +241,22 @@ export function convertValue(value, fromUnit, toUnit, category) {
       return numValue;
   }
 
+  console.log('🔍 [convertValue] Found function:', {
+    hasFunc: !!conversionFunc,
+    reverseConversion
+  });
+
   if (conversionFunc) {
     const result = conversionFunc(numValue);
+    console.log('✅ [convertValue] Conversion result:', {
+      input: numValue,
+      output: result,
+      reverseConversion
+    });
     return reverseConversion ? (1 / result) * numValue * numValue : result;
   }
+
+  console.warn('⚠️ [convertValue] No conversion function found, returning original value');
   return numValue;
 }
 

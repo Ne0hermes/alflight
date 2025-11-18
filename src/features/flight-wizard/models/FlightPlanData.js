@@ -104,6 +104,12 @@ export class FlightPlanData {
       altitudeToDescent: 0,      // Altitude à descendre (ft)
     };
 
+    // Performances (décollage/atterrissage)
+    this.performance = {
+      departure: null,           // Performances de décollage
+      arrival: null,             // Performances d'atterrissage
+    };
+
     // Métadonnées
     this.metadata = {
       createdAt: new Date(),
@@ -111,6 +117,9 @@ export class FlightPlanData {
       version: '1.0',
       status: 'draft',      // draft, completed, filed
     };
+
+    // Notes du pilote
+    this.notes = '';        // Notes manuscrites du pilote
   }
 
   /**
@@ -414,7 +423,9 @@ export class FlightPlanData {
       fuel: cleanObject(this.fuel),
       weightBalance: cleanObject(this.weightBalance),
       todParameters: cleanObject(this.todParameters),
+      performance: cleanObject(this.performance),
       metadata: cleanObject(this.metadata),
+      notes: this.notes || '',
     };
   }
 
@@ -448,6 +459,7 @@ export class FlightPlanData {
     if (data.fuel) flightPlan.fuel = { ...data.fuel };
     if (data.weightBalance) flightPlan.weightBalance = { ...data.weightBalance };
     if (data.todParameters) flightPlan.todParameters = { ...data.todParameters };
+    if (data.performance) flightPlan.performance = { ...data.performance };
 
     if (data.metadata) {
       flightPlan.metadata = { ...data.metadata };
@@ -459,6 +471,8 @@ export class FlightPlanData {
         flightPlan.metadata.updatedAt = new Date(data.metadata.updatedAt);
       }
     }
+
+    if (data.notes) flightPlan.notes = data.notes;
 
     return flightPlan;
   }

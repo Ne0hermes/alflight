@@ -233,7 +233,9 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
     : 'Non renseigné';
 
   // Récupérer les données de carburant depuis le store
-  const { fuelData, fobFuel, calculateTotal } = useFuelStore();
+  const fuelData = useFuelStore(state => state.fuelData);
+  const fobFuel = useFuelStore(state => state.fobFuel);
+  const calculateTotal = useFuelStore(state => state.calculateTotal);
 
   // Récupérer les données météo depuis le store
   const weatherData = useWeatherStore(state => state.weatherData || {});
@@ -250,6 +252,15 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
     // Déterminer le temps de réserve selon le type de vol
     const reserveTime = flightPlan.generalInfo.flightType === 'VFR' ? '30min' : '45min';
+
+    console.log('🔍 [Step7] Calcul carburant:', {
+      totalRequired,
+      totalConfirmed,
+      'fobFuel.ltr': fobFuel.ltr,
+      'fobFuel.gal': fobFuel.gal,
+      difference: totalConfirmed - totalRequired,
+      isSufficient: totalConfirmed >= totalRequired
+    });
 
     return {
       required: totalRequired,
@@ -713,43 +724,73 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                   Normal Procedure
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
-                  {/* Distance de roulage */}
-                  <div>
-                    <div style={{ fontSize: '10px', color: theme.colors.textSecondary, marginBottom: '4px' }}>
-                      Distance de roulage (Ground Roll)
-                    </div>
-                    <div style={{ fontSize: '16px', fontWeight: '700', color: theme.colors.textPrimary }}>
-                      {flightPlan.performance.departure.takeoff.groundRoll
-                        ? `${Math.round(flightPlan.performance.departure.takeoff.groundRoll)} m`
-                        : '—'}
-                    </div>
+                {/* Affichage format abaques */}
+                {flightPlan.performance.departure.takeoff.abaques ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {flightPlan.performance.departure.takeoff.abaques.map((abaque, idx) => (
+                      <div key={idx} style={{
+                        padding: '12px',
+                        backgroundColor: '#f0f9ff',
+                        borderRadius: '6px',
+                        border: '1px solid #bae6fd'
+                      }}>
+                        <div style={{ fontSize: '12px', fontWeight: '600', color: '#0369a1', marginBottom: '6px' }}>
+                          {abaque.name}
+                        </div>
+                        <div style={{ fontSize: '18px', fontWeight: '700', color: '#075985' }}>
+                          {Math.round(abaque.distance)} {abaque.unit || 'm'}
+                        </div>
+                      </div>
+                    ))}
+                    {flightPlan.performance.departure.takeoff.conditions && (
+                      <div style={{ fontSize: '10px', color: '#64748b', marginTop: '8px', fontStyle: 'italic' }}>
+                        Conditions: {flightPlan.performance.departure.takeoff.conditions.temperature?.toFixed(1)}°C,
+                        {' '}{flightPlan.performance.departure.takeoff.conditions.altitude} ft,
+                        {' '}{flightPlan.performance.departure.takeoff.conditions.mass?.toFixed(0)} kg,
+                        {' '}{flightPlan.performance.departure.takeoff.conditions.wind?.toFixed(0)} kt
+                      </div>
+                    )}
                   </div>
+                ) : (
+                  /* Affichage format classique */
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                    {/* Distance de roulage */}
+                    <div>
+                      <div style={{ fontSize: '10px', color: theme.colors.textSecondary, marginBottom: '4px' }}>
+                        Distance de roulage (Ground Roll)
+                      </div>
+                      <div style={{ fontSize: '16px', fontWeight: '700', color: theme.colors.textPrimary }}>
+                        {flightPlan.performance.departure.takeoff.groundRoll
+                          ? `${Math.round(flightPlan.performance.departure.takeoff.groundRoll)} m`
+                          : '—'}
+                      </div>
+                    </div>
 
-                  {/* Distance passage 50ft */}
-                  <div>
-                    <div style={{ fontSize: '10px', color: theme.colors.textSecondary, marginBottom: '4px' }}>
-                      Distance passage 50ft
+                    {/* Distance passage 50ft */}
+                    <div>
+                      <div style={{ fontSize: '10px', color: theme.colors.textSecondary, marginBottom: '4px' }}>
+                        Distance passage 50ft
+                      </div>
+                      <div style={{ fontSize: '15px', fontWeight: '600', color: theme.colors.textPrimary }}>
+                        {flightPlan.performance.departure.takeoff.toda50ft
+                          ? `${Math.round(flightPlan.performance.departure.takeoff.toda50ft)} m`
+                          : '—'}
+                      </div>
                     </div>
-                    <div style={{ fontSize: '15px', fontWeight: '600', color: theme.colors.textPrimary }}>
-                      {flightPlan.performance.departure.takeoff.toda50ft
-                        ? `${Math.round(flightPlan.performance.departure.takeoff.toda50ft)} m`
-                        : '—'}
-                    </div>
-                  </div>
 
-                  {/* Distance passage 15m */}
-                  <div>
-                    <div style={{ fontSize: '10px', color: theme.colors.textSecondary, marginBottom: '4px' }}>
-                      Distance passage 15m
-                    </div>
-                    <div style={{ fontSize: '15px', fontWeight: '600', color: theme.colors.textPrimary }}>
-                      {flightPlan.performance.departure.takeoff.toda15m
-                        ? `${Math.round(flightPlan.performance.departure.takeoff.toda15m)} m`
-                        : '—'}
+                    {/* Distance passage 15m */}
+                    <div>
+                      <div style={{ fontSize: '10px', color: theme.colors.textSecondary, marginBottom: '4px' }}>
+                        Distance passage 15m
+                      </div>
+                      <div style={{ fontSize: '15px', fontWeight: '600', color: theme.colors.textPrimary }}>
+                        {flightPlan.performance.departure.takeoff.toda15m
+                          ? `${Math.round(flightPlan.performance.departure.takeoff.toda15m)} m`
+                          : '—'}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           )}
@@ -790,43 +831,86 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                   Flaps LDG
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
-                  {/* Distance de roulage */}
+                {/* Affichage format abaques */}
+                {flightPlan.performance.arrival.landing.abaques && flightPlan.performance.arrival.landing.abaques.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {flightPlan.performance.arrival.landing.abaques.map((abaque, idx) => (
+                      <div key={idx} style={{
+                        padding: '12px',
+                        backgroundColor: '#f0fdf4',
+                        borderRadius: '6px',
+                        border: '1px solid #bbf7d0'
+                      }}>
+                        <div style={{ fontSize: '12px', fontWeight: '600', color: '#047857', marginBottom: '6px' }}>
+                          {abaque.name}
+                        </div>
+                        <div style={{ fontSize: '18px', fontWeight: '700', color: '#065f46' }}>
+                          {Math.round(abaque.distance)} {abaque.unit || 'm'}
+                        </div>
+                      </div>
+                    ))}
+                    {flightPlan.performance.arrival.landing.conditions && (
+                      <div style={{ fontSize: '10px', color: '#64748b', marginTop: '8px', fontStyle: 'italic' }}>
+                        Conditions: {flightPlan.performance.arrival.landing.conditions.temperature?.toFixed(1)}°C,
+                        {' '}{flightPlan.performance.arrival.landing.conditions.altitude} ft,
+                        {' '}{flightPlan.performance.arrival.landing.conditions.mass?.toFixed(0)} kg,
+                        {' '}{flightPlan.performance.arrival.landing.conditions.wind?.toFixed(0)} kt
+                      </div>
+                    )}
+                  </div>
+                ) : flightPlan.performance.arrival.landing.conditions ? (
+                  /* Affichage conditions seules si pas d'abaques */
                   <div>
-                    <div style={{ fontSize: '10px', color: theme.colors.textSecondary, marginBottom: '4px' }}>
-                      Distance de roulage (Ground Roll)
+                    <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '12px', fontStyle: 'italic' }}>
+                      Aucun abaque d'atterrissage disponible pour cet avion
                     </div>
-                    <div style={{ fontSize: '16px', fontWeight: '700', color: theme.colors.textPrimary }}>
-                      {flightPlan.performance.arrival.landing.groundRoll
-                        ? `${Math.round(flightPlan.performance.arrival.landing.groundRoll)} m`
-                        : '—'}
+                    <div style={{ fontSize: '10px', color: '#64748b', fontStyle: 'italic' }}>
+                      Conditions: {flightPlan.performance.arrival.landing.conditions.temperature?.toFixed(1)}°C,
+                      {' '}{flightPlan.performance.arrival.landing.conditions.altitude} ft,
+                      {' '}{flightPlan.performance.arrival.landing.conditions.mass?.toFixed(0)} kg,
+                      {' '}{flightPlan.performance.arrival.landing.conditions.wind?.toFixed(0)} kt
                     </div>
                   </div>
+                ) : (
+                  /* Affichage format classique */
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                    {/* Distance de roulage */}
+                    <div>
+                      <div style={{ fontSize: '10px', color: theme.colors.textSecondary, marginBottom: '4px' }}>
+                        Distance de roulage (Ground Roll)
+                      </div>
+                      <div style={{ fontSize: '16px', fontWeight: '700', color: theme.colors.textPrimary }}>
+                        {flightPlan.performance.arrival.landing.groundRoll
+                          ? `${Math.round(flightPlan.performance.arrival.landing.groundRoll)} m`
+                          : '—'}
+                      </div>
+                    </div>
 
-                  {/* Distance passage 50ft */}
-                  <div>
-                    <div style={{ fontSize: '10px', color: theme.colors.textSecondary, marginBottom: '4px' }}>
-                      Distance passage 50ft
+                    {/* Distance passage 50ft */}
+                    <div>
+                      <div style={{ fontSize: '10px', color: theme.colors.textSecondary, marginBottom: '4px' }}>
+                        Distance passage 50ft
+                      </div>
+                      <div style={{ fontSize: '15px', fontWeight: '600', color: theme.colors.textPrimary }}>
+                        {flightPlan.performance.arrival.landing.lda50ft
+                          ? `${Math.round(flightPlan.performance.arrival.landing.lda50ft)} m`
+                          : '—'}
+                      </div>
                     </div>
-                    <div style={{ fontSize: '15px', fontWeight: '600', color: theme.colors.textPrimary }}>
-                      {flightPlan.performance.arrival.landing.lda50ft
-                        ? `${Math.round(flightPlan.performance.arrival.landing.lda50ft)} m`
-                        : '—'}
-                    </div>
-                  </div>
 
-                  {/* Distance passage 15m */}
-                  <div>
-                    <div style={{ fontSize: '10px', color: theme.colors.textSecondary, marginBottom: '4px' }}>
-                      Distance passage 15m
-                    </div>
-                    <div style={{ fontSize: '15px', fontWeight: '600', color: theme.colors.textPrimary }}>
-                      {flightPlan.performance.arrival.landing.lda15m
-                        ? `${Math.round(flightPlan.performance.arrival.landing.lda15m)} m`
-                        : '—'}
+                    {/* Distance passage 15m */}
+                    <div>
+                      <div style={{ fontSize: '10px', color: theme.colors.textSecondary, marginBottom: '4px' }}>
+                        Distance passage 15m
+                      </div>
+                      <div style={{ fontSize: '15px', fontWeight: '600', color: theme.colors.textPrimary }}>
+                        {flightPlan.performance.arrival.landing.lda15m
+                          ? `${Math.round(flightPlan.performance.arrival.landing.lda15m)} m`
+                          : '—'}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           )}
@@ -1494,6 +1578,39 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                                       <span style={{ color: '#6b7280' }}>LDA:</span>
                                       <span style={{ fontWeight: '600' }}>{lda1}m</span>
                                     </div>
+
+                                    {/* Distances de performance calculées */}
+                                    {(() => {
+                                      // idx === 0 = DÉPART (décollage), idx === 1 = ARRIVÉE (atterrissage)
+                                      const isDeparture = idx === 0;
+                                      const perfData = isDeparture
+                                        ? flightPlan?.performance?.departure?.takeoff
+                                        : flightPlan?.performance?.arrival?.landing;
+
+                                      if (!perfData || !perfData.abaques || perfData.abaques.length === 0) {
+                                        return null;
+                                      }
+
+                                      return (
+                                        <div style={{
+                                          marginTop: '8px',
+                                          paddingTop: '8px',
+                                          borderTop: '1px solid #e5e7eb'
+                                        }}>
+                                          <div style={{ fontSize: '10px', fontWeight: '700', color: '#10b981', marginBottom: '6px' }}>
+                                            📊 {isDeparture ? 'Décollage' : 'Atterrissage'}
+                                          </div>
+                                          {perfData.abaques.map((abaque, aIdx) => (
+                                            <div key={aIdx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                              <span style={{ color: '#6b7280', fontSize: '10px' }}>{abaque.name}:</span>
+                                              <span style={{ fontWeight: '600', color: '#10b981', fontSize: '10px' }}>
+                                                {Math.round(abaque.distance)}m
+                                              </span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      );
+                                    })()}
                                   </div>
                                 </div>
 
@@ -1529,6 +1646,39 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                                         <span style={{ color: '#6b7280' }}>LDA:</span>
                                         <span style={{ fontWeight: '600' }}>{lda2}m</span>
                                       </div>
+
+                                      {/* Distances de performance calculées */}
+                                      {(() => {
+                                        // idx === 0 = DÉPART (décollage), idx === 1 = ARRIVÉE (atterrissage)
+                                        const isDeparture = idx === 0;
+                                        const perfData = isDeparture
+                                          ? flightPlan?.performance?.departure?.takeoff
+                                          : flightPlan?.performance?.arrival?.landing;
+
+                                        if (!perfData || !perfData.abaques || perfData.abaques.length === 0) {
+                                          return null;
+                                        }
+
+                                        return (
+                                          <div style={{
+                                            marginTop: '8px',
+                                            paddingTop: '8px',
+                                            borderTop: '1px solid #e5e7eb'
+                                          }}>
+                                            <div style={{ fontSize: '10px', fontWeight: '700', color: '#10b981', marginBottom: '6px' }}>
+                                              📊 {isDeparture ? 'Décollage' : 'Atterrissage'}
+                                            </div>
+                                            {perfData.abaques.map((abaque, aIdx) => (
+                                              <div key={aIdx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                                <span style={{ color: '#6b7280', fontSize: '10px' }}>{abaque.name}:</span>
+                                                <span style={{ fontWeight: '600', color: '#10b981', fontSize: '10px' }}>
+                                                  {Math.round(abaque.distance)}m
+                                                </span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        );
+                                      })()}
                                     </div>
                                   </div>
                                 )}

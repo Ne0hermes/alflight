@@ -120,22 +120,37 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
 
           if (airportData && airportData.runways && airportData.runways.length > 0) {
             console.log('✅ [RunwaySuggestionEnhanced] Utilisation données aeroDataProvider');
+            console.log('🔍 [RunwaySuggestionEnhanced] CONTENU DÉTAILLÉ des pistes aeroDataProvider:', {
+              icao,
+              runways: JSON.parse(JSON.stringify(airportData.runways))
+            });
             setAirport(airportData);
             setRunways(airportData.runways);
           } else {
             console.log('⚠️ [RunwaySuggestionEnhanced] Pas de données aeroDataProvider - Essai fallback');
+            console.log('🔍 [RunwaySuggestionEnhanced] ICAO passé à fallback:', {
+              icao,
+              icaoType: typeof icao,
+              icaoUpperCase: icao?.toUpperCase(),
+              icaoLength: icao?.length
+            });
 
             // En dernier recours, utiliser les données de secours
             const fallbackRunways = getFallbackRunways(icao);
             const fallbackAirport = getFallbackAirport(icao);
 
-            console.log('🔍 [RunwaySuggestionEnhanced] Fallback résultat:', {
+            console.log('🔍 [RunwaySuggestionEnhanced] Fallback résultat DÉTAILLÉ:', {
+              icao,
               hasFallbackRunways: !!fallbackRunways,
-              hasFallbackAirport: !!fallbackAirport
+              fallbackRunways: fallbackRunways,
+              fallbackRunwaysLength: fallbackRunways?.length,
+              hasFallbackAirport: !!fallbackAirport,
+              fallbackAirport: fallbackAirport
             });
 
             if (fallbackRunways) {
               console.log('✅ [RunwaySuggestionEnhanced] Utilisation données fallback');
+              console.log('✅ [RunwaySuggestionEnhanced] Pistes fallback:', fallbackRunways);
               setRunways(fallbackRunways);
               setAirport(fallbackAirport || { icao, name: icao, dataSource: 'fallback' });
             } else if (airportData) {
@@ -164,7 +179,16 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
     ? { direction: 360, speed: 1 }  // Vent fictif 1kt Nord pour afficher le tableau
     : wind;
 
+  console.log('🔍 [RunwaySuggestionEnhanced] État du rendu:', {
+    icao,
+    runwaysLength: runways.length,
+    runways: runways,
+    loading,
+    airport
+  });
+
   if (!runways.length && !loading) {
+    console.log('❌ [RunwaySuggestionEnhanced] Affichage "Pas de données" pour', icao);
     return (
       <div style={sx.combine(sx.spacing.mt(3), sx.spacing.pt(3), { borderTop: '1px solid #e5e7eb' })}>
         <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
@@ -178,7 +202,13 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
   // Analyser chaque piste par rapport au vent
   const analyzedRunways = [];
   const processedRunways = new Set(); // Pour éviter les doublons
-  
+
+  console.log('🔍 [RunwaySuggestionEnhanced] Analyse des pistes - INPUT:', {
+    icao,
+    runwaysCount: runways.length,
+    runways: JSON.parse(JSON.stringify(runways))
+  });
+
   runways.forEach(runway => {
     // Traiter le format avec identifier "05/23"
     if (runway.identifier && runway.identifier.includes('/')) {
@@ -293,6 +323,18 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
     }
   });
 
+  console.log('🔍 [RunwaySuggestionEnhanced] Analyse des pistes - OUTPUT:', {
+    icao,
+    analyzedRunwaysCount: analyzedRunways.length,
+    analyzedRunways: analyzedRunways.map(r => ({
+      ident: r.ident,
+      heading: r.heading,
+      hasIdentifier: !!r.runway?.identifier,
+      hasLeIdent: !!r.runway?.le_ident,
+      hasHeIdent: !!r.runway?.he_ident
+    }))
+  });
+
   // 🔧 FIX CRITIQUE: Filtrer les pistes incompatibles avec l'avion AVANT de recommander
   const compatibleRunways = analyzedRunways.filter(analysis => {
     // Si pas d'avion ou pas de restrictions de surface, tout est acceptable
@@ -302,9 +344,33 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
 
     // Vérifier la compatibilité de surface
     const surfaceType = analysis.runway?.surface?.type || analysis.runway?.surface || 'UNKNOWN';
-    const isCompatible = aircraft.compatibleRunwaySurfaces.includes(surfaceType);
+
+    // Vérification exacte
+    let isCompatible = aircraft.compatibleRunwaySurfaces.includes(surfaceType);
+
+    // Si pas compatible, vérifier les surfaces combinées (ex: "CONC+ASPH" contient "ASPH")
+    if (!isCompatible && typeof surfaceType === 'string' && surfaceType.includes('+')) {
+      isCompatible = aircraft.compatibleRunwaySurfaces.some(compatibleSurface =>
+        surfaceType.includes(compatibleSurface)
+      );
+    }
+
+    console.log('🔍 [RunwaySuggestionEnhanced] Filtre de compatibilité:', {
+      icao,
+      runway: analysis.ident,
+      surfaceType,
+      aircraftCompatibleSurfaces: aircraft.compatibleRunwaySurfaces,
+      isCompatible
+    });
 
     return isCompatible;
+  });
+
+  console.log('🔍 [RunwaySuggestionEnhanced] Après filtre compatibilité:', {
+    icao,
+    analyzedCount: analyzedRunways.length,
+    compatibleCount: compatibleRunways.length,
+    filtered: analyzedRunways.length - compatibleRunways.length
   });
 
   // Trier par score (meilleur en premier)
