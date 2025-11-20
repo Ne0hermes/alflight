@@ -41,7 +41,7 @@ export const TabNavigation = memo(({ tabs, activeTab, onTabChange }) => {
 const styles = {
   tab: {
     padding: '12px 20px',
-    backgroundColor: '#f3f4f6',
+    backgroundColor: 'transparent',
     border: 'none',
     borderRadius: '8px',
     fontSize: '14px',
@@ -51,11 +51,12 @@ const styles = {
     alignItems: 'center',
     gap: '8px',
     transition: 'all 0.2s',
-    color: '#6b7280'
+    color: '#D1D5DB'
   },
   activeTab: {
-    backgroundColor: '#3b82f6',
-    color: 'white'
+    backgroundColor: 'rgba(147, 22, 60, 0.2)',
+    color: '#FFFFFF',
+    fontWeight: '700'
   }
 };
 

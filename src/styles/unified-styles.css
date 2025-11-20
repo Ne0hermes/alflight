@@ -237,6 +237,59 @@ div[class*="Card"] {
   padding: var(--spacing-lg);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   color: var(--color-text) !important;
+  /* Prévention des débordements */
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Tous les éléments dans les cards doivent respecter la largeur */
+.card *,
+.panel *,
+.module *,
+.module-card *,
+div[class*="card"] *,
+div[class*="Card"] * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Images dans les cards */
+.card img,
+.panel img,
+.module img,
+div[class*="card"] img,
+div[class*="Card"] img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Tables dans les cards */
+.card table,
+.panel table,
+.module table,
+div[class*="card"] table,
+div[class*="Card"] table {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  display: block;
+}
+
+/* Pre et code dans les cards */
+.card pre,
+.card code,
+.panel pre,
+.panel code,
+.module pre,
+.module code {
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 /* ============================================
@@ -533,29 +586,60 @@ div[class*="loading"] {
     background: var(--color-background) !important;
     font-size: 14px;
   }
-  
+
   .mobile-header,
   .mobile-nav {
     background: rgba(255, 255, 255, 0.95) !important;
     border-bottom: 1px solid var(--color-border-light) !important;
   }
-  
+
   .mobile-content {
     padding: var(--spacing-md);
     background: var(--color-background) !important;
   }
-  
+
   h1 { font-size: 2rem; }
   h2 { font-size: 1.75rem; }
   h3 { font-size: 1.5rem; }
   h4 { font-size: 1.25rem; }
   h5 { font-size: 1.125rem; }
   h6 { font-size: 1rem; }
-  
+
   button,
   .btn {
     padding: 10px 20px !important;
     font-size: 14px !important;
+  }
+
+  /* Correction débordements sur mobile */
+  .card,
+  .panel,
+  .module,
+  div[class*="card"],
+  div[class*="Card"] {
+    padding: var(--spacing-md);
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Tables responsives sur mobile */
+  table {
+    font-size: 12px;
+  }
+
+  /* Empêcher les débordements de texte */
+  * {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
+
+  /* Inputs et selects en pleine largeur sur mobile */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    width: 100% !important;
+    max-width: 100% !important;
   }
 }
 

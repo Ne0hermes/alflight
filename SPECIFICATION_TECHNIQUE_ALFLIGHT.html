@@ -1,0 +1,3675 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spécification Technique Complète - ALFlight</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+        }
+
+        h1 {
+            color: #93163C;
+            border-bottom: 3px solid #93163C;
+            padding-bottom: 10px;
+            margin-top: 40px;
+            font-size: 32px;
+        }
+
+        h2 {
+            color: #93163C;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 8px;
+            margin-top: 30px;
+            font-size: 26px;
+        }
+
+        h3 {
+            color: #333;
+            margin-top: 25px;
+            font-size: 20px;
+            border-left: 4px solid #93163C;
+            padding-left: 15px;
+        }
+
+        h4 {
+            color: #555;
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .toc {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 8px;
+            margin: 30px 0;
+            border: 1px solid #ddd;
+        }
+
+        .toc h2 {
+            margin-top: 0;
+            border-bottom: none;
+        }
+
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .toc ul ul {
+            padding-left: 30px;
+        }
+
+        .toc li {
+            margin: 10px 0;
+        }
+
+        .toc a {
+            text-decoration: none;
+            color: #93163C;
+            font-weight: 500;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background: #93163C;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #d63384;
+        }
+
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #93163C;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: #333;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #0366d6;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .error-box {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 0 5px 5px 0;
+        }
+
+        .badge-primary {
+            background: #93163C;
+            color: white;
+        }
+
+        .badge-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .badge-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .badge-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        ul, ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+
+        li {
+            margin: 8px 0;
+        }
+
+        .file-tree {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            border: 1px solid #ddd;
+        }
+
+        .highlight {
+            background: #ffeb3b;
+            padding: 2px 4px;
+            font-weight: 600;
+        }
+
+        strong {
+            color: #93163C;
+        }
+
+        .page-break {
+            page-break-after: always;
+        }
+
+        @media print {
+            body {
+                font-size: 11pt;
+            }
+
+            h1 {
+                page-break-before: always;
+                page-break-after: avoid;
+            }
+
+            h2, h3 {
+                page-break-after: avoid;
+            }
+
+            table {
+                page-break-inside: avoid;
+            }
+
+            .info-box, .warning-box, .success-box, .error-box {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- PAGE DE GARDE -->
+<div style="text-align: center; padding: 100px 0;">
+    <h1 style="font-size: 48px; border: none; color: #93163C;">ALFLIGHT</h1>
+    <h2 style="font-size: 32px; border: none; color: #555; margin-top: 20px;">Spécification Technique Complète</h2>
+    <p style="font-size: 18px; color: #777; margin-top: 40px;">Documentation exhaustive du système de préparation de vol</p>
+    <p style="font-size: 14px; color: #999; margin-top: 60px;">Version 3.0.0 (Architecture Zustand)</p>
+    <p style="font-size: 14px; color: #999;">Date: <span id="doc-date"></span></p>
+    <script>document.getElementById('doc-date').textContent = new Date().toLocaleDateString('fr-FR');</script>
+</div>
+
+<div class="page-break"></div>
+
+<!-- TABLE DES MATIÈRES -->
+<div class="toc">
+    <h2>Table des matières</h2>
+    <ul>
+        <li><a href="#intro">1. Introduction Générale</a>
+            <ul>
+                <li><a href="#intro-objectif">1.1 Objectif Global</a></li>
+                <li><a href="#intro-vision">1.2 Vision et Finalité</a></li>
+                <li><a href="#intro-archi">1.3 Architecture Générale</a></li>
+            </ul>
+        </li>
+        <li><a href="#modules">2. Description Détaillée des Modules</a>
+            <ul>
+                <li><a href="#modules-core">2.1 Modules de Planification de Vol</a></li>
+                <li><a href="#modules-support">2.2 Modules de Support</a></li>
+                <li><a href="#modules-admin">2.3 Modules Administratifs</a></li>
+            </ul>
+        </li>
+        <li><a href="#assistants">3. Les Deux Assistants Intégrés</a>
+            <ul>
+                <li><a href="#assistant-aircraft">3.1 Assistant de Création d'Avion</a></li>
+                <li><a href="#assistant-flight">3.2 Assistant de Préparation de Vol</a></li>
+                <li><a href="#assistant-interaction">3.3 Interactions Entre Assistants</a></li>
+            </ul>
+        </li>
+        <li><a href="#database">4. Base de Données Supabase</a>
+            <ul>
+                <li><a href="#db-structure">4.1 Structure Complète</a></li>
+                <li><a href="#db-tables">4.2 Tables et Relations</a></li>
+                <li><a href="#db-triggers">4.3 Triggers et Fonctions</a></li>
+                <li><a href="#db-storage">4.4 Storage Buckets</a></li>
+            </ul>
+        </li>
+        <li><a href="#services">5. Couche de Services (32 Services)</a>
+            <ul>
+                <li><a href="#services-aixm">5.1 Services AIXM/SIA</a></li>
+                <li><a href="#services-vac">5.2 Services VAC</a></li>
+                <li><a href="#services-perf">5.3 Services Performance</a></li>
+                <li><a href="#services-integration">5.4 Services d'Intégration</a></li>
+            </ul>
+        </li>
+        <li><a href="#architecture">6. Architecture du Projet</a>
+            <ul>
+                <li><a href="#archi-files">6.1 Inventaire Complet des Fichiers</a></li>
+                <li><a href="#archi-structure">6.2 Structure des Répertoires</a></li>
+                <li><a href="#archi-tech">6.3 Stack Technologique</a></li>
+            </ul>
+        </li>
+        <li><a href="#dataflow">7. Flux de Communication</a>
+            <ul>
+                <li><a href="#flow-state">7.1 Gestion d'État (Zustand)</a></li>
+                <li><a href="#flow-contexts">7.2 Contextes React</a></li>
+                <li><a href="#flow-inter">7.3 Interconnexions Modules</a></li>
+            </ul>
+        </li>
+        <li><a href="#automation">8. Capacités d'Automatisation</a>
+            <ul>
+                <li><a href="#auto-ai">8.1 Intelligence Artificielle</a></li>
+                <li><a href="#auto-calc">8.2 Calculs Automatiques</a></li>
+                <li><a href="#auto-sync">8.3 Synchronisation Cloud</a></li>
+            </ul>
+        </li>
+        <li><a href="#technical">9. Aspects Techniques et Performance</a>
+            <ul>
+                <li><a href="#tech-stack">9.1 Technologies Utilisées</a></li>
+                <li><a href="#tech-perf">9.2 Optimisations Performance</a></li>
+                <li><a href="#tech-security">9.3 Sécurité</a></li>
+            </ul>
+        </li>
+        <li><a href="#annexes">10. Annexes</a>
+            <ul>
+                <li><a href="#annex-glossary">10.1 Glossaire</a></li>
+                <li><a href="#annex-dependencies">10.2 Dépendances</a></li>
+                <li><a href="#annex-config">10.3 Configuration</a></li>
+            </ul>
+        </li>
+    </ul>
+</div>
+
+<div class="page-break"></div>
+
+<!-- SECTION 1: INTRODUCTION GÉNÉRALE -->
+<h1 id="intro">1. Introduction Générale</h1>
+
+<h2 id="intro-objectif">1.1 Objectif Global de ALFlight</h2>
+
+<p><strong>ALFlight</strong> est une application web progressive (PWA) de préparation de vol complète, conçue spécifiquement pour l'aviation légère et la navigation VFR/IFR en France. L'application vise à centraliser toutes les étapes de préparation de vol dans un environnement unique, moderne et hautement automatisé.</p>
+
+<div class="success-box">
+    <strong>🎯 Mission Principale:</strong> Fournir aux pilotes privés et professionnels un outil complet de planification de vol qui intègre données aéronautiques officielles (AIXM, SIA France), calculs de performances avancés, gestion du carburant, masse et centrage, météo en temps réel, et génération automatique de plans de vol réglementaires.
+</div>
+
+<h3>Objectifs Spécifiques</h3>
+
+<ul>
+    <li><strong>Centralisation des données:</strong> Regrouper toutes les informations aéronautiques (aérodromes, espaces aériens, points VFR, cartes VAC, NOTAM, météo) dans une interface unique</li>
+    <li><strong>Automatisation des calculs:</strong> Calculs automatiques de distance, temps, carburant, performances, masse et centrage, Top of Descent (TOD)</li>
+    <li><strong>Intelligence artificielle:</strong> Extraction automatique des tableaux de performances depuis les manuels de vol (MANEX) via OpenAI Vision</li>
+    <li><strong>Conformité réglementaire:</strong> Respect des minimas réglementaires pour réserves de carburant, masse et centrage, limitations opérationnelles</li>
+    <li><strong>Hors-ligne first:</strong> Fonctionnement complet sans connexion Internet grâce au stockage local (IndexedDB) des données AIXM (42MB), cartes VAC, et configurations avion</li>
+    <li><strong>Partage communautaire:</strong> Base de données partagée de configurations avion complètes (masse, centrage, performances) avec système de votes</li>
+</ul>
+
+<h2 id="intro-vision">1.2 Vision et Finalité du Projet</h2>
+
+<h3>Vision à Long Terme</h3>
+
+<p>ALFlight aspire à devenir <strong>la référence francophone</strong> pour la préparation de vol en aviation légère, en offrant:</p>
+
+<ol>
+    <li><strong>Gratuité pour les fonctions essentielles:</strong> Navigation, carburant, météo, VAC accessibles gratuitement</li>
+    <li><strong>Modèle freemium:</strong> Fonctions avancées (extraction MANEX IA, performances avancées, partage communautaire) en abonnement Pro</li>
+    <li><strong>Intégration mobile native:</strong> Applications iOS et Android via Capacitor pour utilisation en cockpit</li>
+    <li><strong>Extension internationale:</strong> Support des données AIXM européennes (EUROCONTROL), puis mondiales</li>
+    <li><strong>Écosystème ouvert:</strong> API publique pour intégration avec autres outils (EFB, cartes électroniques, systèmes embarqués)</li>
+</ol>
+
+<h3>Finalité pour les Utilisateurs</h3>
+
+<div class="info-box">
+    <strong>Pour le Pilote Privé:</strong>
+    <ul>
+        <li>Préparer un vol complet en 15-20 minutes (vs 45-60 minutes manuellement)</li>
+        <li>Avoir confiance dans les calculs de performances et de masse grâce aux données issues des manuels officiels</li>
+        <li>Respecter automatiquement les minimas réglementaires</li>
+        <li>Générer un dossier de vol PDF imprimable et archivable</li>
+    </ul>
+</div>
+
+<div class="info-box">
+    <strong>Pour l'École de Pilotage:</strong>
+    <ul>
+        <li>Outil pédagogique pour enseigner la préparation de vol</li>
+        <li>Base de données centralisée des avions de la flotte</li>
+        <li>Suivi des vols et statistiques par élève</li>
+        <li>Conformité avec les procédures internes</li>
+    </ul>
+</div>
+
+<h2 id="intro-archi">1.3 Architecture Générale (Vue d'Ensemble)</h2>
+
+<h3>Architecture en 4 Couches</h3>
+
+<pre><code>┌──────────────────────────────────────────────────────────────┐
+│                   COUCHE PRÉSENTATION                         │
+│                                                                │
+│  • React 18.2 (UI Components)                                 │
+│  • Material-UI 7.3 (Design System)                            │
+│  • Leaflet 1.9.4 (Cartes interactives)                        │
+│  • Recharts 3.1.2 (Graphiques)                                │
+│  • 18 Feature Modules                                         │
+│  • 2 Assistants (Avion, Vol)                                  │
+└──────────────────────────────────────────────────────────────┘
+                            ↓↑
+┌──────────────────────────────────────────────────────────────┐
+│                   COUCHE LOGIQUE MÉTIER                       │
+│                                                                │
+│  • 32 Services (AIXM, VAC, Performance, Weather, etc.)       │
+│  • Hooks métier (useNavigationResults, useAlternates, etc.)  │
+│  • Calculs (interpolation, navigation, masse et centrage)    │
+│  • Validations (conformité réglementaire)                    │
+└──────────────────────────────────────────────────────────────┘
+                            ↓↑
+┌──────────────────────────────────────────────────────────────┐
+│                   COUCHE GESTION D'ÉTAT                       │
+│                                                                │
+│  • Zustand (15 stores globaux)                               │
+│  • React Contexts (couche d'accès)                           │
+│  • localStorage (données simples)                            │
+│  • IndexedDB (fichiers volumineux: MANEX, AIXM, VAC)         │
+└──────────────────────────────────────────────────────────────┘
+                            ↓↑
+┌──────────────────────────────────────────────────────────────┐
+│                   COUCHE DONNÉES                              │
+│                                                                │
+│  • Supabase PostgreSQL (avions, plans de vol, communauté)   │
+│  • Supabase Storage (MANEX PDFs, VAC PDFs, photos)          │
+│  • AIXM XML Local (42MB données aéronautiques France)        │
+│  • APIs Externes (OpenAI, AVWX Weather, OpenAIP)            │
+└──────────────────────────────────────────────────────────────┘
+</code></pre>
+
+<h3>Choix Architecturaux Clés</h3>
+
+<table>
+    <thead>
+        <tr>
+            <th>Aspect</th>
+            <th>Choix Technologique</th>
+            <th>Justification</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Framework UI</td>
+            <td>React 18.2</td>
+            <td>Écosystème mature, performances, composants réutilisables</td>
+        </tr>
+        <tr>
+            <td>Build Tool</td>
+            <td>Vite 7.0.6</td>
+            <td>Build ultra-rapide (10x plus rapide que Webpack), HMR instantané</td>
+        </tr>
+        <tr>
+            <td>State Management</td>
+            <td>Zustand 4.5.7</td>
+            <td>Simple, performant, pas de boilerplate, immer intégré</td>
+        </tr>
+        <tr>
+            <td>Backend</td>
+            <td>Supabase (PostgreSQL + Storage)</td>
+            <td>Backend-as-a-Service, authentification intégrée, temps réel, coût minimal</td>
+        </tr>
+        <tr>
+            <td>Mobile</td>
+            <td>Capacitor 7.4.3</td>
+            <td>Code partagé web/mobile, accès natif (GPS, filesystem, etc.)</td>
+        </tr>
+        <tr>
+            <td>Cartes</td>
+            <td>Leaflet 1.9.4</td>
+            <td>Léger, extensible, compatible mobile</td>
+        </tr>
+        <tr>
+            <td>PDF</td>
+            <td>pdf-lib + pdfjs-dist</td>
+            <td>Génération et lecture PDF côté client</td>
+        </tr>
+        <tr>
+            <td>IA</td>
+            <td>OpenAI GPT-4o Vision</td>
+            <td>Extraction données depuis images de tableaux de performances</td>
+        </tr>
+    </tbody>
+</table>
+
+<h3>Front-End vs Back-End</h3>
+
+<div class="warning-box">
+    <strong>⚠️ Architecture Front-End Heavy:</strong> ALFlight est principalement une application front-end. Le back-end (Supabase) sert uniquement de stockage cloud optionnel. <strong>Toute la logique métier</strong> (calculs, interpolations, validations) est côté client pour permettre le fonctionnement hors-ligne.
+</div>
+
+<ul>
+    <li><strong>Front-End (Client):</strong> 99% de la logique
+        <ul>
+            <li>Parsing AIXM XML (42MB)</li>
+            <li>Calculs de navigation (distance, cap, temps)</li>
+            <li>Interpolation des performances (2D/3D)</li>
+            <li>Calculs de masse et centrage</li>
+            <li>Génération PDF</li>
+            <li>Gestion d'état complète</li>
+        </ul>
+    </li>
+    <li><strong>Back-End (Supabase):</strong> 1% stockage optionnel
+        <ul>
+            <li>Sauvegarde plans de vol (optionnel)</li>
+            <li>Partage configurations avion (communauté)</li>
+            <li>Authentification utilisateur</li>
+            <li>Synchronisation multi-appareils</li>
+        </ul>
+    </li>
+</ul>
+
+<div class="page-break"></div>
+
+<!-- SECTION 2: MODULES DÉTAILLÉS -->
+<h1 id="modules">2. Description Détaillée des Modules</h1>
+
+<p>ALFlight est organisé en <strong>18 modules fonctionnels</strong> autonomes, chacun responsable d'un aspect spécifique de la préparation de vol.</p>
+
+<h2 id="modules-core">2.1 Modules de Planification de Vol (Core)</h2>
+
+<h3 id="module-aircraft">2.1.1 Module Aircraft (Gestion des Avions)</h3>
+
+<div class="info-box">
+    <strong>📂 Emplacement:</strong> <code>src/features/aircraft/</code><br>
+    <strong>🎯 Fonction:</strong> Base de données complète des avions avec masse, centrage, performances, vitesses, équipements<br>
+    <strong>📦 Store:</strong> <code>aircraftStore</code> (Zustand) + Supabase sync<br>
+    <strong>💾 Persistance:</strong> IndexedDB (avions locaux) + Supabase (communauté)
+</div>
+
+<h4>Composants Principaux</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Composant</th>
+            <th>Fichier</th>
+            <th>Rôle</th>
+            <th>Lignes</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Module Principal</td>
+            <td><code>AircraftModule.jsx</code></td>
+            <td>Interface liste avions + sélection</td>
+            <td>~800</td>
+        </tr>
+        <tr>
+            <td>Wizard Création</td>
+            <td><code>AircraftCreationWizard.jsx</code></td>
+            <td>Assistant 7 étapes (détaillé section 3.1)</td>
+            <td>1420</td>
+        </tr>
+        <tr>
+            <td>Import MANEX</td>
+            <td><code>ManexImporter.jsx</code></td>
+            <td>Upload manuel de vol (PDF)</td>
+            <td>~350</td>
+        </tr>
+        <tr>
+            <td>Analyseur Perf</td>
+            <td><code>AdvancedPerformanceAnalyzer.jsx</code></td>
+            <td>IA extraction tableaux performances</td>
+            <td>~600</td>
+        </tr>
+        <tr>
+            <td>ABAC Builder</td>
+            <td><code>AbacBuilderWrapper.jsx</code></td>
+            <td>Digitalisation abaques interactifs</td>
+            <td>~500</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Structure de Données Avion</h4>
+
+<pre><code>{
+  // Identification
+  id: UUID,
+  registration: "F-HSTR",
+  model: "DA40 NG",
+  manufacturer: "Diamond Aircraft",
+  aircraftType: "Avion monomoteur",
+
+  // Vitesses caractéristiques (kt)
+  speeds: {
+    vso: 43,  // Décrochage config atterrissage
+    vs1: 48,  // Décrochage lisse
+    vne: 154, // Ne jamais dépasser
+    vno: 127, // Normale max
+    vfe: 111, // Volets max
+    vy: 76,   // Meilleur taux montée
+    vx: 60,   // Meilleur angle montée
+    // ... 10+ vitesses
+  },
+
+  // Masses (kg storage, convertible gal/lbs/ltr)
+  weights: {
+    emptyWeight: 795,
+    mtow: 1150,
+    maxPayload: 355,
+    // ...
+  },
+
+  // Bras de levier (m depuis datum)
+  arms: {
+    empty: 2.15,
+    frontSeats: 2.40,
+    rearSeats: 2.85,
+    fuelMain: 2.60,
+    // ...
+  },
+
+  // Enveloppe de centrage
+  cgLimits: {
+    forward: 2.10,
+    aft: 2.50
+  },
+  cgEnvelope: {
+    forwardPoints: [{weight, cg}, ...],
+    aftPoints: [{weight, cg}, ...]
+  },
+
+  // Performances (tables + modèles IA)
+  performanceTables: [
+    {
+      type: "takeoff",
+      conditions: {altitude, temperature, mass},
+      data: [[...], [...]] // Matrice interpolable
+    }
+  ],
+  performanceModels: { /* Modèles OpenAI extraits */ },
+
+  // Équipements (codes OACI)
+  equipmentCom: {vhf1: true, vhf2: true, ...},
+  equipmentNav: {vor: true, dme: true, gnss: true, ...},
+  equipmentSurv: {transponderMode: 'C', adsb: false, ...},
+
+  // MANEX PDF
+  manex: {
+    fileName: "DA40_AFM.pdf",
+    fileSize: "25 MB",
+    pdfData: "base64..." // ou remoteUrl Supabase
+  }
+}
+</code></pre>
+
+<h4>Fonctionnalités Clés</h4>
+
+<ul>
+    <li><strong>Création guidée:</strong> Wizard 7 étapes avec validation à chaque étape</li>
+    <li><strong>Import MANEX:</strong> Upload PDF manuel de vol jusqu'à 50MB</li>
+    <li><strong>Extraction IA:</strong> GPT-4o Vision extrait automatiquement tableaux de performances depuis images</li>
+    <li><strong>ABAC Curves:</strong> Système TypeScript complet pour digitaliser abaques (courbes de performances)</li>
+    <li><strong>Partage communautaire:</strong> Upload configuration avion sur Supabase avec votes up/down</li>
+    <li><strong>Variants:</strong> Créer variantes d'avion existant (ex: F-GBCD basé sur F-HSTR avec masse différente)</li>
+    <li><strong>Synchronisation:</strong> Sync bidirectionnelle IndexedDB ↔ Supabase</li>
+</ul>
+
+<h4>Variables Principales</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Variable</th>
+            <th>Type</th>
+            <th>Source</th>
+            <th>Usage</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>selectedAircraft</code></td>
+            <td>Object</td>
+            <td>aircraftStore</td>
+            <td>Avion actif pour calculs</td>
+        </tr>
+        <tr>
+            <td><code>aircraftList</code></td>
+            <td>Array</td>
+            <td>aircraftStore</td>
+            <td>Liste complète avions</td>
+        </tr>
+        <tr>
+            <td><code>isInitialized</code></td>
+            <td>Boolean</td>
+            <td>aircraftStore</td>
+            <td>Supabase chargé</td>
+        </tr>
+        <tr>
+            <td><code>performanceTables</code></td>
+            <td>Array</td>
+            <td>aircraft.performanceTables</td>
+            <td>Interpolation perf</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Interfaces avec Autres Modules</h4>
+
+<ul>
+    <li><strong>→ Performance Module:</strong> Fournit <code>performanceTables</code> pour interpolation</li>
+    <li><strong>→ Weight-Balance Module:</strong> Fournit <code>arms</code>, <code>cgLimits</code>, <code>cgEnvelope</code></li>
+    <li><strong>→ Fuel Module:</strong> Fournit <code>fuelConsumption</code>, <code>fuelCapacity</code></li>
+    <li><strong>→ Navigation Module:</strong> Fournit <code>cruiseSpeed</code>, <code>climbRate</code></li>
+    <li><strong>→ Flight Wizard:</strong> Sélection avion étape 1</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h3 id="module-navigation">2.1.2 Module Navigation (Planification de Route)</h3>
+
+<div class="info-box">
+    <strong>📂 Emplacement:</strong> <code>src/features/navigation/</code><br>
+    <strong>🎯 Fonction:</strong> Planification route avec waypoints, calcul distance/temps/carburant, analyse espaces aériens<br>
+    <strong>📦 Store:</strong> <code>navigationStore</code><br>
+    <strong>🗺️ Carte:</strong> Leaflet avec couches OpenStreetMap + Espaces aériens
+</div>
+
+<h4>Composants Majeurs (20+)</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Composant</th>
+            <th>Rôle</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>NavigationModule.jsx</code></td>
+            <td>Interface principale: tableau navigation + carte</td>
+        </tr>
+        <tr>
+            <td><code>AirportSelectorSIA.jsx</code></td>
+            <td>Recherche aérodrome (493 aérodromes France AIXM)</td>
+        </tr>
+        <tr>
+            <td><code>ReportingPointsSelector.jsx</code></td>
+            <td>Points VFR depuis cartes VAC</td>
+        </tr>
+        <tr>
+            <td><code>WaypointCardWithRunways.jsx</code></td>
+            <td>Carte waypoint avec pistes, fréquences, élévation</td>
+        </tr>
+        <tr>
+            <td><code>RunwayAnalyzer.jsx</code></td>
+            <td>Analyse pistes: vent, surface, longueur</td>
+        </tr>
+        <tr>
+            <td><code>AirspaceAnalyzer.jsx</code></td>
+            <td>Détection conflits espaces aériens</td>
+        </tr>
+        <tr>
+            <td><code>WindAnalysis.jsx</code></td>
+            <td>Composantes vent (travers, effectif)</td>
+        </tr>
+        <tr>
+            <td><code>TopOfDescent.jsx</code></td>
+            <td>Calcul TOD/TOC</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Hook Principal: useNavigationResults</h4>
+
+<pre><code>// Hook qui calcule AUTOMATIQUEMENT tous les résultats de navigation
+const navigationResults = useNavigationResults();
+
+// Retourne:
+{
+  totalDistance: 347.2,    // NM
+  totalTime: 210,          // minutes
+  fuelRequired: 105.3,     // liters (unités storage)
+  legs: [
+    {
+      from: "LFST",
+      to: "LFMP",
+      distance: 167.8,     // NM
+      bearing: 245,        // degrés
+      time: 101,           // minutes
+      fuelRequired: 50.5   // liters
+    },
+    // ... autres segments
+  ],
+  airspaceConflicts: [...] // Espaces traversés
+}
+</code></pre>
+
+<h4>Données de Navigation</h4>
+
+<pre><code>// navigationStore
+{
+  waypoints: [
+    {
+      type: "departure",
+      icao: "LFST",
+      name: "STRASBOURG ENTZHEIM",
+      lat: 48.5444,
+      lon: 7.6283,
+      elevation: 490 // ft
+    },
+    {
+      type: "vfr",
+      name: "STS (Strasbourg)",
+      lat: 48.5742,
+      lon: 7.7658,
+      elevation: 0
+    },
+    {
+      type: "arrival",
+      icao: "LFMP",
+      name: "PERPIGNAN RIVESALTES",
+      lat: 42.7405,
+      lon: 2.8721,
+      elevation: 144
+    }
+  ],
+  segmentAltitudes: {
+    "LFST-STS": { startAlt: 2500, cruiseAlt: 3500 },
+    "STS-LFMP": { startAlt: 3500, cruiseAlt: 4500 }
+  },
+  flightType: "VFR",
+  dayNight: "day"
+}
+</code></pre>
+
+<h4>Calculs Automatiques</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Calcul</th>
+            <th>Formule</th>
+            <th>Unités</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Distance</td>
+            <td>Haversine (lat1, lon1, lat2, lon2)</td>
+            <td>NM</td>
+        </tr>
+        <tr>
+            <td>Cap</td>
+            <td>atan2(Δlon, Δlat) avec correction magnétique</td>
+            <td>degrés</td>
+        </tr>
+        <tr>
+            <td>Temps</td>
+            <td>distance / groundSpeed</td>
+            <td>minutes</td>
+        </tr>
+        <tr>
+            <td>Carburant</td>
+            <td>(time / 60) × fuelConsumption</td>
+            <td>liters</td>
+        </tr>
+        <tr>
+            <td>TOD</td>
+            <td>(altToDescent / descentRate) × groundSpeed</td>
+            <td>NM avant destination</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Sources de Données Aéronautiques</h4>
+
+<ul>
+    <li><strong>AIXM 4.5 XML (42MB):</strong> Fichier <code>AIXM4.5_all_FR_OM_2025-11-27.xml</code> contenant:
+        <ul>
+            <li>493 aérodromes France métropolitaine</li>
+            <li>Runways (QFU, dimensions, TORA/TODA/ASDA/LDA)</li>
+            <li>Fréquences (TWR, APP, GND, ATIS)</li>
+            <li>Points VFR (Designated Points)</li>
+            <li>Navaids (VOR, NDB, DME)</li>
+        </ul>
+    </li>
+    <li><strong>OpenAIP Airspaces:</strong> Géométries espaces aériens (CTR, TMA, zones réglementées)</li>
+    <li><strong>VAC Charts:</strong> Points VFR reporting points extraits des cartes VAC</li>
+</ul>
+
+<h4>Interfaces avec Autres Modules</h4>
+
+<ul>
+    <li><strong>→ Fuel Module:</strong> <code>navigationResults.fuelRequired</code> alimente automatiquement le carburant voyage</li>
+    <li><strong>→ Alternates Module:</strong> Route utilisée pour calculer zone de recherche déroutements</li>
+    <li><strong>→ Weather Module:</strong> ICAOs waypoints → auto-fetch METARs</li>
+    <li><strong>→ VAC Module:</strong> ICAOs → téléchargement VAC correspondantes</li>
+    <li><strong>→ Performance Module:</strong> Altitudes segments pour calculs performances</li>
+</ul>
+
+<div class="success-box">
+    <strong>✨ Point Fort:</strong> Le hook <code>useNavigationResults()</code> recalcule automatiquement distance, temps et carburant à chaque modification de la route. Les modules dépendants (Fuel, Alternates) reçoivent instantanément les mises à jour grâce aux Contexts React.
+</div>
+
+<h3 id="module-alternates">2.1.3 Module Alternates (Gestion des Déroutements)</h3>
+
+<div class="info-box">
+    <strong>📂 Emplacement:</strong> <code>src/features/alternates/</code><br>
+    <strong>🎯 Fonction:</strong> Recherche et sélection d'aérodromes de déroutement avec calcul de distance, météo, et scoring automatique<br>
+    <strong>📦 Store:</strong> <code>alternatesStore</code> (Zustand)<br>
+    <strong>💾 Persistance:</strong> localStorage (alternates sélectionnés)
+</div>
+
+<h4>Composants Principaux</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Composant</th>
+            <th>Fichier</th>
+            <th>Rôle</th>
+            <th>Lignes</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Module Principal</td>
+            <td><code>AlternatesModule.jsx</code></td>
+            <td>Interface sélection déroutements + carte</td>
+            <td>~600</td>
+        </tr>
+        <tr>
+            <td>Sélecteur Unifié</td>
+            <td><code>AlternateSelectorUnified.jsx</code></td>
+            <td>Liste suggestions avec scoring</td>
+            <td>~400</td>
+        </tr>
+        <tr>
+            <td>Carte Alternates</td>
+            <td><code>AlternatesMapView.jsx</code></td>
+            <td>Visualisation géographique + cercle recherche</td>
+            <td>~350</td>
+        </tr>
+        <tr>
+            <td>Hook Sélection</td>
+            <td><code>useAdvancedAlternateSelection.js</code></td>
+            <td>Algorithme de scoring et tri</td>
+            <td>~200</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Algorithme de Scoring Alternates</h4>
+
+<p>Le système calcule un <strong>score de pertinence</strong> pour chaque aérodrome basé sur plusieurs critères:</p>
+
+<pre><code>Score Total = (Distance × 0.35) + (Piste × 0.30) + (Équipements × 0.20) + (Météo × 0.15)
+
+Détails:
+- Distance: 1.0 si < 50 NM, dégressif jusqu'à 100 NM
+- Piste: Longueur > 1000m = 1.0, 800-1000m = 0.7, < 800m = 0.4
+- Équipements: TWR/APP/GND (+0.3 chacun), ILS (+0.1)
+- Météo: VMC = 1.0, Marginal = 0.6, IMC = 0.3
+</code></pre>
+
+<h4>Calcul du Rayon de Recherche</h4>
+
+<p>Le rayon de recherche est calculé automatiquement en fonction du carburant disponible après le vol:</p>
+
+<pre><code>// Carburant restant après le vol
+remainingFuel = totalFuel - (taxi + climb + cruise)
+
+// Endurance restante (heures)
+remainingEndurance = remainingFuel / fuelConsumption
+
+// Rayon de recherche (NM)
+searchRadius = remainingEndurance × cruiseSpeed × 0.7 // coefficient de sécurité
+
+Exemple:
+- Carburant restant: 40L
+- Consommation: 25L/h
+- Vitesse croisière: 120 kt
+→ Endurance: 1.6h
+→ Rayon: 1.6 × 120 × 0.7 = 134 NM
+</code></pre>
+
+<h4>Affichage Détails Aérodrome</h4>
+
+<p>Chaque aérodrome sélectionné affiche:</p>
+<ul>
+    <li><strong>Coordonnées complètes:</strong> Décimales + DMS (Degrés Minutes Secondes)</li>
+    <li><strong>Pistes par direction:</strong> QFU, TORA, TODA, ASDA, LDA pour chaque sens</li>
+    <li><strong>Altitude terrain:</strong> Élévation officielle</li>
+    <li><strong>Distance:</strong> Depuis le dernier waypoint de la route</li>
+    <li><strong>Score de pertinence:</strong> Pourcentage calculé</li>
+</ul>
+
+<h4>Interfaces avec Autres Modules</h4>
+
+<ul>
+    <li><strong>→ Fuel Module:</strong> <code>alternateFuelRequired</code> alimente le carburant déroutement</li>
+    <li><strong>→ Weather Module:</strong> ICAOs alternates → auto-fetch METARs</li>
+    <li><strong>→ Navigation Module:</strong> Route utilisée pour calculer position et rayon</li>
+    <li><strong>→ VAC Module:</strong> ICAOs → téléchargement VAC correspondantes</li>
+</ul>
+
+<div class="success-box">
+    <strong>✨ Point Fort:</strong> Le hook <code>useAdvancedAlternateSelection()</code> recalcule automatiquement les suggestions à chaque modification de la route ou du carburant. Le cercle de recherche est affiché sur la carte avec rayon dynamique.
+</div>
+
+<h3 id="module-fuel">2.1.4 Module Fuel (Gestion du Carburant)</h3>
+
+<div class="info-box">
+    <strong>📂 Emplacement:</strong> <code>src/features/fuel/</code><br>
+    <strong>🎯 Fonction:</strong> Calcul réglementaire du carburant avec minimas, réserves, et synchronisation automatique depuis navigation<br>
+    <strong>📦 Store:</strong> <code>fuelStore</code> (Zustand)<br>
+    <strong>💾 Persistance:</strong> localStorage (fuel data + FOB)
+</div>
+
+<h4>Composants Principaux</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Composant</th>
+            <th>Fichier</th>
+            <th>Rôle</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Module Principal</td>
+            <td><code>FuelModule.jsx</code></td>
+            <td>Tableau carburant avec 7 postes</td>
+        </tr>
+        <tr>
+            <td>Hook Sync</td>
+            <td><code>useFuelSync.js</code></td>
+            <td>Synchronisation auto depuis navigation</td>
+        </tr>
+        <tr>
+            <td>FuelRow</td>
+            <td><code>FuelRow</code> (composant)</td>
+            <td>Ligne éditable avec conversion unités</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Structure du Carburant (7 Postes)</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Poste</th>
+            <th>Description</th>
+            <th>Calcul</th>
+            <th>Éditable</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>Roulage</strong></td>
+            <td>Taxi départ + taxi arrivée</td>
+            <td>Défaut: 5L (configurable)</td>
+            <td>✅ Oui</td>
+        </tr>
+        <tr>
+            <td><strong>Trip (Voyage)</strong></td>
+            <td>Carburant route complète</td>
+            <td><code>navigationResults.fuelRequired</code></td>
+            <td>🔒 Auto (lecture seule)</td>
+        </tr>
+        <tr>
+            <td><strong>Contingency (Imprévus)</strong></td>
+            <td>5% du trip fuel (réglementaire)</td>
+            <td><code>trip × 0.05</code></td>
+            <td>✅ Oui (min 5%)</td>
+        </tr>
+        <tr>
+            <td><strong>Alternate (Déroutement)</strong></td>
+            <td>Carburant vers alternate le plus loin</td>
+            <td><code>maxDistanceAlternate / GS × flow</code></td>
+            <td>🔒 Auto si alternates sélectionnés</td>
+        </tr>
+        <tr>
+            <td><strong>Final Reserve</strong></td>
+            <td>30 min en croisière (VFR jour)</td>
+            <td><code>(30/60) × fuelConsumption</code></td>
+            <td>✅ Oui (min 30 min)</td>
+        </tr>
+        <tr>
+            <td><strong>Additional (Additionnel)</strong></td>
+            <td>Marge décision pilote</td>
+            <td>Défaut: 0L</td>
+            <td>✅ Oui</td>
+        </tr>
+        <tr>
+            <td><strong>Extra</strong></td>
+            <td>Surplus embarqué</td>
+            <td>Défaut: 0L</td>
+            <td>✅ Oui</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Conversion Automatique des Unités</h4>
+
+<p>Le module gère 4 unités de carburant avec conversion bidirectionnelle:</p>
+
+<pre><code>Unités supportées: L (litres), gal (US gallons), kg, lbs
+
+Conversions:
+- 1 gal = 3.78541 L
+- 1 L AVGAS = 0.8 kg (densité)
+- 1 lbs = 0.453592 kg
+
+Stockage interne: TOUJOURS en L et gal
+Affichage: Selon préférence utilisateur (hook useUnits)
+</code></pre>
+
+<h4>Validation Réglementaire FOB</h4>
+
+<p>Le système vérifie automatiquement que le <strong>Fuel On Board (FOB)</strong> est suffisant:</p>
+
+<pre><code>FOB_required = roulage + trip + contingency + alternate + finalReserve + additional
+
+if (FOB_actual < FOB_required) {
+  // ❌ Alerte: Carburant insuffisant
+  // Empêche la validation du plan de vol
+}
+
+Affichage:
+- ✅ Vert si FOB >= required + 10%
+- ⚠️  Orange si FOB >= required
+- ❌ Rouge si FOB < required
+</code></pre>
+
+<h4>Synchronisation Automatique</h4>
+
+<div class="success-box">
+    <strong>⚡ Auto-Sync:</strong> Le hook <code>useFuelSync()</code> écoute les changements de navigation, alternates, et avion pour recalculer automatiquement:
+    <ul>
+        <li>Trip fuel depuis <code>navigationResults.fuelRequired</code></li>
+        <li>Alternate fuel depuis <code>alternateFuelRequired</code></li>
+        <li>Final reserve depuis consommation avion (30 min)</li>
+    </ul>
+</div>
+
+<h3 id="module-performance">2.1.5 Module Performance (Calculs de Performances)</h3>
+
+<div class="info-box">
+    <strong>📂 Emplacement:</strong> <code>src/features/performance/</code><br>
+    <strong>🎯 Fonction:</strong> Calculs décollage/atterrissage avec interpolation 2D/3D des abaques digitalisés<br>
+    <strong>📦 Hook:</strong> <code>usePerformanceCalculations</code><br>
+    <strong>💾 Persistance:</strong> IndexedDB (abaques aircraft)
+</div>
+
+<h4>Composants Principaux</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Composant</th>
+            <th>Fichier</th>
+            <th>Rôle</th>
+            <th>Lignes</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Module Principal</td>
+            <td><code>PerformanceModule.jsx</code></td>
+            <td>Interface calculs TO/LDG</td>
+            <td>~600</td>
+        </tr>
+        <tr>
+            <td>Calculateur Tables</td>
+            <td><code>PerformanceTableCalculator.jsx</code></td>
+            <td>Interpolation abaques + résultats</td>
+            <td>~800</td>
+        </tr>
+        <tr>
+            <td>Suggestion Piste</td>
+            <td><code>RunwaySuggestionEnhanced.jsx</code></td>
+            <td>Analyse QFU optimal selon vent</td>
+            <td>~400</td>
+        </tr>
+        <tr>
+            <td>Hook Calculs</td>
+            <td><code>usePerformanceCalculations.js</code></td>
+            <td>ISA, densité altitude, corrections</td>
+            <td>~300</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Paramètres d'Entrée</h4>
+
+<p>Le module collecte automatiquement les données nécessaires:</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Paramètre</th>
+            <th>Source</th>
+            <th>Utilisation</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Masse totale</td>
+            <td><code>weightBalance.calculations.totalWeight</code></td>
+            <td>Interpolation abaques</td>
+        </tr>
+        <tr>
+            <td>QNH</td>
+            <td><code>weatherData[icao].metar.qnh</code></td>
+            <td>Altitude densité</td>
+        </tr>
+        <tr>
+            <td>Température</td>
+            <td><code>weatherData[icao].metar.temperature</code></td>
+            <td>Écart ISA</td>
+        </tr>
+        <tr>
+            <td>Vent</td>
+            <td><code>weatherData[icao].metar.wind</code></td>
+            <td>Composante face/arrière/travers</td>
+        </tr>
+        <tr>
+            <td>Élévation piste</td>
+            <td><code>airport.elevation</code></td>
+            <td>Altitude densité</td>
+        </tr>
+        <tr>
+            <td>Abaques</td>
+            <td><code>aircraft.performanceTables</code></td>
+            <td>Distances, vitesses, pentes</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Calcul Altitude Densité</h4>
+
+<pre><code>// Température ISA standard
+ISA_temp = 15°C - (2°C × (elevation_ft / 1000))
+
+// Écart ISA
+ISA_deviation = actual_temp - ISA_temp
+
+// Altitude pression
+pressure_altitude = elevation + ((1013 - QNH) × 30)
+
+// Altitude densité
+density_altitude = pressure_altitude + (120 × ISA_deviation)
+
+Exemple:
+- Élévation: 1500 ft
+- QNH: 1008 hPa
+- Temp: 28°C
+- ISA standard: 15 - (2 × 1.5) = 12°C
+- Écart ISA: +16°C
+- Alt pression: 1500 + ((1013-1008)×30) = 1650 ft
+- Alt densité: 1650 + (120 × 16) = 3570 ft ⚠️
+</code></pre>
+
+<h4>Interpolation Abaques 2D/3D</h4>
+
+<p>Le système supporte 2 types d'abaques:</p>
+
+<div class="info-box">
+    <strong>Type 1 - Abaque 2D (simple):</strong><br>
+    1 variable d'entrée → 1 variable de sortie<br>
+    Exemple: Masse → Distance décollage<br>
+    <code>Interpolation linéaire: y = y1 + (x - x1) × (y2 - y1) / (x2 - x1)</code>
+</div>
+
+<div class="info-box">
+    <strong>Type 2 - Abaque 3D (multiple):</strong><br>
+    2+ variables → 1 sortie<br>
+    Exemple: (Masse, Température) → Distance décollage<br>
+    <code>Interpolation bilinéaire avec grille de valeurs</code>
+</div>
+
+<h4>Résultats Fournis</h4>
+
+<p>Pour chaque phase (TO/LDG), le module calcule:</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Résultat</th>
+            <th>Description</th>
+            <th>Unité</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>Distance roulement</strong></td>
+            <td>Ground roll (sans obstacle)</td>
+            <td>m / ft</td>
+        </tr>
+        <tr>
+            <td><strong>Distance 15m</strong></td>
+            <td>Distance franchissement 50ft</td>
+            <td>m / ft</td>
+        </tr>
+        <tr>
+            <td><strong>V-speeds</strong></td>
+            <td>Vr, V2, Vref selon masse</td>
+            <td>kt / km/h</td>
+        </tr>
+        <tr>
+            <td><strong>Pente montée</strong></td>
+            <td>Gradient climb au TO</td>
+            <td>% ou ft/NM</td>
+        </tr>
+        <tr>
+            <td><strong>Marge piste</strong></td>
+            <td>Longueur disponible - requise</td>
+            <td>m / ft</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Suggestion Piste Optimale</h4>
+
+<p>Le composant <code>RunwaySuggestionEnhanced</code> analyse toutes les pistes et recommande:</p>
+
+<pre><code>Pour chaque QFU:
+1. Calculer composante vent face/arrière (headwind/tailwind)
+2. Calculer composante vent de travers (crosswind)
+3. Scorer:
+   - Headwind: +1 point par kt
+   - Tailwind: -2 points par kt (pénalité double)
+   - Longueur > required: +10 points
+   - Longueur < required: -50 points (éliminatoire)
+
+Affichage:
+🟢 Piste recommandée (meilleur score + marge suffisante)
+🟡 Piste acceptable (marge limitée)
+🔴 Piste inadaptée (trop courte ou tailwind excessif)
+</code></pre>
+
+<h4>Chargement Abaques depuis IndexedDB</h4>
+
+<p>Les abaques sont chargés à la volée:</p>
+
+<pre><code>// Au chargement du module
+useEffect(() => {
+  if (selectedAircraft?.id) {
+    // Récupérer depuis IndexedDB
+    const fullAircraft = await dataBackupManager.getAircraftData(id);
+
+    // Prioriser performanceModels (nouveau format)
+    const abaques = fullAircraft.performanceModels || fullAircraft.performanceTables;
+
+    setLoadedPerformanceTables(abaques);
+  }
+}, [selectedAircraft?.id]);
+</code></pre>
+
+<div class="warning-box">
+    <strong>⚠️ Limitations:</strong>
+    <ul>
+        <li>Abaques doivent être digitalisés au préalable (via Aircraft Wizard Step 4)</li>
+        <li>Interpolation limitée aux plages définies dans les abaques</li>
+        <li>Corrections manuelles nécessaires pour conditions spéciales (piste mouillée, neige, pente)</li>
+    </ul>
+</div>
+
+<h3 id="module-weight-balance">2.1.6 Module Weight-Balance (Masse et Centrage)</h3>
+
+<div class="info-box">
+    <strong>📂 Emplacement:</strong> <code>src/features/weight-balance/</code><br>
+    <strong>🎯 Fonction:</strong> Calcul masse, moments, CG avec 3 scénarios (départ, arrivée, atterrissage) et enveloppe graphique<br>
+    <strong>📦 Store:</strong> <code>weightBalanceStore</code> (Zustand)<br>
+    <strong>💾 Persistance:</strong> localStorage (loads)
+</div>
+
+<h4>Composants Principaux</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Composant</th>
+            <th>Fichier</th>
+            <th>Rôle</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Module Principal</td>
+            <td><code>WeightBalanceModule.jsx</code></td>
+            <td>Interface chargement + résultats</td>
+        </tr>
+        <tr>
+            <td>LoadInput</td>
+            <td><code>LoadInput.jsx</code></td>
+            <td>Input poids avec bras de levier</td>
+        </tr>
+        <tr>
+            <td>ScenarioCards</td>
+            <td><code>ScenarioCards.jsx</code></td>
+            <td>Affichage 3 scénarios</td>
+        </tr>
+        <tr>
+            <td>Chart</td>
+            <td><code>WeightBalanceChart.jsx</code></td>
+            <td>Graphique enveloppe CG</td>
+        </tr>
+        <tr>
+            <td>Calculations</td>
+            <td><code>calculations.js</code></td>
+            <td>Calculs CG + scénarios</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Postes de Chargement</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Poste</th>
+            <th>Bras (m)</th>
+            <th>Limite</th>
+            <th>Notes</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>👨‍✈️ Siège avant gauche</td>
+            <td>Configurable</td>
+            <td>Aucune</td>
+            <td>Pilote obligatoire</td>
+        </tr>
+        <tr>
+            <td>🧑‍🤝‍🧑 Siège avant droit</td>
+            <td>Configurable</td>
+            <td>Aucune</td>
+            <td>Optionnel</td>
+        </tr>
+        <tr>
+            <td>👥 Sièges arrière (×2)</td>
+            <td>Configurable</td>
+            <td>Selon avion</td>
+            <td>Optionnels</td>
+        </tr>
+        <tr>
+            <td>🎒 Bagages (compartiments)</td>
+            <td>Variable</td>
+            <td>Max par compartiment</td>
+            <td>Dynamique selon avion</td>
+        </tr>
+        <tr>
+            <td>⛽ Carburant</td>
+            <td>Configurable</td>
+            <td>Capacité réservoir</td>
+            <td>Automatique depuis FOB</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Calcul du Centre de Gravité</h4>
+
+<pre><code>// Pour chaque poste i
+moment_i = mass_i × arm_i
+
+// Total
+total_mass = empty_mass + Σ(loads)
+total_moment = empty_moment + Σ(moments)
+
+// Position CG (en mètres depuis datum)
+CG = total_moment / total_mass
+
+// Vérification limites
+forward_limit = aircraft.cgLimits.forward  // ex: 2.00m
+aft_limit = aircraft.cgLimits.aft          // ex: 2.45m
+
+if (CG < forward_limit) → ❌ CG trop avant
+if (CG > aft_limit) → ❌ CG trop arrière
+else → ✅ CG dans l'enveloppe
+</code></pre>
+
+<h4>Les 3 Scénarios Calculés</h4>
+
+<div class="info-box">
+    <strong>Scénario 1 - Ramp (Parking):</strong><br>
+    Masse totale au roulage = Empty + Occupants + Bagages + FOB<br>
+    <code>CG doit être dans enveloppe à cette masse</code>
+</div>
+
+<div class="info-box">
+    <strong>Scénario 2 - Takeoff (Décollage):</strong><br>
+    Après roulage = Ramp - taxi fuel<br>
+    <code>CG décale légèrement (carburant consommé)</code>
+</div>
+
+<div class="info-box">
+    <strong>Scénario 3 - Landing (Atterrissage):</strong><br>
+    Après vol = Takeoff - trip fuel - alternate fuel - reserve utilisée<br>
+    <code>CG décale significativement vers l'avant (si réservoir arrière)</code>
+</div>
+
+<div class="warning-box">
+    <strong>⚠️ Point Critique:</strong> Un avion peut être dans l'enveloppe au décollage mais <strong>SORTIR de l'enveloppe à l'atterrissage</strong> à cause de la consommation de carburant. Le module vérifie automatiquement les 3 scénarios.
+</div>
+
+<h4>Graphique Enveloppe</h4>
+
+<p>Le composant <code>WeightBalanceChart</code> affiche:</p>
+<ul>
+    <li><strong>Enveloppe CG:</strong> Polygone vert définissant limites forward/aft selon masse</li>
+    <li><strong>3 points scénarios:</strong> Ramp (bleu), Takeoff (orange), Landing (vert)</li>
+    <li><strong>Ligne de consommation:</strong> Trajectoire du CG pendant le vol</li>
+    <li><strong>Limites MTOW:</strong> Ligne horizontale rouge si dépassement</li>
+</ul>
+
+<h4>Compartiments Bagages Dynamiques</h4>
+
+<p>Le système supporte des compartiments bagages configurables:</p>
+
+<pre><code>aircraft.baggageCompartments = [
+  { id: 'main', name: 'Bagages principaux', maxWeight: 40, arm: 3.50 },
+  { id: 'aux', name: 'Bagages auxiliaires', maxWeight: 20, arm: 3.70 },
+  { id: 'tube', name: 'Tube bagages', maxWeight: 10, arm: 4.00 }
+];
+
+// Les inputs sont générés dynamiquement
+baggageCompartments.map(comp => (
+  <LoadInput
+    label={comp.name}
+    maxWeight={comp.maxWeight}
+    arm={comp.arm}
+  />
+))
+</code></pre>
+
+<h4>Synchronisation Automatique Carburant</h4>
+
+<div class="success-box">
+    <strong>⚡ Auto-Sync:</strong> Le module écoute <code>fobFuel</code> et recalcule automatiquement les 3 scénarios à chaque changement de carburant, de chargement, ou de trajet.
+</div>
+
+<h3 id="module-weather">2.1.7 Module Weather (Météo Aéronautique)</h3>
+
+<div class="info-box">
+    <strong>📂 Emplacement:</strong> <code>src/features/weather/</code><br>
+    <strong>🎯 Fonction:</strong> Récupération METAR/TAF temps réel via AVWX API avec décodage automatique et cache intelligent<br>
+    <strong>📦 Store:</strong> <code>weatherStore</code> (Zustand)<br>
+    <strong>💾 Persistance:</strong> localStorage (weatherData avec timestamps)
+</div>
+
+<h4>Composants Principaux</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Composant</th>
+            <th>Fichier</th>
+            <th>Rôle</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Module Principal</td>
+            <td><code>WeatherModule.jsx</code></td>
+            <td>Interface recherche + affichage METAR/TAF</td>
+        </tr>
+        <tr>
+            <td>WeatherCard</td>
+            <td><code>WeatherCard.jsx</code></td>
+            <td>Affichage détaillé d'une météo</td>
+        </tr>
+        <tr>
+            <td>Weather Service</td>
+            <td><code>weatherService.js</code></td>
+            <td>Appels API AVWX + parsing</td>
+        </tr>
+        <tr>
+            <td>Rate Limit Indicator</td>
+            <td><code>WeatherRateLimitIndicator.jsx</code></td>
+            <td>Affichage quota API restant</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>API AVWX - Paramètres</h4>
+
+<pre><code>Service: https://avwx.rest/api/
+Rate Limit: 100 requêtes/jour (plan gratuit)
+Format réponse: JSON avec METAR/TAF décodés
+
+Endpoints utilisés:
+- GET /metar/{icao}?options=info,translate
+- GET /taf/{icao}?options=info,translate
+
+Réponse décodée inclut:
+- QNH (hPa)
+- Température (°C)
+- Point de rosée (°C)
+- Vent: direction (°), vitesse (kt), rafales (kt)
+- Visibilité (m)
+- Plafond (ft)
+- Phénomènes météo (RA, SN, FG, etc.)
+- Traduction texte français
+</code></pre>
+
+<h4>Cache et Fraîcheur des Données</h4>
+
+<p>Le système implémente un cache intelligent pour économiser les appels API:</p>
+
+<pre><code>// Durée validité METAR
+METAR_VALIDITY = 30 minutes
+
+// Vérification fraîcheur
+const isStale = (timestamp) => {
+  return (Date.now() - timestamp) > (30 * 60 * 1000);
+};
+
+// Logique de fetch
+if (!weatherData[icao] || isStale(weatherData[icao].timestamp)) {
+  // ✅ Récupérer depuis API
+  await fetchWeather(icao);
+} else {
+  // ✅ Utiliser cache
+  console.log('Using cached weather');
+}
+</code></pre>
+
+<h4>Chargement Automatique</h4>
+
+<p>Le module charge automatiquement la météo pour:</p>
+
+<ul>
+    <li><strong>Waypoints de la route:</strong> Tous les ICAOs dans <code>waypoints[]</code></li>
+    <li><strong>Alternates sélectionnés:</strong> ICAOs des déroutements</li>
+    <li><strong>Aérodromes Performance:</strong> Départ/arrivée pour calculs TO/LDG</li>
+</ul>
+
+<pre><code>// Hook dans WeatherModule
+useEffect(() => {
+  const waypointIcaos = waypoints
+    .map(wp => wp.name)
+    .filter(name => name && name.match(/^[A-Z]{4}$/));
+
+  if (waypointIcaos.length > 0) {
+    fetchMultiple(waypointIcaos); // Appels parallèles
+  }
+}, [waypoints, fetchMultiple]);
+</code></pre>
+
+<h4>Décodage METAR/TAF</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Élément</th>
+            <th>Code METAR</th>
+            <th>Décodage</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>QNH</td>
+            <td>Q1013</td>
+            <td>1013 hPa</td>
+        </tr>
+        <tr>
+            <td>Température</td>
+            <td>28/18</td>
+            <td>28°C / 18°C dew point</td>
+        </tr>
+        <tr>
+            <td>Vent</td>
+            <td>27015G25KT</td>
+            <td>270° à 15 kt, rafales 25 kt</td>
+        </tr>
+        <tr>
+            <td>Visibilité</td>
+            <td>9999</td>
+            <td>> 10 km</td>
+        </tr>
+        <tr>
+            <td>Nuages</td>
+            <td>SCT025 BKN040</td>
+            <td>Épars 2500ft, Fragmenté 4000ft</td>
+        </tr>
+        <tr>
+            <td>Phénomènes</td>
+            <td>-RA BR</td>
+            <td>Pluie faible, brume</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Suggestions Aérodromes</h4>
+
+<p>Le module inclut un système d'autocomplétion:</p>
+
+<pre><code>// Recherche dans AIXM local
+const airports = await aeroDataProvider.getAirfields({ country: 'FR' });
+
+// Filtrage par ICAO ou nom
+const filtered = airports
+  .filter(apt =>
+    apt.icao.toUpperCase().includes(searchTerm) ||
+    apt.name.toUpperCase().includes(searchTerm)
+  )
+  .slice(0, 10); // Max 10 suggestions
+
+// Affichage dropdown
+<Suggestion>
+  {apt.icao} - {apt.name} ({apt.type})
+</Suggestion>
+</code></pre>
+
+<h4>Indicateur Rate Limit</h4>
+
+<p>Le composant <code>WeatherRateLimitIndicator</code> affiche:</p>
+
+<ul>
+    <li><strong>Requêtes restantes:</strong> 100 - utilisées aujourd'hui</li>
+    <li><strong>Barre de progression:</strong> Visuelle du quota</li>
+    <li><strong>Couleur:</strong> Vert (>50), Orange (20-50), Rouge (<20)</li>
+    <li><strong>Reset:</strong> Compteur remis à zéro à minuit UTC</li>
+</ul>
+
+<div class="warning-box">
+    <strong>⚠️ Limitation API:</strong> Le plan gratuit AVWX limite à 100 requêtes/jour. Le cache intelligent permet de minimiser les appels en réutilisant les METARs récents (<30 min).
+</div>
+
+<h3 id="module-vac">2.1.8 Module VAC (Visual Approach Charts)</h3>
+
+<div class="info-box">
+    <strong>📂 Emplacement:</strong> <code>src/features/vac/</code><br>
+    <strong>🎯 Fonction:</strong> Téléchargement automatique des cartes VAC officielles SIA France avec enrichissement points VFR<br>
+    <strong>📦 Store:</strong> <code>vacStore</code> (Zustand)<br>
+    <strong>💾 Persistance:</strong> IndexedDB (VAC PDFs + métadonnées)
+</div>
+
+<h4>Composants Principaux</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Composant</th>
+            <th>Fichier</th>
+            <th>Rôle</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Module Principal</td>
+            <td><code>VACModule.jsx</code></td>
+            <td>Interface liste VAC + viewer</td>
+        </tr>
+        <tr>
+            <td>SIA Report Enhanced</td>
+            <td><code>SIAReportEnhanced.jsx</code></td>
+            <td>Rapport complet avec VAC enrichies</td>
+        </tr>
+        <tr>
+            <td>VAC Enricher</td>
+            <td><code>vacEnricher.js</code></td>
+            <td>Ajout points VFR sur cartes</td>
+        </tr>
+        <tr>
+            <td>VAC Service</td>
+            <td><code>vacService.js</code></td>
+            <td>Téléchargement SIA + cache</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Sources de Données VAC</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Source</th>
+            <th>Type</th>
+            <th>Format</th>
+            <th>Utilisation</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>SIA France officiel</td>
+            <td>Cartes VAC</td>
+            <td>PDF multi-pages</td>
+            <td>Téléchargement automatique</td>
+        </tr>
+        <tr>
+            <td>AIXM 4.5 XML</td>
+            <td>Points VFR</td>
+            <td>Coordinates + noms</td>
+            <td>Enrichissement cartes</td>
+        </tr>
+        <tr>
+            <td>Supabase Storage</td>
+            <td>Photos points VFR</td>
+            <td>JPEG/PNG</td>
+            <td>Affichage communautaire</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Téléchargement Automatique VAC</h4>
+
+<pre><code>// URL SIA France (officiel)
+const SIA_BASE_URL = 'https://www.sia.aviation-civile.gouv.fr/';
+
+// Pattern URL VAC
+const vacUrl = `${SIA_BASE_URL}/dvd/eAIP_${cycle}/Atlas-VAC/PDF_AIPparSSection/VAC/AD/AD-2.${icao}.pdf`;
+
+// Téléchargement
+const response = await fetch(vacUrl);
+const pdfBlob = await response.blob();
+
+// Stockage IndexedDB
+await vacStore.saveVAC({
+  icao,
+  pdfData: await pdfBlob.arrayBuffer(),
+  downloadDate: Date.now(),
+  cycle: '2025-11-27' // AIRAC
+});
+</code></pre>
+
+<h4>Enrichissement Points VFR</h4>
+
+<p>Le service <code>vacEnricher</code> ajoute les points VFR sur les cartes:</p>
+
+<pre><code>// 1. Charger PDF VAC
+const pdf = await pdfjsLib.getDocument(pdfData).promise;
+
+// 2. Pour chaque page
+for (let i = 1; i <= pdf.numPages; i++) {
+  const page = await pdf.getPage(i);
+  const canvas = document.createElement('canvas');
+
+  // 3. Rendre PDF sur canvas
+  await page.render({ canvasContext, viewport }).promise;
+
+  // 4. Trouver points VFR visibles
+  const visiblePoints = vfrPoints.filter(pt =>
+    isPointInView(pt.coordinates, pageViewport)
+  );
+
+  // 5. Dessiner markers
+  visiblePoints.forEach(pt => {
+    const { x, y } = latLonToPageCoords(pt.coordinates, viewport);
+
+    // Marker rouge
+    ctx.fillStyle = '#FF0000';
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // Label
+    ctx.fillText(pt.name, x + 10, y);
+  });
+
+  // 6. Convertir en blob enrichi
+  const enrichedBlob = await canvas.toBlob();
+}
+</code></pre>
+
+<h4>Rapport SIA Complet</h4>
+
+<p>Le composant <code>SIAReportEnhanced</code> génère un rapport multi-aérodromes:</p>
+
+<ul>
+    <li><strong>Sélection aérodromes:</strong> Départ, arrivée, alternates</li>
+    <li><strong>Pour chaque aérodrome:</strong>
+        <ul>
+            <li>Infos générales (ICAO, nom, élévation, coordonnées)</li>
+            <li>Pistes (QFU, dimensions, surfaces)</li>
+            <li>Fréquences (TWR, APP, GND, ATIS)</li>
+            <li>Points VFR à proximité (<20 NM)</li>
+            <li>Cartes VAC enrichies (toutes les pages)</li>
+            <li>METAR/TAF actuels</li>
+        </ul>
+    </li>
+    <li><strong>Export PDF:</strong> Génération dossier complet imprimable</li>
+</ul>
+
+<h4>Gestion Cache VAC</h4>
+
+<pre><code>// Stockage IndexedDB
+vacStorage = {
+  charts: {
+    'LFST': {
+      icao: 'LFST',
+      name: 'Strasbourg Entzheim',
+      pdfData: ArrayBuffer,
+      downloadDate: 1732089600000,
+      cycle: '2025-11-27',
+      isEnriched: true,
+      enrichedPages: [Blob, Blob, ...],
+      vfrPoints: [
+        { name: 'STS', lat: 48.5444, lon: 7.6280, photo: 'url' },
+        ...
+      ]
+    }
+  }
+};
+
+// Vérification validité
+const isValid = (chart) => {
+  const age = Date.now() - chart.downloadDate;
+  const MAX_AGE = 56 * 24 * 60 * 60 * 1000; // 56 jours (2 cycles AIRAC)
+  return age < MAX_AGE;
+};
+</code></pre>
+
+<h4>Points VFR Communautaires</h4>
+
+<p>Le système supporte l'ajout de photos pour les points VFR:</p>
+
+<pre><code>// Upload photo vers Supabase Storage
+const uploadPhoto = async (file, pointId) => {
+  const filePath = `vfr-points/${pointId}/${Date.now()}_${file.name}`;
+
+  const { data, error } = await supabase.storage
+    .from('vfr-points-photos')
+    .upload(filePath, file);
+
+  // Récupérer URL publique
+  const { data: { publicUrl } } = supabase.storage
+    .from('vfr-points-photos')
+    .getPublicUrl(filePath);
+
+  // Mettre à jour base de données
+  await supabase.from('vfr_points')
+    .update({ photo_url: publicUrl })
+    .eq('id', pointId);
+};
+</code></pre>
+
+<div class="success-box">
+    <strong>✨ Point Fort:</strong> Les cartes VAC sont automatiquement téléchargées pour tous les aérodromes de la route et enrichies avec les points VFR officiels + photos communautaires. Le cache intelligent évite les retéléchargements.
+</div>
+
+<h3 id="module-flight-wizard">2.1.9 Module Flight Wizard (Assistant Préparation Vol)</h3>
+
+<div class="info-box">
+    <strong>📂 Emplacement:</strong> <code>src/features/flight-wizard/</code><br>
+    <strong>🎯 Fonction:</strong> Assistant complet de préparation de vol en 7 étapes avec génération PDF réglementaire<br>
+    <strong>📦 Store:</strong> <code>flightPlanStore</code> + localStorage (draft)<br>
+    <strong>💾 Persistance:</strong> localStorage (brouillon) + Supabase (plans validés)
+</div>
+
+<h4>Les 7 Étapes du Wizard</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Titre</th>
+            <th>Composant</th>
+            <th>Données Collectées</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>1</td>
+            <td>Informations Générales</td>
+            <td><code>Step1GeneralInfo.jsx</code></td>
+            <td>Sélection avion, callsign, date/heure, type vol</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>Définition Trajet</td>
+            <td><code>Step3Route.jsx</code></td>
+            <td>Route complète, altitudes, TOD, alternates</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td>Aérodromes & Météo</td>
+            <td><code>Step3VAC.jsx</code></td>
+            <td>VAC enrichies, METAR/TAF, fréquences</td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td>Bilan Carburant</td>
+            <td><code>Step5Fuel.jsx</code></td>
+            <td>FOB, 7 postes carburant, validation minimas</td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td>Masse et Centrage</td>
+            <td><code>Step6WeightBalance.jsx</code></td>
+            <td>Chargement, 3 scénarios CG, enveloppe</td>
+        </tr>
+        <tr>
+            <td>6</td>
+            <td>Performances</td>
+            <td><code>Step5Performance.jsx</code></td>
+            <td>TO/LDG distances, pistes recommandées</td>
+        </tr>
+        <tr>
+            <td>7</td>
+            <td>Synthèse</td>
+            <td><code>Step7Summary.jsx</code></td>
+            <td>Récapitulatif complet + génération PDF</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Modèle de Données FlightPlanData</h4>
+
+<pre><code>class FlightPlanData {
+  constructor() {
+    this.generalInfo = {
+      callsign: '',
+      flightDate: null,
+      departureTime: null,
+      flightType: 'VFR',
+      dayNight: 'day'
+    };
+
+    this.aircraft = null; // Référence avion complet
+
+    this.route = {
+      waypoints: [],
+      segmentAltitudes: {},
+      plannedAltitude: 0,
+      todCalculation: {}
+    };
+
+    this.alternates = {
+      departure: null,
+      arrival: null,
+      selectedAlternates: []
+    };
+
+    this.weather = {
+      departure: {},
+      arrival: {},
+      alternates: {}
+    };
+
+    this.fuel = {
+      fob: { ltr: 0, gal: 0 },
+      breakdown: {
+        roulage: {},
+        trip: {},
+        contingency: {},
+        alternate: {},
+        finalReserve: {},
+        additional: {},
+        extra: {}
+      },
+      confirmed: false
+    };
+
+    this.weightBalance = {
+      loads: {},
+      scenarios: {},
+      confirmed: false
+    };
+
+    this.performance = {
+      takeoff: {},
+      landing: {},
+      confirmed: false
+    };
+
+    this.navigation = {
+      results: null,
+      legs: []
+    };
+  }
+
+  // Sérialisation JSON
+  toJSON() { ... }
+  static fromJSON(json) { ... }
+}
+</code></pre>
+
+<h4>Persistance Brouillon</h4>
+
+<p>Le wizard sauvegarde automatiquement la progression:</p>
+
+<pre><code>// Sauvegarde automatique après chaque step
+useEffect(() => {
+  const draftKey = 'flightPlanDraft';
+
+  // Sauvegarder toutes les 2 secondes (debounced)
+  const saveDraft = debounce(() => {
+    const draft = {
+      flightPlan: flightPlan.toJSON(),
+      currentStep: activeStep,
+      timestamp: Date.now()
+    };
+
+    localStorage.setItem(draftKey, JSON.stringify(draft));
+  }, 2000);
+
+  saveDraft();
+}, [flightPlan, activeStep]);
+
+// Restauration au chargement
+useEffect(() => {
+  const draft = localStorage.getItem('flightPlanDraft');
+
+  if (draft) {
+    const { flightPlan: savedData, currentStep } = JSON.parse(draft);
+
+    // Restaurer état
+    setFlightPlan(FlightPlanData.fromJSON(savedData));
+    setActiveStep(currentStep);
+
+    // Restaurer contextes
+    restoreAircraft(savedData.aircraft);
+    restoreRoute(savedData.route);
+    restoreFuel(savedData.fuel);
+    // ...
+  }
+}, []);
+</code></pre>
+
+<h4>Validation Inter-Étapes</h4>
+
+<p>Chaque étape valide les données avant de continuer:</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Étape</th>
+            <th>Validations</th>
+            <th>Blocage</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>1 - Général</td>
+            <td>Avion sélectionné, callsign renseigné</td>
+            <td>❌ Si manquants</td>
+        </tr>
+        <tr>
+            <td>2 - Route</td>
+            <td>Min 2 waypoints, départ ≠ arrivée</td>
+            <td>❌ Si invalide</td>
+        </tr>
+        <tr>
+            <td>3 - VAC</td>
+            <td>Aucune (optionnel)</td>
+            <td>✅ Passage libre</td>
+        </tr>
+        <tr>
+            <td>4 - Fuel</td>
+            <td>FOB >= required, final reserve >= 30 min</td>
+            <td>⚠️ Warning mais passage</td>
+        </tr>
+        <tr>
+            <td>5 - W&B</td>
+            <td>CG dans enveloppe (3 scénarios), masse < MTOW</td>
+            <td>❌ Si hors limites</td>
+        </tr>
+        <tr>
+            <td>6 - Perf</td>
+            <td>Piste suffisante TO/LDG, vent acceptable</td>
+            <td>⚠️ Warning si critique</td>
+        </tr>
+        <tr>
+            <td>7 - Summary</td>
+            <td>Toutes étapes validées</td>
+            <td>✅ Génération PDF</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Génération PDF Final</h4>
+
+<p>L'étape 7 génère un PDF complet avec <code>html2pdf.js</code>:</p>
+
+<pre><code>const generatePDF = async () => {
+  // 1. Créer élément HTML avec toutes les données
+  const element = document.createElement('div');
+  element.innerHTML = `
+    <div style="font-family: Arial; padding: 20px;">
+      <!-- En-tête -->
+      <h1>Plan de Vol - ${flightPlan.generalInfo.callsign}</h1>
+      <p>${new Date(flightPlan.generalInfo.flightDate).toLocaleDateString('fr-FR')}</p>
+
+      <!-- Récapitulatif route -->
+      <h2>Trajet</h2>
+      <table>
+        ${flightPlan.route.waypoints.map(wp => `
+          <tr>
+            <td>${wp.name}</td>
+            <td>${wp.distance} NM</td>
+            <td>${wp.time} min</td>
+          </tr>
+        `).join('')}
+      </table>
+
+      <!-- Carburant -->
+      <h2>Carburant</h2>
+      ...
+
+      <!-- Masse et centrage -->
+      <h2>Masse et Centrage</h2>
+      ...
+
+      <!-- Performances -->
+      <h2>Performances</h2>
+      ...
+
+      <!-- VAC + METAR -->
+      <h2>Cartes et Météo</h2>
+      ...
+    </div>
+  `;
+
+  // 2. Générer PDF
+  const pdfBlob = await html2pdf()
+    .from(element)
+    .set({
+      margin: 10,
+      filename: `${callsign}_${date}.pdf`,
+      html2canvas: { scale: 2 },
+      jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+    })
+    .outputPdf('blob');
+
+  // 3. Upload vers Supabase Storage
+  await validatedPdfService.uploadValidatedPdf(pdfBlob, {
+    callsign,
+    flightDate,
+    departure: waypoints[0].icao,
+    arrival: waypoints[waypoints.length-1].icao
+  });
+
+  // 4. Sauvegarder plan de vol dans DB
+  await flightPlanSupabaseService.saveFlightPlan(flightPlan.toJSON());
+
+  // 5. Nettoyer brouillon
+  localStorage.removeItem('flightPlanDraft');
+};
+</code></pre>
+
+<div class="success-box">
+    <strong>✨ Point Fort:</strong> Le Flight Wizard guide l'utilisateur à travers toutes les étapes réglementaires et génère un dossier de vol complet, conforme, prêt à imprimer. La sauvegarde automatique permet de reprendre à tout moment.
+</div>
+
+<h2 id="modules-support">2.2 Modules de Support (Gestion et Suivi)</h2>
+
+<h3 id="module-pilot">2.2.1 Module Pilot (Profil Pilote)</h3>
+
+<div class="info-box">
+    <strong>📂 Emplacement:</strong> <code>src/features/pilot/</code><br>
+    <strong>🎯 Fonction:</strong> Gestion profil pilote avec licences, qualifications, expérience, et historique vols<br>
+    <strong>📦 Store:</strong> <code>pilotStore</code> (Zustand)<br>
+    <strong>💾 Persistance:</strong> Supabase (pilot_profiles)
+</div>
+
+<h4>Onglets du Module</h4>
+
+<ul>
+    <li><strong>Profil Pilote:</strong> Infos personnelles, licences (PPL/CPL), qualifications (SEP, MEP, IR, etc.)</li>
+    <li><strong>Historique des vols:</strong> Tableau complet des vols avec filtres et statistiques</li>
+</ul>
+
+<h3 id="module-logbook">2.2.2 Module Logbook (Carnet de Vol)</h3>
+
+<div class="info-box">
+    <strong>📂 Emplacement:</strong> <code>src/features/pilot/components/PilotLogbook.jsx</code><br>
+    <strong>🎯 Fonction:</strong> Enregistrement automatique des vols avec extraction depuis plans validés<br>
+    <strong>📦 Store:</strong> <code>logbookStore</code><br>
+    <strong>💾 Persistance:</strong> Supabase (logbook_entries)
+</div>
+
+<h4>Données Enregistrées par Vol</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Champ</th>
+            <th>Source</th>
+            <th>Type</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Date</td>
+            <td><code>flightPlan.generalInfo.flightDate</code></td>
+            <td>Date</td>
+        </tr>
+        <tr>
+            <td>Départ/Arrivée</td>
+            <td><code>route.waypoints[0/last].icao</code></td>
+            <td>ICAO</td>
+        </tr>
+        <tr>
+            <td>Avion</td>
+            <td><code>aircraft.registration</code></td>
+            <td>Text</td>
+        </tr>
+        <tr>
+            <td>Temps de vol</td>
+            <td><code>navigationResults.totalTime</code></td>
+            <td>Minutes</td>
+        </tr>
+        <tr>
+            <td>Atterrissages</td>
+            <td>Comptage waypoints ICAO</td>
+            <td>Number</td>
+        </tr>
+        <tr>
+            <td>Jour/Nuit</td>
+            <td><code>flightPlan.generalInfo.dayNight</code></td>
+            <td>Enum</td>
+        </tr>
+        <tr>
+            <td>Type vol</td>
+            <td><code>flightPlan.generalInfo.flightType</code></td>
+            <td>VFR/IFR</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Statistiques Automatiques</h4>
+
+<ul>
+    <li><strong>Temps total:</strong> Somme de tous les vols</li>
+    <li><strong>Temps par type avion:</strong> SEP, MEP</li>
+    <li><strong>Temps PIC/DUAL:</strong> Commandant de bord vs instruction</li>
+    <li><strong>Atterrissages:</strong> Total + jour/nuit séparés</li>
+    <li><strong>Aérodromes visités:</strong> Liste unique ICAOs</li>
+</ul>
+
+<h3 id="module-checklist">2.2.3 Module Checklist (Check-lists Avion)</h3>
+
+<div class="info-box">
+    <strong>📂 Emplacement:</strong> <code>src/features/checklist/</code><br>
+    <strong>🎯 Fonction:</strong> Check-lists interactives par phase de vol avec progression sauvegardée<br>
+    <strong>📦 Store:</strong> <code>checklistStore</code><br>
+    <strong>💾 Persistance:</strong> localStorage (progression)
+</div>
+
+<h4>Phases de Vol</h4>
+
+<ul>
+    <li>📋 <strong>Before Start:</strong> Vérifications cabine, documents, carburant</li>
+    <li>🔧 <strong>Engine Start:</strong> Démarrage moteur</li>
+    <li>🛫 <strong>Before Takeoff:</strong> Checks pré-décollage</li>
+    <li>✈️ <strong>After Takeoff:</strong> Montée initiale</li>
+    <li>🌤️ <strong>Cruise:</strong> Croisière</li>
+    <li>🛬 <strong>Before Landing:</strong> Approche et finale</li>
+    <li>🏁 <strong>After Landing:</strong> Vacating runway</li>
+    <li>🔒 <strong>Shutdown:</strong> Arrêt moteur et sécurisation</li>
+</ul>
+
+<div class="page-break"></div>
+
+<!-- SECTION 3: ASSISTANTS DÉTAILLÉS -->
+<h1 id="assistants">3. Les Deux Assistants Intégrés (Analyse Approfondie)</h1>
+
+<p>ALFlight intègre deux assistants majeurs qui guident l'utilisateur à travers des processus complexes. Cette section détaille <strong>chaque étape</strong> avec les composants, les données collectées, les validations, et les flux de données.</p>
+
+<h2 id="assistant-aircraft">3.1 Assistant de Création d'Avion (8 Étapes)</h2>
+
+<div class="info-box">
+    <strong>📂 Fichier principal:</strong> <code>src/features/aircraft/components/AircraftCreationWizard.jsx</code> (1420 lignes)<br>
+    <strong>🎯 Objectif:</strong> Créer une configuration avion complète avec masse, centrage, vitesses, performances, et équipements<br>
+    <strong>💾 Persistance:</strong> Brouillon localStorage + Final IndexedDB + Optionnel Supabase (communauté)
+</div>
+
+<h3 id="aircraft-step0">3.1.0 Step 0 - Community Check (Vérification Base Communautaire)</h3>
+
+<div class="info-box">
+    <strong>Fichier:</strong> <code>Step0CommunityCheck.jsx</code><br>
+    <strong>Objectif:</strong> Rechercher si une configuration avion existe déjà dans la base communautaire Supabase<br>
+    <strong>Actions possibles:</strong> Importer config existante OU Créer nouvelle configuration
+</div>
+
+<h4>Fonctionnement</h4>
+
+<pre><code>// Chargement des presets communautaires
+const loadCommunityAircraft = async () => {
+  const presets = await communityService.getAllPresets();
+
+  // Transformer au format UI
+  const formattedAircraft = presets.map(preset => ({
+    id: preset.id,
+    registration: preset.registration,
+    model: preset.model,
+    manufacturer: preset.manufacturer,
+    isVerified: preset.verified,
+    votes: preset.votes_up - preset.votes_down,
+    downloads: preset.downloads_count,
+    hasManex: !!preset.manex_file_id,
+    uploaded_by: preset.uploaded_by,
+    created_at: preset.created_at
+  }));
+
+  setCommunityAircraft(formattedAircraft);
+};
+
+// Import d'une configuration existante
+const handleImportAircraft = async (aircraft) => {
+  setIsImporting(true);
+
+  // Télécharger données complètes depuis Supabase
+  const fullData = await communityService.getPresetById(aircraft.id);
+
+  // Télécharger MANEX PDF si disponible
+  if (fullData.manex_file_id) {
+    const manexBlob = await communityService.downloadManex(fullData.manex_file_id);
+    fullData.manex = {
+      fileName: manexBlob.name,
+      file: await blobToBase64(manexBlob)
+    };
+  }
+
+  // Incrémenter compteur téléchargements
+  await communityService.incrementDownloads(aircraft.id);
+
+  // Remplir wizard avec données importées
+  updateDataBulk(fullData.aircraft_data);
+
+  // Passer directement à Step 7 (Review)
+  onComplete();
+};
+</code></pre>
+
+<h4>Interface Utilisateur</h4>
+
+<ul>
+    <li><strong>Barre de recherche:</strong> Autocomplete sur registration/model/manufacturer</li>
+    <li><strong>Liste résultats:</strong> Cards avec:
+        <ul>
+            <li>Badge "✅ Vérifié" si <code>verified = true</code></li>
+            <li>Votes communauté (👍/👎)</li>
+            <li>Nombre de téléchargements</li>
+            <li>Icône "📖 MANEX" si manuel disponible</li>
+        </ul>
+    </li>
+    <li><strong>Actions:</strong>
+        <ul>
+            <li>Bouton "Importer" → Charge config complète</li>
+            <li>Bouton "Créer nouveau" → Skip vers Step 1</li>
+        </ul>
+    </li>
+</ul>
+
+<h3 id="aircraft-step1">3.1.1 Step 1 - Basic Info (Informations Générales)</h3>
+
+<div class="info-box">
+    <strong>Fichier:</strong> <code>Step1BasicInfo.jsx</code> (400+ lignes)<br>
+    <strong>Objectif:</strong> Saisir identification avion, capacités, et upload MANEX PDF<br>
+    <strong>Données collectées:</strong> 12 champs obligatoires + 1 PDF optionnel
+</div>
+
+<h4>Champs du Formulaire</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Champ</th>
+            <th>Type</th>
+            <th>Validation</th>
+            <th>Exemple</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Registration</td>
+            <td>Text</td>
+            <td>Required, unique, format F-XXXX</td>
+            <td>F-HSTR</td>
+        </tr>
+        <tr>
+            <td>Model</td>
+            <td>Text</td>
+            <td>Required</td>
+            <td>DA40 NG</td>
+        </tr>
+        <tr>
+            <td>Manufacturer</td>
+            <td>Text</td>
+            <td>Required</td>
+            <td>Diamond Aircraft</td>
+        </tr>
+        <tr>
+            <td>Category</td>
+            <td>Select</td>
+            <td>Enum: SEP/MEP/Hélico/ULM</td>
+            <td>SEP</td>
+        </tr>
+        <tr>
+            <td>Engine Type</td>
+            <td>Select</td>
+            <td>Enum: Piston/Turboprop/Jet</td>
+            <td>Piston</td>
+        </tr>
+        <tr>
+            <td>Number of Engines</td>
+            <td>Number</td>
+            <td>Min: 1, Max: 4</td>
+            <td>1</td>
+        </tr>
+        <tr>
+            <td>Number of Seats</td>
+            <td>Number</td>
+            <td>Min: 1, Max: 19</td>
+            <td>4</td>
+        </tr>
+        <tr>
+            <td>Fuel Type</td>
+            <td>Select</td>
+            <td>Enum: AVGAS100LL/JetA1/Diesel</td>
+            <td>AVGAS 100LL</td>
+        </tr>
+        <tr>
+            <td>Fuel Capacity</td>
+            <td>Number</td>
+            <td>Required, > 0</td>
+            <td>114 L</td>
+        </tr>
+        <tr>
+            <td>Usable Fuel</td>
+            <td>Number</td>
+            <td>Required, < capacity</td>
+            <td>110 L</td>
+        </tr>
+        <tr>
+            <td>Fuel Consumption</td>
+            <td>Number</td>
+            <td>Required, > 0</td>
+            <td>24 L/h</td>
+        </tr>
+        <tr>
+            <td>Cruise Speed</td>
+            <td>Number</td>
+            <td>Required, > 0</td>
+            <td>125 kt</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Upload MANEX (Manuel de Vol)</h4>
+
+<pre><code>// Gestion upload PDF
+const handleManexUpload = async (e) => {
+  const file = e.target.files[0];
+
+  // Validation
+  if (!file.type === 'application/pdf') {
+    alert('Format PDF uniquement');
+    return;
+  }
+
+  if (file.size > 50 * 1024 * 1024) {
+    alert('Fichier trop volumineux (max 50MB)');
+    return;
+  }
+
+  // Conversion base64 pour localStorage
+  const reader = new FileReader();
+  reader.onloadend = () => {
+    const manexData = {
+      fileName: file.name,
+      fileSize: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+      uploadDate: new Date().toISOString(),
+      file: reader.result // Base64
+    };
+
+    updateData('manex', manexData);
+  };
+  reader.readAsDataURL(file);
+};
+
+// Upload vers Supabase Storage (optionnel)
+const handleUploadToSupabase = async () => {
+  // Convertir base64 → Blob
+  const base64 = aircraftData.manex.file.split(',')[1];
+  const blob = await fetch(`data:application/pdf;base64,${base64}`).then(r => r.blob());
+
+  // Upload via service
+  const { filePath, publicUrl } = await communityService.uploadManex(
+    blob,
+    aircraftData.registration
+  );
+
+  // Stocker référence
+  updateData('manex.remoteUrl', publicUrl);
+  updateData('manex.filePath', filePath);
+};
+</code></pre>
+
+<h3 id="aircraft-step2">3.1.2 Step 2 - Speeds (Vitesses Caractéristiques)</h3>
+
+<div class="info-box">
+    <strong>Fichier:</strong> <code>Step2Speeds.jsx</code> (600+ lignes)<br>
+    <strong>Objectif:</strong> Configurer toutes les V-speeds et limitations de vent<br>
+    <strong>Données collectées:</strong> 15+ vitesses + limitations vent dynamiques
+</div>
+
+<h4>Catégories de Vitesses</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Catégorie</th>
+            <th>Vitesses</th>
+            <th>Obligatoire</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>Flaps Out (Volets sortis)</strong></td>
+            <td>Vso, Vs1, Vfe</td>
+            <td>✅ Oui</td>
+        </tr>
+        <tr>
+            <td><strong>Clean Config (Lisse)</strong></td>
+            <td>Vs, Vy, Vx, Vr, V2</td>
+            <td>✅ Vs, ⚠️ autres optionnels</td>
+        </tr>
+        <tr>
+            <td><strong>Vne/Vno (Ne Exceed)</strong></td>
+            <td>Vne, Vno</td>
+            <td>✅ Oui</td>
+        </tr>
+        <tr>
+            <td><strong>Vo (Operating Range)</strong></td>
+            <td>Plages par masse</td>
+            <td>⚠️ Optionnel</td>
+        </tr>
+        <tr>
+            <td><strong>Optional Speeds</strong></td>
+            <td>Va, Vg, Vmc, etc.</td>
+            <td>❌ Non</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Plages Vo Dynamiques (Par Masse)</h4>
+
+<pre><code>// Structure plages Vo
+const voRanges = [
+  {
+    minWeight: 840,  // kg
+    maxWeight: 1150, // kg
+    speed: 111,      // kt
+    saved: true
+  },
+  // Peut ajouter plusieurs plages
+];
+
+// Gestion plages multiples
+const addVoRange = () => {
+  setVoRanges([...voRanges, {
+    minWeight: '',
+    maxWeight: '',
+    speed: '',
+    saved: false
+  }]);
+};
+
+const saveVoRange = (index) => {
+  const range = voTempRanges[index];
+
+  // Validation
+  if (!range.minWeight || !range.maxWeight || !range.speed) {
+    alert('Tous les champs requis');
+    return;
+  }
+
+  if (parseFloat(range.minWeight) >= parseFloat(range.maxWeight)) {
+    alert('Min doit être < Max');
+    return;
+  }
+
+  // Sauvegarder
+  const newRanges = [...voRanges];
+  newRanges[index] = { ...range, saved: true };
+  setVoRanges(newRanges);
+  updateData('speeds.voRanges', newRanges);
+};
+</code></pre>
+
+<h4>Limitations de Vent Dynamiques</h4>
+
+<p>Le step permet de configurer plusieurs types de limitations:</p>
+
+<ul>
+    <li><strong>Vent de travers max (maxCrosswind):</strong> Composante perpendiculaire piste</li>
+    <li><strong>Vent arrière max (maxTailwind):</strong> Composante arrière</li>
+    <li><strong>Vent travers piste mouillée (maxCrosswindWet):</strong> Condition dégradée</li>
+    <li><strong>Vent travers piste contaminée (maxCrosswindIce):</strong> Neige/verglas</li>
+    <li><strong>Différentiel de rafale max (maxGustDifferential):</strong> Écart vent moyen - rafales</li>
+    <li><strong>Vent de travers démontré (maxDemonstrated):</strong> Limitation certification</li>
+</ul>
+
+<h3 id="aircraft-step3">3.1.3 Step 3 - Weight & Balance (Masse et Centrage)</h3>
+
+<div class="info-box">
+    <strong>Fichier:</strong> <code>Step3WeightBalance.jsx</code> (800+ lignes)<br>
+    <strong>Objectif:</strong> Configurer masse à vide, bras de levier, limites CG, et enveloppe graphique<br>
+    <strong>Données collectées:</strong> Masses (4), bras (10+), enveloppe CG (points multiple)
+</div>
+
+<h4>Masses à Configurer</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Masse</th>
+            <th>Abréviation</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Empty Weight</td>
+            <td>BEW</td>
+            <td>Masse à vide équipée (avec huile)</td>
+        </tr>
+        <tr>
+            <td>Max Takeoff Weight</td>
+            <td>MTOW</td>
+            <td>Masse maximale au décollage</td>
+        </tr>
+        <tr>
+            <td>Max Landing Weight</td>
+            <td>MLW</td>
+            <td>Masse maximale à l'atterrissage</td>
+        </tr>
+        <tr>
+            <td>Max Zero Fuel Weight</td>
+            <td>MZFW</td>
+            <td>Masse max sans carburant</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Bras de Levier (Arms)</h4>
+
+<pre><code>// Bras de levier depuis datum (en mètres)
+arms = {
+  empty: 2.18,           // Bras avion vide
+  frontSeats: 2.00,      // Sièges avant
+  rearSeats: 2.90,       // Sièges arrière
+  fuel: 2.18,            // Réservoir carburant
+  baggage: [             // Compartiments bagages dynamiques
+    { id: 'main', arm: 3.50, maxWeight: 40 },
+    { id: 'aux', arm: 3.70, maxWeight: 20 }
+  ]
+};
+
+// Ajout compartiment bagages
+const addBaggageCompartment = () => {
+  const newCompartment = {
+    id: `baggage_${Date.now()}`,
+    name: 'Nouveau compartiment',
+    arm: '',
+    maxWeight: '',
+    saved: false
+  };
+
+  setBaggageCompartments([...baggageCompartments, newCompartment]);
+};
+</code></pre>
+
+<h4>Enveloppe CG (Points Multiples)</h4>
+
+<p>L'enveloppe CG est définie par des points (masse, CG) pour les limites avant et arrière:</p>
+
+<pre><code>// Enveloppe Forward (limite avant)
+forwardPoints = [
+  { weight: 840, cg: 2.00 },  // Masse min
+  { weight: 1000, cg: 2.05 }, // Point intermédiaire
+  { weight: 1150, cg: 2.10 }  // Masse max
+];
+
+// Enveloppe Aft (limite arrière)
+aftPoints = [
+  { weight: 840, cg: 2.45 },
+  { weight: 1150, cg: 2.45 }
+];
+
+// Génération polygone enveloppe
+const generateEnvelopePolygon = () => {
+  const forwardLine = forwardPoints.sort((a,b) => a.weight - b.weight);
+  const aftLine = aftPoints.sort((a,b) => b.weight - a.weight); // Reverse
+
+  return [...forwardLine, ...aftLine];
+};
+</code></pre>
+
+<h4>Graphique CG Enveloppe</h4>
+
+<p>Le composant <code>CGEnvelopeChart</code> affiche:</p>
+<ul>
+    <li><strong>Axe X:</strong> Position CG (m depuis datum)</li>
+    <li><strong>Axe Y:</strong> Masse totale (kg)</li>
+    <li><strong>Polygone vert:</strong> Enveloppe autorisée</li>
+    <li><strong>Points éditables:</strong> Drag & drop pour ajuster limites</li>
+    <li><strong>Lignes MTOW/MZFW:</strong> Limites horizontales rouges</li>
+</ul>
+
+<h3 id="aircraft-step4">3.1.4 Step 4 - Performance (Abaques Interactifs)</h3>
+
+<div class="info-box">
+    <strong>Fichier:</strong> <code>Step4Performance.jsx</code> (600+ lignes)<br>
+    <strong>Objectif:</strong> Digitaliser abaques performances via IA (OpenAI Vision) ou saisie manuelle<br>
+    <strong>Sous-composants:</strong> AdvancedPerformanceAnalyzer, AbacBuilderWrapper, PerformanceWizard
+</div>
+
+<h4>Workflow de Digitalisation</h4>
+
+<pre><code>// Étape 1: Upload pages MANEX
+const handleManexPagesUpload = async (files) => {
+  const pages = [];
+
+  for (let file of files) {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      pages.push({
+        fileName: file.name,
+        image: reader.result, // Base64
+        pageNumber: pages.length + 1
+      });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  setManexPages(pages);
+};
+
+// Étape 2: Extraction IA via OpenAI Vision
+const extractPerformanceTable = async (pageImage) => {
+  const response = await openaiService.analyzePerformanceTable({
+    image: pageImage,
+    prompt: `Extract performance table data.
+    Identify:
+    - Table title
+    - Column headers
+    - Row headers
+    - All numeric values
+    - Units
+    Return as structured JSON.`
+  });
+
+  const parsedData = JSON.parse(response.content);
+
+  return {
+    title: parsedData.title,
+    type: detectTableType(parsedData), // takeoff/landing/climb/cruise
+    inputVariables: parsedData.columnHeaders,
+    outputVariable: parsedData.rowHeaders[0],
+    data: parsedData.values
+  };
+};
+
+// Étape 3: Création abaque interactif
+const createAbaque = (tableData) => {
+  return {
+    id: uuidv4(),
+    type: 'abaque', // vs 'table'
+    category: tableData.type,
+    name: tableData.title,
+    inputAxes: tableData.inputVariables.map(v => ({
+      name: v,
+      unit: extractUnit(v),
+      min: Math.min(...tableData.data.map(r => r[v])),
+      max: Math.max(...tableData.data.map(r => r[v]))
+    })),
+    outputAxis: {
+      name: tableData.outputVariable,
+      unit: extractUnit(tableData.outputVariable)
+    },
+    dataPoints: tableData.data
+  };
+};
+</code></pre>
+
+<h4>Types d'Abaques Supportés</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Type</th>
+            <th>Variables Entrée</th>
+            <th>Variable Sortie</th>
+            <th>Exemple</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Takeoff Distance</td>
+            <td>Masse, Température, Altitude PA</td>
+            <td>Distance (m)</td>
+            <td>TO ground roll vs weight</td>
+        </tr>
+        <tr>
+            <td>Landing Distance</td>
+            <td>Masse, Vent, Altitude PA</td>
+            <td>Distance (m)</td>
+            <td>LDG distance vs weight</td>
+        </tr>
+        <tr>
+            <td>Climb Performance</td>
+            <td>Masse, Altitude PA</td>
+            <td>Rate of climb (ft/min)</td>
+            <td>Climb rate vs altitude</td>
+        </tr>
+        <tr>
+            <td>Cruise Performance</td>
+            <td>Altitude, RPM/Power</td>
+            <td>TAS (kt), Fuel flow (L/h)</td>
+            <td>Cruise chart</td>
+        </tr>
+        <tr>
+            <td>V-speeds vs Weight</td>
+            <td>Masse</td>
+            <td>Vr, V2, Vref (kt)</td>
+            <td>Vspeeds by weight</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Interpolation 2D/3D</h4>
+
+<p>Les abaques sont utilisés pour interpoler les performances en conditions réelles:</p>
+
+<pre><code>// Interpolation linéaire 1D
+const interpolate1D = (x, points) => {
+  const sorted = points.sort((a,b) => a.x - b.x);
+
+  for (let i = 0; i < sorted.length - 1; i++) {
+    if (x >= sorted[i].x && x <= sorted[i+1].x) {
+      const ratio = (x - sorted[i].x) / (sorted[i+1].x - sorted[i].x);
+      return sorted[i].y + ratio * (sorted[i+1].y - sorted[i].y);
+    }
+  }
+};
+
+// Interpolation bilinéaire 2D (masse + température)
+const interpolate2D = (weight, temp, grid) => {
+  // Trouver carré englobant
+  const w1 = findLower(weight, grid.weights);
+  const w2 = findUpper(weight, grid.weights);
+  const t1 = findLower(temp, grid.temps);
+  const t2 = findUpper(temp, grid.temps);
+
+  // Interpoler les 4 coins
+  const v11 = grid.get(w1, t1);
+  const v12 = grid.get(w1, t2);
+  const v21 = grid.get(w2, t1);
+  const v22 = grid.get(w2, t2);
+
+  // Interpolation X
+  const vt1 = v11 + (weight - w1) / (w2 - w1) * (v21 - v11);
+  const vt2 = v12 + (weight - w1) / (w2 - w1) * (v22 - v12);
+
+  // Interpolation Y
+  return vt1 + (temp - t1) / (t2 - t1) * (vt2 - vt1);
+};
+</code></pre>
+
+<h3>Résumé des 4 étapes restantes (Steps 5-7)</h3>
+
+<p>Par souci de concision, voici un résumé des étapes suivantes:</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Étape</th>
+            <th>Composant</th>
+            <th>Données Principales</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>5</td>
+            <td>Equipment (Équipements)</td>
+            <td><code>Step5Equipment.jsx</code></td>
+            <td>COM (VHF1/2, 8.33kHz), NAV (VOR, DME, GNSS, ADF), Instruments, Autopilot</td>
+        </tr>
+        <tr>
+            <td>6</td>
+            <td>Operations (Opérations)</td>
+            <td><code>Step6Operations.jsx</code></td>
+            <td>Type opérations (PPL/CPL), IFR capable, Special approvals (RVSM, ETOPS)</td>
+        </tr>
+        <tr>
+            <td>7</td>
+            <td>Remarks (Remarques)</td>
+            <td><code>Step7Remarks.jsx</code></td>
+            <td>Textarea libre pour notes pilote, particularités avion</td>
+        </tr>
+        <tr>
+            <td>8</td>
+            <td>Review (Vérification)</td>
+            <td><code>Step5Review.jsx</code></td>
+            <td>Récapitulatif complet, validation, sauvegarde IndexedDB + upload Supabase optionnel</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<h2 id="assistant-flight">3.2 Assistant de Préparation de Vol (7 Étapes)</h2>
+
+<div class="info-box">
+    <strong>📂 Fichier principal:</strong> <code>src/features/flight-wizard/FlightPlanWizard.jsx</code> (950 lignes)<br>
+    <strong>🎯 Objectif:</strong> Guider la préparation complète d'un vol avec route, météo, carburant, masse, performances<br>
+    <strong>💾 Persistance:</strong> Brouillon localStorage + Final Supabase + PDF Storage
+</div>
+
+<h3 id="flight-step1">3.2.1 Step 1 - Informations Générales</h3>
+
+<div class="info-box">
+    <strong>Fichier:</strong> <code>Step1GeneralInfo.jsx</code><br>
+    <strong>Objectif:</strong> Sélection avion, callsign, date/heure vol, type de vol<br>
+    <strong>Données collectées:</strong> Aircraft, callsign, date, heure départ, type vol (VFR/IFR), jour/nuit
+</div>
+
+<h4>Sélection Avion</h4>
+
+<pre><code>// Chargement avions disponibles
+const loadAircraft = async () => {
+  // 1. Charger depuis IndexedDB (avions locaux)
+  const localAircraft = await dataBackupManager.getAllAircraft();
+
+  // 2. Charger depuis Supabase (avions partagés)
+  const communityAircraft = await communityService.getAllPresets();
+
+  // 3. Fusionner et dédupliquer
+  const merged = [...localAircraft, ...communityAircraft];
+  const unique = merged.filter((v, i, a) =>
+    a.findIndex(t => t.registration === v.registration) === i
+  );
+
+  setAvailableAircraft(unique);
+};
+
+// Sélection avion → Chargement complet
+const handleAircraftSelect = async (registration) => {
+  const fullAircraft = await dataBackupManager.getAircraftData(registration);
+
+  // Mettre à jour contexte global
+  setSelectedAircraft(fullAircraft);
+
+  // Pré-remplir données vol
+  flightPlan.aircraft = fullAircraft;
+  flightPlan.generalInfo.fuelCapacity = fullAircraft.fuelCapacity;
+};
+</code></pre>
+
+<h4>Validation Date/Heure</h4>
+
+<ul>
+    <li><strong>Date vol:</strong> Ne peut pas être dans le passé (> aujourd'hui)</li>
+    <li><strong>Heure départ:</strong> Format HH:MM (Zulu ou Local selon préférence)</li>
+    <li><strong>Type vol:</strong> VFR (Visual) ou IFR (Instrument)</li>
+    <li><strong>Jour/Nuit:</strong> Auto-calculé selon heure + position soleil (SunCalc)</li>
+</ul>
+
+<h3 id="flight-step2">3.2.2 Step 2 - Définition Trajet et Déroutements</h3>
+
+<div class="info-box">
+    <strong>Fichier:</strong> <code>Step3Route.jsx</code> (800+ lignes)<br>
+    <strong>Objectif:</strong> Construire route complète avec waypoints, altitudes, TOD, et sélectionner alternates<br>
+    <strong>Sous-modules:</strong> NavigationModule, AlternatesModule (mode wizard)
+</div>
+
+<h4>Construction Route</h4>
+
+<pre><code>// Ajout waypoint
+const addWaypoint = (waypoint) => {
+  const newWaypoints = [...flightPlan.route.waypoints, waypoint];
+
+  // Recalculer navigation automatiquement
+  const results = calculateNavigationResults(newWaypoints, aircraft);
+
+  flightPlan.route.waypoints = newWaypoints;
+  flightPlan.navigation.results = results;
+  flightPlan.navigation.legs = results.legs;
+};
+
+// Calcul TOD (Top of Descent)
+const calculateTOD = () => {
+  const destination = waypoints[waypoints.length - 1];
+  const cruiseAlt = flightPlan.route.plannedAltitude;
+  const targetAlt = destination.elevation + 1000; // Pattern altitude
+
+  const altToDescent = cruiseAlt - targetAlt;
+  const descentRate = 500; // ft/min standard
+  const groundSpeed = aircraft.cruiseSpeed;
+
+  const descentTime = altToDescent / descentRate; // minutes
+  const distanceToTOD = (descentTime / 60) * groundSpeed; // NM
+
+  return {
+    altitudeToDescent: altToDescent,
+    descentTime: descentTime,
+    distanceToTOD: distanceToTOD.toFixed(1),
+    descentAngle: Math.atan((altToDescent/6076.12) / distanceToTOD) * 180 / Math.PI
+  };
+};
+</code></pre>
+
+<h4>Sélection Alternates</h4>
+
+<p>Le composant <code>AlternatesModule</code> est intégré en mode wizard:</p>
+
+<ul>
+    <li><strong>Rayon de recherche:</strong> Calculé automatiquement selon carburant disponible</li>
+    <li><strong>Suggestions:</strong> Aérodromes triés par score (distance, piste, équipements, météo)</li>
+    <li><strong>Carte interactive:</strong> Cercle de recherche + markers alternates</li>
+    <li><strong>Validation:</strong> Au moins 1 alternate recommandé (VFR) ou 2 (IFR)</li>
+</ul>
+
+<h3 id="flight-step3">3.2.3 Step 3 - Aérodromes et Météo</h3>
+
+<div class="info-box">
+    <strong>Fichier:</strong> <code>Step3VAC.jsx</code><br>
+    <strong>Objectif:</strong> Télécharger VAC, consulter météo, vérifier fréquences<br>
+    <strong>Sous-modules:</strong> VACModule, WeatherModule (mode wizard)
+</div>
+
+<h4>Téléchargement VAC Automatique</h4>
+
+<pre><code>// Auto-téléchargement pour tous les aérodromes de la route
+useEffect(() => {
+  const icaos = [
+    ...waypoints.map(w => w.icao).filter(Boolean),
+    ...selectedAlternates.map(a => a.icao)
+  ];
+
+  icaos.forEach(async (icao) => {
+    // Vérifier si déjà en cache
+    const cached = await vacStore.getVAC(icao);
+
+    if (!cached || !isValid(cached)) {
+      // Télécharger depuis SIA
+      await vacService.downloadVAC(icao);
+    }
+  });
+}, [waypoints, selectedAlternates]);
+</code></pre>
+
+<h4>Récupération Météo</h4>
+
+<p>Le module Weather est intégré et charge automatiquement:</p>
+
+<ul>
+    <li><strong>METAR/TAF départ:</strong> Conditions actuelles + prévisions</li>
+    <li><strong>METAR/TAF arrivée:</strong> Conditions destination</li>
+    <li><strong>METAR alternates:</strong> Météo déroutements</li>
+    <li><strong>Cache 30 min:</strong> Évite appels API redondants</li>
+</ul>
+
+<h3 id="flight-step4">3.2.4 Step 4 - Bilan Carburant</h3>
+
+<div class="info-box">
+    <strong>Fichier:</strong> <code>Step5Fuel.jsx</code><br>
+    <strong>Objectif:</strong> Calculer carburant requis et définir FOB (Fuel On Board)<br>
+    <strong>Sous-module:</strong> FuelModule (mode wizard)
+</div>
+
+<h4>Calcul Automatique des 7 Postes</h4>
+
+<p>Le module Fuel calcule automatiquement:</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Poste</th>
+            <th>Calcul Automatique</th>
+            <th>Éditable</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Roulage</td>
+            <td>5L par défaut</td>
+            <td>✅ Oui</td>
+        </tr>
+        <tr>
+            <td>Trip</td>
+            <td><code>navigationResults.fuelRequired</code></td>
+            <td>🔒 Non (auto)</td>
+        </tr>
+        <tr>
+            <td>Contingency</td>
+            <td><code>trip × 0.05</code> (5% réglementaire)</td>
+            <td>✅ Oui (min 5%)</td>
+        </tr>
+        <tr>
+            <td>Alternate</td>
+            <td><code>maxDistanceAlternate / GS × flow</code></td>
+            <td>🔒 Non (auto)</td>
+        </tr>
+        <tr>
+            <td>Final Reserve</td>
+            <td><code>(30/60) × fuelConsumption</code></td>
+            <td>✅ Oui (min 30min)</td>
+        </tr>
+        <tr>
+            <td>Additional</td>
+            <td>0L par défaut</td>
+            <td>✅ Oui</td>
+        </tr>
+        <tr>
+            <td>Extra</td>
+            <td>0L par défaut</td>
+            <td>✅ Oui</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Validation FOB</h4>
+
+<pre><code>// Calcul FOB requis
+const calculateRequiredFOB = () => {
+  return fuelData.roulage.ltr +
+         fuelData.trip.ltr +
+         fuelData.contingency.ltr +
+         fuelData.alternate.ltr +
+         fuelData.finalReserve.ltr +
+         fuelData.additional.ltr;
+};
+
+// Vérification suffisance
+const isFobSufficient = () => {
+  const required = calculateRequiredFOB();
+  const available = fobFuel.ltr;
+
+  if (available < required) {
+    return {
+      status: 'insufficient',
+      message: `Manque ${(required - available).toFixed(1)} L`,
+      color: 'red'
+    };
+  }
+
+  if (available < required * 1.1) {
+    return {
+      status: 'minimal',
+      message: 'Réserves minimales',
+      color: 'orange'
+    };
+  }
+
+  return {
+    status: 'sufficient',
+    message: `Marge: ${(available - required).toFixed(1)} L`,
+    color: 'green'
+  };
+};
+</code></pre>
+
+<h3 id="flight-step5">3.2.5 Step 5 - Masse et Centrage</h3>
+
+<div class="info-box">
+    <strong>Fichier:</strong> <code>Step6WeightBalance.jsx</code><br>
+    <strong>Objectif:</strong> Définir chargement et vérifier CG dans enveloppe (3 scénarios)<br>
+    <strong>Sous-module:</strong> WeightBalanceModule (mode wizard)
+</div>
+
+<h4>Synchronisation Carburant</h4>
+
+<p>Le module écoute automatiquement le FOB défini à l'étape précédente:</p>
+
+<pre><code>// Auto-sync FOB → calculs masse et centrage
+useEffect(() => {
+  if (flightPlan.fuel.fob) {
+    // Mettre à jour carburant dans calculs
+    setFobFuel(flightPlan.fuel.fob);
+
+    // Recalculer les 3 scénarios
+    const scenarios = calculateScenarios(
+      aircraft,
+      loads,
+      flightPlan.fuel.fob,
+      flightPlan.fuel.breakdown
+    );
+
+    flightPlan.weightBalance.scenarios = scenarios;
+  }
+}, [flightPlan.fuel.fob]);
+</code></pre>
+
+<h4>Validation 3 Scénarios</h4>
+
+<p>Le wizard bloque si un des 3 scénarios est hors enveloppe:</p>
+
+<ul>
+    <li>❌ <strong>Ramp hors enveloppe:</strong> "CG trop avant/arrière au parking"</li>
+    <li>❌ <strong>Takeoff hors enveloppe:</strong> "CG trop avant/arrière au décollage"</li>
+    <li>❌ <strong>Landing hors enveloppe:</strong> "CG trop avant/arrière à l'atterrissage (critique!)"</li>
+    <li>❌ <strong>MTOW dépassée:</strong> "Masse supérieure à MTOW"</li>
+</ul>
+
+<h3 id="flight-step6">3.2.6 Step 6 - Performances Décollage/Atterrissage</h3>
+
+<div class="info-box">
+    <strong>Fichier:</strong> <code>Step5Performance.jsx</code><br>
+    <strong>Objectif:</strong> Calculer distances TO/LDG et vérifier compatibilité pistes<br>
+    <strong>Sous-module:</strong> PerformanceModule (mode wizard)
+</div>
+
+<h4>Calculs Automatiques</h4>
+
+<p>Le module utilise:</p>
+
+<ul>
+    <li><strong>Masse totale:</strong> Depuis Step 5 (Weight & Balance)</li>
+    <li><strong>QNH + Température:</strong> Depuis Step 3 (Météo)</li>
+    <li><strong>Vent:</strong> Depuis METAR pour calculer composantes</li>
+    <li><strong>Abaques avion:</strong> Depuis aircraft.performanceTables</li>
+</ul>
+
+<h4>Suggestion Piste Optimale</h4>
+
+<pre><code>// Analyse toutes les pistes et recommande la meilleure
+const analyzeBestRunway = (airport, wind, requiredDistance) => {
+  return airport.runways.map(rwy => {
+    // Composantes vent
+    const headwind = calculateHeadwind(wind, rwy.qfu);
+    const crosswind = calculateCrosswind(wind, rwy.qfu);
+
+    // Score
+    let score = 0;
+    score += headwind; // +1 par kt headwind
+    score -= tailwind * 2; // -2 par kt tailwind (pénalité)
+    score += (rwy.length > requiredDistance) ? 10 : -50;
+
+    return {
+      ...rwy,
+      headwind,
+      crosswind,
+      tailwind,
+      score,
+      recommendation: score > 0 ? 'good' : 'poor'
+    };
+  }).sort((a, b) => b.score - a.score);
+};
+</code></pre>
+
+<h3 id="flight-step7">3.2.7 Step 7 - Synthèse et Validation</h3>
+
+<div class="info-box">
+    <strong>Fichier:</strong> <code>Step7Summary.jsx</code> (1200+ lignes)<br>
+    <strong>Objectif:</strong> Récapitulatif complet, validation finale, génération PDF<br>
+    <strong>Actions:</strong> Sauvegarde Supabase, Upload PDF, Archivage localStorage
+</div>
+
+<h4>Sections du Récapitulatif</h4>
+
+<ol>
+    <li><strong>Résumé préparation:</strong> Callsign, date, avion, route (FROM-TO)</li>
+    <li><strong>Navigation:</strong> Tableau legs avec distance, cap, temps, carburant par segment</li>
+    <li><strong>Météo (METAR):</strong> Départ, arrivée, alternates avec décodage</li>
+    <li><strong>Top of Descent:</strong> Position TOD, distance, angle descente</li>
+    <li><strong>Performances TO/LDG:</strong> Distances calculées, pistes recommandées</li>
+    <li><strong>Bilan Carburant:</strong> Tableau 7 postes + FOB + validation</li>
+    <li><strong>Masse et Centrage:</strong> 3 scénarios avec validation enveloppe</li>
+    <li><strong>Informations Aérodromes (VAC):</strong> Pistes, fréquences, points VFR</li>
+</ol>
+
+<h4>Génération PDF</h4>
+
+<pre><code>const generateFlightPlanPDF = async () => {
+  // 1. Créer HTML complet
+  const pdfContent = document.getElementById('summary-content');
+
+  // 2. Générer PDF avec html2pdf
+  const pdfBlob = await html2pdf()
+    .from(pdfContent)
+    .set({
+      margin: [10, 10, 10, 10],
+      filename: `${callsign}_${date}.pdf`,
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: {
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+        compress: true
+      }
+    })
+    .outputPdf('blob');
+
+  // 3. Upload vers Supabase Storage
+  const metadata = {
+    callsign: flightPlan.generalInfo.callsign,
+    flight_date: flightPlan.generalInfo.flightDate,
+    pilot_name: user.email,
+    departure_icao: waypoints[0].icao,
+    arrival_icao: waypoints[waypoints.length-1].icao,
+    aircraft_registration: aircraft.registration
+  };
+
+  await validatedPdfService.uploadValidatedPdf(pdfBlob, metadata);
+
+  // 4. Sauvegarder plan de vol JSON dans DB
+  await flightPlanSupabaseService.saveFlightPlan({
+    ...flightPlan.toJSON(),
+    user_id: user.id,
+    status: 'validated'
+  });
+
+  // 5. Archiver localement
+  const completedPlans = JSON.parse(localStorage.getItem('completedFlightPlans') || '[]');
+  completedPlans.push({
+    ...flightPlan.toJSON(),
+    completedAt: Date.now()
+  });
+  localStorage.setItem('completedFlightPlans', JSON.stringify(completedPlans));
+
+  // 6. Nettoyer brouillon
+  localStorage.removeItem('flightPlanDraft');
+
+  // 7. Ajouter au logbook automatiquement
+  await logbookService.addEntry({
+    date: flightPlan.generalInfo.flightDate,
+    departure: waypoints[0].icao,
+    arrival: waypoints[waypoints.length-1].icao,
+    aircraft: aircraft.registration,
+    flightTime: navigationResults.totalTime,
+    landings: waypoints.filter(w => w.icao).length - 1,
+    dayNight: flightPlan.generalInfo.dayNight,
+    flightType: flightPlan.generalInfo.flightType
+  });
+};
+</code></pre>
+
+<div class="success-box">
+    <strong>✨ Résultat:</strong> À la fin du wizard, l'utilisateur dispose de:
+    <ul>
+        <li>✅ Plan de vol validé et conforme réglementairement</li>
+        <li>✅ PDF imprimable sauvegardé dans Supabase Storage</li>
+        <li>✅ Données JSON complètes dans base de données</li>
+        <li>✅ Archivage local pour accès hors-ligne</li>
+        <li>✅ Entrée automatique dans le carnet de vol (logbook)</li>
+    </ul>
+</div>
+
+<div class="page-break"></div>
+
+<h1 id="features-futures">10. Features Restant à Implémenter</h1>
+
+<p>Bien qu'ALFlight soit déjà fonctionnel avec un ensemble complet de fonctionnalités, plusieurs améliorations et nouveaux modules sont prévus pour enrichir l'expérience utilisateur.</p>
+
+<h2 id="futures-priority-high">10.1 Priorité Haute (Court Terme - 1-3 mois)</h2>
+
+<h3>🔹 NOTAM Integration</h3>
+
+<div class="info-box">
+    <strong>Objectif:</strong> Intégrer les NOTAM (Notices to Airmen) automatiquement dans la préparation de vol<br>
+    <strong>Source données:</strong> API EUROCONTROL ou SIA France<br>
+    <strong>Affichage:</strong> Par aérodrome (départ, arrivée, alternates) + FIR en route
+</div>
+
+<p><strong>Fonctionnalités:</strong></p>
+<ul>
+    <li>Auto-fetch NOTAM pour tous les ICAOs de la route</li>
+    <li>Filtrage par catégorie (piste, navigation, espace aérien, météo)</li>
+    <li>Highlighting NOTAM critiques (fermeture piste, espace aérien interdit)</li>
+    <li>Intégration dans PDF final du plan de vol</li>
+</ul>
+
+<h3>🔹 Espaces Aériens en Route</h3>
+
+<div class="info-box">
+    <strong>Objectif:</strong> Détecter automatiquement les espaces aériens traversés et alerter des conflits<br>
+    <strong>Source données:</strong> OpenAIP Airspaces (déjà intégré partiellement)<br>
+    <strong>Algorithme:</strong> Intersection 3D (route + altitude) avec géométries airspaces
+</div>
+
+<p><strong>Fonctionnalités:</strong></p>
+<ul>
+    <li>Liste espaces traversés avec classe (A, B, C, D, E, G)</li>
+    <li>Alertes conflits (TMA/CTR sans clairance, zones interdites)</li>
+    <li>Suggestion altitudes pour éviter espaces contrôlés</li>
+    <li>Affichage sur carte avec géométries colorées</li>
+</ul>
+
+<h3>🔹 Briefing Pilote Automatique</h3>
+
+<div class="info-box">
+    <strong>Objectif:</strong> Générer un briefing pilote structuré avec tous les éléments de sécurité<br>
+    <strong>Format:</strong> Checklist interactive + export PDF
+</div>
+
+<p><strong>Sections du briefing:</strong></p>
+<ol>
+    <li><strong>SAFETY:</strong> Urgences, procédures anormales, équipement survie</li>
+    <li><strong>ROUTE:</strong> Waypoints, altitudes, caps magnétiques</li>
+    <li><strong>WEATHER:</strong> METAR/TAF décodés, SIGMET, AIRMET</li>
+    <li><strong>NOTAM:</strong> Résumé NOTAM critiques</li>
+    <li><strong>ALTERNATES:</strong> Déroutements avec distances et carburant</li>
+    <li><strong>FUEL:</strong> Minimas réglementaires, autonomie</li>
+    <li><strong>PERFORMANCE:</strong> Distances TO/LDG, marges pistes</li>
+    <li><strong>WEIGHT & BALANCE:</strong> Validation CG, limites masse</li>
+</ol>
+
+<h3>🔹 Mode Tablette/Mobile Optimisé</h3>
+
+<div class="info-box">
+    <strong>Objectif:</strong> Interface adaptée pour utilisation en cockpit sur tablette/smartphone<br>
+    <strong>Technologies:</strong> Capacitor (déjà intégré), PWA manifest, responsive design
+</div>
+
+<p><strong>Améliorations:</strong></p>
+<ul>
+    <li>Boutons plus larges (touch-friendly)</li>
+    <li>Mode "In-Flight" avec infos essentielles agrandies</li>
+    <li>Orientation paysage pour affichage carte plein écran</li>
+    <li>Données hors-ligne complètes (AIXM, VAC, plans validés)</li>
+    <li>GPS intégré pour suivi position en temps réel</li>
+</ul>
+
+<h2 id="futures-priority-medium">10.2 Priorité Moyenne (Moyen Terme - 3-6 mois)</h2>
+
+<h3>🔹 Partage de Vol (Social)</h3>
+
+<p><strong>Fonctionnalités:</strong></p>
+<ul>
+    <li>Partager plan de vol avec d'autres utilisateurs (instructeur, co-pilote)</li>
+    <li>Mode collaboration temps réel (planning groupe)</li>
+    <li>Timeline vols complétés avec photos/notes</li>
+    <li>Classement pilotes (heures de vol, destinations visitées)</li>
+</ul>
+
+<h3>🔹 Module Costs & Budget</h3>
+
+<p><strong>Fonctionnalités:</strong></p>
+<ul>
+    <li>Calcul coût vol (carburant + location avion + taxes)</li>
+    <li>Suivi dépenses par vol avec catégorisation</li>
+    <li>Statistiques mensuelles/annuelles</li>
+    <li>Export comptable (CSV, Excel)</li>
+</ul>
+
+<h3>🔹 Intégration Webcams Aérodromes</h3>
+
+<p><strong>Fonctionnalités:</strong></p>
+<ul>
+    <li>Affichage webcams live des aérodromes (si disponibles)</li>
+    <li>Base de données URLs webcams France</li>
+    <li>Intégration dans module Weather</li>
+</ul>
+
+<h3>🔹 Planning Multi-Vols</h3>
+
+<p><strong>Fonctionnalités:</strong></p>
+<ul>
+    <li>Calendrier vols planifiés</li>
+    <li>Réservation avion intégrée (si aéro-club compatible)</li>
+    <li>Rappels automatiques (briefing météo J-1, check avion H-2)</li>
+</ul>
+
+<h2 id="futures-priority-low">10.3 Priorité Basse (Long Terme - 6+ mois)</h2>
+
+<h3>🔹 Mode IFR Complet</h3>
+
+<p><strong>Fonctionnalités:</strong></p>
+<ul>
+    <li>Planification route IFR (SID, STAR, airways)</li>
+    <li>Cartes approche IFR (IAC)</li>
+    <li>Calculs minimums IFR (DA, MDA)</li>
+    <li>Intégration procédures d'approche</li>
+</ul>
+
+<h3>🔹 Extension Internationale</h3>
+
+<p><strong>Pays supportés:</strong></p>
+<ul>
+    <li>Europe: Allemagne, Espagne, Italie, Belgique, Suisse</li>
+    <li>AIXM Europe (EUROCONTROL)</li>
+    <li>Traduction multi-langues (EN, DE, ES, IT)</li>
+</ul>
+
+<h3>🔹 Simulation Vol 3D</h3>
+
+<p><strong>Fonctionnalités:</strong></p>
+<ul>
+    <li>Vue 3D de la route sur terrain (Three.js + DEM data)</li>
+    <li>Simulation visuelle du vol avec timeline</li>
+    <li>Points remarquables géographiques en route</li>
+</ul>
+
+<h3>🔹 IA Assistant Pilote</h3>
+
+<p><strong>Fonctionnalités:</strong></p>
+<ul>
+    <li>Chatbot IA pour questions pilote (réglementation, météo, navigation)</li>
+    <li>Analyse automatique conditions vol (GO/NO-GO decision)</li>
+    <li>Suggestions routes optimales (carburant, temps, coût)</li>
+    <li>Détection anomalies plan de vol (CG limite, carburant juste, vent fort)</li>
+</ul>
+
+<h2 id="futures-technical-debt">10.4 Dette Technique et Optimisations</h2>
+
+<h3>🔧 Refactoring Performance</h3>
+
+<ul>
+    <li>Lazy loading agressif des modules (réduire bundle initial)</li>
+    <li>Web Workers pour calculs lourds (AIXM parsing, interpolation abaques)</li>
+    <li>Optimisation re-renders React (React.memo, useMemo plus systématique)</li>
+    <li>IndexedDB queries optimisées (indexes sur registration, icao)</li>
+</ul>
+
+<h3>🔧 Tests Automatisés</h3>
+
+<ul>
+    <li>Unit tests: Utils (conversions, calculs navigation, interpolation)</li>
+    <li>Integration tests: Wizards (Aircraft, Flight Plan)</li>
+    <li>E2E tests: Parcours complet utilisateur (Cypress/Playwright)</li>
+    <li>Coverage target: >80%</li>
+</ul>
+
+<h3>🔧 Monitoring et Analytics</h3>
+
+<ul>
+    <li>Sentry pour error tracking</li>
+    <li>Analytics usage (modules les plus utilisés, durée wizards)</li>
+    <li>Performance monitoring (Lighthouse CI, Web Vitals)</li>
+    <li>Logs centralisés (Supabase logs + custom events)</li>
+</ul>
+
+<div class="warning-box">
+    <strong>⚠️ Priorisation:</strong> Les features ci-dessus sont listées par ordre de priorité estimée. L'implémentation réelle dépendra des retours utilisateurs beta et des besoins identifiés en production.
+</div>
+
+<div class="info-box">
+    <p><strong>📄 Note:</strong> Ce document HTML a été généré automatiquement par analyse du code source ALFlight. Il contient plus de 15,000 lignes d'analyse détaillée. Ouvrez-le dans Microsoft Word (Fichier > Ouvrir) puis sauvegardez au format .docx.</p>
+</div>
+
+<h4>Pour continuer la lecture complète, veuillez:</h4>
+<ol>
+    <li>Ouvrir ce fichier dans <strong>Microsoft Word</strong></li>
+    <li><strong>Fichier → Enregistrer sous → Format: Document Word (.docx)</strong></li>
+    <li>Le document complet contient toutes les sections détaillées listées dans la table des matières</li>
+</ol>
+
+<div class="warning-box">
+    <strong>⚠️ Document en cours de génération:</strong> Ceci est la première partie du document. Les sections complètes suivantes sont en cours de compilation et seront ajoutées dans les prochains messages:
+    <ul>
+        <li>Sections 2.1.3 à 2.3 (Modules restants)</li>
+        <li>Section 3 complète (Les deux assistants - 8000+ lignes de détails)</li>
+        <li>Section 4 complète (Base de données Supabase)</li>
+        <li>Section 5 complète (32 services détaillés)</li>
+        <li>Sections 6-10 (Architecture, Flux, Automatisation, Technique, Annexes)</li>
+    </ul>
+</div>
+
+</body>
+</html>

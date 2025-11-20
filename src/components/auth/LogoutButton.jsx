@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../core/contexts/AuthContext';
-import { Button, CircularProgress, Tooltip } from '@mui/material';
+import { CircularProgress, Tooltip } from '@mui/material';
 import { LogOut } from 'lucide-react';
+import { Button } from '../../shared/components/Button';
 
 const LogoutButton = ({ variant = 'text', size = 'small', fullWidth = false }) => {
   const { signOut, user } = useAuth();
@@ -32,22 +33,35 @@ const LogoutButton = ({ variant = 'text', size = 'small', fullWidth = false }) =
 
   return (
     <Tooltip title={`Déconnexion (${user.email})`}>
-      <Button
-        variant={variant}
-        size={size}
-        fullWidth={fullWidth}
-        onClick={handleLogout}
-        disabled={loading}
-        startIcon={loading ? <CircularProgress size={16} /> : <LogOut size={16} />}
-        sx={{
-          color: variant === 'text' ? '#dc2626' : undefined,
-          '&:hover': {
-            backgroundColor: variant === 'text' ? 'rgba(220, 38, 38, 0.1)' : undefined,
-          }
-        }}
-      >
-        {loading ? 'Déconnexion...' : 'Se déconnecter'}
-      </Button>
+      <span>
+        <Button
+          variant={variant}
+          size={size}
+          fullWidth={fullWidth}
+          onClick={handleLogout}
+          disabled={loading}
+          sx={{
+            color: variant === 'text' ? '#dc2626' : undefined,
+            '&:hover': {
+              backgroundColor: variant === 'text' ? 'rgba(220, 38, 38, 0.1)' : undefined,
+            },
+            minWidth: 'auto',
+            textTransform: 'none'
+          }}
+        >
+          {loading ? (
+            <>
+              <CircularProgress size={16} sx={{ mr: 1 }} />
+              Déconnexion...
+            </>
+          ) : (
+            <>
+              <LogOut size={16} style={{ marginRight: '8px' }} />
+              Se déconnecter
+            </>
+          )}
+        </Button>
+      </span>
     </Tooltip>
   );
 };
