@@ -6,6 +6,7 @@ import './index.css';  // Contient maintenant uniquement l'import du fichier uni
 // import './styles/aircraft-fixes.css';    // DÉSACTIVÉ - dans unified-styles.css
 // import './styles/theme-loader.js';       // DÉSACTIVÉ - remplacé par unified-styles.css
 import MobileApp from './MobileApp.jsx';
+import { AuthProvider } from './core/contexts/AuthContext';
 import apiKeyManager from './utils/apiKeyManager';
 
 // Initialiser le gestionnaire de clés API au démarrage
@@ -22,7 +23,11 @@ if (import.meta.env.DEV) {
 // Rendu sans StrictMode pour debug
 const root = document.getElementById('root');
 if (root) {
-  createRoot(root).render(<MobileApp />);
+  createRoot(root).render(
+    <AuthProvider>
+      <MobileApp />
+    </AuthProvider>
+  );
 } else {
   console.error('Element root non trouvé !');
 }

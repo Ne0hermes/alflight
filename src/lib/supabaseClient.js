@@ -12,14 +12,17 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: false // Pas de session auth pour l'instant (public)
+    persistSession: true, // Active la persistance de session pour l'authentification
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storage: window.localStorage // Utilise localStorage pour persister la session
   },
   db: {
     schema: 'public'
   },
   global: {
     headers: {
-      'X-Client-Info': 'alflight-vac-module'
+      'X-Client-Info': 'alflight-app'
     }
   }
 });

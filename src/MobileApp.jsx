@@ -14,6 +14,8 @@ import { useAuthStore } from './features/account/stores/authStore';
 import { LandingPage } from './components/LandingPage';
 import { ALFlightSplashScreen } from './components/ALFlightSplashScreen';
 import { IndexedDBChecker } from './components/IndexedDBChecker';
+import { useAuth } from './core/contexts/AuthContext';
+import LoginPage from './components/auth/LoginPage';
 
 // 🔧 FIX OUT OF MEMORY: Lazy loading des modules pour réduire la charge mémoire au démarrage
 // Les modules ne sont chargés que quand l'utilisateur les ouvre (économise 70-80% de mémoire au démarrage)
@@ -55,6 +57,7 @@ const TAB_CONFIG = [
 ];
 
 const MobileApp = () => {
+  const { user, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('landing');
   const [isMobile, setIsMobile] = useState(false);
   const [showSplash, setShowSplash] = useState(false); // Désactivé temporairement
@@ -104,6 +107,26 @@ const MobileApp = () => {
   }, [activeTab]); // 🔧 Ajouter activeTab pour charger backup/migration quand on quitte landing
 
   const ActiveComponent = TAB_CONFIG.find(tab => tab.id === activeTab)?.component;
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <ThemeProvider theme={muiTheme}>
+        <CssBaseline />
+        <ALFlightSplashScreen />
+      </ThemeProvider>
+    );
+  }
+
+  // Show login page if not authenticated
+  if (!user) {
+    return (
+      <ThemeProvider theme={muiTheme}>
+        <CssBaseline />
+        <LoginPage />
+      </ThemeProvider>
+    );
+  }
 
   // Show splash screen
   if (showSplash) {
