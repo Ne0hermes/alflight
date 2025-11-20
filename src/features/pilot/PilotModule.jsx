@@ -1,8 +1,7 @@
 // src/features/pilot/PilotModule.jsx
 import React, { useState } from 'react';
-import { User, UserCircle, FileText } from 'lucide-react';
+import { User, FileText } from 'lucide-react';
 import PilotProfile from './components/PilotProfile';
-import { AccountPanel } from '../account/components/AccountPanel';
 import { FlightHistory } from './components/FlightHistory';
 
 const PilotModule = () => {
@@ -10,8 +9,7 @@ const PilotModule = () => {
 
   const tabs = [
     { id: 'profile', label: 'Profil Pilote', icon: User },
-    { id: 'history', label: 'Historique des vols', icon: FileText },
-    { id: 'account', label: 'Compte', icon: UserCircle }
+    { id: 'history', label: 'Historique des vols', icon: FileText }
   ];
 
   return (
@@ -82,7 +80,6 @@ const PilotModule = () => {
       }}>
         {activeTab === 'profile' && <PilotProfile />}
         {activeTab === 'history' && <FlightHistory pilotName="F-HSTR" callsign="F-HSTR" />}
-        {activeTab === 'account' && <AccountPanel />}
       </div>
     </div>
   );
