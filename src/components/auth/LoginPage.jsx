@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../core/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Paper,
@@ -9,7 +8,6 @@ import {
   Typography,
   Alert,
   CircularProgress,
-  Link,
   IconButton,
   InputAdornment
 } from '@mui/material';
@@ -21,7 +19,6 @@ import {
 
 const LoginPage = () => {
   const { signIn, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -50,8 +47,9 @@ const LoginPage = () => {
       }
 
       if (data?.user) {
-        // Connexion réussie, redirection vers la page principale
-        navigate('/');
+        // Connexion réussie, l'app va automatiquement afficher le contenu
+        // car MobileApp.jsx vérifie user et redirige automatiquement
+        window.location.reload();
       }
     } catch (err) {
       console.error('Login error:', err);
@@ -167,15 +165,11 @@ const LoginPage = () => {
             )}
           </Button>
 
+          {/* Mot de passe oublié - désactivé pour la beta */}
           <Box sx={{ textAlign: 'center' }}>
-            <Link
-              component="button"
-              variant="body2"
-              onClick={() => navigate('/forgot-password')}
-              sx={{ textDecoration: 'none' }}
-            >
-              Mot de passe oublié ?
-            </Link>
+            <Typography variant="caption" color="text.secondary">
+              Mot de passe oublié ? Contactez l'administrateur.
+            </Typography>
           </Box>
         </form>
 
