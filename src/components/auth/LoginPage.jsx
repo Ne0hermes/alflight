@@ -4,7 +4,6 @@ import {
   Box,
   Paper,
   TextField,
-  Button,
   Typography,
   Alert,
   CircularProgress,
@@ -16,6 +15,7 @@ import {
   VisibilityOff,
   Flight as FlightIcon
 } from '@mui/icons-material';
+import { Button } from '../../shared/components/Button';
 
 const LoginPage = () => {
   const { signIn, loading: authLoading } = useAuth();
@@ -65,7 +65,7 @@ const LoginPage = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'linear-gradient(135deg, #8B1538 0%, #6B0F2B 100%)',
         padding: 2
       }}
     >
@@ -80,7 +80,7 @@ const LoginPage = () => {
       >
         {/* Logo et Titre */}
         <Box sx={{ textAlign: 'center', mb: 3 }}>
-          <FlightIcon sx={{ fontSize: 48, color: '#667eea', mb: 1 }} />
+          <FlightIcon sx={{ fontSize: 48, color: '#93163C', mb: 1 }} />
           <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 700 }}>
             ALFlight
           </Typography>
@@ -144,16 +144,10 @@ const LoginPage = () => {
           <Button
             fullWidth
             type="submit"
-            variant="contained"
+            variant="primary"
             size="large"
             disabled={loading || authLoading || !email || !password}
-            sx={{
-              mb: 2,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #5568d3 0%, #6a4193 100%)',
-              }
-            }}
+            sx={{ mb: 2 }}
           >
             {loading ? (
               <>

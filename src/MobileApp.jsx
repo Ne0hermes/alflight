@@ -240,8 +240,8 @@ const styles = {
     position: 'sticky',
     top: 0,
     zIndex: 100,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderBottom: '1px solid rgba(209, 213, 219, 0.3)',
+    backgroundColor: 'rgba(30, 28, 28, 0.95)',
+    borderBottom: '1px solid rgba(147, 22, 60, 0.3)',
     backdropFilter: 'blur(10px)',
   },
   content: {
