@@ -772,7 +772,7 @@ const PilotProfile = () => {
 
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(5, 1fr)',
+          gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
           gap: '16px'
         }}>
           <div style={{ textAlign: 'center' }}>
@@ -809,14 +809,7 @@ const PilotProfile = () => {
               {units?.pressure || 'hPa'}
             </div>
           </div>
-        </div>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(5, 1fr)',
-          gap: '16px',
-          marginTop: '16px'
-        }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Carburant</div>
             <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937' }}>
@@ -849,6 +842,20 @@ const PilotProfile = () => {
             <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Bras de levier</div>
             <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937' }}>
               {units?.armLength?.toUpperCase() || 'MM'}
+            </div>
+          </div>
+
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Visibilité</div>
+            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937' }}>
+              {units?.visibility?.toUpperCase() || 'KM'}
+            </div>
+          </div>
+
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Coordonnées</div>
+            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937' }}>
+              {units?.coordinates?.toUpperCase() || 'DMS'}
             </div>
           </div>
         </div>
