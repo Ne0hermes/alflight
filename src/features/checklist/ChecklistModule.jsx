@@ -330,28 +330,27 @@ const ActiveChecklistView = memo(({
   return (
     <div>
       {/* En-tête de la checklist */}
-      <div style={sx.combine(sx.flex.between, sx.spacing.mb(4))}>
-        <div>
-          <h4 style={sx.combine(sx.text.xl, sx.text.bold, sx.spacing.mb(1))}>
-            {checklist.name}
-          </h4>
-          {checklist.description && (
-            <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
-              {checklist.description}
-            </p>
-          )}
-          <div style={sx.combine(sx.flex.start, sx.spacing.mt(2), sx.spacing.gap(3))}>
+      <div style={sx.spacing.mb(4)}>
+        <h4 style={sx.combine(sx.text.xl, sx.text.bold, sx.spacing.mb(1))}>
+          {checklist.name}
+        </h4>
+        {checklist.description && (
+          <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>
+            {checklist.description}
+          </p>
+        )}
+        <div style={sx.combine(sx.flex.start, sx.spacing.gap(3), sx.spacing.mb(3))}>
+          <span style={sx.combine(sx.text.sm, sx.text.secondary)}>
+            <Clock size={14} style={{ display: 'inline', marginRight: '4px' }} />
+            Créée le {new Date(checklist.createdAt).toLocaleDateString('fr-FR')}
+          </span>
+          {checklist.updatedAt && (
             <span style={sx.combine(sx.text.sm, sx.text.secondary)}>
-              <Clock size={14} style={{ display: 'inline', marginRight: '4px' }} />
-              Créée le {new Date(checklist.createdAt).toLocaleDateString('fr-FR')}
+              Modifiée le {new Date(checklist.updatedAt).toLocaleDateString('fr-FR')}
             </span>
-            {checklist.updatedAt && (
-              <span style={sx.combine(sx.text.sm, sx.text.secondary)}>
-                Modifiée le {new Date(checklist.updatedAt).toLocaleDateString('fr-FR')}
-              </span>
-            )}
-          </div>
+          )}
         </div>
+        {/* Boutons déplacés en dessous des dates */}
         <div style={sx.combine(sx.flex.row, sx.spacing.gap(2))}>
           <button
             onClick={onReset}

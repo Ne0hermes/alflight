@@ -581,7 +581,10 @@ const PilotProfile = () => {
     borderRadius: '6px',
     fontSize: '14px',
     width: '100%',
-    backgroundColor: 'white'
+    minWidth: 0,
+    maxWidth: '100%',
+    backgroundColor: 'white',
+    boxSizing: 'border-box'
   };
 
   const labelStyle = {
