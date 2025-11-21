@@ -3,15 +3,6 @@
   "installCommand": "rm -f package-lock.json && npm install --no-optional --legacy-peer-deps",
   "outputDirectory": "dist",
   "framework": "vite",
-  "routes": [
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ],
   "headers": [
     {
       "source": "/service-worker.js",
