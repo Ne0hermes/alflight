@@ -32,7 +32,9 @@ export default defineConfig(({ mode }) => ({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,pdf}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,pdf,geojson}'],
+        // Exclure les gros fichiers GeoJSON du précaching
+        globIgnores: ['**/data/geojson/*.geojson'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/cdnjs\.cloudflare\.com\/.*/i,
@@ -42,6 +44,21 @@ export default defineConfig(({ mode }) => ({
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 60 * 60 * 24 * 365 // 1 an
+              }
+            }
+          },
+          {
+            // Cache les fichiers GeoJSON avec stratégie NetworkFirst
+            urlPattern: /\/data\/geojson\/.*\.geojson$/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'geojson-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 jours
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
               }
             }
           }
