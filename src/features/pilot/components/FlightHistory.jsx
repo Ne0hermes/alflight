@@ -10,10 +10,19 @@ export const FlightHistory = ({ pilotName, callsign }) => {
   const [flights, setFlights] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
     loadFlightHistory();
   }, [pilotName, callsign]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const loadFlightHistory = async () => {
     try {
@@ -101,42 +110,51 @@ export const FlightHistory = ({ pilotName, callsign }) => {
 
   return (
     <div style={styles.container}>
-      <div style={styles.header}>
-        <h3 style={styles.title}>
-          <FileText size={20} style={styles.titleIcon} />
-          Historique des vols ({flights.length})
-        </h3>
-        <button onClick={loadFlightHistory} style={styles.refreshButton}>
-          ↻ Actualiser
-        </button>
-      </div>
-
-      <div style={styles.flightList}>
-        {/* En-tête du tableau */}
-        <div style={styles.tableHeader}>
-          <div style={styles.colFlightNumber}>N° Vol</div>
-          <div style={styles.colDate}>Date</div>
-          <div style={styles.colAircraft}>Avion</div>
-          <div style={styles.colRoute}>Trajet complet</div>
-          <div style={styles.colActions}>PDF</div>
-        </div>
-
+      <div style={{
+        ...styles.flightList,
+        maxHeight: isMobile ? '500px' : '600px',
+        overflowY: 'auto'
+      }}>
         {/* Lignes du tableau */}
         {flights.map((flight) => (
-          <div key={flight.id} style={styles.flightRow}>
-            {/* Numéro de vol */}
-            <div style={styles.colFlightNumber}>
-              <span style={styles.badgeSmall}>{flight.flight_number || 'N/A'}</span>
+          <div key={flight.id} style={{
+            ...styles.flightRow,
+            display: isMobile ? 'flex' : 'grid',
+            flexDirection: isMobile ? 'column' : 'row',
+            gridTemplateColumns: isMobile ? 'none' : '120px 110px 180px 1fr 120px',
+            gap: isMobile ? '8px' : '12px',
+            padding: isMobile ? '12px' : '14px 16px'
+          }}>
+            {/* Numéro de vol et Date sur la même ligne sur mobile */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              ...(isMobile ? {} : styles.colFlightNumber)
+            }}>
+              {isMobile ? (
+                <>
+                  <span style={styles.badgeSmall}>{flight.flight_number || 'N/A'}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#475569' }}>
+                    <Calendar size={14} style={styles.iconInline} />
+                    {formatDate(flight.flight_date)}
+                  </div>
+                </>
+              ) : (
+                <span style={styles.badgeSmall}>{flight.flight_number || 'N/A'}</span>
+              )}
             </div>
 
-            {/* Date */}
-            <div style={styles.colDate}>
-              <Calendar size={14} style={styles.iconInline} />
-              {formatDate(flight.flight_date)}
-            </div>
+            {/* Date (desktop seulement) */}
+            {!isMobile && (
+              <div style={styles.colDate}>
+                <Calendar size={14} style={styles.iconInline} />
+                {formatDate(flight.flight_date)}
+              </div>
+            )}
 
             {/* Avion */}
-            <div style={styles.colAircraft}>
+            <div style={isMobile ? {} : styles.colAircraft}>
               <Plane size={14} style={styles.iconInline} />
               {flight.aircraft_registration}
               {flight.aircraft_type && (
@@ -145,7 +163,7 @@ export const FlightHistory = ({ pilotName, callsign }) => {
             </div>
 
             {/* Trajet complet */}
-            <div style={styles.colRoute}>
+            <div style={isMobile ? {} : styles.colRoute}>
               <MapPin size={14} style={styles.iconInline} />
               <span style={styles.routeText}>
                 {flight.full_route || `${flight.departure_icao}→${flight.arrival_icao}`}
@@ -160,14 +178,14 @@ export const FlightHistory = ({ pilotName, callsign }) => {
             </div>
 
             {/* Actions */}
-            <div style={styles.colActions}>
+            <div style={isMobile ? { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } : styles.colActions}>
               <button
                 onClick={() => handleDownloadPdf(flight)}
                 style={styles.pdfButton}
                 title="Télécharger le PDF"
               >
                 <Download size={16} />
-                <ExternalLink size={12} style={styles.externalIconSmall} />
+                {isMobile ? ' PDF' : <ExternalLink size={12} style={styles.externalIconSmall} />}
               </button>
               <span style={styles.fileSizeSmall}>
                 {formatFileSize(flight.pdf_size_bytes)}
@@ -182,42 +200,9 @@ export const FlightHistory = ({ pilotName, callsign }) => {
 
 const styles = {
   container: {
-    padding: '20px',
-    backgroundColor: '#f8fafc',
-    borderRadius: '12px',
-    border: '1px solid #e2e8f0'
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '20px'
-  },
-  title: {
-    margin: 0,
-    fontSize: '20px',
-    fontWeight: '600',
-    color: '#1e293b',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px'
-  },
-  titleIcon: {
-    color: '#3b82f6'
-  },
-  refreshButton: {
-    padding: '8px 16px',
-    backgroundColor: '#f1f5f9',
-    border: '1px solid #cbd5e1',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '500',
-    color: '#475569',
-    transition: 'all 0.2s',
-    ':hover': {
-      backgroundColor: '#e2e8f0'
-    }
+    padding: '0',
+    backgroundColor: 'transparent',
+    borderRadius: '8px'
   },
   flightList: {
     display: 'flex',
@@ -225,21 +210,9 @@ const styles = {
     gap: '0',
     backgroundColor: 'white',
     borderRadius: '8px',
-    overflow: 'hidden',
-    border: '1px solid #e2e8f0'
-  },
-  tableHeader: {
-    display: 'grid',
-    gridTemplateColumns: '120px 110px 180px 1fr 120px',
-    gap: '12px',
-    padding: '12px 16px',
-    backgroundColor: '#f8fafc',
-    borderBottom: '2px solid #e2e8f0',
-    fontWeight: '600',
-    fontSize: '13px',
-    color: '#475569',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px'
+    border: '1px solid #e2e8f0',
+    scrollBehavior: 'smooth',
+    WebkitOverflowScrolling: 'touch'
   },
   flightRow: {
     display: 'grid',
