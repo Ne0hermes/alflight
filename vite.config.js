@@ -32,9 +32,11 @@ export default defineConfig(({ mode }) => ({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,pdf,geojson}'],
-        // Exclure les gros fichiers GeoJSON du précaching
-        globIgnores: ['**/data/geojson/*.geojson'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,pdf}'],
+        // Exclure TOUS les fichiers GeoJSON du précaching (certains > 2MB)
+        globIgnores: ['**/*.geojson', '**/data/**/*.geojson'],
+        // Augmenter la limite pour les autres assets
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10 MB
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/cdnjs\.cloudflare\.com\/.*/i,
