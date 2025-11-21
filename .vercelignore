@@ -1,0 +1,16 @@
+# Exclure les gros fichiers XML AIXM du déploiement
+# Ces fichiers ne sont plus utilisés (on utilise GeoJSON à la place)
+src/data/*.xml
+
+# Exclure les fichiers de développement
+*.log
+.DS_Store
+*.backup
+*.bak
+
+# Fichiers temporaires
+~$*.pptx
+~$*.docx
+
+# Scripts locaux
+scripts/
