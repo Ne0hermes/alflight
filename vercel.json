@@ -3,11 +3,6 @@
   "installCommand": "rm -f package-lock.json && npm install --no-optional --legacy-peer-deps",
   "outputDirectory": "dist",
   "framework": "vite",
-  "functions": {
-    "**/*": {
-      "maxDuration": 10
-    }
-  },
   "rewrites": [
     {
       "source": "/(.*)",
