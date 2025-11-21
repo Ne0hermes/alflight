@@ -379,10 +379,10 @@
 <p>ALFlight aspire à devenir <strong>la référence francophone</strong> pour la préparation de vol en aviation légère, en offrant:</p>
 
 <ol>
-    <li><strong>Gratuité pour les fonctions essentielles:</strong> Navigation, carburant, météo, VAC accessibles gratuitement</li>
-    <li><strong>Modèle freemium:</strong> Fonctions avancées (extraction MANEX IA, performances avancées, partage communautaire) en abonnement Pro</li>
-    <li><strong>Intégration mobile native:</strong> Applications iOS et Android via Capacitor pour utilisation en cockpit</li>
-    <li><strong>Extension internationale:</strong> Support des données AIXM européennes (EUROCONTROL), puis mondiales</li>
+    <li><strong>✅ APPLICATION PREMIUM PAYANTE DÈS LE DÉBUT:</strong> Abonnement requis pour accéder à toutes les fonctionnalités. Qualité professionnelle garantie avec mises à jour continues et support prioritaire.</li>
+    <li><strong>Intégration mobile native:</strong> Applications iOS et Android via Capacitor pour utilisation en cockpit sur tablette ou smartphone</li>
+    <li><strong>Extension internationale:</strong> Support des données AIXM européennes (EUROCONTROL), puis mondiales (USA FAA, Canada Nav Canada, etc.)</li>
+    <li><strong>Support multi-types d'aéronefs:</strong> Extension future aux hélicoptères et ULM avec calculs de performances spécifiques</li>
     <li><strong>Écosystème ouvert:</strong> API publique pour intégration avec autres outils (EFB, cartes électroniques, systèmes embarqués)</li>
 </ol>
 
@@ -1167,8 +1167,703 @@ Affichage:
     <strong>📂 Emplacement:</strong> <code>src/features/performance/</code><br>
     <strong>🎯 Fonction:</strong> Calculs décollage/atterrissage avec interpolation 2D/3D des abaques digitalisés<br>
     <strong>📦 Hook:</strong> <code>usePerformanceCalculations</code><br>
-    <strong>💾 Persistance:</strong> IndexedDB (abaques aircraft)
+    <strong>💾 Persistance:</strong> IndexedDB (abaques aircraft)<br>
+    <strong>🔬 Précision:</strong> Interpolation mathématique avec facteurs correctifs temps réel
 </div>
+
+<h4>Introduction aux Performances Aéronautiques</h4>
+
+<p>Le module Performance d'ALFlight calcule automatiquement les <strong>distances de décollage et d'atterrissage</strong> en fonction des conditions réelles (altitude terrain, température, vent, pente de piste, masse de l'avion). Ces calculs sont <strong>critiques pour la sécurité</strong> car ils déterminent si un vol peut être effectué en toute sécurité.</p>
+
+<h4>Différence Fondamentale : Abaques vs Tableaux de Performances</h4>
+
+<div class="info-box">
+    <strong>📊 ABAQUES (Nomogrammes Graphiques)</strong><br><br>
+    <strong>Définition :</strong> Représentation graphique permettant de résoudre graphiquement des équations à plusieurs variables sans calcul mathématique direct.<br><br>
+    <strong>Caractéristiques :</strong>
+    <ul>
+        <li><strong>Format :</strong> Graphique avec axes X/Y (ex: température vs distance de décollage)</li>
+        <li><strong>Source :</strong> Manuels de vol officiels (MANEX, POH - Pilot Operating Handbook)</li>
+        <li><strong>Précision :</strong> Lecture manuelle avec interpolation visuelle (~5% de marge d'erreur)</li>
+        <li><strong>Avantage :</strong> Vision intuitive de l'impact des paramètres</li>
+        <li><strong>Inconvénient :</strong> Nécessite numérisation et extraction des données</li>
+    </ul>
+</div>
+
+<p><strong>Exemple typique dans un MANEX :</strong></p>
+<pre><code>Abaque Décollage - DA40 NG
+-----------------------------
+Axe X : Température extérieure (°C)  -20 à +40°C
+Axe Y : Distance de décollage (m)    200 à 800m
+Courbes : Une par altitude pression (0ft, 2000ft, 4000ft, 6000ft, 8000ft)
+</code></pre>
+
+<p><strong>Structure des données extraites d'un abaque :</strong></p>
+<pre><code>{
+  "chartName": "Takeoff Distance - Sea Level",
+  "chartType": "takeoff",
+  "pressureAltitude": 0,
+  "dataPoints": [
+    { "temperature": -20, "distance": 215 },
+    { "temperature": -10, "distance": 240 },
+    { "temperature": 0, "distance": 265 },
+    { "temperature": 10, "distance": 295 },
+    { "temperature": 20, "distance": 330 },
+    { "temperature": 30, "distance": 370 },
+    { "temperature": 40, "distance": 420 }
+  ]
+}
+</code></pre>
+
+<div class="success-box">
+    <strong>📈 TABLEAUX DE PERFORMANCES (Tables Numériques)</strong><br><br>
+    <strong>Définition :</strong> Tableaux structurés avec valeurs numériques exactes organisées en lignes et colonnes.<br><br>
+    <strong>Caractéristiques :</strong>
+    <ul>
+        <li><strong>Format :</strong> Grille de données (lignes = températures, colonnes = altitudes)</li>
+        <li><strong>Source :</strong> Manuels de vol, suppléments de performances</li>
+        <li><strong>Précision :</strong> Valeurs exactes nécessitant interpolation mathématique</li>
+        <li><strong>Avantage :</strong> Données structurées facilement exploitables par ordinateur</li>
+        <li><strong>Inconvénient :</strong> Moins intuitif visuellement</li>
+    </ul>
+</div>
+
+<p><strong>Exemple tableau performances :</strong></p>
+<pre><code>TABLEAU DÉCOLLAGE DA40 NG (masses 1200-1310kg)
+------------------------------------------------
+Temp (°C) | 0 ft | 2000 ft | 4000 ft | 6000 ft
+----------|------|---------|---------|--------
+   -20    | 215m |   250m  |   290m  |   335m
+   -10    | 240m |   280m  |   325m  |   380m
+     0    | 265m |   310m  |   365m  |   430m
+    10    | 295m |   350m  |   410m  |   485m
+    20    | 330m |   390m  |   460m  |   545m
+    30    | 370m |   440m  |   520m  |   615m
+    40    | 420m |   500m  |   590m  |   700m
+</code></pre>
+
+<h4>Séquence et Interaction des Calculs de Performances</h4>
+
+<p>Le flux de calcul complet suit cette séquence en 8 étapes :</p>
+
+<pre><code>[1] ENTRÉES UTILISATEUR
+    ├─ Aérodrome départ/arrivée (ICAO)
+    ├─ Avion sélectionné (masse, performances)
+    └─ Passagers et bagages (masse et centrage)
+          ↓
+[2] RÉCUPÉRATION DONNÉES MÉTÉO
+    ├─ METAR départ/arrivée (API CheckWX)
+    ├─ Extraction température OAT (°C)
+    ├─ Extraction QNH (hPa)
+    └─ Extraction vent (direction°, vitesse kt)
+          ↓
+[3] CALCUL ALTITUDE PRESSION
+    │   Formula: PA = Elevation + (1013 - QNH) * 27
+    │   Où:
+    │   - Elevation = altitude terrain (ft)
+    │   - QNH = pression atmosphérique ajustée (hPa)
+    │   - 27 ft/hPa = constante ISA
+          ↓
+[4] SÉLECTION ABAQUE/TABLEAU
+    ├─ Recherche abaque pour altitude pression calculée
+    ├─ Si multiple abaques → interpolation entre 2 abaques encadrants
+    └─ Si aucun abaque → fallback sur formule empirique
+          ↓
+[5] INTERPOLATION TEMPÉRATURE
+    │   Formula: D = D1 + (T - T1) / (T2 - T1) * (D2 - D1)
+    │   Où:
+    │   - D = distance recherchée
+    │   - T = température actuelle (°C)
+    │   - D1, D2 = distances encadrantes dans l'abaque
+    │   - T1, T2 = températures encadrantes
+          ↓
+[6] FACTEURS CORRECTIFS
+    ├─ Vent effectif sur piste
+    │   • Vent de face : Distance × (1 - WindComponent / 100)
+    │   • Vent arrière : Distance × (1 + WindComponent / 50)
+    ├─ Pente de piste
+    │   • Montante : Distance × (1 + Slope% / 2)
+    │   • Descendante : Distance × (1 - Slope% / 4)
+    ├─ Surface piste
+    │   • Herbe : Distance × 1.20
+    │   • Gravier : Distance × 1.15
+    │   • Asphalte/Béton : Distance × 1.00
+    └─ État surface
+        • Mouillée : Distance × 1.15
+        • Enneigée : Distance × 1.40
+        • Verglacée : Distance × 2.00
+          ↓
+[7] MARGES DE SÉCURITÉ
+    │   Formula: Distance_Safe = Distance_Calculée × 1.33
+    │   (Marge de 33% réglementaire)
+          ↓
+[8] RÉSULTAT FINAL
+    ├─ Distance nécessaire décollage/atterrissage (m)
+    ├─ Distance disponible (TORA/LDA de la piste)
+    ├─ Verdict : SAFE / WARNING / UNSAFE
+    └─ Alertes visuelles si piste trop courte
+</code></pre>
+
+<h4>Code Source - Séquence Calcul</h4>
+
+<p><strong>Fichier :</strong> <code>src/features/performance/PerformanceModule.jsx</code></p>
+
+<pre><code>// ÉTAPE 1 : Récupération température depuis METAR
+const departureTemp = useMemo(() => {
+  if (!departureAirport) return null;
+
+  // Température depuis METAR décodé
+  const metarTemp = departureWeather?.metar?.decoded?.temperature;
+
+  // ⚠️ CRITIQUE : Ne JAMAIS utiliser ISA comme fallback (sécurité)
+  if (metarTemp === undefined || metarTemp === null) {
+    console.warn('❌ Pas de température METAR disponible');
+    return null;
+  }
+
+  return metarTemp; // Température en °C
+}, [departureAirport, departureWeather]);
+
+// ÉTAPE 2 : Calcul altitude pression
+const pressureAltitude = useMemo(() => {
+  const elevation = departureAirport?.elevation || 0; // ft
+  const qnh = departureWeather?.metar?.decoded?.pressure || 1013; // hPa
+
+  // Formula: PA = Elevation + (1013 - QNH) * 27 ft/hPa
+  return elevation + (1013 - qnh) * 27;
+}, [departureAirport, departureWeather]);
+
+// ÉTAPE 3 : Sélection abaques pour interpolation
+const selectedCharts = useMemo(() => {
+  if (!aircraftPerformanceTables) return null;
+
+  // Trouver abaques encadrant l'altitude pression
+  const charts = aircraftPerformanceTables.filter(chart =>
+    chart.chartType === 'takeoff'
+  ).sort((a, b) => a.pressureAltitude - b.pressureAltitude);
+
+  // Interpolation entre 2 abaques si altitude entre 2 valeurs
+  const lowerChart = charts.filter(c => c.pressureAltitude <= pressureAltitude).pop();
+  const upperChart = charts.find(c => c.pressureAltitude >= pressureAltitude);
+
+  return { lowerChart, upperChart, pressureAltitude };
+}, [aircraftPerformanceTables, pressureAltitude]);
+
+// ÉTAPE 4 : Interpolation bilinéaire température + altitude
+function interpolateDistance(charts, temperature, pressureAlt) {
+  const { lowerChart, upperChart } = charts;
+
+  if (!lowerChart || !upperChart) return null;
+
+  // Interpolation linéaire sur température pour chaque altitude
+  const distLower = interpolateTemperature(lowerChart.dataPoints, temperature);
+  const distUpper = interpolateTemperature(upperChart.dataPoints, temperature);
+
+  // Interpolation linéaire entre altitudes
+  const altRatio = (pressureAlt - lowerChart.pressureAltitude) /
+                   (upperChart.pressureAltitude - lowerChart.pressureAltitude);
+
+  return distLower + altRatio * (distUpper - distLower);
+}
+
+// Fonction interpolation température
+function interpolateTemperature(dataPoints, temperature) {
+  // Trouver points encadrant la température
+  const sorted = dataPoints.sort((a, b) => a.temperature - b.temperature);
+
+  let lower = sorted[0];
+  let upper = sorted[sorted.length - 1];
+
+  for (let i = 0; i < sorted.length - 1; i++) {
+    if (sorted[i].temperature <= temperature && sorted[i + 1].temperature >= temperature) {
+      lower = sorted[i];
+      upper = sorted[i + 1];
+      break;
+    }
+  }
+
+  // Interpolation linéaire
+  const tempRatio = (temperature - lower.temperature) /
+                    (upper.temperature - lower.temperature);
+
+  return lower.distance + tempRatio * (upper.distance - lower.distance);
+}
+
+// ÉTAPE 5 : Application facteurs correctifs
+function applyCorrectiveFactors(baseDistance, conditions) {
+  let correctedDistance = baseDistance;
+
+  // Facteur vent
+  if (conditions.headwind > 0) {
+    correctedDistance *= (1 - conditions.headwind / 100);
+  } else if (conditions.tailwind > 0) {
+    correctedDistance *= (1 + conditions.tailwind / 50);
+  }
+
+  // Facteur pente
+  if (conditions.slope > 0) {
+    correctedDistance *= (1 + conditions.slope / 2); // Pente montante
+  } else if (conditions.slope < 0) {
+    correctedDistance *= (1 - Math.abs(conditions.slope) / 4); // Pente descendante
+  }
+
+  // Facteur surface
+  const surfaceFactors = {
+    'asphalt': 1.00,
+    'concrete': 1.00,
+    'grass': 1.20,
+    'gravel': 1.15
+  };
+  correctedDistance *= surfaceFactors[conditions.surface] || 1.00;
+
+  // Facteur état
+  if (conditions.wet) correctedDistance *= 1.15;
+  if (conditions.snow) correctedDistance *= 1.40;
+  if (conditions.ice) correctedDistance *= 2.00;
+
+  // Marge de sécurité 33%
+  return correctedDistance * 1.33;
+}
+</code></pre>
+
+<h4>Équations Mathématiques Utilisées</h4>
+
+<div class="info-box">
+    <strong>📐 Altitude Pression (Pressure Altitude)</strong><br><br>
+    <code>PA = Elevation + (1013 - QNH) × 27</code><br><br>
+    <strong>Où :</strong>
+    <ul>
+        <li><strong>PA</strong> = Pressure Altitude (ft)</li>
+        <li><strong>Elevation</strong> = Altitude terrain (ft)</li>
+        <li><strong>QNH</strong> = Pression atmosphérique ajustée au niveau de la mer (hPa)</li>
+        <li><strong>27 ft/hPa</strong> = Gradient vertical ISA (International Standard Atmosphere)</li>
+    </ul>
+    <strong>Exemple :</strong><br>
+    - Elevation LFST (Strasbourg) = 502 ft<br>
+    - QNH actuel = 1005 hPa<br>
+    - PA = 502 + (1013 - 1005) × 27 = 502 + 216 = <strong>718 ft</strong>
+</div>
+
+<div class="success-box">
+    <strong>📏 Interpolation Linéaire Simple (1D)</strong><br><br>
+    <code>y = y₁ + (x - x₁) / (x₂ - x₁) × (y₂ - y₁)</code><br><br>
+    <strong>Où :</strong>
+    <ul>
+        <li><strong>y</strong> = Valeur recherchée</li>
+        <li><strong>x</strong> = Variable d'entrée (ex: température)</li>
+        <li><strong>(x₁, y₁)</strong> = Point inférieur encadrant</li>
+        <li><strong>(x₂, y₂)</strong> = Point supérieur encadrant</li>
+    </ul>
+    <strong>Exemple Température :</strong><br>
+    - Points abaque: (-10°C, 240m) et (0°C, 265m)<br>
+    - Température actuelle: -5°C<br>
+    - Distance = 240 + (-5 - (-10)) / (0 - (-10)) × (265 - 240)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 240 + 5/10 × 25<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 240 + 12.5<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <strong>252.5 m</strong>
+</div>
+
+<div class="warning-box">
+    <strong>🔬 Interpolation Bilinéaire (2D)</strong><br><br>
+    Pour interpoler simultanément sur 2 variables (température ET altitude):<br><br>
+    <code>f(x, y) = f(0,0) × (1-s) × (1-t) + f(1,0) × s × (1-t) + f(0,1) × (1-s) × t + f(1,1) × s × t</code><br><br>
+    <strong>Où :</strong>
+    <ul>
+        <li><strong>s</strong> = (x - x₀) / (x₁ - x₀)</li>
+        <li><strong>t</strong> = (y - y₀) / (y₁ - y₀)</li>
+        <li><strong>f(i,j)</strong> = Valeurs aux 4 coins de la grille</li>
+    </ul>
+    <strong>Exemple concret :</strong><br>
+    Données abaques:<br>
+    - 0 ft, -10°C → 240m<br>
+    - 0 ft, 0°C → 265m<br>
+    - 2000 ft, -10°C → 280m<br>
+    - 2000 ft, 0°C → 310m<br><br>
+    Calcul pour: 1000 ft, -5°C<br>
+    - s = (-5 - (-10)) / (0 - (-10)) = 0.5<br>
+    - t = (1000 - 0) / (2000 - 0) = 0.5<br>
+    Distance = 240×0.25 + 265×0.25 + 280×0.25 + 310×0.25 = <strong>273.75 m</strong>
+</div>
+
+<h4>Composante de Vent Effectif sur Piste</h4>
+
+<pre><code>Headwind = WindSpeed × cos(WindAngle - RunwayHeading)
+Crosswind = WindSpeed × sin(WindAngle - RunwayHeading)
+
+Facteur Correction Décollage:
+- Si Headwind > 0: Distance × (1 - Headwind / 100)
+- Si Tailwind > 0: Distance × (1 + Tailwind / 50)
+
+Exemple:
+- Piste 08 (QFU 080°)
+- Vent 120° / 15 kt
+- Angle relatif = 120° - 80° = 40°
+- Headwind = 15 × cos(40°) = 15 × 0.766 = 11.5 kt
+- Distance de base = 300m
+- Distance corrigée = 300 × (1 - 11.5/100) = 300 × 0.885 = 265.5 m
+  (Le vent de face réduit la distance nécessaire)
+</code></pre>
+
+<h4>Correction Pente de Piste</h4>
+
+<pre><code>Distance_Pente = Distance_Base × (1 + Slope% / FacteurPente)
+
+Où:
+- FacteurPente_Montante = 2.0 (pente divisée par 2)
+- FacteurPente_Descendante = 4.0 (pente divisée par 4)
+
+Exemple pente montante 2%:
+- Distance de base = 300m
+- Distance corrigée = 300 × (1 + 2/2) = 300 × 2 = 600m
+  (Pente montante DOUBLE la distance !)
+
+Exemple pente descendante -2%:
+- Distance de base = 300m
+- Distance corrigée = 300 × (1 - 2/4) = 300 × 0.5 = 150m
+  (Pente descendante réduit la distance)
+</code></pre>
+
+<h4>Méthode de Création d'Abaques Numériques de A à Z</h4>
+
+<p><strong>Workflow Complet en 8 Étapes :</strong></p>
+
+<pre><code>[1] ACQUISITION MANEX PDF
+    ↓
+[2] EXTRACTION IMAGE ABAQUE
+    ├─ Outil: PDF.js (pdfjs-dist)
+    ├─ Page identifiée manuellement (ex: page 35)
+    └─ Exportation PNG haute résolution (300 DPI)
+    ↓
+[3] NUMÉRISATION AXES ET COURBES
+    ├─ Méthode manuelle: Lecture coordonnées pixels
+    ├─ Méthode semi-auto: Détection contours (OpenCV.js)
+    └─ Méthode IA: OpenAI Vision API (GPT-4 Vision)
+    ↓
+[4] EXTRACTION POINTS DE DONNÉES
+    ├─ Identification courbes (altitude 0, 2000, 4000...)
+    ├─ Lecture points sur chaque courbe (tous les 10°C)
+    └─ Conversion pixels → valeurs réelles
+    ↓
+[5] VALIDATION ET VÉRIFICATION
+    ├─ Comparaison avec valeurs connues du MANEX
+    ├─ Vérification cohérence (distances croissantes)
+    └─ Tests avec conditions réelles
+    ↓
+[6] STRUCTURATION JSON
+    ├─ Métadonnées: nom, type, unités
+    ├─ Courbes: altitude pression
+    └─ DataPoints: température → distance
+    ↓
+[7] STOCKAGE INDEXEDDB
+    ├─ Table: aircraftPerformanceTables
+    ├─ Indexation: aircraftId + chartType
+    └─ Compression: gzip pour optimiser
+    ↓
+[8] UTILISATION DANS L'APP
+    └─ Interpolation temps réel avec conditions actuelles
+</code></pre>
+
+<h4>Exemple Pratique : Numérisation Abaque DA40 NG</h4>
+
+<p><strong>Étape 1 : Abaque Original (Papier)</strong></p>
+<pre><code>TAKEOFF DISTANCE - SEA LEVEL
+Diamond DA40 NG (MTOW 1310 kg)
+
+[Graphique avec:]
+- Axe X: OAT (Outside Air Temperature) de -20°C à +40°C
+- Axe Y: Ground Roll Distance de 200m à 450m
+- Courbes: Pression altitude 0 ft, 2000 ft, 4000 ft
+</code></pre>
+
+<p><strong>Étape 2 : Identification Coordonnées Pixels</strong></p>
+<pre><code>// Calibration axes (mesure manuelle avec outil de mesure)
+const chart = {
+  pixelOrigin: { x: 150, y: 850 }, // Coin bas-gauche du graphique
+  pixelMaxX: 950,                   // Coin bas-droit
+  pixelMaxY: 150,                   // Coin haut-gauche
+
+  realMinX: -20,  // °C
+  realMaxX: 40,   // °C
+  realMinY: 200,  // m
+  realMaxY: 450   // m
+};
+
+// Fonction conversion pixel → valeur réelle
+function pixelToReal(px, py) {
+  const xRatio = (px - chart.pixelOrigin.x) / (chart.pixelMaxX - chart.pixelOrigin.x);
+  const yRatio = (chart.pixelOrigin.y - py) / (chart.pixelOrigin.y - chart.pixelMaxY);
+
+  const realX = chart.realMinX + xRatio * (chart.realMaxX - chart.realMinX);
+  const realY = chart.realMinY + yRatio * (chart.realMaxY - chart.realMinY);
+
+  return { temperature: realX, distance: realY };
+}
+</code></pre>
+
+<p><strong>Étape 3 : Structure JSON Finale</strong></p>
+<pre><code>{
+  "id": "da40ng-takeoff-sea-level",
+  "aircraftId": "f-hstr",
+  "chartName": "Takeoff Distance - Sea Level",
+  "chartType": "takeoff",
+  "phase": "ground_roll",
+  "pressureAltitude": 0,
+  "units": {
+    "temperature": "celsius",
+    "distance": "meters"
+  },
+  "conditions": {
+    "wind": "calm",
+    "surface": "hard_paved",
+    "flaps": 0,
+    "weight": 1310
+  },
+  "dataPoints": [
+    { "temperature": -20, "distance": 215 },
+    { "temperature": -10, "distance": 240 },
+    { "temperature": 0, "distance": 265 },
+    { "temperature": 10, "distance": 295 },
+    { "temperature": 20, "distance": 330 },
+    { "temperature": 30, "distance": 370 },
+    { "temperature": 40, "distance": 420 }
+  ],
+  "metadata": {
+    "source": "DA40 NG Flight Manual",
+    "version": "Rev. 5",
+    "dateExtracted": "2024-12-15",
+    "extractedBy": "manual_digitization",
+    "validated": true
+  }
+}
+</code></pre>
+
+<h4>Méthode de Classement des Abaques</h4>
+
+<p><strong>Organisation hiérarchique :</strong></p>
+<pre><code>performanceTables/
+├── takeoff/
+│   ├── sea_level/
+│   │   ├── 1200kg.json
+│   │   ├── 1250kg.json
+│   │   └── 1310kg.json (MTOW)
+│   ├── 2000ft/
+│   │   └── ...
+│   ├── 4000ft/
+│   └── 6000ft/
+├── landing/
+│   ├── sea_level/
+│   ├── 2000ft/
+│   └── 4000ft/
+└── climb/
+    └── rate_of_climb.json
+</code></pre>
+
+<p><strong>Nomenclature fichiers :</strong></p>
+<pre><code>{aircraftType}_{phase}_{altitude}_{mass}_{conditions}.json
+
+Exemples:
+- da40ng_takeoff_0ft_1310kg_flaps0.json
+- da40ng_landing_2000ft_1250kg_fullflaps.json
+- c172_takeoff_sl_max_gross.json
+</code></pre>
+
+<h4>Exemple Graphique d'Abaque Numérisé</h4>
+
+<p><strong>Représentation Visuelle ASCII :</strong></p>
+<pre><code>TAKEOFF DISTANCE vs OAT - DA40 NG (Sea Level)
+Distance (m)
+   450 |                                      *  (40°C)
+       |                                   *
+   420 |                                *
+       |                             *
+   390 |                          *
+       |                       *
+   360 |                    *
+       |                 *                     Courbe: 0 ft PA
+   330 |              * (20°C)
+       |           *
+   300 |        *
+       |     *
+   270 |  * (0°C)
+       |*
+   240 |* (-10°C)
+       |
+   215 |* (-20°C)
+       +----+----+----+----+----+----+----+----+---- OAT (°C)
+      -20  -10   0   10   20   30   40
+
+LÉGENDE:
+* = Points de données extraits de l'abaque
+Ligne continue = Interpolation linéaire entre points
+</code></pre>
+
+<h4>Exemple Calcul Complet</h4>
+
+<pre><code>// Données d'entrée
+const inputs = {
+  aircraft: "F-HSTR (DA40 NG)",
+  departure: "LFST (Strasbourg Entzheim)",
+  elevation: 502, // ft
+  qnh: 1005, // hPa
+  temperature: 15, // °C
+  wind: { direction: 270, speed: 10 }, // kt
+  runway: { heading: 87, length: 2400, surface: 'asphalt' },
+  mass: 1285 // kg
+};
+
+// Étape 1 : Altitude pression
+const PA = inputs.elevation + (1013 - inputs.qnh) * 27;
+console.log(`Altitude pression: ${PA} ft`); // 718 ft
+
+// Étape 2 : Interpolation abaque
+const baseDistance = interpolateFromChart(
+  PA,              // 718 ft
+  inputs.temperature, // 15°C
+  inputs.mass      // 1285 kg
+);
+console.log(`Distance de base (abaque): ${baseDistance} m`); // 310 m
+
+// Étape 3 : Vent effectif
+const windAngle = inputs.wind.direction - inputs.runway.heading;
+const headwind = inputs.wind.speed * Math.cos(windAngle * Math.PI / 180);
+console.log(`Vent effectif: ${headwind.toFixed(1)} kt`); // 0.5 kt (quasi-nul)
+
+const windFactor = headwind > 0 ? (1 - headwind / 100) : (1 + Math.abs(headwind) / 50);
+const distanceWithWind = baseDistance * windFactor;
+console.log(`Distance avec vent: ${distanceWithWind.toFixed(0)} m`); // 308 m
+
+// Étape 4 : Marge de sécurité 33%
+const safeDistance = distanceWithWind * 1.33;
+console.log(`Distance sécurisée: ${safeDistance.toFixed(0)} m`); // 410 m
+
+// Étape 5 : Verdict
+const runwayAvailable = inputs.runway.length;
+const margin = runwayAvailable - safeDistance;
+const verdict = margin > 0 ? 'SAFE' : 'UNSAFE';
+
+console.log(`\n=== RÉSULTAT ===`);
+console.log(`Distance nécessaire: ${safeDistance.toFixed(0)} m`);
+console.log(`Piste disponible: ${runwayAvailable} m`);
+console.log(`Marge: ${margin.toFixed(0)} m`);
+console.log(`Verdict: ${verdict} ✅`);
+</code></pre>
+
+<p><strong>Output console :</strong></p>
+<pre><code>Altitude pression: 718 ft
+Distance de base (abaque): 310 m
+Vent effectif: 0.5 kt
+Distance avec vent: 308 m
+Distance sécurisée: 410 m
+
+=== RÉSULTAT ===
+Distance nécessaire: 410 m
+Piste disponible: 2400 m
+Marge: 1990 m
+Verdict: SAFE ✅
+</code></pre>
+
+<h4>Gestion des Cas Limites et Erreurs</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Cas Limite</th>
+            <th>Détection</th>
+            <th>Action</th>
+            <th>Sévérité</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Absence METAR</td>
+            <td><code>temperature === null</code></td>
+            <td>Bloquer calcul + demander saisie manuelle</td>
+            <td>🔴 CRITIQUE</td>
+        </tr>
+        <tr>
+            <td>Extrapolation hors limites</td>
+            <td><code>temp < minTemp || temp > maxTemp</code></td>
+            <td>Prolongement linéaire avec warning</td>
+            <td>🟡 WARNING</td>
+        </tr>
+        <tr>
+            <td>Masse > MTOW</td>
+            <td><code>mass > aircraft.maxTakeoffWeight</code></td>
+            <td>Bloquer calcul</td>
+            <td>🔴 BLOCKING</td>
+        </tr>
+        <tr>
+            <td>Vent travers excessif</td>
+            <td><code>crosswind > maxDemonstrated</code></td>
+            <td>Alerte visuelle</td>
+            <td>🟡 WARNING</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Performance et Optimisations</h4>
+
+<p><strong>Mise en cache des calculs :</strong></p>
+<pre><code>import { useMemo } from 'react';
+
+// Mémoïsation des calculs coûteux
+const performanceResults = useMemo(() => {
+  return calculatePerformance(
+    aircraft,
+    conditions,
+    performanceTables
+  );
+}, [aircraft.id, conditions.temperature, conditions.altitude, performanceTables]);
+</code></pre>
+
+<p><strong>Pré-calcul tables de lookup :</strong></p>
+<pre><code>// Pré-générer une table de lookup pour accès instantané
+const lookupTable = useMemo(() => {
+  const table = {};
+
+  for (let temp = -20; temp <= 40; temp += 1) {
+    for (let alt = 0; alt <= 8000; alt += 500) {
+      const key = `${temp}_${alt}`;
+      table[key] = interpolateFromChart(alt, temp, mass);
+    }
+  }
+
+  return table;
+}, [performanceTables, mass]);
+
+// Utilisation O(1) au lieu de O(n) interpolation
+const distance = lookupTable[`${temperature}_${altitude}`];
+</code></pre>
+
+<h4>Tests Unitaires</h4>
+
+<pre><code>describe('Performance Calculations', () => {
+  test('Interpolation température simple', () => {
+    const dataPoints = [
+      { temperature: -10, distance: 240 },
+      { temperature: 0, distance: 265 }
+    ];
+
+    const result = interpolateTemperature(dataPoints, -5);
+    expect(result).toBeCloseTo(252.5, 1);
+  });
+
+  test('Calcul altitude pression', () => {
+    const PA = calculatePressureAltitude(502, 1005);
+    expect(PA).toBeCloseTo(718, 0);
+  });
+
+  test('Vent de face réduit distance', () => {
+    const corrected = applyWindCorrection(300, 10, 'headwind');
+    expect(corrected).toBeLessThan(300);
+  });
+
+  test('Pente montante augmente distance', () => {
+    const corrected = applySlopeCorrection(300, 2); // 2% montée
+    expect(corrected).toBeCloseTo(600, 0);
+  });
+});
+</code></pre>
 
 <h4>Composants Principaux</h4>
 
@@ -1209,178 +1904,13 @@ Affichage:
     </tbody>
 </table>
 
-<h4>Paramètres d'Entrée</h4>
-
-<p>Le module collecte automatiquement les données nécessaires:</p>
-
-<table>
-    <thead>
-        <tr>
-            <th>Paramètre</th>
-            <th>Source</th>
-            <th>Utilisation</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Masse totale</td>
-            <td><code>weightBalance.calculations.totalWeight</code></td>
-            <td>Interpolation abaques</td>
-        </tr>
-        <tr>
-            <td>QNH</td>
-            <td><code>weatherData[icao].metar.qnh</code></td>
-            <td>Altitude densité</td>
-        </tr>
-        <tr>
-            <td>Température</td>
-            <td><code>weatherData[icao].metar.temperature</code></td>
-            <td>Écart ISA</td>
-        </tr>
-        <tr>
-            <td>Vent</td>
-            <td><code>weatherData[icao].metar.wind</code></td>
-            <td>Composante face/arrière/travers</td>
-        </tr>
-        <tr>
-            <td>Élévation piste</td>
-            <td><code>airport.elevation</code></td>
-            <td>Altitude densité</td>
-        </tr>
-        <tr>
-            <td>Abaques</td>
-            <td><code>aircraft.performanceTables</code></td>
-            <td>Distances, vitesses, pentes</td>
-        </tr>
-    </tbody>
-</table>
-
-<h4>Calcul Altitude Densité</h4>
-
-<pre><code>// Température ISA standard
-ISA_temp = 15°C - (2°C × (elevation_ft / 1000))
-
-// Écart ISA
-ISA_deviation = actual_temp - ISA_temp
-
-// Altitude pression
-pressure_altitude = elevation + ((1013 - QNH) × 30)
-
-// Altitude densité
-density_altitude = pressure_altitude + (120 × ISA_deviation)
-
-Exemple:
-- Élévation: 1500 ft
-- QNH: 1008 hPa
-- Temp: 28°C
-- ISA standard: 15 - (2 × 1.5) = 12°C
-- Écart ISA: +16°C
-- Alt pression: 1500 + ((1013-1008)×30) = 1650 ft
-- Alt densité: 1650 + (120 × 16) = 3570 ft ⚠️
-</code></pre>
-
-<h4>Interpolation Abaques 2D/3D</h4>
-
-<p>Le système supporte 2 types d'abaques:</p>
-
-<div class="info-box">
-    <strong>Type 1 - Abaque 2D (simple):</strong><br>
-    1 variable d'entrée → 1 variable de sortie<br>
-    Exemple: Masse → Distance décollage<br>
-    <code>Interpolation linéaire: y = y1 + (x - x1) × (y2 - y1) / (x2 - x1)</code>
-</div>
-
-<div class="info-box">
-    <strong>Type 2 - Abaque 3D (multiple):</strong><br>
-    2+ variables → 1 sortie<br>
-    Exemple: (Masse, Température) → Distance décollage<br>
-    <code>Interpolation bilinéaire avec grille de valeurs</code>
-</div>
-
-<h4>Résultats Fournis</h4>
-
-<p>Pour chaque phase (TO/LDG), le module calcule:</p>
-
-<table>
-    <thead>
-        <tr>
-            <th>Résultat</th>
-            <th>Description</th>
-            <th>Unité</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td><strong>Distance roulement</strong></td>
-            <td>Ground roll (sans obstacle)</td>
-            <td>m / ft</td>
-        </tr>
-        <tr>
-            <td><strong>Distance 15m</strong></td>
-            <td>Distance franchissement 50ft</td>
-            <td>m / ft</td>
-        </tr>
-        <tr>
-            <td><strong>V-speeds</strong></td>
-            <td>Vr, V2, Vref selon masse</td>
-            <td>kt / km/h</td>
-        </tr>
-        <tr>
-            <td><strong>Pente montée</strong></td>
-            <td>Gradient climb au TO</td>
-            <td>% ou ft/NM</td>
-        </tr>
-        <tr>
-            <td><strong>Marge piste</strong></td>
-            <td>Longueur disponible - requise</td>
-            <td>m / ft</td>
-        </tr>
-    </tbody>
-</table>
-
-<h4>Suggestion Piste Optimale</h4>
-
-<p>Le composant <code>RunwaySuggestionEnhanced</code> analyse toutes les pistes et recommande:</p>
-
-<pre><code>Pour chaque QFU:
-1. Calculer composante vent face/arrière (headwind/tailwind)
-2. Calculer composante vent de travers (crosswind)
-3. Scorer:
-   - Headwind: +1 point par kt
-   - Tailwind: -2 points par kt (pénalité double)
-   - Longueur > required: +10 points
-   - Longueur < required: -50 points (éliminatoire)
-
-Affichage:
-🟢 Piste recommandée (meilleur score + marge suffisante)
-🟡 Piste acceptable (marge limitée)
-🔴 Piste inadaptée (trop courte ou tailwind excessif)
-</code></pre>
-
-<h4>Chargement Abaques depuis IndexedDB</h4>
-
-<p>Les abaques sont chargés à la volée:</p>
-
-<pre><code>// Au chargement du module
-useEffect(() => {
-  if (selectedAircraft?.id) {
-    // Récupérer depuis IndexedDB
-    const fullAircraft = await dataBackupManager.getAircraftData(id);
-
-    // Prioriser performanceModels (nouveau format)
-    const abaques = fullAircraft.performanceModels || fullAircraft.performanceTables;
-
-    setLoadedPerformanceTables(abaques);
-  }
-}, [selectedAircraft?.id]);
-</code></pre>
-
 <div class="warning-box">
-    <strong>⚠️ Limitations:</strong>
+    <strong>⚠️ Limitations Actuelles :</strong>
     <ul>
         <li>Abaques doivent être digitalisés au préalable (via Aircraft Wizard Step 4)</li>
         <li>Interpolation limitée aux plages définies dans les abaques</li>
         <li>Corrections manuelles nécessaires pour conditions spéciales (piste mouillée, neige, pente)</li>
+        <li>Pas de support automatique pour surfaces contaminées (slush, standing water)</li>
     </ul>
 </div>
 
@@ -2264,29 +2794,285 @@ useEffect(() => {
 
 <h2 id="modules-support">2.2 Modules de Support (Gestion et Suivi)</h2>
 
-<h3 id="module-pilot">2.2.1 Module Pilot (Profil Pilote)</h3>
+<p>Les modules de support d'ALFlight permettent au pilote de gérer l'ensemble de son activité aéronautique : profil personnel, licences, carnet de vol, checklists, documentation réglementaire, et suivi technique des avions. Ces modules sont conçus pour une utilisation quotidienne et un archivage réglementaire.</p>
+
+<h3 id="module-pilot">2.2.1 Module Pilot (Profil Pilote et Licences)</h3>
 
 <div class="info-box">
     <strong>📂 Emplacement:</strong> <code>src/features/pilot/</code><br>
     <strong>🎯 Fonction:</strong> Gestion profil pilote avec licences, qualifications, expérience, et historique vols<br>
     <strong>📦 Store:</strong> <code>pilotStore</code> (Zustand)<br>
-    <strong>💾 Persistance:</strong> Supabase (pilot_profiles)
+    <strong>💾 Persistance:</strong> Supabase (pilot_profiles) + localStorage backup<br>
+    <strong>📄 Fichiers clés:</strong> <code>PilotModule.jsx</code> (800 lignes), <code>PilotInfo.jsx</code>, <code>LicenseManager.jsx</code>
 </div>
 
-<h4>Onglets du Module</h4>
+<h4>Informations Personnelles</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Champ</th>
+            <th>Type</th>
+            <th>Validation</th>
+            <th>Utilité</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Nom / Prénom</td>
+            <td>Text</td>
+            <td>Required, 2-50 caractères</td>
+            <td>Identification, export PDF credentials</td>
+        </tr>
+        <tr>
+            <td>Date de naissance</td>
+            <td>Date</td>
+            <td>Required, > 16 ans (LAPL), > 17 ans (PPL)</td>
+            <td>Calcul âge pour renouvellements médicaux</td>
+        </tr>
+        <tr>
+            <td>Adresse</td>
+            <td>Text</td>
+            <td>Optional</td>
+            <td>Contact, assurance</td>
+        </tr>
+        <tr>
+            <td>Email</td>
+            <td>Email</td>
+            <td>Required, format email valide</td>
+            <td>Authentification Supabase, notifications</td>
+        </tr>
+        <tr>
+            <td>Téléphone</td>
+            <td>Tel</td>
+            <td>Optional, format international +33...</td>
+            <td>Contact urgence, assurance</td>
+        </tr>
+        <tr>
+            <td>Photo profil</td>
+            <td>Image</td>
+            <td>Optional, max 2 MB, jpg/png</td>
+            <td>Supabase Storage bucket 'avatars'</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Licences et Qualifications</h4>
+
+<p><strong>Types de licences supportés :</strong></p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Licence</th>
+            <th>Acronyme</th>
+            <th>Champs Spécifiques</th>
+            <th>Validité</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Light Aircraft Pilot Licence</td>
+            <td>LAPL</td>
+            <td>Numéro, date obtention, autorité (EASA)</td>
+            <td>Permanente (sauf médical)</td>
+        </tr>
+        <tr>
+            <td>Private Pilot Licence</td>
+            <td>PPL</td>
+            <td>Numéro, date obtention, autorité (EASA/DGAC)</td>
+            <td>Permanente (sauf médical)</td>
+        </tr>
+        <tr>
+            <td>Commercial Pilot Licence</td>
+            <td>CPL</td>
+            <td>Numéro, date obtention, autorité</td>
+            <td>Permanente (sauf médical + SEP revalidation)</td>
+        </tr>
+        <tr>
+            <td>Instrument Rating</td>
+            <td>IR</td>
+            <td>Numéro, date obtention, type (SE/ME)</td>
+            <td>Revalidation annuelle</td>
+        </tr>
+        <tr>
+            <td>Airline Transport Pilot Licence</td>
+            <td>ATPL</td>
+            <td>Numéro, date obtention, type rating</td>
+            <td>Permanente (revalidation 6 mois)</td>
+        </tr>
+    </tbody>
+</table>
+
+<p><strong>Qualifications de classe/type :</strong></p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Qualification</th>
+            <th>Description</th>
+            <th>Revalidation</th>
+            <th>Conditions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>SEP (Single-Engine Piston)</td>
+            <td>Avions monomoteurs à pistons</td>
+            <td>24 mois</td>
+            <td>12h vol dont 6h PIC + 1h instruction + 12 TO/LDG</td>
+        </tr>
+        <tr>
+            <td>MEP (Multi-Engine Piston)</td>
+            <td>Avions multimoteurs à pistons</td>
+            <td>12 mois</td>
+            <td>10h vol dont 6h PIC + contrôle compétence</td>
+        </tr>
+        <tr>
+            <td>Night Rating</td>
+            <td>Vol de nuit</td>
+            <td>Permanente</td>
+            <td>Formation initiale 5h nuit + 5 atterrissages</td>
+        </tr>
+        <tr>
+            <td>Aerobatics</td>
+            <td>Voltige aérienne</td>
+            <td>24 mois</td>
+            <td>Formation + contrôle compétence</td>
+        </tr>
+        <tr>
+            <td>Mountain Rating</td>
+            <td>Vol montagne</td>
+            <td>24 mois</td>
+            <td>Formation spécifique + 3 atterrissages montagne</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Visite Médicale (Medical Certificate)</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Classe</th>
+            <th>Usage</th>
+            <th>Validité < 40 ans</th>
+            <th>Validité 40-50 ans</th>
+            <th>Validité > 50 ans</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Classe 1</td>
+            <td>Pilote professionnel (CPL, ATPL)</td>
+            <td>12 mois</td>
+            <td>12 mois</td>
+            <td>6 mois</td>
+        </tr>
+        <tr>
+            <td>Classe 2</td>
+            <td>Pilote privé (PPL)</td>
+            <td>60 mois (5 ans)</td>
+            <td>24 mois (2 ans)</td>
+            <td>12 mois (1 an)</td>
+        </tr>
+        <tr>
+            <td>LAPL Medical</td>
+            <td>LAPL uniquement</td>
+            <td>60 mois</td>
+            <td>24 mois</td>
+            <td>12 mois</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Alertes et Notifications Automatiques</h4>
+
+<p>Le module envoie des alertes (email + notification in-app) pour :</p>
+
+<pre><code>// Calcul expiration médicale
+function checkMedicalValidity(pilot) {
+  const medicalClass = pilot.medicalClass; // 1, 2, LAPL
+  const age = calculateAge(pilot.birthDate);
+  const medicalIssueDate = pilot.medicalIssueDate;
+
+  let validityMonths;
+  if (medicalClass === 1) {
+    validityMonths = age < 40 ? 12 : (age < 50 ? 12 : 6);
+  } else if (medicalClass === 2) {
+    validityMonths = age < 40 ? 60 : (age < 50 ? 24 : 12);
+  } else { // LAPL
+    validityMonths = age < 40 ? 60 : (age < 50 ? 24 : 12);
+  }
+
+  const expirationDate = addMonths(medicalIssueDate, validityMonths);
+  const daysRemaining = differenceInDays(expirationDate, new Date());
+
+  // Alertes
+  if (daysRemaining <= 0) {
+    return { status: 'EXPIRED', severity: 'critical', message: 'Certificat médical expiré !' };
+  } else if (daysRemaining <= 30) {
+    return { status: 'WARNING', severity: 'warning', message: `Renouveler avant ${daysRemaining} jours` };
+  } else if (daysRemaining <= 60) {
+    return { status: 'NOTICE', severity: 'info', message: `Penser à renouveler (${daysRemaining} jours)` };
+  }
+
+  return { status: 'VALID', severity: 'success', message: `Valide jusqu'au ${format(expirationDate, 'dd/MM/yyyy')}` };
+}
+
+// Alertes SEP revalidation
+function checkSEPValidity(pilot, logbook) {
+  const lastRevalidation = pilot.sepRevalidationDate;
+  const expirationDate = addMonths(lastRevalidation, 24);
+
+  // Vérifier activité récente (12 derniers mois)
+  const last12Months = subMonths(new Date(), 12);
+  const recentFlights = logbook.filter(f => f.date >= last12Months && f.aircraftClass === 'SEP');
+
+  const totalHours = sumBy(recentFlights, 'flightTime') / 60;
+  const picHours = sumBy(recentFlights.filter(f => f.function === 'PIC'), 'flightTime') / 60;
+  const totalLandings = sumBy(recentFlights, 'landings');
+
+  const requirementsMet = totalHours >= 12 && picHours >= 6 && totalLandings >= 12;
+
+  if (!requirementsMet) {
+    return {
+      status: 'REQUIREMENTS_NOT_MET',
+      severity: 'warning',
+      message: `Activité insuffisante pour revalidation (${totalHours.toFixed(1)}h dont ${picHours.toFixed(1)}h PIC, ${totalLandings} atterrissages)`,
+      needed: {
+        hours: Math.max(0, 12 - totalHours),
+        picHours: Math.max(0, 6 - picHours),
+        landings: Math.max(0, 12 - totalLandings)
+      }
+    };
+  }
+
+  return { status: 'VALID', severity: 'success', message: 'SEP valide' };
+}
+</code></pre>
+
+<h4>Export PDF Credentials</h4>
+
+<p>Fonctionnalité export PDF profil complet pilote :</p>
 
 <ul>
-    <li><strong>Profil Pilote:</strong> Infos personnelles, licences (PPL/CPL), qualifications (SEP, MEP, IR, etc.)</li>
-    <li><strong>Historique des vols:</strong> Tableau complet des vols avec filtres et statistiques</li>
+    <li>Photo + infos personnelles</li>
+    <li>Licences avec numéros et dates</li>
+    <li>Qualifications avec validités</li>
+    <li>Certificat médical (classe, expiration)</li>
+    <li>Statistiques vol (heures totales, PIC, types avion)</li>
+    <li>QR code vers profil Supabase (optionnel)</li>
 </ul>
 
-<h3 id="module-logbook">2.2.2 Module Logbook (Carnet de Vol)</h3>
+<h3 id="module-logbook">2.2.2 Module Logbook (Carnet de Vol Électronique)</h3>
 
 <div class="info-box">
-    <strong>📂 Emplacement:</strong> <code>src/features/pilot/components/PilotLogbook.jsx</code><br>
-    <strong>🎯 Fonction:</strong> Enregistrement automatique des vols avec extraction depuis plans validés<br>
-    <strong>📦 Store:</strong> <code>logbookStore</code><br>
-    <strong>💾 Persistance:</strong> Supabase (logbook_entries)
+    <strong>📂 Emplacement:</strong> <code>src/features/logbook/</code><br>
+    <strong>🎯 Fonction:</strong> Carnet de vol électronique réglementaire avec totalisations automatiques<br>
+    <strong>📦 Store:</strong> <code>logbookStore</code> (Zustand)<br>
+    <strong>💾 Persistance:</strong> Supabase (logbook_entries) + export CSV/PDF<br>
+    <strong>📄 Fichiers clés:</strong> <code>LogbookModule.jsx</code> (600 lignes), <code>PilotLogbook.jsx</code> (1900 lignes)
 </div>
 
 <h4>Données Enregistrées par Vol</h4>
@@ -2297,77 +3083,655 @@ useEffect(() => {
             <th>Champ</th>
             <th>Source</th>
             <th>Type</th>
+            <th>Validation</th>
         </tr>
     </thead>
     <tbody>
         <tr>
             <td>Date</td>
-            <td><code>flightPlan.generalInfo.flightDate</code></td>
+            <td><code>flightPlan.generalInfo.flightDate</code> (auto) ou saisie manuelle</td>
             <td>Date</td>
+            <td>Required, format DD/MM/YYYY</td>
         </tr>
         <tr>
-            <td>Départ/Arrivée</td>
-            <td><code>route.waypoints[0/last].icao</code></td>
-            <td>ICAO</td>
+            <td>Départ (ICAO)</td>
+            <td><code>route.waypoints[0].icao</code> (auto) ou saisie</td>
+            <td>Text 4 chars</td>
+            <td>Required, format ICAO (LFST, LFPO...)</td>
         </tr>
         <tr>
-            <td>Avion</td>
-            <td><code>aircraft.registration</code></td>
+            <td>Arrivée (ICAO)</td>
+            <td><code>route.waypoints[last].icao</code> (auto) ou saisie</td>
+            <td>Text 4 chars</td>
+            <td>Required, format ICAO</td>
+        </tr>
+        <tr>
+            <td>Immatriculation</td>
+            <td><code>aircraft.registration</code> (auto) ou saisie</td>
             <td>Text</td>
+            <td>Required, format F-ABCD ou équivalent</td>
         </tr>
         <tr>
-            <td>Temps de vol</td>
-            <td><code>navigationResults.totalTime</code></td>
-            <td>Minutes</td>
+            <td>Type avion</td>
+            <td><code>aircraft.model</code> (auto) ou saisie</td>
+            <td>Text</td>
+            <td>Optional (DA40, C172, PA28...)</td>
+        </tr>
+        <tr>
+            <td>Temps de vol (Total)</td>
+            <td><code>navigationResults.totalTime</code> (auto) ou saisie</td>
+            <td>Durée HH:MM</td>
+            <td>Required, format 01:30 (1h30)</td>
+        </tr>
+        <tr>
+            <td>Temps PIC</td>
+            <td>Saisie manuelle ou = Total si solo</td>
+            <td>Durée HH:MM</td>
+            <td>≤ Temps Total</td>
+        </tr>
+        <tr>
+            <td>Temps DUAL</td>
+            <td>Saisie manuelle (instruction)</td>
+            <td>Durée HH:MM</td>
+            <td>≤ Temps Total, exclusif avec PIC</td>
         </tr>
         <tr>
             <td>Atterrissages</td>
-            <td>Comptage waypoints ICAO</td>
+            <td>Comptage waypoints ICAO (auto) ou saisie</td>
             <td>Number</td>
+            <td>≥ 1</td>
         </tr>
         <tr>
-            <td>Jour/Nuit</td>
-            <td><code>flightPlan.generalInfo.dayNight</code></td>
+            <td>Jour / Nuit</td>
+            <td><code>flightPlan.generalInfo.dayNight</code> (auto) ou saisie</td>
             <td>Enum</td>
+            <td>DAY, NIGHT, MIXED</td>
         </tr>
         <tr>
-            <td>Type vol</td>
-            <td><code>flightPlan.generalInfo.flightType</code></td>
-            <td>VFR/IFR</td>
+            <td>VFR / IFR</td>
+            <td><code>flightPlan.generalInfo.flightType</code> (auto) ou saisie</td>
+            <td>Enum</td>
+            <td>VFR, IFR</td>
+        </tr>
+        <tr>
+            <td>SEP / MEP</td>
+            <td><code>aircraft.engineCount</code> (auto) ou saisie</td>
+            <td>Enum</td>
+            <td>SEP (single), MEP (multi)</td>
+        </tr>
+        <tr>
+            <td>Remarques</td>
+            <td>Saisie manuelle</td>
+            <td>Text area</td>
+            <td>Optional, max 500 caractères</td>
         </tr>
     </tbody>
 </table>
 
-<h4>Statistiques Automatiques</h4>
+<h4>Totalisations Automatiques</h4>
+
+<p>Le module calcule automatiquement les totaux suivants (mise à jour temps réel) :</p>
+
+<pre><code>// Calcul totalisations depuis logbook
+function calculateTotals(logbookEntries, filters) {
+  const filtered = applyFilters(logbookEntries, filters);
+
+  const totals = {
+    // Temps total
+    totalTime: sumDurations(filtered, 'flightTime'),
+
+    // Temps par fonction
+    picTime: sumDurations(filtered.filter(e => e.function === 'PIC'), 'flightTime'),
+    dualTime: sumDurations(filtered.filter(e => e.function === 'DUAL'), 'flightTime'),
+    soloTime: sumDurations(filtered.filter(e => e.function === 'SOLO'), 'flightTime'),
+
+    // Temps par classe avion
+    sepTime: sumDurations(filtered.filter(e => e.aircraftClass === 'SEP'), 'flightTime'),
+    mepTime: sumDurations(filtered.filter(e => e.aircraftClass === 'MEP'), 'flightTime'),
+
+    // Temps jour/nuit
+    dayTime: sumDurations(filtered.filter(e => e.dayNight === 'DAY'), 'flightTime'),
+    nightTime: sumDurations(filtered.filter(e => e.dayNight === 'NIGHT'), 'flightTime'),
+
+    // Temps VFR/IFR
+    vfrTime: sumDurations(filtered.filter(e => e.flightType === 'VFR'), 'flightTime'),
+    ifrTime: sumDurations(filtered.filter(e => e.flightType === 'IFR'), 'flightTime'),
+
+    // Atterrissages
+    totalLandings: sumBy(filtered, 'landings'),
+    dayLandings: sumBy(filtered.filter(e => e.dayNight === 'DAY'), 'landings'),
+    nightLandings: sumBy(filtered.filter(e => e.dayNight === 'NIGHT'), 'landings'),
+
+    // Aérodromes visités
+    uniqueAerodromes: new Set([
+      ...filtered.map(e => e.departure),
+      ...filtered.map(e => e.arrival)
+    ]).size,
+
+    // Temps par type avion
+    byAircraftType: groupBy(filtered, 'aircraftModel')
+      .map(group => ({
+        type: group[0].aircraftModel,
+        time: sumDurations(group, 'flightTime'),
+        flights: group.length
+      })),
+
+    // Temps par immatriculation
+    byRegistration: groupBy(filtered, 'aircraftRegistration')
+      .map(group => ({
+        registration: group[0].aircraftRegistration,
+        time: sumDurations(group, 'flightTime'),
+        flights: group.length
+      })),
+
+    // Statistiques période
+    last30Days: calculatePeriodStats(filtered, 30),
+    last90Days: calculatePeriodStats(filtered, 90),
+    last12Months: calculatePeriodStats(filtered, 365),
+    currentYear: calculateYearStats(filtered, new Date().getFullYear())
+  };
+
+  return totals;
+}
+
+// Affichage formé
+function formatDuration(minutes) {
+  const hours = Math.floor(minutes / 60);
+  const mins = Math.round(minutes % 60);
+  return `${hours}h${String(mins).padStart(2, '0')}`;
+}
+
+// Exemple output:
+// Temps total: 145h32
+// Temps PIC: 98h15
+// Temps DUAL: 47h17
+// SEP: 132h45
+// Atterrissages: 287 (dont 23 nuit)
+// Aérodromes visités: 42
+</code></pre>
+
+<h4>Filtres et Recherche</h4>
+
+<p>Filtres disponibles sur le tableau logbook :</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Filtre</th>
+            <th>Type</th>
+            <th>Options</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Période</td>
+            <td>Date range</td>
+            <td>Dernier mois, 3 mois, 6 mois, année, personnalisé</td>
+        </tr>
+        <tr>
+            <td>Immatriculation</td>
+            <td>Select</td>
+            <td>Liste unique registrations logbook</td>
+        </tr>
+        <tr>
+            <td>Type avion</td>
+            <td>Select</td>
+            <td>Liste unique models logbook</td>
+        </tr>
+        <tr>
+            <td>Classe</td>
+            <td>Checkbox</td>
+            <td>SEP, MEP</td>
+        </tr>
+        <tr>
+            <td>Fonction</td>
+            <td>Checkbox</td>
+            <td>PIC, DUAL, SOLO</td>
+        </tr>
+        <tr>
+            <td>Jour/Nuit</td>
+            <td>Checkbox</td>
+            <td>DAY, NIGHT</td>
+        </tr>
+        <tr>
+            <td>VFR/IFR</td>
+            <td>Checkbox</td>
+            <td>VFR, IFR</td>
+        </tr>
+        <tr>
+            <td>Aérodrome</td>
+            <td>Text search</td>
+            <td>Recherche départ ou arrivée (ICAO ou nom)</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Export et Compliance Réglementaire</h4>
+
+<p><strong>Export CSV :</strong> Toutes colonnes logbook au format standardisé pour import Excel/LibreOffice</p>
+<p><strong>Export PDF :</strong> Carnet de vol formaté réglementaire avec :</p>
 
 <ul>
-    <li><strong>Temps total:</strong> Somme de tous les vols</li>
-    <li><strong>Temps par type avion:</strong> SEP, MEP</li>
-    <li><strong>Temps PIC/DUAL:</strong> Commandant de bord vs instruction</li>
-    <li><strong>Atterrissages:</strong> Total + jour/nuit séparés</li>
-    <li><strong>Aérodromes visités:</strong> Liste unique ICAOs</li>
+    <li>En-tête : Nom pilote, numéro licence, période</li>
+    <li>Tableau : Date, Départ, Arrivée, Immat, Type, Temps (Total, PIC, DUAL), Atterrissages, Jour/Nuit, VFR/IFR, Remarques</li>
+    <li>Totaux par page + totaux cumulés</li>
+    <li>Signature pilote + certification "Je certifie l'exactitude des informations ci-dessus"</li>
 </ul>
 
-<h3 id="module-checklist">2.2.3 Module Checklist (Check-lists Avion)</h3>
+<p><strong>Synchronisation Supabase :</strong> Multi-devices (PC, tablette, smartphone) avec conflict resolution timestamp-based</p>
+
+<h3 id="module-checklist">2.2.3 Module Checklist (Check-lists Interactives)</h3>
 
 <div class="info-box">
     <strong>📂 Emplacement:</strong> <code>src/features/checklist/</code><br>
-    <strong>🎯 Fonction:</strong> Check-lists interactives par phase de vol avec progression sauvegardée<br>
-    <strong>📦 Store:</strong> <code>checklistStore</code><br>
-    <strong>💾 Persistance:</strong> localStorage (progression)
+    <strong>🎯 Fonction:</strong> Check-lists personnalisables par avion et phase de vol<br>
+    <strong>📦 Store:</strong> <code>checklistStore</code> (Zustand)<br>
+    <strong>💾 Persistance:</strong> localStorage (progression) + Supabase (templates)<br>
+    <strong>📄 Fichiers clés:</strong> <code>ChecklistModule.jsx</code> (500 lignes), <code>ChecklistEditor.jsx</code>
 </div>
 
-<h4>Phases de Vol</h4>
+<h4>Phases de Vol et Templates</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Phase</th>
+            <th>Icône</th>
+            <th>Timing</th>
+            <th>Items Typiques</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Before Start</td>
+            <td>📋</td>
+            <td>Avant démarrage moteur</td>
+            <td>Documents (licences, CdN, assurance, MANEX), Vérif extérieure (carburant, huile, gouvernes), Cabine (ceintures, portes, master OFF)</td>
+        </tr>
+        <tr>
+            <td>Engine Start</td>
+            <td>🔧</td>
+            <td>Démarrage moteur</td>
+            <td>Mixture RICH, Carb Heat COLD, Throttle 1cm, Master ON, Fuel Pump ON, Start, Oil Pressure check</td>
+        </tr>
+        <tr>
+            <td>Before Takeoff</td>
+            <td>🛫</td>
+            <td>Holding point piste</td>
+            <td>Contrôles vol (AILERONS-PROFONDEUR-DIRECTION), Trim NEUTRAL, Flaps TO, Instruments (T&P verts), Carb Heat HOT puis COLD, Magnetos L/R/BOTH, Brief décollage</td>
+        </tr>
+        <tr>
+            <td>After Takeoff</td>
+            <td>✈️</td>
+            <td>Après décollage (400 ft AGL)</td>
+            <td>Flaps UP, Fuel Pump OFF, Climb power (25"/2500 RPM), Altimètre QNH, After TO checks</td>
+        </tr>
+        <tr>
+            <td>Cruise</td>
+            <td>🌤️</td>
+            <td>Altitude croisière</td>
+            <td>Cruise power (23"/2300 RPM), Mixture LEAN, Fuel check (quantité, sélecteur), Altimètre QNH update</td>
+        </tr>
+        <tr>
+            <td>Descent</td>
+            <td>🛬</td>
+            <td>Top of Descent</td>
+            <td>Briefing arrivée (piste, QFU, vent), Altimètre QNH destination, Carb Heat HOT, Mixture progressivement RICH</td>
+        </tr>
+        <tr>
+            <td>Before Landing</td>
+            <td>🏁</td>
+            <td>Downwind / Base</td>
+            <td>BUMPH check (Brakes, Undercarriage fixed, Mixture RICH, Propeller FULL, Harness), Flaps progressif, Fuel Pump ON</td>
+        </tr>
+        <tr>
+            <td>After Landing</td>
+            <td>🚶</td>
+            <td>Après vacating piste</td>
+            <td>Flaps UP, Carb Heat COLD, Fuel Pump OFF, Lights OFF, Transponder STANDBY</td>
+        </tr>
+        <tr>
+            <td>Shutdown</td>
+            <td>🔒</td>
+            <td>Parking</td>
+            <td>Parking brake ON, Throttle IDLE 30s, Mixture CUT-OFF, Magnetos OFF, Master OFF, Hobbs time, Calage avion</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Fonctionnalités Checklist</h4>
 
 <ul>
-    <li>📋 <strong>Before Start:</strong> Vérifications cabine, documents, carburant</li>
-    <li>🔧 <strong>Engine Start:</strong> Démarrage moteur</li>
-    <li>🛫 <strong>Before Takeoff:</strong> Checks pré-décollage</li>
-    <li>✈️ <strong>After Takeoff:</strong> Montée initiale</li>
-    <li>🌤️ <strong>Cruise:</strong> Croisière</li>
-    <li>🛬 <strong>Before Landing:</strong> Approche et finale</li>
-    <li>🏁 <strong>After Landing:</strong> Vacating runway</li>
-    <li>🔒 <strong>Shutdown:</strong> Arrêt moteur et sécurisation</li>
+    <li><strong>Templates par avion :</strong> Chaque avion possède sa propre checklist personnalisée (DA40, C172, PA28...)</li>
+    <li><strong>Éditeur drag & drop :</strong> Réorganiser items, ajouter/supprimer, modifier texte</li>
+    <li><strong>Progression sauvegardée :</strong> État coché/décoché persiste entre sessions (localStorage)</li>
+    <li><strong>Mode vol :</strong> Affichage plein écran checklist, grandes checkboxes tactiles (tablette cockpit)</li>
+    <li><strong>Audio confirm :</strong> Son "ding" à chaque item coché (optionnel)</li>
+    <li><strong>Reset automatique :</strong> Après vol complet (shutdown), réinitialisation pour prochain vol</li>
+    <li><strong>Partage community :</strong> Import/export JSON checklist, upload Supabase pour partage</li>
+    <li><strong>Multi-langue :</strong> Checklist FR/EN (termes aéronautiques standards)</li>
+</ul>
+
+<h4>Format JSON Checklist</h4>
+
+<pre><code>{
+  "aircraftModel": "DA40 NG",
+  "registration": "F-HSTR",
+  "checklists": [
+    {
+      "phase": "before_start",
+      "phaseName": "Before Start",
+      "items": [
+        {
+          "id": "bs-001",
+          "text": "Documents bord (Licence, Médical, CdN, Assurance, MANEX)",
+          "checked": false,
+          "critical": true
+        },
+        {
+          "id": "bs-002",
+          "text": "Visite prévol extérieure effectuée",
+          "checked": false,
+          "critical": true
+        },
+        {
+          "id": "bs-003",
+          "text": "Quantité carburant vérifiée (bouchons, drains)",
+          "checked": false,
+          "critical": true
+        },
+        {
+          "id": "bs-004",
+          "text": "Niveau huile MIN 6 qts",
+          "checked": false,
+          "critical": true
+        },
+        {
+          "id": "bs-005",
+          "text": "Cabine : Ceintures attachées, Portes fermées",
+          "checked": false,
+          "critical": false
+        },
+        {
+          "id": "bs-006",
+          "text": "Master OFF, Magnetos OFF",
+          "checked": false,
+          "critical": true
+        }
+      ]
+    },
+    {
+      "phase": "before_takeoff",
+      "phaseName": "Before Takeoff",
+      "items": [
+        {
+          "id": "bt-001",
+          "text": "Contrôles vol LIBRES et CORRECTS (Ailerons, Profondeur, Direction)",
+          "checked": false,
+          "critical": true
+        },
+        {
+          "id": "bt-002",
+          "text": "Trim NEUTRAL ou selon CG",
+          "checked": false,
+          "critical": true
+        },
+        {
+          "id": "bt-003",
+          "text": "Flaps position DÉCOLLAGE (0° ou 15° selon config)",
+          "checked": false,
+          "critical": true
+        },
+        {
+          "id": "bt-004",
+          "text": "Instruments moteur T&P VERTS",
+          "checked": false,
+          "critical": true
+        },
+        {
+          "id": "bt-005",
+          "text": "Carb Heat : HOT test puis COLD",
+          "checked": false,
+          "critical": true
+        },
+        {
+          "id": "bt-006",
+          "text": "Magnetos : L/R/BOTH (drop < 150 RPM, diff < 50 RPM)",
+          "checked": false,
+          "critical": true
+        },
+        {
+          "id": "bt-007",
+          "text": "Briefing décollage : Panne avant Vr → STOP, après Vr < 400ft → atterrir droit devant, > 400ft → circuit",
+          "checked": false,
+          "critical": true
+        }
+      ]
+    }
+  ]
+}
+</code></pre>
+
+<h3 id="module-regulations">2.2.4 Module Regulations (Références Réglementaires)</h3>
+
+<div class="info-box">
+    <strong>📂 Emplacement:</strong> <code>src/features/regulations/</code><br>
+    <strong>🎯 Fonction:</strong> Base de données règlements aéronautiques avec recherche full-text<br>
+    <strong>📦 Store:</strong> <code>regulationsStore</code> (Zustand)<br>
+    <strong>💾 Persistance:</strong> localStorage (favoris) + liens externes EASA/DGAC<br>
+    <strong>📄 Fichiers clés:</strong> <code>RegulationsModule.jsx</code> (400 lignes), <code>regulationsData.js</code>
+</div>
+
+<h4>Catégories de Règlements</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Catégorie</th>
+            <th>Règlements</th>
+            <th>Utilité</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>FCL (Flight Crew Licensing)</td>
+            <td>Part-FCL EASA, FCL.010, FCL.030, FCL.040, FCL.055, FCL.065, FCL.135, FCL.140, FCL.205, FCL.215, FCL.740, FCL.805</td>
+            <td>Licences pilotes (PPL, LAPL, CPL), qualifications (SEP, MEP, IR, night), revalidations, expérience récente, instructeurs</td>
+        </tr>
+        <tr>
+            <td>OPS (Operations)</td>
+            <td>Part-NCO, Part-SPO, Part-CAT, Annexe 2 OACI</td>
+            <td>Règles vol VFR/IFR, minimums météo, plans de vol, carburant, altimétrie, espaces aériens, règles priorité</td>
+        </tr>
+        <tr>
+            <td>AIR (Airworthiness)</td>
+            <td>Part-21, Part-M, Part-ML, Part-CAMO</td>
+            <td>Navigabilité avions, maintenance, CdN (Certificat de Navigabilité), inspections annuelles, AD (Airworthiness Directives)</td>
+        </tr>
+        <tr>
+            <td>SERA (Standardised European Rules of the Air)</td>
+            <td>SERA.3101, SERA.3105, SERA.3210, SERA.5001, SERA.5005, SERA.6001</td>
+            <td>Règles air, altitudes minimales, plans de vol, signaux, feux, transpondeur, altimétrie (QNH/QFE/FL)</td>
+        </tr>
+        <tr>
+            <td>MED (Medical)</td>
+            <td>Part-MED, ARA.MED.150, ARA.MED.200, ARA.MED.300</td>
+            <td>Certificats médicaux classe 1/2/LAPL, validité selon âge, restrictions, AME (Aero Medical Examiners)</td>
+        </tr>
+        <tr>
+            <td>ATM (Air Traffic Management)</td>
+            <td>RAC (Règles Air Circulation France), RCA (Règles Circulation Aérienne)</td>
+            <td>Espaces aériens (A/B/C/D/E/F/G), TMA, CTR, zones D/P/R, procédures VFR spéciales, autorisations</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Fonctionnalités Module</h4>
+
+<ul>
+    <li><strong>Recherche full-text :</strong> Index Fuse.js sur titres + contenus règlements (fuzzy search, typo tolerance)</li>
+    <li><strong>Filtres catégories :</strong> FCL, OPS, AIR, SERA, MED, ATM</li>
+    <li><strong>Liens externes :</strong> PDF officiels EASA, DGAC, OACI, JORF (Journal Officiel)</li>
+    <li><strong>Favoris :</strong> Sauvegarde règlements fréquemment consultés (localStorage)</li>
+    <li><strong>Historique :</strong> 20 derniers règlements consultés</li>
+    <li><strong>Mises à jour :</strong> Notification quand règlement amendé (fetch JSON distant)</li>
+</ul>
+
+<h3 id="module-technical-log">2.2.5 Module Technical Log (Carnet Technique Avion)</h3>
+
+<div class="info-box">
+    <strong>📂 Emplacement:</strong> <code>src/features/technical-log/</code><br>
+    <strong>🎯 Fonction:</strong> Suivi maintenance et navigabilité avions<br>
+    <strong>📦 Store:</strong> <code>technicalLogStore</code> (Zustand)<br>
+    <strong>💾 Persistance:</strong> Supabase (technical_logs) + IndexedDB (docs PDF)<br>
+    <strong>📄 Fichiers clés:</strong> <code>TechnicalLogModule.jsx</code> (128 lignes initialement, à étoffer)
+</div>
+
+<h4>Suivi Heures et Potentiels</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Compteur</th>
+            <th>Unité</th>
+            <th>Utilité</th>
+            <th>Seuils Alertes</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Heures cellule (Airframe)</td>
+            <td>Heures de vol</td>
+            <td>Suivi potentiel total avion</td>
+            <td>Inspection 50h, 100h, annuelle</td>
+        </tr>
+        <tr>
+            <td>Heures moteur (Engine)</td>
+            <td>Heures de vol</td>
+            <td>Suivi potentiel moteur (TBO = Time Between Overhaul)</td>
+            <td>TBO typique 2000h (Lycoming/Continental)</td>
+        </tr>
+        <tr>
+            <td>Heures hélice (Propeller)</td>
+            <td>Heures de vol</td>
+            <td>Suivi potentiel hélice</td>
+            <td>Inspection 500h, révision 2000h</td>
+        </tr>
+        <tr>
+            <td>Cycles moteur</td>
+            <td>Démarrages</td>
+            <td>Usure moteur (cycles thermiques)</td>
+            <td>Alerte si ratio cycles/heures > 2</td>
+        </tr>
+        <tr>
+            <td>Atterrissages</td>
+            <td>Count</td>
+            <td>Usure train, pneus, freins</td>
+            <td>Inspection train 500 atterrissages</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>MEL/CDL (Minimum Equipment List / Configuration Deviation List)</h4>
+
+<p>Gestion pannes acceptables pour vol :</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Catégorie</th>
+            <th>Description</th>
+            <th>Action Requise</th>
+            <th>Limitation Vol</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>A (Critical)</td>
+            <td>Équipement critique sécurité</td>
+            <td>Réparation AVANT vol</td>
+            <td>❌ Vol interdit</td>
+        </tr>
+        <tr>
+            <td>B (Essential)</td>
+            <td>Équipement essentiel</td>
+            <td>Réparation dans 3 jours</td>
+            <td>⚠️ Vol autorisé avec limitations</td>
+        </tr>
+        <tr>
+            <td>C (Important)</td>
+            <td>Équipement important</td>
+            <td>Réparation dans 10 jours</td>
+            <td>✅ Vol autorisé conditions normales</td>
+        </tr>
+        <tr>
+            <td>D (Minor)</td>
+            <td>Équipement mineur</td>
+            <td>Réparation prochaine maintenance</td>
+            <td>✅ Aucune limitation</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>AD (Airworthiness Directives) et SB (Service Bulletins)</h4>
+
+<ul>
+    <li><strong>AD Compliance :</strong> Suivi directives navigabilité obligatoires (EASA, FAA, constructeur)</li>
+    <li><strong>SB Tracking :</strong> Bulletins service recommandés (non obligatoires mais conseillés)</li>
+    <li><strong>Alertes échéances :</strong> AD répétitives (ex: inspection tous les 100h ou 12 mois)</li>
+    <li><strong>Statut :</strong> N/A (Non Applicable), Compliant (Conforme), Overdue (En retard)</li>
+</ul>
+
+<h4>Inspections Programmées</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Inspection</th>
+            <th>Fréquence</th>
+            <th>Contenu</th>
+            <th>Coût Estimé</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>50 heures</td>
+            <td>50h vol ou 6 mois</td>
+            <td>Vidange huile, filtres, bougies, niveaux, freins, pneus</td>
+            <td>300-500 €</td>
+        </tr>
+        <tr>
+            <td>100 heures</td>
+            <td>100h vol ou 12 mois</td>
+            <td>Inspection moteur, contrôles vol, train, propulsion, systèmes</td>
+            <td>800-1200 €</td>
+        </tr>
+        <tr>
+            <td>Annuelle (Annual)</td>
+            <td>12 mois</td>
+            <td>Inspection complète navigabilité, renouvellement CdN</td>
+            <td>1500-2500 €</td>
+        </tr>
+        <tr>
+            <td>Progressive (Phase)</td>
+            <td>4 phases/an</td>
+            <td>Alternative annuelle : inspection divisée en 4 phases trimestrielles</td>
+            <td>400-600 € / phase</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Export PDF Carnet Technique</h4>
+
+<p>Génération PDF complet :</p>
+
+<ul>
+    <li>Page 1 : Avion (immat, modèle, N/S, propriétaire)</li>
+    <li>Page 2 : Compteurs actuels (cellule, moteur, hélice, cycles)</li>
+    <li>Page 3 : Historique maintenance (interventions avec dates, heures, description, mécanicien)</li>
+    <li>Page 4 : AD Compliance status</li>
+    <li>Page 5 : Inspections programmées (prochaines échéances)</li>
+    <li>Page 6 : MEL items actifs</li>
 </ul>
 
 <div class="page-break"></div>
@@ -3463,6 +4827,592 @@ const analyzeBestRunway = (airport, wind, requiredDistance) => {
 
 <div class="page-break"></div>
 
+<h1 id="project-structure">4. Structure du Projet et Fichiers Clés</h1>
+
+<p>Cette section présente l'ensemble des fichiers et dossiers du projet ALFlight avec leur utilité spécifique. Chaque fichier est décrit brièvement (2-3 lignes) pour faciliter la compréhension de l'architecture globale.</p>
+
+<h2 id="project-root-files">4.1 Fichiers Racine (Configuration et Build)</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Fichier</th>
+            <th>Type</th>
+            <th>Utilité</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>package.json</code></td>
+            <td>Config</td>
+            <td>Manifeste npm avec dépendances (React 18.2, Vite 7.0.6, MUI 7.3.1, Zustand 4.5.7, Supabase, Leaflet, PDF.js, etc.). Définit les scripts de build, dev, preview. Liste 60+ packages pour un bundle final ~2.5MB gzip.</td>
+        </tr>
+        <tr>
+            <td><code>vite.config.js</code></td>
+            <td>Config</td>
+            <td>Configuration Vite : alias @/, plugins PWA (VitePWA), optimizations (chunks vendor/leaflet/pdfjs), proxy API /openaip vers localhost:4001. Build output dans <code>dist/</code>.</td>
+        </tr>
+        <tr>
+            <td><code>index.html</code></td>
+            <td>HTML</td>
+            <td>Point d'entrée SPA. Charge <code>src/main.jsx</code>, définit viewport, meta tags SEO, Apple Touch Icons pour PWA, Google Fonts (Space Grotesk, Inter, JetBrains Mono).</td>
+        </tr>
+        <tr>
+            <td><code>manifest.json</code></td>
+            <td>PWA</td>
+            <td>Manifeste PWA : nom, icônes (192x192, 512x512, Apple Touch 180x180), couleurs thème (#93163C bordeaux), display standalone, orientation portrait, scope /. Permet installation home screen.</td>
+        </tr>
+        <tr>
+            <td><code>service-worker.js</code></td>
+            <td>PWA</td>
+            <td>Service Worker pour fonctionnement offline. Cache assets statiques, API responses (METAR/TAF, AIXM, VAC). Stratégies: CacheFirst (assets), NetworkFirst (API). Workbox Background Sync pour requêtes hors-ligne.</td>
+        </tr>
+        <tr>
+            <td><code>.env</code></td>
+            <td>Config</td>
+            <td>Variables d'environnement : VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_CHECKWX_API_KEY, VITE_OPENAI_API_KEY. Non commité (gitignored).</td>
+        </tr>
+        <tr>
+            <td><code>.env.example</code></td>
+            <td>Template</td>
+            <td>Template des variables d'environnement avec instructions pour obtenir clés API CheckWX, Supabase, OpenAI.</td>
+        </tr>
+        <tr>
+            <td><code>eslint.config.js</code></td>
+            <td>Config</td>
+            <td>Configuration ESLint : règles React (hooks, props), recommandations ES6+, exclusions (node_modules, dist). Lint avant commit via husky.</td>
+        </tr>
+        <tr>
+            <td><code>jsconfig.json</code></td>
+            <td>Config</td>
+            <td>Configuration VS Code : alias @/ vers src/, target ES2020, jsx preserve. Autocomplétion imports absolus (@/features/..., @/utils/...).</td>
+        </tr>
+        <tr>
+            <td><code>README.md</code></td>
+            <td>Doc</td>
+            <td>Documentation principale : présentation projet, stack tech (React/Vite/MUI), installation (npm install), démarrage (npm run dev), build (npm run build), architecture 11 modules.</td>
+        </tr>
+        <tr>
+            <td><code>SPECIFICATION_TECHNIQUE_ALFLIGHT.html</code></td>
+            <td>Doc</td>
+            <td>Spécification technique complète (ce document). HTML standalone ~4200+ lignes avec analyse exhaustive architecture, modules, code, équations performances, roadmap. Convertible en .docx.</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2 id="project-src">4.2 Dossier src/ (Code Source Principal)</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Fichier/Dossier</th>
+            <th>Type</th>
+            <th>Utilité</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>src/main.jsx</code></td>
+            <td>Entry</td>
+            <td>Point d'entrée React : initialise ReactDOM.createRoot(), wrappe App avec ThemeProvider (MUI), Supabase session check, error boundaries. Charge fonts Google, CSS global, tokens design system.</td>
+        </tr>
+        <tr>
+            <td><code>src/App.jsx</code></td>
+            <td>Root</td>
+            <td>Composant racine : routing (React Router), layout global (AppLayout avec Navbar, Sidebar, Footer), authentification Supabase (LoginPage/Dashboard), gestion states globaux (Zustand stores). ~400 lignes.</td>
+        </tr>
+        <tr>
+            <td><code>src/index.css</code></td>
+            <td>Styles</td>
+            <td>Styles globaux CSS : reset, variables CSS (--color-primary, --spacing-md), animations (@keyframes fadeIn, slideIn), utilitaires (.text-center, .mt-4), print styles (@media print).</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2 id="project-features">4.3 Dossier src/features/ (Modules Fonctionnels)</h2>
+
+<p>Chaque module suit architecture : <code>components/</code> (UI), <code>hooks/</code> (logique métier), <code>services/</code> (API), <code>stores/</code> (Zustand state), <code>utils/</code> (helpers), <code>index.js</code> (exports).</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Module</th>
+            <th>Fichiers Clés</th>
+            <th>Utilité</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>aircraft/</strong></td>
+            <td>
+                <code>AircraftModule.jsx</code> (800 lignes)<br>
+                <code>AircraftWizard.jsx</code> (8 steps)<br>
+                <code>performanceCharts.js</code>
+            </td>
+            <td>Gestion complète avions : CRUD, wizard création 8 étapes (infos générales, limites, masses/CG, performances MANEX, configs, checklist, équipements, synthèse). Upload PDF MANEX, extraction abaques (IA GPT-4 Vision), stockage IndexedDB. ~3500 lignes total.</td>
+        </tr>
+        <tr>
+            <td><strong>navigation/</strong></td>
+            <td>
+                <code>NavigationModule.jsx</code> (1200 lignes)<br>
+                <code>RouteMapView.jsx</code> (Leaflet)<br>
+                <code>WaypointSelector.jsx</code>
+            </td>
+            <td>Planification route VFR : sélection waypoints (aérodromes ICAO, points VFR AIXM, coordonnées GPS), calculs heading/distance/time par segment, détection zones dangereuses (D/P/R), affichage carte interactive Leaflet avec layers (OSM, OpenTopoMap, ESRI Satellite), export GPX/KML.</td>
+        </tr>
+        <tr>
+            <td><strong>weather/</strong></td>
+            <td>
+                <code>WeatherModule.jsx</code> (750 lignes)<br>
+                <code>MetarDisplay.jsx</code><br>
+                <code>weatherService.js</code>
+            </td>
+            <td>Météo temps réel : API CheckWX pour METAR/TAF, recherche aérodromes auto-complète (493 AD France), décodage météo (température, QNH, vent, visibilité, nuages, phénomènes), alerts visuels (vent travers > 15kt, visi < 5km, plafond < 1500ft), cache 15 min.</td>
+        </tr>
+        <tr>
+            <td><strong>fuel/</strong></td>
+            <td>
+                <code>FuelModule.jsx</code> (600 lignes)<br>
+                <code>fuelStore.js</code> (Zustand)<br>
+                <code>useFuelSync.js</code>
+            </td>
+            <td>Calculs carburant 7 positions : Roulage (5 min), Trip (navigation auto-sync), Contingency (5% trip), Alternate (auto-sync), Final Reserve (30 min), Additional (user), Extra (user). Validation FOB ≥ Required, alerts visuels rouge/orange/vert, export PDF fuel log.</td>
+        </tr>
+        <tr>
+            <td><strong>performance/</strong></td>
+            <td>
+                <code>PerformanceModule.jsx</code> (600 lignes)<br>
+                <code>PerformanceTableCalculator.jsx</code> (800)<br>
+                <code>usePerformanceCalculations.js</code>
+            </td>
+            <td>Calculs décollage/atterrissage : interpolation abaques 2D/3D (température, altitude pression, masse), facteurs correctifs (vent, pente, surface, état piste), calculs PA = Elev + (1013-QNH)×27, DA = PA + 120×ISA_dev, marges sécurité 33%, suggestion piste optimale (scoring vent), verdict SAFE/UNSAFE.</td>
+        </tr>
+        <tr>
+            <td><strong>alternates/</strong></td>
+            <td>
+                <code>AlternatesModule.jsx</code> (500 lignes)<br>
+                <code>alternatesService.js</code><br>
+                <code>useAlternatesData.js</code>
+            </td>
+            <td>Sélection terrains de dégagement : scoring intelligent (distance < 50 NM, piste > 800m, services carburant, météo, ouverture PPR/H24), calculs fuel alternate auto, tri par pertinence, affichage carte avec rayon 50 NM, sync avec FuelModule, validation réglementaire (min 1 alternate si dest IFR).</td>
+        </tr>
+        <tr>
+            <td><strong>weight-balance/</strong></td>
+            <td>
+                <code>WeightBalanceModule.jsx</code> (700 lignes)<br>
+                <code>weightBalanceStore.js</code><br>
+                <code>CgEnvelopeChart.jsx</code>
+            </td>
+            <td>Masse et centrage : saisie charges (pilote, passagers, bagages, carburant), calculs moments (masse × bras de levier), 3 scénarios (takeoff, landing, zero-fuel), vérification enveloppe CG graphique (React Recharts), limites MTOW/MLW/MZFW, export PDF W&B sheet, validation réglementaire.</td>
+        </tr>
+        <tr>
+            <td><strong>vac/</strong></td>
+            <td>
+                <code>VACModule.jsx</code> (500 lignes)<br>
+                <code>vacService.js</code><br>
+                <code>VACPdfExtractor.jsx</code>
+            </td>
+            <td>Cartes VAC (Visual Approach Charts) : téléchargement PDF depuis SIA France (catalogue JSON 493 AD), stockage Supabase Storage + IndexedDB, visualisation PDF.js avec zoom/annotations, extraction infos piste (QFU, longueur, élévation, fréquences), enrichissement navigation avec données VAC, proxy CORS (port 4001).</td>
+        </tr>
+        <tr>
+            <td><strong>logbook/</strong></td>
+            <td>
+                <code>LogbookModule.jsx</code> (600 lignes)<br>
+                <code>PilotLogbook.jsx</code><br>
+                <code>logbookStore.js</code>
+            </td>
+            <td>Carnet de vol électronique : saisie vols (date, départ, arrivée, immat, type vol, temps vol, atterrissages, jour/nuit, IFR/VFR), totalisations automatiques (heures totales, par type avion, par fonction PIC/DUAL/SOLO), export CSV/PDF, synchronisation Supabase (multi-devices), filtres date/avion/type, statistiques annuelles.</td>
+        </tr>
+        <tr>
+            <td><strong>checklist/</strong></td>
+            <td>
+                <code>ChecklistModule.jsx</code> (500 lignes)<br>
+                <code>ChecklistEditor.jsx</code><br>
+                <code>checklistStore.js</code>
+            </td>
+            <td>Checklists personnalisables : templates par avion (Before Start, After Start, Before TO, Climb, Cruise, Descent, Before Landing, After Landing, Shutdown), éditeur drag&drop items, cochage progressif en vol, sauvegarde état, reset, export PDF checklist complète, partage community checklists (Supabase).</td>
+        </tr>
+        <tr>
+            <td><strong>pilot/</strong></td>
+            <td>
+                <code>PilotModule.jsx</code> (800 lignes)<br>
+                <code>PilotInfo.jsx</code><br>
+                <code>LicenseManager.jsx</code>
+            </td>
+            <td>Profil pilote : infos personnelles (nom, prénom, date naissance, adresse, email, téléphone), licences (PPL, LAPL, IR, CPL, ATPL) avec validité, qualifications (SEP, MEP, night, aerobatics), visite médicale (classe 1/2, expiration), alerts renouvellement 30 jours avant expiration, export PDF pilot credentials.</td>
+        </tr>
+        <tr>
+            <td><strong>technical-log/</strong></td>
+            <td>
+                <code>TechnicalLogModule.jsx</code> (128 lignes)<br>
+                <code>technicalLogStore.js</code>
+            </td>
+            <td>Carnet technique avion : suivi maintenance (heures moteur, cellule, hélice), MEL/CDL (Minimum Equipment List), pannes reportées, interventions maintenance, AD (Airworthiness Directives) compliance, SB (Service Bulletins), alertes inspections (50h, 100h, annual), export PDF tech log.</td>
+        </tr>
+        <tr>
+            <td><strong>regulations/</strong></td>
+            <td>
+                <code>RegulationsModule.jsx</code> (400 lignes)<br>
+                <code>regulationsData.js</code>
+            </td>
+            <td>Références réglementaires : base de données règlements aéronautiques (FCL, OPS, AIR, SERA), recherche full-text, catégories (licences, opérations, navigabilité, espace aérien), liens externes (EASA, DGAC), favoris, historique consultation.</td>
+        </tr>
+        <tr>
+            <td><strong>flight-wizard/</strong></td>
+            <td>
+                <code>FlightWizard.jsx</code> (7 steps)<br>
+                <code>Step1GeneralInfo.jsx</code><br>
+                <code>Step7Summary.jsx</code> (1200 lignes)
+            </td>
+            <td>Assistant préparation vol : 7 étapes séquentielles (Infos générales, Route, Météo, Carburant, Performances, Masse/Centrage, Synthèse), validation réglementaire chaque étape, sauvegarde brouillon localStorage, génération PDF plan de vol complet, archivage Supabase, ajout automatique logbook. ~3000 lignes total.</td>
+        </tr>
+        <tr>
+            <td><strong>account/</strong></td>
+            <td>
+                <code>AccountModule.jsx</code><br>
+                <code>BillingModule.jsx</code><br>
+                <code>SubscriptionManager.jsx</code>
+            </td>
+            <td>Gestion compte utilisateur : abonnement premium (10€/mois ou 100€/an), billing Stripe, préférences (unités m/ft, °C/°F, kg/lbs, format date), synchronisation Supabase multi-devices, export données personnelles (RGPD), suppression compte.</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2 id="project-core">4.4 Dossier src/core/ (Architecture Centrale)</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Fichier</th>
+            <th>Utilité</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>core/stores/index.js</code></td>
+            <td>Index centralisé des 15 stores Zustand : aircraftStore, navigationStore, weatherStore, fuelStore, performanceStore, alternatesStore, weightBalanceStore, vacStore, logbookStore, checklistStore, pilotStore, technicalLogStore, regulationsStore, flightWizardStore, accountStore. Chaque store avec persist() middleware (localStorage).</td>
+        </tr>
+        <tr>
+            <td><code>core/contexts/AuthContext.jsx</code></td>
+            <td>Context React pour authentification Supabase : session user, login/logout, password reset, email verification, role-based access (admin/premium/free), session persistence, auto-refresh token.</td>
+        </tr>
+        <tr>
+            <td><code>core/contexts/ThemeContext.jsx</code></td>
+            <td>Context React pour thème : mode clair/sombre (detecté via prefers-color-scheme), couleurs personnalisables, bordeau #93163C comme primary, persistance préférence localStorage, switch theme dynamique.</td>
+        </tr>
+        <tr>
+            <td><code>core/data/AeroDataProvider.js</code></td>
+            <td>Provider centralisé données aéronautiques : AIXM parsing (aérodromes, points VFR, zones aériennes), cache IndexedDB, extraction XML avec fast-xml-parser, indexation recherche rapide (Fuse.js), mise à jour cycle AIRAC (tous les 28 jours).</td>
+        </tr>
+        <tr>
+            <td><code>core/flags.js</code></td>
+            <td>Feature flags : activation/désactivation fonctionnalités (ENABLE_VAC_UPLOAD, ENABLE_AI_MANEX, ENABLE_BILLING, ENABLE_COMMUNITY_POINTS), contrôle rollout progressif, A/B testing, maintenance mode.</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2 id="project-utils">4.5 Dossier src/utils/ (Utilitaires et Helpers)</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Fichier</th>
+            <th>Utilité</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>utils/calculations.js</code></td>
+            <td>Fonctions calculs aéronautiques : heading (cap vrai avec déclinaison magnétique), distance haversine (Great Circle), temps vol (distance/vitesse), interpolation linéaire/bilinéaire, conversions trigonométriques, wind components (headwind/crosswind), fuel burn rate.</td>
+        </tr>
+        <tr>
+            <td><code>utils/conversions.js</code></td>
+            <td>Conversions unités : m ↔ ft, km ↔ NM, kg ↔ lbs, °C ↔ °F, kt ↔ km/h, L ↔ US gal, hPa ↔ inHg, m/s ↔ fpm. Fonctions réversibles avec précision 2 décimales.</td>
+        </tr>
+        <tr>
+            <td><code>utils/geographicZones.js</code></td>
+            <td>Détection zones géographiques : point-in-polygon (ray casting algorithm), zones dangereuses (D/P/R), TMA/CTR, espaces aériens (A/B/C/D/E/F/G), alertes franchissement altitude transition, coordonnées DMS ↔ DD.</td>
+        </tr>
+        <tr>
+            <td><code>utils/pdfExtractors.js</code></td>
+            <td>Extraction données PDF : PDF.js pour parsing MANEX/VAC, extraction texte avec positions, reconnaissance patterns (distances TO/LDG, V-speeds, limites), extraction images abaques, OCR léger (Tesseract.js optionnel).</td>
+        </tr>
+        <tr>
+            <td><code>utils/unitsConversion.js</code></td>
+            <td>Système conversion unités global : détection préférence user (m/ft), formatage affichage avec symboles (1234 ft, 376 m), parsing input utilisateur (accepte "1500 ft" ou "1500"), validation ranges.</td>
+        </tr>
+        <tr>
+            <td><code>utils/googleSheetsLogger.js</code></td>
+            <td>Logger actions Claude dans Google Sheets : tracking modifications code, commits git, build status, tests pass/fail, exports CSV automatiques pour suivi développement. Utilisé par scripts PowerShell.</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2 id="project-services">4.6 Dossier src/services/ (Services Backend)</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Fichier</th>
+            <th>Utilité</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>services/supabaseClient.js</code></td>
+            <td>Client Supabase initialisé : createClient(SUPABASE_URL, ANON_KEY), connexion PostgreSQL database, Storage (MANEX PDFs, VAC PDFs, avatars), Auth (email/password, OAuth Google), Realtime subscriptions (collaborative features futures).</td>
+        </tr>
+        <tr>
+            <td><code>services/weatherService.js</code></td>
+            <td>Service météo : API CheckWX (X-API-Key header), endpoints /metar/:icao et /taf/:icao, cache 15 min (Map), retry logic (3 tentatives), fallback NOAA si CheckWX down, parsing METAR/TAF avec metar-parser-js.</td>
+        </tr>
+        <tr>
+            <td><code>services/vacService.js</code></td>
+            <td>Service VAC : téléchargement PDF SIA France via proxy CORS (port 4001), stockage Supabase Storage bucket 'vac-charts', enrichissement métadonnées (ICAO, nom AD, date cycle AIRAC), synchronisation catalogue JSON, cleanup old cycles.</td>
+        </tr>
+        <tr>
+            <td><code>services/dataBackupManager.js</code></td>
+            <td>Gestionnaire backup données : export IndexedDB → JSON, import/restore, synchronisation Supabase bi-directionnelle, conflict resolution (timestamp + hash), compression gzip, chiffrement AES-256 (optionnel), export RGPD compliant.</td>
+        </tr>
+        <tr>
+            <td><code>services/updateLoggerService.js</code></td>
+            <td>Service logging mises à jour : tracking modifications user (aircraft, flight plans, logbook), audit trail Supabase table 'audit_logs', filtres par user/date/module, export compliance réglementaire.</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2 id="project-styles">4.7 Dossier src/styles/ (Système de Design)</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Fichier</th>
+            <th>Utilité</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>styles/tokens.js</code></td>
+            <td>Design tokens centralisés : colors (primary bordeaux #93163C, secondary, success, warning, error, info), spacing (xs/sm/md/lg/xl), shadows (sm/md/lg/button/modal), borderRadius, typography (fontFamily Space Grotesk, fontSize, fontWeight), gradients, transitions, zIndex, breakpoints, animations. ~330 lignes.</td>
+        </tr>
+        <tr>
+            <td><code>styles/muiTheme.js</code></td>
+            <td>Thème Material-UI : palette (primary #93163C, mode light/dark auto-detect), typography (h1-h6 uppercase 700, button 600), shape (borderRadius 8px), breakpoints custom (xs:0, sm:640, md:768, lg:1024, xl:1400), components overrides (Button gradient, TextField shrink labels, Select 56px height). ~220 lignes.</td>
+        </tr>
+        <tr>
+            <td><code>styles/theme.js</code></td>
+            <td>Thème global application : variables CSS exportées depuis tokens.js, mode sombre avec couleurs inversées, animations fadeIn/slideIn, classes utilitaires (.btn-primary, .card, .badge), media queries responsive.</td>
+        </tr>
+        <tr>
+            <td><code>styles/unifiedDesignSystem.js</code></td>
+            <td>Système design unifié : composants stylés réutilisables (StyledCard, StyledButton, StyledInput, StyledBadge), styled-components avec theming, variants (primary/secondary/success/warning/error), states (hover/active/disabled), accessibilité ARIA.</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2 id="project-server">4.8 Dossier server/ (Serveurs Node.js Backend)</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Fichier</th>
+            <th>Utilité</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>server/openaip-airspaces-proxy.js</code></td>
+            <td>Proxy CORS Node.js Express port 4001 : proxifie requêtes vers api.openaip.net (espaces aériens), www.sia.aviation-civile.gouv.fr (VAC PDFs), ajout headers CORS, cache responses 1h, logging requests, error handling, démarrage via start-vac-proxy.bat.</td>
+        </tr>
+        <tr>
+            <td><code>server/logging-server.js</code></td>
+            <td>Serveur logging Node.js port 3002 : reçoit logs frontend (POST /api/log), écrit fichiers logs/app-YYYY-MM-DD.log, rotation quotidienne, filtres niveau (info/warn/error), export Sentry/LogRocket (optionnel).</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2 id="project-scripts">4.9 Dossier scripts/ (Scripts PowerShell et Batch)</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Fichier</th>
+            <th>Utilité</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>scripts/claude-log-action.ps1</code></td>
+            <td>Script PowerShell logging actions Claude dans Google Sheets : prend paramètres -Summary, -Details, -Files, -Component, génère timestamp, push vers Google Sheets API, tracking développement complet. Appelé systématiquement après chaque tâche complétée.</td>
+        </tr>
+        <tr>
+            <td><code>scripts/create-alflight-presentation.ps1</code></td>
+            <td>Génération automatique PowerPoint : crée présentation 12 slides ALFlight (titre, problématique, solution, modules, architecture, business model, roadmap, UI/UX, conclusion), styles bordeaux #93163C, export ALFlight_Presentation.pptx. ~545 lignes PowerShell COM automation.</td>
+        </tr>
+        <tr>
+            <td><code>scripts/create-flight-plans-table.bat</code></td>
+            <td>Script Batch création table Supabase : execute SQL creation table flight_plans (id, user_id, departure_icao, arrival_icao, waypoints JSONB, fuel_data JSONB, performance_data JSONB, created_at, updated_at), indexes, RLS policies.</td>
+        </tr>
+        <tr>
+            <td><code>start-all.bat</code></td>
+            <td>Lanceur global : démarre 3 serveurs en parallèle (npm run dev port 3001, openaip-proxy port 4001, logging-server port 3002), ouvre navigateur http://localhost:3001, logs consolidés, arrêt propre Ctrl+C.</td>
+        </tr>
+        <tr>
+            <td><code>start-vac-proxy.bat</code></td>
+            <td>Lance uniquement proxy VAC/CORS port 4001 : node server/openaip-airspaces-proxy.js, logs dans console, arrêt Ctrl+C.</td>
+        </tr>
+        <tr>
+            <td><code>clean-and-start.bat</code></td>
+            <td>Nettoyage et démarrage : supprime node_modules/.vite/dist, npm install, npm run dev. Utile après changements package.json ou corruption cache Vite.</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2 id="project-public">4.10 Dossier public/ (Assets Statiques)</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Fichier/Dossier</th>
+            <th>Utilité</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>public/icons/</code></td>
+            <td>Icônes PWA : icon-192x192.png, icon-512x512.png (logo ALFlight bordeaux), apple-touch-icon-180x180.png (iOS), favicon.ico 32x32, maskable_icon.png (adaptive Android). Format PNG optimisé, compression ImageOptim.</td>
+        </tr>
+        <tr>
+            <td><code>public/data/geojson/</code></td>
+            <td>Fichiers GeoJSON espaces aériens France : french_airspaces.geojson (TMA/CTR/D/P/R), vfr_points.geojson (points VFR AIXM), danger_zones.geojson (zones dangereuses). Source : SIA France + OpenAIP. ~15 MB total.</td>
+        </tr>
+        <tr>
+            <td><code>public/data/airports/</code></td>
+            <td>Base de données aérodromes : french_airports.json (493 AD France avec ICAO, nom, lat/lon, élévation, pistes, fréquences), european_airports.json (2500+ AD Europe), runway_data.json (QFU, longueur, surface, pente). ~3 MB JSON.</td>
+        </tr>
+        <tr>
+            <td><code>public/data/aixm/</code></td>
+            <td>Données AIXM SIA : AIXM4.5_all_FR_OM_2025-10-02.xml (42 MB), XML_SIA_2025-10-02.xml (27 MB), cycle AIRAC 10/2025. Contient aérodromes, points VFR, zones, obstacles, procédures. Parser fast-xml-parser côté client.</td>
+        </tr>
+        <tr>
+            <td><code>public/aircraft-presets/</code></td>
+            <td>Presets avions communautaires : da40ng-f-hstr-example.json (Diamond DA40 NG complet avec performances), c172sp-example.json (Cessna 172SP), pa28-example.json (Piper PA-28). Chargement wizard via "Importer preset".</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2 id="project-data">4.11 Dossier src/data/ (Données Statiques Embarquées)</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Fichier</th>
+            <th>Utilité</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>data/frenchAirspaces.js</code></td>
+            <td>Export JavaScript espaces aériens France : array objets {id, name, type, class, floor, ceiling, geometry}, ~500 zones (TMA, CTR, D, P, R), utilisé détection conflits route navigation.</td>
+        </tr>
+        <tr>
+            <td><code>data/frenchAirspacesManual.js</code></td>
+            <td>Espaces aériens saisis manuellement (non AIXM) : zones spéciales (volcans volcanique, parachutisme, planeurs, ULM, manifestations aériennes), alertes temporaires, NOTAM permanents.</td>
+        </tr>
+        <tr>
+            <td><code>data/airportNames.js</code></td>
+            <td>Mapping ICAO → noms complets : {'LFST': 'Strasbourg Entzheim', 'LFPO': 'Paris Orly', ...}. ~493 entrées France. Utilisé autocomplete, affichage lisible.</td>
+        </tr>
+        <tr>
+            <td><code>data/aixm.config.js</code></td>
+            <td>Configuration AIXM : chemins fichiers XML, version format (4.5/5.1), date cycle AIRAC (2025-10-02), date expiration (2025-10-30), URL téléchargement SIA, validation schema XSD.</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2 id="project-docs">4.12 Dossier docs/ (Documentation Technique)</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Fichier</th>
+            <th>Utilité</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>docs/VAC_MODULE_GUIDE.md</code></td>
+            <td>Guide complet module VAC : architecture, API endpoints, stockage Supabase, proxy CORS, troubleshooting erreurs courantes (404, CORS, timeout), exemples code, schémas UML. ~200 lignes markdown.</td>
+        </tr>
+        <tr>
+            <td><code>docs/VAC_API_GUIDE.md</code></td>
+            <td>Documentation API VAC : endpoints GET /api/vac/:icao, POST /api/vac/upload, DELETE /api/vac/:id, paramètres, responses JSON, codes erreur HTTP, rate limiting, authentification bearer token.</td>
+        </tr>
+        <tr>
+            <td><code>ICONES_PWA_GUIDE.md</code></td>
+            <td>Guide création icônes PWA : tailles requises (192, 512, 180 Apple), formats PNG/SVG, outils recommandés (Figma, Inkscape, ImageOptim), manifest.json configuration, test iOS/Android.</td>
+        </tr>
+        <tr>
+            <td><code>CLAUDE_LOGGING_GUIDE.md</code></td>
+            <td>Guide logging systématique : règle obligatoire appel claude-log-action.ps1 après chaque tâche, format résumé/détails, paramètres requis, exemples concrets, troubleshooting Google Sheets API.</td>
+        </tr>
+        <tr>
+            <td><code>SECTION_PERFORMANCE_ENRICHIE.md</code></td>
+            <td>Documentation exhaustive module Performance : différence abaques/tableaux, équations (PA, interpolations, corrections), méthode A-Z création abaques, exemples DA40 NG, tests unitaires. ~875 lignes markdown (23 KB).</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2 id="project-supabase">4.13 Fichiers SQL Supabase (Database Schema)</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Fichier</th>
+            <th>Utilité</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>supabase-community-vfr-points.sql</code></td>
+            <td>Table points VFR communautaires : CREATE TABLE community_vfr_points (id UUID, name TEXT, lat FLOAT, lon FLOAT, type TEXT, description TEXT, photos TEXT[], user_id UUID, aerodrome_icao TEXT, created_at TIMESTAMP). Index géospatial PostGIS, RLS policies user-specific.</td>
+        </tr>
+        <tr>
+            <td><code>supabase-flight-plans.sql</code></td>
+            <td>Table plans de vol : CREATE TABLE flight_plans (id UUID, user_id UUID, departure_icao TEXT, arrival_icao TEXT, waypoints JSONB, fuel_data JSONB, performance_data JSONB, pdf_url TEXT, status TEXT, created_at, updated_at). Indexes ICAO, RLS.</td>
+        </tr>
+        <tr>
+            <td><code>supabase-aircraft.sql</code></td>
+            <td>Table avions : CREATE TABLE aircraft (id UUID, user_id UUID, registration TEXT UNIQUE, model TEXT, manex_pdf_url TEXT, performance_tables JSONB, limits JSONB, weights JSONB, cg_envelope JSONB, created_at, updated_at). RLS owner access only.</td>
+        </tr>
+        <tr>
+            <td><code>supabase-logbook.sql</code></td>
+            <td>Table carnet de vol : CREATE TABLE logbook_entries (id UUID, user_id UUID, date DATE, departure_icao TEXT, arrival_icao TEXT, aircraft_registration TEXT, flight_time INTERVAL, landings INT, day_night TEXT, ifr_vfr TEXT, pic_dual_solo TEXT). Indexes date, aircraft.</td>
+        </tr>
+        <tr>
+            <td><code>supabase-storage-buckets.sql</code></td>
+            <td>Buckets Supabase Storage : manex-pdfs (50 MB limit, private), vac-charts (10 MB limit, public read), avatars (2 MB limit, public), flight-plan-pdfs (5 MB limit, private). Policies RLS upload owner only.</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="success-box">
+    <strong>📊 Statistiques Projet ALFlight :</strong>
+    <ul>
+        <li><strong>Total fichiers sources :</strong> ~450 fichiers (.js/.jsx/.json/.css/.html/.sql/.md/.ps1/.bat)</li>
+        <li><strong>Lignes de code :</strong> ~85,000 lignes (dont ~60,000 src/, ~15,000 docs/, ~10,000 config/scripts)</li>
+        <li><strong>Modules fonctionnels :</strong> 14 features (aircraft, navigation, weather, fuel, performance, alternates, weight-balance, vac, logbook, checklist, pilot, technical-log, regulations, flight-wizard)</li>
+        <li><strong>Stores Zustand :</strong> 15 stores avec persistence localStorage</li>
+        <li><strong>Services backend :</strong> 2 serveurs Node.js (proxy CORS port 4001, logging port 3002)</li>
+        <li><strong>Base de données :</strong> PostgreSQL Supabase (12 tables + 3 Storage buckets)</li>
+        <li><strong>Bundle production :</strong> ~2.5 MB gzip (chunks vendor 1.2MB, leaflet 400KB, pdfjs 350KB, app 550KB)</li>
+        <li><strong>Dépendances npm :</strong> 60+ packages (React, MUI, Vite, Zustand, Supabase, Leaflet, PDF.js, etc.)</li>
+        <li><strong>Formats supportés :</strong> PDF (MANEX, VAC), JSON (presets, data), XML (AIXM), GeoJSON (zones), GPX/KML (export routes)</li>
+    </ul>
+</div>
+
+<div class="page-break"></div>
+
 <h1 id="features-futures">10. Features Restant à Implémenter</h1>
 
 <p>Bien qu'ALFlight soit déjà fonctionnel avec un ensemble complet de fonctionnalités, plusieurs améliorations et nouveaux modules sont prévus pour enrichir l'expérience utilisateur.</p>
@@ -3660,16 +5610,548 @@ const analyzeBestRunway = (airport, wind, requiredDistance) => {
     <li>Le document complet contient toutes les sections détaillées listées dans la table des matières</li>
 </ol>
 
-<div class="warning-box">
-    <strong>⚠️ Document en cours de génération:</strong> Ceci est la première partie du document. Les sections complètes suivantes sont en cours de compilation et seront ajoutées dans les prochains messages:
-    <ul>
-        <li>Sections 2.1.3 à 2.3 (Modules restants)</li>
-        <li>Section 3 complète (Les deux assistants - 8000+ lignes de détails)</li>
-        <li>Section 4 complète (Base de données Supabase)</li>
-        <li>Section 5 complète (32 services détaillés)</li>
-        <li>Sections 6-10 (Architecture, Flux, Automatisation, Technique, Annexes)</li>
-    </ul>
+<div class="page-break"></div>
+
+<!-- SECTION ENRICHIE: FEATURES À IMPLÉMENTER -->
+<h2 id="futures-features">10.5 Features Prioritaires à Implémenter</h2>
+
+<div class="info-box">
+    <strong>🎯 Roadmap Développement:</strong> Cette section détaille les fonctionnalités prioritaires identifiées pour l'évolution d'ALFlight vers une solution complète d'aviation internationale et multi-types d'aéronefs.
 </div>
+
+<h3>🌍 Extension Données Aéronautiques Européennes et Mondiales</h3>
+
+<h4>Phase 1 : Europe (Q2-Q3 2025)</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Pays</th>
+            <th>Source Données</th>
+            <th>Format</th>
+            <th>Complexité</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>🇩🇪 Allemagne</td>
+            <td>DFS (Deutsche Flugsicherung)</td>
+            <td>AIXM 5.1</td>
+            <td>Moyenne</td>
+        </tr>
+        <tr>
+            <td>🇬🇧 Royaume-Uni</td>
+            <td>UK AIP (NATS)</td>
+            <td>AIXM 5.1</td>
+            <td>Moyenne</td>
+        </tr>
+        <tr>
+            <td>🇪🇸 Espagne</td>
+            <td>ENAIRE AIP</td>
+            <td>AIXM 5.1</td>
+            <td>Moyenne</td>
+        </tr>
+        <tr>
+            <td>🇮🇹 Italie</td>
+            <td>ENAV AIP</td>
+            <td>AIXM 5.1</td>
+            <td>Moyenne</td>
+        </tr>
+        <tr>
+            <td>🇨🇭 Suisse</td>
+            <td>Skyguide AIP</td>
+            <td>AIXM 5.1</td>
+            <td>Facile</td>
+        </tr>
+        <tr>
+            <td>🇧🇪 Belgique</td>
+            <td>skeyes AIP</td>
+            <td>AIXM 5.1</td>
+            <td>Facile</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Architecture Multi-Pays</h4>
+
+<pre><code>// Structure données internationales
+const countryConfigs = {
+  FR: {
+    aixmSource: 'https://www.sia.aviation-civile.gouv.fr/dvd/eAIP_...',
+    aixmFormat: 'AIXM_4.5',
+    vacProvider: 'SIA_France',
+    notamEndpoint: 'https://notamweb.aviation-civile.gouv.fr/...',
+    weatherApi: 'Météo France + CheckWX',
+    timezone: 'Europe/Paris'
+  },
+  DE: {
+    aixmSource: 'https://secais.dfs.de/...',
+    aixmFormat: 'AIXM_5.1',
+    vacProvider: 'DFS_Charts',
+    notamEndpoint: 'https://notam.dfs.de/...',
+    weatherApi: 'DWD + CheckWX',
+    timezone: 'Europe/Berlin'
+  },
+  // ... autres pays
+};
+
+// Chargement dynamique selon pays sélectionné
+async function loadCountryData(countryCode) {
+  const config = countryConfigs[countryCode];
+  const aixmData = await fetch(config.aixmSource);
+  await parseAIXM(aixmData, config.aixmFormat);
+  await loadVACCatalogue(config.vacProvider);
+}
+</code></pre>
+
+<h4>Adaptations Nécessaires</h4>
+
+<ul>
+    <li><strong>Parsing AIXM 5.1:</strong> Migration du parser AIXM 4.5 → 5.1 (XML plus complexe avec namespaces)</li>
+    <li><strong>Espaces aériens:</strong> Gestion des FIR/UIR européennes (Maastricht, Reims, etc.)</li>
+    <li><strong>Langues:</strong> Interface multilingue (EN, DE, ES, IT) avec détection automatique</li>
+    <li><strong>Unités:</strong> Respect conventions locales (QNH en inHg pour UK, pieds/mètres)</li>
+    <li><strong>Réglementation:</strong> Minimas carburant variables selon pays (EASA vs national)</li>
+    <li><strong>Cartes VAC:</strong> Formats différents (PDF, GeoTIFF, PNG) selon pays</li>
+</ul>
+
+<h4>Phase 2 : Mondial (2026)</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Zone</th>
+            <th>Source</th>
+            <th>Priorité</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>🇺🇸 USA</td>
+            <td>FAA NASR (National Airspace System Resources)</td>
+            <td>Haute</td>
+        </tr>
+        <tr>
+            <td>🇨🇦 Canada</td>
+            <td>Nav Canada CFS (Canada Flight Supplement)</td>
+            <td>Haute</td>
+        </tr>
+        <tr>
+            <td>🇦🇺 Australie</td>
+            <td>Airservices Australia ERSA</td>
+            <td>Moyenne</td>
+        </tr>
+        <tr>
+            <td>🌍 Afrique</td>
+            <td>ASECNA (Afrique francophone)</td>
+            <td>Moyenne</td>
+        </tr>
+        <tr>
+            <td>🌏 Asie</td>
+            <td>ICAO Regional AIPs</td>
+            <td>Faible</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<h3>🚁 Support Hélicoptères</h3>
+
+<h4>Spécificités Hélicoptères à Implémenter</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Aspect</th>
+            <th>Avion</th>
+            <th>Hélicoptère</th>
+            <th>Changements Nécessaires</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>Performances</strong></td>
+            <td>Distance décollage/atterrissage</td>
+            <td>Aire décollage verticale (TODA/TLOF)</td>
+            <td>Abaques différents (hover IGE/OGE, altitude densité)</td>
+        </tr>
+        <tr>
+            <td><strong>Navigation</strong></td>
+            <td>Routes VFR/IFR</td>
+            <td>Vol direct basse altitude</td>
+            <td>Calculs hauteur sol (AGL), obstacles verticaux</td>
+        </tr>
+        <tr>
+            <td><strong>Aérodromes</strong></td>
+            <td>Aérodromes avec pistes</td>
+            <td>Héliports (TLOF/FATO)</td>
+            <td>Base données héliports (hospitals, plateformes offshore)</td>
+        </tr>
+        <tr>
+            <td><strong>Carburant</strong></td>
+            <td>Consommation L/h constante</td>
+            <td>Consommation variable (hover >> cruise)</td>
+            <td>Modèle carburant 3 phases (hover, cruise, hover)</td>
+        </tr>
+        <tr>
+            <td><strong>Masse/Centrage</strong></td>
+            <td>CG avant/arrière</td>
+            <td>CG latéral critique</td>
+            <td>Enveloppe 3D (longitudinal + latéral)</td>
+        </tr>
+        <tr>
+            <td><strong>Météo</strong></td>
+            <td>Vent de face/arrière</td>
+            <td>Vent max (limitation structurelle)</td>
+            <td>Alertes vent fort (rafales > 25 kt)</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Nouveaux Modules Hélicoptères</h4>
+
+<h5>1. Module Hover Performance</h5>
+
+<pre><code>// Calcul performances hover selon altitude densité
+function calculateHoverPerformance(helicopter, conditions) {
+  const { mass, engine } = helicopter;
+  const { densityAltitude, temperature, wind } = conditions;
+
+  // Power required for hover (kg-m/s)
+  const powerRequired = (mass * 9.81) / (helicopter.mainRotorEfficiency || 0.75);
+
+  // Power available from engine
+  const powerAvailable = engine.maxPower * (1 - 0.01 * (densityAltitude / 1000));
+
+  // Hover ceiling IGE (In Ground Effect)
+  const hoverCeilingIGE = calculateHoverCeiling(powerAvailable, powerRequired, true);
+
+  // Hover ceiling OGE (Out of Ground Effect)
+  const hoverCeilingOGE = calculateHoverCeiling(powerAvailable, powerRequired * 1.15, false);
+
+  return {
+    hoverCeilingIGE,    // ft
+    hoverCeilingOGE,    // ft
+    powerMargin: ((powerAvailable - powerRequired) / powerAvailable) * 100, // %
+    maxGrossWeight: calculateMaxGrossWeightHover(powerAvailable, densityAltitude)
+  };
+}
+</code></pre>
+
+<h5>2. Module Héliports</h5>
+
+<ul>
+    <li><strong>Base données:</strong> Héliports France (500+ sites)</li>
+    <li><strong>Caractéristiques:</strong> TLOF dimensions, surface, éclairage, obstacles</li>
+    <li><strong>Catégories:</strong> Hospital, Police, Offshore, Privé, Public</li>
+    <li><strong>Restrictions:</strong> Horaires, autorisations préalables, nuisances sonores</li>
+</ul>
+
+<h5>3. Calculs Spécifiques</h5>
+
+<ul>
+    <li><strong>Autorotation:</strong> Distance plané sans moteur, hauteur décision</li>
+    <li><strong>Effet sol:</strong> Gain performances IGE (In Ground Effect) < 1 rotor diameter</li>
+    <li><strong>Vents limites:</strong> Vent de travers max, vent arrière max, rafales max</li>
+    <li><strong>Performances catégorie A/B:</strong> Calculs mono/multimoteur</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h3>🛩️ Support ULM (Ultralights)</h3>
+
+<h4>Classes ULM Françaises</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Classe</th>
+            <th>Description</th>
+            <th>Spécificités Navigation</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>ULM Paramoteur</strong></td>
+            <td>Aile souple motorisée</td>
+            <td>Basse altitude, météo critique (vent)</td>
+        </tr>
+        <tr>
+            <td><strong>ULM Pendulaire</strong></td>
+            <td>Aile delta motorisée</td>
+            <td>Vol à vue strict, altitudes limitées</td>
+        </tr>
+        <tr>
+            <td><strong>ULM Multiaxe</strong></td>
+            <td>Avion léger (< 450 kg)</td>
+            <td>Navigation similaire aviation légère</td>
+        </tr>
+        <tr>
+            <td><strong>ULM Autogire</strong></td>
+            <td>Rotor libre non motorisé</td>
+            <td>Performances hybrides avion/hélico</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Adaptations Réglementaires ULM</h4>
+
+<ul>
+    <li><strong>Espaces aériens:</strong> Interdictions CTR/TMA (sauf autorisation), accès zones ULM dédiées</li>
+    <li><strong>Altitudes:</strong> Maximum 3000 ft ASFC (sauf montagne), minimum 500 ft AGL</li>
+    <li><strong>Météo:</strong> Visibilité minimale 5 km, plafond 1000 ft, pas de vol IMC</li>
+    <li><strong>Carburant:</strong> Pas de minimas réglementaires (seulement sécurité pilote)</li>
+    <li><strong>Plan de vol:</strong> Optionnel sauf traversée frontière</li>
+</ul>
+
+<h4>Base Données Terrains ULM</h4>
+
+<pre><code>// Structure terrain ULM
+{
+  id: "ULM-001-LFPZ",
+  name: "Terrain ULM de Saint-Cyr",
+  type: "ulm_airfield",
+  location: {
+    lat: 48.8157,
+    lon: 2.0748,
+    elevation: 374 // ft
+  },
+  runways: [
+    {
+      designation: "09/27",
+      length: 600,  // m (pistes courtes typiques ULM)
+      width: 30,    // m
+      surface: "grass"
+    }
+  ],
+  restrictions: {
+    ulm_only: true,
+    noise_sensitive: true,
+    hours: "SR-SS", // Sunrise to Sunset only
+    circuit_direction: "left"
+  },
+  facilities: {
+    fuel: "MOGAS",
+    hangar: true,
+    school: true,
+    maintenance: false
+  }
+}
+</code></pre>
+
+<h4>Calculs Performances ULM Simplifiés</h4>
+
+<p>Les ULM n'ont généralement pas d'abaques détaillés. ALFlight utilisera des formules empiriques:</p>
+
+<pre><code>// Distance décollage ULM (formule simplifiée)
+function calculateULMTakeoff(ulm, conditions) {
+  const { mass, wingArea, power } = ulm;
+  const { densityAltitude, windComponent } = conditions;
+
+  // Charge alaire (kg/m²)
+  const wingLoading = mass / wingArea;
+
+  // Distance de base (formule empirique ULM)
+  let baseDistance = (wingLoading * 15) + (densityAltitude * 0.1);
+
+  // Correction vent
+  if (windComponent > 0) {
+    baseDistance *= (1 - windComponent / 100); // Vent de face réduit
+  } else {
+    baseDistance *= (1 + Math.abs(windComponent) / 50); // Vent arrière augmente
+  }
+
+  // Marge sécurité ULM (50% - plus conservateur que avion)
+  return baseDistance * 1.5;
+}
+</code></pre>
+
+<div class="page-break"></div>
+
+<h3>📋 Génération Plans de Vol Officiels</h3>
+
+<h4>Format OACI (ICAO Flight Plan)</h4>
+
+<p>Génération automatique du formulaire FPL complet selon format OACI:</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Champ</th>
+            <th>Code OACI</th>
+            <th>Contenu</th>
+            <th>Source ALFlight</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Identification</td>
+            <td>Field 7</td>
+            <td>Immatriculation avion</td>
+            <td><code>aircraft.registration</code></td>
+        </tr>
+        <tr>
+            <td>Règles de vol</td>
+            <td>Field 8a</td>
+            <td>V (VFR) ou I (IFR)</td>
+            <td><code>flightType.rules</code></td>
+        </tr>
+        <tr>
+            <td>Type de vol</td>
+            <td>Field 8b</td>
+            <td>G (General Aviation)</td>
+            <td>Fixe: 'G'</td>
+        </tr>
+        <tr>
+            <td>Équipements</td>
+            <td>Field 10</td>
+            <td>S (VOR/ILS/VHF), G (GNSS)</td>
+            <td><code>aircraft.equipmentCom/Nav</code></td>
+        </tr>
+        <tr>
+            <td>Aérodrome départ</td>
+            <td>Field 13</td>
+            <td>Code OACI (LFST)</td>
+            <td><code>waypoints[0].icao</code></td>
+        </tr>
+        <tr>
+            <td>Heure départ</td>
+            <td>Field 13</td>
+            <td>HHMM UTC</td>
+            <td><code>flightPlan.departureTime</code></td>
+        </tr>
+        <tr>
+            <td>Vitesse</td>
+            <td>Field 15</td>
+            <td>N0120 (120 kt TAS)</td>
+            <td><code>aircraft.cruiseSpeed</code></td>
+        </tr>
+        <tr>
+            <td>Niveau</td>
+            <td>Field 15</td>
+            <td>VFR ou A045 (4500 ft)</td>
+            <td><code>segmentAltitudes[]</code></td>
+        </tr>
+        <tr>
+            <td>Route</td>
+            <td>Field 15</td>
+            <td>DCT POINT1 DCT POINT2</td>
+            <td><code>waypoints[].name</code></td>
+        </tr>
+        <tr>
+            <td>Aérodrome arrivée</td>
+            <td>Field 16</td>
+            <td>Code OACI (LFPO)</td>
+            <td><code>waypoints[last].icao</code></td>
+        </tr>
+        <tr>
+            <td>Durée vol</td>
+            <td>Field 16</td>
+            <td>HHMM (ex: 0145)</td>
+            <td><code>navigationResults.totalTime</code></td>
+        </tr>
+        <tr>
+            <td>Alternates</td>
+            <td>Field 16</td>
+            <td>LFMD LFMN (max 2)</td>
+            <td><code>selectedAlternates[].icao</code></td>
+        </tr>
+        <tr>
+            <td>Autonomie</td>
+            <td>Field 19</td>
+            <td>HHMM endurance</td>
+            <td><code>fuelData.total / consumption</code></td>
+        </tr>
+        <tr>
+            <td>Personnes à bord</td>
+            <td>Field 19</td>
+            <td>P/0004 (4 personnes)</td>
+            <td><code>loads.frontLeft + ... (calculé)</code></td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Génération Automatique FPL</h4>
+
+<pre><code>// Fonction génération plan de vol OACI
+function generateICAOFlightPlan(flightData) {
+  const {
+    aircraft,
+    waypoints,
+    segmentAltitudes,
+    navigationResults,
+    fuelData,
+    selectedAlternates,
+    departureTime,
+    flightType
+  } = flightData;
+
+  // Field 7-8: Aircraft ID + Flight Rules
+  const field7 = `(FPL-${aircraft.registration}-${flightType.rules}G`;
+
+  // Field 10: Equipment
+  const equipmentCode = generateEquipmentCode(aircraft.equipmentNav, aircraft.equipmentCom);
+  const field10 = `-${aircraft.model}/${equipmentCode}`;
+
+  // Field 13: Departure aerodrome + Time
+  const depTime = departureTime.toISOString().substr(11, 4).replace(':', ''); // HHMM UTC
+  const field13 = `-${waypoints[0].icao}${depTime}`;
+
+  // Field 15: Speed + Level + Route
+  const cruiseSpeedKt = Math.round(aircraft.cruiseSpeedKt);
+  const altitudeFt = Math.round(segmentAltitudes[0] || 3500);
+  const speedLevel = `N${String(cruiseSpeedKt).padStart(4, '0')}${flightType.rules === 'VFR' ? 'VFR' : 'A' + String(Math.floor(altitudeFt / 100)).padStart(3, '0')}`;
+
+  // Route: DCT point1 DCT point2 ...
+  const route = waypoints.slice(1, -1).map(wp => `DCT ${wp.name}`).join(' ');
+  const field15 = `-${speedLevel} ${route}`;
+
+  // Field 16: Destination + Total EET + Alternates
+  const totalTimeHHMM = formatTimeHHMM(navigationResults.totalTime);
+  const alternatesICAO = selectedAlternates.slice(0, 2).map(alt => alt.icao).join(' ');
+  const field16 = `-${waypoints[waypoints.length - 1].icao}${totalTimeHHMM} ${alternatesICAO}`;
+
+  // Field 18: Other info (PBN capability, etc.)
+  const field18 = `-PBN/B1 NAV/GPS`;
+
+  // Field 19: Endurance + POB (Persons On Board)
+  const enduranceHours = (fuelData.total * 60) / aircraft.fuelConsumption;
+  const enduranceHHMM = formatTimeHHMM(enduranceHours);
+  const pob = Object.values(loads).filter(load => load > 0).length; // Nombre de sièges occupés
+  const field19 = `-E/${enduranceHHMM} P/${String(pob).padStart(3, '0')}`;
+
+  // Assemblage final
+  return `${field7}
+${field10}
+${field13}
+${field15}
+${field16}
+${field18}
+${field19})`;
+}
+
+// Exemple output:
+// (FPL-FHSTR-VG
+// -DA40/S-G
+// -LFST0830
+// -N0120VFR DCT STS DCT LFPO
+// -LFPO0145 LFMD LFMN
+// -PBN/B1 NAV/GPS
+// -E/0430 P/004)
+</code></pre>
+
+<h4>Dépôt Plan de Vol Électronique</h4>
+
+<ul>
+    <li><strong>France:</strong> Intégration API OLIVIA (Ministère des Transports)</li>
+    <li><strong>Europe:</strong> API EUROCONTROL IFPS (Integrated Flight Planning Service)</li>
+    <li><strong>Validation:</strong> Vérification syntaxe + cohérence avant envoi</li>
+    <li><strong>Suivi:</strong> Statut plan de vol (déposé, accepté, refusé, modifié)</li>
+    <li><strong>Archivage:</strong> Historique plans de vol déposés (conformité réglementaire)</li>
+</ul>
+
+<div class="page-break"></div>
 
 </body>
 </html>

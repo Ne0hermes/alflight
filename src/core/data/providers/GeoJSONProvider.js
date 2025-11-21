@@ -6,7 +6,7 @@
  */
 
 import { AeroDataProvider } from '../AeroDataProvider';
-import { geoJSONDataService } from '@features/navigation/services/GeoJSONDataService';
+import { geoJSONDataService } from '../../../features/navigation/services/GeoJSONDataService';
 
 export class GeoJSONProvider extends AeroDataProvider {
   constructor() {
