@@ -22,6 +22,18 @@ const PilotProfile = () => {
   const [showUnitsConfig, setShowUnitsConfig] = useState(false);
   const fileInputRef = useRef(null);
 
+  // Hook pour détecter la taille d'écran mobile
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Récupérer les unités actuelles depuis le store
   const units = unitsSelectors.useUnits();
 
@@ -597,7 +609,12 @@ const PilotProfile = () => {
       
       {/* Carte de profil */}
       <div style={sx.combine(sx.components.card.base, sx.spacing.mb(4), sx.spacing.mt(4))}>
-        <div style={sx.combine(sx.flex.row, sx.spacing.gap(4))}>
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: '16px',
+          flexWrap: 'wrap'
+        }}>
           {/* Photo de profil avec ImageEditor */}
           <div style={{ position: 'relative' }}>
             <ImageEditor
@@ -648,78 +665,87 @@ const PilotProfile = () => {
             </label>
           </div>
 
-          {/* Informations principales */}
-          <div style={{ flex: 1 }}>
-            <h3 style={sx.combine(sx.text.xl, sx.text.bold)}>
-              {profile.firstName && profile.lastName
-                ? `${profile.firstName} ${profile.lastName}`
-                : 'Nom du pilote'}
-            </h3>
+          {/* Conteneur pour nom et boutons */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {/* Informations principales */}
+            <div>
+              <h3 style={sx.combine(sx.text.xl, sx.text.bold)}>
+                {profile.firstName && profile.lastName
+                  ? `${profile.firstName} ${profile.lastName}`
+                  : 'Nom du pilote'}
+              </h3>
 
-            {profile.licenseNumber && (
-              <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mt(1))}>
-                <Award size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                Licence {profile.licenseType} - N° {profile.licenseNumber}
-              </p>
-            )}
-          </div>
+              {profile.licenseNumber && (
+                <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mt(1))}>
+                  <Award size={14} style={{ display: 'inline', marginRight: '4px' }} />
+                  Licence {profile.licenseType} - N° {profile.licenseNumber}
+                </p>
+              )}
+            </div>
 
-          {/* Boutons d'export/import */}
-          <div style={{ display: 'flex', gap: '8px', flexDirection: 'column', position: 'relative' }}>
-            {/* Input file caché pour l'import */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json"
-              onChange={handleImport}
-              style={{ display: 'none' }}
-            />
+            {/* Boutons d'export/import sous le nom */}
+            <div style={{
+              display: 'flex',
+              gap: '8px',
+              flexWrap: 'wrap',
+              marginTop: '8px'
+            }}>
+              {/* Input file caché pour l'import */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                onChange={handleImport}
+                style={{ display: 'none' }}
+              />
 
-            {/* Bouton Import */}
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              style={{
-                padding: '8px 12px',
-                backgroundColor: '#10b981',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                fontSize: '13px',
-                fontWeight: '500',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                whiteSpace: 'nowrap'
-              }}
-              title="Importer des données JSON"
-            >
-              <Upload size={16} />
-              Importer
-            </button>
+              {/* Bouton Import */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  padding: '8px 12px',
+                  backgroundColor: '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  whiteSpace: 'nowrap'
+                }}
+                title="Importer des données JSON"
+              >
+                <Upload size={16} />
+                Importer
+              </button>
 
-            {/* Bouton Export direct */}
-            <button
-              onClick={() => exportPilotData()}
-              style={{
-                padding: '8px 12px',
-                backgroundColor: '#3b82f6',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                fontSize: '13px',
-                fontWeight: '500',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                whiteSpace: 'nowrap'
-              }}
-              title="Exporter le profil pilote"
-            >
-              <Download size={16} />
-              Exporter le profil pilote
-            </button>
+              {/* Bouton Export direct */}
+              <button
+                onClick={() => exportPilotData()}
+                style={{
+                  padding: '8px 12px',
+                  backgroundColor: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  whiteSpace: 'nowrap',
+                  flex: '1 1 auto'
+                }}
+                title="Exporter le profil pilote"
+              >
+                <Download size={16} />
+                {isMobile ? 'Exporter' : 'Exporter le profil pilote'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1084,13 +1110,19 @@ const PilotProfile = () => {
 
       {showPersonalInfo && (
       <div style={sx.combine(sx.components.card.base, { marginBottom: '24px' })}>
-        
+
         {/* Informations personnelles */}
         <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
           Informations personnelles
         </h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
-          <div>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+          gap: '16px',
+          marginBottom: '24px',
+          alignItems: 'end'
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
             <label style={labelStyle}>Prénom *</label>
             <input
               type="text"
@@ -1100,8 +1132,8 @@ const PilotProfile = () => {
               required
             />
           </div>
-          
-          <div>
+
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
             <label style={labelStyle}>Nom *</label>
             <input
               type="text"
@@ -1111,8 +1143,8 @@ const PilotProfile = () => {
               required
             />
           </div>
-          
-          <div>
+
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
             <label style={labelStyle}>Date de naissance</label>
             <input
               type="date"
@@ -1121,8 +1153,8 @@ const PilotProfile = () => {
               style={inputStyle}
             />
           </div>
-          
-          <div>
+
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
             <label style={labelStyle}>Nationalité</label>
             <select
               value={profile.nationality}
@@ -1137,8 +1169,8 @@ const PilotProfile = () => {
               ))}
             </select>
           </div>
-          
-          <div>
+
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
             <label style={labelStyle}>Base d'attache</label>
             <input
               type="text"
@@ -1148,8 +1180,8 @@ const PilotProfile = () => {
               style={inputStyle}
             />
           </div>
-          
-          <div>
+
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
             <label style={labelStyle}>Club / École</label>
             <input
               type="text"
