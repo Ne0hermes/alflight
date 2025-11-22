@@ -161,7 +161,11 @@ export const LandingPage = ({ onNavigate }) => {
           <div style={{ textAlign: 'center', width: '100%', position: 'relative' }}>
             <h1 style={styles.title}>ALFlight</h1>
             <p style={styles.subtitle}>Peritia per Praeparationem</p>
-            <div style={{ position: 'absolute', top: 0, right: isMobile ? 0 : 20 }}>
+            <div style={{
+              position: 'absolute',
+              top: isMobile ? '4px' : 0,
+              right: isMobile ? '8px' : 20
+            }}>
               <LogoutButton variant="text" size="small" />
             </div>
           </div>
@@ -338,6 +342,7 @@ const styles = {
   header: {
     backgroundColor: 'rgba(139, 21, 56, 0.05)',
     padding: '20px',
+    paddingTop: 'max(env(safe-area-inset-top), 20px)',
     borderBottom: `1px solid ${theme.colors.border}`,
     boxShadow: theme.shadows.sm,
     backdropFilter: 'blur(10px)',
