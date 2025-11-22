@@ -15,11 +15,23 @@ const ICONS = {
 
 export const TabNavigation = memo(({ tabs, activeTab, onTabChange }) => {
   return (
-    <nav style={sx.combine(sx.flex.row, sx.spacing.gap(2), sx.spacing.mb(4))}>
+    <nav style={{
+      ...sx.combine(sx.flex.row, sx.spacing.gap(2), sx.spacing.mb(4)),
+      overflowX: 'auto',
+      overflowY: 'hidden',
+      WebkitOverflowScrolling: 'touch',
+      scrollbarWidth: 'none',
+      msOverflowStyle: 'none',
+      paddingTop: 'max(env(safe-area-inset-top), 8px)',
+      paddingBottom: '8px',
+      '::-webkit-scrollbar': {
+        display: 'none'
+      }
+    }}>
       {tabs.map(tab => {
         const Icon = ICONS[tab.icon];
         const isActive = tab.id === activeTab;
-        
+
         return (
           <button
             key={tab.id}
@@ -51,7 +63,9 @@ const styles = {
     alignItems: 'center',
     gap: '8px',
     transition: 'all 0.2s',
-    color: '#D1D5DB'
+    color: '#D1D5DB',
+    whiteSpace: 'nowrap',
+    flexShrink: 0
   },
   activeTab: {
     backgroundColor: 'rgba(147, 22, 60, 0.2)',

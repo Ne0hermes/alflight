@@ -1003,26 +1003,24 @@ const PilotLogbook = ({ showFormProp }) => {
       {/* Statistiques globales - Afficher seulement si on n'est pas dans le formulaire */}
       {!isFormVisible && (
         <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 'bold' }}>Statistiques de vol</h3>
-            <div style={{ display: 'flex', gap: '8px' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '12px' }}>Statistiques de vol</h3>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+            <button
+              onClick={handleImport}
+              style={{ padding: '8px 16px', backgroundColor: '#93163C', color: 'white', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Upload size={16} />
+              Importer
+            </button>
+            {entries.length > 0 && (
               <button
-                onClick={handleImport}
-                style={{ padding: '8px 16px', backgroundColor: '#93163C', color: 'white', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                onClick={handleExport}
+                style={{ padding: '8px 16px', backgroundColor: '#e5e7eb', color: '#374151', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
               >
-                <Upload size={16} />
-                Importer
+                <Download size={16} />
+                Exporter
               </button>
-              {entries.length > 0 && (
-                <button
-                  onClick={handleExport}
-                  style={{ padding: '8px 16px', backgroundColor: '#e5e7eb', color: '#374151', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-                >
-                  <Download size={16} />
-                  Exporter
-                </button>
-              )}
-            </div>
+            )}
           </div>
           
           {/* Statistiques fusionnées */}
