@@ -32,6 +32,9 @@ export default defineConfig(({ mode }) => ({
         ]
       },
       workbox: {
+        // Forcer le rechargement automatique des mises à jour
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,pdf}'],
         // Exclure TOUS les fichiers GeoJSON du précaching (certains > 2MB)
         globIgnores: ['**/*.geojson', '**/data/**/*.geojson'],
