@@ -115,6 +115,17 @@ export const FlightHistory = ({ pilotName, callsign }) => {
         maxHeight: isMobile ? '500px' : '600px',
         overflowY: 'auto'
       }}>
+        {/* En-tête du tableau - masqué sur mobile */}
+        {!isMobile && (
+          <div style={styles.tableHeader}>
+            <div style={styles.colFlightNumber}>N° Vol</div>
+            <div style={styles.colDate}>Date</div>
+            <div style={styles.colAircraft}>Avion</div>
+            <div style={styles.colRoute}>Trajet complet</div>
+            <div style={styles.colActions}>PDF</div>
+          </div>
+        )}
+
         {/* Lignes du tableau */}
         {flights.map((flight) => (
           <div key={flight.id} style={{
@@ -213,6 +224,19 @@ const styles = {
     border: '1px solid #e2e8f0',
     scrollBehavior: 'smooth',
     WebkitOverflowScrolling: 'touch'
+  },
+  tableHeader: {
+    display: 'grid',
+    gridTemplateColumns: '120px 110px 180px 1fr 120px',
+    gap: '12px',
+    padding: '12px 16px',
+    backgroundColor: '#f8fafc',
+    borderBottom: '2px solid #e2e8f0',
+    fontWeight: '600',
+    fontSize: '13px',
+    color: '#475569',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px'
   },
   flightRow: {
     display: 'grid',

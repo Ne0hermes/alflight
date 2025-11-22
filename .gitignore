@@ -52,3 +52,4 @@ ExportOptions.plist
 logs/
 *.csv
 tracking_local.json
+.vercel

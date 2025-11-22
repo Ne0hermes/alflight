@@ -3065,6 +3065,381 @@ function checkSEPValidity(pilot, logbook) {
     <li>QR code vers profil Supabase (optionnel)</li>
 </ul>
 
+<h4>Préférences d'Unités (Unit Preferences)</h4>
+
+<p>Le module Pilot intègre un système complet de préférences d'unités permettant au pilote de personnaliser l'affichage selon ses habitudes (système métrique EASA, impérial FAA, ou mixte). Ces préférences sont appliquées <strong>globalement</strong> à travers toute l'application (navigation, performance, météo, carnet de vol).</p>
+
+<div class="info-box">
+    <strong>📦 Store:</strong> <code>pilotStore.preferences.units</code><br>
+    <strong>💾 Persistance:</strong> localStorage + Supabase sync<br>
+    <strong>🔄 Application:</strong> Temps réel via Zustand (tous composants abonnés)<br>
+    <strong>📄 Fichier:</strong> <code>src/features/pilot/UnitPreferences.jsx</code> (400 lignes)
+</div>
+
+<h5>Système d'Unités Supporté</h5>
+
+<table>
+    <thead>
+        <tr>
+            <th>Catégorie</th>
+            <th>Options Disponibles</th>
+            <th>Usage dans l'App</th>
+            <th>Valeur par Défaut</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>Distances</strong></td>
+            <td>
+                • <code>km</code> (Kilomètres)<br>
+                • <code>nm</code> (Nautical Miles)<br>
+                • <code>mi</code> (Statute Miles)
+            </td>
+            <td>Navigation, route planning, cartes, distances aérodromes</td>
+            <td><code>nm</code> (EASA standard)</td>
+        </tr>
+        <tr>
+            <td><strong>Altitudes</strong></td>
+            <td>
+                • <code>ft</code> (Feet)<br>
+                • <code>m</code> (Mètres)
+            </td>
+            <td>Plan de vol, altitudes croisière, élévations terrains, METAR</td>
+            <td><code>ft</code> (Aviation standard)</td>
+        </tr>
+        <tr>
+            <td><strong>Vitesses</strong></td>
+            <td>
+                • <code>kt</code> (Knots)<br>
+                • <code>km/h</code> (Kilomètres/heure)<br>
+                • <code>mph</code> (Miles/heure)
+            </td>
+            <td>Vitesses sol/air, vents, vitesses avion (Vne, Vs0, Vx, Vy), METAR</td>
+            <td><code>kt</code> (Aviation standard)</td>
+        </tr>
+        <tr>
+            <td><strong>Températures</strong></td>
+            <td>
+                • <code>°C</code> (Celsius)<br>
+                • <code>°F</code> (Fahrenheit)
+            </td>
+            <td>METAR, TAF, performances (ISA deviation), OAT cockpit</td>
+            <td><code>°C</code> (EASA standard)</td>
+        </tr>
+        <tr>
+            <td><strong>Carburant</strong></td>
+            <td>
+                • <code>L</code> (Litres)<br>
+                • <code>gal</code> (US Gallons)<br>
+                • <code>imp_gal</code> (Imperial Gallons)<br>
+                • <code>kg</code> (Kilogrammes)
+            </td>
+            <td>Réservoirs, consommation, endurance, calculs carburant, W&B</td>
+            <td><code>L</code> (EASA)</td>
+        </tr>
+        <tr>
+            <td><strong>Masses</strong></td>
+            <td>
+                • <code>kg</code> (Kilogrammes)<br>
+                • <code>lb</code> (Pounds)
+            </td>
+            <td>Weight & Balance, masse avion, charge utile, passagers, bagages</td>
+            <td><code>kg</code> (EASA standard)</td>
+        </tr>
+        <tr>
+            <td><strong>Pressions</strong></td>
+            <td>
+                • <code>hPa</code> (Hectopascals)<br>
+                • <code>inHg</code> (Inches Mercury)<br>
+                • <code>mb</code> (Millibars)
+            </td>
+            <td>QNH METAR, calage altimétrique, pression atmosphérique ISA</td>
+            <td><code>hPa</code> (EASA standard)</td>
+        </tr>
+        <tr>
+            <td><strong>Visibilité</strong></td>
+            <td>
+                • <code>m</code> (Mètres)<br>
+                • <code>km</code> (Kilomètres)<br>
+                • <code>mi</code> (Statute Miles)
+            </td>
+            <td>METAR/TAF visibilité horizontale, RVR piste</td>
+            <td><code>m</code> ou <code>km</code> (EASA)</td>
+        </tr>
+        <tr>
+            <td><strong>Vertical Speeds</strong></td>
+            <td>
+                • <code>ft/min</code> (Feet/minute)<br>
+                • <code>m/s</code> (Mètres/seconde)
+            </td>
+            <td>Taux de montée/descente avion (Vx, Vy), variomètre</td>
+            <td><code>ft/min</code> (Aviation standard)</td>
+        </tr>
+    </tbody>
+</table>
+
+<h5>Presets Rapides</h5>
+
+<p>L'interface propose 3 presets pré-configurés pour faciliter la configuration initiale :</p>
+
+<div class="info-box">
+    <strong>🇪🇺 EASA Standard (Europe)</strong><br>
+    • Distances: <code>nm</code>, Altitudes: <code>ft</code>, Vitesses: <code>kt</code><br>
+    • Températures: <code>°C</code>, Pressions: <code>hPa</code>, Carburant: <code>L</code>, Masses: <code>kg</code><br>
+    <em>➜ Recommandé pour pilotes basés en Europe (France, Allemagne, Espagne...)</em>
+</div>
+
+<div class="info-box">
+    <strong>🇺🇸 FAA Standard (USA)</strong><br>
+    • Distances: <code>nm</code>, Altitudes: <code>ft</code>, Vitesses: <code>kt</code><br>
+    • Températures: <code>°F</code>, Pressions: <code>inHg</code>, Carburant: <code>gal</code>, Masses: <code>lb</code><br>
+    <em>➜ Recommandé pour pilotes basés aux États-Unis</em>
+</div>
+
+<div class="info-box">
+    <strong>🌍 Métrique Pur (Non-standard)</strong><br>
+    • Distances: <code>km</code>, Altitudes: <code>m</code>, Vitesses: <code>km/h</code><br>
+    • Températures: <code>°C</code>, Pressions: <code>hPa</code>, Carburant: <code>L</code>, Masses: <code>kg</code><br>
+    <em>➜ Option pour pilotes préférant le système métrique complet (rare en aviation)</em>
+</div>
+
+<h5>Conversions Automatiques et Affichage</h5>
+
+<p>Toutes les conversions sont gérées via le module <code>src/utils/unitConversions.js</code> (300 lignes) avec des fonctions pures testées unitairement :</p>
+
+<pre><code>// Exemple conversion distance
+function convertDistance(value, fromUnit, toUnit) {
+  // Toutes conversions passent par NM (unité pivot)
+  const nmValue = toNauticalMiles(value, fromUnit);
+  return fromNauticalMiles(nmValue, toUnit);
+}
+
+// Conversions disponibles
+const conversions = {
+  distance: { km: 1.852, nm: 1, mi: 1.15078 },
+  altitude: { ft: 1, m: 0.3048 },
+  speed: { kt: 1, kmh: 1.852, mph: 1.15078 },
+  temperature: { celsius: (f) => (f - 32) * 5/9, fahrenheit: (c) => c * 9/5 + 32 },
+  fuel: { L: 1, gal: 3.78541, imp_gal: 4.54609, kg: (avgas) => 0.72 },
+  mass: { kg: 1, lb: 0.453592 },
+  pressure: { hPa: 1, inHg: 33.8639, mb: 1 }
+};
+
+// Hook React pour récupérer préférences utilisateur
+function useUnitPreferences() {
+  const preferences = usePilotStore(state => state.preferences.units);
+
+  const format = (value, category) => {
+    const targetUnit = preferences[category];
+    const converted = convertValue(value, category, targetUnit);
+    return `${converted.toFixed(precision[category])} ${targetUnit}`;
+  };
+
+  return { preferences, format };
+}
+</code></pre>
+
+<p><strong>Affichage dynamique dans l'UI :</strong></p>
+
+<ul>
+    <li>Tous les champs numériques s'adaptent automatiquement aux préférences utilisateur</li>
+    <li>Labels dynamiques affichant l'unité courante (ex: "Distance (nm)" ou "Distance (km)")</li>
+    <li>Tooltips affichant valeur alternative (ex: "150 nm (278 km)" au survol)</li>
+    <li>Saisie manuelle accepte plusieurs unités avec conversion automatique (ex: "100km" → converti en nm si préférence = nm)</li>
+</ul>
+
+<h4>Historique de Vols et Statistiques</h4>
+
+<p>Le module Pilot intègre un système de <strong>statistiques avancées</strong> basé sur le carnet de vol (Module Logbook), calculées automatiquement et mises à jour en temps réel à chaque ajout/modification d'entrée.</p>
+
+<div class="info-box">
+    <strong>📦 Source Données:</strong> <code>logbookStore.entries</code> (synchronisé depuis Supabase)<br>
+    <strong>🧮 Calculs:</strong> <code>src/features/pilot/FlightStatistics.jsx</code> (500 lignes)<br>
+    <strong>⚡ Performance:</strong> Calculs mémorisés via <code>useMemo</code> (recalcul uniquement si logbook modifié)<br>
+    <strong>📊 Affichage:</strong> Onglet "Statistiques" dans PilotModule + dashboard cards
+</div>
+
+<h5>Totalisations Automatiques</h5>
+
+<table>
+    <thead>
+        <tr>
+            <th>Statistique</th>
+            <th>Description</th>
+            <th>Calcul</th>
+            <th>Utilité</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>Heures Totales</strong></td>
+            <td>Total temps de vol toutes fonctions</td>
+            <td><code>SUM(logbook.flightTime)</code></td>
+            <td>Expérience globale, CV pilote, assurance</td>
+        </tr>
+        <tr>
+            <td><strong>Heures PIC</strong></td>
+            <td>Pilote Commandant de Bord</td>
+            <td><code>SUM(flightTime WHERE function='PIC')</code></td>
+            <td>Revalidation licences, assurance, expérience CDB</td>
+        </tr>
+        <tr>
+            <td><strong>Heures DUAL</strong></td>
+            <td>Double commande (instruction)</td>
+            <td><code>SUM(flightTime WHERE function='DUAL')</code></td>
+            <td>Formation initiale/continue, progression élève</td>
+        </tr>
+        <tr>
+            <td><strong>Heures SOLO</strong></td>
+            <td>Vol solo élève-pilote</td>
+            <td><code>SUM(flightTime WHERE function='SOLO')</code></td>
+            <td>Progression formation PPL/LAPL</td>
+        </tr>
+        <tr>
+            <td><strong>Heures Nuit</strong></td>
+            <td>Vol de nuit</td>
+            <td><code>SUM(flightTime WHERE nightTime > 0)</code></td>
+            <td>Qualification Night Rating, expérience nuit</td>
+        </tr>
+        <tr>
+            <td><strong>Heures IFR</strong></td>
+            <td>Vol aux instruments (IMC réel + simulated)</td>
+            <td><code>SUM(ifrTime)</code></td>
+            <td>Revalidation IR, expérience IFR</td>
+        </tr>
+        <tr>
+            <td><strong>Heures SEP</strong></td>
+            <td>Single-Engine Piston</td>
+            <td><code>SUM(flightTime WHERE aircraftClass='SEP')</code></td>
+            <td>Revalidation SEP (12h/24 mois requis)</td>
+        </tr>
+        <tr>
+            <td><strong>Heures MEP</strong></td>
+            <td>Multi-Engine Piston</td>
+            <td><code>SUM(flightTime WHERE aircraftClass='MEP')</code></td>
+            <td>Revalidation MEP (10h/12 mois requis)</td>
+        </tr>
+        <tr>
+            <td><strong>Atterrissages Totaux</strong></td>
+            <td>Total atterrissages jour + nuit</td>
+            <td><code>SUM(landings)</code></td>
+            <td>Expérience, revalidation (12 TO/LDG SEP)</td>
+        </tr>
+        <tr>
+            <td><strong>Atterrissages Jour</strong></td>
+            <td>Atterrissages diurnes</td>
+            <td><code>SUM(landings WHERE dayNight='DAY')</code></td>
+            <td>Statistiques</td>
+        </tr>
+        <tr>
+            <td><strong>Atterrissages Nuit</strong></td>
+            <td>Atterrissages nocturnes</td>
+            <td><code>SUM(landings WHERE dayNight='NIGHT')</code></td>
+            <td>Night Rating (5 requis), currency nuit</td>
+        </tr>
+        <tr>
+            <td><strong>Aérodromes Visités</strong></td>
+            <td>Nombre d'aérodromes uniques</td>
+            <td><code>COUNT(DISTINCT departure + arrival)</code></td>
+            <td>Expérience variété terrains</td>
+        </tr>
+        <tr>
+            <td><strong>Avions Pilotés</strong></td>
+            <td>Types avion différents</td>
+            <td><code>COUNT(DISTINCT aircraftModel)</code></td>
+            <td>Expérience diversité machines</td>
+        </tr>
+        <tr>
+            <td><strong>Pays Visités</strong></td>
+            <td>Pays différents via codes ICAO</td>
+            <td><code>COUNT(DISTINCT country FROM icao[0:2])</code></td>
+            <td>Expérience internationale</td>
+        </tr>
+    </tbody>
+</table>
+
+<h5>Statistiques Période Récente (Derniers 12 Mois)</h5>
+
+<p>Calculs spécifiques pour <strong>activité récente</strong> (utilisés pour vérifications revalidations licences) :</p>
+
+<pre><code>// Calcul activité 12 derniers mois
+function calculateRecentActivity(logbook) {
+  const last12Months = subMonths(new Date(), 12);
+  const recentFlights = logbook.filter(f => parseISO(f.date) >= last12Months);
+
+  return {
+    // Heures par classe
+    sepHours: sumFlightTime(recentFlights, { aircraftClass: 'SEP' }),
+    mepHours: sumFlightTime(recentFlights, { aircraftClass: 'MEP' }),
+
+    // Heures par fonction
+    picHours: sumFlightTime(recentFlights, { function: 'PIC' }),
+    dualHours: sumFlightTime(recentFlights, { function: 'DUAL' }),
+
+    // Atterrissages
+    totalLandings: sumBy(recentFlights, 'landings'),
+
+    // Vérification conditions revalidation SEP
+    sepRevalidationOK: checkSEPRevalidation(recentFlights),
+
+    // Vérification conditions revalidation MEP
+    mepRevalidationOK: checkMEPRevalidation(recentFlights)
+  };
+}
+
+// Vérification revalidation SEP Part-FCL
+function checkSEPRevalidation(recentFlights) {
+  const sepFlights = recentFlights.filter(f => f.aircraftClass === 'SEP');
+
+  const totalHours = sumFlightTime(sepFlights);
+  const picHours = sumFlightTime(sepFlights, { function: 'PIC' });
+  const landings = sumBy(sepFlights, 'landings');
+
+  const requirements = {
+    totalHours: { needed: 12, actual: totalHours, met: totalHours >= 12 },
+    picHours: { needed: 6, actual: picHours, met: picHours >= 6 },
+    landings: { needed: 12, actual: landings, met: landings >= 12 }
+  };
+
+  const allMet = Object.values(requirements).every(r => r.met);
+
+  return {
+    valid: allMet,
+    requirements,
+    message: allMet
+      ? 'Conditions revalidation SEP remplies'
+      : 'Activité insuffisante pour revalidation SEP'
+  };
+}
+</code></pre>
+
+<h5>Graphiques et Visualisations</h5>
+
+<p>Le module affiche les statistiques sous forme de graphiques interactifs (librairie <strong>Recharts</strong>) :</p>
+
+<ul>
+    <li><strong>Évolution heures de vol par mois</strong> (Line Chart) : tendance activité sur 12/24 mois</li>
+    <li><strong>Répartition par type avion</strong> (Pie Chart) : % heures par modèle (DA40, C172, PA28...)</li>
+    <li><strong>Répartition par fonction</strong> (Bar Chart) : PIC vs DUAL vs SOLO</li>
+    <li><strong>Répartition jour/nuit</strong> (Donut Chart) : % vols diurnes vs nocturnes</li>
+    <li><strong>Top 10 aérodromes</strong> (Bar Chart horizontal) : aérodromes les plus fréquentés</li>
+    <li><strong>Carte interactive des vols</strong> (Leaflet) : traces GPS des routes effectuées (si disponibles)</li>
+</ul>
+
+<div class="warning-box">
+    <strong>⚠️ Note Réglementaire :</strong> Les statistiques calculées automatiquement sont indicatives. Le pilote reste responsable de la vérification manuelle de ses heures et qualifications pour toute démarche réglementaire (revalidation, assurance, candidature emploi). En cas de doute, se référer au carnet de vol papier officiel ou aux données Supabase brutes.
+</div>
+
+<h5>Export et Partage</h5>
+
+<p>Les statistiques peuvent être exportées :</p>
+
+<ul>
+    <li><strong>PDF Résumé Statistiques</strong> : document 2 pages avec tous totaux + graphiques (pour CV, assurance)</li>
+    <li><strong>CSV Données Brutes</strong> : export Excel-compatible pour analyses personnalisées</li>
+    <li><strong>Partage Public (Optionnel)</strong> : lien public Supabase vers profil pilote read-only (pour recruteurs, aéro-clubs)</li>
+</ul>
+
 <h3 id="module-logbook">2.2.2 Module Logbook (Carnet de Vol Électronique)</h3>
 
 <div class="info-box">
