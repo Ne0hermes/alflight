@@ -28,11 +28,24 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange }) => {
   const [isFlightToolsOpen, setIsFlightToolsOpen] = useState(false);
 
   // Modules à regrouper dans "Outils de vol"
-  const flightToolsIds = ['navigation', 'weather', 'weight-balance', 'fuel', 'performance', 'vac'];
+  const flightToolsIds = ['navigation', 'weather', 'weight-balance', 'fuel', 'performance'];
 
   // Séparer les tabs
   const flightTools = tabs.filter(tab => flightToolsIds.includes(tab.id));
-  const mainTabs = tabs.filter(tab => !flightToolsIds.includes(tab.id));
+  const allMainTabs = tabs.filter(tab => !flightToolsIds.includes(tab.id));
+
+  // Réorganiser pour placer VAC après checklist
+  const checklistIndex = allMainTabs.findIndex(tab => tab.id === 'checklist');
+  const vacTab = allMainTabs.find(tab => tab.id === 'vac');
+  const mainTabsWithoutVac = allMainTabs.filter(tab => tab.id !== 'vac');
+
+  const mainTabs = vacTab && checklistIndex !== -1
+    ? [
+        ...mainTabsWithoutVac.slice(0, checklistIndex + 1),
+        vacTab,
+        ...mainTabsWithoutVac.slice(checklistIndex + 1)
+      ]
+    : allMainTabs;
   
   const handleTabSelect = (tabId) => {
     onTabChange(tabId);
