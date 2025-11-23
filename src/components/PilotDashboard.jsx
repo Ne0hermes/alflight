@@ -788,8 +788,9 @@ export const PilotDashboard = ({ onNavigate }) => {
           </div>
         </div>
       )}
-      
-      <div style={styles.grid}>
+
+      <div style={{ maxWidth: '400px', width: '100%', margin: '0 auto' }}>
+        <div style={styles.grid}>
         {/* Statistiques de vol */}
         <div style={styles.card}>
           <div style={styles.cardHeader}>
@@ -1246,6 +1247,7 @@ export const PilotDashboard = ({ onNavigate }) => {
         </div>
         )}
 
+      </div>
       </div>
     </section>
   );
