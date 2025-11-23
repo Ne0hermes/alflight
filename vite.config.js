@@ -10,24 +10,30 @@ export default defineConfig(({ mode }) => ({
       // DÉSACTIVER PWA en mode développement pour éviter le cache
       disable: mode === 'development',
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico'],
+      includeAssets: ['favicon-16.png', 'favicon-32.png', 'icon-192.png', 'icon-512.png'],
+      manifestFilename: 'manifest.json',  // Forcer .json au lieu de .webmanifest
       manifest: {
-        name: 'Système de Gestion de Vol',
-        short_name: 'SGV',
-        description: 'Application de gestion de vol avec cartes VAC',
-        theme_color: '#3b82f6',
-        background_color: '#ffffff',
+        name: 'ALFlight - Assistant de Vol',
+        short_name: 'ALFlight',
+        description: 'Application mobile de gestion de vol pour pilotes privés',
+        start_url: '/',
         display: 'standalone',
+        orientation: 'portrait',
+        theme_color: '#93163C',
+        background_color: '#ffffff',
+        categories: ['navigation', 'productivity', 'utilities'],
         icons: [
           {
             src: '/icon-192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           },
           {
             src: '/icon-512.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
       },

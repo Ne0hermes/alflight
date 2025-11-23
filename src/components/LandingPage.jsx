@@ -6,7 +6,6 @@ import {
 } from 'lucide-react';
 import { theme, createCardStyle, createButtonStyle } from '../styles/theme';
 import { PilotDashboard } from './PilotDashboard';
-import LogoutButton from './auth/LogoutButton';
 
 export const LandingPage = ({ onNavigate }) => {
   const [showInfo, setShowInfo] = useState(false);
@@ -158,16 +157,9 @@ export const LandingPage = ({ onNavigate }) => {
       {/* Header */}
       <header style={styles.header}>
         <div style={styles.logoContainer}>
-          <div style={{ textAlign: 'center', width: '100%', position: 'relative' }}>
+          <div style={{ textAlign: 'center', width: '100%' }}>
             <h1 style={styles.title}>ALFlight</h1>
             <p style={styles.subtitle}>Peritia per Praeparationem</p>
-            <div style={{
-              position: 'absolute',
-              top: isMobile ? '4px' : 0,
-              right: isMobile ? '8px' : 20
-            }}>
-              <LogoutButton variant="text" size="small" />
-            </div>
           </div>
         </div>
       </header>
