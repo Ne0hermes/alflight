@@ -31,19 +31,16 @@ const LogbookModule = () => {
 
 
   return (
-    <div style={{ padding: '20px' }}>
-      {/* Contenu du module */}
-      <div style={{ 
-        backgroundColor: 'white', 
-        borderRadius: '8px', 
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        marginBottom: '20px',
-        padding: '20px'
-      }}>
-        <Suspense fallback={<LoadingSpinner />}>
-          <PilotLogbook showFormProp={forceShowForm} />
-        </Suspense>
-      </div>
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '8px',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+      marginBottom: '20px',
+      padding: '20px'
+    }}>
+      <Suspense fallback={<LoadingSpinner />}>
+        <PilotLogbook showFormProp={forceShowForm} />
+      </Suspense>
     </div>
   );
 };
