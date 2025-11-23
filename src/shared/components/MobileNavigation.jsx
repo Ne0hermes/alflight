@@ -117,14 +117,8 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange }) => {
                   backgroundColor: flightToolsIds.includes(activeTab) ? 'rgba(139, 21, 56, 0.1)' : 'transparent',
                   borderLeft: flightToolsIds.includes(activeTab) ? '3px solid #8b1538' : '3px solid transparent',
                   marginBottom: '4px',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
                   color: theme.colors.textSecondary,
-                  borderRadius: '6px',
-                  padding: '10px 20px',
-                  justifyContent: 'flex-start'
+                  borderRadius: '6px'
                 }}
               />
 
@@ -161,14 +155,7 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange }) => {
                   size="medium"
                   className="mobile-menu-button"
                   sx={{
-                    fontSize: '14px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    fontWeight: '500',
-                    color: theme.colors.textSecondary,
-                    padding: '10px 20px',
-                    justifyContent: 'flex-start',
-                    textAlign: 'left'
+                    color: theme.colors.textSecondary
                   }}
                 />
               </div>
@@ -303,8 +290,8 @@ const styles = {
     marginBottom: '4px',
     textAlign: 'left',
     fontWeight: '500',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
+    textTransform: 'none',
+    letterSpacing: 'normal',
     justifyContent: 'flex-start',
   },
   navItemActive: {
