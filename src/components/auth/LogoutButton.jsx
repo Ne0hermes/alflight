@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../core/contexts/AuthContext';
 import { CircularProgress, Tooltip } from '@mui/material';
-import { LogOut } from 'lucide-react';
 import { Button } from '../../shared/components/Button';
 
 const LogoutButton = ({ variant = 'text', size = 'small', fullWidth = false, sx = {}, className = '' }) => {
@@ -57,10 +56,7 @@ const LogoutButton = ({ variant = 'text', size = 'small', fullWidth = false, sx 
               Déconnexion...
             </>
           ) : (
-            <>
-              <LogOut size={16} style={{ marginRight: '8px' }} />
-              Se déconnecter
-            </>
+            'Se déconnecter'
           )}
         </Button>
       </span>
