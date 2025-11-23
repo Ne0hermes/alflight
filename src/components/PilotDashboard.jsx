@@ -789,8 +789,7 @@ export const PilotDashboard = ({ onNavigate }) => {
         </div>
       )}
 
-      <div style={{ maxWidth: '400px', width: '100%', margin: '0 auto' }}>
-        <div style={styles.grid}>
+      <div style={{ ...styles.grid, maxWidth: '400px', width: '100%', margin: '0 auto' }}>
         {/* Statistiques de vol */}
         <div style={styles.card}>
           <div style={styles.cardHeader}>
@@ -1248,7 +1247,6 @@ export const PilotDashboard = ({ onNavigate }) => {
         )}
 
       </div>
-      </div>
     </section>
   );
 };
@@ -1304,7 +1302,7 @@ const styles = {
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gridTemplateColumns: '1fr',
     gap: '16px',
   },
   card: {
