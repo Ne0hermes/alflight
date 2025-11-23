@@ -148,17 +148,15 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange }) => {
               <div style={{ height: '1px', backgroundColor: theme.colors.border, margin: '8px 0' }} />
 
               {/* Bouton de déconnexion */}
-              <div style={{ padding: '0 8px' }}>
-                <LogoutButton
-                  variant="contained"
-                  fullWidth
-                  size="medium"
-                  className="mobile-menu-button"
-                  sx={{
-                    color: theme.colors.textSecondary
-                  }}
-                />
-              </div>
+              <LogoutButton
+                variant="contained"
+                fullWidth
+                size="medium"
+                className="mobile-menu-button"
+                sx={{
+                  color: theme.colors.textSecondary
+                }}
+              />
             </nav>
           </div>
         </div>
