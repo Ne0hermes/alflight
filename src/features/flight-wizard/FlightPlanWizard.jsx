@@ -716,7 +716,10 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
       </div>
 
       {/* Contenu de l'étape courante */}
-      <div style={styles.content}>
+      <div
+        id={currentStep === 7 ? 'flight-plan-summary' : undefined}
+        style={styles.content}
+      >
         <div className="wizard-step-header" style={styles.stepHeader}>
           <h2 style={styles.stepTitle}>
             Étape {currentStep} : {currentStepConfig.title}
@@ -726,16 +729,11 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
           </p>
         </div>
 
-        <div
-          id={currentStep === 7 ? 'flight-plan-summary' : undefined}
-          style={styles.stepContent}
-        >
-          {console.log('🔧 Rendering step:', currentStep, 'Component:', currentStepConfig.title, 'StepComponent:', StepComponent.name || StepComponent.displayName)}
-          <StepComponent
-            flightPlan={flightPlan}
-            onUpdate={updateFlightPlan}
-          />
-        </div>
+        {console.log('🔧 Rendering step:', currentStep, 'Component:', currentStepConfig.title, 'StepComponent:', StepComponent.name || StepComponent.displayName)}
+        <StepComponent
+          flightPlan={flightPlan}
+          onUpdate={updateFlightPlan}
+        />
       </div>
 
       {/* Barre de navigation */}
@@ -867,8 +865,13 @@ const styles = {
   },
   content: {
     flex: 1,
-    padding: '20px',
+    padding: '24px',
     overflowY: 'auto',
+    background: theme.colors.backgroundCard,
+    borderRadius: '15px',
+    margin: '20px',
+    border: `1px solid ${theme.colors.border}`,
+    boxShadow: theme.shadows.sm,
   },
   stepHeader: {
     marginBottom: '24px',
@@ -883,13 +886,6 @@ const styles = {
   stepDescription: {
     fontSize: '14px',
     color: theme.colors.textSecondary,
-  },
-  stepContent: {
-    background: theme.colors.backgroundCard,
-    borderRadius: '15px',
-    padding: '24px',
-    border: `1px solid ${theme.colors.border}`,
-    boxShadow: theme.shadows.sm,
   },
   navigation: {
     background: theme.colors.backgroundGlass,
