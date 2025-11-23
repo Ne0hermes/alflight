@@ -602,13 +602,13 @@ export const PilotDashboard = ({ onNavigate }) => {
                 la validité de votre certificat médical et les examens requis selon votre âge.
               </p>
             </div>
-            <button
-              style={styles.configureButton}
-              onClick={() => onNavigate && onNavigate('pilot')}
-            >
-              Configurer mon profil
-            </button>
           </div>
+          <button
+            style={{ ...styles.configureButton, width: '100%', marginTop: '12px' }}
+            onClick={() => onNavigate && onNavigate('pilot')}
+          >
+            Configurer mon profil
+          </button>
         </div>
       )}
 
@@ -633,16 +633,18 @@ export const PilotDashboard = ({ onNavigate }) => {
                 ⚠️ Pensez à configurer vos unités de mesure dans le module Info Pilote &gt; Configuration des unités
               </p>
             </div>
-            <button
-              style={{
-                ...styles.configureButton,
-                backgroundColor: '#f59e0b'
-              }}
-              onClick={() => onNavigate && onNavigate('pilot')}
-            >
-              Configurer les unités
-            </button>
           </div>
+          <button
+            style={{
+              ...styles.configureButton,
+              backgroundColor: '#f59e0b',
+              width: '100%',
+              marginTop: '12px'
+            }}
+            onClick={() => onNavigate && onNavigate('pilot')}
+          >
+            Configurer les unités
+          </button>
         </div>
       )}
 
@@ -666,51 +668,48 @@ export const PilotDashboard = ({ onNavigate }) => {
               {formatAIXMAlert(aixmDataStatus.status).icon}
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <p style={{ ...styles.ageErrorTitle, margin: 0 }}>
-                  <Database size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
-                  {formatAIXMAlert(aixmDataStatus.status).title}
-                </p>
-                <button
-                  onClick={() => setAixmDetailsExpanded(!aixmDetailsExpanded)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: formatAIXMAlert(aixmDataStatus.status).color,
-                    padding: '4px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    fontSize: '12px',
-                    fontWeight: '600'
-                  }}
-                >
-                  {aixmDetailsExpanded ? (
-                    <>
-                      Masquer <ChevronUp size={16} />
-                    </>
-                  ) : (
-                    <>
-                      Détails <ChevronDown size={16} />
-                    </>
-                  )}
-                </button>
-              </div>
+              <p style={{ ...styles.ageErrorTitle, margin: 0, marginBottom: '4px' }}>
+                <Database size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
+                {formatAIXMAlert(aixmDataStatus.status).title}
+              </p>
               <p style={styles.ageErrorMessage}>
                 {aixmDataStatus.message}
               </p>
-              {aixmDetailsExpanded && (
-                <div style={{ fontSize: '11px', color: '#6b7280', lineHeight: '1.6', marginTop: '8px' }}>
-                  <div><strong>Fichier :</strong> {aixmDataStatus.filename}</div>
-                  <div><strong>Date effective :</strong> {aixmDataStatus.effectiveDate}</div>
-                  <div><strong>Date expiration :</strong> {aixmDataStatus.expiryDate}</div>
-                  {aixmDataStatus.nextAIRACDate && (
-                    <div><strong>Prochain cycle AIRAC :</strong> {aixmDataStatus.nextAIRACDate}</div>
-                  )}
-                </div>
+            </div>
+          </div>
+          {aixmDetailsExpanded && (
+            <div style={{ fontSize: '11px', color: '#6b7280', lineHeight: '1.6', marginTop: '12px', paddingLeft: '32px' }}>
+              <div><strong>Fichier :</strong> {aixmDataStatus.filename}</div>
+              <div><strong>Date effective :</strong> {aixmDataStatus.effectiveDate}</div>
+              <div><strong>Date expiration :</strong> {aixmDataStatus.expiryDate}</div>
+              {aixmDataStatus.nextAIRACDate && (
+                <div><strong>Prochain cycle AIRAC :</strong> {aixmDataStatus.nextAIRACDate}</div>
               )}
             </div>
+          )}
+          <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+            <button
+              onClick={() => setAixmDetailsExpanded(!aixmDetailsExpanded)}
+              style={{
+                ...styles.configureButton,
+                backgroundColor: formatAIXMAlert(aixmDataStatus.status).color,
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '4px'
+              }}
+            >
+              {aixmDetailsExpanded ? (
+                <>
+                  Masquer <ChevronUp size={16} />
+                </>
+              ) : (
+                <>
+                  Détails <ChevronDown size={16} />
+                </>
+              )}
+            </button>
             {(aixmDataStatus.status === 'expired' || aixmDataStatus.status === 'warning' || aixmDataStatus.status === 'expiring-today') && (
               <a
                 href={aixmDataStatus.downloadUrl}
@@ -720,8 +719,10 @@ export const PilotDashboard = ({ onNavigate }) => {
                   ...styles.configureButton,
                   backgroundColor: formatAIXMAlert(aixmDataStatus.status).color,
                   textDecoration: 'none',
-                  display: 'inline-block',
-                  fontSize: '12px'
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
               >
                 📥 Télécharger
