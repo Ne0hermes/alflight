@@ -111,6 +111,7 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange }) => {
                 title="Modules de préparation"
                 variant="minimal"
                 textAlign="left"
+                className="mobile-menu-button"
                 style={{
                   ...styles.navItem,
                   backgroundColor: flightToolsIds.includes(activeTab) ? 'rgba(139, 21, 56, 0.1)' : 'transparent',
@@ -158,6 +159,7 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange }) => {
                   variant="contained"
                   fullWidth
                   size="medium"
+                  className="mobile-menu-button"
                   sx={{
                     fontSize: '14px',
                     textTransform: 'uppercase',

@@ -1,0 +1,24 @@
+/*
+ * Overrides pour les boutons du menu mobile
+ * Ces règles doivent avoir une spécificité plus haute que unified-styles.css
+ * pour override les styles avec !important
+ */
+
+.mobile-menu-button,
+button.mobile-menu-button,
+.mobile-menu-button.MuiButton-root {
+  padding: 10px 20px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  text-align: left !important;
+  justify-content: flex-start !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+/* Assurer que les styles s'appliquent aussi aux boutons Material-UI */
+.mobile-menu-button.MuiButton-contained {
+  padding: 10px 20px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}

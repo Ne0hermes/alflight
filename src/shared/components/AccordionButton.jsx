@@ -98,7 +98,7 @@ const AccordionButton = ({
     <button
       onClick={disabled ? undefined : onClick}
       style={selectedStyle}
-      className={className}
+      className={`${className || ''}`}
       disabled={disabled}
       type="button"
     >

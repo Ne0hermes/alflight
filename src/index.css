@@ -1,18 +1,23 @@
 /* Global styles for the Flight Management System */
 
 /* ============================================
-   IMPORT DU FICHIER CSS UNIFIÉ 
+   IMPORT DU FICHIER CSS UNIFIÉ
    TOUS LES STYLES SONT MAINTENANT ICI
    ============================================ */
 @import './styles/unified-styles.css';
 
-/* 
+/* ============================================
+   OVERRIDES SPÉCIFIQUES - DOIVENT ÊTRE APRÈS
+   ============================================ */
+@import './styles/mobile-menu-overrides.css';
+
+/*
    Les anciens fichiers sont désactivés car tout a été unifié :
    - global-overrides.css
    - unified-button-style.css
    - button-rounded.css
    - aircraft-fixes.css
    - theme-loader.js
-   
+
    Tout est maintenant dans unified-styles.css
 */
