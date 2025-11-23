@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import {
   Menu, X, User, Book, Navigation, Plane, Cloud,
   CheckSquare, TrendingUp, Package, Fuel, Settings,
-  Map, UserCircle, Home, ChevronDown, ChevronRight, Layers
+  Map, UserCircle, Home, ChevronDown, ChevronRight, Layers, LogOut
 } from 'lucide-react';
 import { theme } from '../../styles/theme';
 import AccordionButton from './AccordionButton';
+import LogoutButton from '../../components/auth/LogoutButton';
 
 const ICON_MAP = {
   UserCircle: UserCircle,
@@ -33,9 +34,6 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange }) => {
   const flightTools = tabs.filter(tab => flightToolsIds.includes(tab.id));
   const mainTabs = tabs.filter(tab => !flightToolsIds.includes(tab.id));
   
-  const activeTabData = tabs.find(tab => tab.id === activeTab);
-  const Icon = activeTabData ? ICON_MAP[activeTabData.icon] || Navigation : Navigation;
-
   const handleTabSelect = (tabId) => {
     onTabChange(tabId);
     setIsMenuOpen(false);
@@ -45,20 +43,13 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange }) => {
     <>
       {/* Mobile Header */}
       <div style={styles.header}>
-        <button 
+        <button
           style={styles.menuButton}
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           aria-label="Menu"
         >
           {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
-        
-        <div style={styles.titleSection}>
-          <Icon size={20} style={{ marginRight: '8px' }} />
-          <h1 style={styles.title}>{activeTabData?.label || 'ALFlight'}</h1>
-        </div>
-        
-        <div style={styles.spacer} />
       </div>
 
       {/* Mobile Menu Overlay */}
@@ -88,7 +79,6 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange }) => {
                 }}
                 onClick={() => handleTabSelect('landing')}
               >
-                <Home size={20} style={{ marginRight: '12px' }} />
                 <span>Accueil</span>
               </button>
 
@@ -96,7 +86,6 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange }) => {
 
               {/* Modules principaux */}
               {mainTabs.map(tab => {
-                const TabIcon = ICON_MAP[tab.icon] || Navigation;
                 const isActive = tab.id === activeTab;
 
                 return (
@@ -108,7 +97,6 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange }) => {
                     }}
                     onClick={() => handleTabSelect(tab.id)}
                   >
-                    <TabIcon size={20} style={{ marginRight: '12px' }} />
                     <span>{tab.label}</span>
                   </button>
                 );
@@ -120,20 +108,22 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange }) => {
               <AccordionButton
                 isOpen={isFlightToolsOpen}
                 onClick={() => setIsFlightToolsOpen(!isFlightToolsOpen)}
-                icon={<Layers size={20} />}
                 title="Modules de préparation"
                 variant="minimal"
+                textAlign="left"
                 style={{
                   ...styles.navItem,
                   backgroundColor: flightToolsIds.includes(activeTab) ? 'rgba(139, 21, 56, 0.1)' : 'transparent',
                   borderLeft: flightToolsIds.includes(activeTab) ? '3px solid #8b1538' : '3px solid transparent',
                   marginBottom: '4px',
-                  fontSize: '15px',
+                  fontSize: '14px',
                   fontWeight: '500',
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em',
                   color: theme.colors.textSecondary,
-                  borderRadius: '8px'
+                  borderRadius: '6px',
+                  padding: '10px 20px',
+                  justifyContent: 'flex-start'
                 }}
               />
 
@@ -141,7 +131,6 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange }) => {
               {isFlightToolsOpen && (
                 <div style={{ paddingLeft: '20px', backgroundColor: 'rgba(0,0,0,0.05)' }}>
                   {flightTools.map(tab => {
-                    const TabIcon = ICON_MAP[tab.icon] || Navigation;
                     const isActive = tab.id === activeTab;
 
                     return (
@@ -154,13 +143,33 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange }) => {
                         }}
                         onClick={() => handleTabSelect(tab.id)}
                       >
-                        <TabIcon size={18} style={{ marginRight: '10px' }} />
                         <span>{tab.label}</span>
                       </button>
                     );
                   })}
                 </div>
               )}
+
+              <div style={{ height: '1px', backgroundColor: theme.colors.border, margin: '8px 0' }} />
+
+              {/* Bouton de déconnexion */}
+              <div style={{ padding: '0 8px' }}>
+                <LogoutButton
+                  variant="contained"
+                  fullWidth
+                  size="medium"
+                  sx={{
+                    fontSize: '14px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    fontWeight: '500',
+                    color: theme.colors.textSecondary,
+                    padding: '10px 20px',
+                    justifyContent: 'flex-start',
+                    textAlign: 'left'
+                  }}
+                />
+              </div>
             </nav>
           </div>
         </div>
@@ -181,7 +190,8 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     padding: '0 16px',
-    paddingTop: 'max(env(safe-area-inset-top), 8px)',
+    paddingTop: 'max(env(safe-area-inset-top), 16px)',
+    paddingBottom: '16px',
     paddingLeft: 'max(env(safe-area-inset-left), 16px)',
     paddingRight: 'max(env(safe-area-inset-right), 16px)',
     zIndex: 1000,
@@ -196,7 +206,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: '8px',
+    borderRadius: '6px',
     transition: 'all 0.2s',
     color: theme.colors.primary,
     '&:hover': {
@@ -266,7 +276,7 @@ const styles = {
     border: `1px solid ${theme.colors.border}`,
     padding: '4px',
     cursor: 'pointer',
-    borderRadius: '4px',
+    borderRadius: '6px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -278,13 +288,13 @@ const styles = {
   },
   navItem: {
     width: '100%',
-    padding: '14px 16px',
+    padding: '10px 20px',
     backgroundColor: 'transparent',
     border: `1px solid transparent`,
-    borderRadius: '8px',
+    borderRadius: '6px',
     display: 'flex',
     alignItems: 'center',
-    fontSize: '15px',
+    fontSize: '14px',
     color: theme.colors.textSecondary,
     cursor: 'pointer',
     transition: 'all 0.2s',
@@ -293,6 +303,7 @@ const styles = {
     fontWeight: '500',
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
+    justifyContent: 'flex-start',
   },
   navItemActive: {
     backgroundColor: 'rgba(139, 21, 56, 0.1)',

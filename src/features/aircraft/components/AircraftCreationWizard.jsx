@@ -1171,8 +1171,13 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
           justifyContent: 'space-between',
           alignItems: 'center',
           p: 2,
+          pb: 'max(env(safe-area-inset-bottom), 16px)',
+          pl: 'max(env(safe-area-inset-left), 16px)',
+          pr: 'max(env(safe-area-inset-right), 16px)',
           borderTop: '1px solid',
-          borderColor: 'divider'
+          borderColor: 'divider',
+          flexWrap: 'wrap',
+          gap: 1
         }}
       >
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
