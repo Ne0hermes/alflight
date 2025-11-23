@@ -899,7 +899,7 @@ export const PilotDashboard = ({ onNavigate }) => {
 
         {/* Expérience récente - Afficher seulement si des qualifications ne sont pas valides */}
         {currencyStatus.filter(item => item.status !== 'valid').length > 0 && (
-          <div style={{ ...styles.card, gridColumn: 'span 2' }}>
+          <div style={styles.card}>
             <div style={styles.cardHeader}>
               <Activity size={20} />
               <span>Validité des qualifications</span>
@@ -1045,7 +1045,7 @@ export const PilotDashboard = ({ onNavigate }) => {
 
         {/* Documents regroupés (Certificat médical, Licences, Qualifications) - Masquer si tout est valide */}
         {!areAllDocumentsValid() && (
-          <div style={{ ...styles.card, gridColumn: documentsExpanded ? 'span 2' : 'span 1' }}>
+          <div style={styles.card}>
           <div 
             style={styles.expandableHeader}
             onClick={() => setDocumentsExpanded(!documentsExpanded)}
