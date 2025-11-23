@@ -30,8 +30,8 @@ export const Button = ({
     const baseStyles = {
       borderRadius: '8px',
       fontWeight: 600,
-      textTransform: 'uppercase',
-      letterSpacing: '0.05em',
+      textTransform: 'none',
+      letterSpacing: 'normal',
       transition: 'all 0.2s ease',
     };
 
