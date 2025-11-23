@@ -26,10 +26,11 @@ const AccordionButton = ({
   variant = 'default',
   className = '',
   disabled = false,
-  children
+  children,
+  textAlign = 'center'  // Nouveau prop pour contrôler l'alignement du texte
 }) => {
-  // Styles de base selon la variante
-  const baseStyles = {
+  // Styles de base selon la variante (sans les styles personnalisés)
+  const baseStylesTemplate = {
     default: {
       padding: '12px 16px',
       backgroundColor: isOpen ? color : 'white',
@@ -45,8 +46,7 @@ const AccordionButton = ({
       justifyContent: 'center',
       gap: '8px',
       transition: 'all 0.2s',
-      opacity: disabled ? 0.5 : 1,
-      ...style
+      opacity: disabled ? 0.5 : 1
     },
     minimal: {
       padding: '8px 12px',
@@ -63,11 +63,7 @@ const AccordionButton = ({
       justifyContent: 'center',
       gap: '8px',
       transition: 'all 0.2s',
-      opacity: disabled ? 0.5 : 1,
-      ':hover': {
-        backgroundColor: '#f3f4f6'
-      },
-      ...style
+      opacity: disabled ? 0.5 : 1
     },
     outlined: {
       padding: '10px 14px',
@@ -84,12 +80,16 @@ const AccordionButton = ({
       justifyContent: 'center',
       gap: '8px',
       transition: 'all 0.2s',
-      opacity: disabled ? 0.5 : 1,
-      ...style
+      opacity: disabled ? 0.5 : 1
     }
   };
 
-  const selectedStyle = baseStyles[variant] || baseStyles.default;
+  // Merge explicite des styles : base + custom
+  const baseStyle = baseStylesTemplate[variant] || baseStylesTemplate.default;
+  const selectedStyle = {
+    ...baseStyle,
+    ...style  // Les styles personnalisés override les styles de base
+  };
 
   // Icône chevron
   const ChevronIcon = isOpen ? ChevronUp : ChevronDown;
@@ -103,7 +103,7 @@ const AccordionButton = ({
       type="button"
     >
       {icon && <span style={{ display: 'flex', alignItems: 'center' }}>{icon}</span>}
-      <span style={{ flex: 1, textAlign: icon ? 'left' : 'center' }}>
+      <span style={{ flex: 1, textAlign: textAlign }}>
         {children || title}
       </span>
       <ChevronIcon size={18} />
