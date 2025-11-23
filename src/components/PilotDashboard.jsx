@@ -592,7 +592,7 @@ export const PilotDashboard = ({ onNavigate }) => {
       
       {/* Alerte si l'âge n'est pas configuré */}
       {hasAgeError && (
-        <div style={{ ...styles.ageErrorAlert, maxWidth: '264px', margin: '0 auto 20px auto' }}>
+        <div style={{ ...styles.ageErrorAlert, maxWidth: '400px', width: '100%', margin: '0 auto 20px auto' }}>
           <div style={styles.ageErrorContent}>
             <AlertTriangle size={20} />
             <div style={{ flex: 1 }}>
@@ -618,7 +618,8 @@ export const PilotDashboard = ({ onNavigate }) => {
           ...styles.ageErrorAlert,
           backgroundColor: 'rgba(245, 158, 11, 0.1)',
           borderColor: 'rgba(245, 158, 11, 0.3)',
-          maxWidth: '264px',
+          maxWidth: '400px',
+          width: '100%',
           margin: '0 auto 20px auto'
         }}>
           <div style={{
@@ -652,7 +653,8 @@ export const PilotDashboard = ({ onNavigate }) => {
           backgroundColor: formatAIXMAlert(aixmDataStatus.status).bgColor,
           borderColor: formatAIXMAlert(aixmDataStatus.status).color,
           border: `2px solid ${formatAIXMAlert(aixmDataStatus.status).color}`,
-          maxWidth: '264px',
+          maxWidth: '400px',
+          width: '100%',
           margin: '0 auto 20px auto'
         }}>
           <div style={{
@@ -735,7 +737,8 @@ export const PilotDashboard = ({ onNavigate }) => {
           ...styles.ageErrorAlert,
           backgroundColor: 'rgba(139, 92, 246, 0.1)',
           borderColor: 'rgba(139, 92, 246, 0.3)',
-          maxWidth: '264px',
+          maxWidth: '400px',
+          width: '100%',
           margin: '0 auto 20px auto'
         }}>
           <div style={{
@@ -1249,7 +1252,7 @@ export const PilotDashboard = ({ onNavigate }) => {
 
 const styles = {
   container: {
-    padding: '24px 20px',
+    padding: '32px 16px',
     background: `linear-gradient(135deg, ${theme.colors.primary}15, ${theme.colors.accent}10)`,
     borderBottom: `1px solid ${theme.colors.border}`,
   },
