@@ -12,8 +12,8 @@ button.mobile-menu-button,
   font-weight: 500 !important;
   text-align: left !important;
   justify-content: flex-start !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.05em !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
 }
 
 /* Assurer que les styles s'appliquent aussi aux boutons Material-UI */
