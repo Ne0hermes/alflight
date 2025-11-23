@@ -61,11 +61,11 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange }) => {
           >
             <div style={styles.drawerHeader}>
               <h2 style={styles.drawerTitle}>ALFlight</h2>
-              <button 
+              <button
                 style={styles.closeButton}
                 onClick={() => setIsMenuOpen(false)}
               >
-                <X size={24} />
+                <X size={12} />
               </button>
             </div>
             
@@ -101,8 +101,6 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange }) => {
                   </button>
                 );
               })}
-
-              <div style={{ height: '1px', backgroundColor: theme.colors.border, margin: '8px 0' }} />
 
               {/* Menu déroulant "Outils de vol" */}
               <AccordionButton
