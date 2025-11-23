@@ -5941,6 +5941,1189 @@ const analyzeBestRunway = (airport, wind, requiredDistance) => {
     <li>Détection anomalies plan de vol (CG limite, carburant juste, vent fort)</li>
 </ul>
 
+<h3>🔹 Analyse Poussée des Cartes OACI</h3>
+
+<h4>Vue d'ensemble</h4>
+
+<p>Analyse intelligente et contextuelle des données OACI pour fournir des alertes et recommandations basées sur l'altitude de vol planifiée, la trajectoire et les réglementations spécifiques.</p>
+
+<h4>Fonctionnalités principales</h4>
+
+<p><strong>1. Restrictions de Survol des Villes selon Altitude</strong></p>
+
+<ul>
+    <li><strong>Base de données urbaines:</strong> Cartographie des agglomérations françaises avec populations</li>
+    <li><strong>Règles réglementaires:</strong> Application automatique de la réglementation française
+        <ul>
+            <li>Survol agglomération interdit < 1000 ft AGL (sauf nécessité décollage/atterrissage)</li>
+            <li>Survol rassemblement de personnes interdit < 1000 ft AGL</li>
+            <li>Survol zones sensibles (centrales nucléaires, sites militaires) avec restrictions spécifiques</li>
+        </ul>
+    </li>
+    <li><strong>Alertes contextuelles:</strong>
+        <ul>
+            <li>Si altitude planifiée < 1000 ft AGL → alerte "Survol agglomération interdit à cette altitude"</li>
+            <li>Proposition altitude minimale sécuritaire (1000 ft AGL + marge)</li>
+            <li>Affichage zones urbaines sur carte avec code couleur selon conformité</li>
+        </ul>
+    </li>
+</ul>
+
+<p><strong>2. Zones de Restriction Dynamiques</strong></p>
+
+<ul>
+    <li><strong>Espaces aériens conditionnels:</strong> Analyse des zones actives selon horaires
+        <ul>
+            <li>Zones militaires (activation selon NOTAM)</li>
+            <li>Zones de parachutage (actives selon horaires publiés)</li>
+            <li>Zones de vol à voile (actives selon saison/météo)</li>
+        </ul>
+    </li>
+    <li><strong>Calcul intersection route/zones:</strong> Détection automatique des conflits potentiels</li>
+    <li><strong>Suggestions évitement:</strong> Routes alternatives avec impact minimal (distance, carburant)</li>
+</ul>
+
+<p><strong>3. Analyse Réglementaire Avancée</strong></p>
+
+<ul>
+    <li><strong>Minimas de séparation:</strong> Vérification distances obstacles, terrain</li>
+    <li><strong>Conformité VFR:</strong> Validation visibilité minimale, distance nuages selon classe espace aérien</li>
+    <li><strong>Restrictions nocturnes:</strong> Alerte si vol de nuit sur aérodrome non équipé éclairage</li>
+    <li><strong>Carburant réglementaire:</strong> Calcul automatique minimas selon destination (aérodrome contrôlé, montagne, survol maritime)</li>
+</ul>
+
+<h4>Exemple d'implémentation</h4>
+
+<pre><code>// Analyse automatique survol agglomération
+function analyzeUrbanOverflight(flightPlan) {
+  const alerts = [];
+
+  // Récupère toutes les agglomérations > 5000 habitants
+  const urbanAreas = getUrbanAreas({ minPopulation: 5000 });
+
+  for (const segment of flightPlan.segments) {
+    // Calcul altitude AGL pour chaque point du segment
+    const aglAltitude = segment.altitude - getTerrainElevation(segment.coordinates);
+
+    // Vérifie si segment traverse zone urbaine
+    const intersectedCities = urbanAreas.filter(city =>
+      isSegmentIntersectingPolygon(segment, city.boundary)
+    );
+
+    for (const city of intersectedCities) {
+      if (aglAltitude < 1000) {
+        alerts.push({
+          type: 'regulatory_violation',
+          severity: 'critical',
+          title: `Survol ${city.name} interdit à ${aglAltitude} ft AGL`,
+          regulation: 'Article D131-1 du Code de l\'Aviation Civile',
+          recommendation: `Altitude minimale requise: ${city.elevation + 1000} ft AMSL`,
+          action: 'increase_altitude',
+          suggestedAltitude: Math.ceil((city.elevation + 1000 + 500) / 100) * 100 // Arrondi au 100 ft sup
+        });
+      } else if (aglAltitude < 1500) {
+        // Alerte warning si marge faible
+        alerts.push({
+          type: 'regulatory_warning',
+          severity: 'warning',
+          title: `Survol ${city.name} avec marge réduite (${aglAltitude} ft AGL)`,
+          recommendation: `Marge conseillée: 1500 ft AGL minimum pour sécurité`
+        });
+      }
+    }
+  }
+
+  return alerts;
+}
+</code></pre>
+
+<h4>Intégration Interface</h4>
+
+<ul>
+    <li><strong>Carte interactive:</strong> Overlay zones urbaines avec code couleur
+        <ul>
+            <li>🟢 Vert : Survol autorisé à l'altitude planifiée</li>
+            <li>🟡 Orange : Marge réduite, vigilance requise</li>
+            <li>🔴 Rouge : Survol interdit, changement altitude/route nécessaire</li>
+        </ul>
+    </li>
+    <li><strong>Panel alertes:</strong> Liste violations réglementaires avec actions correctives</li>
+    <li><strong>Mode "Compliance Check":</strong> Validation complète conformité réglementaire avant vol</li>
+</ul>
+
+<h3>🔹 Points Tournants Manuels pour Évitement</h3>
+
+<h4>Vue d'ensemble</h4>
+
+<p>Permettre au pilote d'ajouter manuellement des waypoints intermédiaires (points tournants) non-significatifs dans le plan de vol pour effectuer des corrections de trajectoire et éviter des zones spécifiques.</p>
+
+<h4>Cas d'usage</h4>
+
+<ul>
+    <li><strong>Évitement météo:</strong> Contourner un orage identifié sur la route directe</li>
+    <li><strong>Évitement zones réglementées:</strong> Contourner une TMA, CTR ou zone militaire active</li>
+    <li><strong>Évitement tactique:</strong> Dévier pour raisons de confort (turbulences montagne, zones de vol à voile actives)</li>
+    <li><strong>Points de report visuels:</strong> Ajouter points de repère visuels pour navigation VFR</li>
+    <li><strong>Optimisation route:</strong> Ajuster trajectoire pour profiter de vent favorable ou éviter vent contraire</li>
+</ul>
+
+<h4>Fonctionnalités</h4>
+
+<p><strong>1. Ajout Manuel de Waypoints</strong></p>
+
+<ul>
+    <li><strong>Clic sur carte:</strong> Clic-droit sur carte → "Ajouter point tournant"</li>
+    <li><strong>Insertion entre waypoints:</strong> Insertion automatique entre deux waypoints existants</li>
+    <li><strong>Type de waypoint:</strong>
+        <ul>
+            <li>🔵 <strong>Waypoint standard:</strong> Aérodrome, VOR, point publié</li>
+            <li>🟣 <strong>Point tournant manuel:</strong> Coordonnées GPS arbitraires</li>
+            <li>🟡 <strong>Point de report:</strong> Repère visuel (château d'eau, lac, route)</li>
+        </ul>
+    </li>
+    <li><strong>Nommage automatique:</strong> "PT01", "PT02" ou nom personnalisé ("Évitement Orage", "Contournement TMA Paris")</li>
+</ul>
+
+<p><strong>2. Edition Interactive</strong></p>
+
+<ul>
+    <li><strong>Drag & Drop:</strong> Déplacement point tournant sur carte en temps réel</li>
+    <li><strong>Recalcul automatique:</strong> Mise à jour distances, caps, temps de vol instantanée</li>
+    <li><strong>Suppression rapide:</strong> Clic-droit → "Supprimer point tournant"</li>
+    <li><strong>Optimisation route:</strong> Bouton "Optimiser" pour suggérer route la plus directe possible</li>
+</ul>
+
+<p><strong>3. Annotations et Notes</strong></p>
+
+<ul>
+    <li><strong>Note par waypoint:</strong> Raison de l'évitement ("Éviter TMA actif jusqu'à 16h", "Orage prévu à 14h")</li>
+    <li><strong>Altitude recommandée:</strong> Spécifier altitude optimale pour ce segment</li>
+    <li><strong>Heure de passage estimée:</strong> Calcul automatique ETO (Estimated Time Over)</li>
+    <li><strong>Fréquences radio:</strong> Attacher fréquences utiles au waypoint (Info, Approche)</li>
+</ul>
+
+<h4>Exemple d'implémentation</h4>
+
+<pre><code>// Structure waypoint manuel
+interface ManualTurningPoint {
+  id: string;
+  type: 'manual_turning_point' | 'visual_reference';
+  name: string;
+  coordinates: {
+    lat: number;
+    lon: number;
+  };
+  elevation?: number;  // ft AMSL
+  insertedBetween: {
+    from: string;  // ID waypoint précédent
+    to: string;    // ID waypoint suivant
+  };
+  annotations: {
+    reason?: string;  // "Évitement TMA Paris"
+    suggestedAltitude?: number;  // ft
+    radioFrequencies?: string[];  // ["118.25", "125.80"]
+    notes?: string;
+  };
+  createdAt: Date;
+  createdBy: 'user' | 'auto_suggestion';
+}
+
+// Fonction d'ajout de point tournant
+function addManualTurningPoint(clickedCoords, insertAfterIndex) {
+  const newWaypoint: ManualTurningPoint = {
+    id: generateId(),
+    type: 'manual_turning_point',
+    name: `PT${getNextTurningPointNumber()}`,
+    coordinates: clickedCoords,
+    elevation: getTerrainElevation(clickedCoords),
+    insertedBetween: {
+      from: flightPlan.waypoints[insertAfterIndex].id,
+      to: flightPlan.waypoints[insertAfterIndex + 1].id
+    },
+    annotations: {},
+    createdAt: new Date(),
+    createdBy: 'user'
+  };
+
+  // Insertion dans plan de vol
+  flightPlan.waypoints.splice(insertAfterIndex + 1, 0, newWaypoint);
+
+  // Recalcul navigation
+  recalculateNavigation(flightPlan);
+
+  // Mise à jour carte
+  updateMapRoute(flightPlan);
+
+  // Afficher popup édition
+  showWaypointEditPopup(newWaypoint);
+}
+</code></pre>
+
+<h4>Interface Utilisateur</h4>
+
+<p><strong>1. Carte Interactive</strong></p>
+
+<ul>
+    <li><strong>Mode édition route:</strong> Activer/désactiver mode édition</li>
+    <li><strong>Visualisation waypoints:</strong>
+        <ul>
+            <li>⭐ Waypoints standard (aérodromes) : Icône standard bleu</li>
+            <li>⚪ Points tournants manuels : Cercle violet avec numéro</li>
+            <li>📍 Points de report : Marqueur jaune avec icône œil</li>
+        </ul>
+    </li>
+    <li><strong>Ligne de route:</strong>
+        <ul>
+            <li>Segment standard : Ligne continue bleue</li>
+            <li>Segment avec point manuel : Ligne pointillée violette</li>
+        </ul>
+    </li>
+</ul>
+
+<p><strong>2. Panel Latéral - Liste Waypoints</strong></p>
+
+<pre><code>┌─────────────────────────────────────────┐
+│ 📍 ROUTE DETAILS                        │
+├─────────────────────────────────────────┤
+│ 1. ⭐ LFST (Strasbourg)         0 NM    │
+│    └─ 15 NM → 093° → 12 min            │
+│ 2. ⚪ PT01 (Évitement TMA)     15 NM    │
+│    📝 "Contourner TMA Paris actif"      │
+│    ✈️  Altitude recommandée: 3500 ft    │
+│    └─ 22 NM → 105° → 17 min            │
+│ 3. 📍 Château d'Andlau         37 NM    │
+│    👁️  Point de report visuel           │
+│    └─ 8 NM → 118° → 6 min              │
+│ 4. ⭐ LFPO (Paris-Orly)        45 NM    │
+│                                         │
+│ Total: 45 NM - 35 min                   │
+│                                         │
+│ [+ Ajouter Point Tournant]              │
+│ [⚙️ Optimiser Route]                    │
+└─────────────────────────────────────────┘
+</code></pre>
+
+<p><strong>3. Popup Édition Waypoint</strong></p>
+
+<ul>
+    <li><strong>Nom:</strong> Champ texte personnalisable</li>
+    <li><strong>Type:</strong> Radio buttons (Point tournant / Point de report)</li>
+    <li><strong>Raison:</strong> Textarea pour notes</li>
+    <li><strong>Altitude suggérée:</strong> Input numérique (ft)</li>
+    <li><strong>Fréquences:</strong> Liste fréquences radio utiles</li>
+    <li><strong>Actions:</strong> Boutons "Sauvegarder", "Supprimer", "Annuler"</li>
+</ul>
+
+<h4>Suggestions Automatiques</h4>
+
+<p>ALFlight peut suggérer automatiquement des points tournants dans certains cas :</p>
+
+<ul>
+    <li><strong>Détection conflit espace aérien:</strong> Si route directe traverse TMA → suggestion point contournement</li>
+    <li><strong>Optimisation vent:</strong> Ajout waypoint pour profiter composante vent favorable</li>
+    <li><strong>Évitement obstacles:</strong> Suggestion déviation si terrain élevé sur route (montagne)</li>
+    <li><strong>Points de report VFR:</strong> Suggestions waypoints visuels évidents (lacs, villes, autoroutes)</li>
+</ul>
+
+<pre><code>// Exemple suggestion automatique
+if (routeIntersectsTMA(flightPlan.route, 'LFPG_TMA')) {
+  const bypassPoint = calculateOptimalBypass(flightPlan.route, 'LFPG_TMA');
+
+  showSuggestion({
+    type: 'auto_turning_point',
+    title: 'Conflit TMA Paris détecté',
+    message: 'Votre route traverse la TMA de Paris (Classe A). Un point de contournement est recommandé.',
+    suggestedWaypoint: {
+      name: 'Contournement TMA Paris',
+      coordinates: bypassPoint,
+      reason: 'Évitement TMA Paris (Classe A - Clairance IFR requise)'
+    },
+    actions: [
+      { label: 'Ajouter point', action: () => addWaypoint(bypassPoint) },
+      { label: 'Ignorer', action: () => dismissSuggestion() },
+      { label: 'Modifier altitude', action: () => showAltitudeEditor() }
+    ]
+  });
+}
+</code></pre>
+
+<h4>Export et Intégration</h4>
+
+<ul>
+    <li><strong>Plan de vol OACI:</strong> Points tournants manuels inclus dans champ 15 (route)</li>
+    <li><strong>Format GPS:</strong> Export GPX/KML avec tous waypoints (standard + manuels)</li>
+    <li><strong>Log de vol:</strong> Historique modifications route avec horodatage</li>
+    <li><strong>Briefing PDF:</strong> Carte avec route complète incluant points tournants annotés</li>
+</ul>
+
+<h3>🔹 Intégration AeroWeb et Analyse Météo Avancée</h3>
+
+<h4>Vue d'ensemble</h4>
+
+<p>Téléchargement automatique et analyse intelligente du dossier AeroWeb (Météo France) pour fournir une planification météorologique complète avec calculs de temps de vol ajustés au vent et alertes météo significatives.</p>
+
+<h4>Sources de Données AeroWeb</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Document</th>
+            <th>Description</th>
+            <th>Format</th>
+            <th>Fréquence Mise à Jour</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>WINTEM (Wind/Temp)</strong></td>
+            <td>Carte des vents et températures en altitude (FL050, FL100, FL180, FL240)</td>
+            <td>PDF/Image</td>
+            <td>4 fois/jour (00h, 06h, 12h, 18h UTC)</td>
+        </tr>
+        <tr>
+            <td><strong>TEMSI</strong></td>
+            <td>Carte Temps Significatif France (phénomènes météo, nébulosité, givrage, turbulence)</td>
+            <td>PDF/Image</td>
+            <td>4 fois/jour (00h, 06h, 12h, 18h UTC)</td>
+        </tr>
+        <tr>
+            <td><strong>METAR</strong></td>
+            <td>Observations météo aérodromes (vent, visibilité, nuages, température)</td>
+            <td>Texte</td>
+            <td>Horaire (ou demi-horaire)</td>
+        </tr>
+        <tr>
+            <td><strong>TAF</strong></td>
+            <td>Prévisions aérodromes 9-30h</td>
+            <td>Texte</td>
+            <td>Toutes les 6h</td>
+        </tr>
+        <tr>
+            <td><strong>SIGMET</strong></td>
+            <td>Avis météo significative (orages, givrage sévère, turbulence forte)</td>
+            <td>Texte</td>
+            <td>Au besoin</td>
+        </tr>
+        <tr>
+            <td><strong>GAMET</strong></td>
+            <td>Prévisions zone pour vol basse altitude (&lt; FL100)</td>
+            <td>Texte</td>
+            <td>2 fois/jour</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Fonctionnalités Principales</h4>
+
+<p><strong>1. Téléchargement Automatique Dossier AeroWeb</strong></p>
+
+<ul>
+    <li><strong>Scraping automatique:</strong> Connexion à AeroWeb Météo France
+        <ul>
+            <li>URL: <code>https://aviation.meteo.fr/</code></li>
+            <li>Téléchargement WINTEM + TEMSI valides pour heure de vol prévue</li>
+            <li>Récupération METAR/TAF pour tous aérodromes de la route</li>
+        </ul>
+    </li>
+    <li><strong>Détection validité:</strong> Sélection automatique du dossier le plus récent applicable
+        <ul>
+            <li>Si vol prévu à 14h → télécharge WINTEM 12h UTC (validité 12h-18h)</li>
+            <li>Alerte si dossier obsolète (> 6h d'ancienneté)</li>
+        </ul>
+    </li>
+    <li><strong>Archivage local:</strong> Stockage dossiers météo avec plan de vol
+        <ul>
+            <li>Traçabilité : preuve des conditions météo consultées avant vol</li>
+            <li>Conformité réglementaire : obligation de consulter météo avant vol VFR</li>
+        </ul>
+    </li>
+</ul>
+
+<p><strong>2. Extraction et OCR des Cartes WINTEM</strong></p>
+
+<ul>
+    <li><strong>Parsing automatique carte WINTEM:</strong> Extraction données vent par niveau
+        <ul>
+            <li>OCR zones texte avec TesseractJS ou Google Vision API</li>
+            <li>Reconnaissance symboles vent (flèches avec barbules)</li>
+            <li>Extraction températures par FL (FL050, FL100, FL180, FL240)</li>
+        </ul>
+    </li>
+    <li><strong>Interpolation géographique:</strong> Calcul vent exact pour coordonnées route
+        <ul>
+            <li>Grille interpolation entre stations météo</li>
+            <li>Vent pour chaque segment de route</li>
+        </ul>
+    </li>
+    <li><strong>Interpolation altimétrique:</strong> Vent à altitude non-standard
+        <ul>
+            <li>Si vol à 4500 ft → interpolation entre FL050 (5000 ft) et surface</li>
+            <li>Modèle logarithmique de variation vent avec altitude</li>
+        </ul>
+    </li>
+</ul>
+
+<p><strong>3. Calcul Temps de Vol avec Vent Réel</strong></p>
+
+<pre><code>// Calcul temps de vol ajusté avec WINTEM
+function calculateFlightTimeWithWind(flightPlan, wintemData) {
+  let totalTime = 0;
+  const segments = [];
+
+  for (let i = 0; i < flightPlan.waypoints.length - 1; i++) {
+    const from = flightPlan.waypoints[i];
+    const to = flightPlan.waypoints[i + 1];
+    const altitude = flightPlan.segmentAltitudes[i]; // ft AMSL
+
+    // Récupère vent interpolé pour ce segment et altitude
+    const wind = interpolateWind(
+      wintemData,
+      { from: from.coordinates, to: to.coordinates },
+      altitude
+    );
+
+    // Calcul distance et cap magnétique
+    const distance = calculateDistance(from.coordinates, to.coordinates); // NM
+    const trueCourse = calculateBearing(from.coordinates, to.coordinates); // °T
+    const magCourse = trueCourse - getLocalMagneticVariation(from.coordinates); // °M
+
+    // Calcul vent effectif (composante vent de face/arrière)
+    const windAngle = wind.direction - trueCourse;
+    const headwindComponent = wind.speed * Math.cos(windAngle * Math.PI / 180);
+    const crosswindComponent = wind.speed * Math.sin(windAngle * Math.PI / 180);
+
+    // Ground Speed (vitesse sol)
+    const TAS = flightPlan.aircraft.cruiseSpeedKt; // True Air Speed
+    const groundSpeed = TAS - headwindComponent; // kt
+
+    // Temps de vol segment
+    const segmentTime = (distance / groundSpeed) * 60; // minutes
+
+    // Cap de correction dérive
+    const driftAngle = Math.asin(crosswindComponent / TAS) * 180 / Math.PI;
+    const headingMag = magCourse + driftAngle;
+
+    segments.push({
+      from: from.name,
+      to: to.name,
+      distance,
+      trueCourse,
+      magCourse,
+      heading: Math.round(headingMag),
+      wind: `${wind.direction}°/${wind.speed} kt`,
+      headwind: Math.round(headwindComponent),
+      crosswind: Math.round(crosswindComponent),
+      groundSpeed: Math.round(groundSpeed),
+      time: Math.round(segmentTime),
+      temperature: wind.temperature  // °C
+    });
+
+    totalTime += segmentTime;
+  }
+
+  return {
+    totalTime: Math.round(totalTime),
+    totalTimeFormatted: formatTime(totalTime),
+    segments,
+    averageGroundSpeed: Math.round(
+      flightPlan.totalDistance / (totalTime / 60)
+    ),
+    fuelAdjustment: calculateFuelAdjustment(segments) // Carburant ajusté selon vent
+  };
+}
+</code></pre>
+
+<p><strong>4. Analyse TEMSI - Détection Phénomènes Dangereux</strong></p>
+
+<ul>
+    <li><strong>Parsing carte TEMSI:</strong> Extraction zones météo significative
+        <ul>
+            <li>🌩️ <strong>Orages (CB):</strong> Détection symboles cumulonimbus</li>
+            <li>❄️ <strong>Givrage:</strong> Zones givrage modéré/sévère</li>
+            <li>💨 <strong>Turbulence:</strong> Zones turbulence modérée/forte</li>
+            <li>🌫️ <strong>Brouillard/Stratus:</strong> Zones visibilité réduite</li>
+            <li>☁️ <strong>Plafond bas:</strong> Bases nuages < 1500 ft</li>
+        </ul>
+    </li>
+    <li><strong>Intersection route/phénomènes:</strong> Calcul si route traverse zone dangereuse
+        <ul>
+            <li>Analyse géométrique intersection route + polygones TEMSI</li>
+            <li>Vérification altitude concernée (ex: givrage FL050-FL120)</li>
+        </ul>
+    </li>
+    <li><strong>Alertes automatiques:</strong> Génération alertes si dangers détectés</li>
+</ul>
+
+<h4>Système d'Alertes Météo Intelligentes</h4>
+
+<p><strong>Croisement METAR + TEMSI + SIGMET</strong></p>
+
+<pre><code>// Analyse croisée des sources météo
+function crossAnalyzeWeatherData(flightPlan, weatherData) {
+  const alerts = [];
+
+  // 1. Analyse METAR aérodromes départ/arrivée
+  for (const aerodrome of [flightPlan.departure, flightPlan.arrival]) {
+    const metar = weatherData.metars[aerodrome.icao];
+
+    // Plafond nuages trop bas pour VFR
+    if (metar.cloudBase < 1500) {
+      alerts.push({
+        severity: 'critical',
+        type: 'low_ceiling',
+        location: aerodrome.name,
+        title: `Plafond nuages bas à ${aerodrome.icao}`,
+        details: `Base nuages ${metar.cloudBase} ft AGL (minimum VFR: 1500 ft)`,
+        metar: metar.raw,
+        recommendation: 'Envisager report ou déroutement'
+      });
+    }
+
+    // Visibilité insuffisante VFR
+    if (metar.visibility < 5000) { // mètres
+      alerts.push({
+        severity: 'critical',
+        type: 'low_visibility',
+        location: aerodrome.name,
+        title: `Visibilité réduite à ${aerodrome.icao}`,
+        details: `${metar.visibility}m (minimum VFR: 5 km hors CTR, 8 km en CTR)`,
+        metar: metar.raw,
+        recommendation: 'Vol VFR impossible - Annuler ou attendre amélioration'
+      });
+    }
+
+    // Vent fort / vent de travers
+    const crosswind = calculateCrosswind(
+      metar.wind.direction,
+      aerodrome.activeRunway.heading,
+      metar.wind.speed
+    );
+
+    if (crosswind > flightPlan.aircraft.maxCrosswind) {
+      alerts.push({
+        severity: 'warning',
+        type: 'strong_crosswind',
+        location: aerodrome.name,
+        title: `Vent de travers important à ${aerodrome.icao}`,
+        details: `Vent ${metar.wind.direction}°/${metar.wind.speed} kt → Composante travers ${crosswind} kt (max avion: ${flightPlan.aircraft.maxCrosswind} kt)`,
+        metar: metar.raw,
+        recommendation: 'Évaluer compétence vent de travers ou choisir piste alternative'
+      });
+    }
+  }
+
+  // 2. Analyse TEMSI - Intersection route avec phénomènes
+  for (const phenomenon of weatherData.temsi.phenomena) {
+    const intersection = calculateRouteIntersection(
+      flightPlan.route,
+      phenomenon.polygon
+    );
+
+    if (intersection.intersects) {
+      // Orage sur route
+      if (phenomenon.type === 'thunderstorm') {
+        alerts.push({
+          severity: 'critical',
+          type: 'thunderstorm_on_route',
+          location: `Segment ${intersection.segmentIndex}`,
+          title: '⚡ Orages sur trajectoire',
+          details: `Zone orageuse ${phenomenon.intensity} détectée sur segment ${intersection.fromWaypoint} → ${intersection.toWaypoint}`,
+          temsi: phenomenon,
+          recommendation: 'ÉVITER IMPÉRATIVEMENT - Contourner minimum 20 NM ou reporter vol',
+          suggestedBypass: calculateBypassRoute(flightPlan.route, phenomenon.polygon, 20)
+        });
+      }
+
+      // Givrage
+      if (phenomenon.type === 'icing') {
+        const altitudeAffected = flightPlan.segmentAltitudes[intersection.segmentIndex];
+
+        if (altitudeAffected >= phenomenon.lowerLimit &&
+            altitudeAffected <= phenomenon.upperLimit) {
+          alerts.push({
+            severity: phenomenon.intensity === 'severe' ? 'critical' : 'warning',
+            type: 'icing_risk',
+            location: `Segment ${intersection.segmentIndex}`,
+            title: `❄️ Risque givrage ${phenomenon.intensity}`,
+            details: `Zone givrage ${phenomenon.intensity} entre ${phenomenon.lowerLimit} et ${phenomenon.upperLimit} ft`,
+            temsi: phenomenon,
+            recommendation: flightPlan.aircraft.deicingEquipment
+              ? 'Activer système dégivrage - Surveiller accumulation'
+              : 'ÉVITER - Avion non équipé dégivrage - Changer altitude ou route'
+          });
+        }
+      }
+
+      // Turbulence
+      if (phenomenon.type === 'turbulence' && phenomenon.intensity === 'severe') {
+        alerts.push({
+          severity: 'warning',
+          type: 'severe_turbulence',
+          location: `Segment ${intersection.segmentIndex}`,
+          title: '💨 Turbulence forte prévue',
+          details: `Zone turbulence forte ${phenomenon.lowerLimit}-${phenomenon.upperLimit} ft`,
+          recommendation: 'Attacher harnais - Éviter si possible - Réduire vitesse'
+        });
+      }
+    }
+  }
+
+  // 3. Analyse SIGMET actifs
+  for (const sigmet of weatherData.sigmets) {
+    if (isRouteAffectedBySIGMET(flightPlan.route, sigmet)) {
+      alerts.push({
+        severity: 'critical',
+        type: 'sigmet_active',
+        title: `SIGMET actif: ${sigmet.phenomenon}`,
+        details: sigmet.raw,
+        validUntil: sigmet.validTo,
+        recommendation: 'Consulter briefing météo détaillé - Envisager report'
+      });
+    }
+  }
+
+  // 4. Analyse tendances TAF (évolution prévue)
+  const arrivalTAF = weatherData.tafs[flightPlan.arrival.icao];
+  const arrivalTime = calculateArrivalTime(flightPlan);
+  const forecastAtArrival = extractTAFAtTime(arrivalTAF, arrivalTime);
+
+  if (forecastAtArrival.conditions === 'worsening') {
+    alerts.push({
+      severity: 'warning',
+      type: 'deteriorating_conditions',
+      location: flightPlan.arrival.name,
+      title: '📉 Dégradation météo prévue à l\'arrivée',
+      details: `TAF prévoit ${forecastAtArrival.description} vers ${arrivalTime}`,
+      taf: arrivalTAF.raw,
+      recommendation: 'Prévoir terrain dégagement - Surveiller évolution - Emporter carburant supplémentaire'
+    });
+  }
+
+  // Tri par sévérité
+  return alerts.sort((a, b) => {
+    const severityOrder = { critical: 0, warning: 1, info: 2 };
+    return severityOrder[a.severity] - severityOrder[b.severity];
+  });
+}
+</code></pre>
+
+<h4>Interface Utilisateur - Module Météo Avancé</h4>
+
+<p><strong>1. Dashboard Météo</strong></p>
+
+<pre><code>┌────────────────────────────────────────────────────────────┐
+│ ☁️ ANALYSE MÉTÉO COMPLÈTE                                  │
+│ Dossier AeroWeb: 23 Nov 2025 12:00 UTC (Validité: 12h-18h) │
+├────────────────────────────────────────────────────────────┤
+│                                                            │
+│ 🚨 ALERTES (3)                                             │
+│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ │
+│ 🔴 CRITIQUE - Orages sur trajectoire (Segment LFST→STS)   │
+│    ⚡ Zone orageuse modérée détectée                       │
+│    → Contournement suggéré +18 NM [Voir carte]            │
+│                                                            │
+│ 🟡 ATTENTION - Vent de travers LFPO (14 kt)               │
+│    💨 Vent 310°/22G28 kt sur piste 08                     │
+│    → Composante travers 14 kt (max avion: 15 kt)          │
+│                                                            │
+│ 🟡 INFO - Dégradation prévue à l'arrivée                  │
+│    📉 TAF LFPO: BECMG 1618 BKN015                         │
+│    → Prévoir terrain dégagement                           │
+│                                                            │
+├────────────────────────────────────────────────────────────┤
+│ ⏱️ TEMPS DE VOL AJUSTÉ                                     │
+│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ │
+│ Sans vent (planifié):        1h 15min                     │
+│ Avec vent (WINTEM réel):     1h 28min (+13 min)           │
+│                                                            │
+│ Vitesse sol moyenne: 112 kt (TAS: 125 kt)                 │
+│ Carburant ajusté: 18.5 L (au lieu de 16.2 L)              │
+│                                                            │
+├────────────────────────────────────────────────────────────┤
+│ 🗺️ CARTES MÉTÉO                                           │
+│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ │
+│ [📄 WINTEM FL050]  [📄 TEMSI France]  [📊 Vent/Route]     │
+│                                                            │
+├────────────────────────────────────────────────────────────┤
+│ 📋 BRIEFING TEXTUEL                                        │
+│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ │
+│ METAR LFST: 231200Z 27015KT 9999 FEW025 SCT040 12/08 ...  │
+│ METAR LFPO: 231200Z 31022G28KT 8000 BKN018 11/07 ...      │
+│                                                            │
+│ TAF LFPO: 231100Z 2312/2418 31020G30KT 9999 BKN020 ...    │
+│                                                            │
+│ [📥 Télécharger Dossier Complet PDF]                      │
+│                                                            │
+└────────────────────────────────────────────────────────────┘
+</code></pre>
+
+<p><strong>2. Carte Interactive - Overlay Météo</strong></p>
+
+<ul>
+    <li><strong>Layer WINTEM:</strong> Flèches vent animées sur carte avec vitesse/direction</li>
+    <li><strong>Layer TEMSI:</strong> Zones colorées phénomènes significatifs
+        <ul>
+            <li>🔴 Rouge : Orages, givrage sévère</li>
+            <li>🟠 Orange : Turbulence forte, givrage modéré</li>
+            <li>🟡 Jaune : Brouillard, stratus</li>
+        </ul>
+    </li>
+    <li><strong>Route ajustée:</strong> Affichage contournement suggéré en vert si évitement nécessaire</li>
+</ul>
+
+<p><strong>3. Export Briefing Météo PDF</strong></p>
+
+<ul>
+    <li><strong>Page 1:</strong> Résumé alertes + décision GO/NO-GO automatique</li>
+    <li><strong>Page 2:</strong> METAR/TAF décodés avec explication en français</li>
+    <li><strong>Page 3:</strong> Cartes WINTEM + TEMSI avec route superposée</li>
+    <li><strong>Page 4:</strong> Tableau temps de vol ajusté vent par segment</li>
+    <li><strong>Page 5:</strong> SIGMET/AIRMET/GAMET actifs</li>
+    <li><strong>Horodatage:</strong> Date/heure consultation + validité données</li>
+</ul>
+
+<h4>Technologies et Implémentation</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Composant</th>
+            <th>Technologie</th>
+            <th>Usage</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Scraping AeroWeb</td>
+            <td>Puppeteer</td>
+            <td>Navigation automatique site Météo France + téléchargement PDFs</td>
+        </tr>
+        <tr>
+            <td>OCR Cartes</td>
+            <td>Tesseract.js / Google Vision API</td>
+            <td>Extraction texte et symboles des cartes WINTEM/TEMSI</td>
+        </tr>
+        <tr>
+            <td>Parsing METAR/TAF</td>
+            <td>metar-taf-parser (NPM)</td>
+            <td>Décodage automatique bulletins météo</td>
+        </tr>
+        <tr>
+            <td>Interpolation Vent</td>
+            <td>Algorithmes géospatiales (Kriging)</td>
+            <td>Calcul vent exact coordonnées route</td>
+        </tr>
+        <tr>
+            <td>Détection Phénomènes</td>
+            <td>OpenCV / TensorFlow</td>
+            <td>Reconnaissance symboles météo (CB, givrage, turbulence)</td>
+        </tr>
+        <tr>
+            <td>Stockage</td>
+            <td>Supabase Storage</td>
+            <td>Archivage PDFs AeroWeb avec plans de vol</td>
+        </tr>
+        <tr>
+            <td>Calculs Navigation</td>
+            <td>Aviation formulas (haversine, wind triangle)</td>
+            <td>GS, heading, drift angle, fuel adjustment</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Bénéfices</h4>
+
+<ul>
+    <li>✅ <strong>Précision temps de vol:</strong> Calcul réaliste avec vent réel (WINTEM) vs estimation sans vent</li>
+    <li>✅ <strong>Sécurité accrue:</strong> Détection automatique dangers météo (orages, givrage, turbulence)</li>
+    <li>✅ <strong>Conformité réglementaire:</strong> Briefing météo obligatoire automatiquement généré et archivé</li>
+    <li>✅ <strong>Gain temps:</strong> Plus besoin de consulter manuellement 10+ documents météo différents</li>
+    <li>✅ <strong>Carburant optimisé:</strong> Ajustement carburant selon vent effectif (économie ou sécurité)</li>
+    <li>✅ <strong>Aide décision:</strong> Recommandation GO/NO-GO basée sur analyse croisée multi-sources</li>
+    <li>✅ <strong>Traçabilité:</strong> Preuve consultation météo avec horodatage (utile en cas d'incident)</li>
+</ul>
+
+<h4>Exemple Scénario Complet</h4>
+
+<pre><code>// Vol LFST → LFPO à 14h locale (13h UTC)
+// Altitude prévue: 4500 ft
+
+1. 📥 Téléchargement automatique:
+   - WINTEM 12h UTC (valide 12h-18h) → ✅
+   - TEMSI 12h UTC → ✅
+   - METAR LFST, LFPO (latest) → ✅
+   - TAF LFST, LFPO → ✅
+   - SIGMET France actifs → ✅
+
+2. 🔍 Analyse WINTEM FL050 (5000 ft):
+   Segment LFST → STS:
+   - Vent interpolé: 280°/18 kt
+   - TAS: 125 kt, Cap vrai: 093°
+   - Composante face: -12 kt
+   - GS: 113 kt (au lieu de 125 kt)
+   - Temps: 8 min (au lieu de 7 min)
+
+3. 🌩️ Analyse TEMSI:
+   ⚠️ Zone orageuse modérée détectée 20 NM au nord de STS
+   → Route directe traverse zone CB
+   → ALERTE CRITIQUE générée
+   → Contournement sud suggéré (+15 NM, +8 min)
+
+4. 🛫 Analyse METAR destination:
+   LFPO: 31022G28KT → Vent de travers piste 08: 14 kt
+   → ALERTE WARNING (proche limite avion 15 kt)
+
+5. 📊 Résultat final:
+   Temps de vol ajusté: 1h28 (vs 1h15 sans vent)
+   Carburant nécessaire: 18.5 L (vs 16.2 L)
+   Recommandation: ⚠️ PRUDENCE
+   - Éviter zone orageuse (contournement sud)
+   - Prévoir atterrissage vent fort LFPO
+   - Emporter 2 L carburant supplémentaire
+</code></pre>
+
+<h3>📄 Analyse Automatique des Compléments aux Cartes OACI</h3>
+
+<h4>Vue d'ensemble</h4>
+
+<p>Les compléments aux cartes OACI (Suppléments AIP, AIC, NOTAM permanents) contiennent des informations critiques non présentes dans les cartes VAC standard. ALFlight analysera automatiquement ces documents pour extraire, interpréter et intégrer les informations pertinentes dans la planification de vol.</p>
+
+<h4>Types de Documents à Analyser</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Type Document</th>
+            <th>Contenu Typique</th>
+            <th>Fréquence Mise à Jour</th>
+            <th>Source</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>SUP AIP</strong></td>
+            <td>Modifications temporaires longue durée (travaux piste, changements procédures)</td>
+            <td>Au besoin</td>
+            <td>SIA France / EUROCONTROL</td>
+        </tr>
+        <tr>
+            <td><strong>AIC (Circulaires d'Information Aéronautique)</strong></td>
+            <td>Informations réglementaires, nouveaux espaces aériens, procédures</td>
+            <td>Mensuel</td>
+            <td>SIA France</td>
+        </tr>
+        <tr>
+            <td><strong>Compléments VAC</strong></td>
+            <td>Instructions spéciales, restrictions, modifications graphiques</td>
+            <td>AIRAC (28 jours)</td>
+            <td>SIA France</td>
+        </tr>
+        <tr>
+            <td><strong>Instructions Spéciales</strong></td>
+            <td>Procédures locales non publiées en VAC standard</td>
+            <td>Variable</td>
+            <td>Aérodromes individuels</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Architecture Système d'Analyse</h4>
+
+<pre><code>// Pipeline d'analyse des compléments OACI
+const documentAnalysisPipeline = {
+
+  // 1. Téléchargement automatique
+  async fetchDocuments(icaoCode, effectiveDate) {
+    // Scraping SIA France pour récupérer SUP AIP et AIC actifs
+    const supAIP = await fetchSUPAIP(icaoCode, effectiveDate);
+    const aic = await fetchAIC(effectiveDate);
+    const vacSupplement = await fetchVACSupplement(icaoCode, effectiveDate);
+
+    return { supAIP, aic, vacSupplement };
+  },
+
+  // 2. Extraction texte et métadonnées
+  async extractContent(documents) {
+    const extractedData = [];
+
+    for (const doc of documents) {
+      const content = await pdfToText(doc.url);
+      const metadata = {
+        docType: doc.type,        // SUP, AIC, VAC_SUP
+        effectiveDate: doc.effectiveStart,
+        expiryDate: doc.effectiveEnd,
+        icaoAffected: extractICAOCodes(content),
+        priority: determinePriority(content)
+      };
+
+      extractedData.push({ content, metadata });
+    }
+
+    return extractedData;
+  },
+
+  // 3. Analyse intelligente avec IA (GPT-4 ou Claude)
+  async analyzeWithAI(extractedData) {
+    const analysisPrompt = `
+      Analyse ce document aéronautique et extrait:
+      1. Résumé en français (2-3 phrases)
+      2. Aérodromes concernés (codes OACI)
+      3. Type de modification (piste, procédure, espace aérien, restriction)
+      4. Impact sur planification de vol (critique, important, informatif)
+      5. Dates validité
+      6. Instructions spécifiques pour pilotes
+
+      Document: ${extractedData.content}
+    `;
+
+    const aiResponse = await callAIAPI(analysisPrompt);
+
+    return {
+      summary: aiResponse.summary,
+      affectedAerodromes: aiResponse.aerodromes,
+      modificationType: aiResponse.type,
+      impactLevel: aiResponse.impact,  // critical, important, info
+      validityPeriod: aiResponse.validity,
+      pilotInstructions: aiResponse.instructions
+    };
+  },
+
+  // 4. Intégration dans base de données
+  async storeParsedData(analysisResults) {
+    await supabase.from('oaci_supplements').insert({
+      doc_type: analysisResults.modificationType,
+      summary: analysisResults.summary,
+      affected_aerodromes: analysisResults.affectedAerodromes,
+      impact_level: analysisResults.impactLevel,
+      valid_from: analysisResults.validityPeriod.start,
+      valid_to: analysisResults.validityPeriod.end,
+      instructions: analysisResults.pilotInstructions,
+      raw_content: extractedData.content,
+      processed_at: new Date()
+    });
+  }
+};
+</code></pre>
+
+<h4>Cas d'Usage Concrets</h4>
+
+<h5>Exemple 1 : SUP AIP - Fermeture Piste LFST</h5>
+
+<pre><code>// Document SUP AIP original (PDF)
+"SUP AIP 023/2025
+Aérodrome de STRASBOURG-ENTZHEIM (LFST)
+Fermeture piste 05/23 pour travaux de resurfacing
+Effectif du 15 mars 2025 0600 UTC au 30 avril 2025 2200 UTC
+Piste 05/23 FERMÉE. Utiliser uniquement piste 10/28.
+Réduction longueur utilisable: 1900m au lieu de 2440m."
+
+// Après analyse IA → Résultat structuré
+{
+  summary: "Piste 05/23 de LFST fermée pour travaux du 15 mars au 30 avril 2025. Seule piste 10/28 disponible (1900m).",
+  affectedAerodromes: ["LFST"],
+  modificationType: "runway_closure",
+  impactLevel: "critical",
+  validityPeriod: {
+    start: "2025-03-15T06:00:00Z",
+    end: "2025-04-30T22:00:00Z"
+  },
+  pilotInstructions: [
+    "❌ Ne pas prévoir d'atterrissage sur piste 05/23",
+    "✅ Utiliser uniquement piste 10/28",
+    "⚠️ Longueur réduite à 1900m (vérifier performances décollage/atterrissage)"
+  ]
+}
+</code></pre>
+
+<h5>Exemple 2 : AIC - Nouvelle Zone Militaire Temporaire</h5>
+
+<pre><code>// Document AIC
+"AIC 005/2025
+Création zone interdite temporaire LF-R 245D
+Du 10 au 20 juin 2025, zone militaire activée:
+Centre: 48°30'N 007°15'E
+Rayon: 10 NM
+Altitude: SFC - FL195
+Horaires: H24
+Contourner par le nord ou le sud. Contacter Strasbourg Info 119.250 avant approche."
+
+// Après analyse → Alerte intégrée dans ALFlight
+{
+  summary: "Zone interdite temporaire LF-R 245D active du 10-20 juin 2025, rayon 10 NM autour de 48°30'N 007°15'E jusqu'à FL195.",
+  modificationType: "temporary_restricted_area",
+  impactLevel: "important",
+  affectedAerodromes: ["LFST", "LFSD", "LFSB"],  // Aérodromes proches calculés automatiquement
+  spatialData: {
+    center: { lat: 48.5, lon: 7.25 },
+    radius: 10,  // NM
+    lowerLimit: 0,  // ft
+    upperLimit: 19500  // ft
+  },
+  pilotInstructions: [
+    "⚠️ Zone interdite active sur votre route prévue",
+    "📡 Contacter Strasbourg Info 119.250 MHz",
+    "🔄 Route alternative suggérée: contournement +15 NM"
+  ]
+}
+</code></pre>
+
+<h4>Intégration dans l'Interface ALFlight</h4>
+
+<h5>1. Alertes Contextuelles lors de la Planification</h5>
+
+<ul>
+    <li><strong>Sélection aérodrome:</strong> Badge rouge "⚠️ 2 SUP AIP actifs" affiché sur LFST dans sélecteur</li>
+    <li><strong>Popup détails:</strong> Clic sur badge → affichage résumé + instructions pilote</li>
+    <li><strong>Impact performances:</strong> Si piste fermée/raccourcie → recalcul automatique distances décollage</li>
+</ul>
+
+<h5>2. Widget "Compléments Actifs" dans Briefing</h5>
+
+<pre><code>// Composant React
+function OACISupplementsWidget({ flightPlan }) {
+  const supplements = useMemo(() =&gt; {
+    // Récupère tous les SUP/AIC affectant les aérodromes du plan de vol
+    return getActiveSupplements(
+      flightPlan.waypoints.map(wp =&gt; wp.icao),
+      flightPlan.departureDate
+    );
+  }, [flightPlan]);
+
+  return (
+    &lt;div className="supplements-widget"&gt;
+      &lt;h3&gt;📄 Compléments aux Cartes ({supplements.length})&lt;/h3&gt;
+      {supplements.map(sup =&gt; (
+        &lt;div key={sup.id} className={`supplement-item ${sup.impactLevel}`}&gt;
+          &lt;div className="sup-header"&gt;
+            &lt;span className="sup-type"&gt;{sup.docType}&lt;/span&gt;
+            &lt;span className="sup-icao"&gt;{sup.affectedAerodromes.join(', ')}&lt;/span&gt;
+            &lt;span className="sup-validity"&gt;{formatDateRange(sup.validityPeriod)}&lt;/span&gt;
+          &lt;/div&gt;
+          &lt;p className="sup-summary"&gt;{sup.summary}&lt;/p&gt;
+          {sup.pilotInstructions.length &gt; 0 &amp;&amp; (
+            &lt;ul className="sup-instructions"&gt;
+              {sup.pilotInstructions.map((instr, i) =&gt; (
+                &lt;li key={i}&gt;{instr}&lt;/li&gt;
+              ))}
+            &lt;/ul&gt;
+          )}
+          &lt;button onClick={() =&gt; viewFullDocument(sup.rawContent)}&gt;
+            📄 Voir document complet
+          &lt;/button&gt;
+        &lt;/div&gt;
+      ))}
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+
+<h5>3. Carte Interactive - Zones Temporaires</h5>
+
+<ul>
+    <li><strong>Overlay automatique:</strong> Zones interdites/dangereuses des SUP AIP affichées sur carte Leaflet</li>
+    <li><strong>Style visuel:</strong> Polygones rouges hachurés avec label "LF-R 245D - Actif jusqu'au 20/06"</li>
+    <li><strong>Calcul évitement:</strong> Si route traverse zone → suggestion contournement automatique</li>
+</ul>
+
+<h4>Technologies et Services</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Composant</th>
+            <th>Technologie</th>
+            <th>Usage</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Scraping Web</td>
+            <td>Puppeteer / Cheerio</td>
+            <td>Téléchargement automatique SUP AIP depuis SIA France</td>
+        </tr>
+        <tr>
+            <td>Extraction PDF</td>
+            <td>pdf.js / pdf-parse</td>
+            <td>Conversion PDF → texte brut</td>
+        </tr>
+        <tr>
+            <td>Analyse IA</td>
+            <td>OpenAI GPT-4 / Claude 3</td>
+            <td>Parsing intelligent + extraction données structurées</td>
+        </tr>
+        <tr>
+            <td>Stockage</td>
+            <td>Supabase PostgreSQL</td>
+            <td>Table <code>oaci_supplements</code> avec full-text search</td>
+        </tr>
+        <tr>
+            <td>Mise à jour auto</td>
+            <td>Cron jobs (Supabase Edge Functions)</td>
+            <td>Vérification quotidienne nouveaux documents</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Bénéfices pour les Pilotes</h4>
+
+<ul>
+    <li>✅ <strong>Sécurité accrue:</strong> Alertes automatiques sur changements critiques (pistes fermées, espaces aériens)</li>
+    <li>✅ <strong>Gain de temps:</strong> Plus besoin de lire manuellement 50+ pages de SUP AIP</li>
+    <li>✅ <strong>Conformité réglementaire:</strong> Assurance que toutes les informations actualisées sont prises en compte</li>
+    <li>✅ <strong>Intelligence contextuelle:</strong> Seules les infos pertinentes au vol planifié sont affichées</li>
+    <li>✅ <strong>Traçabilité:</strong> Archivage des versions consultées (preuve de briefing complet en cas d'incident)</li>
+</ul>
+
+<h4>Roadmap Implémentation</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Phase</th>
+            <th>Fonctionnalités</th>
+            <th>Délai Estimé</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>Phase 1 - POC</strong></td>
+            <td>
+                • Scraping manuel SUP AIP LFST<br>
+                • Parsing IA basique (résumé + dates)<br>
+                • Affichage alertes simples
+            </td>
+            <td>2-4 semaines</td>
+        </tr>
+        <tr>
+            <td><strong>Phase 2 - Automatisation</strong></td>
+            <td>
+                • Scraping automatique tous aérodromes FR<br>
+                • Extraction métadonnées complètes<br>
+                • Intégration widget briefing
+            </td>
+            <td>1-2 mois</td>
+        </tr>
+        <tr>
+            <td><strong>Phase 3 - Intelligence</strong></td>
+            <td>
+                • Analyse spatiale (calcul zones affectées)<br>
+                • Suggestions contournement auto<br>
+                • Priorisation intelligente (ML)
+            </td>
+            <td>2-3 mois</td>
+        </tr>
+        <tr>
+            <td><strong>Phase 4 - International</strong></td>
+            <td>
+                • Support SUP AIP européens (EUROCONTROL)<br>
+                • Multilingue (EN, DE, ES, IT)<br>
+                • API publique pour partenaires
+            </td>
+            <td>3-6 mois</td>
+        </tr>
+    </tbody>
+</table>
+
 <h2 id="futures-technical-debt">10.4 Dette Technique et Optimisations</h2>
 
 <h3>🔧 Refactoring Performance</h3>
@@ -6526,7 +7709,6 @@ ${field19})`;
     <li><strong>Archivage:</strong> Historique plans de vol déposés (conformité réglementaire)</li>
 </ul>
 
-<div class="page-break"></div>
 
 </body>
 </html>

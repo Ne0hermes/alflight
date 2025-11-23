@@ -41,19 +41,19 @@ const AircraftWizardModule = React.lazy(() => import('./features/aircraft/compon
 // import './utils/debugIndexedDB';
 
 const TAB_CONFIG = [
+  { id: 'pilot', label: 'Info Pilote', icon: 'User', component: PilotModule },
+  { id: 'logbook', label: 'Carnet de vol', icon: 'Book', component: LogbookModule },
+  { id: 'aircraft', label: 'Mes avions', icon: 'Settings', component: AircraftModule },
   { id: 'flight-wizard', label: 'Je prépare mon vol', icon: 'Plane', component: FlightWizardModule },
   { id: 'aircraft-wizard', label: 'Configurer un avion', icon: 'Settings', component: AircraftWizardModule },
-  { id: 'pilot', label: 'Info Pilote', icon: 'User', component: PilotModule },
+  { id: 'checklist', label: 'Mes checklists', icon: 'CheckSquare', component: ChecklistModule },
+  { id: 'regulations', label: 'Références réglementaires', icon: 'Shield', component: RegulationsModule },
   { id: 'navigation', label: 'Navigation', icon: 'Navigation', component: NavigationModule },
   { id: 'weather', label: 'Météo', icon: 'Cloud', component: WeatherModule },
-  { id: 'checklist', label: 'Mes checklists', icon: 'CheckSquare', component: ChecklistModule },
   { id: 'performance', label: 'Performances', icon: 'TrendingUp', component: PerformanceModule },
   { id: 'weight-balance', label: 'Masse/Centrage', icon: 'Scale', component: WeightBalanceModule },
   { id: 'fuel', label: 'Carburant', icon: 'Fuel', component: FuelModule },
-  { id: 'aircraft', label: 'Avions', icon: 'Settings', component: AircraftModule },
-  { id: 'vac', label: 'VAC', icon: 'Map', component: VACModule },
-  { id: 'logbook', label: 'Carnet de vol', icon: 'Book', component: LogbookModule },
-  { id: 'regulations', label: 'Références réglementaires', icon: 'Shield', component: RegulationsModule }
+  { id: 'vac', label: 'VAC', icon: 'Map', component: VACModule }
 ];
 
 const MobileApp = () => {
