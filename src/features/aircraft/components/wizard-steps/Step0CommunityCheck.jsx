@@ -767,11 +767,12 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
           <AddIcon color="primary" />
           Votre avion n'est pas dans la liste ? Pas de problème !
         </Typography>
-        <Box sx={{ display: 'flex', gap: 2, mt: 2, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', gap: 2, mt: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
           <Button
             variant="outlined"
             startIcon={<AddIcon />}
             onClick={onSkip}
+            sx={{ flex: { sm: 1 } }}
           >
             Nouvelle configuration
           </Button>
@@ -781,6 +782,7 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
               // TBD: Fonction pour envoyer un email
               window.location.href = 'mailto:contact@alflight.fr?subject=Demande d\'ajout avion&body=Bonjour, je souhaiterais ajouter mon avion à la liste...';
             }}
+            sx={{ flex: { sm: 1 } }}
           >
             Envoyer le manexe
           </Button>
