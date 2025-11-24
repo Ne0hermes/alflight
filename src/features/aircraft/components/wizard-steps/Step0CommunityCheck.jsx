@@ -241,15 +241,19 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
       
 
       // 4. Importer avec le MANEX s'il est disponible
+      const willDownloadManex = communityData.hasManex && communityData.manexAvailableInSupabase?.filePath;
       setDownloadStatus(communityData.manex ? 'Préparation des données avec MANEX...' : 'Préparation des données...');
-      setDownloadProgress(90);
-      
+      setDownloadProgress(willDownloadManex ? 85 : 90);
+
 
       // Petit délai pour afficher le statut final
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      setDownloadStatus('Terminé !');
-      setDownloadProgress(100);
+      // Ne pas mettre à 100% si le MANEX doit encore être téléchargé
+      if (!willDownloadManex) {
+        setDownloadStatus('Terminé !');
+        setDownloadProgress(100);
+      }
 
       // Logger vers Google Sheets
       try {
@@ -652,17 +656,17 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
               <Typography variant="body2">
                 <strong>Date :</strong> {new Date(selectedAircraft.dateAdded).toLocaleDateString()}
               </Typography>
-              <Typography variant="body2">
-                <strong>Téléchargements :</strong> {selectedAircraft.downloads}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Validation :</strong> {selectedAircraft.votes.up} ✓ / {selectedAircraft.votes.down} ✗
-              </Typography>
               {selectedAircraft.version && (
                 <Typography variant="body2">
                   <strong>Version :</strong> {selectedAircraft.version}
                 </Typography>
               )}
+              <Typography variant="body2">
+                <strong>Validation :</strong> <Box component="span" sx={{ whiteSpace: 'nowrap' }}>{selectedAircraft.votes.up} ✓ / {selectedAircraft.votes.down} ✗</Box>
+              </Typography>
+              <Typography variant="body2">
+                <strong>Téléchargements :</strong> {selectedAircraft.downloads}
+              </Typography>
               {selectedAircraft.hasFlightManual && (
                 <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   <ManualIcon sx={{ fontSize: 16, color: 'primary.main' }} />
