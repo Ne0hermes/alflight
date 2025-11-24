@@ -703,56 +703,64 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
             ) : (
               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
                 {baggageCompartments.map((compartment, index) => (
-                  <Box key={compartment.id} sx={{ width: '100%', maxWidth: 550, mb: index < baggageCompartments.length - 1 ? 2 : 0 }}>
+                  <Box key={compartment.id} sx={{ width: '100%', maxWidth: 700, mb: index < baggageCompartments.length - 1 ? 2 : 0 }}>
                     {index > 0 && <Divider sx={{ mb: 2 }} />}
 
-                    <Box sx={{ mb: 1.5 }}>
-                      <StyledTextField
-                        fullWidth
-                        size="small"
-                        label="Nom du compartiment"
-                        value={compartment.name}
-                        onChange={(e) => updateBaggageCompartment(compartment.id, 'name', e.target.value)}
-                        placeholder={`Compartiment ${index + 1}`}
-                      />
-                    </Box>
+                    <Grid container spacing={2}>
+                      {/* Nom du compartiment + Bouton supprimer */}
+                      <Grid item xs={12}>
+                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                          <StyledTextField
+                            fullWidth
+                            size="small"
+                            label="Nom du compartiment"
+                            value={compartment.name}
+                            onChange={(e) => updateBaggageCompartment(compartment.id, 'name', e.target.value)}
+                            placeholder={`Compartiment ${index + 1}`}
+                          />
+                          {baggageCompartments.length > 0 && (
+                            <IconButton
+                              color="error"
+                              onClick={() => removeBaggageCompartment(compartment.id)}
+                              size="small"
+                              sx={{ mt: 0.5 }}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          )}
+                        </Box>
+                      </Grid>
 
-                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', justifyContent: 'center' }}>
-                      <StyledTextField
-                        size="small"
-                        label="Bras de levier"
-                        type="number"
-                        value={compartment.arm}
-                        onChange={(e) => updateBaggageCompartment(compartment.id, 'arm', e.target.value)}
-                        placeholder="Station"
-                        sx={{ flex: 1 }}
-                        InputProps={{
-                          endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
-                        }}
-                      />
-                      <StyledTextField
-                        size="small"
-                        label="Masse max"
-                        type="number"
-                        value={compartment.maxWeight}
-                        onChange={(e) => updateBaggageCompartment(compartment.id, 'maxWeight', e.target.value)}
-                        placeholder="Charge max"
-                        sx={{ flex: 1 }}
-                        InputProps={{
-                          endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
-                        }}
-                      />
-                      {baggageCompartments.length > 0 && (
-                        <IconButton
-                          color="error"
-                          onClick={() => removeBaggageCompartment(compartment.id)}
+                      {/* Bras de levier et Masse max sur la même ligne */}
+                      <Grid item xs={12} sm={6}>
+                        <StyledTextField
+                          fullWidth
                           size="small"
-                          sx={{ mt: 0.5 }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      )}
-                    </Box>
+                          label="Bras de levier"
+                          type="number"
+                          value={compartment.arm}
+                          onChange={(e) => updateBaggageCompartment(compartment.id, 'arm', e.target.value)}
+                          placeholder="Station"
+                          InputProps={{
+                            endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <StyledTextField
+                          fullWidth
+                          size="small"
+                          label="Masse max"
+                          type="number"
+                          value={compartment.maxWeight}
+                          onChange={(e) => updateBaggageCompartment(compartment.id, 'maxWeight', e.target.value)}
+                          placeholder="Charge max"
+                          InputProps={{
+                            endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
+                          }}
+                        />
+                      </Grid>
+                    </Grid>
                   </Box>
                 ))}
               </Box>
@@ -807,7 +815,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                   value={data.weights?.emptyWeight || ''}
                   onChange={(e) => updateData('weights.emptyWeight', e.target.value)}
                   error={!!errors['weights.emptyWeight']}
-                  helperText={errors['weights.emptyWeight'] || "récupérer l'information dans le rapport de masse et centrage joint au manex"}
+                  helperText={errors['weights.emptyWeight']}
                   required
                   InputProps={{
                     endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
@@ -826,6 +834,9 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                   }}
                 />
               </Box>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                récupérer l'information dans le rapport de masse et centrage joint au manex
+              </Typography>
             </Box>
 
             <Box sx={{ width: '100%', maxWidth: 700, mb: 1.5 }}>
