@@ -908,7 +908,7 @@ const renderStepContent = () => {
     switch (currentStep) {
       case 'axes':
         return (
-          <>
+          <div className={styles.stepContent}>
             <h2>Étape 1: {SYSTEM_TYPES.find(t => t.value === systemType)?.label || 'Système d\'abaques'}</h2>
             {importSuccess && (
               <div style={{
@@ -1121,12 +1121,12 @@ const renderStepContent = () => {
                 </button>
               </div>
             </div>
-          </>
+          </div>
         );
 
       case 'points':
         return (
-          <>
+          <div className={styles.stepContent}>
             <h2>Étape 2: Construction et Interpolation - "{SYSTEM_TYPES.find(t => t.value === systemType)?.label || 'Abaques'}"</h2>
             {/* Ligne horizontale avec les 3 cartouches */}
             <div style={{
@@ -1540,7 +1540,7 @@ const renderStepContent = () => {
                 <span style={{ fontSize: '18px' }}>→</span>
               </button>
             </div>
-          </>
+          </div>
         );
 
       case 'fit':
@@ -1550,7 +1550,7 @@ const renderStepContent = () => {
 
       case 'fit_old':
         return (
-          <>
+          <div className={styles.stepContent}>
             <h2>Étape 3: Interpolation des Courbes</h2>
             <div style={{
               backgroundColor: '#e3f2fd',
@@ -1784,7 +1784,7 @@ const renderStepContent = () => {
                 Ré-interpoler toutes les courbes
               </button>
             </div>
-          </>
+          </div>
         );
 
       case 'final':
@@ -1802,7 +1802,7 @@ const renderStepContent = () => {
         });
 
         return (
-          <>
+          <div className={styles.stepContent}>
             <h2>Étape 3: Validation finale</h2>
             <div className={styles.finalView}>
               {/* Affichage des informations du système */}
@@ -2083,7 +2083,7 @@ const renderStepContent = () => {
                 </button>
               </div>
             </div>
-          </>
+          </div>
         );
     }
   };
