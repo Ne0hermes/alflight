@@ -6,7 +6,7 @@ body {
   background: #ffffff !important;
 }
 
-/* Reset all backgrounds to dark */
+/* Light theme styles */
 * {
   scrollbar-width: thin;
   scrollbar-color: #93163C #f0f0f0;
@@ -110,8 +110,8 @@ table {
 }
 
 th {
-  background: rgba(147, 22, 60, 0.2) !important;
-  color: #FFFFFF !important;
+  background: rgba(147, 22, 60, 0.1) !important;
+  color: #111827 !important;
   font-weight: 600 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
@@ -120,7 +120,7 @@ th {
 
 td {
   border-bottom: 1px solid rgba(147, 22, 60, 0.1) !important;
-  color: #B0B0B0 !important;
+  color: #374151 !important;
 }
 
 tr:hover {
@@ -140,20 +140,20 @@ div[role="dialog"] {
 .tab,
 button[role="tab"] {
   background: transparent !important;
-  color: #B0B0B0 !important;
+  color: #6B7280 !important;
   border-bottom: 2px solid transparent !important;
 }
 
 .tab:hover,
 button[role="tab"]:hover {
-  color: #FFFFFF !important;
-  background: rgba(147, 22, 60, 0.1) !important;
+  color: #93163C !important;
+  background: rgba(147, 22, 60, 0.05) !important;
 }
 
 .tab.active,
 .tab[aria-selected="true"],
 button[role="tab"][aria-selected="true"] {
-  color: #FFFFFF !important;
+  color: #93163C !important;
   border-bottom-color: #93163C !important;
   background: transparent !important;
 }
@@ -234,9 +234,9 @@ div[class*="loading"] {
 .notification,
 .alert,
 div[role="alert"] {
-  background: rgba(30, 28, 28, 0.95) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
   border-left: 4px solid #93163C !important;
-  color: #FFFFFF !important;
+  color: #111827 !important;
 }
 
 /* Success states */
@@ -271,7 +271,7 @@ div[role="alert"] {
 }
 
 .recharts-text {
-  fill: #B0B0B0 !important;
+  fill: #374151 !important;
 }
 
 /* Progress bars */
@@ -288,9 +288,10 @@ div[role="progressbar"] {
 /* Tooltips - MODIFIÉ POUR FOND BLANC */
 .tooltip,
 div[role="tooltip"] {
-  background: #374151 !important;
+  background: rgba(255, 255, 255, 0.95) !important;
   border: 1px solid #93163C !important;
-  color: #FFFFFF !important;
+  color: #111827 !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Dropdown menus - MODIFIÉ POUR FOND BLANC */
@@ -304,14 +305,14 @@ div[role="menu"] {
 .dropdown-item,
 .menu-item,
 div[role="menuitem"] {
-  color: #B0B0B0 !important;
+  color: #374151 !important;
 }
 
 .dropdown-item:hover,
 .menu-item:hover,
 div[role="menuitem"]:hover {
-  background: rgba(147, 22, 60, 0.2) !important;
-  color: #FFFFFF !important;
+  background: rgba(147, 22, 60, 0.1) !important;
+  color: #111827 !important;
 }
 
 /* Mobile specific adjustments - MODIFIÉ POUR FOND BLANC */
