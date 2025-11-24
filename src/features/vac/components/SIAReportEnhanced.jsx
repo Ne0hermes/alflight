@@ -808,6 +808,7 @@ export const SIAReportEnhanced = () => {
           href="https://www.sia.aviation-civile.gouv.fr/media/dvd/eAIP_30_OCT_2025/Atlas-VAC/FR/VACProduitPartieframeset.htm"
           target="_blank"
           rel="noopener noreferrer"
+          className="vac-download-button"
           style={{
             display: 'block',
             width: '100%',
