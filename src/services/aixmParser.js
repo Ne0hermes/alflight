@@ -15,9 +15,9 @@ const ensureVACStore = async () => {
 
 class AIXMParser {
   constructor() {
-    console.log('🚨🚨🚨 AIXMParser CONSTRUCTOR - VERSION 2025-11-27 (Cycle AIRAC Novembre)');
-    this.aixmPath = '/src/data/AIXM4.5_all_FR_OM_2025-11-27.xml';
-    this.siaPath = '/src/data/XML_SIA_2025-11-27.xml';
+    console.log('🚨🚨🚨 AIXMParser CONSTRUCTOR - VERSION 2025-11-27 (Cycle AIRAC Novembre - Fix production paths)');
+    this.aixmPath = '/data/AIXM4.5_all_FR_OM_2025-11-27.xml';
+    this.siaPath = '/data/XML_SIA_2025-11-27.xml';
     this.aerodromes = new Map();
     this.runways = new Map();
     this.frequencies = new Map();
