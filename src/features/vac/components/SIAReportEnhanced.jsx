@@ -715,73 +715,89 @@ export const SIAReportEnhanced = () => {
 
   return (
     <div style={styles.container}>
-      {/* Disclaimer important */}
+      {/* Disclaimer important - Collapsible */}
       <div style={{
         background: '#fef3c7',
         border: '1px solid #f59e0b',
         borderRadius: '8px',
-        padding: '12px 16px',
         marginBottom: '16px',
         fontSize: '12px',
         lineHeight: '1.6'
       }}>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '8px',
-          marginBottom: '8px',
-          justifyContent: 'space-between'
-        }}>
+        {/* En-tête cliquable */}
+        <div
+          onClick={() => setWarningExpanded(!warningExpanded)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '12px 16px',
+            cursor: 'pointer',
+            justifyContent: 'space-between'
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <AlertTriangle size={16} style={{ color: '#f59e0b' }} />
             <strong style={{ color: '#92400e', fontSize: '13px' }}>
               AVERTISSEMENT IMPORTANT - Données SIA incomplètes
             </strong>
           </div>
-          {dataDate && (
-            <span style={{ 
-              fontSize: '11px', 
-              color: '#92400e',
-              fontWeight: '600',
-              backgroundColor: '#fed7aa',
-              padding: '2px 8px',
-              borderRadius: '4px'
-            }}>
-              📅 Cycle AIRAC: {dataDate}
-            </span>
-          )}
-        </div>
-        <div style={{ color: '#78350f' }}>
-          Les extraits du SIA affichés ne comprennent PAS les sections suivantes qui doivent être consultées séparément :
-          <ul style={{ 
-            margin: '6px 0 6px 20px', 
-            padding: 0,
-            display: 'grid',
-            gridTemplateColumns: window.innerWidth > 768 ? 'repeat(2, 1fr)' : '1fr',
-            gap: '4px'
-          }}>
-            <li>• Consignes particulières / Special instructions</li>
-            <li>• Conditions d'utilisation de l'AD</li>
-            <li>• Dangers à la navigation aérienne</li>
-            <li>• Procédures et consignes particulières</li>
-            <li>• Arrivées VFR</li>
-            <li>• Départs VFR</li>
-            <li>• Transit VFR</li>
-            <li>• Vols d'entraînement</li>
-            <li>• VFR Spécial</li>
-            <li>• VFR de nuit</li>
-            <li>• Consignes particulières de radiocommunication</li>
-            <li>• Cartes VAC complètes</li>
-          </ul>
-          <div style={{ 
-            marginTop: '8px',
-            paddingTop: '8px',
-            borderTop: '1px solid #fbbf24',
-            fontWeight: '600'
-          }}>
-            📋 Ces éléments essentiels doivent être ajoutés manuellement par le commandant de bord après consultation des documents officiels (AIP, VAC, NOTAM).
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {dataDate && (
+              <span style={{
+                fontSize: '11px',
+                color: '#92400e',
+                fontWeight: '600',
+                backgroundColor: '#fed7aa',
+                padding: '2px 8px',
+                borderRadius: '4px'
+              }}>
+                📅 Cycle AIRAC: {dataDate}
+              </span>
+            )}
+            {warningExpanded ? <ChevronUp size={18} style={{ color: '#92400e' }} /> : <ChevronDown size={18} style={{ color: '#92400e' }} />}
           </div>
         </div>
+
+        {/* Contenu (affiché seulement si expanded) */}
+        {warningExpanded && (
+          <div style={{
+            padding: '0 16px 12px 16px',
+            borderTop: '1px solid #fbbf24',
+            paddingTop: '12px',
+            color: '#78350f'
+          }}>
+            Les extraits du SIA affichés ne comprennent PAS les sections suivantes qui doivent être consultées séparément :
+            <ul style={{
+              margin: '6px 0 6px 20px',
+              padding: 0,
+              display: 'grid',
+              gridTemplateColumns: window.innerWidth > 768 ? 'repeat(2, 1fr)' : '1fr',
+              gap: '4px'
+            }}>
+              <li>• Consignes particulières / Special instructions</li>
+              <li>• Conditions d'utilisation de l'AD</li>
+              <li>• Dangers à la navigation aérienne</li>
+              <li>• Procédures et consignes particulières</li>
+              <li>• Arrivées VFR</li>
+              <li>• Départs VFR</li>
+              <li>• Transit VFR</li>
+              <li>• Vols d'entraînement</li>
+              <li>• VFR Spécial</li>
+              <li>• VFR de nuit</li>
+              <li>• Consignes particulières de radiocommunication</li>
+              <li>• Cartes VAC complètes</li>
+            </ul>
+            <div style={{
+              marginTop: '8px',
+              paddingTop: '8px',
+              borderTop: '1px solid #fbbf24',
+              fontWeight: '600'
+            }}>
+              📋 Ces éléments essentiels doivent être ajoutés manuellement par le commandant de bord après consultation des documents officiels (AIP, VAC, NOTAM).
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Bouton de téléchargement VAC officielles */}
@@ -799,12 +815,12 @@ export const SIAReportEnhanced = () => {
             textAlign: 'center',
             padding: '14px 24px',
             backgroundColor: '#93163C',
-            color: 'white',
+            color: 'white !important',
             border: 'none',
             borderRadius: '8px',
             fontSize: '15px',
             fontWeight: '600',
-            textDecoration: 'none',
+            textDecoration: 'none !important',
             cursor: 'pointer',
             boxShadow: '0 4px 12px rgba(147, 22, 60, 0.3)',
             transition: 'all 0.2s ease'
@@ -829,11 +845,12 @@ export const SIAReportEnhanced = () => {
         <h1 style={styles.title}>
           📊 Rapport SIA - Aérodromes France
           {dataDate && (
-            <span style={{ 
-              fontSize: '14px', 
+            <span style={{
+              display: 'block',
+              fontSize: '14px',
               fontWeight: 'normal',
               color: '#6b7280',
-              marginLeft: '12px'
+              marginTop: '4px'
             }}>
               (Données du {dataDate})
             </span>
