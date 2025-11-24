@@ -1,11 +1,9 @@
 import { createTheme } from '@mui/material/styles';
 
-// Détection du mode préféré de l'utilisateur
-const prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-
+// Force le thème blanc pour toute l'application
 const muiTheme = createTheme({
   palette: {
-    mode: prefersDarkMode ? 'dark' : 'light',
+    mode: 'light',
     primary: {
       main: '#93163C',      // Bordeaux ALFlight
       light: '#A91B45',     // Bordeaux clair
@@ -31,14 +29,14 @@ const muiTheme = createTheme({
       main: '#10b981',      // Vert moderne
     },
     background: {
-      default: prefersDarkMode ? '#1a1a1a' : '#FFFFFF',
-      paper: prefersDarkMode ? '#2d2d2d' : '#FFFFFF',
+      default: '#FFFFFF',
+      paper: '#FFFFFF',
     },
     text: {
-      primary: prefersDarkMode ? '#f9fafb' : '#000000',
-      secondary: prefersDarkMode ? '#d1d5db' : '#374151',
+      primary: '#000000',
+      secondary: '#374151',
     },
-    divider: prefersDarkMode ? 'rgba(147, 22, 60, 0.3)' : 'rgba(209, 213, 219, 0.3)',
+    divider: 'rgba(209, 213, 219, 0.3)',
   },
   typography: {
     fontFamily: [
