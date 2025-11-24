@@ -1239,10 +1239,9 @@ const PilotLogbook = ({ showFormProp }) => {
               <span style={{ color: 'rgb(0, 0, 0)' }}>3 BIS. SEGMENTS DE VOL</span>
             </div>
 
-            {/* Temps total calculé avec bouton Vol uniforme */}
-            <div style={{ marginBottom: '16px', display: 'flex', gap: '16px', alignItems: 'flex-end' }}>
-              <div style={{ flex: 1 }}>
-                <label style={labelStyle}>Temps total de vol (heures) *</label>
+            {/* Temps total de vol */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={labelStyle}>Temps total de vol (heures) *</label>
               <input
                 type="text"
                 value={formData.totalTime}
@@ -1267,77 +1266,18 @@ const PilotLogbook = ({ showFormProp }) => {
                 title="Format: HH:MM (ex: 1:30)"
                 required
               />
-                {formData.blockOff && formData.blockOn && (
-                  <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>
-                    <div>
-                      Bloc à bloc : {decimalToHHMM((new Date(`1970-01-01T${formData.blockOn}`) - new Date(`1970-01-01T${formData.blockOff}`)) / (1000 * 60 * 60))}
-                    </div>
-                    {formData.takeOff && formData.landing && (
-                      <div>
-                        Vol effectif : {decimalToHHMM((new Date(`1970-01-01T${formData.landing}`) - new Date(`1970-01-01T${formData.takeOff}`)) / (1000 * 60 * 60))}
-                      </div>
-                    )}
+              {formData.blockOff && formData.blockOn && (
+                <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>
+                  <div>
+                    Bloc à bloc : {decimalToHHMM((new Date(`1970-01-01T${formData.blockOn}`) - new Date(`1970-01-01T${formData.blockOff}`)) / (1000 * 60 * 60))}
                   </div>
-                )}
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  if (formData.totalTime) {
-                    const totalDecimal = HHMMToDecimal(formData.totalTime);
-
-                    // Récupérer le nom du pilote avec la même logique améliorée
-                    const profile = JSON.parse(localStorage.getItem('pilotProfile') || '{}');
-                    const personalInfo = JSON.parse(localStorage.getItem('personalInfo') || '{}');
-                    let pilotName = '';
-
-                    // Si la fonction est CDB, récupérer automatiquement le nom du pilote
-                    if (formData.functionOnBoard === 'pic') {
-                      // Chercher dans différentes structures possibles
-                      if (profile.personalInfo?.firstName && profile.personalInfo?.lastName) {
-                        pilotName = `${profile.personalInfo.firstName} ${profile.personalInfo.lastName}`;
-                      } else if (profile.firstName && profile.lastName) {
-                        pilotName = `${profile.firstName} ${profile.lastName}`;
-                      } else if (personalInfo.firstName && personalInfo.lastName) {
-                        pilotName = `${personalInfo.firstName} ${personalInfo.lastName}`;
-                      } else if (profile.personalInfo?.name) {
-                        pilotName = profile.personalInfo.name;
-                      } else if (profile.name) {
-                        pilotName = profile.name;
-                      } else if (personalInfo.name) {
-                        pilotName = personalInfo.name;
-                      }
-
-                      if (pilotName) {
-                        pilotName = pilotName.toUpperCase();
-                      }
-                    }
-
-                    setFlightSegments([{
-                      id: 1,
-                      time: totalDecimal.toString(),
-                      flightType: formData.flightType || '',
-                      functionOnBoard: formData.functionOnBoard || '',
-                      pilotInCommand: pilotName || formData.pilotInCommand || ''
-                    }]);
-                    setUseUniformFlight(true);
-                  }
-                }}
-                style={{
-                  padding: '8px 16px',
-                  fontSize: '13px',
-                  backgroundColor: '#3b82f6',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  height: 'fit-content'
-                }}
-              >
-                🔄 Vol uniforme
-              </button>
+                  {formData.takeOff && formData.landing && (
+                    <div>
+                      Vol effectif : {decimalToHHMM((new Date(`1970-01-01T${formData.landing}`) - new Date(`1970-01-01T${formData.takeOff}`)) / (1000 * 60 * 60))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Segments de vol */}
@@ -1349,7 +1289,8 @@ const PilotLogbook = ({ showFormProp }) => {
                 marginBottom: '8px',
                 border: '1px solid #e5e7eb'
               }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 2fr 2fr 80px', gap: '12px', alignItems: 'end' }}>
+                {/* Première ligne : Temps + Type de vol + Boutons */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 80px', gap: '12px', alignItems: 'end', marginBottom: '12px' }}>
                   <div>
                     <label style={{...labelStyle, fontSize: '11px'}}>Temps</label>
                     <input
@@ -1436,6 +1377,56 @@ const PilotLogbook = ({ showFormProp }) => {
                     </select>
                   </div>
 
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    {flightSegments.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFlightSegments(flightSegments.filter(s => s.id !== segment.id));
+                        }}
+                        style={{
+                          padding: '12px',
+                          backgroundColor: '#ef4444',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '12px'
+                        }}
+                      >
+                        ✕
+                      </button>
+                    )}
+                    {index === flightSegments.length - 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFlightSegments([...flightSegments, {
+                            id: Date.now(),
+                            time: '',
+                            flightType: '',
+                            functionOnBoard: '',
+                            pilotInCommand: ''
+                          }]);
+                        }}
+                        style={{
+                          padding: '12px',
+                          backgroundColor: '#10b981',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '12px'
+                        }}
+                      >
+                        +
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Deuxième ligne : Fonction + Nom CDB */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', alignItems: 'end' }}>
                   <div>
                     <label style={{...labelStyle, fontSize: '11px'}}>Fonction</label>
                     <select
@@ -1516,53 +1507,6 @@ const PilotLogbook = ({ showFormProp }) => {
                       style={{...inputStyle, fontSize: '13px'}}
                     />
                   </div>
-
-                  <div style={{ display: 'flex', gap: '4px' }}>
-                    {flightSegments.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFlightSegments(flightSegments.filter(s => s.id !== segment.id));
-                        }}
-                        style={{
-                          padding: '6px',
-                          backgroundColor: '#ef4444',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px'
-                        }}
-                      >
-                        ✕
-                      </button>
-                    )}
-                    {index === flightSegments.length - 1 && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFlightSegments([...flightSegments, {
-                            id: Date.now(),
-                            time: '',
-                            flightType: '',
-                            functionOnBoard: '',
-                            pilotInCommand: ''
-                          }]);
-                        }}
-                        style={{
-                          padding: '6px',
-                          backgroundColor: '#10b981',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px'
-                        }}
-                      >
-                        +
-                      </button>
-                    )}
-                  </div>
                 </div>
               </div>
             ))}
@@ -1594,7 +1538,8 @@ const PilotLogbook = ({ showFormProp }) => {
             <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'rgb(0, 0, 0)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid #e5e7eb', paddingBottom: '4px' }}>
               <span style={{ color: 'rgb(0, 0, 0)' }}>4. AVION</span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 2fr', gap: '16px' }}>
+            {/* Première ligne : Immatriculation */}
+            <div style={{ marginBottom: '16px' }}>
               <div>
                 <label style={labelStyle}>Immatriculation *</label>
                 <select
@@ -1621,7 +1566,10 @@ const PilotLogbook = ({ showFormProp }) => {
                   />
                 )}
               </div>
-              
+            </div>
+
+            {/* Deuxième ligne : Type + Groupe */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', alignItems: 'end' }}>
               <div>
                 <label style={labelStyle}>
                   Type <span style={{ fontSize: '10px', color: '#10b981' }}>(auto)</span>
@@ -1641,7 +1589,7 @@ const PilotLogbook = ({ showFormProp }) => {
                   title='Type géré depuis le module gestion avion'
                 />
               </div>
-              
+
               <div>
                 <label style={labelStyle}>
                   Groupe * <span style={{ fontSize: '10px', color: '#10b981' }}>(auto)</span>
@@ -1678,7 +1626,7 @@ const PilotLogbook = ({ showFormProp }) => {
             <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'rgb(0, 0, 0)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid #e5e7eb', paddingBottom: '4px' }}>
               <span style={{ color: 'rgb(0, 0, 0)' }}>5. ATTERRISSAGES</span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', alignItems: 'end' }}>
               <div>
                 <label style={labelStyle}>Atterrissages jour</label>
                 <input
@@ -1689,7 +1637,7 @@ const PilotLogbook = ({ showFormProp }) => {
                   style={inputStyle}
                 />
               </div>
-              
+
               <div>
                 <label style={labelStyle}>Atterrissages nuit</label>
                 <input
@@ -1700,15 +1648,24 @@ const PilotLogbook = ({ showFormProp }) => {
                   style={inputStyle}
                 />
               </div>
-              
+
               <div>
-                <label style={labelStyle}>Approches IFR</label>
+                <label style={labelStyle}>
+                  Approches IFR <span style={{ fontSize: '10px', color: '#9ca3af' }}>(TBD)</span>
+                </label>
                 <input
                   type="number"
                   value={formData.ifrApproaches || 0}
                   onChange={(e) => handleChange('ifrApproaches', e.target.value)}
                   min="0"
-                  style={inputStyle}
+                  style={{
+                    ...inputStyle,
+                    backgroundColor: '#e5e7eb',
+                    color: '#9ca3af',
+                    cursor: 'not-allowed'
+                  }}
+                  disabled={true}
+                  title="Fonctionnalité à venir"
                 />
               </div>
             </div>
