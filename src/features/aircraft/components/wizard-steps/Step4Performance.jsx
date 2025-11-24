@@ -337,7 +337,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                     </div>
                   )}
                 </div>
-                <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
+                <div style={{ display: 'flex', gap: '4px' }}>
                   <button
                     onClick={() => {
 
@@ -369,6 +369,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                       }
                     }}
                     style={{
+                      flex: 1,
                       padding: '4px 8px',
                       backgroundColor: 'white',
                       border: '1px solid #3b82f6',
@@ -399,6 +400,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                       }
                     }}
                     style={{
+                      flex: 1,
                       padding: '4px 8px',
                       backgroundColor: '#fee2e2',
                       border: 'none',
@@ -472,7 +474,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                         {tables.length} tableau(x) extrait(s)
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
+                    <div style={{ display: 'flex', gap: '4px' }}>
                       <button
                         onClick={() => {
 
@@ -499,6 +501,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                           setForceShowSummary(false);
                         }}
                         style={{
+                          flex: 1,
                           padding: '4px 8px',
                           backgroundColor: 'white',
                           border: '1px solid #3b82f6',
@@ -553,6 +556,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                           }
                         }}
                         style={{
+                          flex: 1,
                           padding: '4px 8px',
                           backgroundColor: '#fee2e2',
                           border: 'none',
