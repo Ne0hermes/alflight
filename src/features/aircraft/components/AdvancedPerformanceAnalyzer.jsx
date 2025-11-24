@@ -1212,11 +1212,7 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
   }, [extractedTables, selectedTableIndex, tableViewMode, groupedTables, combineTablesData]);
 
   return (
-    <div style={sx.combine(sx.components.card.base, sx.spacing.p(4))}>
-      {/* Zone d'extraction de tableaux IA */}
-      <>
-          {/* Zone d'upload pour extraction IA */}
-          <div style={sx.spacing.mb(4)}>
+    <div>
 
           {/* Images chargées */}
           {uploadedImages.length > 0 && !hideUploadedImages && (
@@ -1302,9 +1298,6 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
               </div>
             </div>
           )}
-
-        </div>
-      </>
 
       {/* Barre de progression */}
       {isAnalyzing && (
@@ -1481,65 +1474,38 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
 
       {/* Résultats d'analyse */}
       {extractedTables.length > 0 && (
-        <div style={sx.spacing.mt(4)}>
-          {/* En-tête des résultats */}
-          <div style={sx.combine(sx.flex.between, sx.spacing.mb(4))}>
-            <h5 style={sx.combine(sx.text.md, sx.text.bold)}>
-              📊 Tableaux extraits ({extractedTables.filter(t => t.table_type !== 'undetected' && t.table_type !== 'error').length})
-            </h5>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {/* Sélecteur de mode de vue */}
-              {Object.keys(groupedTables).length > 0 && (
-                <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginRight: '12px' }}>
-                  <button
-                    onClick={() => setTableViewMode('grouped')}
-                    style={sx.combine(
-                      sx.components.button.base,
-                      tableViewMode === 'grouped' ? sx.components.button.primary : sx.components.button.secondary,
-                      { padding: '6px 12px', fontSize: '12px' }
-                    )}
-                    title="Vue groupée par catégorie"
-                  >
-                    Vue groupée
-                  </button>
-                  <button
-                    onClick={() => setTableViewMode('individual')}
-                    style={sx.combine(
-                      sx.components.button.base,
-                      tableViewMode === 'individual' ? sx.components.button.primary : sx.components.button.secondary,
-                      { padding: '6px 12px', fontSize: '12px' }
-                    )}
-                    title="Modifier les extractions individuellement"
-                  >
-                    Modifier les extractions
-                  </button>
-                </div>
-              )}
-              {extractedTables.length > 1 && (
-                <button
-                  onClick={deleteAllTables}
-                  style={sx.combine(
-                    sx.components.button.base,
-                    { 
-                      backgroundColor: '#dc2626',
-                      color: 'white',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }
-                  )}
-                  title="Supprimer tous les tableaux"
-                >
-                  <Trash2 size={14} />
-                  Tout supprimer
-                </button>
-              )}
+        <div>
+          {/* Boutons Vue groupée / Modifier les extractions */}
+          {Object.keys(groupedTables).length > 0 && (
+            <div style={{ display: 'flex', gap: '4px', marginBottom: '12px' }}>
+              <button
+                onClick={() => setTableViewMode('grouped')}
+                style={sx.combine(
+                  sx.components.button.base,
+                  tableViewMode === 'grouped' ? sx.components.button.primary : sx.components.button.secondary,
+                  { padding: '6px 12px', fontSize: '12px' }
+                )}
+                title="Vue groupée par catégorie"
+              >
+                Vue groupée
+              </button>
+              <button
+                onClick={() => setTableViewMode('individual')}
+                style={sx.combine(
+                  sx.components.button.base,
+                  tableViewMode === 'individual' ? sx.components.button.primary : sx.components.button.secondary,
+                  { padding: '6px 12px', fontSize: '12px' }
+                )}
+                title="Modifier les extractions individuellement"
+              >
+                Modifier les extractions
+              </button>
             </div>
-          </div>
+          )}
 
-          {/* Sélecteur de tableau avec bouton de suppression */}
+          {/* Sélecteur de tableau */}
           {extractedTables.length > 0 && (
-            <div style={sx.spacing.mb(4)}>
+            <div style={{ marginBottom: '16px' }}>
               <label style={sx.combine(sx.text.sm, sx.text.bold, { display: 'block', marginBottom: '8px' })}>
                 {tableViewMode === 'grouped' ? 'Catégorie à afficher:' : 'Tableau à afficher:'}
               </label>
@@ -1552,7 +1518,6 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
                     border: '1px solid #d1d5db',
                     borderRadius: '6px',
                     fontSize: '14px',
-                    minWidth: '200px',
                     flex: 1
                   }}
                 >
@@ -1560,7 +1525,7 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
                     // Mode groupé : afficher les catégories (en excluant les tableaux non détectés/erreur)
                     Object.entries(groupedTables).map(([classification, tables], index) => (
                       <option key={index} value={index}>
-                        {classification === 'non-classified' ? '📁 Non classifié' : `✈️ ${classification}`}
+                        {classification === 'non-classified' ? 'Non classifié' : classification}
                         {` (${tables.length} tableau${tables.length > 1 ? 'x' : ''}, ${tables.reduce((acc, t) => acc + (t.data?.length || 0), 0)} lignes)`}
                       </option>
                     ))
