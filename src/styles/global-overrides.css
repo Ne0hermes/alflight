@@ -178,9 +178,23 @@ a {
   text-decoration: none !important;
 }
 
+/* Exception pour les boutons (liens avec background bordeaux) */
+a[style*="background-color: rgb(147, 22, 60)"],
+a[style*="backgroundColor: '#93163C'"] {
+  color: white !important;
+  text-decoration: none !important;
+}
+
 a:hover {
   color: #93163C !important;
   text-decoration: underline !important;
+}
+
+/* Exception pour les boutons au hover */
+a[style*="background-color: rgb(147, 22, 60)"]:hover,
+a[style*="backgroundColor: '#93163C'"]:hover {
+  color: white !important;
+  text-decoration: none !important;
 }
 
 /* Leaflet map adjustments - MODIFIÉ POUR FOND BLANC */
