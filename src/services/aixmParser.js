@@ -76,13 +76,29 @@ class AIXMParser {
       // Créer la promesse de chargement
       this.loadPromise = (async () => {
         // Charger les deux fichiers XML
+        console.log(`🔍 Tentative de chargement AIXM depuis: ${this.aixmPath}`);
+        console.log(`🔍 Tentative de chargement SIA depuis: ${this.siaPath}`);
+
         const [aixmResponse, siaResponse] = await Promise.all([
           fetch(this.aixmPath),
           fetch(this.siaPath)
         ]);
-        
+
+        console.log(`📡 Réponse AIXM: ${aixmResponse.status} ${aixmResponse.statusText}`);
+        console.log(`📡 Réponse SIA: ${siaResponse.status} ${siaResponse.statusText}`);
+
+        if (!aixmResponse.ok) {
+          console.error(`❌ Erreur chargement AIXM: ${aixmResponse.status} ${aixmResponse.statusText}`);
+        }
+        if (!siaResponse.ok) {
+          console.error(`❌ Erreur chargement SIA: ${siaResponse.status} ${siaResponse.statusText}`);
+        }
+
         const aixmText = await aixmResponse.text();
         const siaText = await siaResponse.text();
+
+        console.log(`📄 Taille AIXM: ${aixmText.length} caractères`);
+        console.log(`📄 Taille SIA: ${siaText.length} caractères`);
         
         // Parser les XML
         const aixmParser = new DOMParser();
