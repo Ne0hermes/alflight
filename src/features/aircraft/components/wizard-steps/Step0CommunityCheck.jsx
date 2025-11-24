@@ -621,22 +621,6 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
           )}
         />
 
-        {/* Statistiques */}
-        <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-          <Chip
-            icon={<FlightIcon />}
-            label={`${communityAircraft.length} avions disponibles`}
-            color="primary"
-            variant="outlined"
-          />
-          <Chip
-            icon={<CheckIcon />}
-            label={`${communityAircraft.filter(a => a.verified).length} vérifiés`}
-            color="success"
-            variant="outlined"
-          />
-        </Box>
-
         {/* Informations sur l'avion sélectionné */}
         {selectedAircraft && (
           <Paper elevation={0} sx={{ p: 2, bgcolor: 'primary.50', border: '1px solid', borderColor: 'primary.200' }}>
@@ -653,27 +637,6 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
                   />
                 )}
               </Typography>
-
-              {/* Système de vote */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <IconButton
-                  color={userVotes[selectedAircraft.registration] === 'up' ? 'success' : 'default'}
-                  onClick={() => handleVote(selectedAircraft.registration, 'up')}
-                  size="small"
-                >
-                  <ThumbUpIcon />
-                </IconButton>
-                <Typography variant="body2" sx={{ minWidth: 20, textAlign: 'center' }}>
-                  {selectedAircraft.votes.up - selectedAircraft.votes.down}
-                </Typography>
-                <IconButton
-                  color={userVotes[selectedAircraft.registration] === 'down' ? 'error' : 'default'}
-                  onClick={() => handleVote(selectedAircraft.registration, 'down')}
-                  size="small"
-                >
-                  <ThumbDownIcon />
-                </IconButton>
-              </Box>
             </Box>
 
             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mb: 2 }}>
@@ -804,24 +767,24 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
           <AddIcon color="primary" />
           Votre avion n'est pas dans la liste ? Pas de problème !
         </Typography>
-        <Button
-          variant="outlined"
-          startIcon={<AddIcon />}
-          sx={{ mt: 2 }}
-          onClick={onSkip}
-        >
-          Créer une nouvelle configuration
-        </Button>
-        <Button
-          variant="outlined"
-          sx={{ mt: 2, ml: 2 }}
-          onClick={() => {
-            // TBD: Fonction pour envoyer un email
-            window.location.href = 'mailto:contact@alflight.fr?subject=Demande d\'ajout avion&body=Bonjour, je souhaiterais ajouter mon avion à la liste...';
-          }}
-        >
-          Envoyer le manexe
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2, mt: 2, flexWrap: 'wrap' }}>
+          <Button
+            variant="outlined"
+            startIcon={<AddIcon />}
+            onClick={onSkip}
+          >
+            Nouvelle configuration
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={() => {
+              // TBD: Fonction pour envoyer un email
+              window.location.href = 'mailto:contact@alflight.fr?subject=Demande d\'ajout avion&body=Bonjour, je souhaiterais ajouter mon avion à la liste...';
+            }}
+          >
+            Envoyer le manexe
+          </Button>
+        </Box>
       </Box>
 
       {/* Bouton Annuler pour revenir à l'accueil */}
