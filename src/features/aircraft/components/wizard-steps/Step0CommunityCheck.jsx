@@ -683,15 +683,6 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
               )}
             </Box>
 
-            {!selectedAircraft.verified && (
-              <Alert severity="warning" sx={{ mb: 2, py: 0 }}>
-                <Typography variant="caption">
-                  Cette configuration n'est pas encore vérifiée.
-                  {10 - (selectedAircraft.votes.up - selectedAircraft.votes.down)} votes positifs nets encore nécessaires.
-                </Typography>
-              </Alert>
-            )}
-
             {/* Options d'action */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2, mt: 2 }}>
               {/* Importer directement les données */}
