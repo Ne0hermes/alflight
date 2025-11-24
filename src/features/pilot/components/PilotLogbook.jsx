@@ -1785,10 +1785,6 @@ const PilotLogbook = ({ showFormProp }) => {
               <option value="training">Formation</option>
             </select>
           </div>
-          
-          <p style={{ fontSize: '14px' }}>
-            {filteredEntries.length} vol(s) trouvé(s)
-          </p>
         </div>
       </div>
       )}
@@ -1798,33 +1794,14 @@ const PilotLogbook = ({ showFormProp }) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {filteredEntries.map(entry => (
             <div key={entry.id} style={{ backgroundColor: 'white', padding: '12px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <strong style={{ marginRight: '12px' }}>{entry.date}</strong>
-                  <span style={{ fontSize: '16px', marginRight: '12px' }}>
-                    {entry.departure} → {entry.arrival}
-                  </span>
-                  <span style={{ color: '#6b7280', fontSize: '14px' }}>
-                    {entry.aircraft} ({entry.aircraftType})
-                  </span>
-                </div>
-                
-                <div style={{ display: 'flex', gap: '4px' }}>
-                  <button
-                    onClick={() => {
-                                                                                                              handleEdit(entry);
-                    }}
-                    style={{ padding: '4px 8px', backgroundColor: '#f3f4f6', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                  >
-                    <Edit2 size={14} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(entry.id)}
-                    style={{ padding: '4px 8px', backgroundColor: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                <strong style={{ marginRight: '12px' }}>{entry.date}</strong>
+                <span style={{ fontSize: '16px', marginRight: '12px' }}>
+                  {entry.departure} → {entry.arrival}
+                </span>
+                <span style={{ color: '#6b7280', fontSize: '14px' }}>
+                  {entry.aircraft} ({entry.aircraftType})
+                </span>
               </div>
               
               <div style={{ fontSize: '14px', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
@@ -1880,6 +1857,24 @@ const PilotLogbook = ({ showFormProp }) => {
                   💬 {entry.remarks}
                 </p>
               )}
+
+              {/* Boutons d'action en bas du container */}
+              <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end', marginTop: '12px', paddingTop: '8px', borderTop: '1px solid #e5e7eb' }}>
+                <button
+                  onClick={() => {
+                    handleEdit(entry);
+                  }}
+                  style={{ padding: '4px 8px', backgroundColor: '#f3f4f6', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                >
+                  <Edit2 size={14} />
+                </button>
+                <button
+                  onClick={() => handleDelete(entry.id)}
+                  style={{ padding: '4px 8px', backgroundColor: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
             </div>
           ))}
         </div>
