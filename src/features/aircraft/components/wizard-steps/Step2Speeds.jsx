@@ -223,7 +223,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
     vso: {
       name: "VSO",
       label: "Vitesse de décrochage volets sortis",
-      description: "Vitesse minimale de sustentation en configuration atterrissage",
+      description: "",
       color: "#ffffff",
       category: "critical",
       required: true
@@ -231,7 +231,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
     vfeLdg: {
       name: "VFE LDG",
       label: "Vitesse max volets atterrissage",
-      description: "Vitesse maximale avec volets en configuration atterrissage",
+      description: "",
       color: "#ffffff",
       category: "critical",
       required: true
@@ -239,7 +239,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
     vfeTO: {
       name: "VFE T/O",
       label: "Vitesse max volets décollage",
-      description: "Vitesse maximale avec volets en configuration décollage",
+      description: "",
       color: "#ffffff",
       category: "critical",
       required: true
@@ -247,7 +247,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
     vs1: {
       name: "VS1",
       label: "Vitesse de décrochage lisse",
-      description: "Vitesse minimale de sustentation en configuration lisse",
+      description: "",
       color: "#28a745",
       category: "critical",
       required: true
@@ -255,7 +255,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
     vno: {
       name: "VNO",
       label: "Vitesse maximale de croisière",
-      description: "Vitesse maximale pour opérations normales",
+      description: "",
       color: "#ffc107",
       category: "critical",
       required: true
@@ -263,7 +263,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
     vne: {
       name: "VNE",
       label: "Vitesse à ne jamais dépasser",
-      description: "Vitesse maximale absolue de l'avion",
+      description: "",
       color: "#dc3545",
       category: "critical",
       required: true
@@ -275,7 +275,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
     va: {
       name: "VA",
       label: "VA - Vitesse de manœuvre",
-      description: "Vitesse maximale pour manœuvres à plein débattement",
+      description: "",
       color: "#9c27b0",
       category: "optional",
       required: false
@@ -931,9 +931,6 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 1.5 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2, textAlign: 'center' }}>
-              Vitesse maximale pour manœuvres complètes selon la masse
-            </Typography>
 
             <Grid container spacing={2} justifyContent="center">
               {voTempRanges.map((range, index) => (
@@ -1250,9 +1247,6 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
               </Button>
             </Box>
 
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block', textAlign: 'center' }}>
-              Ajoutez les limitations de vent définies dans le manuel de vol
-            </Typography>
           </Box>
         </AccordionDetails>
       </Accordion>

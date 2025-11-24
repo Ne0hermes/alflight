@@ -495,7 +495,6 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                 type="number"
                 value={data.fuelCapacity || ''}
                 disabled
-                helperText="✓ Valeur importée depuis les informations générales"
                 InputProps={{
                   readOnly: true,
                   endAdornment: <InputAdornment position="end">{getUnitSymbol(units.fuel)}</InputAdornment>,
@@ -590,7 +589,6 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                   value={data.arms?.frontSeats || ''}
                   onChange={(e) => updateData('arms.frontSeats', e.target.value)}
                   error={!!errors['arms.frontSeats']}
-                  helperText="Station des sièges avant"
                   InputProps={{
                     endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
                   }}
@@ -606,7 +604,6 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                   value={data.arms?.rearSeats || ''}
                   onChange={(e) => updateData('arms.rearSeats', e.target.value)}
                   error={!!errors['arms.rearSeats']}
-                  helperText="Station des sièges arrière"
                   InputProps={{
                     endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
                   }}
@@ -1082,7 +1079,6 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                       InputProps={{
                         endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
                       }}
-                      helperText="Position du centre de gravité arrière"
                     />
                   </Box>
 
