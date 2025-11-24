@@ -210,14 +210,6 @@ const RegulationsModule = () => {
           <span style={styles.statLabel}>Réglementations</span>
           <span style={styles.statValue}>{getAllRegulations().length}</span>
         </div>
-        <div style={styles.statItem}>
-          <span style={styles.statLabel}>Résultats</span>
-          <span style={styles.statValue}>
-            {filteredModules.reduce((acc, [, module]) => 
-              acc + module.sections.reduce((acc2, section) => 
-                acc2 + section.regulations.length, 0), 0)}
-          </span>
-        </div>
       </div>
 
       {/* Contenu principal */}
