@@ -115,43 +115,66 @@ export const SIAReportEnhanced = () => {
 
   // DEBUG: useEffect pour tracer la couleur du bouton VAC
   useEffect(() => {
-    if (vacButtonRef.current) {
-      const button = vacButtonRef.current;
-      const computedStyle = window.getComputedStyle(button);
+    console.log('🚀 === DEBUG VAC USEEFFECT DÉCLENCHÉ ===');
+    console.log('📍 vacButtonRef.current:', vacButtonRef.current);
 
-      console.log('🔍 === DEBUG BOUTON VAC - STYLES ===');
-      console.log('📌 Inline style.color:', button.style.color);
-      console.log('📌 Inline style.backgroundColor:', button.style.backgroundColor);
-      console.log('💻 Computed color:', computedStyle.color);
-      console.log('💻 Computed backgroundColor:', computedStyle.backgroundColor);
-      console.log('💻 Computed textDecoration:', computedStyle.textDecoration);
-      console.log('🎨 className:', button.className);
+    // Attendre que le DOM soit prêt
+    const timer = setTimeout(() => {
+      console.log('⏰ Timer déclenché, recherche du bouton...');
 
-      // Obtenir toutes les règles CSS qui s'appliquent au bouton
-      const allRules = [];
-      for (const sheet of document.styleSheets) {
-        try {
-          const rules = sheet.cssRules || sheet.rules;
-          for (const rule of rules) {
-            if (rule.selectorText && button.matches(rule.selectorText)) {
-              allRules.push({
-                selector: rule.selectorText,
-                color: rule.style.color,
-                backgroundColor: rule.style.backgroundColor,
-                textDecoration: rule.style.textDecoration,
-                specificity: rule.selectorText
-              });
-            }
-          }
-        } catch (e) {
-          // Cross-origin stylesheets peuvent être bloquées
-          console.log('⚠️ Impossible d\'accéder à une stylesheet (probablement cross-origin)');
-        }
+      // Essayer d'abord avec la ref
+      let button = vacButtonRef.current;
+
+      // Si la ref ne fonctionne pas, chercher le bouton directement dans le DOM
+      if (!button) {
+        console.log('⚠️ Ref vide, recherche du bouton par className...');
+        button = document.querySelector('.vac-download-button');
+        console.log('🔍 Bouton trouvé par querySelector:', button);
       }
 
-      console.log('📋 Règles CSS appliquées:', allRules);
-      console.log('🔍 === FIN DEBUG ===');
-    }
+      if (button) {
+        const computedStyle = window.getComputedStyle(button);
+
+        console.log('🔍 === DEBUG BOUTON VAC - STYLES ===');
+        console.log('📌 Inline style.color:', button.style.color);
+        console.log('📌 Inline style.backgroundColor:', button.style.backgroundColor);
+        console.log('💻 Computed color:', computedStyle.color);
+        console.log('💻 Computed backgroundColor:', computedStyle.backgroundColor);
+        console.log('💻 Computed textDecoration:', computedStyle.textDecoration);
+        console.log('🎨 className:', button.className);
+        console.log('🏷️ Element:', button);
+
+        // Obtenir toutes les règles CSS qui s'appliquent au bouton
+        const allRules = [];
+        for (const sheet of document.styleSheets) {
+          try {
+            const rules = sheet.cssRules || sheet.rules;
+            for (const rule of rules) {
+              if (rule.selectorText && button.matches(rule.selectorText)) {
+                allRules.push({
+                  selector: rule.selectorText,
+                  color: rule.style.color,
+                  backgroundColor: rule.style.backgroundColor,
+                  textDecoration: rule.style.textDecoration,
+                  sheet: sheet.href || 'inline'
+                });
+              }
+            }
+          } catch (e) {
+            // Cross-origin stylesheets peuvent être bloquées
+            console.log('⚠️ Impossible d\'accéder à une stylesheet:', e.message);
+          }
+        }
+
+        console.log('📋 Règles CSS appliquées:', allRules);
+        console.log('📊 Nombre de règles trouvées:', allRules.length);
+        console.log('🔍 === FIN DEBUG ===');
+      } else {
+        console.error('❌ BOUTON VAC INTROUVABLE! Ref et querySelector ont échoué');
+      }
+    }, 1000); // Attendre 1 seconde pour que le DOM soit prêt
+
+    return () => clearTimeout(timer);
   }, []); // S'exécute une fois après le premier render
 
   const loadAllAerodromes = async () => {
