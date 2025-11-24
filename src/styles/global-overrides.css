@@ -178,23 +178,25 @@ a {
   text-decoration: none !important;
 }
 
-/* Exception pour les boutons (liens avec background bordeaux) */
-a[style*="background-color: rgb(147, 22, 60)"],
-a[style*="backgroundColor: '#93163C'"] {
+/* Bouton téléchargement VAC - Override atomique */
+a.vac-download-button,
+a.vac-download-button:link,
+a.vac-download-button:visited,
+a.vac-download-button:hover,
+a.vac-download-button:active,
+a.vac-download-button:focus {
   color: white !important;
   text-decoration: none !important;
+  background-color: #93163C !important;
+}
+
+a.vac-download-button:hover {
+  background-color: #A91B45 !important;
 }
 
 a:hover {
   color: #93163C !important;
   text-decoration: underline !important;
-}
-
-/* Exception pour les boutons au hover */
-a[style*="background-color: rgb(147, 22, 60)"]:hover,
-a[style*="backgroundColor: '#93163C'"]:hover {
-  color: white !important;
-  text-decoration: none !important;
 }
 
 /* Leaflet map adjustments - MODIFIÉ POUR FOND BLANC */
