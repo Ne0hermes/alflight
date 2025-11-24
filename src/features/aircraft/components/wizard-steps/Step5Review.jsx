@@ -713,22 +713,22 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
   };
 
   const renderSection = (title, icon, stepNumber, items, chart = null) => (
-    <Paper 
-      elevation={0} 
-      sx={{ 
+    <Paper
+      elevation={0}
+      sx={{
         mb: 3,
         border: '1px solid',
         borderColor: 'divider',
         overflow: 'hidden'
       }}
     >
-      <Box 
-        sx={{ 
-          p: 2, 
+      <Box
+        sx={{
+          p: 2,
           bgcolor: 'grey.50',
           display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          flexDirection: 'column',
+          gap: 1,
           borderBottom: '1px solid',
           borderColor: 'divider'
         }}
@@ -744,6 +744,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           variant="outlined"
           startIcon={<EditIcon />}
           onClick={() => setCurrentStep(stepNumber)}
+          sx={{ alignSelf: 'flex-start' }}
         >
           Modifier
         </Button>
@@ -840,22 +841,6 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
         </Typography>
       </Box>
 
-      {data.isImportedFromCommunity && (
-        <Alert
-          severity="info"
-          icon={<CloudUploadIcon />}
-          sx={{ mb: 4 }}
-        >
-          <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
-            Avion importé de la base communautaire
-          </Typography>
-          <Typography variant="body2">
-            Cet avion a été importé de la base de données communautaire (version {data.communityVersion || 1}).
-            Vérifiez les informations et apportez vos modifications si nécessaire.
-            Vous pouvez les conserver localement ou mettre à jour la base communautaire.
-          </Typography>
-        </Alert>
-      )}
 
       {!data.isImportedFromCommunity && (
         <Alert
@@ -1716,7 +1701,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
 
       {/* Système de vote pour configuration communautaire */}
       {data.communityPresetId && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2, mb: 3 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, mb: 3 }}>
           <Typography variant="body2" color="text.secondary">
             Évaluez cette configuration communautaire :
           </Typography>
@@ -1914,52 +1899,6 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
         </DialogActions>
       </Dialog>
 
-      {/* Statistiques */}
-      <Paper 
-        elevation={0} 
-        sx={{ 
-          p: 3,
-          bgcolor: 'primary.lighter',
-          border: '1px solid',
-          borderColor: 'primary.light'
-        }}
-      >
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          Résumé de la configuration
-        </Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={4}>
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" color="primary" fontWeight="bold">
-                8
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Sections complétées
-              </Typography>
-            </Box>
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" color="success.main" fontWeight="bold">
-                100%
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Données obligatoires
-              </Typography>
-            </Box>
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" color="info.main" fontWeight="bold">
-                {data.seats || '4'}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Places disponibles
-              </Typography>
-            </Box>
-          </Grid>
-        </Grid>
-      </Paper>
     </Box>
   );
 };
