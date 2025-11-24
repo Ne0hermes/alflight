@@ -720,5 +720,24 @@ div[class*="loading"] {
 }
 
 /* ============================================
+   BOUTON TÉLÉCHARGEMENT VAC
+   ============================================ */
+/* Override atomique pour forcer le texte blanc */
+a.vac-download-button,
+a.vac-download-button:link,
+a.vac-download-button:visited,
+a.vac-download-button:hover,
+a.vac-download-button:active,
+a.vac-download-button:focus {
+  color: white !important;
+  text-decoration: none !important;
+  background-color: #93163C !important;
+}
+
+a.vac-download-button:hover {
+  background-color: #A91B45 !important;
+}
+
+/* ============================================
    FIN DU FICHIER CSS UNIFIÉ
    ============================================ */
