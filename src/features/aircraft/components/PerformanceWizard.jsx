@@ -1008,60 +1008,54 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
         // Étape 4 : uniquement pour les abaques
         if (performanceType === 'abacs') {
           return (
-            <div>
-              <h3 style={{ ...styles.text.lg, ...styles.text.bold, marginBottom: '16px' }}>
-                Construction des courbes ABAC
-              </h3>
+            <AbacBuilder
+              ref={handleAbacBuilderRef}
+              aircraft={aircraft}
+              onSave={(abacData) => {
+                if (onPerformanceUpdate) {
+                  // Récupérer le systemType depuis la première page sélectionnée (ou 'abaque' par défaut)
+                  const firstSelectedPageIndex = selectedPages[0];
+                  const systemType = pageSystemTypes[firstSelectedPageIndex] || 'abaque';
 
-              <AbacBuilder
-                ref={handleAbacBuilderRef}
-                aircraft={aircraft}
-                onSave={(abacData) => {
-                  if (onPerformanceUpdate) {
-                    // Récupérer le systemType depuis la première page sélectionnée (ou 'abaque' par défaut)
-                    const firstSelectedPageIndex = selectedPages[0];
-                    const systemType = pageSystemTypes[firstSelectedPageIndex] || 'abaque';
+                  // Récupérer la classification depuis les métadonnées de l'abaque
+                  // Si aucune page n'est sélectionnée, utiliser le systemType de l'abaque lui-même
+                  let classificationLabel = 'Non classifié';
+                  let classificationValue = '';
 
-                    // Récupérer la classification depuis les métadonnées de l'abaque
-                    // Si aucune page n'est sélectionnée, utiliser le systemType de l'abaque lui-même
-                    let classificationLabel = 'Non classifié';
-                    let classificationValue = '';
-
-                    if (abacData.metadata?.systemName) {
-                      // Utiliser le nom du système de l'abaque comme classification
-                      classificationLabel = abacData.metadata.systemName;
-                      classificationValue = abacData.metadata.systemType || '';
-                    } else if (selectedPages.length > 0) {
-                      // Sinon, essayer de récupérer depuis pageClassifications
-                      classificationValue = pageClassifications[firstSelectedPageIndex];
-                      const classificationType = performanceTypes.find(t => t.value === classificationValue);
-                      classificationLabel = classificationType?.label || 'Non classifié';
-                    }
-                    onPerformanceUpdate({
-                      abacCurves: abacData,
-                      flightManual: manualFile,
-                      systemType: systemType, // Passer le type de système (table ou abaque)
-                      classification: classificationLabel, // Passer la classification complète
-                      classificationValue: classificationValue, // Passer la valeur de la classification
-                      editingModelIndex: initialData?.editingModelIndex
-                    });
+                  if (abacData.metadata?.systemName) {
+                    // Utiliser le nom du système de l'abaque comme classification
+                    classificationLabel = abacData.metadata.systemName;
+                    classificationValue = abacData.metadata.systemType || '';
+                  } else if (selectedPages.length > 0) {
+                    // Sinon, essayer de récupérer depuis pageClassifications
+                    classificationValue = pageClassifications[firstSelectedPageIndex];
+                    const classificationType = performanceTypes.find(t => t.value === classificationValue);
+                    classificationLabel = classificationType?.label || 'Non classifié';
                   }
-                }}
-                onBack={() => {
-                  
-                  if (onCancel) {
-                    onCancel(); // Retourner à la page listant les données de performance
-                  } else {
-                    // Fallback si onCancel n'est pas fourni
-                    setCurrentStep(2);
-                    setPerformanceType(null);
-                  }
-                }}
-                initialData={initialData?.abacCurves || null}
-                modelName={initialData?.abacCurves?.metadata?.modelName || null}
-                aircraftModel={aircraft?.model || null}
-              />
-            </div>
+                  onPerformanceUpdate({
+                    abacCurves: abacData,
+                    flightManual: manualFile,
+                    systemType: systemType, // Passer le type de système (table ou abaque)
+                    classification: classificationLabel, // Passer la classification complète
+                    classificationValue: classificationValue, // Passer la valeur de la classification
+                    editingModelIndex: initialData?.editingModelIndex
+                  });
+                }
+              }}
+              onBack={() => {
+
+                if (onCancel) {
+                  onCancel(); // Retourner à la page listant les données de performance
+                } else {
+                  // Fallback si onCancel n'est pas fourni
+                  setCurrentStep(2);
+                  setPerformanceType(null);
+                }
+              }}
+              initialData={initialData?.abacCurves || null}
+              modelName={initialData?.abacCurves?.metadata?.modelName || null}
+              aircraftModel={aircraft?.model || null}
+            />
           );
         }
         break;
