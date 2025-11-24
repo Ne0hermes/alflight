@@ -717,7 +717,7 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
             </Box>
 
             {!selectedAircraft.verified && (
-              <Alert severity="warning" sx={{ mb: 2 }}>
+              <Alert severity="warning" sx={{ mb: 2, py: 0 }}>
                 <Typography variant="caption">
                   Cette configuration n'est pas encore vérifiée.
                   {10 - (selectedAircraft.votes.up - selectedAircraft.votes.down)} votes positifs nets encore nécessaires.
@@ -811,6 +811,16 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
           onClick={onSkip}
         >
           Créer une nouvelle configuration
+        </Button>
+        <Button
+          variant="outlined"
+          sx={{ mt: 2, ml: 2 }}
+          onClick={() => {
+            // TBD: Fonction pour envoyer un email
+            window.location.href = 'mailto:contact@alflight.fr?subject=Demande d\'ajout avion&body=Bonjour, je souhaiterais ajouter mon avion à la liste...';
+          }}
+        >
+          Envoyer le manexe
         </Button>
       </Box>
 
