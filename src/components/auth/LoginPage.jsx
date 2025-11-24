@@ -35,12 +35,19 @@ const LoginPage = () => {
       const { data, error: signInError } = await signIn(email, password);
 
       if (signInError) {
+        console.error('Sign in error details:', signInError);
+
         if (signInError.message === 'Invalid login credentials') {
           setError('Email ou mot de passe incorrect');
         } else if (signInError.message.includes('Email not confirmed')) {
           setError('Veuillez confirmer votre email avant de vous connecter');
+        } else if (signInError.message.includes('Failed to fetch') ||
+                   signInError.message.includes('Load failed') ||
+                   signInError.message.includes('network') ||
+                   signInError.message.includes('NetworkError')) {
+          setError('Erreur de connexion réseau. Vérifiez votre connexion internet et désactivez les bloqueurs de contenu.');
         } else {
-          setError(signInError.message);
+          setError(`Erreur: ${signInError.message}`);
         }
         setLoading(false);
         return;
@@ -53,7 +60,16 @@ const LoginPage = () => {
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError('Une erreur est survenue lors de la connexion');
+
+      // Meilleure gestion des erreurs réseau
+      if (err.message && (err.message.includes('Failed to fetch') ||
+          err.message.includes('Load failed') ||
+          err.message.includes('network') ||
+          err.message.includes('NetworkError'))) {
+        setError('Erreur de connexion réseau. Vérifiez votre connexion internet et désactivez les bloqueurs de contenu (AdBlock, etc.)');
+      } else {
+        setError('Une erreur est survenue lors de la connexion');
+      }
       setLoading(false);
     }
   };
