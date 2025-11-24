@@ -540,8 +540,8 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
               </p>
 
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
+                display: 'flex',
+                flexDirection: 'column',
                 gap: '16px',
                 marginBottom: '24px'
               }}>
@@ -1085,71 +1085,8 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
     }
   };
 
-  // Indicateur de progression
-  const renderProgressIndicator = () => {
-    if (currentStep > 3) return null;
-
-    // ⚠️ Step 1 retiré - Le MANEX est géré ailleurs
-    const steps = [
-      { num: 2, label: 'Type de données' },
-      { num: 3, label: 'Sélection pages' }
-    ];
-
-    return (
-      <div style={{
-        ...styles.flexRow,
-        justifyContent: 'center',
-        marginBottom: '24px'
-      }}>
-        {steps.map((step, index) => (
-          <React.Fragment key={step.num}>
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              minWidth: '120px'
-            }}>
-              <div style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                backgroundColor: currentStep >= step.num ? '#1e40af' : '#e5e7eb',
-                color: currentStep >= step.num ? 'white' : '#9ca3af',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 'bold',
-                marginBottom: '4px'
-              }}>
-                {step.num}
-              </div>
-              <span style={{
-                ...styles.text.sm,
-                color: currentStep >= step.num ? '#1e40af' : '#9ca3af',
-                textAlign: 'center'
-              }}>
-                {step.label}
-              </span>
-            </div>
-
-            {index < steps.length - 1 && (
-              <div style={{
-                flex: 1,
-                height: '2px',
-                backgroundColor: currentStep > step.num ? '#1e40af' : '#e5e7eb',
-                marginTop: '15px',
-                maxWidth: '60px'
-              }} />
-            )}
-          </React.Fragment>
-        ))}
-      </div>
-    );
-  };
-
   return (
     <div style={styles.container}>
-      {renderProgressIndicator()}
       {renderStep()}
     </div>
   );
