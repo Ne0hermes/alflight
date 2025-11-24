@@ -495,11 +495,10 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
         
 
         return (
-          <div style={styles.flexCol}>
-            <div style={styles.card}>
-              <h3 style={{ ...styles.text.lg, ...styles.text.bold, marginBottom: '16px' }}>
-                Étape 2 : Sélection des sections de performance
-              </h3>
+          <div style={styles.card}>
+            <h3 style={{ ...styles.text.lg, ...styles.text.bold, marginBottom: '16px' }}>
+              Étape 2 : Sélection des sections de performance
+            </h3>
 
               {/* Alerte si MANEX disponible dans Supabase mais téléchargement échoué */}
               {!hasManex && hasManexInSupabase && (
@@ -652,7 +651,6 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                   </button>
                 </div>
               )}
-            </div>
           </div>
         );
 
@@ -707,11 +705,10 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
 
         // Sinon, afficher la sélection des pages
         return (
-          <div style={styles.flexCol}>
-            <div style={styles.card}>
-              <h3 style={{ ...styles.text.lg, ...styles.text.bold, marginBottom: '8px' }}>
-                Étape 3 : Sélection des pages de performance
-              </h3>
+          <div style={styles.card}>
+            <h3 style={{ ...styles.text.lg, ...styles.text.bold, marginBottom: '8px' }}>
+              Étape 3 : Sélection des pages de performance
+            </h3>
 
               {/* Informations sur l'extraction */}
               <div style={{
@@ -1000,7 +997,6 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                   Analyser ({selectedPages.length} page{selectedPages.length > 1 ? 's' : ''})
                 </button>
               </div>
-            </div>
           </div>
         );
 
