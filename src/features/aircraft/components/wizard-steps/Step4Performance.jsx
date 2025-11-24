@@ -302,15 +302,15 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
   // Si des données existent, afficher une vue récapitulative avec option de modifier
   if ((showExistingData || forceShowSummary) && savedPerformanceData) {
     return (
-      <div style={{ padding: '20px' }}>
-        <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: 'bold' }}>
+      <div>
+        <h3 style={{ marginBottom: '12px', fontSize: '16px', fontWeight: 'bold' }}>
           Données de Performance Configurées
         </h3>
 
         {/* Abaques de performance */}
         {savedPerformanceData.performanceModels && savedPerformanceData.performanceModels.length > 0 && (
-          <div style={{ marginBottom: '20px' }}>
-            <h4 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px' }}>
+          <div style={{ marginBottom: '12px' }}>
+            <h4 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
               Abaques de Performance ({savedPerformanceData.performanceModels.length})
             </h4>
             {savedPerformanceData.performanceModels.map((model, index) => {
@@ -433,8 +433,8 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
           const classificationsCount = Object.keys(groupedByClassification).length;
 
           return (
-            <div style={{ marginBottom: '20px' }}>
-              <h4 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px' }}>
+            <div style={{ marginBottom: '12px' }}>
+              <h4 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
                 Tableaux de performance ({classificationsCount})
               </h4>
               {Object.entries(groupedByClassification).map(([classification, tables], index) => {
@@ -597,33 +597,22 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
             setForceShowSummary(false);
           }}
           style={{
-            marginTop: '16px',
-            padding: '10px 20px',
+            marginTop: '8px',
+            padding: '8px 16px',
             backgroundColor: '#3b82f6',
             color: 'white',
             border: 'none',
-            borderRadius: '6px',
-            fontSize: '14px',
+            borderRadius: '4px',
+            fontSize: '12px',
             cursor: 'pointer',
             fontWeight: '500'
           }}
         >
-          ➕ Ajouter de nouvelles données de performance
+          Ajouter des données de performance
         </button>
 
-        <div style={{
-          marginTop: '16px',
-          padding: '12px',
-          backgroundColor: '#f3f4f6',
-          borderRadius: '6px',
-          fontSize: '14px',
-          color: '#6b7280'
-        }}>
-          ℹ️ Les données de performance sont déjà configurées. Vous pouvez ajouter de nouvelles données ou continuer au récapitulatif.
-        </div>
-
         {/* Boutons de navigation */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
           {/* Bouton Précédent */}
           {onPrevious && (
             <Button
