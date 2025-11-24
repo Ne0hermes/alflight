@@ -314,7 +314,7 @@ const MedicalReminders = () => {
             {editingRecord ? 'Modifier le certificat médical' : 'Nouveau certificat médical'}
           </h4>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px', alignItems: 'end' }}>
             <div>
               <label style={labelStyle}>Classe médicale *</label>
               <select
@@ -328,7 +328,7 @@ const MedicalReminders = () => {
                 <option value="lapl">LAPL Medical</option>
               </select>
             </div>
-            
+
             <div>
               <label style={labelStyle}>Date d'examen *</label>
               <input
@@ -339,7 +339,7 @@ const MedicalReminders = () => {
                 required
               />
             </div>
-            
+
             <div>
               <label style={labelStyle}>Date d'expiration *</label>
               <input
@@ -368,7 +368,7 @@ const MedicalReminders = () => {
           <h5 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>
             Examens complémentaires programmés
           </h5>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '20px' }}>
             <div>
               <label style={labelStyle}>Prochain ECG</label>
               <input
@@ -378,7 +378,7 @@ const MedicalReminders = () => {
                 style={inputStyle}
               />
             </div>
-            
+
             <div>
               <label style={labelStyle}>Prochaine audiométrie</label>
               <input
@@ -388,7 +388,7 @@ const MedicalReminders = () => {
                 style={inputStyle}
               />
             </div>
-            
+
             <div>
               <label style={labelStyle}>Prochaine ophtalmologie</label>
               <input
