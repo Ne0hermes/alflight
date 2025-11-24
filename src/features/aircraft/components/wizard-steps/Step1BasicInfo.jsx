@@ -641,7 +641,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                 }}
                 placeholder="Ex: 200"
                 error={!!errors.fuelCapacity}
-                helperText={errors.fuelCapacity || "Capacité totale des réservoirs"}
+                helperText={errors.fuelCapacity}
                 required
                 InputProps={{
                   endAdornment: <InputAdornment position="end">{getUnitSymbol(units.fuel)}</InputAdornment>,
@@ -681,24 +681,6 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                 helperText="Consommation moyenne en croisière"
                 InputProps={{
                   endAdornment: <InputAdornment position="end">{getUnitSymbol(units.fuelConsumption)}</InputAdornment>,
-                }}
-              />
-            </Grid>
-
-            <Grid item xs={12} sx={{ width: '100%', maxWidth: 350 }}>
-              <StyledTextField
-                fullWidth
-                variant="outlined"
-                label="Vitesse de croisière *"
-                type="number"
-                value={data.cruiseSpeedKt || ''}
-                onChange={(e) => handleCruiseSpeedChange(e.target.value)}
-                placeholder="Ex: 120"
-                error={!!errors.cruiseSpeedKt}
-                helperText={errors.cruiseSpeedKt || "Vitesse de croisière typique"}
-                required
-                InputProps={{
-                  endAdornment: <InputAdornment position="end">{getUnitSymbol(units.speed)}</InputAdornment>,
                 }}
               />
             </Grid>
@@ -917,7 +899,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     )}
                   </Box>
                 </Box>
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                <Box sx={{ display: 'flex', gap: 1, flexDirection: { xs: 'column', sm: 'row' } }}>
                   <Button
                     variant="outlined"
                     color="primary"
@@ -942,6 +924,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                         alert('Impossible de télécharger le MANEX');
                       }
                     }}
+                    sx={{ flex: { sm: 1 } }}
                   >
                     Télécharger
                   </Button>
@@ -951,6 +934,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     size="small"
                     startIcon={<DeleteIcon />}
                     onClick={handleManexDelete}
+                    sx={{ flex: { sm: 1 } }}
                   >
                     Supprimer
                   </Button>

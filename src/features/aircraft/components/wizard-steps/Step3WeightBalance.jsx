@@ -482,7 +482,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
         >
           <FuelIcon color="primary" />
           <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
-            Carburant
+            Capacité utilisable
           </Typography>
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
