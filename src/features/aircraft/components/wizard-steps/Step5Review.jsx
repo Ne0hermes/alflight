@@ -21,7 +21,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  CircularProgress
+  CircularProgress,
+  IconButton
 } from '@mui/material';
 import {
   CheckCircle as CheckCircleIcon,
@@ -39,7 +40,9 @@ import {
   Warning as WarningIcon,
   Sync as SyncIcon,
   Description as DescriptionIcon,
-  CloudQueue as CloudQueueIcon
+  CloudQueue as CloudQueueIcon,
+  ThumbUp as ThumbUpIcon,
+  ThumbDown as ThumbDownIcon
 } from '@mui/icons-material';
 import CGEnvelopeChart from '../CgEnvelopeChart';
 import SpeedLimitationChart from '../SpeedLimitationChart';
@@ -60,6 +63,8 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
   const [isUploadingManex, setIsUploadingManex] = useState(false);
   const [manexUploadSuccess, setManexUploadSuccess] = useState(false);
   const [manexUploadError, setManexUploadError] = useState(null);
+  const [userVote, setUserVote] = useState(null);
+  const [votes, setVotes] = useState(data.votes || { up: 0, down: 0 });
 
   // Calculer les différences avec l'avion de base (pour les variantes)
   const calculateVariantDifferences = () => {
@@ -465,8 +470,8 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
 
   // Gérer la soumission directe pour les nouveaux avions
   const handleDirectSubmission = () => {
-    
-    
+
+
     if (onSave) {
       onSave({
         mode: 'community',
@@ -475,6 +480,45 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
       });
     } else {
       console.error('❌ onSave n\'est pas défini!');
+    }
+  };
+
+  // Gérer le vote pour la configuration communautaire
+  const handleVote = async (voteType) => {
+    if (!data.communityPresetId) {
+      console.error('❌ Pas de communityPresetId pour voter');
+      return;
+    }
+
+    try {
+      // Envoyer le vote à Supabase
+      await communityService.votePreset(
+        data.communityPresetId,
+        'current-user-id', // En prod: récupérer l'ID utilisateur réel
+        voteType
+      );
+
+      // Mettre à jour l'état local du vote utilisateur
+      setUserVote(voteType);
+
+      // Mettre à jour les votes localement
+      setVotes(prev => {
+        let updatedVotes = { ...prev };
+
+        // Annuler le vote précédent
+        if (userVote === 'up') updatedVotes.up--;
+        if (userVote === 'down') updatedVotes.down--;
+
+        // Appliquer le nouveau vote
+        if (voteType === 'up') updatedVotes.up++;
+        if (voteType === 'down') updatedVotes.down++;
+
+        return updatedVotes;
+      });
+
+    } catch (error) {
+      console.error('❌ Erreur lors du vote:', error);
+      alert(`Erreur lors du vote: ${error.message}`);
     }
   };
 
@@ -1668,6 +1712,34 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
         <Alert severity="success" sx={{ mb: 3, maxWidth: 800, mx: 'auto' }}>
           ✅ MANEX uploadé vers Supabase avec succès !
         </Alert>
+      )}
+
+      {/* Système de vote pour configuration communautaire */}
+      {data.communityPresetId && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2, mb: 3 }}>
+          <Typography variant="body2" color="text.secondary">
+            Évaluez cette configuration communautaire :
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <IconButton
+              color={userVote === 'up' ? 'success' : 'default'}
+              onClick={() => handleVote('up')}
+              size="small"
+            >
+              <ThumbUpIcon />
+            </IconButton>
+            <Typography variant="body2" sx={{ minWidth: 20, textAlign: 'center', fontWeight: 600 }}>
+              {votes.up - votes.down}
+            </Typography>
+            <IconButton
+              color={userVote === 'down' ? 'error' : 'default'}
+              onClick={() => handleVote('down')}
+              size="small"
+            >
+              <ThumbDownIcon />
+            </IconButton>
+          </Box>
+        </Box>
       )}
 
       {/* Boutons d'action */}

@@ -1306,7 +1306,7 @@ const styles = {
     gap: '16px',
   },
   card: {
-    backgroundColor: 'rgba(30, 28, 28, 0.6)',
+    backgroundColor: '#FFFFFF',
     backdropFilter: 'blur(10px)',
     border: `1px solid ${theme.colors.border}`,
     borderRadius: '12px',
