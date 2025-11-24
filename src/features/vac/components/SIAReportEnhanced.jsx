@@ -802,8 +802,7 @@ export const SIAReportEnhanced = () => {
 
       {/* Bouton de téléchargement VAC officielles */}
       <div style={{
-        marginBottom: '16px',
-        padding: '0 24px'
+        marginBottom: '16px'
       }}>
         <a
           href="https://www.sia.aviation-civile.gouv.fr/media/dvd/eAIP_30_OCT_2025/Atlas-VAC/FR/VACProduitPartieframeset.htm"
