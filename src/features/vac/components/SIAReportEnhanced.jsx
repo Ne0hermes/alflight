@@ -28,7 +28,8 @@ export const SIAReportEnhanced = () => {
   const [hideClosedAirports, setHideClosedAirports] = useState(true); // Filtre pour AD CLOSED
   const [dataDate, setDataDate] = useState(''); // Date des données
   const [editMode, setEditMode] = useState({}); // État pour gérer le mode édition par aérodrome
-  
+  const [warningExpanded, setWarningExpanded] = useState(false); // État pour l'avertissement (fermé par défaut)
+
   // Référence pour l'import de fichiers (un par aérodrome)
   const fileInputRefs = useRef({});
   
@@ -786,19 +787,18 @@ export const SIAReportEnhanced = () => {
       {/* Bouton de téléchargement VAC officielles */}
       <div style={{
         marginBottom: '16px',
-        display: 'flex',
-        justifyContent: 'center'
+        padding: '0 24px'
       }}>
         <a
           href="https://www.sia.aviation-civile.gouv.fr/media/dvd/eAIP_30_OCT_2025/Atlas-VAC/FR/VACProduitPartieframeset.htm"
           target="_blank"
           rel="noopener noreferrer"
           style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '10px',
+            display: 'block',
+            width: '100%',
+            textAlign: 'center',
             padding: '14px 24px',
-            backgroundColor: '#3b82f6',
+            backgroundColor: '#93163C',
             color: 'white',
             border: 'none',
             borderRadius: '8px',
@@ -806,22 +806,21 @@ export const SIAReportEnhanced = () => {
             fontWeight: '600',
             textDecoration: 'none',
             cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+            boxShadow: '0 4px 12px rgba(147, 22, 60, 0.3)',
             transition: 'all 0.2s ease'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#2563eb';
+            e.currentTarget.style.backgroundColor = '#A91B45';
             e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.4)';
+            e.currentTarget.style.boxShadow = '0 6px 16px rgba(147, 22, 60, 0.4)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#3b82f6';
+            e.currentTarget.style.backgroundColor = '#93163C';
             e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(147, 22, 60, 0.3)';
           }}
         >
-          <FileText size={20} />
-          <span>📥 Télécharger les VAC officielles (SIA)</span>
+          Télécharger les VAC officielles (SIA)
         </a>
       </div>
 
@@ -2365,15 +2364,41 @@ export const SIAReportEnhanced = () => {
 
                         {/* Avertissement */}
                         <div style={{
-                          fontSize: '10px',
-                          color: '#6b7280',
-                          padding: '8px',
                           backgroundColor: '#fef3c7',
                           borderRadius: '4px',
-                          border: '1px solid #f59e0b'
+                          border: '1px solid #f59e0b',
+                          marginTop: '8px'
                         }}>
-                          ⚠️ Les cartes VAC doivent être téléchargées depuis le site officiel du SIA.
-                          Les données affichées sont indicatives.
+                          {/* En-tête cliquable */}
+                          <div
+                            onClick={() => setWarningExpanded(!warningExpanded)}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '8px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              color: '#92400e'
+                            }}
+                          >
+                            <span>⚠️ Avertissement</span>
+                            {warningExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                          </div>
+
+                          {/* Contenu (affiché seulement si expanded) */}
+                          {warningExpanded && (
+                            <div style={{
+                              fontSize: '10px',
+                              color: '#6b7280',
+                              padding: '0 8px 8px 8px',
+                              borderTop: '1px solid #f59e0b'
+                            }}>
+                              Les cartes VAC doivent être téléchargées depuis le site officiel du SIA.
+                              Les données affichées sont indicatives.
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
