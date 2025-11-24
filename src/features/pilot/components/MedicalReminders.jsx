@@ -314,7 +314,7 @@ const MedicalReminders = () => {
             {editingRecord ? 'Modifier le certificat médical' : 'Nouveau certificat médical'}
           </h4>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px', alignItems: 'end' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '20px' }}>
             <div>
               <label style={labelStyle}>Classe médicale *</label>
               <select
