@@ -940,7 +940,18 @@ export const SIAReportEnhanced = () => {
               ...(activeTab === 'favorites' ? styles.tabActive : {})
             }}
           >
-            ⭐ Mes aérodromes sauvegardés ({favoriteAerodromes.size})
+            Mes aérodromes ({favoriteAerodromes.size})
+          </button>
+
+          <button
+            onClick={() => setHideClosedAirports(!hideClosedAirports)}
+            style={{
+              ...styles.tab,
+              ...(hideClosedAirports ? { backgroundColor: '#ef4444', color: 'white' } : {})
+            }}
+            title={hideClosedAirports ? "Afficher les aérodromes fermés" : "Masquer les aérodromes fermés"}
+          >
+            AD Fermés
           </button>
         </div>
         
@@ -968,39 +979,8 @@ export const SIAReportEnhanced = () => {
                 style={{ ...styles.searchBox, paddingLeft: '35px' }}
               />
             </div>
-            <button
-              onClick={() => {
-                if (searchTerm) {
-                  // Forcer un refresh de la recherche
-                  const temp = searchTerm;
-                  setSearchTerm('');
-                  setTimeout(() => setSearchTerm(temp), 10);
-                }
-              }}
-              style={{
-                ...styles.button,
-                ...styles.primaryButton,
-                padding: '8px 20px'
-              }}
-              disabled={!searchTerm}
-            >
-              <Search size={14} />
-              Rechercher
-            </button>
           </div>
-          
-          <button
-            onClick={() => setHideClosedAirports(!hideClosedAirports)}
-            style={{ 
-              ...styles.button, 
-              ...styles.secondaryButton,
-              ...(hideClosedAirports ? { backgroundColor: '#ef4444', color: 'white' } : {})
-            }}
-            title={hideClosedAirports ? "Afficher les aérodromes fermés" : "Masquer les aérodromes fermés"}
-          >
-            {hideClosedAirports ? '🚫' : '✈️'} AD Fermés
-          </button>
-          
+
           {hasChanges && (
             <button
               onClick={saveAllChanges}
@@ -1032,7 +1012,7 @@ export const SIAReportEnhanced = () => {
           <h3 style={{ fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>
             Résultats de recherche ({filteredAerodromes.filter(ad => ad && ad.icao && !favoriteAerodromes.has(ad.icao)).length} trouvés)
           </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '8px' }}>
+          <div style={styles.gridContainer}>
             {filteredAerodromes
               .filter(ad => ad && ad.icao && typeof ad.icao === 'string' && !favoriteAerodromes.has(ad.icao)) // Vérifier que l'aérodrome est valide
               .slice(0, 20) // Augmenter à 20 résultats
