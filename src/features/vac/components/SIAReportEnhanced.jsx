@@ -32,6 +32,9 @@ export const SIAReportEnhanced = () => {
 
   // Référence pour l'import de fichiers (un par aérodrome)
   const fileInputRefs = useRef({});
+
+  // Référence pour le bouton VAC (debug couleur)
+  const vacButtonRef = useRef(null);
   
   // Store VAC pour gérer les cartes importées
   const { charts, addCustomChart, updateExtractedData, updateChartData } = useVACStore(state => ({
@@ -109,6 +112,47 @@ export const SIAReportEnhanced = () => {
     const timer = setTimeout(restorePDFUrls, 500);
     return () => clearTimeout(timer);
   }, []); // Dépendance vide = une seule fois au montage
+
+  // DEBUG: useEffect pour tracer la couleur du bouton VAC
+  useEffect(() => {
+    if (vacButtonRef.current) {
+      const button = vacButtonRef.current;
+      const computedStyle = window.getComputedStyle(button);
+
+      console.log('🔍 === DEBUG BOUTON VAC - STYLES ===');
+      console.log('📌 Inline style.color:', button.style.color);
+      console.log('📌 Inline style.backgroundColor:', button.style.backgroundColor);
+      console.log('💻 Computed color:', computedStyle.color);
+      console.log('💻 Computed backgroundColor:', computedStyle.backgroundColor);
+      console.log('💻 Computed textDecoration:', computedStyle.textDecoration);
+      console.log('🎨 className:', button.className);
+
+      // Obtenir toutes les règles CSS qui s'appliquent au bouton
+      const allRules = [];
+      for (const sheet of document.styleSheets) {
+        try {
+          const rules = sheet.cssRules || sheet.rules;
+          for (const rule of rules) {
+            if (rule.selectorText && button.matches(rule.selectorText)) {
+              allRules.push({
+                selector: rule.selectorText,
+                color: rule.style.color,
+                backgroundColor: rule.style.backgroundColor,
+                textDecoration: rule.style.textDecoration,
+                specificity: rule.selectorText
+              });
+            }
+          }
+        } catch (e) {
+          // Cross-origin stylesheets peuvent être bloquées
+          console.log('⚠️ Impossible d\'accéder à une stylesheet (probablement cross-origin)');
+        }
+      }
+
+      console.log('📋 Règles CSS appliquées:', allRules);
+      console.log('🔍 === FIN DEBUG ===');
+    }
+  }, []); // S'exécute une fois après le premier render
 
   const loadAllAerodromes = async () => {
     setLoading(true);
@@ -805,6 +849,7 @@ export const SIAReportEnhanced = () => {
         marginBottom: '16px'
       }}>
         <a
+          ref={vacButtonRef}
           href="https://www.sia.aviation-civile.gouv.fr/media/dvd/eAIP_30_OCT_2025/Atlas-VAC/FR/VACProduitPartieframeset.htm"
           target="_blank"
           rel="noopener noreferrer"
