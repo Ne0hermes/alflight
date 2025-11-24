@@ -605,7 +605,8 @@ export const SIAReportEnhanced = () => {
       gap: '4px',
       marginBottom: '12px',
       borderBottom: '2px solid #e5e7eb',
-      paddingBottom: '0'
+      paddingBottom: '0',
+      justifyContent: 'space-between'
     },
     tab: {
       padding: '8px 16px',
