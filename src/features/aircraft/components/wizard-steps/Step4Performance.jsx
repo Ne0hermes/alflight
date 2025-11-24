@@ -325,10 +325,9 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                 padding: '12px',
                 marginBottom: '8px',
                 display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
+                flexDirection: 'column'
               }}>
-                <div style={{ flex: 1 }}>
+                <div style={{ marginBottom: '8px' }}>
                   <div style={{ fontWeight: '600', marginBottom: '4px' }}>
                     {model.classification || model.name || `Abaque ${index + 1}`}
                   </div>
@@ -338,10 +337,10 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                     </div>
                   )}
                 </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
                   <button
                     onClick={() => {
-                      
+
                       // Stocker l'abaque à modifier et ouvrir le wizard
                       setSavedPerformanceData({
                         ...savedPerformanceData,
@@ -359,28 +358,28 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                       if (setOnConstruireCourbes) {
                         setOnConstruireCourbes(() => () => {
                           // Cette fonction sera appelée par le bouton "Construire les courbes"
-                          
+
                           if (abacBuilderRef.current) {
-                            
+
                             abacBuilderRef.current.goToNextStep();
                           } else {
-                            
+
                           }
                         });
                       }
                     }}
                     style={{
-                      padding: '6px 12px',
+                      padding: '4px 8px',
                       backgroundColor: 'white',
                       border: '1px solid #3b82f6',
-                      borderRadius: '6px',
-                      fontSize: '14px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
                       cursor: 'pointer',
                       color: '#3b82f6',
                       fontWeight: '500'
                     }}
                   >
-                    ✏️ Modifier
+                    Modifier
                   </button>
                   <button
                     onClick={() => {
@@ -391,7 +390,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                           ...savedPerformanceData,
                           performanceModels: newModels
                         });
-                        
+
 
                         // Si plus d'abaques, revenir au wizard
                         if (newModels.length === 0) {
@@ -400,17 +399,17 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                       }
                     }}
                     style={{
-                      padding: '6px 12px',
+                      padding: '4px 8px',
                       backgroundColor: '#fee2e2',
                       border: 'none',
-                      borderRadius: '6px',
-                      fontSize: '14px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
                       cursor: 'pointer',
                       color: '#991b1b',
                       fontWeight: '500'
                     }}
                   >
-                    🗑️ Supprimer
+                    Supprimer
                   </button>
                 </div>
               </div>
@@ -463,10 +462,9 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                     padding: '12px',
                     marginBottom: '8px',
                     display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
+                    flexDirection: 'column'
                   }}>
-                    <div style={{ flex: 1 }}>
+                    <div style={{ marginBottom: '8px' }}>
                       <div style={{ fontWeight: '600', marginBottom: '4px', fontSize: '15px' }}>
                         {mainTableName}
                       </div>
@@ -474,10 +472,10 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                         {tables.length} tableau(x) extrait(s)
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
                       <button
                         onClick={() => {
-                          
+
                           // Filtrer les tableaux pour cette classification
                           const tablesToEdit = savedPerformanceData.advancedPerformance.tables.filter(
                             t => (t.classification || 'non-classified') === classification
@@ -501,17 +499,17 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                           setForceShowSummary(false);
                         }}
                         style={{
-                          padding: '6px 12px',
+                          padding: '4px 8px',
                           backgroundColor: 'white',
                           border: '1px solid #3b82f6',
-                          borderRadius: '6px',
-                          fontSize: '14px',
+                          borderRadius: '4px',
+                          fontSize: '12px',
                           cursor: 'pointer',
                           color: '#3b82f6',
                           fontWeight: '500'
                         }}
                       >
-                        ✏️ Modifier
+                        Modifier
                       </button>
                       <button
                         onClick={() => {
@@ -528,7 +526,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                                 ...savedPerformanceData,
                                 advancedPerformance: null
                               });
-                              
+
 
                               // Si plus de données, revenir au wizard
                               if (!savedPerformanceData.performanceModels?.length && !savedPerformanceData.performanceTables) {
@@ -550,22 +548,22 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                                 ...savedPerformanceData,
                                 advancedPerformance: updatedPerformance
                               });
-                              
+
                             }
                           }
                         }}
                         style={{
-                          padding: '6px 12px',
+                          padding: '4px 8px',
                           backgroundColor: '#fee2e2',
                           border: 'none',
-                          borderRadius: '6px',
-                          fontSize: '14px',
+                          borderRadius: '4px',
+                          fontSize: '12px',
                           cursor: 'pointer',
                           color: '#991b1b',
                           fontWeight: '500'
                         }}
                       >
-                        🗑️ Supprimer
+                        Supprimer
                       </button>
                     </div>
                   </div>
