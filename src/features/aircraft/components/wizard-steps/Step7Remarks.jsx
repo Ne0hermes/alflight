@@ -2,36 +2,16 @@ import React from 'react';
 import {
   Box,
   Typography,
-  Paper,
   Button
 } from '@mui/material';
 import {
-  Notes as NotesIcon,
   ChevronRight as ChevronRightIcon,
   ChevronLeft as ChevronLeftIcon
 } from '@mui/icons-material';
 
 const Step7Remarks = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
   return (
-    <Box sx={{ 
-      maxWidth: 1000, 
-      mx: 'auto', 
-      p: 2
-    }}>
-      
-      {/* Section unique pour les remarques */}
-      <Paper 
-        elevation={0}
-        sx={{ 
-          p: 4,
-          border: '1px solid',
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-          minHeight: 500
-        }}
-      >
-
-        <Box sx={{ width: '100%' }}>
+    <Box>
           {/* Label custom */}
           <Typography 
             variant="body2" 
@@ -113,11 +93,9 @@ const Step7Remarks = ({ data, updateData, errors = {}, onNext, onPrevious }) => 
               <li>Autres informations pertinentes</li>
             </Box>
           </Box>
-        </Box>
-      </Paper>
 
       {/* Boutons de navigation */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
         {/* Bouton Précédent */}
         {onPrevious && (
           <Button
