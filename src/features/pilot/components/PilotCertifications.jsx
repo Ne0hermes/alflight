@@ -630,7 +630,7 @@ const PilotCertifications = () => {
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: formData.category !== 'licenses' ? 'repeat(2, 1fr)' : '1fr', gap: '16px', marginBottom: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '20px' }}>
             <div>
               <label style={labelStyle}>Date de délivrance</label>
               <input
