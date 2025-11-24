@@ -139,39 +139,36 @@ const RegulationsModule = () => {
       {/* En-tête */}
       <div style={styles.header}>
         <div style={styles.headerContent}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <h1 style={styles.title}>
-                <Book size={28} style={{ marginRight: '12px' }} />
-                Références Réglementaires
-              </h1>
-              <p style={styles.subtitle}>
-                Consultez toutes les réglementations EASA applicables à l'aviation légère
-              </p>
-            </div>
-            <button
-              onClick={() => setShowSuggestionModal(true)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '10px 20px',
-                backgroundColor: theme.colors.primary,
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'opacity 0.2s'
-              }}
-              onMouseEnter={(e) => e.target.style.opacity = '0.9'}
-              onMouseLeave={(e) => e.target.style.opacity = '1'}
-            >
-              <MessageSquarePlus size={20} />
-              Suggérer une modification
-            </button>
-          </div>
+          <h1 style={styles.title}>
+            <Book size={28} style={{ marginRight: '12px' }} />
+            Références Réglementaires
+          </h1>
+          <p style={styles.subtitle}>
+            Consultez toutes les réglementations EASA applicables à l'aviation légère
+          </p>
+          <button
+            onClick={() => setShowSuggestionModal(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 20px',
+              backgroundColor: theme.colors.primary,
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'opacity 0.2s',
+              marginTop: '16px'
+            }}
+            onMouseEnter={(e) => e.target.style.opacity = '0.9'}
+            onMouseLeave={(e) => e.target.style.opacity = '1'}
+          >
+            <MessageSquarePlus size={20} />
+            Suggérer une modification
+          </button>
         </div>
       </div>
 
@@ -606,6 +603,7 @@ const styles = {
     transition: 'border-color 0.2s',
   },
   filterContainer: {
+    flex: '1 1 300px',
     display: 'flex',
     alignItems: 'center',
     padding: '12px 16px',
