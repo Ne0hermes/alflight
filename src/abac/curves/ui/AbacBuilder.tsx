@@ -2108,27 +2108,6 @@ const renderStepContent = () => {
 
   return (
     <div className={styles.abacBuilder}>
-      <div className={styles.stepper}>
-        {steps.map((step, index) => (
-          <div
-            key={step}
-            className={`${styles.step} ${currentStep === step ? styles.stepActive : ''} ${index < currentStepIndex ? styles.stepCompleted : ''}`}
-            onClick={() => {
-              if (index < currentStepIndex || (index === currentStepIndex + 1 && canProceed())) {
-                setCurrentStep(step);
-              }
-            }}
-          >
-            <div className={styles.stepNumber}>{index + 1}</div>
-            <div className={styles.stepLabel}>
-              {step === 'axes' && 'Configurer les Axes'}
-              {step === 'points' && 'Construire et Interpoler'}
-              {step === 'final' && 'Validation'}
-            </div>
-          </div>
-        ))}
-      </div>
-
       <div className={styles.builderContent}>
         {renderStepContent()}
       </div>
