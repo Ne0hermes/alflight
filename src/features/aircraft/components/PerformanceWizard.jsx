@@ -820,15 +820,12 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
               {/* Contrôle de la taille des miniatures */}
               <div style={{
                 marginBottom: '16px',
-                padding: '12px',
-                backgroundColor: '#f9fafb',
-                borderRadius: '8px',
                 display: 'flex',
-                alignItems: 'center',
-                gap: '16px'
+                flexDirection: 'column',
+                gap: '8px'
               }}>
                 <label style={{ ...styles.text.sm, fontWeight: '500' }}>
-                  Taille des miniatures:
+                  Taille des miniatures: {thumbnailSize}px
                 </label>
                 <input
                   type="range"
@@ -837,25 +834,14 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                   step="50"
                   value={thumbnailSize}
                   onChange={(e) => setThumbnailSize(Number(e.target.value))}
-                  style={{ flex: 1 }}
+                  style={{ width: '100%' }}
                 />
-                <span style={{
-                  ...styles.text.sm,
-                  minWidth: '50px',
-                  padding: '4px 8px',
-                  backgroundColor: '#e5e7eb',
-                  borderRadius: '4px',
-                  textAlign: 'center'
-                }}>
-                  {thumbnailSize}px
-                </span>
                 <button
                   onClick={() => setThumbnailSize(150)}
                   style={{
                     ...styles.button,
                     ...styles.buttonSecondary,
-                    padding: '4px 12px',
-                    fontSize: '12px'
+                    alignSelf: 'flex-start'
                   }}
                 >
                   Réinitialiser
@@ -1011,7 +997,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                     opacity: selectedPages.length === 0 ? 0.5 : 1
                   }}
                 >
-                  🚀 Analyser les documents ({selectedPages.length} page{selectedPages.length > 1 ? 's' : ''})
+                  Analyser ({selectedPages.length} page{selectedPages.length > 1 ? 's' : ''})
                 </button>
               </div>
             </div>
