@@ -954,7 +954,6 @@ const renderStepContent = () => {
                 fullWidth
                 variant="outlined"
                 placeholder="Ex: Cessna 172"
-                helperText={aircraftModel ? "Modèle récupéré automatiquement depuis les informations de l'appareil" : "Aucun modèle d'avion configuré"}
               />
             </div>
 
@@ -1039,14 +1038,14 @@ const renderStepContent = () => {
               <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
                 <button
                   style={{
-                    padding: '8px 16px',
+                    padding: '10px 20px',
                     backgroundColor: '#2196F3',
                     color: 'white',
                     border: 'none',
-                    borderRadius: '4px',
+                    borderRadius: '6px',
                     cursor: 'pointer',
                     fontSize: '14px',
-                    fontWeight: 500
+                    fontWeight: 600
                   }}
                   onClick={() => {
                     const name = `Graphique ${graphs.length + 1}`;
@@ -1068,27 +1067,27 @@ const renderStepContent = () => {
               </div>
 
               {/* Boutons de navigation */}
-              <div style={{ marginTop: '24px', display: 'flex', justifyContent: onBack ? 'space-between' : 'flex-end' }}>
+              <div style={{ marginTop: '16px', display: 'flex', justifyContent: onBack ? 'space-between' : 'flex-end' }}>
                 {/* Bouton Précédent pour retourner à la page d'accueil des performances */}
                 {onBack && (
                   <button
                     style={{
-                      padding: '10px 24px',
+                      padding: '10px 20px',
                       backgroundColor: '#9E9E9E',
                       color: 'white',
                       border: 'none',
                       borderRadius: '6px',
                       cursor: 'pointer',
-                      fontSize: '16px',
+                      fontSize: '14px',
                       fontWeight: 600,
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '8px'
+                      gap: '6px'
                     }}
                     onClick={onBack}
                     title="Retourner à la sélection du type de données de performance"
                   >
-                    <span style={{ fontSize: '18px' }}>←</span>
+                    <span style={{ fontSize: '16px' }}>←</span>
                     Précédent
                   </button>
                 )}
@@ -1096,17 +1095,17 @@ const renderStepContent = () => {
                 {/* Bouton Suivant pour aller à l'étape Construire et Interpoler */}
                 <button
                   style={{
-                    padding: '10px 24px',
+                    padding: '10px 20px',
                     backgroundColor: canProceed() ? '#4CAF50' : '#cccccc',
                     color: 'white',
                     border: 'none',
                     borderRadius: '6px',
                     cursor: canProceed() ? 'pointer' : 'not-allowed',
-                    fontSize: '16px',
+                    fontSize: '14px',
                     fontWeight: 600,
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px'
+                    gap: '6px'
                   }}
                   onClick={() => {
                     if (canProceed()) {
@@ -1117,7 +1116,7 @@ const renderStepContent = () => {
                   title={canProceed() ? "Passer à l'étape suivante" : "Configurez au moins un graphique avec ses axes pour continuer"}
                 >
                   Suivant
-                  <span style={{ fontSize: '18px' }}>→</span>
+                  <span style={{ fontSize: '16px' }}>→</span>
                 </button>
               </div>
             </div>
