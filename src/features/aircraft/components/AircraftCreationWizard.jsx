@@ -1144,10 +1144,10 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
       </Paper>
 
       {/* Content */}
-      <Paper 
-        elevation={0} 
-        sx={{ 
-          p: 4, 
+      <Paper
+        elevation={0}
+        sx={{
+          p: '10px',
           mb: 3,
           minHeight: 400,
           border: '1px solid',

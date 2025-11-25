@@ -2,7 +2,7 @@
 .curveManager {
   background: white;
   border-radius: 8px;
-  padding: 16px;
+  padding: 10px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -70,7 +70,7 @@
 }
 
 .addCurveForm {
-  padding: 16px;
+  padding: 10px;
   background: #f9f9f9;
   border-radius: 4px;
   margin-bottom: 16px;
@@ -118,14 +118,14 @@
 .emptyState {
   text-align: center;
   color: #999;
-  padding: 32px;
+  padding: 10px;
   font-size: 14px;
 }
 
 .curveItem {
   display: flex;
   align-items: center;
-  padding: 12px;
+  padding: 10px;
   background: #f9f9f9;
   border-radius: 4px;
   cursor: pointer;
@@ -204,7 +204,7 @@
 .chartContainer {
   background: white;
   border-radius: 8px;
-  padding: 16px;
+  padding: 10px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -212,7 +212,7 @@
 .pointEditor {
   background: white;
   border-radius: 8px;
-  padding: 16px;
+  padding: 10px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -274,7 +274,7 @@
 
 .pointsInfo {
   background: #f9f9f9;
-  padding: 12px;
+  padding: 10px;
   border-radius: 4px;
   margin-bottom: 16px;
 }
@@ -286,7 +286,7 @@
 
 .importSection {
   margin-top: 16px;
-  padding: 16px;
+  padding: 10px;
   background: #f9f9f9;
   border-radius: 4px;
 }
@@ -334,7 +334,7 @@
 
 .warningsSection {
   background: #fff3cd;
-  padding: 16px;
+  padding: 10px;
   border-radius: 4px;
   border: 1px solid #ffc107;
 }
@@ -370,7 +370,7 @@
 
 .stepper {
   display: flex;
-  padding: 20px;
+  padding: 10px;
   background: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -380,7 +380,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px;
+  padding: 10px;
   cursor: pointer;
   position: relative;
 }
@@ -434,13 +434,13 @@
 .builderContent {
   flex: 1;
   overflow: auto;
-  padding: 20px;
+  padding: 10px;
 }
 
 .stepContent {
   background: white;
   border-radius: 8px;
-  padding: 24px;
+  padding: 10px;
   min-height: 500px;
 }
 
@@ -451,7 +451,7 @@
 
 .stepInstructions {
   background: #f9f9f9;
-  padding: 16px;
+  padding: 10px;
   border-radius: 4px;
   margin-bottom: 24px;
 }
@@ -493,7 +493,7 @@
 
 .finalWarnings {
   background: #fff3cd;
-  padding: 16px;
+  padding: 10px;
   border-radius: 4px;
   border: 1px solid #ffc107;
 }
@@ -506,7 +506,7 @@
 .navigation {
   display: flex;
   justify-content: space-between;
-  padding: 20px;
+  padding: 10px;
   background: white;
   box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -522,7 +522,7 @@
 
 .demoHeader {
   background: white;
-  padding: 20px;
+  padding: 10px;
   text-align: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }

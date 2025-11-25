@@ -8,12 +8,12 @@ import { AbacBuilder } from '../../../abac/curves/ui/AbacBuilder';
 // Styles de base
 const styles = {
   container: {
-    padding: '16px'
+    padding: '10px'
   },
   flexCol: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '16px'
+    gap: '10px'
   },
   flexRow: {
     display: 'flex',
@@ -24,21 +24,21 @@ const styles = {
   card: {
     backgroundColor: '#ffffff',
     borderRadius: '8px',
-    padding: '24px',
+    padding: '10px',
     boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
     border: '1px solid #e5e7eb'
   },
   cardHover: {
     backgroundColor: '#ffffff',
     borderRadius: '8px',
-    padding: '24px',
+    padding: '10px',
     border: '2px solid #e5e7eb',
     cursor: 'pointer',
     transition: 'all 0.2s',
     textAlign: 'center'
   },
   button: {
-    padding: '8px 16px',
+    padding: '10px',
     borderRadius: '6px',
     fontSize: '14px',
     fontWeight: '500',
@@ -58,9 +58,9 @@ const styles = {
     color: '#374151'
   },
   alert: {
-    padding: '12px',
+    padding: '10px',
     borderRadius: '6px',
-    marginBottom: '16px',
+    marginBottom: '10px',
     display: 'flex',
     alignItems: 'flex-start',
     gap: '8px'
@@ -553,7 +553,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                     }
                   }}
                   style={{
-                    padding: '16px',
+                    padding: '10px',
                     backgroundColor: '#eff6ff',
                     border: '2px solid #3b82f6',
                     borderRadius: '8px',
@@ -596,7 +596,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                     }
                   }}
                   style={{
-                    padding: '16px',
+                    padding: '10px',
                     backgroundColor: '#f0fdf4',
                     border: '2px solid #22c55e',
                     borderRadius: '8px',
@@ -714,11 +714,11 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px',
-                padding: '12px',
+                gap: '10px',
+                padding: '10px',
                 backgroundColor: '#f9fafb',
                 borderRadius: '8px',
-                marginBottom: '16px',
+                marginBottom: '10px',
                 flexWrap: 'wrap'
               }}>
                 {/* Statut API OpenAI */}
@@ -789,10 +789,10 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
               {/* Afficher un résumé des classifications */}
               {selectedPages.length > 0 && (
                 <div style={{
-                  padding: '12px',
+                  padding: '10px',
                   backgroundColor: '#eff6ff',
                   borderRadius: '8px',
-                  marginBottom: '16px',
+                  marginBottom: '10px',
                   border: '1px solid #3b82f6'
                 }}>
                   <h4 style={{ ...styles.text.sm, fontWeight: 'bold', marginBottom: '8px' }}>
@@ -816,7 +816,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
 
               {/* Contrôle de la taille des miniatures */}
               <div style={{
-                marginBottom: '16px',
+                marginBottom: '10px',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '8px'
@@ -848,10 +848,10 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: `repeat(auto-fill, minmax(${thumbnailSize}px, 1fr))`,
-                gap: '16px',
+                gap: '10px',
                 maxHeight: '600px',
                 overflowY: 'auto',
-                padding: '8px',
+                padding: '10px',
                 border: '1px solid #e5e7eb',
                 borderRadius: '8px'
               }}>

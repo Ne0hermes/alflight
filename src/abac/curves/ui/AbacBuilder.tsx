@@ -913,7 +913,7 @@ const renderStepContent = () => {
             {importSuccess && (
               <div style={{
                 marginBottom: '16px',
-                padding: '12px',
+                padding: '10px',
                 backgroundColor: '#4CAF50',
                 color: 'white',
                 borderRadius: '4px',
@@ -924,7 +924,7 @@ const renderStepContent = () => {
             )}
             <div style={{
               marginBottom: '24px',
-              padding: '16px',
+              padding: '10px',
               backgroundColor: '#f5f5f5',
               borderRadius: '8px',
               border: '1px solid #ddd'
@@ -974,7 +974,7 @@ const renderStepContent = () => {
                     {/* En-tête cliquable */}
                     <div
                       style={{
-                        padding: '16px',
+                        padding: '10px',
                         backgroundColor: '#f5f5f5',
                         cursor: 'pointer',
                         display: 'flex',
@@ -1014,7 +1014,7 @@ const renderStepContent = () => {
 
                     {/* Contenu du graphique */}
                     {isExpanded && (
-                      <div className={styles.workspace} style={{ padding: '16px' }}>
+                      <div className={styles.workspace} style={{ padding: '10px' }}>
                         <AxesForm
                           key={graph.id}
                           onSubmit={(config: AxesConfig) => {
@@ -1137,7 +1137,7 @@ const renderStepContent = () => {
               {/* Cartouche 1: Ajustement des axes */}
               <div style={{
                 flex: 1,
-                padding: '12px',
+                padding: '10px',
                 backgroundColor: '#e3f2fd',
                 borderRadius: '6px',
                 border: '1px solid #2196F3'
@@ -1183,7 +1183,7 @@ const renderStepContent = () => {
               {/* Cartouche 2: Interpolation des courbes */}
               <div style={{
                 flex: 1,
-                padding: '12px',
+                padding: '10px',
                 backgroundColor: '#e8f5e9',
                 borderRadius: '6px',
                 border: '1px solid #4CAF50'
@@ -1225,7 +1225,7 @@ const renderStepContent = () => {
               {/* Cartouche 3: Courbes intermédiaires */}
               <div style={{
                 flex: 1,
-                padding: '12px',
+                padding: '10px',
                 backgroundColor: '#f3e5f5',
                 borderRadius: '6px',
                 border: '1px solid #9C27B0'
@@ -1366,7 +1366,7 @@ const renderStepContent = () => {
                                    'repeat(2, 1fr)',
                 gridTemplateRows: graphs.length <= 3 ? '1fr' : 'repeat(2, 1fr)',
                 gap: '16px',
-                padding: '16px',
+                padding: '10px',
                 backgroundColor: '#f5f5f5',
                 borderRadius: '8px',
                 overflow: 'auto'
@@ -1384,7 +1384,7 @@ const renderStepContent = () => {
                     style={{
                       backgroundColor: 'white',
                       borderRadius: '8px',
-                      padding: '12px',
+                      padding: '10px',
                       border: selectedGraphId === graph.id ? '3px solid #4CAF50' : '1px solid #ddd',
                       cursor: 'pointer',
                       display: 'flex',
@@ -1554,7 +1554,7 @@ const renderStepContent = () => {
             <h2>Étape 3: Interpolation des Courbes</h2>
             <div style={{
               backgroundColor: '#e3f2fd',
-              padding: '12px',
+              padding: '10px',
               borderRadius: '8px',
               marginBottom: '20px'
             }}>
@@ -1730,7 +1730,7 @@ const renderStepContent = () => {
                 <div key={graph.id} style={{
                   border: '1px solid #ddd',
                   borderRadius: '8px',
-                  padding: '16px',
+                  padding: '10px',
                   backgroundColor: 'white'
                 }}>
                   <h3 style={{ marginBottom: '12px' }}>{graph.name}</h3>
@@ -1808,7 +1808,7 @@ const renderStepContent = () => {
               {/* Affichage des informations du système */}
               <div style={{
                 marginBottom: '20px',
-                padding: '16px',
+                padding: '10px',
                 backgroundColor: '#f0f7ff',
                 borderRadius: '8px',
                 border: '1px solid #2196F3'
@@ -1830,7 +1830,7 @@ const renderStepContent = () => {
               {false && graphs.some(g => g.isWindRelated) && (
                 <div style={{
                   marginBottom: '20px',
-                  padding: '16px',
+                  padding: '10px',
                   backgroundColor: '#e3f2fd',
                   borderRadius: '8px',
                   border: '1px solid #2196F3'
@@ -1953,7 +1953,7 @@ const renderStepContent = () => {
                   }
 
                   return (
-                    <div key={graph.id} style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '16px' }}>
+                    <div key={graph.id} style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '10px' }}>
                       <h3 style={{ marginBottom: '12px' }}>
                         {graph.name}
                         {graph.isWindRelated && (
@@ -1991,7 +1991,7 @@ const renderStepContent = () => {
                       )}
                       {graph.isWindRelated && displayCurves.length === 0 && (
                         <div style={{
-                          padding: '20px',
+                          padding: '10px',
                           textAlign: 'center',
                           color: '#999',
                           backgroundColor: '#f5f5f5',
