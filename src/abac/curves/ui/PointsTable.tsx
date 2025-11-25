@@ -14,13 +14,11 @@ interface PointsTableProps {
 
 const styles = {
   container: {
-    padding: '16px',
+    padding: '12px',
     background: 'white',
     borderRadius: '8px',
     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-    marginTop: '16px',
-    maxHeight: '400px',
-    overflow: 'auto'
+    marginTop: '12px'
   },
   header: {
     display: 'flex',
@@ -58,15 +56,14 @@ const styles = {
     fontSize: '13px'
   },
   th: {
-    padding: '8px',
+    padding: '4px 6px',
     textAlign: 'left' as const,
     borderBottom: '2px solid #ddd',
     fontWeight: 600,
     color: '#555',
-    position: 'sticky' as const,
-    top: 0,
     backgroundColor: 'white',
-    whiteSpace: 'nowrap' as const
+    whiteSpace: 'nowrap' as const,
+    fontSize: '12px'
   },
   td: {
     padding: '6px 8px',
@@ -280,14 +277,14 @@ export const PointsTable: React.FC<PointsTableProps> = ({
           <tr>
             <th style={styles.th}>#</th>
             <th style={styles.th}>
-              {axesConfig.xAxis.title}
-              {axesConfig.xAxis.unit && ` (${axesConfig.xAxis.unit})`}
+              {axesConfig.xAxis.title?.replace('Température', 'Temp').replace('Temperature', 'Temp')}
+              {axesConfig.xAxis.unit && axesConfig.xAxis.unit}
             </th>
             <th style={styles.th}>
-              {axesConfig.yAxis.title}
+              {axesConfig.yAxis.title?.replace('Distance', 'Dist')}
               {axesConfig.yAxis.unit && ` (${axesConfig.yAxis.unit})`}
             </th>
-            <th style={styles.th}>Actions</th>
+            <th style={styles.th}></th>
           </tr>
         </thead>
         <tbody>

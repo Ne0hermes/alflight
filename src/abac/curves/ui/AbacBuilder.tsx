@@ -1248,20 +1248,14 @@ const renderStepContent = () => {
                 )}
               </div>
 
-              {/* Grille de graphiques en dessous */}
+              {/* Graphiques en colonne */}
               <div style={{
-                flex: 1,
-                display: 'grid',
-                gridTemplateColumns: graphs.length === 1 ? '1fr' :
-                                   graphs.length === 2 ? 'repeat(2, 1fr)' :
-                                   graphs.length === 3 ? 'repeat(3, 1fr)' :
-                                   'repeat(2, 1fr)',
-                gridTemplateRows: graphs.length <= 3 ? '1fr' : 'repeat(2, 1fr)',
+                display: 'flex',
+                flexDirection: 'column',
                 gap: '16px',
                 padding: '10px',
                 backgroundColor: '#f5f5f5',
-                borderRadius: '8px',
-                overflow: 'auto'
+                borderRadius: '8px'
               }}>
                 {graphs.map(graph => (
                   <div
@@ -1281,8 +1275,7 @@ const renderStepContent = () => {
                       cursor: 'pointer',
                       display: 'flex',
                       flexDirection: 'column',
-                      minHeight: '200px',
-                      height: '100%',
+                      width: '100%',
                       transition: 'all 0.2s'
                     }}
                   >
@@ -1333,7 +1326,7 @@ const renderStepContent = () => {
                     </div>
 
                     {graph.axes ? (
-                      <div style={{ flex: 1, position: 'relative', minHeight: '150px', width: '100%' }}>
+                      <div style={{ width: '100%', minHeight: '200px' }}>
                         <Chart
                           axesConfig={graph.axes}
                           curves={graph.curves}
