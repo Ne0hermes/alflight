@@ -30,8 +30,6 @@ import {
   Scale as ScaleIcon,
   TrendingUp as TrendingUpIcon,
   CheckCircle as CheckCircleIcon,
-  ChevronLeft as ChevronLeftIcon,
-  ChevronRight as ChevronRightIcon,
   Save as SaveIcon,
   Settings as SettingsIcon,
   Build as BuildIcon,
@@ -1033,13 +1031,9 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
             fontWeight: 700,
             color: 'primary.main',
             mb: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 2
+            textAlign: 'center'
           }}
         >
-          <FlightIcon sx={{ fontSize: 40 }} />
           Assistant de création d'avion
         </Typography>
       </Box>
@@ -1180,14 +1174,13 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
           gap: 1
         }}
       >
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
           {/* Bouton Annuler */}
           <Button
             variant="outlined"
             color="error"
             onClick={handleCancel}
-            startIcon={<CloseIcon />}
-            size="large"
+            sx={{ padding: '10px 20px' }}
           >
             Annuler
           </Button>
@@ -1196,23 +1189,21 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
             <Button
               variant="outlined"
               onClick={handlePrevious}
-              startIcon={<ChevronLeftIcon />}
-              size="large"
+              sx={{ padding: '10px 20px' }}
             >
-              Précédent
+              ← Précédent
             </Button>
           )}
         </Box>
 
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
           {currentStep !== 0 && currentStep !== steps.length - 1 && (
             <Button
               variant="contained"
               onClick={handleNext}
-              endIcon={<ChevronRightIcon />}
-              size="large"
+              sx={{ padding: '10px 20px' }}
             >
-              Suivant
+              Suivant →
             </Button>
           )}
         </Box>
