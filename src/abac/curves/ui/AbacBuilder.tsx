@@ -1127,147 +1127,100 @@ const renderStepContent = () => {
         return (
           <div className={styles.stepContent}>
             <h2>Étape 2: Construction et Interpolation - "{SYSTEM_TYPES.find(t => t.value === systemType)?.label || 'Abaques'}"</h2>
-            {/* Colonne avec les 3 cartouches empilées */}
+            {/* Boutons d'actions */}
             <div style={{
               display: 'flex',
-              flexDirection: 'column',
+              flexWrap: 'wrap',
               gap: '8px',
-              marginBottom: '12px'
+              marginBottom: '12px',
+              alignItems: 'center'
             }}>
-              {/* Cartouche 1: Ajustement des axes */}
-              <div style={{
-                padding: '8px 12px',
-                backgroundColor: '#e3f2fd',
-                borderRadius: '6px',
-                border: '1px solid #2196F3',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px'
-              }}>
-                <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#1976d2', whiteSpace: 'nowrap' }}>
-                  🔧 Ajustement des axes
-                </div>
-                {axesConfig && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
-                    <button
-                      onClick={() => handleAutoAdjustAxes(selectedGraphId)}
-                      style={{
-                        padding: '4px 12px',
-                        backgroundColor: '#2196F3',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '11px'
-                      }}
-                      title="Ajuste automatiquement les axes en fonction des points saisis"
-                    >
-                      Ajuster les axes
-                    </button>
-                  </div>
-                )}
+              {axesConfig && (
+                <button
+                  onClick={() => handleAutoAdjustAxes(selectedGraphId)}
+                  style={{
+                    padding: '6px 12px',
+                    backgroundColor: '#2196F3',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '12px'
+                  }}
+                  title="Ajuste automatiquement les axes en fonction des points saisis"
+                >
+                  Ajuster les axes
+                </button>
+              )}
+              <button
+                onClick={() => handleFitAll({ method: interpolationMethod, numPoints: interpolationPoints })}
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '12px',
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+                disabled={!currentGraph || currentGraph.curves.length === 0}
+              >
+                Interpoler
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <input
+                  type="number"
+                  value={numIntermediateCurves}
+                  onChange={(e) => setNumIntermediateCurves(Math.max(1, Math.min(5, parseInt(e.target.value) || 1)))}
+                  style={{
+                    padding: '4px 6px',
+                    borderRadius: '4px',
+                    border: '1px solid #ccc',
+                    fontSize: '12px',
+                    width: '40px'
+                  }}
+                  min="1"
+                  max="5"
+                />
+                <button
+                  onClick={handleGenerateIntermediateCurves}
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: '12px',
+                    backgroundColor: '#9C27B0',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                  disabled={!selectedGraphId || !currentGraph || currentGraph.curves.length < 2}
+                >
+                  Générer les courbes intermédiaires
+                </button>
               </div>
-
-              {/* Cartouche 2: Interpolation des courbes */}
-              <div style={{
-                padding: '8px 12px',
-                backgroundColor: '#e8f5e9',
-                borderRadius: '6px',
-                border: '1px solid #4CAF50',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px'
-              }}>
-                <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#2e7d32', whiteSpace: 'nowrap' }}>
-                  💡 Interpolation
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
-                  <button
-                    onClick={() => handleFitAll({ method: interpolationMethod, numPoints: interpolationPoints })}
-                    style={{
-                      padding: '4px 12px',
-                      fontSize: '11px',
-                      backgroundColor: '#4CAF50',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer'
-                    }}
-                    disabled={!currentGraph || currentGraph.curves.length === 0}
-                  >
-                    Interpoler
-                  </button>
-                </div>
-              </div>
-
-              {/* Cartouche 3: Courbes intermédiaires */}
-              <div style={{
-                padding: '8px 12px',
-                backgroundColor: '#f3e5f5',
-                borderRadius: '6px',
-                border: '1px solid #9C27B0',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px'
-              }}>
-                <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#7B1FA2', whiteSpace: 'nowrap' }}>
-                  ✨ Courbes intermédiaires
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
-                  <input
-                    type="number"
-                    value={numIntermediateCurves}
-                    onChange={(e) => setNumIntermediateCurves(Math.max(1, Math.min(5, parseInt(e.target.value) || 1)))}
-                    style={{
-                      padding: '3px 6px',
-                      borderRadius: '3px',
-                      border: '1px solid #ccc',
-                      fontSize: '11px',
-                      width: '36px'
-                    }}
-                    min="1"
-                    max="5"
-                  />
-                  <button
-                    onClick={handleGenerateIntermediateCurves}
-                    style={{
-                      padding: '4px 10px',
-                      fontSize: '11px',
-                      backgroundColor: '#9C27B0',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '3px',
-                      cursor: 'pointer'
-                    }}
-                    disabled={!selectedGraphId || !currentGraph || currentGraph.curves.length < 2}
-                  >
-                    Générer les courbes intermédiaires
-                  </button>
-                  {currentGraph && currentGraph.curves.filter(c => c.name.includes('(interpolé)')).length > 0 && (
-                    <button
-                      onClick={() => {
-                        const nonInterpolatedCurves = currentGraph.curves.filter(c => !c.name.includes('(interpolé)'));
-                        setGraphs(prev => prev.map(g =>
-                          g.id === selectedGraphId
-                            ? { ...g, curves: nonInterpolatedCurves }
-                            : g
-                        ));
-                      }}
-                      style={{
-                        padding: '4px 8px',
-                        fontSize: '10px',
-                        backgroundColor: '#f44336',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '3px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      🗑️ Suppr. ({currentGraph.curves.filter(c => c.name.includes('(interpolé)')).length})
-                    </button>
-                  )}
-                </div>
-              </div>
+              {currentGraph && currentGraph.curves.filter(c => c.name.includes('(interpolé)')).length > 0 && (
+                <button
+                  onClick={() => {
+                    const nonInterpolatedCurves = currentGraph.curves.filter(c => !c.name.includes('(interpolé)'));
+                    setGraphs(prev => prev.map(g =>
+                      g.id === selectedGraphId
+                        ? { ...g, curves: nonInterpolatedCurves }
+                        : g
+                    ));
+                  }}
+                  style={{
+                    padding: '6px 10px',
+                    fontSize: '11px',
+                    backgroundColor: '#f44336',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  🗑️ Suppr. ({currentGraph.curves.filter(c => c.name.includes('(interpolé)')).length})
+                </button>
+              )}
             </div>
 
             {importSuccess && (
@@ -1284,44 +1237,47 @@ const renderStepContent = () => {
               </div>
             )}
 
-              {/* Main content area with sidebar and chart */}
-              <div style={{ display: 'flex', gap: '16px', height: 'calc(100% - 200px)', marginTop: '16px' }}>
-              {/* Sidebar avec gestionnaire de courbes */}
+              {/* Main content area - courbes en haut, graphiques en dessous */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
+
+              {/* Contrôles de création de courbes */}
               <div style={{
-                width: '300px',
                 display: 'flex',
-                flexDirection: 'column',
                 gap: '16px',
-                overflowY: 'auto'
+                flexWrap: 'wrap'
               }}>
                 {currentGraph && (
                   <>
-                    <CurveManager
-                      curves={curves}
-                      selectedCurveId={selectedCurveId}
-                      onAddCurve={handleAddCurve}
-                      onRemoveCurve={handleRemoveCurve}
-                      onSelectCurve={setSelectedCurveId}
-                      onUpdateCurve={handleUpdateCurve}
-                      onReorderCurves={handleReorderCurves}
-                      isWindRelated={currentGraph?.isWindRelated || false}
-                    />
-                    {axesConfig && (
-                      <PointsTable
+                    <div style={{ flex: '1 1 300px', minWidth: '280px' }}>
+                      <CurveManager
                         curves={curves}
                         selectedCurveId={selectedCurveId}
-                        axesConfig={axesConfig}
-                        onUpdatePoint={handlePointDrag}
-                        onDeletePoint={handlePointDelete}
-                        onAddPoint={handlePointClick}
+                        onAddCurve={handleAddCurve}
+                        onRemoveCurve={handleRemoveCurve}
                         onSelectCurve={setSelectedCurveId}
+                        onUpdateCurve={handleUpdateCurve}
+                        onReorderCurves={handleReorderCurves}
+                        isWindRelated={currentGraph?.isWindRelated || false}
                       />
+                    </div>
+                    {axesConfig && (
+                      <div style={{ flex: '2 1 400px', minWidth: '350px' }}>
+                        <PointsTable
+                          curves={curves}
+                          selectedCurveId={selectedCurveId}
+                          axesConfig={axesConfig}
+                          onUpdatePoint={handlePointDrag}
+                          onDeletePoint={handlePointDelete}
+                          onAddPoint={handlePointClick}
+                          onSelectCurve={setSelectedCurveId}
+                        />
+                      </div>
                     )}
                   </>
                 )}
               </div>
 
-              {/* Grille de graphiques */}
+              {/* Grille de graphiques en dessous */}
               <div style={{
                 flex: 1,
                 display: 'grid',
