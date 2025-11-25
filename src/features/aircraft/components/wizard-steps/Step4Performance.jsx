@@ -322,7 +322,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                 backgroundColor: '#f0f9ff',
                 border: '1px solid #3b82f6',
                 borderRadius: '8px',
-                padding: '12px',
+                padding: '10px',
                 marginBottom: '8px',
                 display: 'flex',
                 flexDirection: 'column'
@@ -461,7 +461,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                     backgroundColor: '#f0f9ff',
                     border: '1px solid #3b82f6',
                     borderRadius: '8px',
-                    padding: '12px',
+                    padding: '10px',
                     marginBottom: '8px',
                     display: 'flex',
                     flexDirection: 'column'
@@ -587,7 +587,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
               backgroundColor: '#f0f9ff',
               border: '1px solid #3b82f6',
               borderRadius: '8px',
-              padding: '12px'
+              padding: '10px'
             }}>
               Configurées
             </div>
@@ -602,7 +602,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
           }}
           style={{
             marginTop: '8px',
-            padding: '8px 16px',
+            padding: '10px',
             backgroundColor: '#3b82f6',
             color: 'white',
             border: 'none',
@@ -685,7 +685,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
     };
 
     return (
-      <div style={{ padding: '20px' }}>
+      <div style={{ padding: '10px' }}>
         <AdvancedPerformanceAnalyzer
           aircraft={aircraft}
           initialData={wizardInitialData}
