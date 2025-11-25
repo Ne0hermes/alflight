@@ -152,50 +152,48 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
 
   return (
     <div style={styles.container}>
-      {/* Avion, Date et Type de vol côte à côte alignés par le bas */}
-      <div style={styles.rowFieldsBottom}>
-        {/* Sélection de l'avion */}
-        <div style={styles.field}>
-          <label style={styles.label}>
-            <Plane size={18} style={styles.icon} />
-            Avion
-          </label>
-          <select
-            style={styles.select}
-            value={flightPlan.generalInfo.callsign || ''}
-            onChange={(e) => handleAircraftSelection(e.target.value)}
-          >
-            <option value="">-- Sélectionnez un avion --</option>
-            {aircraftList.map((aircraft) => (
-              <option key={aircraft.id} value={aircraft.registration}>
-                {aircraft.registration} - {aircraft.model}
-              </option>
-            ))}
-          </select>
-        </div>
+      {/* Sélection de l'avion - ligne 1 */}
+      <div style={styles.field}>
+        <label style={styles.label}>
+          <Plane size={18} style={styles.icon} />
+          Avion
+        </label>
+        <select
+          style={styles.select}
+          value={flightPlan.generalInfo.callsign || ''}
+          onChange={(e) => handleAircraftSelection(e.target.value)}
+        >
+          <option value="">-- Sélectionnez un avion --</option>
+          {aircraftList.map((aircraft) => (
+            <option key={aircraft.id} value={aircraft.registration}>
+              {aircraft.registration} - {aircraft.model}
+            </option>
+          ))}
+        </select>
+      </div>
 
-        {/* Date du vol */}
-        <div style={styles.field}>
-          <label style={styles.label}>
-            <Calendar size={18} style={styles.icon} />
-            Date du vol
-          </label>
-          <input
-            type="date"
-            style={styles.input}
-            value={formatDate(flightPlan.generalInfo.date)}
-            onChange={(e) => handleChange('date', new Date(e.target.value))}
-            min={formatDate(new Date())}
-          />
-        </div>
+      {/* Date du vol - ligne 2 */}
+      <div style={styles.field}>
+        <label style={styles.label}>
+          <Calendar size={18} style={styles.icon} />
+          Date du vol
+        </label>
+        <input
+          type="date"
+          style={styles.input}
+          value={formatDate(flightPlan.generalInfo.date)}
+          onChange={(e) => handleChange('date', new Date(e.target.value))}
+          min={formatDate(new Date())}
+        />
+      </div>
 
-        {/* Type de vol */}
-        <div style={styles.field}>
-          <label style={styles.label}>
-            <Radio size={18} style={styles.icon} />
-            Type de vol
-          </label>
-          <div style={styles.radioGroup}>
+      {/* Type de vol - ligne 3 */}
+      <div style={styles.field}>
+        <label style={styles.label}>
+          <Radio size={18} style={styles.icon} />
+          Type de vol
+        </label>
+        <div style={styles.radioGroup}>
           <label style={styles.radioLabel}>
             <input
               type="radio"
@@ -222,7 +220,6 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
             <span style={styles.radioDescription}>Vol aux instruments</span>
             <span style={styles.badge}>À venir</span>
           </label>
-          </div>
         </div>
       </div>
 
