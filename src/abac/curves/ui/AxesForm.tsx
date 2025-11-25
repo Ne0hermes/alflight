@@ -122,7 +122,7 @@ const AXIS_OPTIONS = {
 
 const styles = {
   form: {
-    padding: '32px',
+    padding: '10px',
     background: 'white',
     borderRadius: '8px',
     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
@@ -131,51 +131,57 @@ const styles = {
     margin: '0 auto'
   },
   section: {
-    marginBottom: '32px'
+    marginBottom: '16px'
   },
   sectionTitle: {
-    marginBottom: '20px',
+    marginBottom: '12px',
     color: '#333',
-    fontSize: '20px',
+    fontSize: '16px',
     fontWeight: 600
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-    gap: '20px'
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: '12px'
   },
   group: {
     display: 'flex',
     flexDirection: 'column' as const
   },
   label: {
-    marginBottom: '6px',
-    fontSize: '15px',
+    marginBottom: '4px',
+    fontSize: '13px',
     fontWeight: 500,
     color: '#555'
   },
   input: {
-    padding: '10px 14px',
+    padding: '8px 10px',
     border: '1px solid #ddd',
     borderRadius: '4px',
-    fontSize: '15px',
-    transition: 'border-color 0.2s'
+    fontSize: '14px',
+    transition: 'border-color 0.2s',
+    width: '100%',
+    boxSizing: 'border-box' as const
   },
   select: {
-    padding: '10px 14px',
+    padding: '8px 10px',
     border: '1px solid #ddd',
     borderRadius: '4px',
-    fontSize: '15px',
+    fontSize: '14px',
     transition: 'border-color 0.2s',
     backgroundColor: 'white',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    width: '100%',
+    boxSizing: 'border-box' as const
   },
   inputError: {
-    padding: '10px 14px',
+    padding: '8px 10px',
     border: '1px solid #f44336',
     borderRadius: '4px',
-    fontSize: '15px',
-    transition: 'border-color 0.2s'
+    fontSize: '14px',
+    transition: 'border-color 0.2s',
+    width: '100%',
+    boxSizing: 'border-box' as const
   },
   errorMessage: {
     color: '#f44336',
@@ -199,17 +205,17 @@ const styles = {
     transition: 'background-color 0.2s'
   },
   helperText: {
-    fontSize: '12px',
+    fontSize: '11px',
     color: '#666',
     marginTop: '4px',
     fontStyle: 'italic'
   },
   formTitle: {
-    fontSize: '20px',
+    fontSize: '16px',
     fontWeight: 600,
     color: '#1976d2',
-    marginBottom: '20px',
-    paddingBottom: '12px',
+    marginBottom: '12px',
+    paddingBottom: '8px',
     borderBottom: '2px solid #e0e0e0'
   }
 };
@@ -470,8 +476,8 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
     <div style={styles.form}>
       {/* Titre du graphique avec bouton de suppression */}
       {graphNumber && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '12px', borderBottom: '2px solid #e0e0e0' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: 600, color: '#1976d2', margin: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingBottom: '8px', borderBottom: '2px solid #e0e0e0' }}>
+          <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1976d2', margin: 0 }}>
             Graphique {graphNumber} - {AXIS_OPTIONS[xAxisType]?.label || config.xAxis.title} / {AXIS_OPTIONS[yAxisType]?.label || config.yAxis.title}
           </h2>
           {onDelete && (

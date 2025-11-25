@@ -8,7 +8,7 @@ import { AbacBuilder } from '../../../abac/curves/ui/AbacBuilder';
 // Styles de base
 const styles = {
   container: {
-    padding: '10px'
+    // Pas de padding ici - chaque step gère son propre padding
   },
   flexCol: {
     display: 'flex',
