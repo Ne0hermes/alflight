@@ -815,7 +815,7 @@ const styles = {
   progressContainer: {
     display: 'flex',
     gap: '8px',
-    overflowX: 'auto',
+    flexWrap: 'wrap',
     paddingBottom: '8px',
   },
   progressStep: {
@@ -866,7 +866,6 @@ const styles = {
   content: {
     flex: 1,
     padding: '24px',
-    overflowY: 'auto',
     background: theme.colors.backgroundCard,
     borderRadius: '15px',
     margin: '20px',

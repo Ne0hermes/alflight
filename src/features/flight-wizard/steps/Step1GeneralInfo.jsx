@@ -152,14 +152,10 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
 
   return (
     <div style={styles.container}>
-      {/* Avion et Date côte à côte */}
-      <div style={styles.rowFields}>
+      {/* Avion, Date et Type de vol côte à côte alignés par le bas */}
+      <div style={styles.rowFieldsBottom}>
         {/* Sélection de l'avion */}
         <div style={styles.field}>
-          <label style={styles.label}>
-            <Plane size={18} style={styles.icon} />
-            Quel avion allez-vous utiliser ?
-          </label>
           <select
             style={styles.select}
             value={flightPlan.generalInfo.callsign || ''}
@@ -176,10 +172,6 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
 
         {/* Date du vol */}
         <div style={styles.field}>
-          <label style={styles.label}>
-            <Calendar size={18} style={styles.icon} />
-            Quelle est la date prévue du vol ?
-          </label>
           <input
             type="date"
             style={styles.input}
@@ -188,15 +180,10 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
             min={formatDate(new Date())}
           />
         </div>
-      </div>
 
-      {/* Type de vol */}
-      <div style={styles.field}>
-        <label style={styles.label}>
-          <Radio size={18} style={styles.icon} />
-          Quel type de vol prévoyez-vous ?
-        </label>
-        <div style={styles.radioGroup}>
+        {/* Type de vol */}
+        <div style={styles.field}>
+          <div style={styles.radioGroup}>
           <label style={styles.radioLabel}>
             <input
               type="radio"
@@ -223,6 +210,7 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
             <span style={styles.radioDescription}>Vol aux instruments</span>
             <span style={styles.badge}>À venir</span>
           </label>
+          </div>
         </div>
       </div>
 
@@ -311,6 +299,12 @@ const styles = {
     display: 'flex',
     gap: '20px',
     alignItems: 'flex-start',
+  },
+  rowFieldsBottom: {
+    display: 'flex',
+    gap: '20px',
+    alignItems: 'flex-end',
+    flexWrap: 'wrap',
   },
   field: {
     display: 'flex',
