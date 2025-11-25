@@ -1326,7 +1326,7 @@ const renderStepContent = () => {
                     </div>
 
                     {graph.axes ? (
-                      <div style={{ width: '100%', minHeight: '200px' }}>
+                      <div style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
                         <Chart
                           axesConfig={graph.axes}
                           curves={graph.curves}
@@ -1335,6 +1335,8 @@ const renderStepContent = () => {
                           onPointDrag={selectedGraphId === graph.id ? handlePointDrag : undefined}
                           onPointDelete={selectedGraphId === graph.id ? handlePointDelete : undefined}
                           responsive={true}
+                          width={320}
+                          height={220}
                         />
                       </div>
                     ) : (
@@ -1838,41 +1840,44 @@ const renderStepContent = () => {
                   }
 
                   return (
-                    <div key={graph.id} style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '10px' }}>
-                      <h3 style={{ marginBottom: '12px' }}>
+                    <div key={graph.id} style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '8px', overflow: 'hidden' }}>
+                      <h3 style={{ marginBottom: '8px', fontSize: '14px' }}>
                         {graph.name}
                         {graph.isWindRelated && (
                           <span style={{
-                            fontSize: '11px',
+                            fontSize: '10px',
                             color: '#1976d2',
-                            marginLeft: '8px',
+                            marginLeft: '6px',
                             backgroundColor: '#e3f2fd',
-                            padding: '2px 6px',
+                            padding: '2px 4px',
                             borderRadius: '3px'
                           }}>
-                            💨 {windFilter === 'headwind' ? 'Vent de face' : windFilter === 'tailwind' ? 'Vent arrière' : 'Tous les vents'}
+                            💨 {windFilter === 'headwind' ? 'Face' : windFilter === 'tailwind' ? 'Arrière' : 'Tous'}
                           </span>
                         )}
                         {graph.linkedFrom && graph.linkedFrom.length > 0 && (
-                          <span style={{ fontSize: '12px', color: '#2196F3', marginLeft: '8px' }}>
-                            (← Reçoit)
+                          <span style={{ fontSize: '10px', color: '#2196F3', marginLeft: '6px' }}>
+                            ←
                           </span>
                         )}
                         {graph.linkedTo && graph.linkedTo.length > 0 && (
-                          <span style={{ fontSize: '12px', color: '#4CAF50', marginLeft: '8px' }}>
-                            (→ Envoie)
+                          <span style={{ fontSize: '10px', color: '#4CAF50', marginLeft: '6px' }}>
+                            →
                           </span>
                         )}
                       </h3>
                       {graph.axes && (
-                        <Chart
-                          axesConfig={graph.axes}
-                          curves={displayCurves}
-                          selectedCurveId={null}
-                          showLegend={true}
-                          width={400}
-                          height={300}
-                        />
+                        <div style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
+                          <Chart
+                            axesConfig={graph.axes}
+                            curves={displayCurves}
+                            selectedCurveId={null}
+                            showLegend={true}
+                            responsive={true}
+                            width={300}
+                            height={200}
+                          />
+                        </div>
                       )}
                       {graph.isWindRelated && displayCurves.length === 0 && (
                         <div style={{
