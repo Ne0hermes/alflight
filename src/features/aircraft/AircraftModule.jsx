@@ -1064,7 +1064,7 @@ export const AircraftModule = memo(() => {
               <div
                 key={aircraft.id}
                 style={{
-                  padding: '16px',
+                  padding: '10px',
                   borderRadius: '8px',
                   border: hasIncompleteSurfaces ? '2px solid #f59e0b' : (isSelected ? '2px solid #3182CE' : '1px solid #E5E7EB'),
                   backgroundColor: hasIncompleteSurfaces ? '#fffbeb' : (isSelected ? '#EBF8FF' : 'white'),
@@ -1072,7 +1072,10 @@ export const AircraftModule = memo(() => {
                   transition: 'all 0.2s ease-in-out',
                   marginBottom: '8px',
                   boxShadow: isSelected ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : 'none',
-                  position: 'relative'
+                  position: 'relative',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px'
                 }}
                 onClick={(e) => {
                   console.log(`🖱️ AircraftModule - Card clicked for aircraft index ${index}`);
@@ -1105,7 +1108,8 @@ export const AircraftModule = memo(() => {
                   </div>
                 )}
                 
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px' }}>
+                {/* Contenu principal de la carte */}
+                <div style={{ display: 'flex', gap: '16px', flex: 1 }}>
                   {/* Photo de l'avion */}
                   {aircraftPhotos[aircraft.id] && (
                     <div style={{
@@ -1127,7 +1131,7 @@ export const AircraftModule = memo(() => {
                       />
                     </div>
                   )}
-                  
+
                   <div style={{ flex: 1 }}>
                     <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '4px', color: '#000000' }}>
                       <span style={{ color: '#000000' }}>{aircraft.registration} - {aircraft.model}</span>
@@ -1318,8 +1322,11 @@ export const AircraftModule = memo(() => {
                       </div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '4px' }}>
-                    {/* Bouton Sélectionner */}
+                </div>
+
+                {/* Boutons d'action en bas de la carte */}
+                <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
+                  {/* Bouton Sélectionner */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1400,7 +1407,6 @@ export const AircraftModule = memo(() => {
                     >
                       <Trash2 size={16} />
                     </button>
-                  </div>
                 </div>
               </div>
             );
