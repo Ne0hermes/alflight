@@ -65,7 +65,8 @@ const styles = {
     color: '#555',
     position: 'sticky' as const,
     top: 0,
-    backgroundColor: 'white'
+    backgroundColor: 'white',
+    whiteSpace: 'nowrap' as const
   },
   td: {
     padding: '6px 8px',

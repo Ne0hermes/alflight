@@ -1167,37 +1167,6 @@ const renderStepContent = () => {
               >
                 Interpoler
               </button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <input
-                  type="number"
-                  value={numIntermediateCurves}
-                  onChange={(e) => setNumIntermediateCurves(Math.max(1, Math.min(5, parseInt(e.target.value) || 1)))}
-                  style={{
-                    padding: '4px 6px',
-                    borderRadius: '4px',
-                    border: '1px solid #ccc',
-                    fontSize: '12px',
-                    width: '40px'
-                  }}
-                  min="1"
-                  max="5"
-                />
-                <button
-                  onClick={handleGenerateIntermediateCurves}
-                  style={{
-                    padding: '6px 12px',
-                    fontSize: '12px',
-                    backgroundColor: '#9C27B0',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                  disabled={!selectedGraphId || !currentGraph || currentGraph.curves.length < 2}
-                >
-                  Générer les courbes intermédiaires
-                </button>
-              </div>
               {currentGraph && currentGraph.curves.filter(c => c.name.includes('(interpolé)')).length > 0 && (
                 <button
                   onClick={() => {
