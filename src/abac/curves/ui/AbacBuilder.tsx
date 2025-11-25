@@ -1162,9 +1162,8 @@ const renderStepContent = () => {
                       }}
                       title="Ajuste automatiquement les axes en fonction des points saisis"
                     >
-                      Ajuster auto
+                      Ajuster les axes
                     </button>
-                    <span style={{ fontSize: '10px', color: '#4CAF50' }}>✅ Marge: 5 unités</span>
                   </div>
                 )}
               </div>
@@ -1196,9 +1195,8 @@ const renderStepContent = () => {
                     }}
                     disabled={!currentGraph || currentGraph.curves.length === 0}
                   >
-                    🎯 Interpoler tout
+                    Interpoler
                   </button>
-                  <span style={{ fontSize: '10px', color: '#666' }}>Lissage des courbes</span>
                 </div>
               </div>
 
@@ -1243,7 +1241,7 @@ const renderStepContent = () => {
                     }}
                     disabled={!selectedGraphId || !currentGraph || currentGraph.curves.length < 2}
                   >
-                    Générer
+                    Générer les courbes intermédiaires
                   </button>
                   {currentGraph && currentGraph.curves.filter(c => c.name.includes('(interpolé)')).length > 0 && (
                     <button
@@ -1268,7 +1266,6 @@ const renderStepContent = () => {
                       🗑️ Suppr. ({currentGraph.curves.filter(c => c.name.includes('(interpolé)')).length})
                     </button>
                   )}
-                  <span style={{ fontSize: '10px', color: '#666' }}>Entre courbes existantes</span>
                 </div>
               </div>
             </div>
