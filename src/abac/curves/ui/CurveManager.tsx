@@ -97,19 +97,18 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
   return (
     <div className={styles.curveManager}>
       <div className={styles.curveManagerHeader}>
-        <h3>Courbes</h3>
         <button
           onClick={() => {
             setShowAddForm(!showAddForm);
             setNewCurveColor(getNextColor());
           }}
           style={{
-            padding: '4px 8px',
-            fontSize: '11px',
+            padding: '6px 12px',
+            fontSize: '12px',
             backgroundColor: '#4CAF50',
             color: 'white',
             border: 'none',
-            borderRadius: '3px',
+            borderRadius: '4px',
             cursor: 'pointer'
           }}
         >
