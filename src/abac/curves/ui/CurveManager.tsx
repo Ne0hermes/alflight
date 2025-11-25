@@ -103,9 +103,10 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
             setNewCurveColor(getNextColor());
           }}
           style={{
-            padding: '6px 12px',
-            fontSize: '12px',
-            backgroundColor: '#4CAF50',
+            padding: '8px 16px',
+            fontSize: '13px',
+            fontWeight: 500,
+            backgroundColor: '#3b82f6',
             color: 'white',
             border: 'none',
             borderRadius: '4px',

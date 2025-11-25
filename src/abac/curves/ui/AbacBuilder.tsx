@@ -1127,25 +1127,26 @@ const renderStepContent = () => {
         return (
           <div className={styles.stepContent}>
             <h2>Étape 2: Construction et Interpolation - "{SYSTEM_TYPES.find(t => t.value === systemType)?.label || 'Abaques'}"</h2>
-            {/* Boutons d'actions en colonne */}
+            {/* Boutons d'actions en ligne */}
             <div style={{
               display: 'flex',
-              flexDirection: 'column',
-              gap: '6px',
+              flexWrap: 'wrap',
+              gap: '8px',
               marginBottom: '12px',
-              alignItems: 'flex-start'
+              alignItems: 'center'
             }}>
               {axesConfig && (
                 <button
                   onClick={() => handleAutoAdjustAxes(selectedGraphId)}
                   style={{
-                    padding: '6px 12px',
-                    backgroundColor: '#2196F3',
+                    padding: '8px 16px',
+                    backgroundColor: '#3b82f6',
                     color: 'white',
                     border: 'none',
                     borderRadius: '4px',
                     cursor: 'pointer',
-                    fontSize: '12px'
+                    fontSize: '13px',
+                    fontWeight: 500
                   }}
                   title="Ajuste automatiquement les axes en fonction des points saisis"
                 >
@@ -1155,9 +1156,10 @@ const renderStepContent = () => {
               <button
                 onClick={() => handleFitAll({ method: interpolationMethod, numPoints: interpolationPoints })}
                 style={{
-                  padding: '6px 12px',
-                  fontSize: '12px',
-                  backgroundColor: '#4CAF50',
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  backgroundColor: '#3b82f6',
                   color: 'white',
                   border: 'none',
                   borderRadius: '4px',
@@ -1817,11 +1819,11 @@ const renderStepContent = () => {
               )}
 
 
-              {/* Affichage des graphiques */}
+              {/* Affichage des graphiques en colonne */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-                gap: '20px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px',
                 marginBottom: '20px'
               }}>
                 {graphs.map(graph => {
