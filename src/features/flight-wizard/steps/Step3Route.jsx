@@ -391,12 +391,6 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
 
   return (
     <div style={commonStyles.container} className="wizard-step-3-route">
-      {/* Titre de l'étape */}
-      <div style={commonStyles.label}>
-        <Navigation size={20} />
-        Planification de la navigation
-      </div>
-
       {/* Carte interactive */}
       <div style={commonStyles.mapSection}>
         <div style={commonStyles.mapLabel}>

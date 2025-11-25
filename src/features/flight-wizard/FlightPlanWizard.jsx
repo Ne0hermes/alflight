@@ -236,7 +236,7 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
     {
       number: 2,
       title: 'Définition du Trajet et Déroutements',
-      description: 'Départ, arrivée, waypoints et aérodromes de déroutement',
+      description: '',
       component: Step3Route,
       validate: () => Boolean(
         flightPlan.route.departure.icao &&
