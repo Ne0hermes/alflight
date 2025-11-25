@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback, useMemo } from 'react';
+import React, { useRef, useState, useCallback, useMemo, useEffect } from 'react';
 import { line, curveLinear } from 'd3-shape';
 import { scaleLinear } from 'd3-scale';
 import { AxesConfig, Curve, XYPoint } from '../core/types';
@@ -15,6 +15,7 @@ interface ChartProps {
   height?: number;
   showGrid?: boolean;
   showLegend?: boolean;
+  responsive?: boolean;
 }
 
 export const Chart: React.FC<ChartProps> = ({
@@ -24,11 +25,40 @@ export const Chart: React.FC<ChartProps> = ({
   onPointClick,
   onPointDrag,
   onPointDelete,
-  width = 800,
-  height = 600,
+  width: propWidth = 800,
+  height: propHeight = 600,
   showGrid = true,
-  showLegend = true
+  showLegend = true,
+  responsive = false
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerSize, setContainerSize] = useState({ width: propWidth, height: propHeight });
+
+  // Responsive sizing
+  useEffect(() => {
+    if (!responsive) return;
+
+    const updateSize = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setContainerSize({
+          width: Math.max(200, rect.width),
+          height: Math.max(150, rect.height)
+        });
+      }
+    };
+
+    updateSize();
+    const resizeObserver = new ResizeObserver(updateSize);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => resizeObserver.disconnect();
+  }, [responsive]);
+
+  const width = responsive ? containerSize.width : propWidth;
+  const height = responsive ? containerSize.height : propHeight;
   // Log pour débogage (désactivé pour éviter le spam)
   // React.useEffect(() => {
   //   )
@@ -335,16 +365,30 @@ export const Chart: React.FC<ChartProps> = ({
   // La légende est maintenant rendue en dehors du SVG
 
   return (
-    <div className={styles.chartContainer} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+    <div
+      ref={containerRef}
+      className={styles.chartContainer}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px',
+        ...(responsive && { width: '100%', height: '100%', minHeight: '150px' })
+      }}
+    >
       <svg
         ref={svgRef}
-        width={width}
-        height={height}
+        width={responsive ? '100%' : width}
+        height={responsive ? Math.max(150, height - 60) : height}
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="xMidYMid meet"
         onClick={handleSvgClick}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={() => setDraggingPoint(null)}
-        style={{ cursor: selectedCurveId && !draggingPoint ? 'crosshair' : 'default' }}
+        style={{
+          cursor: selectedCurveId && !draggingPoint ? 'crosshair' : 'default',
+          flex: responsive ? 1 : undefined
+        }}
       >
         <g transform={`translate(${margin.left}, ${margin.top})`}>
           {showGrid && generateGridLines()}
