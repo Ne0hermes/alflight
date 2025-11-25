@@ -113,7 +113,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
             cursor: 'pointer'
           }}
         >
-          {showAddForm ? 'Annuler' : '+ Ajouter'}
+          {showAddForm ? 'Annuler' : 'Ajouter une courbe'}
         </button>
       </div>
 
