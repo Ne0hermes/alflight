@@ -786,35 +786,31 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
 
   // Sinon, afficher le wizard de création/édition
   return (
-    <div>
-      <PerformanceWizard
-        aircraft={aircraft}
-        onPerformanceUpdate={handlePerformanceUpdate}
-        initialData={wizardInitialData}
-        startAtStep={wizardStep}
-        abacBuilderRefCallback={handleAbacBuilderRefCallback}
-        onCancel={() => {
-          
-          // Si on a des données de performance, revenir à la vue récapitulative
-          if (savedPerformanceData && (data.performanceModels?.length > 0 || data.advancedPerformance || data.performanceTables)) {
-            setShowExistingData(true);
-            setForceShowSummary(true);
-            // Nettoyer le mode édition
-            setSavedPerformanceData({
-              ...savedPerformanceData,
-              editingModel: null,
-              editingModelIndex: null
-            });
-            // Désactiver le mode édition dans le wizard principal
-            if (setIsEditingAbaque) {
-              setIsEditingAbaque(false);
-            }
-          }
-        }}
-      />
+    <PerformanceWizard
+      aircraft={aircraft}
+      onPerformanceUpdate={handlePerformanceUpdate}
+      initialData={wizardInitialData}
+      startAtStep={wizardStep}
+      abacBuilderRefCallback={handleAbacBuilderRefCallback}
+      onCancel={() => {
 
-      {/* Bouton "← Précédent" déplacé dans la navigation du wizard principal */}
-    </div>
+        // Si on a des données de performance, revenir à la vue récapitulative
+        if (savedPerformanceData && (data.performanceModels?.length > 0 || data.advancedPerformance || data.performanceTables)) {
+          setShowExistingData(true);
+          setForceShowSummary(true);
+          // Nettoyer le mode édition
+          setSavedPerformanceData({
+            ...savedPerformanceData,
+            editingModel: null,
+            editingModelIndex: null
+          });
+          // Désactiver le mode édition dans le wizard principal
+          if (setIsEditingAbaque) {
+            setIsEditingAbaque(false);
+          }
+        }
+      }}
+    />
   );
 };
 
