@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Check, Plane } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Plane, X, AlertTriangle } from 'lucide-react';
 import { theme } from '../../styles/theme';
 import { FlightPlanData } from './models/FlightPlanData';
 import { WizardConfigProvider } from './contexts/WizardConfigContext';
@@ -76,7 +76,8 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
     }
   });
   const [isLoading, setIsLoading] = useState(false);
-  
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+
   // Force le re-render quand le plan de vol change
   const [, forceUpdate] = useState({});
   const updateFlightPlan = useCallback(() => {
@@ -574,6 +575,47 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
     }
   }, []);
 
+  /**
+   * Annuler le wizard - Affiche le dialog de confirmation
+   */
+  const handleCancel = useCallback(() => {
+    setShowCancelDialog(true);
+  }, []);
+
+  /**
+   * Confirmer l'annulation - Sauvegarder ou supprimer le brouillon
+   */
+  const handleConfirmCancel = useCallback((saveState) => {
+    if (saveState) {
+      // Sauvegarder le brouillon (déjà fait automatiquement via updateFlightPlan)
+      console.log('💾 [Wizard] Brouillon sauvegardé - Fermeture...');
+    } else {
+      // Supprimer le brouillon
+      localStorage.removeItem('flightPlanDraft');
+      localStorage.removeItem('flightPlanCurrentStep');
+      localStorage.removeItem('flightPlanCompletedSteps');
+      localStorage.removeItem('navigation-storage');
+      localStorage.removeItem('alternates-storage');
+      console.log('🗑️ [Wizard] Brouillon supprimé - Fermeture...');
+    }
+
+    setShowCancelDialog(false);
+
+    // Appeler onCancel si défini, sinon rediriger
+    if (onCancel) {
+      onCancel();
+    } else {
+      // Rediriger vers le dashboard
+      const dashboardTab = document.querySelector('[data-tab-id="dashboard"]') ||
+                          document.querySelector('[data-tab-id="home"]');
+      if (dashboardTab) {
+        dashboardTab.click();
+      } else {
+        window.location.reload();
+      }
+    }
+  }, [onCancel]);
+
   // Vérifier si un brouillon existe
   const hasDraft = Boolean(localStorage.getItem('flightPlanDraft'));
 
@@ -702,45 +744,90 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
 
       {/* Barre de navigation */}
       <div className="wizard-navigation" style={styles.navigation}>
-        <button
-          style={{
-            ...styles.navButton,
-            ...styles.navButtonSecondary,
-            visibility: currentStep > 1 ? 'visible' : 'hidden',
-          }}
-          onClick={handlePrevious}
-          disabled={currentStep === 1}
-        >
-          <ChevronLeft size={20} />
-          Précédent
-        </button>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {/* Bouton Annuler */}
+          <button
+            style={styles.navButtonCancel}
+            onClick={handleCancel}
+          >
+            Annuler
+          </button>
 
-        <div style={styles.stepIndicator}>
-          {currentStep} / {steps.length}
+          {/* Bouton Précédent */}
+          {currentStep > 1 && (
+            <button
+              style={{
+                ...styles.navButton,
+                ...styles.navButtonSecondary,
+              }}
+              onClick={handlePrevious}
+            >
+              ← Précédent
+            </button>
+          )}
         </div>
 
-        {currentStep < steps.length ? (
-          <button
-            style={styles.navButton}
-            onClick={handleNext}
-          >
-            Suivant
-            <ChevronRight size={20} />
-          </button>
-        ) : (
-          <button
-            style={{
-              ...styles.navButton,
-              ...styles.navButtonComplete,
-            }}
-            onClick={handleComplete}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Génération...' : 'Terminer et Générer'}
-            <Check size={20} />
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {currentStep < steps.length ? (
+            <button
+              style={styles.navButton}
+              onClick={handleNext}
+            >
+              Suivant →
+            </button>
+          ) : (
+            <button
+              style={{
+                ...styles.navButton,
+                ...styles.navButtonComplete,
+              }}
+              onClick={handleComplete}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Génération...' : 'Terminer et Générer'}
+              <Check size={20} />
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Dialog de confirmation d'annulation */}
+      {showCancelDialog && (
+        <div style={styles.dialogOverlay}>
+          <div style={styles.dialogContent}>
+            <div style={styles.dialogHeader}>
+              <AlertTriangle size={24} color="#f59e0b" />
+              <h3 style={styles.dialogTitle}>Quitter la préparation de vol</h3>
+            </div>
+            <p style={styles.dialogText}>
+              Vous êtes sur le point de quitter. La préparation du vol n'est pas terminée.
+            </p>
+            <p style={styles.dialogInfo}>
+              Vous pouvez sauvegarder votre progression et reprendre plus tard, ou annuler complètement cette préparation.
+            </p>
+            <div style={styles.dialogActions}>
+              <button
+                style={styles.dialogButtonOutline}
+                onClick={() => setShowCancelDialog(false)}
+              >
+                Continuer l'édition
+              </button>
+              <button
+                style={styles.dialogButtonDanger}
+                onClick={() => handleConfirmCancel(false)}
+              >
+                Annuler sans sauvegarder
+              </button>
+              <button
+                style={styles.dialogButtonPrimary}
+                onClick={() => handleConfirmCancel(true)}
+              >
+                Sauvegarder et reprendre plus tard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
     </WizardConfigProvider>
   );
@@ -890,6 +977,110 @@ const styles = {
     borderRadius: '9999px',
     border: `1px solid ${theme.colors.border}`,
     fontFamily: theme.fonts.primary,
+  },
+  navButtonCancel: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '10px 20px',
+    borderRadius: '8px',
+    border: '2px solid #ef4444',
+    background: 'transparent',
+    color: '#ef4444',
+    fontSize: '14px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    minHeight: '44px',
+    fontFamily: theme.fonts.primary,
+  },
+  // Dialog styles
+  dialogOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 9999,
+    padding: '20px',
+  },
+  dialogContent: {
+    backgroundColor: theme.colors.backgroundCard,
+    borderRadius: '12px',
+    padding: '24px',
+    maxWidth: '500px',
+    width: '100%',
+    border: `1px solid ${theme.colors.border}`,
+    boxShadow: theme.shadows.lg,
+  },
+  dialogHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    marginBottom: '16px',
+  },
+  dialogTitle: {
+    fontSize: '20px',
+    fontWeight: '600',
+    color: theme.colors.textPrimary,
+    margin: 0,
+  },
+  dialogText: {
+    fontSize: '14px',
+    color: theme.colors.textPrimary,
+    marginBottom: '12px',
+  },
+  dialogInfo: {
+    fontSize: '13px',
+    color: theme.colors.textSecondary,
+    marginBottom: '24px',
+    padding: '12px',
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    borderRadius: '8px',
+    border: '1px solid rgba(59, 130, 246, 0.3)',
+  },
+  dialogActions: {
+    display: 'flex',
+    gap: '12px',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+  },
+  dialogButtonOutline: {
+    padding: '10px 16px',
+    borderRadius: '8px',
+    border: `1px solid ${theme.colors.border}`,
+    background: 'transparent',
+    color: theme.colors.textPrimary,
+    fontSize: '14px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+  },
+  dialogButtonDanger: {
+    padding: '10px 16px',
+    borderRadius: '8px',
+    border: '1px solid #ef4444',
+    background: 'transparent',
+    color: '#ef4444',
+    fontSize: '14px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+  },
+  dialogButtonPrimary: {
+    padding: '10px 16px',
+    borderRadius: '8px',
+    border: 'none',
+    background: theme.colors.primary,
+    color: '#fff',
+    fontSize: '14px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
   },
 };
 
