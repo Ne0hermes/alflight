@@ -156,6 +156,10 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
       <div style={styles.rowFieldsBottom}>
         {/* Sélection de l'avion */}
         <div style={styles.field}>
+          <label style={styles.label}>
+            <Plane size={18} style={styles.icon} />
+            Avion
+          </label>
           <select
             style={styles.select}
             value={flightPlan.generalInfo.callsign || ''}
@@ -172,6 +176,10 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
 
         {/* Date du vol */}
         <div style={styles.field}>
+          <label style={styles.label}>
+            <Calendar size={18} style={styles.icon} />
+            Date du vol
+          </label>
           <input
             type="date"
             style={styles.input}
@@ -183,6 +191,10 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
 
         {/* Type de vol */}
         <div style={styles.field}>
+          <label style={styles.label}>
+            <Radio size={18} style={styles.icon} />
+            Type de vol
+          </label>
           <div style={styles.radioGroup}>
           <label style={styles.radioLabel}>
             <input

@@ -224,7 +224,7 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
     {
       number: 1,
       title: 'Informations Générales',
-      description: 'Indicatif, type de vol et date',
+      description: '',
       component: Step1GeneralInfo,
       validate: () => Boolean(
         flightPlan.generalInfo.callsign &&
@@ -688,31 +688,6 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
           </div>
         </div>
         
-        {/* Indicateur de progression */}
-        <div style={styles.progressContainer}>
-          {steps.map((step, index) => (
-            <div
-              key={step.number}
-              style={{
-                ...styles.progressStep,
-                ...(completedSteps.has(step.number) ? styles.progressStepCompleted : {}),
-                ...(step.number === currentStep ? styles.progressStepActive : {}),
-                cursor: (completedSteps.has(step.number) || step.number === currentStep + 1) 
-                  ? 'pointer' : 'default',
-              }}
-              onClick={() => handleStepClick(step.number)}
-            >
-              <div style={styles.progressNumber}>
-                {completedSteps.has(step.number) ? (
-                  <Check size={16} />
-                ) : (
-                  step.number
-                )}
-              </div>
-              <div style={styles.progressLabel}>{step.title}</div>
-            </div>
-          ))}
-        </div>
       </div>
 
       {/* Contenu de l'étape courante */}
