@@ -140,9 +140,15 @@ const styles = {
     fontWeight: 600
   },
   grid: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '12px'
+  },
+  gridRow: {
     display: 'grid',
     gridTemplateColumns: 'repeat(2, 1fr)',
-    gap: '12px'
+    gap: '12px',
+    alignItems: 'flex-end'
   },
   group: {
     display: 'flex',
@@ -528,6 +534,7 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
         </h3>
         {xAxisExpanded && (
         <div style={styles.grid}>
+          {/* Ligne 1: Type d'axe seul */}
           <div style={styles.group}>
             <label htmlFor="x-type" style={styles.label}>Type d'axe</label>
             <select
@@ -544,29 +551,33 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
             </select>
           </div>
 
-          <div style={styles.group}>
-            <label htmlFor="x-min" style={styles.label}>Min</label>
-            <input
-              id="x-min"
-              type="number"
-              value={config.xAxis.min}
-              onChange={(e) => handleChange('xAxis', 'min', e.target.value)}
-              style={errors.xMin ? styles.inputError : styles.input}
-            />
-            {errors.xMin && <span style={styles.errorMessage}>{errors.xMin}</span>}
+          {/* Ligne 2: Min et Max côte à côte */}
+          <div style={styles.gridRow}>
+            <div style={styles.group}>
+              <label htmlFor="x-min" style={styles.label}>Min</label>
+              <input
+                id="x-min"
+                type="number"
+                value={config.xAxis.min}
+                onChange={(e) => handleChange('xAxis', 'min', e.target.value)}
+                style={errors.xMin ? styles.inputError : styles.input}
+              />
+              {errors.xMin && <span style={styles.errorMessage}>{errors.xMin}</span>}
+            </div>
+
+            <div style={styles.group}>
+              <label htmlFor="x-max" style={styles.label}>Max</label>
+              <input
+                id="x-max"
+                type="number"
+                value={config.xAxis.max}
+                onChange={(e) => handleChange('xAxis', 'max', e.target.value)}
+                style={styles.input}
+              />
+            </div>
           </div>
 
-          <div style={styles.group}>
-            <label htmlFor="x-max" style={styles.label}>Max</label>
-            <input
-              id="x-max"
-              type="number"
-              value={config.xAxis.max}
-              onChange={(e) => handleChange('xAxis', 'max', e.target.value)}
-              style={styles.input}
-            />
-          </div>
-
+          {/* Ligne 3: Ordre de l'axe */}
           <div style={styles.group}>
             <label style={styles.label}>Ordre de l'axe</label>
             <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
@@ -623,6 +634,7 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
         </h3>
         {yAxisExpanded && (
         <div style={styles.grid}>
+          {/* Ligne 1: Type d'axe seul */}
           <div style={styles.group}>
             <label htmlFor="y-type" style={styles.label}>Type d'axe</label>
             <select
@@ -639,29 +651,33 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
             </select>
           </div>
 
-          <div style={styles.group}>
-            <label htmlFor="y-min" style={styles.label}>Min</label>
-            <input
-              id="y-min"
-              type="number"
-              value={config.yAxis.min}
-              onChange={(e) => handleChange('yAxis', 'min', e.target.value)}
-              style={errors.yMin ? styles.inputError : styles.input}
-            />
-            {errors.yMin && <span style={styles.errorMessage}>{errors.yMin}</span>}
+          {/* Ligne 2: Min et Max côte à côte */}
+          <div style={styles.gridRow}>
+            <div style={styles.group}>
+              <label htmlFor="y-min" style={styles.label}>Min</label>
+              <input
+                id="y-min"
+                type="number"
+                value={config.yAxis.min}
+                onChange={(e) => handleChange('yAxis', 'min', e.target.value)}
+                style={errors.yMin ? styles.inputError : styles.input}
+              />
+              {errors.yMin && <span style={styles.errorMessage}>{errors.yMin}</span>}
+            </div>
+
+            <div style={styles.group}>
+              <label htmlFor="y-max" style={styles.label}>Max</label>
+              <input
+                id="y-max"
+                type="number"
+                value={config.yAxis.max}
+                onChange={(e) => handleChange('yAxis', 'max', e.target.value)}
+                style={styles.input}
+              />
+            </div>
           </div>
 
-          <div style={styles.group}>
-            <label htmlFor="y-max" style={styles.label}>Max</label>
-            <input
-              id="y-max"
-              type="number"
-              value={config.yAxis.max}
-              onChange={(e) => handleChange('yAxis', 'max', e.target.value)}
-              style={styles.input}
-            />
-          </div>
-
+          {/* Ligne 3: Ordre de l'axe */}
           <div style={styles.group}>
             <label style={styles.label}>Ordre de l'axe</label>
             <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
