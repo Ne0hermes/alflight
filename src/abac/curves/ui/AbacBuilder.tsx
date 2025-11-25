@@ -1127,13 +1127,13 @@ const renderStepContent = () => {
         return (
           <div className={styles.stepContent}>
             <h2>Étape 2: Construction et Interpolation - "{SYSTEM_TYPES.find(t => t.value === systemType)?.label || 'Abaques'}"</h2>
-            {/* Boutons d'actions */}
+            {/* Boutons d'actions en colonne */}
             <div style={{
               display: 'flex',
-              flexWrap: 'wrap',
-              gap: '8px',
+              flexDirection: 'column',
+              gap: '6px',
               marginBottom: '12px',
-              alignItems: 'center'
+              alignItems: 'flex-start'
             }}>
               {axesConfig && (
                 <button
@@ -1240,15 +1240,15 @@ const renderStepContent = () => {
               {/* Main content area - courbes en haut, graphiques en dessous */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
 
-              {/* Contrôles de création de courbes */}
+              {/* Contrôles de création de courbes en colonne */}
               <div style={{
                 display: 'flex',
-                gap: '16px',
-                flexWrap: 'wrap'
+                flexDirection: 'column',
+                gap: '12px'
               }}>
                 {currentGraph && (
                   <>
-                    <div style={{ flex: '1 1 300px', minWidth: '280px' }}>
+                    <div style={{ width: '100%' }}>
                       <CurveManager
                         curves={curves}
                         selectedCurveId={selectedCurveId}
@@ -1261,7 +1261,7 @@ const renderStepContent = () => {
                       />
                     </div>
                     {axesConfig && (
-                      <div style={{ flex: '2 1 400px', minWidth: '350px' }}>
+                      <div style={{ width: '100%' }}>
                         <PointsTable
                           curves={curves}
                           selectedCurveId={selectedCurveId}
