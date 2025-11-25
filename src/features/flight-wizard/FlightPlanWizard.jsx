@@ -641,54 +641,43 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
       `}</style>
 
       <div style={styles.container}>
-        {/* Header avec progression */}
+        {/* Header */}
         <div className="wizard-header" style={styles.header}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h1 style={styles.title}>
             <Plane size={24} style={{ marginRight: '12px' }} />
             Je prépare mon vol
-            {hasDraft && (
+          </h1>
+          {hasDraft && (
+            <div style={{ marginTop: '8px' }}>
               <span style={{
                 fontSize: '14px',
-                marginLeft: '12px',
                 padding: '4px 12px',
                 backgroundColor: '#10b981',
                 color: '#fff',
                 borderRadius: '12px',
-                fontWeight: 'normal'
+                marginRight: '8px'
               }}>
                 💾 Brouillon sauvegardé
               </span>
-            )}
-          </h1>
-
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            {/* Bouton Recommencer */}
-            {hasDraft && (
               <button
                 onClick={handleRestart}
                 style={{
-                  padding: '8px 16px',
+                  padding: '6px 12px',
                   backgroundColor: '#ef4444',
                   color: 'white',
                   borderWidth: '0',
                   borderStyle: 'none',
                   borderRadius: '8px',
                   cursor: 'pointer',
-                  fontSize: '14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
+                  fontSize: '13px'
                 }}
                 title="Effacer le brouillon et recommencer"
               >
                 🔄 Recommencer
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
-        
-      </div>
 
       {/* Contenu de l'étape courante */}
       <div
@@ -766,25 +755,17 @@ const styles = {
     paddingTop: 'env(safe-area-inset-top)',
   },
   header: {
-    background: theme.colors.backgroundGlass,
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
-    borderBottom: `1px solid ${theme.colors.border}`,
     padding: '20px',
-    position: 'sticky',
-    top: 0,
-    zIndex: 1000,
-    boxShadow: theme.shadows.sm,
+    textAlign: 'center',
   },
   title: {
-    fontSize: '32px',
+    fontSize: '28px',
     fontWeight: '700',
     color: theme.colors.primary,
-    marginBottom: '20px',
-    display: 'flex',
+    marginBottom: '8px',
+    display: 'inline-flex',
     alignItems: 'center',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
+    justifyContent: 'center',
     fontFamily: theme.fonts.primary,
   },
   progressContainer: {
@@ -862,19 +843,14 @@ const styles = {
     color: theme.colors.textSecondary,
   },
   navigation: {
-    background: theme.colors.backgroundGlass,
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
     borderTop: `1px solid ${theme.colors.border}`,
-    padding: '20px',
-    paddingBottom: `calc(20px + env(safe-area-inset-bottom))`,
+    padding: '16px 20px',
+    paddingBottom: `max(env(safe-area-inset-bottom), 16px)`,
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    position: 'sticky',
-    bottom: 0,
-    zIndex: 1000,
-    boxShadow: theme.shadows.md,
+    flexWrap: 'wrap',
+    gap: '8px',
   },
   navButton: {
     display: 'inline-flex',
