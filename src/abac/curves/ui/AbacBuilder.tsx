@@ -1035,7 +1035,7 @@ const renderStepContent = () => {
               })}
 
               {/* Bouton Nouveau graphique après la liste */}
-              <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+              <div style={{ marginTop: '16px', width: '100%' }}>
                 <button
                   style={{
                     padding: '10px 20px',
@@ -1045,7 +1045,8 @@ const renderStepContent = () => {
                     borderRadius: '6px',
                     cursor: 'pointer',
                     fontSize: '14px',
-                    fontWeight: 600
+                    fontWeight: 600,
+                    width: '100%'
                   }}
                   onClick={() => {
                     const name = `Graphique ${graphs.length + 1}`;
@@ -1067,9 +1068,10 @@ const renderStepContent = () => {
               </div>
 
               {/* Boutons de navigation */}
-              <div style={{ marginTop: '16px', display: 'flex', justifyContent: onBack ? 'space-between' : 'flex-end' }}>
-                {/* Bouton Précédent pour retourner à la page d'accueil des performances */}
-                {onBack && (
+              <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {/* Ligne 1: Précédent et Suivant */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
+                  {/* Bouton Précédent pour retourner à la page d'accueil des performances */}
                   <button
                     style={{
                       padding: '10px 20px',
@@ -1082,7 +1084,8 @@ const renderStepContent = () => {
                       fontWeight: 600,
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '6px'
+                      gap: '6px',
+                      flex: 1
                     }}
                     onClick={onBack}
                     title="Retourner à la sélection du type de données de performance"
@@ -1090,34 +1093,36 @@ const renderStepContent = () => {
                     <span style={{ fontSize: '16px' }}>←</span>
                     Précédent
                   </button>
-                )}
 
-                {/* Bouton Suivant pour aller à l'étape Construire et Interpoler */}
-                <button
-                  style={{
-                    padding: '10px 20px',
-                    backgroundColor: canProceed() ? '#4CAF50' : '#cccccc',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: canProceed() ? 'pointer' : 'not-allowed',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px'
-                  }}
-                  onClick={() => {
-                    if (canProceed()) {
-                      setCurrentStep('points');
-                    }
-                  }}
-                  disabled={!canProceed()}
-                  title={canProceed() ? "Passer à l'étape suivante" : "Configurez au moins un graphique avec ses axes pour continuer"}
-                >
-                  Suivant
-                  <span style={{ fontSize: '16px' }}>→</span>
-                </button>
+                  {/* Bouton Suivant pour aller à l'étape Construire et Interpoler */}
+                  <button
+                    style={{
+                      padding: '10px 20px',
+                      backgroundColor: canProceed() ? '#4CAF50' : '#cccccc',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: canProceed() ? 'pointer' : 'not-allowed',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      flex: 1
+                    }}
+                    onClick={() => {
+                      if (canProceed()) {
+                        setCurrentStep('points');
+                      }
+                    }}
+                    disabled={!canProceed()}
+                    title={canProceed() ? "Passer à l'étape suivante" : "Configurez au moins un graphique avec ses axes pour continuer"}
+                  >
+                    Suivant
+                    <span style={{ fontSize: '16px' }}>→</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1377,43 +1382,46 @@ const renderStepContent = () => {
             </div>
 
             {/* Boutons de navigation */}
-            <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
               {/* Bouton Précédent pour retourner à Configurer les Axes */}
               <button
                 style={{
-                  padding: '10px 24px',
+                  padding: '10px 20px',
                   backgroundColor: '#9E9E9E',
                   color: 'white',
                   border: 'none',
                   borderRadius: '6px',
                   cursor: 'pointer',
-                  fontSize: '16px',
+                  fontSize: '14px',
                   fontWeight: 600,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px'
+                  gap: '6px',
+                  flex: 1
                 }}
                 onClick={() => setCurrentStep('axes')}
                 title="Retourner à l'étape de configuration des axes"
               >
-                <span style={{ fontSize: '18px' }}>←</span>
+                <span style={{ fontSize: '16px' }}>←</span>
                 Précédent
               </button>
 
               {/* Bouton Suivant pour aller à l'étape Validation */}
               <button
                 style={{
-                  padding: '10px 24px',
+                  padding: '10px 20px',
                   backgroundColor: canProceed() ? '#4CAF50' : '#cccccc',
                   color: 'white',
                   border: 'none',
                   borderRadius: '6px',
                   cursor: canProceed() ? 'pointer' : 'not-allowed',
-                  fontSize: '16px',
+                  fontSize: '14px',
                   fontWeight: 600,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px'
+                  justifyContent: 'center',
+                  gap: '6px',
+                  flex: 1
                 }}
                 onClick={() => {
                   if (canProceed()) {
@@ -1424,7 +1432,7 @@ const renderStepContent = () => {
                 title={canProceed() ? "Passer à l'étape de validation" : "Ajoutez au moins 2 points à une courbe pour continuer"}
               >
                 Suivant
-                <span style={{ fontSize: '18px' }}>→</span>
+                <span style={{ fontSize: '16px' }}>→</span>
               </button>
             </div>
           </div>
@@ -1926,50 +1934,53 @@ const renderStepContent = () => {
               )}
 
               {/* Boutons de navigation */}
-              <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'space-between' }}>
+              <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
                 {/* Bouton Précédent pour retourner à Construire et Interpoler */}
                 <button
                   style={{
-                    padding: '10px 24px',
+                    padding: '10px 20px',
                     backgroundColor: '#9E9E9E',
                     color: 'white',
                     border: 'none',
                     borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: '16px',
+                    fontSize: '14px',
                     fontWeight: 600,
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px'
+                    gap: '6px',
+                    flex: 1
                   }}
                   onClick={() => setCurrentStep('points')}
                   title="Retourner à l'étape de construction et interpolation"
                 >
-                  <span style={{ fontSize: '18px' }}>←</span>
+                  <span style={{ fontSize: '16px' }}>←</span>
                   Précédent
                 </button>
 
                 {/* Bouton Suivant pour sauvegarder et passer à l'équipement */}
                 <button
                   style={{
-                    padding: '10px 24px',
+                    padding: '10px 20px',
                     backgroundColor: modelNameInput ? '#4CAF50' : '#cccccc',
                     color: 'white',
                     border: 'none',
                     borderRadius: '6px',
                     cursor: modelNameInput ? 'pointer' : 'not-allowed',
-                    fontSize: '16px',
+                    fontSize: '14px',
                     fontWeight: 600,
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px'
+                    justifyContent: 'center',
+                    gap: '6px',
+                    flex: 1
                   }}
                   onClick={handleExportJSON}
                   disabled={!modelNameInput}
                   title="Sauvegarder et passer à l'étape suivante"
                 >
                   Suivant
-                  <span style={{ fontSize: '18px' }}>→</span>
+                  <span style={{ fontSize: '16px' }}>→</span>
                 </button>
               </div>
             </div>

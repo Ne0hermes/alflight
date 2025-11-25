@@ -609,7 +609,8 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
             borderRadius: '4px',
             fontSize: '12px',
             cursor: 'pointer',
-            fontWeight: '500'
+            fontWeight: '500',
+            width: '100%'
           }}
         >
           Ajouter des données de performance
