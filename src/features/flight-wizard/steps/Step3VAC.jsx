@@ -1012,30 +1012,33 @@ const styles = {
   },
   sectionTabs: {
     display: 'flex',
+    flexDirection: 'column',
     gap: '4px',
-    padding: '12px 16px 0',
+    padding: '12px 16px',
     borderBottom: '1px solid #e5e7eb',
     backgroundColor: '#fafafa'
   },
   sectionTab: {
     display: 'flex',
     alignItems: 'center',
-    gap: '6px',
-    padding: '8px 16px',
-    backgroundColor: 'transparent',
-    border: 'none',
-    borderBottom: '2px solid transparent',
+    justifyContent: 'flex-start',
+    gap: '8px',
+    padding: '10px 16px',
+    width: '100%',
+    backgroundColor: '#ffffff',
+    border: '1px solid #e5e7eb',
+    borderRadius: '6px',
     cursor: 'pointer',
     fontSize: '13px',
     fontWeight: '500',
     color: '#6b7280',
     transition: 'all 0.2s',
-    marginBottom: '-1px'
+    boxSizing: 'border-box'
   },
   sectionTabActive: {
-    color: '#3b82f6',
-    borderBottom: '2px solid #3b82f6',
-    backgroundColor: 'white'
+    color: '#ffffff',
+    backgroundColor: '#3b82f6',
+    borderColor: '#3b82f6'
   },
   sectionContent: {
     padding: '16px'
