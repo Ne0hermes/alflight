@@ -254,47 +254,56 @@ export const WaypointCardWithRunways = memo(({
       { borderColor: label.color, borderWidth: '2px' }
     )}>
       
-      {/* Ligne avec sélecteur et détails */}
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch' }}>
-        {/* Sélecteur d'aérodrome - 40% */}
-        <div style={{ flex: '0 0 40%' }}>
-          <AirportSelector
-            label="Aérodrome"
-            value={waypoint.name ? { 
-              icao: waypoint.name, 
-              name: waypoint.airportName || waypoint.name,
-              coordinates: { lat: waypoint.lat, lon: waypoint.lon },
-              city: waypoint.city,
-              elevation: waypoint.elevation
-            } : null}
-            onChange={onSelect}
-            placeholder="Code OACI ou nom..."
-          />
-        </div>
-        
-        {/* Informations compactes - 60% */}
-        {waypoint.lat && waypoint.lon ? (
-          <div style={{ flex: '0 0 calc(60% - 12px)' }}>
-            <button
-              onClick={() => setShowDetails(!showDetails)}
-              style={sx.combine(
-                sx.components.input.base,
-                sx.text.xs,
-                {
-                  cursor: 'pointer',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  backgroundColor: showDetails ? '#f3f4f6' : '#f9fafb',
-                  border: '1px solid #e5e7eb',
-                  padding: '10px 12px',
-                  '&:hover': {
-                    backgroundColor: '#f3f4f6',
-                    borderColor: '#d1d5db'
-                  }
-                }
-              )}
-            >
+      {/* Label Aérodrome + info départ/arrivée sur la même ligne */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <span style={{ fontSize: '14px', fontWeight: '600', color: '#374151' }}>Aérodrome</span>
+        <span style={{
+          fontSize: '12px',
+          fontWeight: '600',
+          color: label.color,
+          backgroundColor: label.color + '20',
+          padding: '4px 12px',
+          borderRadius: '4px'
+        }}>
+          {label.text}
+        </span>
+      </div>
+
+      {/* Sélecteur d'aérodrome - pleine largeur */}
+      <div style={{ marginBottom: '12px' }}>
+        <AirportSelector
+          value={waypoint.name ? {
+            icao: waypoint.name,
+            name: waypoint.airportName || waypoint.name,
+            coordinates: { lat: waypoint.lat, lon: waypoint.lon },
+            city: waypoint.city,
+            elevation: waypoint.elevation
+          } : null}
+          onChange={onSelect}
+          placeholder="Code OACI ou nom..."
+        />
+      </div>
+
+      {/* Informations compactes - pleine largeur */}
+      {waypoint.lat && waypoint.lon && (
+        <div>
+          <button
+            onClick={() => setShowDetails(!showDetails)}
+            style={sx.combine(
+              sx.components.input.base,
+              sx.text.xs,
+              {
+                width: '100%',
+                cursor: 'pointer',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                backgroundColor: showDetails ? '#f3f4f6' : '#f9fafb',
+                border: '1px solid #e5e7eb',
+                padding: '10px 12px'
+              }
+            )}
+          >
             <div style={{ display: 'flex', gap: '12px', flex: 1, flexWrap: 'wrap', alignItems: 'center' }}>
               {/* Compatibilité des pistes */}
               {runways.length > 0 && compatibility && selectedAircraft && (
@@ -323,12 +332,8 @@ export const WaypointCardWithRunways = memo(({
               {showDetails ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </div>
           </button>
-          </div>
-        ) : (
-          /* Placeholder si pas de coordonnées */
-          <div style={{ flex: '0 0 calc(60% - 12px)' }}></div>
-        )}
-      </div>
+        </div>
+      )}
       
       {/* Section détails étendue */}
       {waypoint.lat && waypoint.lon && showDetails && (
@@ -699,84 +704,76 @@ export const WaypointCardWithRunways = memo(({
         </div>
       )}
 
-      {/* Pied de carte avec boutons, label et bouton supprimer sur la même ligne */}
+      {/* Pied de carte avec boutons */}
       <div style={sx.combine(
-        sx.flex.between,
         sx.spacing.mt(3),
         sx.spacing.pt(3),
-        { borderTop: '1px solid #e5e7eb', alignItems: 'center' }
+        { borderTop: '1px solid #e5e7eb' }
       )}>
-        {/* Boutons d'ajout - disponibles pour tous les aérodromes */}
+        {/* Bouton Ajouter un point VFR - pleine largeur */}
         {onInsertWaypoint ? (
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ marginBottom: '10px' }}>
             <VFRPointInserter
               waypoints={allWaypoints || waypoints}
               currentAirportIcao={waypoint.name ? waypoint.name.split(' ')[0] : null}
               onInsertWaypoint={(newWaypoint, _) => {
-                                // Insérer après ce waypoint
+                // Insérer après ce waypoint
                 onInsertWaypoint(newWaypoint, index + 1);
               }}
               insertPosition={index + 1}
+              fullWidth={true}
             />
           </div>
         ) : (
-          <div style={{ fontSize: '11px', color: '#9ca3af', fontStyle: 'italic' }}>
+          <div style={{ fontSize: '11px', color: '#9ca3af', fontStyle: 'italic', marginBottom: '10px' }}>
             (Pas de fonction d'insertion disponible)
           </div>
         )}
-        
-        {/* Étiquette et boutons d'action */}
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span style={{
-            fontSize: '12px',
-            fontWeight: '600',
-            color: label.color,
-            backgroundColor: label.color + '20',
-            padding: '4px 12px',
-            borderRadius: '4px'
-          }}>
-            {label.text}
-          </span>
 
-          {/* Boutons de réorganisation */}
-          {/* Déplacer vers le haut (désactivé si départ ou juste après départ) */}
-          <button
-            onClick={() => moveWaypointUp(waypoint.id)}
-            disabled={index <= 1}
-            style={sx.combine(
-              sx.components.button.base,
-              {
-                padding: '6px',
-                backgroundColor: index <= 1 ? '#e5e7eb' : '#dbeafe',
-                color: index <= 1 ? '#9ca3af' : '#1e40af',
-                cursor: index <= 1 ? 'not-allowed' : 'pointer',
-                opacity: index <= 1 ? 0.5 : 1
-              }
-            )}
-            title={index <= 1 ? "Impossible de remonter plus haut" : "Déplacer vers le haut"}
-          >
-            <ArrowUp size={14} />
-          </button>
+        {/* Boutons flèche haut/bas et supprimer */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+          {/* Ligne 1: Boutons flèche haut/bas */}
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {/* Déplacer vers le haut (désactivé si départ ou juste après départ) */}
+            <button
+              onClick={() => moveWaypointUp(waypoint.id)}
+              disabled={index <= 1}
+              style={sx.combine(
+                sx.components.button.base,
+                {
+                  padding: '6px',
+                  backgroundColor: index <= 1 ? '#e5e7eb' : '#dbeafe',
+                  color: index <= 1 ? '#9ca3af' : '#1e40af',
+                  cursor: index <= 1 ? 'not-allowed' : 'pointer',
+                  opacity: index <= 1 ? 0.5 : 1
+                }
+              )}
+              title={index <= 1 ? "Impossible de remonter plus haut" : "Déplacer vers le haut"}
+            >
+              <ArrowUp size={14} />
+            </button>
 
-          {/* Déplacer vers le bas (désactivé si arrivée ou juste avant arrivée) */}
-          <button
-            onClick={() => moveWaypointDown(waypoint.id)}
-            disabled={index >= totalWaypoints - 2}
-            style={sx.combine(
-              sx.components.button.base,
-              {
-                padding: '6px',
-                backgroundColor: index >= totalWaypoints - 2 ? '#e5e7eb' : '#dbeafe',
-                color: index >= totalWaypoints - 2 ? '#9ca3af' : '#1e40af',
-                cursor: index >= totalWaypoints - 2 ? 'not-allowed' : 'pointer',
-                opacity: index >= totalWaypoints - 2 ? 0.5 : 1
-              }
-            )}
-            title={index >= totalWaypoints - 2 ? "Impossible de descendre plus bas" : "Déplacer vers le bas"}
-          >
-            <ArrowDown size={14} />
-          </button>
+            {/* Déplacer vers le bas (désactivé si arrivée ou juste avant arrivée) */}
+            <button
+              onClick={() => moveWaypointDown(waypoint.id)}
+              disabled={index >= totalWaypoints - 2}
+              style={sx.combine(
+                sx.components.button.base,
+                {
+                  padding: '6px',
+                  backgroundColor: index >= totalWaypoints - 2 ? '#e5e7eb' : '#dbeafe',
+                  color: index >= totalWaypoints - 2 ? '#9ca3af' : '#1e40af',
+                  cursor: index >= totalWaypoints - 2 ? 'not-allowed' : 'pointer',
+                  opacity: index >= totalWaypoints - 2 ? 0.5 : 1
+                }
+              )}
+              title={index >= totalWaypoints - 2 ? "Impossible de descendre plus bas" : "Déplacer vers le bas"}
+            >
+              <ArrowDown size={14} />
+            </button>
+          </div>
 
+          {/* Ligne 2: Bouton supprimer centré */}
           {canDelete && (
             <button
               onClick={onRemove}

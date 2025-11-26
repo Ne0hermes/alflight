@@ -17,6 +17,7 @@ import { Step3VAC } from './steps/Step3VAC';
 import { Step5Fuel } from './steps/Step5Fuel';
 import { Step5Performance } from './steps/Step5Performance';
 import { Step6WeightBalance } from './steps/Step6WeightBalance';
+import { Step7Alternates } from './steps/Step7Alternates';  // NOUVEAU: Étape déroutements après W&B
 import { Step7Summary } from './steps/Step7Summary';
 
 /**
@@ -278,6 +279,13 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
     },
     {
       number: 7,
+      title: 'Déroutements',
+      description: 'Sélection aérodromes (zone cône FOB)',
+      component: Step7Alternates,
+      validate: () => true // La sélection d'alternates est optionnelle
+    },
+    {
+      number: 8,
       title: 'Synthèse',
       description: 'Vérifier et générer',
       component: Step7Summary,

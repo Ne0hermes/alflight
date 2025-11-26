@@ -178,6 +178,202 @@ const calculatePillZone = (departure, arrival, radiusOverride = null) => {
 };
 
 /**
+ * Calcule une zone en forme de cône autour de la route
+ * Le cône est plus large au départ (radiusAtDep) et plus étroit à l'arrivée (radiusAtArr)
+ * Basé sur le carburant restant théorique à chaque point de la route
+ *
+ * @param {Object} departure - Point de départ {lat, lon}
+ * @param {Object} arrival - Point d'arrivée {lat, lon}
+ * @param {number} radiusAtDep - Rayon au départ (NM) - basé sur endurance FOB
+ * @param {number} radiusAtArr - Rayon à l'arrivée (NM) - basé sur endurance restante
+ * @returns {Object} Zone cône avec vertices, aire, etc.
+ */
+const calculateConeZone = (departure, arrival, radiusAtDep, radiusAtArr) => {
+  const distance = calculateDistance(departure, arrival);
+  const bearing = calculateBearing(departure, arrival);
+
+  // Protection contre les rayons invalides
+  const R1 = Math.max(5, radiusAtDep || 30); // Minimum 5 NM au départ
+  const R2 = Math.max(3, radiusAtArr || 10); // Minimum 3 NM à l'arrivée
+
+  console.log('🔺 CONE ZONE CALCULATION:', {
+    departure: `${departure.lat.toFixed(4)}, ${departure.lon.toFixed(4)}`,
+    arrival: `${arrival.lat.toFixed(4)}, ${arrival.lon.toFixed(4)}`,
+    distance: distance.toFixed(1) + ' NM',
+    radiusAtDep: R1.toFixed(1) + ' NM',
+    radiusAtArr: R2.toFixed(1) + ' NM',
+    bearing: bearing.toFixed(1) + '°'
+  });
+
+  // Calculer les 4 points clés qui définissent les coins du cône
+  // Au départ : rayon R1 (plus large)
+  const departureRight = calculateDestination(departure, R1, (bearing - 90 + 360) % 360);
+  const departureLeft = calculateDestination(departure, R1, (bearing + 90) % 360);
+  // À l'arrivée : rayon R2 (plus étroit)
+  const arrivalRight = calculateDestination(arrival, R2, (bearing - 90 + 360) % 360);
+  const arrivalLeft = calculateDestination(arrival, R2, (bearing + 90) % 360);
+
+  const vertices = [];
+  const pointsPerArc = 20;
+
+  // SEGMENT 1 : Ligne oblique du côté droit (départ vers arrivée, rétrécissant)
+  vertices.push(departureRight);
+  for (let i = 1; i <= 5; i++) {
+    const ratio = i / 6;
+    vertices.push({
+      lat: departureRight.lat + ratio * (arrivalRight.lat - departureRight.lat),
+      lon: departureRight.lon + ratio * (arrivalRight.lon - departureRight.lon)
+    });
+  }
+  vertices.push(arrivalRight);
+
+  // SEGMENT 2 : Demi-cercle à l'arrivée (plus petit, rayon R2)
+  for (let i = 1; i < pointsPerArc; i++) {
+    const angle = (bearing - 90) + (i / pointsPerArc) * 180;
+    const point = calculateDestination(arrival, R2, angle % 360);
+    vertices.push(point);
+  }
+  vertices.push(arrivalLeft);
+
+  // SEGMENT 3 : Ligne oblique du côté gauche (arrivée vers départ, s'élargissant)
+  for (let i = 1; i <= 5; i++) {
+    const ratio = i / 6;
+    vertices.push({
+      lat: arrivalLeft.lat + ratio * (departureLeft.lat - arrivalLeft.lat),
+      lon: arrivalLeft.lon + ratio * (departureLeft.lon - arrivalLeft.lon)
+    });
+  }
+  vertices.push(departureLeft);
+
+  // SEGMENT 4 : Demi-cercle au départ (plus grand, rayon R1)
+  for (let i = 1; i < pointsPerArc; i++) {
+    const angle = (bearing + 90) + (i / pointsPerArc) * 180;
+    const point = calculateDestination(departure, R1, angle % 360);
+    vertices.push(point);
+  }
+
+  // Calcul de l'aire approximative (trapèze + 2 demi-cercles)
+  const trapezoidArea = distance * (R1 + R2); // Aire du trapèze
+  const departureSemiCircle = Math.PI * R1 * R1 / 2; // Demi-cercle au départ
+  const arrivalSemiCircle = Math.PI * R2 * R2 / 2; // Demi-cercle à l'arrivée
+  const totalArea = trapezoidArea + departureSemiCircle + arrivalSemiCircle;
+
+  // Informations de médiatrice
+  const perpendicular = calculatePerpendicular(departure, arrival);
+
+  return {
+    type: 'cone',
+    vertices: vertices,
+    area: totalArea,
+    center: calculateMidpoint(departure, arrival),
+    radiusAtDep: R1,
+    radiusAtArr: R2,
+    length: distance,
+    widthAtDep: R1 * 2,
+    widthAtArr: R2 * 2,
+    departure: departure,
+    arrival: arrival,
+    bearing: bearing,
+    perpendicular: perpendicular
+  };
+};
+
+/**
+ * Vérifie si un aéroport est dans une zone cône
+ * Le rayon varie linéairement le long de la route (R1 au départ → R2 à l'arrivée)
+ *
+ * @param {Object} airport - Aéroport avec coordonnées
+ * @param {Object} coneZone - Zone cône calculée
+ * @returns {Object} {isInZone, location, distanceToRoute, side, radiusAtPoint}
+ */
+export const isAirportInConeZone = (airport, coneZone) => {
+  if (!airport || !coneZone) return { isInZone: false, reason: 'Données manquantes' };
+
+  const point = airport.coordinates || airport.position || {
+    lat: airport.lat,
+    lon: airport.lon || airport.lng
+  };
+
+  if (!point.lat || !point.lon) return { isInZone: false, reason: 'Coordonnées invalides' };
+
+  const { departure, arrival, radiusAtDep, radiusAtArr, length: routeLength } = coneZone;
+
+  // Déterminer le côté par rapport à la médiatrice
+  const side = getSideOfPerpendicular(point, departure, arrival);
+
+  // Calculer la position du point le long de la route (t: 0 = départ, 1 = arrivée)
+  const routeVector = {
+    x: arrival.lon - departure.lon,
+    y: arrival.lat - departure.lat
+  };
+  const pointVector = {
+    x: point.lon - departure.lon,
+    y: point.lat - departure.lat
+  };
+
+  const routeLengthSquared = routeVector.x * routeVector.x + routeVector.y * routeVector.y;
+  const t = routeLengthSquared > 0 ?
+    (pointVector.x * routeVector.x + pointVector.y * routeVector.y) / routeLengthSquared : 0;
+
+  // Calculer le rayon interpolé à la position t le long de la route
+  // R(t) = R1 + t × (R2 - R1) = R1 × (1-t) + R2 × t
+  const radiusAtPoint = radiusAtDep * (1 - Math.max(0, Math.min(1, t))) + radiusAtArr * Math.max(0, Math.min(1, t));
+
+  // Distances aux extrémités et à la route
+  const distToDeparture = calculateDistance(point, departure);
+  const distToArrival = calculateDistance(point, arrival);
+  const distanceToRoute = calculateDistanceToSegment(point, departure, arrival);
+
+  // Vérification dans les demi-cercles aux extrémités
+  // Demi-cercle au départ (rayon R1)
+  if (t < 0 && distToDeparture <= radiusAtDep) {
+    return {
+      isInZone: true,
+      location: 'cone_departure',
+      distanceToRoute: distToDeparture,
+      side,
+      radiusAtPoint: radiusAtDep,
+      t: 0
+    };
+  }
+
+  // Demi-cercle à l'arrivée (rayon R2)
+  if (t > 1 && distToArrival <= radiusAtArr) {
+    return {
+      isInZone: true,
+      location: 'cone_arrival',
+      distanceToRoute: distToArrival,
+      side,
+      radiusAtPoint: radiusAtArr,
+      t: 1
+    };
+  }
+
+  // Vérification dans le corps du cône (entre départ et arrivée)
+  if (t >= 0 && t <= 1) {
+    // Le point doit être à une distance <= rayon interpolé
+    if (distanceToRoute <= radiusAtPoint) {
+      return {
+        isInZone: true,
+        location: 'cone_body',
+        distanceToRoute,
+        side,
+        radiusAtPoint,
+        t
+      };
+    }
+  }
+
+  return {
+    isInZone: false,
+    reason: 'Hors zone cône',
+    distanceToRoute,
+    radiusAtPoint,
+    t
+  };
+};
+
+/**
  * Calcule une zone rectangulaire autour de la route
  */
 const calculateRectangleZone = (departure, arrival, radius) => {
@@ -354,52 +550,86 @@ export const calculateSearchZone = (departure, arrival, waypoints = [], fuelData
     ...options
   };
 
-  // NOUVELLE LOGIQUE : Rayon = distance totale / 2
-  // Cela crée une zone de recherche circulaire ample autour du trajet
-  let radius = distance / 2;
+  // NOUVELLE LOGIQUE : Rayon basé sur un temps de déroutement acceptable
+  // Pour un VFR, un déroutement de 20-30 minutes max est raisonnable
+  // Rayon = vitesse croisière × temps de déroutement (en heures)
+  //
+  // On utilise aussi l'autonomie pour adapter :
+  // - Si autonomie > 3h : rayon = 30 min de vol (généreux)
+  // - Si autonomie 2-3h : rayon = 25 min de vol
+  // - Si autonomie < 2h : rayon = 20 min de vol (conservateur)
 
-  // Minimum absolu pour assurer une zone viable (10 NM)
-  radius = Math.max(10, radius);
+  let radius;
+  let radiusMethod = 'distance'; // Pour le log
 
-  console.log('🔍 CALCUL RAYON FINAL:', {
-    distance: distance.toFixed(1) + ' NM',
-    radiusCalcule: (distance / 2).toFixed(1) + ' NM',
-    radiusFinal: radius.toFixed(1) + ' NM',
-    formule: 'distance / 2 (sans limitation carburant)'
-  });
+  // Essayer de calculer avec les données avion
+  if (fuelData?.aircraft?.fuelCapacity && fuelData?.aircraft?.fuelConsumption && fuelData?.aircraft?.cruiseSpeedKt) {
+    const aircraft = fuelData.aircraft;
+    const maxEnduranceHours = aircraft.fuelCapacity / aircraft.fuelConsumption;
+    const cruiseSpeed = aircraft.cruiseSpeedKt;
 
-  // DÉSACTIVÉ : Ajustement par carburant
-  // L'utilisateur a demandé une formule simple : distance totale / 2
-  // Sans limitation liée au carburant disponible
-  /*
-  if (fuelData && fuelData.aircraft && fuelData.fuelRemaining !== undefined && config.limitByFuel !== false) {
-    const finalReserve = fuelData.reserves?.final || 0;
-    const alternateReserve = fuelData.reserves?.alternate || 0;
-    const usableFuel = fuelData.fuelRemaining - finalReserve - alternateReserve;
-
-    console.log('⛽ DONNÉES CARBURANT:', {
-      fuelRemaining: fuelData.fuelRemaining,
-      finalReserve,
-      alternateReserve,
-      usableFuel
-    });
-
-    if (usableFuel > 0 && fuelData.aircraft.fuelConsumption && fuelData.aircraft.cruiseSpeedKt) {
-      const enduranceHours = usableFuel / fuelData.aircraft.fuelConsumption;
-      const fuelRadius = enduranceHours * fuelData.aircraft.cruiseSpeedKt * 0.3;
-      const oldRadius = radius;
-      radius = Math.min(radius, Math.max(10, fuelRadius));
-
-      console.log('🛢️ AJUSTEMENT CARBURANT:', {
-        enduranceHours: enduranceHours.toFixed(2) + ' h',
-        fuelRadius: fuelRadius.toFixed(1) + ' NM',
-        radiusAvant: oldRadius.toFixed(1) + ' NM',
-        radiusApres: radius.toFixed(1) + ' NM',
-        LIMITED: radius < oldRadius ? '⚠️ RAYON LIMITÉ PAR CARBURANT!' : '✓ OK'
-      });
+    // Temps de déroutement en fonction de l'autonomie
+    let diversionTimeMinutes;
+    if (maxEnduranceHours >= 3) {
+      diversionTimeMinutes = 30; // 30 min pour avions avec bonne autonomie
+    } else if (maxEnduranceHours >= 2) {
+      diversionTimeMinutes = 25; // 25 min pour autonomie moyenne
+    } else {
+      diversionTimeMinutes = 20; // 20 min pour faible autonomie
     }
+
+    // Rayon = vitesse × temps (convertir minutes en heures)
+    const fuelBasedRadius = cruiseSpeed * (diversionTimeMinutes / 60);
+
+    radius = Math.max(10, fuelBasedRadius); // Minimum 10 NM
+    radiusMethod = 'temps_deroutement';
+
+    console.log('🛩️ CALCUL RAYON PAR TEMPS DE DÉROUTEMENT:', {
+      fuelCapacity: aircraft.fuelCapacity.toFixed(1) + ' L',
+      fuelConsumption: aircraft.fuelConsumption.toFixed(1) + ' L/h',
+      cruiseSpeed: cruiseSpeed + ' kt',
+      maxEndurance: maxEnduranceHours.toFixed(2) + ' h',
+      tempsDetourement: diversionTimeMinutes + ' min',
+      radiusFinal: radius.toFixed(1) + ' NM'
+    });
+  } else {
+    // Fallback : 25 NM par défaut (raisonnable pour VFR)
+    radius = Math.max(10, Math.min(25, distance / 4));
+    radiusMethod = 'distance_fallback';
+
+    console.log('⚠️ CALCUL RAYON FALLBACK (pas de données avion):', {
+      distance: distance.toFixed(1) + ' NM',
+      radiusFinal: radius.toFixed(1) + ' NM',
+      formule: 'min(25 NM, distance / 4)'
+    });
   }
-  */
+
+  // CONTRAINTE 1: Le rayon ne peut pas dépasser la distance totale du vol
+  // Pour un vol court, on réduit proportionnellement
+  if (radius > distance) {
+    console.log('⚠️ RAYON LIMITÉ À LA DISTANCE DU VOL:', {
+      radiusCalcule: radius.toFixed(1) + ' NM',
+      distanceVol: distance.toFixed(1) + ' NM'
+    });
+    radius = distance;
+  }
+
+  // CONTRAINTE 2: Maximum absolu pour éviter des zones trop grandes (80 NM max)
+  // 80 NM = environ 40 min de vol à 120 kt, ce qui est déjà beaucoup pour un déroutement
+  const maxRadius = 80;
+  if (radius > maxRadius) {
+    console.log('⚠️ RAYON LIMITÉ AU MAXIMUM ABSOLU:', {
+      radiusCalcule: radius.toFixed(1) + ' NM',
+      maximum: maxRadius + ' NM'
+    });
+    radius = maxRadius;
+  }
+
+  console.log('🔍 RAYON FINAL DÉROUTEMENT:', {
+    methode: radiusMethod,
+    rayon: radius.toFixed(1) + ' NM',
+    distanceVol: distance.toFixed(1) + ' NM'
+  });
   
   let zone;
   
@@ -457,11 +687,11 @@ export const isAirportInSearchZone = (airport, searchZone) => {
     const routeLength = calculateDistance(searchZone.departure, searchZone.arrival);
     
     // Debug pour LFAF
-        // Vérification stricte avec une tolérance réduite
+        // Vérification avec une tolérance élargie
     // Un point est dans la pilule si la somme de ses distances aux extrémités
     // est inférieure à la longueur de la route + 2 * rayon
-    // On applique une tolérance de 95% pour être plus strict
-    const maxDistanceSum = routeLength + 2 * searchZone.radius * 0.95;
+    // Tolérance de 100% pour inclure tous les aérodromes dans la zone
+    const maxDistanceSum = routeLength + 2 * searchZone.radius * 1.0;
     
     if (distToDeparture + distToArrival > maxDistanceSum) {
       // Le point est définitivement hors de la zone pilule
@@ -470,11 +700,11 @@ export const isAirportInSearchZone = (airport, searchZone) => {
     
     // Calcul plus précis de la position dans la pilule
     const distanceToRoute = calculateDistanceToSegment(point, searchZone.departure, searchZone.arrival);
-    
+
     // Vérifier que le point est dans la zone pilule (forme capsule)
     // 1. D'abord vérifier si le point est dans le rectangle central
-    // On applique une marge de sécurité de 90% sur le rayon pour être plus strict
-    const effectiveRadius = searchZone.radius * 0.9;
+    // Utiliser 100% du rayon pour inclure plus d'aérodromes
+    const effectiveRadius = searchZone.radius * 1.0;
     
     if (distanceToRoute <= effectiveRadius) {
       // 2. Calculer la projection du point sur la ligne de route
@@ -604,7 +834,11 @@ export const geometryUtils = {
   getPointSideOfRoute,
   calculateLineIntersection,
   calculatePillZone,
+  calculateConeZone,
   calculateRectangleZone,
   calculateBoundingBoxZone,
   identifyTurnPoints
 };
+
+// Export nommé de calculateConeZone pour utilisation directe
+export { calculateConeZone };

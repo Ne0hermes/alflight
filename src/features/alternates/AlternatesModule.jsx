@@ -479,29 +479,37 @@ const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
       
       {/* En-tête avec résumé et statistiques */}
       <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
-        {/* Conteneur pour la carte et la sélection côte à côte */}
+        {/* Conteneur pour la carte et la sélection en dessous */}
         {searchZone && (
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: '1fr 1fr',
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
             gap: '20px',
-            marginBottom: '24px',
-            alignItems: 'start'
+            marginBottom: '24px'
           }}>
-            {/* Colonne gauche : Carte */}
+            {/* Carte en haut */}
             <div style={sx.components.card.base}>
               <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(2))}>
                 📍 Visualisation de la route et des déroutements
               </h4>
-              <p style={{
+              <div style={{
                 fontSize: '13px',
-                fontStyle: 'italic',
-                color: '#6b7280',
+                color: '#374151',
                 marginBottom: '16px',
-                marginTop: '0'
+                marginTop: '0',
+                padding: '12px',
+                backgroundColor: '#f0f9ff',
+                borderRadius: '8px',
+                border: '1px solid #bfdbfe'
               }}>
-                Zone : Capsule (pilule) - Corridor de {Math.ceil(dynamicRadius || 25)} NM de rayon autour de la route
-              </p>
+                <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: '#1e40af' }}>
+                  🛩️ Zone de recherche : {Math.ceil(dynamicRadius || 25)} NM de rayon
+                </p>
+                <p style={{ margin: '0', fontSize: '12px', color: '#6b7280', lineHeight: '1.4' }}>
+                  Le rayon correspond à un temps de déroutement de 20-30 min selon l'autonomie de l'avion.
+                  Cela représente la zone où vous pourriez rejoindre un aérodrome de déroutement en cas de besoin.
+                </p>
+              </div>
               <AlternatesMapView
                 searchZone={searchZone}
                 selectedAlternates={selectedAlternates}
@@ -511,8 +519,8 @@ const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
                 currentSelection={manualSelection}
               />
             </div>
-            
-            {/* Colonne droite : Interface de sélection */}
+
+            {/* Interface de sélection en dessous */}
             <div>
               <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(3))}>
                 ✈️ Sélection des aérodromes
@@ -533,7 +541,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
                 </div>
               ) : (
                 <div style={sx.combine(sx.components.card.base, sx.text.left, sx.spacing.p(8))}>
-                  <div style={{ 
+                  <div style={{
                     display: 'inline-block',
                     animation: 'spin 2s linear infinite'
                   }}>

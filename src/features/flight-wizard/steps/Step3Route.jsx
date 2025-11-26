@@ -1,13 +1,13 @@
 // src/features/flight-wizard/steps/Step3Route.jsx
 import React, { memo, useState, useEffect, useMemo } from 'react';
 import NavigationModule from '@features/navigation/NavigationModule';
-import AlternatesModule from '@features/alternates/AlternatesModule';
-import { Navigation, Map, Plane } from 'lucide-react';
+// SUPPRIMÉ: AlternatesModule - déplacé à l'étape 7 (après bilan carburant)
+import { Navigation, Map, Info } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import RouteMapView from '../components/RouteMapView';
 import { useNavigation, useAircraft } from '@core/contexts';
 import { vfrPointsExtractor } from '@services/vfrPointsExtractor';
-import { useUnits } from '@hooks/useUnits';
+// SUPPRIMÉ: useUnits - plus nécessaire
 
 // Styles communs
 const commonStyles = {
@@ -81,7 +81,7 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
 
   // Récupérer l'avion sélectionné
   const { selectedAircraft, setSelectedAircraft } = useAircraft();
-  const { convert, getSymbol } = useUnits();
+  // SUPPRIMÉ: useUnits() - plus nécessaire (calcul searchRadius retiré)
 
   // Points VFR chargés depuis AIXM
   const [vfrPoints, setVfrPoints] = useState([]);
@@ -177,32 +177,8 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
     }
   }, [flightPlan?.aircraft?.registration, setSelectedAircraft]);
 
-  // Calculer le rayon de sélection pour les déroutements
-  const searchRadius = useMemo(() => {
-    const totalFuel = flightPlan.fuel.confirmed || 0;
-    const fuelUsed = (flightPlan.fuel.taxi || 0) +
-                     (flightPlan.fuel.climb || 0) +
-                     (flightPlan.fuel.cruise || 0);
-    const remainingFuel = totalFuel - fuelUsed;
-    const fuelConsumptionStorage = flightPlan.aircraft.fuelConsumption || 40;
-    const fuelConsumptionDisplay = convert(fuelConsumptionStorage, 'fuelConsumption', 'lph');
-    const fuelRemainingDisplay = convert(remainingFuel, 'fuel', 'ltr');
-    const cruiseSpeed = flightPlan.aircraft.cruiseSpeed || 120;
-    const remainingEndurance = remainingFuel / fuelConsumptionStorage;
-    const radiusNM = remainingEndurance * cruiseSpeed;
-    const radiusKM = radiusNM * 1.852;
-
-    return {
-      fuelRemaining: remainingFuel,
-      fuelRemainingDisplay: fuelRemainingDisplay,
-      endurance: remainingEndurance,
-      radiusNM: radiusNM,
-      radiusKM: radiusKM,
-      cruiseSpeed: cruiseSpeed,
-      fuelConsumption: fuelConsumptionStorage,
-      fuelConsumptionDisplay: fuelConsumptionDisplay
-    };
-  }, [flightPlan.fuel, flightPlan.aircraft, convert]);
+  // SUPPRIMÉ: searchRadius - Le calcul du rayon de recherche est maintenant fait
+  // à l'étape 7 (Step7Alternates) avec le FOB et la zone cône
 
   // Synchroniser les waypoints du NavigationContext avec le flightPlan
   useEffect(() => {
@@ -417,17 +393,23 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
         />
       </div>
 
-      {/* Section Aérodromes de Déroutement */}
-      <div style={commonStyles.alternatesSection}>
-        <div style={commonStyles.alternatesHeader}>
-          <Plane size={20} style={{ color: theme.colors.primary }} />
-          <h3 style={commonStyles.alternatesTitle}>Aérodromes de Déroutement</h3>
+      {/* Note: Sélection des déroutements déplacée à l'étape 7 */}
+      <div style={{
+        padding: '16px',
+        backgroundColor: '#f0f9ff',
+        borderRadius: '8px',
+        borderLeft: '4px solid #93163c',
+        marginTop: '20px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+          <Info size={18} color="#93163c" />
+          <span style={{ fontWeight: '600', color: '#1e293b' }}>Sélection des déroutements</span>
         </div>
-
-        <AlternatesModule
-          customRadius={searchRadius.radiusKM}
-          showRadiusCircle={true}
-        />
+        <p style={{ margin: 0, fontSize: '14px', color: '#475569' }}>
+          La sélection des aérodromes de déroutement se fait à l'<strong>étape 7</strong>, après le bilan carburant.
+          Cela permet d'utiliser le <strong>FOB (Fuel On Board)</strong> pour calculer une zone de recherche
+          en forme de cône, plus précise et adaptée à votre autonomie réelle.
+        </p>
       </div>
     </div>
   );

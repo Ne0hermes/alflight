@@ -130,7 +130,8 @@ export class GeoJSONProvider extends AeroDataProvider {
    */
   convertRunways(features) {
     return features.map(feature => ({
-      airportId: feature.properties.airport_icao || feature.properties.icao,
+      // Correspondance avec le format du fichier GeoJSON: aerodrome_icao est la propriété principale
+      airportId: feature.properties.aerodrome_icao || feature.properties.airport_icao || feature.properties.icao,
       designation: feature.properties.designation,
       identifier: feature.properties.designation,
       length: feature.properties.length_m || feature.properties.length,
@@ -178,9 +179,18 @@ export class GeoJSONProvider extends AeroDataProvider {
    * Enrichit les données (associer pistes aux aérodromes, etc.)
    */
   enrichData(data) {
+    console.log(`🛬 [GeoJSONProvider.enrichData] Runways à associer: ${data.runways.length}`);
+    console.log(`🛬 [GeoJSONProvider.enrichData] Sample runways:`, data.runways.slice(0, 3).map(r => ({
+      airportId: r.airportId,
+      designation: r.designation,
+      length: r.length
+    })));
+
     // Associer les pistes aux aéroports
+    let totalAssociated = 0;
     data.airports.forEach(airport => {
       airport.runways = data.runways.filter(rwy => rwy.airportId === airport.icao);
+      totalAssociated += airport.runways.length;
 
       // Normaliser le format des pistes
       airport.runways.forEach(rwy => {
@@ -216,6 +226,10 @@ export class GeoJSONProvider extends AeroDataProvider {
         }
       }
     });
+
+    console.log(`✅ [GeoJSONProvider.enrichData] Total pistes associées: ${totalAssociated} / ${data.runways.length}`);
+    const airportsWithRunways = data.airports.filter(a => a.runways.length > 0).length;
+    console.log(`✅ [GeoJSONProvider.enrichData] Aérodromes avec pistes: ${airportsWithRunways} / ${data.airports.length}`);
 
     // Classifier les espaces aériens par priorité
     data.airspaces.forEach(airspace => {

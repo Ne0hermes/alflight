@@ -126,10 +126,6 @@ export const AlternateSelectorUnified = memo(({
 
   return (
     <div style={sx.components.card.base}>
-      <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-        Aérodromes disponibles ({unifiedCandidates.length})
-      </h5>
-
       {unifiedCandidates.length === 0 ? (
         <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.text.center, sx.spacing.p(4))}>
           Aucun aérodrome trouvé dans la zone de recherche
@@ -192,7 +188,8 @@ export const AlternateSelectorUnified = memo(({
                   </div>
                 )}
 
-                <div style={sx.flex.between}>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {/* Contenu principal */}
                   <div style={{ flex: 1 }}>
                     {/* En-tête avec ICAO et badge côté */}
                     <div style={sx.combine(sx.flex.start, sx.spacing.mb(1))}>
@@ -279,8 +276,8 @@ export const AlternateSelectorUnified = memo(({
                     </div>
                   </div>
 
-                  {/* Bouton de sélection avec menu */}
-                  <div style={{ position: 'relative', marginLeft: '12px' }}>
+                  {/* Bouton de sélection en bas */}
+                  <div style={{ position: 'relative', marginTop: '12px', display: 'flex', justifyContent: 'flex-end' }}>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

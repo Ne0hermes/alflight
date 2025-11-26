@@ -486,7 +486,7 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
       {/* FOB Section */}
       <div style={sx.combine(sx.components.card.base)}>
         <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4))}>
-          ⛽ Carburant CRM (Constaté à bord)
+          ⛽ FOB - Carburant au décollage
         </h3>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>

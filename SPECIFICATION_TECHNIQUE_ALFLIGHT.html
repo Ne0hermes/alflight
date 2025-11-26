@@ -980,24 +980,41 @@ Détails:
 
 <h4>Calcul du Rayon de Recherche</h4>
 
-<p>Le rayon de recherche est calculé automatiquement en fonction du carburant disponible après le vol:</p>
+<p>Le rayon de recherche est calculé automatiquement en fonction de l'<strong>autonomie maximale de l'avion</strong>:</p>
 
-<pre><code>// Carburant restant après le vol
-remainingFuel = totalFuel - (taxi + climb + cruise)
+<div class="info-box">
+    <strong>💡 Note:</strong> À l'étape 3 du wizard (Route), le carburant n'est pas encore saisi (étape 4).
+    On utilise donc la capacité des réservoirs pour calculer un rayon basé sur l'autonomie MAXIMALE.
+</div>
 
-// Endurance restante (heures)
-remainingEndurance = remainingFuel / fuelConsumption
+<pre><code>// Autonomie maximale (heures) - basée sur pleins complets
+maxEndurance = fuelCapacity / fuelConsumption
 
-// Rayon de recherche (NM)
-searchRadius = remainingEndurance × cruiseSpeed × 0.7 // coefficient de sécurité
+// Distance maximale théorique (NM)
+maxRange = maxEndurance × cruiseSpeed
 
-Exemple:
-- Carburant restant: 40L
-- Consommation: 25L/h
+// Rayon de recherche (NM) = 30% de l'autonomie max
+searchRadius = maxRange × 0.30
+
+// Contraintes
+- Minimum: 10 NM (pour garantir une zone viable)
+- Maximum: 150 NM (pour éviter des zones trop étendues)
+
+Exemple (DR400):
+- Capacité réservoirs: 110 L
+- Consommation: 32 L/h
 - Vitesse croisière: 120 kt
-→ Endurance: 1.6h
-→ Rayon: 1.6 × 120 × 0.7 = 134 NM
+→ Autonomie max: 110/32 = 3.44 h
+→ Distance max: 3.44 × 120 = 412 NM
+→ Rayon: 412 × 0.30 = ~124 NM
 </code></pre>
+
+<p><strong>Coefficient de 30%:</strong> Ce coefficient conservateur est utilisé car:</p>
+<ul>
+    <li>On ne vole jamais avec les réservoirs pleins jusqu'à sec</li>
+    <li>Il faut garder des réserves réglementaires (finale + déroutement)</li>
+    <li>C'est une approximation raisonnable sans connaître le carburant exact embarqué</li>
+</ul>
 
 <h4>Affichage Détails Aérodrome</h4>
 
@@ -4762,12 +4779,13 @@ const interpolate2D = (weight, temp, grid) => {
 
 <div class="page-break"></div>
 
-<h2 id="assistant-flight">3.2 Assistant de Préparation de Vol (7 Étapes)</h2>
+<h2 id="assistant-flight">3.2 Assistant de Préparation de Vol (8 Étapes)</h2>
 
 <div class="info-box">
-    <strong>📂 Fichier principal:</strong> <code>src/features/flight-wizard/FlightPlanWizard.jsx</code> (950 lignes)<br>
-    <strong>🎯 Objectif:</strong> Guider la préparation complète d'un vol avec route, météo, carburant, masse, performances<br>
-    <strong>💾 Persistance:</strong> Brouillon localStorage + Final Supabase + PDF Storage
+    <strong>📂 Fichier principal:</strong> <code>src/features/flight-wizard/FlightPlanWizard.jsx</code> (1000+ lignes)<br>
+    <strong>🎯 Objectif:</strong> Guider la préparation complète d'un vol avec route, météo, carburant, masse, performances, déroutements<br>
+    <strong>💾 Persistance:</strong> Brouillon localStorage + Final Supabase + PDF Storage<br>
+    <strong>🆕 v2.0:</strong> Nouvelle étape 7 "Déroutements" avec zone cône FOB et filtrage LDA
 </div>
 
 <h3 id="flight-step1">3.2.1 Step 1 - Informations Générales</h3>
@@ -4819,12 +4837,13 @@ const handleAircraftSelect = async (registration) => {
     <li><strong>Jour/Nuit:</strong> Auto-calculé selon heure + position soleil (SunCalc)</li>
 </ul>
 
-<h3 id="flight-step2">3.2.2 Step 2 - Définition Trajet et Déroutements</h3>
+<h3 id="flight-step2">3.2.2 Step 2 - Définition Trajet</h3>
 
 <div class="info-box">
-    <strong>Fichier:</strong> <code>Step3Route.jsx</code> (800+ lignes)<br>
-    <strong>Objectif:</strong> Construire route complète avec waypoints, altitudes, TOD, et sélectionner alternates<br>
-    <strong>Sous-modules:</strong> NavigationModule, AlternatesModule (mode wizard)
+    <strong>Fichier:</strong> <code>Step3Route.jsx</code> (700+ lignes)<br>
+    <strong>Objectif:</strong> Construire route complète avec waypoints, altitudes, TOD<br>
+    <strong>Sous-modules:</strong> NavigationModule<br>
+    <strong>📌 Note:</strong> La sélection des déroutements est déplacée à l'<strong>étape 7</strong> (après bilan carburant) pour utiliser le FOB réel
 </div>
 
 <h4>Construction Route</h4>
@@ -4862,17 +4881,6 @@ const calculateTOD = () => {
   };
 };
 </code></pre>
-
-<h4>Sélection Alternates</h4>
-
-<p>Le composant <code>AlternatesModule</code> est intégré en mode wizard:</p>
-
-<ul>
-    <li><strong>Rayon de recherche:</strong> Calculé automatiquement selon carburant disponible</li>
-    <li><strong>Suggestions:</strong> Aérodromes triés par score (distance, piste, équipements, météo)</li>
-    <li><strong>Carte interactive:</strong> Cercle de recherche + markers alternates</li>
-    <li><strong>Validation:</strong> Au moins 1 alternate recommandé (VFR) ou 2 (IFR)</li>
-</ul>
 
 <h3 id="flight-step3">3.2.3 Step 3 - Aérodromes et Météo</h3>
 
@@ -5102,7 +5110,126 @@ const analyzeBestRunway = (airport, wind, requiredDistance) => {
 };
 </code></pre>
 
-<h3 id="flight-step7">3.2.7 Step 7 - Synthèse et Validation</h3>
+<h3 id="flight-step7">3.2.7 Step 7 - Déroutements (Zone Cône FOB)</h3>
+
+<div class="info-box">
+    <strong>Fichier:</strong> <code>Step7Alternates.jsx</code> (300+ lignes)<br>
+    <strong>Objectif:</strong> Sélection des aérodromes de déroutement avec zone cône basée sur FOB<br>
+    <strong>Sous-modules:</strong> AlternatesModule, useAlternateSelection hook<br>
+    <strong>🆕 Nouveauté v2.0:</strong> Zone cône (variable) au lieu de zone pilule (constante)
+</div>
+
+<h4>Zone Cône vs Zone Pilule</h4>
+
+<p>Contrairement à l'ancienne méthode (rayon constant), la <strong>zone cône</strong> utilise le carburant réel (FOB) pour calculer des rayons variables :</p>
+
+<ul>
+    <li><strong>Rayon au départ (R1) :</strong> Plus large car plus de carburant disponible</li>
+    <li><strong>Rayon à l'arrivée (R2) :</strong> Plus étroit car carburant consommé pendant le vol</li>
+</ul>
+
+<h4>Formules de Calcul</h4>
+
+<pre><code>// Calcul des rayons basés sur FOB (Fuel On Board)
+const coneZoneParams = useMemo(() => {
+  const cruiseSpeed = aircraft.cruiseSpeedKt;        // kt
+  const consumption = aircraft.fuelConsumption;       // L/h
+  const finalReserve = consumption / 2;               // 30 min VFR
+
+  // FOB = Carburant confirmé au décollage
+  const fobLiters = fobFuel?.ltr || aircraft.fuelCapacity;
+
+  // Carburant consommé pendant le vol
+  const tripFuel = navigationResults?.fuelRequired || 0;
+
+  // RAYON AU DÉPART (R1)
+  // Autonomie = (FOB - réserve) / consommation
+  const enduranceAtDep = (fobLiters - finalReserve) / consumption;
+  // Rayon = vitesse × autonomie × 0.5 (demi pour aller-retour)
+  const radiusAtDep = cruiseSpeed * enduranceAtDep * 0.5;
+
+  // RAYON À L'ARRIVÉE (R2)
+  const fuelAtArrival = fobLiters - tripFuel;
+  const enduranceAtArr = (fuelAtArrival - finalReserve) / consumption;
+  const radiusAtArr = cruiseSpeed * enduranceAtArr * 0.5;
+
+  return { radiusAtDep, radiusAtArr };
+}, [aircraft, fobFuel, navigationResults]);
+</code></pre>
+
+<h4>Filtrage par LDA (Landing Distance Available)</h4>
+
+<p>Les aérodromes sont filtrés selon la longueur de piste minimale requise :</p>
+
+<pre><code>// Calcul du filtrage LDA
+const ldaFilterParams = useMemo(() => {
+  // LDA des aérodromes de départ et d'arrivée
+  const ldaDeparture = getLongestRunway(departureWp);
+  const ldaArrival = getLongestRunway(arrivalWp);
+
+  // Moyenne des LDA (si disponibles)
+  const averageLDA = (ldaDeparture + ldaArrival) / 2;
+
+  // Distance minimale requise = LDA moyenne × 1.43 (marge VFR réglementaire)
+  // Ou performance avion × 1.43 si LDA non disponibles
+  const minRunwayRequired = averageLDA ?
+    Math.ceil(averageLDA * 1.43) :
+    Math.ceil(landingDistanceRequired * 1.43);
+
+  return { minRunwayRequired, averageLDA };
+}, [waypoints, selectedAircraft]);
+</code></pre>
+
+<h4>Fonction calculateConeZone()</h4>
+
+<p>Génère une zone géométrique en forme de cône :</p>
+
+<pre><code>// geometryCalculations.js
+const calculateConeZone = (departure, arrival, radiusAtDep, radiusAtArr) => {
+  const R1 = radiusAtDep;  // Plus large au départ
+  const R2 = radiusAtArr;  // Plus étroit à l'arrivée
+
+  // 4 points clés
+  const departureRight = calculateDestination(departure, R1, bearing - 90);
+  const departureLeft = calculateDestination(departure, R1, bearing + 90);
+  const arrivalRight = calculateDestination(arrival, R2, bearing - 90);
+  const arrivalLeft = calculateDestination(arrival, R2, bearing + 90);
+
+  // Vertices : lignes obliques + demi-cercles aux extrémités
+  const vertices = [
+    ...linePoints(departureRight, arrivalRight),      // Côté droit (rétrécit)
+    ...semiCircle(arrival, R2, bearing - 90, 180),    // Demi-cercle arrivée
+    ...linePoints(arrivalLeft, departureLeft),        // Côté gauche (s'élargit)
+    ...semiCircle(departure, R1, bearing + 90, 180)   // Demi-cercle départ
+  ];
+
+  return {
+    type: 'cone',
+    vertices,
+    radiusAtDep: R1,
+    radiusAtArr: R2,
+    area: trapezoidArea + semiCircleAreas
+  };
+};
+</code></pre>
+
+<h4>Affichage des Informations</h4>
+
+<p>L'étape affiche les paramètres calculés :</p>
+
+<ul>
+    <li><strong>Rayon au départ (R1) :</strong> XX NM avec autonomie YY h</li>
+    <li><strong>Rayon à l'arrivée (R2) :</strong> XX NM avec autonomie YY h</li>
+    <li><strong>FOB au décollage :</strong> XX L</li>
+    <li><strong>Trip fuel :</strong> XX L</li>
+    <li><strong>Piste minimale (LDA × 1.43) :</strong> XX m</li>
+</ul>
+
+<div class="warning-box">
+    <strong>⚠️ Note TBD :</strong> Le calcul exact des performances théoriques d'atterrissage en fonction de la position le long de la route est en cours d'implémentation. Actuellement, la moyenne LDA départ/arrivée est utilisée.
+</div>
+
+<h3 id="flight-step8">3.2.8 Step 8 - Synthèse et Validation</h3>
 
 <div class="info-box">
     <strong>Fichier:</strong> <code>Step7Summary.jsx</code> (1200+ lignes)<br>
@@ -7311,6 +7438,138 @@ async function loadCountryData(countryCode) {
         </tr>
     </tbody>
 </table>
+
+<div class="page-break"></div>
+
+<h3>⛽ Gestion Avancée des Escales de Ravitaillement</h3>
+
+<div class="info-box">
+    <strong>🎯 Objectif:</strong> Permettre aux pilotes de planifier des vols longue distance avec escales de ravitaillement,
+    tout en ajustant automatiquement la zone de recherche des déroutements.
+</div>
+
+<h4>Fonctionnalités à Implémenter</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Feature</th>
+            <th>Description</th>
+            <th>Impact</th>
+            <th>Priorité</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>Marquage Point de Ravitaillement</strong></td>
+            <td>
+                Permettre à l'utilisateur de marquer un waypoint comme escale carburant.<br>
+                <code>waypoint.isRefuelStop = true</code>
+            </td>
+            <td>Navigation Module, Waypoint Card</td>
+            <td>Haute</td>
+        </tr>
+        <tr>
+            <td><strong>Volume de Ravitaillement</strong></td>
+            <td>
+                Saisir le volume prévu à ravitailler lors de l'escale.<br>
+                <code>waypoint.refuelVolume = 50 // litres</code>
+            </td>
+            <td>Fuel Module, FlightPlan</td>
+            <td>Haute</td>
+        </tr>
+        <tr>
+            <td><strong>Rayon Dynamique Multi-Segments</strong></td>
+            <td>
+                Le rayon de recherche des déroutements se réinitialise après chaque escale carburant.<br>
+                Avant escale: rayon diminue progressivement.<br>
+                Après escale: rayon revient à (carburant après ravitaillement × coefficient).
+            </td>
+            <td>Alternates Module, geometryCalculations</td>
+            <td>Haute</td>
+        </tr>
+        <tr>
+            <td><strong>Bilan Carburant Multi-Étapes</strong></td>
+            <td>
+                Calcul du carburant requis pour chaque segment entre ravitaillements.<br>
+                FOB requis segment 1 + FOB après ravitaillement segment 2 + ...
+            </td>
+            <td>Fuel Module, PDF Export</td>
+            <td>Moyenne</td>
+        </tr>
+        <tr>
+            <td><strong>Synthèse Vol Multi-Étapes</strong></td>
+            <td>
+                Adaptation de la synthèse pour afficher:<br>
+                - Temps/Distance par segment<br>
+                - Carburant par segment<br>
+                - Escales avec durée prévue au sol
+            </td>
+            <td>FlightSynthesis, PDF Export</td>
+            <td>Moyenne</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Architecture Technique Proposée</h4>
+
+<pre><code>// Structure waypoint avec support ravitaillement
+const waypoint = {
+  id: 'wp-123',
+  name: 'LFXX',
+  type: 'intermediate', // ou 'refuel_stop'
+  lat: 48.1234,
+  lon: 2.5678,
+
+  // Nouveau: données ravitaillement
+  isRefuelStop: false,        // true si escale carburant
+  refuelVolume: null,         // Volume à ravitailler (L)
+  estimatedGroundTime: null,  // Temps au sol estimé (min)
+  fuelAvailable: true         // L'aérodrome a-t-il du carburant?
+};
+
+// Calcul rayon dynamique par segment
+function calculateSegmentRadius(segmentIndex, waypoints, aircraft) {
+  // Trouver le dernier point de ravitaillement avant ce segment
+  let lastRefuelIndex = 0;
+  for (let i = segmentIndex - 1; i >= 0; i--) {
+    if (waypoints[i].isRefuelStop) {
+      lastRefuelIndex = i;
+      break;
+    }
+  }
+
+  // Calculer le carburant disponible à ce point
+  let fuelAtPoint = aircraft.fuelCapacity;
+  if (lastRefuelIndex > 0) {
+    const refuelWp = waypoints[lastRefuelIndex];
+    fuelAtPoint = (refuelWp.refuelVolume || aircraft.fuelCapacity);
+  }
+
+  // Soustraire la consommation depuis le dernier ravitaillement
+  const distanceSinceRefuel = calculateDistanceBetweenPoints(
+    waypoints[lastRefuelIndex],
+    waypoints[segmentIndex]
+  );
+  const fuelUsed = (distanceSinceRefuel / aircraft.cruiseSpeed) * aircraft.fuelConsumption;
+  const fuelRemaining = fuelAtPoint - fuelUsed;
+
+  // Rayon = autonomie restante × 30%
+  const endurance = fuelRemaining / aircraft.fuelConsumption;
+  return endurance * aircraft.cruiseSpeed * 0.3;
+}
+</code></pre>
+
+<h4>Implications et Points d'Attention</h4>
+
+<ul>
+    <li><strong>Bilan Carburant:</strong> Doit afficher le carburant par segment avec les ajouts de ravitaillement</li>
+    <li><strong>Synthèse Vol:</strong> Doit inclure les escales avec temps au sol prévu</li>
+    <li><strong>PDF Export:</strong> Format adapté pour vols multi-segments</li>
+    <li><strong>Réagencement Étapes:</strong> Si un waypoint est déplacé, recalculer les segments de ravitaillement</li>
+    <li><strong>Validation:</strong> Alerter si un segment dépasse l'autonomie disponible</li>
+    <li><strong>UX:</strong> Interface claire pour distinguer les waypoints normaux des escales carburant</li>
+</ul>
 
 <div class="page-break"></div>
 

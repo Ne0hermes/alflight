@@ -50,7 +50,7 @@ export const ScenarioCards = memo(({ scenarios, fobFuel, fuelData, aircraft }) =
       {
         key: 'toCrm',
         color: 'success',
-        title: 'Masse au décollage (CRM)',
+        title: 'Masse au décollage (FOB)',
         data: scenarios.toCrm,
         description: null
       },
@@ -59,7 +59,7 @@ export const ScenarioCards = memo(({ scenarios, fobFuel, fuelData, aircraft }) =
         color: 'warning',
         title: 'Masse à l\'atterrissage',
         data: scenarios.landing,
-        description: fobLiter > 0 ? '(CRM - Bilan)' : '(ZFW)'
+        description: fobLiter > 0 ? '(FOB - Bilan)' : '(ZFW)'
       },
       {
         key: 'fulltank',

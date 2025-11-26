@@ -64,7 +64,7 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
   const fuelCapacityLtr = aircraft.fuelCapacity || 0;
   const fulltankFuelKg = fuelCapacityLtr * fuelDensity;
 
-  // Scénario 2: T/O CRM (actuel)
+  // Scénario 2: T/O FOB (actuel)
   const toCrmFuel = safeFuel;
 
   // Scénario 3: LANDING

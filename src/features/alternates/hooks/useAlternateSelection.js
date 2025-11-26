@@ -6,10 +6,13 @@ import { useNavigation, useAircraft, useFuel, useWeather } from '@core/contexts'
 import { useNavigationResults } from './useNavigationResults';
 import { useWeatherStore } from '@core/stores/weatherStore';
 import { useVACStore } from '@core/stores/vacStore';
-import { 
-  calculateSearchZone, 
+import { useUnitsStore } from '@core/stores/unitsStore';
+import {
+  calculateSearchZone,
   isAirportInSearchZone,
-  calculateDistanceFromRoute
+  isAirportInConeZone,
+  calculateDistanceFromRoute,
+  calculateConeZone
 } from '../utils/geometryCalculations';
 import { calculateDistance } from '@utils/navigationCalculations';
 import { scoreAlternates } from './useAlternateScoring';
@@ -199,31 +202,57 @@ export const useAlternateSelection = () => {
   useEffect(() => {
     const loadAirports = async () => {
       setIsLoadingAirports(true);
-      
+      console.log('🔍 [Alternates] Début du chargement des aérodromes...');
+
       try {
         // Accéder directement au store OpenAIP
         const openAIPStore = useOpenAIPStore.getState();
         let loadedAirports = [];
-        
+
+        console.log('🔍 [Alternates] Store OpenAIP airports count:', openAIPStore.airports?.length || 0);
+
         // Essayer d'obtenir les aérodromes depuis le store
-        if (openAIPStore.airports && Array.isArray(openAIPStore.airports)) {
+        if (openAIPStore.airports && Array.isArray(openAIPStore.airports) && openAIPStore.airports.length > 0) {
           // Filtrer les aérodromes français
           loadedAirports = openAIPStore.airports.filter(apt =>
             apt.icao && apt.icao.startsWith('LF')
           );
+          console.log('✅ [Alternates] Aérodromes français depuis OpenAIP store:', loadedAirports.length);
         }
-        
+
+        // Si le store est vide, essayer de charger via loadAirports
         if (!loadedAirports || loadedAirports.length === 0) {
+          console.log('⚠️ [Alternates] Store vide, tentative de chargement via loadAirports...');
+
+          // Forcer le chargement des aérodromes via le store
+          try {
+            await openAIPStore.loadAirports('FR');
+            const reloadedStore = useOpenAIPStore.getState();
+            if (reloadedStore.airports && reloadedStore.airports.length > 0) {
+              loadedAirports = reloadedStore.airports.filter(apt =>
+                apt.icao && apt.icao.startsWith('LF')
+              );
+              console.log('✅ [Alternates] Aérodromes chargés via loadAirports:', loadedAirports.length);
+            }
+          } catch (storeError) {
+            console.warn('⚠️ [Alternates] Échec loadAirports du store:', storeError);
+          }
+        }
+
+        // Si toujours vide, essayer aeroDataProvider
+        if (!loadedAirports || loadedAirports.length === 0) {
+          console.log('⚠️ [Alternates] Tentative via aeroDataProvider...');
           try {
             const { aeroDataProvider } = await import('@core/data');
             const staticAirports = await aeroDataProvider.getAirfields({ country: 'FR' });
-            
+            console.log('✅ [Alternates] aeroDataProvider retourne:', staticAirports?.length || 0, 'aérodromes');
+
             // Formater pour correspondre à la structure attendue
             loadedAirports = staticAirports.map(apt => ({
               ...apt,
               icao: apt.icao,
               name: apt.name,
-              type: apt.type === 'AIRPORT' ? 'large_airport' : 
+              type: apt.type === 'AIRPORT' ? 'large_airport' :
                     apt.type === 'AIRFIELD' ? 'small_airport' : 'medium_airport',
               lat: apt.coordinates?.lat || apt.lat,
               lon: apt.coordinates?.lon || apt.lon || apt.lng,
@@ -246,9 +275,14 @@ export const useAlternateSelection = () => {
               frequencies: apt.frequencies || []
             }));
           } catch (error) {
-            console.error('❌ Erreur import service:', error);
-            loadedAirports = getMinimalAirports();
+            console.error('❌ [Alternates] Erreur aeroDataProvider:', error);
           }
+        }
+
+        // Dernier recours : aérodromes minimaux
+        if (!loadedAirports || loadedAirports.length === 0) {
+          console.warn('⚠️ [Alternates] Aucune source disponible, utilisation des aérodromes minimaux');
+          loadedAirports = getMinimalAirports();
         } else {
           // Formater les aérodromes du store pour s'assurer qu'ils ont la bonne structure
           loadedAirports = loadedAirports.map(apt => ({
@@ -267,23 +301,29 @@ export const useAlternateSelection = () => {
             }
           }));
         }
-        
+
+        console.log('✅ [Alternates] TOTAL aérodromes chargés:', loadedAirports.length);
         setAirports(loadedAirports);
-                
+
       } catch (error) {
-        console.error('❌ Erreur chargement aérodromes:', error);
+        console.error('❌ [Alternates] Erreur critique chargement aérodromes:', error);
         setAirports(getMinimalAirports());
       } finally {
         setIsLoadingAirports(false);
       }
     };
-    
+
     loadAirports();
   }, []);
   
   // DEBUG: Afficher l'état des aérodromes
   useEffect(() => {
-      }, [airports, isLoadingAirports]);
+    console.log('📊 [DEBUG] État aérodromes:', {
+      airportsCount: airports.length,
+      isLoadingAirports,
+      sampleAirports: airports.slice(0, 3).map(a => a.icao)
+    });
+  }, [airports, isLoadingAirports]);
   
   // Validation des données
   const isReady = useMemo(() => {
@@ -328,25 +368,194 @@ export const useAlternateSelection = () => {
   }, [waypoints, selectedAircraft, navigationResults, airports, isLoadingAirports]);
   
   // Calcul des données carburant pour le rayon dynamique
+  // IMPORTANT: À l'étape 3, le carburant n'est pas encore saisi (étape 4)
+  // On utilise donc les données de l'avion (capacité, consommation, vitesse)
+  // pour calculer un rayon basé sur l'autonomie MAXIMALE
+
+  // Récupérer les préférences d'unités de l'utilisateur
+  const userUnits = useUnitsStore(state => state.units);
+
   const fuelDataForRadius = useMemo(() => {
-    if (!selectedAircraft || !fobFuel || !navigationResults) return null;
-    
-    // Vérifier que les propriétés existent
-    const fobLiters = fobFuel?.ltr || 0;
-    const fuelRequired = navigationResults?.fuelRequired || 0;
-    const totalRequired = calculateTotal ? calculateTotal('ltr') : 0;
-    const fuelRemaining = fobLiters - fuelRequired;
-    
-    return {
-      aircraft: selectedAircraft,
-      fuelRemaining,
-      reserves: {
-        final: navigationResults?.regulationReserveLiters || 0,
-        alternate: fuelData?.alternate?.ltr || 0
-      }
+    // Minimum requis : l'avion doit être sélectionné
+    if (!selectedAircraft) return null;
+
+    // Facteur de conversion gallons US → litres (1 gal US = 3.78541 L)
+    const GAL_TO_LTR = 3.78541;
+
+    // Les données de selectedAircraft sont DÉJÀ converties vers les préférences utilisateur
+    // par aircraftStore.js lors du chargement depuis Supabase
+    const rawCapacity = selectedAircraft.fuelCapacity || selectedAircraft.fuel?.capacity || 0;
+    const rawConsumption = selectedAircraft.fuelConsumption || selectedAircraft.fuel?.consumption || 0;
+    const cruiseSpeed = selectedAircraft.cruiseSpeedKt || selectedAircraft.cruiseSpeed || 120;
+
+    // Vérifier si l'utilisateur utilise les gallons (besoin de convertir en litres)
+    // ou déjà les litres (pas de conversion nécessaire)
+    const isGallons = userUnits.fuel === 'gal';
+    const isGallonsPerHour = userUnits.fuelConsumption === 'gph';
+
+    // Convertir vers litres pour le calcul interne (le calcul utilise toujours les litres)
+    const fuelCapacityLiters = isGallons ? rawCapacity * GAL_TO_LTR : rawCapacity;
+    const fuelConsumptionLph = isGallonsPerHour ? rawConsumption * GAL_TO_LTR : rawConsumption;
+
+    // Construire les données pour le calcul du rayon (toujours en litres)
+    const aircraftData = {
+      fuelCapacity: fuelCapacityLiters,
+      fuelConsumption: fuelConsumptionLph,
+      cruiseSpeedKt: cruiseSpeed
     };
-  }, [selectedAircraft, fobFuel, navigationResults, calculateTotal, fuelData]);
-  
+
+    console.log('🛩️ [fuelDataForRadius] Préférences utilisateur:', {
+      fuelUnit: userUnits.fuel,
+      consumptionUnit: userUnits.fuelConsumption
+    });
+    console.log('🛩️ [fuelDataForRadius] Données avion (unités utilisateur):', {
+      fuelCapacity: rawCapacity + ' ' + userUnits.fuel,
+      fuelConsumption: rawConsumption + ' ' + userUnits.fuelConsumption
+    });
+    console.log('🛩️ [fuelDataForRadius] Données avion (converties en litres):', {
+      fuelCapacity: aircraftData.fuelCapacity.toFixed(1) + ' L',
+      fuelConsumption: aircraftData.fuelConsumption.toFixed(1) + ' L/h',
+      cruiseSpeedKt: aircraftData.cruiseSpeedKt + ' kt'
+    });
+
+    // Si le carburant est saisi (étape 4+), on peut être plus précis
+    if (fobFuel && navigationResults) {
+      const fobLiters = fobFuel?.ltr || 0;
+      const fuelRequired = navigationResults?.fuelRequired || 0;
+      const fuelRemaining = fobLiters - fuelRequired;
+
+      return {
+        aircraft: aircraftData,
+        fuelRemaining,
+        reserves: {
+          final: navigationResults?.regulationReserveLiters || 0,
+          alternate: fuelData?.alternate?.ltr || 0
+        }
+      };
+    }
+
+    // Sinon, on retourne juste les données avion pour le calcul d'autonomie max
+    return {
+      aircraft: aircraftData,
+      fuelRemaining: null, // Pas de carburant saisi encore
+      reserves: null
+    };
+  }, [selectedAircraft, fobFuel, navigationResults, fuelData, userUnits]);
+
+  // ========================================================================================
+  // NOUVEAU: Calcul des rayons pour zone CÔNE basée sur FOB (Fuel On Board)
+  // Le cône est plus large au départ (plus de carburant) et plus étroit à l'arrivée
+  // ========================================================================================
+  const coneZoneParams = useMemo(() => {
+    if (!selectedAircraft || !fuelDataForRadius?.aircraft) return null;
+
+    const aircraft = fuelDataForRadius.aircraft;
+    const cruiseSpeed = aircraft.cruiseSpeedKt || 120;
+    const consumption = aircraft.fuelConsumption || 40; // L/h
+
+    // Réserve finale (30 min minimum VFR)
+    const finalReserve = (consumption / 2); // 30 min en litres
+
+    // FOB = Carburant confirmé au décollage (depuis fobFuel du contexte Fuel)
+    // Si pas encore défini, utiliser la capacité max comme fallback
+    const fobLiters = fobFuel?.ltr || aircraft.fuelCapacity || 0;
+
+    // Carburant consommé pendant le vol (si disponible)
+    const tripFuel = navigationResults?.fuelRequired || 0;
+
+    // RAYON AU DÉPART (R1): Basé sur FOB - Réserve finale
+    // Autonomie au départ = (FOB - réserve) / consommation
+    const enduranceAtDep = Math.max(0, (fobLiters - finalReserve) / consumption);
+    // Rayon = vitesse × autonomie × 0.5 (demi-autonomie pour aller-retour théorique)
+    const radiusAtDep = cruiseSpeed * enduranceAtDep * 0.5;
+
+    // RAYON À L'ARRIVÉE (R2): Basé sur FOB - TripFuel - Réserve finale
+    // Autonomie à l'arrivée = (FOB - carburant_vol - réserve) / consommation
+    const fuelAtArrival = fobLiters - tripFuel;
+    const enduranceAtArr = Math.max(0, (fuelAtArrival - finalReserve) / consumption);
+    // Rayon à l'arrivée
+    const radiusAtArr = cruiseSpeed * enduranceAtArr * 0.5;
+
+    console.log('🔺 [CONE ZONE PARAMS] Calcul:', {
+      fobLiters: fobLiters.toFixed(1) + ' L',
+      tripFuel: tripFuel.toFixed(1) + ' L',
+      fuelAtArrival: fuelAtArrival.toFixed(1) + ' L',
+      finalReserve: finalReserve.toFixed(1) + ' L',
+      cruiseSpeed: cruiseSpeed + ' kt',
+      consumption: consumption.toFixed(1) + ' L/h',
+      enduranceAtDep: enduranceAtDep.toFixed(2) + ' h',
+      enduranceAtArr: enduranceAtArr.toFixed(2) + ' h',
+      radiusAtDep: radiusAtDep.toFixed(1) + ' NM',
+      radiusAtArr: radiusAtArr.toFixed(1) + ' NM'
+    });
+
+    return {
+      radiusAtDep: Math.max(10, Math.min(100, radiusAtDep)), // Min 10 NM, Max 100 NM
+      radiusAtArr: Math.max(5, Math.min(80, radiusAtArr)),   // Min 5 NM, Max 80 NM
+      fobLiters,
+      tripFuel,
+      finalReserve,
+      enduranceAtDep,
+      enduranceAtArr
+    };
+  }, [selectedAircraft, fuelDataForRadius, fobFuel, navigationResults]);
+
+  // ========================================================================================
+  // NOUVEAU: Calcul du filtrage LDA (Landing Distance Available)
+  // Distance moyenne entre départ et arrivée × 1.43 (marge VFR)
+  // ========================================================================================
+  const ldaFilterParams = useMemo(() => {
+    if (!selectedAircraft || !waypoints || waypoints.length < 2) return null;
+
+    // Récupérer les performances d'atterrissage de l'avion
+    const landingDistanceRequired = selectedAircraft.performances?.landingDistance ||
+                                     selectedAircraft.landingDistance || 200; // mètres
+
+    // LDA au départ (si disponible dans les données du waypoint)
+    const departureWp = waypoints[0];
+    const arrivalWp = waypoints[waypoints.length - 1];
+
+    // Essayer de récupérer les LDA des aérodromes (depuis runways)
+    const getLongestRunway = (wp) => {
+      if (wp.runways && wp.runways.length > 0) {
+        return Math.max(...wp.runways.map(r => r.length || 0));
+      }
+      return null;
+    };
+
+    const ldaDeparture = getLongestRunway(departureWp);
+    const ldaArrival = getLongestRunway(arrivalWp);
+
+    // Si on a les deux LDA, calculer la moyenne
+    // Sinon, utiliser la distance d'atterrissage de l'avion × 1.43 comme minimum
+    let averageLDA = null;
+    if (ldaDeparture && ldaArrival) {
+      averageLDA = (ldaDeparture + ldaArrival) / 2;
+    }
+
+    // Distance minimale de piste requise = LDA moyenne × 1.43 (ou performance avion × 1.43)
+    const minRunwayRequired = averageLDA ?
+      Math.ceil(averageLDA * 1.43) :
+      Math.ceil(landingDistanceRequired * 1.43);
+
+    console.log('🛬 [LDA FILTER PARAMS] Calcul:', {
+      ldaDeparture: ldaDeparture ? ldaDeparture + ' m' : 'N/A',
+      ldaArrival: ldaArrival ? ldaArrival + ' m' : 'N/A',
+      averageLDA: averageLDA ? averageLDA.toFixed(0) + ' m' : 'N/A',
+      landingDistanceRequired: landingDistanceRequired + ' m',
+      minRunwayRequired: minRunwayRequired + ' m',
+      note: averageLDA ? 'Basé sur moyenne LDA × 1.43' : 'Basé sur performance avion × 1.43'
+    });
+
+    return {
+      ldaDeparture,
+      ldaArrival,
+      averageLDA,
+      landingDistanceRequired,
+      minRunwayRequired
+    };
+  }, [selectedAircraft, waypoints]);
+
   // Calcul de la zone de recherche
   const searchZone = useMemo(() => {
     if (!isReady) return null;
@@ -408,44 +617,104 @@ export const useAlternateSelection = () => {
     
     return zone;
   }, [waypoints, fuelDataForRadius, isReady]);
-  
-  // Paramètres dynamiques
-  const dynamicParams = useMemo(() => {
-    if (!selectedAircraft || !navigationResults || !searchZone) return null;
-    
-    const landingDistance = selectedAircraft.performances?.landingDistance || 200;
-    const requiredRunwayLength = Math.ceil(landingDistance * 1.43);
-    const minRunwayLength = 300; // Minimum acceptable
 
-    console.log('Dynamic params:', {
+  // ========================================================================================
+  // NOUVEAU: Calcul de la zone CÔNE (utilise FOB pour rayons variables)
+  // Le cône remplace la pilule quand le bilan carburant est disponible (étape 7)
+  // ========================================================================================
+  const coneZone = useMemo(() => {
+    // La zone cône nécessite les paramètres FOB calculés
+    if (!isReady || !coneZoneParams || !waypoints || waypoints.length < 2) return null;
+
+    const departure = {
+      lat: waypoints[0].lat,
+      lon: waypoints[0].lon
+    };
+    const arrival = {
+      lat: waypoints[waypoints.length - 1].lat,
+      lon: waypoints[waypoints.length - 1].lon
+    };
+
+    // Utiliser calculateConeZone avec les rayons basés sur FOB
+    const cone = calculateConeZone(
+      departure,
+      arrival,
+      coneZoneParams.radiusAtDep,
+      coneZoneParams.radiusAtArr
+    );
+
+    if (cone) {
+      console.log('🔺 [CONE ZONE] Zone cône calculée:', {
+        radiusAtDep: cone.radiusAtDep?.toFixed(1) + ' NM',
+        radiusAtArr: cone.radiusAtArr?.toFixed(1) + ' NM',
+        area: cone.area?.toFixed(0) + ' NM²',
+        fobUsed: coneZoneParams.fobLiters?.toFixed(1) + ' L'
+      });
+    }
+
+    return cone;
+  }, [isReady, coneZoneParams, waypoints]);
+
+  // Paramètres dynamiques
+  // MISE À JOUR: Utilise ldaFilterParams pour le filtrage des pistes
+  const dynamicParams = useMemo(() => {
+    if (!selectedAircraft || !searchZone) return null;
+
+    // NOUVEAU: Utiliser ldaFilterParams si disponible, sinon fallback
+    const minRunwayLength = ldaFilterParams?.minRunwayRequired || 300;
+
+    console.log('✅ [dynamicParams] Calculés:', {
       requiredRunwayLength: minRunwayLength,
-      maxRadiusNM: searchZone.dynamicRadius
+      maxRadiusNM: searchZone.dynamicRadius,
+      hasNavigationResults: !!navigationResults,
+      ldaFilterUsed: !!ldaFilterParams
     });
 
     return {
       requiredRunwayLength: minRunwayLength,
       maxRadiusNM: searchZone.dynamicRadius,
       flightRules: flightType.rules,
-      isDayFlight: flightType.period === 'jour'
+      isDayFlight: flightType.period === 'jour',
+      // NOUVEAU: Informations LDA pour affichage
+      ldaInfo: ldaFilterParams
     };
-  }, [selectedAircraft, navigationResults, searchZone, flightType]);
+  }, [selectedAircraft, navigationResults, searchZone, flightType, ldaFilterParams]);
   
   // Fonction de recherche et scoring
   const findAlternates = useCallback(async () => {
-    if (!searchZone || !selectedAircraft || !dynamicParams) {
-      console.log('Cannot find alternates: missing requirements');
+    console.log('🚀🚀🚀 [findAlternates] FONCTION APPELÉE 🚀🚀🚀');
+    console.log('🔍 [findAlternates] ÉTAT:', {
+      searchZone: !!searchZone,
+      searchZoneRadius: searchZone?.dynamicRadius,
+      selectedAircraft: !!selectedAircraft,
+      aircraftReg: selectedAircraft?.registration,
+      dynamicParams: !!dynamicParams,
+      airportsCount: airports?.length || 0
+    });
+
+    if (!searchZone) {
+      console.log('❌ [findAlternates] BLOQUÉ: searchZone manquant');
       return;
     }
-    
+    if (!selectedAircraft) {
+      console.log('❌ [findAlternates] BLOQUÉ: selectedAircraft manquant');
+      return;
+    }
+    if (!dynamicParams) {
+      console.log('❌ [findAlternates] BLOQUÉ: dynamicParams manquant');
+      return;
+    }
+
     // Vérifier qu'on a des aérodromes
     if (!airports || airports.length === 0) {
-      console.error('❌ Aucun aérodrome disponible pour la recherche');
+      console.error('❌ [findAlternates] BLOQUÉ: Aucun aérodrome disponible');
       return;
     }
-    
+
     const isSearching = useAlternatesStore.getState().isSearching;
+    console.log('🔍 [findAlternates] isSearching:', isSearching);
     if (isSearching) {
-      console.log('Search already in progress');
+      console.log('⏳ [findAlternates] BLOQUÉ: Recherche déjà en cours');
       return;
     }
     
@@ -457,18 +726,46 @@ export const useAlternateSelection = () => {
       // 1. Filtrer les aérodromes dans la zone
       const candidatesInZone = [];
       let testedCount = 0;
-      let debugInfo = { inPill: 0, inTurnBuffer: 0, tooFar: 0 };
-      
+      let debugInfo = { inPill: 0, inTurnBuffer: 0, tooFar: 0, noIcao: 0, noCoords: 0 };
+
+      console.log('🔍 [findAlternates] Zone de recherche:', {
+        departure: searchZone.departure,
+        arrival: searchZone.arrival,
+        radius: searchZone.dynamicRadius,
+        type: searchZone.type
+      });
+
+      // Afficher quelques aérodromes de test pour comprendre la structure
+      console.log('🔍 [findAlternates] Exemples d\'aérodromes:', airports.slice(0, 5).map(a => ({
+        icao: a.icao,
+        name: a.name,
+        lat: a.lat || a.coordinates?.lat,
+        lon: a.lon || a.coordinates?.lon
+      })));
+
       for (const airport of airports) {
         // Ignorer les aérodromes sans code ICAO
         if (!airport.icao) {
-                    continue;
+          debugInfo.noIcao++;
+          continue;
         }
-        
+
+        // Vérifier les coordonnées
+        const coords = airport.coordinates || airport.position || { lat: airport.lat, lon: airport.lon || airport.lng };
+        if (!coords.lat || !coords.lon) {
+          debugInfo.noCoords++;
+          continue;
+        }
+
         testedCount++;
         const zoneCheck = isAirportInSearchZone(airport, searchZone);
-        
-                if (zoneCheck.isInZone) {
+
+        // Log détaillé pour les premiers aérodromes testés
+        if (testedCount <= 10) {
+          console.log(`🧪 Test ${airport.icao}: inZone=${zoneCheck.isInZone}, location=${zoneCheck.location}, reason=${zoneCheck.reason || 'OK'}`);
+        }
+
+        if (zoneCheck.isInZone) {
           candidatesInZone.push({
             ...airport,
             distance: zoneCheck.distanceToRoute || calculateDistanceFromRoute(
@@ -487,26 +784,49 @@ export const useAlternateSelection = () => {
         }
       }
 
-      console.log(`Found ${candidatesInZone.length} candidates in search zone`);
+      console.log(`📊 [findAlternates] RÉSUMÉ DE LA RECHERCHE:`, {
+        totalAirports: airports.length,
+        testedCount,
+        noIcao: debugInfo.noIcao,
+        noCoords: debugInfo.noCoords,
+        inPill: debugInfo.inPill,
+        inTurnBuffer: debugInfo.inTurnBuffer,
+        tooFar: debugInfo.tooFar,
+        candidatesFound: candidatesInZone.length
+      });
 
       if (candidatesInZone.length > 0) {
+        console.log('✅ [findAlternates] CANDIDATS TROUVÉS:');
         candidatesInZone.forEach((airport, index) => {
-          console.log(`  ${index + 1}. ${airport.name || airport.icao} - ${airport.position.lat.toFixed(4)}°, ${airport.position.lon.toFixed(4)}°`);
+          console.log(`  ${index + 1}. ${airport.icao} - ${airport.name || 'Sans nom'}`);
+          console.log(`     Position: ${airport.position?.lat?.toFixed(4)}°, ${airport.position?.lon?.toFixed(4)}°`);
           console.log(`     Distance: ${airport.distance?.toFixed(1) || 'N/A'} NM`);
         });
+      } else {
+        console.log('⚠️ [findAlternates] AUCUN CANDIDAT TROUVÉ!');
+        console.log('⚠️ Vérifiez que les aérodromes ont des coordonnées valides et sont dans le rayon de recherche');
       }
 
       // 2. Filtrer selon les critères de compatibilité de piste
-      const filtered = candidatesInZone.filter(airport => {
-        // Si l'avion n'a pas de critères de compatibilité, accepter tous les aérodromes
-        if (!selectedAircraft.compatibleRunwaySurfaces ||
-            selectedAircraft.compatibleRunwaySurfaces.length === 0) {
-          return true;
-        }
+      // DEBUG: Afficher les critères de l'avion (format string pour voir le contenu)
+      console.log('🛫 [FILTRAGE PISTES] Critères avion - surfaces:', JSON.stringify(selectedAircraft.compatibleRunwaySurfaces));
+      console.log('🛫 [FILTRAGE PISTES] Critères avion - longueur min:', selectedAircraft.minimumRunwayLength);
 
-        // Vérifier que l'aérodrome a au moins une piste compatible
+      // DEBUG: Afficher quelques exemples de pistes d'aérodromes (format string)
+      const exemplesPistes = candidatesInZone.slice(0, 5).map(apt => ({
+        icao: apt.icao,
+        runways: apt.runways?.map(r => ({ surface: r.surface, length: r.length }))
+      }));
+      console.log('🛬 [FILTRAGE PISTES] Exemples de pistes:', JSON.stringify(exemplesPistes, null, 2));
+
+      let rejectedReasons = { noRunways: 0, noSurface: 0, incompatibleSurface: 0, tooShort: 0 };
+
+      const filtered = candidatesInZone.filter(airport => {
+        // Si l'aérodrome n'a pas d'info sur les pistes, l'accepter quand même
+        // (on ne peut pas vérifier la compatibilité, mais mieux vaut l'afficher que l'exclure)
         if (!airport.runways || airport.runways.length === 0) {
-          return false; // Pas de piste = non compatible
+          // Accepter par défaut si pas d'info de pistes
+          return true;
         }
 
         // Fonction pour normaliser le type de surface
@@ -529,30 +849,61 @@ export const useAlternateSelection = () => {
           return s;
         };
 
-        // Vérifier si au moins une piste a une surface compatible
+        // Vérifier si au moins une piste est compatible
+        // NOUVEAU: On accepte les pistes sans info de surface (données GeoJSON incomplètes)
+        let isTooShort = false;
+        let allTooShort = true;
+
         const hasCompatibleRunway = airport.runways.some(runway => {
-          const runwaySurface = normalizeSurface(runway.surface);
-          if (!runwaySurface) return false;
+          // Récupérer la longueur de piste (peut être à différents endroits)
+          const runwayLength = runway.length || runway.dimensions?.length || 0;
 
-          // Vérifier la compatibilité de surface
-          const isSurfaceCompatible = selectedAircraft.compatibleRunwaySurfaces.some(
-            compatible => normalizeSurface(compatible) === runwaySurface
-          );
-
-          // Vérifier la longueur minimale si spécifiée
-          if (isSurfaceCompatible && selectedAircraft.minimumRunwayLength &&
-              selectedAircraft.minimumRunwayLength !== '') {
+          // Vérifier la longueur minimale si l'avion a un critère
+          if (selectedAircraft.minimumRunwayLength &&
+              selectedAircraft.minimumRunwayLength !== '' &&
+              runwayLength > 0) {
             const minLength = parseInt(selectedAircraft.minimumRunwayLength);
-            return runway.length >= minLength;
+            if (runwayLength < minLength) {
+              isTooShort = true;
+              return false; // Cette piste est trop courte
+            }
           }
 
-          return isSurfaceCompatible;
+          // Si la piste n'est pas trop courte, elle est compatible
+          allTooShort = false;
+
+          // Vérifier la surface seulement si l'info est disponible ET l'avion a des critères
+          const runwaySurface = normalizeSurface(runway.surface);
+          if (runwaySurface &&
+              selectedAircraft.compatibleRunwaySurfaces?.length > 0) {
+            const isSurfaceCompatible = selectedAircraft.compatibleRunwaySurfaces.some(
+              compatible => normalizeSurface(compatible) === runwaySurface
+            );
+            if (!isSurfaceCompatible) {
+              return false; // Surface incompatible
+            }
+          }
+
+          // Si on arrive ici, la piste est compatible
+          return true;
         });
+
+        if (!hasCompatibleRunway) {
+          if (allTooShort) rejectedReasons.tooShort++;
+          else rejectedReasons.incompatibleSurface++;
+        }
 
         return hasCompatibleRunway;
       });
 
-      console.log(`Filtered to ${filtered.length} compatible airports (runway surface check)`);
+      console.log('📊 [FILTRAGE PISTES] Résultat:',
+        'avant=' + candidatesInZone.length +
+        ', après=' + filtered.length +
+        ', rejets: noRunways=' + rejectedReasons.noRunways +
+        ', noSurface=' + rejectedReasons.noSurface +
+        ', incompatibleSurface=' + rejectedReasons.incompatibleSurface +
+        ', tooShort=' + rejectedReasons.tooShort
+      );
       
             
       setCandidates(filtered);
@@ -590,8 +941,8 @@ export const useAlternateSelection = () => {
       }));
       
       // OPTION : Filtrer pour n'afficher que les aérodromes non contrôlés
-      // Activé par défaut pour ne montrer que les aérodromes non contrôlés
-      const SHOW_ONLY_UNCONTROLLED = true; // true = non contrôlés uniquement, false = tous
+      // DÉSACTIVÉ pour afficher TOUS les aérodromes de déroutement disponibles
+      const SHOW_ONLY_UNCONTROLLED = false; // true = non contrôlés uniquement, false = tous
       
       let scoredToDisplay = scored;
       if (SHOW_ONLY_UNCONTROLLED) {
@@ -614,14 +965,29 @@ export const useAlternateSelection = () => {
       arrivalSideAirports.sort((a, b) => b.score - a.score);
       
       // Stocker tous les aérodromes scorés (après filtrage optionnel)
+      console.log('📝 [findAlternates] STOCKAGE DES RÉSULTATS:', {
+        scoredCount: scoredToDisplay.length,
+        departureSide: departureSideAirports.length,
+        arrivalSide: arrivalSideAirports.length,
+        airports: scoredToDisplay.map(a => `${a.icao} (score: ${(a.score * 100).toFixed(0)}%, side: ${a.side})`)
+      });
+
       setScoredAlternates(scoredToDisplay);
-      
+
+      // Vérifier que le store a bien été mis à jour
+      setTimeout(() => {
+        const storeState = useAlternatesStore.getState();
+        console.log('🔍 [findAlternates] VÉRIFICATION STORE:', {
+          scoredAlternates: storeState.scoredAlternates?.length || 0,
+          candidates: storeState.candidates?.length || 0
+        });
+      }, 100);
+
       // 6. PAS DE SÉLECTION AUTOMATIQUE - Juste stocker les suggestions
       const filterText = SHOW_ONLY_UNCONTROLLED ? ' (non contrôlés uniquement)' : '';
-                        
+
       // Ne pas sélectionner automatiquement - laisser l'utilisateur choisir
       // Les alternates scorés sont disponibles dans scoredAlternates du store
-
 
       // RÉSUMÉ FINAL
       if (SHOW_ONLY_UNCONTROLLED) {
@@ -646,11 +1012,26 @@ export const useAlternateSelection = () => {
   
   // Effet pour déclencher la recherche automatique une fois que tout est prêt
   useEffect(() => {
+    console.log('🔄 [AUTO-SEARCH EFFECT] Vérification conditions:', {
+      isReady,
+      hasSearchZone: !!searchZone,
+      hasSearchedOnce,
+      dynamicParams: !!dynamicParams,
+      airportsCount: airports.length
+    });
+
     if (isReady && searchZone && !hasSearchedOnce) {
-            setHasSearchedOnce(true);
+      console.log('🚀 [AUTO-SEARCH] Conditions remplies! Lancement de findAlternates...');
+      setHasSearchedOnce(true);
       findAlternates();
+    } else if (!isReady) {
+      console.log('⏳ [AUTO-SEARCH] En attente: isReady = false');
+    } else if (!searchZone) {
+      console.log('⏳ [AUTO-SEARCH] En attente: searchZone = null');
+    } else if (hasSearchedOnce) {
+      console.log('✅ [AUTO-SEARCH] Déjà recherché une fois');
     }
-  }, [isReady, searchZone, hasSearchedOnce, findAlternates]);
+  }, [isReady, searchZone, hasSearchedOnce, findAlternates, dynamicParams, airports.length]);
   
   // Mise à jour automatique à chaque changement de route
   useEffect(() => {
@@ -678,12 +1059,15 @@ export const useAlternateSelection = () => {
 
   return {
     searchZone,
+    coneZone,              // NOUVEAU: Zone cône basée sur FOB
+    coneZoneParams,        // NOUVEAU: Paramètres du cône (rayons, FOB, etc.)
+    ldaFilterParams,       // NOUVEAU: Paramètres de filtrage LDA
     dynamicParams,
     selectedAlternates,
     findAlternates,
     isReady,
-    isLoadingAircraft,  // Nouveau : indique si on attend le chargement de l'avion
-    isLoadingAirports   // Export de l'état de chargement des aérodromes
+    isLoadingAircraft,     // Indique si on attend le chargement de l'avion
+    isLoadingAirports      // État de chargement des aérodromes
   };
 };
 
