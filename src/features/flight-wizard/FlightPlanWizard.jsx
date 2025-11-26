@@ -704,27 +704,10 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
                 padding: '4px 12px',
                 backgroundColor: '#10b981',
                 color: '#fff',
-                borderRadius: '12px',
-                marginRight: '8px'
+                borderRadius: '12px'
               }}>
-                💾 Brouillon sauvegardé
+                Brouillon sauvegardé
               </span>
-              <button
-                onClick={handleRestart}
-                style={{
-                  padding: '6px 12px',
-                  backgroundColor: '#ef4444',
-                  color: 'white',
-                  borderWidth: '0',
-                  borderStyle: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '13px'
-                }}
-                title="Effacer le brouillon et recommencer"
-              >
-                🔄 Recommencer
-              </button>
             </div>
           )}
         </div>

@@ -470,14 +470,16 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
                     )}
                   </div>
 
-                  {/* En-tête Info terrain */}
-                  <div style={styles.terrainHeader}>
-                    <MapPin size={18} style={{ color: theme.colors.primary }} />
-                    <h4 style={styles.terrainHeaderTitle}>Info terrain</h4>
-                  </div>
+                  {/* Section Info terrain - Container */}
+                  <div style={styles.terrainSection}>
+                    {/* En-tête Info terrain */}
+                    <div style={styles.terrainHeader}>
+                      <MapPin size={18} style={{ color: theme.colors.primary }} />
+                      <h4 style={styles.terrainHeaderTitle}>Info terrain</h4>
+                    </div>
 
-                  {/* Onglets de sections */}
-                  <div style={styles.sectionTabs}>
+                    {/* Onglets de sections */}
+                    <div style={styles.sectionTabs}>
                     <button
                       onClick={() => toggleSection(aerodrome.icao, 'general')}
                       style={{
@@ -725,6 +727,7 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
                       </div>
                     )}
                   </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -737,7 +740,7 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
 
 const styles = {
   container: {
-    padding: '24px',
+    padding: '0',
     backgroundColor: 'white',
     borderRadius: '8px',
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
@@ -817,7 +820,10 @@ const styles = {
   },
   meteoSection: {
     padding: '16px',
-    backgroundColor: '#f9fafb'
+    backgroundColor: '#f9fafb',
+    border: '1px solid #e5e7eb',
+    borderRadius: '8px',
+    margin: '12px'
   },
   meteoHeader: {
     display: 'flex',
@@ -848,6 +854,13 @@ const styles = {
     fontSize: '13px',
     color: '#9ca3af',
     fontStyle: 'italic'
+  },
+  terrainSection: {
+    border: '1px solid #e5e7eb',
+    borderRadius: '8px',
+    margin: '12px',
+    backgroundColor: '#f9fafb',
+    overflow: 'hidden'
   },
   terrainHeader: {
     display: 'flex',
