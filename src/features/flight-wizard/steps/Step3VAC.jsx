@@ -330,13 +330,14 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
 
           return (
             <div key={aerodrome.icao} style={styles.aerodromeCard}>
-              {/* En-tête de la carte */}
+              {/* En-tête de la carte - Structure optimisée */}
               <div
                 style={styles.aerodromeHeader}
                 onClick={() => setExpandedAerodrome(isExpanded ? null : aerodrome.icao)}
               >
-                <div style={styles.aerodromeInfo}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <div style={styles.aerodromeInfoContainer}>
+                  {/* Ligne 1: OACI + Badge Rôle + VAC Status */}
+                  <div style={styles.aerodromeTopLine}>
                     <span style={styles.aerodromeIcao}>{aerodrome.icao}</span>
 
                     {/* Badge Rôle (Départ/Arrivée/Déroutement) */}
@@ -363,53 +364,50 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
                     {hasChart ? (
                       <div style={styles.statusSuccess}>
                         <CheckCircle size={14} />
-                        <span>VAC disponible</span>
+                        <span>VAC</span>
                       </div>
                     ) : (
                       <div style={styles.statusMissing}>
                         <XCircle size={14} />
-                        <span>VAC manquante</span>
+                        <span>VAC</span>
                       </div>
                     )}
 
-                    <span style={styles.aerodromeName}>
-                      {aerodrome.name}
-                    </span>
+                    {/* Chevron à droite */}
+                    <div style={styles.expandIconInline}>
+                      {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </div>
                   </div>
-                </div>
 
-                {/* Actions VAC - Lecture seule */}
-                <div style={styles.aerodromeActions}>
-                  {/* Bouton Visualiser */}
+                  {/* Ligne 2: Nom complet de l'aérodrome */}
+                  <div style={styles.aerodromeNameLine}>
+                    {aerodrome.name}
+                  </div>
+
+                  {/* Lignes 3-4: Boutons VAC (si disponible) */}
                   {hasChart && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewChart(aerodrome.icao);
-                      }}
-                      style={styles.viewButton}
-                    >
-                      <FileText size={16} />
-                      Visualiser
-                    </button>
+                    <div style={styles.aerodromeButtonsStack}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewChart(aerodrome.icao);
+                        }}
+                        style={styles.viewButtonFull}
+                      >
+                        <FileText size={16} />
+                        Visualiser la VAC
+                      </button>
+                      <a
+                        href={charts[aerodrome.icao?.toUpperCase()]?.url}
+                        download={`VAC_${aerodrome.icao}.${charts[aerodrome.icao?.toUpperCase()]?.type?.includes('pdf') ? 'pdf' : 'png'}`}
+                        onClick={(e) => e.stopPropagation()}
+                        style={styles.downloadButtonFull}
+                      >
+                        <Download size={16} />
+                        Télécharger la VAC
+                      </a>
+                    </div>
                   )}
-
-                  {/* Télécharger si disponible */}
-                  {hasChart && (
-                    <a
-                      href={charts[aerodrome.icao?.toUpperCase()]?.url}
-                      download={`VAC_${aerodrome.icao}.${charts[aerodrome.icao?.toUpperCase()]?.type?.includes('pdf') ? 'pdf' : 'png'}`}
-                      onClick={(e) => e.stopPropagation()}
-                      style={styles.downloadButton}
-                    >
-                      <Download size={16} />
-                      Télécharger
-                    </a>
-                  )}
-                </div>
-
-                <div style={styles.expandIcon}>
-                  {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                 </div>
               </div>
 
@@ -900,23 +898,51 @@ const styles = {
   },
   aerodromeHeader: {
     display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '16px',
+    flexDirection: 'column',
+    padding: '12px 16px',
     backgroundColor: '#f9fafb',
     cursor: 'pointer',
     transition: 'background-color 0.2s'
+  },
+  aerodromeInfoContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    width: '100%'
+  },
+  aerodromeTopLine: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    flexWrap: 'wrap'
+  },
+  aerodromeIcao: {
+    fontSize: '18px',
+    fontWeight: '700',
+    color: theme.colors.textPrimary
+  },
+  aerodromeNameLine: {
+    fontSize: '14px',
+    color: '#374151',
+    fontWeight: '500'
+  },
+  aerodromeButtonsStack: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+    marginTop: '4px'
+  },
+  expandIconInline: {
+    color: '#6b7280',
+    display: 'flex',
+    alignItems: 'center',
+    marginLeft: 'auto'
   },
   aerodromeInfo: {
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
     flex: 1
-  },
-  aerodromeIcao: {
-    fontSize: '18px',
-    fontWeight: '700',
-    color: theme.colors.textPrimary
   },
   aerodromeName: {
     fontSize: '14px',
@@ -1005,6 +1031,41 @@ const styles = {
     cursor: 'pointer',
     textDecoration: 'none',
     transition: 'all 0.2s'
+  },
+  viewButtonFull: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    padding: '10px 16px',
+    width: '100%',
+    backgroundColor: '#10b981',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '14px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    transition: 'background-color 0.2s',
+    boxSizing: 'border-box'
+  },
+  downloadButtonFull: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    padding: '10px 16px',
+    width: '100%',
+    backgroundColor: 'white',
+    color: theme.colors.primary,
+    border: `1px solid ${theme.colors.border}`,
+    borderRadius: '6px',
+    fontSize: '14px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    textDecoration: 'none',
+    transition: 'all 0.2s',
+    boxSizing: 'border-box'
   },
   detailsContainer: {
     borderTop: '1px solid #e5e7eb',
