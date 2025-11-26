@@ -15,7 +15,8 @@ export const VFRPointInserter = ({
   waypoints = [],
   currentAirportIcao = null, // Code ICAO de l'aérodrome courant pour filtrer les points VFR
   onInsertWaypoint,
-  insertPosition = null // Position où insérer le point (null = avant dernier)
+  insertPosition = null, // Position où insérer le point (null = avant dernier)
+  fullWidth = false // Si true, le bouton prend toute la largeur
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -193,7 +194,7 @@ export const VFRPointInserter = ({
   };
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{ position: 'relative', width: fullWidth ? '100%' : 'auto' }}>
       {/* Bouton pour ouvrir le sélecteur */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -203,9 +204,11 @@ export const VFRPointInserter = ({
           {
             display: 'flex',
             alignItems: 'center',
+            justifyContent: fullWidth ? 'center' : 'flex-start',
             gap: '6px',
-            padding: '6px 12px',
-            fontSize: '13px'
+            padding: '8px 12px',
+            fontSize: '13px',
+            width: fullWidth ? '100%' : 'auto'
           }
         )}
         title="Ajouter un point VFR"
@@ -220,14 +223,15 @@ export const VFRPointInserter = ({
           position: 'absolute',
           top: '100%',
           left: 0,
+          right: 0,
           marginTop: '8px',
           background: 'white',
           border: '1px solid #e5e7eb',
           borderRadius: '8px',
           boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
           padding: '12px',
-          minWidth: '300px',
-          maxWidth: '400px',
+          width: '100%',
+          boxSizing: 'border-box',
           zIndex: 1000
         }}>
           {/* En-tête avec recherche */}

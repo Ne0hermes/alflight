@@ -173,7 +173,7 @@ export const WeightBalanceTable = memo(({ aircraft, loads, calculations }) => {
           
           {/* Ligne carburant */}
           <tr style={styles.fuelRow}>
-            <td style={styles.cell}>Carburant CRM</td>
+            <td style={styles.cell}>Carburant FOB</td>
             <td style={sx.combine(styles.cell, styles.rightAlign, styles.fuelText)}>
               {loads.fuel || 0}
             </td>

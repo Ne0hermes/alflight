@@ -800,11 +800,11 @@ const LoadingSection = memo(({ loads, aircraft, onLoadChange, fobFuel, fuelData,
             );
           })()}
 
-          {/* CRM T/O (Take-Off) */}
+          {/* FOB T/O (Take-Off) */}
           {fuelLitres > 0 && (
             <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #d1fae5' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <span style={{ fontSize: '13px', fontWeight: '600' }}>CRM T/O (Décollage)</span>
+                <span style={{ fontSize: '13px', fontWeight: '600' }}>FOB T/O (Décollage)</span>
                 <span style={{ fontSize: '13px', color: '#059669' }}>
                   {fuelInUserUnit.toFixed(1)} {fuelUnitSymbol} ({fuelWeightKg.toFixed(1)} kg)
                 </span>
@@ -832,7 +832,7 @@ const LoadingSection = memo(({ loads, aircraft, onLoadChange, fobFuel, fuelData,
           </div>
         )}
 
-          {/* CRM Landing (Atterrissage) */}
+          {/* FOB Landing (Atterrissage) */}
           {(() => {
             const fuelBalance = fuelData ? Object.values(fuelData).reduce((sum, f) => sum + (f?.ltr || 0), 0) : 0;
             const remainingFuelL = Math.max(0, fuelLitres - fuelBalance);
@@ -843,7 +843,7 @@ const LoadingSection = memo(({ loads, aircraft, onLoadChange, fobFuel, fuelData,
             return landingFuelKg > 0 ? (
               <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #d1fae5' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: '600' }}>CRM Landing (Atterrissage)</span>
+                  <span style={{ fontSize: '13px', fontWeight: '600' }}>FOB Landing (Atterrissage)</span>
                   <span style={{ fontSize: '13px', color: '#f59e0b' }}>
                     {landingFuelInUserUnit.toFixed(1)} {fuelUnitSymbol} ({landingFuelKg.toFixed(1)} kg)
                   </span>
@@ -862,7 +862,7 @@ const LoadingSection = memo(({ loads, aircraft, onLoadChange, fobFuel, fuelData,
             ) : null;
           })()}
 
-          {/* CRM Alternate (Point de déroutement) - Calcul géométrique */}
+          {/* FOB Alternate (Point de déroutement) - Calcul géométrique */}
           {(() => {
             // Utiliser le calcul géométrique avec perpendiculaire
             // Distance = distance le long de la route jusqu'à la perpendiculaire + distance perpendiculaire
@@ -937,7 +937,7 @@ const LoadingSection = memo(({ loads, aircraft, onLoadChange, fobFuel, fuelData,
             return alternateFuelKg > 0 ? (
               <div style={{ marginBottom: '0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: '600' }}>CRM Alternate (Déroutement)</span>
+                  <span style={{ fontSize: '13px', fontWeight: '600' }}>FOB Alternate (Déroutement)</span>
                   <span style={{ fontSize: '13px', color: theme.colors.textPrimary }}>
                     {alternateFuelInUserUnit.toFixed(1)} {fuelUnitSymbol} ({alternateFuelKg.toFixed(1)} kg)
                   </span>

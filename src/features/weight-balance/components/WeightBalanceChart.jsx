@@ -257,7 +257,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
   // Configuration des scénarios avec les nouveaux libellés
   const scenarioConfig = [
     { key: 'fulltank', label: 'Réservoirs pleins', color: '#3b82f6' },
-    { key: 'toCrm', label: 'Masse au décollage (CRM)', color: '#10b981' },
+    { key: 'toCrm', label: 'Masse au décollage (FOB)', color: '#10b981' },
     { key: 'landing', label: 'Masse à l\'atterrissage', color: '#f59e0b' },
     { key: 'zfw', label: 'Masse sans carburant (ZFW)', color: '#ef4444' }
   ];
@@ -300,7 +300,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
         </p>
         {!criticalScenariosWithinLimits && (
           <p style={sx.combine(sx.text.sm, sx.spacing.mt(2))}>
-            <strong>Vérifiez les points signalés en rouge sur le graphique.</strong> Les scénarios <strong>Masse au décollage (CRM)</strong> et <strong>Masse à l'atterrissage</strong> doivent être dans les limites.
+            <strong>Vérifiez les points signalés en rouge sur le graphique.</strong> Les scénarios <strong>Masse au décollage (FOB)</strong> et <strong>Masse à l'atterrissage</strong> doivent être dans les limites.
           </p>
         )}
         {criticalScenariosWithinLimits && hasNonCriticalWarnings && (
