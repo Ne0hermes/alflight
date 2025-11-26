@@ -67,20 +67,20 @@ const FuelRow = memo(({ type, label, description, fuel, onChange, readonly = fal
 
   return (
     <tr style={{ borderBottom: `1px solid ${sx.theme.colors.gray[200]}` }}>
-      <td style={{ padding: '8px 12px' }}>
+      <td style={{ padding: '8px 10px', verticalAlign: 'top' }}>
         <div>
           <p style={sx.combine(sx.text.sm, sx.text.bold, { margin: 0, fontSize: '13px' })}>
             {label}
-            {readonly && <span style={{ marginLeft: '6px', color: sx.theme.colors.gray[500], fontSize: '10px' }}>🔒</span>}
-            {automatic && <span style={{ marginLeft: '6px', color: sx.theme.colors.success[500], fontSize: '10px' }}>⚡</span>}
+            {readonly && <span style={{ marginLeft: '4px', color: sx.theme.colors.gray[500], fontSize: '10px' }}>🔒</span>}
+            {automatic && <span style={{ marginLeft: '4px', color: sx.theme.colors.success[500], fontSize: '10px' }}>⚡</span>}
           </p>
-          <p style={sx.combine(sx.text.xs, sx.text.secondary, { margin: 0, fontSize: '11px', lineHeight: '1.3', maxWidth: '200px', wordBreak: 'break-word' })}>
+          <p style={sx.combine(sx.text.xs, sx.text.secondary, { margin: 0, fontSize: '10px', lineHeight: '1.3', wordBreak: 'break-word', overflow: 'hidden' })}>
             {description}
           </p>
         </div>
       </td>
-      <td style={{ padding: '8px 12px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+      <td style={{ padding: '8px 10px', textAlign: 'center', verticalAlign: 'middle' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
           <input
             type="number"
             value={getDisplayValue()}
@@ -88,17 +88,17 @@ const FuelRow = memo(({ type, label, description, fuel, onChange, readonly = fal
             disabled={readonly}
             style={sx.combine(
               sx.components.input.base,
-              { width: '70px', textAlign: 'center', padding: '6px 4px', fontSize: '13px' },
+              { width: '60px', textAlign: 'center', padding: '6px 2px', fontSize: '13px' },
               readonly && { backgroundColor: sx.theme.colors.gray[100], cursor: 'not-allowed' }
             )}
             step="0.1"
           />
-          <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500' }}>
+          <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: '500' }}>
             {getSymbol('fuel')}
           </span>
         </div>
       </td>
-      <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+      <td style={{ padding: '8px 10px', textAlign: 'center', verticalAlign: 'middle' }}>
         <span style={sx.combine(sx.text.sm, sx.text.bold, { fontSize: '12px' })}>
           {totalGal > 0 ? ((safeFuel.gal / totalGal) * 100).toFixed(0) : 0}%
         </span>
@@ -424,13 +424,18 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
       )}
 
       {/* Tableau principal */}
-      <div style={sx.combine(sx.components.card.base, sx.spacing.mb(6), { overflowX: 'auto', padding: '0' })}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '320px' }}>
+      <div style={sx.combine(sx.components.card.base, sx.spacing.mb(6), { padding: '0' })}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+          <colgroup>
+            <col style={{ width: '55%' }} />
+            <col style={{ width: '30%' }} />
+            <col style={{ width: '15%' }} />
+          </colgroup>
           <thead>
             <tr style={{ borderBottom: `2px solid ${sx.theme.colors.gray[300]}` }}>
-              <th style={{ padding: '8px 12px', textAlign: 'left', fontSize: '13px' }}>Type</th>
-              <th style={{ padding: '8px 12px', textAlign: 'center', fontSize: '13px', whiteSpace: 'nowrap' }}>Quantité</th>
-              <th style={{ padding: '8px 12px', textAlign: 'center', fontSize: '13px' }}>%</th>
+              <th style={{ padding: '8px 10px', textAlign: 'left', fontSize: '13px' }}>Type</th>
+              <th style={{ padding: '8px 10px', textAlign: 'center', fontSize: '13px' }}>Quantité</th>
+              <th style={{ padding: '8px 10px', textAlign: 'center', fontSize: '13px' }}>%</th>
             </tr>
           </thead>
           <tbody>
@@ -457,8 +462,8 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
           </tbody>
           <tfoot>
             <tr style={{ borderTop: `2px solid ${sx.theme.colors.gray[700]}` }}>
-              <td style={{ padding: '8px 12px', fontWeight: 'bold', fontSize: '13px' }}>TOTAL</td>
-              <td style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 'bold', fontSize: '15px' }}>
+              <td style={{ padding: '8px 10px', fontWeight: 'bold', fontSize: '13px' }}>TOTAL</td>
+              <td style={{ padding: '8px 10px', textAlign: 'center', fontWeight: 'bold', fontSize: '14px' }}>
                 {(() => {
                   const totalLtr = safeCalculateTotal('ltr');
                   const userUnit = getUnit('fuel');
@@ -475,7 +480,7 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
                   return `${totalLtr.toFixed(1)} L`;
                 })()}
               </td>
-              <td style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 'bold', fontSize: '12px' }}>
+              <td style={{ padding: '8px 10px', textAlign: 'center', fontWeight: 'bold', fontSize: '12px' }}>
                 100%
               </td>
             </tr>
