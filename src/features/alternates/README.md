@@ -2,9 +2,84 @@
 
 ## Vue d'ensemble
 
-Le module Alternates implémente une sélection automatique et intelligente des aérodromes de déroutement basée sur une approche géométrique avancée utilisant une zone en forme de pilule (capsule) et un scoring multi-critères. 
+Le module Alternates implémente une sélection automatique et intelligente des aérodromes de déroutement basée sur une approche géométrique avancée utilisant une **zone en forme de CÔNE** (rayon variable selon le carburant restant) et un scoring multi-critères.
 
-**Nouveauté :** Système dual avec médiatrice garantissant un aérodrome accessible depuis le départ ET un depuis l'arrivée.
+**Fonctionnalités principales :**
+- Système dual avec médiatrice garantissant un aérodrome accessible depuis le départ ET l'arrivée
+- Zone CÔNE basée sur le FOB (Fuel On Board) avec rayon décroissant le long de la route
+- Filtrage automatique des pistes par distance minimale d'atterrissage × 1.43
+
+---
+
+## Étape 7 du Flight Wizard : Déroutements
+
+L'étape 7 utilise les données des étapes précédentes pour calculer automatiquement :
+
+### 1. Zone de recherche en forme de CÔNE
+
+La zone de recherche n'est pas un cercle fixe mais un **CÔNE** dont le rayon varie le long de la route :
+
+```
+       R1 (Rayon au départ)              R2 (Rayon à l'arrivée)
+       ←─────────────────────────────────────────────────────→
+
+       ◯ DÉPART                                    ARRIVÉE ◯
+       │                                                   │
+       │←── Zone large (plus de carburant) ──→│←─ Zone étroite ─→│
+```
+
+**Calcul des rayons :**
+- **R1 (Rayon au départ)** = Autonomie au départ × Vitesse croisière
+  - Autonomie au départ = FOB / Consommation horaire
+  - Exemple : 10 gal × 3.785 = 37.85 L → 37.85 L / 38 L/h = 1.0 h → 1.0 h × 100 kt = **100 NM**
+
+- **R2 (Rayon à l'arrivée)** = Autonomie restante à l'arrivée × Vitesse croisière
+  - Autonomie à l'arrivée = (FOB - Trip Fuel) / Consommation horaire
+  - Exemple : (37.85 L - 16 L) / 38 L/h = 0.57 h → 0.57 h × 100 kt = **57 NM**
+
+### 2. Piste minimale requise (filtrage LDA × 1.43)
+
+Le filtrage des aérodromes utilise les **distances d'atterrissage calculées à l'étape Performance** :
+
+**Cas 1 : Deux distances disponibles (départ ET arrivée)**
+```
+Piste minimale = ((Distance atterrissage départ + Distance atterrissage arrivée) / 2) × 1.43
+Exemple : (274 m + 745 m) / 2 = 510 m → × 1.43 = 729 m
+```
+
+**Cas 2 : Une seule distance disponible (départ OU arrivée)**
+```
+Piste minimale = Distance disponible × 1.43
+Exemple : 274 m × 1.43 = 392 m (si seulement départ disponible)
+```
+
+**Cas 3 : Aucune donnée Performance**
+- Avertissement affiché : "Filtrage piste minimale désactivé"
+- Recommandation de compléter l'étape Performance
+
+### 3. Affichage des cartouches d'information
+
+L'interface affiche 4 cartouches avec les détails de calcul :
+
+| Cartouche | Valeur principale | Détail |
+|-----------|-------------------|--------|
+| **Rayon R1** | 100 NM | = 4.9h × 120 kt |
+| **Rayon R2** | 80 NM | = 4.9h - trip × 120 kt |
+| **FOB au décollage** | 10 gal | Trip fuel: 4 gal |
+| **Piste minimale × 1.43** | 729 m | = (274 + 745) / 2 × 1.43 |
+
+### 4. Sources des données
+
+| Donnée | Provenance | Contexte/Store |
+|--------|------------|----------------|
+| FOB | Étape 6 (Bilan carburant) | `useFuel()` → `fobFuel` |
+| Trip Fuel | Calculs navigation | `coneZoneParams.tripFuel` |
+| Vitesse croisière | Avion sélectionné | `selectedAircraft.cruiseSpeedKt` |
+| Consommation | Avion sélectionné | `selectedAircraft.fuelConsumption` |
+| Distance atterrissage départ | Étape Performance | `flightPlan.performance.departure.landing.lda50ft` |
+| Distance atterrissage arrivée | Étape Performance | `flightPlan.performance.arrival.landing.lda50ft` |
+
+---
 
 ## Caractéristiques principales
 

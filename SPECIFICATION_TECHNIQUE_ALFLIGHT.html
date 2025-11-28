@@ -978,14 +978,134 @@ Détails:
 - Météo: VMC = 1.0, Marginal = 0.6, IMC = 0.3
 </code></pre>
 
-<h4>Calcul du Rayon de Recherche</h4>
+<h4>Zone de Recherche en forme de CÔNE (Étape 7)</h4>
 
-<p>Le rayon de recherche est calculé automatiquement en fonction de l'<strong>autonomie maximale de l'avion</strong>:</p>
+<p>À l'étape 7 (Déroutements), la zone de recherche utilise le <strong>FOB (Fuel On Board)</strong> confirmé à l'étape Bilan Carburant pour calculer une <strong>zone en forme de CÔNE</strong> dont le rayon varie le long de la route :</p>
 
 <div class="info-box">
-    <strong>💡 Note:</strong> À l'étape 3 du wizard (Route), le carburant n'est pas encore saisi (étape 4).
-    On utilise donc la capacité des réservoirs pour calculer un rayon basé sur l'autonomie MAXIMALE.
+    <strong>💡 Zone CÔNE:</strong> Le rayon est plus large au départ (plus de carburant disponible) et plus étroit à l'arrivée (carburant consommé).
 </div>
+
+<pre><code>// RAYON AU DÉPART (R1)
+autonomieDepart = FOB / consommationHoraire
+R1 = autonomieDepart × vitesseCroisière
+
+// RAYON À L'ARRIVÉE (R2)
+autonomieArrivee = (FOB - tripFuel) / consommationHoraire
+R2 = autonomieArrivee × vitesseCroisière
+
+Exemple:
+- FOB: 10 gal × 3.785 = 37.85 L
+- Consommation: 38 L/h
+- Vitesse croisière: 100 kt
+- Trip fuel: 16 L
+
+→ R1 = (37.85 / 38) × 100 = 100 NM (autonomie 1.0h)
+→ R2 = ((37.85 - 16) / 38) × 100 = 57 NM (autonomie 0.57h)
+</code></pre>
+
+<h4>Filtrage Piste Minimale × 1.43 (Données Performance)</h4>
+
+<p>Les aérodromes sont filtrés selon une <strong>piste minimale requise</strong> calculée à partir des distances d'atterrissage de l'étape Performance :</p>
+
+<pre><code>// CAS 1: Deux distances disponibles (départ ET arrivée)
+pisteMinimale = ((distanceAtterissageDepart + distanceAtterissageArrivee) / 2) × 1.43
+
+Exemple: (274 m + 745 m) / 2 = 510 m → × 1.43 = 729 m
+
+// CAS 2: Une seule distance disponible (départ OU arrivée)
+pisteMinimale = distanceDisponible × 1.43
+
+Exemple: 274 m × 1.43 = 392 m (départ uniquement)
+
+// CAS 3: Aucune donnée Performance
+→ Avertissement: "Filtrage piste minimale désactivé"
+→ Recommandation de compléter l'étape Performance
+</code></pre>
+
+<h4>Sources des Données (Étape 7)</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Donnée</th>
+            <th>Provenance</th>
+            <th>Contexte/Store</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>FOB</td>
+            <td>Étape 6 (Bilan carburant)</td>
+            <td><code>useFuel() → fobFuel</code></td>
+        </tr>
+        <tr>
+            <td>Trip Fuel</td>
+            <td>Calculs navigation</td>
+            <td><code>coneZoneParams.tripFuel</code></td>
+        </tr>
+        <tr>
+            <td>Vitesse croisière</td>
+            <td>Avion sélectionné</td>
+            <td><code>selectedAircraft.cruiseSpeedKt</code></td>
+        </tr>
+        <tr>
+            <td>Consommation</td>
+            <td>Avion sélectionné</td>
+            <td><code>selectedAircraft.fuelConsumption</code></td>
+        </tr>
+        <tr>
+            <td>Distance atterrissage départ</td>
+            <td>Étape Performance</td>
+            <td><code>flightPlan.performance.departure.landing.lda50ft</code></td>
+        </tr>
+        <tr>
+            <td>Distance atterrissage arrivée</td>
+            <td>Étape Performance</td>
+            <td><code>flightPlan.performance.arrival.landing.lda50ft</code></td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Cartouches d'Information (UI Étape 7)</h4>
+
+<p>L'interface affiche 4 cartouches avec les détails de calcul :</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Cartouche</th>
+            <th>Valeur</th>
+            <th>Détail calcul</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>Rayon R1</strong></td>
+            <td>100 NM</td>
+            <td>= 1.0h × 100 kt</td>
+        </tr>
+        <tr>
+            <td><strong>Rayon R2</strong></td>
+            <td>57 NM</td>
+            <td>= 1.0h - trip × 100 kt</td>
+        </tr>
+        <tr>
+            <td><strong>FOB au décollage</strong></td>
+            <td>10 gal</td>
+            <td>Trip fuel: 4 gal</td>
+        </tr>
+        <tr>
+            <td><strong>Piste minimale × 1.43</strong></td>
+            <td>729 m</td>
+            <td>= (274 + 745) / 2 × 1.43</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Calcul Rayon Fallback (Étape Route)</h4>
+
+<p>À l'étape 3 (Route), le carburant n'est pas encore saisi. On utilise la capacité des réservoirs :</p>
 
 <pre><code>// Autonomie maximale (heures) - basée sur pleins complets
 maxEndurance = fuelCapacity / fuelConsumption
@@ -996,25 +1116,8 @@ maxRange = maxEndurance × cruiseSpeed
 // Rayon de recherche (NM) = 30% de l'autonomie max
 searchRadius = maxRange × 0.30
 
-// Contraintes
-- Minimum: 10 NM (pour garantir une zone viable)
-- Maximum: 150 NM (pour éviter des zones trop étendues)
-
-Exemple (DR400):
-- Capacité réservoirs: 110 L
-- Consommation: 32 L/h
-- Vitesse croisière: 120 kt
-→ Autonomie max: 110/32 = 3.44 h
-→ Distance max: 3.44 × 120 = 412 NM
-→ Rayon: 412 × 0.30 = ~124 NM
+// Contraintes: Minimum 10 NM, Maximum 150 NM
 </code></pre>
-
-<p><strong>Coefficient de 30%:</strong> Ce coefficient conservateur est utilisé car:</p>
-<ul>
-    <li>On ne vole jamais avec les réservoirs pleins jusqu'à sec</li>
-    <li>Il faut garder des réserves réglementaires (finale + déroutement)</li>
-    <li>C'est une approximation raisonnable sans connaître le carburant exact embarqué</li>
-</ul>
 
 <h4>Affichage Détails Aérodrome</h4>
 

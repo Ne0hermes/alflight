@@ -105,18 +105,19 @@ export const Step4Alternates = memo(({ flightPlan, onUpdate }) => {
     // Carburant restant à l'arrivée (L) - valeur de stockage
     const remainingFuel = totalFuel - fuelUsed;
 
-    // Consommation de l'avion stockée en L/h (lph)
-    const fuelConsumptionStorage = flightPlan.aircraft.fuelConsumption || 40;
-
-    // Conversion pour affichage selon préférences utilisateur
-    const fuelConsumptionDisplay = convert(fuelConsumptionStorage, 'fuelConsumption', 'lph');
+    // 🔧 FIX: Les données avion sont DÉJÀ converties vers les préférences utilisateur
+    // par aircraftStore.loadFromSupabase() - PAS de double conversion !
+    // NOTE: Pour les CALCULS on garde la valeur originale (déjà en unité utilisateur)
+    const fuelConsumption = flightPlan.aircraft.fuelConsumption || 40;
     const fuelRemainingDisplay = convert(remainingFuel, 'fuel', 'ltr');
 
     // Vitesse de croisière (kt)
     const cruiseSpeed = flightPlan.aircraft.cruiseSpeed || 120;
 
-    // Autonomie restante (heures) - UTILISER la valeur de stockage pour les calculs
-    const remainingEndurance = remainingFuel / fuelConsumptionStorage;
+    // Autonomie restante (heures)
+    // NOTE: remainingFuel est en litres, fuelConsumption peut être en gal/h ou l/h
+    // Pour un calcul correct, il faudrait convertir les deux dans la même unité
+    const remainingEndurance = remainingFuel / fuelConsumption;
 
     // Rayon en NM (distance franchissable avec carburant restant)
     const radiusNM = remainingEndurance * cruiseSpeed;
@@ -131,8 +132,8 @@ export const Step4Alternates = memo(({ flightPlan, onUpdate }) => {
       radiusNM: radiusNM,
       radiusKM: radiusKM,
       cruiseSpeed: cruiseSpeed,
-      fuelConsumption: fuelConsumptionStorage,     // Stockage (L/h) pour calculs
-      fuelConsumptionDisplay: fuelConsumptionDisplay // Affichage converti
+      fuelConsumption: fuelConsumption,            // Valeur (unité utilisateur)
+      fuelConsumptionDisplay: fuelConsumption      // Affichage (même valeur car déjà convertie)
     };
   }, [flightPlan.fuel, flightPlan.aircraft, convert]);
 

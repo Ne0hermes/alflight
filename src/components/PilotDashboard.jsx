@@ -612,41 +612,6 @@ export const PilotDashboard = ({ onNavigate }) => {
         </div>
       )}
 
-      {/* Alerte pour les unités */}
-      {!localStorage.getItem('unitsConfigured') && (
-        <div style={{
-          ...styles.ageErrorAlert,
-          backgroundColor: 'rgba(245, 158, 11, 0.1)',
-          borderColor: 'rgba(245, 158, 11, 0.3)',
-          maxWidth: '400px',
-          width: '100%',
-          margin: '0 auto 20px auto'
-        }}>
-          <div style={{
-            ...styles.ageErrorContent,
-            color: '#f59e0b'
-          }}>
-            <AlertCircle size={20} />
-            <div style={{ flex: 1 }}>
-              <p style={styles.ageErrorTitle}>Configuration des unités</p>
-              <p style={styles.ageErrorMessage}>
-                ⚠️ Pensez à configurer vos unités de mesure dans le module Info Pilote &gt; Configuration des unités
-              </p>
-            </div>
-          </div>
-          <button
-            style={{
-              ...styles.configureButton,
-              backgroundColor: '#f59e0b',
-              width: '100%',
-              marginTop: '12px'
-            }}
-            onClick={() => onNavigate && onNavigate('pilot')}
-          >
-            Configurer les unités
-          </button>
-        </div>
-      )}
 
       {/* Alerte statut base de données AIXM - Réductible */}
       {aixmDataStatus && (

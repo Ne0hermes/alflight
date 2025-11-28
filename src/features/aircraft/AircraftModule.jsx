@@ -1164,24 +1164,22 @@ export const AircraftModule = memo(() => {
                     </h4>
                     <div style={{ fontSize: '14px', color: '#6B7280' }}>
                       <p>Carburant: {aircraft.fuelType} • Capacité: {aircraft.fuelCapacity ? (() => {
-                        const converted = convert(aircraft.fuelCapacity, 'fuel', 'ltr');
-                        console.log('🟣 [AircraftModule] DISPLAY fuelCapacity:', {
-                          storage: aircraft.fuelCapacity,
-                          metadata: aircraft._metadata?.units?.fuel,
-                          userUnit: getUnit('fuel'),
-                          converted: converted
+                        // 🔧 FIX: Les données avion sont DÉJÀ converties vers les préférences utilisateur
+                        // par aircraftStore.loadFromSupabase() - PAS de double conversion !
+                        console.log('🟣 [AircraftModule] DISPLAY fuelCapacity (déjà converti):', {
+                          value: aircraft.fuelCapacity,
+                          userUnit: getUnit('fuel')
                         });
-                        return converted.toFixed(1);
+                        return Number(aircraft.fuelCapacity).toFixed(1);
                       })() : 'N/A'} {getSymbol('fuel')}</p>
                       <p>Vitesse: {(aircraft.cruiseSpeed || aircraft.cruiseSpeedKt) ? Number(aircraft.cruiseSpeed || aircraft.cruiseSpeedKt).toFixed(0) : 'N/A'} {getSymbol('speed')} • Conso: {aircraft.fuelConsumption ? (() => {
-                        const converted = convert(aircraft.fuelConsumption, 'fuelConsumption', 'lph');
-                        console.log('🟣 [AircraftModule] DISPLAY fuelConsumption:', {
-                          storage: aircraft.fuelConsumption,
-                          metadata: aircraft._metadata?.units?.fuelConsumption,
-                          userUnit: getUnit('fuelConsumption'),
-                          converted: converted
+                        // 🔧 FIX: Les données avion sont DÉJÀ converties vers les préférences utilisateur
+                        // par aircraftStore.loadFromSupabase() - PAS de double conversion !
+                        console.log('🟣 [AircraftModule] DISPLAY fuelConsumption (déjà converti):', {
+                          value: aircraft.fuelConsumption,
+                          userUnit: getUnit('fuelConsumption')
                         });
-                        return converted.toFixed(1);
+                        return Number(aircraft.fuelConsumption).toFixed(1);
                       })() : 'N/A'} {getSymbol('fuelConsumption')}</p>
                       <p>MTOW: {(aircraft.maxTakeoffWeight || aircraft.weights?.mtow) ? Number(aircraft.maxTakeoffWeight || aircraft.weights?.mtow).toFixed(0) : 'N/A'} {getSymbol('weight')}</p>
                       {/* Affichage des informations MANEX si présent */}

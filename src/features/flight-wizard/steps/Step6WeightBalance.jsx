@@ -14,7 +14,7 @@ import { calculateDistanceToSegment, calculateDistance, calculateMidpoint } from
 // Styles communs
 const commonStyles = {
   container: {
-    padding: '24px',
+    padding: '0',
     backgroundColor: 'white',
     borderRadius: '8px',
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
@@ -39,7 +39,7 @@ const commonStyles = {
   },
   grid2: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
     gap: '16px'
   }
 };
@@ -493,13 +493,6 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
 
   return (
     <div style={commonStyles.container}>
-      <div style={commonStyles.field}>
-        <label style={commonStyles.label}>
-          <Scale size={18} />
-          Configuration détaillée de masse et centrage
-        </label>
-      </div>
-
       {/* 🚨 ALERTES SÉCURITÉ: Limites de masse opérationnelles */}
       {weightLimitViolations && weightLimitViolations.map((violation, index) => (
         <div
@@ -972,7 +965,7 @@ const LoadingSection = memo(({ loads, aircraft, onLoadChange, fobFuel, fuelData,
         {aircraft.baggageCompartments && aircraft.baggageCompartments.length > 0 ? (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: aircraft.baggageCompartments.length === 1 ? '1fr' : '1fr 1fr',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             gap: '16px'
           }}>
             {aircraft.baggageCompartments.map((compartment, index) => {

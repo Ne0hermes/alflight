@@ -72,18 +72,34 @@ export class AIXMParser {
         const codeType = ahp.querySelector('codeType')?.textContent;
         
         if (!icao) return;
-        
-        // Exclure seulement les Landing Sites (LS) qui ne sont pas de vrais aérodromes
-        // Garder AD (Aerodrome), AH (Airport/Heliport), HP (Heliport)
-        if (codeType === 'LS') {
-          return; // Ignorer les landing sites
+
+        // Exclure les Landing Sites (LS) qui ne sont pas de vrais aérodromes
+        // Exclure les Heliports purs (HP) - souvent des héliports d'hôpitaux
+        // Garder AD (Aerodrome), AH (Airport/Heliport)
+        if (codeType === 'LS' || codeType === 'HP') {
+          return; // Ignorer les landing sites et héliports purs
         }
-        
-        // Récupérer le nom depuis l'AIXM
-        let aixmName = ahp.querySelector('txtName')?.textContent || '';
-        
-        // Récupérer la ville
-        const city = ahp.querySelector('txtNameCitySer')?.textContent || '';
+
+        // Récupérer le nom pour vérifier si c'est un héliport d'hôpital
+        const rawName = ahp.querySelector('txtName')?.textContent || '';
+        const rawCity = ahp.querySelector('txtNameCitySer')?.textContent || '';
+        const rawRemarks = ahp.querySelector('txtRmk')?.textContent || '';
+        const combinedText = `${rawName} ${rawCity} ${rawRemarks}`.toUpperCase();
+
+        // Exclure les héliports d'hôpitaux et centres médicaux
+        const hospitalKeywords = [
+          'HOPITAL', 'HOSPITAL', 'CHU', 'CHR', 'CLINIQUE', 'SAMU',
+          'HELISTATION', 'HELIPORT', 'HELISURFACE',
+          'MEDICAL', 'URGENCE', 'SECOURS'
+        ];
+
+        if (hospitalKeywords.some(keyword => combinedText.includes(keyword))) {
+          return; // Ignorer les héliports d'hôpitaux et centres médicaux
+        }
+
+        // Utiliser le nom et la ville déjà récupérés
+        let aixmName = rawName;
+        const city = rawCity;
         
         // Récupérer le code IATA si disponible
         const iata = ahp.querySelector('codeIata')?.textContent || '';

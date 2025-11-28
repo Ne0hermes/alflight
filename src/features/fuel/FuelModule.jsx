@@ -321,12 +321,10 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
     const reserveMinutes = navigationResults.regulationReserveMinutes || 30;
     const reserveHours = (reserveMinutes / 60).toFixed(1);
 
-    // 🔧 FIX: Toujours stocker en lph, convertir pour affichage
-    const consumptionStorage = parseFloat(selectedAircraft?.fuelConsumption) || 30;
+    // 🔧 FIX: Les données avion sont DÉJÀ converties vers les préférences utilisateur
+    // par aircraftStore.loadFromSupabase() - PAS de double conversion !
+    const consumptionDisplay = parseFloat(selectedAircraft?.fuelConsumption) || 30;
     const consumptionSymbol = getSymbol('fuelConsumption');
-
-    // Convertir depuis lph (unité de stockage) vers l'unité préférée de l'utilisateur
-    const consumptionDisplay = convert(consumptionStorage, 'fuelConsumption', 'lph');
 
     let desc = `${reserveMinutes} min = ${reserveHours}h × ${consumptionDisplay.toFixed(1)} ${consumptionSymbol} - `;
     desc += `${flightType.rules} `;
@@ -350,12 +348,10 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
     // Arrondir à 2 décimales pour éviter d'afficher "0.0h"
     const timeFormatted = timeHours.toFixed(2);
 
-    // 🔧 FIX: Toujours stocker en lph, convertir pour affichage
-    const consumptionStorage = parseFloat(selectedAircraft?.fuelConsumption) || 30;
+    // 🔧 FIX: Les données avion sont DÉJÀ converties vers les préférences utilisateur
+    // par aircraftStore.loadFromSupabase() - PAS de double conversion !
+    const consumptionDisplay = parseFloat(selectedAircraft?.fuelConsumption) || 30;
     const consumptionSymbol = getSymbol('fuelConsumption');
-
-    // Convertir depuis lph (unité de stockage) vers l'unité préférée de l'utilisateur
-    const consumptionDisplay = convert(consumptionStorage, 'fuelConsumption', 'lph');
 
     // Formule simplifiée : la réserve finale (final reserve) est comptée séparément
     // Afficher l'ICAO de l'alternate de référence (le plus éloigné)
@@ -372,12 +368,10 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
     const cruiseSpeed = selectedAircraft?.cruiseSpeedKt || selectedAircraft?.cruiseSpeed || 100;
     const timeHours = (navigationResults.totalDistance / cruiseSpeed).toFixed(1);
 
-    // 🔧 FIX: Toujours stocker en lph, convertir pour affichage
-    const consumptionStorage = parseFloat(selectedAircraft?.fuelConsumption) || 30;
+    // 🔧 FIX: Les données avion sont DÉJÀ converties vers les préférences utilisateur
+    // par aircraftStore.loadFromSupabase() - PAS de double conversion !
+    const consumptionDisplay = parseFloat(selectedAircraft?.fuelConsumption) || 30;
     const consumptionSymbol = getSymbol('fuelConsumption');
-
-    // Convertir depuis lph (unité de stockage) vers l'unité préférée de l'utilisateur
-    const consumptionDisplay = convert(consumptionStorage, 'fuelConsumption', 'lph');
 
     return `${distance} NM ÷ ${cruiseSpeed} kt = ${timeHours}h × ${consumptionDisplay.toFixed(1)} ${consumptionSymbol}`;
   };

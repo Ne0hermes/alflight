@@ -360,6 +360,15 @@ export const FuelProvider = memo(({ children }) => {
   const setFuelData = useFuelStore(state => state.setFuelData);
   const fobFuel = useFuelStore(state => state.fobFuel);
   const setFobFuel = useFuelStore(state => state.setFobFuel);
+
+  // 🔧 DEBUG: Log de la valeur FOB du store
+  React.useEffect(() => {
+    console.log('🔍 [FuelProvider] fobFuel du store Zustand:', {
+      fobFuel,
+      ltr: fobFuel?.ltr,
+      gal: fobFuel?.gal
+    });
+  }, [fobFuel]);
   const calculateTotal = useFuelStore(state => state.calculateTotal);
   const isFobSufficient = useFuelStore(state => state.isFobSufficient);
   const updateTripFuel = useFuelStore(state => state.updateTripFuel);

@@ -1,18 +1,65 @@
 // src/features/alternates/utils/alternateFilters.js
 
 /**
+ * Mots-clés pour identifier les héliports d'hôpitaux et centres médicaux
+ */
+const HOSPITAL_HELIPORT_KEYWORDS = [
+  'HOPITAL', 'HOSPITAL', 'CHU', 'CHR', 'CLINIQUE', 'SAMU',
+  'HELISTATION', 'HELIPORT', 'HELISURFACE',
+  'MEDICAL', 'URGENCE', 'SECOURS'
+];
+
+/**
+ * Vérifie si un aérodrome est un héliport d'hôpital ou centre médical
+ * @param {Object} airport - L'aérodrome à vérifier
+ * @returns {boolean} - true si c'est un héliport médical à exclure
+ */
+export const isHospitalHeliport = (airport) => {
+  if (!airport) return false;
+
+  // Exclure les héliports purs (type HP)
+  const airportType = airport.type?.toUpperCase() || '';
+  if (airportType === 'HP' || airportType === 'HELIPORT') {
+    return true;
+  }
+
+  // Vérifier le nom, la ville et les remarques
+  const combinedText = [
+    airport.name || '',
+    airport.city || '',
+    airport.remarks || '',
+    airport.description || ''
+  ].join(' ').toUpperCase();
+
+  return HOSPITAL_HELIPORT_KEYWORDS.some(keyword => combinedText.includes(keyword));
+};
+
+/**
+ * Filtre les héliports d'hôpitaux d'une liste d'aérodromes
+ * @param {Array} airports - Liste d'aérodromes
+ * @returns {Array} - Liste filtrée sans les héliports médicaux
+ */
+export const filterOutHospitalHeliports = (airports) => {
+  if (!airports || !Array.isArray(airports)) return [];
+  return airports.filter(airport => !isHospitalHeliport(airport));
+};
+
+/**
  * Filtre les aérodromes candidats selon les critères définis
  */
 export const filterAlternates = async (candidates, criteria, stores = {}) => {
   const filtered = [];
-  
-  for (const airport of candidates) {
+
+  // D'abord filtrer les héliports d'hôpitaux
+  const validCandidates = filterOutHospitalHeliports(candidates);
+
+  for (const airport of validCandidates) {
     const passesFilters = await checkAllCriteria(airport, criteria, stores);
     if (passesFilters) {
       filtered.push(airport);
     }
   }
-  
+
   return filtered;
 };
 

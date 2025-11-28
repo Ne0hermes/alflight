@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Menu, X, User, Book, Navigation, Plane, Cloud,
   CheckSquare, TrendingUp, Package, Fuel, Settings,
-  Map, UserCircle, Home, ChevronDown, ChevronRight, Layers, LogOut
+  Map, UserCircle, Home, ChevronDown, ChevronRight, Layers, LogOut, Info, Shield
 } from 'lucide-react';
 import { theme } from '../../styles/theme';
 import AccordionButton from './AccordionButton';
@@ -23,9 +23,10 @@ const ICON_MAP = {
   Map: Map
 };
 
-export const MobileNavigation = ({ tabs, activeTab, onTabChange }) => {
+export const MobileNavigation = ({ tabs, activeTab, onTabChange, isProfileConfigured = true }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isFlightToolsOpen, setIsFlightToolsOpen] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
 
   // Modules à regrouper dans "Outils de vol"
   const flightToolsIds = ['navigation', 'weather', 'weight-balance', 'fuel', 'performance'];
@@ -158,6 +159,15 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange }) => {
 
               <div style={{ height: '1px', backgroundColor: theme.colors.border, margin: '8px 0' }} />
 
+              {/* Bouton À propos */}
+              <button
+                style={styles.navItem}
+                onClick={() => setShowAbout(true)}
+              >
+                <Info size={16} style={{ marginRight: '8px' }} />
+                <span>À propos</span>
+              </button>
+
               {/* Bouton de déconnexion */}
               <LogoutButton
                 variant="contained"
@@ -172,11 +182,125 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange }) => {
           </div>
         </div>
       )}
+
+      {/* Modal À propos */}
+      {showAbout && (
+        <div style={styles.aboutOverlay} onClick={() => setShowAbout(false)}>
+          <div style={styles.aboutModal} onClick={(e) => e.stopPropagation()}>
+            <button
+              style={styles.aboutCloseButton}
+              onClick={() => setShowAbout(false)}
+            >
+              <X size={20} />
+            </button>
+            <h2 style={styles.aboutTitle}>ALFlight v1.0.0</h2>
+            <p style={styles.aboutText}>
+              Application d'assistance au vol pour pilotes privés VFR
+            </p>
+
+            <div style={styles.aboutLinks}>
+              <button style={styles.aboutLink}>
+                <Shield size={14} />
+                Mentions légales
+              </button>
+              <button style={styles.aboutLink}>
+                <Shield size={14} />
+                Confidentialité
+              </button>
+              <button style={styles.aboutLink}>
+                <Shield size={14} />
+                CGU
+              </button>
+            </div>
+
+            <p style={styles.aboutCopyright}>
+              © 2025 ALFlight. Tous droits réservés.
+            </p>
+            <p style={styles.aboutDisclaimer}>
+              Cette application est un outil d'aide à la décision.
+              Le pilote reste seul responsable de la préparation et de la conduite du vol.
+            </p>
+          </div>
+        </div>
+      )}
     </>
   );
 };
 
 const styles = {
+  aboutOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2000,
+    padding: '20px',
+  },
+  aboutModal: {
+    backgroundColor: theme.colors.backgroundCard,
+    borderRadius: '16px',
+    padding: '24px',
+    maxWidth: '350px',
+    width: '100%',
+    position: 'relative',
+    border: `1px solid ${theme.colors.border}`,
+    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
+  },
+  aboutCloseButton: {
+    position: 'absolute',
+    top: '12px',
+    right: '12px',
+    background: 'transparent',
+    border: 'none',
+    color: theme.colors.textSecondary,
+    cursor: 'pointer',
+    padding: '4px',
+  },
+  aboutTitle: {
+    fontSize: '18px',
+    fontWeight: '700',
+    marginBottom: '8px',
+    color: theme.colors.textPrimary,
+  },
+  aboutText: {
+    fontSize: '14px',
+    color: theme.colors.textSecondary,
+    marginBottom: '16px',
+  },
+  aboutLinks: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px',
+    marginBottom: '16px',
+  },
+  aboutLink: {
+    backgroundColor: 'transparent',
+    border: `1px solid ${theme.colors.border}`,
+    borderRadius: '6px',
+    padding: '6px 10px',
+    fontSize: '11px',
+    color: theme.colors.textSecondary,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+  },
+  aboutCopyright: {
+    fontSize: '11px',
+    color: theme.colors.textMuted,
+    marginBottom: '8px',
+  },
+  aboutDisclaimer: {
+    fontSize: '10px',
+    color: theme.colors.textMuted,
+    fontStyle: 'italic',
+    lineHeight: '1.4',
+  },
   header: {
     position: 'fixed',
     top: 0,

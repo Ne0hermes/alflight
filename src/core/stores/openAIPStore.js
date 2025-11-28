@@ -3,6 +3,31 @@ import { immer } from 'zustand/middleware/immer';
 import { aeroDataProvider } from '@core/data';
 import { useVACStore } from './vacStore';
 
+/**
+ * Mots-clés pour identifier les héliports d'hôpitaux et centres médicaux
+ */
+const HOSPITAL_HELIPORT_KEYWORDS = [
+  'HOPITAL', 'HOSPITAL', 'CHU', 'CHR', 'CLINIQUE', 'SAMU',
+  'HELISTATION', 'HELIPORT', 'HELISURFACE',
+  'MEDICAL', 'URGENCE', 'SECOURS'
+];
+
+/**
+ * Vérifie si un aérodrome est un héliport d'hôpital ou centre médical
+ */
+const isHospitalHeliport = (airport) => {
+  if (!airport) return false;
+  const airportType = airport.type?.toUpperCase() || '';
+  if (airportType === 'HP' || airportType === 'HELIPORT') return true;
+  const combinedText = [
+    airport.name || '',
+    airport.city || '',
+    airport.remarks || '',
+    airport.description || ''
+  ].join(' ').toUpperCase();
+  return HOSPITAL_HELIPORT_KEYWORDS.some(keyword => combinedText.includes(keyword));
+};
+
 export const useOpenAIPStore = create(
   immer((set, get) => ({
     airports: [],
@@ -48,8 +73,12 @@ export const useOpenAIPStore = create(
       });
       
       try {
-        const airports = await aeroDataProvider.getAirfields({ country: countryCode });
-        
+        const rawAirports = await aeroDataProvider.getAirfields({ country: countryCode });
+
+        // Filtrer les héliports d'hôpitaux et centres médicaux
+        const airports = rawAirports.filter(apt => !isHospitalHeliport(apt));
+        console.log(`✅ [OpenAIPStore] Aérodromes chargés: ${rawAirports.length} -> après filtrage héliports: ${airports.length}`);
+
         set(state => {
           state.airports = airports;
           state.loading.airports = false;

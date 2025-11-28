@@ -18,6 +18,18 @@ const PilotCertifications = () => {
     training: []
   });
 
+  // Hook pour détecter la taille d'écran mobile
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
@@ -436,13 +448,27 @@ const PilotCertifications = () => {
   };
 
 
+  // Style pour les inputs - contraintes fortes pour éviter le débordement sur mobile
   const inputStyle = {
     padding: '8px 12px',
     border: '1px solid #d1d5db',
     borderRadius: '6px',
     fontSize: '14px',
     width: '100%',
-    backgroundColor: 'white'
+    minWidth: 0,
+    maxWidth: '100%',
+    boxSizing: 'border-box',
+    backgroundColor: 'white',
+    WebkitAppearance: 'none',  // Supprime le style natif iOS
+    MozAppearance: 'none',
+    appearance: 'none'
+  };
+
+  // Style pour les conteneurs de champs - empêche le débordement
+  const fieldContainerStyle = {
+    minWidth: 0,
+    maxWidth: '100%',
+    overflow: 'hidden'
   };
 
   const labelStyle = {
@@ -572,19 +598,22 @@ const PilotCertifications = () => {
     <div>
       {/* Formulaire unifié */}
       {showForm && (
-        <div style={{ 
-          backgroundColor: 'white', 
-          padding: '20px', 
-          borderRadius: '8px', 
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)', 
-          marginBottom: '16px' 
+        <div style={{
+          backgroundColor: 'white',
+          padding: '20px',
+          borderRadius: '8px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          marginBottom: '16px',
+          overflow: 'hidden',
+          maxWidth: '100%',
+          boxSizing: 'border-box'
         }}>
           <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '16px' }}>
             {editingItem ? 'Modifier la certification' : 'Nouvelle certification'}
           </h4>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '16px', marginBottom: '20px' }}>
-            <div>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 2fr', gap: '16px', marginBottom: '20px', minWidth: 0 }}>
+            <div style={fieldContainerStyle}>
               <label style={labelStyle}>Catégorie *</label>
               <select
                 value={formData.category}
@@ -598,8 +627,8 @@ const PilotCertifications = () => {
                 <option value="training">Formations</option>
               </select>
             </div>
-            
-            <div>
+
+            <div style={fieldContainerStyle}>
               <label style={labelStyle}>Type *</label>
               <select
                 value={formData.type}
@@ -617,7 +646,7 @@ const PilotCertifications = () => {
           </div>
 
           {formData.type === 'other' && (
-            <div style={{ marginBottom: '20px' }}>
+            <div style={{ ...fieldContainerStyle, marginBottom: '20px' }}>
               <label style={labelStyle}>Nom personnalisé *</label>
               <input
                 type="text"
@@ -630,8 +659,8 @@ const PilotCertifications = () => {
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '20px' }}>
-            <div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '20px', minWidth: 0 }}>
+            <div style={fieldContainerStyle}>
               <label style={labelStyle}>Date de délivrance</label>
               <input
                 type="date"
@@ -642,7 +671,7 @@ const PilotCertifications = () => {
             </div>
 
             {formData.category !== 'licenses' && (
-              <div>
+              <div style={fieldContainerStyle}>
                 <label style={labelStyle}>Date d'expiration</label>
                 <input
                   type="date"
