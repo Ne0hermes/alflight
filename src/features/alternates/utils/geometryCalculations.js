@@ -550,14 +550,11 @@ export const calculateSearchZone = (departure, arrival, waypoints = [], fuelData
     ...options
   };
 
-  // NOUVELLE LOGIQUE : Rayon basé sur un temps de déroutement acceptable
-  // Pour un VFR, un déroutement de 20-30 minutes max est raisonnable
-  // Rayon = vitesse croisière × temps de déroutement (en heures)
-  //
-  // On utilise aussi l'autonomie pour adapter :
-  // - Si autonomie > 3h : rayon = 30 min de vol (généreux)
-  // - Si autonomie 2-3h : rayon = 25 min de vol
-  // - Si autonomie < 2h : rayon = 20 min de vol (conservateur)
+  // LOGIQUE CORRIGÉE : Rayon basé sur demi-autonomie (aller-retour théorique)
+  // Formule UTILISATEUR : Rayon = FOB / Consommation × Vitesse × 0.5
+  // Exemple: 10 gal / 7 gal/h × 120 kt × 0.5 = 85 NM
+  // Le facteur 0.5 représente un aller simple (la moitié de l'autonomie totale)
+  // NOTE: Pas de soustraction de réserve dans cette formule
 
   let radius;
   let radiusMethod = 'distance'; // Pour le log
@@ -565,31 +562,29 @@ export const calculateSearchZone = (departure, arrival, waypoints = [], fuelData
   // Essayer de calculer avec les données avion
   if (fuelData?.aircraft?.fuelCapacity && fuelData?.aircraft?.fuelConsumption && fuelData?.aircraft?.cruiseSpeedKt) {
     const aircraft = fuelData.aircraft;
-    const maxEnduranceHours = aircraft.fuelCapacity / aircraft.fuelConsumption;
     const cruiseSpeed = aircraft.cruiseSpeedKt;
+    const consumption = aircraft.fuelConsumption;
 
-    // Temps de déroutement en fonction de l'autonomie
-    let diversionTimeMinutes;
-    if (maxEnduranceHours >= 3) {
-      diversionTimeMinutes = 30; // 30 min pour avions avec bonne autonomie
-    } else if (maxEnduranceHours >= 2) {
-      diversionTimeMinutes = 25; // 25 min pour autonomie moyenne
-    } else {
-      diversionTimeMinutes = 20; // 20 min pour faible autonomie
-    }
+    // Utiliser la capacité carburant (FOB = fuelCapacity en storage units = litres)
+    const fobLiters = aircraft.fuelCapacity;
 
-    // Rayon = vitesse × temps (convertir minutes en heures)
-    const fuelBasedRadius = cruiseSpeed * (diversionTimeMinutes / 60);
+    // Autonomie en heures = FOB / Consommation (PAS de réserve soustraite)
+    const enduranceHours = fobLiters / consumption;
+
+    // Rayon = Vitesse × Autonomie × 0.5 (demi-autonomie pour aller simple)
+    const fuelBasedRadius = cruiseSpeed * enduranceHours * 0.5;
 
     radius = Math.max(10, fuelBasedRadius); // Minimum 10 NM
-    radiusMethod = 'temps_deroutement';
+    radiusMethod = 'demi_autonomie';
 
-    console.log('🛩️ CALCUL RAYON PAR TEMPS DE DÉROUTEMENT:', {
-      fuelCapacity: aircraft.fuelCapacity.toFixed(1) + ' L',
-      fuelConsumption: aircraft.fuelConsumption.toFixed(1) + ' L/h',
+    console.log('🛩️ CALCUL RAYON PAR DEMI-AUTONOMIE (formule: FOB/Conso×Vit×0.5):', {
+      fobLiters: fobLiters.toFixed(1) + ' L',
+      fobGallons: (fobLiters / 3.785).toFixed(1) + ' gal',
+      consumptionLph: consumption.toFixed(1) + ' L/h',
+      consumptionGph: (consumption / 3.785).toFixed(1) + ' gal/h',
       cruiseSpeed: cruiseSpeed + ' kt',
-      maxEndurance: maxEnduranceHours.toFixed(2) + ' h',
-      tempsDetourement: diversionTimeMinutes + ' min',
+      endurance: enduranceHours.toFixed(2) + ' h',
+      formule: `${(fobLiters / 3.785).toFixed(1)} gal / ${(consumption / 3.785).toFixed(1)} gal/h × ${cruiseSpeed} kt × 0.5 = ${fuelBasedRadius.toFixed(1)} NM`,
       radiusFinal: radius.toFixed(1) + ' NM'
     });
   } else {
@@ -604,31 +599,12 @@ export const calculateSearchZone = (departure, arrival, waypoints = [], fuelData
     });
   }
 
-  // CONTRAINTE 1: Le rayon ne peut pas dépasser la distance totale du vol
-  // Pour un vol court, on réduit proportionnellement
-  if (radius > distance) {
-    console.log('⚠️ RAYON LIMITÉ À LA DISTANCE DU VOL:', {
-      radiusCalcule: radius.toFixed(1) + ' NM',
-      distanceVol: distance.toFixed(1) + ' NM'
-    });
-    radius = distance;
-  }
-
-  // CONTRAINTE 2: Maximum absolu pour éviter des zones trop grandes (80 NM max)
-  // 80 NM = environ 40 min de vol à 120 kt, ce qui est déjà beaucoup pour un déroutement
-  const maxRadius = 80;
-  if (radius > maxRadius) {
-    console.log('⚠️ RAYON LIMITÉ AU MAXIMUM ABSOLU:', {
-      radiusCalcule: radius.toFixed(1) + ' NM',
-      maximum: maxRadius + ' NM'
-    });
-    radius = maxRadius;
-  }
+  // NOTE: Le rayon est calculé exactement selon la formule demi-autonomie
+  // Pas de plafonnement artificiel - le rayon reflète la vraie capacité de déroutement
 
   console.log('🔍 RAYON FINAL DÉROUTEMENT:', {
     methode: radiusMethod,
-    rayon: radius.toFixed(1) + ' NM',
-    distanceVol: distance.toFixed(1) + ' NM'
+    rayon: radius.toFixed(1) + ' NM'
   });
   
   let zone;

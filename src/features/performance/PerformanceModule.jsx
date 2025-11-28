@@ -539,7 +539,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   }
 
   return (
-    <div style={sx.spacing.p(6)}>
+    <div>
       {/* Section Décollage */}
       {takeoffGroups.length > 0 && (
         <div style={sx.combine(sx.components.card.base, sx.spacing.mb(6))}>
@@ -549,7 +549,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
           </h3>
 
           {/* Paramètres de décollage */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '16px' }}>
               {/* Masse décollage */}
               <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
                 <div style={sx.combine(sx.flex.start, sx.spacing.mb(2))}>
@@ -678,7 +678,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
           </h3>
 
             {/* Paramètres d'atterrissage */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '16px' }}>
               {/* Masse atterrissage */}
               <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
                 <div style={sx.combine(sx.flex.start, sx.spacing.mb(2))}>
@@ -1357,7 +1357,7 @@ const AbaqueTestSections = ({
               }}>
                 Conditions de décollage
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '12px' }}>
                 <div>
                   <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '4px' }}>
                     Température
@@ -1529,7 +1529,7 @@ const AbaqueTestSections = ({
             }}>
               Conditions d'atterrissage
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '12px' }}>
               <div>
                 <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '4px' }}>
                   Température

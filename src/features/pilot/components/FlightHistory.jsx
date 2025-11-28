@@ -189,7 +189,7 @@ export const FlightHistory = ({ pilotName, callsign }) => {
             </div>
 
             {/* Actions */}
-            <div style={isMobile ? { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } : styles.colActions}>
+            <div style={isMobile ? { display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: '8px' } : styles.colActions}>
               <button
                 onClick={() => handleDownloadPdf(flight)}
                 style={styles.pdfButton}
@@ -281,7 +281,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    justifyContent: 'flex-end'
+    justifyContent: 'flex-start'
   },
   badgeSmall: {
     backgroundColor: '#3b82f6',
@@ -349,9 +349,9 @@ const styles = {
   loadingContainer: {
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '60px 20px',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+    padding: '20px',
     gap: '16px'
   },
   spinner: {
@@ -370,8 +370,8 @@ const styles = {
   errorContainer: {
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center',
-    padding: '40px 20px',
+    alignItems: 'flex-start',
+    padding: '20px',
     gap: '16px'
   },
   errorText: {
@@ -392,8 +392,8 @@ const styles = {
   emptyContainer: {
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center',
-    padding: '60px 20px',
+    alignItems: 'flex-start',
+    padding: '20px',
     gap: '12px'
   },
   emptyText: {
@@ -406,8 +406,7 @@ const styles = {
     fontSize: '14px',
     color: '#94a3b8',
     margin: 0,
-    textAlign: 'center',
-    maxWidth: '300px'
+    textAlign: 'left'
   }
 };
 

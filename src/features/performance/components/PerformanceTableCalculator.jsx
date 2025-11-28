@@ -358,7 +358,7 @@ const PerformanceTableCalculator = ({
 
         {/* 🔧 RÉSULTATS INTÉGRÉS - Toujours visibles */}
         {result && !result.outOfRange && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginTop: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginTop: '16px' }}>
             {/* Distance de roulage - Interpolation normale */}
             {result.groundRoll && typeof result.groundRoll === 'number' && (
               <div style={sx.combine(sx.components.card.base, { backgroundColor: '#f0fdf4', padding: '12px' })}>
@@ -405,7 +405,7 @@ const PerformanceTableCalculator = ({
             </div>
 
             {/* Grille 2x2 : Roulage et 50ft, chacun avec 2 calculs */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
               {/* Distance de roulage */}
               {result.groundRoll && (
                 <div>

@@ -61,8 +61,21 @@ const MobileApp = () => {
   const [activeTab, setActiveTab] = useState('landing');
   const [isMobile, setIsMobile] = useState(false);
   const [showSplash, setShowSplash] = useState(false); // Désactivé temporairement
+  const [isProfileConfigured, setIsProfileConfigured] = useState(null); // null = en cours de vérification
+
+  // Vérifier si le profil est configuré
+  const checkProfileConfiguration = () => {
+    const profile = JSON.parse(localStorage.getItem('pilotProfile') || '{}');
+    const hasRequiredFields = profile.firstName && profile.lastName &&
+                              (profile.dateOfBirth || profile.birthDate);
+    setIsProfileConfigured(hasRequiredFields);
+    return hasRequiredFields;
+  };
 
   useEffect(() => {
+    // Vérifier si le profil est configuré au démarrage
+    checkProfileConfiguration();
+
     // Initialize auth - Désactivé temporairement
     // useAuthStore.getState().actions.initialize();
 
@@ -92,6 +105,12 @@ const MobileApp = () => {
     };
     window.addEventListener('navigate-to-home', handleNavigateHome);
 
+    // Écouter l'événement de configuration de profil terminée
+    const handleProfileConfigured = () => {
+      checkProfileConfiguration();
+    };
+    window.addEventListener('profile-configured', handleProfileConfigured);
+
     // Check if mobile
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -103,8 +122,20 @@ const MobileApp = () => {
     return () => {
       window.removeEventListener('resize', checkMobile);
       window.removeEventListener('navigate-to-home', handleNavigateHome);
+      window.removeEventListener('profile-configured', handleProfileConfigured);
     };
   }, [activeTab]); // 🔧 Ajouter activeTab pour charger backup/migration quand on quitte landing
+
+  // Handler pour navigation avec vérification profil
+  const handleNavigate = (tabId) => {
+    // Si le profil n'est pas configuré et qu'on essaie d'aller ailleurs que pilot
+    if (!isProfileConfigured && tabId !== 'pilot' && tabId !== 'landing') {
+      // Forcer la navigation vers pilot pour configurer le profil
+      setActiveTab('pilot');
+      return;
+    }
+    setActiveTab(tabId);
+  };
 
   const ActiveComponent = TAB_CONFIG.find(tab => tab.id === activeTab)?.component;
 
@@ -133,6 +164,60 @@ const MobileApp = () => {
     return <ALFlightSplashScreen onComplete={() => setShowSplash(false)} />;
   }
 
+  // Attendre la vérification du profil
+  if (isProfileConfigured === null) {
+    return (
+      <ThemeProvider theme={muiTheme}>
+        <CssBaseline />
+        <ALFlightSplashScreen />
+      </ThemeProvider>
+    );
+  }
+
+  // 🔒 BLOCAGE OBLIGATOIRE : Si le profil n'est pas configuré, afficher uniquement le module Pilot
+  if (!isProfileConfigured) {
+    return (
+      <IndexedDBChecker>
+        <ThemeProvider theme={muiTheme}>
+          <CssBaseline />
+          <FlightSystemProviders>
+            <div style={styles.app}>
+              {/* Header fixe avec message */}
+              <div style={styles.profileRequiredHeader}>
+                <h2 style={styles.profileRequiredTitle}>Configuration requise</h2>
+                <p style={styles.profileRequiredText}>
+                  Veuillez configurer votre profil pilote pour accéder à ALFlight
+                </p>
+              </div>
+
+              {/* Module Pilot en plein écran */}
+              <main style={{
+                ...styles.content,
+                ...(isMobile ? styles.mobileContent : styles.desktopContent),
+                marginTop: '100px'
+              }}>
+                <ErrorBoundary>
+                  <React.Suspense fallback={
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', fontSize: '18px', color: '#3b82f6' }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ marginBottom: '16px' }}>⏳</div>
+                        <div>Chargement...</div>
+                      </div>
+                    </div>
+                  }>
+                    <PilotModule />
+                  </React.Suspense>
+                </ErrorBoundary>
+              </main>
+
+              <NotificationContainer />
+            </div>
+          </FlightSystemProviders>
+        </ThemeProvider>
+      </IndexedDBChecker>
+    );
+  }
+
   // Show landing page (WITHOUT FlightSystemProviders to reduce memory usage)
   if (activeTab === 'landing') {
     return (
@@ -145,10 +230,11 @@ const MobileApp = () => {
               <MobileNavigation
                 tabs={TAB_CONFIG}
                 activeTab={activeTab}
-                onTabChange={setActiveTab}
+                onTabChange={handleNavigate}
+                isProfileConfigured={isProfileConfigured}
               />
             )}
-            <LandingPage onNavigate={setActiveTab} />
+            <LandingPage onNavigate={handleNavigate} isProfileConfigured={isProfileConfigured} />
             <NotificationContainer />
           </div>
         </ThemeProvider>
@@ -180,7 +266,8 @@ const MobileApp = () => {
           <MobileNavigation
             tabs={TAB_CONFIG}
             activeTab={activeTab}
-            onTabChange={setActiveTab}
+            onTabChange={handleNavigate}
+            isProfileConfigured={isProfileConfigured}
           />
         ) : (
           <div className="app-navigation" style={styles.desktopNav}>
@@ -235,6 +322,30 @@ const styles = {
     position: 'relative',
     minHeight: '100vh',
     backgroundColor: '#FFFFFF',
+  },
+  profileRequiredHeader: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#8b1538',
+    color: '#FFFFFF',
+    padding: '16px 20px',
+    paddingTop: 'max(env(safe-area-inset-top), 16px)',
+    zIndex: 1000,
+    textAlign: 'center',
+    boxShadow: '0 2px 10px rgba(139, 21, 56, 0.3)',
+  },
+  profileRequiredTitle: {
+    margin: 0,
+    fontSize: '18px',
+    fontWeight: '700',
+    marginBottom: '4px',
+  },
+  profileRequiredText: {
+    margin: 0,
+    fontSize: '14px',
+    opacity: 0.9,
   },
   desktopNav: {
     position: 'sticky',

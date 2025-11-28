@@ -535,8 +535,19 @@ const PilotProfile = () => {
   };
 
   const handleSave = () => {
+    // Validation des champs obligatoires
+    const hasRequiredFields = profile.firstName && profile.lastName &&
+                              (profile.dateOfBirth || profile.birthDate);
+
+    if (!hasRequiredFields) {
+      alert('Veuillez remplir les champs obligatoires :\n• Prénom\n• Nom\n• Date de naissance');
+      return;
+    }
+
     localStorage.setItem('pilotProfile', JSON.stringify(profile));
-    alert('Profil sauvegardé avec succès !');
+    // Notifier que le profil est configuré (pour débloquer l'accès aux autres modules)
+    window.dispatchEvent(new CustomEvent('profile-configured'));
+    alert('Profil sauvegardé avec succès !\n\nVous avez maintenant accès à toutes les fonctionnalités d\'ALFlight.');
   };
 
   const handleImport = async (event) => {
@@ -575,6 +586,7 @@ const PilotProfile = () => {
     event.target.value = '';
   };
 
+  // Style pour les inputs - contraintes fortes pour éviter le débordement sur mobile
   const inputStyle = {
     padding: '8px 12px',
     border: '1px solid #d1d5db',
@@ -584,7 +596,19 @@ const PilotProfile = () => {
     minWidth: 0,
     maxWidth: '100%',
     backgroundColor: 'white',
-    boxSizing: 'border-box'
+    boxSizing: 'border-box',
+    WebkitAppearance: 'none',  // Supprime le style natif iOS
+    MozAppearance: 'none',
+    appearance: 'none'
+  };
+
+  // Style pour les conteneurs de champs - empêche le débordement
+  const fieldContainerStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    minWidth: 0,
+    maxWidth: '100%',
+    overflow: 'hidden'
   };
 
   const labelStyle = {
@@ -1119,7 +1143,7 @@ const PilotProfile = () => {
       </div>
 
       {showPersonalInfo && (
-      <div style={sx.combine(sx.components.card.base, { marginBottom: '24px' })}>
+      <div style={sx.combine(sx.components.card.base, { marginBottom: '24px', overflow: 'hidden', maxWidth: '100%', boxSizing: 'border-box' })}>
 
         {/* Informations personnelles */}
         <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
@@ -1130,9 +1154,10 @@ const PilotProfile = () => {
           gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
           gap: '16px',
           marginBottom: '24px',
-          alignItems: 'end'
+          alignItems: 'end',
+          minWidth: 0
         }}>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={fieldContainerStyle}>
             <label style={labelStyle}>Prénom *</label>
             <input
               type="text"
@@ -1143,7 +1168,7 @@ const PilotProfile = () => {
             />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={fieldContainerStyle}>
             <label style={labelStyle}>Nom *</label>
             <input
               type="text"
@@ -1154,7 +1179,7 @@ const PilotProfile = () => {
             />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={fieldContainerStyle}>
             <label style={labelStyle}>Date de naissance</label>
             <input
               type="date"
@@ -1164,7 +1189,7 @@ const PilotProfile = () => {
             />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={fieldContainerStyle}>
             <label style={labelStyle}>Nationalité</label>
             <select
               value={profile.nationality}
@@ -1180,7 +1205,7 @@ const PilotProfile = () => {
             </select>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={fieldContainerStyle}>
             <label style={labelStyle}>Base d'attache</label>
             <input
               type="text"
@@ -1191,7 +1216,7 @@ const PilotProfile = () => {
             />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={fieldContainerStyle}>
             <label style={labelStyle}>Club / École</label>
             <input
               type="text"

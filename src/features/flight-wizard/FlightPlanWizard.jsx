@@ -280,7 +280,6 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
     {
       number: 7,
       title: 'Déroutements',
-      description: 'Sélection aérodromes (zone cône FOB)',
       component: Step7Alternates,
       validate: () => true // La sélection d'alternates est optionnelle
     },

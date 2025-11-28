@@ -6,7 +6,7 @@ import { useNavigation, useAircraft, useFuel, useWeather } from '@core/contexts'
 import { useNavigationResults } from './useNavigationResults';
 import { useWeatherStore } from '@core/stores/weatherStore';
 import { useVACStore } from '@core/stores/vacStore';
-import { useUnitsStore } from '@core/stores/unitsStore';
+import { useFuelStore } from '@core/stores/fuelStore'; // Accès direct au store pour fobFuel
 import {
   calculateSearchZone,
   isAirportInSearchZone,
@@ -16,6 +16,7 @@ import {
 } from '../utils/geometryCalculations';
 import { calculateDistance } from '@utils/navigationCalculations';
 import { scoreAlternates } from './useAlternateScoring';
+import { filterOutHospitalHeliports, isHospitalHeliport } from '../utils/alternateFilters';
 
 // Fonction pour obtenir un minimum d'aérodromes
 const getMinimalAirports = () => {
@@ -170,10 +171,31 @@ const getMinimalAirports = () => {
 export const useAlternateSelection = () => {
   const { waypoints, flightType } = useNavigation();
   const { selectedAircraft } = useAircraft();
-  const { fuelData, fobFuel, calculateTotal } = useFuel();
+  const { fuelData, fobFuel: fobFuelContext, calculateTotal } = useFuel();
   const navigationResults = useNavigationResults();
   const weatherStore = useWeatherStore();
   const vacStore = useVACStore();
+
+  // 🔧 FIX: Accéder DIRECTEMENT au store Zustand pour avoir la valeur la plus récente
+  // Le contexte React peut avoir un délai de mise à jour
+  const fobFuelStore = useFuelStore(state => state.fobFuel);
+
+  // Utiliser la valeur du store en priorité, sinon celle du contexte
+  // Vérifier AUSSI gal car l'utilisateur peut avoir configuré ses unités en gallons
+  const hasFobInStore = (fobFuelStore?.ltr > 0) || (fobFuelStore?.gal > 0);
+  const fobFuel = hasFobInStore ? fobFuelStore : fobFuelContext;
+
+  // 🔧 DEBUG: Log des valeurs FOB pour diagnostic
+  useEffect(() => {
+    console.log('🔍 [useAlternateSelection] FOB Debug:', {
+      fobFuelStore,
+      fobFuelContext,
+      hasFobInStore,
+      fobFuelUsed: fobFuel,
+      ltr: fobFuel?.ltr,
+      gal: fobFuel?.gal
+    });
+  }, [fobFuelStore, fobFuelContext, fobFuel, hasFobInStore]);
 
   // DEBUG: Log de l'avion sélectionné
   useEffect(() => {
@@ -302,8 +324,10 @@ export const useAlternateSelection = () => {
           }));
         }
 
-        console.log('✅ [Alternates] TOTAL aérodromes chargés:', loadedAirports.length);
-        setAirports(loadedAirports);
+        // Filtrer les héliports d'hôpitaux et centres médicaux
+        const filteredAirports = filterOutHospitalHeliports(loadedAirports);
+        console.log('✅ [Alternates] TOTAL aérodromes chargés:', loadedAirports.length, '-> après filtrage héliports:', filteredAirports.length);
+        setAirports(filteredAirports);
 
       } catch (error) {
         console.error('❌ [Alternates] Erreur critique chargement aérodromes:', error);
@@ -372,50 +396,61 @@ export const useAlternateSelection = () => {
   // On utilise donc les données de l'avion (capacité, consommation, vitesse)
   // pour calculer un rayon basé sur l'autonomie MAXIMALE
 
-  // Récupérer les préférences d'unités de l'utilisateur
-  const userUnits = useUnitsStore(state => state.units);
-
   const fuelDataForRadius = useMemo(() => {
     // Minimum requis : l'avion doit être sélectionné
     if (!selectedAircraft) return null;
 
-    // Facteur de conversion gallons US → litres (1 gal US = 3.78541 L)
-    const GAL_TO_LTR = 3.78541;
+    // 🔧 DIAGNOSTIC: Afficher TOUTES les données brutes de l'avion
+    console.log('🔍 [fuelDataForRadius] DONNÉES BRUTES selectedAircraft:', {
+      registration: selectedAircraft.registration,
+      fuelCapacity: selectedAircraft.fuelCapacity,
+      fuelConsumption: selectedAircraft.fuelConsumption,
+      cruiseSpeedKt: selectedAircraft.cruiseSpeedKt,
+      cruiseSpeed: selectedAircraft.cruiseSpeed,
+      fuel: selectedAircraft.fuel,
+      _metadata: selectedAircraft._metadata,
+      units: selectedAircraft._metadata?.units
+    });
 
-    // Les données de selectedAircraft sont DÉJÀ converties vers les préférences utilisateur
-    // par aircraftStore.js lors du chargement depuis Supabase
-    const rawCapacity = selectedAircraft.fuelCapacity || selectedAircraft.fuel?.capacity || 0;
-    const rawConsumption = selectedAircraft.fuelConsumption || selectedAircraft.fuel?.consumption || 0;
+    // Récupérer les valeurs brutes
+    let fuelCapacity = selectedAircraft.fuelCapacity || selectedAircraft.fuel?.capacity || 0;
+    let fuelConsumption = selectedAircraft.fuelConsumption || selectedAircraft.fuel?.consumption || 0;
     const cruiseSpeed = selectedAircraft.cruiseSpeedKt || selectedAircraft.cruiseSpeed || 120;
 
-    // Vérifier si l'utilisateur utilise les gallons (besoin de convertir en litres)
-    // ou déjà les litres (pas de conversion nécessaire)
-    const isGallons = userUnits.fuel === 'gal';
-    const isGallonsPerHour = userUnits.fuelConsumption === 'gph';
+    // 🔧 DÉTECTION AUTOMATIQUE: Si les valeurs semblent être en gallons (< 50), convertir
+    // Logique:
+    // - Une capacité < 50 est probablement en gallons (un avion typique a 100-400 L)
+    // - Une consommation < 15 est probablement en gal/h (typiquement 20-60 L/h)
+    const probablyInGallons = (fuelCapacity > 0 && fuelCapacity < 60) ||
+                              (fuelConsumption > 0 && fuelConsumption < 20);
 
-    // Convertir vers litres pour le calcul interne (le calcul utilise toujours les litres)
-    const fuelCapacityLiters = isGallons ? rawCapacity * GAL_TO_LTR : rawCapacity;
-    const fuelConsumptionLph = isGallonsPerHour ? rawConsumption * GAL_TO_LTR : rawConsumption;
+    console.log('🔍 [fuelDataForRadius] ANALYSE UNITÉS:', {
+      fuelCapacityBrut: fuelCapacity,
+      fuelConsumptionBrut: fuelConsumption,
+      probablyInGallons,
+      seuilCapacite: '< 60 = probablement gallons',
+      seuilConso: '< 20 = probablement gal/h'
+    });
+
+    // Si les données semblent être en gallons, convertir en litres
+    if (probablyInGallons) {
+      console.log('⚠️ [fuelDataForRadius] CONVERSION GAL → L détectée nécessaire');
+      fuelCapacity = fuelCapacity * 3.78541;
+      fuelConsumption = fuelConsumption * 3.78541;
+    }
 
     // Construire les données pour le calcul du rayon (toujours en litres)
     const aircraftData = {
-      fuelCapacity: fuelCapacityLiters,
-      fuelConsumption: fuelConsumptionLph,
+      fuelCapacity: fuelCapacity,
+      fuelConsumption: fuelConsumption,
       cruiseSpeedKt: cruiseSpeed
     };
 
-    console.log('🛩️ [fuelDataForRadius] Préférences utilisateur:', {
-      fuelUnit: userUnits.fuel,
-      consumptionUnit: userUnits.fuelConsumption
-    });
-    console.log('🛩️ [fuelDataForRadius] Données avion (unités utilisateur):', {
-      fuelCapacity: rawCapacity + ' ' + userUnits.fuel,
-      fuelConsumption: rawConsumption + ' ' + userUnits.fuelConsumption
-    });
-    console.log('🛩️ [fuelDataForRadius] Données avion (converties en litres):', {
+    console.log('✅ [fuelDataForRadius] Données FINALES (en litres):', {
       fuelCapacity: aircraftData.fuelCapacity.toFixed(1) + ' L',
       fuelConsumption: aircraftData.fuelConsumption.toFixed(1) + ' L/h',
-      cruiseSpeedKt: aircraftData.cruiseSpeedKt + ' kt'
+      cruiseSpeedKt: aircraftData.cruiseSpeedKt + ' kt',
+      wasConverted: probablyInGallons
     });
 
     // Si le carburant est saisi (étape 4+), on peut être plus précis
@@ -440,65 +475,108 @@ export const useAlternateSelection = () => {
       fuelRemaining: null, // Pas de carburant saisi encore
       reserves: null
     };
-  }, [selectedAircraft, fobFuel, navigationResults, fuelData, userUnits]);
+  }, [selectedAircraft, fobFuel, navigationResults, fuelData]);
 
   // ========================================================================================
   // NOUVEAU: Calcul des rayons pour zone CÔNE basée sur FOB (Fuel On Board)
   // Le cône est plus large au départ (plus de carburant) et plus étroit à l'arrivée
+  // FORMULE UTILISATEUR: Rayon = FOB / Consommation × Vitesse × 0.5
+  // Exemple: 10 gal / 7 gal/h × 120 kt × 0.5 = 85 NM
   // ========================================================================================
   const coneZoneParams = useMemo(() => {
     if (!selectedAircraft || !fuelDataForRadius?.aircraft) return null;
 
     const aircraft = fuelDataForRadius.aircraft;
     const cruiseSpeed = aircraft.cruiseSpeedKt || 120;
-    const consumption = aircraft.fuelConsumption || 40; // L/h
-
-    // Réserve finale (30 min minimum VFR)
-    const finalReserve = (consumption / 2); // 30 min en litres
+    const consumption = aircraft.fuelConsumption || 40; // L/h (en storage units)
 
     // FOB = Carburant confirmé au décollage (depuis fobFuel du contexte Fuel)
-    // Si pas encore défini, utiliser la capacité max comme fallback
-    const fobLiters = fobFuel?.ltr || aircraft.fuelCapacity || 0;
+    // IMPORTANT: Utiliser fobFuel.ltr OU convertir fobFuel.gal si ltr est 0
+    // NE PAS utiliser aircraft.fuelCapacity comme fallback (c'est la capacité max, pas le FOB réel)
+    let fobLiters = 0;
+    if (fobFuel?.ltr && fobFuel.ltr > 0) {
+      fobLiters = fobFuel.ltr;
+    } else if (fobFuel?.gal && fobFuel.gal > 0) {
+      // Convertir les gallons en litres (1 gal = 3.78541 L)
+      fobLiters = fobFuel.gal * 3.78541;
+    }
+
+    // 🔧 DEBUG: Afficher les valeurs réelles pour diagnostic
+    console.log('🔍 [CONE ZONE] DEBUG valeurs FOB:', {
+      fobFuel: fobFuel,
+      fobFuelLtr: fobFuel?.ltr,
+      fobFuelGal: fobFuel?.gal,
+      fobLitersCalculated: fobLiters,
+      aircraftFuelCapacity: aircraft.fuelCapacity,
+      consumption: consumption,
+      willUseFallback: fobLiters === 0
+    });
+
+    // Si pas de FOB défini, on ne peut pas calculer les rayons précis
+    if (fobLiters === 0) {
+      console.log('⚠️ [CONE ZONE PARAMS] FOB non défini, utilisation de la capacité max comme estimation');
+      // Fallback: utiliser la capacité max de l'avion
+      const maxCapacity = aircraft.fuelCapacity || 0;
+      if (maxCapacity === 0) return null;
+
+      // Autonomie max (sans réserve pour simplicité)
+      const maxEndurance = maxCapacity / consumption;
+      const maxRadius = cruiseSpeed * maxEndurance * 0.5;
+
+      return {
+        radiusAtDep: Math.max(10, Math.min(100, maxRadius)), // Plafonner à 100 NM si FOB inconnu
+        radiusAtArr: Math.max(5, Math.min(50, maxRadius * 0.5)),
+        fobLiters: maxCapacity,
+        tripFuel: 0,
+        finalReserve: 0,
+        enduranceAtDep: maxEndurance,
+        enduranceAtArr: maxEndurance,
+        isEstimate: true
+      };
+    }
 
     // Carburant consommé pendant le vol (si disponible)
     const tripFuel = navigationResults?.fuelRequired || 0;
 
-    // RAYON AU DÉPART (R1): Basé sur FOB - Réserve finale
-    // Autonomie au départ = (FOB - réserve) / consommation
-    const enduranceAtDep = Math.max(0, (fobLiters - finalReserve) / consumption);
+    // RAYON AU DÉPART (R1): Basé sur FOB BRUT (pas de réserve soustraite)
+    // Formule exacte demandée: FOB / Consommation × Vitesse × 0.5
+    // Autonomie au départ = FOB / consommation
+    const enduranceAtDep = fobLiters / consumption;
     // Rayon = vitesse × autonomie × 0.5 (demi-autonomie pour aller-retour théorique)
     const radiusAtDep = cruiseSpeed * enduranceAtDep * 0.5;
 
-    // RAYON À L'ARRIVÉE (R2): Basé sur FOB - TripFuel - Réserve finale
-    // Autonomie à l'arrivée = (FOB - carburant_vol - réserve) / consommation
-    const fuelAtArrival = fobLiters - tripFuel;
-    const enduranceAtArr = Math.max(0, (fuelAtArrival - finalReserve) / consumption);
+    // RAYON À L'ARRIVÉE (R2): Basé sur carburant restant théorique
+    // Autonomie à l'arrivée = (FOB - carburant_vol) / consommation
+    const fuelAtArrival = Math.max(0, fobLiters - tripFuel);
+    const enduranceAtArr = fuelAtArrival / consumption;
     // Rayon à l'arrivée
     const radiusAtArr = cruiseSpeed * enduranceAtArr * 0.5;
 
-    console.log('🔺 [CONE ZONE PARAMS] Calcul:', {
+    console.log('🔺 [CONE ZONE PARAMS] Calcul (formule: FOB/Conso×Vit×0.5):', {
       fobLiters: fobLiters.toFixed(1) + ' L',
+      fobGallons: (fobLiters / 3.785).toFixed(1) + ' gal',
       tripFuel: tripFuel.toFixed(1) + ' L',
       fuelAtArrival: fuelAtArrival.toFixed(1) + ' L',
-      finalReserve: finalReserve.toFixed(1) + ' L',
       cruiseSpeed: cruiseSpeed + ' kt',
-      consumption: consumption.toFixed(1) + ' L/h',
+      consumptionLph: consumption.toFixed(1) + ' L/h',
+      consumptionGph: (consumption / 3.785).toFixed(1) + ' gal/h',
       enduranceAtDep: enduranceAtDep.toFixed(2) + ' h',
       enduranceAtArr: enduranceAtArr.toFixed(2) + ' h',
       radiusAtDep: radiusAtDep.toFixed(1) + ' NM',
-      radiusAtArr: radiusAtArr.toFixed(1) + ' NM'
+      radiusAtArr: radiusAtArr.toFixed(1) + ' NM',
+      formule: `${(fobLiters / 3.785).toFixed(1)} gal / ${(consumption / 3.785).toFixed(1)} gal/h × ${cruiseSpeed} kt × 0.5 = ${radiusAtDep.toFixed(1)} NM`
     });
 
     return {
-      radiusAtDep: Math.max(10, Math.min(100, radiusAtDep)), // Min 10 NM, Max 100 NM
-      radiusAtArr: Math.max(5, Math.min(80, radiusAtArr)),   // Min 5 NM, Max 80 NM
+      radiusAtDep: Math.max(10, radiusAtDep), // Min 10 NM, pas de max (calcul exact)
+      radiusAtArr: Math.max(5, radiusAtArr),   // Min 5 NM, pas de max (calcul exact)
       fobLiters,
       tripFuel,
-      finalReserve,
+      finalReserve: 0, // Plus de réserve soustraite dans le calcul du rayon
       enduranceAtDep,
       enduranceAtArr
     };
-  }, [selectedAircraft, fuelDataForRadius, fobFuel, navigationResults]);
+  }, [selectedAircraft, fuelDataForRadius, fobFuel, fobFuelStore, navigationResults]);
 
   // ========================================================================================
   // NOUVEAU: Calcul du filtrage LDA (Landing Distance Available)
@@ -657,28 +735,38 @@ export const useAlternateSelection = () => {
 
   // Paramètres dynamiques
   // MISE À JOUR: Utilise ldaFilterParams pour le filtrage des pistes
+  // 🔧 FIX: Utiliser coneZoneParams.radiusAtDep si FOB disponible, sinon searchZone.dynamicRadius
   const dynamicParams = useMemo(() => {
     if (!selectedAircraft || !searchZone) return null;
 
     // NOUVEAU: Utiliser ldaFilterParams si disponible, sinon fallback
     const minRunwayLength = ldaFilterParams?.minRunwayRequired || 300;
 
+    // 🔧 FIX: Utiliser le rayon du cône (basé sur FOB réel) si disponible
+    // sinon utiliser le rayon de la zone pilule (basé sur capacité max)
+    const effectiveRadius = (coneZoneParams && !coneZoneParams.isEstimate)
+      ? coneZoneParams.radiusAtDep
+      : searchZone.dynamicRadius;
+
     console.log('✅ [dynamicParams] Calculés:', {
       requiredRunwayLength: minRunwayLength,
-      maxRadiusNM: searchZone.dynamicRadius,
+      maxRadiusNM: effectiveRadius,
+      searchZoneRadius: searchZone.dynamicRadius,
+      coneZoneRadius: coneZoneParams?.radiusAtDep,
+      useConeRadius: !!(coneZoneParams && !coneZoneParams.isEstimate),
       hasNavigationResults: !!navigationResults,
       ldaFilterUsed: !!ldaFilterParams
     });
 
     return {
       requiredRunwayLength: minRunwayLength,
-      maxRadiusNM: searchZone.dynamicRadius,
+      maxRadiusNM: effectiveRadius,
       flightRules: flightType.rules,
       isDayFlight: flightType.period === 'jour',
       // NOUVEAU: Informations LDA pour affichage
       ldaInfo: ldaFilterParams
     };
-  }, [selectedAircraft, navigationResults, searchZone, flightType, ldaFilterParams]);
+  }, [selectedAircraft, navigationResults, searchZone, flightType, ldaFilterParams, coneZoneParams]);
   
   // Fonction de recherche et scoring
   const findAlternates = useCallback(async () => {
@@ -750,6 +838,11 @@ export const useAlternateSelection = () => {
           continue;
         }
 
+        // Double vérification : ignorer les héliports d'hôpitaux (import en haut du fichier)
+        if (isHospitalHeliport(airport)) {
+          continue;
+        }
+
         // Vérifier les coordonnées
         const coords = airport.coordinates || airport.position || { lat: airport.lat, lon: airport.lon || airport.lng };
         if (!coords.lat || !coords.lon) {
@@ -758,11 +851,20 @@ export const useAlternateSelection = () => {
         }
 
         testedCount++;
-        const zoneCheck = isAirportInSearchZone(airport, searchZone);
+
+        // 🔧 FIX: Utiliser la zone CÔNE (basée sur FOB réel) si disponible
+        // La zone cône a des rayons R1 (départ) et R2 (arrivée) différents
+        // Sinon utiliser la zone pilule (basée sur capacité max)
+        let zoneCheck;
+        if (coneZone) {
+          zoneCheck = isAirportInConeZone(airport, coneZone);
+        } else {
+          zoneCheck = isAirportInSearchZone(airport, searchZone);
+        }
 
         // Log détaillé pour les premiers aérodromes testés
         if (testedCount <= 10) {
-          console.log(`🧪 Test ${airport.icao}: inZone=${zoneCheck.isInZone}, location=${zoneCheck.location}, reason=${zoneCheck.reason || 'OK'}`);
+          console.log(`🧪 Test ${airport.icao}: inZone=${zoneCheck.isInZone}, location=${zoneCheck.location}, useCone=${!!coneZone}, reason=${zoneCheck.reason || 'OK'}`);
         }
 
         if (zoneCheck.isInZone) {
@@ -858,7 +960,22 @@ export const useAlternateSelection = () => {
           // Récupérer la longueur de piste (peut être à différents endroits)
           const runwayLength = runway.length || runway.dimensions?.length || 0;
 
-          // Vérifier la longueur minimale si l'avion a un critère
+          // 1. Vérifier la SURFACE EN PREMIER (critère le plus important)
+          const runwaySurface = normalizeSurface(runway.surface);
+          if (runwaySurface && selectedAircraft.compatibleRunwaySurfaces?.length > 0) {
+            const isSurfaceCompatible = selectedAircraft.compatibleRunwaySurfaces.some(
+              compatible => normalizeSurface(compatible) === runwaySurface
+            );
+            if (!isSurfaceCompatible) {
+              // Log pour debug LFGC
+              if (airport.icao === 'LFGC') {
+                console.log(`❌ [LFGC] Piste surface incompatible: ${runwaySurface} pas dans [${selectedAircraft.compatibleRunwaySurfaces.join(', ')}]`);
+              }
+              return false; // Surface incompatible - REJET
+            }
+          }
+
+          // 2. Vérifier la longueur minimale si l'avion a un critère
           if (selectedAircraft.minimumRunwayLength &&
               selectedAircraft.minimumRunwayLength !== '' &&
               runwayLength > 0) {
@@ -869,22 +986,8 @@ export const useAlternateSelection = () => {
             }
           }
 
-          // Si la piste n'est pas trop courte, elle est compatible
+          // Si on arrive ici, la piste est compatible (surface OK et longueur OK)
           allTooShort = false;
-
-          // Vérifier la surface seulement si l'info est disponible ET l'avion a des critères
-          const runwaySurface = normalizeSurface(runway.surface);
-          if (runwaySurface &&
-              selectedAircraft.compatibleRunwaySurfaces?.length > 0) {
-            const isSurfaceCompatible = selectedAircraft.compatibleRunwaySurfaces.some(
-              compatible => normalizeSurface(compatible) === runwaySurface
-            );
-            if (!isSurfaceCompatible) {
-              return false; // Surface incompatible
-            }
-          }
-
-          // Si on arrive ici, la piste est compatible
           return true;
         });
 

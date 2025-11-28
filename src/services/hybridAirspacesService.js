@@ -4,8 +4,14 @@
  * - Métadonnées et corrections depuis AIXM local
  */
 
-// Utiliser 127.0.0.1 au lieu de localhost pour éviter les problèmes CORS
-const OPENAIP_PROXY_URL = import.meta.env.VITE_OPENAIP_PROXY_URL?.replace('localhost', '127.0.0.1') || 'http://127.0.0.1:3002';
+// En production, utiliser l'API Route Vercel, sinon le proxy local
+const isProduction = typeof window !== 'undefined' &&
+                     window.location.hostname !== 'localhost' &&
+                     window.location.hostname !== '127.0.0.1';
+
+const OPENAIP_PROXY_URL = isProduction
+  ? '' // En production, utiliser le même domaine (API Route Vercel)
+  : (import.meta.env.VITE_OPENAIP_PROXY_URL?.replace('localhost', '127.0.0.1') || 'http://127.0.0.1:3002');
 
 class HybridAirspacesService {
   constructor() {
@@ -145,6 +151,8 @@ class HybridAirspacesService {
 
   /**
    * Récupère les données OpenAIP
+   * En production: utilise l'API Route Vercel (/api/airspaces)
+   * En développement: utilise le proxy local (localhost:3002)
    */
   async fetchOpenAIPAirspaces(bbox) {
     const franceBbox = bbox || {
@@ -161,12 +169,10 @@ class HybridAirspacesService {
       format: 'geojson'
     });
 
-    
-
     // Créer un contrôleur d'abandon avec timeout plus long
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 secondes pour les grosses données
-    
+
     try {
       const response = await fetch(`${url}?${params}`, {
         method: 'GET',
@@ -174,23 +180,21 @@ class HybridAirspacesService {
         mode: 'cors',
         signal: controller.signal
       });
-      
+
       clearTimeout(timeoutId);
-      
+
       if (!response.ok) {
         throw new Error(`OpenAIP Error: ${response.status}`);
       }
 
       const data = await response.json();
-      
+
       if (!data.features || !Array.isArray(data.features)) {
-        
         return [];
       }
 
-      
       return data.features;
-      
+
     } catch (error) {
       clearTimeout(timeoutId);
       // Silencieux - pas de log pour éviter le spam dans la console

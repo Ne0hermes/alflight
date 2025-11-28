@@ -4,7 +4,7 @@
 
 import React, { memo, useMemo, useEffect, useState } from 'react';
 import AlternatesModule from '@features/alternates/AlternatesModule';
-import { AlertTriangle, Fuel, Navigation, Info, MapPin, Plane } from 'lucide-react';
+import { AlertTriangle, Fuel, Navigation, Info, MapPin, Plane, Filter, ChevronDown, ChevronUp } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import { useNavigation, useAircraft, useFuel } from '@core/contexts';
 import { useUnits } from '@hooks/useUnits';
@@ -102,6 +102,17 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
   const { fobFuel } = useFuel();
   const { convert, getSymbol, format } = useUnits();
 
+  // 🔧 DEBUG: Log de la valeur FOB reçue du contexte
+  useEffect(() => {
+    console.log('🔍 [Step7Alternates] FOB depuis contexte:', {
+      fobFuel,
+      fobLtr: fobFuel?.ltr,
+      fobGal: fobFuel?.gal,
+      hasFobValue: fobFuel && fobFuel.ltr > 0,
+      flightPlanFuelConfirmed: flightPlan?.fuel?.confirmed
+    });
+  }, [fobFuel, flightPlan?.fuel?.confirmed]);
+
   // Utiliser le hook de sélection avec les nouvelles fonctionnalités
   const {
     searchZone,
@@ -113,6 +124,49 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
     isLoadingAircraft,
     isLoadingAirports
   } = useAlternateSelection();
+
+  // État des filtres manuels
+  const [filters, setFilters] = useState({
+    hideShortRunways: true,        // Cacher les pistes trop courtes
+    hideIncompatibleSurface: true, // Cacher les revêtements incompatibles
+    hideIncompatibleType: true,    // Cacher les types incompatibles (ULM, héliport)
+    showFilters: false             // Afficher/masquer le panneau de filtres
+  });
+
+  // Récupérer les surfaces compatibles de l'avion
+  const aircraftCompatibleSurfaces = useMemo(() => {
+    // Par défaut, tous les avions peuvent se poser sur dur
+    const defaultSurfaces = ['hard', 'asphalt', 'concrete', 'bituminous', 'tarmac'];
+
+    // Si l'avion a des surfaces configurées
+    if (selectedAircraft?.compatibleSurfaces) {
+      return selectedAircraft.compatibleSurfaces;
+    }
+
+    // Si c'est un avion léger, ajouter herbe
+    if (selectedAircraft?.category === 'SEP' || selectedAircraft?.category === 'ULM') {
+      return [...defaultSurfaces, 'grass', 'gravel', 'turf', 'soil'];
+    }
+
+    return defaultSurfaces;
+  }, [selectedAircraft]);
+
+  // Récupérer le type d'avion pour le filtrage
+  const aircraftType = useMemo(() => {
+    // Catégories : 'airplane', 'ulm', 'helicopter', 'glider'
+    const category = selectedAircraft?.category?.toUpperCase();
+
+    if (category === 'ULM' || category === 'MICROLIGHT') {
+      return 'ulm';
+    }
+    if (category === 'HELICOPTER' || category === 'HELI') {
+      return 'helicopter';
+    }
+    if (category === 'GLIDER' || category === 'SAILPLANE') {
+      return 'glider';
+    }
+    return 'airplane';
+  }, [selectedAircraft]);
 
   // Synchroniser l'avion du flightPlan avec le contexte Aircraft global
   useEffect(() => {
@@ -183,18 +237,81 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
   }, [waypoints]);
 
   // Vérifier si le bilan carburant est disponible
+  // 🔧 FIX: Vérifier à la fois fobFuel (contexte) ET fobFuel.gal pour les utilisateurs en gallons
   const hasFuelData = useMemo(() => {
-    return fobFuel && fobFuel.ltr > 0;
+    // Vérifier si le FOB est défini (en litres OU en gallons)
+    const hasLiters = fobFuel && fobFuel.ltr > 0;
+    const hasGallons = fobFuel && fobFuel.gal > 0;
+    return hasLiters || hasGallons;
   }, [fobFuel]);
+
+  // 🔧 Calculer la piste minimale basée sur les distances d'atterrissage de l'étape Performance
+  const performanceBasedLDA = useMemo(() => {
+    // Récupérer les distances d'atterrissage calculées à l'étape Performance
+    const departureLanding = flightPlan?.performance?.departure?.takeoff?.lda50ft ||
+                              flightPlan?.performance?.departure?.takeoff?.groundRoll ||
+                              flightPlan?.performance?.departure?.landing?.lda50ft ||
+                              flightPlan?.performance?.departure?.landing?.groundRoll;
+
+    const arrivalLanding = flightPlan?.performance?.arrival?.landing?.lda50ft ||
+                           flightPlan?.performance?.arrival?.landing?.groundRoll;
+
+    console.log('🛬 [Step7] Distances atterrissage depuis Performance:', {
+      departureLanding,
+      arrivalLanding,
+      departurePerf: flightPlan?.performance?.departure,
+      arrivalPerf: flightPlan?.performance?.arrival
+    });
+
+    // CAS 1: Les deux distances disponibles → moyenne × 1.43
+    if (departureLanding && arrivalLanding) {
+      const average = (departureLanding + arrivalLanding) / 2;
+      const minRequired = Math.ceil(average * 1.43);
+
+      return {
+        departureLandingDistance: Math.round(departureLanding),
+        arrivalLandingDistance: Math.round(arrivalLanding),
+        averageLDA: average,
+        minRunwayRequired: minRequired,
+        source: 'performance_both'
+      };
+    }
+
+    // CAS 2: Seulement distance départ disponible → utiliser comme minimum × 1.43
+    if (departureLanding && !arrivalLanding) {
+      const minRequired = Math.ceil(departureLanding * 1.43);
+
+      return {
+        departureLandingDistance: Math.round(departureLanding),
+        arrivalLandingDistance: null,
+        minRunwayRequired: minRequired,
+        source: 'performance_departure_only'
+      };
+    }
+
+    // CAS 3: Seulement distance arrivée disponible → utiliser comme minimum × 1.43
+    if (!departureLanding && arrivalLanding) {
+      const minRequired = Math.ceil(arrivalLanding * 1.43);
+
+      return {
+        departureLandingDistance: null,
+        arrivalLandingDistance: Math.round(arrivalLanding),
+        minRunwayRequired: minRequired,
+        source: 'performance_arrival_only'
+      };
+    }
+
+    // CAS 4: Aucune distance Performance disponible → avertissement
+    return {
+      departureLandingDistance: null,
+      arrivalLandingDistance: null,
+      minRunwayRequired: null,
+      source: 'no_performance_data'
+    };
+  }, [flightPlan?.performance]);
 
   return (
     <div style={commonStyles.container}>
-      {/* En-tête avec informations sur le mode de sélection */}
-      <div style={commonStyles.label}>
-        <MapPin size={20} color={theme.colors.primary} />
-        <span>Sélection des aérodromes de déroutement</span>
-      </div>
-
       {/* Alerte si pas de bilan carburant */}
       {!hasFuelData && (
         <div style={commonStyles.infoBoxWarning}>
@@ -231,6 +348,9 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
               <div style={commonStyles.coneInfoValueSmall}>
                 Autonomie: {searchRadius.enduranceAtDep?.toFixed(1)}h
               </div>
+              <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                = {convert(searchRadius.fobLiters || 0, 'fuel', 'ltr').toFixed(0)} {getSymbol('fuel')} / {(selectedAircraft?.fuelConsumption || 40).toFixed(0)} {getSymbol('fuelConsumption')} × {selectedAircraft?.cruiseSpeedKt || selectedAircraft?.cruiseSpeed || 120} kt × 0.5
+              </div>
             </div>
 
             <div style={commonStyles.coneInfoCard}>
@@ -241,59 +361,239 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
               <div style={commonStyles.coneInfoValueSmall}>
                 Autonomie: {searchRadius.enduranceAtArr?.toFixed(1)}h
               </div>
+              <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                = ({convert(searchRadius.fobLiters || 0, 'fuel', 'ltr').toFixed(0)} - {convert(searchRadius.tripFuel || 0, 'fuel', 'ltr').toFixed(0)}) {getSymbol('fuel')} / {(selectedAircraft?.fuelConsumption || 40).toFixed(0)} {getSymbol('fuelConsumption')} × {selectedAircraft?.cruiseSpeedKt || selectedAircraft?.cruiseSpeed || 120} kt × 0.5
+              </div>
             </div>
 
             <div style={commonStyles.coneInfoCard}>
               <div style={commonStyles.coneInfoTitle}>FOB au décollage</div>
               <div style={commonStyles.coneInfoValueLarge}>
-                {searchRadius.fobLiters?.toFixed(0)} L
+                {convert(searchRadius.fobLiters || 0, 'fuel', 'ltr').toFixed(0)} {getSymbol('fuel')}
               </div>
               <div style={commonStyles.coneInfoValueSmall}>
-                Trip fuel: {searchRadius.tripFuel?.toFixed(0)} L
+                Trip fuel: {convert(searchRadius.tripFuel || 0, 'fuel', 'ltr').toFixed(0)} {getSymbol('fuel')}
               </div>
             </div>
 
-            {ldaFilterParams && (
+            {performanceBasedLDA && performanceBasedLDA.source === 'performance_both' && (
               <div style={commonStyles.coneInfoCard}>
-                <div style={commonStyles.coneInfoTitle}>Piste minimale (LDA × 1.43)</div>
+                <div style={commonStyles.coneInfoTitle}>Piste minimale × 1.43</div>
                 <div style={commonStyles.coneInfoValueLarge}>
-                  {ldaFilterParams.minRunwayRequired} m
+                  {performanceBasedLDA.minRunwayRequired} m
                 </div>
                 <div style={commonStyles.coneInfoValueSmall}>
-                  {ldaFilterParams.averageLDA ?
-                    `Moyenne LDA: ${ldaFilterParams.averageLDA.toFixed(0)} m` :
-                    `Perf. avion: ${ldaFilterParams.landingDistanceRequired} m`
-                  }
+                  Dép: {performanceBasedLDA.departureLandingDistance} m | Arr: {performanceBasedLDA.arrivalLandingDistance} m
+                </div>
+                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                  = ({performanceBasedLDA.departureLandingDistance} + {performanceBasedLDA.arrivalLandingDistance}) / 2 × 1.43
+                </div>
+              </div>
+            )}
+
+            {performanceBasedLDA && performanceBasedLDA.source === 'performance_departure_only' && (
+              <div style={{...commonStyles.coneInfoCard, backgroundColor: '#fef9c3'}}>
+                <div style={commonStyles.coneInfoTitle}>Piste minimale × 1.43</div>
+                <div style={commonStyles.coneInfoValueLarge}>
+                  {performanceBasedLDA.minRunwayRequired} m
+                </div>
+                <div style={commonStyles.coneInfoValueSmall}>
+                  Départ: {performanceBasedLDA.departureLandingDistance} m
+                </div>
+                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                  = {performanceBasedLDA.departureLandingDistance} × 1.43 (arrivée N/A)
+                </div>
+              </div>
+            )}
+
+            {performanceBasedLDA && performanceBasedLDA.source === 'performance_arrival_only' && (
+              <div style={{...commonStyles.coneInfoCard, backgroundColor: '#fef9c3'}}>
+                <div style={commonStyles.coneInfoTitle}>Piste minimale × 1.43</div>
+                <div style={commonStyles.coneInfoValueLarge}>
+                  {performanceBasedLDA.minRunwayRequired} m
+                </div>
+                <div style={commonStyles.coneInfoValueSmall}>
+                  Arrivée: {performanceBasedLDA.arrivalLandingDistance} m
+                </div>
+                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                  = {performanceBasedLDA.arrivalLandingDistance} × 1.43 (départ N/A)
+                </div>
+              </div>
+            )}
+
+            {performanceBasedLDA && performanceBasedLDA.source === 'no_performance_data' && (
+              <div style={{...commonStyles.coneInfoCard, backgroundColor: '#fef3c7', borderColor: '#f59e0b'}}>
+                <div style={commonStyles.coneInfoTitle}>Piste minimale</div>
+                <div style={{...commonStyles.coneInfoValueLarge, color: '#92400e'}}>
+                  N/A
+                </div>
+                <div style={{...commonStyles.coneInfoValueSmall, color: '#92400e'}}>
+                  Données Performance non disponibles
                 </div>
               </div>
             )}
           </div>
 
-          {/* Note sur la méthode de calcul */}
-          <div style={{
-            padding: '10px 12px',
-            backgroundColor: '#e0f2fe',
-            borderRadius: '6px',
-            fontSize: '12px',
-            color: '#0369a1',
-            marginTop: '12px'
-          }}>
-            <strong>Note:</strong> La distance de piste minimale est calculée comme la moyenne des LDA
-            (Landing Distance Available) de l'aérodrome de départ et d'arrivée, multipliée par 1.43
-            (marge réglementaire VFR). Les aérodromes avec des pistes plus courtes sont filtrés.
-            <br />
-            <em style={{ display: 'block', marginTop: '4px', opacity: 0.8 }}>
-              TBD: Calcul exact des performances théoriques en cours d'implémentation.
-            </em>
-          </div>
+          {/* Avertissement si pas de données performance */}
+          {performanceBasedLDA && performanceBasedLDA.source === 'no_performance_data' && (
+            <div style={{
+              padding: '10px 12px',
+              backgroundColor: '#fef3c7',
+              borderRadius: '6px',
+              fontSize: '12px',
+              color: '#92400e',
+              marginTop: '12px'
+            }}>
+              <AlertTriangle size={14} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
+              <strong>Filtrage piste minimale désactivé:</strong> Les distances d'atterrissage n'ont pas été calculées à l'étape Performance.
+              Complétez les calculs Performance pour activer le filtrage automatique des pistes.
+            </div>
+          )}
         </div>
       )}
+
+      {/* Filtres manuels */}
+      <div style={{
+        backgroundColor: '#f8fafc',
+        borderRadius: '8px',
+        border: '1px solid #e2e8f0',
+        marginBottom: '20px',
+        overflow: 'hidden'
+      }}>
+        {/* En-tête cliquable */}
+        <button
+          onClick={() => setFilters(prev => ({ ...prev, showFilters: !prev.showFilters }))}
+          style={{
+            width: '100%',
+            padding: '12px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            backgroundColor: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: '600',
+            color: '#374151'
+          }}
+        >
+          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Filter size={16} color="#6366f1" />
+            Filtres de recherche
+            {(filters.hideShortRunways || filters.hideIncompatibleSurface || filters.hideIncompatibleType) && (
+              <span style={{
+                padding: '2px 8px',
+                backgroundColor: '#6366f1',
+                color: 'white',
+                borderRadius: '10px',
+                fontSize: '11px'
+              }}>
+                {[filters.hideShortRunways, filters.hideIncompatibleSurface, filters.hideIncompatibleType].filter(Boolean).length} actif(s)
+              </span>
+            )}
+          </span>
+          {filters.showFilters ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+        </button>
+
+        {/* Contenu des filtres */}
+        {filters.showFilters && (
+          <div style={{ padding: '0 16px 16px 16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {/* Filtre piste minimale */}
+              <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 12px',
+                backgroundColor: filters.hideShortRunways ? '#eef2ff' : '#ffffff',
+                borderRadius: '6px',
+                border: '1px solid #e2e8f0',
+                cursor: 'pointer'
+              }}>
+                <input
+                  type="checkbox"
+                  checked={filters.hideShortRunways}
+                  onChange={e => setFilters(prev => ({ ...prev, hideShortRunways: e.target.checked }))}
+                  style={{ width: '18px', height: '18px', accentColor: '#6366f1' }}
+                />
+                <div>
+                  <div style={{ fontWeight: '500', fontSize: '13px', color: '#1f2937' }}>
+                    Masquer les pistes trop courtes
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                    Piste minimale requise: {performanceBasedLDA?.minRunwayRequired ? `${performanceBasedLDA.minRunwayRequired} m` : 'N/A (données Performance requises)'}
+                  </div>
+                </div>
+              </label>
+
+              {/* Filtre revêtement */}
+              <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 12px',
+                backgroundColor: filters.hideIncompatibleSurface ? '#eef2ff' : '#ffffff',
+                borderRadius: '6px',
+                border: '1px solid #e2e8f0',
+                cursor: 'pointer'
+              }}>
+                <input
+                  type="checkbox"
+                  checked={filters.hideIncompatibleSurface}
+                  onChange={e => setFilters(prev => ({ ...prev, hideIncompatibleSurface: e.target.checked }))}
+                  style={{ width: '18px', height: '18px', accentColor: '#6366f1' }}
+                />
+                <div>
+                  <div style={{ fontWeight: '500', fontSize: '13px', color: '#1f2937' }}>
+                    Masquer les revêtements incompatibles
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                    Surfaces compatibles: {aircraftCompatibleSurfaces.slice(0, 3).join(', ')}{aircraftCompatibleSurfaces.length > 3 ? '...' : ''}
+                  </div>
+                </div>
+              </label>
+
+              {/* Filtre type d'aérodrome */}
+              <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 12px',
+                backgroundColor: filters.hideIncompatibleType ? '#eef2ff' : '#ffffff',
+                borderRadius: '6px',
+                border: '1px solid #e2e8f0',
+                cursor: 'pointer'
+              }}>
+                <input
+                  type="checkbox"
+                  checked={filters.hideIncompatibleType}
+                  onChange={e => setFilters(prev => ({ ...prev, hideIncompatibleType: e.target.checked }))}
+                  style={{ width: '18px', height: '18px', accentColor: '#6366f1' }}
+                />
+                <div>
+                  <div style={{ fontWeight: '500', fontSize: '13px', color: '#1f2937' }}>
+                    Masquer les types d'aérodromes incompatibles
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                    Type avion: {aircraftType === 'airplane' ? 'Avion (exclure héliports, ULM...)' : aircraftType}
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Module de déroutement complet */}
       <AlternatesModule
         customRadius={coneZone ? null : searchRadius.radiusAtDep * 1.852} // Convertir NM en km si pas de cône
         showRadiusCircle={true}
         useConeZone={!!coneZone} // Nouveau prop pour utiliser la zone cône
+        filters={{
+          minRunwayLength: filters.hideShortRunways ? performanceBasedLDA?.minRunwayRequired : null,
+          compatibleSurfaces: filters.hideIncompatibleSurface ? aircraftCompatibleSurfaces : null,
+          aircraftType: filters.hideIncompatibleType ? aircraftType : null
+        }}
       />
     </div>
   );

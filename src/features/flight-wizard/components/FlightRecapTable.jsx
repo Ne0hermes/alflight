@@ -494,6 +494,15 @@ export const FlightRecapTable = ({
           gap: 8px !important;
         }
 
+        /* iPhone responsive - éléments en colonne */
+        @media (max-width: 430px) {
+          .recap-main-grid {
+            display: flex !important;
+            flex-direction: column !important;
+            grid-template-columns: unset !important;
+          }
+        }
+
         .recap-text-xs {
           font-size: 7px !important;
           line-height: 1.2 !important;
@@ -539,7 +548,7 @@ export const FlightRecapTable = ({
         </div>
 
         {/* Grille principale : Aérodromes à gauche, Navigation à droite */}
-        <div className="recap-grid-2col" style={{
+        <div className="recap-grid-2col recap-main-grid" style={{
           display: 'grid',
           gridTemplateColumns: '35% 65%',
           gap: '8px'

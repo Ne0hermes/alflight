@@ -13,77 +13,14 @@ export const AlternateSelectorUnified = memo(({
   candidates = [],
   searchZone,
   onSelectionChange,
-  currentSelection = { departure: null, arrival: null }
+  currentSelection = { departure: null, arrival: null },
+  filters = {}
 }) => {
 
   const selectedDeparture = currentSelection.departure;
   const selectedArrival = currentSelection.arrival;
 
-  // Fusionner et enrichir tous les candidats
-  const unifiedCandidates = useMemo(() => {
-    const enriched = [];
-
-    candidates.forEach(airport => {
-      // Filtrer les aéroports sans code ICAO ou avec code ICAO invalide (ex: LF01)
-      if (!airport.icao || !/^[A-Z]{4}$/.test(airport.icao)) {
-        return;
-      }
-
-      // S'assurer que l'aéroport a une position valide
-      const position = airport.position || airport.coordinates || { lat: airport.lat, lon: airport.lon || airport.lng };
-
-      if (!position || !position.lat || !position.lon) {
-        return;
-      }
-
-      // Calculer les distances depuis départ et arrivée
-      const distToDeparture = calculateDistance(position, searchZone.departure);
-      const distToArrival = calculateDistance(position, searchZone.arrival);
-
-      // Déterminer si l'aérodrome est contrôlé
-      const isControlled = airport.services?.atc === true ||
-                          (airport.frequencies && airport.frequencies.some(f => f.type === 'TWR')) ||
-                          airport.type === 'large_airport' ||
-                          airport.type === 'medium_airport';
-
-      // Enrichir avec les distances et le statut de contrôle
-      enriched.push({
-        ...airport,
-        position: position,
-        distanceToDeparture: distToDeparture,
-        distanceToArrival: distToArrival,
-        side: airport.side || (distToDeparture < distToArrival ? 'departure' : 'arrival'),
-        isControlled: isControlled
-      });
-    });
-
-    // Trier par score décroissant (meilleurs en premier)
-    enriched.sort((a, b) => (b.score || 0) - (a.score || 0));
-
-    return enriched;
-  }, [candidates, searchZone]);
-
-  // Distance totale du vol
-  const totalFlightDistance = useMemo(() => {
-    if (!searchZone) return 0;
-    return calculateDistance(searchZone.departure, searchZone.arrival);
-  }, [searchZone]);
-
-  // Gérer la sélection
-  const handleSelect = (airport, side) => {
-    if (side === 'departure') {
-      const newDeparture = airport?.icao === selectedDeparture?.icao ? null : airport;
-      onSelectionChange?.({ departure: newDeparture, arrival: selectedArrival });
-    } else {
-      const newArrival = airport?.icao === selectedArrival?.icao ? null : airport;
-      onSelectionChange?.({ departure: selectedDeparture, arrival: newArrival });
-    }
-  };
-
-  const [hoveredIcao, setHoveredIcao] = React.useState(null);
-  const [openMenuIcao, setOpenMenuIcao] = React.useState(null);
-
-  // Fonction helper pour obtenir la longueur maximale de piste
+  // Fonction helper pour obtenir la longueur maximale de piste (déplacé ici pour être utilisé par passesFilters)
   const getMaxRunwayLength = (runways) => {
     if (!runways || runways.length === 0) return null;
 
@@ -113,6 +50,142 @@ export const AlternateSelectorUnified = memo(({
     return maxLength > 0 ? maxLength : null;
   };
 
+  // Fonction pour vérifier si un aérodrome passe les filtres
+  const passesFilters = (airport) => {
+    // Filtre piste minimale
+    if (filters.minRunwayLength) {
+      const maxLength = getMaxRunwayLength(airport.runways);
+      if (maxLength && maxLength < filters.minRunwayLength) {
+        return false;
+      }
+    }
+
+    // Filtre revêtement
+    if (filters.compatibleSurfaces && airport.runways) {
+      const hasSompatibleSurface = airport.runways.some(runway => {
+        const surface = (runway.surface || runway.surfaceType || '').toLowerCase();
+        // Normaliser les noms de surface
+        const normalizedSurface = surface
+          .replace('asphalte', 'asphalt')
+          .replace('béton', 'concrete')
+          .replace('bitume', 'bituminous')
+          .replace('gazon', 'grass')
+          .replace('herbe', 'grass')
+          .replace('terre', 'soil')
+          .replace('gravier', 'gravel');
+
+        return filters.compatibleSurfaces.some(cs =>
+          normalizedSurface.includes(cs.toLowerCase()) ||
+          cs.toLowerCase().includes(normalizedSurface)
+        );
+      });
+      if (!hasSompatibleSurface && airport.runways.length > 0) {
+        return false;
+      }
+    }
+
+    // Filtre type d'aérodrome
+    if (filters.aircraftType) {
+      const airportType = (airport.type || '').toLowerCase();
+      const aircraftType = filters.aircraftType;
+
+      // Si l'avion est un avion normal, exclure les héliports et terrains ULM
+      if (aircraftType === 'airplane') {
+        if (airportType.includes('heliport') || airportType.includes('heli')) {
+          return false;
+        }
+        // Exclure les terrains spécifiquement ULM sauf si c'est aussi un aérodrome
+        if (airportType === 'ulm' || airportType === 'ultralight_field') {
+          return false;
+        }
+      }
+
+      // Si l'avion est un hélicoptère, il peut aller sur les héliports et aérodromes
+      // Pas de restriction spécifique
+
+      // Si l'avion est un ULM, il peut aller partout
+      // Pas de restriction spécifique
+    }
+
+    return true;
+  };
+
+  // Fusionner et enrichir tous les candidats
+  const unifiedCandidates = useMemo(() => {
+    const enriched = [];
+
+    candidates.forEach(airport => {
+      // Filtrer les aéroports sans code ICAO ou avec code ICAO invalide (ex: LF01)
+      if (!airport.icao || !/^[A-Z]{4}$/.test(airport.icao)) {
+        return;
+      }
+
+      // S'assurer que l'aéroport a une position valide
+      const position = airport.position || airport.coordinates || { lat: airport.lat, lon: airport.lon || airport.lng };
+
+      if (!position || !position.lat || !position.lon) {
+        return;
+      }
+
+      // Calculer les distances depuis départ et arrivée
+      const distToDeparture = calculateDistance(position, searchZone.departure);
+      const distToArrival = calculateDistance(position, searchZone.arrival);
+
+      // Déterminer si l'aérodrome est contrôlé
+      const isControlled = airport.services?.atc === true ||
+                          (airport.frequencies && airport.frequencies.some(f => f.type === 'TWR')) ||
+                          airport.type === 'large_airport' ||
+                          airport.type === 'medium_airport';
+
+      // Enrichir avec les distances et le statut de contrôle
+      const enrichedAirport = {
+        ...airport,
+        position: position,
+        distanceToDeparture: distToDeparture,
+        distanceToArrival: distToArrival,
+        side: airport.side || (distToDeparture < distToArrival ? 'departure' : 'arrival'),
+        isControlled: isControlled
+      };
+
+      // Vérifier si l'aérodrome passe les filtres
+      enrichedAirport.passesFilters = passesFilters(enrichedAirport);
+
+      enriched.push(enrichedAirport);
+    });
+
+    // Trier par score décroissant (meilleurs en premier)
+    // Les aérodromes filtrés sont mis à la fin
+    enriched.sort((a, b) => {
+      // D'abord, les non-filtrés avant les filtrés
+      if (a.passesFilters && !b.passesFilters) return -1;
+      if (!a.passesFilters && b.passesFilters) return 1;
+      // Ensuite, par score
+      return (b.score || 0) - (a.score || 0);
+    });
+
+    return enriched;
+  }, [candidates, searchZone, filters]);
+
+  // Distance totale du vol
+  const totalFlightDistance = useMemo(() => {
+    if (!searchZone) return 0;
+    return calculateDistance(searchZone.departure, searchZone.arrival);
+  }, [searchZone]);
+
+  // Gérer la sélection
+  const handleSelect = (airport, side) => {
+    if (side === 'departure') {
+      const newDeparture = airport?.icao === selectedDeparture?.icao ? null : airport;
+      onSelectionChange?.({ departure: newDeparture, arrival: selectedArrival });
+    } else {
+      const newArrival = airport?.icao === selectedArrival?.icao ? null : airport;
+      onSelectionChange?.({ departure: selectedDeparture, arrival: newArrival });
+    }
+  };
+
+  const [hoveredIcao, setHoveredIcao] = React.useState(null);
+  const [openMenuIcao, setOpenMenuIcao] = React.useState(null);
+
   // Fermer le menu si on clique ailleurs
   React.useEffect(() => {
     const handleClickOutside = () => {
@@ -136,6 +209,7 @@ export const AlternateSelectorUnified = memo(({
             const isSelectedDeparture = selectedDeparture?.icao === airport.icao;
             const isSelectedArrival = selectedArrival?.icao === airport.icao;
             const isHovered = hoveredIcao === airport.icao;
+            const isFiltered = !airport.passesFilters;
 
             // Déterminer le côté pour l'affichage (badge suggéré)
             const side = airport.side;
@@ -158,19 +232,37 @@ export const AlternateSelectorUnified = memo(({
                   padding: '12px',
                   marginBottom: '8px',
                   borderWidth: '2px',
-                  borderStyle: 'solid',
-                  borderColor: (isSelectedDeparture || isSelectedArrival) ? selectionColor : (isHovered ? `${sideColor}60` : '#e5e7eb'),
+                  borderStyle: isFiltered ? 'dashed' : 'solid',
+                  borderColor: isFiltered ? '#d1d5db' : ((isSelectedDeparture || isSelectedArrival) ? selectionColor : (isHovered ? `${sideColor}60` : '#e5e7eb')),
                   borderRadius: '8px',
-                  backgroundColor: (isSelectedDeparture || isSelectedArrival) ? selectionBgColor : (isHovered ? '#fafafa' : '#ffffff'),
+                  backgroundColor: isFiltered ? '#f9fafb' : ((isSelectedDeparture || isSelectedArrival) ? selectionBgColor : (isHovered ? '#fafafa' : '#ffffff')),
                   cursor: 'pointer',
                   transition: 'all 0.2s',
                   position: 'relative',
                   transform: isHovered && !isSelectedDeparture && !isSelectedArrival ? 'translateY(-1px)' : 'translateY(0)',
-                  boxShadow: isHovered && !isSelectedDeparture && !isSelectedArrival ? '0 2px 6px rgba(0,0,0,0.08)' : 'none'
+                  boxShadow: isHovered && !isSelectedDeparture && !isSelectedArrival && !isFiltered ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
+                  opacity: isFiltered ? 0.6 : 1
                 }}
                 onMouseEnter={() => setHoveredIcao(airport.icao)}
                 onMouseLeave={() => setHoveredIcao(null)}
               >
+                {/* Badge "Filtré" */}
+                {isFiltered && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    backgroundColor: '#9ca3af',
+                    color: 'white',
+                    padding: '2px 8px',
+                    borderBottomRightRadius: '6px',
+                    fontSize: '10px',
+                    fontWeight: '600'
+                  }}>
+                    FILTRÉ
+                  </div>
+                )}
+
                 {/* Indicateur visuel de sélection */}
                 {(isSelectedDeparture || isSelectedArrival) && (
                   <div style={{

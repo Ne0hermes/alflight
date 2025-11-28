@@ -114,8 +114,8 @@ const AerodromeDetailsCard = memo(({ airport, side, sideColor, sideEmoji, sideLa
         emphasis={true}
       />
 
-      {/* Distance et Score */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '12px' }}>
+      {/* Distance */}
+      <div style={{ marginTop: '12px' }}>
         <DataField
           label="Distance"
           value={distanceValue?.toFixed(1) || '?'}
@@ -123,6 +123,10 @@ const AerodromeDetailsCard = memo(({ airport, side, sideColor, sideEmoji, sideLa
           dataSource={airport.dataSource || 'static'}
           size="sm"
         />
+      </div>
+
+      {/* Score */}
+      <div style={{ marginTop: '8px' }}>
         <DataField
           label="Score"
           value={`${((airport.score || 0) * 100).toFixed(0)}%`}
@@ -263,7 +267,7 @@ const AerodromeDetailsCard = memo(({ airport, side, sideColor, sideEmoji, sideLa
   );
 });
 
-const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
+const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }) => {
 
   const {
     searchZone,
@@ -531,6 +535,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
                   searchZone={searchZone}
                   onSelectionChange={handleManualSelection}
                   currentSelection={manualSelection}
+                  filters={filters}
                 />
               ) : hasSearched ? (
                 <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning)}>
@@ -571,7 +576,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {} }) => {
             <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
               ✅ Aérodromes sélectionnés
             </h4>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {manualSelection.departure && (
                 <AerodromeDetailsCard
                   airport={manualSelection.departure}

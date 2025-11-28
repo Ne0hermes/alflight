@@ -1,6 +1,6 @@
 // src/features/navigation/NavigationModule.jsx
 import React, { memo, useState, useCallback, useEffect, Fragment } from 'react';
-import { MapPin, Plus, Trash2, Navigation2, Home, Sun, Moon, List, Loader, AlertCircle, AlertTriangle, Wind, Plane } from 'lucide-react';
+import { MapPin, Plus, Trash2, Navigation2, Home, Sun, Moon, List, Loader, AlertCircle, AlertTriangle, Wind, Plane, Shield } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useUnits } from '@hooks/useUnits';
 import { ValueWithUnit, ValueGrid } from '@shared/components/ValueWithUnit';
@@ -25,6 +25,7 @@ import WindAnalysis from './components/WindAnalysis';
 import GlobalVFRPointsManager from './components/GlobalVFRPointsManager';
 import AlternatesModule from '../alternates/AlternatesModule';
 import WaypointSelectorModal from './components/WaypointSelectorModal';
+import AirspacesSummaryTable from './components/AirspacesSummaryTable';
 
 // Hook temporaire pour remplacer useAlternatesForNavigation
 const useAlternatesForNavigation = () => {
@@ -698,6 +699,29 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
           {!wizardMode && (
             <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
               <GlobalVFRPointsManager />
+            </section>
+          )}
+
+          {/* Tableau récapitulatif des espaces aériens traversés */}
+          {waypoints.length >= 2 && (
+            <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
+              <h3 style={{
+                fontSize: '16px',
+                fontWeight: '600',
+                color: '#1f2937',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <Shield size={20} color="#3b82f6" />
+                Espaces Aériens et Zones Traversés
+              </h3>
+              <AirspacesSummaryTable
+                waypoints={waypoints}
+                segmentAltitudes={segmentAltitudes}
+                plannedAltitude={plannedAltitude}
+              />
             </section>
           )}
         </>

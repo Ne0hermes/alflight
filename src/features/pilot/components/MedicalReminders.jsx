@@ -7,7 +7,19 @@ const MedicalReminders = () => {
   const [medicalRecords, setMedicalRecords] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
-  
+
+  // Hook pour détecter la taille d'écran mobile
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const [formData, setFormData] = useState({
     type: 'class2',
     examDate: '',
@@ -148,13 +160,27 @@ const MedicalReminders = () => {
     }
   };
 
+  // Style pour les inputs - contraintes fortes pour éviter le débordement sur mobile
   const inputStyle = {
     padding: '8px 12px',
     border: '1px solid #d1d5db',
     borderRadius: '6px',
     fontSize: '14px',
     width: '100%',
-    backgroundColor: 'white'
+    minWidth: 0,
+    maxWidth: '100%',
+    boxSizing: 'border-box',
+    backgroundColor: 'white',
+    WebkitAppearance: 'none',  // Supprime le style natif iOS
+    MozAppearance: 'none',
+    appearance: 'none'
+  };
+
+  // Style pour les conteneurs de champs - empêche le débordement
+  const fieldContainerStyle = {
+    minWidth: 0,
+    maxWidth: '100%',
+    overflow: 'hidden'
   };
 
   const labelStyle = {
@@ -303,19 +329,22 @@ const MedicalReminders = () => {
     <div>
       {/* Formulaire d'ajout/édition */}
       {showForm && (
-        <div style={{ 
-          backgroundColor: 'white', 
-          padding: '20px', 
-          borderRadius: '8px', 
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)', 
-          marginBottom: '16px' 
+        <div style={{
+          backgroundColor: 'white',
+          padding: '20px',
+          borderRadius: '8px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          marginBottom: '16px',
+          overflow: 'hidden',
+          maxWidth: '100%',
+          boxSizing: 'border-box'
         }}>
           <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '16px' }}>
             {editingRecord ? 'Modifier le certificat médical' : 'Nouveau certificat médical'}
           </h4>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '20px' }}>
-            <div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '20px', minWidth: 0 }}>
+            <div style={fieldContainerStyle}>
               <label style={labelStyle}>Classe médicale *</label>
               <select
                 value={formData.type}
@@ -329,7 +358,7 @@ const MedicalReminders = () => {
               </select>
             </div>
 
-            <div>
+            <div style={fieldContainerStyle}>
               <label style={labelStyle}>Date d'examen *</label>
               <input
                 type="date"
@@ -340,7 +369,7 @@ const MedicalReminders = () => {
               />
             </div>
 
-            <div>
+            <div style={fieldContainerStyle}>
               <label style={labelStyle}>Date d'expiration *</label>
               <input
                 type="date"
@@ -353,7 +382,7 @@ const MedicalReminders = () => {
             </div>
           </div>
 
-          <div style={{ marginBottom: '20px' }}>
+          <div style={{ ...fieldContainerStyle, marginBottom: '20px' }}>
             <label style={labelStyle}>Rappel (jours avant expiration)</label>
             <input
               type="number"
@@ -361,15 +390,15 @@ const MedicalReminders = () => {
               onChange={(e) => handleChange('reminderDays', e.target.value)}
               min="1"
               max="365"
-              style={{...inputStyle, maxWidth: '200px'}}
+              style={{...inputStyle, maxWidth: isMobile ? '100%' : '200px'}}
             />
           </div>
 
           <h5 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>
             Examens complémentaires programmés
           </h5>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '20px' }}>
-            <div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '20px', minWidth: 0 }}>
+            <div style={fieldContainerStyle}>
               <label style={labelStyle}>Prochain ECG</label>
               <input
                 type="date"
@@ -379,7 +408,7 @@ const MedicalReminders = () => {
               />
             </div>
 
-            <div>
+            <div style={fieldContainerStyle}>
               <label style={labelStyle}>Prochaine audiométrie</label>
               <input
                 type="date"
@@ -389,7 +418,7 @@ const MedicalReminders = () => {
               />
             </div>
 
-            <div>
+            <div style={fieldContainerStyle}>
               <label style={labelStyle}>Prochaine ophtalmologie</label>
               <input
                 type="date"

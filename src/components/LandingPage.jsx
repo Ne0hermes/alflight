@@ -7,7 +7,7 @@ import {
 import { theme, createCardStyle, createButtonStyle } from '../styles/theme';
 import { PilotDashboard } from './PilotDashboard';
 
-export const LandingPage = ({ onNavigate }) => {
+export const LandingPage = ({ onNavigate, isProfileConfigured = true }) => {
   const [showInfo, setShowInfo] = useState(false);
   const [showModulesDropdown, setShowModulesDropdown] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -154,6 +154,30 @@ export const LandingPage = ({ onNavigate }) => {
       ...styles.container,
       ...(isMobile ? { paddingTop: '56px' } : {})
     }}>
+      {/* Overlay configuration profil obligatoire */}
+      {!isProfileConfigured && (
+        <div style={styles.profileOverlay}>
+          <div style={styles.profileModal}>
+            <User size={48} style={{ color: theme.colors.primary, marginBottom: '16px' }} />
+            <h2 style={styles.profileModalTitle}>Configuration du profil requise</h2>
+            <p style={styles.profileModalText}>
+              Avant de pouvoir utiliser ALFlight, vous devez configurer votre profil pilote.
+              Cette étape est nécessaire pour personnaliser l'application selon vos besoins.
+            </p>
+            <p style={styles.profileModalSubtext}>
+              Informations requises : Nom, Prénom, Date de naissance
+            </p>
+            <button
+              style={styles.profileModalButton}
+              onClick={() => onNavigate('pilot')}
+            >
+              <User size={20} style={{ marginRight: '8px' }} />
+              Configurer mon profil
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header style={styles.header}>
         <div style={styles.logoContainer}>
@@ -277,48 +301,6 @@ export const LandingPage = ({ onNavigate }) => {
       </section>
 
 
-      {/* Footer */}
-      <footer style={styles.footer}>
-        <button
-          style={styles.infoButton}
-          onClick={() => setShowInfo(!showInfo)}
-        >
-          <Info size={16} />
-          <span>À propos</span>
-        </button>
-        
-        {showInfo && (
-          <div style={styles.infoPanel}>
-            <h4 style={styles.infoTitle}>ALFlight v1.0.0</h4>
-            <p style={styles.infoText}>
-              Application d'assistance au vol pour pilotes privés VFR
-            </p>
-            
-            <div style={styles.legalLinks}>
-              <button style={styles.legalLink} onClick={() => alert('Mentions légales')}>
-                <Shield size={14} />
-                Mentions légales
-              </button>
-              <button style={styles.legalLink} onClick={() => alert('Politique de confidentialité')}>
-                <Shield size={14} />
-                Confidentialité
-              </button>
-              <button style={styles.legalLink} onClick={() => alert('CGU')}>
-                <Shield size={14} />
-                Conditions d'utilisation
-              </button>
-            </div>
-            
-            <p style={styles.copyright}>
-              © 2025 ALFlight. Tous droits réservés.
-            </p>
-            <p style={styles.disclaimer}>
-              Cette application est un outil d'aide à la décision. 
-              Le pilote reste seul responsable de la préparation et de la conduite du vol.
-            </p>
-          </div>
-        )}
-      </footer>
     </div>
   );
 };
@@ -330,6 +312,64 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     fontFamily: theme.fonts.primary,
+  },
+  profileOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 9999,
+    padding: '20px',
+  },
+  profileModal: {
+    backgroundColor: theme.colors.backgroundCard,
+    borderRadius: '16px',
+    padding: '32px',
+    maxWidth: '400px',
+    width: '100%',
+    textAlign: 'center',
+    border: `2px solid ${theme.colors.primary}`,
+    boxShadow: '0 20px 60px rgba(139, 21, 56, 0.3)',
+  },
+  profileModalTitle: {
+    fontSize: '22px',
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
+    marginBottom: '16px',
+  },
+  profileModalText: {
+    fontSize: '14px',
+    color: theme.colors.textSecondary,
+    lineHeight: '1.6',
+    marginBottom: '12px',
+  },
+  profileModalSubtext: {
+    fontSize: '12px',
+    color: theme.colors.primary,
+    fontWeight: '600',
+    marginBottom: '24px',
+  },
+  profileModalButton: {
+    backgroundColor: theme.colors.primary,
+    color: '#FFFFFF',
+    border: 'none',
+    borderRadius: '25px',
+    padding: '16px 32px',
+    fontSize: '16px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+    transition: 'all 0.3s ease',
   },
   header: {
     backgroundColor: 'rgba(139, 21, 56, 0.05)',

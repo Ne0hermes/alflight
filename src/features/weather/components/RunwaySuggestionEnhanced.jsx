@@ -55,10 +55,14 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
   
   // Charger les données de l'aérodrome
   useEffect(() => {
+    let retryCount = 0;
+    const maxRetries = 3;
+    const retryDelay = 500; // ms
+
     const loadAirportData = async () => {
       if (!icao) return;
 
-      console.log('🔍 [RunwaySuggestionEnhanced] Chargement pistes pour:', icao);
+      console.log('🔍 [RunwaySuggestionEnhanced] Chargement pistes pour:', icao, '- tentative', retryCount + 1);
 
       setLoading(true);
       try {
@@ -79,11 +83,11 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
             const thresholds = rwy.identifier ? rwy.identifier.split('/') : [];
             const baseIdent = thresholds[0] || '';
             const oppositeIdent = thresholds[1] || '';
-            
+
             // Calculer les QFU pour chaque seuil
             const baseQfu = rwy.qfu || (parseInt(baseIdent.replace(/[LRC]/, '')) * 10) || 0;
             const oppositeQfu = (baseQfu + 180) % 360;
-            
+
             return {
               identifier: rwy.identifier,
               le_ident: baseIdent,
@@ -96,80 +100,77 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
               surface: rwy.surface
             };
           });
-          
+
           setRunways(vacRunways);
-          setAirport({ 
-            icao, 
+          setAirport({
+            icao,
             name: vacChart.extractedData.airportName || icao,
             dataSource: 'vac'
           });
+          setLoading(false);
+          return;
+        }
+
+        console.log('⚠️ [RunwaySuggestionEnhanced] Pas de VAC - Essai aeroDataProvider');
+
+        // Sinon essayer le provider de données
+        const airports = await aeroDataProvider.getAirfields({ icao });
+        const airportData = airports.find(a => a.icao === icao);
+
+        console.log('🔍 [RunwaySuggestionEnhanced] aeroDataProvider résultat:', {
+          hasAirportData: !!airportData,
+          hasRunways: !!airportData?.runways,
+          runwaysCount: airportData?.runways?.length || 0
+        });
+
+        if (airportData && airportData.runways && airportData.runways.length > 0) {
+          console.log('✅ [RunwaySuggestionEnhanced] Utilisation données aeroDataProvider:', airportData.runways.length, 'pistes');
+          setAirport(airportData);
+          setRunways(airportData.runways);
+          setLoading(false);
+          return;
+        }
+
+        // Si pas de pistes trouvées dans aeroDataProvider, réessayer après un délai
+        // car les données peuvent ne pas être encore chargées
+        if (airportData && (!airportData.runways || airportData.runways.length === 0) && retryCount < maxRetries) {
+          console.log('⏳ [RunwaySuggestionEnhanced] Pistes non chargées, nouvelle tentative dans', retryDelay, 'ms...');
+          retryCount++;
+          setTimeout(loadAirportData, retryDelay);
+          return;
+        }
+
+        console.log('⚠️ [RunwaySuggestionEnhanced] Pas de données aeroDataProvider - Essai fallback');
+
+        // En dernier recours, utiliser les données de secours
+        const fallbackRunways = getFallbackRunways(icao);
+        const fallbackAirport = getFallbackAirport(icao);
+
+        console.log('🔍 [RunwaySuggestionEnhanced] Fallback résultat:', {
+          icao,
+          hasFallbackRunways: !!fallbackRunways,
+          fallbackRunwaysLength: fallbackRunways?.length
+        });
+
+        if (fallbackRunways) {
+          console.log('✅ [RunwaySuggestionEnhanced] Utilisation données fallback');
+          setRunways(fallbackRunways);
+          setAirport(fallbackAirport || { icao, name: icao, dataSource: 'fallback' });
+        } else if (airportData) {
+          console.log('❌ [RunwaySuggestionEnhanced] Aérodrome trouvé mais SANS PISTES:', icao);
+          // Si on a l'aérodrome mais pas les pistes
+          setAirport(airportData);
+          setRunways([]);
         } else {
-          console.log('⚠️ [RunwaySuggestionEnhanced] Pas de VAC - Essai aeroDataProvider');
-
-          // Sinon essayer le provider de données
-          const airports = await aeroDataProvider.getAirfields({ icao });
-          const airportData = airports.find(a => a.icao === icao);
-
-          console.log('🔍 [RunwaySuggestionEnhanced] aeroDataProvider résultat:', {
-            hasAirportData: !!airportData,
-            hasRunways: !!airportData?.runways,
-            runwaysCount: airportData?.runways?.length || 0,
-            runways: airportData?.runways,
-            airportData: airportData
-          });
-
-          if (airportData && airportData.runways && airportData.runways.length > 0) {
-            console.log('✅ [RunwaySuggestionEnhanced] Utilisation données aeroDataProvider');
-            console.log('🔍 [RunwaySuggestionEnhanced] CONTENU DÉTAILLÉ des pistes aeroDataProvider:', {
-              icao,
-              runways: JSON.parse(JSON.stringify(airportData.runways))
-            });
-            setAirport(airportData);
-            setRunways(airportData.runways);
-          } else {
-            console.log('⚠️ [RunwaySuggestionEnhanced] Pas de données aeroDataProvider - Essai fallback');
-            console.log('🔍 [RunwaySuggestionEnhanced] ICAO passé à fallback:', {
-              icao,
-              icaoType: typeof icao,
-              icaoUpperCase: icao?.toUpperCase(),
-              icaoLength: icao?.length
-            });
-
-            // En dernier recours, utiliser les données de secours
-            const fallbackRunways = getFallbackRunways(icao);
-            const fallbackAirport = getFallbackAirport(icao);
-
-            console.log('🔍 [RunwaySuggestionEnhanced] Fallback résultat DÉTAILLÉ:', {
-              icao,
-              hasFallbackRunways: !!fallbackRunways,
-              fallbackRunways: fallbackRunways,
-              fallbackRunwaysLength: fallbackRunways?.length,
-              hasFallbackAirport: !!fallbackAirport,
-              fallbackAirport: fallbackAirport
-            });
-
-            if (fallbackRunways) {
-              console.log('✅ [RunwaySuggestionEnhanced] Utilisation données fallback');
-              console.log('✅ [RunwaySuggestionEnhanced] Pistes fallback:', fallbackRunways);
-              setRunways(fallbackRunways);
-              setAirport(fallbackAirport || { icao, name: icao, dataSource: 'fallback' });
-            } else if (airportData) {
-              console.log('❌ [RunwaySuggestionEnhanced] Aérodrome trouvé mais SANS PISTES');
-              // Si on a l'aérodrome mais pas les pistes
-              setAirport(airportData);
-              setRunways([]);
-            } else {
-              console.log('❌ [RunwaySuggestionEnhanced] AUCUNE DONNÉE disponible pour', icao);
-            }
-          }
+          console.log('❌ [RunwaySuggestionEnhanced] AUCUNE DONNÉE disponible pour', icao);
         }
       } catch (error) {
-        console.error('Erreur chargement pistes:', error);
+        console.error('❌ [RunwaySuggestionEnhanced] Erreur chargement pistes:', error);
       } finally {
         setLoading(false);
       }
     };
-    
+
     loadAirportData();
   }, [icao, vacChart]);
 
@@ -345,6 +346,11 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
     // Vérifier la compatibilité de surface
     const surfaceType = analysis.runway?.surface?.type || analysis.runway?.surface || 'UNKNOWN';
 
+    // 🔧 FIX: Si surface inconnue, accepter par défaut (les données GeoJSON ne contiennent pas toujours la surface)
+    if (surfaceType === 'UNKNOWN' || !surfaceType) {
+      return true;
+    }
+
     // Vérification exacte
     let isCompatible = aircraft.compatibleRunwaySurfaces.includes(surfaceType);
 
@@ -355,13 +361,14 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
       );
     }
 
-    console.log('🔍 [RunwaySuggestionEnhanced] Filtre de compatibilité:', {
-      icao,
-      runway: analysis.ident,
-      surfaceType,
-      aircraftCompatibleSurfaces: aircraft.compatibleRunwaySurfaces,
-      isCompatible
-    });
+    // Si pas compatible, vérifier les variantes courantes (ASPH inclut ASPHALT, etc.)
+    if (!isCompatible) {
+      const surfaceUpper = surfaceType.toUpperCase();
+      isCompatible = aircraft.compatibleRunwaySurfaces.some(compatibleSurface => {
+        const compatUpper = compatibleSurface.toUpperCase();
+        return surfaceUpper.includes(compatUpper) || compatUpper.includes(surfaceUpper);
+      });
+    }
 
     return isCompatible;
   });
