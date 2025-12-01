@@ -1,7 +1,7 @@
 // src/features/alternates/AlternatesModule.jsx
 // VERSION 5 - Module Déroutements avec sélection manuelle uniquement et suggestions visuelles
 
- // LOG DE VÉRIFICATION
+// LOG DE VÉRIFICATION
 
 import React, { memo, useEffect, useState } from 'react';
 import { Navigation2, AlertTriangle, Fuel, Wind, Plane, Info, MapPin, RefreshCw } from 'lucide-react';
@@ -15,7 +15,7 @@ import { useAlternatesStore } from '@core/stores/alternatesStore';
 import { DataSourceBadge, DataField } from '@shared/components';
 import { calculateDistance } from '@utils/navigationCalculations';
 import { useWeatherStore } from '@core/stores/weatherStore';
-import { Conversions } from '@utils/conversions';
+import { coordinateConversions } from '@utils/unitConversions';
 
 // Composant pour afficher une carte de statistique
 const StatCard = memo(({ icon, label, value, detail, dataSource = 'static' }) => (
@@ -91,7 +91,7 @@ const AerodromeDetailsCard = memo(({ airport, side, sideColor, sideEmoji, sideLa
 
   const runwayDirections = separateRunwayDirections();
   const position = airport.position || airport.coordinates || { lat: airport.lat, lon: airport.lon || airport.lng };
-  const dmsCoords = position ? Conversions.coordinatesToDMS(position.lat, position.lon) : null;
+  const dmsCoords = position ? coordinateConversions.coordinatesToDMS(position.lat, position.lon) : null;
 
   return (
     <div style={{
@@ -171,7 +171,7 @@ const AerodromeDetailsCard = memo(({ airport, side, sideColor, sideEmoji, sideLa
               const lengthFt = Math.round(lengthM * 3.28084);
               const widthM = typeof runway.width === 'number' ? runway.width : 0;
               const surfaceType = typeof runway.surface === 'string' ? runway.surface :
-                                  (typeof runway.composition === 'string' ? runway.composition : 'N/A');
+                (typeof runway.composition === 'string' ? runway.composition : 'N/A');
 
               return (
                 <div
@@ -228,34 +228,34 @@ const AerodromeDetailsCard = memo(({ airport, side, sideColor, sideEmoji, sideLa
                       (typeof runway.asda === 'number') ||
                       (typeof runway.lda === 'number')
                     ) && (
-                      <div style={sx.spacing.mt(2)}>
-                        <p style={sx.combine(sx.text.xs, sx.text.bold, sx.spacing.mb(1))}>Distances déclarées :</p>
-                        {typeof runway.tora === 'number' && (
-                          <div style={sx.flex.between}>
-                            <span>• TORA :</span>
-                            <strong>{runway.tora} m ({Math.round(runway.tora * 3.28084)} ft)</strong>
-                          </div>
-                        )}
-                        {typeof runway.toda === 'number' && (
-                          <div style={sx.combine(sx.flex.between, sx.spacing.mt(1))}>
-                            <span>• TODA :</span>
-                            <strong>{runway.toda} m ({Math.round(runway.toda * 3.28084)} ft)</strong>
-                          </div>
-                        )}
-                        {typeof runway.asda === 'number' && (
-                          <div style={sx.combine(sx.flex.between, sx.spacing.mt(1))}>
-                            <span>• ASDA :</span>
-                            <strong>{runway.asda} m ({Math.round(runway.asda * 3.28084)} ft)</strong>
-                          </div>
-                        )}
-                        {typeof runway.lda === 'number' && (
-                          <div style={sx.combine(sx.flex.between, sx.spacing.mt(1))}>
-                            <span>• LDA :</span>
-                            <strong>{runway.lda} m ({Math.round(runway.lda * 3.28084)} ft)</strong>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                        <div style={sx.spacing.mt(2)}>
+                          <p style={sx.combine(sx.text.xs, sx.text.bold, sx.spacing.mb(1))}>Distances déclarées :</p>
+                          {typeof runway.tora === 'number' && (
+                            <div style={sx.flex.between}>
+                              <span>• TORA :</span>
+                              <strong>{runway.tora} m ({Math.round(runway.tora * 3.28084)} ft)</strong>
+                            </div>
+                          )}
+                          {typeof runway.toda === 'number' && (
+                            <div style={sx.combine(sx.flex.between, sx.spacing.mt(1))}>
+                              <span>• TODA :</span>
+                              <strong>{runway.toda} m ({Math.round(runway.toda * 3.28084)} ft)</strong>
+                            </div>
+                          )}
+                          {typeof runway.asda === 'number' && (
+                            <div style={sx.combine(sx.flex.between, sx.spacing.mt(1))}>
+                              <span>• ASDA :</span>
+                              <strong>{runway.asda} m ({Math.round(runway.asda * 3.28084)} ft)</strong>
+                            </div>
+                          )}
+                          {typeof runway.lda === 'number' && (
+                            <div style={sx.combine(sx.flex.between, sx.spacing.mt(1))}>
+                              <span>• LDA :</span>
+                              <strong>{runway.lda} m ({Math.round(runway.lda * 3.28084)} ft)</strong>
+                            </div>
+                          )}
+                        </div>
+                      )}
                   </div>
                 </div>
               );
@@ -281,12 +281,12 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
     formattedAlternates,
     statistics
   } = useAdvancedAlternateSelection();
-  
+
   const { scoredAlternates, setSelectedAlternates, selectedAlternates } = useAlternatesStore();
   const { fetchMultiple } = useWeatherStore();
-  
+
   const [hasSearched, setHasSearched] = useState(false);
-  
+
   // Dériver la sélection manuelle depuis le store
   const manualSelection = React.useMemo(() => {
     const depAlt = selectedAlternates?.find(alt => alt.selectionType === 'departure') || null;
@@ -330,15 +330,15 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
 
     return { departure, arrival };
   }, [selectedAlternates, searchZone]);
-  
+
   // Déclencher automatiquement la recherche quand les conditions sont remplies
   useEffect(() => {
     if (isReady && !hasSearched) {
-            setHasSearched(true);
+      setHasSearched(true);
       refreshAlternates();
     }
   }, [isReady, hasSearched, refreshAlternates]);
-  
+
   // Réinitialiser et relancer la recherche quand la route change
   useEffect(() => {
     if (searchZone) {
@@ -359,7 +359,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
       }
     }
   }, [searchZone, isReady, refreshAlternates]);
-  
+
   // Gérer la sélection manuelle - DOIT être défini AVANT le return conditionnel
   const handleManualSelection = React.useCallback((selection) => {
     // Mettre à jour le store avec la sélection manuelle
@@ -386,12 +386,12 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
     }
     setSelectedAlternates(newSelection);
   }, [setSelectedAlternates]);
-  
+
   // Déterminer quels alternates afficher sur la carte
   const mapAlternates = (manualSelection.departure || manualSelection.arrival)
     ? [manualSelection.departure, manualSelection.arrival].filter(Boolean)
     : [];
-  
+
   // Récupérer les METAR pour les aérodromes sélectionnés
   useEffect(() => {
     if (selectedAlternates && selectedAlternates.length > 0) {
@@ -409,7 +409,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
       }
     }
   }, [selectedAlternates, fetchMultiple]);
-  
+
   // Rendu conditionnel - DOIT être APRÈS tous les hooks
 
   // Loader pour le chargement de l'avion
@@ -475,12 +475,12 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
       </div>
     );
   }
-  
+
   return (
     <div>
       {/* Indicateur de rate limiting météo */}
       <WeatherRateLimitIndicator />
-      
+
       {/* En-tête avec résumé et statistiques */}
       <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
         {/* Conteneur pour la carte et la sélection en dessous */}

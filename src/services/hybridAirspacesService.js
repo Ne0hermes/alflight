@@ -6,8 +6,8 @@
 
 // En production, utiliser l'API Route Vercel, sinon le proxy local
 const isProduction = typeof window !== 'undefined' &&
-                     window.location.hostname !== 'localhost' &&
-                     window.location.hostname !== '127.0.0.1';
+  window.location.hostname !== 'localhost' &&
+  window.location.hostname !== '127.0.0.1';
 
 const OPENAIP_PROXY_URL = isProduction
   ? '' // En production, utiliser le même domaine (API Route Vercel)
@@ -27,16 +27,13 @@ class HybridAirspacesService {
    */
   async getFrenchAirspaces(bbox = null) {
     const cacheKey = `hybrid_airspaces_${bbox || 'france'}`;
-    
+
     // Vérifier le cache
     if (this.cache.has(cacheKey) && this.cacheExpiry.get(cacheKey) > Date.now()) {
-      
       return this.cache.get(cacheKey);
     }
 
     try {
-      
-      
       // 1. Charger les corrections depuis AIXM
       await this.loadAIXMCorrections();
 
@@ -45,20 +42,26 @@ class HybridAirspacesService {
 
       // 2. Récupérer les géométries depuis OpenAIP
       const openAIPData = await this.fetchOpenAIPAirspaces(bbox);
-      
+
+      // Si échec OpenAIP (proxy éteint), utiliser fallback AIXM
+      if (!openAIPData) {
+        console.warn('⚠️ OpenAIP inaccessible, utilisation du fallback AIXM local');
+        return this.getAIXMOnlyAirspaces();
+      }
+
       // 3. Fusionner les données
       const hybridAirspaces = this.mergeAirspacesData(openAIPData);
-      
+
       // Mise en cache
       this.cache.set(cacheKey, hybridAirspaces);
       this.cacheExpiry.set(cacheKey, Date.now() + this.CACHE_DURATION);
-      
-      
+
       return hybridAirspaces;
 
     } catch (error) {
       // Silencieux - fallback automatique vers AIXM
-      
+      console.warn('⚠️ Erreur service hybride, fallback AIXM:', error);
+
       // Fallback vers AIXM seul
       return this.getAIXMOnlyAirspaces();
     }
@@ -75,12 +78,12 @@ class HybridAirspacesService {
     try {
       const { aixmAirspacesParser } = await import('./aixmAirspacesParser.js');
       const aixmData = await aixmAirspacesParser.loadAndParse();
-      
+
       // Stocker les corrections par nom/type
       aixmData.forEach(airspace => {
         const props = airspace.properties;
         const key = this.makeKey(props.name, props.type);
-        
+
         this.aixmCorrections.set(key, {
           class: props.class,
           originalClass: props.originalClass,
@@ -90,7 +93,6 @@ class HybridAirspacesService {
           frequencies: props.frequencies || []
         });
       });
-      
 
     } catch (error) {
       console.error('Erreur chargement corrections AIXM:', error);
@@ -198,8 +200,8 @@ class HybridAirspacesService {
     } catch (error) {
       clearTimeout(timeoutId);
       // Silencieux - pas de log pour éviter le spam dans la console
-      // Retourner un tableau vide au lieu de throw pour éviter les erreurs
-      return [];
+      // Retourner null pour signaler l'échec et déclencher le fallback
+      return null;
     }
   }
 
@@ -209,11 +211,11 @@ class HybridAirspacesService {
   mergeAirspacesData(openAIPFeatures) {
     return openAIPFeatures.map(feature => {
       const props = feature.properties || {};
-      
+
       // Convertir les codes OpenAIP en types lisibles
       const type = this.convertOpenAIPType(props.type);
       const name = props.name || `${type} ${props.id}`;
-      
+
       // Chercher les corrections AIXM
       const key = this.makeKey(name, type);
       const corrections = this.aixmCorrections.get(key) || {};
@@ -310,14 +312,14 @@ class HybridAirspacesService {
       25: 'TFR',
       26: 'NOTAM'
     };
-    
+
     const type = typeMap[typeCode] || 'OTHER';
-    
+
     // Normaliser certains types
     if (type === 'RESTRICTED') return 'R';
     if (type === 'DANGER') return 'D';
     if (type === 'PROHIBITED') return 'P';
-    
+
     return type;
   }
 
@@ -339,7 +341,7 @@ class HybridAirspacesService {
       10: 'G',   // FIR
       11: 'G'    // UIR
     };
-    
+
     return classMap[classCode] || 'G';
   }
 
@@ -350,16 +352,16 @@ class HybridAirspacesService {
     if (!limit) {
       return { value: 0, raw: 'SFC' };
     }
-    
+
     const value = limit.value || 0;
     const unit = limit.unit;
     const ref = limit.referenceDatum;
-    
+
     // Convertir selon l'unité
     // OpenAIP units: 0=FT, 1=M, 6=FL
     let altFeet = value;
     let raw = '';
-    
+
     if (unit === 1) { // Mètres
       altFeet = value * 3.28084;
       raw = `${value}m`;
@@ -369,12 +371,12 @@ class HybridAirspacesService {
     } else { // Pieds
       raw = `${value}ft`;
     }
-    
+
     // Reference datum: 0=GND, 1=STD, 2=MSL
     if (ref === 0 && value === 0) {
       raw = 'SFC';
     }
-    
+
     return {
       value: Math.round(altFeet),
       raw: raw
@@ -488,12 +490,12 @@ class HybridAirspacesService {
    * Fallback vers AIXM uniquement
    */
   async getAIXMOnlyAirspaces() {
-    
-    
+
+
     try {
       const { aixmAirspacesParser } = await import('./aixmAirspacesParser.js');
       const aixmData = await aixmAirspacesParser.loadAndParse();
-      
+
       return aixmData;
     } catch (error) {
       console.error('Erreur fallback AIXM:', error);

@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"vite --host\" \"node --max-old-space-size=4096 server/googleSheetsServer.js\"",
+    "dev": "concurrently \"vite --port 4000\" \"node server/openaip-airspaces-proxy.js\"",
     "dev:frontend": "vite --host",
     "dev:logger": "node --max-old-space-size=4096 server/googleSheetsServer.js",
     "dev:tracker": "node scripts/autoTracker.cjs",

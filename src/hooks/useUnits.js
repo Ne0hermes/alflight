@@ -1,7 +1,7 @@
 // src/hooks/useUnits.js
 import { useEffect, useState } from 'react';
 import { useUnitsStore, unitsSelectors } from '@core/stores/unitsStore';
-import { convertValue, formatWithUnit } from '@utils/unitsConversion';
+import { convertValue, formatWithUnit } from '@utils/unitConversions';
 
 /**
  * Hook personnalisé pour gérer les unités et conversions
@@ -9,28 +9,28 @@ import { convertValue, formatWithUnit } from '@utils/unitsConversion';
 export const useUnits = () => {
   const [units, setUnitsState] = useState(unitsSelectors.useUnits());
   const { setUnit, setPreset } = unitsSelectors.useUnitsActions();
-  
+
   // Écouter les changements d'unités via l'événement custom
   useEffect(() => {
     const handleUnitsUpdate = (event) => {
-            // Forcer la mise à jour depuis le store
+      // Forcer la mise à jour depuis le store
       const newUnits = useUnitsStore.getState().units;
       setUnitsState(newUnits);
     };
-    
+
     window.addEventListener('unitsUpdated', handleUnitsUpdate);
-    
+
     // Également s'abonner aux changements du store directement
     const unsubscribe = useUnitsStore.subscribe((state) => {
       setUnitsState(state.units);
     });
-    
+
     return () => {
       window.removeEventListener('unitsUpdated', handleUnitsUpdate);
       unsubscribe();
     };
   }, []);
-  
+
   /**
    * Convertit une valeur depuis l'unité de stockage vers l'unité préférée de l'utilisateur
    * @param {number} value - La valeur à convertir
@@ -41,7 +41,7 @@ export const useUnits = () => {
    */
   const convert = (value, category, fromUnit = null, options = {}) => {
     if (value === null || value === undefined || isNaN(value)) return value;
-    
+
     // Unités standard de stockage (format interne)
     const storageUnits = {
       distance: 'nm',
@@ -56,7 +56,7 @@ export const useUnits = () => {
       temperature: 'C',
       fuelConsumption: 'lph'
     };
-    
+
     const from = fromUnit || storageUnits[category];
     const to = options.toUnit || units[category];
 
@@ -81,11 +81,11 @@ export const useUnits = () => {
       return value;
     }
 
-    const converted = convertValue(value, category, from, to);
+    const converted = convertValue(value, from, to, category, options);
     console.log('✅ [useUnits.convert] Result:', converted);
     return converted;
   };
-  
+
   /**
    * Formate une valeur avec son unité préférée
    * @param {number} value - La valeur à formater
@@ -98,7 +98,7 @@ export const useUnits = () => {
     const convertedValue = convert(value, category, fromUnit);
     return formatWithUnit(convertedValue, units[category], decimals);
   };
-  
+
   /**
    * Convertit une valeur de l'unité utilisateur vers l'unité de stockage
    * @param {number} value - La valeur saisie par l'utilisateur
@@ -107,7 +107,7 @@ export const useUnits = () => {
    */
   const toStorage = (value, category) => {
     if (value === null || value === undefined || isNaN(value)) return value;
-    
+
     const storageUnits = {
       distance: 'nm',
       altitude: 'ft',
@@ -121,15 +121,15 @@ export const useUnits = () => {
       temperature: 'C',
       fuelConsumption: 'lph'
     };
-    
+
     const from = units[category];
     const to = storageUnits[category];
 
     if (!from || !to || from === to) return value;
 
-    return convertValue(value, category, from, to);
+    return convertValue(value, from, to, category);
   };
-  
+
   /**
    * Obtient l'unité actuelle pour une catégorie
    * @param {string} category - La catégorie d'unité
@@ -138,7 +138,7 @@ export const useUnits = () => {
   const getUnit = (category) => {
     return units[category];
   };
-  
+
   /**
    * Obtient le symbole d'unité pour affichage
    * @param {string} category - La catégorie d'unité
@@ -151,43 +151,43 @@ export const useUnits = () => {
       'km': 'km',
       'mi': 'mi',
       'm': 'm',
-      
+
       // Altitude
       'ft': 'ft',
       'FL': 'FL',
-      
+
       // Vitesse
       'kt': 'kt',
       'km/h': 'km/h',
       'mph': 'mph',
       'm/s': 'm/s',
-      
+
       // Poids
       'kg': 'kg',
       'lbs': 'lbs',
-      
+
       // Carburant
       'ltr': 'L',
       'gal': 'gal',
-      
+
       // Pression
       'hPa': 'hPa',
       'inHg': 'inHg',
       'mb': 'mb',
-      
+
       // Température
       'C': '°C',
       'F': '°F',
-      
+
       // Consommation
       'lph': 'L/h',
       'gph': 'gal/h'
     };
-    
+
     const unit = units[category];
     return symbols[unit] || unit;
   };
-  
+
   return {
     units,
     convert,

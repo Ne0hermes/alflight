@@ -23,10 +23,7 @@ export const TabNavigation = memo(({ tabs, activeTab, onTabChange }) => {
       scrollbarWidth: 'none',
       msOverflowStyle: 'none',
       paddingTop: 'max(env(safe-area-inset-top), 8px)',
-      paddingBottom: '8px',
-      '::-webkit-scrollbar': {
-        display: 'none'
-      }
+      paddingBottom: '8px'
     }}>
       {tabs.map(tab => {
         const Icon = ICONS[tab.icon];

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Calculator, AlertCircle, TrendingUp, Wind, Compass, FileText, Scale, Plane, MapPin, Thermometer, CheckCircle, XCircle, Table } from 'lucide-react';
 import { sx } from '../../shared/styles/styleSystem';
 import PerformanceTableCalculator from './components/PerformanceTableCalculator';
+import PerformanceDataDebugger from './components/PerformanceDataDebugger';
 import { RunwaySuggestionEnhanced } from '../weather/components/RunwaySuggestionEnhanced';
 import { useAircraft, useWeightBalance, useNavigation, useWeather, useFuel } from '../../core/contexts';
 import { useWeatherStore } from '../../core/stores/weatherStore';
@@ -163,15 +164,15 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     // 🔧 FIX: Chemin correct vers température METAR = metar.decoded.temperature
     // weatherAPI.js ligne 91: { decoded: { temperature: data.temperature?.value ?? null } }
     const metarTemp = departureWeather?.metar?.decoded?.temperature ||
-                      departureWeather?.decoded?.temperature ||
-                      departureWeather?.temp ||
-                      flightPlan?.weather?.departure?.metar?.decoded?.temperature;
+      departureWeather?.decoded?.temperature ||
+      departureWeather?.temp ||
+      flightPlan?.weather?.departure?.metar?.decoded?.temperature;
 
     // 🚨 CRITIQUE: Si pas de METAR → utiliser savedTemp si disponible (rechargement page)
     // NE PAS utiliser ISA comme fallback (erreur grave de sécurité)
     const finalTemp = (metarTemp !== undefined && metarTemp !== null) ? metarTemp :
-                      (savedTemp !== undefined && savedTemp !== null) ? savedTemp :
-                      null;
+      (savedTemp !== undefined && savedTemp !== null) ? savedTemp :
+        null;
 
     console.log('🌡️ [PerformanceModule] Départ temp DEBUG:', {
       icao: departureAirport?.icao?.toUpperCase(),
@@ -201,14 +202,14 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     // 🔧 FIX: Chemin correct vers température METAR = metar.decoded.temperature
     // weatherAPI.js ligne 91: { decoded: { temperature: data.temperature?.value ?? null } }
     const metarTemp = arrivalWeather?.metar?.decoded?.temperature ||
-                      arrivalWeather?.decoded?.temperature ||
-                      arrivalWeather?.temp ||
-                      flightPlan?.weather?.arrival?.metar?.decoded?.temperature;
+      arrivalWeather?.decoded?.temperature ||
+      arrivalWeather?.temp ||
+      flightPlan?.weather?.arrival?.metar?.decoded?.temperature;
 
     // 🚨 CRITIQUE: Si pas de METAR → utiliser savedTemp si disponible (rechargement page)
     const finalTemp = (metarTemp !== undefined && metarTemp !== null) ? metarTemp :
-                      (savedTemp !== undefined && savedTemp !== null) ? savedTemp :
-                      null;
+      (savedTemp !== undefined && savedTemp !== null) ? savedTemp :
+        null;
 
     console.log('🌡️ [PerformanceModule] Arrivée temp DEBUG:', {
       icao: arrivalAirport?.icao?.toUpperCase(),
@@ -322,7 +323,11 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
         toda50ft: result.distance50ft,
         toda15m: result.distance50ft, // Utiliser la même valeur pour 15m/50ft
         outOfRange: result.outOfRange,
-        conditions: metadata.conditions
+        conditions: {
+          ...metadata.conditions,
+          mass: metadata.conditions.weight || calculations?.totalWeight || fallbackWeight,
+          wind: departureWeather?.metar?.decoded?.wind || departureWeather?.wind || null
+        }
       }
     };
 
@@ -359,9 +364,20 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
         lda50ft: result.distance50ft,
         lda15m: result.distance50ft, // Utiliser la même valeur pour 15m/50ft
         outOfRange: result.outOfRange,
-        conditions: metadata.conditions
+        conditions: {
+          ...metadata.conditions,
+          mass: metadata.conditions.weight || flightPlan?.weightBalance?.landingWeight || calculations?.totalWeight || fallbackWeight,
+          wind: arrivalWeather?.metar?.decoded?.wind || arrivalWeather?.wind || null
+        }
       }
     };
+
+    console.log('🔍 [PerformanceModule] DEBUG Atterrissage:', {
+      metadataWeight: metadata?.conditions?.weight,
+      arrivalWeatherWind: arrivalWeather?.metar?.decoded?.wind,
+      arrivalWeatherRaw: arrivalWeather,
+      savedConditions: flightPlan.performance.arrival.landing.conditions
+    });
 
     console.log('💾 [PerformanceModule] Performances atterrissage sauvegardées:', flightPlan.performance.arrival);
 
@@ -550,96 +566,96 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
 
           {/* Paramètres de décollage */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '16px' }}>
-              {/* Masse décollage */}
-              <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
-                <div style={sx.combine(sx.flex.start, sx.spacing.mb(2))}>
-                  <Scale size={16} style={{ marginRight: '6px', color: '#8b5cf6' }} />
-                  <h4 style={sx.combine(sx.text.xs, sx.text.bold)}>Masse</h4>
-                </div>
-                {calculations?.totalWeight ? (
-                  <>
-                    <p style={sx.combine(sx.text.lg, sx.text.bold)}>
-                      {calculations.totalWeight.toFixed(1)} kg
-                    </p>
-                    {calculations.isWithinLimits ? (
-                      <div style={sx.combine(sx.flex.start, sx.spacing.mt(1))}>
-                        <CheckCircle size={12} style={{ marginRight: '4px', color: '#10b981' }} />
-                        <span style={sx.combine(sx.text.xs, { color: '#10b981' })}>OK</span>
-                      </div>
-                    ) : (
-                      <div style={sx.combine(sx.flex.start, sx.spacing.mt(1))}>
-                        <XCircle size={12} style={{ marginRight: '4px', color: '#ef4444' }} />
-                        <span style={sx.combine(sx.text.xs, { color: '#ef4444' })}>Hors limites</span>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <p style={sx.combine(sx.text.sm, sx.text.secondary)}>Non définie</p>
-                )}
+            {/* Masse décollage */}
+            <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
+              <div style={sx.combine(sx.flex.start, sx.spacing.mb(2))}>
+                <Scale size={16} style={{ marginRight: '6px', color: '#8b5cf6' }} />
+                <h4 style={sx.combine(sx.text.xs, sx.text.bold)}>Masse</h4>
               </div>
-
-              {/* Altitude décollage */}
-              <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
-                <div style={sx.combine(sx.flex.start, sx.spacing.mb(2))}>
-                  <MapPin size={16} style={{ marginRight: '6px', color: '#3b82f6' }} />
-                  <h4 style={sx.combine(sx.text.xs, sx.text.bold)}>Altitude</h4>
-                </div>
-                {departureAirport ? (
+              {calculations?.totalWeight ? (
+                <>
                   <p style={sx.combine(sx.text.lg, sx.text.bold)}>
-                    {departureAirport.elevation || 0} ft
+                    {calculations.totalWeight.toFixed(1)} kg
                   </p>
-                ) : (
-                  <p style={sx.combine(sx.text.sm, sx.text.secondary)}>Non définie</p>
-                )}
-              </div>
-
-              {/* Température décollage */}
-              <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
-                <div style={sx.combine(sx.flex.start, sx.spacing.mb(2))}>
-                  <Thermometer size={16} style={{ marginRight: '6px', color: '#f59e0b' }} />
-                  <h4 style={sx.combine(sx.text.xs, sx.text.bold)}>Température</h4>
-                </div>
-                {departureTemp !== null ? (
-                  <>
-                    <p style={sx.combine(sx.text.lg, sx.text.bold)}>
-                      {departureTemp}°C
-                    </p>
-                    <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
-                      METAR
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p style={sx.combine(sx.text.lg, sx.text.bold, { color: '#ef4444' })}>
-                      NON DISPONIBLE
-                    </p>
-                    <p style={sx.combine(sx.text.xs, { color: '#ef4444' })}>
-                      ⚠️ Consulter météo
-                    </p>
-                  </>
-                )}
-              </div>
-
-              {/* Vent décollage */}
-              <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
-                <div style={sx.combine(sx.flex.start, sx.spacing.mb(2))}>
-                  <Wind size={16} style={{ marginRight: '6px', color: '#06b6d4' }} />
-                  <h4 style={sx.combine(sx.text.xs, sx.text.bold)}>Vent</h4>
-                </div>
-                {departureWeather?.metar?.decoded?.wind ? (
-                  <>
-                    <p style={sx.combine(sx.text.lg, sx.text.bold)}>
-                      {departureWeather.metar.decoded.wind.speed || 0} kt
-                    </p>
-                    <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
-                      {departureWeather.metar.decoded.wind.direction || '---'}°
-                    </p>
-                  </>
-                ) : (
-                  <p style={sx.combine(sx.text.sm, sx.text.secondary)}>Non disponible</p>
-                )}
-              </div>
+                  {calculations.isWithinLimits ? (
+                    <div style={sx.combine(sx.flex.start, sx.spacing.mt(1))}>
+                      <CheckCircle size={12} style={{ marginRight: '4px', color: '#10b981' }} />
+                      <span style={sx.combine(sx.text.xs, { color: '#10b981' })}>OK</span>
+                    </div>
+                  ) : (
+                    <div style={sx.combine(sx.flex.start, sx.spacing.mt(1))}>
+                      <XCircle size={12} style={{ marginRight: '4px', color: '#ef4444' }} />
+                      <span style={sx.combine(sx.text.xs, { color: '#ef4444' })}>Hors limites</span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p style={sx.combine(sx.text.sm, sx.text.secondary)}>Non définie</p>
+              )}
             </div>
+
+            {/* Altitude décollage */}
+            <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
+              <div style={sx.combine(sx.flex.start, sx.spacing.mb(2))}>
+                <MapPin size={16} style={{ marginRight: '6px', color: '#3b82f6' }} />
+                <h4 style={sx.combine(sx.text.xs, sx.text.bold)}>Altitude</h4>
+              </div>
+              {departureAirport ? (
+                <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+                  {departureAirport.elevation || 0} ft
+                </p>
+              ) : (
+                <p style={sx.combine(sx.text.sm, sx.text.secondary)}>Non définie</p>
+              )}
+            </div>
+
+            {/* Température décollage */}
+            <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
+              <div style={sx.combine(sx.flex.start, sx.spacing.mb(2))}>
+                <Thermometer size={16} style={{ marginRight: '6px', color: '#f59e0b' }} />
+                <h4 style={sx.combine(sx.text.xs, sx.text.bold)}>Température</h4>
+              </div>
+              {departureTemp !== null ? (
+                <>
+                  <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+                    {departureTemp}°C
+                  </p>
+                  <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                    METAR
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p style={sx.combine(sx.text.lg, sx.text.bold, { color: '#ef4444' })}>
+                    NON DISPONIBLE
+                  </p>
+                  <p style={sx.combine(sx.text.xs, { color: '#ef4444' })}>
+                    ⚠️ Consulter météo
+                  </p>
+                </>
+              )}
+            </div>
+
+            {/* Vent décollage */}
+            <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
+              <div style={sx.combine(sx.flex.start, sx.spacing.mb(2))}>
+                <Wind size={16} style={{ marginRight: '6px', color: '#06b6d4' }} />
+                <h4 style={sx.combine(sx.text.xs, sx.text.bold)}>Vent</h4>
+              </div>
+              {departureWeather?.metar?.decoded?.wind ? (
+                <>
+                  <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+                    {departureWeather.metar.decoded.wind.speed || 0} kt
+                  </p>
+                  <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                    {departureWeather.metar.decoded.wind.direction || '---'}°
+                  </p>
+                </>
+              ) : (
+                <p style={sx.combine(sx.text.sm, sx.text.secondary)}>Non disponible</p>
+              )}
+            </div>
+          </div>
 
           {takeoffGroups.map((group, index) => (
             <PerformanceTableCalculator
@@ -677,95 +693,95 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
             Atterrissage{arrivalAirport?.name && ` - ${arrivalAirport.name} (${arrivalAirport.icao})`}
           </h3>
 
-            {/* Paramètres d'atterrissage */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '16px' }}>
-              {/* Masse atterrissage */}
-              <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
-                <div style={sx.combine(sx.flex.start, sx.spacing.mb(2))}>
-                  <Scale size={16} style={{ marginRight: '6px', color: '#8b5cf6' }} />
-                  <h4 style={sx.combine(sx.text.xs, sx.text.bold)}>Masse</h4>
-                </div>
-                {(() => {
-                  // 🔧 FIX: Utiliser landingWeight depuis flightPlan (Step6) au lieu de recalculer
-                  const landingWeight = flightPlan?.weightBalance?.landingWeight || calculations?.totalWeight;
-
-                  return landingWeight ? (
-                    <>
-                      <p style={sx.combine(sx.text.lg, sx.text.bold)}>
-                        {landingWeight.toFixed(1)} kg
-                      </p>
-                      <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
-                        {flightPlan?.weightBalance?.landingWeight ? 'Depuis Step 6' : 'Estimée'}
-                      </p>
-                    </>
-                  ) : (
-                    <p style={sx.combine(sx.text.sm, sx.text.secondary)}>Non définie</p>
-                  );
-                })()}
+          {/* Paramètres d'atterrissage */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+            {/* Masse atterrissage */}
+            <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
+              <div style={sx.combine(sx.flex.start, sx.spacing.mb(2))}>
+                <Scale size={16} style={{ marginRight: '6px', color: '#8b5cf6' }} />
+                <h4 style={sx.combine(sx.text.xs, sx.text.bold)}>Masse</h4>
               </div>
+              {(() => {
+                // 🔧 FIX: Utiliser landingWeight depuis flightPlan (Step6) au lieu de recalculer
+                const landingWeight = flightPlan?.weightBalance?.landingWeight || calculations?.totalWeight;
 
-              {/* Altitude atterrissage */}
-              <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
-                <div style={sx.combine(sx.flex.start, sx.spacing.mb(2))}>
-                  <MapPin size={16} style={{ marginRight: '6px', color: '#10b981' }} />
-                  <h4 style={sx.combine(sx.text.xs, sx.text.bold)}>Altitude</h4>
-                </div>
-                {arrivalAirport ? (
-                  <p style={sx.combine(sx.text.lg, sx.text.bold)}>
-                    {arrivalAirport.elevation || 0} ft
-                  </p>
+                return landingWeight ? (
+                  <>
+                    <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+                      {landingWeight.toFixed(1)} kg
+                    </p>
+                    <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                      {flightPlan?.weightBalance?.landingWeight ? 'Depuis Step 6' : 'Estimée'}
+                    </p>
+                  </>
                 ) : (
                   <p style={sx.combine(sx.text.sm, sx.text.secondary)}>Non définie</p>
-                )}
-              </div>
-
-              {/* Température atterrissage */}
-              <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
-                <div style={sx.combine(sx.flex.start, sx.spacing.mb(2))}>
-                  <Thermometer size={16} style={{ marginRight: '6px', color: '#f59e0b' }} />
-                  <h4 style={sx.combine(sx.text.xs, sx.text.bold)}>Température</h4>
-                </div>
-                {arrivalTemp !== null ? (
-                  <>
-                    <p style={sx.combine(sx.text.lg, sx.text.bold)}>
-                      {arrivalTemp}°C
-                    </p>
-                    <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
-                      METAR
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p style={sx.combine(sx.text.lg, sx.text.bold, { color: '#ef4444' })}>
-                      NON DISPONIBLE
-                    </p>
-                    <p style={sx.combine(sx.text.xs, { color: '#ef4444' })}>
-                      ⚠️ Consulter météo
-                    </p>
-                  </>
-                )}
-              </div>
-
-              {/* Vent atterrissage */}
-              <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
-                <div style={sx.combine(sx.flex.start, sx.spacing.mb(2))}>
-                  <Wind size={16} style={{ marginRight: '6px', color: '#06b6d4' }} />
-                  <h4 style={sx.combine(sx.text.xs, sx.text.bold)}>Vent</h4>
-                </div>
-                {arrivalWeather?.metar?.decoded?.wind ? (
-                  <>
-                    <p style={sx.combine(sx.text.lg, sx.text.bold)}>
-                      {arrivalWeather.metar.decoded.wind.speed || 0} kt
-                    </p>
-                    <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
-                      {arrivalWeather.metar.decoded.wind.direction || '---'}°
-                    </p>
-                  </>
-                ) : (
-                  <p style={sx.combine(sx.text.sm, sx.text.secondary)}>Non disponible</p>
-                )}
-              </div>
+                );
+              })()}
             </div>
+
+            {/* Altitude atterrissage */}
+            <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
+              <div style={sx.combine(sx.flex.start, sx.spacing.mb(2))}>
+                <MapPin size={16} style={{ marginRight: '6px', color: '#10b981' }} />
+                <h4 style={sx.combine(sx.text.xs, sx.text.bold)}>Altitude</h4>
+              </div>
+              {arrivalAirport ? (
+                <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+                  {arrivalAirport.elevation || 0} ft
+                </p>
+              ) : (
+                <p style={sx.combine(sx.text.sm, sx.text.secondary)}>Non définie</p>
+              )}
+            </div>
+
+            {/* Température atterrissage */}
+            <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
+              <div style={sx.combine(sx.flex.start, sx.spacing.mb(2))}>
+                <Thermometer size={16} style={{ marginRight: '6px', color: '#f59e0b' }} />
+                <h4 style={sx.combine(sx.text.xs, sx.text.bold)}>Température</h4>
+              </div>
+              {arrivalTemp !== null ? (
+                <>
+                  <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+                    {arrivalTemp}°C
+                  </p>
+                  <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                    METAR
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p style={sx.combine(sx.text.lg, sx.text.bold, { color: '#ef4444' })}>
+                    NON DISPONIBLE
+                  </p>
+                  <p style={sx.combine(sx.text.xs, { color: '#ef4444' })}>
+                    ⚠️ Consulter météo
+                  </p>
+                </>
+              )}
+            </div>
+
+            {/* Vent atterrissage */}
+            <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3))}>
+              <div style={sx.combine(sx.flex.start, sx.spacing.mb(2))}>
+                <Wind size={16} style={{ marginRight: '6px', color: '#06b6d4' }} />
+                <h4 style={sx.combine(sx.text.xs, sx.text.bold)}>Vent</h4>
+              </div>
+              {arrivalWeather?.metar?.decoded?.wind ? (
+                <>
+                  <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+                    {arrivalWeather.metar.decoded.wind.speed || 0} kt
+                  </p>
+                  <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                    {arrivalWeather.metar.decoded.wind.direction || '---'}°
+                  </p>
+                </>
+              ) : (
+                <p style={sx.combine(sx.text.sm, sx.text.secondary)}>Non disponible</p>
+              )}
+            </div>
+          </div>
 
           {landingGroups.map((group, index) => (
             <PerformanceTableCalculator
@@ -774,7 +790,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               index={index}
               defaultAltitude={arrivalAirport?.elevation || 0}
               defaultTemperature={arrivalTemp}
-              defaultWeight={(calculations?.totalWeight || fallbackWeight) - 50} // Estimation masse atterrissage (moins carburant)
+              defaultWeight={flightPlan?.weightBalance?.landingWeight || (calculations?.totalWeight || fallbackWeight) - 50}
               arrivalAirport={arrivalAirport}
               isExpanded={index === 0} // Premier groupe ouvert par défaut
               onResultsCalculated={handleLandingResults} // Sauvegarde automatique
@@ -869,6 +885,9 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
           })}
         </div>
       )}
+
+      {/* 🔧 DEBUG: Afficher les données brutes pour vérification */}
+      <PerformanceDataDebugger tables={loadedPerformanceTables} />
     </div>
   );
 };
@@ -932,10 +951,10 @@ const AbaqueTestSections = ({
     // Essayer plusieurs chemins possibles pour le vent
     // IMPORTANT: Utiliser ?? au lieu de || pour accepter 0 comme valeur valide
     const windSpeed = arrivalWeather?.metar?.decoded?.wind?.speed ??
-                     arrivalWeather?.decoded?.wind?.speed ??
-                     arrivalWeather?.wind?.speed ??
-                     arrivalWeather?.metar?.wind?.speed ??
-                     departureWeather?.metar?.decoded?.wind?.speed ?? 0;
+      arrivalWeather?.decoded?.wind?.speed ??
+      arrivalWeather?.wind?.speed ??
+      arrivalWeather?.metar?.wind?.speed ??
+      departureWeather?.metar?.decoded?.wind?.speed ?? 0;
     const wind = windSpeed;
 
 

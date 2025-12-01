@@ -13,56 +13,32 @@ import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
 const FuelRow = memo(({ type, label, description, fuel, onChange, readonly = false, automatic = false, totalGal }) => {
   const { format, convert, getSymbol, toStorage, getUnit } = useUnits();
   const units = useUnitsWatcher(); // Force re-render on units change
-  const GAL_TO_LTR = 3.78541;
-  
+
+
   // Valeurs par défaut si fuel est undefined
   const safeFuel = fuel || { gal: 0, ltr: 0 };
-  
+
   // Gérer les changements selon l'unité préférée
   const handleFuelChange = (value) => {
     const numValue = parseFloat(value) || 0;
     const userUnit = getUnit('fuel');
-    
+
     // Convertir vers les unités de stockage (L et gal)
-    let ltr, gal;
-    
-    if (userUnit === 'ltr') {
-      ltr = numValue;
-      gal = ltr / GAL_TO_LTR;
-    } else if (userUnit === 'gal') {
-      gal = numValue;
-      ltr = gal * GAL_TO_LTR;
-    } else if (userUnit === 'kg') {
-      // Densité du carburant: ~0.8 kg/L pour AVGAS
-      ltr = numValue / 0.8;
-      gal = ltr / GAL_TO_LTR;
-    } else if (userUnit === 'lbs') {
-      // 1 lbs = 0.453592 kg
-      const kg = numValue * 0.453592;
-      ltr = kg / 0.8;
-      gal = ltr / GAL_TO_LTR;
-    }
-    
+    // Utilise la densité standard définie dans unitConversions.js (0.72 pour AVGAS)
+    const ltr = convert(numValue, 'fuel', userUnit, { toUnit: 'ltr' });
+    const gal = convert(numValue, 'fuel', userUnit, { toUnit: 'gal' });
+
     onChange({
       gal: gal,
       ltr: ltr
     });
   };
-  
+
   // Obtenir la valeur à afficher selon l'unité préférée
   const getDisplayValue = () => {
     const userUnit = getUnit('fuel');
-    
-    if (userUnit === 'ltr') {
-      return safeFuel.ltr.toFixed(1);
-    } else if (userUnit === 'gal') {
-      return safeFuel.gal.toFixed(1);
-    } else if (userUnit === 'kg') {
-      return (safeFuel.ltr * 0.8).toFixed(1);
-    } else if (userUnit === 'lbs') {
-      return (safeFuel.ltr * 0.8 * 2.20462).toFixed(1);
-    }
-    return safeFuel.ltr.toFixed(1);
+    // Convertir depuis l'unité de stockage (ltr) vers l'unité utilisateur
+    return convert(safeFuel.ltr, 'fuel', 'ltr', { toUnit: userUnit }).toFixed(1);
   };
 
   return (
@@ -111,19 +87,19 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
   useFuelSync();
   const { format, convert, getSymbol, toStorage, getUnit } = useUnits();
   const units = useUnitsWatcher(); // Force re-render on units change
-  const GAL_TO_LTR = 3.78541; // Constante de conversion gallons vers litres
+
   const { selectedAircraft } = useAircraft();
   const { navigationResults, flightType } = useNavigation();
   const { fuelData, setFuelData, fobFuel, setFobFuel, calculateTotal, isFobSufficient } = useFuel();
   const alternatesData = useAlternatesForFuel();
-  const { 
-    alternateFuelRequired, 
-    alternateFuelRequiredGal, 
-    alternatesCount, 
+  const {
+    alternateFuelRequired,
+    alternateFuelRequiredGal,
+    alternatesCount,
     maxDistanceAlternate,
-    hasAlternates 
+    hasAlternates
   } = alternatesData;
-  
+
 
   // S'assurer que fuelData existe avec des valeurs par défaut
   // Utiliser les valeurs de fuelData si elles existent, sinon les valeurs par défaut
@@ -164,7 +140,7 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
         let consumptionLph;
         if (storedUnit === 'gph') {
           // Consommation stockée en gal/h → convertir en L/h
-          consumptionLph = consumptionStored * GAL_TO_LTR;
+          consumptionLph = convert(consumptionStored, 'fuelConsumption', 'gph', { toUnit: 'lph' });
         } else {
           // Consommation déjà en L/h
           consumptionLph = consumptionStored;
@@ -185,11 +161,10 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
         tripLtr = 0;
       }
 
-      const tripGal = tripLtr / GAL_TO_LTR;
-
       // Calculer contingency (5% du trip, minimum 1 gallon)
+      const tripGal = convert(tripLtr, 'fuel', 'ltr', { toUnit: 'gal' });
       const contingencyGal = Math.max(1, tripGal * 0.05);
-      const contingencyLtr = contingencyGal * GAL_TO_LTR;
+      const contingencyLtr = convert(contingencyGal, 'fuel', 'gal', { toUnit: 'ltr' });
 
       // Calculer final reserve
       const reserveMinutes = navigationResults.regulationReserveMinutes || 30;
@@ -200,21 +175,21 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
       let reserveLtr;
       if (storedUnit === 'gph') {
         // Consommation stockée en gal/h → convertir en L/h
-        const consumptionLph = reserveConsumptionStored * GAL_TO_LTR;
+        const consumptionLph = convert(reserveConsumptionStored, 'fuelConsumption', 'gph', { toUnit: 'lph' });
         reserveLtr = consumptionLph * reserveHours;
       } else {
         // Consommation déjà en L/h
         reserveLtr = reserveConsumptionStored * reserveHours;
       }
 
-      const reserveGal = reserveLtr / GAL_TO_LTR;
-      
+      const reserveGal = convert(reserveLtr, 'fuel', 'ltr', { toUnit: 'gal' });
+
       console.log('🔄 Fuel sync: Updating fuel data:', {
         trip: { gal: tripGal, ltr: tripLtr },
         contingency: { gal: contingencyGal, ltr: contingencyLtr },
         finalReserve: { gal: reserveGal, ltr: reserveLtr }
       });
-      
+
       // Mettre à jour les données
       setFuelData(prev => ({
         ...prev,
@@ -252,7 +227,7 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
       alternatesCount,
       maxDistanceAlternate
     });
-    
+
     if (hasAlternates) {
       // Toujours mettre à jour si on a des alternates, même si le fuel calculé est 0
       console.log('📊 Mise à jour du carburant alternate:', alternateFuelRequired, 'L');
@@ -279,7 +254,7 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
   const handleFuelChange = (type, values) => {
     // Ne pas permettre la modification manuelle de ces types (calculés automatiquement)
     if (type === 'trip' || type === 'contingency' || type === 'finalReserve' || type === 'alternate') return;
-    
+
     setFuelData({
       ...safeFuelData,
       [type]: values
@@ -291,11 +266,11 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
     if (unit === 'gal') {
       setFobFuel({
         gal: numValue,
-        ltr: numValue * 3.78541
+        ltr: convert(numValue, 'fuel', 'gal', { toUnit: 'ltr' })
       });
     } else {
       setFobFuel({
-        gal: numValue / 3.78541,
+        gal: convert(numValue, 'fuel', 'ltr', { toUnit: 'gal' }),
         ltr: numValue
       });
     }
@@ -306,7 +281,7 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
     gal: (fobFuel && typeof fobFuel.gal === 'number') ? fobFuel.gal : 0,
     ltr: (fobFuel && typeof fobFuel.ltr === 'number') ? fobFuel.ltr : 0
   };
-  
+
   // S'assurer que calculateTotal retourne toujours un nombre
   // Arrondir à l'unité supérieure pour éviter les valeurs décimales longues
   const safeCalculateTotal = (unit) => {
@@ -435,10 +410,10 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
           <tbody>
             {fuelTypes.map(type => {
               // S'assurer que la propriété existe dans fuelData
-              const fuelValue = safeFuelData && safeFuelData[type.key] 
-                ? safeFuelData[type.key] 
+              const fuelValue = safeFuelData && safeFuelData[type.key]
+                ? safeFuelData[type.key]
                 : { gal: 0, ltr: 0 };
-              
+
               return (
                 <FuelRow
                   key={type.key}

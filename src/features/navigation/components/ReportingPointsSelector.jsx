@@ -3,26 +3,26 @@ import { Navigation2, MapPin, Plus, Trash2, Info, CheckCircle, Download, FileTex
 import { sx } from '@shared/styles/styleSystem';
 import { aeroDataProvider } from '@core/data';
 import { useVACStore, vacSelectors } from '@core/stores/vacStore';
-import { Conversions } from '@utils/conversions';
+import { coordinateConversions } from '@utils/unitConversions';
 
 // PAS DE POINTS PRÉDÉFINIS - Les points VFR doivent venir exclusivement des fichiers SIA/AIXM locaux
 
-export const ReportingPointsSelector = memo(({ 
-  airportIcao, 
-  selectedPoints = [], 
-  onPointsChange, 
-  maxPoints = 5 
+export const ReportingPointsSelector = memo(({
+  airportIcao,
+  selectedPoints = [],
+  onPointsChange,
+  maxPoints = 5
 }) => {
   const [availablePoints, setAvailablePoints] = useState([]);
   const [customPoint, setCustomPoint] = useState({ name: '', lat: '', lon: '' });
   const [showCustomForm, setShowCustomForm] = useState(false);
   const [vacPointsAvailable, setVacPointsAvailable] = useState(false);
-  
+
   // Hooks VAC
   const vacChart = vacSelectors.useChartByIcao(airportIcao);
   const { } = vacSelectors.useVACActions();
   const isDownloading = false; // État de téléchargement temporairement désactivé
-  
+
   // Charger les points VFR pour l'aérodrome
   useEffect(() => {
     if (!airportIcao) {
@@ -30,7 +30,7 @@ export const ReportingPointsSelector = memo(({
       setVacPointsAvailable(false);
       return;
     }
-    
+
     // Vérifier d'abord si des points VAC sont disponibles
     if (vacChart && vacChart.isDownloaded && vacChart.extractedData && vacChart.extractedData.vfrPoints) {
       setAvailablePoints(vacChart.extractedData.vfrPoints);
@@ -41,18 +41,18 @@ export const ReportingPointsSelector = memo(({
       setVacPointsAvailable(false);
     }
   }, [airportIcao, vacChart]);
-  
+
   // Gérer la sélection/désélection d'un point
   const togglePoint = (point) => {
     const isSelected = selectedPoints.some(p => p.id === point.id);
-    
+
     if (isSelected) {
       onPointsChange(selectedPoints.filter(p => p.id !== point.id));
     } else if (selectedPoints.length < maxPoints) {
       onPointsChange([...selectedPoints, point]);
     }
   };
-  
+
   // Ajouter un point personnalisé
   const addCustomPoint = () => {
     if (customPoint.name && customPoint.lat && customPoint.lon) {
@@ -68,20 +68,20 @@ export const ReportingPointsSelector = memo(({
         mandatory: false,
         custom: true
       };
-      
+
       if (selectedPoints.length < maxPoints) {
         onPointsChange([...selectedPoints, newPoint]);
       }
-      
+
       setCustomPoint({ name: '', lat: '', lon: '' });
       setShowCustomForm(false);
     }
   };
-  
+
   const removeCustomPoint = (pointId) => {
     onPointsChange(selectedPoints.filter(p => p.id !== pointId));
   };
-  
+
   return (
     <div style={sx.combine(sx.components.card.base, sx.spacing.p(4))}>
       <div style={sx.combine(sx.flex.between, sx.spacing.mb(4))}>
@@ -93,14 +93,14 @@ export const ReportingPointsSelector = memo(({
           {selectedPoints.length}/{maxPoints} sélectionnés
         </span>
       </div>
-      
+
       {!airportIcao && (
         <div style={sx.combine(sx.text.center, sx.text.secondary, sx.spacing.py(4))}>
           <Info size={24} style={{ margin: '0 auto 8px' }} />
           <p>Sélectionnez un aérodrome pour voir les points de report VFR disponibles</p>
         </div>
       )}
-      
+
       {/* Notification pour télécharger la carte VAC */}
       {airportIcao && vacChart && !vacChart.isDownloaded && (
         <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning, sx.spacing.mb(4))}>
@@ -132,7 +132,7 @@ export const ReportingPointsSelector = memo(({
           </button>
         </div>
       )}
-      
+
       {/* Indicateur de source des points */}
       {airportIcao && availablePoints.length > 0 && vacPointsAvailable && (
         <div style={sx.combine(sx.components.alert.base, sx.components.alert.success, sx.spacing.mb(4))}>
@@ -142,17 +142,17 @@ export const ReportingPointsSelector = memo(({
           </p>
         </div>
       )}
-      
+
       {airportIcao && availablePoints.length === 0 && !vacChart && (
         <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mb(4))}>
           <Info size={16} />
           <p style={sx.text.sm}>
-            Aucun point VFR prédéfini pour cet aérodrome. 
+            Aucun point VFR prédéfini pour cet aérodrome.
             Vous pouvez ajouter des points personnalisés.
           </p>
         </div>
       )}
-      
+
       {/* Points VFR prédéfinis */}
       {availablePoints.length > 0 && (
         <div style={sx.spacing.mb(4)}>
@@ -194,7 +194,7 @@ export const ReportingPointsSelector = memo(({
             <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning, sx.spacing.mb(2), { padding: '6px 10px' })}>
               <Info size={14} />
               <p style={sx.text.xs}>
-                Ces points sont prédéfinis et peuvent différer des points officiels. 
+                Ces points sont prédéfinis et peuvent différer des points officiels.
                 {vacChart && ' Téléchargez la carte VAC pour obtenir les points officiels.'}
               </p>
             </div>
@@ -203,9 +203,9 @@ export const ReportingPointsSelector = memo(({
             {availablePoints.map(point => {
               const isSelected = selectedPoints.some(p => p.id === point.id);
               const canSelect = !isSelected && selectedPoints.length < maxPoints;
-              
+
               return (
-                <div 
+                <div
                   key={point.id}
                   onClick={() => canSelect || isSelected ? togglePoint(point) : null}
                   style={sx.combine(
@@ -251,7 +251,7 @@ export const ReportingPointsSelector = memo(({
                         <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
                           📍 {point.coordinates.lat.toFixed(4)}°, {point.coordinates.lon.toFixed(4)}°<br />
                           <span style={{ fontSize: '10px', color: '#9ca3af' }}>
-                            {Conversions.coordinatesToDMS(point.coordinates.lat, point.coordinates.lon).formatted}
+                            {coordinateConversions.coordinatesToDMS(point.coordinates.lat, point.coordinates.lon).formatted}
                           </span>
                         </p>
                       </div>
@@ -266,7 +266,7 @@ export const ReportingPointsSelector = memo(({
           </div>
         </div>
       )}
-      
+
       {/* Points sélectionnés personnalisés */}
       {selectedPoints.filter(p => p.custom).length > 0 && (
         <div style={sx.spacing.mb(4)}>
@@ -275,7 +275,7 @@ export const ReportingPointsSelector = memo(({
           </h5>
           <div style={{ display: 'grid', gap: '8px' }}>
             {selectedPoints.filter(p => p.custom).map(point => (
-              <div 
+              <div
                 key={point.id}
                 style={sx.combine(
                   sx.spacing.p(3),
@@ -289,7 +289,7 @@ export const ReportingPointsSelector = memo(({
                   <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
                     📍 {point.coordinates.lat.toFixed(4)}°, {point.coordinates.lon.toFixed(4)}°<br />
                     <span style={{ fontSize: '10px', color: '#9ca3af' }}>
-                      {Conversions.coordinatesToDMS(point.coordinates.lat, point.coordinates.lon).formatted}
+                      {coordinateConversions.coordinatesToDMS(point.coordinates.lat, point.coordinates.lon).formatted}
                     </span>
                   </p>
                 </div>
@@ -304,7 +304,7 @@ export const ReportingPointsSelector = memo(({
           </div>
         </div>
       )}
-      
+
       {/* Formulaire pour ajouter un point personnalisé */}
       {airportIcao && (
         <div style={sx.spacing.mt(4)}>
@@ -383,7 +383,7 @@ export const ReportingPointsSelector = memo(({
           )}
         </div>
       )}
-      
+
       {/* Résumé de la sélection */}
       {selectedPoints.length > 0 && (
         <div style={sx.combine(

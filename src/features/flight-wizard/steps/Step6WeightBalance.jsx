@@ -7,7 +7,7 @@ import { ScenarioCards } from '@features/weight-balance/components/ScenarioCards
 import { calculateScenarios } from '@features/weight-balance/utils/calculations';
 import { Scale } from 'lucide-react';
 import { theme } from '../../../styles/theme';
-import { FUEL_DENSITIES } from '@utils/constants';
+import { DENSITIES } from '@utils/unitConversions';
 import { useUnits } from '@hooks/useUnits';
 import { calculateDistanceToSegment, calculateDistance, calculateMidpoint } from '@utils/navigationCalculations';
 
@@ -228,594 +228,370 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
     }
   }, [flightPlan, fobFuel, setFobFuel]);
 
-  // 🔧 FIX CRITIQUE: Restaurer les loads depuis flightPlan au montage
-  // Utiliser un ref pour ne restaurer qu'une seule fois au montage
-  const hasRestoredLoads = React.useRef(false);
+      // 🔧 FIX CRITIQUE: Restaurer les loads depuis flightPlan au montage
+      // Utiliser un ref pour ne restaurer qu'une seule fois au montage
+      const hasRestoredLoads = React.useRef(false);
 
-  useEffect(() => {
-    // Ne restaurer qu'une fois, au premier montage
-    if (hasRestoredLoads.current) return;
+      useEffect(() => {
+        // Ne restaurer qu'une fois, au premier montage
+        if (hasRestoredLoads.current) return;
 
-    const hasLoadsInFlightPlan = flightPlan?.weightBalance?.loads && Object.keys(flightPlan.weightBalance.loads).length > 0;
+        const hasLoadsInFlightPlan = flightPlan?.weightBalance?.loads && Object.keys(flightPlan.weightBalance.loads).length > 0;
 
-    // 🔧 FIX: Vérifier si le contexte contient des valeurs non-nulles (pas juste la présence de clés)
-    const sumLoads = Object.values(loads).reduce((sum, val) => sum + (val || 0), 0);
-    const contextHasRealData = sumLoads > 0;
+        // 🔧 FIX: Vérifier si le contexte contient des valeurs non-nulles (pas juste la présence de clés)
+        const sumLoads = Object.values(loads).reduce((sum, val) => sum + (val || 0), 0);
+        const contextHasRealData = sumLoads > 0;
 
-    if (hasLoadsInFlightPlan && !contextHasRealData) {
-      // Restaurer depuis flightPlan
-      console.log('🔄 [Step6WB] Restauration des loads depuis flightPlan:', flightPlan.weightBalance.loads);
-      Object.entries(flightPlan.weightBalance.loads).forEach(([type, value]) => {
-        if (value !== undefined && value !== null && value !== 0) {
-          updateLoad(type, value);
+        if (hasLoadsInFlightPlan && !contextHasRealData) {
+          // Restaurer depuis flightPlan
+          console.log('🔄 [Step6WB] Restauration des loads depuis flightPlan:', flightPlan.weightBalance.loads);
+          Object.entries(flightPlan.weightBalance.loads).forEach(([type, value]) => {
+            if (value !== undefined && value !== null && value !== 0) {
+              updateLoad(type, value);
+            }
+          });
+          hasRestoredLoads.current = true;
         }
-      });
-      hasRestoredLoads.current = true;
-    }
-  }, [flightPlan?.weightBalance?.loads, loads, updateLoad]);
+      }, [flightPlan?.weightBalance?.loads, loads, updateLoad]);
 
-  // 🔧 FIX: Mettre à jour loads.fuel quand fobFuel change
-  // Nécessaire pour que les scénarios incluent le carburant dans leurs calculs
-  useEffect(() => {
-    if (aircraft && fobFuel) {
-      // Calculer les litres de carburant
-      let fuelLitres = 0;
-      if (typeof fobFuel === 'number') {
-        fuelLitres = fobFuel;
-      } else if (fobFuel?.ltr) {
-        fuelLitres = fobFuel.ltr;
-      }
+      // 🔧 FIX: Mettre à jour loads.fuel quand fobFuel change
+      useEffect(() => {
+        if (aircraft && fobFuel) {
+          // Calculer les litres de carburant
+          let fuelLitres = 0;
+          if (typeof fobFuel === 'number') {
+            fuelLitres = fobFuel;
+          } else if (fobFuel?.ltr) {
+            fuelLitres = fobFuel.ltr;
+          }
 
-      // Utiliser FUEL_DENSITIES pour une détection robuste du type de carburant
-      const normalizedFuelType = aircraft.fuelType?.replace(/-/g, ' ');
-      const fuelDensity = FUEL_DENSITIES[aircraft.fuelType] ||
-                          FUEL_DENSITIES[normalizedFuelType] ||
-                          FUEL_DENSITIES['JET A-1'] ||
-                          0.84;
+          // Utiliser DENSITIES centralisées
+          const isJet = aircraft.fuelType?.toUpperCase().includes('JET');
+          const fuelDensity = isJet ? DENSITIES.JET_A1 : DENSITIES.AVGAS;
 
-      console.log('🔧 [Step6] Updating loads.fuel:', { fuelLitres, fuelDensity, fuelWeightKg: fuelLitres * fuelDensity });
-      updateFuelLoad(fuelLitres, fuelDensity);
-    }
-  }, [aircraft, aircraft?.fuelType, fobFuel, updateFuelLoad]);
+          console.log('🔧 [Step6] Updating loads.fuel:', { fuelLitres, fuelDensity });
+          updateFuelLoad(fuelLitres, fuelDensity);
+        }
+      }, [aircraft, aircraft?.fuelType, fobFuel, updateFuelLoad]);
 
-  // Calcul des scénarios
-  const scenarios = useMemo(() => {
-    // 🔧 FIX: Attendre que weightBalance soit chargé avant de calculer les scénarios
-    if (!aircraft || !aircraft.weightBalance || !calculations || typeof calculations.totalWeight !== 'number') {
-      console.log('⏳ [Step6] Scénarios en attente:', {
-        hasAircraft: !!aircraft,
-        hasWeightBalance: !!aircraft?.weightBalance,
-        hasCalculations: !!calculations,
-        hasTotalWeight: typeof calculations?.totalWeight === 'number'
-      });
-      return null;
-    }
-    const fuelUnit = getUnit('fuel');
-    return calculateScenarios(aircraft, calculations, loads, fobFuel, fuelData, fuelUnit);
-  }, [aircraft, calculations, loads, fobFuel, fuelData, getUnit]);
+      // Calcul des scénarios
+      const scenarios = useMemo(() => {
+        if (!aircraft || !aircraft.weightBalance || !calculations || typeof calculations.totalWeight !== 'number') {
+          return null;
+        }
+        const fuelUnit = getUnit('fuel');
+        return calculateScenarios(aircraft, calculations, loads, fobFuel, fuelData, fuelUnit);
+      }, [aircraft, calculations, loads, fobFuel, fuelData, getUnit]);
 
-  // 🔧 SÉCURITÉ CRITIQUE: Vérifier les limites opérationnelles de masse
-  const weightLimitViolations = useMemo(() => {
-    if (!aircraft || !scenarios) return null;
+      // 🔧 SÉCURITÉ CRITIQUE: Vérifier les limites opérationnelles de masse
+      const weightLimitViolations = useMemo(() => {
+        if (!aircraft || !scenarios) return null;
 
-    const violations = [];
-    const minTakeoffWeight = parseFloat(aircraft.weights?.minTakeoffWeight);
-    const maxTakeoffWeight = parseFloat(aircraft.weights?.mtow || aircraft.maxTakeoffWeight);
-    const maxLandingWeight = parseFloat(aircraft.weights?.mlw);
+        const violations = [];
+        const minTakeoffWeight = parseFloat(aircraft.weights?.minTakeoffWeight);
+        const maxTakeoffWeight = parseFloat(aircraft.weights?.mtow || aircraft.maxTakeoffWeight);
+        const maxLandingWeight = parseFloat(aircraft.weights?.mlw);
 
-    const takeoffWeight = scenarios.toCrm?.w || calculations?.totalWeight || 0;
-    const landingWeight = scenarios.landing?.w || 0;
+        const takeoffWeight = scenarios.toCrm?.w || calculations?.totalWeight || 0;
+        const landingWeight = scenarios.landing?.w || 0;
 
-    // Vérifier masse minimale de vol (DÉCOLLAGE)
-    if (!isNaN(minTakeoffWeight) && takeoffWeight < minTakeoffWeight) {
-      violations.push({
-        type: 'critical',
-        phase: 'Décollage',
-        message: `⚠️ MASSE INSUFFISANTE AU DÉCOLLAGE : ${takeoffWeight.toFixed(1)} kg < ${minTakeoffWeight} kg minimum`,
-        detail: `La masse au décollage est INFÉRIEURE à la masse minimale de vol. VOL INTERDIT.`,
-        value: takeoffWeight,
-        limit: minTakeoffWeight,
-        icon: '🚫'
-      });
-    }
+        if (!isNaN(minTakeoffWeight) && takeoffWeight < minTakeoffWeight) {
+          violations.push({
+            type: 'critical',
+            phase: 'Décollage',
+            message: `⚠️ MASSE INSUFFISANTE AU DÉCOLLAGE : ${takeoffWeight.toFixed(1)} kg < ${minTakeoffWeight} kg minimum`,
+            detail: `La masse au décollage est INFÉRIEURE à la masse minimale de vol. VOL INTERDIT.`,
+            value: takeoffWeight,
+            limit: minTakeoffWeight,
+            icon: '🚫'
+          });
+        }
 
-    // 🔧 FIX CRITIQUE: Vérifier AUSSI la masse minimale à l'ATTERRISSAGE
-    if (!isNaN(minTakeoffWeight) && landingWeight > 0 && landingWeight < minTakeoffWeight) {
-      violations.push({
-        type: 'critical',
-        phase: 'Atterrissage',
-        message: `⚠️ MASSE INSUFFISANTE À L'ATTERRISSAGE : ${landingWeight.toFixed(1)} kg < ${minTakeoffWeight} kg minimum`,
-        detail: `La masse à l'atterrissage est INFÉRIEURE à la masse minimale de vol. ATTERRISSAGE INTERDIT.`,
-        value: landingWeight,
-        limit: minTakeoffWeight,
-        icon: '🚫'
-      });
-    }
+        if (!isNaN(minTakeoffWeight) && landingWeight > 0 && landingWeight < minTakeoffWeight) {
+          violations.push({
+            type: 'critical',
+            phase: 'Atterrissage',
+            message: `⚠️ MASSE INSUFFISANTE À L'ATTERRISSAGE : ${landingWeight.toFixed(1)} kg < ${minTakeoffWeight} kg minimum`,
+            detail: `La masse à l'atterrissage est INFÉRIEURE à la masse minimale de vol. ATTERRISSAGE INTERDIT.`,
+            value: landingWeight,
+            limit: minTakeoffWeight,
+            icon: '🚫'
+          });
+        }
 
-    // Vérifier MTOW
-    if (!isNaN(maxTakeoffWeight) && takeoffWeight > maxTakeoffWeight) {
-      violations.push({
-        type: 'critical',
-        phase: 'Décollage',
-        message: `⚠️ SURCHARGE : ${takeoffWeight.toFixed(1)} kg > ${maxTakeoffWeight} kg maximum`,
-        detail: `La masse au décollage DÉPASSE la masse maximale autorisée (MTOW). VOL INTERDIT.`,
-        value: takeoffWeight,
-        limit: maxTakeoffWeight,
-        icon: '🚫'
-      });
-    }
+        if (!isNaN(maxTakeoffWeight) && takeoffWeight > maxTakeoffWeight) {
+          violations.push({
+            type: 'critical',
+            phase: 'Décollage',
+            message: `⚠️ SURCHARGE : ${takeoffWeight.toFixed(1)} kg > ${maxTakeoffWeight} kg maximum`,
+            detail: `La masse au décollage DÉPASSE la masse maximale autorisée (MTOW). VOL INTERDIT.`,
+            value: takeoffWeight,
+            limit: maxTakeoffWeight,
+            icon: '🚫'
+          });
+        }
 
-    // Vérifier MLW
-    if (!isNaN(maxLandingWeight) && landingWeight > maxLandingWeight) {
-      violations.push({
-        type: 'critical',
-        phase: 'Atterrissage',
-        message: `⚠️ SURCHARGE ATTERRISSAGE : ${landingWeight.toFixed(1)} kg > ${maxLandingWeight} kg maximum`,
-        detail: `La masse à l'atterrissage DÉPASSE la masse maximale autorisée (MLW). Consommez plus de carburant avant d'atterrir.`,
-        value: landingWeight,
-        limit: maxLandingWeight,
-        icon: '⚠️'
-      });
-    }
+        if (!isNaN(maxLandingWeight) && landingWeight > maxLandingWeight) {
+          violations.push({
+            type: 'critical',
+            phase: 'Atterrissage',
+            message: `⚠️ SURCHARGE ATTERRISSAGE : ${landingWeight.toFixed(1)} kg > ${maxLandingWeight} kg maximum`,
+            detail: `La masse à l'atterrissage DÉPASSE la masse maximale autorisée (MLW). Consommez plus de carburant avant d'atterrir.`,
+            value: landingWeight,
+            limit: maxLandingWeight,
+            icon: '⚠️'
+          });
+        }
 
-    console.log('🔍 [Step6] Vérification limites de masse:', {
-      takeoffWeight,
-      landingWeight,
-      minTakeoffWeight,
-      maxTakeoffWeight,
-      maxLandingWeight,
-      violations: violations.length
-    });
+        return violations.length > 0 ? violations : null;
+      }, [aircraft, scenarios, calculations]);
 
-    return violations.length > 0 ? violations : null;
-  }, [aircraft, scenarios, calculations]);
+      // Synchroniser withinLimits du flightPlan avec calculations.isWithinLimits
+      useEffect(() => {
+        if (calculations && flightPlan && scenarios && calculations.isWithinLimits !== undefined) {
+          const takeoffWeight = calculations.totalWeight || 0;
+          const landingWeight = scenarios?.landing?.w || takeoffWeight;
+          const landingCG = scenarios?.landing?.cg || calculations.cg || 0;
 
-  // Synchroniser withinLimits du flightPlan avec calculations.isWithinLimits
-  useEffect(() => {
-    if (calculations && flightPlan && scenarios && calculations.isWithinLimits !== undefined) {
-      console.log('🔍 [Step6WB] Synchronizing withinLimits:', {
-        'calculations.isWithinLimits': calculations.isWithinLimits,
-        'calculations.isWithinWeight': calculations.isWithinWeight,
-        'calculations.isWithinCG': calculations.isWithinCG,
-        'current flightPlan.weightBalance.withinLimits': flightPlan.weightBalance.withinLimits
-      });
+          const needsSave =
+            flightPlan.weightBalance.withinLimits !== calculations.isWithinLimits ||
+            flightPlan.weightBalance.takeoffWeight !== takeoffWeight ||
+            flightPlan.weightBalance.landingWeight !== landingWeight ||
+            flightPlan.weightBalance.cg?.takeoff !== calculations.cg;
 
-      // 🔧 FIX CRITIQUE: Utiliser scenarios.landing.w au lieu de recalculer manuellement
-      const takeoffWeight = calculations.totalWeight || 0;
-      const landingWeight = scenarios?.landing?.w || takeoffWeight;
-      const landingCG = scenarios?.landing?.cg || calculations.cg || 0;
+          if (needsSave) {
+            flightPlan.weightBalance = {
+              ...flightPlan.weightBalance,
+              takeoffWeight: takeoffWeight,
+              landingWeight: landingWeight,
+              cg: {
+                takeoff: calculations.cg || 0,
+                landing: landingCG,
+              },
+              withinLimits: calculations.isWithinLimits,
+              isWithinWeight: calculations.isWithinWeight,
+              isWithinCG: calculations.isWithinCG,
+              calculations: {
+                emptyWeight: calculations.emptyWeight,
+                emptyMoment: calculations.emptyMoment,
+                loadMoment: calculations.loadMoment,
+                totalMoment: calculations.totalMoment,
+                totalWeight: calculations.totalWeight,
+                cg: calculations.cg
+              },
+              scenarios: scenarios
+            };
+            if (onUpdate) {
+              onUpdate();
+            }
+          }
+        }
+      }, [calculations, flightPlan, onUpdate, fuelData, scenarios]);
 
-      // 🔧 NOUVEAU : Sauvegarder TOUTES les données de calcul dans flightPlan
-      const needsSave =
-        flightPlan.weightBalance.withinLimits !== calculations.isWithinLimits ||
-        flightPlan.weightBalance.takeoffWeight !== takeoffWeight ||
-        flightPlan.weightBalance.landingWeight !== landingWeight ||
-        flightPlan.weightBalance.cg?.takeoff !== calculations.cg;
+      // Handler pour la mise à jour des charges
+      const handleLoadChange = useCallback((type, value) => {
+        updateLoad(type, value);
 
-      if (needsSave) {
-        flightPlan.weightBalance = {
-          ...flightPlan.weightBalance,
-          // Données de poids
-          takeoffWeight: takeoffWeight,
-          landingWeight: landingWeight, // 🔧 FIX: Utiliser scenarios.landing.w (calcul correct avec fuelBalance complet)
-          // Données de centrage
-          cg: {
-            takeoff: calculations.cg || 0,
-            landing: landingCG, // 🔧 FIX: Utiliser CG landing du scénario
-          },
-          // États de validation
-          withinLimits: calculations.isWithinLimits,
-          isWithinWeight: calculations.isWithinWeight,
-          isWithinCG: calculations.isWithinCG,
-          // Sauvegarder les détails de calcul
-          calculations: {
-            emptyWeight: calculations.emptyWeight,
-            emptyMoment: calculations.emptyMoment,
-            loadMoment: calculations.loadMoment,
-            totalMoment: calculations.totalMoment,
-            totalWeight: calculations.totalWeight,
-            cg: calculations.cg
-          },
-          // Sauvegarder les 4 scénarios pour l'étape 7
-          scenarios: scenarios
-        };
-        console.log('✅ [Step6WB] Sauvegarde complète Weight & Balance dans flightPlan:', {
-          takeoffWeight: takeoffWeight,
-          landingWeight: landingWeight,
-          takeoffCG: calculations.cg,
-          landingCG: landingCG,
-          withinLimits: calculations.isWithinLimits,
-          scenarios: scenarios,
-          hasScenarios: !!scenarios,
-          scenarioKeys: scenarios ? Object.keys(scenarios) : []
-        });
-        if (onUpdate) {
+        if (flightPlan) {
+          const totalPassengerWeight =
+            (type === 'frontLeft' ? value : loads.frontLeft || 0) +
+            (type === 'frontRight' ? value : loads.frontRight || 0) +
+            (type === 'rearLeft' ? value : loads.rearLeft || 0) +
+            (type === 'rearRight' ? value : loads.rearRight || 0);
+
+          const updatedLoads = { ...loads, [type]: value };
+          const totalBaggageWeight = Object.keys(updatedLoads)
+            .filter(key => key.startsWith('baggage_'))
+            .reduce((sum, key) => sum + (updatedLoads[key] || 0), 0);
+
+          flightPlan.updateWeightBalance({
+            passengers: Math.round(totalPassengerWeight / 77),
+            baggage: totalBaggageWeight,
+            loads: updatedLoads
+          });
           onUpdate();
         }
+      }, [updateLoad, loads, flightPlan, onUpdate]);
+
+      if (!aircraft) {
+        return (
+          <div style={commonStyles.container}>
+            <div style={{ textAlign: 'center', padding: '40px' }}>
+              <p style={{ fontSize: '16px', color: theme.colors.textSecondary }}>
+                Aucun avion sélectionné. Veuillez sélectionner un avion à l'étape 1.
+              </p>
+            </div>
+          </div>
+        );
       }
-    }
-  }, [calculations, flightPlan, onUpdate, fuelData, scenarios]);
 
-  // Handler pour la mise à jour des charges
-  const handleLoadChange = useCallback((type, value) => {
-    updateLoad(type, value);
+      if (!aircraft.weightBalance) {
+        return (
+          <div style={commonStyles.container}>
+            <div style={{ textAlign: 'center', padding: '40px' }}>
+              <p style={{ fontSize: '16px', color: theme.colors.textSecondary, marginBottom: '12px' }}>
+                ⏳ Chargement des données de masse et centrage...
+              </p>
 
-    // Mettre à jour le plan de vol
-    if (flightPlan) {
-      const totalPassengerWeight =
-        (type === 'frontLeft' ? value : loads.frontLeft || 0) +
-        (type === 'frontRight' ? value : loads.frontRight || 0) +
-        (type === 'rearLeft' ? value : loads.rearLeft || 0) +
-        (type === 'rearRight' ? value : loads.rearRight || 0);
-
-      // Calculer le poids total des bagages depuis les compartiments dynamiques
-      const updatedLoads = { ...loads, [type]: value };
-      const totalBaggageWeight = Object.keys(updatedLoads)
-        .filter(key => key.startsWith('baggage_'))
-        .reduce((sum, key) => sum + (updatedLoads[key] || 0), 0);
-
-      flightPlan.updateWeightBalance({
-        passengers: Math.round(totalPassengerWeight / 77),
-        baggage: totalBaggageWeight,
-        loads: updatedLoads
-      });
-      onUpdate();
-    }
-  }, [updateLoad, loads, flightPlan, onUpdate]);
-
-  if (!aircraft) {
-    return (
-      <div style={commonStyles.container}>
-        <div style={{ textAlign: 'center', padding: '40px' }}>
-          <p style={{ fontSize: '16px', color: theme.colors.textSecondary }}>
-            Aucun avion sélectionné. Veuillez sélectionner un avion à l'étape 1.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // 🔧 FIX: Vérifier si weightBalance est disponible
-  if (!aircraft.weightBalance) {
-    return (
-      <div style={commonStyles.container}>
-        <div style={{ textAlign: 'center', padding: '40px' }}>
-          <p style={{ fontSize: '16px', color: theme.colors.textSecondary, marginBottom: '12px' }}>
-            ⏳ Chargement des données de masse et centrage...
-          </p>
-          <p style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
-            Si le chargement persiste, retournez à l'étape 1 et re-sélectionnez votre avion.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div style={commonStyles.container}>
-      {/* 🚨 ALERTES SÉCURITÉ: Limites de masse opérationnelles */}
-      {weightLimitViolations && weightLimitViolations.map((violation, index) => (
-        <div
-          key={index}
-          style={{
-            padding: '16px 20px',
-            marginBottom: '16px',
-            backgroundColor: violation.type === 'critical' ? '#fef2f2' : '#fff7ed',
-            border: `2px solid ${violation.type === 'critical' ? '#dc2626' : '#f59e0b'}`,
-            borderRadius: '8px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '24px' }}>{violation.icon}</span>
-            <div style={{ flex: 1 }}>
-              <div style={{
-                fontSize: '16px',
-                fontWeight: '700',
-                color: violation.type === 'critical' ? '#991b1b' : '#c2410c',
-                marginBottom: '4px'
-              }}>
-                {violation.message}
-              </div>
-              <div style={{
-                fontSize: '14px',
-                color: violation.type === 'critical' ? '#7f1d1d' : '#9a3412',
-                lineHeight: '1.5'
-              }}>
-                {violation.detail}
-              </div>
             </div>
           </div>
-          <div style={{
-            fontSize: '12px',
-            color: '#6b7280',
-            padding: '8px 12px',
-            backgroundColor: 'white',
-            borderRadius: '4px',
-            border: '1px solid #e5e7eb'
-          }}>
-            <strong>Phase:</strong> {violation.phase} |
-            <strong> Masse actuelle:</strong> {violation.value.toFixed(1)} kg |
-            <strong> Limite:</strong> {violation.limit} kg |
-            <strong> Écart:</strong> {Math.abs(violation.value - violation.limit).toFixed(1)} kg
-          </div>
+        );
+      }
+
+      return (
+        <div style={commonStyles.container}>
+          {weightLimitViolations && weightLimitViolations.map((violation, index) => (
+            <div
+              key={index}
+              style={{
+                padding: '16px 20px',
+                marginBottom: '16px',
+                backgroundColor: violation.type === 'critical' ? '#fef2f2' : '#fff7ed',
+                border: `2px solid ${violation.type === 'critical' ? '#dc2626' : '#f59e0b'}`,
+                borderRadius: '8px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '24px' }}>{violation.icon}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    fontSize: '16px',
+                    fontWeight: '700',
+                    color: violation.type === 'critical' ? '#991b1b' : '#c2410c',
+                    marginBottom: '4px'
+                  }}>
+                    {violation.message}
+                  </div>
+                  <div style={{
+                    fontSize: '14px',
+                    color: violation.type === 'critical' ? '#7f1d1d' : '#9a3412',
+                    lineHeight: '1.5'
+                  }}>
+                    {violation.detail}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          <LoadingSection
+            loads={loads}
+            aircraft={aircraft}
+            onLoadChange={handleLoadChange}
+            fobFuel={fobFuel}
+            fuelData={fuelData}
+            flightPlan={flightPlan}
+          />
+
+          {scenarios && (
+            <ScenarioCards
+              scenarios={scenarios}
+              fobFuel={fobFuel}
+              fuelData={fuelData}
+            />
+          )}
+
+          <WeightBalanceChart
+            aircraft={aircraft}
+            scenarios={scenarios}
+            calculations={calculations}
+          />
         </div>
-      ))}
-
-      {/* Section Chargement */}
-      <LoadingSection
-        loads={loads}
-        aircraft={aircraft}
-        onLoadChange={handleLoadChange}
-        fobFuel={fobFuel}
-        fuelData={fuelData}
-        flightPlan={flightPlan}
-      />
-
-      {/* Scénarios de vol */}
-      {scenarios && (
-        <ScenarioCards
-          scenarios={scenarios}
-          fobFuel={fobFuel}
-          fuelData={fuelData}
-        />
-      )}
-
-      {/* Graphique du domaine de vol */}
-      <WeightBalanceChart
-        aircraft={aircraft}
-        scenarios={scenarios}
-        calculations={calculations}
-      />
-    </div>
-  );
-});
-
-// Composant pour la section de chargement
-const LoadingSection = memo(({ loads, aircraft, onLoadChange, fobFuel, fuelData, flightPlan }) => {
-  // Hook pour les unités
-  const { convert, getSymbol, getUnit } = useUnits();
-
-  // ⚠️ SÉCURITÉ CRITIQUE : PAS DE VALEURS PAR DÉFAUT POUR LES BRAS
-  // Les bras de levier sont spécifiques à chaque avion
-  const wb = aircraft.weightBalance || {};
-  const armLengths = aircraft.armLengths || {};
-  const armsData = aircraft.arms || {}; // Structure utilisée par le wizard de création
-
-  // Helper pour parser les valeurs
-  const parseOrNull = (value) => {
-    if (!value || value === '' || value === '0') return null;
-    const parsed = parseFloat(value);
-    return isNaN(parsed) ? null : parsed;
-  };
-
-  // Extraire les bras - AUCUNE valeur par défaut, null si manquant
-  // Ordre de priorité: weightBalance > arms (wizard) > armLengths
-  // NOTE: baggage et auxiliary ne sont PAS des champs fixes - ils sont dans baggageCompartments[]
-  const arms = {
-    empty: wb.emptyWeightArm || parseOrNull(armsData.empty) || armLengths.emptyMassArm || null,
-    frontLeft: wb.frontLeftSeatArm || parseOrNull(armsData.frontSeats) || parseOrNull(armsData.frontSeat) || armLengths.frontSeat1Arm || null,
-    frontRight: wb.frontRightSeatArm || parseOrNull(armsData.frontSeats) || parseOrNull(armsData.frontSeat) || armLengths.frontSeat2Arm || null,
-    rearLeft: wb.rearLeftSeatArm || parseOrNull(armsData.rearSeats) || parseOrNull(armsData.rearSeat) || armLengths.rearSeat1Arm || null,
-    rearRight: wb.rearRightSeatArm || parseOrNull(armsData.rearSeats) || parseOrNull(armsData.rearSeat) || armLengths.rearSeat2Arm || null,
-    fuel: wb.fuelArm || parseOrNull(armsData.fuelMain) || parseOrNull(armsData.fuel) || armLengths.fuelArm || null
-  };
-
-  // Vérifier si des données critiques manquent
-  const missingArms = Object.entries(arms)
-    .filter(([key, value]) => value === null)
-    .map(([key]) => key);
-
-  if (missingArms.length > 0) {
-    console.error('⚠️ [Step6] DONNÉES CRITIQUES MANQUANTES - Bras:', missingArms);
-    console.log('📊 [Step6] Structures disponibles:', {
-      'aircraft.weightBalance': !!wb && Object.keys(wb).length > 0,
-      'aircraft.arms': !!armsData && Object.keys(armsData).length > 0,
-      'aircraft.armLengths': !!armLengths && Object.keys(armLengths).length > 0
+      );
     });
-    console.log('📊 [Step6] aircraft.arms:', armsData);
-    console.log('📊 [Step6] aircraft.weightBalance:', wb);
-  }
 
-  console.log('🔍 Bras de levier chargés:', arms);
-  console.log('🔍 fobFuel disponible:', fobFuel, 'type:', typeof fobFuel);
-  console.log('🔍 fuelData disponible:', fuelData);
+  // Composant pour la section de chargement
+  const LoadingSection = memo(({ loads, aircraft, onLoadChange, fobFuel, fuelData, flightPlan }) => {
+    const { convert, getSymbol, getUnit } = useUnits();
 
-  // Calculer le poids du carburant depuis l'étape 4 (bilan carburant)
-  const normalizedFuelType = aircraft.fuelType?.replace(/-/g, ' ');
-  const fuelDensity = FUEL_DENSITIES[aircraft.fuelType] ||
-                      FUEL_DENSITIES[normalizedFuelType] ||
-                      FUEL_DENSITIES['JET A-1'] ||
-                      0.84;
+    // ⚠️ SÉCURITÉ CRITIQUE : PAS DE VALEURS PAR DÉFAUT POUR LES BRAS
+    const wb = aircraft.weightBalance || {};
+    const armLengths = aircraft.armLengths || {};
+    const armsData = aircraft.arms || {};
 
-  // fobFuel peut être soit un nombre (litres), soit un objet {gal, ltr}
-  let fuelLitres = 0;
-  if (typeof fobFuel === 'number') {
-    fuelLitres = fobFuel;
-  } else if (fobFuel?.ltr) {
-    fuelLitres = fobFuel.ltr;
-  }
+    const parseOrNull = (value) => {
+      if (!value || value === '' || value === '0') return null;
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? null : parsed;
+    };
 
-  const fuelWeightKg = fuelLitres * fuelDensity;
-  const fuelMoment = fuelWeightKg * (arms.fuel || 0);
+    const arms = {
+      empty: wb.emptyWeightArm || parseOrNull(armsData.empty) || armLengths.emptyMassArm || null,
+      frontLeft: wb.frontLeftSeatArm || parseOrNull(armsData.frontSeats) || parseOrNull(armsData.frontSeat) || armLengths.frontSeat1Arm || null,
+      frontRight: wb.frontRightSeatArm || parseOrNull(armsData.frontSeats) || parseOrNull(armsData.frontSeat) || armLengths.frontSeat2Arm || null,
+      rearLeft: wb.rearLeftSeatArm || parseOrNull(armsData.rearSeats) || parseOrNull(armsData.rearSeat) || armLengths.rearSeat1Arm || null,
+      rearRight: wb.rearRightSeatArm || parseOrNull(armsData.rearSeats) || parseOrNull(armsData.rearSeat) || armLengths.rearSeat2Arm || null,
+      fuel: wb.fuelArm || parseOrNull(armsData.fuelMain) || parseOrNull(armsData.fuel) || armLengths.fuelArm || null
+    };
 
-  // Convertir le carburant dans l'unité préférée du pilote
-  const userFuelUnit = getUnit('fuel');
-  const fuelInUserUnit = convert(fuelLitres, 'fuel', 'ltr', userFuelUnit);
-  const fuelUnitSymbol = getSymbol('fuel');
+    // Calculer le poids du carburant depuis l'étape 4 (bilan carburant)
+    const isJet = aircraft.fuelType?.toUpperCase().includes('JET');
+    const fuelDensity = isJet ? DENSITIES.JET_A1 : DENSITIES.AVGAS;
 
-  // S'assurer que toutes les valeurs sont numériques
-  // NOTE: baggage et auxiliary ne sont plus des champs fixes - chargements dans baggageCompartments
-  const safeLoads = {
-    frontLeft: loads.frontLeft || 0,
-    frontRight: loads.frontRight || 0,
-    rearLeft: loads.rearLeft || 0,
-    rearRight: loads.rearRight || 0,
-    // Les compartiments bagages sont gérés dynamiquement via loads[`baggage_${compartment.id}`]
-    ...loads // Inclure tous les autres loads pour les compartiments dynamiques
-  };
+    // fobFuel peut être soit un nombre (litres), soit un objet {gal, ltr}
+    let fuelLitres = 0;
+    if (typeof fobFuel === 'number') {
+      fuelLitres = fobFuel;
+    } else if (fobFuel?.ltr) {
+      fuelLitres = fobFuel.ltr;
+    }
 
-  return (
-    <section style={{ ...commonStyles.card, marginBottom: '24px' }}>
-      <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px' }}>
-        ⚖️ Chargement et Moments
-      </h3>
-      
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {/* Masse à vide (lecture seule) */}
-        <div style={{ ...commonStyles.card, padding: '12px', backgroundColor: 'rgba(59, 130, 246, 0.05)' }}>
-          <LoadInput
-            label="⚖️ Masse à vide"
-            value={aircraft.emptyWeight || 0}
-            onChange={() => {}} // Lecture seule
-            disabled={true}
-            helperText="Masse de l'avion vide (depuis configuration avion)"
-          />
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '8px',
-            marginTop: '8px',
-            fontSize: '12px',
-            color: theme.colors.textSecondary
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>📏 Bras:</span>
-              {arms.empty !== null ? (
-                <span style={{ color: theme.colors.textPrimary }}>{arms.empty.toFixed(2)} m</span>
-              ) : (
-                <span style={{ color: '#ef4444', fontWeight: '600' }}>⚠️ MANQUANT</span>
-              )}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>⚖️ Moment:</span>
-              {arms.empty !== null ? (
-                <span style={{ color: theme.colors.textPrimary, fontWeight: '600' }}>
-                  {((aircraft.emptyWeight || 0) * arms.empty).toFixed(1)} kg.m
-                </span>
-              ) : (
-                <span style={{ color: '#ef4444', fontWeight: '600' }}>⚠️ N/A</span>
-              )}
-            </div>
-          </div>
-        </div>
+    const fuelWeightKg = fuelLitres * fuelDensity;
+    const fuelMoment = fuelWeightKg * (arms.fuel || 0);
 
-        {/* Sièges avant */}
-        <div style={commonStyles.grid2}>
-          <LoadInputWithInfo
-            label="👨‍✈️ Siège avant gauche (Pilote)"
-            value={safeLoads.frontLeft}
-            onChange={(v) => onLoadChange('frontLeft', v)}
-            arm={arms.frontLeft}
-            max={120}
-          />
-          <LoadInputWithInfo
-            label="🧑‍🤝‍🧑 Siège avant droit"
-            value={safeLoads.frontRight}
-            onChange={(v) => onLoadChange('frontRight', v)}
-            arm={arms.frontRight}
-            max={120}
-          />
-        </div>
+    // Convertir le carburant dans l'unité préférée du pilote
+    const userFuelUnit = getUnit('fuel');
+    const fuelInUserUnit = convert(fuelLitres, 'fuel', 'ltr', userFuelUnit);
+    const fuelUnitSymbol = getSymbol('fuel');
 
-        {/* Sièges arrière */}
-        <div style={commonStyles.grid2}>
-          <LoadInputWithInfo
-            label="👥 Siège arrière gauche"
-            value={safeLoads.rearLeft}
-            onChange={(v) => onLoadChange('rearLeft', v)}
-            arm={arms.rearLeft}
-            max={120}
-          />
-          <LoadInputWithInfo
-            label="👥 Siège arrière droit"
-            value={safeLoads.rearRight}
-            onChange={(v) => onLoadChange('rearRight', v)}
-            arm={arms.rearRight}
-            max={120}
-          />
-        </div>
+    const safeLoads = {
+      frontLeft: loads.frontLeft || 0,
+      frontRight: loads.frontRight || 0,
+      rearLeft: loads.rearLeft || 0,
+      rearRight: loads.rearRight || 0,
+      ...loads
+    };
 
-        {/* Section Carburant - Différents scénarios */}
-        <div style={{ ...commonStyles.card, padding: '16px', backgroundColor: 'rgba(16, 185, 129, 0.05)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <h4 style={{ fontSize: '14px', fontWeight: '600', margin: 0, color: '#10b981' }}>
-              ⛽ Scénarios de carburant
-            </h4>
+    return (
+      <section style={{ ...commonStyles.card, marginBottom: '24px' }}>
+        <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px' }}>
+          ⚖️ Chargement et Moments
+        </h3>
 
-            {/* Badge densité carburant */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Masse à vide (lecture seule) */}
+          <div style={{ ...commonStyles.card, padding: '12px', backgroundColor: 'rgba(59, 130, 246, 0.05)' }}>
+            <LoadInput
+              label="⚖️ Masse à vide"
+              value={aircraft.emptyWeight || 0}
+              onChange={() => { }} // Lecture seule
+              disabled={true}
+              helperText="Masse de l'avion vide (depuis configuration avion)"
+            />
             <div style={{
-              display: 'flex',
-              gap: '12px',
-              fontSize: '11px',
-              color: '#6b7280',
-              backgroundColor: '#f3f4f6',
-              padding: '6px 12px',
-              borderRadius: '6px',
-              border: '1px solid #e5e7eb'
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '8px',
+              marginTop: '8px',
+              fontSize: '12px',
+              color: theme.colors.textSecondary
             }}>
-              <span>⛽ <strong>{aircraft.fuelType || 'JET-A1'}</strong>: {fuelDensity} kg/L</span>
-            </div>
-          </div>
-
-          {/* Full Tank */}
-          {(() => {
-            const userFuelUnit = getUnit('fuel');
-            // 🔧 FIX: aircraft.fuelCapacity est TOUJOURS en litres (storage unit)
-            // Pas besoin de conversion, c'est déjà en litres !
-            const fuelCapacityLtr = aircraft.fuelCapacity || 0;
-
-            const fullTankKg = fuelCapacityLtr * fuelDensity;
-            const fullTankMoment = fullTankKg * (arms.fuel || 0);
-            const fullTankInUserUnit = convert(fuelCapacityLtr, 'fuel', 'ltr', userFuelUnit);
-
-            return (
-              <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #d1fae5' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: '600' }}>Full Tank</span>
-                  <span style={{ fontSize: '13px', color: '#3b82f6' }}>
-                    {fullTankInUserUnit.toFixed(1)} {fuelUnitSymbol} ({fullTankKg.toFixed(1)} kg)
-                  </span>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px', color: '#6b7280' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>📏 Bras:</span>
-                    <span>{arms.fuel !== null ? `${arms.fuel.toFixed(2)} m` : '⚠️ N/A'}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>⚖️ Moment:</span>
-                    <span>{arms.fuel !== null ? `${fullTankMoment.toFixed(1)} kg.m` : '⚠️ N/A'}</span>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* FOB T/O (Take-Off) */}
-          {fuelLitres > 0 && (
-            <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #d1fae5' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <span style={{ fontSize: '13px', fontWeight: '600' }}>FOB T/O (Décollage)</span>
-                <span style={{ fontSize: '13px', color: '#059669' }}>
-                  {fuelInUserUnit.toFixed(1)} {fuelUnitSymbol} ({fuelWeightKg.toFixed(1)} kg)
-                </span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px', color: '#6b7280' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>📏 Bras:</span>
-                {arms.fuel !== null ? (
-                  <span style={{ color: theme.colors.textPrimary }}>{arms.fuel.toFixed(2)} m</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>📏 Bras:</span>
+                {arms.empty !== null ? (
+                  <span style={{ color: theme.colors.textPrimary }}>{arms.empty.toFixed(2)} m</span>
                 ) : (
                   <span style={{ color: '#ef4444', fontWeight: '600' }}>⚠️ MANQUANT</span>
                 )}
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>⚖️ Moment:</span>
-                {arms.fuel !== null ? (
+                {arms.empty !== null ? (
                   <span style={{ color: theme.colors.textPrimary, fontWeight: '600' }}>
-                    {fuelMoment.toFixed(1)} kg.m
+                    {((aircraft.emptyWeight || 0) * arms.empty).toFixed(1)} kg.m
                   </span>
                 ) : (
                   <span style={{ color: '#ef4444', fontWeight: '600' }}>⚠️ N/A</span>
@@ -823,243 +599,342 @@ const LoadingSection = memo(({ loads, aircraft, onLoadChange, fobFuel, fuelData,
               </div>
             </div>
           </div>
-        )}
 
-          {/* FOB Landing (Atterrissage) */}
-          {(() => {
-            const fuelBalance = fuelData ? Object.values(fuelData).reduce((sum, f) => sum + (f?.ltr || 0), 0) : 0;
-            const remainingFuelL = Math.max(0, fuelLitres - fuelBalance);
-            const landingFuelKg = remainingFuelL * fuelDensity;
-            const landingMoment = landingFuelKg * (arms.fuel || 0);
-            const landingFuelInUserUnit = convert(remainingFuelL, 'fuel', 'ltr', userFuelUnit);
+          {/* Sièges avant */}
+          <div style={commonStyles.grid2}>
+            <LoadInputWithInfo
+              label="👨‍✈️ Siège avant gauche (Pilote)"
+              value={safeLoads.frontLeft}
+              onChange={(v) => onLoadChange('frontLeft', v)}
+              arm={arms.frontLeft}
+              max={120}
+            />
+            <LoadInputWithInfo
+              label="🧑‍🤝‍🧑 Siège avant droit"
+              value={safeLoads.frontRight}
+              onChange={(v) => onLoadChange('frontRight', v)}
+              arm={arms.frontRight}
+              max={120}
+            />
+          </div>
 
-            return landingFuelKg > 0 ? (
+          {/* Sièges arrière */}
+          <div style={commonStyles.grid2}>
+            <LoadInputWithInfo
+              label="👥 Siège arrière gauche"
+              value={safeLoads.rearLeft}
+              onChange={(v) => onLoadChange('rearLeft', v)}
+              arm={arms.rearLeft}
+              max={120}
+            />
+            <LoadInputWithInfo
+              label="👥 Siège arrière droit"
+              value={safeLoads.rearRight}
+              onChange={(v) => onLoadChange('rearRight', v)}
+              arm={arms.rearRight}
+              max={120}
+            />
+          </div>
+
+          {/* Section Carburant - Différents scénarios */}
+          <div style={{ ...commonStyles.card, padding: '16px', backgroundColor: 'rgba(16, 185, 129, 0.05)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h4 style={{ fontSize: '14px', fontWeight: '600', margin: 0, color: '#10b981' }}>
+                ⛽ Scénarios de carburant
+              </h4>
+
+              {/* Badge densité carburant */}
+              <div style={{
+                display: 'flex',
+                gap: '12px',
+                fontSize: '11px',
+                color: '#6b7280',
+                backgroundColor: '#f3f4f6',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                border: '1px solid #e5e7eb'
+              }}>
+                <span>⛽ <strong>{aircraft.fuelType || 'JET-A1'}</strong>: {fuelDensity} kg/L</span>
+              </div>
+            </div>
+
+            {/* Full Tank */}
+            {(() => {
+              const userFuelUnit = getUnit('fuel');
+              // 🔧 FIX: aircraft.fuelCapacity est TOUJOURS en litres (storage unit)
+              // Pas besoin de conversion, c'est déjà en litres !
+              const fuelCapacityLtr = aircraft.fuelCapacity || 0;
+
+              const fullTankKg = fuelCapacityLtr * fuelDensity;
+              const fullTankMoment = fullTankKg * (arms.fuel || 0);
+              const fullTankInUserUnit = convert(fuelCapacityLtr, 'fuel', 'ltr', userFuelUnit);
+
+              return (
+                <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #d1fae5' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '600' }}>Full Tank</span>
+                    <span style={{ fontSize: '13px', color: '#3b82f6' }}>
+                      {fullTankInUserUnit.toFixed(1)} {fuelUnitSymbol} ({fullTankKg.toFixed(1)} kg)
+                    </span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px', color: '#6b7280' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>📏 Bras:</span>
+                      <span>{arms.fuel !== null ? `${arms.fuel.toFixed(2)} m` : '⚠️ N/A'}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>⚖️ Moment:</span>
+                      <span>{arms.fuel !== null ? `${fullTankMoment.toFixed(1)} kg.m` : '⚠️ N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* FOB T/O (Take-Off) */}
+            {fuelLitres > 0 && (
               <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #d1fae5' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: '600' }}>FOB Landing (Atterrissage)</span>
-                  <span style={{ fontSize: '13px', color: '#f59e0b' }}>
-                    {landingFuelInUserUnit.toFixed(1)} {fuelUnitSymbol} ({landingFuelKg.toFixed(1)} kg)
+                  <span style={{ fontSize: '13px', fontWeight: '600' }}>FOB T/O (Décollage)</span>
+                  <span style={{ fontSize: '13px', color: '#059669' }}>
+                    {fuelInUserUnit.toFixed(1)} {fuelUnitSymbol} ({fuelWeightKg.toFixed(1)} kg)
                   </span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px', color: '#6b7280' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>📏 Bras:</span>
-                    <span>{arms.fuel !== null ? `${arms.fuel.toFixed(2)} m` : '⚠️ N/A'}</span>
+                    {arms.fuel !== null ? (
+                      <span style={{ color: theme.colors.textPrimary }}>{arms.fuel.toFixed(2)} m</span>
+                    ) : (
+                      <span style={{ color: '#ef4444', fontWeight: '600' }}>⚠️ MANQUANT</span>
+                    )}
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>⚖️ Moment:</span>
-                    <span>{arms.fuel !== null ? `${landingMoment.toFixed(1)} kg.m` : '⚠️ N/A'}</span>
+                    {arms.fuel !== null ? (
+                      <span style={{ color: theme.colors.textPrimary, fontWeight: '600' }}>
+                        {fuelMoment.toFixed(1)} kg.m
+                      </span>
+                    ) : (
+                      <span style={{ color: '#ef4444', fontWeight: '600' }}>⚠️ N/A</span>
+                    )}
                   </div>
                 </div>
               </div>
-            ) : null;
-          })()}
+            )}
 
-          {/* FOB Alternate (Point de déroutement) - Calcul géométrique */}
-          {(() => {
-            // Utiliser le calcul géométrique avec perpendiculaire
-            // Distance = distance le long de la route jusqu'à la perpendiculaire + distance perpendiculaire
+            {/* FOB Landing (Atterrissage) */}
+            {(() => {
+              const fuelBalance = fuelData ? Object.values(fuelData).reduce((sum, f) => sum + (f?.ltr || 0), 0) : 0;
+              const remainingFuelL = Math.max(0, fuelLitres - fuelBalance);
+              const landingFuelKg = remainingFuelL * fuelDensity;
+              const landingMoment = landingFuelKg * (arms.fuel || 0);
+              const landingFuelInUserUnit = convert(remainingFuelL, 'fuel', 'ltr', userFuelUnit);
 
-            let alternateFuelL = 0;
-            let calculationDetails = null;
+              return landingFuelKg > 0 ? (
+                <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #d1fae5' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '600' }}>FOB Landing (Atterrissage)</span>
+                    <span style={{ fontSize: '13px', color: '#f59e0b' }}>
+                      {landingFuelInUserUnit.toFixed(1)} {fuelUnitSymbol} ({landingFuelKg.toFixed(1)} kg)
+                    </span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px', color: '#6b7280' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>📏 Bras:</span>
+                      <span>{arms.fuel !== null ? `${arms.fuel.toFixed(2)} m` : '⚠️ N/A'}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>⚖️ Moment:</span>
+                      <span>{arms.fuel !== null ? `${landingMoment.toFixed(1)} kg.m` : '⚠️ N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : null;
+            })()}
 
-            // Vérifier si on a les données nécessaires
-            if (flightPlan?.route?.departure?.coordinates &&
+            {/* FOB Alternate (Point de déroutement) - Calcul géométrique */}
+            {(() => {
+              // Utiliser le calcul géométrique avec perpendiculaire
+              // Distance = distance le long de la route jusqu'à la perpendiculaire + distance perpendiculaire
+
+              let alternateFuelL = 0;
+              let calculationDetails = null;
+
+              // Vérifier si on a les données nécessaires
+              if (flightPlan?.route?.departure?.coordinates &&
                 flightPlan?.route?.arrival?.coordinates &&
                 flightPlan?.alternates &&
                 flightPlan.alternates.length > 0 &&
                 aircraft?.cruiseSpeedKt &&
                 aircraft?.fuelConsumption) {
 
-              // Prendre le premier alternate
-              const alternate = flightPlan.alternates[0];
+                // Prendre le premier alternate
+                const alternate = flightPlan.alternates[0];
 
-              if (alternate.coordinates || (alternate.lat && (alternate.lon || alternate.lng))) {
-                const departure = flightPlan.route.departure.coordinates;
-                const arrival = flightPlan.route.arrival.coordinates;
-                const altCoords = alternate.coordinates || {
-                  lat: alternate.lat,
-                  lon: alternate.lon || alternate.lng
-                };
+                if (alternate.coordinates || (alternate.lat && (alternate.lon || alternate.lng))) {
+                  const departure = flightPlan.route.departure.coordinates;
+                  const arrival = flightPlan.route.arrival.coordinates;
+                  const altCoords = alternate.coordinates || {
+                    lat: alternate.lat,
+                    lon: alternate.lon || alternate.lng
+                  };
 
-                // Calculer la distance perpendiculaire du point au segment de route
-                const perpDistance = calculateDistanceToSegment(altCoords, departure, arrival);
+                  // Calculer la distance perpendiculaire du point au segment de route
+                  const perpDistance = calculateDistanceToSegment(altCoords, departure, arrival);
 
-                // Calculer la distance totale de la route
-                const routeDistance = calculateDistance(departure, arrival);
+                  // Calculer la distance totale de la route
+                  const routeDistance = calculateDistance(departure, arrival);
 
-                // Calculer le point médian de la route (approximation du point de décision)
-                const midpoint = calculateMidpoint(departure, arrival);
+                  // Calculer le point médian de la route (approximation du point de décision)
+                  const midpoint = calculateMidpoint(departure, arrival);
 
-                // Distance du départ au point médian (approximation)
-                const distanceToDecisionPoint = routeDistance / 2;
+                  // Distance du départ au point médian (approximation)
+                  const distanceToDecisionPoint = routeDistance / 2;
 
-                // Distance totale = distance jusqu'au point de décision + distance perpendiculaire
-                const totalDistance = distanceToDecisionPoint + perpDistance;
+                  // Distance totale = distance jusqu'au point de décision + distance perpendiculaire
+                  const totalDistance = distanceToDecisionPoint + perpDistance;
 
-                // Calculer le carburant nécessaire
-                const timeHours = totalDistance / aircraft.cruiseSpeedKt;
-                const currentUnit = getUnit('fuelConsumption');
-                const GAL_TO_LTR = 3.78541;
+                  // Calculer le carburant nécessaire
+                  const timeHours = totalDistance / aircraft.cruiseSpeedKt;
+                  const currentUnit = getUnit('fuelConsumption');
+                  const GAL_TO_LTR = 3.78541;
 
-                if (currentUnit === 'gph') {
-                  const consumptionLph = aircraft.fuelConsumption * GAL_TO_LTR;
-                  alternateFuelL = timeHours * consumptionLph;
-                } else {
-                  alternateFuelL = timeHours * aircraft.fuelConsumption;
+                  if (currentUnit === 'gph') {
+                    const consumptionLph = aircraft.fuelConsumption * GAL_TO_LTR;
+                    alternateFuelL = timeHours * consumptionLph;
+                  } else {
+                    alternateFuelL = timeHours * aircraft.fuelConsumption;
+                  }
+
+                  calculationDetails = {
+                    routeDistance: routeDistance.toFixed(1),
+                    distanceToDecisionPoint: distanceToDecisionPoint.toFixed(1),
+                    perpDistance: perpDistance.toFixed(1),
+                    totalDistance: totalDistance.toFixed(1)
+                  };
                 }
-
-                calculationDetails = {
-                  routeDistance: routeDistance.toFixed(1),
-                  distanceToDecisionPoint: distanceToDecisionPoint.toFixed(1),
-                  perpDistance: perpDistance.toFixed(1),
-                  totalDistance: totalDistance.toFixed(1)
-                };
               }
-            }
 
-            // Fallback sur fuelData.alternate si pas de calcul géométrique possible
-            if (alternateFuelL === 0 && fuelData?.alternate?.ltr) {
-              alternateFuelL = fuelData.alternate.ltr;
-            }
+              // Fallback sur fuelData.alternate si pas de calcul géométrique possible
+              if (alternateFuelL === 0 && fuelData?.alternate?.ltr) {
+                alternateFuelL = fuelData.alternate.ltr;
+              }
 
-            const alternateFuelKg = alternateFuelL * fuelDensity;
-            const alternateMoment = alternateFuelKg * (arms.fuel || 0);
-            const alternateFuelInUserUnit = convert(alternateFuelL, 'fuel', 'ltr', userFuelUnit);
+              const alternateFuelKg = alternateFuelL * fuelDensity;
+              const alternateMoment = alternateFuelKg * (arms.fuel || 0);
+              const alternateFuelInUserUnit = convert(alternateFuelL, 'fuel', 'ltr', userFuelUnit);
 
-            return alternateFuelKg > 0 ? (
-              <div style={{ marginBottom: '0' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: '600' }}>FOB Alternate (Déroutement)</span>
-                  <span style={{ fontSize: '13px', color: theme.colors.textPrimary }}>
-                    {alternateFuelInUserUnit.toFixed(1)} {fuelUnitSymbol} ({alternateFuelKg.toFixed(1)} kg)
-                  </span>
+              return alternateFuelKg > 0 ? (
+                <div style={{ marginBottom: '0' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '600' }}>FOB Alternate (Déroutement)</span>
+                    <span style={{ fontSize: '13px', color: theme.colors.textPrimary }}>
+                      {alternateFuelInUserUnit.toFixed(1)} {fuelUnitSymbol} ({alternateFuelKg.toFixed(1)} kg)
+                    </span>
+                  </div>
+
+                  {/* Détails du calcul géométrique */}
+                  {calculationDetails && (
+                    <div style={{ fontSize: '10px', color: '#9ca3af', marginBottom: '4px', paddingLeft: '4px' }}>
+                      📐 Route: {calculationDetails.routeDistance} NM |
+                      Point décision: {calculationDetails.distanceToDecisionPoint} NM |
+                      Perpendiculaire: {calculationDetails.perpDistance} NM |
+                      Total: {calculationDetails.totalDistance} NM
+                    </div>
+                  )}
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px', color: '#6b7280' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>📏 Bras:</span>
+                      <span>{arms.fuel !== null ? `${arms.fuel.toFixed(2)} m` : '⚠️ N/A'}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>⚖️ Moment:</span>
+                      <span>{arms.fuel !== null ? `${alternateMoment.toFixed(1)} kg.m` : '⚠️ N/A'}</span>
+                    </div>
+                  </div>
                 </div>
-
-                {/* Détails du calcul géométrique */}
-                {calculationDetails && (
-                  <div style={{ fontSize: '10px', color: '#9ca3af', marginBottom: '4px', paddingLeft: '4px' }}>
-                    📐 Route: {calculationDetails.routeDistance} NM |
-                    Point décision: {calculationDetails.distanceToDecisionPoint} NM |
-                    Perpendiculaire: {calculationDetails.perpDistance} NM |
-                    Total: {calculationDetails.totalDistance} NM
-                  </div>
-                )}
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px', color: '#6b7280' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>📏 Bras:</span>
-                    <span>{arms.fuel !== null ? `${arms.fuel.toFixed(2)} m` : '⚠️ N/A'}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>⚖️ Moment:</span>
-                    <span>{arms.fuel !== null ? `${alternateMoment.toFixed(1)} kg.m` : '⚠️ N/A'}</span>
-                  </div>
-                </div>
-              </div>
-            ) : null;
-          })()}
-        </div>
-
-        {/* Compartiments bagages dynamiques configurés par le pilote */}
-        {aircraft.baggageCompartments && aircraft.baggageCompartments.length > 0 ? (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '16px'
-          }}>
-            {aircraft.baggageCompartments.map((compartment, index) => {
-              // ⚠️ SÉCURITÉ : Pas de valeur par défaut pour arm
-              const armValue = compartment.arm && compartment.arm !== '' && compartment.arm !== '0'
-                ? parseFloat(compartment.arm)
-                : null;
-              const maxValue = compartment.maxWeight && compartment.maxWeight !== ''
-                ? parseFloat(compartment.maxWeight)
-                : null;
-
-              return (
-                <LoadInputWithInfo
-                  key={compartment.id || `baggage-${index}`}
-                  label={`🎒 ${compartment.name}${maxValue ? ` (max ${maxValue} kg)` : ''}`}
-                  value={safeLoads[`baggage_${compartment.id || index}`] || 0}
-                  onChange={(v) => onLoadChange(`baggage_${compartment.id || index}`, v)}
-                  arm={armValue}
-                  max={maxValue || 999}
-                />
-              );
-            })}
+              ) : null;
+            })()}
           </div>
-        ) : (
-          // Aucun compartiment configuré
-          <div style={{
-            padding: '16px',
-            textAlign: 'center',
-            color: theme.colors.textSecondary,
-            fontSize: '14px'
-          }}>
-            Aucun compartiment bagages configuré pour cet avion.
-            <br />
-            <span style={{ fontSize: '12px' }}>
-              Les compartiments bagages sont configurés dans le module Aircraft lors de la création/édition de l'avion.
-            </span>
-          </div>
-        )}
-      </div>
-    </section>
-  );
-});
 
-// Composant pour chaque input avec infos
-const LoadInputWithInfo = memo(({ label, value, onChange, arm, max }) => {
-  // ⚠️ SÉCURITÉ : Vérifier si le bras est défini
-  const hasArm = arm !== null && arm !== undefined && !isNaN(arm);
-  const moment = useMemo(() => {
-    if (!hasArm) return 'N/A';
-    return ((value || 0) * arm).toFixed(1);
-  }, [value, arm, hasArm]);
+          {/* Compartiments bagages dynamiques configurés par le pilote */}
+          {aircraft.baggageCompartments && aircraft.baggageCompartments.length > 0 ? (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: '16px'
+            }}>
+              {aircraft.baggageCompartments.map((compartment, index) => {
+                // ⚠️ SÉCURITÉ : Pas de valeur par défaut pour arm
+                const arm = compartment.arm !== undefined && compartment.arm !== null && compartment.arm !== ''
+                  ? parseFloat(compartment.arm)
+                  : null;
 
-  return (
-    <div style={{ ...commonStyles.card, padding: '12px' }}>
-      <LoadInput
-        label={label}
-        value={value}
-        onChange={onChange}
-        max={max}
-      />
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: '8px',
-        marginTop: '8px',
-        fontSize: '12px',
-        color: theme.colors.textSecondary
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span>📏 Bras:</span>
-          {hasArm ? (
-            <span style={{ color: theme.colors.textPrimary }}>{arm.toFixed(2)} m</span>
+                return (
+                  <LoadInputWithInfo
+                    key={compartment.id || index}
+                    label={`🧳 ${compartment.name}`}
+                    value={safeLoads[`baggage_${compartment.id}`] || 0}
+                    onChange={(v) => onLoadChange(`baggage_${compartment.id}`, v)}
+                    arm={arm}
+                    max={compartment.maxWeight ? parseFloat(compartment.maxWeight) : undefined}
+                  />
+                );
+              })}
+            </div>
           ) : (
-            <span style={{ color: '#ef4444', fontWeight: '600' }}>⚠️ MANQUANT</span>
+            <div style={{ ...commonStyles.card, padding: '16px', textAlign: 'center', color: theme.colors.textSecondary, fontSize: '13px' }}>
+              Aucun compartiment bagage configuré pour cet avion.
+            </div>
           )}
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span>⚖️ Moment:</span>
-          {hasArm ? (
-            <span style={{ color: theme.colors.textPrimary, fontWeight: '600' }}>
-              {moment} kg.m
-            </span>
-          ) : (
-            <span style={{ color: '#ef4444', fontWeight: '600' }}>⚠️ N/A</span>
-          )}
+      </section>
+    );
+  });
+
+  // Composant utilitaire pour les champs de chargement avec info bras/moment
+  const LoadInputWithInfo = memo(({ label, value, onChange, arm, max }) => {
+    const moment = arm !== null ? (value * arm) : null;
+
+    return (
+      <div style={{ ...commonStyles.card, padding: '12px' }}>
+        <LoadInput
+          label={label}
+          value={value}
+          onChange={onChange}
+          max={max}
+        />
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '8px',
+          marginTop: '8px',
+          fontSize: '12px',
+          color: theme.colors.textSecondary
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span>📏 Bras:</span>
+            {arm !== null ? (
+              <span style={{ color: theme.colors.textPrimary }}>{arm.toFixed(2)} m</span>
+            ) : (
+              <span style={{ color: '#ef4444', fontWeight: '600' }}>⚠️ MANQUANT</span>
+            )}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span>⚖️ Moment:</span>
+            {moment !== null ? (
+              <span style={{ color: theme.colors.textPrimary, fontWeight: '600' }}>
+                {moment.toFixed(1)} kg.m
+              </span>
+            ) : (
+              <span style={{ color: '#ef4444', fontWeight: '600' }}>⚠️ N/A</span>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
-});
+    );
+  });
 
-// Display names pour le debug
-Step6WeightBalance.displayName = 'Step6WeightBalance';
-LoadingSection.displayName = 'LoadingSection';
-LoadInputWithInfo.displayName = 'LoadInputWithInfo';
-
-export default Step6WeightBalance;
+  export default Step6WeightBalance;

@@ -5,6 +5,7 @@ import { sx } from '../../../shared/styles/styleSystem';
 import performanceInterpolation from '../../../services/performanceInterpolation';
 import { getCombinedDataForGroup } from '../../../services/performanceTableGrouping';
 import { calculatePerformanceDistance, calculatePerformanceWithExtrapolation } from '../../../services/performanceTrilinearInterpolation';
+import { useUnits } from '@hooks/useUnits';
 
 /**
  * Calculateur de performance pour UN tableau extrait
@@ -24,6 +25,9 @@ const PerformanceTableCalculator = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(initialExpanded);
   const [showCalculationDetails, setShowCalculationDetails] = useState(true);
+
+  // 🔧 UNITÉS: Utiliser le hook global
+  const { convert, getSymbol, format } = useUnits();
 
   // 🔧 COMPATIBILITÉ: Accepter soit table soit tableGroup
   // Si tableGroup est fourni, utiliser le premier tableau pour compatibilité temporaire
@@ -261,7 +265,7 @@ const PerformanceTableCalculator = ({
   const tableWeight = useMemo(() => {
     if (!table) return null;
     const weightMatch = table.table_name?.match(/(\d+)\s*kg/i) ||
-                        table.conditions?.match(/(\d+)\s*kg/i);
+      table.conditions?.match(/(\d+)\s*kg/i);
     return weightMatch ? parseInt(weightMatch[1]) : null;
   }, [table]);
 
@@ -318,7 +322,18 @@ const PerformanceTableCalculator = ({
     return null;
   }, [combinedGroupData, preparedData]);
 
-  const { altitudes, temperatures } = displayData || { altitudes: [], temperatures: [] };
+  // 🔧 HELPER: Convertir et formater une distance
+  // Les résultats bruts sont toujours en MÈTRES (standard interne)
+  const formatDistance = (valueInMeters) => {
+    if (valueInMeters === null || valueInMeters === undefined) return '---';
+
+    // Convertir mètres -> unité préférée (m, ft, nm, etc.)
+    // 'runway' est la catégorie pour les longueurs de piste (m ou ft)
+    const converted = convert(valueInMeters, 'runway', 'm');
+    const symbol = getSymbol('runway');
+
+    return `${Math.round(converted)} ${symbol}`;
+  };
 
   return (
     <div style={sx.combine(sx.components.card.base, sx.spacing.mb(4))}>
@@ -366,7 +381,7 @@ const PerformanceTableCalculator = ({
                   Distance de roulage (ground roll)
                 </p>
                 <p style={sx.combine(sx.text.xl, sx.text.bold, { color: tableType.color })}>
-                  {result.groundRoll} m
+                  {formatDistance(result.groundRoll)}
                 </p>
               </div>
             )}
@@ -378,7 +393,7 @@ const PerformanceTableCalculator = ({
                   Distance passage 50ft / 15m
                 </p>
                 <p style={sx.combine(sx.text.xl, sx.text.bold, { color: tableType.color })}>
-                  {result.distance50ft} m
+                  {formatDistance(result.distance50ft)}
                 </p>
               </div>
             )}
@@ -420,7 +435,7 @@ const PerformanceTableCalculator = ({
                         📊 Extrapolée ({conditions.weight} kg)
                       </p>
                       <p style={sx.combine(sx.text.lg, sx.text.bold, { color: '#f59e0b' })}>
-                        {result.groundRoll.extrapolated.value} m
+                        {formatDistance(result.groundRoll.extrapolated.value)}
                       </p>
                       <p style={sx.combine(sx.text.xs, { color: '#92400e', marginTop: '4px' })}>
                         {result.groundRoll.extrapolated.warning}
@@ -435,7 +450,7 @@ const PerformanceTableCalculator = ({
                         📌 Masse limite ({result.groundRoll.clamped.massUsed} kg)
                       </p>
                       <p style={sx.combine(sx.text.lg, sx.text.bold, { color: '#4f46e5' })}>
-                        {result.groundRoll.clamped.value} m
+                        {formatDistance(result.groundRoll.clamped.value)}
                       </p>
                       <p style={sx.combine(sx.text.xs, { color: '#312e81', marginTop: '4px' })}>
                         {result.groundRoll.clamped.warning}
@@ -459,7 +474,7 @@ const PerformanceTableCalculator = ({
                         📊 Extrapolée ({conditions.weight} kg)
                       </p>
                       <p style={sx.combine(sx.text.lg, sx.text.bold, { color: '#f59e0b' })}>
-                        {result.distance50ft.extrapolated.value} m
+                        {formatDistance(result.distance50ft.extrapolated.value)}
                       </p>
                       <p style={sx.combine(sx.text.xs, { color: '#92400e', marginTop: '4px' })}>
                         {result.distance50ft.extrapolated.warning}
@@ -474,7 +489,7 @@ const PerformanceTableCalculator = ({
                         📌 Masse limite ({result.distance50ft.clamped.massUsed} kg)
                       </p>
                       <p style={sx.combine(sx.text.lg, sx.text.bold, { color: '#4f46e5' })}>
-                        {result.distance50ft.clamped.value} m
+                        {formatDistance(result.distance50ft.clamped.value)}
                       </p>
                       <p style={sx.combine(sx.text.xs, { color: '#312e81', marginTop: '4px' })}>
                         {result.distance50ft.clamped.warning}
@@ -495,29 +510,29 @@ const PerformanceTableCalculator = ({
       {!result && (
         <div style={sx.spacing.p(4)}>
           <div style={sx.combine(
-              sx.components.alert.base,
-              conditions.temperature === null ? sx.components.alert.danger : sx.components.alert.warning
-            )}>
-              <AlertCircle size={16} />
-              <div>
-                {conditions.temperature === null ? (
-                  <>
-                    <p style={sx.combine(sx.text.sm, sx.text.bold)}>
-                      ⚠️ TEMPÉRATURE NON DISPONIBLE
-                    </p>
-                    <p style={sx.text.sm}>
-                      Calcul de performance bloqué pour des raisons de sécurité.
-                      La température METAR n'a pas été trouvée. Consultez la météo et saisissez la température manuellement dans le champ ci-dessus.
-                    </p>
-                  </>
-                ) : (
-                  <p style={sx.text.sm}>
-                    Impossible de calculer les performances avec les conditions actuelles.
-                    Vérifiez que les valeurs sont dans les plages supportées par le tableau.
+            sx.components.alert.base,
+            conditions.temperature === null ? sx.components.alert.danger : sx.components.alert.warning
+          )}>
+            <AlertCircle size={16} />
+            <div>
+              {conditions.temperature === null ? (
+                <>
+                  <p style={sx.combine(sx.text.sm, sx.text.bold)}>
+                    ⚠️ TEMPÉRATURE NON DISPONIBLE
                   </p>
-                )}
-              </div>
+                  <p style={sx.text.sm}>
+                    Calcul de performance bloqué pour des raisons de sécurité.
+                    La température METAR n'a pas été trouvée. Consultez la météo et saisissez la température manuellement dans le champ ci-dessus.
+                  </p>
+                </>
+              ) : (
+                <p style={sx.text.sm}>
+                  Impossible de calculer les performances avec les conditions actuelles.
+                  Vérifiez que les valeurs sont dans les plages supportées par le tableau.
+                </p>
+              )}
             </div>
+          </div>
         </div>
       )}
     </div>

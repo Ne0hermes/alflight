@@ -2,6 +2,8 @@
  * Modèle de données pour le plan de vol
  * Contient toutes les informations collectées pendant le wizard
  */
+import { DENSITIES } from '@utils/unitConversions';
+
 export class FlightPlanData {
   constructor() {
     // Étape 1 : Informations générales
@@ -177,39 +179,39 @@ export class FlightPlanData {
   calculateFuel() {
     const { distance } = this.route;
     const { cruiseSpeed, fuelConsumption } = this.aircraft;
-    
+
     if (distance && cruiseSpeed && fuelConsumption) {
       // Temps de vol en heures
       const flightTime = distance / cruiseSpeed;
-      
+
       // Carburant croisière
       this.fuel.cruise = Math.ceil(flightTime * fuelConsumption);
-      
+
       // Carburant montée (estimation : 10% du trajet)
       this.fuel.climb = Math.ceil(this.fuel.cruise * 0.1);
-      
+
       // Carburant déroutement (plus long déroutement + 10%)
       if (this.alternates.length > 0) {
         const maxAlternateDistance = Math.max(...this.alternates.map(alt => alt.distance));
         const alternateTime = maxAlternateDistance / cruiseSpeed;
         this.fuel.alternate = Math.ceil(alternateTime * fuelConsumption * 1.1);
       }
-      
+
       // Réserve réglementaire (30 min VFR, 45 min IFR)
       const reserveTime = this.generalInfo.flightType === 'VFR' ? 0.5 : 0.75;
       this.fuel.reserve = Math.ceil(reserveTime * fuelConsumption);
-      
+
       // Contingence (5% du trajet)
       this.fuel.contingency = Math.ceil(this.fuel.cruise * 0.05);
-      
+
       // Total
-      this.fuel.total = this.fuel.taxi + this.fuel.climb + this.fuel.cruise + 
-                       this.fuel.alternate + this.fuel.reserve + this.fuel.contingency;
-      
+      this.fuel.total = this.fuel.taxi + this.fuel.climb + this.fuel.cruise +
+        this.fuel.alternate + this.fuel.reserve + this.fuel.contingency;
+
       // Par défaut, confirmé = total
       this.fuel.confirmed = this.fuel.total;
     }
-    
+
     this.updateTimestamp();
     return this.fuel;
   }
@@ -229,24 +231,28 @@ export class FlightPlanData {
     const { emptyWeight } = this.aircraft;
     const { passengers, passengersWeight, baggage } = this.weightBalance;
     const { confirmed: fuelLiters } = this.fuel;
-    
-    // Conversion carburant L -> kg (densité moyenne 0.72 kg/L)
-    const fuelWeight = fuelLiters * 0.72;
+
+    // Déterminer la densité selon le type de carburant
+    const isJet = this.aircraft.fuelType?.toUpperCase().includes('JET');
+    const density = isJet ? DENSITIES.JET_A1 : DENSITIES.AVGAS;
+
+    // Conversion carburant L -> kg
+    const fuelWeight = fuelLiters * density;
     this.weightBalance.fuel = fuelWeight;
-    
+
     // Masse au décollage
-    this.weightBalance.takeoffWeight = emptyWeight + 
-                                       (passengers * passengersWeight) + 
-                                       baggage + 
-                                       fuelWeight;
-    
+    this.weightBalance.takeoffWeight = emptyWeight +
+      (passengers * passengersWeight) +
+      baggage +
+      fuelWeight;
+
     // Masse à l'atterrissage (sans le carburant consommé)
-    const consumedFuel = (this.fuel.climb + this.fuel.cruise) * 0.72;
+    const consumedFuel = (this.fuel.climb + this.fuel.cruise) * density;
     this.weightBalance.landingWeight = this.weightBalance.takeoffWeight - consumedFuel;
-    
+
     // Vérification des limites
     this.weightBalance.withinLimits = this.weightBalance.takeoffWeight <= this.aircraft.maxWeight;
-    
+
     this.updateTimestamp();
     return this.weightBalance;
   }
@@ -321,14 +327,14 @@ export class FlightPlanData {
       const lat2 = this.route.arrival.coordinates.lat * Math.PI / 180;
       const deltaLat = (this.route.arrival.coordinates.lat - this.route.departure.coordinates.lat) * Math.PI / 180;
       const deltaLng = (this.route.arrival.coordinates.lng - this.route.departure.coordinates.lng) * Math.PI / 180;
-      
-      const a = Math.sin(deltaLat/2) * Math.sin(deltaLat/2) +
-                Math.cos(lat1) * Math.cos(lat2) *
-                Math.sin(deltaLng/2) * Math.sin(deltaLng/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      
+
+      const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+        Math.cos(lat1) * Math.cos(lat2) *
+        Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
       this.route.distance = Math.round(R * c);
-      
+
       // Temps estimé
       if (this.aircraft.cruiseSpeed) {
         this.route.estimatedTime = Math.round((this.route.distance / this.aircraft.cruiseSpeed) * 60);
