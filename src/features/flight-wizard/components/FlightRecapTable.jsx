@@ -75,12 +75,12 @@ export const FlightRecapTable = ({
 
     // Titre de la section
     const sectionTitle = type === 'departure' ? 'DÉPART' :
-                        type === 'arrival' ? 'ARRIVÉE' :
-                        'DÉROUTEMENT';
+      type === 'arrival' ? 'ARRIVÉE' :
+        'DÉROUTEMENT';
 
     const titleColor = type === 'departure' ? '#10b981' :
-                      type === 'arrival' ? '#ef4444' :
-                      '#f59e0b';
+      type === 'arrival' ? '#ef4444' :
+        '#f59e0b';
 
     // Extraire les fréquences
     const atisFreq = aerodrome.frequencies ? extractFrequency(aerodrome.frequencies.atis) : null;
@@ -331,6 +331,37 @@ export const FlightRecapTable = ({
                               ))}
                             </div>
                           )}
+
+                          {/* Performances calculées (si pas d'abaques ou en complément) */}
+                          {(!performanceData?.takeoff?.abaques || performanceData.takeoff.abaques.length === 0) && performanceData?.takeoff?.groundRoll && (
+                            <div style={{
+                              marginTop: '4px',
+                              paddingTop: '4px',
+                              paddingLeft: '8px',
+                              borderLeft: '3px solid #3b82f6',
+                              backgroundColor: '#eff6ff'
+                            }}>
+                              <div style={{ fontSize: '8px', fontWeight: '700', color: '#3b82f6', marginBottom: '2px' }}>
+                                📊 Calculé
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                                <span style={{ color: '#6b7280', fontSize: '8px' }}>Roulement:</span>
+                                <span style={{ fontWeight: '700', color: '#111827', fontSize: '8px' }}>
+                                  {Math.round(performanceData.takeoff.groundRoll)}m
+                                </span>
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                                <span style={{ color: '#6b7280', fontSize: '8px' }}>Passage 50ft:</span>
+                                <span style={{
+                                  fontWeight: '700',
+                                  color: tora >= performanceData.takeoff.toda50ft ? '#059669' : '#dc2626',
+                                  fontSize: '8px'
+                                }}>
+                                  {Math.round(performanceData.takeoff.toda50ft)}m
+                                </span>
+                              </div>
+                            </div>
+                          )}
                         </>
                       )}
 
@@ -370,6 +401,37 @@ export const FlightRecapTable = ({
                                   </span>
                                 </div>
                               ))}
+                            </div>
+                          )}
+
+                          {/* Performances calculées (si pas d'abaques ou en complément) */}
+                          {(!performanceData?.landing?.abaques || performanceData.landing.abaques.length === 0) && performanceData?.landing?.groundRoll && (
+                            <div style={{
+                              marginTop: '4px',
+                              paddingTop: '4px',
+                              paddingLeft: '8px',
+                              borderLeft: '3px solid #10b981',
+                              backgroundColor: '#f0fdf4'
+                            }}>
+                              <div style={{ fontSize: '8px', fontWeight: '700', color: '#10b981', marginBottom: '2px' }}>
+                                📊 Calculé
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                                <span style={{ color: '#6b7280', fontSize: '8px' }}>Roulement:</span>
+                                <span style={{ fontWeight: '700', color: '#111827', fontSize: '8px' }}>
+                                  {Math.round(performanceData.landing.groundRoll)}m
+                                </span>
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                                <span style={{ color: '#6b7280', fontSize: '8px' }}>Passage 50ft:</span>
+                                <span style={{
+                                  fontWeight: '700',
+                                  color: lda >= performanceData.landing.lda50ft ? '#059669' : '#dc2626',
+                                  fontSize: '8px'
+                                }}>
+                                  {Math.round(performanceData.landing.lda50ft)}m
+                                </span>
+                              </div>
                             </div>
                           )}
                         </>

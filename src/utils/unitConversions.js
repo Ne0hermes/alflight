@@ -2,25 +2,30 @@
 // Gère toutes les conversions entre différents systèmes d'unités pour l'aviation
 
 // Conversions de carburant
+export const DENSITIES = {
+  AVGAS: 0.72,
+  JET_A1: 0.80
+};
+
 export const fuelConversions = {
   // Litres vers autres unités
   ltrToGal: (ltr) => ltr * 0.264172,
-  ltrToKg: (ltr, density = 0.72) => ltr * density, // densité AVGAS par défaut
-  ltrToLbs: (ltr, density = 0.72) => ltr * density * 2.20462,
-  
+  ltrToKg: (ltr, density = DENSITIES.AVGAS) => ltr * density,
+  ltrToLbs: (ltr, density = DENSITIES.AVGAS) => ltr * density * 2.20462,
+
   // Gallons vers autres unités
   galToLtr: (gal) => gal * 3.78541,
-  galToKg: (gal, density = 0.72) => gal * 3.78541 * density,
+  galToKg: (gal, density = DENSITIES.AVGAS) => gal * 3.78541 * density,
   galToLbs: (gal) => gal * 6.01, // poids moyen AVGAS
-  
+
   // Kilogrammes vers autres unités
-  kgToLtr: (kg, density = 0.72) => kg / density,
-  kgToGal: (kg, density = 0.72) => (kg / density) * 0.264172,
+  kgToLtr: (kg, density = DENSITIES.AVGAS) => kg / density,
+  kgToGal: (kg, density = DENSITIES.AVGAS) => (kg / density) * 0.264172,
   kgToLbs: (kg) => kg * 2.20462,
-  
+
   // Livres vers autres unités
   lbsToKg: (lbs) => lbs * 0.453592,
-  lbsToLtr: (lbs, density = 0.72) => (lbs * 0.453592) / density,
+  lbsToLtr: (lbs, density = DENSITIES.AVGAS) => (lbs * 0.453592) / density,
   lbsToGal: (lbs) => lbs / 6.01
 };
 
@@ -70,8 +75,8 @@ export const speedConversions = {
 
 // Conversions de température
 export const temperatureConversions = {
-  celsiusToFahrenheit: (c) => (c * 9/5) + 32,
-  fahrenheitToCelsius: (f) => (f - 32) * 5/9
+  celsiusToFahrenheit: (c) => (c * 9 / 5) + 32,
+  fahrenheitToCelsius: (f) => (f - 32) * 5 / 9
 };
 
 // Conversions de pression
@@ -116,15 +121,41 @@ export const runwayConversions = {
   ftToM: (ft) => ft * 0.3048
 };
 
+// Conversions de coordonnées
+export const coordinateConversions = {
+  decimalToDMS: (decimal, isLat) => {
+    const absolute = Math.abs(decimal);
+    const degrees = Math.floor(absolute);
+    const minutesNotTruncated = (absolute - degrees) * 60;
+    const minutes = Math.floor(minutesNotTruncated);
+    const seconds = Math.floor((minutesNotTruncated - minutes) * 60);
+
+    const direction = decimal >= 0
+      ? (isLat ? 'N' : 'E')
+      : (isLat ? 'S' : 'W');
+
+    return `${String(degrees).padStart(2, '0')}°${String(minutes).padStart(2, '0')}'${String(seconds).padStart(2, '0')}"${direction}`;
+  },
+
+  coordinatesToDMS: (lat, lon) => {
+    return {
+      lat: coordinateConversions.decimalToDMS(lat, true),
+      lon: coordinateConversions.decimalToDMS(lon, false),
+      formatted: `${coordinateConversions.decimalToDMS(lat, true)} - ${coordinateConversions.decimalToDMS(lon, false)}`
+    };
+  }
+};
+
 /**
  * Fonction générale de conversion de valeur
  * @param {number} value - La valeur à convertir
  * @param {string} fromUnit - L'unité de départ
  * @param {string} toUnit - L'unité d'arrivée
  * @param {string} category - La catégorie d'unité (speed, distance, etc.)
+ * @param {Object} options - Options supplémentaires (ex: density)
  * @returns {number} - La valeur convertie
  */
-export function convertValue(value, fromUnit, toUnit, category) {
+export function convertValue(value, fromUnit, toUnit, category, options = {}) {
   // Si les unités sont identiques, retourner la valeur telle quelle
   if (fromUnit === toUnit) {
     return value;
@@ -149,7 +180,6 @@ export function convertValue(value, fromUnit, toUnit, category) {
 
   // Construire la clé de conversion
   const conversionKey = `${fromUnit}To${toUnit.charAt(0).toUpperCase() + toUnit.slice(1)}`;
-  const reverseKey = `${toUnit}To${fromUnit.charAt(0).toUpperCase() + fromUnit.slice(1)}`;
 
   console.log('🔍 [convertValue]', {
     value: numValue,
@@ -157,106 +187,64 @@ export function convertValue(value, fromUnit, toUnit, category) {
     toUnit,
     category,
     conversionKey,
-    reverseKey
+    options
   });
 
   let conversionFunc = null;
-  let reverseConversion = false;
 
   // Chercher la fonction de conversion selon la catégorie
   switch (category) {
     case 'distance':
-      conversionFunc = distanceConversions[conversionKey] || distanceConversions[reverseKey];
-      if (!conversionFunc && distanceConversions[reverseKey]) {
-        conversionFunc = distanceConversions[reverseKey];
-        reverseConversion = true;
-      }
+      conversionFunc = distanceConversions[conversionKey];
       break;
     case 'altitude':
-      conversionFunc = altitudeConversions[conversionKey] || altitudeConversions[reverseKey];
-      if (!conversionFunc && altitudeConversions[reverseKey]) {
-        conversionFunc = altitudeConversions[reverseKey];
-        reverseConversion = true;
-      }
+      conversionFunc = altitudeConversions[conversionKey];
       break;
     case 'speed':
     case 'windSpeed':
-      conversionFunc = speedConversions[conversionKey] || speedConversions[reverseKey];
-      if (!conversionFunc && speedConversions[reverseKey]) {
-        conversionFunc = speedConversions[reverseKey];
-        reverseConversion = true;
-      }
+      conversionFunc = speedConversions[conversionKey];
       break;
     case 'weight':
-      conversionFunc = weightConversions[conversionKey] || weightConversions[reverseKey];
-      if (!conversionFunc && weightConversions[reverseKey]) {
-        conversionFunc = weightConversions[reverseKey];
-        reverseConversion = true;
-      }
+      conversionFunc = weightConversions[conversionKey];
       break;
     case 'fuel':
-      conversionFunc = fuelConversions[conversionKey] || fuelConversions[reverseKey];
-      if (!conversionFunc && fuelConversions[reverseKey]) {
-        conversionFunc = fuelConversions[reverseKey];
-        reverseConversion = true;
-      }
+      conversionFunc = fuelConversions[conversionKey];
       break;
     case 'fuelConsumption':
-      conversionFunc = fuelConsumptionConversions[conversionKey] || fuelConsumptionConversions[reverseKey];
-      if (!conversionFunc && fuelConsumptionConversions[reverseKey]) {
-        conversionFunc = fuelConsumptionConversions[reverseKey];
-        reverseConversion = true;
-      }
+      conversionFunc = fuelConsumptionConversions[conversionKey];
       break;
     case 'pressure':
-      conversionFunc = pressureConversions[conversionKey] || pressureConversions[reverseKey];
-      if (!conversionFunc && pressureConversions[reverseKey]) {
-        conversionFunc = pressureConversions[reverseKey];
-        reverseConversion = true;
-      }
+      conversionFunc = pressureConversions[conversionKey];
       break;
     case 'armLength':
-      conversionFunc = armLengthConversions[conversionKey] || armLengthConversions[reverseKey];
-      if (!conversionFunc && armLengthConversions[reverseKey]) {
-        conversionFunc = armLengthConversions[reverseKey];
-        reverseConversion = true;
-      }
+      conversionFunc = armLengthConversions[conversionKey];
       break;
     case 'visibility':
-      conversionFunc = visibilityConversions[conversionKey] || visibilityConversions[reverseKey];
-      if (!conversionFunc && visibilityConversions[reverseKey]) {
-        conversionFunc = visibilityConversions[reverseKey];
-        reverseConversion = true;
-      }
+      conversionFunc = visibilityConversions[conversionKey];
       break;
     case 'runway':
-      conversionFunc = runwayConversions[conversionKey] || runwayConversions[reverseKey];
-      if (!conversionFunc && runwayConversions[reverseKey]) {
-        conversionFunc = runwayConversions[reverseKey];
-        reverseConversion = true;
-      }
+      conversionFunc = runwayConversions[conversionKey];
       break;
     default:
-      
+      console.warn(`⚠️ [convertValue] Unknown category: ${category}`);
       return numValue;
   }
 
-  console.log('🔍 [convertValue] Found function:', {
-    hasFunc: !!conversionFunc,
-    reverseConversion
-  });
-
   if (conversionFunc) {
-    const result = conversionFunc(numValue);
+    // Passer la densité si disponible (pour le carburant)
+    const density = options.density;
+    const result = conversionFunc(numValue, density);
+
     console.log('✅ [convertValue] Conversion result:', {
       input: numValue,
       output: result,
-      reverseConversion
+      densityUsed: density
     });
-    return reverseConversion ? (1 / result) * numValue * numValue : result;
+
+    return result;
   }
 
-  console.warn('⚠️ [convertValue] No conversion function found, returning original value');
+  console.warn(`⚠️ [convertValue] No conversion function found for ${conversionKey}, returning original value`);
   return numValue;
 }
 

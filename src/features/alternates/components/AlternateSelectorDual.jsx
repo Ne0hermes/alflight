@@ -4,24 +4,24 @@ import { MapPin, Plane, Navigation, Check, X, ChevronDown, ChevronUp } from 'luc
 import { sx } from '@shared/styles/styleSystem';
 import { calculateDistance } from '@utils/navigationCalculations';
 import { DataSourceBadge } from '@shared/components';
-import { Conversions } from '@utils/conversions';
+
 import { useAircraft } from '@core/contexts';
 
 /**
  * Composant de sélection duale des aérodromes de déroutement
  * Permet de choisir un aérodrome côté départ et un côté arrivée
  */
-export const AlternateSelectorDual = memo(({ 
-  candidates = [], 
+export const AlternateSelectorDual = memo(({
+  candidates = [],
   searchZone,
   onSelectionChange,
   currentSelection = { departure: null, arrival: null }
 }) => {
-  
+
   // Utiliser directement currentSelection au lieu de useState
   const selectedDeparture = currentSelection.departure;
   const selectedArrival = currentSelection.arrival;
-  
+
   // Séparer les candidats par côté (liste unique sans séparation contrôlé/non contrôlé)
   const candidatesBySide = useMemo(() => {
     const departure = [];
@@ -46,9 +46,9 @@ export const AlternateSelectorDual = memo(({
 
       // Déterminer si l'aérodrome est contrôlé
       const isControlled = airport.services?.atc === true ||
-                          (airport.frequencies && airport.frequencies.some(f => f.type === 'TWR')) ||
-                          airport.type === 'large_airport' ||
-                          airport.type === 'medium_airport';
+        (airport.frequencies && airport.frequencies.some(f => f.type === 'TWR')) ||
+        airport.type === 'large_airport' ||
+        airport.type === 'medium_airport';
 
       // Enrichir avec les distances et le statut de contrôle
       const enrichedAirport = {
@@ -74,13 +74,13 @@ export const AlternateSelectorDual = memo(({
 
     return { departure, arrival };
   }, [candidates, searchZone]);
-  
+
   // Distance totale du vol
   const totalFlightDistance = useMemo(() => {
     if (!searchZone) return 0;
     return calculateDistance(searchZone.departure, searchZone.arrival);
   }, [searchZone]);
-  
+
   // Gérer la sélection
   const handleSelect = (airport, side) => {
     if (side === 'departure') {
@@ -91,7 +91,7 @@ export const AlternateSelectorDual = memo(({
       onSelectionChange?.({ departure: selectedDeparture, arrival: newArrival });
     }
   };
-  
+
   // Composant pour afficher un côté avec indicateur visuel de sélection
   const SideSelector = ({ title, airports, selectedAirport, onSelect, side, referencePoint, sideColor }) => {
     const [hoveredIcao, setHoveredIcao] = React.useState(null);
@@ -99,184 +99,184 @@ export const AlternateSelectorDual = memo(({
     const { selectedAircraft } = useAircraft();
 
     return (
-    <div style={sx.components.card.base}>
-      <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2), { color: sideColor })}>
-        {title} ({airports.length})
-      </h5>
-      
-      {airports.length === 0 ? (
-        <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.text.center, sx.spacing.p(4))}>
-          Aucun aérodrome trouvé de ce côté
-        </p>
-      ) : (
-        <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-          {airports.map((airport, index) => {
-            const isSelected = selectedAirport?.icao === airport.icao;
-            const isHovered = hoveredIcao === airport.icao;
-            const distanceFromRef = side === 'departure'
-              ? airport.distanceToDeparture
-              : airport.distanceToArrival;
+      <div style={sx.components.card.base}>
+        <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2), { color: sideColor })}>
+          {title} ({airports.length})
+        </h5>
 
-            // Vérifier si le déroutement est plus court que le vol initial
-            const isDiversionShorter = distanceFromRef < totalFlightDistance;
+        {airports.length === 0 ? (
+          <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.text.center, sx.spacing.p(4))}>
+            Aucun aérodrome trouvé de ce côté
+          </p>
+        ) : (
+          <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+            {airports.map((airport, index) => {
+              const isSelected = selectedAirport?.icao === airport.icao;
+              const isHovered = hoveredIcao === airport.icao;
+              const distanceFromRef = side === 'departure'
+                ? airport.distanceToDeparture
+                : airport.distanceToArrival;
 
-            return (
-              <div
-                key={airport.icao}
-                role="button"
-                tabIndex={0}
-                style={{
-                  padding: '10px',
-                  marginBottom: '6px',
-                  borderWidth: '2px',
-                  borderStyle: 'solid',
-                  borderColor: isSelected ? sideColor : (isHovered ? `${sideColor}60` : '#e5e7eb'),
-                  borderRadius: '6px',
-                  backgroundColor: isSelected ? (side === 'departure' ? '#fef2f2' : '#f0fdf4') : (isHovered ? '#fafafa' : '#ffffff'),
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  userSelect: 'none',
-                  pointerEvents: 'auto',
-                  zIndex: 1,
-                  transform: isHovered && !isSelected ? 'translateY(-1px)' : 'translateY(0)',
-                  boxShadow: isHovered && !isSelected ? '0 2px 6px rgba(0,0,0,0.08)' : 'none'
-                }}
-                onClick={() => {
-                  if (onSelect) {
-                    onSelect(airport, side);
-                  }
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
+              // Vérifier si le déroutement est plus court que le vol initial
+              const isDiversionShorter = distanceFromRef < totalFlightDistance;
+
+              return (
+                <div
+                  key={airport.icao}
+                  role="button"
+                  tabIndex={0}
+                  style={{
+                    padding: '10px',
+                    marginBottom: '6px',
+                    borderWidth: '2px',
+                    borderStyle: 'solid',
+                    borderColor: isSelected ? sideColor : (isHovered ? `${sideColor}60` : '#e5e7eb'),
+                    borderRadius: '6px',
+                    backgroundColor: isSelected ? (side === 'departure' ? '#fef2f2' : '#f0fdf4') : (isHovered ? '#fafafa' : '#ffffff'),
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    userSelect: 'none',
+                    pointerEvents: 'auto',
+                    zIndex: 1,
+                    transform: isHovered && !isSelected ? 'translateY(-1px)' : 'translateY(0)',
+                    boxShadow: isHovered && !isSelected ? '0 2px 6px rgba(0,0,0,0.08)' : 'none'
+                  }}
+                  onClick={() => {
                     if (onSelect) {
                       onSelect(airport, side);
                     }
-                  }
-                }}
-                onMouseEnter={() => setHoveredIcao(airport.icao)}
-                onMouseLeave={() => setHoveredIcao(null)}
-              >
-                {/* Indicateur visuel de sélection */}
-                {isSelected && (
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    right: 0,
-                    backgroundColor: sideColor,
-                    color: 'white',
-                    padding: '4px 12px',
-                    borderBottomLeftRadius: '8px',
-                    fontSize: '11px',
-                    fontWeight: 'bold'
-                  }}>
-                    ✓ SÉLECTIONNÉ
-                  </div>
-                )}
-                
-                
-                <div style={sx.flex.between}>
-                  <div style={{ flex: 1 }}>
-                    <div style={sx.flex.start}>
-                      <span style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: '20px',
-                        height: '20px',
-                        borderRadius: '50%',
-                        backgroundColor: isSelected ? sideColor : `${sideColor}20`,
-                        color: isSelected ? 'white' : sideColor,
-                        fontSize: '11px',
-                        fontWeight: 'bold',
-                        marginRight: '6px',
-                        borderWidth: isSelected ? '0' : '1px',
-                        borderStyle: isSelected ? 'none' : 'solid',
-                        borderColor: isSelected ? 'transparent' : sideColor,
-                        flexShrink: 0
-                      }}>
-                        {index + 1}
-                      </span>
-                      <strong style={sx.text.sm}>{airport.icao}</strong>
-                      <span style={sx.combine(sx.text.sm, sx.spacing.ml(1))}>
-                        {airport.name}
-                      </span>
-                      {airport.dataSource && airport.dataSource !== 'static' && (
-                        <DataSourceBadge 
-                          source={airport.dataSource} 
-                          size="xs" 
-                          showLabel={false}
-                          inline={true}
-                          style={{ marginLeft: '6px' }}
-                        />
-                      )}
-                    </div>
-                    
-                    <div style={sx.combine(sx.text.xs, sx.text.secondary)}>
-                      <span style={sx.spacing.mr(2)}>
-                        <MapPin size={10} style={{ display: 'inline', marginRight: '2px' }} />
-                        {distanceFromRef.toFixed(1)} NM depuis {side === 'departure' ? 'départ' : 'arrivée'}
-                      </span>
-                      <span style={sx.spacing.mr(2)}>
-                        <Navigation size={10} style={{ display: 'inline', marginRight: '2px' }} />
-                        {airport.distance.toFixed(1)} NM route
-                      </span>
-                    </div>
-                    
-                    <div style={sx.combine(sx.text.xs)}>
-                      <span style={sx.spacing.mr(1)}>
-                        🛬 {airport.runways?.[0]?.length || '?'}m
-                      </span>
-                      {airport.services?.fuel && <span style={sx.spacing.mr(1)}>⛽</span>}
-                      {airport.services?.atc && <span style={sx.spacing.mr(1)}>🗼</span>}
-                      <span style={{
-                        padding: '1px 4px',
-                        backgroundColor: getScoreColor(airport.score) + '20',
-                        color: getScoreColor(airport.score),
-                        borderRadius: '3px',
-                        fontWeight: 'bold',
-                        fontSize: '10px'
-                      }}>
-                        {((airport.score || 0) * 100).toFixed(0)}%
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div style={sx.combine(sx.flex.center, sx.spacing.ml(3))}>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      if (onSelect) {
                         onSelect(airport, side);
-                      }}
-                      style={{
-                        width: '40px',
-                        height: '40px',
-                        borderWidth: isSelected ? '0' : '2px',
-                        borderStyle: isSelected ? 'none' : 'solid',
-                        borderColor: isSelected ? 'transparent' : `${sideColor}30`,
-                        borderRadius: '50%',
-                        backgroundColor: isSelected ? sideColor : 'white',
-                        color: isSelected ? 'white' : sideColor,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '16px',
-                        fontWeight: 'bold'
-                      }}
-                    >
-                      {isSelected ? '✓' : '+'}
-                    </button>
+                      }
+                    }
+                  }}
+                  onMouseEnter={() => setHoveredIcao(airport.icao)}
+                  onMouseLeave={() => setHoveredIcao(null)}
+                >
+                  {/* Indicateur visuel de sélection */}
+                  {isSelected && (
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      right: 0,
+                      backgroundColor: sideColor,
+                      color: 'white',
+                      padding: '4px 12px',
+                      borderBottomLeftRadius: '8px',
+                      fontSize: '11px',
+                      fontWeight: 'bold'
+                    }}>
+                      ✓ SÉLECTIONNÉ
+                    </div>
+                  )}
+
+
+                  <div style={sx.flex.between}>
+                    <div style={{ flex: 1 }}>
+                      <div style={sx.flex.start}>
+                        <span style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '20px',
+                          height: '20px',
+                          borderRadius: '50%',
+                          backgroundColor: isSelected ? sideColor : `${sideColor}20`,
+                          color: isSelected ? 'white' : sideColor,
+                          fontSize: '11px',
+                          fontWeight: 'bold',
+                          marginRight: '6px',
+                          borderWidth: isSelected ? '0' : '1px',
+                          borderStyle: isSelected ? 'none' : 'solid',
+                          borderColor: isSelected ? 'transparent' : sideColor,
+                          flexShrink: 0
+                        }}>
+                          {index + 1}
+                        </span>
+                        <strong style={sx.text.sm}>{airport.icao}</strong>
+                        <span style={sx.combine(sx.text.sm, sx.spacing.ml(1))}>
+                          {airport.name}
+                        </span>
+                        {airport.dataSource && airport.dataSource !== 'static' && (
+                          <DataSourceBadge
+                            source={airport.dataSource}
+                            size="xs"
+                            showLabel={false}
+                            inline={true}
+                            style={{ marginLeft: '6px' }}
+                          />
+                        )}
+                      </div>
+
+                      <div style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                        <span style={sx.spacing.mr(2)}>
+                          <MapPin size={10} style={{ display: 'inline', marginRight: '2px' }} />
+                          {distanceFromRef.toFixed(1)} NM depuis {side === 'departure' ? 'départ' : 'arrivée'}
+                        </span>
+                        <span style={sx.spacing.mr(2)}>
+                          <Navigation size={10} style={{ display: 'inline', marginRight: '2px' }} />
+                          {airport.distance.toFixed(1)} NM route
+                        </span>
+                      </div>
+
+                      <div style={sx.combine(sx.text.xs)}>
+                        <span style={sx.spacing.mr(1)}>
+                          🛬 {airport.runways?.[0]?.length || '?'}m
+                        </span>
+                        {airport.services?.fuel && <span style={sx.spacing.mr(1)}>⛽</span>}
+                        {airport.services?.atc && <span style={sx.spacing.mr(1)}>🗼</span>}
+                        <span style={{
+                          padding: '1px 4px',
+                          backgroundColor: getScoreColor(airport.score) + '20',
+                          color: getScoreColor(airport.score),
+                          borderRadius: '3px',
+                          fontWeight: 'bold',
+                          fontSize: '10px'
+                        }}>
+                          {((airport.score || 0) * 100).toFixed(0)}%
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={sx.combine(sx.flex.center, sx.spacing.ml(3))}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelect(airport, side);
+                        }}
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          borderWidth: isSelected ? '0' : '2px',
+                          borderStyle: isSelected ? 'none' : 'solid',
+                          borderColor: isSelected ? 'transparent' : `${sideColor}30`,
+                          borderRadius: '50%',
+                          backgroundColor: isSelected ? sideColor : 'white',
+                          color: isSelected ? 'white' : sideColor,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '16px',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        {isSelected ? '✓' : '+'}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (

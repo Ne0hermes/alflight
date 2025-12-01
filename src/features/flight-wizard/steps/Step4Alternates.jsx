@@ -1,10 +1,12 @@
+```
 // src/features/flight-wizard/steps/Step4Alternates.jsx
 import React, { memo, useMemo, useEffect } from 'react';
 import AlternatesModule from '@features/alternates/AlternatesModule';
 import { AlertTriangle, Fuel, Navigation } from 'lucide-react';
-import { theme } from '../../../styles/theme';
-import { useNavigation, useAircraft } from '@core/contexts';
+import { theme } '../../../styles/theme';
+import { useNavigation, useAircraft, useFuel } from '@core/contexts';
 import { useUnits } from '@hooks/useUnits';
+import { useFuelStore } from '@core/stores/fuelStore';
 
 // Styles communs
 const commonStyles = {
@@ -53,6 +55,8 @@ export const Step4Alternates = memo(({ flightPlan, onUpdate }) => {
   const { waypoints } = useNavigation();
   const { setSelectedAircraft } = useAircraft();
   const { convert, getSymbol } = useUnits();
+  const { setFobFuel } = useFuel();
+  const setFobFuelStore = useFuelStore(state => state.setFobFuel);
 
   // 🔧 FIX: Synchroniser l'avion du flightPlan avec le contexte Aircraft global
   // Nécessaire pour que AlternatesModule (via useAlternateSelection) puisse accéder à l'avion
@@ -91,6 +95,24 @@ export const Step4Alternates = memo(({ flightPlan, onUpdate }) => {
       });
     }
   }, [flightPlan?.aircraft?.registration, setSelectedAircraft]);
+
+  // 🔧 FIX: Synchroniser le carburant confirmé (FOB) avec le store
+  // Nécessaire pour que AlternatesModule puisse calculer le rayon correctement
+  useEffect(() => {
+    const confirmedFuel = flightPlan?.fuel?.confirmed;
+    if (confirmedFuel && confirmedFuel > 0) {
+      console.log('⛽ [Step4] Synchronisation FOB depuis flightPlan:', confirmedFuel, 'L');
+      
+      // Mettre à jour via le contexte ET le store directement pour être sûr
+      const fuelData = {
+        ltr: confirmedFuel,
+        gal: convert(confirmedFuel, 'fuel', 'ltr', { toUnit: 'gal' })
+      };
+      
+      setFobFuel(fuelData);
+      setFobFuelStore(fuelData);
+    }
+  }, [flightPlan?.fuel?.confirmed, setFobFuel, setFobFuelStore, convert]);
 
   // Calculer le rayon de sélection basé sur le carburant restant à l'arrivée
   const searchRadius = useMemo(() => {
@@ -157,3 +179,4 @@ export const Step4Alternates = memo(({ flightPlan, onUpdate }) => {
 Step4Alternates.displayName = 'Step4Alternates';
 
 export default Step4Alternates;
+```

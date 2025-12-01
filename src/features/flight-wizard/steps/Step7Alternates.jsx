@@ -9,6 +9,7 @@ import { theme } from '../../../styles/theme';
 import { useNavigation, useAircraft, useFuel } from '@core/contexts';
 import { useUnits } from '@hooks/useUnits';
 import { useAlternateSelection } from '@features/alternates/hooks/useAlternateSelection';
+import { useFuelStore } from '@core/stores/fuelStore';
 
 // Styles communs
 const commonStyles = {
@@ -99,19 +100,30 @@ const commonStyles = {
 export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
   const { waypoints } = useNavigation();
   const { selectedAircraft, setSelectedAircraft } = useAircraft();
-  const { fobFuel } = useFuel();
+  const { fobFuel, setFobFuel } = useFuel();
   const { convert, getSymbol, format } = useUnits();
 
-  // 🔧 DEBUG: Log de la valeur FOB reçue du contexte
+  // Synchroniser les données de carburant avec le store global
+  const setFobFuelStore = useFuelStore(state => state.setFobFuel);
+
   useEffect(() => {
-    console.log('🔍 [Step7Alternates] FOB depuis contexte:', {
+    if (flightPlan?.fuel?.confirmed) {
+      console.log('⛽ [Step7Alternates] Syncing fuel from flightPlan:', flightPlan.fuel.confirmed);
+      // Sync local context
+      setFobFuel(flightPlan.fuel.confirmed);
+      // Sync global store
+      setFobFuelStore(flightPlan.fuel.confirmed);
+    }
+  }, [flightPlan?.fuel?.confirmed, setFobFuel, setFobFuelStore]);
+
+  // Effet pour logger le carburant disponible
+  useEffect(() => {
+    console.log('⛽ [Step7Alternates] Fuel state:', {
       fobFuel,
-      fobLtr: fobFuel?.ltr,
-      fobGal: fobFuel?.gal,
-      hasFobValue: fobFuel && fobFuel.ltr > 0,
-      flightPlanFuelConfirmed: flightPlan?.fuel?.confirmed
+      hasFuelData: fobFuel && (fobFuel.ltr > 0 || fobFuel.gal > 0),
+      flightPlanFuel: flightPlan?.fuel
     });
-  }, [fobFuel, flightPlan?.fuel?.confirmed]);
+  }, [fobFuel, flightPlan]);
 
   // Utiliser le hook de sélection avec les nouvelles fonctionnalités
   const {
@@ -203,8 +215,8 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
       // Fallback vers l'ancien calcul si pas de données cône
       const totalFuel = flightPlan.fuel?.confirmed || 0;
       const fuelUsed = (flightPlan.fuel?.taxi || 0) +
-                       (flightPlan.fuel?.climb || 0) +
-                       (flightPlan.fuel?.cruise || 0);
+        (flightPlan.fuel?.climb || 0) +
+        (flightPlan.fuel?.cruise || 0);
       const remainingFuel = totalFuel - fuelUsed;
       const fuelConsumption = flightPlan.aircraft?.fuelConsumption || 40;
       const cruiseSpeed = flightPlan.aircraft?.cruiseSpeed || 120;
@@ -249,12 +261,12 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
   const performanceBasedLDA = useMemo(() => {
     // Récupérer les distances d'atterrissage calculées à l'étape Performance
     const departureLanding = flightPlan?.performance?.departure?.takeoff?.lda50ft ||
-                              flightPlan?.performance?.departure?.takeoff?.groundRoll ||
-                              flightPlan?.performance?.departure?.landing?.lda50ft ||
-                              flightPlan?.performance?.departure?.landing?.groundRoll;
+      flightPlan?.performance?.departure?.takeoff?.groundRoll ||
+      flightPlan?.performance?.departure?.landing?.lda50ft ||
+      flightPlan?.performance?.departure?.landing?.groundRoll;
 
     const arrivalLanding = flightPlan?.performance?.arrival?.landing?.lda50ft ||
-                           flightPlan?.performance?.arrival?.landing?.groundRoll;
+      flightPlan?.performance?.arrival?.landing?.groundRoll;
 
     console.log('🛬 [Step7] Distances atterrissage depuis Performance:', {
       departureLanding,
@@ -392,7 +404,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
             )}
 
             {performanceBasedLDA && performanceBasedLDA.source === 'performance_departure_only' && (
-              <div style={{...commonStyles.coneInfoCard, backgroundColor: '#fef9c3'}}>
+              <div style={{ ...commonStyles.coneInfoCard, backgroundColor: '#fef9c3' }}>
                 <div style={commonStyles.coneInfoTitle}>Piste minimale × 1.43</div>
                 <div style={commonStyles.coneInfoValueLarge}>
                   {performanceBasedLDA.minRunwayRequired} m
@@ -407,7 +419,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
             )}
 
             {performanceBasedLDA && performanceBasedLDA.source === 'performance_arrival_only' && (
-              <div style={{...commonStyles.coneInfoCard, backgroundColor: '#fef9c3'}}>
+              <div style={{ ...commonStyles.coneInfoCard, backgroundColor: '#fef9c3' }}>
                 <div style={commonStyles.coneInfoTitle}>Piste minimale × 1.43</div>
                 <div style={commonStyles.coneInfoValueLarge}>
                   {performanceBasedLDA.minRunwayRequired} m
@@ -422,12 +434,12 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
             )}
 
             {performanceBasedLDA && performanceBasedLDA.source === 'no_performance_data' && (
-              <div style={{...commonStyles.coneInfoCard, backgroundColor: '#fef3c7', borderColor: '#f59e0b'}}>
+              <div style={{ ...commonStyles.coneInfoCard, backgroundColor: '#fef3c7', borderColor: '#f59e0b' }}>
                 <div style={commonStyles.coneInfoTitle}>Piste minimale</div>
-                <div style={{...commonStyles.coneInfoValueLarge, color: '#92400e'}}>
+                <div style={{ ...commonStyles.coneInfoValueLarge, color: '#92400e' }}>
                   N/A
                 </div>
-                <div style={{...commonStyles.coneInfoValueSmall, color: '#92400e'}}>
+                <div style={{ ...commonStyles.coneInfoValueSmall, color: '#92400e' }}>
                   Données Performance non disponibles
                 </div>
               </div>

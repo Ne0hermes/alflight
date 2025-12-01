@@ -1,9 +1,9 @@
-// src/features/flight-wizard/steps/Step5Fuel.jsx
 import React, { memo, useEffect } from 'react';
 import FuelModule from '@features/fuel/FuelModule';
 import { Fuel } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import { useFuel } from '@core/contexts';
+import { convertValue } from '@utils/unitConversions';
 
 // Styles communs
 const commonStyles = {
@@ -98,7 +98,7 @@ export const Step5Fuel = memo(({ flightPlan, onUpdate }) => {
       console.log('🔄 [Step5Fuel] Restauration CRM depuis flightPlan:', savedFuel, 'L');
       setFobFuel({
         ltr: savedFuel,
-        gal: savedFuel / 3.78541
+        gal: convertValue(savedFuel, 'fuel', 'ltr', 'gal')
       });
       hasRestored.current = true;
     }

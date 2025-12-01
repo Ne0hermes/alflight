@@ -5,7 +5,7 @@ import { aeroDataProvider } from '@core/data';
 import { useAircraft, useNavigation } from '@core/contexts';
 import { SimpleAirportSelector as AirportSelector } from './SimpleAirportSelector';
 import { VFRPointInserter } from './VFRPointInserter';
-import { Conversions } from '@utils/conversions';
+import { coordinateConversions } from '@utils/unitConversions';
 import { usePerformanceCalculations } from '@shared/hooks/usePerformanceCalculations';
 
 // Composant pour une carte de waypoint avec analyse des pistes intégrée
@@ -20,17 +20,19 @@ export const WaypointCardWithRunways = memo(({
   onInsertWaypoint,
   allWaypoints,
   segmentAltitude, // Altitude du segment précédent pour le calcul TOD
-  onRemoveVfrPoint // Fonction pour supprimer un point VFR
+  onRemoveVfrPoint, // Fonction pour supprimer un point VFR
+  onMoveUp, // Fonction pour déplacer vers le haut (passée par le parent)
+  onMoveDown // Fonction pour déplacer vers le bas (passée par le parent)
 }) => {
   const { selectedAircraft } = useAircraft();
-  const { waypoints, updateWaypoint, segmentAltitudes, moveWaypointUp, moveWaypointDown } = useNavigation();
+  const { waypoints, updateWaypoint, segmentAltitudes } = useNavigation();
   const { calculateCorrectedDistances } = usePerformanceCalculations();
   const [airport, setAirport] = useState(null);
   const [runways, setRunways] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [vacData, setVacData] = useState(null);
-  
+
   const isFirst = index === 0;
   const isLast = index === totalWaypoints - 1;
   const canDelete = totalWaypoints > 2;
@@ -40,9 +42,9 @@ export const WaypointCardWithRunways = memo(({
     if (isLast) return { text: 'Arrivée', color: '#f59e0b' };
     return { text: `Étape ${index}`, color: '#3b82f6' };
   };
-  
+
   const label = getLabel();
-  
+
   // Charger les données VAC de l'aérodrome quand le waypoint change
   useEffect(() => {
     const loadAirportData = async () => {
@@ -96,13 +98,13 @@ export const WaypointCardWithRunways = memo(({
 
     loadAirportData();
   }, [waypoint.name]);
-  
+
   const goToVACModule = () => {
     if (window.setActiveTab) {
       window.setActiveTab('vac');
     }
   };
-  
+
   // Analyser la compatibilité des pistes
   const getRunwayCompatibility = () => {
     if (!selectedAircraft || !runways.length) return null;
@@ -163,12 +165,12 @@ export const WaypointCardWithRunways = memo(({
       const ldaFeet = Math.round((runway.dimensions?.lda || runway.dimensions?.length || 0) * 3.28084);
 
       return todaFeet >= requiredDistances.takeoffDistance &&
-             ldaFeet >= requiredDistances.landingDistance;
+        ldaFeet >= requiredDistances.landingDistance;
     }).length;
 
     return { compatible: compatibleCount, total: runways.length };
   };
-  
+
   // Séparer les pistes en directions individuelles (numéro de piste + QFU)
   const separateRunwayDirections = () => {
     const directions = [];
@@ -244,16 +246,16 @@ export const WaypointCardWithRunways = memo(({
 
     return directions;
   };
-  
+
   const compatibility = getRunwayCompatibility();
   const runwayDirections = separateRunwayDirections();
-  
+
   return (
     <div style={sx.combine(
       sx.components.card.base,
       { borderColor: label.color, borderWidth: '2px' }
     )}>
-      
+
       {/* Label Aérodrome + info départ/arrivée sur la même ligne */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <span style={{ fontSize: '14px', fontWeight: '600', color: '#374151' }}>Aérodrome</span>
@@ -334,18 +336,18 @@ export const WaypointCardWithRunways = memo(({
           </button>
         </div>
       )}
-      
+
       {/* Section détails étendue */}
       {waypoint.lat && waypoint.lon && showDetails && (
         <div style={sx.combine(sx.spacing.mt(3), sx.spacing.p(3), sx.bg.gray, sx.rounded.md)}>
           {/* Indicateur VAC si données disponibles */}
           {vacData && (
             <div style={sx.combine(
-              sx.text.xs, 
+              sx.text.xs,
               sx.spacing.mb(3),
               sx.spacing.p(2),
               sx.rounded.sm,
-              { 
+              {
                 background: '#dbeafe',
                 color: '#1e40af',
                 border: '1px solid #93c5fd'
@@ -354,7 +356,7 @@ export const WaypointCardWithRunways = memo(({
               ✅ Données issues de la carte VAC officielle
             </div>
           )}
-          
+
           {/* Coordonnées détaillées */}
           <div style={sx.spacing.mb(3)}>
             <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
@@ -364,10 +366,10 @@ export const WaypointCardWithRunways = memo(({
               {waypoint.lat.toFixed(4)}°, {waypoint.lon.toFixed(4)}°
             </div>
             <div style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
-              {Conversions.coordinatesToDMS(waypoint.lat, waypoint.lon).formatted}
+              {coordinateConversions.coordinatesToDMS(waypoint.lat, waypoint.lon).formatted}
             </div>
           </div>
-          
+
           {/* Altitude détaillée */}
           {(waypoint.elevation || vacData?.elevation) && (
             <div style={sx.spacing.mb(3)}>
@@ -379,7 +381,7 @@ export const WaypointCardWithRunways = memo(({
               </div>
             </div>
           )}
-          
+
           {/* Pistes détaillées */}
           {runways.length > 0 && (
             <div>
@@ -388,188 +390,188 @@ export const WaypointCardWithRunways = memo(({
               </h5>
               <div style={sx.spacing.mb(2)}>
                 {runwayDirections.map((runway, idx) => {
-                    // Calcul des distances disponibles
-                    const todaFeet = Math.round((runway.dimensions?.toda || runway.dimensions?.length || 0) * 3.28084);
-                    const ldaFeet = Math.round((runway.dimensions?.lda || runway.dimensions?.length || 0) * 3.28084);
+                  // Calcul des distances disponibles
+                  const todaFeet = Math.round((runway.dimensions?.toda || runway.dimensions?.length || 0) * 3.28084);
+                  const ldaFeet = Math.round((runway.dimensions?.lda || runway.dimensions?.length || 0) * 3.28084);
 
-                    // Surfaces compatibles de l'avion
-                    const aircraftSurfaces = selectedAircraft?.compatibleRunwaySurfaces || [];
-                    const surfaceType = runway.surface?.type || runway.surface || 'Non spécifiée';
+                  // Surfaces compatibles de l'avion
+                  const aircraftSurfaces = selectedAircraft?.compatibleRunwaySurfaces || [];
+                  const surfaceType = runway.surface?.type || runway.surface || 'Non spécifiée';
 
-                    // Si aircraftSurfaces est vide, toutes surfaces sont considérées compatibles (pas de restriction)
-                    // Sinon, vérifier que la surface est dans la liste
-                    const surfaceCompatible = aircraftSurfaces.length === 0 || aircraftSurfaces.includes(surfaceType);
+                  // Si aircraftSurfaces est vide, toutes surfaces sont considérées compatibles (pas de restriction)
+                  // Sinon, vérifier que la surface est dans la liste
+                  const surfaceCompatible = aircraftSurfaces.length === 0 || aircraftSurfaces.includes(surfaceType);
 
-                    // Calculer les distances requises (même logique que getRunwayCompatibility)
-                    const airportAltitude = waypoint.elevation || vacData?.elevation || 0;
-                    let requiredDistances = null;
+                  // Calculer les distances requises (même logique que getRunwayCompatibility)
+                  const airportAltitude = waypoint.elevation || vacData?.elevation || 0;
+                  let requiredDistances = null;
 
-                    if (selectedAircraft?.performances?.takeoffDistance) {
-                      const isaTemp = 15 - (airportAltitude * 0.002);
-                      requiredDistances = calculateCorrectedDistances(airportAltitude, isaTemp, null);
-                    } else if (selectedAircraft?.distances) {
-                      requiredDistances = {
-                        takeoffDistance: selectedAircraft.distances.takeoffDistance50ft || selectedAircraft.distances.takeoffDistance15m,
-                        landingDistance: selectedAircraft.distances.landingDistance50ft || selectedAircraft.distances.landingDistance15m
-                      };
-                    }
+                  if (selectedAircraft?.performances?.takeoffDistance) {
+                    const isaTemp = 15 - (airportAltitude * 0.002);
+                    requiredDistances = calculateCorrectedDistances(airportAltitude, isaTemp, null);
+                  } else if (selectedAircraft?.distances) {
+                    requiredDistances = {
+                      takeoffDistance: selectedAircraft.distances.takeoffDistance50ft || selectedAircraft.distances.takeoffDistance15m,
+                      landingDistance: selectedAircraft.distances.landingDistance50ft || selectedAircraft.distances.landingDistance15m
+                    };
+                  }
 
-                    // Compatibilité des distances
-                    const isCompatible = selectedAircraft && requiredDistances &&
-                      todaFeet >= requiredDistances.takeoffDistance &&
-                      ldaFeet >= requiredDistances.landingDistance;
+                  // Compatibilité des distances
+                  const isCompatible = selectedAircraft && requiredDistances &&
+                    todaFeet >= requiredDistances.takeoffDistance &&
+                    ldaFeet >= requiredDistances.landingDistance;
 
-                    // Numéro de piste et QFU (orientation vraie)
-                    const runwayNumber = runway.runwayNumber || 'XX';
-                    const qfu = runway.qfu !== null && runway.qfu !== undefined
-                      ? Math.round(runway.qfu)
-                      : null;
+                  // Numéro de piste et QFU (orientation vraie)
+                  const runwayNumber = runway.runwayNumber || 'XX';
+                  const qfu = runway.qfu !== null && runway.qfu !== undefined
+                    ? Math.round(runway.qfu)
+                    : null;
 
-                    // Longueur de la piste
-                    const lengthM = runway.dimensions?.length || 0;
-                    const lengthFt = Math.round(lengthM * 3.28084);
+                  // Longueur de la piste
+                  const lengthM = runway.dimensions?.length || 0;
+                  const lengthFt = Math.round(lengthM * 3.28084);
 
-                    // Largeur de la piste
-                    const widthM = runway.dimensions?.width || runway.width || 0;
+                  // Largeur de la piste
+                  const widthM = runway.dimensions?.width || runway.width || 0;
 
-                    // Orientation géographique
-                    const orientation = runway.orientation || runway.bearing || runway.trueBearing || '';
+                  // Orientation géographique
+                  const orientation = runway.orientation || runway.bearing || runway.trueBearing || '';
 
-                    // LDA (Landing Distance Available)
-                    const ldaM = runway.dimensions?.lda || runway.lda || 0;
+                  // LDA (Landing Distance Available)
+                  const ldaM = runway.dimensions?.lda || runway.lda || 0;
 
-                    // Piste principale
-                    const isPrimary = runway.isPrimary || runway.primary || false;
+                  // Piste principale
+                  const isPrimary = runway.isPrimary || runway.primary || false;
 
-                    return (
-                      <div key={idx} style={sx.combine(
-                        sx.text.xs,
-                        sx.spacing.p(2),
-                        sx.spacing.mb(1),
-                        sx.rounded.sm,
-                        {
-                          background: '#f9fafb',
-                          borderLeft: `3px solid #3b82f6`
-                        }
-                      )}>
-                                          {/* Ligne 1: Piste, QFU et Orientation */}
-                        <div style={{ marginBottom: '4px' }}>
-                          <strong>Piste {runwayNumber}</strong>
-                          {isPrimary && (
-                            <span style={{
-                              marginLeft: '6px',
-                              padding: '2px 6px',
-                              backgroundColor: '#3b82f6',
-                              color: 'white',
-                              borderRadius: '3px',
-                              fontSize: '10px',
-                              fontWeight: 'bold'
-                            }}>
-                              PRINCIPALE
-                            </span>
-                          )}
-                          {qfu !== null && (
-                            <span style={sx.text.secondary}>
-                              {' '}• QFU {Math.round(qfu)}°
-                            </span>
-                          )}
-                          {orientation && (
-                            <span style={sx.text.secondary}>
-                              {' '}• Orientation: {orientation}°
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Ligne 2: Longueur et Largeur */}
-                        <div style={{ marginBottom: '4px' }}>
-                          <span style={sx.text.secondary}>
-                            Longueur: {lengthFt} ft ({lengthM} m)
+                  return (
+                    <div key={idx} style={sx.combine(
+                      sx.text.xs,
+                      sx.spacing.p(2),
+                      sx.spacing.mb(1),
+                      sx.rounded.sm,
+                      {
+                        background: '#f9fafb',
+                        borderLeft: `3px solid #3b82f6`
+                      }
+                    )}>
+                      {/* Ligne 1: Piste, QFU et Orientation */}
+                      <div style={{ marginBottom: '4px' }}>
+                        <strong>Piste {runwayNumber}</strong>
+                        {isPrimary && (
+                          <span style={{
+                            marginLeft: '6px',
+                            padding: '2px 6px',
+                            backgroundColor: '#3b82f6',
+                            color: 'white',
+                            borderRadius: '3px',
+                            fontSize: '10px',
+                            fontWeight: 'bold'
+                          }}>
+                            PRINCIPALE
                           </span>
-                          {widthM > 0 && (
-                            <span style={sx.text.secondary}>
-                              {' '}• Largeur: {widthM} m
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Ligne 3: Revêtement + Compatibilité */}
-                        <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={sx.text.secondary}>Revêtement: {surfaceType}</span>
-                          {selectedAircraft && selectedAircraft.distances && (
-                            <span style={{
-                              fontSize: '10px',
-                              fontWeight: 'bold',
-                              padding: '2px 6px',
-                              borderRadius: '3px',
-                              ...(isCompatible && surfaceCompatible ? {
-                                backgroundColor: '#d1fae5',
-                                color: '#065f46'
-                              } : {
-                                backgroundColor: '#fee2e2',
-                                color: '#991b1b'
-                              })
-                            }}>
-                              {isCompatible && surfaceCompatible ? '✓ Compatible' : '✗ Incompatible'}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Distances déclarées */}
-                        {(runway.tora || runway.toda || runway.asda || runway.lda) && (
-                          <div style={{ marginBottom: '4px' }}>
-                            <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
-                              Distances déclarées :
-                            </div>
-                            {runway.tora && (
-                              <div style={sx.text.secondary}>
-                                • TORA: {runway.tora} m ({Math.round(runway.tora * 3.28084)} ft)
-                              </div>
-                            )}
-                            {runway.toda && (
-                              <div style={sx.text.secondary}>
-                                • TODA: {runway.toda} m ({Math.round(runway.toda * 3.28084)} ft)
-                              </div>
-                            )}
-                            {runway.asda && (
-                              <div style={sx.text.secondary}>
-                                • ASDA: {runway.asda} m ({Math.round(runway.asda * 3.28084)} ft)
-                              </div>
-                            )}
-                            {runway.lda && (
-                              <div style={sx.text.secondary}>
-                                • LDA: {runway.lda} m ({Math.round(runway.lda * 3.28084)} ft)
-                              </div>
-                            )}
-                          </div>
                         )}
-
-                        {/* Compatibilité avion */}
-                        {selectedAircraft && aircraftSurfaces.length > 0 && (
-                          <div style={{ marginBottom: '4px' }}>
-                            <span style={sx.text.secondary}>
-                              Avion compatible avec: {aircraftSurfaces.join(', ')}
-                            </span>
-                          </div>
+                        {qfu !== null && (
+                          <span style={sx.text.secondary}>
+                            {' '}• QFU {Math.round(qfu)}°
+                          </span>
                         )}
-
-                        {/* Conclusion compatibilité */}
-                        {selectedAircraft && selectedAircraft.distances && (
-                          <div style={sx.combine(
-                            { fontWeight: 'bold' },
-                            isCompatible && surfaceCompatible ? sx.text.success : sx.text.danger
-                          )}>
-                            {isCompatible && surfaceCompatible ? (
-                              '✓ Piste compatible avec cet avion'
-                            ) : !isCompatible ? (
-                              `✗ Piste trop courte (requis: ${requiredDistances?.takeoffDistance || 'N/A'} ft décollage)`
-                            ) : (
-                              '✗ Surface incompatible avec cet avion'
-                            )}
-                          </div>
+                        {orientation && (
+                          <span style={sx.text.secondary}>
+                            {' '}• Orientation: {orientation}°
+                          </span>
                         )}
                       </div>
-                    );
-                  })}
+
+                      {/* Ligne 2: Longueur et Largeur */}
+                      <div style={{ marginBottom: '4px' }}>
+                        <span style={sx.text.secondary}>
+                          Longueur: {lengthFt} ft ({lengthM} m)
+                        </span>
+                        {widthM > 0 && (
+                          <span style={sx.text.secondary}>
+                            {' '}• Largeur: {widthM} m
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Ligne 3: Revêtement + Compatibilité */}
+                      <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={sx.text.secondary}>Revêtement: {surfaceType}</span>
+                        {selectedAircraft && selectedAircraft.distances && (
+                          <span style={{
+                            fontSize: '10px',
+                            fontWeight: 'bold',
+                            padding: '2px 6px',
+                            borderRadius: '3px',
+                            ...(isCompatible && surfaceCompatible ? {
+                              backgroundColor: '#d1fae5',
+                              color: '#065f46'
+                            } : {
+                              backgroundColor: '#fee2e2',
+                              color: '#991b1b'
+                            })
+                          }}>
+                            {isCompatible && surfaceCompatible ? '✓ Compatible' : '✗ Incompatible'}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Distances déclarées */}
+                      {(runway.tora || runway.toda || runway.asda || runway.lda) && (
+                        <div style={{ marginBottom: '4px' }}>
+                          <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
+                            Distances déclarées :
+                          </div>
+                          {runway.tora && (
+                            <div style={sx.text.secondary}>
+                              • TORA: {runway.tora} m ({Math.round(runway.tora * 3.28084)} ft)
+                            </div>
+                          )}
+                          {runway.toda && (
+                            <div style={sx.text.secondary}>
+                              • TODA: {runway.toda} m ({Math.round(runway.toda * 3.28084)} ft)
+                            </div>
+                          )}
+                          {runway.asda && (
+                            <div style={sx.text.secondary}>
+                              • ASDA: {runway.asda} m ({Math.round(runway.asda * 3.28084)} ft)
+                            </div>
+                          )}
+                          {runway.lda && (
+                            <div style={sx.text.secondary}>
+                              • LDA: {runway.lda} m ({Math.round(runway.lda * 3.28084)} ft)
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Compatibilité avion */}
+                      {selectedAircraft && aircraftSurfaces.length > 0 && (
+                        <div style={{ marginBottom: '4px' }}>
+                          <span style={sx.text.secondary}>
+                            Avion compatible avec: {aircraftSurfaces.join(', ')}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Conclusion compatibilité */}
+                      {selectedAircraft && selectedAircraft.distances && (
+                        <div style={sx.combine(
+                          { fontWeight: 'bold' },
+                          isCompatible && surfaceCompatible ? sx.text.success : sx.text.danger
+                        )}>
+                          {isCompatible && surfaceCompatible ? (
+                            '✓ Piste compatible avec cet avion'
+                          ) : !isCompatible ? (
+                            `✗ Piste trop courte (requis: ${requiredDistances?.takeoffDistance || 'N/A'} ft décollage)`
+                          ) : (
+                            '✗ Surface incompatible avec cet avion'
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -736,7 +738,7 @@ export const WaypointCardWithRunways = memo(({
           <div style={{ display: 'flex', gap: '8px' }}>
             {/* Déplacer vers le haut (désactivé si départ ou juste après départ) */}
             <button
-              onClick={() => moveWaypointUp(waypoint.id)}
+              onClick={onMoveUp}
               disabled={index <= 1}
               style={sx.combine(
                 sx.components.button.base,
@@ -755,7 +757,7 @@ export const WaypointCardWithRunways = memo(({
 
             {/* Déplacer vers le bas (désactivé si arrivée ou juste avant arrivée) */}
             <button
-              onClick={() => moveWaypointDown(waypoint.id)}
+              onClick={onMoveDown}
               disabled={index >= totalWaypoints - 2}
               style={sx.combine(
                 sx.components.button.base,
