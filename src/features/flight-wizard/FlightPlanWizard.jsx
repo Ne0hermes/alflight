@@ -713,7 +713,7 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
 
       {/* Contenu de l'étape courante */}
       <div
-        id={currentStep === 7 ? 'flight-plan-summary' : undefined}
+        id={currentStep === 8 ? 'flight-plan-summary' : undefined}
         style={styles.content}
       >
         <div className="wizard-step-header" style={styles.stepHeader}>
