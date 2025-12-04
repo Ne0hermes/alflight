@@ -35,31 +35,43 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   const departureAirport = waypoints?.[0];
   const arrivalAirport = waypoints?.[waypoints?.length - 1];
 
+  // 🔧 FIX: Extraire le code ICAO depuis icao OU name (les waypoints peuvent utiliser l'un ou l'autre)
+  const getIcaoCode = (waypoint) => {
+    if (!waypoint) return null;
+    // Priorité: icao > name (si name ressemble à un code ICAO: 4 lettres commençant par LF)
+    const icao = waypoint.icao || waypoint.name;
+    if (icao && typeof icao === 'string' && /^[A-Z]{4}$/i.test(icao.trim())) {
+      return icao.trim().toUpperCase();
+    }
+    return null;
+  };
+
+  const departureIcao = getIcaoCode(departureAirport);
+  const arrivalIcao = getIcaoCode(arrivalAirport);
+
   // 🔧 FIX: Charger automatiquement la météo des aérodromes
   useEffect(() => {
     const loadWeather = async () => {
       const icaosToLoad = [];
 
       // Vérifier si météo départ existe et est valide
-      if (departureAirport?.icao) {
-        const depIcao = departureAirport.icao.toUpperCase();
-        const depWeather = weatherData[depIcao];
+      if (departureIcao) {
+        const depWeather = weatherData[departureIcao];
 
         // Charger si pas de METAR ou météo trop ancienne (> 30 min)
         if (!depWeather?.metar || (Date.now() - (depWeather.timestamp || 0) > 30 * 60 * 1000)) {
-          icaosToLoad.push(depIcao);
-          console.log('🌤️ [PerformanceModule] Chargement météo départ:', depIcao);
+          icaosToLoad.push(departureIcao);
+          console.log('🌤️ [PerformanceModule] Chargement météo départ:', departureIcao);
         }
       }
 
       // Vérifier si météo arrivée existe et est valide
-      if (arrivalAirport?.icao && arrivalAirport.icao !== departureAirport?.icao) {
-        const arrIcao = arrivalAirport.icao.toUpperCase();
-        const arrWeather = weatherData[arrIcao];
+      if (arrivalIcao && arrivalIcao !== departureIcao) {
+        const arrWeather = weatherData[arrivalIcao];
 
         if (!arrWeather?.metar || (Date.now() - (arrWeather.timestamp || 0) > 30 * 60 * 1000)) {
-          icaosToLoad.push(arrIcao);
-          console.log('🌤️ [PerformanceModule] Chargement météo arrivée:', arrIcao);
+          icaosToLoad.push(arrivalIcao);
+          console.log('🌤️ [PerformanceModule] Chargement météo arrivée:', arrivalIcao);
         }
       }
 
@@ -86,7 +98,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     };
 
     loadWeather();
-  }, [departureAirport?.icao, arrivalAirport?.icao, selectedAlternates, fetchWeather]);
+  }, [departureIcao, arrivalIcao, selectedAlternates, fetchWeather, weatherData]);
 
   // 🔧 Charger les performanceTables depuis IndexedDB quand l'avion change
   useEffect(() => {
@@ -141,15 +153,13 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   }, [selectedAircraft?.id]);
 
   // Récupérer la météo pour les aérodromes (indexé par ICAO, pas par name)
-  // 🔧 FIX: Essayer plusieurs sources pour trouver la météo
-  const departureWeather = departureAirport?.icao && (
-    weatherData[departureAirport.icao.toUpperCase()] ||
-    weatherData[departureAirport.icao] ||
+  // 🔧 FIX: Utiliser departureIcao/arrivalIcao qui gère le fallback name → icao
+  const departureWeather = departureIcao && (
+    weatherData[departureIcao] ||
     flightPlan?.weather?.departure
   );
-  const arrivalWeather = arrivalAirport?.icao && (
-    weatherData[arrivalAirport.icao.toUpperCase()] ||
-    weatherData[arrivalAirport.icao] ||
+  const arrivalWeather = arrivalIcao && (
+    weatherData[arrivalIcao] ||
     flightPlan?.weather?.arrival
   );
 
@@ -175,7 +185,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
         null;
 
     console.log('🌡️ [PerformanceModule] Départ temp DEBUG:', {
-      icao: departureAirport?.icao?.toUpperCase(),
+      icao: departureIcao,
       hasWeather: !!departureWeather,
       hasMETAR: !!departureWeather?.metar,
       hasDecoded: !!departureWeather?.metar?.decoded,
@@ -212,7 +222,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
         null;
 
     console.log('🌡️ [PerformanceModule] Arrivée temp DEBUG:', {
-      icao: arrivalAirport?.icao?.toUpperCase(),
+      icao: arrivalIcao,
       hasWeather: !!arrivalWeather,
       hasMETAR: !!arrivalWeather?.metar,
       hasDecoded: !!arrivalWeather?.metar?.decoded,
@@ -672,10 +682,10 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
           ))}
 
           {/* Analyse des pistes pour le départ */}
-          {departureWeather?.metar?.decoded?.wind && departureAirport?.icao && (
+          {departureWeather?.metar?.decoded?.wind && departureIcao && (
             <div style={sx.spacing.mt(4)}>
               <RunwaySuggestionEnhanced
-                icao={departureAirport.icao}
+                icao={departureIcao}
                 wind={departureWeather.metar.decoded.wind}
                 aircraft={selectedAircraft}
                 showCompact={false}
@@ -798,10 +808,10 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
           ))}
 
           {/* Analyse des pistes pour l'arrivée */}
-          {arrivalWeather?.metar?.decoded?.wind && arrivalAirport?.icao && (
+          {arrivalWeather?.metar?.decoded?.wind && arrivalIcao && (
             <div style={sx.spacing.mt(4)}>
               <RunwaySuggestionEnhanced
-                icao={arrivalAirport.icao}
+                icao={arrivalIcao}
                 wind={arrivalWeather.metar.decoded.wind}
                 aircraft={selectedAircraft}
                 showCompact={false}
