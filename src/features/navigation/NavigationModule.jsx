@@ -6,7 +6,7 @@ import { useUnits } from '@hooks/useUnits';
 import { ValueWithUnit, ValueGrid } from '@shared/components/ValueWithUnit';
 
 // Import des contextes et hooks
-import { useNavigation } from '@core/contexts';
+import { useNavigation, useAircraft } from '@core/contexts';
 import { useNavigationStore } from '@core/stores/navigationStore';
 import { useWeatherStore, weatherSelectors } from '@core/stores/weatherStore';
 

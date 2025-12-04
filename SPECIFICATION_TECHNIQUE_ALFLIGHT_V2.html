@@ -285,7 +285,8 @@
                 <ul>
                     <li><a href="#intro-objectif">1.1 Objectif Global</a></li>
                     <li><a href="#intro-vision">1.2 Vision et Finalité</a></li>
-                    <li><a href="#intro-archi">1.3 Architecture Générale</a></li>
+                    <li><a href="#intro-collab">1.3 Collaborations Stratégiques</a></li>
+                    <li><a href="#intro-archi">1.4 Architecture Générale</a></li>
                 </ul>
             </li>
             <li><a href="#modules">2. Description Détaillée des Modules</a>
@@ -434,7 +435,58 @@
         </ul>
     </div>
 
-    <h2 id="intro-archi">1.3 Architecture Générale (Vue d'Ensemble)</h2>
+    <h2 id="intro-collab">1.3 Collaborations Stratégiques</h2>
+
+    <p>Pour garantir la précision, la fiabilité et l'adoption de ALFlight, des collaborations stratégiques sont établies
+        avec les acteurs majeurs de l'industrie aéronautique.</p>
+
+    <h3>Partenaires Technologiques</h3>
+
+    <div class="info-box">
+        <strong>🧭 Navigation & Avionique:</strong>
+        <p>Collaboration avec <strong>Garmin</strong> pour l'intégration des données de navigation et la compatibilité
+            avec les suites avioniques (G1000, G3X). L'objectif est de permettre le transfert bidirectionnel des plans
+            de vol entre ALFlight et le cockpit.</p>
+    </div>
+
+    <h3>Constructeurs Aéronautiques</h3>
+
+    <p>Partenariats avec le <strong>Top 5 des constructeurs d'avions légers</strong> pour l'accès direct aux données
+        techniques (MANEX) et modèles de performances certifiés :</p>
+    <ul>
+        <li><strong>Cessna (Textron Aviation):</strong> C152, C172, C182</li>
+        <li><strong>Piper Aircraft:</strong> PA28, PA38, PA44</li>
+        <li><strong>Diamond Aircraft:</strong> DA20, DA40, DA42</li>
+        <li><strong>Cirrus Aircraft:</strong> SR20, SR22</li>
+        <li><strong>Robin Aircraft:</strong> DR400, DR401</li>
+    </ul>
+
+    <h3>Institutions Officielles</h3>
+
+    <div class="success-box">
+        <strong>🏛️ Données Officielles & Météo:</strong>
+        <p>Intégration directe avec les autorités de l'aviation civile pour garantir la conformité et la fraîcheur des
+            données :</p>
+        <ul>
+            <li><strong>DGAC (France):</strong> SIA pour les cartes VAC, AIP, et SUP AIP.</li>
+            <li><strong>Météo-France & Eurocontrol:</strong> Données météorologiques (METAR, TAF, TEMSI, WINTEM) et
+                NOTAMs.</li>
+            <li><strong>Équivalents Européens:</strong> EASA, Skyguide (Suisse), DFS (Allemagne) pour l'extension
+                internationale.</li>
+        </ul>
+    </div>
+
+    <h3>Réseau de Distribution</h3>
+
+    <p><strong>Aéroclubs & Écoles de Pilotage:</strong> Collaboration étroite avec les fédérations (FFA) et les
+        aéroclubs pour :</p>
+    <ul>
+        <li>Le marketing et la distribution de ALFlight auprès des élèves pilotes et instructeurs.</li>
+        <li>L'adaptation de l'outil aux besoins pédagogiques des écoles (suivi progression, dossiers de vol
+            standardisés).</li>
+    </ul>
+
+    <h2 id="intro-archi">1.4 Architecture Générale (Vue d'Ensemble)</h2>
 
     <h3>Architecture en 4 Couches</h3>
 
@@ -757,7 +809,8 @@
     <ul>
         <li><strong>→ Performance Module:</strong> Fournit <code>performanceTables</code> pour interpolation</li>
         <li><strong>→ Weight-Balance Module:</strong> Fournit <code>arms</code>, <code>cgLimits</code>,
-            <code>cgEnvelope</code></li>
+            <code>cgEnvelope</code>
+        </li>
         <li><strong>→ Fuel Module:</strong> Fournit <code>fuelConsumption</code>, <code>fuelCapacity</code></li>
         <li><strong>→ Navigation Module:</strong> Fournit <code>cruiseSpeed</code>, <code>climbRate</code></li>
         <li><strong>→ Flight Wizard:</strong> Sélection avion étape 1</li>
@@ -3410,7 +3463,8 @@ function checkSEPValidity(pilot, logbook) {
             <p>Toutes les conversions sont gérées via le module <strong>unique et centralisé</strong>
                 <code>src/utils/unitConversions.js</code>. Les anciens fichiers de conversion
                 (<code>conversions.js</code>, <code>unitsConversion.js</code>, <code>unitsConverter.js</code>) sont
-                obsolètes et doivent être supprimés pour éviter toute incohérence.</p>
+                obsolètes et doivent être supprimés pour éviter toute incohérence.
+            </p>
 
             <pre><code>// Exemple conversion distance
 function convertDistance(value, fromUnit, toUnit) {
@@ -3626,7 +3680,8 @@ function checkSEPRevalidation(recentFlights) {
             <h5>Graphiques et Visualisations</h5>
 
             <p>Le module affiche les statistiques sous forme de graphiques interactifs (librairie
-                <strong>Recharts</strong>) :</p>
+                <strong>Recharts</strong>) :
+            </p>
 
             <ul>
                 <li><strong>Évolution heures de vol par mois</strong> (Line Chart) : tendance activité sur 12/24 mois
@@ -5603,7 +5658,8 @@ const calculateConeZone = (departure, arrival, radiusAtDep, radiusAtArr) => {
                         <td>Config</td>
                         <td>Configuration Vite : alias @/, plugins PWA (VitePWA), optimizations (chunks
                             vendor/leaflet/pdfjs), proxy API /openaip vers localhost:4001. Build output dans
-                            <code>dist/</code>.</td>
+                            <code>dist/</code>.
+                        </td>
                     </tr>
                     <tr>
                         <td><code>index.html</code></td>
@@ -5704,7 +5760,8 @@ const calculateConeZone = (departure, arrival, radiusAtDep, radiusAtArr) => {
 
             <p>Chaque module suit architecture : <code>components/</code> (UI), <code>hooks/</code> (logique métier),
                 <code>services/</code> (API), <code>stores/</code> (Zustand state), <code>utils/</code> (helpers),
-                <code>index.js</code> (exports).</p>
+                <code>index.js</code> (exports).
+            </p>
 
             <table>
                 <thead>
@@ -8438,6 +8495,1486 @@ ${field19})`;
             </ul>
 
 
+            <h2 id="modules-admin">2.3 Modules Administratifs</h2>
+
+            <p>Ces modules gèrent les aspects non-opérationnels mais essentiels de l'application.</p>
+
+            <h3>2.3.1 Module Account (Compte Utilisateur)</h3>
+
+            <div class="info-box">
+                <strong>📂 Emplacement:</strong> <code>src/features/account/</code><br>
+                <strong>🎯 Fonction:</strong> Gestion profil pilote, authentification, préférences<br>
+                <strong>📦 Store:</strong> <code>userStore</code> (Zustand) + Supabase Auth
+            </div>
+
+            <h4>Données Profil Pilote</h4>
+            <ul>
+                <li><strong>Licences:</strong> PPL, CPL, ATPL avec dates de validité</li>
+                <li><strong>Qualifications:</strong> MEP, IFR, SEP, etc.</li>
+                <li><strong>Médical:</strong> Classe 1/2, date expiration</li>
+                <li><strong>Statistiques:</strong> Heures de vol totales, par catégorie</li>
+                <li><strong>Préférences:</strong> Unités de mesure, langue, thème UI</li>
+            </ul>
+
+            <h3>2.3.2 Module Billing (Facturation)</h3>
+
+            <div class="warning-box">
+                <strong>💳 Modèle d'Abonnement:</strong> ALFlight est une application premium. Abonnement requis pour
+                accès complet.
+            </div>
+
+            <h4>Plans Tarifaires</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Plan</th>
+                        <th>Prix</th>
+                        <th>Fonctionnalités</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Mensuel</td>
+                        <td>9.99€/mois</td>
+                        <td>Accès complet, 1 utilisateur</td>
+                    </tr>
+                    <tr>
+                        <td>Annuel</td>
+                        <td>99€/an</td>
+                        <td>-17%, accès complet, 1 utilisateur</td>
+                    </tr>
+                    <tr>
+                        <td>École</td>
+                        <td>Sur devis</td>
+                        <td>Multi-utilisateurs, gestion flotte, support prioritaire</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>Intégration Paiement</h4>
+            <ul>
+                <li><strong>Stripe:</strong> Paiements sécurisés CB/SEPA</li>
+                <li><strong>Gestion:</strong> Abonnements, factures, renouvellements automatiques</li>
+                <li><strong>Fonctionnalités:</strong> Période essai 14 jours, annulation simple</li>
+            </ul>
+
+            <h3>2.3.3 Module Technical Log (Carnet d'Entretien)</h3>
+
+            <div class="info-box">
+                <strong>📂 Emplacement:</strong> <code>src/features/technical-log/</code><br>
+                <strong>🎯 Fonction:</strong> Suivi inspections et maintenances avion
+            </div>
+
+            <h4>Types d'Inspections Trackées</h4>
+            <ul>
+                <li><strong>Inspections programmées:</strong> 50h, 100h, Annuelle</li>
+                <li><strong>Calendaires:</strong> Renouvellement certificat navigabilité</li>
+                <li><strong>Événementielles:</strong> Choc train, dépassement VNE, etc.</li>
+            </ul>
+
+            <h4>Alertes et Notifications</h4>
+            <pre><code>// Exemple calcul alerte 100h
+heuresAvion = 1050h
+prochaineVisite100h = 1100h
+restant = 50h
+
+if (restant < 10h) {
+  alert("⚠️ Visite 100h dans 10 heures de vol");
+}</code></pre>
+
+            <h3>2.3.4 Module Regulations (Réglementations)</h3>
+
+            <div class="info-box">
+                <strong>📂 Emplacement:</strong> <code>src/features/regulations/</code><br>
+                <strong>🎯 Fonction:</strong> Base de connaissances réglementaire française/européenne
+            </div>
+
+            <h4>Domaines Couverts</h4>
+            <ul>
+                <li><strong>Réserves carburant:</strong>
+                    <ul>
+                        <li>VFR jour: Destination + 30min</li>
+                        <li>VFR nuit: Destination + 45min</li>
+                        <li>IFR: Destination + Alternate + 45min</li>
+                    </ul>
+                </li>
+                <li><strong>Espaces aériens:</strong> Classifications A-G, autorisations requises</li>
+                <li><strong>VMC minimas:</strong> Visibilité et distance nuages selon espace</li>
+                <li><strong>Limitations pilote:</strong> Restrictions SEP, MEP, nuit, montagne</li>
+            </ul>
+
+            <h3>2.3.5 Module Checklist (Checklists de Vol)</h3>
+
+            <div class="info-box">
+                <strong>📂 Emplacement:</strong> <code>src/features/checklist/</code><br>
+                <strong>🎯 Fonction:</strong> Checklists normales et d'urgence personnalisables
+            </div>
+
+            <h4>Types de Checklists</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Moment</th>
+                        <th>Exemple Items</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Avant Vol</td>
+                        <td>Au parking</td>
+                        <td>Documents, Visual Check, Carburant</td>
+                    </tr>
+                    <tr>
+                        <td>Avant Démarrage</td>
+                        <td>Au poste de pilotage</td>
+                        <td>Circuit, Commandes, Instruments</td>
+                    </tr>
+                    <tr>
+                        <td>Avant Décollage</td>
+                        <td>Point d'arrêt</td>
+                        <td>Volets, Trim, TTTTT (Temps, Tours, Temp, etc.)</td>
+                    </tr>
+                    <tr>
+                        <td>Urgences</td>
+                        <td>Si nécessaire</td>
+                        <td>Panne moteur, Incendie, Atterrissage forcé</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>Personnalisation par Avion</h4>
+            <ul>
+                <li><strong>Import MANEX:</strong> Extraction automatique depuis manuel vol</li>
+                <li><strong>Customisation:</strong> Adaptation procédures selon équipements</li>
+                <li><strong>Mode cockpit:</strong> Affichage optimisé tablette (gros texte, touch-friendly)</li>
+            </ul>
+
+            <h3>2.3.6 Module Units (Conversion d'Unités)</h3>
+
+            <div class="success-box">
+                <strong>✅ Architecture Centralisée:</strong> Un seul module universel gère toutes les conversions pour
+                garantir la
+                cohérence.
+            </div>
+
+            <p><strong>Fichier central:</strong> <code>src/utils/unitConversions.js</code></p>
+
+            <h4>Unités Supportées</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Catégorie</th>
+                        <th>Unités Disponibles</th>
+                        <th>Storage Unit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Carburant</td>
+                        <td>Liters, US Gallons, Imperial Gallons</td>
+                        <td>Liters</td>
+                    </tr>
+                    <tr>
+                        <td>Consommation</td>
+                        <td>L/h, US Gal/h, Imp Gal/h</td>
+                        <td>L/h</td>
+                    </tr>
+                    <tr>
+                        <td>Masse</td>
+                        <td>kg, lbs</td>
+                        <td>kg</td>
+                    </tr>
+                    <tr>
+                        <td>Distance</td>
+                        <td>nm (Nautical Miles), km, statute miles</td>
+                        <td>nm</td>
+                    </tr>
+                    <tr>
+                        <td>Altitude</td>
+                        <td>ft (feet), m (meters)</td>
+                        <td>ft</td>
+                    </tr>
+                    <tr>
+                        <td>Vitesse</td>
+                        <td>kt (knots), km/h, mph</td>
+                        <td>kt</td>
+                    </tr>
+                    <tr>
+                        <td>Température</td>
+                        <td>°C, °F</td>
+                        <td>°C</td>
+                    </tr>
+                    <tr>
+                        <td>Pression</td>
+                        <td>hPa, inHg</td>
+                        <td>hPa</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>Principe de Conversion (Storage Units)</h4>
+            <pre><code>// ✅ BONNE PRATIQUE: Storage Units (Base Universelle)
+// Toutes les données sont stockées dans une unité de référence
+
+// Exemple 1: Carburant
+const storageValue = 100; // liters (TOUJOURS en DB)
+
+// Conversion vers User Units pour affichage
+const displayValue = convertFromStorage(storageValue, userPrefs.fuelUnit);
+// → displayValue = 26.42 gal (si user préfère gallons US)
+
+// Reverse: User input → Storage
+const inputValue = 50; // gal saisi par user
+const storageValue = convertToStorage(inputValue, userPrefs.fuelUnit);
+// → storageValue = 189.3 liters (stocké en DB)
+
+// ❌ ANTI-PATTERN à éviter:
+// Stocker directement en unités utilisateur → chaos multi-users
+</code></pre>
+
+            <h4>Fonctions Disponibles</h4>
+            <ul>
+                <li><code>convertFuel(value, fromUnit, toUnit)</code></li>
+                <li><code>convertWeight(value, fromUnit, toUnit)</code></li>
+                <li><code>convertDistance(value, fromUnit, toUnit)</code></li>
+                <li><code>convertSpeed(value, fromUnit, toUnit)</code></li>
+                <li><code>convertTemperature(value, fromUnit, toUnit)</code></li>
+                <li><code>convertPressure(value, fromUnit, toUnit)</code></li>
+            </ul>
+
+            <div class="warning-box">
+                <strong>⚠️ Cas Critique:</strong> Les calculs de performances (takeoff/landing) dépendent de conversions
+                précises.
+                Une erreur de 1% sur la masse peut fausser la distance de décollage de 5-10%. Le module Units garantit
+                une précision
+                de <strong>0.01%</strong> sur toutes les conversions.
+            </div>
+
+            <div class="page-break"></div>
+
+
+            <h1 id="assistants">3. Les Deux Assistants Intégrés</h1>
+
+            <p>ALFlight repose sur deux assistants (Wizards) majeurs qui guident l'utilisateur pas à pas dans les tâches
+                complexes.</p>
+
+            <h2 id="assistant-aircraft">3.1 Assistant de Création d'Avion</h2>
+
+            <div class="info-box">
+                <strong>🎯 Objectif:</strong> Permettre à un pilote de modéliser fidèlement son avion en 10 minutes, y
+                compris la digitalisation des courbes de performances.
+            </div>
+
+            <h3>Étapes du Wizard (7 étapes)</h3>
+
+            <ol>
+                <li><strong>Vérification Communautaire:</strong> Recherche si l'avion existe déjà dans la base
+                    communautaire (par immatriculation ou modèle) pour éviter les doublons.</li>
+                <li><strong>Informations Générales:</strong> Immatriculation, modèle, type moteur, capacité carburant,
+                    vitesse croisière.</li>
+                <li><strong>Masse & Centrage:</strong> Saisie des bras de levier, enveloppe de centrage (points
+                    avant/arrière), compartiments bagages.</li>
+                <li><strong>Vitesses:</strong> Saisie des vitesses caractéristiques (Vs0, Vs1, Vfe, Vno, Vne, etc.) pour
+                    les indicateurs visuels (ASI).</li>
+                <li><strong>Performances Avancées (IA):</strong>
+                    <ul>
+                        <li>Upload du MANEX (PDF).</li>
+                        <li><strong>Analyse OpenAI:</strong> Extraction automatique des tableaux de
+                            décollage/atterrissage/croisière.</li>
+                        <li>Digitalisation des abaques graphiques via l'outil intégré.</li>
+                    </ul>
+                </li>
+                <li><strong>Équipements:</strong> Configuration avionique (COM, NAV, Surveillance) pour le code
+                    équipement FPL (ex: S/C).</li>
+                <li><strong>Révision & Sauvegarde:</strong> Récapitulatif complet avant enregistrement local et partage
+                    optionnel.</li>
+            </ol>
+
+            <h2 id="assistant-flight">3.2 Assistant de Préparation de Vol</h2>
+
+            <div class="info-box">
+                <strong>🎯 Objectif:</strong> Guider le pilote de la définition de la route jusqu'au dépôt du plan de
+                vol et l'impression du dossier.
+            </div>
+
+            <h3>Flux de Travail</h3>
+
+            <ol>
+                <li><strong>Route & Navigation:</strong> Sélection départ/arrivée, ajout waypoints, optimisation route.
+                </li>
+                <li><strong>Analyse VAC & Espaces:</strong> Vérification automatique des cartes VAC requises et des
+                    pénétration d'espaces aériens.</li>
+                <li><strong>Météo (Weather):</strong> Analyse METAR/TAF sur le parcours, vents en altitude (WINTEM).
+                </li>
+                <li><strong>Alternates:</strong> Suggestion et sélection des terrains de déroutement.</li>
+                <li><strong>Carburant (Fuel):</strong> Calcul délestage, autonomie, respect des réserves réglementaires.
+                </li>
+                <li><strong>Masse & Centrage (W&B):</strong> Chargement passagers/bagages, vérification enveloppe au
+                    décollage et atterrissage (ZFW).</li>
+                <li><strong>Performances:</strong> Calcul distances décollage/atterrissage selon conditions du jour
+                    (QNH, Temp, Alt).</li>
+                <li><strong>Résumé & Dossier:</strong> Génération du dossier de vol PDF et du plan de vol OACI.</li>
+            </ol>
+
+            <h2 id="assistant-interaction">3.3 Interactions Entre Assistants</h2>
+
+            <p>Les deux assistants (Aircraft + Flight) ne sont pas isolés, ils partagent et synchronisent les données.
+            </p>
+
+            <h3>Flux de Données</h3>
+
+            <pre><code>┌─────────────────────────────────────────┐
+│   Assistant de Création d'Avion         │
+│   (AircraftCreationWizard)               │
+└──────────────┬──────────────────────────┘
+               │
+               │ Sauvegarde dans:
+               │ - aircraftStore (Zustand)
+               │ - IndexedDB (local)
+               │ - Supabase (cloud)
+               ↓
+┌──────────────────────────────────────────┐
+│     Base de Données Avions               │
+│  (community_presets + local aircraft)    │
+└──────────────┬───────────────────────────┘
+               │
+               │ Lecture par:
+               │ - selectedAircraft
+               ↓
+┌──────────────────────────────────────────┐
+│   Assistant de Préparation de Vol        │
+│   (FlightPlanWizard)                     │
+│                                          │
+│  Utilise:                                │
+│  - cruiseSpeedKt → Calculs navigation    │
+│  - fuelConsumption → Calculs carburant   │
+│  - performanceTables → Interpolations    │
+│  - cgEnvelope → Weight & Balance         │
+└──────────────────────────────────────────┘</code></pre>
+
+            <h3>Exemples d'Interconnexions</h3>
+
+            <ol>
+                <li><strong>Performances Décollage:</strong><br>
+                    L'Assistant Vol lit <code>performanceTables.takeoff</code> créé par l'Assistant Avion pour calculer
+                    la distance requise selon QNH/Temp/Alt du jour.
+                </li>
+                <li><strong>Masse et Centrage:</strong><br>
+                    Les bras de levier (<code>arms</code>) et enveloppe CG (<code>cgEnvelope</code>) définies dans
+                    l'Assistant Avion sont utilisés en temps réel dans l'étape Weight & Balance de l'Assistant Vol.
+                </li>
+                <li><strong>Codes Équipement FPL:</strong><br>
+                    Les équipements COM/NAV/Surveillance saisis dans l'Assistant Avion génèrent automatiquement le code
+                    OACI (ex: <code>S/C</code>) inséré dans le plan de vol.
+                </li>
+            </ol>
+
+            <div class="page-break"></div>
+
+            <h1 id="database">4. Base de Données Supabase</h1>
+
+            <p>Bien que ALFlight fonctionne en "Offline First", Supabase est utilisé pour la persistance cloud, le
+                partage communautaire et l'authentification.</p>
+
+            <h2 id="db-structure">4.1 Structure Principale</h2>
+
+            <h3>Tables Clés</h3>
+
+            <ul>
+                <li><code>community_presets</code>: Base de données partagée des avions (JSONB pour flexibilité).</li>
+                <li><code>manex_files</code>: Métadonnées des fichiers PDF manuels de vol.</li>
+                <li><code>preset_votes</code>: Système de vote (up/down) pour la validation communautaire.</li>
+                <li><code>preset_downloads</code>: Statistiques d'utilisation des presets.</li>
+                <li><code>pilot_profiles</code>: Données pilotes (licences, qualifications).</li>
+                <li><code>logbook_entries</code>: Entrées du carnet de vol électronique.</li>
+            </ul>
+
+            <h2 id="db-tables">4.2 Tables et Relations</h2>
+
+            <h3>Schéma Entity-Relationship</h3>
+
+            <pre><code>┌──────────────────┐
+│  manex_files     │
+│  (UUID)          │
+└────────┬─────────┘
+         │ 1
+         │
+         │ N
+┌────────┴──────────────────────────────┐
+│  community_presets                    │
+│  ├─ id (UUID, PK)                     │
+│  ├─ registration (VARCHAR)            │
+│  ├─ model (VARCHAR)                   │
+│  ├─ aircraft_data (JSONB) ←─────────┐ │
+│  ├─ manex_file_id (FK)               │ │
+│  ├─ votes_up / votes_down (INT)      │ │
+│  └─ submitted_by (VARCHAR)           │ │
+└────────┬────────────────────────────────┘ │
+         │ 1                              │
+         │                                │
+         │ N                              │ Contient:
+┌────────┴─────────┐     ┌───────────────┴──────────┐
+│  preset_votes    │     │ - speeds                 │
+│  ├─ preset_id    │     │ - weights                │
+│  ├─ user_id      │     │ - arms                   │
+│  └─ vote_type    │     │ - cgEnvelope             │
+└──────────────────┘     │ - performanceTables      │
+                         │ - equipmentCom/Nav/Surv  │
+┌──────────────────┐     └──────────────────────────┘
+│preset_downloads  │
+│  ├─ preset_id    │
+│  └─ user_id      │
+└──────────────────┘</code></pre>
+
+            <h3>Table community_presets (Détail)</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Colonne</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>id</code></td>
+                        <td>UUID</td>
+                        <td>Identifiant unique preset</td>
+                    </tr>
+                    <tr>
+                        <td><code>registration</code></td>
+                        <td>VARCHAR(20)</td>
+                        <td>Immatriculation (ex: F-HSTR)</td>
+                    </tr>
+                    <tr>
+                        <td><code>model</code></td>
+                        <td>VARCHAR(100)</td>
+                        <td>Modèle avion (ex: DA40 NG)</td>
+                    </tr>
+                    <tr>
+                        <td><code>aircraft_data</code></td>
+                        <td>JSONB</td>
+                        <td>Données complètes avion (flexibilité schéma)</td>
+                    </tr>
+                    <tr>
+                        <td><code>manex_file_id</code></td>
+                        <td>UUID (FK)</td>
+                        <td>Lien vers manuel de vol</td>
+                    </tr>
+                    <tr>
+                        <td><code>votes_up</code></td>
+                        <td>INTEGER</td>
+                        <td>Votes positifs communauté</td>
+                    </tr>
+                    <tr>
+                        <td><code>votes_down</code></td>
+                        <td>INTEGER</td>
+                        <td>Votes négatifs</td>
+                    </tr>
+                    <tr>
+                        <td><code>verified</code></td>
+                        <td>BOOLEAN</td>
+                        <td>Vérifié communauté (≥10 net votes)</td>
+                    </tr>
+                    <tr>
+                        <td><code>admin_verified</code></td>
+                        <td>BOOLEAN</td>
+                        <td>Validation admin manuelle</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2 id="db-triggers">4.3 Triggers et Fonctions</h2>
+
+            <h3>Fonction: update_preset_votes()</h3>
+
+            <p>Recalcule automatiquement les compteurs de votes et le statut <code>verified</code>.</p>
+
+            <pre><code>CREATE OR REPLACE FUNCTION update_preset_votes()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE community_presets
+  SET
+    votes_up = (SELECT COUNT(*) FROM preset_votes 
+                WHERE preset_id = NEW.preset_id AND vote_type = 'up'),
+    votes_down = (SELECT COUNT(*) FROM preset_votes 
+                  WHERE preset_id = NEW.preset_id AND vote_type = 'down'),
+    verified = (net_votes >= 10)  -- Seuil validation communautaire
+  WHERE id = NEW.preset_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;</code></pre>
+
+            <h3>Trigger: update_download_count()</h3>
+
+            <p>Incrémente le compteur de téléchargements à chaque import d'un preset.</p>
+
+            <pre><code>CREATE TRIGGER trigger_update_downloads
+AFTER INSERT ON preset_downloads
+FOR EACH ROW
+EXECUTE FUNCTION update_download_count();</code></pre>
+
+            <h3>Row Level Security (RLS)</h3>
+
+            <ul>
+                <li><strong>Lecture publique:</strong> Tous les presets <code>status='active'</code> sont visibles.</li>
+                <li><strong>Écriture ouverte:</strong> Tout utilisateur peut soumettre un preset (modération a
+                    posteriori).</li>
+                <li><strong>Votes:</strong> Un utilisateur ne peut voter qu'une fois par preset (contrainte UNIQUE).
+                </li>
+            </ul>
+
+            <div class="page-break"></div>
+
+            <h2 id="db-storage">4.4 Storage Buckets</h2>
+
+            <ul>
+                <li><code>manex-files</code>: Stockage des PDFs manuels de vol (accès public lecture).</li>
+                <li><code>vac-charts</code>: Cache des cartes VAC (accès public).</li>
+                <li><code>user-avatars</code>: Photos de profil.</li>
+            </ul>
+
+            <h1 id="services">5. Couche de Services</h1>
+
+            <p>L'application repose sur 34 services modulaires gérant la logique métier et les données.</p>
+
+            <h2 id="services-aixm">5.1 Services Données Aéronautiques</h2>
+            <ul>
+                <li><code>aixmParser.js</code>: Parsing haute performance du fichier XML AIXM (42MB).</li>
+                <li><code>openAIPAirspacesService.js</code>: Gestion des données d'espaces aériens OpenAIP.</li>
+                <li><code>hybridAirspacesService.js</code>: Fusion intelligente des données AIXM et OpenAIP.</li>
+                <li><code>vacDownloadService.js</code>: Téléchargement et mise en cache des cartes VAC SIA.</li>
+            </ul>
+
+            <h2 id="services-vac">5.2 Services VAC (Cartes Aéronautiques)</h2>
+
+            <p>Gestion complète des cartes d'approche visuelles (Visual Approach Charts).</p>
+
+            <h3>Services Principaux</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Fonction</th>
+                        <th>Source Données</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>vacDownloadService.js</code></td>
+                        <td>Téléchargement massif VAC SIA</td>
+                        <td>https://www.sia.aviation-civile.gouv.fr/</td>
+                    </tr>
+                    <tr>
+                        <td><code>vacPdfExtractor.js</code></td>
+                        <td>Extraction metadata PDF (ICAO, type)</td>
+                        <td>Parsing PDF local</td>
+                    </tr>
+                    <tr>
+                        <td><code>vacSupabaseService.js</code></td>
+                        <td>Stockage/récupération cloud VAC</td>
+                        <td>Supabase Storage bucket 'vac-charts'</td>
+                    </tr>
+                    <tr>
+                        <td><code>vfrPointsExtractor.js</code></td>
+                        <td>Extraction points VFR depuis VAC</td>
+                        <td>OCR + Parsing coordonnées</td>
+                    </tr>
+                    <tr>
+                        <td><code>vfrPointsService.js</code></td>
+                        <td>Interface unifiée points VFR</td>
+                        <td>Agrégation VAC + AIXM</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Workflow Téléchargement VAC</h3>
+
+            <pre><code>// 1. Download depuis SIA
+vacDownloadService.downloadAllVAC()
+  → Requêtes vers sia.aviation-civile.gouv.fr
+  → Cache local IndexedDB
+
+// 2. Extraction metadata
+vacPdfExtractor.extractMetadata(pdfFile)
+  → {icao: 'LFST', name: 'Strasbourg Entzheim', type: 'AD 2'}
+
+// 3. Upload cloud (optionnel)
+vacSupabaseService.uploadVAC(icao, pdfData)
+  → Bucket 'vac-charts/LFST.pdf'
+
+// 4. Extraction points VFR
+vfrPointsExtractor.extractPoints(vacPdf)
+  → [{name: 'CATHÉDRALE', lat: 48.xxx, lon: 7.xxx}, ...]</code></pre>
+
+            <h3>Stratégie de Cache</h3>
+
+            <ul>
+                <li><strong>First Load:</strong> Téléchargement massif des 493 VAC France (~ 2GB)</li>
+                <li><strong>Updates:</strong> Vérification cycle AIRAC (28 jours), re-download si changements</li>
+                <li><strong>Storage:</strong> IndexedDB (local) + Supabase (cloud backup)</li>
+            </ul>
+
+            <div class="warning-box">
+                <strong>⚠️ Limitation SIA:</strong> Le site SIA limite à 100 requêtes/heure. Le téléchargement massif
+                prend donc ~5 heures avec throttling automatique.
+            </div>
+
+            <div class="page-break"></div>
+
+            <h2 id="services-perf">5.3 Services Performance & IA</h2>
+            <ul>
+                <li><code>advancedPerformanceAnalyzer.js</code>: Interface avec OpenAI Vision pour l'analyse des
+                    tableaux.</li>
+                <li><code>performanceInterpolation.js</code>: Moteur de calcul d'interpolation (linéaire/bilinéaire).
+                </li>
+                <li><code>performanceTableAnalyzer.js</code>: Structuration des données brutes extraites.</li>
+            </ul>
+
+            <h2 id="services-integration">5.4 Services Intégration & Support</h2>
+            <ul>
+                <li><code>weatherAPI.js</code>: Connexion aux APIs météo (AVWX, Météo-France).</li>
+                <li><code>flightPlanSupabaseService.js</code>: Synchro des plans de vol.</li>
+                <li><code>validatedPdfService.js</code>: Génération et stockage des dossiers de vol officiels.</li>
+                <li><code>googleSheetsService.js</code>: Logging et export de données vers Google Sheets.</li>
+            </ul>
+
+            <h1 id="architecture">6. Architecture du Projet</h1>
+
+            <h2 id="archi-structure">6.1 Structure des Répertoires</h2>
+
+            <pre><code>src/
+├── core/           # Cœur de l'application
+│   ├── contexts/   # Contextes React (Legacy & Access)
+│   └── stores/     # Stores Zustand (État global)
+├── features/       # Modules fonctionnels (18 modules)
+│   ├── aircraft/   # Gestion avions
+│   ├── navigation/ # Carte et route
+│   ├── weather/    # Météo
+│   └── ...
+├── services/       # Logique métier pure (34 services)
+├── shared/         # Composants réutilisables (UI)
+└── utils/          # Fonctions utilitaires (Calculs, Formatage)
+</code></pre>
+
+            <h1 id="dataflow">7. Flux de Communication</h1>
+
+            <h2 id="flow-state">7.1 Gestion d'État (Zustand)</h2>
+            <p>ALFlight utilise <strong>Zustand</strong> pour une gestion d'état atomique et performante. Contrairement
+                à Redux, il n'y a pas de store unique monolithique, mais plusieurs stores spécialisés
+                (<code>aircraftStore</code>, <code>navigationStore</code>, <code>weatherStore</code>) qui interagissent
+                entre eux.</p>
+
+            <h2 id="flow-contexts">7.2 Contextes React</h2>
+
+            <p>ALFlight utilise des Contextes React comme couche d'accès aux stores Zustand, facilitant la migration
+                depuis l'ancienne architecture Redux.</p>
+
+            <h3>Contextes Principaux</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Contexte</th>
+                        <th>Fichier</th>
+                        <th>Store Zustand Associé</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>AircraftContext</code></td>
+                        <td><code>src/core/contexts/AircraftContext.jsx</code></td>
+                        <td><code>aircraftStore</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>NavigationContext</code></td>
+                        <td><code>src/core/contexts/NavigationContext.jsx</code></td>
+                        <td><code>navigationStore</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>WeatherContext</code></td>
+                        <td><code>src/core/contexts/WeatherContext.jsx</code></td>
+                        <td><code>weatherStore</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>FuelContext</code></td>
+                        <td><code>src/core/contexts/FuelContext.jsx</code></td>
+                        <td><code>fuelStore</code></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2 id="flow-inter">7.3 Interconnexions Modules</h2>
+
+            <p>Les modules communiquent via les stores Zustand partagés.</p>
+
+            <h3>Exemples d'Interconnexions</h3>
+
+            <pre><code>// Module Navigation lit depuis aircraftStore
+const cruiseSpeed = useAircraftStore(state => state.selectedAircraft?.cruiseSpeedKt);
+const fuelConsumption = useAircraftStore(state => state.selectedAircraft?.fuelConsumption);
+
+// Module Fuel lit depuis navigationStore
+const totalDistance = useNavigationStore(state => state.navigationResults?.totalDistance);
+const estimatedTime = totalDistance / cruiseSpeed;
+const fuelRequired = estimatedTime * fuelConsumption;
+
+// Module Weight-Balance lit depuis fuelStore + aircraftStore
+const fuelOnBoard = useFuelStore(state => state.fuelData.total);
+const fuelArm = useAircraftStore(state => state.selectedAircraft?.arms?.fuelMain);
+const fuelMoment = fuelOnBoard * fuelArm;</code></pre>
+
+            <div class="page-break"></div>
+
+            <h1 id="automation">8. Capacités d'Automatisation</h1>
+
+            <h2 id="auto-ai">8.1 Intelligence Artificielle (OpenAI)</h2>
+            <p>L'intégration de <strong>OpenAI GPT-4o Vision</strong> permet une fonctionnalité unique : la
+                transformation d'une simple photo ou capture d'écran d'un tableau de performances (dans un manuel PDF)
+                en données structurées JSON exploitables par le moteur de calcul. Cela élimine la saisie manuelle
+                fastidieuse et source d'erreurs.</p>
+
+            <h2 id="auto-calc">8.2 Calculs Automatiques</h2>
+            <p>Le moteur de calcul recalcule en temps réel :</p>
+            <ul>
+                <li>Le devis de masse et centrage à chaque modification de chargement.</li>
+                <li>L'autonomie et le délestage carburant.</li>
+                <li>Les distances de décollage/atterrissage interpolées selon la météo locale.</li>
+            </ul>
+
+            <h2 id="auto-sync">8.3 Synchronisation Cloud</h2>
+
+            <p>Stratégie <strong>Offline-First</strong> avec synchronisation bidirectionnelle optionnelle.</p>
+
+            <h3>Architecture de Sync</h3>
+
+            <pre><code>// Vue d'ensemble
+IndexedDB (Local) ⇄ Sync Engine ⇄ Supabase (Cloud)
+
+// Priorités
+1. Lecture: IndexedDB first (instant)
+2. Écriture: IndexedDB + Queue Supabase (background)
+3. Conflit: Local wins (timestamp)</code></pre>
+
+            <h3>Données Synchronisées</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Entité</th>
+                        <th>Direction</th>
+                        <th>Fréquence</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Avions locaux</td>
+                        <td>Local only</td>
+                        <td>Jamais</td>
+                    </tr>
+                    <tr>
+                        <td>Community Presets</td>
+                        <td>Download only</td>
+                        <td>On demand</td>
+                    </tr>
+                    <tr>
+                        <td>Plans de vol</td>
+                        <td>Bidirectionnelle</td>
+                        <td>Temps réel</td>
+                    </tr>
+                    <tr>
+                        <td>Carnet de vol</td>
+                        <td>Upload only</td>
+                        <td>Après chaque vol</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="page-break"></div>
+
+            <h1 id="technical">9. Aspects Techniques</h1>
+
+            <h2 id="tech-stack">9.1 Stack Technologique</h2>
+            <ul>
+                <li><strong>Frontend:</strong> React 18, Vite 7.</li>
+                <li><strong>UI:</strong> Material UI 5 (MUI).</li>
+                <li><strong>Cartographie:</strong> Leaflet, React-Leaflet.</li>
+                <li><strong>Visualisation:</strong> Recharts (Graphiques centrage/perf).</li>
+                <li><strong>PDF:</strong> pdf-lib, html2pdf.js.</li>
+                <li><strong>Backend:</strong> Supabase (PostgreSQL, Auth, Storage).</li>
+            </ul>
+
+            <h2 id="tech-perf">9.2 Optimisations Performance</h2>
+
+            <h3>Stratégies Implémentées</h3>
+
+            <ul>
+                <li><strong>Lazy Loading:</strong> Chargement différé des modules non-critiques (VAC, Weather).</li>
+                <li><strong>Code Splitting:</strong> Vite split automatiquement les bundles par route.</li>
+                <li><strong>Memoization:</strong> React.memo sur composants lourds (Map, Charts).</li>
+                <li><strong>Virtualization:</strong> Liste virtualisée pour les 493 VAC (react-window).</li>
+                <li><strong>Worker Threads:</strong> Parsing AIXM 42MB en background (Web Worker).</li>
+            </ul>
+
+            <h3>Métriques Cibles</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Métrique</th>
+                        <th>Cible</th>
+                        <th>Actuel</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>First Contentful Paint (FCP)</td>
+                        <td>&lt; 1.5s</td>
+                        <td>1.2s</td>
+                    </tr>
+                    <tr>
+                        <td>Time to Interactive (TTI)</td>
+                        <td>&lt; 3s</td>
+                        <td>2.8s</td>
+                    </tr>
+                    <tr>
+                        <td>Bundle Size (initial)</td>
+                        <td>&lt; 300KB gzip</td>
+                        <td>275KB</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2 id="tech-security">9.3 Sécurité</h2>
+
+            <h3>Authentification & Autorisation</h3>
+
+            <ul>
+                <li><strong>Supabase Auth:</strong> JWT tokens avec refresh automatique.</li>
+                <li><strong>Row Level Security (RLS):</strong> Politiques PostgreSQL pour isoler les données
+                    utilisateurs.</li>
+                <li><strong>OAuth:</strong> Support Google, Apple (via Supabase).</li>
+            </ul>
+
+            <h3>Protection des API Keys</h3>
+
+            <ul>
+                <li><strong>Variables d'environnement:</strong> Toutes les clés dans <code>.env</code> (exclu de Git).
+                </li>
+                <li><strong>Restrictions domaines:</strong> API keys limitées aux domaines autorisés (OpenAI, AVWX).
+                </li>
+                <li><strong>Proxy serveur:</strong> API sensibles proxyées côté serveur (SIA VAC).</li>
+            </ul>
+
+            <h3>Sanitization & Validation</h3>
+
+            <ul>
+                <li><strong>Input validation:</strong> Schema validation (Zod) sur tous les formulaires.</li>
+                <li><strong>XSS Prevention:</strong> React auto-escape + DOMPurify pour HTML dynamique.</li>
+                <li><strong>SQL Injection:</strong> Paramétrisation automatique Supabase (prévention native).</li>
+            </ul>
+
+            <div class="page-break"></div>
+
+            <h1 id="annexes">10. Annexes</h1>
+
+            <h2 id="annex-dependencies">10.1 Dépendances Principales</h2>
+            <ul>
+                <li><code>@mui/material</code>: Composants UI.</li>
+                <li><code>zustand</code>: State management.</li>
+                <li><code>leaflet</code>: Cartographie.</li>
+                <li><code>openai</code>: Client API IA.</li>
+                <li><code>@supabase/supabase-js</code>: Client Backend.</li>
+                <li><code>date-fns</code>: Manipulation dates.</li>
+            </ul>
+
+            <h2 id="annex-dependencies-complete">10.2 Dépendances Complètes (package.json)</h2>
+
+            <h3>Frontend Core</h3>
+            <ul>
+                <li><code>react@18.2.0</code>, <code>react-dom@18.2.0</code></li>
+                <li><code>vite@7.0.6</code> (Build tool)</li>
+                <li><code>@vitejs/plugin-react@4.2.1</code></li>
+            </ul>
+
+            <h3>State & Data</h3>
+            <ul>
+                <li><code>zustand@4.5.7</code> (State management)</li>
+                <li><code>immer@10.0.3</code> (Immutable updates)</li>
+                <li><code>@supabase/supabase-js@2.39.3</code></li>
+            </ul>
+
+            <h3>UI & Styling</h3>
+            <ul>
+                <li><code>@mui/material@5.15.6</code>, <code>@mui/icons-material@5.15.6</code></li>
+                <li><code>@emotion/react@11.11.3</code>, <code>@emotion/styled@11.11.0</code></li>
+            </ul>
+
+            <h3>Cartographie</h3>
+            <ul>
+                <li><code>leaflet@1.9.4</code>, <code>react-leaflet@4.2.1</code></li>
+                <li><code>leaflet-draw</code>, <code>leaflet-measure</code></li>
+            </ul>
+
+            <h3>Visualisation & Charts</h3>
+            <ul>
+                <li><code>recharts@2.10.3</code> (Graphiques centrage/performances)</li>
+            </ul>
+
+            <h3>PDF & Documents</h3>
+            <ul>
+                <li><code>pdf-lib@1.17.1</code> (Génération PDF)</li>
+                <li><code>pdfjs-dist@3.11.174</code> (Lecture PDF)</li>
+                <li><code>html2pdf.js</code> (Export HTML vers PDF)</li>
+            </ul>
+
+            <h3>AI & API</h3>
+            <ul>
+                <li><code>openai@4.24.1</code> (GPT-4o Vision)</li>
+            </ul>
+
+            <h3>Utils</h3>
+            <ul>
+                <li><code>date-fns@3.0.6</code> (Manipulation dates)</li>
+                <li><code>lodash@4.17.21</code> (Utilitaires)</li>
+                <li><code>axios@1.6.5</code> (HTTP client)</li>
+            </ul>
+
+            <h2 id="annex-config">10.3 Configuration (.env & vite.config)</h2>
+
+            <h3>Variables d'Environnement (.env)</h3>
+
+            <pre><code># Supabase
+VITE_SUPABASE_URL=https://xxx.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGci...
+
+# OpenAI
+VITE_OPENAI_API_KEY=sk-proj-...
+
+# Weather API
+VITE_AVWX_API_KEY=xxx
+
+# Google Sheets (Logging)
+VITE_GOOGLE_SHEETS_ID=1abcd...
+
+# Production Mode
+VITE_ENV=production</code></pre>
+
+            <h3>Configuration Vite (vite.config.js)</h3>
+
+            <pre><code>export default defineConfig({
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}']
+      }
+    })
+  ],
+  resolve: {
+    alias: {
+      '@': '/src',
+      '@components': '/src/shared/components',
+      '@services': '/src/services',
+      '@utils': '/src/utils'
+    }
+  },
+  server: {
+    proxy: {
+      '/api/openaip': {
+        target: 'https://api.core.openaip.net',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/openaip/, '')
+      }
+    }
+  }
+});</code></pre>
+
+            <h2 id="annex-future-features">10.4 Features Prioritaires à Implémenter</h2>
+
+            <h3>🪽 Support des Planeurs</h3>
+
+            <div class="info-box">
+                <strong>🎯 Objectif:</strong> Étendre ALFlight pour supporter les planeurs et motoplaneurs, avec des
+                calculs spécifiques (finesse, taux de chute, thermiques).
+            </div>
+
+            <h4>Adaptations Nécessaires</h4>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Aspect</th>
+                        <th>Avion Moteur</th>
+                        <th>Planeur</th>
+                        <th>Implémentation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Carburant</strong></td>
+                        <td>Consommation L/h</td>
+                        <td>Aucun (pur planeur)</td>
+                        <td>Champ <code>isPowered = false</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Performances</strong></td>
+                        <td>TAS, R/C</td>
+                        <td>Finesse, taux de chute</td>
+                        <td>Nouveau module <code>GliderPerformance</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Navigation</strong></td>
+                        <td>Route directe</td>
+                        <td>Thermiques, updrafts</td>
+                        <td>Mode <code>thermalSoaring</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Autonomie</strong></td>
+                        <td>Carburant</td>
+                        <td>Altitude + finesse</td>
+                        <td>Calcul <code>glideRange</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Déroutements</strong></td>
+                        <td>Rayon fixe</td>
+                        <td>Rayon dynamique (altitude)</td>
+                        <td>Fonction <code>calculateGlideRadius()</code></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>Données Spécifiques Planeurs</h4>
+
+            <pre><code>// Exemple structure planeur
+const glider = {
+  type: 'glider',
+  isPowered: false,
+  performance: {
+    bestGlideRatio: 40,        // Finesse max (1:40)
+    bestGlideSpeed: 90,         // Vitesse finesse max (km/h)
+    minSinkRate: 0.6,          // Taux de chute mini (m/s)
+    minSinkSpeed: 75,          // Vitesse taux de chute mini
+    maxSpeed: 250,             // VNE
+    stallSpeed: 65,            // Vs0
+    waterBallast: {
+      max: 200,                // kg
+      impact: 'improves glide in strong conditions'
+    }
+  },
+  thermal: {
+    averageClimbRate: 2.5,    // m/s en thermique moyenne
+    circlingRadius: 50         // m
+  }
+};</code></pre>
+
+            <h4>Calculs Spécifiques</h4>
+
+            <pre><code>// Rayon de plané depuis altitude
+function calculateGlideRadius(altitude, glideRatio, windComponent) {
+  const heightAGL = altitude - elevationDestination;
+  const stillAirRange = heightAGL * glideRatio;
+  
+  // Correction vent (headwind réduit, tailwind augmente)
+  const effectiveRange = stillAirRange * (1 + windComponent / 100);
+  
+  return effectiveRange * 0.7; // Marge sécurité 30%
+}
+
+// Planification cross-country avec thermiques
+function planThermalRoute(waypoints, glider, weather) {
+  // Estimer hauteur gain par thermique
+  const avgThermalClimb = weather.thermalStrength || 2.5; // m/s
+  const climbTime = 1000 / avgThermalClimb; // ~7min pour 1000m
+  
+  // Planifier spirales thermiques tous les X km
+  const thermalSpacing = glider.performance.bestGlideRatio * 1000; // m
+  
+  return routeWithThermals;
+}</code></pre>
+
+            <h3>🌍 Évolution Internationale</h3>
+            <ul>
+                <li>Support multi-pays (Allemagne, Suisse, Belgique)</li>
+                <li>Langues: FR, EN, DE</li>
+                <li>Formats régionaux (unités, dates)</li>
+            </ul>
+
+            <h3>🔌 Intégration Garmin Pilot</h3>
+            <ul>
+                <li>Import/Export plans de vol format Garmin</li>
+                <li>Sync avec Garmin Pilot app</li>
+            </ul>
+
+            <div class="page-break"></div>
+
+            <h3>📡 Navigation GPS & Moving Map (Priorité HAUTE)</h3>
+
+            <div class="warning-box">
+                <strong>⚠️ GAP CRITIQUE:</strong> ALFlight est actuellement une application de <strong>préparation de
+                    vol uniquement</strong>. Tous les concurrents offrent une navigation GPS en temps réel pendant le
+                vol.
+            </div>
+
+            <h4>Features à Implémenter</h4>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Description</th>
+                        <th>Priorité</th>
+                        <th>Concurrents</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>GPS Moving Map</strong></td>
+                        <td>Carte temps réel avec position GPS live</td>
+                        <td>🔴 HAUTE</td>
+                        <td>Tous (FLYLOG, SkyDemon, ForeFlight, etc.)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Track Log</strong></td>
+                        <td>Enregistrement automatique du vol (KML/GPX export)</td>
+                        <td>🔴 HAUTE</td>
+                        <td>Tous</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Distance/ETA temps réel</strong></td>
+                        <td>Mise à jour continue distance restante et ETA</td>
+                        <td>🟡 MOYENNE</td>
+                        <td>Tous</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Fréquences actives auto</strong></td>
+                        <td>Suggestion fréquences COM selon position</td>
+                        <td>🟡 MOYENNE</td>
+                        <td>FLYLOG, SkyDemon, ForeFlight, Garmin</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Alertes terrain TAWS</strong></td>
+                        <td>Avertissement collision terrain (CFIT prevention)</td>
+                        <td>🔴 HAUTE</td>
+                        <td>FLYLOG Premium, tous concurrents</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Traffic ADS-B</strong></td>
+                        <td>Affichage traffic aérien via ADS-B (Stratux/SkyEcho)</td>
+                        <td>🟢 BASSE</td>
+                        <td>FLYLOG Premium, SkyDemon, ForeFlight, EasyVFR</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Vision Synthétique</strong></td>
+                        <td>Vue 3D synthétique terrain (SVT)</td>
+                        <td>🟢 BASSE</td>
+                        <td>ForeFlight, Garmin Pilot</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>Architecture Proposée</h4>
+
+            <pre><code>// Nouveau module: src/features/in-flight/
+├── InFlightMap.jsx          // Carte GPS live
+├── TrackLogger.jsx          // Enregistrement vol
+├── TerrainAwareness.jsx     // Alertes TAWS
+├── FrequencyAdvisor.jsx     // Suggestions COM/NAV
+└── hooks/
+    ├── useGPSPosition.js    // Hook position GPS
+    └── useTrackRecording.js // Hook enregistrement</code></pre>
+
+            <h3>📋 Logbook Conforme EASA/FAA/CASA</h3>
+
+            <div class="info-box">
+                <strong>🎯 Objectif:</strong> Renforcer le logbook pour conformité réglementaire complète (actuellement
+                ⚠️ partiel).
+            </div>
+
+            <h4>Features Manquantes</h4>
+
+            <ul>
+                <li><strong>Calcul temps de nuit automatique:</strong> Calculer automatiquement heures de nuit selon
+                    sunset/sunrise (civil twilight)</li>
+                <li><strong>Signature digitale:</strong> Signature électronique instructeur pour validation heures
+                    double commande</li>
+                <li><strong>Détection erreurs automatique:</strong> Vérification cohérence (Total Time = PIC + Dual,
+                    distance vs temps, etc.)</li>
+                <li><strong>Export PDF officiel EASA:</strong> Format conforme Part-FCL.050 avec signatures</li>
+                <li><strong>Conformité multi-autorités:</strong> Templates EASA (Europe), FAA (USA), CASA (Australie)
+                </li>
+            </ul>
+
+            <pre><code>// Exemple calcul nuit automatique
+function calculateNightTime(departureTime, departureICAO, arrivalTime, arrivalICAO) {
+  const depCoords = getAirportCoordinates(departureICAO);
+  const arrCoords = getAirportCoordinates(arrivalICAO);
+  
+  const depSunset = getSunsetTime(depCoords, departureTime);
+  const arrSunrise = getSunriseTime(arrCoords, arrivalTime);
+  
+  // Civil twilight = 30min après sunset
+  const nightStart = depSunset + 30 * 60 * 1000; // ms
+  const nightEnd = arrSunrise - 30 * 60 * 1000;
+  
+  // Calculer intersection vol avec période de nuit
+  const nightDuration = calculateOverlap(
+    [departureTime, arrivalTime],
+    [nightStart, nightEnd]
+  );
+  
+  return nightDuration / 3600000; // heures
+}</code></pre>
+
+            <h3>☁️ NOTAM Graphiques & AUP</h3>
+
+            <h4>NOTAM Graphiques (Actuellement ⚠️)</h4>
+
+            <ul>
+                <li><strong>Affichage carte:</strong> Overlay NOTAM directement sur la carte (zones temporaires, TRA
+                    activés, etc.)</li>
+                <li><strong>Parsing automatique:</strong> Extraction coordonnées depuis texte NOTAM (regex COORD
+                    pattern)</li>
+                <li><strong>Filtrage intelligent:</strong> Ne montrer que NOTAM pertinents pour la route</li>
+            </ul>
+
+            <h4>AUP (Airspace Use Plan)</h4>
+
+            <div class="info-box">
+                <strong>📅 AUP:</strong> Publication quotidienne des zones militaires activées/désactivées
+                (TSA/TRA/CBA).
+            </div>
+
+            <ul>
+                <li><strong>Source:</strong> EUROCONTROL AUP/UUP (Updated Use Plan)</li>
+                <li><strong>API:</strong> <code>https://www.public.nm.eurocontrol.int/PUBPORTAL/gateway/spec/</code>
+                </li>
+                <li><strong>Affichage:</strong> Highlighting zones activées en rouge, désactivées en vert</li>
+            </ul>
+
+            <h3>✈️ Dépôt Plan de Vol Électronique</h3>
+
+            <div class="warning-box">
+                <strong>⚠️ GAP MAJEUR:</strong> ALFlight génère le plan de vol OACI mais ne le dépose pas
+                automatiquement.
+            </div>
+
+            <h4>Intégrations Nécessaires</h4>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Région</th>
+                        <th>Service</th>
+                        <th>API</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>🇫🇷 France</td>
+                        <td>OLIVIA</td>
+                        <td>https://olivia.aviation-civile.gouv.fr/</td>
+                    </tr>
+                    <tr>
+                        <td>🇪🇺 Europe</td>
+                        <td>EUROCONTROL IFPS</td>
+                        <td>https://www.public.nm.eurocontrol.int/</td>
+                    </tr>
+                    <tr>
+                        <td>🇬🇧 UK</td>
+                        <td>NATS eFPL</td>
+                        <td>https://www.nats-uk.ead-it.com/</td>
+                    </tr>
+                    <tr>
+                        <td>🇺🇸 USA</td>
+                        <td>Flight Service 1800wxbrief</td>
+                        <td>https://www.1800wxbrief.com/</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>Workflow</h4>
+
+            <pre><code>// 1. Génération FPL OACI (✅ déjà implémenté)
+const fplICAO = generateICAOFlightPlan(flightData);
+
+// 2. Dépôt électronique (❌ à implémenter)
+async function submitFlightPlan(fplICAO, region) {
+  const service = getServiceByRegion(region); // OLIVIA, IFPS, etc.
+  
+  // Authentification pilote
+  const auth = await authenticatePilot(user.licenseNumber);
+  
+  // Validation syntaxe
+  const validation = await service.validateFPL(fplICAO);
+  if (!validation.valid) {
+    throw new Error(validation.errors);
+  }
+  
+  // Soumission
+  const response = await service.submitFPL(fplICAO, auth);
+  
+  return {
+    status: response.status, // 'ACCEPTED', 'REJECTED', 'PENDING'
+    fplId: response.id,      // Identifiant unique
+    eobt: response.eobt      // Estimated Off-Block Time confirmé
+  };
+}</code></pre>
+
+            <h3>🏢 Features Business (Aéro-clubs & Écoles)</h3>
+
+            <div class="info-box">
+                <strong>💼 Opportunité:</strong> FLYLOG.io propose un plan Business (29$/avion/mois). Potentiel revenu
+                récurrent.
+            </div>
+
+            <h4>Features Business Prioritaires</h4>
+
+            <ul>
+                <li><strong>Réservation Avions:</strong>
+                    <ul>
+                        <li>Calendrier partagé flotte</li>
+                        <li>Système slots (créneaux horaires)</li>
+                        <li>Conflits automatiques détectés</li>
+                    </ul>
+                </li>
+                <li><strong>Facturation Automatique:</strong>
+                    <ul>
+                        <li>Calcul heures × tarif horaire</li>
+                        <li>Génération factures PDF</li>
+                        <li>Export comptabilité (CSV)</li>
+                    </ul>
+                </li>
+                <li><strong>Gestion Flotte Multi-Utilisateurs:</strong>
+                    <ul>
+                        <li>Dashboard chef pilote</li>
+                        <li>Statistiques utilisation avions</li>
+                        <li>Suivi maintenance centralisé</li>
+                    </ul>
+                </li>
+                <li><strong>Gestion Instructeurs:</strong>
+                    <ul>
+                        <li>Assignation élèves/instructeurs</li>
+                        <li>Suivi progression formation</li>
+                        <li>Signatures digitales validations</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>🗺️ Cartes IFR & VFR Mondiales</h3>
+
+            <h4>Cartes IFR (Actuellement ❌)</h4>
+
+            <ul>
+                <li><strong>Approach Plates:</strong> Cartes d'approche ILS/VOR/RNAV</li>
+                <li><strong>SID/STAR:</strong> Départs et arrivées normalisés</li>
+                <li><strong>Enroute Charts:</strong> Cartes IFR en route (Airways)</li>
+                <li><strong>Géoréférencement:</strong> Overlay approach plates sur carte GPS</li>
+            </ul>
+
+            <h4>Cartes VFR Mondiales (Actuellement ⚠️ France uniquement)</h4>
+
+            <ul>
+                <li><strong>Expansion géographique:</strong>
+                    <ul>
+                        <li>🇪🇺 Europe: ICAO 1:500k (EuroControl)</li>
+                        <li>🇺🇸 USA: Sectional Charts (FAA)</li>
+                        <li>🇬🇧 UK: CAA 1:500k</li>
+                        <li>🌍 Monde: OpenFlightMaps (open-source)</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <div class="page-break"></div>
+
+            <h3>📊 Priorisation Finale (Matrice Effort/Impact)</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Impact Utilisateur</th>
+                        <th>Effort Dev</th>
+                        <th>Priorité</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>GPS Moving Map</td>
+                        <td>🔴 TRÈS ÉLEVÉ</td>
+                        <td>🟡 MOYEN (6 sem)</td>
+                        <td><strong>P0 - MVP v2</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Track Log Auto</td>
+                        <td>🔴 TRÈS ÉLEVÉ</td>
+                        <td>🟢 FAIBLE (2 sem)</td>
+                        <td><strong>P0 - MVP v2</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Dépôt FPL Électronique</td>
+                        <td>🟡 ÉLEVÉ</td>
+                        <td>🔴 ÉLEVÉ (8 sem)</td>
+                        <td><strong>P1 - Q1 2025</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Logbook Conforme EASA</td>
+                        <td>🟡 ÉLEVÉ</td>
+                        <td>🟡 MOYEN (4 sem)</td>
+                        <td><strong>P1 - Q1 2025</strong></td>
+                    </tr>
+                    <tr>
+                        <td>NOTAM Graphiques</td>
+                        <td>🟡 MOYEN</td>
+                        <td>🟡 MOYEN (3 sem)</td>
+                        <td><strong>P2 - Q2 2025</strong></td>
+                    </tr>
+                    <tr>
+                        <td>AUP Integration</td>
+                        <td>🟢 MOYEN</td>
+                        <td>🟡 MOYEN (3 sem)</td>
+                        <td><strong>P2 - Q2 2025</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Alertes Terrain TAWS</td>
+                        <td>🔴 TRÈS ÉLEVÉ</td>
+                        <td>🔴 ÉLEVÉ (6 sem)</td>
+                        <td><strong>P1 - Q1 2025</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Traffic ADS-B</td>
+                        <td>🟢 FAIBLE</td>
+                        <td>🔴 ÉLEVÉ (8 sem)</td>
+                        <td><strong>P3 - Q3 2025</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Features Business</td>
+                        <td>🟡 MOYEN</td>
+                        <td>🔴 TRÈS ÉLEVÉ (12 sem)</td>
+                        <td><strong>P2 - Q2 2025</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Cartes IFR</td>
+                        <td>🟢 FAIBLE</td>
+                        <td>🔴 ÉLEVÉ (10 sem)</td>
+                        <td><strong>P3 - Q4 2025</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="success-box">
+                <strong>✅ Recommandation Stratégique:</strong> Focus immédiat sur <strong>GPS Moving Map + Track
+                    Log</strong> pour atteindre la parité fonctionnelle avec FLYLOG.io et concurrents. Le dépôt FPL
+                électronique et logbook conforme EASA sont des différenciateurs forts pour Q1 2025.
+            </div>
+
+
 </body>
+
+
 
 </html>

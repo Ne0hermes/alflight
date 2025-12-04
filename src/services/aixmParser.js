@@ -27,7 +27,7 @@ class AIXMParser {
     // Extraire la date depuis le nom du fichier
     this.dataDate = this.extractDateFromPath();
   }
-  
+
   /**
    * Extrait la date depuis le nom des fichiers
    */
@@ -38,7 +38,7 @@ class AIXMParser {
       const [year, month, day] = match[1].split('-');
       // Formater en français : 04 septembre 2025
       const months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin',
-                     'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+        'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
       return `${day} ${months[parseInt(month) - 1]} ${year}`;
     }
     return 'Date inconnue';
@@ -62,17 +62,17 @@ class AIXMParser {
         console.log('⏳ Chargement déjà en cours, attente...');
         return await this.loadPromise;
       }
-      
+
       // Vider les collections pour un rechargement propre
       this.aerodromes.clear();
       this.runways.clear();
       this.frequencies.clear();
       this.navaids.clear();
-      
+
       // Marquer comme en cours de chargement
       this.isLoading = true;
-      
-            
+
+
       // Créer la promesse de chargement
       this.loadPromise = (async () => {
         // Charger les deux fichiers XML
@@ -94,17 +94,68 @@ class AIXMParser {
           console.error(`❌ Erreur chargement SIA: ${siaResponse.status} ${siaResponse.statusText}`);
         }
 
+
         const aixmText = await aixmResponse.text();
         const siaText = await siaResponse.text();
 
         console.log(`📄 Taille AIXM: ${aixmText.length} caractères`);
         console.log(`📄 Taille SIA: ${siaText.length} caractères`);
-        
+
+        // 🔍 VALIDATION: Vérifier que les fichiers sont bien du XML valide
+        const validateXML = (text, filename) => {
+          // Trim pour enlever les espaces
+          const trimmed = text.trim();
+
+          // Vérifier que le fichier commence par '<' (XML) et non par '<!DOCTYPE html' ou '<html'
+          if (!trimmed.startsWith('<')) {
+            throw new Error(`❌ ${filename}: Le fichier ne commence pas par '<'. Contenu reçu: ${trimmed.substring(0, 100)}`);
+          }
+
+          // Détecter les réponses HTML (erreurs 404, etc.)
+          if (trimmed.toLowerCase().startsWith('<!doctype html') ||
+            trimmed.toLowerCase().startsWith('<html')) {
+            throw new Error(`❌ ${filename}: Le serveur a renvoyé du HTML au lieu de XML. Vérifier le chemin: ${this.aixmPath}. Cela indique probablement une erreur 404 ou un fichier manquant.`);
+          }
+
+          // Vérifier que c'est bien du XML AIXM (devrait contenir des balises AIXM spécifiques)
+          if (!trimmed.includes('<?xml') && !trimmed.includes('<Ahp') && !trimmed.includes('<AIXM')) {
+            console.warn(`⚠️ ${filename}: Le fichier ne ressemble pas à du XML AIXM standard`);
+          }
+
+          return true;
+        };
+
+        // Valider les deux fichiers AVANT le parsing
+        try {
+          validateXML(aixmText, 'AIXM');
+          validateXML(siaText, 'SIA');
+        } catch (validationError) {
+          console.error('❌ Erreur validation XML:', validationError.message);
+          throw new Error(`Erreur de validation XML: ${validationError.message}\n\nVérifiez que les fichiers XML AIXM sont présents dans /public/data/`);
+        }
+
         // Parser les XML
         const aixmParser = new DOMParser();
         const aixmDoc = aixmParser.parseFromString(aixmText, 'text/xml');
         const siaDoc = aixmParser.parseFromString(siaText, 'text/xml');
-        
+
+        // 🔍 VALIDATION POST-PARSING: Vérifier les erreurs de parsing XML
+        const checkParseErrors = (doc, filename) => {
+          const parseError = doc.querySelector('parsererror');
+          if (parseError) {
+            const errorText = parseError.textContent || parseError.innerText || 'Erreur inconnue';
+            throw new Error(`Erreur de parsing XML: ${errorText}`);
+          }
+        };
+
+        try {
+          checkParseErrors(aixmDoc, 'AIXM');
+          checkParseErrors(siaDoc, 'SIA');
+        } catch (parseError) {
+          console.error(`❌ Erreur parsing XML:`, parseError.message);
+          throw parseError;
+        }
+
         // Extraire les données (sans logs répétitifs)
         this.parseAerodromes(aixmDoc);
         this.parseRunways(aixmDoc);
@@ -117,8 +168,8 @@ class AIXMParser {
         this.parseServices(aixmDoc);
         this.parseAdminInfo(siaDoc); // Ajouter les informations administratives
         this.parseProcedures(siaDoc);
-        
-                
+
+
         // Marquer comme chargé
         this.isLoading = false;
 
@@ -126,7 +177,7 @@ class AIXMParser {
         const combinedData = this.combineData();
         return await this.enrichWithVACData(combinedData);
       })();
-      
+
       return await this.loadPromise;
     } catch (error) {
       console.error('❌ Erreur parsing AIXM:', error);
@@ -148,13 +199,13 @@ class AIXMParser {
       // Le codeId est dans AhpUid, pas directement dans Ahp
       const ahpUid = ahp.querySelector('AhpUid');
       if (!ahpUid) continue;
-      
+
       const codeId = this.getTextContent(ahpUid, 'codeId');
       if (!codeId || typeof codeId !== 'string' || !codeId.startsWith('LF')) continue;
-      
+
       count++;
       // Debug LFST activé temporairement
-            const aerodrome = {
+      const aerodrome = {
         icao: String(codeId || ''),
         iata: this.getTextContent(ahp, 'codeIata'),
         name: this.getTextContent(ahp, 'txtName'),
@@ -184,38 +235,38 @@ class AIXMParser {
         navaids: [],
         vfrPoints: []
       };
-      
+
       // Debug pour LFST (désactivé)
       // if (codeId === 'LFST') {
       //         // }
-      
+
       this.aerodromes.set(codeId, aerodrome);
     }
-    
+
     // Résumé final (conservé car utile)
-      }
+  }
 
   /**
    * Parse les pistes depuis AIXM
    */
   parseRunways(doc) {
     const rwys = doc.getElementsByTagName('Rwy');
-    
+
     for (const rwy of rwys) {
       const rwyUid = rwy.querySelector('RwyUid');
       if (!rwyUid) continue;
-      
+
       const ahpUid = rwyUid.querySelector('AhpUid');
       if (!ahpUid) continue;
-      
+
       const aerodromeId = this.getTextContent(ahpUid, 'codeId');
       if (!aerodromeId || !aerodromeId.startsWith('LF')) continue;
-      
+
       // Le txtDesig est dans RwyUid, pas dans Rwy
       const designation = this.getTextContent(rwyUid, 'txtDesig');
-      
+
       // Debug pour LFST
-            const runway = {
+      const runway = {
         designation,
         length: parseFloat(this.getTextContent(rwy, 'valLen') || 0),
         width: parseFloat(this.getTextContent(rwy, 'valWid') || 0),
@@ -225,11 +276,11 @@ class AIXMParser {
         stripWidth: parseFloat(this.getTextContent(rwy, 'valWidStrip') || 0),
         directions: []
       };
-      
+
       // Stocker la piste pour référence
       const rwyKey = `${aerodromeId}_${designation}`;
       this.runways.set(rwyKey, runway);
-      
+
       // Ajouter à l'aérodrome
       const aerodrome = this.aerodromes.get(aerodromeId);
       if (aerodrome) {
@@ -244,18 +295,18 @@ class AIXMParser {
   parseRunwayDistances(doc) {
     // Parser les directions de piste (Rdn)
     const rdns = doc.getElementsByTagName('Rdn');
-    
+
     for (const rdn of rdns) {
       const rdnUid = rdn.querySelector('RdnUid');
       if (!rdnUid) continue;
-      
+
       const rwyUid = rdnUid.querySelector('RwyUid');
       if (!rwyUid) continue;
-      
+
       const ahpUid = rwyUid.querySelector('AhpUid');
       const aerodromeId = this.getTextContent(ahpUid, 'codeId');
       if (!aerodromeId || !aerodromeId.startsWith('LF')) continue;
-      
+
       const rwyDesignation = this.getTextContent(rwyUid, 'txtDesig');
       const direction = this.getTextContent(rdnUid, 'txtDesig');
 
@@ -296,7 +347,7 @@ class AIXMParser {
         },
         distances: {} // Initialiser les distances comme objet vide
       };
-      
+
       // Ajouter à la piste correspondante
       const rwyKey = `${aerodromeId}_${rwyDesignation}`;
       const runway = this.runways.get(rwyKey);
@@ -304,35 +355,35 @@ class AIXMParser {
         runway.directions.push(directionData);
       }
     }
-    
+
     // Parser les distances déclarées (Rdd)
     const rdds = doc.getElementsByTagName('Rdd');
-    
+
     for (const rdd of rdds) {
       // D'abord récupérer RddUid qui contient le codeType et RdnUid
       const rddUidElement = rdd.querySelector('RddUid');
       if (!rddUidElement) continue;
-      
+
       const rdnUid = rddUidElement.querySelector('RdnUid');
       if (!rdnUid) continue;
-      
+
       const rwyUid = rdnUid.querySelector('RwyUid');
       if (!rwyUid) continue;
-      
+
       const ahpUid = rwyUid.querySelector('AhpUid');
       const aerodromeId = this.getTextContent(ahpUid, 'codeId');
       if (!aerodromeId || !aerodromeId.startsWith('LF')) continue;
-      
+
       const rwyDesignation = this.getTextContent(rwyUid, 'txtDesig');
       const direction = this.getTextContent(rdnUid, 'txtDesig');
       // Le codeType est dans RddUid
       const distanceType = this.getTextContent(rddUidElement, 'codeType');
       const distance = parseFloat(this.getTextContent(rdd, 'valDist') || 0);
-      
+
       // Debug pour LFST (désactivé pour éviter spam)
       // if (aerodromeId === 'LFST') {
       //         // }
-      
+
       // Trouver la direction correspondante
       const rwyKey = `${aerodromeId}_${rwyDesignation}`;
       const runway = this.runways.get(rwyKey);
@@ -342,7 +393,7 @@ class AIXMParser {
         if (dir) {
           // Garder la valeur (elle sera écrasée si dupliquée, ce qui prend la dernière)
           dir.distances[distanceType] = distance;
-          
+
           // Debug uniquement pour LFST et uniquement si on assigne vraiment une valeur
         }
       }
@@ -350,23 +401,23 @@ class AIXMParser {
 
     // Parser les ILS
     const ilss = doc.getElementsByTagName('Ils');
-    
+
     for (const ils of ilss) {
       const rdnUid = ils.querySelector('RdnUid');
       if (!rdnUid) continue;
-      
+
       const rwyUid = rdnUid.querySelector('RwyUid');
       if (!rwyUid) continue;
-      
+
       const ahpUid = rwyUid.querySelector('AhpUid');
       const aerodromeId = this.getTextContent(ahpUid, 'codeId');
       if (!aerodromeId || !aerodromeId.startsWith('LF')) continue;
-      
+
       const rwyDesignation = this.getTextContent(rwyUid, 'txtDesig');
       const direction = this.getTextContent(rdnUid, 'txtDesig');
-      
+
       // Debug pour LFST
-            const ilsData = {
+      const ilsData = {
         category: this.getTextContent(ils, 'codeCat'),
         frequency: parseFloat(this.getTextContent(ils.querySelector('Ilz'), 'valFreq') || 0),
         identifier: this.getTextContent(ils.querySelector('Ilz'), 'codeId'),
@@ -376,7 +427,7 @@ class AIXMParser {
           rdh: parseFloat(this.getTextContent(ils.querySelector('Igp'), 'valRdh') || 0)
         }
       };
-      
+
       // Ajouter à la direction correspondante
       const rwyKey = `${aerodromeId}_${rwyDesignation}`;
       const runway = this.runways.get(rwyKey);
@@ -402,20 +453,20 @@ class AIXMParser {
     for (const freq of frequences) {
       const service = freq.querySelector('Service');
       if (!service) continue;
-      
+
       // Le nom du service est dans l'attribut 'lk', pas dans le contenu texte
       const serviceName = service.getAttribute('lk');
       if (!serviceName) continue;
-      
+
       // Debug: afficher le format du service (désactivé pour éviter spam)
       // if (count < 10) {
       //         //   count++;
       // }
-      
+
       // Chercher spécifiquement LFST (log désactivé)
       // if (serviceName.includes('[LF][ST]')) {
       //         // }
-      
+
       // Extraire l'ICAO du service (format: [LF][ST][SERVICE])
       const icaoMatch = serviceName.match(/\[LF\]\[([A-Z]{2})\]/);
       if (!icaoMatch) {
@@ -424,15 +475,15 @@ class AIXMParser {
         //           // }
         continue;
       }
-      
+
       const icao = 'LF' + icaoMatch[1];
       const aerodrome = this.aerodromes.get(icao);
       if (!aerodrome) continue;
-      
+
       // Extraire le type de service - chercher TWR, APP, GND, etc. dans le nom du service
       // Le format peut être [TWR STRASBOURG Tour] ou [TWR STRASBOURG Sol] ou [ATIS STRASBOURG .]
       let serviceType = null;
-      
+
       // Vérifier d'abord les cas spéciaux basés sur le suffixe
       if (serviceName.includes(' Sol]')) {
         serviceType = 'gnd';  // Sol = Ground
@@ -454,11 +505,11 @@ class AIXMParser {
       const frequency = this.getTextContent(freq, 'Frequence');
       const horaire = this.getTextContent(freq, 'HorCode');
       const remarque = this.getTextContent(freq, 'Remarque');
-      
+
       if (!aerodrome.frequencies[serviceType]) {
         aerodrome.frequencies[serviceType] = [];
       }
-      
+
       aerodrome.frequencies[serviceType].push({
         frequency,
         schedule: horaire,
@@ -473,48 +524,48 @@ class AIXMParser {
    */
   parseAIXMFrequencies(doc) {
     const frequencies = doc.getElementsByTagName('Fqy');
-        
+
     for (const freq of frequencies) {
       // Extraire les informations de base
       const valFreq = this.getTextContent(freq, 'valFreqTrans');
       const uomFreq = this.getTextContent(freq, 'uomFreq');
-      
+
       if (!valFreq) continue;
-      
+
       // Extraire le call sign (indicatif)
       const callSignNodes = freq.getElementsByTagName('txtCallSign');
       let callSign = '';
       if (callSignNodes.length > 0) {
         callSign = callSignNodes[0].textContent;
       }
-      
+
       // Extraire le service associé
       const serUid = freq.querySelector('SerUid');
       if (!serUid) continue;
-      
+
       const codeType = this.getTextContent(serUid, 'codeType');
       const uniUid = serUid.querySelector('UniUid');
       if (!uniUid) continue;
-      
+
       const txtName = this.getTextContent(uniUid, 'txtName');
       if (!txtName) continue;
-      
+
       // Extraire l'ICAO du nom (format: "LFBD BORDEAUX MERIGNAC")
       const icaoMatch = txtName.match(/^(LF[A-Z]{2})\s/);
       if (!icaoMatch) continue;
-      
+
       const icao = icaoMatch[1];
       const aerodrome = this.aerodromes.get(icao);
       if (!aerodrome) continue;
-      
+
       // Initialiser les fréquences si nécessaire
       if (!aerodrome.frequencies) {
         aerodrome.frequencies = [];
       }
-      
+
       // Déterminer le type de service
       let serviceType = codeType?.toLowerCase() || '';
-      
+
       // Mapper les codes AIXM vers des types standards
       const serviceMap = {
         'TWR': 'twr',
@@ -526,9 +577,9 @@ class AIXMParser {
         'DEL': 'del',
         'VDF': 'vdf'
       };
-      
+
       serviceType = serviceMap[codeType] || serviceType;
-      
+
       // Ajouter la fréquence si elle n'existe pas déjà
       const existingFreq = aerodrome.frequencies.find(f =>
         f.value === valFreq && f.type === serviceType
@@ -545,7 +596,7 @@ class AIXMParser {
         });
       }
     }
-    
+
     // Log de résumé
     let totalFreqs = 0;
     this.aerodromes.forEach(ad => {
@@ -553,7 +604,7 @@ class AIXMParser {
         totalFreqs += ad.frequencies.length;
       }
     });
-      }
+  }
 
   /**
    * Parse les aides à la navigation
@@ -566,7 +617,7 @@ class AIXMParser {
       const freq = parseFloat(this.getTextContent(vor, 'valFreq') || 0);
       const lat = this.convertDMSToDecimal(this.getTextContent(vor, 'geoLat'));
       const lon = this.convertDMSToDecimal(this.getTextContent(vor, 'geoLong'));
-      
+
       this.navaids.set(icao, {
         type: 'VOR',
         identifier: icao,
@@ -574,7 +625,7 @@ class AIXMParser {
         coordinates: { lat, lon }
       });
     }
-    
+
     // DME
     const dmes = doc.getElementsByTagName('Dme');
     for (const dme of dmes) {
@@ -582,7 +633,7 @@ class AIXMParser {
       const freq = parseFloat(this.getTextContent(dme, 'valFreq') || 0);
       const lat = this.convertDMSToDecimal(this.getTextContent(dme, 'geoLat'));
       const lon = this.convertDMSToDecimal(this.getTextContent(dme, 'geoLong'));
-      
+
       const existing = this.navaids.get(icao);
       if (existing) {
         existing.type = 'VOR/DME';
@@ -596,7 +647,7 @@ class AIXMParser {
         });
       }
     }
-    
+
     // NDB
     const ndbs = doc.getElementsByTagName('Ndb');
     for (const ndb of ndbs) {
@@ -604,7 +655,7 @@ class AIXMParser {
       const freq = parseFloat(this.getTextContent(ndb, 'valFreq') || 0);
       const lat = this.convertDMSToDecimal(this.getTextContent(ndb, 'geoLat'));
       const lon = this.convertDMSToDecimal(this.getTextContent(ndb, 'geoLong'));
-      
+
       this.navaids.set(icao, {
         type: 'NDB',
         identifier: icao,
@@ -619,18 +670,18 @@ class AIXMParser {
    */
   parseServices(doc) {
     const services = doc.getElementsByTagName('Ahs');
-    
+
     for (const service of services) {
       const ahsUid = service.querySelector('AhsUid');
       if (!ahsUid) continue;
-      
+
       const ahpUid = ahsUid.querySelector('AhpUid');
       const icao = this.getTextContent(ahpUid, 'codeId');
       if (!icao || !icao.startsWith('LF')) continue;
-      
+
       const aerodrome = this.aerodromes.get(icao);
       if (!aerodrome) continue;
-      
+
       // Initialiser les services si nécessaire
       if (!aerodrome.services) {
         aerodrome.services = {
@@ -651,11 +702,11 @@ class AIXMParser {
           details: []
         };
       }
-      
+
       const serviceType = this.getTextContent(ahsUid, 'codeType');
       const description = this.getTextContent(service, 'txtDescrFac');
       const workHours = this.getTextContent(service, 'codeWorkHr');
-      
+
       // Ajouter aux détails
       if (serviceType) {
         aerodrome.services.details.push({
@@ -664,7 +715,7 @@ class AIXMParser {
           hours: workHours
         });
       }
-      
+
       // Mapper les types de services aux flags booléens
       switch (serviceType) {
         case 'FUEL':
@@ -709,30 +760,30 @@ class AIXMParser {
           break;
       }
     }
-    
+
     // Debug pour LFST
     const lfst = this.aerodromes.get('LFST');
-      }
+  }
 
   /**
    * Parse les consignes particulières depuis SIA
    */
   parseSpecialInstructions(doc) {
     const aerodromes = doc.getElementsByTagName('Aerodrome');
-    
+
     for (const ad of aerodromes) {
       const icao = this.getTextContent(ad, 'AdCode');
       if (!icao || !icao.startsWith('LF')) continue;
-      
+
       const aerodrome = this.aerodromes.get(icao);
       if (!aerodrome) continue;
-      
+
       // Récupérer AdRem (remarques administratives)
       const adRem = this.getTextContent(ad, 'AdRem');
       if (adRem) {
         aerodrome.specialInstructions = adRem;
       }
-      
+
       // Récupérer les remarques spécifiques
       const remarques = ad.getElementsByTagName('Remarque');
       if (remarques.length > 0) {
@@ -744,10 +795,10 @@ class AIXMParser {
           }
         }
       }
-      
+
       // Debug pour LFST
       if (icao === 'LFST' && (adRem || remarques.length > 0)) {
-              }
+      }
     }
   }
 
@@ -756,15 +807,15 @@ class AIXMParser {
    */
   parseAdminInfo(doc) {
     const ads = doc.getElementsByTagName('Ad');
-    
+
     for (const ad of ads) {
       const adCode = this.getTextContent(ad, 'AdCode');
       if (!adCode) continue;
-      
+
       const icao = 'LF' + adCode;
       const aerodrome = this.aerodromes.get(icao);
       if (!aerodrome) continue;
-      
+
       // Extraire les informations administratives
       const adminInfo = {
         gestion: this.getTextContent(ad, 'AdGestion'),
@@ -774,7 +825,7 @@ class AIXMParser {
         email: null,
         website: null
       };
-      
+
       // Extraire email et website depuis AdRem
       const adRem = this.getTextContent(ad, 'AdRem');
       if (adRem) {
@@ -783,14 +834,14 @@ class AIXMParser {
         if (emailMatch) {
           adminInfo.email = emailMatch[0];
         }
-        
+
         // Rechercher le site web
         const websiteMatch = adRem.match(/(?:www\.|http:\/\/|https:\/\/)[^\s#]+/);
         if (websiteMatch) {
           adminInfo.website = websiteMatch[0];
         }
       }
-      
+
       // Ajouter les informations à l'aérodrome
       aerodrome.adminInfo = adminInfo;
     }
@@ -801,19 +852,19 @@ class AIXMParser {
    */
   parseProcedures(doc) {
     const aerodromes = doc.getElementsByTagName('Aerodrome');
-    
+
     for (const ad of aerodromes) {
       const icao = this.getTextContent(ad, 'AdCode');
       if (!icao || !icao.startsWith('LF')) continue;
-      
+
       const aerodrome = this.aerodromes.get(icao);
       if (!aerodrome) continue;
-      
+
       // Initialiser les procédures si nécessaire
       if (!aerodrome.procedures) {
         aerodrome.procedures = {};
       }
-      
+
       // Procédures de déneigement
       const neigePriorite = this.getTextContent(ad, 'NeigePriorite');
       if (neigePriorite) {
@@ -822,7 +873,7 @@ class AIXMParser {
           equipment: this.getTextContent(ad, 'NeigeEqpt')
         };
       }
-      
+
       // Procédures SSLIA (Service incendie)
       const ssliaAcft = this.getTextContent(ad, 'SsliaAcft');
       if (ssliaAcft) {
@@ -833,19 +884,19 @@ class AIXMParser {
           facilities: this.getTextContent(ad, 'SsliaFac')
         };
       }
-      
+
       // Restrictions opérationnelles
       const adOpr = this.getTextContent(ad, 'AdOpr');
       if (adOpr) {
         aerodrome.procedures.operationalRestrictions = adOpr;
       }
-      
+
       // Services passagers remarques
       const svcPaxRem = this.getTextContent(ad, 'SvcPaxRem');
       if (svcPaxRem) {
         aerodrome.procedures.passengerServicesRemarks = svcPaxRem;
       }
-      
+
       // Debug pour LFST
       if (icao === 'LFST' && Object.keys(aerodrome.procedures).length > 0) {
       }
@@ -858,26 +909,26 @@ class AIXMParser {
   parseVFRPoints(doc) {
     const dpns = doc.getElementsByTagName('Dpn');
     let vfrCount = 0;
-    
+
     for (const dpn of dpns) {
       const dpnUid = dpn.querySelector('DpnUid');
       if (!dpnUid) continue;
-      
+
       const codeId = this.getTextContent(dpnUid, 'codeId');
       const lat = this.getTextContent(dpnUid, 'geoLat');
       const lon = this.getTextContent(dpnUid, 'geoLong');
-      
+
       // Chercher l'aérodrome associé
       const ahpUidAssoc = dpn.querySelector('AhpUidAssoc');
       const aerodromeId = this.getTextContent(ahpUidAssoc, 'codeId');
-      
+
       if (!aerodromeId || !aerodromeId.startsWith('LF')) continue;
-      
+
       // Récupérer les détails du point
       const codeType = this.getTextContent(dpn, 'codeType');
       const txtName = this.getTextContent(dpn, 'txtName');
       const txtRmk = this.getTextContent(dpn, 'txtRmk');
-      
+
       // Filtrer les points VFR (VRP = Visual Reporting Point)
       if (txtRmk && txtRmk.includes('VRP')) {
         const vfrPoint = {
@@ -890,25 +941,25 @@ class AIXMParser {
           },
           type: 'VRP'
         };
-        
+
         const aerodrome = this.aerodromes.get(aerodromeId);
         if (aerodrome) {
           aerodrome.vfrPoints.push(vfrPoint);
           vfrCount++;
-          
+
           // Debug pour LFST
-                  }
+        }
       }
     }
-    
-      }
+
+  }
 
   /**
    * Combine toutes les données
    */
   combineData() {
     const result = [];
-    
+
     for (const [icao, aerodrome] of this.aerodromes) {
       // Associer les navaids proches de l'aérodrome (dans un rayon de 30 NM)
       aerodrome.navaids = [];
@@ -933,23 +984,23 @@ class AIXMParser {
           });
         }
       }
-      
+
       // Séparer les pistes bidirectionnelles en entrées individuelles
       const processedRunways = [];
-      
+
       // Debug pour LFST
-            for (const runway of aerodrome.runways) {
+      for (const runway of aerodrome.runways) {
         if (runway.designation && runway.designation.includes('/')) {
           // Piste bidirectionnelle - créer une entrée pour chaque direction
-                    for (const direction of runway.directions || []) {
+          for (const direction of runway.directions || []) {
             // NE PAS inventer de données - utiliser null si pas de données
             let tora = direction.distances?.TORA || null;
             let toda = direction.distances?.TODA || null;
             let asda = direction.distances?.ASDA || null;
             let lda = direction.distances?.LDA || null;
-            
+
             // Log pour debug
-                        processedRunways.push({
+            processedRunways.push({
               designation: direction.designation,
               identifier: direction.designation,
               length: runway.length || null,
@@ -970,7 +1021,7 @@ class AIXMParser {
           }
         } else {
           // Piste unidirectionnelle ou format non standard
-                    processedRunways.push({
+          processedRunways.push({
             ...runway,
             identifier: runway.designation,
             qfu: runway.directions?.[0]?.magneticBearing || null,
@@ -1044,7 +1095,7 @@ class AIXMParser {
     if (!tagName) {
       return element.textContent ? element.textContent.trim() : '';
     }
-    
+
     // Chercher uniquement dans les enfants directs pour éviter les éléments imbriqués
     const children = element.children;
     for (let i = 0; i < children.length; i++) {
@@ -1060,41 +1111,41 @@ class AIXMParser {
    */
   convertDMSToDecimal(dms) {
     if (!dms) return 0;
-    
+
     // Format: DDMMSS.ssN ou DDDMMSS.ssE
     const matches = dms.match(/(\d{2,3})(\d{2})(\d{2}\.?\d*)([NSEW])/);
     if (!matches) return 0;
-    
+
     const degrees = parseInt(matches[1]);
     const minutes = parseInt(matches[2]);
     const seconds = parseFloat(matches[3]);
     const direction = matches[4];
-    
+
     let decimal = degrees + minutes / 60 + seconds / 3600;
-    
+
     if (direction === 'S' || direction === 'W') {
       decimal = -decimal;
     }
-    
+
     return decimal;
   }
-  
+
   /**
    * Formater DMS du format AIXM vers le format standard aéronautique
    */
   formatDMSFromAIXM(dms, isLongitude) {
     if (!dms) return '';
-    
+
     // Format AIXM: DDMMSS.ssN ou DDDMMSS.ssE
     const matches = dms.match(/(\d{2,3})(\d{2})(\d{2})(\.(\d+))?([NSEW])/);
     if (!matches) return dms;
-    
+
     const degrees = matches[1];
     const minutes = matches[2];
     const seconds = matches[3];
     const decimals = matches[5] || '00';
     const direction = matches[6];
-    
+
     // Format standard aéronautique
     if (isLongitude) {
       return `${degrees.padStart(3, '0')}°${minutes}'${seconds}"${direction}`;
@@ -1110,11 +1161,11 @@ class AIXMParser {
     const R = 3440.065; // Rayon de la Terre en NM
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   }
 
@@ -1125,7 +1176,7 @@ class AIXMParser {
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const y = Math.sin(dLon) * Math.cos(lat2 * Math.PI / 180);
     const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) -
-              Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos(dLon);
+      Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos(dLon);
     const radial = Math.atan2(y, x);
     return Math.round((radial * 180 / Math.PI + 360) % 360);
   }
@@ -1137,11 +1188,11 @@ class AIXMParser {
     if (this.aerodromes.size === 0) {
       await this.loadAndParse();
     }
-    
+
     const results = this.combineData();
-    
+
     if (!searchTerm) return results;
-    
+
     const search = searchTerm.toLowerCase();
     return results.filter(ad => {
       return (
@@ -1159,11 +1210,11 @@ class AIXMParser {
     if (this.aerodromes.size === 0) {
       await this.loadAndParse();
     }
-    
+
     const aerodrome = this.aerodromes.get(icao);
-        return aerodrome;
+    return aerodrome;
   }
-  
+
   /**
    * Obtenir la date des données
    */
@@ -1181,12 +1232,12 @@ if (typeof window !== 'undefined') {
   // Ne définir la fonction qu'une seule fois
   if (!window.testAIXMParser) {
     window.testAIXMParser = async () => {
-            await aixmParser.loadAndParse();
+      await aixmParser.loadAndParse();
       const lfst = aixmParser.aerodromes.get('LFST');
       const lfga = aixmParser.aerodromes.get('LFGA');
-                                    // Afficher quelques codes ICAO pour debug
+      // Afficher quelques codes ICAO pour debug
       const icaos = Array.from(aixmParser.aerodromes.keys()).slice(0, 10);
-            return { lfst, lfga, total: aixmParser.aerodromes.size };
+      return { lfst, lfga, total: aixmParser.aerodromes.size };
     };
   }
 
