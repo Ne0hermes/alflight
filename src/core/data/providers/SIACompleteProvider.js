@@ -44,7 +44,7 @@ export class SIACompleteProvider extends AeroDataProvider {
       try {
         // Charger le fichier AIXM depuis la configuration
         const { CURRENT_AIXM_FILE } = await import('../../../data/aixm.config.js');
-        const response = await fetch(`/src/data/${CURRENT_AIXM_FILE}`);
+        const response = await fetch(`/data/${CURRENT_AIXM_FILE}`);
         
         if (!response.ok) {
           throw new Error(`Erreur chargement AIXM: ${response.status}`);
