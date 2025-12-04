@@ -491,21 +491,32 @@ export const useAlternateSelection = () => {
     const consumption = aircraft.fuelConsumption || 40; // L/h (en storage units)
 
     // FOB = Carburant confirmé au décollage (depuis fobFuel du contexte Fuel)
-    // IMPORTANT: Utiliser fobFuel.ltr OU convertir fobFuel.gal si ltr est 0
+    // IMPORTANT: Utiliser fobFuelStore EN PRIORITÉ (accès direct au store Zustand)
+    // puis fobFuel (contexte) comme fallback
     // NE PAS utiliser aircraft.fuelCapacity comme fallback (c'est la capacité max, pas le FOB réel)
     let fobLiters = 0;
-    if (fobFuel?.ltr && fobFuel.ltr > 0) {
-      fobLiters = fobFuel.ltr;
-    } else if (fobFuel?.gal && fobFuel.gal > 0) {
+
+    // 🔧 FIX: Vérifier TOUTES les sources de FOB dans l'ordre de priorité
+    // 1. fobFuelStore (accès direct au store Zustand - le plus fiable)
+    // 2. fobFuel (contexte React - peut avoir du délai)
+    const fobSource = fobFuelStore || fobFuel;
+
+    if (fobSource?.ltr && fobSource.ltr > 0) {
+      fobLiters = fobSource.ltr;
+    } else if (fobSource?.gal && fobSource.gal > 0) {
       // Convertir les gallons en litres (1 gal = 3.78541 L)
-      fobLiters = fobFuel.gal * 3.78541;
+      fobLiters = fobSource.gal * 3.78541;
     }
 
     // 🔧 DEBUG: Afficher les valeurs réelles pour diagnostic
     console.log('🔍 [CONE ZONE] DEBUG valeurs FOB:', {
+      fobFuelStore: fobFuelStore,
+      fobFuelStoreLtr: fobFuelStore?.ltr,
+      fobFuelStoreGal: fobFuelStore?.gal,
       fobFuel: fobFuel,
       fobFuelLtr: fobFuel?.ltr,
       fobFuelGal: fobFuel?.gal,
+      fobSourceUsed: fobSource === fobFuelStore ? 'store' : 'context',
       fobLitersCalculated: fobLiters,
       aircraftFuelCapacity: aircraft.fuelCapacity,
       consumption: consumption,
