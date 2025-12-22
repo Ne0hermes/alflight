@@ -2,10 +2,9 @@ import React, { useState } from 'react';
 import {
   Menu, X, User, Book, Navigation, Plane, Cloud,
   CheckSquare, TrendingUp, Package, Fuel, Settings,
-  Map, UserCircle, Home, ChevronDown, ChevronRight, Layers, LogOut, Info, Shield
+  Map, UserCircle, Info, Shield
 } from 'lucide-react';
 import { theme } from '../../styles/theme';
-import AccordionButton from './AccordionButton';
 import LogoutButton from '../../components/auth/LogoutButton';
 
 const ICON_MAP = {
@@ -25,15 +24,13 @@ const ICON_MAP = {
 
 export const MobileNavigation = ({ tabs, activeTab, onTabChange, isProfileConfigured = true }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isFlightToolsOpen, setIsFlightToolsOpen] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
 
-  // Modules à regrouper dans "Outils de vol"
-  const flightToolsIds = ['navigation', 'weather', 'weight-balance', 'fuel', 'performance'];
+  // Modules à exclure du menu (modules séparés)
+  const excludedModuleIds = ['navigation', 'weather', 'weight-balance', 'fuel', 'performance'];
 
-  // Séparer les tabs
-  const flightTools = tabs.filter(tab => flightToolsIds.includes(tab.id));
-  const allMainTabs = tabs.filter(tab => !flightToolsIds.includes(tab.id));
+  // Filtrer les tabs pour exclure les modules séparés
+  const allMainTabs = tabs.filter(tab => !excludedModuleIds.includes(tab.id));
 
   // Réorganiser pour placer VAC après checklist
   const checklistIndex = allMainTabs.findIndex(tab => tab.id === 'checklist');
@@ -115,47 +112,6 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange, isProfileConfig
                   </button>
                 );
               })}
-
-              {/* Menu déroulant "Outils de vol" */}
-              <AccordionButton
-                isOpen={isFlightToolsOpen}
-                onClick={() => setIsFlightToolsOpen(!isFlightToolsOpen)}
-                title="Modules de préparation"
-                variant="minimal"
-                textAlign="left"
-                className="mobile-menu-button"
-                style={{
-                  ...styles.navItem,
-                  backgroundColor: flightToolsIds.includes(activeTab) ? 'rgba(139, 21, 56, 0.1)' : 'transparent',
-                  borderLeft: flightToolsIds.includes(activeTab) ? '3px solid #8b1538' : '3px solid transparent',
-                  marginBottom: '4px',
-                  color: theme.colors.textSecondary,
-                  borderRadius: '6px'
-                }}
-              />
-
-              {/* Sous-menu des outils de vol */}
-              {isFlightToolsOpen && (
-                <div style={{ paddingLeft: '20px', backgroundColor: 'rgba(0,0,0,0.05)' }}>
-                  {flightTools.map(tab => {
-                    const isActive = tab.id === activeTab;
-
-                    return (
-                      <button
-                        key={tab.id}
-                        style={{
-                          ...styles.navItem,
-                          ...styles.subNavItem,
-                          ...(isActive ? styles.navItemActive : {})
-                        }}
-                        onClick={() => handleTabSelect(tab.id)}
-                      >
-                        <span>{tab.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
 
               <div style={{ height: '1px', backgroundColor: theme.colors.border, margin: '8px 0' }} />
 
@@ -432,11 +388,6 @@ const styles = {
     color: theme.colors.primary,
     fontWeight: '700',
     borderColor: theme.colors.border,
-  },
-  subNavItem: {
-    fontSize: '14px',
-    padding: '12px 14px',
-    borderLeft: '2px solid transparent',
   },
 };
 
