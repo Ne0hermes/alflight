@@ -1,13 +1,12 @@
 // src/features/logbook/LogbookModule.jsx
-// Module Carnet de bord - Regroupe le carnet de vol et le log technique
+// Module Carnet de bord - Carnet de vol électronique
 
 import React, { useState, lazy, Suspense, useEffect } from 'react';
-import { Book, Plane, Wrench, Plus, FileText } from 'lucide-react';
 import { LoadingSpinner } from '../../shared/components/LoadingSpinner';
 
 // Import lazy pour éviter les problèmes de dépendances circulaires
 const PilotLogbook = lazy(() => import('../pilot/components/PilotLogbook').then(module => ({ default: module.default })));
-const TechnicalLogModule = lazy(() => import('../technical-log/TechnicalLogModule').then(module => ({ default: module.default })));
+// Note: TechnicalLogModule supprimé - fonctionnalité retirée de l'application
 
 const LogbookModule = () => {
   // Vérifier si on doit ouvrir le formulaire dès le début
@@ -21,7 +20,7 @@ const LogbookModule = () => {
       setForceShowForm(true);
       window.logbookAction = null; // Réinitialiser pour la prochaine fois
     }
-    
+
     // Vérifier aussi les paramètres d'URL
     const params = new URLSearchParams(window.location.search);
     if (params.get('action') === 'add') {

@@ -6,6 +6,10 @@ class VFRPointsExtractor {
   constructor() {
     this.vfrPoints = [];
     this.loading = false;
+
+
+
+    
     this.loaded = false;
   }
 

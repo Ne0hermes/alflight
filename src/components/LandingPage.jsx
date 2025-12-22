@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Plane, User, Settings, Navigation, BookOpen,
-  Info, Shield, ChevronRight, Map, Grid, ChevronDown,
-  Cloud, Scale, Fuel, TrendingUp, FileText, MapPin, Book
+  Plane, User, Settings, BookOpen,
+  Map, Book, Shield
 } from 'lucide-react';
 import { theme, createCardStyle, createButtonStyle } from '../styles/theme';
 import { PilotDashboard } from './PilotDashboard';
 
 export const LandingPage = ({ onNavigate, isProfileConfigured = true }) => {
-  const [showInfo, setShowInfo] = useState(false);
-  const [showModulesDropdown, setShowModulesDropdown] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   // Gérer le redimensionnement de la fenêtre
@@ -139,16 +136,6 @@ export const LandingPage = ({ onNavigate, isProfileConfigured = true }) => {
     }
   ];
 
-  // Liste complète des modules de préparation
-  const preparationModules = [
-    { id: 'navigation', label: 'Navigation VFR', icon: Navigation },
-    { id: 'weather', label: 'Météo', icon: Cloud },
-    { id: 'weight-balance', label: 'Masse & Centrage', icon: Scale },
-    { id: 'fuel', label: 'Bilan Carburant', icon: Fuel },
-    { id: 'performance', label: 'Performances', icon: TrendingUp },
-    { id: 'vac', label: 'Cartes VAC', icon: Map }
-  ];
-
   return (
     <div style={{
       ...styles.container,
@@ -246,49 +233,6 @@ export const LandingPage = ({ onNavigate, isProfileConfigured = true }) => {
 
           {/* Boutons supplémentaires */}
           <div style={styles.additionalActions}>
-          {/* Bouton Modules de préparation avec dropdown */}
-          <div style={styles.dropdownContainer}>
-            <button
-              style={styles.dropdownButton}
-              onClick={() => setShowModulesDropdown(!showModulesDropdown)}
-            >
-              <Grid size={20} style={{ marginRight: '8px' }} />
-              Modules de préparation
-              <ChevronDown 
-                size={16} 
-                style={{ 
-                  marginLeft: '8px',
-                  transform: showModulesDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
-                  transition: 'transform 0.3s ease'
-                }} 
-              />
-            </button>
-            
-            {showModulesDropdown && (
-              <div style={styles.dropdownMenu}>
-                {preparationModules.map(module => (
-                  <button
-                    key={module.id}
-                    style={styles.dropdownItem}
-                    onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = 'rgba(147, 22, 60, 0.2)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.backgroundColor = 'transparent';
-                    }}
-                    onClick={() => {
-                      onNavigate(module.id);
-                      setShowModulesDropdown(false);
-                    }}
-                  >
-                    <module.icon size={16} style={{ marginRight: '8px' }} />
-                    {module.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          
           <button
             style={styles.primaryButton}
             onClick={() => onNavigate('flight-wizard')}
@@ -463,60 +407,6 @@ const styles = {
     cursor: 'pointer',
     width: '100%',
     minHeight: '56px',
-  },
-  dropdownContainer: {
-    position: 'relative',
-    width: '100%',
-  },
-  dropdownButton: {
-    ...createButtonStyle(),
-    backgroundColor: 'transparent',
-    border: `2px solid ${theme.colors.primary}`,
-    color: theme.colors.primary,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '16px 24px',
-    fontSize: '15px',
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-    transition: 'all 0.3s ease',
-    cursor: 'pointer',
-    width: '100%',
-    minHeight: '56px',
-    borderRadius: '25px',
-  },
-  dropdownMenu: {
-    position: 'absolute',
-    top: '100%',
-    left: 0,
-    right: 0,
-    marginTop: '8px',
-    backgroundColor: 'rgba(30, 28, 28, 0.98)',
-    border: `1px solid ${theme.colors.border}`,
-    borderRadius: '12px',
-    boxShadow: theme.shadows.lg,
-    overflow: 'hidden',
-    zIndex: 1000,
-    maxHeight: '400px',
-    overflowY: 'auto',
-    padding: '10px',
-  },
-  dropdownItem: {
-    width: '100%',
-    padding: '12px 16px',
-    marginBottom: '10px',
-    backgroundColor: 'transparent',
-    border: 'none',
-    borderRadius: '8px',
-    color: theme.colors.textPrimary,
-    fontSize: '14px',
-    display: 'flex',
-    alignItems: 'center',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s ease',
-    textAlign: 'left',
   },
   footer: {
     backgroundColor: 'rgba(30, 28, 28, 0.5)',
