@@ -208,14 +208,16 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
     }
 
     // Trouver le départ et l'arrivée
-    const departure = waypoints.find(wp => wp.type === 'departure');
-    const arrival = waypoints.find(wp => wp.type === 'arrival');
+    // 🔧 FIX: Utiliser la POSITION plutôt que le type car le type peut être perdu
+    // Premier waypoint = départ, dernier waypoint = arrivée
+    const departure = waypoints.length > 0 ? waypoints[0] : null;
+    const arrival = waypoints.length > 1 ? waypoints[waypoints.length - 1] : null;
 
-    // 🔧 FIX: Extraire les waypoints intermédiaires (ni départ ni arrivée)
-    const intermediates = waypoints.filter(wp =>
-      wp.type !== 'departure' &&
-      wp.type !== 'arrival'
-    );
+    // 🔧 FIX: Extraire les waypoints intermédiaires (ni premier ni dernier)
+    // On exclut le premier (départ) et le dernier (arrivée)
+    const intermediates = waypoints.length > 2
+      ? waypoints.slice(1, -1)
+      : [];
 
     console.log('🔄 Synchronisation waypoints avec flightPlan:', {
       departure,
