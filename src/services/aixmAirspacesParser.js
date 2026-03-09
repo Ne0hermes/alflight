@@ -31,7 +31,7 @@ class AIXMAirspacesParser {
         
         
         // Charger le fichier AIXM
-        const aixmResponse = await fetch('/src/data/AIXM4.5_all_FR_OM_2025-09-04.xml');
+        const aixmResponse = await fetch('/data/AIXM4.5_all_FR_OM_2026-03-19.xml');
         const aixmText = await aixmResponse.text();
         
         // Parser le XML
