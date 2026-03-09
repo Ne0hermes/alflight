@@ -48,6 +48,11 @@ export default defineConfig(({ mode }) => ({
         maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10 MB
         runtimeCaching: [
           {
+            // Ne PAS cacher les fichiers AIXM XML (trop volumineux ~40MB+)
+            urlPattern: /\/data\/AIXM.*\.xml$/,
+            handler: 'NetworkOnly'
+          },
+          {
             urlPattern: /^https:\/\/cdnjs\.cloudflare\.com\/.*/i,
             handler: 'CacheFirst',
             options: {

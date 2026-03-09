@@ -11,7 +11,7 @@
  * Exemple : AIXM4.5_all_FR_OM_2025-11-27.xml
  */
 
-export const CURRENT_AIXM_FILE = 'AIXM4.5_all_FR_OM_2025-12-25.xml';
+export const CURRENT_AIXM_FILE = 'AIXM4.5_all_FR_OM_2026-03-19.xml';
 
 // Vous pouvez également utiliser le format XML_SIA :
 // export const CURRENT_AIXM_FILE = 'XML_SIA_2025-11-27.xml';

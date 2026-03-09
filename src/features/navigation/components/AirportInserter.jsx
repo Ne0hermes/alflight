@@ -38,7 +38,7 @@ export const AirportInserter = ({
         
         // 1. Essayer de charger depuis AIXM (plus complet)
         try {
-          const response = await fetch('/src/data/AIXM4.5_all_FR_OM_2025-09-04.xml');
+          const response = await fetch('/data/AIXM4.5_all_FR_OM_2026-03-19.xml');
           if (response.ok) {
             const xmlText = await response.text();
             const parser = new DOMParser();
