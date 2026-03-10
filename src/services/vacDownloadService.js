@@ -158,7 +158,7 @@ export class VACDownloadService {
     const upperIcao = icao.toUpperCase();
     
     return {
-      sia: `https://www.sia.aviation-civile.gouv.fr/vac-search?icao=${upperIcao}`,
+      sia: `https://www.sia.aviation-civile.gouv.fr/vaip`,
       openflightmaps: `https://www.openflightmaps.org/airfield/${upperIcao}`,
       vfrNav: `https://vfrnav.com/airport/${upperIcao}`,
       skyvector: `https://skyvector.com/airport/${upperIcao}`,
