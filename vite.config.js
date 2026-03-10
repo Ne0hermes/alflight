@@ -41,11 +41,15 @@ export default defineConfig(({ mode }) => ({
         // Forcer le rechargement automatique des mises à jour
         skipWaiting: true,
         clientsClaim: true,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,pdf}'],
-        // Exclure TOUS les fichiers GeoJSON du précaching (certains > 2MB)
-        globIgnores: ['**/*.geojson', '**/data/**/*.geojson'],
+        // Nettoyer les anciens caches quand une nouvelle version est déployée
+        cleanupOutdatedCaches: true,
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        // Exclure les fichiers volumineux du précaching
+        globIgnores: ['**/*.geojson', '**/data/**/*.geojson', '**/data/**/*.xml', '**/*.pdf'],
         // Augmenter la limite pour les autres assets
-        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10 MB
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
+        // Ne pas cacher les fichiers data en navigateFallback
+        navigateFallbackDenylist: [/^\/data\//],
         runtimeCaching: [
           {
             // Ne PAS cacher les fichiers AIXM XML (trop volumineux ~40MB+)
