@@ -6,7 +6,7 @@ import FlightCurrencyTracker from './FlightCurrencyTracker';
 import PilotCertifications from './PilotCertifications';
 import MedicalReminders from './MedicalReminders';
 import UnitsConfiguration from './UnitsConfiguration';
-import { exportPilotData, importData } from '../utils/exportUtils';
+import { exportPilotData, importData, loadFullPilotProfile, savePilotProfile } from '../utils/exportUtils';
 import ImageEditor from '../../../components/ImageEditor';
 import { useUnitsStore, unitsSelectors } from '@core/stores/unitsStore';
 import AccordionButton from '../../../shared/components/AccordionButton';
@@ -197,12 +197,23 @@ const PilotProfile = () => {
     }
   };
 
-  // Charger le profil depuis localStorage
+  // Charger le profil depuis localStorage + IndexedDB (pour la photo)
   useEffect(() => {
-    const savedProfile = localStorage.getItem('pilotProfile');
-    if (savedProfile) {
-      setProfile(JSON.parse(savedProfile));
-    }
+    const loadProfile = async () => {
+      try {
+        const fullProfile = await loadFullPilotProfile();
+        if (Object.keys(fullProfile).length > 0) {
+          setProfile(prev => ({ ...prev, ...fullProfile }));
+        }
+      } catch (error) {
+        // Fallback: charger depuis localStorage uniquement
+        const savedProfile = localStorage.getItem('pilotProfile');
+        if (savedProfile) {
+          setProfile(JSON.parse(savedProfile));
+        }
+      }
+    };
+    loadProfile();
 
     // Calculer les statistiques depuis le carnet de vol
     calculateStats();
@@ -534,7 +545,7 @@ const PilotProfile = () => {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Validation des champs obligatoires
     const hasRequiredFields = profile.firstName && profile.lastName &&
                               (profile.dateOfBirth || profile.birthDate);
@@ -544,10 +555,16 @@ const PilotProfile = () => {
       return;
     }
 
-    localStorage.setItem('pilotProfile', JSON.stringify(profile));
-    // Notifier que le profil est configuré (pour débloquer l'accès aux autres modules)
-    window.dispatchEvent(new CustomEvent('profile-configured'));
-    alert('Profil sauvegardé avec succès !\n\nVous avez maintenant accès à toutes les fonctionnalités d\'ALFlight.');
+    try {
+      // Sauvegarder avec photo dans IndexedDB pour éviter QuotaExceededError
+      await savePilotProfile(profile);
+      // Notifier que le profil est configuré (pour débloquer l'accès aux autres modules)
+      window.dispatchEvent(new CustomEvent('profile-configured'));
+      alert('Profil sauvegardé avec succès !\n\nVous avez maintenant accès à toutes les fonctionnalités d\'ALFlight.');
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde:', error);
+      alert('Erreur lors de la sauvegarde du profil: ' + error.message);
+    }
   };
 
   const handleImport = async (event) => {
