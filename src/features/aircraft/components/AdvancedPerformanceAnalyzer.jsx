@@ -26,6 +26,34 @@ import testEnvVars from '../../../utils/testEnvVars';
 //      sur le même tableau MANEX), retourner CHAQUE grandeur dans un tableau
 //      SÉPARÉ avec son propre operationId.
 //   3. Une ligne du tableau = un point de calcul, avec UNE seule valeur (`value`)
+
+// ─────────────────────────────────────────────────────────────────────────
+// PAIRES D'OPÉRATIONS SŒURS (Option 2 — split forcé)
+// ─────────────────────────────────────────────────────────────────────────
+//
+// Sur la plupart des MANEX, les tableaux "Take-off Distance" et
+// "Landing Distance" contiennent 2 grandeurs côte à côte : ground roll
+// (roulage seul) ET over 50 ft (passage 15m total). L'IA n'extrait pas
+// toujours correctement les 2 (cas observé : takeoff splittée ✓, landing
+// non splittée ✗).
+//
+// Stratégie : pour les operationId qui ont une "sœur logique" (= autre
+// grandeur quasi-systématiquement présente sur la même page MANEX), faire
+// un 2ème appel OpenAI focalisé sur la sœur si elle n'est pas déjà retournée.
+// Coût : +1 appel pour la moitié des extractions. 0 friction utilisateur.
+const SISTER_OPERATIONS = {
+  takeoff_50ft: 'takeoff_ground_roll',
+  takeoff_ground_roll: 'takeoff_50ft',
+  landing_50ft_flaps_landing: 'landing_ground_roll_flaps_landing',
+  landing_ground_roll_flaps_landing: 'landing_50ft_flaps_landing',
+  landing_50ft_flaps_up: 'landing_ground_roll_flaps_up',
+  landing_ground_roll_flaps_up: 'landing_50ft_flaps_up'
+};
+
+/** Retourne la sœur logique d'un operationId, ou null si pas de sœur définie. */
+function getSisterOperation(operationId) {
+  return SISTER_OPERATIONS[operationId] || null;
+}
 //      pour l'operationId du tableau parent. Plus de mélange ground_roll/over_50ft
 //      dans la même ligne.
 
@@ -126,6 +154,87 @@ Count the OUTPUT columns (distance, time, speed, climb rate...) in the
 MANEX image. Return EXACTLY that many tables in the array. If you return
 1 table when there are 2 output columns, your answer is WRONG.`;
 };
+
+// ─────────────────────────────────────────────────────────────────────────
+// HELPER : analyse d'une image avec auto-split via sœur (Option 2)
+// ─────────────────────────────────────────────────────────────────────────
+//
+// Stratégie :
+//   1. Appel principal avec expectedOpId. L'IA est censée détecter et splitter.
+//   2. Si l'expectedOpId a une sœur logique (SISTER_OPERATIONS) et que l'IA
+//      n'a renvoyé qu'UN tableau (donc pas splitté) → 2ème appel ciblé sur la sœur.
+//   3. On dédoublonne les résultats par operationId.
+//   4. Si l'IA a déjà retourné les 2 grandeurs au 1er appel → pas de 2ème appel
+//      (économie de coût).
+
+/**
+ * Effectue l'analyse OpenAI avec auto-split via opération sœur.
+ *
+ * @param {object} unifiedPerformanceService  Service d'analyse
+ * @param {string} base64Image                Image base64 sans préfixe data:
+ * @param {string|null} expectedOpId          operationId attendu par le pilote
+ * @param {function} buildExtractionPromptFn  Constructeur de prompt
+ * @param {function} [onProgress]             Callback de progression (msg string)
+ * @returns {Promise<object>}                 { tables: [...], confidence, detectionMethod, _splitTriggered: bool }
+ */
+async function analyzeImageWithSplitCheck(
+  unifiedPerformanceService,
+  base64Image,
+  expectedOpId,
+  buildExtractionPromptFn,
+  onProgress
+) {
+  // ── 1er appel : prompt avec expectedOpId ──
+  if (onProgress) onProgress(`Analyse 1/2 : ${expectedOpId || 'détection auto'}`);
+  const promptMain = buildExtractionPromptFn(expectedOpId);
+  const result1 = await unifiedPerformanceService.analyzeManualPerformance(base64Image, promptMain);
+  const tables1 = (result1?.tables || []).filter(t => t?.operationId);
+  const opIdsReturned = new Set(tables1.map(t => t.operationId));
+
+  // ── Détection : faut-il un 2ème appel ? ──
+  const sister = expectedOpId ? getSisterOperation(expectedOpId) : null;
+  const sisterAlreadyReturned = sister && opIdsReturned.has(sister);
+  const shouldDoSecondCall = sister && !sisterAlreadyReturned;
+
+  if (!shouldDoSecondCall) {
+    console.log(`[Analyzer] Pas de 2ème appel nécessaire (sister=${sister}, alreadyReturned=${sisterAlreadyReturned})`);
+    return { ...result1, _splitTriggered: false };
+  }
+
+  // ── 2ème appel : focalisé sur la sœur ──
+  console.log(`[Analyzer] Split auto : 2ème appel pour la sœur "${sister}" (1er appel n'a pas splitté)`);
+  if (onProgress) onProgress(`Analyse 2/2 : ${sister} (split auto)`);
+  const promptSister = buildExtractionPromptFn(sister);
+  let result2 = null;
+  try {
+    result2 = await unifiedPerformanceService.analyzeManualPerformance(base64Image, promptSister);
+  } catch (err) {
+    console.warn(`[Analyzer] 2ème appel échoué (sister=${sister}):`, err.message);
+    // En cas d'échec du 2ème appel, on conserve juste le 1er résultat
+    return { ...result1, _splitTriggered: true, _splitError: err.message };
+  }
+
+  // ── Fusion : on garde les tableaux du 1er appel + ceux du 2ème dont
+  // l'operationId n'était pas déjà retourné. Préférence donnée au 1er appel. ──
+  const tables2 = (result2?.tables || []).filter(t => t?.operationId);
+  const mergedTables = [...tables1];
+  for (const t of tables2) {
+    if (!opIdsReturned.has(t.operationId)) {
+      mergedTables.push(t);
+      opIdsReturned.add(t.operationId);
+    }
+  }
+
+  console.log(`[Analyzer] Split résultat : ${tables1.length} (1er appel) + ${tables2.length - (tables1.length === mergedTables.length ? tables2.length : 0)} (2ème appel) = ${mergedTables.length} tableau(x) final`);
+
+  return {
+    ...result1,
+    tables: mergedTables,
+    _splitTriggered: true,
+    _splitOperationIds: { primary: expectedOpId, sister },
+    confidence: Math.min(result1.confidence ?? 1, result2.confidence ?? 1) // confiance = min des 2
+  };
+}
 
 /**
  * Composant d'analyse avancée des performances aéronautiques
@@ -647,12 +756,21 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
           const expectedOpId = image.classification && image.classification !== 'non-classified'
             ? image.classification
             : null;
-          const detailedPrompt = buildExtractionPrompt(expectedOpId);
 
-          const analysisResult = await unifiedPerformanceService.analyzeManualPerformance(
+          // Option 2 : auto-split via sœur logique si l'IA ne split pas seule.
+          // Pour takeoff_50ft ↔ takeoff_ground_roll, landing_50ft ↔ landing_ground_roll
+          // → fait jusqu'à 2 appels et fusionne les résultats.
+          const analysisResult = await analyzeImageWithSplitCheck(
+            unifiedPerformanceService,
             image.base64,
-            detailedPrompt
+            expectedOpId,
+            buildExtractionPrompt,
+            (msg) => setCurrentStep(`Image ${i + 1}/${uploadedImages.length} — ${msg}`)
           );
+
+          if (analysisResult._splitTriggered) {
+            console.log(`✅ [Analyzer] Split auto déclenché pour ${image.name} : ${expectedOpId} + sœur`);
+          }
 
 
 
