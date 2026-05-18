@@ -208,6 +208,16 @@ export const OPERATION_CATALOG: OperationDefinition[] = [
     configuration: { flaps: 'UP' },
     acceptedOutputs: [OUT_DISTANCE],
     description: 'Distance au sol entre le toucher des roues et l\'arrêt complet, volets rentrés.'
+  },
+
+  // ─── 10. Performance de montée en remise de gaz (go-around) ───
+  {
+    id: 'go_around_climb',
+    labelFr: 'Performance de montée en remise de gaz',
+    labelEn: 'Go-around climb performance',
+    phase: 'climb',
+    acceptedOutputs: [OUT_RATE_OF_CLIMB, OUT_CLIMB_GRADIENT],
+    description: 'Performance de montée lors d\'une remise de gaz (atterrissage interrompu). Taux (ft/min) ou angle (°/%).'
   }
 ];
 
@@ -231,7 +241,8 @@ export type OperationId =
   | 'landing_50ft_flaps_landing'
   | 'landing_ground_roll_flaps_landing'
   | 'landing_50ft_flaps_up'
-  | 'landing_ground_roll_flaps_up';
+  | 'landing_ground_roll_flaps_up'
+  | 'go_around_climb';
 
 // ─────────────────────────────────────────────────────────────────────────
 // HELPERS

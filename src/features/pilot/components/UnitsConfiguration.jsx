@@ -290,7 +290,7 @@ const UnitsConfiguration = () => {
       {/* Préréglages rapides */}
       <Paper elevation={0} sx={{ p: 3, mb: 3, border: '1px solid', borderColor: 'divider' }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <StyledFormControl fullWidth>
               <InputLabel>Préréglages régionaux</InputLabel>
               <Select

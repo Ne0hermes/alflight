@@ -47,6 +47,7 @@ import {
 import CGEnvelopeChart from '../CgEnvelopeChart';
 import SpeedLimitationChart from '../SpeedLimitationChart';
 import communityService from '../../../../services/communityService';
+import { getCurrentUserId, getCurrentUserIdOrThrow } from '../../../../lib/supabaseAuth';
 import { trackingActions } from '../../../../utils/autoTracking';
 import { useUnitsStore } from '@core/stores/unitsStore';
 import { getUnitSymbol } from '@utils/unitConversions';
@@ -491,10 +492,11 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
     }
 
     try {
-      // Envoyer le vote à Supabase
+      // Envoyer le vote à Supabase (userId réel issu de la session)
+      const userId = await getCurrentUserIdOrThrow();
       await communityService.votePreset(
         data.communityPresetId,
-        'current-user-id', // En prod: récupérer l'ID utilisateur réel
+        userId,
         voteType
       );
 
@@ -573,13 +575,14 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
         console.log('ℹ️ MANEX déjà sur Supabase - Skip upload');
       }
 
-      // Appeler la fonction de mise à jour
+      // Appeler la fonction de mise à jour (userId réel issu de la session Supabase)
+      const userIdForUpdate = await getCurrentUserIdOrThrow();
       await communityService.updateCommunityPreset(
         data.communityPresetId,
         dataToUpdate,
         manexFile,
         data.manex?.fileName || 'manex.pdf', // Nom du fichier MANEX
-        'current-user-id' // En prod: récupérer l'ID utilisateur réel
+        userIdForUpdate
       );
 
       // 🔧 FIX: Sauvegarder le MANEX dans IndexedDB localement après upload Supabase
@@ -753,7 +756,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
       <Box sx={{ p: 3 }}>
         <Grid container spacing={3}>
           {items.map((item, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
               <Typography 
                 variant="caption" 
                 sx={{ 
@@ -1137,13 +1140,13 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                   </Typography>
                   <Grid container spacing={2}>
                     {data.advancedPerformance?.serviceCeiling && (
-                      <Grid item xs={6}>
+                      <Grid size={6}>
                         <Typography variant="caption" color="text.secondary">Plafond pratique</Typography>
                         <Typography variant="body2">{data.advancedPerformance.serviceCeiling} ft</Typography>
                       </Grid>
                     )}
                     {data.advancedPerformance?.absoluteCeiling && (
-                      <Grid item xs={6}>
+                      <Grid size={6}>
                         <Typography variant="caption" color="text.secondary">Plafond absolu</Typography>
                         <Typography variant="body2">{data.advancedPerformance.absoluteCeiling} ft</Typography>
                       </Grid>
@@ -1201,7 +1204,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           <Box sx={{ p: 3 }}>
             <Grid container spacing={3}>
               {data.equipmentCom && Object.entries(data.equipmentCom).filter(([_, value]) => value).length > 0 && (
-                <Grid item xs={12} md={4}>
+                <Grid size={{ xs: 12, md: 4 }}>
                   <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
                     Communication
                   </Typography>
@@ -1215,7 +1218,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                 </Grid>
               )}
               {data.equipmentNav && Object.entries(data.equipmentNav).filter(([_, value]) => value && typeof value === 'boolean').length > 0 && (
-                <Grid item xs={12} md={4}>
+                <Grid size={{ xs: 12, md: 4 }}>
                   <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
                     Navigation
                   </Typography>
@@ -1229,7 +1232,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                 </Grid>
               )}
               {data.equipmentSurv && Object.entries(data.equipmentSurv).filter(([_, value]) => value && typeof value === 'boolean').length > 0 && (
-                <Grid item xs={12} md={4}>
+                <Grid size={{ xs: 12, md: 4 }}>
                   <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
                     Surveillance
                   </Typography>
@@ -1291,7 +1294,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           <Grid container spacing={3}>
             {/* Règles de vol */}
             {data.approvedOperations && (
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1, color: 'primary.main' }}>
                   Règles de vol
                 </Typography>
@@ -1315,7 +1318,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
             
             {/* Opérations spéciales */}
             {data.approvedOperations && (
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1, color: 'warning.main' }}>
                   Opérations spéciales
                 </Typography>
@@ -1343,7 +1346,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
             
             {/* Environnement et usage */}
             {data.approvedOperations && (
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1, color: 'success.main' }}>
                   Environnement et usage
                 </Typography>

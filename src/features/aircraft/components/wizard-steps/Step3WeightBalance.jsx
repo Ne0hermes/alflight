@@ -708,7 +708,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
 
                     <Grid container spacing={2}>
                       {/* Nom du compartiment + Bouton supprimer */}
-                      <Grid item xs={12}>
+                      <Grid size={12}>
                         <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
                           <StyledTextField
                             fullWidth
@@ -732,7 +732,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                       </Grid>
 
                       {/* Bras de levier et Masse max sur la même ligne */}
-                      <Grid item xs={12} sm={6}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         <StyledTextField
                           fullWidth
                           size="small"
@@ -746,7 +746,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                           }}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         <StyledTextField
                           fullWidth
                           size="small"
