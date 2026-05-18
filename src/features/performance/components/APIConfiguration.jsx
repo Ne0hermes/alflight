@@ -2,37 +2,29 @@
 import React, { useState, useEffect } from 'react';
 import { Key, Save, Eye, EyeOff, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import { sx } from '../../../shared/styles/styleSystem';
+import apiKeyManager from '../../../utils/apiKeyManager';
 
 const APIConfiguration = ({ onClose }) => {
-  const [apiKey, setApiKey] = useState('');
-  const [showKey, setShowKey] = useState(false);
-  const [provider, setProvider] = useState('openai');
+  // 2 clés gérées séparément : Anthropic (Claude, défaut) + OpenAI (legacy)
+  const [anthropicKey, setAnthropicKey] = useState('');
+  const [openaiKey, setOpenaiKey] = useState('');
+  const [showAnthropicKey, setShowAnthropicKey] = useState(false);
+  const [showOpenaiKey, setShowOpenaiKey] = useState(false);
+  const [provider, setProvider] = useState('anthropic');
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState(null);
 
   // Charger la configuration existante
   useEffect(() => {
-    // D'abord essayer de charger depuis les variables d'environnement
-    const envKey = import.meta?.env?.VITE_OPENAI_API_KEY;
-    const existingKey = localStorage.getItem('alflight_ai_api_key') || envKey;
-    const existingProvider = localStorage.getItem('alflight_ai_provider') || 'openai';
-    
-    if (existingKey) {
-      setApiKey(existingKey);
-      // Si la clé vient de l'environnement, la sauvegarder dans localStorage
-      if (envKey && !localStorage.getItem('alflight_ai_api_key')) {
-        localStorage.setItem('alflight_ai_api_key', envKey);
-        localStorage.setItem('openai_api_key', envKey); // Pour compatibilité
-        
-      }
-    }
-    setProvider(existingProvider);
+    setAnthropicKey(apiKeyManager.getAnthropicAPIKey() || '');
+    setOpenaiKey(apiKeyManager.getAPIKey() || '');
+    setProvider(apiKeyManager.getActiveProvider());
   }, []);
 
-  // Sauvegarder la configuration
   const handleSave = async () => {
-    if (!apiKey.trim()) {
-      setMessage({ type: 'error', text: 'Veuillez entrer une clé API' });
+    const activeKey = provider === 'anthropic' ? anthropicKey.trim() : openaiKey.trim();
+    if (!activeKey) {
+      setMessage({ type: 'error', text: `Veuillez entrer une clé API ${provider === 'anthropic' ? 'Anthropic' : 'OpenAI'}` });
       return;
     }
 
@@ -40,33 +32,22 @@ const APIConfiguration = ({ onClose }) => {
     setMessage(null);
 
     try {
-      // Sauvegarder dans localStorage (en production, utiliser une méthode plus sécurisée)
-      localStorage.setItem('alflight_ai_api_key', apiKey);
-      localStorage.setItem('alflight_ai_provider', provider);
-      
-      // Mettre à jour les variables globales pour l'utilisation runtime
-      if (provider === 'openai' && typeof window !== 'undefined') {
-        window.REACT_APP_OPENAI_API_KEY = apiKey;
-        window.REACT_APP_AI_API_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
-      }
-      
-      setMessage({ 
-        type: 'success', 
-        text: 'Configuration sauvegardée ! Rechargez la page pour appliquer les changements.' 
+      // Sauvegarder les 2 clés (si saisies) + le provider actif
+      if (anthropicKey.trim()) apiKeyManager.setAnthropicAPIKey(anthropicKey.trim());
+      if (openaiKey.trim()) apiKeyManager.setAPIKey(openaiKey.trim());
+      apiKeyManager.setActiveProvider(provider);
+
+      setMessage({
+        type: 'success',
+        text: `Configuration sauvegardée ! Provider actif : ${provider === 'anthropic' ? 'Claude (Anthropic)' : 'GPT-4o (OpenAI)'}. Rechargement…`
       });
-      
-      // Fermer après 2 secondes
+
       setTimeout(() => {
         if (onClose) onClose();
-        // Recharger la page pour appliquer les changements
         window.location.reload();
-      }, 2000);
-      
+      }, 1500);
     } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: `Erreur lors de la sauvegarde: ${error.message}` 
-      });
+      setMessage({ type: 'error', text: `Erreur lors de la sauvegarde: ${error.message}` });
     } finally {
       setIsSaving(false);
     }
@@ -78,102 +59,95 @@ const APIConfiguration = ({ onClose }) => {
         ⚙️ Configuration de l'API d'analyse IA
       </h4>
 
-      {/* Information */}
       <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mb(4))}>
         <Info size={16} />
         <div>
           <p style={sx.text.sm}>
-            L'analyse IA permet d'extraire automatiquement les distances de performances
-            depuis les tableaux de votre manuel de vol.
+            L'analyse IA permet d'extraire automatiquement les tableaux de performance
+            depuis les pages du MANEX. <strong>Claude (Anthropic)</strong> est plus précis
+            sur les tableaux numériques structurés et est le choix recommandé.
           </p>
-          {apiKey && (
-            <p style={{...sx.text.sm, marginTop: '8px', fontWeight: 'bold', color: '#10b981'}}>
-              ✅ Clé API détectée et configurée automatiquement
-            </p>
-          )}
         </div>
       </div>
 
-      {/* Sélection du provider */}
+      {/* Sélection du provider actif */}
       <div style={sx.spacing.mb(4)}>
         <label style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-          Fournisseur d'IA
+          Fournisseur d'IA actif
         </label>
         <select
           value={provider}
           onChange={(e) => setProvider(e.target.value)}
           style={sx.combine(sx.components.input.base, sx.spacing.mt(1))}
         >
-          <option value="openai">OpenAI GPT-4 Vision (recommandé)</option>
-          <option value="claude">Claude Vision (bientôt disponible)</option>
-          <option value="local">Modèle local (gratuit, moins précis)</option>
+          <option value="anthropic">Claude 3.5+ Sonnet (Anthropic) — recommandé</option>
+          <option value="openai">GPT-4o Vision (OpenAI) — legacy</option>
         </select>
       </div>
 
-      {/* Instructions selon le provider */}
-      {provider === 'openai' && (
-        <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.mb(4))}>
-          <h5 style={sx.text.sm}>Pour obtenir une clé API OpenAI :</h5>
-          <ol style={sx.combine(sx.text.xs, sx.spacing.mt(2))}>
-            <li>1. Créez un compte sur <a href="https://platform.openai.com" target="_blank" rel="noopener noreferrer">platform.openai.com</a></li>
-            <li>2. Allez dans "API Keys" dans votre compte</li>
-            <li>3. Cliquez sur "Create new secret key"</li>
-            <li>4. Copiez la clé et collez-la ci-dessous</li>
-          </ol>
-          <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(2))}>
-            💰 Coût estimé : ~0.01€ par analyse de tableau
-          </p>
+      {/* Bloc Anthropic */}
+      <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3), sx.spacing.mb(3))}>
+        <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
+          🟣 Clé API Anthropic (Claude)
+          {provider === 'anthropic' && <span style={{ color: '#16a34a', marginLeft: 8, fontWeight: 600 }}>● ACTIF</span>}
+        </h5>
+        <div style={{ position: 'relative' }}>
+          <input
+            type={showAnthropicKey ? 'text' : 'password'}
+            value={anthropicKey}
+            onChange={(e) => setAnthropicKey(e.target.value)}
+            placeholder="sk-ant-..."
+            style={sx.combine(sx.components.input.base, { paddingRight: '40px' })}
+          />
+          <button
+            onClick={() => setShowAnthropicKey(!showAnthropicKey)}
+            style={{
+              position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
+              background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px'
+            }}
+          >
+            {showAnthropicKey ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
         </div>
-      )}
+        <ol style={sx.combine(sx.text.xs, sx.spacing.mt(2), { paddingLeft: 18 })}>
+          <li>Créez un compte sur <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer">console.anthropic.com</a></li>
+          <li>Allez dans "API Keys" et générez une clé</li>
+          <li>Copiez la clé (format <code>sk-ant-...</code>) et collez-la ci-dessus</li>
+        </ol>
+        <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(2))}>
+          💰 Coût estimé : ~0.01–0.02 €/page MANEX (Claude 3.5+ Sonnet Vision)
+        </p>
+      </div>
 
-      {provider === 'local' && (
-        <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning, sx.spacing.mb(4))}>
-          <AlertTriangle size={16} />
-          <div>
-            <p style={sx.text.sm}>
-              Mode local : nécessite l'installation d'Ollama avec un modèle vision.
-            </p>
-            <p style={sx.combine(sx.text.xs, sx.spacing.mt(1))}>
-              Précision réduite par rapport aux modèles cloud.
-            </p>
-          </div>
+      {/* Bloc OpenAI */}
+      <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3), sx.spacing.mb(3))}>
+        <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
+          🟢 Clé API OpenAI (GPT-4o)
+          {provider === 'openai' && <span style={{ color: '#16a34a', marginLeft: 8, fontWeight: 600 }}>● ACTIF</span>}
+        </h5>
+        <div style={{ position: 'relative' }}>
+          <input
+            type={showOpenaiKey ? 'text' : 'password'}
+            value={openaiKey}
+            onChange={(e) => setOpenaiKey(e.target.value)}
+            placeholder="sk-..."
+            style={sx.combine(sx.components.input.base, { paddingRight: '40px' })}
+          />
+          <button
+            onClick={() => setShowOpenaiKey(!showOpenaiKey)}
+            style={{
+              position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
+              background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px'
+            }}
+          >
+            {showOpenaiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
         </div>
-      )}
+        <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(2))}>
+          Optionnel — conserve si tu veux pouvoir comparer GPT-4o vs Claude.
+        </p>
+      </div>
 
-      {/* Champ de clé API */}
-      {provider !== 'local' && (
-        <div style={sx.spacing.mb(4)}>
-          <label style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-            Clé API
-          </label>
-          <div style={{ position: 'relative' }}>
-            <input
-              type={showKey ? 'text' : 'password'}
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="sk-..."
-              style={sx.combine(sx.components.input.base, sx.spacing.mt(1), { paddingRight: '40px' })}
-            />
-            <button
-              onClick={() => setShowKey(!showKey)}
-              style={{
-                position: 'absolute',
-                right: '8px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '4px'
-              }}
-            >
-              {showKey ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Message de statut */}
       {message && (
         <div style={sx.combine(
           sx.components.alert.base,
@@ -185,7 +159,6 @@ const APIConfiguration = ({ onClose }) => {
         </div>
       )}
 
-      {/* Boutons d'action */}
       <div style={sx.combine(sx.flex.between, sx.spacing.mt(4))}>
         <button
           onClick={onClose}
@@ -195,14 +168,11 @@ const APIConfiguration = ({ onClose }) => {
         </button>
         <button
           onClick={handleSave}
-          disabled={isSaving || (provider !== 'local' && !apiKey.trim())}
+          disabled={isSaving}
           style={sx.combine(
             sx.components.button.base,
             sx.components.button.primary,
-            (isSaving || (provider !== 'local' && !apiKey.trim())) && { 
-              opacity: 0.5, 
-              cursor: 'not-allowed' 
-            }
+            isSaving && { opacity: 0.5, cursor: 'not-allowed' }
           )}
         >
           <Save size={16} style={{ marginRight: '8px' }} />
@@ -210,9 +180,8 @@ const APIConfiguration = ({ onClose }) => {
         </button>
       </div>
 
-      {/* Note de sécurité */}
       <div style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(4), sx.text.center)}>
-        🔒 Votre clé API est stockée localement sur votre navigateur et n'est jamais partagée.
+        🔒 Tes clés API sont stockées localement dans le navigateur et n'ont jamais transitent par nos serveurs.
       </div>
     </div>
   );
