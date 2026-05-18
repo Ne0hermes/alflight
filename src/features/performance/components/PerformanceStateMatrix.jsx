@@ -58,9 +58,6 @@ const STATUS_VISUAL = {
 export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État de performance — couverture exhaustive', phases }) {
   const state = useMemo(() => generatePerformanceState(aircraft, inputs), [aircraft, inputs]);
   const [expandedOp, setExpandedOp] = useState(null);
-  // Step cascade actuellement étendu pour voir l'inspection détaillée.
-  // Clé : `${opId}:${graphId}` pour ne pas confondre les steps d'opérations différentes.
-  const [expandedStepKey, setExpandedStepKey] = useState(null);
 
   // Filtrage par phases si fourni — on ne montre que les opérations dont la phase est dans la liste.
   const filteredOps = useMemo(() => {
@@ -247,17 +244,8 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
                       <strong>Confiance :</strong> <code>{result.confidence}</code>
                     </div>
                   )}
-                  {/* Chaîne de cascade : output de chaque graphe → input du suivant.
-                      Chaque étape est cliquable via le bouton ⋯ pour ouvrir l'inspection
-                      détaillée du sous-graphique (axes, courbes, méthode, paramètres). */}
-                  {result.cascadeSteps && result.cascadeSteps.length > 0 && (() => {
-                    // Build a lookup map from perGraph inspection data, indexed by graphId,
-                    // so chaque step de cascade peut afficher SON propre détail.
-                    const perGraphById = {};
-                    (result.debug?.perGraph || []).forEach(g => {
-                      if (g.graphId) perGraphById[g.graphId] = g;
-                    });
-                    return (
+                  {/* Chaîne de cascade : output de chaque graphe → input du suivant. */}
+                  {result.cascadeSteps && result.cascadeSteps.length > 0 && (
                     <div style={{
                       marginBottom: 8, padding: 8,
                       backgroundColor: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 4
@@ -273,9 +261,6 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
                             step.used === 'bracket'      ? 'BRACKET' :
                             step.used === 'slope-follow' ? 'SLOPE-FOLLOW' :
                             step.used === 'idw'          ? 'IDW (fallback)' : 'ÉCHEC';
-                          const stepKey = `${op.id}:${step.graphId || sIdx}`;
-                          const isStepExpanded = expandedStepKey === stepKey;
-                          const perGraph = perGraphById[step.graphId];
                           return (
                           <div key={step.graphId || sIdx} style={{
                             padding: '4px 8px',
@@ -284,41 +269,17 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
                             borderLeft: `3px solid ${step.role === 'primary' ? '#16a34a' : '#f59e0b'}`,
                             borderRadius: 3
                           }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                              <div style={{ fontWeight: 700, flex: 1, minWidth: 0 }}>
-                                {step.role === 'primary' ? '⭐ Primaire' : `🔗 T${step.cascadeOrder ?? '?'}`}
-                                {' — '}{step.graphName}
-                                {' '}
-                                <span style={{
-                                  display: 'inline-block', padding: '1px 5px', borderRadius: 3,
-                                  fontSize: 9, fontWeight: 700,
-                                  backgroundColor: usedBadgeColor, color: 'white'
-                                }}>
-                                  {usedLabel}
-                                </span>
-                              </div>
-                              {/* Bouton burger menu (⋯) pour ouvrir l'inspection détaillée du graphe */}
-                              <button
-                                type="button"
-                                onClick={() => setExpandedStepKey(isStepExpanded ? null : stepKey)}
-                                title={isStepExpanded ? 'Masquer l\'inspection détaillée' : 'Voir l\'inspection détaillée (axes, courbes, méthode)'}
-                                style={{
-                                  border: '1px solid #d1d5db',
-                                  backgroundColor: isStepExpanded ? '#312e81' : 'white',
-                                  color: isStepExpanded ? 'white' : '#374151',
-                                  borderRadius: 4,
-                                  padding: '2px 8px',
-                                  fontSize: 14,
-                                  lineHeight: 1,
-                                  cursor: 'pointer',
-                                  fontWeight: 700,
-                                  flexShrink: 0
-                                }}
-                                aria-expanded={isStepExpanded}
-                                aria-label="Inspection détaillée"
-                              >
-                                {isStepExpanded ? '×' : '⋯'}
-                              </button>
+                            <div style={{ fontWeight: 700 }}>
+                              {step.role === 'primary' ? '⭐ Primaire' : `🔗 T${step.cascadeOrder ?? '?'}`}
+                              {' — '}{step.graphName}
+                              {' '}
+                              <span style={{
+                                display: 'inline-block', padding: '1px 5px', borderRadius: 3,
+                                fontSize: 9, fontWeight: 700,
+                                backgroundColor: usedBadgeColor, color: 'white'
+                              }}>
+                                {usedLabel}
+                              </span>
                             </div>
                             <div style={{ fontSize: 10, color: '#6b7280' }}>
                               X = <code>{step.xDim}</code> = <strong>{step.queryX !== null && step.queryX !== undefined ? Number(step.queryX).toFixed(2) : '—'}</strong>
@@ -363,197 +324,11 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
                                 ❌ Bracket tenté en auto : {step.bracketResult.error}
                               </div>
                             )}
-
-                            {/* ─── PANNEAU D'INSPECTION DÉTAILLÉE (toggle ⋯) ───
-                                Format tableau structuré : axes, mode, courbes, méthode + paramètres. */}
-                            {isStepExpanded && perGraph && (
-                              <div style={{
-                                marginTop: 8,
-                                padding: 10,
-                                backgroundColor: '#f8fafc',
-                                border: '1px solid #cbd5e1',
-                                borderRadius: 4,
-                                fontFamily: 'Inter, system-ui, sans-serif'
-                              }}>
-                                {/* Tableau récap caractéristiques du graphe */}
-                                <table style={{ width: '100%', fontSize: 11, borderCollapse: 'collapse' }}>
-                                  <tbody>
-                                    <tr>
-                                      <td style={{ padding: '3px 6px', fontWeight: 600, color: '#475569', width: '35%' }}>Mode déclaré</td>
-                                      <td style={{ padding: '3px 6px' }}>
-                                        <code style={{
-                                          padding: '1px 6px', borderRadius: 3, fontWeight: 700,
-                                          backgroundColor: perGraph.interpolationMode === 'slope-follow' ? '#7c3aed'
-                                                        : perGraph.interpolationMode === 'family' ? '#16a34a'
-                                                        : perGraph.interpolationMode === 'mono' ? '#0891b2'
-                                                        : '#9ca3af',
-                                          color: 'white'
-                                        }}>{perGraph.interpolationMode || 'auto'}</code>
-                                        {perGraph.familyAxisVariable && (
-                                          <span style={{ marginLeft: 8, color: '#64748b' }}>
-                                            familyAxisVariable = <code>{perGraph.familyAxisVariable}</code>
-                                          </span>
-                                        )}
-                                      </td>
-                                    </tr>
-                                    <tr style={{ backgroundColor: 'white' }}>
-                                      <td style={{ padding: '3px 6px', fontWeight: 600, color: '#475569' }}>Axes</td>
-                                      <td style={{ padding: '3px 6px', fontFamily: 'monospace' }}>
-                                        X = <code>{perGraph.axes?.xTitle}</code>{perGraph.axes?.xUnit && ` (${perGraph.axes.xUnit})`}
-                                        {' · '}
-                                        Y = <code>{perGraph.axes?.yTitle}</code>{perGraph.axes?.yUnit && ` (${perGraph.axes.yUnit})`}
-                                      </td>
-                                    </tr>
-                                    <tr>
-                                      <td style={{ padding: '3px 6px', fontWeight: 600, color: '#475569' }}>Courbes / points</td>
-                                      <td style={{ padding: '3px 6px' }}>
-                                        <strong>{perGraph.curveCount}</strong> courbe(s) · <strong>{perGraph.pointCount}</strong> point(s) extrait(s)
-                                      </td>
-                                    </tr>
-                                    {step.slopeResult?.axisReversed && (
-                                      <tr style={{ backgroundColor: 'white' }}>
-                                        <td style={{ padding: '3px 6px', fontWeight: 600, color: '#475569' }}>Orientation axe X</td>
-                                        <td style={{ padding: '3px 6px', color: '#9a3412' }}>
-                                          ⬅ <strong>décroissant</strong> — entry_y prise au X max (bord gauche visuel)
-                                        </td>
-                                      </tr>
-                                    )}
-                                    {step.slopeResult?.entryYSource && (
-                                      <tr>
-                                        <td style={{ padding: '3px 6px', fontWeight: 600, color: '#475569' }}>Source entry_y</td>
-                                        <td style={{ padding: '3px 6px' }}>
-                                          <code style={{
-                                            padding: '1px 5px', borderRadius: 3, fontWeight: 600,
-                                            backgroundColor: step.slopeResult.entryYSource === 'manual'      ? '#ede9fe'
-                                                          : step.slopeResult.entryYSource === 'mixed'       ? '#fef3c7'
-                                                          : step.slopeResult.entryYSource === 'first-point' ? '#dcfce7'
-                                                          : '#f1f5f9',
-                                            color: step.slopeResult.entryYSource === 'manual'      ? '#5b21b6'
-                                                 : step.slopeResult.entryYSource === 'mixed'       ? '#92400e'
-                                                 : step.slopeResult.entryYSource === 'first-point' ? '#065f46'
-                                                 : '#475569'
-                                          }}>
-                                            {step.slopeResult.entryYSource === 'first-point' ? '1er point' : step.slopeResult.entryYSource}
-                                          </code>
-                                        </td>
-                                      </tr>
-                                    )}
-                                  </tbody>
-                                </table>
-
-                                {/* Liste détaillée des courbes (toggle) */}
-                                {perGraph.curveAnalysis && perGraph.curveAnalysis.length > 0 && (
-                                  <details style={{ marginTop: 8, fontSize: 10 }}>
-                                    <summary style={{ cursor: 'pointer', fontWeight: 600, color: '#475569' }}>
-                                      📊 Détail des {perGraph.curveAnalysis.length} courbe(s)
-                                    </summary>
-                                    <table style={{ width: '100%', fontSize: 10, borderCollapse: 'collapse', marginTop: 4 }}>
-                                      <thead>
-                                        <tr style={{ backgroundColor: '#e2e8f0' }}>
-                                          <th style={{ padding: '3px 6px', textAlign: 'left', fontWeight: 600 }}>Nom</th>
-                                          <th style={{ padding: '3px 6px', textAlign: 'right', fontWeight: 600 }}>Pts</th>
-                                          <th style={{ padding: '3px 6px', textAlign: 'left', fontWeight: 600 }}>Paramètre familial</th>
-                                        </tr>
-                                      </thead>
-                                      <tbody>
-                                        {perGraph.curveAnalysis.map((c, ci) => (
-                                          <tr key={ci} style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: ci % 2 === 0 ? 'white' : '#f8fafc' }}>
-                                            <td style={{ padding: '3px 6px', fontFamily: 'monospace' }}>{c.name}</td>
-                                            <td style={{ padding: '3px 6px', textAlign: 'right' }}>{c.pointCount}</td>
-                                            <td style={{ padding: '3px 6px', fontFamily: 'monospace' }}>
-                                              {c.familyParsed
-                                                ? <span style={{ color: '#16a34a' }}>{c.familyKind} = {c.familyValue}</span>
-                                                : <span style={{ color: '#94a3b8' }}>—</span>}
-                                            </td>
-                                          </tr>
-                                        ))}
-                                      </tbody>
-                                    </table>
-                                  </details>
-                                )}
-
-                                {/* Liste des entry_y triés (slope-follow) si applicable */}
-                                {step.slopeResult?.availableEntryRows && step.slopeResult.availableEntryRows.length > 0 && (
-                                  <details style={{ marginTop: 6, fontSize: 10 }}>
-                                    <summary style={{ cursor: 'pointer', fontWeight: 600, color: '#475569' }}>
-                                      🪜 Courbes triées par entry_y croissant
-                                    </summary>
-                                    <table style={{ width: '100%', fontSize: 10, borderCollapse: 'collapse', marginTop: 4 }}>
-                                      <thead>
-                                        <tr style={{ backgroundColor: '#e2e8f0' }}>
-                                          <th style={{ padding: '3px 6px', textAlign: 'left', fontWeight: 600 }}></th>
-                                          <th style={{ padding: '3px 6px', textAlign: 'left', fontWeight: 600 }}>Courbe</th>
-                                          <th style={{ padding: '3px 6px', textAlign: 'right', fontWeight: 600 }}>entry_y</th>
-                                          <th style={{ padding: '3px 6px', textAlign: 'right', fontWeight: 600 }}>X 1er pt</th>
-                                        </tr>
-                                      </thead>
-                                      <tbody>
-                                        {step.slopeResult.availableEntryRows.map((row, ri) => {
-                                          const isLower = row.name === step.slopeResult.lowerCurve?.name;
-                                          const isUpper = row.name === step.slopeResult.upperCurve?.name;
-                                          const marker = isLower ? '▼' : isUpper ? '▲' : '';
-                                          return (
-                                            <tr key={ri} style={{
-                                              borderBottom: '1px solid #e2e8f0',
-                                              backgroundColor: (isLower || isUpper) ? '#f5f3ff' : (ri % 2 === 0 ? 'white' : '#f8fafc'),
-                                              fontWeight: (isLower || isUpper) ? 700 : 400,
-                                              color: (isLower || isUpper) ? '#5b21b6' : '#374151'
-                                            }}>
-                                              <td style={{ padding: '3px 6px', width: '20px' }}>{marker}</td>
-                                              <td style={{ padding: '3px 6px', fontFamily: 'monospace' }}>{row.name}</td>
-                                              <td style={{ padding: '3px 6px', textAlign: 'right', fontFamily: 'monospace' }}>{Number(row.entryY).toFixed(2)}</td>
-                                              <td style={{ padding: '3px 6px', textAlign: 'right', fontFamily: 'monospace' }}>
-                                                {row.firstPointX !== null && row.firstPointX !== undefined ? Number(row.firstPointX).toFixed(1) : '—'}
-                                              </td>
-                                            </tr>
-                                          );
-                                        })}
-                                      </tbody>
-                                    </table>
-                                  </details>
-                                )}
-
-                                {/* Filtre vent appliqué */}
-                                {(step.slopeResult?.windFilter || step.bracketResult?.windFilter) && (() => {
-                                  const wf = step.slopeResult?.windFilter || step.bracketResult?.windFilter;
-                                  if (!wf) return null;
-                                  return (
-                                    <div style={{
-                                      marginTop: 6, padding: 6, borderRadius: 3, fontSize: 10,
-                                      backgroundColor: wf.applied ? '#dbeafe' : '#fef3c7',
-                                      borderLeft: `3px solid ${wf.applied ? '#0284c7' : '#f59e0b'}`,
-                                      color: wf.applied ? '#0c4a6e' : '#92400e'
-                                    }}>
-                                      <strong>🌬 Filtre direction vent :</strong>{' '}
-                                      {wf.applied ? (
-                                        <>
-                                          <span style={{
-                                            display: 'inline-block', padding: '0 5px', borderRadius: 2,
-                                            fontSize: 9, fontWeight: 700,
-                                            backgroundColor: wf.actualDirection === 'headwind' ? '#16a34a'
-                                                          : wf.actualDirection === 'tailwind' ? '#dc2626' : '#64748b',
-                                            color: 'white'
-                                          }}>
-                                            {wf.actualDirection === 'headwind' ? '↑ HEADWIND'
-                                             : wf.actualDirection === 'tailwind' ? '↓ TAILWIND' : '— CALME'}
-                                          </span>
-                                          {' '}— {wf.keptCount} courbe(s) gardée(s), {wf.excludedCount || 0} exclue(s)
-                                          {typeof wf.queryWindUsed === 'number' && (
-                                            <> · query <strong>{Number(wf.queryWindUsed).toFixed(1)} kt</strong></>
-                                          )}
-                                        </>
-                                      ) : (wf.reason || 'Filtre non applicable')}
-                                    </div>
-                                  );
-                                })()}
-                              </div>
-                            )}
                           </div>
                         );})}
                       </div>
                     </div>
-                    );
-                  })()}
+                  )}
                   {result.nearestPoints && result.nearestPoints.length > 0 && (
                     <details style={{ marginBottom: 6 }}>
                       <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
