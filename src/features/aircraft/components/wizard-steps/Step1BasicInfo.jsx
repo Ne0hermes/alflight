@@ -58,7 +58,6 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
   const [manexFile, setManexFile] = useState(data.manex || null);
   const [uploadingToSupabase, setUploadingToSupabase] = useState(false);
   const units = unitsSelectors.useUnits();
-  const [previousUnits, setPreviousUnits] = useState(units);
   const [expandedPanels, setExpandedPanels] = useState({
     identification: false,
     fuel: false,
@@ -339,36 +338,10 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
     updateData('compatibleRunwaySurfaces', updatedSurfaces);
   };
 
-  // Gérer les conversions automatiques lors du changement d'unités
-  useEffect(() => {
-    // Convertir la capacité carburant
-    if (previousUnits.fuel !== units.fuel && data.fuelCapacity) {
-      const convertedCapacity = convertValue(
-        data.fuelCapacity,
-        'fuel',
-        previousUnits.fuel,
-        units.fuel
-      );
-      if (convertedCapacity && convertedCapacity !== data.fuelCapacity) {
-        updateData('fuelCapacity', Math.round(convertedCapacity * 100) / 100);
-      }
-    }
-
-    // Convertir la consommation de carburant
-    if (previousUnits.fuelConsumption !== units.fuelConsumption && data.fuelConsumption) {
-      const convertedConsumption = convertValue(
-        data.fuelConsumption,
-        'fuelConsumption',
-        previousUnits.fuelConsumption,
-        units.fuelConsumption
-      );
-      if (convertedConsumption && convertedConsumption !== data.fuelConsumption) {
-        updateData('fuelConsumption', Math.round(convertedConsumption * 100) / 100);
-      }
-    }
-
-    setPreviousUnits(units);
-  }, [units, data.fuelCapacity, data.fuelConsumption, previousUnits]);
+  // NOTE: pas de conversion automatique au changement de pref utilisateur.
+  // data.fuelCapacity et data.fuelConsumption sont stockés en unités STORAGE (L, L/h),
+  // l'affichage est converti à la volée par les `value=` (lignes ~623 et ~661).
+  // Convertir la valeur stockée ici provoquerait une double conversion à chaque render.
 
   return (
     <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
@@ -408,7 +381,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 1.5 }}>
-            <Grid item xs={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
               <StyledTextField
                 fullWidth
                 variant="outlined"
@@ -437,7 +410,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               />
             </Grid>
 
-            <Grid item xs={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
               <StyledTextField
                 fullWidth
                 variant="outlined"
@@ -451,7 +424,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               />
             </Grid>
 
-            <Grid item xs={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
               <StyledFormControl fullWidth variant="outlined">
                 <InputLabel shrink id="engine-label">Type de moteur</InputLabel>
                 <Select
@@ -472,7 +445,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               </StyledFormControl>
             </Grid>
 
-            <Grid item xs={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
               <StyledFormControl fullWidth variant="outlined">
                 <InputLabel shrink id="category-label">Catégorie</InputLabel>
                 <Select
@@ -494,7 +467,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
             </Grid>
 
             {/* Photo upload section within identification */}
-            <Grid item xs={12} sx={{ width: '100%', maxWidth: 350, textAlign: 'center', mt: 2 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, textAlign: 'center', mt: 2 }}>
               <Typography variant="body2" sx={{ mb: 2, fontWeight: 500 }}>
                 Photo de l'appareil (optionnel)
               </Typography>
@@ -589,7 +562,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 1.5 }}>
-            <Grid item xs={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
               <StyledFormControl fullWidth variant="outlined">
                 <InputLabel shrink id="fuel-label">Type de carburant *</InputLabel>
                 <Select
@@ -611,7 +584,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               </StyledFormControl>
             </Grid>
 
-            <Grid item xs={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
               <StyledTextField
                 fullWidth
                 variant="outlined"
@@ -620,7 +593,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                 value={
                   data.fuelCapacity
                     ? (() => {
-                        const converted = Math.round(convertValue(data.fuelCapacity, 'fuel', 'ltr', units.fuel) * 10) / 10;
+                        const converted = Math.round(convertValue(data.fuelCapacity, 'ltr', units.fuel, 'fuel') * 10) / 10;
                         console.log('🔵 [Step1] DISPLAY fuelCapacity:', {
                           storage: data.fuelCapacity,
                           userUnit: units.fuel,
@@ -631,7 +604,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     : ''
                 }
                 onChange={(e) => {
-                  const valueInStorageUnit = convertValue(e.target.value, 'fuel', units.fuel, 'ltr');
+                  const valueInStorageUnit = convertValue(e.target.value, units.fuel, 'ltr', 'fuel');
                   console.log('🟢 [Step1] SAVE fuelCapacity:', {
                     userInput: e.target.value,
                     userUnit: units.fuel,
@@ -649,7 +622,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               />
             </Grid>
 
-            <Grid item xs={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
               <StyledTextField
                 fullWidth
                 variant="outlined"
@@ -658,7 +631,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                 value={
                   data.fuelConsumption
                     ? (() => {
-                        const converted = Math.round(convertValue(data.fuelConsumption, 'fuelConsumption', 'lph', units.fuelConsumption) * 10) / 10;
+                        const converted = Math.round(convertValue(data.fuelConsumption, 'lph', units.fuelConsumption, 'fuelConsumption') * 10) / 10;
                         console.log('🔵 [Step1] DISPLAY fuelConsumption:', {
                           storage: data.fuelConsumption,
                           userUnit: units.fuelConsumption,
@@ -669,7 +642,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     : ''
                 }
                 onChange={(e) => {
-                  const valueInStorageUnit = convertValue(e.target.value, 'fuelConsumption', units.fuelConsumption, 'lph');
+                  const valueInStorageUnit = convertValue(e.target.value, units.fuelConsumption, 'lph', 'fuelConsumption');
                   console.log('🟢 [Step1] SAVE fuelConsumption:', {
                     userInput: e.target.value,
                     userUnit: units.fuelConsumption,
@@ -685,7 +658,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               />
             </Grid>
 
-            <Grid item xs={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
               <StyledTextField
                 fullWidth
                 variant="outlined"
@@ -1058,22 +1031,22 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               Avion existant :
             </Typography>
             <Grid container spacing={1}>
-              <Grid item xs={6}>
+              <Grid size={6}>
                 <Typography variant="body2">
                   <strong>Modèle :</strong> {existingAircraftData.model}
                 </Typography>
               </Grid>
-              <Grid item xs={6}>
+              <Grid size={6}>
                 <Typography variant="body2">
                   <strong>Constructeur :</strong> {existingAircraftData.manufacturer}
                 </Typography>
               </Grid>
-              <Grid item xs={6}>
+              <Grid size={6}>
                 <Typography variant="body2">
                   <strong>Ajouté par :</strong> {existingAircraftData.addedBy}
                 </Typography>
               </Grid>
-              <Grid item xs={6}>
+              <Grid size={6}>
                 {existingAircraftData.verified && (
                   <Typography variant="body2" color="success.main">
                     ✓ Configuration vérifiée
@@ -1088,7 +1061,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
           </Typography>
 
           <Grid container spacing={2}>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Paper
                 elevation={0}
                 sx={{
@@ -1119,7 +1092,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               </Paper>
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Paper
                 elevation={0}
                 sx={{
@@ -1149,7 +1122,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               </Paper>
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Paper
                 elevation={0}
                 sx={{

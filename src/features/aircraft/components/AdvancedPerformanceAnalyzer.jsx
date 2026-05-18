@@ -59,32 +59,72 @@ ${buildCatalogForPrompt()}
 ═════ INSTRUCTIONS ═════
 ${expectedClause}
 
-CRITICAL RULES:
-1. ONE table = ONE operationId from the catalog above. Never mix multiple operations in the same table.
-2. If a single MANEX table contains MULTIPLE quantities (ex: "Take-off Distance" with both ground roll AND over-50ft columns), SPLIT it into separate output tables, one per operationId.
-3. Each row has ONE single output value in a field called "value" (number, in defaultUnit of the operation).
-4. Input columns: Altitude (ft), Temperature (°C), Masse (kg). Other relevant inputs are allowed (e.g. windComponent, runwaySlope).
-5. If mass is in the header (ex: column "1100 kg") instead of in rows, expand: create one row per mass value with Masse:1100 added.
-6. Only return operationIds from the catalog. NEVER invent new ids.
+═════ MANDATORY COLUMN-SPLITTING RULE ═════
+⚠ ABSOLUTE PRIORITY ⚠
+A SINGLE MANEX table in the image often shows MULTIPLE output quantities
+side-by-side (one column per quantity). YOU MUST ALWAYS split them.
+
+EXAMPLE 1 — "Take-Off Distance" table with both ground roll AND over 50 ft:
+  The MANEX image shows:
+    | Altitude | Temp | Mass | Ground Roll (m) | Over 50 ft (m) |
+    |    0     |  15  | 1200 |       285       |       425      |
+    |   2000   |  15  | 1200 |       320       |       475      |
+
+  YOU MUST RETURN 2 SEPARATE TABLES (not 1 table with 2 columns):
+    Table A: operationId="takeoff_ground_roll", data with value=285, 320, ...
+    Table B: operationId="takeoff_50ft",        data with value=425, 475, ...
+
+EXAMPLE 2 — "Landing Distance Flaps LDG" table with ground roll AND over 50 ft:
+  YOU MUST RETURN 2 SEPARATE TABLES:
+    Table A: operationId="landing_ground_roll_flaps_landing"
+    Table B: operationId="landing_50ft_flaps_landing"
+
+EXAMPLE 3 — "Climb performance" table with rate of climb AND climb gradient:
+  YOU MUST RETURN 2 SEPARATE TABLES (or 1 if only one quantity is shown):
+    Table A: operationId="climb_takeoff" with outputKind="rate_of_climb" (ft/min)
+    Table B: operationId="climb_takeoff" with outputKind="climb_gradient" (°)
+
+Look at each COLUMN of the MANEX table. Each output column = ONE separate
+output table. If you see 2 output columns, return 2 tables. If you see 3
+output columns, return 3 tables. Never merge them into a single table.
+
+═════ OTHER CRITICAL RULES ═════
+1. ONE table = ONE operationId from the catalog. Never mix multiple operations.
+2. Each row has ONE single output value in field "value" (number, in defaultUnit of the operation).
+3. Input columns: Altitude (ft), Temperature (°C), Masse (kg). Other relevant inputs are allowed (e.g. windComponent, runwaySlope).
+4. If mass is in the header (ex: column "1100 kg") instead of in rows, expand: create one row per mass value with Masse:1100 added.
+5. Only return operationIds from the catalog. NEVER invent new ids.
 
 ═════ OUTPUT FORMAT (strict JSON) ═════
 {
   "tables": [
+    {
+      "operationId": "takeoff_ground_roll",
+      "outputUnit": "m",
+      "table_name": "Take-off Ground Roll - Normal Procedure",
+      "data": [
+        {"Altitude": 0,    "Temperature": 15, "Masse": 1200, "value": 285},
+        {"Altitude": 2000, "Temperature": 15, "Masse": 1200, "value": 320}
+      ]
+    },
     {
       "operationId": "takeoff_50ft",
       "outputUnit": "m",
       "table_name": "Take-off Distance over 50 ft - Normal Procedure",
       "data": [
         {"Altitude": 0,    "Temperature": 15, "Masse": 1200, "value": 425},
-        {"Altitude": 2000, "Temperature": 15, "Masse": 1200, "value": 475},
-        {"Altitude": 0,    "Temperature": 30, "Masse": 1200, "value": 470}
+        {"Altitude": 2000, "Temperature": 15, "Masse": 1200, "value": 475}
       ]
     }
   ]
 }
 
 LIMIT: 30 rows max per table. Extract key data points only.
-If you detect 2 operations on the same MANEX table, return 2 separate tables in the array.`;
+
+═════ FINAL REMINDER ═════
+Count the OUTPUT columns (distance, time, speed, climb rate...) in the
+MANEX image. Return EXACTLY that many tables in the array. If you return
+1 table when there are 2 output columns, your answer is WRONG.`;
 };
 
 /**
