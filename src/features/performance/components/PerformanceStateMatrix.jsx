@@ -15,6 +15,7 @@
 import React, { useMemo, useState } from 'react';
 import { generatePerformanceState, ResultStatus } from '../../../services/operationResolver';
 import { OPERATION_CATALOG, getOperation } from '../../../abac/curves/core/operationCatalog';
+import { applySafetyFactor, isDistanceOperation, DEFAULT_SAFETY_FACTOR } from '../../../utils/performanceSafetyFactor';
 
 const PHASE_ICONS = {
   takeoff:  '🛫',
@@ -49,13 +50,16 @@ const STATUS_VISUAL = {
 
 /**
  * @param {object} props
- * @param {object} props.aircraft  L'avion sélectionné (avec performanceModels)
- * @param {object} props.inputs    { mass, oat, pressureAltitude, headwind, ... }
- * @param {string} [props.title]   Titre de la matrice (défaut "État de performance")
- * @param {string[]} [props.phases] Liste des phases à afficher (ex: ['takeoff'], ['landing'], ['climb','cruise']).
- *                                  Si non fourni → toutes les phases du catalogue.
+ * @param {object} props.aircraft       L'avion sélectionné (avec performanceModels)
+ * @param {object} props.inputs         { mass, oat, pressureAltitude, headwind, ... }
+ * @param {string} [props.title]        Titre de la matrice (défaut "État de performance")
+ * @param {string[]} [props.phases]     Liste des phases à afficher.
+ * @param {object}  [props.safetyFactor] Preset de marge réglementaire optionnel
+ *                                       { id, value, label, description }. Default = brut MANEX (×1.0).
+ *                                       Le facteur n'affecte QUE l'affichage des distances,
+ *                                       pas les calculs amont ni le stockage.
  */
-export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État de performance — couverture exhaustive', phases }) {
+export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État de performance — couverture exhaustive', phases, safetyFactor = DEFAULT_SAFETY_FACTOR }) {
   const state = useMemo(() => generatePerformanceState(aircraft, inputs), [aircraft, inputs]);
   const [expandedOp, setExpandedOp] = useState(null);
 
@@ -180,9 +184,28 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
                 <div style={{ textAlign: 'right', minWidth: 130 }}>
                   {status === ResultStatus.COMPUTED ? (
                     <>
-                      <div style={{ fontSize: 16, fontWeight: 700 }}>
-                        {formatValue(result.value)} <span style={{ fontSize: 12, fontWeight: 500 }}>{result.unit}</span>
-                      </div>
+                      {/* Application du facteur de sécurité UNIQUEMENT pour les opérations distance,
+                          UNIQUEMENT à l'affichage. La valeur brute est toujours visible en petit
+                          en-dessous quand un facteur > 1 est appliqué. */}
+                      {(() => {
+                        const isDist = isDistanceOperation(op.id);
+                        const factorApplies = isDist && safetyFactor && safetyFactor.value > 1;
+                        const displayedValue = factorApplies
+                          ? applySafetyFactor(result.value, op.id, safetyFactor.value)
+                          : result.value;
+                        return (
+                          <>
+                            <div style={{ fontSize: 16, fontWeight: 700 }}>
+                              {formatValue(displayedValue)} <span style={{ fontSize: 12, fontWeight: 500 }}>{result.unit}</span>
+                            </div>
+                            {factorApplies && (
+                              <div style={{ fontSize: 10, color: '#854d0e', marginTop: 1, fontStyle: 'italic' }}>
+                                brut : {formatValue(result.value)} × {safetyFactor.value}
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
                       {result.warnings?.length > 0 && (
                         <div style={{ fontSize: 10, color: '#92400e', marginTop: 2 }}>
                           ⚠ {result.warnings.length} warning{result.warnings.length > 1 ? 's' : ''}
