@@ -5,20 +5,43 @@ import ABACProtocolHandler from './abacProtocolHandler';
 import ABACValidationService from './abacValidationService';
 import apiKeyManager from '../../../utils/apiKeyManager';
 
+// ─────────────────────────────────────────────────────────────────────────
+// Configuration des providers d'IA Vision
+// ─────────────────────────────────────────────────────────────────────────
+//
+// 2 providers supportés. Anthropic (Claude) est le défaut depuis l'intégration
+// car globalement plus précis sur les tableaux numériques structurés (MANEX).
+// OpenAI reste disponible en fallback pour rétro-compat ou comparaison.
+
+const PROVIDER_CONFIG = {
+  anthropic: {
+    endpoint: 'https://api.anthropic.com/v1/messages',
+    // claude-sonnet-4-5 est l'alias stable courant (Anthropic gère le routage
+    // vers la version la plus à jour). Pour figer : claude-sonnet-4-5-20250929.
+    model: 'claude-sonnet-4-5',
+    maxTokens: 8192
+  },
+  openai: {
+    endpoint: 'https://api.openai.com/v1/chat/completions',
+    model: 'gpt-4o',
+    maxTokens: 4000
+  }
+};
+
 class UnifiedPerformanceService {
   constructor() {
     // Configuration API unifiée - initialisée de manière lazy
     this.apiKey = null;
-    this.endpoint = import.meta?.env?.VITE_AI_API_ENDPOINT || 'https://api.openai.com/v1/chat/completions';
-    this.model = 'gpt-4o'; // Modèle avec vision
-    
+    this.endpoint = import.meta?.env?.VITE_AI_API_ENDPOINT || PROVIDER_CONFIG.openai.endpoint;
+    this.model = PROVIDER_CONFIG.openai.model; // Compat legacy (sera override si provider=anthropic)
+
     // Services intégrés - initialisés de manière lazy
     this.protocolHandler = null;
     this.validationService = null;
-    
+
     // Mode de fonctionnement
     this.mode = 'abac'; // 'abac' | 'legacy' | 'manual'
-    
+
     // Flag d'initialisation
     this.initialized = false;
   }
@@ -148,18 +171,28 @@ class UnifiedPerformanceService {
   }
 
   // ===== MODE MANUEL (Analyse guidée) =====
-  
+
   async analyzeManualPerformance(imageBase64, userPrompt) {
     this.initialize();
     this.mode = 'manual';
+    // Routage selon le provider actif (configuré dans apiKeyManager).
+    // Défaut : Anthropic (Claude) car meilleur sur tableaux numériques.
+    const provider = apiKeyManager.getActiveProvider();
+    if (provider === 'anthropic') {
+      return await this.callClaude(imageBase64, userPrompt);
+    }
     return await this.callOpenAI(imageBase64, userPrompt);
   }
 
   // ===== MÉTHODES COMMUNES =====
 
-  async callOpenAI(imageBase64, prompt) {
+  async callOpenAI(imageBase64, prompt, options = {}) {
     // S'assurer que le service est initialisé
     this.initialize();
+    // Permet d'override le system message par appel (utile pour reformuler le
+    // contexte quand OpenAI applique des heuristiques de refus sur certains sujets).
+    const systemMessage = options.systemMessage
+      || 'You are an expert aviation performance data analyst specializing in extracting data from aircraft manuals.';
     
     // Réessayer d'obtenir la clé API si elle n'est pas définie
     if (!this.apiKey) {
@@ -206,7 +239,7 @@ class UnifiedPerformanceService {
     const messages = [
       {
         role: 'system',
-        content: 'You are an expert aviation performance data analyst specializing in extracting data from aircraft manuals.'
+        content: systemMessage
       },
       {
         role: 'user',
@@ -242,9 +275,23 @@ class UnifiedPerformanceService {
       }
 
       const data = await response.json();
-      
-      const content = data.choices[0].message.content;
-    //', content.substring(0, 100));
+
+      const content = data.choices?.[0]?.message?.content;
+      // Protection : OpenAI peut retourner content=null (refus de filtrage, finish_reason='content_filter',
+      // ou image trop volumineuse / contexte dépassé). Donner un message utile au lieu de crasher.
+      if (typeof content !== 'string' || content.length === 0) {
+        const refusal = data.choices?.[0]?.message?.refusal;
+        const finishReason = data.choices?.[0]?.finish_reason;
+        const reasonMsg = refusal
+          ? `OpenAI a refusé : ${refusal}`
+          : finishReason === 'content_filter'
+            ? 'Contenu filtré par OpenAI (possible image inadaptée ou trop volumineuse).'
+            : finishReason === 'length'
+              ? 'Réponse coupée (max_tokens atteint). Réessayez avec une image plus simple ou un prompt plus court.'
+              : `Réponse OpenAI vide (finish_reason=${finishReason || 'inconnu'}).`;
+        console.error('❌ Réponse OpenAI sans contenu textuel:', { finishReason, refusal, raw: data.choices?.[0] });
+        throw new Error(reasonMsg);
+      }
 
       // Essayer de parser comme JSON
       try {
@@ -442,9 +489,9 @@ class UnifiedPerformanceService {
                 return parsed;
       } catch (parseError) {
         console.error('❌ Erreur de parsing JSON:', parseError.message);
+        // À ce stade `content` est garanti string non vide (check au-dessus)
         console.log('First 500 chars:', content.substring(0, 500));
         console.log('Last 500 chars:', content.substring(Math.max(0, content.length - 500)));
-
 
         // Position de l'erreur dans le JSON
         const errorPosition = parseError.message.match(/position (\d+)/);
@@ -585,6 +632,157 @@ class UnifiedPerformanceService {
     } catch (error) {
       console.error('Erreur OpenAI:', error);
       throw error;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────
+  // CLAUDE (Anthropic) — provider par défaut pour l'analyse de tableaux
+  // ─────────────────────────────────────────────────────────────────────
+  //
+  // Claude 3.5+ Sonnet Vision est globalement plus précis que GPT-4o sur
+  // les tableaux numériques structurés (MANEX). API Anthropic Messages :
+  //   - Endpoint  : https://api.anthropic.com/v1/messages
+  //   - Header    : x-api-key (au lieu de Authorization: Bearer)
+  //   - Header    : anthropic-version: 2023-06-01 (obligatoire)
+  //   - Header    : anthropic-dangerous-direct-browser-access: true
+  //                 (obligatoire depuis 2024 pour appel navigateur direct)
+  //   - Image     : { type: 'image', source: { type: 'base64', media_type, data } }
+  //   - Response  : data.content[0].text
+  //
+  // Pour forcer un JSON strict en sortie, on utilise la technique du
+  // response prefill : on commence la réponse de l'assistant par "{" → Claude
+  // sait qu'il doit continuer en JSON pur (pas de préambule type "Voici ...").
+  async callClaude(imageBase64, prompt, options = {}) {
+    this.initialize();
+
+    const apiKey = apiKeyManager.getAnthropicAPIKey();
+    if (!apiKey) {
+      throw new Error('Clé API Anthropic non configurée. Configure VITE_ANTHROPIC_API_KEY ou saisis-la dans les paramètres.');
+    }
+
+    // ── Normaliser l'image (base64 pur sans préfixe data: pour Claude) ──
+    let mediaType = 'image/jpeg';
+    let pureBase64 = imageBase64;
+    if (typeof imageBase64 === 'string' && imageBase64.startsWith('data:')) {
+      const m = imageBase64.match(/^data:(image\/[a-z]+);base64,(.+)$/);
+      if (m) {
+        mediaType = m[1];
+        pureBase64 = m[2];
+      }
+    } else if (typeof imageBase64 === 'string') {
+      // Heuristique de détection du type via les magic bytes du base64
+      if (imageBase64.startsWith('/9j/'))          mediaType = 'image/jpeg';
+      else if (imageBase64.startsWith('iVBOR'))    mediaType = 'image/png';
+      else if (imageBase64.startsWith('R0lGOD'))   mediaType = 'image/gif';
+      else if (imageBase64.startsWith('UklGR'))    mediaType = 'image/webp';
+    }
+
+    // Système : positionne Claude en expert + exige du JSON strict
+    const systemMessage = options.systemMessage
+      || `You are an expert aviation performance data analyst extracting structured data from aircraft MANEX manuals.
+You ALWAYS return strict valid JSON with no preamble, no markdown fences, no comments.
+The JSON must be directly parseable by JSON.parse().`;
+
+    const config = PROVIDER_CONFIG.anthropic;
+    const body = {
+      model: config.model,
+      max_tokens: config.maxTokens,
+      system: systemMessage,
+      temperature: 0.1,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: pureBase64 } },
+            { type: 'text', text: prompt }
+          ]
+        },
+        // Response prefill : force Claude à commencer par "{"
+        // → output JSON pur garanti, plus de "Voici le JSON : ```json {...} ```"
+        {
+          role: 'assistant',
+          content: '{'
+        }
+      ]
+    };
+
+    let response;
+    try {
+      response = await fetch(config.endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify(body)
+      });
+    } catch (fetchErr) {
+      console.error('❌ Erreur réseau Claude:', fetchErr);
+      throw new Error(`Erreur réseau Anthropic : ${fetchErr.message}`);
+    }
+
+    if (!response.ok) {
+      let errorMsg = `Anthropic API Error ${response.status}`;
+      try {
+        const errBody = await response.json();
+        errorMsg = errBody?.error?.message || errBody?.message || errorMsg;
+      } catch (e) { /* keep default */ }
+      console.error('❌ Erreur API Anthropic:', errorMsg);
+      throw new Error(errorMsg);
+    }
+
+    const data = await response.json();
+    const rawContent = data?.content?.[0]?.text;
+    const stopReason = data?.stop_reason;
+
+    if (typeof rawContent !== 'string') {
+      console.error('❌ Réponse Claude sans content textuel:', { stopReason, raw: data });
+      throw new Error(`Réponse Claude vide (stop_reason=${stopReason || 'inconnu'}).`);
+    }
+
+    // Reconstruire le JSON : on a prefill avec "{" donc on l'ajoute en préfixe
+    let cleanContent = '{' + rawContent;
+
+    // Nettoyage défensif : enlever ```json ... ``` si jamais Claude en a mis
+    if (cleanContent.includes('```json')) {
+      const m = cleanContent.match(/```json\s*([\s\S]*?)```/);
+      if (m) cleanContent = m[1].trim();
+    } else if (cleanContent.includes('```')) {
+      const m = cleanContent.match(/```\s*([\s\S]*?)```/);
+      if (m) cleanContent = m[1].trim();
+    }
+
+    // Stop reason "max_tokens" → JSON probablement coupé. Tenter de réparer.
+    if (stopReason === 'max_tokens') {
+      console.warn('⚠ Claude a atteint max_tokens, tentative de réparation JSON');
+    }
+
+    // Équilibrage défensif des accolades/crochets (en cas de coupure)
+    const openBraces = (cleanContent.match(/{/g) || []).length;
+    const closeBraces = (cleanContent.match(/}/g) || []).length;
+    const openBrackets = (cleanContent.match(/\[/g) || []).length;
+    const closeBrackets = (cleanContent.match(/]/g) || []).length;
+    while ((cleanContent.match(/{/g) || []).length > (cleanContent.match(/}/g) || []).length) {
+      cleanContent += '}';
+    }
+    while ((cleanContent.match(/\[/g) || []).length > (cleanContent.match(/]/g) || []).length) {
+      cleanContent += ']';
+    }
+
+    try {
+      const parsed = JSON.parse(cleanContent);
+      // Ajouter méta : provider utilisé
+      if (typeof parsed === 'object' && parsed !== null) {
+        parsed._provider = 'anthropic';
+        parsed._model = config.model;
+      }
+      return parsed;
+    } catch (parseError) {
+      console.error('❌ Erreur parsing JSON Claude:', parseError.message);
+      console.error('Content (cleaned):', cleanContent.slice(0, 500));
+      return { raw: cleanContent, tables: [], error: 'JSON parse failed (Claude): ' + parseError.message };
     }
   }
 
