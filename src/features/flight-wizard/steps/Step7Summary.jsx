@@ -8,6 +8,7 @@ import VFRNavigationTable from '@features/navigation/components/VFRNavigationTab
 import { useNavigationResults } from '@features/navigation/hooks/useNavigationResults';
 import { useUnits } from '@hooks/useUnits';
 import { useFuelStore } from '@core/stores/fuelStore';
+import { normalizeElevationToFeet } from '@utils/elevationUtils';
 import { useWeatherStore } from '@core/stores/weatherStore';
 import { calculateAeronauticalNight, formatTime as formatSunTime } from '@services/dayNightCalculator';
 import { WeightBalanceChart } from '@features/weight-balance/components/WeightBalanceChart';
@@ -1156,7 +1157,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {aerodromeData.map((aerodrome, idx) => {
                 const hasVAC = charts[aerodrome.icao]?.isDownloaded;
-                const elevation = typeof aerodrome.elevation === 'object' ? aerodrome.elevation.value : aerodrome.elevation;
+                const elevation = normalizeElevationToFeet(aerodrome.elevation, { context: `${aerodrome.icao} (Summary)` });
                 const altPlusQNH = elevation ? elevation + 300 : null;
 
                 return (
@@ -1229,7 +1230,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                         <div>
                           <div style={{ fontSize: '10px', color: '#9ca3af', marginBottom: '2px' }}>Altitude</div>
                           <div style={{ fontSize: '13px', fontWeight: '600', color: '#111827' }}>
-                            {typeof aerodrome.elevation === 'object' ? aerodrome.elevation.value : aerodrome.elevation} ft
+                            {normalizeElevationToFeet(aerodrome.elevation, { context: `${aerodrome.icao} (display)` })} ft
                           </div>
                         </div>
                       )}
@@ -1240,7 +1241,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                           <div style={{ fontSize: '10px', color: '#9ca3af', marginBottom: '2px' }}>Altitude TdP</div>
                           <div style={{ fontSize: '13px', fontWeight: '600', color: '#111827' }}>
                             {(() => {
-                              const elevation = typeof aerodrome.elevation === 'object' ? aerodrome.elevation.value : aerodrome.elevation;
+                              const elevation = normalizeElevationToFeet(aerodrome.elevation, { context: `${aerodrome.icao} (Summary)` });
                               const circuitAAL = typeof aerodrome.circuitAltitude === 'object' ? aerodrome.circuitAltitude.value : aerodrome.circuitAltitude;
                               return elevation && circuitAAL
                                 ? `${elevation + circuitAAL} ft (${circuitAAL} AAL)`
@@ -1266,7 +1267,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                           <div style={{ fontSize: '10px', color: '#9ca3af', marginBottom: '2px' }}>Altitude VT</div>
                           <div style={{ fontSize: '13px', fontWeight: '600', color: '#111827' }}>
                             {(() => {
-                              const elevation = typeof aerodrome.elevation === 'object' ? aerodrome.elevation.value : aerodrome.elevation;
+                              const elevation = normalizeElevationToFeet(aerodrome.elevation, { context: `${aerodrome.icao} (Summary)` });
                               const integrationAAL = typeof aerodrome.integrationAltitude === 'object' ? aerodrome.integrationAltitude.value : aerodrome.integrationAltitude;
                               return elevation && integrationAAL
                                 ? `${elevation + integrationAAL} ft (${integrationAAL} AAL)`

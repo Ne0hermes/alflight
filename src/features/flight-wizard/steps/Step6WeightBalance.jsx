@@ -9,7 +9,6 @@ import { Scale } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import { DENSITIES } from '@utils/unitConversions';
 import { useUnits } from '@hooks/useUnits';
-import { calculateDistanceToSegment, calculateDistance, calculateMidpoint } from '@utils/navigationCalculations';
 
 // Styles communs
 const commonStyles = {
@@ -221,10 +220,14 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
     }
   }, [aircraft?.registration, setSelectedAircraft, flightPlan, onUpdate]);
 
-  // Synchroniser le carburant
+  // Synchroniser le carburant (fobFuel doit être { ltr, gal }, pas un nombre)
   useEffect(() => {
-    if (flightPlan?.fuel?.confirmed && fobFuel !== flightPlan.fuel.confirmed) {
-      setFobFuel(flightPlan.fuel.confirmed);
+    const confirmedLtr = flightPlan?.fuel?.confirmed;
+    if (confirmedLtr && confirmedLtr > 0 && fobFuel?.ltr !== confirmedLtr) {
+      setFobFuel({
+        ltr: confirmedLtr,
+        gal: parseFloat((confirmedLtr / 3.78541).toFixed(2))
+      });
     }
   }, [flightPlan, fobFuel, setFobFuel]);
 
@@ -753,73 +756,16 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
               ) : null;
             })()}
 
-            {/* FOB Alternate (Point de déroutement) - Calcul géométrique */}
+            {/* FOB Alternate (Point de déroutement) — source unique fuelData.alternate.ltr */}
             {(() => {
-              // Utiliser le calcul géométrique avec perpendiculaire
-              // Distance = distance le long de la route jusqu'à la perpendiculaire + distance perpendiculaire
-
-              let alternateFuelL = 0;
-              let calculationDetails = null;
-
-              // Vérifier si on a les données nécessaires
-              if (flightPlan?.route?.departure?.coordinates &&
-                flightPlan?.route?.arrival?.coordinates &&
-                flightPlan?.alternates &&
-                flightPlan.alternates.length > 0 &&
-                aircraft?.cruiseSpeedKt &&
-                aircraft?.fuelConsumption) {
-
-                // Prendre le premier alternate
-                const alternate = flightPlan.alternates[0];
-
-                if (alternate.coordinates || (alternate.lat && (alternate.lon || alternate.lng))) {
-                  const departure = flightPlan.route.departure.coordinates;
-                  const arrival = flightPlan.route.arrival.coordinates;
-                  const altCoords = alternate.coordinates || {
-                    lat: alternate.lat,
-                    lon: alternate.lon || alternate.lng
-                  };
-
-                  // Calculer la distance perpendiculaire du point au segment de route
-                  const perpDistance = calculateDistanceToSegment(altCoords, departure, arrival);
-
-                  // Calculer la distance totale de la route
-                  const routeDistance = calculateDistance(departure, arrival);
-
-                  // Calculer le point médian de la route (approximation du point de décision)
-                  const midpoint = calculateMidpoint(departure, arrival);
-
-                  // Distance du départ au point médian (approximation)
-                  const distanceToDecisionPoint = routeDistance / 2;
-
-                  // Distance totale = distance jusqu'au point de décision + distance perpendiculaire
-                  const totalDistance = distanceToDecisionPoint + perpDistance;
-
-                  // Calculer le carburant nécessaire
-                  const timeHours = totalDistance / aircraft.cruiseSpeedKt;
-                  const currentUnit = getUnit('fuelConsumption');
-                  const GAL_TO_LTR = 3.78541;
-
-                  if (currentUnit === 'gph') {
-                    const consumptionLph = aircraft.fuelConsumption * GAL_TO_LTR;
-                    alternateFuelL = timeHours * consumptionLph;
-                  } else {
-                    alternateFuelL = timeHours * aircraft.fuelConsumption;
-                  }
-
-                  calculationDetails = {
-                    routeDistance: routeDistance.toFixed(1),
-                    distanceToDecisionPoint: distanceToDecisionPoint.toFixed(1),
-                    perpDistance: perpDistance.toFixed(1),
-                    totalDistance: totalDistance.toFixed(1)
-                  };
-                }
-              }
-
-              // Fallback sur fuelData.alternate si pas de calcul géométrique possible
-              if (alternateFuelL === 0 && fuelData?.alternate?.ltr) {
-                alternateFuelL = fuelData.alternate.ltr;
-              }
+              // ─── SOURCE UNIQUE DE VÉRITÉ : fuelData.alternate.ltr ───
+              // Précédemment, ce bloc faisait un calcul géométrique parallèle
+              // (perpendiculaire au segment route + demi-route ≈ point décision)
+              // qui pouvait diverger jusqu'à 20-30% du `FuelModule` selon la
+              // géométrie du déroutement.
+              // Maintenant on lit directement `fuelData.alternate.ltr` qui est
+              // calculé par `useAlternatesForFuel` (hook centralisé).
+              const alternateFuelL = fuelData?.alternate?.ltr || 0;
 
               const alternateFuelKg = alternateFuelL * fuelDensity;
               const alternateMoment = alternateFuelKg * (arms.fuel || 0);
@@ -833,16 +779,6 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                       {alternateFuelInUserUnit.toFixed(1)} {fuelUnitSymbol} ({alternateFuelKg.toFixed(1)} kg)
                     </span>
                   </div>
-
-                  {/* Détails du calcul géométrique */}
-                  {calculationDetails && (
-                    <div style={{ fontSize: '10px', color: '#9ca3af', marginBottom: '4px', paddingLeft: '4px' }}>
-                      📐 Route: {calculationDetails.routeDistance} NM |
-                      Point décision: {calculationDetails.distanceToDecisionPoint} NM |
-                      Perpendiculaire: {calculationDetails.perpDistance} NM |
-                      Total: {calculationDetails.totalDistance} NM
-                    </div>
-                  )}
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px', color: '#6b7280' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>

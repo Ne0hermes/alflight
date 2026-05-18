@@ -8,6 +8,7 @@ import { aircraftSelectors } from '../../core/stores/aircraftStore';
 import { flightPlanSupabaseService } from '../../services/flightPlanSupabaseService';
 import { validatedPdfService } from '../../services/validatedPdfService';
 import { useNavigationResults } from '@features/navigation/hooks/useNavigationResults';
+import { showNotification } from '@shared/components/Notification';
 import html2pdf from 'html2pdf.js';
 
 // Import des étapes
@@ -348,7 +349,8 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
       }
 
       console.error('❌ [Wizard] Validation échouée pour étape', currentStep);
-      alert(errorMessage);
+      // Toast non-bloquant au lieu d'alert() natif
+      showNotification(errorMessage, 'warning', 6000);
     }
   }, [currentStep, currentStepConfig, steps.length, completedSteps, flightPlan]);
 
@@ -709,6 +711,57 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
               </span>
             </div>
           )}
+        </div>
+
+        {/* Barre de progression — étapes cliquables (style déjà défini, on rend ici) */}
+        <div
+          className="wizard-progress"
+          style={{ ...styles.progressContainer, padding: '0 20px', marginTop: '8px' }}
+          role="navigation"
+          aria-label="Progression du wizard"
+        >
+          {steps.map((step) => {
+            const isCurrent = step.number === currentStep;
+            const isCompleted = completedSteps.has(step.number);
+            // Une étape est cliquable si elle est complétée OU c'est l'étape suivante de la courante
+            const isReachable = isCompleted || isCurrent || step.number === currentStep + 1;
+            const stepStyle = {
+              ...styles.progressStep,
+              ...(isCurrent ? styles.progressStepActive : {}),
+              ...(isCompleted && !isCurrent ? styles.progressStepCompleted : {}),
+              cursor: isReachable ? 'pointer' : 'not-allowed',
+              opacity: isReachable ? 1 : 0.45,
+              flex: '1 1 0',
+              minWidth: '70px',
+              border: 'none',
+              fontFamily: 'inherit'
+            };
+            const numberStyle = {
+              ...styles.progressNumber,
+              ...(isCurrent
+                ? { background: theme.colors.primary, color: '#fff', borderColor: theme.colors.primary }
+                : {}),
+              ...(isCompleted && !isCurrent
+                ? { background: theme.colors.success, color: '#fff', borderColor: theme.colors.success }
+                : {})
+            };
+            return (
+              <button
+                key={step.number}
+                type="button"
+                onClick={() => isReachable && handleStepClick(step.number)}
+                disabled={!isReachable}
+                style={stepStyle}
+                aria-current={isCurrent ? 'step' : undefined}
+                title={`Étape ${step.number} : ${step.title}`}
+              >
+                <div style={numberStyle}>
+                  {isCompleted && !isCurrent ? '✓' : step.number}
+                </div>
+                <div style={styles.progressLabel}>{step.title}</div>
+              </button>
+            );
+          })}
         </div>
 
       {/* Contenu de l'étape courante */}

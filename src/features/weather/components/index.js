@@ -1,3 +1,4 @@
 // Export des composants du module Weather
-export { default as RunwaySuggestion } from './RunwaySuggestion';
+// Note : `RunwaySuggestion` (legacy) supprimé — utiliser `RunwaySuggestionEnhanced`
+// qui gère VAC store + aeroDataProvider + sélection optimale piste.
 export { default as RunwaySuggestionEnhanced } from './RunwaySuggestionEnhanced';

@@ -10,6 +10,9 @@ export interface AxesConfig {
     max: number;
     unit: string;
     title: string;
+    /** Pas entre 2 graduations principales. Si défini, les ticks sont générés à
+     *  min, min+step, min+2*step, …, max. Sinon ticks D3 auto. */
+    step?: number;
     reversed?: boolean; // true pour ordre décroissant
   };
   yAxis: {
@@ -17,6 +20,7 @@ export interface AxesConfig {
     max: number;
     unit: string;
     title: string;
+    step?: number;
     reversed?: boolean; // true pour ordre décroissant
   };
 }
@@ -29,6 +33,29 @@ export interface Curve {
   color: string;
   points: XYPoint[];
   windDirection?: WindDirection; // Direction du vent pour cette courbe
+  /**
+   * 🔒 Valeur de la courbe sur le paramètre familial du graphe.
+   * Ex: si `graph.familyAxisVariable === 'pressure_altitude'`, ce champ vaut
+   * 0 / 2000 / 4000… pour chaque courbe parametrée par altitude.
+   * Saisi manuellement → ne dépend pas du parsing du nom de courbe.
+   */
+  familyValue?: number;
+  /**
+   * 🔒 OVERRIDE OPTIONNEL — Valeur Y de la courbe au bord gauche pour le mode
+   * `slope-follow`. Si laissé indéfini, la valeur est dérivée automatiquement
+   * du Y du PREMIER POINT de la courbe (trié par X croissant).
+   *
+   * Pourquoi un override ?
+   *   - Cas standard : on laisse vide et l'algorithme utilise points[0].y
+   *     trié par X croissant — c'est suffisant dans la grande majorité des
+   *     cas et la valeur se met à jour automatiquement quand on déplace le
+   *     premier point dans le wizard.
+   *   - Cas exceptionnel : on souhaite forcer une valeur d'entrée différente
+   *     (par exemple si on a tracé la courbe sans atteindre le bord gauche
+   *     du graphique mais qu'on veut la considérer comme se prolongeant à
+   *     une valeur spécifique). Saisir alors la valeur manuellement.
+   */
+  entryY?: number;
   fitted?: {
     points: XYPoint[];
     rmse: number;
@@ -57,7 +84,63 @@ export interface FitResult {
 export interface GraphConfig {
   id: string;
   name: string;
+  /** ⚠ Champ legacy — étiquette UI uniquement, NON consommé par les calculs.
+   *  Conservé pour rétro-compatibilité avec les abaques existants.
+   *  Pour les nouvelles créations, utiliser `operationId` (catalogue canonique).
+   */
+  graphType?: string;
+  /**
+   * 🔒 Rôle de ce graphique dans le set d'abaques :
+   *   - 'primary'      : graphique qui produit la valeur finale du set (doit porter un operationId)
+   *   - 'intermediate' : étape de correction (température, masse, vent...) — pas d'operationId requis
+   * Si non défini : traité comme 'primary' (rétro-compatibilité).
+   */
+  role?: 'primary' | 'intermediate';
+  /**
+   * Position du graphique dans la cascade de calcul du set.
+   *   - Intermédiaires : 1, 2, 3, 4… selon l'ordre dans la chaîne
+   *     (Tableau 1 produit la valeur qui sert d'entrée à Tableau 2, etc.)
+   *   - Primaire : implicitement le dernier (max + 1) ; pas besoin de saisir.
+   * Utilisé en Phase 4 pour évaluer le set en cascade.
+   */
+  cascadeOrder?: number;
+  /**
+   * 🔒 Identifiant canonique de l'opération de performance que cet abaque
+   * fournit. Doit appartenir au catalogue `core/operationCatalog.ts`.
+   * Requis UNIQUEMENT pour les graphiques `role: 'primary'`.
+   * Clé persistée, utilisée par le moteur de calcul pour matcher cet abaque
+   * lors de la génération de l'état de performance d'un vol.
+   */
+  operationId?: string;
+  /**
+   * Nature de sortie effectivement fournie par cet abaque, parmi celles
+   * acceptées par `operationId` (cf. `OperationDefinition.acceptedOutputs`).
+   * Exemple : pour `climb_takeoff`, peut valoir 'rate_of_climb' ou 'climb_gradient'.
+   */
+  outputKind?: string;
+  /** Unité effective de la sortie (ex. 'ft/min', 'm', '°'). */
+  outputUnit?: string;
   axes: AxesConfig;
+  /**
+   * 🔒 Variable canonique qui distingue les courbes du graphe (paramètre familial).
+   * Ex: `pressure_altitude` si les courbes sont nommées « 0 ft », « 2000 ft »...
+   * Si défini, chaque courbe doit fournir `Curve.familyValue`.
+   * Utilisé par le résolveur pour le bracket 2D (lecture pilote).
+   */
+  familyAxisVariable?: string;
+  /**
+   * 🔒 Mode d'interpolation à appliquer sur ce graphe :
+   *   - 'family'        : bracket entre 2 courbes par leur valeur familiale (graphe 1
+   *                       d'une cascade typique avec courbes "0 ft / 2000 ft / 4000 ft").
+   *                       Requiert `familyAxisVariable` + `Curve.familyValue` sur chaque courbe.
+   *   - 'slope-follow'  : suivi de pente (graphe 2-3 d'une cascade avec courbes guides
+   *                       sans valeur). Entre par Y_in (output précédent) au bord gauche
+   *                       (X = X_min), trace parallèle aux 2 courbes encadrant Y_in,
+   *                       lit Y_out à X = X_cible (input courant).
+   *   - 'mono'          : graphe à 1 seule courbe → interpolation 1D directe sur X.
+   *   - (undefined)     : auto-détection (mono si 1 courbe, family si familyValue présent, sinon fallback).
+   */
+  interpolationMode?: 'family' | 'slope-follow' | 'mono';
   curves: Curve[];
   isWindRelated?: boolean; // Indique si ce graphique concerne le vent
   linkedFrom?: string[]; // IDs des graphiques sources

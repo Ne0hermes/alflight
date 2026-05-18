@@ -546,7 +546,11 @@ const VACModuleOld = memo(() => {
           icao: aerodrome.icao,
           name: aerodrome.name,
           city: aerodrome.city,
-          elevation_ft: aerodrome.elevation.unit === 'FT' ? aerodrome.elevation.value : aerodrome.elevation.value * 3.28084,
+          // ⚠ DEAD CODE : ce composant `VACModuleOld` n'est plus exporté/utilisé.
+          // Conservé pour référence. Conversion d'unité maintenant gérée via
+          // `normalizeElevationToFeet` côté parser (cf. aixmParser.js).
+          elevation_ft: aerodrome.elevation?.valueFt
+            ?? (aerodrome.elevation?.unit === 'FT' ? aerodrome.elevation.value : aerodrome.elevation?.value * 3.28084),
           type: aerodrome.type,
           runways: aerodrome.runways || [],
           frequencies: aerodrome.frequencies || {},

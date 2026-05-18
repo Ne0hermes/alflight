@@ -8,6 +8,7 @@ import {
 import { sx } from '../../../shared/styles/styleSystem';
 import performanceInterpolation from '../../../services/performanceInterpolation';
 import { useWeather, useNavigation, useWeightBalance } from '../../../core/contexts';
+import { getWaypointIcao } from '../../../shared/utils/getWaypointIcao';
 
 const AdvancedPerformanceCalculator = ({ aircraft }) => {
   const { getWeatherByIcao } = useWeather();
@@ -58,62 +59,10 @@ const AdvancedPerformanceCalculator = ({ aircraft }) => {
     
   }, [waypoints, departureAirport, arrivalAirport]);
   
-  // Récupérer les données météo - essayer plusieurs champs pour l'ICAO
-  // S'assurer que c'est une string
-  const getDepartureIcao = () => {
-    // Essayer plusieurs champs possibles pour l'ICAO
-    const icao = departureAirport?.icao || departureAirport?.code || departureAirport?.name || departureAirport?.id;
-    
-    // Si c'est déjà une string valide (4 lettres majuscules typiquement)
-    if (typeof icao === 'string' && icao.match(/^[A-Z]{4}$/)) {
-      return icao;
-    }
-    
-    // Si c'est une string mais pas au bon format, vérifier si c'est un code ICAO valide
-    if (typeof icao === 'string' && icao.length >= 4) {
-      const upperIcao = icao.toUpperCase();
-      // Vérifier si ça commence par LF (France) ou d'autres codes ICAO valides
-      if (upperIcao.match(/^[A-Z]{2}/)) {
-        return upperIcao.substring(0, 4);
-      }
-    }
-    
-    // Si c'est un objet avec une propriété value
-    if (typeof icao === 'object' && icao?.value) {
-      return icao.value;
-    }
-    
-    return null;
-  };
-  
-  const getArrivalIcao = () => {
-    // Essayer plusieurs champs possibles pour l'ICAO
-    const icao = arrivalAirport?.icao || arrivalAirport?.code || arrivalAirport?.name || arrivalAirport?.id;
-    
-    // Si c'est déjà une string valide (4 lettres majuscules typiquement)
-    if (typeof icao === 'string' && icao.match(/^[A-Z]{4}$/)) {
-      return icao;
-    }
-    
-    // Si c'est une string mais pas au bon format, vérifier si c'est un code ICAO valide
-    if (typeof icao === 'string' && icao.length >= 4) {
-      const upperIcao = icao.toUpperCase();
-      // Vérifier si ça commence par LF (France) ou d'autres codes ICAO valides
-      if (upperIcao.match(/^[A-Z]{2}/)) {
-        return upperIcao.substring(0, 4);
-      }
-    }
-    
-    // Si c'est un objet avec une propriété value
-    if (typeof icao === 'object' && icao?.value) {
-      return icao.value;
-    }
-    
-    return null;
-  };
-  
-  const departureIcao = getDepartureIcao();
-  const arrivalIcao = getArrivalIcao();
+  // Codes ICAO départ/arrivée via util partagé (source unique de vérité,
+  // cf. src/shared/utils/getWaypointIcao.js)
+  const departureIcao = getWaypointIcao(departureAirport);
+  const arrivalIcao = getWaypointIcao(arrivalAirport);
   
   
   

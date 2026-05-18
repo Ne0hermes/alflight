@@ -3,6 +3,8 @@
  * depuis les fichiers XML AIXM 4.5 et SIA
  */
 
+import { normalizeElevationToFeet } from '../utils/elevationUtils';
+
 // Fonction pour obtenir le store VAC (import dynamique pour éviter les imports circulaires)
 let getVACStore = null;
 const ensureVACStore = async () => {
@@ -216,10 +218,19 @@ class AIXMParser {
           latDMS: this.formatDMSFromAIXM(this.getTextContent(ahp, 'geoLat'), false),  // Format standard aéronautique
           lonDMS: this.formatDMSFromAIXM(this.getTextContent(ahp, 'geoLong'), true)   // Format standard aéronautique
         },
-        elevation: {
-          value: parseFloat(this.getTextContent(ahp, 'valElev') || 0),
-          unit: this.getTextContent(ahp, 'uomDistVer') || 'FT'
-        },
+        elevation: (() => {
+          const value = parseFloat(this.getTextContent(ahp, 'valElev') || 0);
+          const unit = this.getTextContent(ahp, 'uomDistVer') || 'FT';
+          // Ajout d'un `valueFt` normalisé pour éviter les conversions ad-hoc
+          // chez chaque consommateur (source unique de vérité).
+          return {
+            value,
+            unit,
+            valueFt: normalizeElevationToFeet({ value, unit }, {
+              context: `aérodrome ${this.getTextContent(ahp, 'codeIcao') || '???'}`
+            })
+          };
+        })(),
         magneticVariation: {
           value: parseFloat(this.getTextContent(ahp, 'valMagVar') || 0),
           date: this.getTextContent(ahp, 'dateMagVar'),

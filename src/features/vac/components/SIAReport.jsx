@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Download, Printer, Save, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { aixmParser } from '@services/aixmParser';
+import { normalizeElevationToFeet } from '@utils/elevationUtils';
 
 export const SIAReport = () => {
   const [aerodromes, setAerodromes] = useState([]);
@@ -344,7 +345,7 @@ export const SIAReport = () => {
                   </div>
                   <div style={styles.aerodromeSubtitle}>
                     {data.city && `${data.city} • `}
-                    {data.elevation?.value && `Altitude: ${data.elevation.value} ft • `}
+                    {data.elevation && `Altitude: ${normalizeElevationToFeet(data.elevation, { context: data.icao })} ft • `}
                     {data.runways?.length > 0 && `${data.runways.length} piste(s)`}
                   </div>
                 </div>
@@ -417,7 +418,8 @@ export const SIAReport = () => {
                         <label style={styles.label}>Altitude (ft)</label>
                         <input
                           type="number"
-                          value={data.elevation?.value || 0}
+                          // Afficher la valeur normalisée en pieds (gère conversion m→ft si nécessaire)
+                          value={normalizeElevationToFeet(data.elevation, { context: aerodrome.icao }) || 0}
                           onChange={(e) => updateValue(aerodrome.icao, 'elevation.value', parseInt(e.target.value) || 0)}
                           style={styles.input}
                         />

@@ -103,53 +103,17 @@ export const WeightBalanceTable = memo(({ aircraft, loads, calculations }) => {
     return items;
   }, [aircraft, loads, wb]);
   
-  // Calculer les totaux manuellement pour vérification
-  const manualTotals = useMemo(() => {
-    let totalWeight = aircraft.emptyWeight;
-    let totalMoment = aircraft.emptyWeight * wb.emptyWeightArm;
-    
-    totalWeight += (loads.frontLeft || 0);
-    totalMoment += (loads.frontLeft || 0) * wb.frontLeftSeatArm;
-    
-    totalWeight += (loads.frontRight || 0);
-    totalMoment += (loads.frontRight || 0) * wb.frontRightSeatArm;
-    
-    totalWeight += (loads.rearLeft || 0);
-    totalMoment += (loads.rearLeft || 0) * wb.rearLeftSeatArm;
-    
-    totalWeight += (loads.rearRight || 0);
-    totalMoment += (loads.rearRight || 0) * wb.rearRightSeatArm;
-    
-    // Gérer les compartiments bagages dynamiques pour les totaux
-    if (aircraft.baggageCompartments && aircraft.baggageCompartments.length > 0) {
-      aircraft.baggageCompartments.forEach((compartment, index) => {
-        const loadKey = `baggage_${compartment.id || index}`;
-        const weight = loads[loadKey] || 0;
-        const arm = parseFloat(compartment.arm) || 3.50;
-        totalWeight += weight;
-        totalMoment += weight * arm;
-      });
-    } else {
-      totalWeight += (loads.baggage || 0);
-      totalMoment += (loads.baggage || 0) * wb.baggageArm;
-      
-      totalWeight += (loads.auxiliary || 0);
-      totalMoment += (loads.auxiliary || 0) * wb.auxiliaryArm;
-    }
-    
-    totalWeight += (loads.fuel || 0);
-    totalMoment += (loads.fuel || 0) * wb.fuelArm;
-    
-    const cg = totalWeight > 0 ? totalMoment / totalWeight : 0;
-    
-    return {
-      totalWeight: totalWeight.toFixed(1),
-      totalMoment: totalMoment.toFixed(1),
-      cg: cg.toFixed(3)
-    };
-  }, [aircraft, loads, wb]);
-  
-  console.log('WeightBalanceTable - Manual calculations:', manualTotals);
+  // ─── SOURCE UNIQUE DE VÉRITÉ : `calculations` (props depuis useWeightBalance store) ───
+  // Le bloc `manualTotals` recalculait localement les totaux en parallèle de
+  // ce que le store fournissait déjà. Supprimé pour éviter les divergences
+  // (ex: si un nouveau `loadKey` est ajouté au store, l'ancien manualTotals
+  // l'ignorait silencieusement). Les valeurs affichées proviennent maintenant
+  // exclusivement de `calculations.{totalWeight,totalMoment,cg}`.
+  const totals = useMemo(() => ({
+    totalWeight: typeof calculations?.totalWeight === 'number' ? calculations.totalWeight.toFixed(1) : '—',
+    totalMoment: typeof calculations?.totalMoment === 'number' ? calculations.totalMoment.toFixed(1) : '—',
+    cg:          typeof calculations?.cg === 'number'          ? calculations.cg.toFixed(3)          : '—'
+  }), [calculations]);
   
   return (
     <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
@@ -189,42 +153,19 @@ export const WeightBalanceTable = memo(({ aircraft, loads, calculations }) => {
           <tr style={styles.totalRow}>
             <td style={styles.totalCell}>TOTAL</td>
             <td style={sx.combine(styles.totalCell, styles.rightAlign)}>
-              {manualTotals.totalWeight}
+              {totals.totalWeight}
             </td>
             <td style={sx.combine(styles.totalCell, styles.rightAlign)}>
-              {manualTotals.cg}
+              {totals.cg}
             </td>
             <td style={sx.combine(styles.totalCell, styles.rightAlign, styles.totalMoment)}>
-              {manualTotals.totalMoment}
+              {totals.totalMoment}
             </td>
           </tr>
         </tfoot>
       </table>
-      
-      <FormulaInfo cg={manualTotals.cg} totalMoment={manualTotals.totalMoment} totalWeight={manualTotals.totalWeight} />
-      
-      {/* Section de débogage temporaire */}
-      <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#FEF3C7', borderRadius: '8px', fontSize: '12px' }}>
-        <h5 style={{ marginBottom: '8px', fontWeight: 'bold' }}>🔍 Debug - Comparaison des calculs:</h5>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-          <div>
-            <strong>Calculs manuels (tableau):</strong>
-            <ul style={{ margin: 0, paddingLeft: '20px' }}>
-              <li>Poids total: {manualTotals.totalWeight} kg</li>
-              <li>Moment total: {manualTotals.totalMoment} kg.m</li>
-              <li>CG: {manualTotals.cg} m</li>
-            </ul>
-          </div>
-          <div>
-            <strong>Calculs du store:</strong>
-            <ul style={{ margin: 0, paddingLeft: '20px' }}>
-              <li>Poids total: {calculations?.totalWeight || 'N/A'} kg</li>
-              <li>Moment total: {calculations?.totalMoment || 'N/A'} kg.m</li>
-              <li>CG: {calculations?.cg || 'N/A'} m</li>
-            </ul>
-          </div>
-        </div>
-      </div>
+
+      <FormulaInfo cg={totals.cg} totalMoment={totals.totalMoment} totalWeight={totals.totalWeight} />
     </section>
   );
 });

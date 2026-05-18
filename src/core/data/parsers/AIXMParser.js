@@ -5,6 +5,7 @@
  */
 
 import { AIRPORT_NAMES, enrichAirportName } from '@data/airportNames';
+import { normalizeElevationToFeet } from '@utils/elevationUtils';
 
 export class AIXMParser {
   constructor() {
@@ -150,10 +151,12 @@ export class AIXMParser {
           remarks: ahp.querySelector('txtRmk')?.textContent
         };
         
-        // Convertir l'élévation en pieds si nécessaire
-        if (airport.elevationUnit === 'M') {
-          airport.elevation = Math.round(airport.elevation * 3.28084);
-        }
+        // Normaliser l'élévation en pieds via util partagé (gère toutes les
+        // variantes orthographiques d'unité + cas absent).
+        airport.elevation = Math.round(normalizeElevationToFeet(
+          { value: airport.elevation, unit: airport.elevationUnit },
+          { context: airport.icao || airport.name }
+        ));
         
         this.data.airports.push(airport);
       } catch (error) {
