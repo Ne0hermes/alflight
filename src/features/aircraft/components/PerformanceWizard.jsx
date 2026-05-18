@@ -4,6 +4,7 @@ import unifiedPerformanceService from '../../performance/services/unifiedPerform
 import pdfToImageConverterOptimized from '../../../services/pdfToImageConverterOptimized';
 import AdvancedPerformanceAnalyzer from './AdvancedPerformanceAnalyzer';
 import { AbacBuilder } from '../../../abac/curves/ui/AbacBuilder';
+import { OPERATION_CATALOG } from '../../../abac/curves/core/operationCatalog';
 
 // Styles de base
 const styles = {
@@ -183,14 +184,20 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
     }
   }, [startAtStep, initialData]);
 
-  // Types de performance disponibles
+  // ─── Types de performance disponibles ───
+  // Source de vérité : OPERATION_CATALOG (src/abac/curves/core/operationCatalog.ts).
+  // Les 9 opérations canoniques utilisées aussi par les abaques côté pilote
+  // (matrice de couverture). Le pilote sélectionne UNE opération principale par
+  // page MANEX ; l'IA peut détecter d'autres grandeurs et les retourner en
+  // tableaux séparés (cf. prompt OpenAI plus bas).
   const performanceTypes = [
     { value: '', label: 'Non classifié' },
-    { value: 'takeoff-normal', label: 'Take-off Distance - Normal Procedure' },
-    { value: 'takeoff-climb', label: 'Take-off Climb - Flaps T/O' },
-    { value: 'cruise-climb', label: 'Cruise Climb - Flaps Up' },
-    { value: 'landing-normal', label: 'Landing Distance - Flaps LDG' },
-    { value: 'landing-abnormal', label: 'Landing Distance - Abnormal Position' }
+    ...OPERATION_CATALOG.map(op => ({
+      value: op.id,
+      label: op.labelFr,
+      phase: op.phase,
+      acceptedOutputs: op.acceptedOutputs
+    }))
   ];
 
   // Gestion de l'upload du manuel

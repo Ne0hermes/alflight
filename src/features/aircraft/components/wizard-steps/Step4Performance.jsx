@@ -152,26 +152,33 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
       console.log('📊 Tableaux existants:', existingTables.length);
       console.log('📊 Fusion en cours...');
 
-      // Fusionner les tableaux (éviter les doublons par page + type + nom)
+      // Fusionner les tableaux (éviter les doublons).
+      // Clé de dédoublonnage (Option B) :
+      //   - PRIORITAIRE : operationId + Masse (un seul tableau par opération par masse)
+      //   - FALLBACK : pageNumber + table_type + table_name (legacy)
       const mergedTables = [...existingTables];
       newTables.forEach(newTable => {
-        // 🔧 FIX: Identifiant unique combinant pageNumber + type + nom
-        // Plusieurs tableaux peuvent venir de la même page
-        const newTableId = `${newTable.pageNumber || 'nopage'}_${newTable.table_type || 'notype'}_${newTable.table_name || 'noname'}`;
+        // Helper pour calculer la clé d'un tableau
+        const tableKey = (t) => {
+          if (t.operationId) {
+            // Masse depuis data[0] ou nom ou conditions
+            const mass = t.data?.[0]?.Masse
+                       ?? (t.table_name?.match(/(\d+)\s*kg/i)?.[1])
+                       ?? t.conditions?.mass
+                       ?? 'nomass';
+            return `op:${t.operationId}__m:${mass}`;
+          }
+          return `legacy:${t.pageNumber || 'nopage'}_${t.table_type || 'notype'}_${t.table_name || 'noname'}`;
+        };
 
-        // Chercher un tableau avec le même identifiant unique
-        const existingIndex = mergedTables.findIndex(t => {
-          const existingId = `${t.pageNumber || 'nopage'}_${t.table_type || 'notype'}_${t.table_name || 'noname'}`;
-          return existingId === newTableId;
-        });
+        const newKey = tableKey(newTable);
+        const existingIndex = mergedTables.findIndex(t => tableKey(t) === newKey);
 
         if (existingIndex >= 0) {
-          // Remplacer le tableau existant (ré-analyse)
-          console.log(`📊 Remplacement tableau ${newTable.table_name} (page ${newTable.pageNumber})`);
+          console.log(`📊 Remplacement tableau ${newTable.table_name} (key=${newKey})`);
           mergedTables[existingIndex] = newTable;
         } else {
-          // Ajouter le nouveau tableau
-          console.log(`📊 Ajout nouveau tableau ${newTable.table_name} (page ${newTable.pageNumber})`);
+          console.log(`📊 Ajout nouveau tableau ${newTable.table_name} (key=${newKey})`);
           mergedTables.push(newTable);
         }
       });
@@ -216,24 +223,66 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
         updateData('performanceModels', newModels);
         dataToSave.performanceModels = newModels;
       } else {
-        // Sinon, créer un nouveau modèle
-        
-        
-                const newModels = [
-          ...(data.performanceModels || []),
-          {
-            id: `model_${Date.now()}`,
-            name: performanceData.classification || performanceData.abacCurves.name || 'Nouveau modèle ABAC',
-            type: performanceData.systemType || 'abaque', // Utiliser le systemType si disponible
+        // Sinon, créer un nouveau modèle.
+        // 🔧 GARDE ANTI-DOUBLON : si un modèle avec la même signature
+        // (operationId du primaire + systemType + nombre de graphes + premier graphId)
+        // a été créé il y a < 10 secondes, on le REMPLACE au lieu d'en créer un nouveau.
+        // Évite les triples-saves qu'on observait quand handlePerformanceUpdate
+        // était invoqué plusieurs fois par re-render.
+        const existing = data.performanceModels || [];
+        const newAbac = performanceData.abacCurves;
+        const newSig = {
+          systemType: newAbac?.metadata?.systemType,
+          nbGraphs: newAbac?.graphs?.length,
+          firstGraphId: newAbac?.graphs?.[0]?.id,
+          firstPrimaryOpId: newAbac?.graphs?.find?.(g => (g.role || 'primary') === 'primary')?.operationId
+        };
+        const tenSecondsAgo = Date.now() - 10_000;
+        const dupIndex = existing.findIndex(m => {
+          if (!m?.createdAt) return false;
+          if (new Date(m.createdAt).getTime() < tenSecondsAgo) return false;
+          const sig = {
+            systemType: m.data?.metadata?.systemType,
+            nbGraphs: m.data?.graphs?.length,
+            firstGraphId: m.data?.graphs?.[0]?.id,
+            firstPrimaryOpId: m.data?.graphs?.find?.(g => (g.role || 'primary') === 'primary')?.operationId
+          };
+          return sig.systemType === newSig.systemType
+              && sig.nbGraphs === newSig.nbGraphs
+              && sig.firstGraphId === newSig.firstGraphId
+              && sig.firstPrimaryOpId === newSig.firstPrimaryOpId;
+        });
+
+        let newModels;
+        if (dupIndex >= 0) {
+          // ⚠ Doublon récent détecté → on met à jour l'entrée existante
+          console.warn('🛑 [Step4Performance] Doublon détecté (même set créé < 10s) — remplacement de l\'entrée existante au lieu d\'un append :', existing[dupIndex].id);
+          newModels = [...existing];
+          newModels[dupIndex] = {
+            ...newModels[dupIndex],
+            name: performanceData.classification || newAbac.name || newModels[dupIndex].name,
+            type: performanceData.systemType || newModels[dupIndex].type || 'abaque',
             classification: performanceData.classification,
             classificationValue: performanceData.classificationValue,
-            data: performanceData.abacCurves,
-            createdAt: new Date().toISOString(),
+            data: newAbac,
             updatedAt: new Date().toISOString()
-          }
-        ];
-        newModels.forEach((model, idx) => {
-        });
+          };
+        } else {
+          // Nouveau modèle légitime
+          newModels = [
+            ...existing,
+            {
+              id: `model_${Date.now()}`,
+              name: performanceData.classification || newAbac.name || 'Nouveau modèle ABAC',
+              type: performanceData.systemType || 'abaque',
+              classification: performanceData.classification,
+              classificationValue: performanceData.classificationValue,
+              data: newAbac,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            }
+          ];
+        }
 
         updateData('performanceModels', newModels);
         dataToSave.performanceModels = newModels;
@@ -256,12 +305,45 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
       dataToSave.flightManual = manualData;
     }
 
-    // Sauvegarder dans le localStorage pour persistance
+    // Sauvegarder dans le localStorage pour persistance (brouillon wizard)
+    // ⚠ On strippe les données lourdes (points fittés, dataURLs d'images) qui peuvent
+    // facilement dépasser la quota localStorage (~5 MB). Ces données sont régénérables
+    // ou stockées ailleurs.
     try {
-      localStorage.setItem('wizard_performance_temp', JSON.stringify(dataToSave));
-      
+      const stripHeavy = (obj) => {
+        if (!obj || typeof obj !== 'object') return obj;
+        if (Array.isArray(obj)) return obj.map(stripHeavy);
+        const out = {};
+        for (const [k, v] of Object.entries(obj)) {
+          if (k === 'fitted' && v && typeof v === 'object' && Array.isArray(v.points)) {
+            // On garde la méta du fit (rmse, method) mais on dégage les ~200 points fittés
+            out[k] = { rmse: v.rmse, method: v.method, _stripped: true };
+          } else if (typeof v === 'string' && v.startsWith('data:') && v.length > 5000) {
+            // dataURL base64 → on ne persiste pas dans le brouillon
+            out[k] = '[stripped_dataurl]';
+          } else {
+            out[k] = stripHeavy(v);
+          }
+        }
+        return out;
+      };
+
+      const lightDraft = stripHeavy(dataToSave);
+      const serialized = JSON.stringify(lightDraft);
+
+      // Si même la version allégée dépasse 4 MB, on saute le brouillon plutôt que de planter
+      if (serialized.length > 4 * 1024 * 1024) {
+        console.warn(`⚠️ [Step4Performance] Brouillon localStorage skip (${(serialized.length / 1024 / 1024).toFixed(2)} MB > 4 MB). L'avion reste persisté correctement via Supabase/IndexedDB.`);
+        // On vide quand même la clé existante pour éviter une vieille version
+        localStorage.removeItem('wizard_performance_temp');
+      } else {
+        localStorage.setItem('wizard_performance_temp', serialized);
+      }
     } catch (e) {
-      console.error('Erreur lors de la sauvegarde:', e);
+      // QuotaExceededError ou autre — on ne bloque pas le flow de sauvegarde principale
+      // (qui passe par Supabase/IndexedDB et n'a pas besoin du brouillon localStorage).
+      console.warn('⚠️ [Step4Performance] Impossible de sauver le brouillon localStorage (non bloquant):', e?.name || 'erreur', e?.message || '');
+      try { localStorage.removeItem('wizard_performance_temp'); } catch { /* noop */ }
     }
 
     // Navigation automatique vers l'étape suivante (équipement)

@@ -117,6 +117,28 @@ export default defineConfig(({ mode }) => ({
       protocol: 'ws',
       host: 'localhost'
     },
+    // ─── Watcher : exclure les gros fichiers / dossiers non-source ───
+    // Sans cette config, Vite watchait src/data/*.xml (~70 MB combinés)
+    // ce qui saturait les file handles Windows et causait des crashes
+    // récurrents (HMR figé, serveur qui ne répond plus, processus zombies).
+    watch: {
+      ignored: [
+        '**/node_modules/**',
+        '**/.git/**',
+        '**/dist/**',
+        '**/build/**',
+        '**/backups/**',
+        '**/src/data/**',           // XML AIXM/SIA volumineux (43 + 27 MB)
+        '**/src/data/old/**',
+        '**/public/data/old/**',
+        '**/public/data/**/*.xml',
+        '**/public/data/**/*.geojson',
+        '**/*.log',
+        '**/.vite/**',
+        '**/coverage/**',
+        '**/.vite-restart.log'
+      ]
+    },
     // DÉSACTIVÉ: Ces headers bloquent les requêtes Supabase
     // headers: {
     //   'Cross-Origin-Embedder-Policy': 'require-corp',

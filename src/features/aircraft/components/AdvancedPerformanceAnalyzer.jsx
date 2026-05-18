@@ -7,12 +7,85 @@ import {
 } from 'lucide-react';
 import { sx } from '../../../shared/styles/styleSystem';
 import unifiedPerformanceService from '../../../features/performance/services/unifiedPerformanceService';
+import { OPERATION_CATALOG, isValidOperationId } from '../../../abac/curves/core/operationCatalog';
 import pdfToImageConverter from '../../../services/pdfToImageConverter';
 import pdfToImageConverterOptimized from '../../../services/pdfToImageConverterOptimized';
 import TableDisplay from './TableDisplay';
 import APIConfiguration from '../../performance/components/APIConfiguration';
 import apiKeyManager from '../../../utils/apiKeyManager';
 import testEnvVars from '../../../utils/testEnvVars';
+
+// ─────────────────────────────────────────────────────────────────────────
+// CONSTRUCTION DU PROMPT D'EXTRACTION (Option B)
+// ─────────────────────────────────────────────────────────────────────────
+//
+// L'utilisateur indique une opération principale (operationId du catalogue
+// canonique) sur la page sélectionnée. L'IA doit :
+//   1. Extraire OBLIGATOIREMENT cette opération
+//   2. Si la page contient AUSSI d'autres grandeurs (ex: ground roll + over 50ft
+//      sur le même tableau MANEX), retourner CHAQUE grandeur dans un tableau
+//      SÉPARÉ avec son propre operationId.
+//   3. Une ligne du tableau = un point de calcul, avec UNE seule valeur (`value`)
+//      pour l'operationId du tableau parent. Plus de mélange ground_roll/over_50ft
+//      dans la même ligne.
+
+/** Catalogue formaté pour injection dans le prompt OpenAI. */
+const buildCatalogForPrompt = () => OPERATION_CATALOG.map(op => {
+  const outputs = op.acceptedOutputs.map(o => `${o.kind} (${o.defaultUnit})`).join(' OR ');
+  const config = op.configuration?.flaps ? ` [flaps=${op.configuration.flaps}]` : '';
+  return `  - "${op.id}" — ${op.labelEn}${config} → output: ${outputs}`;
+}).join('\n');
+
+/**
+ * Construit un prompt d'extraction adapté à l'operationId attendu.
+ *
+ * @param {string|null} expectedOperationId  L'operationId que le pilote a indiqué
+ *                                            comme classification de la page. Si null
+ *                                            ou invalide, l'IA détecte librement.
+ * @returns {string} Prompt complet à envoyer à OpenAI Vision
+ */
+const buildExtractionPrompt = (expectedOperationId) => {
+  const isValidExpected = expectedOperationId && isValidOperationId(expectedOperationId);
+  const expectedClause = isValidExpected
+    ? `The user classified this page as containing data for operationId="${expectedOperationId}".
+You MUST extract this operation as a separate table.`
+    : `The user has not specified a classification. Detect the operationId(s) yourself from the page content.`;
+
+  return `Extract aircraft performance data from this MANEX page image.
+
+═════ AVAILABLE OPERATION IDs (strict catalog) ═════
+${buildCatalogForPrompt()}
+
+═════ INSTRUCTIONS ═════
+${expectedClause}
+
+CRITICAL RULES:
+1. ONE table = ONE operationId from the catalog above. Never mix multiple operations in the same table.
+2. If a single MANEX table contains MULTIPLE quantities (ex: "Take-off Distance" with both ground roll AND over-50ft columns), SPLIT it into separate output tables, one per operationId.
+3. Each row has ONE single output value in a field called "value" (number, in defaultUnit of the operation).
+4. Input columns: Altitude (ft), Temperature (°C), Masse (kg). Other relevant inputs are allowed (e.g. windComponent, runwaySlope).
+5. If mass is in the header (ex: column "1100 kg") instead of in rows, expand: create one row per mass value with Masse:1100 added.
+6. Only return operationIds from the catalog. NEVER invent new ids.
+
+═════ OUTPUT FORMAT (strict JSON) ═════
+{
+  "tables": [
+    {
+      "operationId": "takeoff_50ft",
+      "outputUnit": "m",
+      "table_name": "Take-off Distance over 50 ft - Normal Procedure",
+      "data": [
+        {"Altitude": 0,    "Temperature": 15, "Masse": 1200, "value": 425},
+        {"Altitude": 2000, "Temperature": 15, "Masse": 1200, "value": 475},
+        {"Altitude": 0,    "Temperature": 30, "Masse": 1200, "value": 470}
+      ]
+    }
+  ]
+}
+
+LIMIT: 30 rows max per table. Extract key data points only.
+If you detect 2 operations on the same MANEX table, return 2 separate tables in the array.`;
+};
 
 /**
  * Composant d'analyse avancée des performances aéronautiques
@@ -528,20 +601,13 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
         setAnalysisProgress((i / uploadedImages.length) * 100);
 
         try {
-          // Appel du service d'analyse avancée avec un prompt détaillé
+          // Appel du service d'analyse avancée avec un prompt typé sur le catalogue
           unifiedPerformanceService.setMode('manual');
-          const detailedPrompt = `Extract performance table. Return JSON:
-{
-  "tables": [{
-    "table_name": "name",
-    "table_type": "takeoff/landing/climb",
-    "data": [
-      {"Altitude": n, "Temperature": n, "Distance_roulement": n, "Distance_passage_15m": n, "Masse": n}
-    ]
-  }]
-}
-LIMIT: 30 rows max. Extract key values only.
-If mass in header (900kg), add Masse:900 to row.`;
+          // operationId attendu sur cette page (saisi par le pilote dans le wizard)
+          const expectedOpId = image.classification && image.classification !== 'non-classified'
+            ? image.classification
+            : null;
+          const detailedPrompt = buildExtractionPrompt(expectedOpId);
 
           const analysisResult = await unifiedPerformanceService.analyzeManualPerformance(
             image.base64,
@@ -552,11 +618,21 @@ If mass in header (900kg), add Masse:900 to row.`;
 
           if (analysisResult.tables && analysisResult.tables.length > 0) {
             const imageTables = analysisResult.tables.map(table => {
-              // Utiliser le format data s'il est fourni, sinon convertir headers+rows
-              let tableData = table.data;
+              // ─── Validation du nouveau schéma (Option B) ───
+              // L'IA doit retourner : { operationId, outputUnit, table_name, data: [{...inputs, value}] }
+              // Si l'operationId est absent ou hors catalogue, on garde le tableau mais on
+              // le marque comme "needs review" pour que le pilote le corrige manuellement.
+              const opIdValid = table.operationId && isValidOperationId(table.operationId);
+              if (!opIdValid) {
+                console.warn(
+                  `⚠️ [Analyzer] Tableau sans operationId valide retourné par l'IA (table_name="${table.table_name}")`,
+                  { receivedOperationId: table.operationId }
+                );
+              }
 
+              // Utiliser le format data s'il est fourni, sinon convertir headers+rows (legacy)
+              let tableData = table.data;
               if (!tableData && table.headers && table.rows) {
-                
                 tableData = table.rows.map(row => {
                   const rowObj = {};
                   table.headers.forEach((header, index) => {
@@ -569,73 +645,64 @@ If mass in header (900kg), add Masse:900 to row.`;
               // Post-traitement pour s'assurer que la colonne "Masse" existe
               if (tableData && tableData.length > 0) {
                 const hasMasse = tableData.some(row => row.Masse !== undefined);
-
                 if (!hasMasse) {
-                  
-
                   // Chercher la masse dans les headers (ex: "1100kg", "900kg")
                   const massHeaders = table.headers?.filter(h => /\d+\s*kg/i.test(h)) || [];
-
                   if (massHeaders.length > 0) {
-                    
                     // Créer des lignes séparées pour chaque masse
                     const expandedData = [];
-
                     for (const massHeader of massHeaders) {
                       const massValue = massHeader.match(/(\d+)/)?.[1];
                       if (massValue) {
                         tableData.forEach(row => {
                           const newRow = { ...row };
                           newRow.Masse = massValue;
-                          // Copier la valeur de la colonne de masse vers une colonne standard
-                          if (row[massHeader] !== undefined) {
-                            newRow.Distance = row[massHeader];
+                          // Pour le nouveau schéma : la valeur de la colonne masse devient `value`
+                          if (row[massHeader] !== undefined && newRow.value === undefined) {
+                            newRow.value = row[massHeader];
                           }
                           expandedData.push(newRow);
                         });
                       }
                     }
-
                     if (expandedData.length > 0) {
                       tableData = expandedData;
-                      
                     }
                   } else if (table.table_name?.match(/\d+\s*kg/i) || table.conditions?.match(/\d+\s*kg/i)) {
                     // Extraire la masse du titre ou des conditions
                     const massMatch = (table.table_name + ' ' + (table.conditions || '')).match(/(\d+)\s*kg/i);
                     if (massMatch) {
-                      const massValue = massMatch[1];
-                      
-                      tableData = tableData.map(row => ({ ...row, Masse: massValue }));
-                      
+                      tableData = tableData.map(row => ({ ...row, Masse: massMatch[1] }));
                     }
-                  } else {
-                    
-                    // Ajouter une masse par défaut si aucune information n'est disponible
-                    tableData = tableData.map(row => ({ ...row, Masse: '1050' }));
                   }
+                  // Plus de défaut hardcodé à 1050 — laisser sans Masse plutôt que mentir
                 }
               }
 
-              // 🔧 FIX: Extraire le numéro de page depuis image.name pour la fusion
+              // Extraire le numéro de page depuis image.name pour la fusion
               // Format attendu: "Page 177", "Page 178", etc.
               const pageMatch = image.name.match(/Page\s+(\d+)/i);
               const pageNumber = pageMatch ? parseInt(pageMatch[1], 10) : undefined;
 
               return {
-                ...table,
+                // Schéma normalisé Option B
+                operationId: opIdValid ? table.operationId : null,
+                outputUnit: table.outputUnit || null,
+                table_name: table.table_name || `Tableau page ${pageNumber || '?'}`,
                 data: tableData || [],
-                pageNumber, // 🔧 AJOUT: Numéro de page pour éviter doublons lors de la fusion
+                pageNumber,
                 sourceImage: {
                   id: image.id,
                   name: image.name,
                   preview: image.preview
                 },
-                classification: image.classification || 'non-classified',
+                // classification = operationId du catalogue (legacy field name conservé pour compat)
+                classification: opIdValid ? table.operationId : (image.classification || 'non-classified'),
                 analysisMetadata: {
                   analyzedAt: new Date().toISOString(),
                   confidence: analysisResult.confidence,
-                  detectionMethod: analysisResult.detectionMethod
+                  detectionMethod: analysisResult.detectionMethod,
+                  needsReview: !opIdValid
                 }
               };
             });
@@ -998,38 +1065,15 @@ If mass in header (900kg), add Masse:900 to row.`;
     try {
       // Forcer une nouvelle analyse avec le même prompt détaillé
       unifiedPerformanceService.setMode('manual');
-      const detailedPrompt = `FORCE extraction of ALL data from this aviation performance image.
-This is a RE-ANALYSIS - the previous attempt may have missed data.
+      // RE-ANALYSE en mode strict catalogue : extrait les opérations détectables
+      // sur l'image, chaque opération dans son propre tableau (Option B).
+      const detailedPrompt = buildExtractionPrompt(null) + `
 
-Look CAREFULLY for:
-- ANY tables with rows and columns (even if poorly formatted)
-- Performance graphs, charts, or abacus curves
-- Numbers arranged in grid patterns
-- Takeoff/landing/climb performance data
-- ANY numerical data related to aircraft performance
-
-Extract EVERYTHING you can see, even partial data.
-
-Return as JSON:
-{
-  "tables": [
-    {
-      "table_name": "descriptive name",
-      "table_type": "type of performance data",
-      "headers": ["column headers if visible"],
-      "rows": [["extract", "all", "data"], ["even", "partial", "rows"]],
-      "units": {"column": "unit"},
-      "conditions": "any conditions or notes",
-      "raw_data": "copy all text/numbers you can see"
-    }
-  ],
-  "confidence": 0.0 to 1.0,
-  "detectionMethod": "vision-reanalysis",
-  "raw_text": "ALL text visible in the image",
-  "description": "Describe what you see in the image"
-}
-
-IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`;
+═════ RE-ANALYSIS MODE ═════
+This is a RE-ANALYSIS — the previous attempt may have missed data.
+Look CAREFULLY for ANY tables, graphs, or numerical grids related to aircraft performance.
+Extract EVERYTHING you can identify. If unsure about operationId, omit it (the user will review).
+Do NOT return empty tables array.`;
 
       const analysisResult = await unifiedPerformanceService.analyzeManualPerformance(
         table.sourceImage.preview.split(',')[1], // Extraire le base64 de la preview
@@ -1371,11 +1415,11 @@ IMPORTANT: Do NOT return empty tables array. Extract ANY data you can identify.`
                       setIsAnalyzing(true);
                       setError(null);
                       try {
-                        // Préparer le prompt pour la ré-analyse
-                        const detailedPrompt = `Analyze this aircraft performance image and extract ALL tables.
-                        Focus on: ${imageToReanalyze.classification || 'takeoff/landing performance'} data.
-                        Extract values including Distance_roulement, Distance_passage_15m, etc.
-                        Return valid JSON with extracted tables.`;
+                        // Ré-analyser avec le prompt typé sur le catalogue
+                        const expectedOpId = imageToReanalyze.classification && imageToReanalyze.classification !== 'non-classified'
+                          ? imageToReanalyze.classification
+                          : null;
+                        const detailedPrompt = buildExtractionPrompt(expectedOpId);
 
                         // Extraire le base64 de l'image
                         const base64Data = imageToReanalyze.preview.includes('base64,')
