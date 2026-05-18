@@ -536,7 +536,12 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
                           <div style={styles.infoItem}>
                             <span style={styles.infoLabel}>Élévation terrain</span>
                             <span style={styles.infoValue}>
-                              {aerodrome.elevation?.value ? `${aerodrome.elevation.value} ft` : 'N/A'}
+                              {/* Utiliser valueFt normalisé (parser garantit la conversion m→ft si nécessaire) */}
+                              {aerodrome.elevation?.valueFt != null
+                                ? `${aerodrome.elevation.valueFt} ft`
+                                : aerodrome.elevation?.value != null
+                                  ? `${aerodrome.elevation.value} ft`
+                                  : 'N/A'}
                             </span>
                           </div>
                           <div style={styles.infoItem}>
@@ -548,17 +553,23 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
                           <div style={styles.infoItem}>
                             <span style={styles.infoLabel}>Alt. tour de piste</span>
                             <span style={styles.infoValue}>
-                              {aerodrome.circuitAltitude && aerodrome.elevation?.value
-                                ? `${aerodrome.elevation.value + aerodrome.circuitAltitude} ft (${aerodrome.circuitAltitude} AAL)`
-                                : 'N/A'}
+                              {(() => {
+                                const elevFt = aerodrome.elevation?.valueFt ?? aerodrome.elevation?.value;
+                                return aerodrome.circuitAltitude && elevFt != null
+                                  ? `${elevFt + aerodrome.circuitAltitude} ft (${aerodrome.circuitAltitude} AAL)`
+                                  : 'N/A';
+                              })()}
                             </span>
                           </div>
                           <div style={styles.infoItem}>
                             <span style={styles.infoLabel}>Alt. intégration</span>
                             <span style={styles.infoValue}>
-                              {aerodrome.integrationAltitude && aerodrome.elevation?.value
-                                ? `${aerodrome.elevation.value + aerodrome.integrationAltitude} ft (${aerodrome.integrationAltitude} AAL)`
-                                : 'N/A'}
+                              {(() => {
+                                const elevFt = aerodrome.elevation?.valueFt ?? aerodrome.elevation?.value;
+                                return aerodrome.integrationAltitude && elevFt != null
+                                  ? `${elevFt + aerodrome.integrationAltitude} ft (${aerodrome.integrationAltitude} AAL)`
+                                  : 'N/A';
+                              })()}
                             </span>
                           </div>
                         </div>

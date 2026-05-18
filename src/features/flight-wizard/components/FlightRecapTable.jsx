@@ -2,6 +2,7 @@ import React from 'react';
 import { Plane, MapPin, Navigation as NavigationIcon, Radio, Phone, Clock } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import VFRNavigationTable from '@features/navigation/components/VFRNavigationTable';
+import { normalizeElevationToFeet } from '@utils/elevationUtils';
 
 /**
  * Tableau récapitulatif pour le PDF
@@ -92,8 +93,8 @@ export const FlightRecapTable = ({
     // Téléphone
     const phone = aerodrome.phone || null;
 
-    // Altitudes
-    const elevation = typeof aerodrome.elevation === 'object' ? aerodrome.elevation.value : aerodrome.elevation;
+    // Altitudes (élévation normalisée en pieds via util partagé — gère m→ft + variantes unit)
+    const elevation = normalizeElevationToFeet(aerodrome.elevation, { context: `${aerodrome?.icao || 'aerodrome'} (recap)` });
     const tdpAlt = typeof aerodrome.circuitAltitude === 'object' ? aerodrome.circuitAltitude.value : aerodrome.circuitAltitude;
     const integrationAlt = typeof aerodrome.integrationAltitude === 'object' ? aerodrome.integrationAltitude.value : aerodrome.integrationAltitude;
 

@@ -11,6 +11,21 @@ interface CurveManagerProps {
   onUpdateCurve: (curveId: string, updates: Partial<Curve>) => void;
   onReorderCurves?: (curves: Curve[]) => void;
   isWindRelated?: boolean;
+  /** ID de la variable familiale du graphe (cf. graph.familyAxisVariable).
+   *  Si défini, on affiche un champ "Valeur familiale" pour chaque courbe. */
+  familyAxisVariable?: string;
+  /** Libellé court de la variable familiale (pour affichage UI). */
+  familyAxisLabel?: string;
+  /** Mode d'interpolation du graphe. Si 'slope-follow', on affiche un champ
+   *  "Y au bord gauche" pour chaque courbe (utilisé pour bracketer Y_in). */
+  interpolationMode?: 'family' | 'slope-follow' | 'mono';
+  /** Unité de l'axe Y du graphe (affichée dans le label du champ entryY). */
+  yAxisUnit?: string;
+  /** Titre de l'axe Y du graphe (affiché dans le label du champ entryY). */
+  yAxisTitle?: string;
+  /** Sens de l'axe X : si true, l'axe est décroissant → le 1er point pilote
+   *  est celui avec le X MAX (bord gauche visuel). */
+  xAxisReversed?: boolean;
 }
 
 const DEFAULT_COLORS = [
@@ -36,7 +51,13 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
   onSelectCurve,
   onUpdateCurve,
   onReorderCurves,
-  isWindRelated = false
+  isWindRelated = false,
+  familyAxisVariable,
+  familyAxisLabel,
+  interpolationMode,
+  yAxisUnit,
+  yAxisTitle,
+  xAxisReversed
 }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newCurveName, setNewCurveName] = useState('');
@@ -160,7 +181,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
           </div>
           {isWindRelated && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-              <label style={{ fontSize: '14px', color: '#666' }}>Direction du vent:</label>
+              <label style={{ fontSize: '14px', color: '#666' }}>Direction du vent (Wind direction) :</label>
               <select
                 value={newCurveWindDirection}
                 onChange={(e) => setNewCurveWindDirection(e.target.value as WindDirection)}
@@ -173,9 +194,9 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                   backgroundColor: 'white'
                 }}
               >
-                <option value="none">Sans vent</option>
-                <option value="headwind">Vent de face</option>
-                <option value="tailwind">Vent arrière</option>
+                <option value="none">Sans vent / No wind</option>
+                <option value="headwind">Vent de face / Headwind ↑</option>
+                <option value="tailwind">Vent arrière / Tailwind ↓</option>
               </select>
             </div>
           )}
@@ -228,16 +249,34 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                     style={{ flex: 1 }}
                   />
                 ) : (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
-                    <span className={styles.curveName} style={{ fontWeight: 500 }}>{curve.name}</span>
+                  <div
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '6px', flex: 1,
+                      cursor: 'pointer',
+                      padding: '2px 6px',
+                      borderRadius: '3px',
+                      // Bordure visuelle quand la courbe est sélectionnée pour édition des points
+                      backgroundColor: selectedCurveId === curve.id ? '#dcfce7' : 'transparent',
+                      border: selectedCurveId === curve.id ? '1px solid #16a34a' : '1px solid transparent'
+                    }}
+                    title={selectedCurveId === curve.id
+                      ? '✓ Courbe sélectionnée — tu peux maintenant glisser ses points sur le graphique'
+                      : 'Clique pour sélectionner cette courbe et modifier ses points sur le graphique'}
+                  >
+                    <span className={styles.curveName} style={{ fontWeight: selectedCurveId === curve.id ? 600 : 500, color: selectedCurveId === curve.id ? '#065f46' : 'inherit' }}>
+                      {selectedCurveId === curve.id && '✓ '}{curve.name}
+                    </span>
                     {curve.windDirection && curve.windDirection !== 'none' && (
-                      <span className={styles.windBadge} style={{
-                        padding: '1px 4px',
-                        borderRadius: '2px',
-                        fontSize: '10px',
-                        backgroundColor: curve.windDirection === 'headwind' ? '#e3f2fd' : '#fff3e0',
-                        color: curve.windDirection === 'headwind' ? '#1976d2' : '#f57c00'
-                      }}>
+                      <span
+                        className={styles.windBadge}
+                        title={curve.windDirection === 'headwind' ? 'Vent de face / Headwind' : 'Vent arrière / Tailwind'}
+                        style={{
+                          padding: '1px 4px',
+                          borderRadius: '2px',
+                          fontSize: '10px',
+                          backgroundColor: curve.windDirection === 'headwind' ? '#e3f2fd' : '#fff3e0',
+                          color: curve.windDirection === 'headwind' ? '#1976d2' : '#f57c00'
+                        }}>
                         {curve.windDirection === 'headwind' ? '↑' : '↓'}
                       </span>
                     )}
@@ -252,6 +291,132 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                   </div>
                 )}
               </div>
+
+              {/* Champ familyValue (visible uniquement si le graphe a déclaré un paramètre familial) */}
+              {familyAxisVariable && editingCurveId !== curve.id && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '4px 8px',
+                  backgroundColor: typeof curve.familyValue === 'number' ? '#dcfce7' : '#fef3c7',
+                  borderRadius: 3,
+                  fontSize: 11
+                }}
+                onClick={(e) => e.stopPropagation()}
+                >
+                  <span style={{ fontWeight: 600, color: '#374151' }}>
+                    🔀 {familyAxisLabel || familyAxisVariable} :
+                  </span>
+                  <input
+                    type="number"
+                    value={curve.familyValue ?? ''}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      const num = v === '' ? undefined : parseFloat(v);
+                      onUpdateCurve(curve.id, { familyValue: Number.isFinite(num) ? num : undefined });
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    placeholder="ex. 0, 2000, 4000…"
+                    style={{
+                      flex: 1,
+                      padding: '2px 6px',
+                      fontSize: 11,
+                      border: '1px solid #d1d5db',
+                      borderRadius: 3
+                    }}
+                  />
+                  {typeof curve.familyValue !== 'number' && (
+                    <span style={{ fontSize: 10, color: '#dc2626' }}>⚠ requis</span>
+                  )}
+                </div>
+              )}
+
+              {/* Champ entryY — OVERRIDE optionnel pour le mode slope-follow.
+                  Si non saisi, l'algorithme prend automatiquement le Y du premier
+                  point de la courbe au bord GAUCHE VISUEL du graphe :
+                    - axe X croissant : X min
+                    - axe X décroissant : X max */}
+              {interpolationMode === 'slope-follow' && editingCurveId !== curve.id && (() => {
+                // Calculer la valeur auto à partir du premier point selon le sens d'axe
+                let autoValue = null;
+                let autoX = null;
+                if (Array.isArray(curve.points) && curve.points.length > 0) {
+                  const sorted = [...curve.points]
+                    .filter(p => typeof p.x === 'number' && typeof p.y === 'number')
+                    .sort((a, b) => xAxisReversed ? b.x - a.x : a.x - b.x);
+                  if (sorted.length > 0) {
+                    autoValue = sorted[0].y;
+                    autoX = sorted[0].x;
+                  }
+                }
+                const hasOverride = typeof curve.entryY === 'number';
+                return (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '4px 8px',
+                    backgroundColor: hasOverride ? '#ede9fe' : '#f1f5f9',
+                    borderRadius: 3,
+                    fontSize: 11,
+                    marginTop: 4
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  title={hasOverride
+                    ? "Override manuel : cette valeur est utilisée à la place du Y du premier point."
+                    : autoValue !== null
+                      ? `Auto : Y du premier point (à X=${autoX}). Effacer pour laisser auto, saisir pour forcer une autre valeur.`
+                      : "Aucun point placé — placez au moins un point pour activer le calcul automatique."}
+                  >
+                    <span style={{ fontWeight: 600, color: '#374151' }}>
+                      🚀 Y bord gauche{yAxisUnit ? ` (${yAxisUnit})` : ''} :
+                    </span>
+                    <input
+                      type="number"
+                      step="any"
+                      value={curve.entryY ?? ''}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        const num = v === '' ? undefined : parseFloat(v);
+                        onUpdateCurve(curve.id, { entryY: Number.isFinite(num) ? num : undefined });
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      placeholder={autoValue !== null ? `auto = ${autoValue.toFixed(1)}` : 'placez un point d\'abord'}
+                      style={{
+                        flex: 1,
+                        padding: '2px 6px',
+                        fontSize: 11,
+                        border: '1px solid #d1d5db',
+                        borderRadius: 3,
+                        fontStyle: hasOverride ? 'normal' : 'italic',
+                        color: hasOverride ? '#111827' : '#6b7280'
+                      }}
+                    />
+                    {hasOverride ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onUpdateCurve(curve.id, { entryY: undefined });
+                        }}
+                        style={{
+                          padding: '1px 6px',
+                          fontSize: 10,
+                          backgroundColor: '#7c3aed',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 3,
+                          cursor: 'pointer'
+                        }}
+                        title="Revenir au calcul automatique"
+                      >
+                        override
+                      </button>
+                    ) : autoValue !== null ? (
+                      <span style={{ fontSize: 10, color: '#475569', fontWeight: 600 }}>auto</span>
+                    ) : (
+                      <span style={{ fontSize: 10, color: '#dc2626' }}>—</span>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Deuxième ligne : tous les boutons d'action */}
               {editingCurveId !== curve.id && (
@@ -271,13 +436,14 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                           fontSize: '10px',
                           backgroundColor: 'white',
                           cursor: 'pointer',
-                          height: '22px'
+                          height: '22px',
+                          minWidth: 140
                         }}
-                        title="Direction du vent"
+                        title="Direction du vent (Wind direction)"
                       >
-                        <option value="none">-</option>
-                        <option value="headwind">↑</option>
-                        <option value="tailwind">↓</option>
+                        <option value="none">— Sans vent / No wind —</option>
+                        <option value="headwind">↑ Vent de face / Headwind</option>
+                        <option value="tailwind">↓ Vent arrière / Tailwind</option>
                       </select>
                     )}
                     {onReorderCurves && (
@@ -342,6 +508,11 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                         onClick={(e) => {
                           e.stopPropagation();
                           handleStartEdit(curve.id, curve.name);
+                          // Sélectionne aussi la courbe pour permettre l'édition des points
+                          // dès que le nom est validé (sortie de l'input).
+                          if (selectedCurveId !== curve.id) {
+                            onSelectCurve(curve.id);
+                          }
                         }}
                         style={{
                           padding: '2px 4px',
@@ -351,7 +522,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                           cursor: 'pointer',
                           borderRadius: '2px'
                         }}
-                        title="Éditer le nom"
+                        title="Renommer la courbe (pour modifier les points, clique simplement sur le nom)"
                       >
                         ✏️
                       </button>
