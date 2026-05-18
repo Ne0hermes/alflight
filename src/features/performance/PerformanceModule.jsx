@@ -14,6 +14,7 @@ import dataBackupManager from '../../utils/dataBackupManager';
 import airportDataService from '../../services/airportDataService';
 import { FUEL_DENSITIES } from '../../utils/constants';
 import { getWaypointIcao } from '../../shared/utils/getWaypointIcao';
+import { SAFETY_FACTOR_PRESETS, DEFAULT_SAFETY_FACTOR } from '../../utils/performanceSafetyFactor';
 
 const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   const { selectedAircraft } = useAircraft();
@@ -29,6 +30,16 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   // État pour stocker les performanceTables chargées depuis IndexedDB
   const [loadedPerformanceTables, setLoadedPerformanceTables] = useState(null);
   const [loadingTables, setLoadingTables] = useState(false);
+  // Facteur de sécurité OPTIONNEL appliqué à l'affichage des distances.
+  // Par défaut : 'raw' (× 1.0) — strictement les valeurs MANEX, aucune marge.
+  // Le pilote peut sélectionner une marge réglementaire (VFR/IFR/CAT) via le
+  // dropdown au-dessus des matrices. Le facteur n'affecte QUE le rendu, pas
+  // les valeurs stockées ni les calculs amont.
+  const [safetyFactorId, setSafetyFactorId] = useState(DEFAULT_SAFETY_FACTOR.id);
+  const safetyFactor = useMemo(
+    () => SAFETY_FACTOR_PRESETS.find(p => p.id === safetyFactorId) || DEFAULT_SAFETY_FACTOR,
+    [safetyFactorId]
+  );
 
   // 🔧 Récupérer les données depuis flightPlan si en mode wizard
   const flightPlan = config?.flightPlan;
@@ -478,6 +489,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
       inputs={takeoffInputsForMatrix}
       phases={['takeoff']}
       title="🧮 Matrice de couverture — Décollage"
+      safetyFactor={safetyFactor}
     />
   );
   const renderClimbCruiseMatrix = () => (
@@ -486,6 +498,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
       inputs={takeoffInputsForMatrix}
       phases={['climb', 'cruise', 'descent']}
       title="🧮 Matrice de couverture — Montée &amp; Croisière"
+      safetyFactor={safetyFactor}
     />
   );
   const renderLandingMatrix = () => (
@@ -494,12 +507,55 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
       inputs={landingInputsForMatrix}
       phases={['landing']}
       title="🧮 Matrice de couverture — Atterrissage"
+      safetyFactor={safetyFactor}
     />
+  );
+
+  // Dropdown de sélection du facteur de sécurité réglementaire.
+  // Placé en tête du module : le pilote choisit la marge à appliquer aux
+  // distances affichées. N'affecte PAS les calculs amont ni le stockage.
+  const renderSafetyFactorSelector = () => (
+    <div style={{
+      marginBottom: 12,
+      padding: 10,
+      backgroundColor: '#fefce8',
+      border: '1px solid #fde68a',
+      borderRadius: 6,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      flexWrap: 'wrap'
+    }}>
+      <span style={{ fontSize: 13, fontWeight: 700, color: '#854d0e' }}>
+        ⚠ Marge réglementaire appliquée aux distances :
+      </span>
+      <select
+        value={safetyFactorId}
+        onChange={(e) => setSafetyFactorId(e.target.value)}
+        style={{
+          padding: '4px 8px',
+          fontSize: 13,
+          fontWeight: 600,
+          backgroundColor: 'white',
+          border: '1px solid #d4d4d8',
+          borderRadius: 4,
+          cursor: 'pointer'
+        }}
+      >
+        {SAFETY_FACTOR_PRESETS.map(p => (
+          <option key={p.id} value={p.id}>{p.label}</option>
+        ))}
+      </select>
+      <span style={{ fontSize: 11, color: '#a16207', fontStyle: 'italic' }}>
+        {safetyFactor.description}
+      </span>
+    </div>
   );
 
   // Compat : ancien helper pour les early-returns (legacy). Affiche les 3 matrices à la suite.
   const renderCoverageMatrices = () => (
     <>
+      {renderSafetyFactorSelector()}
       {renderTakeoffMatrix()}
       {renderClimbCruiseMatrix()}
       {renderLandingMatrix()}
@@ -669,6 +725,11 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
 
   return (
     <div>
+      {/* Sélecteur de facteur de sécurité réglementaire en tête du module */}
+      <div style={{ padding: '0 8px' }}>
+        {renderSafetyFactorSelector()}
+      </div>
+
       {/* ─── REGROUPEMENT PAR PHASE ───
           Chaque phase de vol affiche :
           - 📋 Le récapitulatif des conditions (aérodrome, OAT, alt. pression, masse, vent)
