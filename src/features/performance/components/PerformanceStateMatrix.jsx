@@ -242,11 +242,30 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
                 }}>
                   {status === ResultStatus.COMPUTED && result.source && (
                     <div style={{ marginBottom: 6 }}>
-                      <strong>Source :</strong> abaque <code>{result.source.graphName}</code>
-                      (set : <code>{result.source.modelName}</code>,
-                      {result.source.curveCount > 0 && <> courbes : <code>{result.source.curveCount}</code>,</>}
-                      {result.source.pointsUsed > 0 && <> points : <code>{result.source.pointsUsed}</code>,</>}
-                      {result.source.method && <> méthode : <code>{result.source.method}</code></>})
+                      <strong>Source :</strong>{' '}
+                      <span style={{
+                        display: 'inline-block', padding: '1px 6px', borderRadius: 3,
+                        fontSize: 9, fontWeight: 700, marginRight: 6,
+                        backgroundColor: result.source.kind === 'table' ? '#0891b2' : '#3b82f6',
+                        color: 'white'
+                      }}>
+                        {result.source.kind === 'table' ? 'TABLEAU' : 'ABAQUE'}
+                      </span>
+                      {result.source.kind === 'table' ? (
+                        <>
+                          {result.source.tableCount > 0 && <>tableaux : <code>{result.source.tableCount}</code>, </>}
+                          {result.source.masses && result.source.masses.length > 0 && <>masses : <code>[{result.source.masses.join(', ')}] kg</code>, </>}
+                          {result.source.method && <>méthode : <code>{result.source.method}</code></>}
+                        </>
+                      ) : (
+                        <>
+                          abaque <code>{result.source.graphName}</code>
+                          (set : <code>{result.source.modelName}</code>,
+                          {result.source.curveCount > 0 && <> courbes : <code>{result.source.curveCount}</code>,</>}
+                          {result.source.pointsUsed > 0 && <> points : <code>{result.source.pointsUsed}</code>,</>}
+                          {result.source.method && <> méthode : <code>{result.source.method}</code></>})
+                        </>
+                      )}
                     </div>
                   )}
                   {status === ResultStatus.COMPUTED && result.inputs && (
@@ -279,10 +298,12 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
                           const usedBadgeColor =
                             step.used === 'bracket'      ? '#16a34a' :
                             step.used === 'slope-follow' ? '#7c3aed' :
+                            step.used === 'trilinear'    ? '#0891b2' :
                             step.used === 'idw'          ? '#f59e0b' : '#dc2626';
                           const usedLabel =
                             step.used === 'bracket'      ? 'BRACKET' :
                             step.used === 'slope-follow' ? 'SLOPE-FOLLOW' :
+                            step.used === 'trilinear'    ? 'TRILINÉAIRE' :
                             step.used === 'idw'          ? 'IDW (fallback)' : 'ÉCHEC';
                           return (
                           <div key={step.graphId || sIdx} style={{

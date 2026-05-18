@@ -31,6 +31,7 @@ import {
   isValidOperationId
 } from '../abac/curves/core/operationCatalog';
 import { interpolateAbac, inspectAbacByGraph, bracketInterpolateGraph, evaluateAbacCascade, inputsToConditions, InterpolationStatus } from './abacInterpolation';
+import { findTablesForOperation, resolveOperationFromTables } from './tableInterpolationAdapter';
 
 /** Statuts possibles d'un résultat d'opération. */
 export const ResultStatus = Object.freeze({
@@ -222,15 +223,31 @@ export function resolveOperation(aircraft, operationId, inputs = {}) {
   }
   const opDef = getOperation(operationId);
 
-  // ── 2. Recherche des abaques portant cet id ──
+  // ── 2. Recherche des sources de données portant cet operationId ──
+  // Priorité d'évaluation : abaque > tableau (P1 — branchement tableaux).
+  // Le pilote n'a normalement qu'UNE source par operationId (abaque OU tableau,
+  // jamais les deux à la fois selon décision architecturale).
   const matches = findGraphsForOperation(aircraft, operationId);
 
   if (matches.length === 0) {
+    // ─── Fallback tableaux : si pas d'abaque pour cet operationId, on
+    // tente la résolution via les tableaux numériques (advancedPerformance.tables).
+    // L'adapter retourne null si aucune table non plus.
+    const conditionsForTable = inputsToConditions(inputs);
+    const tableResult = resolveOperationFromTables(aircraft, operationId, conditionsForTable);
+    if (tableResult) {
+      // Adapter le status string vers ResultStatus enum
+      let mappedStatus = ResultStatus.COMPUTED;
+      if (tableResult.status === 'MISSING_INPUT') mappedStatus = ResultStatus.MISSING_INPUT;
+      else if (tableResult.status === 'ERROR') mappedStatus = ResultStatus.ERROR;
+      return { ...tableResult, status: mappedStatus };
+    }
+
     return {
       operationId,
       operationLabel: opDef.labelFr,
       status: ResultStatus.NOT_IMPLEMENTED,
-      reason: `Aucun abaque portant l'operationId "${operationId}" n'est défini sur cet avion.`
+      reason: `Aucun abaque ni tableau portant l'operationId "${operationId}" n'est défini sur cet avion.`
     };
   }
 
