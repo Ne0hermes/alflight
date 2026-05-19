@@ -72,135 +72,92 @@ function convertToStorage(value, rawUnit, category, targetUnit) {
   }
 }
 
-// Mapping plat : { aircraftPath, sourceSection, sourceKey, category, targetUnit, label }
-// Chaque entrée décrit comment un champ extrait par l'IA est routé dans le wizard.
+// Mapping STRICT : chaque entrée correspond à un champ effectivement saisi
+// dans le wizard de création d'avion (Step1/Step2/Step3). Tout champ qui
+// n'est pas écrit via updateData(path, ...) dans un des steps a été retiré.
+//
+// Audit du wizard (à jour avec la refonte) :
+//   - Step1 : registration, model, engineType, wakeTurbulenceCategory,
+//             fuelType, fuelCapacity, fuelConsumption, cruiseSpeedKt,
+//             compatibleRunwaySurfaces
+//   - Step2 : speeds.{vso, vs1, vfeLdg, vfeTO, vno, vne, vr, vx, vy, vapp,
+//             initialClimb, vglide, vle, vlo}, speeds.voRanges, windLimits.limits
+//   - Step3 : weights.{emptyWeight, mtow, mlw, mzfw, minTakeoffWeight},
+//             arms.{empty, frontSeats, rearSeats, fuelMain},
+//             cgEnvelope.{forwardPoints, aftMinWeight, aftMaxWeight, aftCG}
+//
+// Pour les structures complexes (arrays type voRanges, windLimits.limits,
+// cgEnvelope.forwardPoints) le mapping de base extrait des valeurs scalaires
+// que buildBulkUpdatePayload assemblera ensuite.
 const FIELD_MAPPINGS = [
-  // ═══ IDENTIFICATION ═══
+  // ═══ IDENTIFICATION (Step1) ═══
   { aircraftPath: 'model',                 src: ['aircraft_identification', 'model'],         type: 'string', label: 'Modèle (type avion)' },
   { aircraftPath: 'registration',          src: ['aircraft_identification', 'registration'],  type: 'string', label: 'Immatriculation' },
-  { aircraftPath: 'serialNumber',          src: ['aircraft_identification', 'serial_number'], type: 'string', label: 'Numéro de série (MSN)' },
-  { aircraftPath: 'manufacturer',          src: ['aircraft_identification', 'manufacturer'],  type: 'string', label: 'Constructeur' },
-  { aircraftPath: 'yearOfConstruction',    src: ['aircraft_identification', 'year_of_construction'], type: 'string', label: 'Année de fabrication' },
-  { aircraftPath: 'manexEdition',          src: ['aircraft_identification', 'manex_edition'], type: 'string', label: 'Édition MANEX' },
-  { aircraftPath: 'manexDate',             src: ['aircraft_identification', 'manex_date'],    type: 'string', label: 'Date MANEX' },
 
-  // ═══ CERTIFICATION ═══
-  { aircraftPath: 'certification.basis',         src: ['certification', 'certification_basis'],     type: 'string', label: 'Base de certification' },
-  { aircraftPath: 'certification.category',      src: ['certification', 'aircraft_category'],       type: 'string', label: 'Catégorie (Normal/Utility/Aerobatic)' },
-  { aircraftPath: 'certification.ifrCertified',  src: ['certification', 'ifr_certified'],           type: 'string', label: 'Certifié IFR' },
-  { aircraftPath: 'certification.icingCertified',src: ['certification', 'icing_certified'],         type: 'string', label: 'Vol givrant autorisé' },
-  { aircraftPath: 'maxSeats',                    src: ['certification', 'max_seats'],               type: 'number', label: 'Sièges max (pilote inclus)' },
-  { aircraftPath: 'maxPersonsOnBoard',           src: ['certification', 'max_pob'],                 type: 'number', label: 'Personnes max à bord' },
+  // ═══ MOTORISATION (Step1) ═══
+  // engineType est un enum dans le wizard : singleEngine | twinEngine | turboprop | jet
+  { aircraftPath: 'engineType',                  src: ['engine', 'type_category'], type: 'string', label: 'Type moteur (single/twin/turboprop/jet)' },
+
+  // ═══ CATÉGORIE TURBULENCE (Step1) ═══
+  // L (Light < 7000 kg) | M (Medium 7-136 t) | H (Heavy > 136 t) | S (Super)
   { aircraftPath: 'wakeTurbulenceCategory',      src: ['certification', 'wake_turbulence_category'], type: 'string', label: 'Catégorie turbulence ICAO (L/M/H)' },
 
-  // ═══ MOTEUR ═══
-  { aircraftPath: 'engineType',                  src: ['engine', 'type'],          type: 'string', label: 'Type moteur' },
-  { aircraftPath: 'engine.manufacturer',         src: ['engine', 'manufacturer'],  type: 'string', label: 'Constructeur moteur' },
-  { aircraftPath: 'engine.count',                src: ['engine', 'count'],         type: 'number', label: 'Nombre de moteurs' },
-  { aircraftPath: 'engine.powerMax',             src: ['engine', 'power_max'],     type: 'string', label: 'Puissance max (avec unité)' },
-  { aircraftPath: 'engine.powerCruise',          src: ['engine', 'power_cruise'],  type: 'string', label: 'Puissance croisière' },
-  { aircraftPath: 'engine.rpmMax',               src: ['engine', 'rpm_max'],       type: 'number', label: 'RPM max' },
-  { aircraftPath: 'engine.rpmIdle',              src: ['engine', 'rpm_idle'],      type: 'number', label: 'RPM ralenti' },
-  { aircraftPath: 'engine.oilPressureMin',       src: ['engine', 'oil_pressure_min'], type: 'string', label: 'Pression huile min' },
-  { aircraftPath: 'engine.oilPressureMax',       src: ['engine', 'oil_pressure_max'], type: 'string', label: 'Pression huile max' },
-  { aircraftPath: 'engine.oilTempMax',           src: ['engine', 'oil_temp_max'],  type: 'string', label: 'Temp huile max' },
-  { aircraftPath: 'engine.chtMax',               src: ['engine', 'cht_max'],       type: 'string', label: 'CHT max (têtes cylindres)' },
+  // ═══ CARBURANT (Step1) ═══
+  // fuelType est un enum dans le wizard : AVGAS | JET-A1 | MOGAS
+  { aircraftPath: 'fuelType',               src: ['fuel', 'fuel_type'],          type: 'string',                                          label: 'Type carburant (AVGAS/JET-A1/MOGAS)' },
+  { aircraftPath: 'fuelCapacity',           src: ['fuel', 'capacity_total'],     category: 'fuel',            targetUnit: 'ltr',           label: 'Capacité totale carburant' },
+  { aircraftPath: 'fuelConsumption',        src: ['fuel', 'consumption_cruise'], category: 'fuelConsumption', targetUnit: 'lph',           label: 'Conso croisière' },
 
-  // ═══ HÉLICE ═══
-  { aircraftPath: 'propeller.type',              src: ['propeller', 'type'],         type: 'string', label: 'Hélice — type' },
-  { aircraftPath: 'propeller.manufacturer',      src: ['propeller', 'manufacturer'], type: 'string', label: 'Hélice — constructeur' },
-  { aircraftPath: 'propeller.diameter',          src: ['propeller', 'diameter'],     type: 'string', label: 'Hélice — diamètre' },
-  { aircraftPath: 'propeller.bladeCount',        src: ['propeller', 'blade_count'],  type: 'number', label: 'Hélice — nombre de pales' },
-  { aircraftPath: 'propeller.pitchType',         src: ['propeller', 'pitch_type'],   type: 'string', label: 'Hélice — type de pas' },
+  // ═══ COMPATIBILITÉ PISTE (Step1) ═══
+  // Array d'enum : ASPH | CONC | GRASS | GRVL | UNPAVED | SAND | SNOW | WATER
+  { aircraftPath: 'compatibleRunwaySurfaces',    src: ['compatibility', 'runway_surfaces'],   type: 'array_csv', label: 'Revêtements compatibles' },
 
-  // ═══ POIDS (storage = kg) ═══
+  // ═══ VITESSES (Step2 — storage = kt) ═══
+  // Critiques (saisies obligatoirement dans Step2)
+  { aircraftPath: 'speeds.vso',          src: ['speeds', 'vso'],          category: 'speed', targetUnit: 'kt', label: 'VSO (stall flaps LDG)' },
+  { aircraftPath: 'speeds.vs1',          src: ['speeds', 'vs1'],          category: 'speed', targetUnit: 'kt', label: 'VS1 (stall clean)' },
+  { aircraftPath: 'speeds.vfeTO',        src: ['speeds', 'vfe_takeoff'],  category: 'speed', targetUnit: 'kt', label: 'VFE T/O' },
+  { aircraftPath: 'speeds.vfeLdg',       src: ['speeds', 'vfe_landing'],  category: 'speed', targetUnit: 'kt', label: 'VFE LDG' },
+  { aircraftPath: 'speeds.vno',          src: ['speeds', 'vno'],          category: 'speed', targetUnit: 'kt', label: 'VNO' },
+  { aircraftPath: 'speeds.vne',          src: ['speeds', 'vne'],          category: 'speed', targetUnit: 'kt', label: 'VNE' },
+  // Optionnelles (panel "Vitesses optionnelles" du wizard)
+  { aircraftPath: 'speeds.vr',           src: ['speeds', 'vr'],           category: 'speed', targetUnit: 'kt', label: 'VR (rotation)' },
+  { aircraftPath: 'speeds.vx',           src: ['speeds', 'vx'],           category: 'speed', targetUnit: 'kt', label: 'VX (best angle climb)' },
+  { aircraftPath: 'speeds.vy',           src: ['speeds', 'vy'],           category: 'speed', targetUnit: 'kt', label: 'VY (best rate climb)' },
+  { aircraftPath: 'speeds.vapp',         src: ['speeds', 'vapp'],         category: 'speed', targetUnit: 'kt', label: 'VAPP (approche)' },
+  { aircraftPath: 'speeds.initialClimb', src: ['speeds', 'initial_climb_rate'], category: 'climbRate', targetUnit: 'ft/min', label: 'Taux montée initial' },
+  { aircraftPath: 'speeds.vglide',       src: ['speeds', 'vglide'],       category: 'speed', targetUnit: 'kt', label: 'V finesse (best glide)' },
+  { aircraftPath: 'speeds.vle',          src: ['speeds', 'vle'],          category: 'speed', targetUnit: 'kt', label: 'VLE (gear extended)' },
+  { aircraftPath: 'speeds.vlo',          src: ['speeds', 'vlo'],          category: 'speed', targetUnit: 'kt', label: 'VLO (gear operating)' },
+
+  // ═══ LIMITES VENT (Step2 — array windLimits.limits) ═══
+  // Stockage final : windLimits.limits = array d'objets {type, value, saved}.
+  // Le mapping plat capture les valeurs scalaires ; buildBulkUpdatePayload
+  // assemble l'array final.
+  { aircraftPath: '_windLimit:maxCrosswind',    src: ['wind_limits', 'max_crosswind'],     category: 'speed', targetUnit: 'kt', label: 'Vent traversier max démontré' },
+  { aircraftPath: '_windLimit:maxTailwind',     src: ['wind_limits', 'max_tailwind'],      category: 'speed', targetUnit: 'kt', label: 'Vent arrière max' },
+  { aircraftPath: '_windLimit:maxCrosswindWet', src: ['wind_limits', 'max_crosswind_wet'], category: 'speed', targetUnit: 'kt', label: 'Travers max piste mouillée' },
+
+  // ═══ POIDS (Step3 — storage = kg) ═══
   { aircraftPath: 'weights.emptyWeight',         src: ['weights', 'empty_weight'],        category: 'weight', targetUnit: 'kg', label: 'Masse à vide (BEW)' },
-  { aircraftPath: 'weights.rampWeight',          src: ['weights', 'ramp_weight'],         category: 'weight', targetUnit: 'kg', label: 'Masse rampe max' },
   { aircraftPath: 'weights.mtow',                src: ['weights', 'mtow'],                category: 'weight', targetUnit: 'kg', label: 'MTOW (masse max décollage)' },
   { aircraftPath: 'weights.mlw',                 src: ['weights', 'mlw'],                 category: 'weight', targetUnit: 'kg', label: 'MLW (max landing weight)' },
   { aircraftPath: 'weights.mzfw',                src: ['weights', 'mzfw'],                category: 'weight', targetUnit: 'kg', label: 'MZFW (max zero fuel weight)' },
   { aircraftPath: 'weights.minTakeoffWeight',    src: ['weights', 'min_takeoff_weight'],  category: 'weight', targetUnit: 'kg', label: 'Masse min décollage' },
-  { aircraftPath: 'weights.maxPayload',          src: ['weights', 'max_payload'],         category: 'weight', targetUnit: 'kg', label: 'Charge utile max' },
-  { aircraftPath: 'weights.usefulLoad',          src: ['weights', 'useful_load'],         category: 'weight', targetUnit: 'kg', label: 'Useful load (MTOW − BEW)' },
-  { aircraftPath: 'weights.maxBaggageFwd',       src: ['weights', 'max_baggage_fwd'],     category: 'weight', targetUnit: 'kg', label: 'Bagages avant max' },
-  { aircraftPath: 'weights.maxBaggageAft',       src: ['weights', 'max_baggage_aft'],     category: 'weight', targetUnit: 'kg', label: 'Bagages arrière max' },
 
-  // ═══ BRAS DE LEVIER (storage = cm pour FR) ═══
+  // ═══ BRAS DE LEVIER (Step3 — storage = cm pour FR) ═══
   { aircraftPath: 'arms.empty',          src: ['arms', 'empty_cg_arm'],     category: 'armLength', targetUnit: 'cm', label: 'Bras CG à vide' },
   { aircraftPath: 'arms.frontSeats',     src: ['arms', 'front_seats_arm'],  category: 'armLength', targetUnit: 'cm', label: 'Bras sièges avant' },
   { aircraftPath: 'arms.rearSeats',      src: ['arms', 'rear_seats_arm'],   category: 'armLength', targetUnit: 'cm', label: 'Bras sièges arrière' },
   { aircraftPath: 'arms.fuelMain',       src: ['arms', 'fuel_main_arm'],    category: 'armLength', targetUnit: 'cm', label: 'Bras carburant' },
-  { aircraftPath: 'arms.baggageFwd',     src: ['arms', 'baggage_fwd_arm'],  category: 'armLength', targetUnit: 'cm', label: 'Bras bagages avant' },
-  { aircraftPath: 'arms.baggageAft',     src: ['arms', 'baggage_aft_arm'],  category: 'armLength', targetUnit: 'cm', label: 'Bras bagages arrière' },
-  { aircraftPath: 'cgLimits.forward',    src: ['arms', 'cg_forward_limit'], category: 'armLength', targetUnit: 'cm', label: 'CG limite avant' },
-  { aircraftPath: 'cgLimits.aft',        src: ['arms', 'cg_aft_limit'],     category: 'armLength', targetUnit: 'cm', label: 'CG limite arrière' },
-  { aircraftPath: 'arms.datumReference', src: ['arms', 'datum_reference'],  type: 'string',                          label: 'Référence du datum' },
 
-  // ═══ LIMITES G ═══
-  { aircraftPath: 'gLimits.maxPositiveNormal',     src: ['g_limits', 'max_positive_g_normal'],    type: 'number', label: 'G max + (Normal)' },
-  { aircraftPath: 'gLimits.maxNegativeNormal',     src: ['g_limits', 'max_negative_g_normal'],    type: 'number', label: 'G max − (Normal)' },
-  { aircraftPath: 'gLimits.maxPositiveUtility',    src: ['g_limits', 'max_positive_g_utility'],   type: 'number', label: 'G max + (Utility)' },
-  { aircraftPath: 'gLimits.maxNegativeUtility',    src: ['g_limits', 'max_negative_g_utility'],   type: 'number', label: 'G max − (Utility)' },
-  { aircraftPath: 'gLimits.maxPositiveAerobatic',  src: ['g_limits', 'max_positive_g_aerobatic'], type: 'number', label: 'G max + (Aerobatic)' },
-  { aircraftPath: 'gLimits.maxNegativeAerobatic',  src: ['g_limits', 'max_negative_g_aerobatic'], type: 'number', label: 'G max − (Aerobatic)' },
-
-  // ═══ VITESSES (storage = kt) ═══
-  { aircraftPath: 'speeds.vso',          src: ['speeds', 'vso'],          category: 'speed', targetUnit: 'kt', label: 'VSO (stall flaps LDG)' },
-  { aircraftPath: 'speeds.vs1',          src: ['speeds', 'vs1'],          category: 'speed', targetUnit: 'kt', label: 'VS1 (stall clean)' },
-  { aircraftPath: 'speeds.vfe',          src: ['speeds', 'vfe'],          category: 'speed', targetUnit: 'kt', label: 'VFE' },
-  { aircraftPath: 'speeds.vfeTO',        src: ['speeds', 'vfe_takeoff'],  category: 'speed', targetUnit: 'kt', label: 'VFE T/O' },
-  { aircraftPath: 'speeds.vfeLdg',       src: ['speeds', 'vfe_landing'],  category: 'speed', targetUnit: 'kt', label: 'VFE LDG' },
-  { aircraftPath: 'speeds.vfeApp',       src: ['speeds', 'vfe_approach'], category: 'speed', targetUnit: 'kt', label: 'VFE APP' },
-  { aircraftPath: 'speeds.vno',          src: ['speeds', 'vno'],          category: 'speed', targetUnit: 'kt', label: 'VNO' },
-  { aircraftPath: 'speeds.vne',          src: ['speeds', 'vne'],          category: 'speed', targetUnit: 'kt', label: 'VNE' },
-  { aircraftPath: 'speeds.vr',           src: ['speeds', 'vr'],           category: 'speed', targetUnit: 'kt', label: 'VR (rotation)' },
-  { aircraftPath: 'speeds.vx',           src: ['speeds', 'vx'],           category: 'speed', targetUnit: 'kt', label: 'VX (best angle climb)' },
-  { aircraftPath: 'speeds.vy',           src: ['speeds', 'vy'],           category: 'speed', targetUnit: 'kt', label: 'VY (best rate climb)' },
-  { aircraftPath: 'speeds.vxTO',         src: ['speeds', 'vx_takeoff'],   category: 'speed', targetUnit: 'kt', label: 'VX T/O' },
-  { aircraftPath: 'speeds.vyTO',         src: ['speeds', 'vy_takeoff'],   category: 'speed', targetUnit: 'kt', label: 'VY T/O' },
-  { aircraftPath: 'speeds.vapp',         src: ['speeds', 'vapp'],         category: 'speed', targetUnit: 'kt', label: 'VAPP (approche)' },
-  { aircraftPath: 'speeds.vref',         src: ['speeds', 'vref'],         category: 'speed', targetUnit: 'kt', label: 'VREF (ref atterrissage)' },
-  { aircraftPath: 'speeds.vglide',       src: ['speeds', 'vglide'],       category: 'speed', targetUnit: 'kt', label: 'V finesse (best glide)' },
-  { aircraftPath: 'speeds.vle',          src: ['speeds', 'vle'],          category: 'speed', targetUnit: 'kt', label: 'VLE (gear extended)' },
-  { aircraftPath: 'speeds.vlo',          src: ['speeds', 'vlo'],          category: 'speed', targetUnit: 'kt', label: 'VLO (gear operating)' },
-  { aircraftPath: 'speeds.va',           src: ['speeds', 'va'],           category: 'speed', targetUnit: 'kt', label: 'VA (manoeuvre)' },
-  { aircraftPath: 'speeds.initialClimb', src: ['speeds', 'initial_climb_rate'], category: 'climbRate', targetUnit: 'ft/min', label: 'Taux montée initial' },
-
-  // ═══ CARBURANT (storage = ltr pour capa, lph pour conso) ═══
-  { aircraftPath: 'fuelCapacity',           src: ['fuel', 'capacity_total'],   category: 'fuel',            targetUnit: 'ltr', label: 'Capacité totale carburant' },
-  { aircraftPath: 'fuelCapacityUsable',     src: ['fuel', 'capacity_usable'],  category: 'fuel',            targetUnit: 'ltr', label: 'Capacité utilisable' },
-  { aircraftPath: 'fuelCapacityUnusable',   src: ['fuel', 'capacity_unusable'],category: 'fuel',            targetUnit: 'ltr', label: 'Capacité non-utilisable' },
-  { aircraftPath: 'fuelType',               src: ['fuel', 'fuel_type'],        type: 'string',                                  label: 'Type carburant (principal)' },
-  { aircraftPath: 'fuelGradesAllowed',      src: ['fuel', 'fuel_grades_allowed'], type: 'string',                              label: 'Carburants alternatifs autorisés' },
-  { aircraftPath: 'fuelConsumption',        src: ['fuel', 'consumption_cruise'], category: 'fuelConsumption', targetUnit: 'lph', label: 'Conso croisière' },
-  { aircraftPath: 'fuelConsumptionTaxi',    src: ['fuel', 'consumption_taxi'],   category: 'fuelConsumption', targetUnit: 'lph', label: 'Conso roulage' },
-  { aircraftPath: 'fuelConsumptionClimb',   src: ['fuel', 'consumption_takeoff_climb'], category: 'fuelConsumption', targetUnit: 'lph', label: 'Conso décollage/montée' },
-
-  // ═══ LIMITES VENT ═══
-  { aircraftPath: 'windLimits.maxCrosswind',    src: ['wind_limits', 'max_crosswind'],     category: 'speed', targetUnit: 'kt', label: 'Vent traversier max démontré' },
-  { aircraftPath: 'windLimits.maxTailwind',     src: ['wind_limits', 'max_tailwind'],      category: 'speed', targetUnit: 'kt', label: 'Vent arrière max' },
-  { aircraftPath: 'windLimits.maxCrosswindWet', src: ['wind_limits', 'max_crosswind_wet'], category: 'speed', targetUnit: 'kt', label: 'Travers max piste mouillée' },
-
-  // ═══ PERFORMANCES SYNTHÉTIQUES ═══
-  { aircraftPath: 'cruiseSpeedKt',          src: ['performance_summary', 'cruise_speed_75percent'], category: 'speed',  targetUnit: 'kt',  label: 'Vitesse croisière 75%' },
-  { aircraftPath: 'cruiseSpeedMaxKt',       src: ['performance_summary', 'cruise_speed_max'],       category: 'speed',  targetUnit: 'kt',  label: 'Vitesse croisière max' },
-  { aircraftPath: 'serviceCeiling',         src: ['performance_summary', 'service_ceiling'],        category: 'altitude', targetUnit: 'ft', label: 'Plafond pratique' },
-  { aircraftPath: 'maxOperatingAltitude',   src: ['performance_summary', 'max_operating_altitude'], category: 'altitude', targetUnit: 'ft', label: 'Plafond opérationnel' },
-  { aircraftPath: 'takeoffRun',             src: ['performance_summary', 'takeoff_run'],            type: 'string',                          label: 'Distance roulage décollage' },
-  { aircraftPath: 'takeoffDistance50ft',    src: ['performance_summary', 'takeoff_distance_50ft'],  type: 'string',                          label: 'Distance décollage 50ft' },
-  { aircraftPath: 'landingRun',             src: ['performance_summary', 'landing_run'],            type: 'string',                          label: 'Distance roulage atterrissage' },
-  { aircraftPath: 'landingDistance50ft',    src: ['performance_summary', 'landing_distance_50ft'],  type: 'string',                          label: 'Distance atterrissage 50ft' },
-  { aircraftPath: 'endurance',              src: ['performance_summary', 'endurance'],              type: 'string',                          label: 'Autonomie' },
-  { aircraftPath: 'rangeCruise',            src: ['performance_summary', 'range_cruise'],           type: 'string',                          label: 'Distance franchissable' },
-
-  // ═══ TRAIN ═══
-  { aircraftPath: 'landingGear.type',                src: ['landing_gear', 'type'],                type: 'string', label: 'Type de train' },
-  { aircraftPath: 'landingGear.tirePressureMain',    src: ['landing_gear', 'tire_pressure_main'],  type: 'string', label: 'Pression pneus principal' },
-  { aircraftPath: 'landingGear.tirePressureNose',    src: ['landing_gear', 'tire_pressure_nose'],  type: 'string', label: 'Pression pneu avant' },
-
-  // ═══ COMPATIBILITÉ PISTE ═══
-  { aircraftPath: 'compatibleRunwaySurfaces',  src: ['compatibility', 'runway_surfaces'],   type: 'string', label: 'Revêtements compatibles' },
-  { aircraftPath: 'minRunwayLength',           src: ['compatibility', 'min_runway_length'], type: 'string', label: 'Longueur piste min' }
+  // ═══ ENVELOPPE CG (Step3 — partie arrière simple) ═══
+  // L'enveloppe avant (forwardPoints) est un array de points difficile à
+  // extraire automatiquement → laissé au pilote dans Step3. Pour l'arrière,
+  // on accepte 3 valeurs scalaires : poids min, poids max, CG.
+  { aircraftPath: 'cgEnvelope.aftMinWeight', src: ['arms', 'aft_cg_min_weight'], category: 'weight',    targetUnit: 'kg', label: 'Enveloppe CG arrière — masse min' },
+  { aircraftPath: 'cgEnvelope.aftMaxWeight', src: ['arms', 'aft_cg_max_weight'], category: 'weight',    targetUnit: 'kg', label: 'Enveloppe CG arrière — masse max' },
+  { aircraftPath: 'cgEnvelope.aftCG',        src: ['arms', 'cg_aft_limit'],      category: 'armLength', targetUnit: 'cm', label: 'Enveloppe CG arrière — CG' }
 ];
 
 /**
@@ -259,17 +216,60 @@ export function mapExtractionToReviewItems(extraction) {
  * Transforme la liste validée par l'utilisateur en un objet à passer à `updateDataBulk`.
  * Reconstruit la structure imbriquée (speeds.vso, weights.emptyWeight, etc.).
  *
+ * GÈRE DES CAS SPÉCIAUX :
+ *  - `_windLimit:<type>` (pseudo-paths) → assemble en `windLimits.limits` array
+ *    d'objets { type, value, saved } (format wizard Step2)
+ *  - `array_csv` (compatibleRunwaySurfaces) → split CSV → array de strings
+ *
  * @param {Array} reviewItems - Items dont `accepted === true` seulement.
  * @returns {Object} - Objet plat avec clés top-level imbriquées prêtes pour updateDataBulk.
  */
 export function buildBulkUpdatePayload(reviewItems) {
-  const accepted = reviewItems.filter(it => it.accepted && it.value !== null && it.value !== undefined);
+  const accepted = reviewItems.filter(it => it.accepted && it.value !== null && it.value !== undefined && it.value !== '');
   const payload = {};
+  // Accumulateur pour windLimits.limits (assemblage en array final)
+  const windLimitEntries = [];
 
   for (const item of accepted) {
-    const parts = item.aircraftPath.split('.');
+    const path = item.aircraftPath;
+
+    // ─── Cas spécial : pseudo-paths "_windLimit:<type>" ───
+    if (path.startsWith('_windLimit:')) {
+      const type = path.slice('_windLimit:'.length);
+      const valueNum = typeof item.value === 'number' ? item.value : parseFloat(item.value);
+      if (Number.isFinite(valueNum)) {
+        windLimitEntries.push({ type, value: valueNum, saved: true });
+      }
+      continue;
+    }
+
+    // ─── Cas spécial : array_csv (split par , / ;) ───
+    let valueToWrite = item.value;
+    if (item.type === 'array_csv' && typeof item.value === 'string') {
+      // Normaliser : "asphalte, herbe, gravier" → ["ASPH", "GRASS", "GRVL"]
+      // ou conserver les valeurs telles quelles si le wizard accepte
+      valueToWrite = String(item.value)
+        .split(/[,;\/]/)
+        .map(s => s.trim())
+        .filter(Boolean);
+      // Mapping textuel courant FR/EN → codes wizard
+      const surfaceMap = {
+        asphalte: 'ASPH', asphalt: 'ASPH', goudron: 'ASPH', bitume: 'ASPH',
+        béton: 'CONC', beton: 'CONC', concrete: 'CONC',
+        herbe: 'GRASS', grass: 'GRASS', gazon: 'GRASS',
+        gravier: 'GRVL', gravel: 'GRVL',
+        terre: 'UNPAVED', dirt: 'UNPAVED', unpaved: 'UNPAVED',
+        sable: 'SAND', sand: 'SAND',
+        neige: 'SNOW', snow: 'SNOW',
+        eau: 'WATER', water: 'WATER'
+      };
+      valueToWrite = valueToWrite.map(s => surfaceMap[s.toLowerCase()] || s.toUpperCase());
+    }
+
+    // ─── Assemblage générique paths imbriqués ───
+    const parts = path.split('.');
     if (parts.length === 1) {
-      payload[parts[0]] = item.value;
+      payload[parts[0]] = valueToWrite;
     } else {
       // ex: speeds.vso → payload.speeds = { ...payload.speeds, vso: value }
       const [top, ...rest] = parts;
@@ -279,8 +279,14 @@ export function buildBulkUpdatePayload(reviewItems) {
         cursor[rest[i]] = cursor[rest[i]] || {};
         cursor = cursor[rest[i]];
       }
-      cursor[rest[rest.length - 1]] = item.value;
+      cursor[rest[rest.length - 1]] = valueToWrite;
     }
+  }
+
+  // Assembler windLimits.limits si on a collecté des entrées
+  if (windLimitEntries.length > 0) {
+    payload.windLimits = payload.windLimits || {};
+    payload.windLimits.limits = windLimitEntries;
   }
 
   return payload;
