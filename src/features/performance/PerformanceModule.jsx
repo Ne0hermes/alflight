@@ -586,142 +586,73 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     performanceTablesTypes: selectedAircraft?.performanceTables?.map(t => t.type || t.name) || []
   });
 
-  // Si aucun tableau extrait disponible
-  if (!selectedAircraft.advancedPerformance?.tables || selectedAircraft.advancedPerformance.tables.length === 0) {
-    // Vérifier si l'avion a des abaques (performanceTables)
-    const hasAbaques = selectedAircraft.performanceTables && selectedAircraft.performanceTables.length > 0;
+  // ─── DÉTECTION DES SOURCES DE DONNÉES DE PERFORMANCE ───
+  // Un avion peut être configuré par 3 voies équivalentes côté pilote :
+  //   - performanceModels[] : ABAQUES (graphiques avec courbes digitalisées)
+  //   - advancedPerformance.tables[] : TABLEAUX IA (extractions OpenAI/Claude)
+  //   - performanceTables[] : alias legacy de performanceModels
+  // À partir du moment où une seule source contient au moins 1 entrée, l'avion
+  // est considéré comme exploitable et le rendu COMPLET est affiché (conditions,
+  // matrice de couverture, analyse pistes, déroutements) — UNIFIÉ entre abaques
+  // et tableaux. Le résolveur `operationResolver` choisit automatiquement la
+  // source disponible pour chaque opération (P1).
+  const hasAITables = (selectedAircraft.advancedPerformance?.tables?.length || 0) > 0;
+  const hasPerformanceModels = (selectedAircraft.performanceModels?.length || 0) > 0;
+  const hasPerformanceTablesLegacy = (selectedAircraft.performanceTables?.length || 0) > 0;
+  const hasLoadedPerfTables = (loadedPerformanceTables?.length || 0) > 0;
+  const hasAnyPerfData = hasAITables || hasPerformanceModels || hasPerformanceTablesLegacy || hasLoadedPerfTables;
 
-    if (hasAbaques) {
-      // L'avion a des abaques - Message différent + matrice de couverture exhaustive
-      return (
-        <div style={sx.spacing.p(6)}>
-          {/* PHASE 3 : matrice exhaustive même quand pas d'AI tables */}
-          {renderCoverageMatrices()}
-          <div style={sx.combine(sx.components.card.base, sx.spacing.p(6), sx.text.center)}>
-            <Table size={48} style={{ margin: '0 auto 16px', color: '#3b82f6' }} />
-            <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(2))}>
-              Avion avec abaques de performances
-            </h3>
-            <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(4))}>
-              Cet avion ({selectedAircraft.registration}) utilise des <strong>abaques</strong> (graphiques) dans son MANEX.
-            </p>
-            <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning, { textAlign: 'left', marginBottom: '16px' })}>
-              <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-                ⚠️ Limitation actuelle :
-              </p>
-              <p style={{ fontSize: '13px', lineHeight: '1.6' }}>
-                Les abaques ne peuvent pas être interpolées automatiquement comme les tableaux de données.
-                Vous devez consulter manuellement les graphiques du MANEX pour calculer les performances.
-              </p>
-            </div>
-            <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, { textAlign: 'left' })}>
-              <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-                📊 Abaques disponibles ({selectedAircraft.performanceTables.length}) :
-              </p>
-              <ul style={{ marginLeft: '20px', fontSize: '13px', lineHeight: '1.8' }}>
-                {selectedAircraft.performanceTables.map((table, idx) => (
-                  <li key={idx}>{table.name || table.type || `Abaque ${idx + 1}`}</li>
-                ))}
-              </ul>
-              <p style={{ fontSize: '13px', marginTop: '12px', fontStyle: 'italic', color: '#64748b' }}>
-                💡 Consultez votre MANEX pour utiliser ces abaques lors de la préparation du vol.
-              </p>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // Cas particulier : Avion sélectionné mais performanceTables pas chargées
-    // (données volumineuses chargées à la demande)
-    console.log('⚠️ [PerformanceModule] Avion détecté mais performanceTables non chargées - Tentative de chargement depuis IndexedDB');
-
-    // Afficher état de chargement
+  // Si vraiment AUCUNE donnée : afficher message d'aide (avec spinner si chargement en cours)
+  if (!hasAnyPerfData) {
     if (loadingTables) {
       return (
         <div style={sx.spacing.p(6)}>
           <div style={sx.combine(sx.components.card.base, sx.spacing.p(6), sx.text.center)}>
             <Table size={48} style={{ margin: '0 auto 16px', color: '#3b82f6' }} />
             <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(2))}>
-              Chargement des abaques...
+              Chargement des données de performance…
             </h3>
             <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
-              Chargement des données de performances pour {selectedAircraft.registration}
+              Chargement pour {selectedAircraft.registration}
             </p>
           </div>
         </div>
       );
     }
 
-    // Si les tables sont chargées et qu'il y en a, afficher uniquement les matrices de couverture
-    if (loadedPerformanceTables && loadedPerformanceTables.length > 0) {
-      return (
-        <div style={sx.spacing.p(6)}>
-          {renderCoverageMatrices()}
-        </div>
-      );
-    }
-
-    // Aucune table trouvée après chargement — la matrice exhaustive reste utile pour voir ce qui manque
     return (
       <div style={sx.spacing.p(6)}>
-        {/* PHASE 3 : matrice exhaustive même sans tableaux */}
+        {/* Matrice exhaustive même sans données — utile pour voir les "trous" */}
         {renderCoverageMatrices()}
         <div style={sx.combine(sx.components.card.base, sx.spacing.p(6), sx.text.center)}>
           <Table size={48} style={{ margin: '0 auto 16px', color: '#f59e0b' }} />
           <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(2))}>
-            Aucun abaque trouvé
+            Aucune donnée de performance trouvée
           </h3>
           <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(4))}>
-            Aucune donnée de performance n'a été trouvée pour {selectedAircraft.registration}.
+            {selectedAircraft.registration} n'a ni abaques ni tableaux configurés.
           </p>
           <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, { textAlign: 'left' })}>
             <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-              💡 Pour ajouter des abaques :
+              💡 Pour ajouter des performances :
             </p>
             <ol style={{ marginLeft: '20px', fontSize: '13px', lineHeight: '1.8' }}>
               <li>Allez dans l'onglet <strong>"Gestion Avions"</strong></li>
               <li>Sélectionnez votre avion ({selectedAircraft.registration})</li>
               <li>Cliquez sur <strong>"Modifier"</strong></li>
-              <li>Allez dans l'onglet <strong>"🤖 Performances IA"</strong></li>
-              <li>Uploadez et analysez les abaques du MANEX</li>
+              <li>Étape <strong>"Performances"</strong> → cliquez "Ajouter des données"</li>
+              <li>Choisissez <strong>Tableaux</strong> (extraction IA Claude) ou <strong>Abaques</strong> (construction manuelle)</li>
             </ol>
           </div>
         </div>
       </div>
     );
-
-    // Aucun tableau ni abaque - Message pour extraire avec IA (CODE MORT - ne devrait jamais être atteint car cas géré au-dessus)
-    /*return (
-      <div style={sx.spacing.p(6)}>
-        <div style={sx.combine(sx.components.card.base, sx.spacing.p(6), sx.text.center)}>
-          <Table size={48} style={{ margin: '0 auto 16px', color: '#f59e0b' }} />
-          <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(2))}>
-            Aucun tableau de performance extrait
-          </h3>
-          <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(4))}>
-            Pour utiliser le module Performance, vous devez d'abord analyser les tableaux de performances du MANEX avec l'IA.
-          </p>
-          <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, { textAlign: 'left' })}>
-            <p style={sx.combine(sx.text.sm, sx.text.bold)}>
-              📝 Marche à suivre :
-            </p>
-            <ol style={{ marginLeft: '20px', marginTop: '8px', fontSize: '13px' }}>
-              <li>Allez dans "Gestion Avions"</li>
-              <li>Sélectionnez votre avion ({selectedAircraft.registration})</li>
-              <li>Cliquez sur "Modifier"</li>
-              <li>Allez dans l'onglet "🤖 Performances IA"</li>
-              <li>Uploadez ou analysez vos tableaux de performances</li>
-              <li>Revenez ici pour utiliser les calculateurs</li>
-            </ol>
-          </div>
-        </div>
-      </div>
-    );*/
   }
 
-  // Les inputs et le helper renderCoverageMatrices() sont déjà définis en haut
-  // (avant les early-returns) — on les réutilise ici pour le main return.
+  // ─── RENDU COMPLET UNIFIÉ ───
+  // Au moins une source de données est disponible (abaque OU tableau).
+  // Le rendu inclut : sélecteur marge sécu + sections décollage/montée/atterrissage
+  // (chacune avec encart Conditions + matrice de couverture + analyse pistes).
 
   return (
     <div>
