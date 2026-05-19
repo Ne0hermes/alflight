@@ -184,6 +184,21 @@ class UnifiedPerformanceService {
     return await this.callOpenAI(imageBase64, userPrompt);
   }
 
+  // ===== ROUTAGE GÉNÉRIQUE Vision (Claude OU OpenAI selon provider actif) =====
+  //
+  // Méthode utilisée par les services d'extraction de données depuis images
+  // qui ne sont pas spécifiquement liés à la performance (ex: extraction
+  // complète du MANEX par manexExtractionService). Identique à
+  // analyzeManualPerformance mais sans le marquage mode='manual'.
+  async analyzeWithVision(imageBase64, prompt, options = {}) {
+    this.initialize();
+    const provider = apiKeyManager.getActiveProvider();
+    if (provider === 'anthropic') {
+      return await this.callClaude(imageBase64, prompt, options);
+    }
+    return await this.callOpenAI(imageBase64, prompt, options);
+  }
+
   // ===== MÉTHODES COMMUNES =====
 
   async callOpenAI(imageBase64, prompt, options = {}) {
