@@ -14,19 +14,37 @@ const confidenceColor = (c) => {
   return '#ef4444';
 };
 
+// Helper : détermine si une valeur "courante" est considérée comme "saisie"
+const hasValue = (v) => {
+  if (v === null || v === undefined || v === '') return false;
+  if (Array.isArray(v)) return v.length > 0;
+  return true;
+};
+
 const Row = memo(({ item, onChange }) => {
   const isAccepted = item.accepted;
   const isMissing = !item.found; // Champ non extrait par l'IA
+  const hasOptions = Array.isArray(item.options) && item.options.length > 0;
+  const isMulti = item.type === 'enum_multi';
 
-  // Styles selon état :
-  //   - Extrait + accepté    → vert pâle, opaque
-  //   - Extrait non accepté  → gris pâle, semi-opaque
-  //   - Manquant (non trouvé) → orange pâle, opaque (à remplir manuellement)
+  // Styles ligne selon état
   const rowBg = isMissing
-    ? '#fff7ed'                         // orange clair : à remplir
+    ? '#fff7ed'
     : isAccepted
-      ? '#f0fdf4'                        // vert : importé
-      : '#fafafa';                       // gris : extrait mais non accepté
+      ? '#f0fdf4'
+      : '#fafafa';
+
+  // Handler unifié de changement de valeur (auto-accept si on remplit un champ manquant)
+  const handleValueChange = (newValue) => {
+    const valuePresent = hasValue(newValue);
+    const newAccepted = isMissing && valuePresent ? true : item.accepted;
+    onChange({
+      ...item,
+      value: newValue,
+      accepted: newAccepted,
+      found: item.found || valuePresent
+    });
+  };
 
   return (
     <tr style={{
@@ -34,6 +52,7 @@ const Row = memo(({ item, onChange }) => {
       opacity: isMissing ? 0.85 : (isAccepted ? 1 : 0.6),
       borderBottom: '1px solid #e5e7eb'
     }}>
+      {/* COLONNE — Champ */}
       <td style={{ padding: '8px 12px', fontWeight: 500, fontSize: 13 }}>
         {item.label}
         {isMissing && (
@@ -46,45 +65,123 @@ const Row = memo(({ item, onChange }) => {
           </span>
         )}
       </td>
+
+      {/* COLONNE — Valeur (éditable). 3 variantes selon item.type */}
       <td style={{ padding: '8px 12px' }}>
-        <input
-          type={item.type === 'string' ? 'text' : 'number'}
-          value={item.value ?? ''}
-          placeholder={isMissing ? 'Saisir manuellement…' : ''}
-          onChange={(e) => {
-            const raw = e.target.value;
-            // Type forcé selon mapping.type (string ou number)
-            let newValue;
-            if (item.type === 'string') {
-              newValue = raw;
-            } else {
-              newValue = raw === '' ? null : Number(raw);
-              if (!Number.isFinite(newValue)) newValue = null;
-            }
-            // Quand le pilote remplit un champ manquant, on l'auto-accepte
-            const newAccepted = isMissing && newValue !== null && newValue !== ''
-              ? true
-              : item.accepted;
-            onChange({ ...item, value: newValue, accepted: newAccepted, found: item.found || newValue !== null });
-          }}
-          style={{
-            width: '100%',
-            padding: '4px 8px',
+        {hasOptions && isMulti ? (
+          /* ─── MULTI-SELECT (checkboxes) ─── */
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+            gap: 4,
+            padding: '4px 6px',
             border: isMissing ? '1px dashed #fb923c' : '1px solid #d1d5db',
             borderRadius: 4,
-            fontSize: 13,
-            backgroundColor: 'white'
-          }}
-        />
+            backgroundColor: 'white',
+            maxHeight: 120,
+            overflowY: 'auto'
+          }}>
+            {item.options.map(opt => {
+              const checked = Array.isArray(item.value) && item.value.includes(opt.value);
+              return (
+                <label key={opt.value} style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={(e) => {
+                      const current = Array.isArray(item.value) ? item.value : [];
+                      const next = e.target.checked
+                        ? [...current, opt.value]
+                        : current.filter(v => v !== opt.value);
+                      handleValueChange(next);
+                    }}
+                  />
+                  {opt.label}
+                </label>
+              );
+            })}
+          </div>
+        ) : hasOptions ? (
+          /* ─── SELECT mono (liste déroulante) ─── */
+          <select
+            value={item.value ?? ''}
+            onChange={(e) => handleValueChange(e.target.value || null)}
+            style={{
+              width: '100%',
+              padding: '4px 8px',
+              border: isMissing ? '1px dashed #fb923c' : '1px solid #d1d5db',
+              borderRadius: 4,
+              fontSize: 13,
+              backgroundColor: 'white',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="">— Sélectionner —</option>
+            {item.options.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        ) : (
+          /* ─── INPUT texte / number (cas standard) ─── */
+          <input
+            type={item.type === 'string' ? 'text' : 'number'}
+            value={item.value ?? ''}
+            placeholder={isMissing ? 'Saisir manuellement…' : ''}
+            onChange={(e) => {
+              const raw = e.target.value;
+              let newValue;
+              if (item.type === 'string') {
+                newValue = raw;
+              } else {
+                newValue = raw === '' ? null : Number(raw);
+                if (!Number.isFinite(newValue)) newValue = null;
+              }
+              handleValueChange(newValue);
+            }}
+            style={{
+              width: '100%',
+              padding: '4px 8px',
+              border: isMissing ? '1px dashed #fb923c' : '1px solid #d1d5db',
+              borderRadius: 4,
+              fontSize: 13,
+              backgroundColor: 'white'
+            }}
+          />
+        )}
       </td>
+
+      {/* COLONNE — Unité cible */}
       <td style={{ padding: '8px 12px', fontSize: 12, color: '#6b7280' }}>
         {item.targetUnit || '—'}
       </td>
+
+      {/* COLONNE — Source MANEX (valeur brute IA) */}
       <td style={{ padding: '8px 12px', fontSize: 12, color: '#9ca3af' }}>
         {isMissing
           ? <span style={{ fontStyle: 'italic' }}>—</span>
-          : <>{item.originalValue} {item.originalUnit || ''}</>}
+          : <>{Array.isArray(item.originalValue) ? item.originalValue.join(', ') : item.originalValue} {item.originalUnit || ''}</>}
       </td>
+
+      {/* COLONNE — Page MANEX (NEW) */}
+      <td style={{ padding: '8px 12px', textAlign: 'center', fontSize: 12 }}>
+        {item.sourcePage ? (
+          <span style={{
+            display: 'inline-block',
+            padding: '2px 8px',
+            borderRadius: 10,
+            backgroundColor: '#dbeafe',
+            color: '#1e40af',
+            fontWeight: 600,
+            fontSize: 11
+          }} title="Numéro de page du MANEX où la donnée a été extraite">
+            p. {item.sourcePage}
+          </span>
+        ) : (
+          <span style={{ color: '#cbd5e1' }}>—</span>
+        )}
+      </td>
+
+      {/* COLONNE — Confiance */}
       <td style={{ padding: '8px 12px' }}>
         <div style={{
           display: 'inline-flex',
@@ -100,12 +197,14 @@ const Row = memo(({ item, onChange }) => {
           {isMissing ? '—' : `${item.confidence}%`}
         </div>
       </td>
+
+      {/* COLONNE — Importer (checkbox) */}
       <td style={{ padding: '8px 12px', textAlign: 'center' }}>
-        <label style={{ cursor: (item.value !== null && item.value !== '') ? 'pointer' : 'not-allowed' }}>
+        <label style={{ cursor: hasValue(item.value) ? 'pointer' : 'not-allowed' }}>
           <input
             type="checkbox"
             checked={isAccepted}
-            disabled={item.value === null || item.value === ''}
+            disabled={!hasValue(item.value)}
             onChange={(e) => onChange({ ...item, accepted: e.target.checked })}
             style={{ marginRight: 4, cursor: 'inherit' }}
           />
@@ -263,7 +362,8 @@ const ManexExtractionReview = memo(({
                   <th style={th}>Champ</th>
                   <th style={th}>Valeur (storage)</th>
                   <th style={th}>Unité cible</th>
-                  <th style={th}>Source MANEX</th>
+                  <th style={th}>Source MANEX (brut IA)</th>
+                  <th style={{ ...th, textAlign: 'center' }} title="Numéro de page du MANEX d'origine">📄 Page</th>
                   <th style={th}>Confiance</th>
                   <th style={{ ...th, textAlign: 'center' }}>Importer</th>
                 </tr>
@@ -271,7 +371,7 @@ const ManexExtractionReview = memo(({
               <tbody>
                 {filteredItems.length === 0 ? (
                   <tr>
-                    <td colSpan={6} style={{ padding: 24, textAlign: 'center', color: '#9ca3af' }}>
+                    <td colSpan={7} style={{ padding: 24, textAlign: 'center', color: '#9ca3af' }}>
                       {items.length === 0 ? 'Aucune donnée extraite' : 'Aucun champ ne correspond au filtre'}
                     </td>
                   </tr>

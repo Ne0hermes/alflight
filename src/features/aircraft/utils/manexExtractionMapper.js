@@ -95,22 +95,68 @@ const FIELD_MAPPINGS = [
   { aircraftPath: 'registration',          src: ['aircraft_identification', 'registration'],  type: 'string', label: 'Immatriculation' },
 
   // ═══ MOTORISATION (Step1) ═══
-  // engineType est un enum dans le wizard : singleEngine | twinEngine | turboprop | jet
-  { aircraftPath: 'engineType',                  src: ['engine', 'type_category'], type: 'string', label: 'Type moteur (single/twin/turboprop/jet)' },
+  // engineType : ENUM strict du wizard
+  {
+    aircraftPath: 'engineType',
+    src: ['engine', 'type_category'],
+    type: 'enum',
+    label: 'Type moteur',
+    options: [
+      { value: 'singleEngine', label: 'Monomoteur thermique (single)' },
+      { value: 'twinEngine',   label: 'Bimoteur thermique (twin)' },
+      { value: 'turboprop',    label: 'Turbopropulseur (turboprop)' },
+      { value: 'jet',          label: 'Jet (turbofan/turbojet)' }
+    ]
+  },
 
   // ═══ CATÉGORIE TURBULENCE (Step1) ═══
   // L (Light < 7000 kg) | M (Medium 7-136 t) | H (Heavy > 136 t) | S (Super)
-  { aircraftPath: 'wakeTurbulenceCategory',      src: ['certification', 'wake_turbulence_category'], type: 'string', label: 'Catégorie turbulence ICAO (L/M/H)' },
+  {
+    aircraftPath: 'wakeTurbulenceCategory',
+    src: ['certification', 'wake_turbulence_category'],
+    type: 'enum',
+    label: 'Catégorie turbulence ICAO',
+    options: [
+      { value: 'L', label: 'L — Light (< 7 t)' },
+      { value: 'M', label: 'M — Medium (7–136 t)' },
+      { value: 'H', label: 'H — Heavy (> 136 t)' },
+      { value: 'S', label: 'S — Super (A380)' }
+    ]
+  },
 
   // ═══ CARBURANT (Step1) ═══
-  // fuelType est un enum dans le wizard : AVGAS | JET-A1 | MOGAS
-  { aircraftPath: 'fuelType',               src: ['fuel', 'fuel_type'],          type: 'string',                                          label: 'Type carburant (AVGAS/JET-A1/MOGAS)' },
+  {
+    aircraftPath: 'fuelType',
+    src: ['fuel', 'fuel_type'],
+    type: 'enum',
+    label: 'Type carburant',
+    options: [
+      { value: 'AVGAS',  label: 'AVGAS 100LL' },
+      { value: 'JET-A1', label: 'JET A-1 (kérosène)' },
+      { value: 'MOGAS',  label: 'MOGAS (UL91, essence auto)' }
+    ]
+  },
   { aircraftPath: 'fuelCapacity',           src: ['fuel', 'capacity_total'],     category: 'fuel',            targetUnit: 'ltr',           label: 'Capacité totale carburant' },
   { aircraftPath: 'fuelConsumption',        src: ['fuel', 'consumption_cruise'], category: 'fuelConsumption', targetUnit: 'lph',           label: 'Conso croisière' },
 
   // ═══ COMPATIBILITÉ PISTE (Step1) ═══
-  // Array d'enum : ASPH | CONC | GRASS | GRVL | UNPAVED | SAND | SNOW | WATER
-  { aircraftPath: 'compatibleRunwaySurfaces',    src: ['compatibility', 'runway_surfaces'],   type: 'array_csv', label: 'Revêtements compatibles' },
+  // Array d'ENUMs (multi-select)
+  {
+    aircraftPath: 'compatibleRunwaySurfaces',
+    src: ['compatibility', 'runway_surfaces'],
+    type: 'enum_multi',
+    label: 'Revêtements compatibles (multi)',
+    options: [
+      { value: 'ASPH',    label: 'Asphalte (ASPH)' },
+      { value: 'CONC',    label: 'Béton (CONC)' },
+      { value: 'GRASS',   label: 'Herbe (GRASS)' },
+      { value: 'GRVL',    label: 'Gravier (GRVL)' },
+      { value: 'UNPAVED', label: 'Non revêtu / terre (UNPAVED)' },
+      { value: 'SAND',    label: 'Sable (SAND)' },
+      { value: 'SNOW',    label: 'Neige (SNOW)' },
+      { value: 'WATER',   label: 'Eau (WATER)' }
+    ]
+  },
 
   // ═══ VITESSES (Step2 — storage = kt) ═══
   // Critiques (saisies obligatoirement dans Step2)
@@ -180,8 +226,22 @@ export function mapExtractionToReviewItems(extraction) {
 
     let convertedValue = null;
     if (found) {
-      if (mapping.type === 'string') {
+      if (mapping.type === 'enum') {
+        // Normaliser vers une valeur autorisée du select (matching insensible à
+        // la casse et tolérant aux espaces). Si pas de match, on garde la valeur
+        // brute pour que le pilote puisse la corriger manuellement.
+        convertedValue = matchEnumValue(raw.value, mapping.options);
+      } else if (mapping.type === 'enum_multi') {
+        // CSV → array de valeurs ENUM. Mapping FR/EN → codes via matchEnumValue.
+        const parts = String(raw.value).split(/[,;\/]/).map(s => s.trim()).filter(Boolean);
+        convertedValue = parts
+          .map(p => matchEnumValue(p, mapping.options))
+          .filter(v => v !== null);
+      } else if (mapping.type === 'string' || mapping.type === 'array_csv') {
         convertedValue = String(raw.value);
+      } else if (mapping.type === 'number') {
+        const n = Number(raw.value);
+        convertedValue = Number.isFinite(n) ? n : null;
       } else if (mapping.category && mapping.targetUnit) {
         convertedValue = convertToStorage(raw.value, raw.unit, mapping.category, mapping.targetUnit);
       } else {
@@ -205,11 +265,85 @@ export function mapExtractionToReviewItems(extraction) {
       found, // ← nouveau flag pour différencier "extrait" vs "manquant"
       // category + type conservés pour l'éditeur (forcer type number ou string)
       category: mapping.category || null,
-      type: mapping.type || null
+      type: mapping.type || null,
+      // Options de liste déroulante (pour les enum / enum_multi) — propagées
+      // jusqu'à l'UI pour rendre un <select> au lieu d'un <input texte>.
+      options: mapping.options || null
     });
   }
 
   return items;
+}
+
+/**
+ * Normalise une valeur ENUM extraite par l'IA vers une option autorisée.
+ * Matching tolérant : casse, accents, espaces, et synonymes courants.
+ * Retourne null si aucune correspondance (le pilote devra sélectionner manuellement).
+ */
+function matchEnumValue(raw, options) {
+  if (raw === null || raw === undefined) return null;
+  if (!Array.isArray(options) || options.length === 0) return String(raw);
+
+  const normalize = (s) => String(s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '') // supprime les accents
+    .replace(/[\s\-_\.]/g, '');       // supprime espaces, tirets, underscores, points
+
+  const target = normalize(raw);
+  if (!target) return null;
+
+  // 1) Match exact sur la value
+  for (const opt of options) {
+    if (normalize(opt.value) === target) return opt.value;
+  }
+  // 2) Match exact sur le label
+  for (const opt of options) {
+    if (normalize(opt.label) === target) return opt.value;
+  }
+  // 3) Match partiel : la valeur extraite contient la value ou vice versa
+  for (const opt of options) {
+    const v = normalize(opt.value);
+    if (target.includes(v) || v.includes(target)) return opt.value;
+  }
+  // 4) Synonymes courants pour les surfaces (FR ↔ codes)
+  const surfaceSynonyms = {
+    asphalte: 'ASPH', asphalt: 'ASPH', goudron: 'ASPH', bitume: 'ASPH', tar: 'ASPH',
+    beton: 'CONC', concrete: 'CONC',
+    herbe: 'GRASS', gazon: 'GRASS', pelouse: 'GRASS',
+    gravier: 'GRVL', gravel: 'GRVL', cailloux: 'GRVL',
+    terre: 'UNPAVED', dirt: 'UNPAVED', unpaved: 'UNPAVED', nonrevetu: 'UNPAVED',
+    sable: 'SAND', sand: 'SAND',
+    neige: 'SNOW', snow: 'SNOW',
+    eau: 'WATER', water: 'WATER'
+  };
+  if (surfaceSynonyms[target]) {
+    const code = surfaceSynonyms[target];
+    if (options.some(opt => opt.value === code)) return code;
+  }
+  // 5) Synonymes engine type
+  const engineSynonyms = {
+    monomoteur: 'singleEngine', single: 'singleEngine', singleengine: 'singleEngine', piston: 'singleEngine',
+    bimoteur: 'twinEngine', twin: 'twinEngine', twoengine: 'twinEngine',
+    turboprop: 'turboprop', turbopropulseur: 'turboprop', turboprope: 'turboprop',
+    jet: 'jet', turbofan: 'jet', turbojet: 'jet'
+  };
+  if (engineSynonyms[target]) {
+    const code = engineSynonyms[target];
+    if (options.some(opt => opt.value === code)) return code;
+  }
+  // 6) Synonymes fuel
+  const fuelSynonyms = {
+    avgas: 'AVGAS', avgas100ll: 'AVGAS', '100ll': 'AVGAS', '100LL': 'AVGAS',
+    jeta1: 'JET-A1', jeta: 'JET-A1', kerosene: 'JET-A1', kérosène: 'JET-A1', kero: 'JET-A1',
+    mogas: 'MOGAS', ul91: 'MOGAS', essence: 'MOGAS', petrol: 'MOGAS', autogas: 'MOGAS'
+  };
+  if (fuelSynonyms[target]) {
+    const code = fuelSynonyms[target];
+    if (options.some(opt => opt.value === code)) return code;
+  }
+  // Aucun match → null. Le pilote devra sélectionner manuellement.
+  return null;
 }
 
 /**
