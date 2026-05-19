@@ -200,7 +200,14 @@ const ManexExtractionReview = memo(({
             border: '1px solid #bae6fd', borderRadius: 8
           }}>
             <div><strong>{foundCount}</strong>/{items.length} champs extraits</div>
-            <div>{metadata.pagesAnalyzed} pages analysées</div>
+            <div>
+              {metadata.pagesAnalyzed} page{metadata.pagesAnalyzed > 1 ? 's' : ''} analysée{metadata.pagesAnalyzed > 1 ? 's' : ''}
+              {metadata.pagesWithData !== undefined && (
+                <span style={{ color: '#6b7280', fontSize: 11, marginLeft: 4 }}>
+                  ({metadata.pagesWithData} avec données, {metadata.pagesEmpty || 0} vides)
+                </span>
+              )}
+            </div>
             <div>Confiance moyenne : <strong style={{ color: confidenceColor(metadata.overallConfidence) }}>{metadata.overallConfidence}%</strong></div>
             {missingCount > 0 && (
               <div style={{ color: '#9a3412' }}>
