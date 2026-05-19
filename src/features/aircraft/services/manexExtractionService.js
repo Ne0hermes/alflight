@@ -67,39 +67,118 @@ Exemples valides : "kg", "lbs", "kt", "kts", "KIAS", "mph", "km/h", "L", "litres
 <schema>
 {
   "aircraft_identification": {
-    "model": "..", "manufacturer": "..", "manex_edition": "..", "manex_date": ".."
+    "model": ".. (TYPE générique de l'avion, ex: DA40 NG, Cessna 172S, Piper PA-28-181)",
+    "registration": ".. (IMMATRICULATION spécifique de cet aéronef, ex: F-HSTR, N12345, G-ABCD)",
+    "serial_number": ".. (numéro de série / MSN)",
+    "manufacturer": ".. (ex: Diamond Aircraft, Cessna, Piper)",
+    "year_of_construction": ".. (année de fabrication)",
+    "manex_edition": ".. (numéro / version d'édition du MANEX, ex: Rev 4)",
+    "manex_date": ".. (date d'édition du MANEX)"
+  },
+  "certification": {
+    "certification_basis": ".. (ex: CS-23, FAR Part 23, JAR-VLA)",
+    "aircraft_category": ".. (Normal / Utility / Aerobatic / Commuter)",
+    "ifr_certified": ".. (boolean ou Yes/No - certifié IFR ?)",
+    "icing_certified": ".. (vol en conditions givrantes autorisé ?)",
+    "max_seats": ".. (nombre de sièges max, pilote inclus)",
+    "max_pob": ".. (max persons on board)",
+    "wake_turbulence_category": ".. (ICAO : L / M / H — Light / Medium / Heavy)"
+  },
+  "engine": {
+    "type": ".. (ex: Austro AE300, Lycoming O-360-A4M, Continental IO-550-N)",
+    "manufacturer": ".. (ex: Austro Engine, Lycoming, Continental, Rotax)",
+    "count": ".. (nombre de moteurs)",
+    "power_max": ".. (puissance max en kW, hp ou CV)",
+    "power_cruise": ".. (puissance croisière typique)",
+    "rpm_max": ".. (RPM max moteur)",
+    "rpm_idle": ".. (RPM ralenti)",
+    "oil_pressure_min": "..", "oil_pressure_max": "..",
+    "oil_temp_max": "..", "cht_max": ".. (cylinder head temp max si applicable)"
+  },
+  "propeller": {
+    "type": ".. (ex: MT-Propeller MTV-6-A-C-F, McCauley...)",
+    "manufacturer": "..",
+    "diameter": ".. (en m ou inches)",
+    "blade_count": ".. (nombre de pales)",
+    "pitch_type": ".. (fixed pitch / constant speed / variable pitch)"
   },
   "weights": {
-    "empty_weight": ".. (masse à vide BEW)", "mtow": ".. (max takeoff weight)",
-    "mlw": ".. (max landing weight)", "min_takeoff_weight": "..",
-    "max_payload": "..", "max_baggage_fwd": "..", "max_baggage_aft": ".."
+    "empty_weight": ".. (BEW - Basic Empty Weight, masse à vide)",
+    "ramp_weight": ".. (max au sol avant taxi, souvent MTOW + ~10 kg)",
+    "mtow": ".. (Maximum Takeoff Weight)",
+    "mlw": ".. (Maximum Landing Weight, souvent = MTOW pour avions GA)",
+    "mzfw": ".. (Maximum Zero Fuel Weight, surtout pour gros avions)",
+    "min_takeoff_weight": "..",
+    "max_payload": ".. (charge utile max)",
+    "useful_load": ".. (MTOW - empty_weight)",
+    "max_baggage_fwd": "..", "max_baggage_aft": ".."
   },
   "arms": {
-    "empty_cg_arm": "..", "front_seats_arm": "..", "rear_seats_arm": "..",
-    "fuel_main_arm": "..", "baggage_fwd_arm": "..", "baggage_aft_arm": "..",
-    "cg_forward_limit": "..", "cg_aft_limit": ".."
+    "empty_cg_arm": ".. (bras de levier du CG à vide)",
+    "front_seats_arm": "..", "rear_seats_arm": "..",
+    "fuel_main_arm": "..",
+    "baggage_fwd_arm": "..", "baggage_aft_arm": "..",
+    "cg_forward_limit": ".. (limite avant centrage)",
+    "cg_aft_limit": ".. (limite arrière centrage)",
+    "datum_reference": ".. (description du point de référence, ex: \"nose tip\", \"firewall\")"
+  },
+  "g_limits": {
+    "max_positive_g_normal": ".. (ex: +3.8g cat Normal)",
+    "max_negative_g_normal": ".. (ex: -1.5g)",
+    "max_positive_g_utility": ".. (ex: +4.4g cat Utility)",
+    "max_negative_g_utility": "..",
+    "max_positive_g_aerobatic": ".. (ex: +6g cat Aerobatic)",
+    "max_negative_g_aerobatic": ".."
   },
   "speeds": {
     "vso": ".. (stall flaps extended)", "vs1": ".. (stall clean)",
-    "vfe": ".. (max flaps extended)", "vfe_takeoff": "..", "vfe_landing": "..",
+    "vfe": ".. (max flaps extended général)",
+    "vfe_takeoff": ".. (VFE T/O flaps)", "vfe_landing": ".. (VFE LDG flaps)",
+    "vfe_approach": ".. (si flaps APP distinct)",
     "vno": ".. (max structural cruising)", "vne": ".. (never exceed)",
-    "vr": ".. (rotation)", "vx": ".. (best angle climb)", "vy": ".. (best rate climb)",
-    "vapp": ".. (approach)", "vglide": ".. (best glide)",
+    "vr": ".. (rotation)",
+    "vx": ".. (best angle of climb)", "vy": ".. (best rate of climb)",
+    "vx_takeoff": ".. (VX au décollage avec flaps T/O si distinct)",
+    "vy_takeoff": ".. (VY au décollage avec flaps T/O si distinct)",
+    "vapp": ".. (approach)", "vref": ".. (reference landing speed)",
+    "vglide": ".. (best glide)",
     "vle": ".. (landing gear extended)", "vlo": ".. (gear operating)",
-    "va": ".. (manoeuvring)", "initial_climb_rate": ".. en ft/min ou m/s"
+    "va": ".. (manoeuvring speed, dépend masse)",
+    "initial_climb_rate": ".. (taux montée initiale en ft/min)"
   },
   "fuel": {
-    "capacity_total": "..", "capacity_usable": "..",
-    "fuel_type": ".. (JET A-1, AVGAS 100LL, MOGAS...)",
-    "consumption_cruise": ".. en L/h ou GPH"
+    "capacity_total": ".. (capacité totale)",
+    "capacity_usable": ".. (capacité utilisable, exclut le fuel non-disponible)",
+    "capacity_unusable": "..",
+    "fuel_type": ".. (JET A-1, AVGAS 100LL, MOGAS UL91, ULSD...)",
+    "fuel_grades_allowed": ".. (liste textuelle des carburants alternatifs autorisés)",
+    "consumption_cruise": ".. en L/h ou GPH",
+    "consumption_taxi": "..",
+    "consumption_takeoff_climb": ".."
   },
   "wind_limits": {
-    "max_crosswind": "..", "max_tailwind": "..", "max_crosswind_wet": ".."
+    "max_crosswind": ".. (demonstrated crosswind component)",
+    "max_tailwind": "..", "max_crosswind_wet": ".."
   },
   "performance_summary": {
-    "takeoff_distance_50ft": "..", "landing_distance_50ft": "..",
-    "service_ceiling": "..", "cruise_speed_75percent": "..",
-    "endurance": "..", "range_cruise": ".."
+    "takeoff_run": ".. (ground roll)",
+    "takeoff_distance_50ft": ".. (distance totale passage 50ft / 15m)",
+    "landing_run": ".. (landing ground roll)",
+    "landing_distance_50ft": "..",
+    "service_ceiling": ".. (plafond pratique)",
+    "max_operating_altitude": ".. (plafond opérationnel certifié)",
+    "cruise_speed_75percent": ".. (TAS à 75% puissance)",
+    "cruise_speed_max": ".. (TAS max croisière)",
+    "endurance": ".. (autonomie en heures à conso croisière)",
+    "range_cruise": ".. (distance franchissable, NM ou km)"
+  },
+  "landing_gear": {
+    "type": ".. (tricycle / tailwheel / retractable / fixed)",
+    "tire_pressure_main": "..", "tire_pressure_nose": ".."
+  },
+  "compatibility": {
+    "runway_surfaces": ".. (revêtements compatibles : asphalte, herbe, gravier, neige... liste textuelle)",
+    "min_runway_length": ".."
   }
 }
 </schema>
@@ -111,6 +190,12 @@ Le JSON doit être directement parseable par JSON.parse().
 </output_format>
 
 <important>
+- **DISTINCTION MAJEURE entre model et registration** :
+  * "model" = TYPE générique de l'avion (ex: "DA40 NG", "Cessna 172S", "Piper PA-28-181")
+  * "registration" = IMMATRICULATION spécifique du tail-number (ex: "F-HSTR",
+    "N12345", "G-ABCD", "D-EFGH"). Format : préfixe pays + suffixe alphanumérique.
+  * Le MANEX peut contenir les deux. Ne JAMAIS mettre une immatriculation dans
+    "model" ni l'inverse.
 - Si la page est un sommaire / table des matières / page blanche : retourne {}
 - Si tu hésites entre 2 valeurs (ex: VR = 55 vs 60), choisis la plus probable et
   baisse la confidence à 50-65 pour signaler l'incertitude.
@@ -118,6 +203,11 @@ Le JSON doit être directement parseable par JSON.parse().
 - Pour les bras (arms), conserve le signe si négatif (FS - fuselage station).
 - Pour les masses : si tu vois "1500 lbs / 680 kg" sur la même ligne, retourne
   la version en kg avec unit:"kg" (préférence métrique pour MANEX FR).
+- Pour les surfaces piste compatibles : retourne string liste, ex:
+  "asphalte, herbe, gravier" plutôt qu'un array (le mapper se charge de parser).
+- Pour les certifications booléennes (IFR, icing) : retourne "Yes"/"No" en string.
+- wake_turbulence_category : retourne "L" (Light), "M" (Medium) ou "H" (Heavy).
+  Pour un avion GA monomoteur léger sous 7000 lbs : c'est "L".
 </important>`;
 
 /**
