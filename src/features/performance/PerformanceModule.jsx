@@ -552,10 +552,35 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     </div>
   );
 
+  // Note d'avertissement : corrections piste/terrain non encore appliquées par
+  // le résolveur. Le pilote doit en tenir compte manuellement le cas échéant.
+  const renderRunwayCorrectionsNotice = () => (
+    <div style={{
+      marginBottom: 12,
+      padding: 10,
+      backgroundColor: '#fff7ed',
+      border: '1px solid #fdba74',
+      borderRadius: 6,
+      display: 'flex',
+      alignItems: 'flex-start',
+      gap: 10
+    }}>
+      <span style={{ fontSize: 16, lineHeight: 1, marginTop: 1 }}>ℹ</span>
+      <div style={{ fontSize: 12, color: '#9a3412', lineHeight: 1.5 }}>
+        <strong>Note — Corrections piste/terrain non encore implémentées.</strong>
+        {' '}Les distances affichées <strong>ne tiennent pas compte</strong> des facteurs
+        multiplicatifs liés à <strong>l'état du sol</strong> (sèche, humide, contaminée,
+        enneigée) ni au <strong>type de revêtement</strong> (asphalte, herbe, gravier).
+        À ajouter manuellement selon ton MANEX et la réglementation applicable.
+      </div>
+    </div>
+  );
+
   // Compat : ancien helper pour les early-returns (legacy). Affiche les 3 matrices à la suite.
   const renderCoverageMatrices = () => (
     <>
       {renderSafetyFactorSelector()}
+      {renderRunwayCorrectionsNotice()}
       {renderTakeoffMatrix()}
       {renderClimbCruiseMatrix()}
       {renderLandingMatrix()}
@@ -656,9 +681,10 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
 
   return (
     <div>
-      {/* Sélecteur de facteur de sécurité réglementaire en tête du module */}
+      {/* Sélecteur de facteur de sécurité réglementaire + note corrections piste */}
       <div style={{ padding: '0 8px' }}>
         {renderSafetyFactorSelector()}
+        {renderRunwayCorrectionsNotice()}
       </div>
 
       {/* ─── REGROUPEMENT PAR PHASE ───
