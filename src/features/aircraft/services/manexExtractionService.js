@@ -17,9 +17,23 @@
 
 import unifiedPerformanceService from '@features/performance/services/unifiedPerformanceService';
 
-// Nombre de pages analysées par défaut (couverture + specs + limitations).
-// Empiriquement, ces données tiennent dans les 8 premières pages d'un MANEX standard.
-const DEFAULT_PAGES_TO_SCAN = 8;
+// Nombre de pages analysées par défaut.
+// null = analyser TOUTES les pages du MANEX (recommandé pour exhaustivité).
+// Un MANEX d'avion GA standard fait 50-300 pages réparties en sections :
+// couverture / specs / limitations / normal procedures / emergency / performance /
+// weight & balance / systems description / supplements / appendices.
+// Les données chiffrées (vitesses, masses, performances) sont dispersées un peu
+// partout — limiter à 8 pages comme on faisait avant manquait jusqu'à 95% des
+// données utiles.
+const DEFAULT_PAGES_TO_SCAN = null;
+
+// Concurrence : nombre de pages analysées EN PARALLÈLE.
+// Compromis entre vitesse et rate-limit Anthropic.
+//   - Tier free Anthropic : 5 req/min → CONCURRENCY=2 max
+//   - Tier paid (Build) : 50 req/min → CONCURRENCY=5 confortable
+//   - Tier paid (Scale) : 1000 req/min → CONCURRENCY=10+ ok
+// On reste prudent à 5 par défaut. Le pilote peut surcharger via options.concurrency.
+const DEFAULT_CONCURRENCY = 5;
 
 // ─────────────────────────────────────────────────────────────────────────
 // PROMPT OPTIMISÉ POUR CLAUDE (avec fallback compatible OpenAI)
@@ -273,69 +287,104 @@ function safeParseJSON(text) {
 }
 
 /**
- * Extrait les données complètes d'un MANEX.
+ * Analyse UNE page MANEX et retourne le résultat normalisé.
+ * Utilisé par extractCompleteManexData en mode parallèle (Promise.all batches).
+ */
+async function analyzeSinglePage(page) {
+  try {
+    const rawResponse = await unifiedPerformanceService.analyzeWithVision(
+      page.image,
+      MANEX_EXTRACTION_PROMPT
+    );
+
+    let pageData;
+    if (typeof rawResponse === 'string') {
+      pageData = safeParseJSON(rawResponse);
+    } else if (rawResponse && typeof rawResponse === 'object') {
+      pageData = rawResponse;
+    }
+
+    if (pageData) {
+      pageData._pageNumber = page.pageNumber;
+      pageData._provider = rawResponse?._provider;
+      pageData._model = rawResponse?._model;
+      // Compter les sections non-vides (utile pour stats)
+      pageData._sectionsFound = Object.keys(pageData).filter(k => !k.startsWith('_')).length;
+      return pageData;
+    }
+  } catch (err) {
+    console.warn(`[manexExtractionService] Page ${page.pageNumber} a échoué:`, err.message);
+  }
+  return null;
+}
+
+/**
+ * Extrait les données complètes d'un MANEX (analyse intégrale par défaut).
  *
  * @param {File} pdfFile - Fichier PDF du MANEX
  * @param {Object} options
- * @param {number} options.maxPages - Nombre max de pages à analyser (défaut: 8)
+ * @param {number|null} options.maxPages - Nombre max de pages à analyser.
+ *                                          null (défaut) = TOUTES les pages.
+ * @param {number} options.concurrency - Nombre de pages en parallèle
+ *                                        (défaut: 5, attention rate-limit Anthropic).
  * @param {function} options.onProgress - Callback(progress, message) appelé pendant l'extraction
  * @returns {Promise<{extraction: Object, metadata: Object}>}
  */
 export async function extractCompleteManexData(pdfFile, options = {}) {
-  const { maxPages = DEFAULT_PAGES_TO_SCAN, onProgress } = options;
+  const {
+    maxPages = DEFAULT_PAGES_TO_SCAN,
+    concurrency = DEFAULT_CONCURRENCY,
+    onProgress
+  } = options;
 
   if (!pdfFile) throw new Error('Aucun fichier PDF fourni');
 
-  onProgress?.(5, 'Conversion du PDF en images...');
+  onProgress?.(2, 'Conversion du PDF en images...');
 
   // Réutilise le helper existant qui rend chaque page en canvas
   const allPages = await unifiedPerformanceService.extractPDFPages(pdfFile);
-  const pagesToScan = allPages.slice(0, maxPages);
+  // Si maxPages est null → analyser TOUTES les pages
+  const pagesToScan = maxPages === null || maxPages === undefined
+    ? allPages
+    : allPages.slice(0, maxPages);
 
-  onProgress?.(15, `${pagesToScan.length} pages à analyser`);
+  onProgress?.(5, `${pagesToScan.length} page(s) à analyser (parallélisme ${concurrency})`);
 
+  // ── ANALYSE PARALLÈLE PAR LOTS ──
+  // Au lieu d'attendre chaque page séquentiellement (200 pages × 3s = 10min),
+  // on traite N pages en parallèle (200 pages × 3s / 5 = 2min). Compromis
+  // vitesse vs rate-limit Anthropic. Le pilote peut adjuster `concurrency`.
   const pageResults = [];
   let pagesAnalyzed = 0;
+  const total = pagesToScan.length;
 
-  for (const page of pagesToScan) {
-    pagesAnalyzed += 1;
-    const progress = 15 + Math.round((pagesAnalyzed / pagesToScan.length) * 80);
-    onProgress?.(progress, `Page ${pagesAnalyzed}/${pagesToScan.length}`);
+  // Découpe en chunks de taille `concurrency`
+  for (let chunkStart = 0; chunkStart < total; chunkStart += concurrency) {
+    const chunk = pagesToScan.slice(chunkStart, chunkStart + concurrency);
 
-    try {
-      // Route automatique vers Claude OU OpenAI selon apiKeyManager.getActiveProvider().
-      // Pour Claude : le response prefill "{" garantit un JSON pur en sortie.
-      const rawResponse = await unifiedPerformanceService.analyzeWithVision(
-        page.image,
-        MANEX_EXTRACTION_PROMPT
-      );
+    // Lance les N appels en parallèle
+    const chunkResults = await Promise.all(chunk.map(page => analyzeSinglePage(page)));
 
-      // analyzeWithVision retourne soit l'objet déjà parsé, soit la string brute selon
-      // ce qui a réussi côté API. On normalise.
-      let pageData;
-      if (typeof rawResponse === 'string') {
-        pageData = safeParseJSON(rawResponse);
-      } else if (rawResponse && typeof rawResponse === 'object') {
-        pageData = rawResponse;
-      }
-
-      if (pageData) {
-        pageData._pageNumber = page.pageNumber;
-        // Préserver les métadonnées provider (utile pour traçabilité)
-        pageData._provider = rawResponse._provider;
-        pageData._model = rawResponse._model;
-        pageResults.push(pageData);
-      }
-    } catch (err) {
-      console.warn(`[manexExtractionService] Page ${page.pageNumber} a échoué:`, err.message);
+    // Aggréger
+    for (const r of chunkResults) {
+      pagesAnalyzed += 1;
+      if (r) pageResults.push(r);
     }
+
+    // Progress après chaque chunk (entre 5 et 95)
+    const progress = 5 + Math.round((pagesAnalyzed / total) * 90);
+    const lastPageInChunk = chunk[chunk.length - 1]?.pageNumber;
+    onProgress?.(
+      progress,
+      `Page ${pagesAnalyzed}/${total} analysée${pagesAnalyzed > 1 ? 's' : ''}${lastPageInChunk ? ` (dernière : p.${lastPageInChunk})` : ''}`
+    );
   }
 
-  onProgress?.(98, 'Fusion des résultats...');
+  onProgress?.(97, 'Fusion des résultats…');
 
   const extraction = mergePageResults(pageResults);
 
-  // Compter les champs trouvés et leur confiance moyenne
+  // Stats globales
   let totalFields = 0;
   let sumConfidence = 0;
   for (const section of Object.values(extraction)) {
@@ -345,14 +394,19 @@ export async function extractCompleteManexData(pdfFile, options = {}) {
     }
   }
 
+  // Stats par page : combien de pages ont produit ≥1 champ
+  const pagesWithData = pageResults.filter(r => r._sectionsFound > 0).length;
+
   const metadata = {
     pagesAnalyzed,
+    pagesWithData,
+    pagesEmpty: pagesAnalyzed - pagesWithData,
     fieldsFound: totalFields,
     overallConfidence: totalFields > 0 ? Math.round(sumConfidence / totalFields) : 0,
     extractedAt: new Date().toISOString()
   };
 
-  onProgress?.(100, `Terminé : ${totalFields} champs extraits`);
+  onProgress?.(100, `Terminé : ${totalFields} champs extraits sur ${pagesWithData}/${pagesAnalyzed} pages utiles`);
 
   return { extraction, metadata };
 }
