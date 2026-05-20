@@ -16,6 +16,8 @@ import performanceDataManager from '../../utils/performanceDataManager';
 import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
 import dataBackupManager from '@utils/dataBackupManager';
 import indexedDBStorage from '@utils/indexedDBStorage';
+import { formatCanonical } from '@utils/unitsDisplay';
+import { useUnitsStore } from '@core/stores/unitsStore';
 
 // Composant pour l'aide contextuelle
 const InfoIcon = memo(({ tooltip }) => {
@@ -1224,25 +1226,18 @@ export const AircraftModule = memo(() => {
                       )}
                     </h4>
                     <div style={{ fontSize: '14px', color: '#6B7280' }}>
-                      <p>Carburant: {aircraft.fuelType} • Capacité: {aircraft.fuelCapacity ? (() => {
-                        // 🔧 FIX: Les données avion sont DÉJÀ converties vers les préférences utilisateur
-                        // par aircraftStore.loadFromSupabase() - PAS de double conversion !
-                        console.log('🟣 [AircraftModule] DISPLAY fuelCapacity (déjà converti):', {
-                          value: aircraft.fuelCapacity,
-                          userUnit: getUnit('fuel')
-                        });
-                        return Number(aircraft.fuelCapacity).toFixed(1);
-                      })() : 'N/A'} {getSymbol('fuel')}</p>
-                      <p>Vitesse: {(aircraft.cruiseSpeed || aircraft.cruiseSpeedKt) ? Number(aircraft.cruiseSpeed || aircraft.cruiseSpeedKt).toFixed(0) : 'N/A'} {getSymbol('speed')} • Conso: {aircraft.fuelConsumption ? (() => {
-                        // 🔧 FIX: Les données avion sont DÉJÀ converties vers les préférences utilisateur
-                        // par aircraftStore.loadFromSupabase() - PAS de double conversion !
-                        console.log('🟣 [AircraftModule] DISPLAY fuelConsumption (déjà converti):', {
-                          value: aircraft.fuelConsumption,
-                          userUnit: getUnit('fuelConsumption')
-                        });
-                        return Number(aircraft.fuelConsumption).toFixed(1);
-                      })() : 'N/A'} {getSymbol('fuelConsumption')}</p>
-                      <p>MTOW: {(aircraft.maxTakeoffWeight || aircraft.weights?.mtow) ? Number(aircraft.maxTakeoffWeight || aircraft.weights?.mtow).toFixed(0) : 'N/A'} {getSymbol('weight')}</p>
+                      <p>Carburant: {aircraft.fuelType} • Capacité: {
+                        // CANONIQUE → user pref via formatCanonical (double affichage)
+                        formatCanonical(aircraft.fuelCapacity, 'fuel', useUnitsStore.getState().units, { both: true })
+                      }</p>
+                      <p>Vitesse: {
+                        formatCanonical(aircraft.cruiseSpeed || aircraft.cruiseSpeedKt, 'speed', useUnitsStore.getState().units)
+                      } • Conso: {
+                        formatCanonical(aircraft.fuelConsumption, 'fuelConsumption', useUnitsStore.getState().units, { both: true })
+                      }</p>
+                      <p>MTOW: {
+                        formatCanonical(aircraft.maxTakeoffWeight || aircraft.weights?.mtow, 'weight', useUnitsStore.getState().units, { both: true })
+                      }</p>
                       {/* Affichage des informations MANEX si présent */}
                       {(aircraft.hasManex || aircraft.manex) && (
                         <p style={{ color: '#059669', fontSize: '12px', marginTop: '4px' }}>

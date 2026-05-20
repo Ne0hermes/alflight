@@ -7,6 +7,20 @@ import { createModuleLogger } from '@utils/logger';
 import { validateAndRepairAircraft } from '@utils/aircraftValidation';
 import { prepareAircraftExport } from '@utils/aircraftNormalizer';
 import { useUnitsStore } from '@core/stores/unitsStore';
+import { supabase } from '../../lib/supabaseClient';
+import { recordSupabaseError } from '../../lib/persistentErrorLog';
+
+// Récupère l'userId Supabase courant pour tagger les écritures.
+// Retourne null si l'utilisateur n'est pas authentifié (les RLS doivent alors refuser l'écriture).
+async function getCurrentUserId() {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.user?.id || null;
+  } catch (e) {
+    console.warn('[AircraftStore] Impossible de récupérer la session Supabase:', e?.message);
+    return null;
+  }
+}
 
 const logger = createModuleLogger('AircraftStore');
 
@@ -97,44 +111,39 @@ export const useAircraftStore = create(
             aircraft.maxTakeoffWeight = parseFloat(aircraft.weights.mtow);
           }
 
-          // 🔧 CONVERTIR DEPUIS UNITÉS DE STOCKAGE VERS PRÉFÉRENCES PILOTE
-          // Supabase contient TOUJOURS unités de stockage (L, L/h, kg, kt)
-          // On convertit vers les préférences du pilote local
-          const currentPilotUnits = useUnitsStore.getState().units;
-          const storageUnits = aircraft._metadata?.units || {
-            fuel: 'ltr',
-            fuelConsumption: 'lph',
-            speed: 'kt',
-            weight: 'kg',
-            verticalSpeed: 'fpm',
-            altitude: 'ft',
-            distance: 'nm'
-          };
-
+          // ═══════════════════════════════════════════════════════════════
+          // CONVENTION : LES DONNÉES EN MÉMOIRE SONT TOUJOURS EN CANONIQUE
+          // ═══════════════════════════════════════════════════════════════
+          // Supabase = canonique. App state = canonique. IndexedDB = canonique.
+          // La conversion vers les unités utilisateur se fait UNIQUEMENT au
+          // rendu UI via le helper `unitsDisplay.js`.
+          //
+          // → AUCUNE conversion automatique ici.
+          //
+          // Migration légère : si l'avion vient d'un ancien _metadata.units
+          // NON-canonique (ex: ancien export en gph), on le convertit UNE FOIS
+          // vers canonique avant de l'écrire en state. Sinon on laisse tel quel.
           let processedAircraft = aircraft;
-
-          // Vérifier si conversion nécessaire
-          const needsConversion =
-            storageUnits.fuel !== currentPilotUnits.fuel ||
-            storageUnits.fuelConsumption !== currentPilotUnits.fuelConsumption ||
-            storageUnits.weight !== currentPilotUnits.weight;
-
-          if (needsConversion) {
-            console.log('🔄 [AircraftStore] Converting from STORAGE units to PILOT preferences:', {
+          const meta = aircraft._metadata?.units;
+          const isLegacyNonCanonical = meta && (
+            (meta.fuel && meta.fuel !== 'ltr') ||
+            (meta.fuelConsumption && meta.fuelConsumption !== 'lph') ||
+            (meta.weight && meta.weight !== 'kg') ||
+            (meta.armLength && meta.armLength !== 'mm') ||
+            (meta.speed && meta.speed !== 'kt')
+          );
+          if (isLegacyNonCanonical) {
+            console.warn('🔁 [AircraftStore] Avion en unités legacy non-canoniques, migration one-shot vers canonique:', {
               registration: aircraft.registration,
-              from: storageUnits,
-              to: currentPilotUnits
+              from: meta
             });
-
-            // Convertir les valeurs depuis unités de stockage vers préférences pilote
-            processedAircraft = convertAircraftUnits(aircraft, storageUnits, currentPilotUnits);
-
-            console.log('✅ [AircraftStore] Converted values:', {
-              fuelConsumption: processedAircraft.fuelConsumption,
-              fuelCapacity: processedAircraft.fuelCapacity
-            });
-          } else {
-            console.log('✓ [AircraftStore] Pilot uses STORAGE units - No conversion needed');
+            const canonicalUnits = {
+              fuel: 'ltr', fuelConsumption: 'lph', weight: 'kg',
+              armLength: 'mm', speed: 'kt', altitude: 'ft', distance: 'nm'
+            };
+            processedAircraft = convertAircraftUnits(aircraft, meta, canonicalUnits);
+            // Mettre à jour le tag pour ne plus migrer la prochaine fois
+            processedAircraft._metadata = { ...aircraft._metadata, units: canonicalUnits };
           }
 
           // Valider et réparer
@@ -218,35 +227,27 @@ export const useAircraftStore = create(
         // Récupérer les préférences d'unités de l'utilisateur
         const userUnits = useUnitsStore.getState().units;
 
-        // 🔧 STRATÉGIE CORRECTE : Supabase = unités STANDARD (normalisées)
-        // Chaque utilisateur fait la conversion LOCALEMENT selon ses préférences
-
-        // 🔧 FIX CRITIQUE: Vérifier si les données sont DÉJÀ en STORAGE units
-        const currentMetadata = validatedAircraft._metadata?.units;
-        const isAlreadyStorageUnits = currentMetadata?.fuel === 'ltr' && currentMetadata?.fuelConsumption === 'lph';
-
-        let normalizedAircraft;
-
-        if (isAlreadyStorageUnits) {
-          console.log('✅ [AircraftStore] Data already in STORAGE units - skipping normalization');
-          normalizedAircraft = validatedAircraft;
-        } else {
-          console.log('📤 [AircraftStore] Normalizing aircraft to STORAGE units for Supabase');
-
-          // Créer une copie avec métadonnées indiquant les unités SOURCE (utilisateur)
-          const aircraftWithUserMetadata = {
-            ...validatedAircraft,
-            _metadata: {
-              version: '1.0.0',
-              units: userUnits,  // Unités SOURCE (avant normalisation)
-              exportedAt: new Date().toISOString()
-            }
-          };
-
-          // Normaliser vers unités de STOCKAGE pour Supabase
-          const { normalizeAircraftImport } = await import('@utils/aircraftNormalizer');
-          normalizedAircraft = normalizeAircraftImport(aircraftWithUserMetadata);
-        }
+        // ═══════════════════════════════════════════════════════════════
+        // CONVENTION : LES DONNÉES EN MÉMOIRE SONT TOUJOURS EN CANONIQUE
+        // ═══════════════════════════════════════════════════════════════
+        // Les valeurs en state local sont supposées EN CANONIQUE déjà
+        // (toutes les saisies utilisateur passent par useEditableValue qui
+        // convertit vers canonique avant écriture). Donc à l'envoi vers
+        // Supabase, AUCUNE conversion supplémentaire n'est nécessaire.
+        //
+        // On ajoute juste le tag _metadata.units = CANONIQUE pour signaler
+        // explicitement le format aux autres clients.
+        const normalizedAircraft = {
+          ...validatedAircraft,
+          _metadata: {
+            version: '2.0.0',
+            units: {
+              fuel: 'ltr', fuelConsumption: 'lph', weight: 'kg',
+              armLength: 'mm', speed: 'kt', altitude: 'ft', distance: 'nm'
+            },
+            exportedAt: new Date().toISOString()
+          }
+        };
 
         console.log('📤 [AircraftStore] Normalized aircraft for Supabase (STORAGE units):', {
           registration: normalizedAircraft.registration,
@@ -255,6 +256,9 @@ export const useAircraftStore = create(
           sourceUnits: userUnits,
           storageUnits: 'lph/ltr/kg/kt'
         });
+
+        // Récupérer l'userId Supabase pour tagger la création
+        const currentUserId = await getCurrentUserId();
 
         // Préparer les données pour Supabase (avec unités NORMALISÉES)
         const presetData = {
@@ -266,7 +270,7 @@ export const useAircraftStore = create(
           category: normalizedAircraft.category || 'SEP',
           aircraft_data: normalizedAircraft,  // Données normalisées (L, L/h, kg, kt) + _metadata
           description: `Configuration ${normalizedAircraft.model} - ${normalizedAircraft.registration}`,
-          submitted_by: 'current-user-id',
+          submitted_by: currentUserId,  // null = anonyme/non authentifié (les RLS doivent filtrer)
           isVariant: aircraftData.isVariant || false  // 🔧 FIX: Flag variant
         };
 
@@ -274,7 +278,7 @@ export const useAircraftStore = create(
         const result = await communityService.submitPreset(
           presetData,
           null, // manexFile
-          'current-user-id'
+          currentUserId
         );
 
         console.log('✅ [AircraftStore] Preset créé dans Supabase:', result?.id);
@@ -436,6 +440,11 @@ export const useAircraftStore = create(
       } catch (error) {
         const errorMessage = `❌ Erreur lors de l'ajout: ${error.message}`;
         console.error(errorMessage, error);
+        // Bandeau persistant — survit aux reloads/HMR/navigation
+        recordSupabaseError('addAircraft', error, {
+          registration: aircraftData?.registration,
+          model: aircraftData?.model
+        });
         set({ isLoading: false, error: errorMessage });
         throw error;
       }
@@ -466,19 +475,44 @@ export const useAircraftStore = create(
         try {
           console.log('📤 Mise à jour de l\'avion dans Supabase:', validatedAircraft.registration);
 
+          // 🔍 DIAGNOSTIC : log explicite de la session avant l'écriture
+          const { data: { session } } = await supabase.auth.getSession();
+          console.log('🔐 [updateAircraft] Session Supabase au moment du save:', {
+            hasSession: !!session,
+            userId: session?.user?.id || '(anonyme)',
+            email: session?.user?.email || '(none)',
+            expiresAt: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : '(none)'
+          });
+          if (!session) {
+            console.warn('⚠️ [updateAircraft] AUCUNE session Supabase → la RLS va probablement refuser l\'UPDATE.');
+          }
+
+          const currentUserId = await getCurrentUserId();
           await communityService.updateCommunityPreset(
             validatedAircraft.id,
             validatedAircraft,
             null, // pas de MANEX pour l'instant
             null,
-            null  // userId - TODO: ajouter l'authentification
+            currentUserId  // tagué avec l'utilisateur courant (null = anonyme/non authentifié)
           );
 
           console.log('✅ Avion mis à jour dans Supabase avec succès');
         } catch (supabaseError) {
-          console.error('⚠️ Erreur lors de la sauvegarde dans Supabase:', supabaseError);
-          // Ne pas bloquer l'utilisateur si Supabase échoue
-          // Les données sont déjà mises à jour localement
+          // 🚨 FIX A : ne plus avaler silencieusement — l'erreur remonte au UI.
+          // L'état local optimiste est conservé (pour ne pas perdre le travail de l'utilisateur),
+          // mais on signale clairement que la base distante n'a PAS reçu la mise à jour.
+          console.error('🚨 [updateAircraft] ÉCHEC SAUVEGARDE SUPABASE — modifications LOCALES uniquement:', supabaseError);
+          // Enregistrement persistant pour bandeau global (survit aux reloads/HMR).
+          recordSupabaseError('updateAircraft', supabaseError, {
+            aircraftId: validatedAircraft.id,
+            registration: validatedAircraft.registration,
+            model: validatedAircraft.model
+          });
+          set({
+            error: `⚠ Sauvegarde Supabase échouée : ${supabaseError.message || 'erreur inconnue'}. Tes modifications sont uniquement locales pour l'instant. Connecte-toi ou vérifie les permissions.`
+          });
+          // Rethrow pour que l'appelant puisse afficher un toast / bloquer la navigation.
+          throw supabaseError;
         }
 
         return validatedAircraft;
