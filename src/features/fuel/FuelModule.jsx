@@ -266,10 +266,11 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
 
     // CANONIQUE → user pref. La valeur du store est en lph (canonique).
     // On la convertit pour affichage selon les préférences utilisateur.
+    // ⚠ getSymbol() du hook useUnits attend une CATÉGORIE, pas une unité.
     const consumptionUserUnit = getUnit('fuelConsumption');
     const consumptionCanonical = parseFloat(selectedAircraft?.fuelConsumption) || 30;
     const consumptionDisplay = toUserUnit(consumptionCanonical, 'fuelConsumption', consumptionUserUnit) || consumptionCanonical;
-    const consumptionSymbol = getSymbol(consumptionUserUnit);
+    const consumptionSymbol = getSymbol('fuelConsumption');
 
     let desc = `${reserveMinutes} min = ${reserveHours}h × ${consumptionDisplay.toFixed(1)} ${consumptionSymbol} - `;
     desc += `${flightType.rules} `;
@@ -295,10 +296,11 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
 
     // CANONIQUE → user pref. La valeur du store est en lph (canonique).
     // On la convertit pour affichage selon les préférences utilisateur.
+    // ⚠ getSymbol() du hook useUnits attend une CATÉGORIE, pas une unité.
     const consumptionUserUnit = getUnit('fuelConsumption');
     const consumptionCanonical = parseFloat(selectedAircraft?.fuelConsumption) || 30;
     const consumptionDisplay = toUserUnit(consumptionCanonical, 'fuelConsumption', consumptionUserUnit) || consumptionCanonical;
-    const consumptionSymbol = getSymbol(consumptionUserUnit);
+    const consumptionSymbol = getSymbol('fuelConsumption');
 
     // Formule simplifiée : la réserve finale (final reserve) est comptée séparément
     // Afficher l'ICAO de l'alternate de référence (le plus éloigné)
@@ -317,10 +319,11 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
 
     // CANONIQUE → user pref. La valeur du store est en lph (canonique).
     // On la convertit pour affichage selon les préférences utilisateur.
+    // ⚠ getSymbol() du hook useUnits attend une CATÉGORIE, pas une unité.
     const consumptionUserUnit = getUnit('fuelConsumption');
     const consumptionCanonical = parseFloat(selectedAircraft?.fuelConsumption) || 30;
     const consumptionDisplay = toUserUnit(consumptionCanonical, 'fuelConsumption', consumptionUserUnit) || consumptionCanonical;
-    const consumptionSymbol = getSymbol(consumptionUserUnit);
+    const consumptionSymbol = getSymbol('fuelConsumption');
 
     return `${distance} NM ÷ ${cruiseSpeed} kt = ${timeHours}h × ${consumptionDisplay.toFixed(1)} ${consumptionSymbol}`;
   };
