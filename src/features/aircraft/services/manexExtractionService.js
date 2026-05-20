@@ -84,7 +84,8 @@ que le wizard de création d'avion sait stocker, ni plus ni moins) :
 
 {
   "aircraft_identification": {
-    "model": ".. (TYPE générique de l'avion, ex: \"DA40 NG\", \"Cessna 172S\", \"Piper PA-28-181\")",
+    "manufacturer": ".. (MARQUE / CONSTRUCTEUR seul, ex: \"Cessna\", \"Diamond Aircraft\", \"Robin Aviation\", \"Piper Aircraft\", \"Cirrus Aircraft\". Sans le modèle.)",
+    "model": ".. (MODÈLE seul, ex: \"172S\", \"DA40 NG\", \"DR400-180\", \"PA-28-181\". Sans la marque.)",
     "registration": ".. (IMMATRICULATION spécifique du tail-number, ex: \"F-HSTR\", \"N12345\", \"G-ABCD\")"
   },
   "engine": {
@@ -264,10 +265,14 @@ Le JSON doit être directement parseable par JSON.parse().
 <important>
 RÈGLES STRICTES D'EXTRACTION :
 
-1) DISTINCTION ABSOLUE model ↔ registration :
-   - "model" = TYPE GÉNÉRIQUE (ex: "DA40 NG", "Cessna 172S", "PA-28-181")
+1) DISTINCTION ABSOLUE manufacturer ↔ model ↔ registration :
+   - "manufacturer" = MARQUE/CONSTRUCTEUR seul (ex: "Cessna", "Diamond Aircraft",
+     "Robin Aviation", "Piper Aircraft", "Cirrus Aircraft", "Beechcraft")
+   - "model" = MODÈLE seul, SANS la marque (ex: "172S", "DA40 NG", "DR400-180",
+     "PA-28-181", "SR22"). Si tu lis "Cessna 172S", split en manufacturer="Cessna"
+     + model="172S".
    - "registration" = IMMATRICULATION (ex: "F-HSTR", "N12345", "G-ABCD")
-   - JAMAIS mettre une immatriculation dans "model" ni l'inverse.
+   - JAMAIS confondre les 3.
 
 2) Si la page est sommaire / table des matières / page blanche / illustration
    sans données chiffrées : retourne {} (objet vide).

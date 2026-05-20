@@ -92,6 +92,7 @@ function convertToStorage(value, rawUnit, category, targetUnit) {
 // que buildBulkUpdatePayload assemblera ensuite.
 const FIELD_MAPPINGS = [
   // ═══ IDENTIFICATION (Step1) ═══
+  { aircraftPath: 'manufacturer',          src: ['aircraft_identification', 'manufacturer'],  type: 'string', label: 'Marque / Constructeur' },
   { aircraftPath: 'model',                 src: ['aircraft_identification', 'model'],         type: 'string', label: 'Modèle (type avion)' },
   { aircraftPath: 'registration',          src: ['aircraft_identification', 'registration'],  type: 'string', label: 'Immatriculation' },
 
