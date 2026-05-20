@@ -6,6 +6,7 @@
 
 import React, { memo, useMemo, useState } from 'react';
 import { CheckCircle2, AlertTriangle, X, Loader2, Sparkles } from 'lucide-react';
+import UnitConverterCard from './UnitConverterCard';
 
 const confidenceColor = (c) => {
   if (c >= 85) return '#10b981';
@@ -302,6 +303,13 @@ const ManexExtractionReview = memo(({
             <X size={24} />
           </button>
         </div>
+
+        {/* Vérificateur de conversion d'unités — outil d'aide à la relecture */}
+        {!isLoading && (
+          <div style={{ marginBottom: 12 }}>
+            <UnitConverterCard />
+          </div>
+        )}
 
         {/* Loader pendant extraction */}
         {isLoading && (
