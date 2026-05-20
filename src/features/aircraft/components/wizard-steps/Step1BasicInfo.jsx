@@ -392,12 +392,24 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               <StyledTextField
                 fullWidth
                 variant="outlined"
+                label="Marque / Constructeur"
+                value={data.manufacturer || ''}
+                onChange={(e) => updateData('manufacturer', e.target.value)}
+                placeholder="Ex: Cessna, Robin, Diamond, Piper, Cirrus…"
+                helperText="Constructeur de l'avion (extrait du MANEX si présent)"
+              />
+            </Grid>
+
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+              <StyledTextField
+                fullWidth
+                variant="outlined"
                 label="Modèle *"
                 value={data.model || ''}
                 onChange={(e) => updateData('model', e.target.value)}
-                placeholder="Ex: Cessna 172SP"
+                placeholder="Ex: 172SP, DR400-180, DA40 NG, PA-28-181"
                 error={!!errors.model}
-                helperText={errors.model}
+                helperText={errors.model || "Désignation officielle du modèle (sans la marque)"}
                 required
               />
             </Grid>
