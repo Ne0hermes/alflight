@@ -518,34 +518,70 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
     }
   ];
 
-  // Fonction de mise à jour des données
+  /**
+   * Parse un chemin pouvant contenir des index de tableau pour retourner une
+   * liste de segments. Exemples :
+   *   "arms.fuelMain"                    → ["arms", "fuelMain"]
+   *   "baggageCompartments[0].arm"       → ["baggageCompartments", 0, "arm"]
+   *   "additionalFuelTanks[2].momentAtFull" → ["additionalFuelTanks", 2, "momentAtFull"]
+   *
+   * Les segments numériques (index de tableau) sont retournés comme Number,
+   * permettant à la logique de mise à jour de créer un tableau plutôt qu'un
+   * objet quand on remonte la chaîne.
+   */
+  const parsePath = (path) => {
+    const segments = [];
+    const parts = path.split('.');
+    for (const part of parts) {
+      const match = part.match(/^([^\[]+)((?:\[\d+\])*)$/);
+      if (!match) {
+        segments.push(part);
+        continue;
+      }
+      const [, key, indicesPart] = match;
+      if (key) segments.push(key);
+      if (indicesPart) {
+        const indices = [...indicesPart.matchAll(/\[(\d+)\]/g)].map(m => Number(m[1]));
+        segments.push(...indices);
+      }
+    }
+    return segments;
+  };
+
+  // Fonction de mise à jour des données (supporte chemins imbriqués + indices
+  // de tableau, ex : "baggageCompartments[0].arm").
   const updateData = (path, value) => {
     console.log('Update Data - Path:', path, 'Value:', value);
 
     setAircraftData(prev => {
-      const newData = { ...prev };
-      const keys = path.split('.');
+      const segments = parsePath(path);
+      // Clonage profond le long du chemin pour ne pas muter prev
+      const newData = Array.isArray(prev) ? [...prev] : { ...prev };
       let current = newData;
-
-      for (let i = 0; i < keys.length - 1; i++) {
-        const key = keys[i];
-        if (!current[key]) {
-          current[key] = {};
+      for (let i = 0; i < segments.length - 1; i++) {
+        const seg = segments[i];
+        const nextSeg = segments[i + 1];
+        // Détermine si le niveau suivant est un tableau (basé sur nextSeg numérique)
+        if (current[seg] === undefined || current[seg] === null) {
+          current[seg] = typeof nextSeg === 'number' ? [] : {};
+        } else {
+          // Clone shallow pour propager l'immuabilité
+          current[seg] = Array.isArray(current[seg]) ? [...current[seg]] : { ...current[seg] };
         }
-        current = current[key];
+        current = current[seg];
       }
-
-      current[keys[keys.length - 1]] = value;
+      current[segments[segments.length - 1]] = value;
       console.log('Updated aircraft data:', newData);
       return newData;
     });
 
-    // Effacer l'erreur si elle existe
-    const errorKey = path.includes('.') ? path.split('.').pop() : path;
-    if (errors[errorKey]) {
+    // Effacer l'erreur si elle existe (essayer clé complète "speeds.vso" ET clé courte "vso")
+    const shortKey = path.includes('.') ? path.split('.').pop() : path;
+    if (errors[path] || errors[shortKey]) {
       setErrors(prev => {
         const newErrors = { ...prev };
-        delete newErrors[errorKey];
+        delete newErrors[path];
+        delete newErrors[shortKey];
         return newErrors;
       });
     }
@@ -571,51 +607,92 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         break;
         
       case 1: // Informations générales
-        if (!aircraftData.registration) newErrors.registration = "L'immatriculation est requise";
+        if (!aircraftData.registration) {
+          newErrors.registration = "L'immatriculation est requise";
+        } else {
+          const normalized = String(aircraftData.registration).trim().toUpperCase();
+          const editingId = existingAircraft?.id;
+          const duplicate = (aircraftList || []).some(a =>
+            a.id !== editingId &&
+            String(a.registration || '').trim().toUpperCase() === normalized
+          );
+          if (duplicate) {
+            newErrors.registration = "Cette immatriculation existe déjà dans votre flotte";
+          }
+        }
         if (!aircraftData.model) newErrors.model = "Le modèle est requis";
         if (!aircraftData.fuelCapacity) newErrors.fuelCapacity = "La capacité carburant est requise";
-        if (!aircraftData.cruiseSpeedKt) newErrors.cruiseSpeedKt = "La vitesse de croisière est requise";
+        // NOTE: cruiseSpeedKt validé dans case 3 (Step2 Vitesses), pas ici.
         break;
-        
+
       case 2: // Masse et centrage
         if (!aircraftData.weights?.emptyWeight) newErrors.emptyWeight = "La masse à vide est requise";
         if (!aircraftData.weights?.mtow) newErrors.mtow = "La masse maximale est requise";
         break;
 
       case 3: // Vitesses
-        // Vitesses critiques requises uniquement
+        // Vitesse de croisière (déplacée depuis case 1 — elle conditionne le baseFactor)
+        if (!aircraftData.cruiseSpeedKt || aircraftData.cruiseSpeedKt === '') {
+          newErrors.cruiseSpeedKt = "La vitesse de croisière est requise";
+        }
+        // Vitesses critiques requises (clés préfixées `speeds.` pour matcher Step2Speeds)
         if (!aircraftData.speeds?.vso || aircraftData.speeds.vso === '') {
-          newErrors.vso = "VSO est requise";
+          newErrors['speeds.vso'] = "VSO est requise";
         }
         if (!aircraftData.speeds?.vs1 || aircraftData.speeds.vs1 === '') {
-          newErrors.vs1 = "VS1 est requise";
+          newErrors['speeds.vs1'] = "VS1 est requise";
         }
         if (!aircraftData.speeds?.vne || aircraftData.speeds.vne === '') {
-          newErrors.vne = "VNE est requise";
+          newErrors['speeds.vne'] = "VNE est requise";
         }
         if (!aircraftData.speeds?.vfeTO || aircraftData.speeds.vfeTO === '') {
-          newErrors.vfeTO = "VFE T/O est requise";
+          newErrors['speeds.vfeTO'] = "VFE T/O est requise";
         }
         if (!aircraftData.speeds?.vfeLdg || aircraftData.speeds.vfeLdg === '') {
-          newErrors.vfeLdg = "VFE LDG est requise";
+          newErrors['speeds.vfeLdg'] = "VFE LDG est requise";
         }
         if (!aircraftData.speeds?.vno || aircraftData.speeds.vno === '') {
-          newErrors.vno = "VNO est requise";
+          newErrors['speeds.vno'] = "VNO est requise";
         }
-        // Les vitesses suivantes sont facultatives - pas de validation
-        // VA, VR, VX, VY, initialClimb, vglide sont facultatives
-        // VO ranges sont facultatives
 
-        // Limitations de vent requises
-        if (!aircraftData.windLimits?.maxCrosswind || aircraftData.windLimits.maxCrosswind === '') {
-          newErrors.maxCrosswind = "Le vent traversier max est requis";
+        // Validation de l'ordre des vitesses (uniquement si valeurs renseignées et valides)
+        {
+          const num = (v) => (v === '' || v == null || isNaN(Number(v))) ? null : Number(v);
+          const vso = num(aircraftData.speeds?.vso);
+          const vs1 = num(aircraftData.speeds?.vs1);
+          const vno = num(aircraftData.speeds?.vno);
+          const vne = num(aircraftData.speeds?.vne);
+          const vfeTO = num(aircraftData.speeds?.vfeTO);
+          const vfeLdg = num(aircraftData.speeds?.vfeLdg);
+          const va = num(aircraftData.speeds?.va);
+
+          if (vso !== null && vs1 !== null && vso >= vs1 && !newErrors['speeds.vs1']) {
+            newErrors['speeds.vs1'] = "VS1 doit être supérieure à VSO";
+          }
+          if (vs1 !== null && vno !== null && vs1 >= vno && !newErrors['speeds.vno']) {
+            newErrors['speeds.vno'] = "VNO doit être supérieure à VS1";
+          }
+          if (vno !== null && vne !== null && vno >= vne && !newErrors['speeds.vne']) {
+            newErrors['speeds.vne'] = "VNE doit être supérieure à VNO";
+          }
+          if (vfeTO !== null && vne !== null && vfeTO > vne && !newErrors['speeds.vfeTO']) {
+            newErrors['speeds.vfeTO'] = "VFE T/O doit être inférieure ou égale à VNE";
+          }
+          if (vfeLdg !== null && vne !== null && vfeLdg > vne && !newErrors['speeds.vfeLdg']) {
+            newErrors['speeds.vfeLdg'] = "VFE LDG doit être inférieure ou égale à VNE";
+          }
+          if (vfeLdg !== null && vso !== null && vfeLdg < vso && !newErrors['speeds.vfeLdg']) {
+            newErrors['speeds.vfeLdg'] = "VFE LDG doit être supérieure ou égale à VSO";
+          }
+          if (va !== null && vne !== null && va > vne) {
+            newErrors['speeds.va'] = "VA doit être inférieure à VNE";
+          }
         }
-        if (!aircraftData.windLimits?.maxTailwind || aircraftData.windLimits.maxTailwind === '') {
-          newErrors.maxTailwind = "Le vent arrière max est requis";
-        }
-        if (!aircraftData.windLimits?.maxCrosswindWet || aircraftData.windLimits.maxCrosswindWet === '') {
-          newErrors.maxCrosswindWet = "Le vent traversier max sur piste mouillée est requis";
-        }
+
+        // Limitations de vent : OPTIONNELLES (pas toujours documentées dans le MANEX,
+        // surtout pour les avions GA légers). Le pilote peut continuer sans les saisir.
+        // (Validation supprimée — anciennement bloquante alors que le format de stockage
+        //  windLimits.limits[] / windLimits.maxXxx variait selon les avions.)
         break;
     }
     

@@ -303,32 +303,9 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
     }
   };
 
-  // Calculer automatiquement le baseFactor
-  const calculateBaseFactor = (cruiseSpeed) => {
-    if (cruiseSpeed && parseFloat(cruiseSpeed) > 0) {
-      return (60 / parseFloat(cruiseSpeed)).toFixed(3);
-    }
-    return '';
-  };
-
-  const handleCruiseSpeedChange = (value) => {
-    updateData('cruiseSpeedKt', value);
-    // Calculer et mettre à jour le baseFactor automatiquement
-    const factor = calculateBaseFactor(value);
-    if (factor) {
-      updateData('baseFactor', factor);
-    }
-  };
-
-  // Calculer le baseFactor au chargement initial si cruiseSpeedKt existe
-  useEffect(() => {
-    if (data.cruiseSpeedKt && !data.baseFactor) {
-      const factor = calculateBaseFactor(data.cruiseSpeedKt);
-      if (factor) {
-        updateData('baseFactor', factor);
-      }
-    }
-  }, []); // Execute uniquement au montage du composant
+  // NOTE: la vitesse de croisière (cruiseSpeedKt) et le calcul du baseFactor
+  // ont été déplacés vers Step2Speeds (le baseFactor découle directement d'une
+  // vitesse, sa place naturelle est avec les autres vitesses de l'avion).
 
   const handleSurfaceChange = (surface) => (event) => {
     const currentSurfaces = data.compatibleRunwaySurfaces || [];
@@ -658,20 +635,8 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               />
             </Grid>
 
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
-              <StyledTextField
-                fullWidth
-                variant="outlined"
-                label="Base Factor"
-                type="number"
-                value={data.baseFactor || ''}
-                placeholder="Auto-calculé"
-                helperText="60 / vitesse de croisière (auto-calculé)"
-                InputProps={{
-                  readOnly: true,
-                }}
-              />
-            </Grid>
+            {/* NOTE: champ "Base Factor" déplacé vers Step2Speeds avec la vitesse
+                de croisière (le baseFactor découle directement de cette vitesse). */}
           </Box>
         </AccordionDetails>
       </Accordion>

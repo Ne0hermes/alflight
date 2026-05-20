@@ -121,6 +121,36 @@ const Row = memo(({ item, onChange }) => {
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </select>
+        ) : item.type === 'boolean' ? (
+          /* ─── CHECKBOX TRI-ÉTAT pour booléens équipement/opérations ───
+             3 états : true (installé) / false (absent) / null (non analysé)
+          */
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <label style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+              <input
+                type="radio"
+                checked={item.value === true}
+                onChange={() => handleValueChange(true)}
+              />
+              ✅ Présent
+            </label>
+            <label style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+              <input
+                type="radio"
+                checked={item.value === false}
+                onChange={() => handleValueChange(false)}
+              />
+              ❌ Absent
+            </label>
+            <label style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', color: '#9ca3af' }}>
+              <input
+                type="radio"
+                checked={item.value === null || item.value === undefined}
+                onChange={() => handleValueChange(null)}
+              />
+              ⏳ N/A
+            </label>
+          </div>
         ) : (
           /* ─── INPUT texte / number (cas standard) ─── */
           <input

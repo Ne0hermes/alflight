@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -41,8 +41,13 @@ import {
 } from '@mui/icons-material';
 import { useAircraftStore } from '@core/stores/aircraftStore';
 import communityService from '../../../../services/communityService';
+import { getCurrentUserId } from '../../../../lib/supabaseAuth';
 import dataBackupManager from '../../../../utils/dataBackupManager';
 import CleanDuplicatesButton from '../../../../components/CleanDuplicatesButton';
+import { AutoAwesome as AutoAwesomeIcon } from '@mui/icons-material';
+import { extractCompleteManexData } from '../../services/manexExtractionService';
+import { mapExtractionToReviewItems, buildBulkUpdatePayload } from '../../utils/manexExtractionMapper';
+import ManexExtractionReview from '../ManexExtractionReview';
 
 const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onComplete, onCancel }) => {
   const [searchValue, setSearchValue] = useState(data.searchRegistration || '');
@@ -60,6 +65,97 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
 
   // Récupérer les fonctions du store
   const { addAircraft } = useAircraftStore();
+
+  // Extraction MANEX automatique
+  const manexFileInputRef = useRef(null);
+  const [showExtractionReview, setShowExtractionReview] = useState(false);
+  const [extractionLoading, setExtractionLoading] = useState(false);
+  const [extractionProgress, setExtractionProgress] = useState(0);
+  const [extractionProgressMessage, setExtractionProgressMessage] = useState('');
+  const [extractionMetadata, setExtractionMetadata] = useState(null);
+  const [extractionItems, setExtractionItems] = useState([]);
+  const [extractionError, setExtractionError] = useState(null);
+
+  const handleManexFileSelected = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== 'application/pdf') {
+      setExtractionError('Le fichier doit être un PDF');
+      return;
+    }
+
+    setExtractionError(null);
+    setShowExtractionReview(true);
+    setExtractionLoading(true);
+    setExtractionProgress(0);
+    setExtractionItems([]);
+    setExtractionMetadata(null);
+
+    try {
+      const { extraction, metadata } = await extractCompleteManexData(file, {
+        onProgress: (pct, msg) => {
+          setExtractionProgress(pct);
+          setExtractionProgressMessage(msg);
+        }
+      });
+      setExtractionMetadata(metadata);
+      setExtractionItems(mapExtractionToReviewItems(extraction));
+
+      // ─── Stocker le PDF MANEX dans data.manex pour que le fichier soit
+      //     attaché à l'avion à la sortie du wizard (sans cela, seules les
+      //     données extraites sont importées, le PDF lui-même est perdu).
+      try {
+        const pdfBase64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error('Lecture base64 échouée'));
+          reader.readAsDataURL(file);
+        });
+        const manexObject = {
+          fileName: file.name,
+          fileSize: file.size,
+          pdfData: pdfBase64,
+          uploadDate: new Date().toISOString(),
+          uploadedToSupabase: false,
+          hasData: true,
+          // Métadonnées d'extraction (pour traçabilité)
+          extractionMetadata: metadata
+        };
+        updateData('manex', manexObject);
+        console.log('✅ [Step0] MANEX attaché à l\'avion (sera sauvegardé en fin de wizard)');
+      } catch (storeErr) {
+        // Échec stockage : non bloquant pour l'extraction de données
+        console.warn('[Step0] Stockage MANEX échoué (extraction OK):', storeErr.message);
+      }
+    } catch (err) {
+      console.error('[Step0] Extraction MANEX échouée:', err);
+      setExtractionError(err.message || 'Extraction échouée');
+      setShowExtractionReview(false);
+    } finally {
+      setExtractionLoading(false);
+      // Réinitialiser l'input pour permettre une nouvelle sélection du même fichier
+      if (manexFileInputRef.current) manexFileInputRef.current.value = '';
+    }
+  };
+
+  const handleApplyExtraction = () => {
+    const payload = buildBulkUpdatePayload(extractionItems);
+    if (updateDataBulk) {
+      updateDataBulk(payload);
+    } else if (updateData) {
+      // Fallback : mises à jour individuelles
+      const flatten = (obj, prefix = '') => {
+        for (const [k, v] of Object.entries(obj)) {
+          const path = prefix ? `${prefix}.${k}` : k;
+          if (v && typeof v === 'object' && !Array.isArray(v)) flatten(v, path);
+          else updateData(path, v);
+        }
+      };
+      flatten(payload);
+    }
+    setShowExtractionReview(false);
+    if (onSkip) onSkip(); // passe au Step1 pour vérification visuelle
+  };
 
   // Simuler le chargement des avions depuis la base de données communautaire
   useEffect(() => {
@@ -136,8 +232,8 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
     try {
       
 
-      // 1. Enregistrer le téléchargement dans Supabase
-      await communityService.recordDownload(aircraft.id, 'current-user-id');
+      // 1. Enregistrer le téléchargement dans Supabase (userId réel ou null si anonyme)
+      await communityService.recordDownload(aircraft.id, await getCurrentUserId());
 
       // 2. Récupérer les données complètes depuis aircraft_data
       const fullAircraftData = aircraft.aircraftData || {};
@@ -214,7 +310,7 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
       // 1. Enregistrer le téléchargement dans Supabase
       setDownloadStatus('Enregistrement du téléchargement...');
       setDownloadProgress(10);
-      await communityService.recordDownload(aircraft.id, 'current-user-id');
+      await communityService.recordDownload(aircraft.id, await getCurrentUserId());
 
       // 2. Récupérer les données complètes depuis Supabase (avec téléchargement automatique du MANEX)
       setDownloadStatus('Téléchargement des données de l\'avion...');
@@ -423,10 +519,15 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
 
       
 
-      // Envoyer le vote à Supabase
+      // Envoyer le vote à Supabase (userId réel issu de la session)
+      const voterId = await getCurrentUserId();
+      if (!voterId) {
+        alert('Connecte-toi pour voter.');
+        return;
+      }
       await communityService.votePreset(
         aircraft.id,
-        'current-user-id', // En prod: récupérer l'ID utilisateur réel
+        voterId,
         voteType
       );
 
@@ -763,26 +864,57 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
           Votre avion n'est pas dans la liste ? Pas de problème !
         </Typography>
         <Box sx={{ display: 'flex', gap: 2, mt: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+          {/* Bouton 1 : Import MANEX automatique (recommandé) */}
           <Button
-            variant="outlined"
-            startIcon={<AddIcon />}
-            onClick={onSkip}
-            sx={{ flex: { sm: 1 } }}
+            variant="contained"
+            color="secondary"
+            startIcon={<AutoAwesomeIcon />}
+            onClick={() => manexFileInputRef.current?.click()}
+            sx={{ flex: { sm: 1.5 } }}
           >
-            Nouvelle configuration
+            Importer depuis un MANEX (PDF)
           </Button>
+          <input
+            ref={manexFileInputRef}
+            type="file"
+            accept="application/pdf"
+            style={{ display: 'none' }}
+            onChange={handleManexFileSelected}
+          />
+
+          {/* NOTE: bouton "Saisie manuelle" retiré — la création d'un avion
+              passe désormais systématiquement par l'import du MANEX (PDF),
+              qui pré-remplit le wizard automatiquement. */}
           <Button
             variant="outlined"
             onClick={() => {
-              // TBD: Fonction pour envoyer un email
               window.location.href = 'mailto:contact@alflight.fr?subject=Demande d\'ajout avion&body=Bonjour, je souhaiterais ajouter mon avion à la liste...';
             }}
             sx={{ flex: { sm: 1 } }}
           >
-            Envoyer le manexe
+            Envoyer le MANEX
           </Button>
         </Box>
+        {extractionError && (
+          <Alert severity="error" sx={{ mt: 2 }} onClose={() => setExtractionError(null)}>
+            {extractionError}
+          </Alert>
+        )}
       </Box>
+
+      {/* Modal de validation des données extraites du MANEX */}
+      {showExtractionReview && (
+        <ManexExtractionReview
+          isLoading={extractionLoading}
+          progress={extractionProgress}
+          progressMessage={extractionProgressMessage}
+          metadata={extractionMetadata}
+          items={extractionItems}
+          onItemsChange={setExtractionItems}
+          onApply={handleApplyExtraction}
+          onCancel={() => setShowExtractionReview(false)}
+        />
+      )}
 
       {/* Bouton Annuler pour revenir à l'accueil */}
       {onCancel && (

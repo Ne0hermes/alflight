@@ -95,7 +95,14 @@ que le wizard de création d'avion sait stocker, ni plus ni moins) :
   },
   "fuel": {
     "fuel_type": ".. (UNE valeur ENUM parmi : \"AVGAS\", \"JET-A1\", \"MOGAS\". \"AVGAS 100LL\" → \"AVGAS\". \"Jet A-1\" → \"JET-A1\". \"MOGAS UL91\" → \"MOGAS\")",
-    "capacity_total": ".. (capacité totale carburant, en L ou US gal)",
+    "capacity_total": ".. (capacité totale carburant TOUS RÉSERVOIRS CONFONDUS, en L ou US gal)",
+    "capacity_main": ".. (capacité du réservoir PRINCIPAL seul, si distinct du total. Ex: \"main tank: 110 L\" séparé d'un total de 200 L)",
+    "capacity_wing_left": ".. (réservoir AILE GAUCHE / LEFT WING TANK, si présent)",
+    "capacity_wing_right": ".. (réservoir AILE DROITE / RIGHT WING TANK, si présent)",
+    "capacity_wing": ".. (réservoir d'aile UNIQUE / WING TANK, si l'avion a UN seul réservoir d'aile non latéralisé)",
+    "capacity_tip": ".. (tip tank / réservoir d'EXTRÉMITÉ d'aile, si présent)",
+    "capacity_aux": ".. (réservoir AUXILIAIRE / AUX TANK / réservoir de fuselage, si présent)",
+    "capacity_optional": ".. (réservoir OPTIONNEL ajouté en kit, si présent)",
     "consumption_cruise": ".. (consommation croisière, en L/h ou GPH)"
   },
   "compatibility": {
@@ -126,19 +133,126 @@ que le wizard de création d'avion sait stocker, ni plus ni moins) :
     "mzfw": ".. (Maximum Zero Fuel Weight, souvent absent pour avions GA)",
     "min_takeoff_weight": ".. (masse mini décollage, rare)"
   },
-  "arms": {
-    "empty_cg_arm": ".. (bras de levier du CG à vide)",
-    "front_seats_arm": "..",
-    "rear_seats_arm": "..",
-    "fuel_main_arm": ".. (bras du réservoir principal)",
-    "aft_cg_min_weight": ".. (masse min de la zone arrière de l'enveloppe CG)",
-    "aft_cg_max_weight": ".. (masse max de la zone arrière de l'enveloppe CG)",
-    "cg_aft_limit": ".. (CG arrière maximum)"
-  },
   "performance_summary": {
     "cruise_speed_75percent": ".. (TAS à 75% puissance, kt)"
+  },
+
+  "equipment_com": {
+    "vhf1": "true|false (présence VHF COM 1, standard sur tous les avions équipés radio)",
+    "vhf2": "true|false (présence VHF COM 2, fréquent en aviation générale)",
+    "hf": "true|false (radio Haute Fréquence, rare en aviation générale)",
+    "satcom": "true|false (communications satellite)",
+    "acars": "true|false (Aircraft Communications Addressing and Reporting System)",
+    "cpdlc": "true|false (Controller-Pilot Data Link Communications)"
+  },
+  "equipment_nav": {
+    "vor": "true|false (récepteur VOR)",
+    "dme": "true|false (Distance Measuring Equipment)",
+    "adf": "true|false (Automatic Direction Finder, NDB)",
+    "gnss": "true|false (GNSS/GPS)",
+    "ils": "true|false (Instrument Landing System récepteur)",
+    "mls": "true|false (Microwave Landing System)",
+    "gbas": "true|false (Ground-Based Augmentation System)",
+    "lpv": "true|false (approche LPV via SBAS/WAAS)",
+    "ahrs": "true|false (Attitude and Heading Reference System)",
+    "adc": "true|false (Air Data Computer)",
+    "rnav": "true|false (capacité Area Navigation)",
+    "rnav_types": ".. (texte libre si rnav=true, ex: 'B-RNAV, P-RNAV, RNAV 1, RNAV 5')",
+    "rnp": "true|false (Required Navigation Performance)",
+    "rnp_types": ".. (texte libre si rnp=true, ex: 'RNP 0.3, RNP APCH, RNP AR')"
+  },
+  "equipment_surv": {
+    "adsb": "true|false (ADS-B receiver/transmitter)",
+    "adsc": "true|false (ADS-C, Automatic Dependent Surveillance-Contract)",
+    "tcas": "true|false (TCAS I)",
+    "acas": "true|false (ACAS II / TCAS II)",
+    "taws": "true|false (Terrain Awareness Warning System / EGPWS)",
+    "cvr": "true|false (Cockpit Voice Recorder)",
+    "fdr": "true|false (Flight Data Recorder)",
+    "weather": "true|false (radar météo)",
+    "transponder_modes": ".. (liste CSV des modes : 'A,C,S' — ou un seul si seul mode)",
+    "adsb_out": "true|false (ADS-B Out spécifiquement)"
+  },
+  "special_capabilities": {
+    "pbn": "true|false (Performance-Based Navigation approuvé)",
+    "lvto": "true|false (Low Visibility Take-Off)",
+    "cat_ii": "true|false (approche ILS catégorie II)",
+    "cat_iiia": "true|false (cat IIIa)",
+    "cat_iiib": "true|false (cat IIIb)",
+    "cat_iiic": "true|false (cat IIIc)",
+    "etops": "true|false (Extended-range Twin-engine Operational Performance Standards)",
+    "rvsm": "true|false (Reduced Vertical Separation Minimum)",
+    "mnps": "true|false (Minimum Navigation Performance Specifications)",
+    "icing": "true|false (vol en conditions givrantes connues approuvé)"
+  },
+  "approved_operations": {
+    "vfr_day": "true|false (VFR de jour autorisé)",
+    "vfr_night": "true|false (VFR de nuit autorisé)",
+    "ifr_day": "true|false (IFR de jour autorisé)",
+    "ifr_night": "true|false (IFR de nuit autorisé)",
+    "svfr": "true|false (Special VFR)",
+    "formation": "true|false (vol en formation)",
+    "aerobatics": "true|false (voltige aérienne approuvée)",
+    "banner": "true|false (remorquage de banderoles)",
+    "glider": "true|false (remorquage de planeurs)",
+    "parachute": "true|false (largage de parachutistes)",
+    "agricultural": "true|false (épandage agricole)",
+    "aerial": "true|false (travail aérien autre / photographie)",
+    "training": "true|false (utilisation école / instruction)",
+    "charter": "true|false (transport public à la demande)",
+    "mountainous": "true|false (vol en zone montagneuse approuvé)",
+    "seaplane": "true|false (configuration hydravion)",
+    "ski_plane": "true|false (configuration skis)"
+  },
+  "safety_equipment": {
+    "elt": "true|false (Emergency Locator Transmitter installé, 121.5 ou 406 MHz)",
+    "life_vests": "true|false (gilets de sauvetage à bord)",
+    "fire_extinguisher_halon": "true|false (extincteur Halon)",
+    "fire_extinguisher_water": "true|false (extincteur eau)",
+    "fire_extinguisher_powder": "true|false (extincteur poudre)",
+    "oxygen_bottles": "true|false (bouteilles oxygène)",
+    "life_raft": "true|false (radeau de survie)",
+    "survival_kit": "true|false (kit de survie)",
+    "plb": "true|false (Personal Locator Beacon)",
+    "first_aid_kit": "true|false (trousse de premiers secours)"
   }
 }
+
+NOTE IMPORTANTE :
+- N'extrais PAS les bras de levier (front_seats_arm, rear_seats_arm, fuel_main_arm, etc.)
+  → ces données seront déterminées par le pilote via la lecture graphique du
+    centrogramme dans une étape dédiée (Détermination graphique des bras de levier).
+- N'extrais PAS l'enveloppe de centrage (forward CG points, aft CG points, etc.)
+  → également déterminée graphiquement.
+- Concentre-toi sur les valeurs numériques scalaires bien identifiables ET les
+  équipements/opérations listés explicitement dans le MANEX (sections "Equipment",
+  "Avionics", "Approved Operations", "Limitations", "Kinds of Operations Equipment List").
+
+RÈGLES SPÉCIFIQUES ÉQUIPEMENTS / OPÉRATIONS :
+
+A) Booléens : retourner explicitement true ou false selon ce qui est trouvé.
+   - true  : l'équipement est CITÉ comme installé/présent/approuvé
+   - false : l'équipement est EXPLICITEMENT cité comme absent/non installé
+   - OMETTRE le champ entièrement si le MANEX ne mentionne pas du tout cet équipement
+     (ne pas inventer false par défaut). Le pilote saura que c'est "non analysé".
+
+B) Confiance honnête sur les équipements :
+   - 90-100 : MANEX dit clairement "ADS-B Out installed" → adsb_out = true, conf=95
+   - 70-89  : déduit du contexte (ex: "Mode S transponder" → transponder_modes = "S")
+   - 40-69  : présence ambiguë (mentionné dans une liste de specs sans être confirmé)
+   - <40    : NE PAS retourner
+
+C) Champs textuels (rnav_types, rnp_types, transponder_modes) :
+   - Conserver le texte exact ou normalisé. Ex: "B-RNAV, P-RNAV" ou "A,C,S".
+
+D) Opérations approuvées : chercher dans les sections "Approved Operations",
+   "Operating Limitations", "Kinds of Operations Equipment List" (KOEL), ou
+   les sections de limitations de vol.
+
+E) Si une catégorie complète n'a aucun champ trouvé (ex: tu n'as vu aucune mention
+   d'équipement COM dans les pages analysées), OMETTRE entièrement la section
+   equipment_com plutôt que de retourner tous les champs à false. Ça permet à
+   l'UI de distinguer "non analysé" vs "analysé et non présent".
 </schema>
 
 <output_format>
@@ -179,10 +293,25 @@ RÈGLES STRICTES D'EXTRACTION :
 
 8) Masses : si tu vois "1500 lbs / 680 kg" sur la même ligne, préfère "kg".
 
-9) Bras (arms) : conserve le signe si négatif (FS - fuselage station négatif).
-
-10) Confiance honnête : si tu hésites entre 2 valeurs, baisse à 50-65 et
+9) Confiance honnête : si tu hésites entre 2 valeurs, baisse à 50-65 et
     choisis la plus probable. Mieux vaut un faible score qu'une fausse certitude.
+
+10) BRAS DE LEVIER & ENVELOPPE DE CENTRAGE : NE PAS EXTRAIRE. Ces données sont
+    déterminées graphiquement dans un wizard dédié, à partir d'une lecture par
+    clic sur le centrogramme. Même si tu vois "Bras CG à vide : 2.13 m" écrit
+    explicitement, n'extrais pas (le pilote le saisira manuellement ou via la
+    lecture graphique).
+
+11) RÉSERVOIRS CARBURANT — DÉCOMPOSITION :
+    - Si le MANEX donne UNIQUEMENT une valeur totale (ex: "Fuel capacity: 200 L"),
+      remplis SEULEMENT capacity_total.
+    - Si le MANEX donne le détail par réservoir (ex: "Main tank: 110 L, Wing tanks:
+      2 × 45 L"), remplis capacity_main + capacity_wing_left + capacity_wing_right
+      (ne remplis capacity_total que si calculé EXPLICITEMENT par le MANEX).
+    - Tip tank, réservoir auxiliaire, optionnel : extrais-les chacun séparément.
+    - Si seules les capacités de gauche ET de droite sont indiquées et identiques,
+      remplis les deux quand même (capacity_wing_left + capacity_wing_right).
+    - Distingue bien "USABLE" (utile) de "TOTAL" (avec inutile). Préfère USABLE.
 </important>`;
 
 /**
