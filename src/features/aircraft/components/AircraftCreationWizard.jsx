@@ -45,7 +45,6 @@ import {
 } from '@mui/icons-material';
 import { useAircraft } from '../../../core/contexts';
 import { useAircraftStore } from '../../../core/stores/aircraftStore';
-import UnitConverterCard from './UnitConverterCard';
 
 // 🔧 FIX MEMORY: Import LAZY des étapes pour éviter de charger tous les composants en mémoire d'un coup
 // Avant : tous les steps chargés au démarrage du wizard (7 composants volumineux)
@@ -1214,9 +1213,6 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
           />
         </Box>
       </Paper>
-
-      {/* Vérificateur de conversion d'unités — toujours visible en haut */}
-      <UnitConverterCard />
 
       {/* Content */}
       <Paper
