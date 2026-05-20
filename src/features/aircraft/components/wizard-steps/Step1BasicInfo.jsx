@@ -42,6 +42,7 @@ import {
 import FormHelperText from '@mui/material/FormHelperText';
 import { useUnitsStore, unitsSelectors } from '@core/stores/unitsStore';
 import { convertValue, getUnitSymbol, fuelConsumptionConversions } from '@utils/unitConversions';
+import { formatCanonical } from '@utils/unitsDisplay';
 import UpdateAircraftDialog from '../UpdateAircraftDialog';
 import aircraftVersioningService from '../../services/aircraftVersioningService';
 import ImageEditor from '../../../../components/ImageEditor';
@@ -582,16 +583,13 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                 }
                 onChange={(e) => {
                   const valueInStorageUnit = convertValue(e.target.value, units.fuel, 'ltr', 'fuel');
-                  console.log('🟢 [Step1] SAVE fuelCapacity:', {
-                    userInput: e.target.value,
-                    userUnit: units.fuel,
-                    storageValue: valueInStorageUnit
-                  });
                   updateData('fuelCapacity', valueInStorageUnit);
                 }}
                 placeholder="Ex: 200"
                 error={!!errors.fuelCapacity}
-                helperText={errors.fuelCapacity}
+                helperText={errors.fuelCapacity || (data.fuelCapacity
+                  ? `≈ ${formatCanonical(data.fuelCapacity, 'fuel', units, { both: true })}`
+                  : 'Capacité utile (les 2 unités s\'afficheront après saisie)')}
                 required
                 InputProps={{
                   endAdornment: <InputAdornment position="end">{getUnitSymbol(units.fuel)}</InputAdornment>,
@@ -607,28 +605,17 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                 type="number"
                 value={
                   data.fuelConsumption
-                    ? (() => {
-                        const converted = Math.round(convertValue(data.fuelConsumption, 'lph', units.fuelConsumption, 'fuelConsumption') * 10) / 10;
-                        console.log('🔵 [Step1] DISPLAY fuelConsumption:', {
-                          storage: data.fuelConsumption,
-                          userUnit: units.fuelConsumption,
-                          displayed: converted
-                        });
-                        return converted;
-                      })()
+                    ? Math.round(convertValue(data.fuelConsumption, 'lph', units.fuelConsumption, 'fuelConsumption') * 10) / 10
                     : ''
                 }
                 onChange={(e) => {
                   const valueInStorageUnit = convertValue(e.target.value, units.fuelConsumption, 'lph', 'fuelConsumption');
-                  console.log('🟢 [Step1] SAVE fuelConsumption:', {
-                    userInput: e.target.value,
-                    userUnit: units.fuelConsumption,
-                    storageValue: valueInStorageUnit
-                  });
                   updateData('fuelConsumption', valueInStorageUnit);
                 }}
                 placeholder="Ex: 35"
-                helperText="Consommation moyenne en croisière"
+                helperText={data.fuelConsumption
+                  ? `≈ ${formatCanonical(data.fuelConsumption, 'fuelConsumption', units, { both: true })}`
+                  : 'Consommation moyenne en croisière (les 2 unités s\'afficheront après saisie)'}
                 InputProps={{
                   endAdornment: <InputAdornment position="end">{getUnitSymbol(units.fuelConsumption)}</InputAdornment>,
                 }}

@@ -52,6 +52,7 @@ import { getCurrentUserId, getCurrentUserIdOrThrow } from '../../../../lib/supab
 import { trackingActions } from '../../../../utils/autoTracking';
 import { useUnitsStore } from '@core/stores/unitsStore';
 import { getUnitSymbol } from '@utils/unitConversions';
+import { formatCanonical } from '@utils/unitsDisplay';
 
 const Step5Review = ({ data, setCurrentStep, onSave }) => {
   // Récupérer les préférences d'unités de l'utilisateur
@@ -879,9 +880,9 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           { label: 'Type de moteur', value: data.engineType || '-' },
           { label: 'Catégorie de turbulence', value: data.wakeTurbulenceCategory || '-' },
           { label: 'Type de carburant', value: data.fuelType || '-' },
-          { label: 'Capacité carburant', value: formatValue(data.fuelCapacity, getUnitSymbol(units.fuel)) },
-          { label: 'Consommation', value: formatValue(data.fuelConsumption, getUnitSymbol(units.fuelConsumption)) },
-          { label: 'Vitesse de croisière', value: formatValue(data.cruiseSpeedKt, 'kt') },
+          { label: 'Capacité carburant', value: formatCanonical(data.fuelCapacity, 'fuel', units, { both: true }) },
+          { label: 'Consommation', value: formatCanonical(data.fuelConsumption, 'fuelConsumption', units, { both: true }) },
+          { label: 'Vitesse de croisière', value: formatCanonical(data.cruiseSpeedKt, 'speed', units) },
           { label: 'Base Factor', value: data.baseFactor || '-' }
         ]
       )}
@@ -925,9 +926,9 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           { label: 'MZFW', value: formatValue(data.weights?.mzfw, wU) },
           { label: 'Masse min de vol', value: formatValue(data.weights?.minTakeoffWeight, wU) },
 
-          // ─── Carburant principal ───
-          { label: 'Capacité totale carburant', value: formatValue(data.fuelCapacity, getUnitSymbol(units.fuel)) },
-          { label: 'Capacité réservoir principal', value: formatValue(data.fuelMainCapacity, getUnitSymbol(units.fuel)) },
+          // ─── Carburant principal (double affichage L / gal) ───
+          { label: 'Capacité totale carburant', value: formatCanonical(data.fuelCapacity, 'fuel', units, { both: true }) },
+          { label: 'Capacité réservoir principal', value: formatCanonical(data.fuelMainCapacity, 'fuel', units, { both: true }) },
           { label: 'Bras réservoir principal', value: formatValue(data.arms?.fuelMain, aU) },
           { label: 'Moment réservoir principal (plein)', value: formatValue(data.moments?.fuelMain, mU) },
 
@@ -941,7 +942,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           data.additionalFuelTanks.forEach((tank, idx) => {
             const label = tank.name || `Réservoir ${idx + 1}`;
             weightBalanceFields.push(
-              { label: `${label} — capacité`, value: formatValue(tank.capacity, getUnitSymbol(units.fuel)) },
+              { label: `${label} — capacité`, value: formatCanonical(tank.capacity, 'fuel', units, { both: true }) },
               { label: `${label} — bras`, value: formatValue(tank.arm, aU) },
               { label: `${label} — moment (plein)`, value: formatValue(tank.momentAtFull, mU) }
             );
