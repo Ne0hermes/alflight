@@ -980,13 +980,15 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
             );
           });
         }
-        // Enveloppe arrière : 1 CG partagé + 2 masses + 2 moments dérivés
+        // Enveloppe arrière (2 points indépendants avec CG/moment propres)
+        const legacyAftCG = data.cgEnvelope?.aftCG;
         weightBalanceFields.push(
-          { label: 'Aft — bras de levier (partagé)', value: formatValue(data.cgEnvelope?.aftCG, aU) },
           { label: 'Aft point bas — masse min', value: formatValue(data.cgEnvelope?.aftMinWeight, wU) },
-          { label: 'Aft point bas — moment min', value: formatValue(data.cgEnvelope?.aftMinMoment, mU) },
+          { label: 'Aft point bas — CG', value: formatValue(data.cgEnvelope?.aftMinCG || legacyAftCG, aU) },
+          { label: 'Aft point bas — moment', value: formatValue(data.cgEnvelope?.aftMinMoment, mU) },
           { label: 'Aft point haut — masse max', value: formatValue(data.cgEnvelope?.aftMaxWeight, wU) },
-          { label: 'Aft point haut — moment max', value: formatValue(data.cgEnvelope?.aftMaxMoment, mU) }
+          { label: 'Aft point haut — CG', value: formatValue(data.cgEnvelope?.aftMaxCG || legacyAftCG, aU) },
+          { label: 'Aft point haut — moment', value: formatValue(data.cgEnvelope?.aftMaxMoment, mU) }
         );
 
         return renderSection(
