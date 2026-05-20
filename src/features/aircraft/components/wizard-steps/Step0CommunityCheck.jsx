@@ -49,7 +49,7 @@ import { extractCompleteManexData } from '../../services/manexExtractionService'
 import { mapExtractionToReviewItems, buildBulkUpdatePayload } from '../../utils/manexExtractionMapper';
 import ManexExtractionReview from '../ManexExtractionReview';
 
-const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onComplete, onCancel }) => {
+const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onComplete, onCancel, manexReviewTrigger }) => {
   const [searchValue, setSearchValue] = useState(data.searchRegistration || '');
   const [isLoading, setIsLoading] = useState(false);
   const [communityAircraft, setCommunityAircraft] = useState([]);
@@ -72,9 +72,41 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
   const [extractionLoading, setExtractionLoading] = useState(false);
   const [extractionProgress, setExtractionProgress] = useState(0);
   const [extractionProgressMessage, setExtractionProgressMessage] = useState('');
-  const [extractionMetadata, setExtractionMetadata] = useState(null);
-  const [extractionItems, setExtractionItems] = useState([]);
+  // ─── État synchronisé avec data.manexExtraction (persiste dans le wizard) ─
+  // Si on revient sur Step0 après avoir navigué dans les étapes suivantes,
+  // on retrouve l'extraction précédente sans avoir à relancer l'analyse IA.
+  // Le store data.manexExtraction est la source de vérité ; ce state local
+  // sert juste à l'affichage / édition au sein du modal.
+  const [extractionMetadata, setExtractionMetadata] = useState(
+    data.manexExtraction?.metadata || null
+  );
+  const [extractionItems, setExtractionItems] = useState(
+    data.manexExtraction?.items || []
+  );
   const [extractionError, setExtractionError] = useState(null);
+
+  // Re-synchroniser si data.manexExtraction change (ex. édition depuis un
+  // autre endroit, ou retour arrière vers Step0). Ne sert que pour les cas
+  // de modification externe — la modification interne (onItemsChange) écrit
+  // directement aux deux endroits.
+  useEffect(() => {
+    if (data.manexExtraction?.items && data.manexExtraction.items !== extractionItems) {
+      setExtractionItems(data.manexExtraction.items);
+    }
+    if (data.manexExtraction?.metadata && data.manexExtraction.metadata !== extractionMetadata) {
+      setExtractionMetadata(data.manexExtraction.metadata);
+    }
+  }, [data.manexExtraction]);
+
+  // ─── Déclencheur externe (wizard) : ouvre automatiquement le modal ────
+  // Quand le pilote clique sur le bouton « Voir / Modifier MANEX » depuis
+  // une étape Step1+, le wizard incrémente manexReviewTrigger pour signaler
+  // l'ouverture. On vérifie qu'il y a bien une extraction disponible.
+  useEffect(() => {
+    if (manexReviewTrigger && manexReviewTrigger > 0 && data.manexExtraction?.items?.length > 0) {
+      setShowExtractionReview(true);
+    }
+  }, [manexReviewTrigger]);
 
   const handleManexFileSelected = async (e) => {
     const file = e.target.files?.[0];
@@ -98,8 +130,20 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
           setExtractionProgressMessage(msg);
         }
       });
+      const initialItems = mapExtractionToReviewItems(extraction);
       setExtractionMetadata(metadata);
-      setExtractionItems(mapExtractionToReviewItems(extraction));
+      setExtractionItems(initialItems);
+      // ─── Persistance dynamique : sauvegarder dans data.manexExtraction ──
+      // Ainsi, si le pilote navigue vers Step1+ puis revient sur Step0 via
+      // « Précédent », l'extraction est toujours disponible sans relancer
+      // l'analyse IA (qui coûte tokens + temps). Reste persisté jusqu'à
+      // la sauvegarde finale Supabase.
+      updateData('manexExtraction', {
+        items: initialItems,
+        metadata,
+        extractedAt: new Date().toISOString(),
+        fileName: file.name
+      });
 
       // ─── Stocker le PDF MANEX dans data.manex pour que le fichier soit
       //     attaché à l'avion à la sortie du wizard (sans cela, seules les
@@ -912,9 +956,57 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
             {extractionError}
           </Alert>
         )}
+
+        {/* ─── Bouton « Réouvrir la validation » ───
+            Visible uniquement si une extraction MANEX est déjà disponible
+            (extraite plus tôt dans la session). Permet de revoir les
+            données sans relancer l'analyse IA. */}
+        {data.manexExtraction?.items?.length > 0 && (
+          <Paper
+            elevation={0}
+            sx={{
+              mt: 3,
+              p: 2,
+              border: '2px dashed',
+              borderColor: 'success.main',
+              bgcolor: 'success.50',
+              borderRadius: 2
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+              <AutoAwesomeIcon color="success" />
+              <Box sx={{ flex: 1, minWidth: 200 }}>
+                <Typography variant="subtitle2" fontWeight={700}>
+                  Extraction MANEX disponible
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {data.manexExtraction.fileName || 'MANEX'} •{' '}
+                  {data.manexExtraction.items.length} champ
+                  {data.manexExtraction.items.length > 1 ? 's' : ''} •{' '}
+                  {data.manexExtraction.extractedAt
+                    ? new Date(data.manexExtraction.extractedAt).toLocaleString('fr-FR')
+                    : ''}
+                </Typography>
+              </Box>
+              <Button
+                variant="contained"
+                color="success"
+                startIcon={<AutoAwesomeIcon />}
+                onClick={() => setShowExtractionReview(true)}
+                size="small"
+              >
+                Réouvrir la validation
+              </Button>
+            </Box>
+          </Paper>
+        )}
       </Box>
 
-      {/* Modal de validation des données extraites du MANEX */}
+      {/* Modal de validation des données extraites du MANEX.
+          Les modifications du pilote sont persistées en temps réel dans
+          data.manexExtraction pour pouvoir réouvrir le modal plus tard
+          (via le bouton « Réouvrir validation » ou « Précédent » depuis
+          une étape suivante) sans perdre ses choix. */}
       {showExtractionReview && (
         <ManexExtractionReview
           isLoading={extractionLoading}
@@ -922,7 +1014,14 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
           progressMessage={extractionProgressMessage}
           metadata={extractionMetadata}
           items={extractionItems}
-          onItemsChange={setExtractionItems}
+          onItemsChange={(newItems) => {
+            setExtractionItems(newItems);
+            // Sync immédiat dans le wizard pour persistance inter-étapes
+            updateData('manexExtraction', {
+              ...(data.manexExtraction || {}),
+              items: newItems
+            });
+          }}
           onApply={handleApplyExtraction}
           onCancel={() => setShowExtractionReview(false)}
         />
