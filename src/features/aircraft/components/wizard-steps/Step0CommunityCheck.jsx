@@ -185,13 +185,13 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
       const presets = await communityService.getAllPresets();
       console.log(`🔍 [DEBUG] Presets reçus: ${presets.length}`);
 
-      // 🔧 DEBUG: Limiter à 2 presets maximum pour tester
-      const limitedPresets = presets.slice(0, 2);
-      console.log(`🔍 [DEBUG] Presets limités: ${limitedPresets.length}`);
+      // 🔧 ANCIENNE LIMITATION DEBUG RETIRÉE :
+      // const limitedPresets = presets.slice(0, 2);  ← MASQUAIT LES AUTRES AVIONS
+      // → Maintenant on affiche TOUS les presets de la communauté.
 
       // Transformer les presets Supabase au format attendu par le composant
       // NOTE: communityService.getAllPresets() retourne déjà SEULEMENT les métadonnées
-      const formattedAircraft = limitedPresets.map(preset => {
+      const formattedAircraft = presets.map(preset => {
         // Ne PAS spread ...preset pour éviter de copier des champs non nécessaires
         return {
           id: preset.id,
