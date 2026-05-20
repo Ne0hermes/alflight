@@ -25,8 +25,7 @@ import {
   FormControl,
   InputLabel,
   IconButton,
-  Tooltip,
-  Stack
+  Tooltip
 } from '@mui/material';
 import {
   Calculate as CalculateIcon,
@@ -250,9 +249,23 @@ const UnitConverterCard = () => {
       </AccordionSummary>
 
       <AccordionDetails sx={{ pt: 1, pb: 2 }}>
-        <Stack spacing={2}>
-          {/* Sélecteur de catégorie */}
-          <FormControl size="small" sx={{ minWidth: 240, maxWidth: 320 }}>
+        {/* Tout sur une seule ligne :
+            Catégorie | Valeur | Unité source | ↔ | Résultat | Unité cible */}
+        <Box
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 1.5,
+            alignItems: 'center',
+            bgcolor: 'background.paper',
+            p: 1.5,
+            borderRadius: 1,
+            border: '1px solid',
+            borderColor: 'divider'
+          }}
+        >
+          {/* Catégorie */}
+          <FormControl size="small" sx={{ minWidth: 200 }}>
             <InputLabel id="conv-category-label">Catégorie</InputLabel>
             <Select
               labelId="conv-category-label"
@@ -266,116 +279,80 @@ const UnitConverterCard = () => {
             </Select>
           </FormControl>
 
-          {/* Ligne de conversion source → cible */}
-          <Box
-            sx={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 1.5,
-              alignItems: 'center',
-              bgcolor: 'background.paper',
-              p: 1.5,
-              borderRadius: 1,
-              border: '1px solid',
-              borderColor: 'divider'
+          {/* Valeur source */}
+          <TextField
+            size="small"
+            type="number"
+            label="Valeur"
+            value={rawValue}
+            onChange={(e) => setRawValue(e.target.value)}
+            inputProps={{
+              step: 'any',
+              style: { fontSize: 16, fontWeight: 600 }
             }}
-          >
-            {/* SOURCE — valeur + unité */}
-            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flex: '1 1 280px' }}>
-              <TextField
-                size="small"
-                type="number"
-                label="Valeur"
-                value={rawValue}
-                onChange={(e) => setRawValue(e.target.value)}
-                inputProps={{
-                  step: 'any',
-                  style: { fontSize: 16, fontWeight: 600 }
-                }}
-                sx={{ width: 140 }}
-              />
-              <FormControl size="small" sx={{ minWidth: 130 }}>
-                <InputLabel id="conv-source-unit-label">Unité source</InputLabel>
-                <Select
-                  labelId="conv-source-unit-label"
-                  value={sourceUnit}
-                  label="Unité source"
-                  onChange={(e) => setSourceUnit(e.target.value)}
-                >
-                  {category.units.map(u => (
-                    <MenuItem key={u.value} value={u.value}>{u.label}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
+            sx={{ width: 130 }}
+          />
 
-            {/* Bouton ↔ */}
-            <Tooltip title="Inverser source ↔ cible">
-              <IconButton
-                onClick={handleSwap}
-                size="medium"
-                sx={{
-                  bgcolor: 'primary.main',
-                  color: 'white',
-                  '&:hover': { bgcolor: 'primary.dark' }
-                }}
-              >
-                <SwapHorizIcon />
-              </IconButton>
-            </Tooltip>
+          {/* Unité source */}
+          <FormControl size="small" sx={{ minWidth: 160 }}>
+            <InputLabel id="conv-source-unit-label">Unité source</InputLabel>
+            <Select
+              labelId="conv-source-unit-label"
+              value={sourceUnit}
+              label="Unité source"
+              onChange={(e) => setSourceUnit(e.target.value)}
+            >
+              {category.units.map(u => (
+                <MenuItem key={u.value} value={u.value}>{u.label}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
-            {/* CIBLE — résultat + unité */}
-            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flex: '1 1 280px' }}>
-              <TextField
-                size="small"
-                label="Résultat"
-                value={resultText}
-                InputProps={{
-                  readOnly: true,
-                  style: { fontSize: 16, fontWeight: 700, color: '#0f766e' }
-                }}
-                sx={{
-                  width: 160,
-                  '& .MuiInputBase-root': { bgcolor: '#ecfdf5' }
-                }}
-              />
-              <FormControl size="small" sx={{ minWidth: 130 }}>
-                <InputLabel id="conv-target-unit-label">Unité cible</InputLabel>
-                <Select
-                  labelId="conv-target-unit-label"
-                  value={targetUnit}
-                  label="Unité cible"
-                  onChange={(e) => setTargetUnit(e.target.value)}
-                >
-                  {category.units.map(u => (
-                    <MenuItem key={u.value} value={u.value}>{u.label}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-          </Box>
-
-          {/* Récap textuel explicite */}
-          {result !== null && rawValue !== '' && (
-            <Typography
-              variant="body2"
+          {/* Bouton inverser */}
+          <Tooltip title="Inverser source ↔ cible">
+            <IconButton
+              onClick={handleSwap}
+              size="medium"
               sx={{
-                p: 1,
-                bgcolor: 'background.paper',
-                borderRadius: 1,
-                border: '1px dashed',
-                borderColor: 'primary.light',
-                fontFamily: 'monospace',
-                fontSize: 14
+                bgcolor: 'primary.main',
+                color: 'white',
+                '&:hover': { bgcolor: 'primary.dark' }
               }}
             >
-              <strong>{formatNumber(parseFloat(rawValue), decimals)}</strong>{' '}
-              {sourceUnit}{'  =  '}
-              <strong style={{ color: '#0f766e' }}>{resultText}</strong>{' '}
-              {targetUnit}
-            </Typography>
-          )}
-        </Stack>
+              <SwapHorizIcon />
+            </IconButton>
+          </Tooltip>
+
+          {/* Résultat */}
+          <TextField
+            size="small"
+            label="Résultat"
+            value={resultText}
+            InputProps={{
+              readOnly: true,
+              style: { fontSize: 16, fontWeight: 700, color: '#0f766e' }
+            }}
+            sx={{
+              width: 150,
+              '& .MuiInputBase-root': { bgcolor: '#ecfdf5' }
+            }}
+          />
+
+          {/* Unité cible */}
+          <FormControl size="small" sx={{ minWidth: 160 }}>
+            <InputLabel id="conv-target-unit-label">Unité cible</InputLabel>
+            <Select
+              labelId="conv-target-unit-label"
+              value={targetUnit}
+              label="Unité cible"
+              onChange={(e) => setTargetUnit(e.target.value)}
+            >
+              {category.units.map(u => (
+                <MenuItem key={u.value} value={u.value}>{u.label}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
       </AccordionDetails>
     </Accordion>
   );
