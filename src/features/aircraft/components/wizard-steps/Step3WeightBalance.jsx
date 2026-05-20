@@ -110,11 +110,24 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
     return [];
   });
 
-  // État pour Most Rearward CG - formulaire simple (minWeight, maxWeight, un seul CG)
-  const [aftCG, setAftCG] = useState({
-    minWeight: data.cgEnvelope?.aftMinWeight || '',
-    maxWeight: data.cgEnvelope?.aftMaxWeight || '',
-    cg: data.cgEnvelope?.aftCG || ''
+  // État pour Most Rearward CG : 2 POINTS INDÉPENDANTS (masse min et masse max),
+  // chacun avec son propre CG et son propre moment.
+  // Modèle réel : la limite arrière n'est PAS toujours un segment vertical à
+  // CG constant — elle peut être inclinée (CG variable selon la masse).
+  //
+  // Format : { minWeight, minCG, minMoment, maxWeight, maxCG, maxMoment }
+  // Migration légère : si data.cgEnvelope.aftCG (ancien format) est présent,
+  // on le copie dans minCG ET maxCG pour préserver le visuel à l'ouverture.
+  const [aftCG, setAftCG] = useState(() => {
+    const legacyCG = data.cgEnvelope?.aftCG || '';
+    return {
+      minWeight: data.cgEnvelope?.aftMinWeight || '',
+      maxWeight: data.cgEnvelope?.aftMaxWeight || '',
+      minCG:    data.cgEnvelope?.aftMinCG    || legacyCG,
+      maxCG:    data.cgEnvelope?.aftMaxCG    || legacyCG,
+      minMoment: data.cgEnvelope?.aftMinMoment || '',
+      maxMoment: data.cgEnvelope?.aftMaxMoment || ''
+    };
   });
 
   // État pour les points intermédiaires de l'enveloppe CG
@@ -298,30 +311,22 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
       updateData('cgEnvelope.forwardPoints', convertedForwardPoints);
     }
 
-    // Convertir les données Aft CG
-    if (aftCG.minWeight || aftCG.maxWeight || aftCG.cg) {
+    // Convertir les données Aft CG (2 points : min + max, chacun avec son CG)
+    if (aftCG.minWeight || aftCG.maxWeight || aftCG.minCG || aftCG.maxCG) {
+      const convertWeight = (v) => v && previousUnits.weight !== units.weight
+        ? Math.round(convertValue(v, previousUnits.weight, units.weight, 'weight') * 10) / 10
+        : v;
+      const convertArm = (v) => v && previousUnits.armLength !== units.armLength
+        ? Math.round(convertValue(v, previousUnits.armLength || 'mm', units.armLength || 'mm', 'armLength') * 10000) / 10000
+        : v;
       const convertedAft = {
-        minWeight: aftCG.minWeight && previousUnits.weight !== units.weight ?
-          Math.round(convertValue(
-            aftCG.minWeight,
-            previousUnits.weight,
-            units.weight,
-            'weight'
-          ) * 10) / 10 : aftCG.minWeight,
-        maxWeight: aftCG.maxWeight && previousUnits.weight !== units.weight ?
-          Math.round(convertValue(
-            aftCG.maxWeight,
-            previousUnits.weight,
-            units.weight,
-            'weight'
-          ) * 10) / 10 : aftCG.maxWeight,
-        cg: aftCG.cg && previousUnits.armLength !== units.armLength ?
-          Math.round(convertValue(
-            aftCG.cg,
-            previousUnits.armLength || 'mm',
-            units.armLength || 'mm',
-            'armLength'
-          ) * 10000) / 10000 : aftCG.cg
+        minWeight: convertWeight(aftCG.minWeight),
+        maxWeight: convertWeight(aftCG.maxWeight),
+        minCG: convertArm(aftCG.minCG),
+        maxCG: convertArm(aftCG.maxCG),
+        // Moments : recalculés à partir des nouvelles valeurs (masse × bras)
+        minMoment: aftCG.minMoment,  // gardés tels quels — le 2-sur-3 les recalculera
+        maxMoment: aftCG.maxMoment
       };
       setAftCG(convertedAft);
     }
@@ -398,35 +403,38 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
     });
   };
 
-  // Fonction de validation et sauvegarde Most Rearward CG
+  // Fonction de validation et sauvegarde Most Rearward CG (2 points indépendants)
   const handleValidateAftCG = () => {
     let finalMinWeight = aftCG.minWeight;
     let finalMaxWeight = aftCG.maxWeight;
 
-    // Auto-complétion intelligente
+    // Auto-complétion intelligente des masses
     if (!finalMinWeight && finalMaxWeight) {
-      // Si masse min manquante, utiliser la masse minimale de vol
       finalMinWeight = data.weights?.minTakeoffWeight || '';
     }
-
     if (!finalMaxWeight && finalMinWeight) {
-      // Si masse max manquante, utiliser MTOW
       finalMaxWeight = data.weights?.mtow || '';
     }
 
     // Mettre à jour l'état local
     const updatedAft = {
+      ...aftCG,
       minWeight: finalMinWeight,
-      maxWeight: finalMaxWeight,
-      cg: aftCG.cg
+      maxWeight: finalMaxWeight
     };
-
     setAftCG(updatedAft);
 
-    // Sauvegarder dans les données principales
+    // Sauvegarder dans les données principales (nouveau format à 2 points)
     updateData('cgEnvelope.aftMinWeight', finalMinWeight);
     updateData('cgEnvelope.aftMaxWeight', finalMaxWeight);
-    updateData('cgEnvelope.aftCG', aftCG.cg);
+    updateData('cgEnvelope.aftMinCG', aftCG.minCG);
+    updateData('cgEnvelope.aftMaxCG', aftCG.maxCG);
+    updateData('cgEnvelope.aftMinMoment', aftCG.minMoment);
+    updateData('cgEnvelope.aftMaxMoment', aftCG.maxMoment);
+    // RÉTRO-COMPAT : on garde aussi aftCG (= aftMinCG par défaut) pour ne pas
+    // casser les consommateurs externes qui lisent encore aftCG (PDF, exports…)
+    // Mais à terme, ils devront lire aftMinCG/aftMaxCG explicitement.
+    updateData('cgEnvelope.aftCG', aftCG.maxCG || aftCG.minCG);
 
     return true;
   };
@@ -1862,146 +1870,220 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
               </Alert>
             </Box>
 
-            {/* CG Arrière (Most rearward) */}
+            {/* CG Arrière (Most rearward) — 2 POINTS INDÉPENDANTS */}
             <Box>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', fontSize: '14px' }}>
+              <Typography variant="h6" sx={{ mb: 1, fontWeight: 'bold', fontSize: '14px' }}>
                 📍 Most Rearward CG (Limite arrière)
               </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+                La limite arrière peut être inclinée — chaque point (masse min et masse max) a son propre bras et son propre moment.
+              </Typography>
 
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 2 }}>
+
+                {/* ─── POINT BAS : masse min — trio dynamique ─── */}
                 <Box sx={{ width: '100%', maxWidth: 700, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper' }}>
-                  {/* Masse min et max sur la même ligne */}
-                  <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                    <StyledTextField
-                      fullWidth
-                      size="small"
-                      label="Masse min *"
-                      type="number"
-                      value={aftCG.minWeight}
-                      onChange={(e) => setAftCG(prev => ({ ...prev, minWeight: e.target.value }))}
-                      placeholder={String(data.weights?.minTakeoffWeight || "940")}
-                      required
-                      InputProps={{
-                        endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
-                      }}
-                      helperText={!aftCG.minWeight && data.weights?.minTakeoffWeight ? "Auto: Masse min de vol" : ""}
-                    />
-                    <StyledTextField
-                      fullWidth
-                      size="small"
-                      label="Masse max *"
-                      type="number"
-                      value={aftCG.maxWeight}
-                      onChange={(e) => setAftCG(prev => ({ ...prev, maxWeight: e.target.value }))}
-                      placeholder={String(data.weights?.mtow || "1310")}
-                      required
-                      InputProps={{
-                        endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
-                      }}
-                      helperText={!aftCG.maxWeight && data.weights?.mtow ? "Auto: MTOW" : ""}
-                    />
-                  </Box>
-
-                  {/* Bras de levier (CG) arrière + Moments aux 2 extrémités */}
-                  <Grid container spacing={1.5} sx={{ mb: 2 }}>
+                  <Typography variant="caption" fontWeight={700} color="primary.main" sx={{ display: 'block', mb: 1 }}>
+                    Point bas (à masse min)
+                  </Typography>
+                  <Grid container spacing={1.5}>
                     <Grid size={{ xs: 12, sm: 4 }}>
                       <StyledTextField
-                        fullWidth
-                        size="small"
-                        label={`${envLabel} arrière *`}
+                        fullWidth size="small"
+                        label="Masse min *"
                         type="number"
-                        value={aftCG.cg}
-                        onChange={(e) => setAftCG(prev => ({ ...prev, cg: e.target.value }))}
+                        value={aftCG.minWeight}
+                        onChange={(e) => {
+                          const newW = e.target.value;
+                          const w = parseFloat(newW);
+                          const cg = parseFloat(aftCG.minCG);
+                          const newMoment = (Number.isFinite(w) && Number.isFinite(cg))
+                            ? Math.round(w * cg * 100) / 100
+                            : aftCG.minMoment;
+                          setAftCG(prev => ({ ...prev, minWeight: newW, minMoment: newMoment }));
+                        }}
+                        placeholder={String(data.weights?.minTakeoffWeight || '940')}
+                        required
+                        helperText={!aftCG.minWeight && data.weights?.minTakeoffWeight ? "Auto: Masse min de vol" : ""}
+                        InputProps={{
+                          endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>
+                        }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 4 }}>
+                      <StyledTextField
+                        fullWidth size="small"
+                        label={`${envLabel} à masse min *`}
+                        type="number"
+                        value={aftCG.minCG}
+                        onChange={(e) => {
+                          const newCG = e.target.value;
+                          const w = parseFloat(aftCG.minWeight);
+                          const cg = parseFloat(newCG);
+                          const newMoment = (Number.isFinite(w) && Number.isFinite(cg))
+                            ? Math.round(w * cg * 100) / 100
+                            : aftCG.minMoment;
+                          setAftCG(prev => ({ ...prev, minCG: newCG, minMoment: newMoment }));
+                        }}
                         placeholder={envPlaceholder}
                         inputProps={{ step: "0.0001" }}
                         required
-                        helperText="CG constant sur tout le segment arrière"
                         InputProps={{
-                          endAdornment: <InputAdornment position="end">{envUnit}</InputAdornment>,
+                          endAdornment: <InputAdornment position="end">{envUnit}</InputAdornment>
                         }}
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 4 }}>
                       <StyledTextField
-                        fullWidth
-                        size="small"
+                        fullWidth size="small"
                         label="Moment à masse min"
                         type="number"
-                        value={(() => {
-                          const w = parseFloat(aftCG.minWeight);
-                          const cg = parseFloat(aftCG.cg);
-                          return (Number.isFinite(w) && Number.isFinite(cg)) ? Math.round(w * cg * 100) / 100 : '';
-                        })()}
+                        value={aftCG.minMoment}
                         onChange={(e) => {
-                          // Si on saisit le moment et la masse min : déduit le CG
-                          const M = parseFloat(e.target.value);
+                          const newMoment = e.target.value;
+                          const M = parseFloat(newMoment);
                           const w = parseFloat(aftCG.minWeight);
+                          const cg = parseFloat(aftCG.minCG);
+                          // Saisir moment → déduit cg si masse, sinon masse si cg
                           if (Number.isFinite(M) && Number.isFinite(w) && w !== 0) {
-                            setAftCG(prev => ({ ...prev, cg: String(Math.round((M / w) * 10000) / 10000) }));
+                            setAftCG(prev => ({
+                              ...prev,
+                              minMoment: newMoment,
+                              minCG: String(Math.round((M / w) * 10000) / 10000)
+                            }));
+                          } else if (Number.isFinite(M) && Number.isFinite(cg) && cg !== 0) {
+                            setAftCG(prev => ({
+                              ...prev,
+                              minMoment: newMoment,
+                              minWeight: String(Math.round((M / cg) * 100) / 100)
+                            }));
+                          } else {
+                            setAftCG(prev => ({ ...prev, minMoment: newMoment }));
                           }
                         }}
-                        placeholder="Auto (min × cg)"
-                        helperText="à masse min"
+                        placeholder="Auto"
                         InputProps={{
-                          endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}·{getUnitSymbol(units.armLength)}</InputAdornment>,
-                        }}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 4 }}>
-                      <StyledTextField
-                        fullWidth
-                        size="small"
-                        label="Moment à masse max"
-                        type="number"
-                        value={(() => {
-                          const w = parseFloat(aftCG.maxWeight);
-                          const cg = parseFloat(aftCG.cg);
-                          return (Number.isFinite(w) && Number.isFinite(cg)) ? Math.round(w * cg * 100) / 100 : '';
-                        })()}
-                        onChange={(e) => {
-                          // Si on saisit le moment et la masse max : déduit le CG
-                          const M = parseFloat(e.target.value);
-                          const w = parseFloat(aftCG.maxWeight);
-                          if (Number.isFinite(M) && Number.isFinite(w) && w !== 0) {
-                            setAftCG(prev => ({ ...prev, cg: String(Math.round((M / w) * 10000) / 10000) }));
-                          }
-                        }}
-                        placeholder="Auto (max × cg)"
-                        helperText="à masse max"
-                        InputProps={{
-                          endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}·{getUnitSymbol(units.armLength)}</InputAdornment>,
+                          endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}·{getUnitSymbol(units.armLength)}</InputAdornment>
                         }}
                       />
                     </Grid>
                   </Grid>
-
-                  {/* Bouton de validation */}
-                  <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                    <Button
-                      variant="contained"
-                      color="success"
-                      onClick={handleValidateAftCG}
-                      disabled={!aftCG.cg || (!aftCG.minWeight && !aftCG.maxWeight)}
-                      sx={{ textTransform: 'none' }}
-                    >
-                      ✓ Valider Most Rearward CG
-                    </Button>
-                  </Box>
                 </Box>
 
+                {/* ─── POINT HAUT : masse max — trio dynamique ─── */}
+                <Box sx={{ width: '100%', maxWidth: 700, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper' }}>
+                  <Typography variant="caption" fontWeight={700} color="primary.main" sx={{ display: 'block', mb: 1 }}>
+                    Point haut (à masse max)
+                  </Typography>
+                  <Grid container spacing={1.5}>
+                    <Grid size={{ xs: 12, sm: 4 }}>
+                      <StyledTextField
+                        fullWidth size="small"
+                        label="Masse max *"
+                        type="number"
+                        value={aftCG.maxWeight}
+                        onChange={(e) => {
+                          const newW = e.target.value;
+                          const w = parseFloat(newW);
+                          const cg = parseFloat(aftCG.maxCG);
+                          const newMoment = (Number.isFinite(w) && Number.isFinite(cg))
+                            ? Math.round(w * cg * 100) / 100
+                            : aftCG.maxMoment;
+                          setAftCG(prev => ({ ...prev, maxWeight: newW, maxMoment: newMoment }));
+                        }}
+                        placeholder={String(data.weights?.mtow || '1310')}
+                        required
+                        helperText={!aftCG.maxWeight && data.weights?.mtow ? "Auto: MTOW" : ""}
+                        InputProps={{
+                          endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>
+                        }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 4 }}>
+                      <StyledTextField
+                        fullWidth size="small"
+                        label={`${envLabel} à masse max *`}
+                        type="number"
+                        value={aftCG.maxCG}
+                        onChange={(e) => {
+                          const newCG = e.target.value;
+                          const w = parseFloat(aftCG.maxWeight);
+                          const cg = parseFloat(newCG);
+                          const newMoment = (Number.isFinite(w) && Number.isFinite(cg))
+                            ? Math.round(w * cg * 100) / 100
+                            : aftCG.maxMoment;
+                          setAftCG(prev => ({ ...prev, maxCG: newCG, maxMoment: newMoment }));
+                        }}
+                        placeholder={envPlaceholder}
+                        inputProps={{ step: "0.0001" }}
+                        required
+                        InputProps={{
+                          endAdornment: <InputAdornment position="end">{envUnit}</InputAdornment>
+                        }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 4 }}>
+                      <StyledTextField
+                        fullWidth size="small"
+                        label="Moment à masse max"
+                        type="number"
+                        value={aftCG.maxMoment}
+                        onChange={(e) => {
+                          const newMoment = e.target.value;
+                          const M = parseFloat(newMoment);
+                          const w = parseFloat(aftCG.maxWeight);
+                          const cg = parseFloat(aftCG.maxCG);
+                          if (Number.isFinite(M) && Number.isFinite(w) && w !== 0) {
+                            setAftCG(prev => ({
+                              ...prev,
+                              maxMoment: newMoment,
+                              maxCG: String(Math.round((M / w) * 10000) / 10000)
+                            }));
+                          } else if (Number.isFinite(M) && Number.isFinite(cg) && cg !== 0) {
+                            setAftCG(prev => ({
+                              ...prev,
+                              maxMoment: newMoment,
+                              maxWeight: String(Math.round((M / cg) * 100) / 100)
+                            }));
+                          } else {
+                            setAftCG(prev => ({ ...prev, maxMoment: newMoment }));
+                          }
+                        }}
+                        placeholder="Auto"
+                        InputProps={{
+                          endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}·{getUnitSymbol(units.armLength)}</InputAdornment>
+                        }}
+                      />
+                    </Grid>
+                  </Grid>
+                </Box>
+
+                {/* Bouton de validation */}
+                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    onClick={handleValidateAftCG}
+                    disabled={(!aftCG.minCG && !aftCG.maxCG) || (!aftCG.minWeight && !aftCG.maxWeight)}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    ✓ Valider Most Rearward CG (2 points)
+                  </Button>
+                </Box>
               </Box>
             </Box>
           </Box>
         </AccordionDetails>
       </Accordion>
 
-      {/* Double graphique de l'enveloppe — CG + Moment côte à côte */}
+      {/* Double graphique de l'enveloppe — CG + Moment côte à côte (2 points aft) */}
       <CGEnvelopeDualChart
         cgEnvelope={{
           forwardPoints: forwardCGPoints,
           aftMinWeight: data.cgEnvelope?.aftMinWeight || aftCG.minWeight,
-          aftCG: data.cgEnvelope?.aftCG || aftCG.cg,
-          aftMaxWeight: data.cgEnvelope?.aftMaxWeight || aftCG.maxWeight
+          aftMaxWeight: data.cgEnvelope?.aftMaxWeight || aftCG.maxWeight,
+          aftMinCG: data.cgEnvelope?.aftMinCG || aftCG.minCG,
+          aftMaxCG: data.cgEnvelope?.aftMaxCG || aftCG.maxCG
         }}
         massUnit={getUnitSymbol(units.weight)}
         armUnit={getUnitSymbol(units.armLength)}

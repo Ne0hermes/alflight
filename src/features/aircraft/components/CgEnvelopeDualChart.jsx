@@ -174,8 +174,12 @@ const CGEnvelopeDualChart = memo(({ cgEnvelope, massUnit = 'kg', armUnit = 'mm' 
     .filter(p => p.weight > 0 && p.cg > 0);
 
   const aftMinWeight = parseFloat(cgEnvelope?.aftMinWeight) || 0;
-  const aftCG = parseFloat(cgEnvelope?.aftCG) || 0;
   const aftMaxWeight = parseFloat(cgEnvelope?.aftMaxWeight) || 0;
+  // Nouveau modèle : 2 CG indépendants. Rétro-compat : si aftMinCG/aftMaxCG
+  // ne sont pas définis, on utilise aftCG (ancien format) pour les deux.
+  const legacyAftCG = parseFloat(cgEnvelope?.aftCG) || 0;
+  const aftMinCG = parseFloat(cgEnvelope?.aftMinCG) || legacyAftCG;
+  const aftMaxCG = parseFloat(cgEnvelope?.aftMaxCG) || legacyAftCG;
 
   // ─── Construction des points de l'enveloppe (sens horaire) ─────────────
   // Format universel : { x: <valeur axe X>, y: <masse>, label, isForward }
@@ -192,17 +196,20 @@ const CGEnvelopeDualChart = memo(({ cgEnvelope, massUnit = 'kg', armUnit = 'mm' 
         isForward: true
       });
     });
-    if (aftMaxWeight > 0 && aftCG > 0) {
+    // Aft Max : utilise aftMaxCG (peut être différent de aftMinCG)
+    if (aftMaxWeight > 0 && aftMaxCG > 0) {
       points.push({
-        x: useMoment ? aftMaxWeight * aftCG : aftCG,
+        x: useMoment ? aftMaxWeight * aftMaxCG : aftMaxCG,
         y: aftMaxWeight,
         label: 'Aft Max',
         isForward: false
       });
     }
-    if (aftMinWeight > 0 && aftCG > 0 && aftMinWeight !== aftMaxWeight) {
+    // Aft Min : utilise aftMinCG. Toujours ajouter (même si égal à Max) car
+    // c'est un sommet distinct du polygone.
+    if (aftMinWeight > 0 && aftMinCG > 0) {
       points.push({
-        x: useMoment ? aftMinWeight * aftCG : aftCG,
+        x: useMoment ? aftMinWeight * aftMinCG : aftMinCG,
         y: aftMinWeight,
         label: 'Aft Min',
         isForward: false

@@ -556,8 +556,16 @@ export const AircraftModule = memo(() => {
             addText(`CG avant (min): ${fullAircraft.cgEnvelope.forwardPoints[0].cg} mm`, 70, yPosition, { size: 10 });
             yPosition -= 18;
           }
-          if (fullAircraft.cgEnvelope.aftCG) {
-            addText(`CG arrière (max): ${fullAircraft.cgEnvelope.aftCG} mm`, 70, yPosition, { size: 10 });
+          // Arrière : 2 points indépendants (rétro-compat aftCG)
+          const legacyAftCG = fullAircraft.cgEnvelope.aftCG;
+          const aftMinCG = fullAircraft.cgEnvelope.aftMinCG || legacyAftCG;
+          const aftMaxCG = fullAircraft.cgEnvelope.aftMaxCG || legacyAftCG;
+          if (aftMinCG) {
+            addText(`CG arrière à masse min (${fullAircraft.cgEnvelope.aftMinWeight || '?'} kg): ${aftMinCG} mm`, 70, yPosition, { size: 10 });
+            yPosition -= 18;
+          }
+          if (aftMaxCG && aftMaxCG !== aftMinCG) {
+            addText(`CG arrière à masse max (${fullAircraft.cgEnvelope.aftMaxWeight || '?'} kg): ${aftMaxCG} mm`, 70, yPosition, { size: 10 });
             yPosition -= 18;
           }
 
