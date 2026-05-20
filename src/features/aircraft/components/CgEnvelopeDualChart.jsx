@@ -175,16 +175,13 @@ const CGEnvelopeDualChart = memo(({ cgEnvelope, massUnit = 'kg', armUnit = 'mm' 
 
   const aftMinWeight = parseFloat(cgEnvelope?.aftMinWeight) || 0;
   const aftMaxWeight = parseFloat(cgEnvelope?.aftMaxWeight) || 0;
-  // Nouveau modèle : 2 CG indépendants. Rétro-compat : si aftMinCG/aftMaxCG
-  // ne sont pas définis, on utilise aftCG (ancien format) pour les deux.
-  const legacyAftCG = parseFloat(cgEnvelope?.aftCG) || 0;
-  const aftMinCG = parseFloat(cgEnvelope?.aftMinCG) || legacyAftCG;
-  const aftMaxCG = parseFloat(cgEnvelope?.aftMaxCG) || legacyAftCG;
+  // Modèle : 1 CG partagé pour tout le segment arrière, 2 masses
+  const aftCG = parseFloat(cgEnvelope?.aftCG) || 0;
 
   // ─── Construction des points de l'enveloppe (sens horaire) ─────────────
   // Format universel : { x: <valeur axe X>, y: <masse>, label, isForward }
-  // Pour le graphe CG  : x = CG
-  // Pour le graphe Moment : x = masse × CG (= moment)
+  // Pour le graphe CG  : x = CG (même pour aft min et aft max)
+  // Pour le graphe Moment : x = masse × CG (différent pour aft min vs aft max)
   const buildPoints = (useMoment) => {
     const points = [];
     const sortedForward = [...forwardPoints].sort((a, b) => a.weight - b.weight);
@@ -196,20 +193,19 @@ const CGEnvelopeDualChart = memo(({ cgEnvelope, massUnit = 'kg', armUnit = 'mm' 
         isForward: true
       });
     });
-    // Aft Max : utilise aftMaxCG (peut être différent de aftMinCG)
-    if (aftMaxWeight > 0 && aftMaxCG > 0) {
+    // Aft Max : CG partagé, moment = max × aftCG
+    if (aftMaxWeight > 0 && aftCG > 0) {
       points.push({
-        x: useMoment ? aftMaxWeight * aftMaxCG : aftMaxCG,
+        x: useMoment ? aftMaxWeight * aftCG : aftCG,
         y: aftMaxWeight,
         label: 'Aft Max',
         isForward: false
       });
     }
-    // Aft Min : utilise aftMinCG. Toujours ajouter (même si égal à Max) car
-    // c'est un sommet distinct du polygone.
-    if (aftMinWeight > 0 && aftMinCG > 0) {
+    // Aft Min : même CG, moment = min × aftCG (différent du max si masses ≠)
+    if (aftMinWeight > 0 && aftCG > 0 && aftMinWeight !== aftMaxWeight) {
       points.push({
-        x: useMoment ? aftMinWeight * aftMinCG : aftMinCG,
+        x: useMoment ? aftMinWeight * aftCG : aftCG,
         y: aftMinWeight,
         label: 'Aft Min',
         isForward: false
