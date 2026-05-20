@@ -61,9 +61,10 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
     seats: false,
     baggage: false,
     limits: false,
-    cgEnvelope: false
+    cgEnvelope: false,
+    utility: false
   });
-  
+
   const handlePanelChange = (panel) => (event, isExpanded) => {
     if (isExpanded) {
       // When opening a panel, close all others and open this one
@@ -73,6 +74,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
         baggage: false,
         limits: false,
         cgEnvelope: false,
+        utility: false,
         [panel]: true
       });
     } else {
@@ -2109,6 +2111,198 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
         massUnit={getUnitSymbol(units.weight)}
         armUnit={getUnitSymbol(units.armLength)}
       />
+
+      {/* ═══ Configuration Catégorie Utilitaire (U) — optionnel ═══
+          La majorité des avions GA ont une catégorie Normale (N) seule.
+          Mais certains certifiés CS-23 / FAR 23 ont AUSSI une catégorie
+          Utilitaire (U) avec un MTOW réduit et un domaine de centrage plus
+          restreint — en contrepartie, des facteurs de charge supérieurs
+          (+4,4g vs +3,8g) qui autorisent vrilles et certaines manœuvres.
+          Si activé ici, la préparation de vol affichera un sélecteur N/U
+          qui basculera entre les deux jeux de limites. */}
+      <Accordion
+        expanded={expandedPanels.utility}
+        onChange={handlePanelChange('utility')}
+        elevation={0}
+        sx={{
+          mt: 2,
+          mb: 2,
+          border: '1px dashed',
+          borderColor: 'warning.main',
+          '&:before': { display: 'none' }
+        }}
+      >
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          sx={{
+            minHeight: '40px',
+            '&.Mui-expanded': { minHeight: '40px' },
+            '& .MuiAccordionSummary-content': {
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              margin: '8px 0'
+            },
+            '& .MuiAccordionSummary-content.Mui-expanded': { margin: '8px 0' }
+          }}
+        >
+          <WarningIcon color="warning" />
+          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+            Catégorie Utilitaire (U) — optionnel
+          </Typography>
+          {data.utilityCategory?.enabled && (
+            <Typography variant="caption" sx={{ ml: 1, color: 'success.main', fontWeight: 700 }}>
+              ✓ Activé
+            </Typography>
+          )}
+        </AccordionSummary>
+        <AccordionDetails sx={{ pt: 1, pb: 2 }}>
+          <Box sx={{ width: '100%', maxWidth: 700, mx: 'auto' }}>
+            <Alert severity="info" sx={{ mb: 2 }}>
+              <Typography variant="body2">
+                <strong>Catégorie Normale (N) :</strong> MTOW standard, facteurs +3,8g/−1,5g, pas d'acrobaties.
+                <br />
+                <strong>Catégorie Utilitaire (U) :</strong> MTOW réduit, domaine CG plus restreint, facteurs +4,4g/−1,76g,
+                vrilles autorisées (si certifié). Si l'avion offre cette option, renseigne ci-dessous les limites U ;
+                la préparation de vol proposera un sélecteur N/U.
+              </Typography>
+            </Alert>
+
+            {/* Toggle activation */}
+            <Box sx={{ mb: 2 }}>
+              <Button
+                variant={data.utilityCategory?.enabled ? 'contained' : 'outlined'}
+                color={data.utilityCategory?.enabled ? 'success' : 'warning'}
+                onClick={() => {
+                  updateData('utilityCategory', {
+                    ...(data.utilityCategory || {}),
+                    enabled: !data.utilityCategory?.enabled
+                  });
+                }}
+                size="small"
+              >
+                {data.utilityCategory?.enabled
+                  ? '✓ Catégorie U activée (cliquer pour désactiver)'
+                  : 'Activer la catégorie Utilitaire (U)'}
+              </Button>
+            </Box>
+
+            {/* Inputs visibles uniquement si activé */}
+            {data.utilityCategory?.enabled && (
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <StyledTextField
+                    fullWidth
+                    size="small"
+                    label="MTOW en cat. U"
+                    type="number"
+                    value={
+                      data.utilityCategory?.mtow
+                        ? Math.round(convertValue(data.utilityCategory.mtow, 'kg', units.weight, 'weight') * 10) / 10
+                        : ''
+                    }
+                    onChange={(e) => {
+                      const newUser = e.target.value;
+                      const newCanonical = newUser
+                        ? convertValue(newUser, units.weight, 'kg', 'weight')
+                        : '';
+                      updateData('utilityCategory', {
+                        ...(data.utilityCategory || {}),
+                        mtow: newCanonical
+                      });
+                    }}
+                    helperText="Masse max décollage en cat. utilitaire (souvent < MTOW normale)"
+                    InputProps={{
+                      endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
+                    }}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <StyledTextField
+                    fullWidth
+                    size="small"
+                    label="Limite CG avant (U)"
+                    type="number"
+                    value={
+                      data.utilityCategory?.forwardCG
+                        ? Math.round(convertValue(data.utilityCategory.forwardCG, 'mm', units.armLength, 'armLength') * 100) / 100
+                        : ''
+                    }
+                    onChange={(e) => {
+                      const newUser = e.target.value;
+                      const newCanonical = newUser
+                        ? convertValue(newUser, units.armLength, 'mm', 'armLength')
+                        : '';
+                      updateData('utilityCategory', {
+                        ...(data.utilityCategory || {}),
+                        forwardCG: newCanonical
+                      });
+                    }}
+                    helperText="Bras CG le plus avant autorisé en cat. U"
+                    InputProps={{
+                      endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
+                    }}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <StyledTextField
+                    fullWidth
+                    size="small"
+                    label="Limite CG arrière min (U)"
+                    type="number"
+                    value={
+                      data.utilityCategory?.aftMinCG
+                        ? Math.round(convertValue(data.utilityCategory.aftMinCG, 'mm', units.armLength, 'armLength') * 100) / 100
+                        : ''
+                    }
+                    onChange={(e) => {
+                      const newUser = e.target.value;
+                      const newCanonical = newUser
+                        ? convertValue(newUser, units.armLength, 'mm', 'armLength')
+                        : '';
+                      updateData('utilityCategory', {
+                        ...(data.utilityCategory || {}),
+                        aftMinCG: newCanonical
+                      });
+                    }}
+                    helperText="CG arrière à masse min en cat. U"
+                    InputProps={{
+                      endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
+                    }}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <StyledTextField
+                    fullWidth
+                    size="small"
+                    label="Limite CG arrière max (U)"
+                    type="number"
+                    value={
+                      data.utilityCategory?.aftMaxCG
+                        ? Math.round(convertValue(data.utilityCategory.aftMaxCG, 'mm', units.armLength, 'armLength') * 100) / 100
+                        : ''
+                    }
+                    onChange={(e) => {
+                      const newUser = e.target.value;
+                      const newCanonical = newUser
+                        ? convertValue(newUser, units.armLength, 'mm', 'armLength')
+                        : '';
+                      updateData('utilityCategory', {
+                        ...(data.utilityCategory || {}),
+                        aftMaxCG: newCanonical
+                      });
+                    }}
+                    helperText="CG arrière à MTOW (U) en cat. U"
+                    InputProps={{
+                      endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
+                    }}
+                  />
+                </Grid>
+              </Grid>
+            )}
+          </Box>
+        </AccordionDetails>
+      </Accordion>
 
       {/* Boutons de navigation */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
