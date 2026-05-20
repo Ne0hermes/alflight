@@ -844,14 +844,20 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-            {/* Capacité totale (importée depuis Step1, lecture seule) */}
+            {/* Capacité totale (importée depuis Step1, lecture seule).
+                NOTE : data.fuelCapacity est stocké en CANONIQUE (litres). On
+                convertit vers l'unité de préférence pilote pour l'affichage. */}
             <Box sx={{ width: '100%', maxWidth: 700, mb: 2 }}>
               <StyledTextField
                 fullWidth
                 size="small"
                 label="Capacité totale carburant (importée du MANEX)"
                 type="number"
-                value={data.fuelCapacity || ''}
+                value={
+                  data.fuelCapacity
+                    ? Math.round(convertValue(data.fuelCapacity, 'ltr', units.fuel, 'fuel') * 10) / 10
+                    : ''
+                }
                 disabled
                 InputProps={{
                   readOnly: true,
@@ -886,12 +892,20 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                     size="small"
                     label="Capacité"
                     type="number"
-                    value={data.fuelMainCapacity || ''}
+                    value={
+                      data.fuelMainCapacity
+                        ? Math.round(convertValue(data.fuelMainCapacity, 'ltr', units.fuel, 'fuel') * 10) / 10
+                        : ''
+                    }
                     onChange={(e) => {
-                      const newCap = e.target.value;
-                      updateData('fuelMainCapacity', newCap);
-                      // Recalcul du moment à plein si bras présent
-                      const cap = parseFloat(newCap);
+                      const newCapUser = e.target.value;
+                      // Convertir saisie user → canonique (litres) pour stockage
+                      const newCapCanonical = newCapUser
+                        ? convertValue(newCapUser, units.fuel, 'ltr', 'fuel')
+                        : '';
+                      updateData('fuelMainCapacity', newCapCanonical);
+                      // Moment = capacité_litres × densité (kg/L) × bras (mm)
+                      const cap = parseFloat(newCapCanonical);
                       const arm = parseFloat(data.arms?.fuelMain);
                       const density = getFuelDensity(data.fuelType);
                       if (Number.isFinite(cap) && Number.isFinite(arm)) {
@@ -1055,19 +1069,27 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                             size="small"
                             label="Capacité"
                             type="number"
-                            value={tank.capacity || ''}
+                            value={
+                              tank.capacity
+                                ? Math.round(convertValue(tank.capacity, 'ltr', units.fuel, 'fuel') * 10) / 10
+                                : ''
+                            }
                             onChange={(e) => {
-                              const newCap = e.target.value;
-                              const cap = parseFloat(newCap);
+                              const newCapUser = e.target.value;
+                              // Convertir saisie user → canonique (litres) pour stockage
+                              const newCapCanonical = newCapUser
+                                ? convertValue(newCapUser, units.fuel, 'ltr', 'fuel')
+                                : '';
+                              const cap = parseFloat(newCapCanonical);
                               const arm = parseFloat(tank.arm);
                               const density = getFuelDensity(data.fuelType);
-                              const fields = { capacity: newCap };
+                              const fields = { capacity: newCapCanonical };
                               if (Number.isFinite(cap) && Number.isFinite(arm)) {
                                 fields.momentAtFull = Math.round(cap * density * arm * 100) / 100;
                               }
                               updateFuelTankFields(tank.id, fields);
                             }}
-                            placeholder="Litres"
+                            placeholder="Capacité utilisable"
                             InputProps={{
                               endAdornment: <InputAdornment position="end">{getUnitSymbol(units.fuel)}</InputAdornment>,
                             }}
@@ -1132,18 +1154,22 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
               )}
             </Box>
 
-            {/* ─── Récap : somme calculée vs total importé ─── */}
+            {/* ─── Récap : somme calculée vs total importé ───
+                Toutes les valeurs en mémoire sont en CANONIQUE (litres).
+                On convertit chaque valeur vers l'unité user pour l'affichage. */}
             {(() => {
-              const total = parseFloat(data.fuelCapacity) || 0;
-              const mainCap = parseFloat(data.fuelMainCapacity) || 0;
+              const total = parseFloat(data.fuelCapacity) || 0;          // litres
+              const mainCap = parseFloat(data.fuelMainCapacity) || 0;     // litres
               const additionalSum = additionalFuelTanks.reduce(
-                (sum, t) => sum + (parseFloat(t.capacity) || 0), 0
+                (sum, t) => sum + (parseFloat(t.capacity) || 0), 0        // litres
               );
-              const computed = mainCap + additionalSum;
+              const computed = mainCap + additionalSum;                   // litres
               const hasData = mainCap > 0 || additionalSum > 0;
               if (!hasData) return null;
               const diff = computed - total;
               const isMatch = Math.abs(diff) < 0.5;
+              // Helper local : convertit canonique (L) vers unité user
+              const toDisp = (v) => Math.round(convertValue(v, 'ltr', units.fuel, 'fuel') * 10) / 10;
               return (
                 <Box sx={{ width: '100%', maxWidth: 700, mt: 2 }}>
                   <Alert
@@ -1156,24 +1182,24 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                     <Box sx={{ mt: 1, fontFamily: 'monospace', fontSize: 13 }}>
                       <div>
                         Réservoir principal :{' '}
-                        <strong>{mainCap.toFixed(1)} {getUnitSymbol(units.fuel)}</strong>
+                        <strong>{toDisp(mainCap).toFixed(1)} {getUnitSymbol(units.fuel)}</strong>
                       </div>
                       {additionalFuelTanks.map(t => (
                         <div key={t.id}>
                           {t.name || 'Réservoir'} :{' '}
-                          <strong>{(parseFloat(t.capacity) || 0).toFixed(1)} {getUnitSymbol(units.fuel)}</strong>
+                          <strong>{toDisp(parseFloat(t.capacity) || 0).toFixed(1)} {getUnitSymbol(units.fuel)}</strong>
                         </div>
                       ))}
                       <Divider sx={{ my: 0.5 }} />
                       <div>
                         <strong>Somme calculée :</strong>{' '}
                         <strong style={{ color: isMatch ? '#16a34a' : '#dc2626' }}>
-                          {computed.toFixed(1)} {getUnitSymbol(units.fuel)}
+                          {toDisp(computed).toFixed(1)} {getUnitSymbol(units.fuel)}
                         </strong>
                       </div>
                       <div>
                         <strong>Capacité totale (MANEX) :</strong>{' '}
-                        <strong>{total.toFixed(1)} {getUnitSymbol(units.fuel)}</strong>
+                        <strong>{toDisp(total).toFixed(1)} {getUnitSymbol(units.fuel)}</strong>
                       </div>
                       {!isMatch && (
                         <div style={{ marginTop: 6, color: Math.abs(diff) < total * 0.05 ? '#0284c7' : '#dc2626' }}>
@@ -1342,6 +1368,39 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ width: '100%' }}>
+            {/* ─── Limite cumulée bagages (optionnel) ───
+                Beaucoup de MANEX définissent une LIMITE GLOBALE en plus des
+                limites par compartiment. Ex : « max 40 kg compartiment avant,
+                max 60 kg compartiment arrière, MAIS total max 80 kg ». Ce
+                champ stocke cette borne globale et sera utilisé en garde-fou
+                lors du calcul M&C de préparation de vol. */}
+            <Box sx={{ width: '100%', maxWidth: 700, mx: 'auto', mb: 2 }}>
+              <StyledTextField
+                fullWidth
+                size="small"
+                label="Masse max cumulée bagages (optionnelle)"
+                type="number"
+                value={
+                  data.maxBaggageTotalMass
+                    ? Math.round(convertValue(data.maxBaggageTotalMass, 'kg', units.weight, 'weight') * 10) / 10
+                    : ''
+                }
+                onChange={(e) => {
+                  const newMassUser = e.target.value;
+                  // Stockage canonique en kg
+                  const newMassCanonical = newMassUser
+                    ? convertValue(newMassUser, units.weight, 'kg', 'weight')
+                    : '';
+                  updateData('maxBaggageTotalMass', newMassCanonical);
+                }}
+                helperText="Si l'avion a une limite globale cumulée distincte des limites par compartiment (ex : « total max 80 kg »). Sera contrôlée lors du calcul M&C en préparation de vol."
+                placeholder="Ex : 80"
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
+                }}
+              />
+            </Box>
+
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
               <Button
                 variant="contained"
@@ -1354,7 +1413,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                 Ajouter un compartiment
               </Button>
             </Box>
-            
+
             {baggageCompartments.length === 0 ? (
               <Alert severity="info" sx={{ mt: 2 }}>
                 Aucun compartiment défini. Cliquez sur "Ajouter un compartiment" pour commencer.

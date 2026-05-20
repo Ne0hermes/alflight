@@ -138,6 +138,10 @@ que le wizard de création d'avion sait stocker, ni plus ni moins) :
     "cruise_speed_75percent": ".. (TAS à 75% puissance, kt)"
   },
 
+  "baggage": {
+    "max_total_mass": ".. (masse maximale CUMULÉE des bagages tous compartiments confondus, en kg ou lbs. Exemple : « total baggage 80 kg » ou « max combined baggage load 175 lbs ». ⚠️ Différent des limites individuelles par compartiment.)"
+  },
+
   "equipment_com": {
     "vhf1": "true|false (présence VHF COM 1, standard sur tous les avions équipés radio)",
     "vhf2": "true|false (présence VHF COM 2, fréquent en aviation générale)",
