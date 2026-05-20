@@ -7,6 +7,7 @@ import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { sx } from '@shared/styles/styleSystem';
 import AccordionButton from '@shared/components/AccordionButton';
 import { ManexImporter } from './components/ManexImporter';
+import ManexViewer from './components/ManexViewer';
 import AdvancedPerformanceAnalyzer from './components/AdvancedPerformanceAnalyzer';
 import AircraftCreationWizard from './components/AircraftCreationWizard';
 // import APIKeyTest from '../performance/components/APIKeyTest'; // Temporairement désactivé
@@ -138,6 +139,7 @@ export const AircraftModule = memo(() => {
   const [showForm, setShowForm] = useState(false);
   const [editingAircraft, setEditingAircraft] = useState(null);
   const [showManexImporter, setShowManexImporter] = useState(false);
+  const [showManexViewer, setShowManexViewer] = useState(false);
   const [manexAircraft, setManexAircraft] = useState(null);
   const [showWizard, setShowWizard] = useState(false);
   const [wizardAircraft, setWizardAircraft] = useState(null);
@@ -465,22 +467,29 @@ export const AircraftModule = memo(() => {
         checkNewPage(50);
       }
 
-      // Masse et centrage
+      // Masse et centrage — section enrichie avec moments + arrays
       if (fullAircraft.weights || fullAircraft.arms || fullAircraft.cgEnvelope) {
         addText('MASSE ET CENTRAGE', 50, yPosition, { bold: true, size: 14 });
         yPosition -= 25;
 
         const massBalanceInfo = [
+          // Masse à vide (trio masse / bras / moment)
           ['Masse à vide', fullAircraft.weights?.emptyWeight, 'kg'],
           ['Bras à vide', fullAircraft.arms?.empty, 'mm'],
+          ['Moment à vide', fullAircraft.moments?.empty, 'kg·mm'],
+          // Masses limites
           ['MTOW', fullAircraft.weights?.mtow || fullAircraft.maxTakeoffWeight, 'kg'],
           ['MLW', fullAircraft.weights?.mlw, 'kg'],
           ['MZFW', fullAircraft.weights?.mzfw || fullAircraft.weights?.zfm, 'kg'],
-          ['Carburant max', fullAircraft.fuel?.maxCapacity || fullAircraft.fuelCapacity, 'L'],
-          ['Bras carburant', fullAircraft.arms?.fuel, 'mm'],
+          ['Masse min vol', fullAircraft.weights?.minTakeoffWeight, 'kg'],
+          // Carburant principal
+          ['Capacité totale carburant', fullAircraft.fuel?.maxCapacity || fullAircraft.fuelCapacity, 'L'],
+          ['Capacité rés. principal', fullAircraft.fuelMainCapacity, 'L'],
+          ['Bras rés. principal', fullAircraft.arms?.fuelMain || fullAircraft.arms?.fuel, 'mm'],
+          ['Moment rés. principal (plein)', fullAircraft.moments?.fuelMain, 'kg·mm'],
+          // Sièges (bras seul — moment dépend du passager au chargement)
           ['Bras sièges avant', fullAircraft.arms?.frontSeats, 'mm'],
-          ['Bras sièges arrière', fullAircraft.arms?.rearSeats, 'mm'],
-          ['Bras bagages', fullAircraft.arms?.baggage, 'mm'],
+          ['Bras sièges arrière', fullAircraft.arms?.rearSeats, 'mm']
         ];
 
         massBalanceInfo.forEach(([label, value, unit]) => {
@@ -491,6 +500,50 @@ export const AircraftModule = memo(() => {
             yPosition -= 18;
           }
         });
+
+        // Réservoirs additionnels
+        if (fullAircraft.additionalFuelTanks && fullAircraft.additionalFuelTanks.length > 0) {
+          yPosition -= 5;
+          checkNewPage(50);
+          addText('Réservoirs additionnels:', 50, yPosition, { bold: true, size: 11 });
+          yPosition -= 18;
+          fullAircraft.additionalFuelTanks.forEach((tank, idx) => {
+            const name = tank.name || `Réservoir ${idx + 1}`;
+            checkNewPage();
+            addText(`  ${name}: ${tank.capacity || '?'} L, bras ${tank.arm || '?'} mm, moment ${tank.momentAtFull || '?'} kg·mm`,
+              60, yPosition, { size: 10 });
+            yPosition -= 16;
+          });
+        }
+
+        // Sièges additionnels (bras seul)
+        if (fullAircraft.additionalSeats && fullAircraft.additionalSeats.length > 0) {
+          yPosition -= 5;
+          checkNewPage(50);
+          addText('Sièges additionnels:', 50, yPosition, { bold: true, size: 11 });
+          yPosition -= 18;
+          fullAircraft.additionalSeats.forEach((seat, idx) => {
+            const name = seat.name || `Siège ${idx + 3}`;
+            checkNewPage();
+            addText(`  ${name}: bras ${seat.arm || '?'} mm`, 60, yPosition, { size: 10 });
+            yPosition -= 16;
+          });
+        }
+
+        // Compartiments bagages
+        if (fullAircraft.baggageCompartments && fullAircraft.baggageCompartments.length > 0) {
+          yPosition -= 5;
+          checkNewPage(50);
+          addText('Compartiments bagages:', 50, yPosition, { bold: true, size: 11 });
+          yPosition -= 18;
+          fullAircraft.baggageCompartments.forEach((comp, idx) => {
+            const name = comp.name || `Compartiment ${idx + 1}`;
+            checkNewPage();
+            addText(`  ${name}: masse max ${comp.maxWeight || '?'} kg, bras ${comp.arm || '?'} mm, moment max ${comp.momentMax || '?'} kg·mm`,
+              60, yPosition, { size: 10 });
+            yPosition -= 16;
+          });
+        }
 
         // Limites CG et graphique d'enveloppe
         if (fullAircraft.cgEnvelope) {
@@ -1345,9 +1398,14 @@ export const AircraftModule = memo(() => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        console.log('📚 AircraftModule - MANEX button clicked');
+                        const alreadyHasManex = !!(aircraft.hasManex || aircraft.manex);
+                        console.log('📚 AircraftModule - MANEX button clicked, hasManex=', alreadyHasManex);
                         setManexAircraft(aircraft);
-                        setShowManexImporter(true);
+                        if (alreadyHasManex) {
+                          setShowManexViewer(true);
+                        } else {
+                          setShowManexImporter(true);
+                        }
                       }}
                       style={{
                         ...window.buttonSectionStyle,
@@ -1355,7 +1413,7 @@ export const AircraftModule = memo(() => {
                         background: (aircraft.hasManex || aircraft.manex) ? '#fef3c7' : 'rgba(55, 65, 81, 0.35)',
                         borderColor: (aircraft.hasManex || aircraft.manex) ? '#fbbf24' : 'rgba(0, 0, 0, 0.7)'
                       }}
-                      title={(aircraft.hasManex || aircraft.manex) ? "MANEX importé - Cliquer pour modifier" : "Importer le MANEX"}
+                      title={(aircraft.hasManex || aircraft.manex) ? "Voir le MANEX" : "Importer le MANEX"}
                     >
                       <FileText size={16} color={(aircraft.hasManex || aircraft.manex) ? '#f59e0b' : undefined} />
                     </button>
@@ -1590,6 +1648,17 @@ export const AircraftModule = memo(() => {
           onManexUpdate={updateAircraftManex}
           onClose={() => {
             setShowManexImporter(false);
+            setManexAircraft(null);
+          }}
+        />
+      )}
+
+      {/* Modal MANEX Viewer */}
+      {showManexViewer && manexAircraft && (
+        <ManexViewer
+          aircraft={manexAircraft}
+          onClose={() => {
+            setShowManexViewer(false);
             setManexAircraft(null);
           }}
         />

@@ -685,16 +685,38 @@ class CommunityService {
         console.log('✅ Préservation du flag has_manex existant');
       }
 
+      // 🚨 FIX B : on récupère un tableau (pas .single()) pour pouvoir détecter
+      // les refus RLS silencieux (Supabase JS renvoie data=[] sans error
+      // quand la policy bloque l'UPDATE).
       const { data, error } = await supabase
         .from('community_presets')
         .update(updatePayload)
         .eq('id', presetId)
-        .select()
-        .single();
+        .select();
 
       if (error) throw error;
 
-            return data;
+      if (!data || data.length === 0) {
+        // 0 ligne renvoyée → soit la ligne n'existe pas, soit RLS a refusé.
+        // On enrichit le message avec un diagnostic de session pour gagner du temps.
+        const { data: { session } } = await supabase.auth.getSession();
+        const sessionInfo = session
+          ? `connecté en tant que ${session.user.email || session.user.id}`
+          : 'AUCUNE session active (anonyme)';
+        const hint = session
+          ? `Vérifie que la ligne ${presetId} t'appartient (submitted_by = ${session.user.id}) ou que la politique RLS autorise ton compte à la modifier.`
+          : 'Connecte-toi avant de sauvegarder, la RLS interdit les écritures anonymes.';
+        throw new Error(
+          `Supabase UPDATE community_presets/${presetId} a affecté 0 ligne. ` +
+          `Session : ${sessionInfo}. ${hint}`
+        );
+      }
+
+      if (data.length > 1) {
+        console.warn(`⚠ [updateCommunityPreset] ${data.length} lignes affectées pour id=${presetId} (attendu : 1)`);
+      }
+
+      return data[0];
     } catch (error) {
       console.error('❌ Erreur lors de la mise à jour du preset:', error);
       throw error;

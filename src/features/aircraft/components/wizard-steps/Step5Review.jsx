@@ -45,6 +45,7 @@ import {
   ThumbDown as ThumbDownIcon
 } from '@mui/icons-material';
 import CGEnvelopeChart from '../CgEnvelopeChart';
+import CGEnvelopeDualChart from '../CgEnvelopeDualChart';
 import SpeedLimitationChart from '../SpeedLimitationChart';
 import communityService from '../../../../services/communityService';
 import { getCurrentUserId, getCurrentUserIdOrThrow } from '../../../../lib/supabaseAuth';
@@ -642,26 +643,26 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
   };
 
   // Uploader le MANEX vers Supabase
+  // FAIL-SOFT : si l'upload échoue (RLS, auth, réseau…), on NE BLOQUE PAS la
+  // création locale de l'avion. Le pilote pourra réessayer plus tard quand
+  // l'authentification Supabase sera correctement configurée.
+  //
+  // @returns {boolean} true si l'upload a réussi, false sinon (sans throw)
   const handleUploadManexToSupabase = async () => {
     if (!data.registration) {
       setManexUploadError('Immatriculation requise pour uploader le MANEX');
-      return;
+      return false;
     }
 
     if (!data.manex || (!data.manex.file && !data.manex.pdfData)) {
       setManexUploadError('Aucun MANEX à uploader');
-      return;
+      return false;
     }
 
     setIsUploadingManex(true);
     setManexUploadError(null);
 
     try {
-
-
-      // 🔧 FIX: Ne pas sauvegarder localement ici - handleSaveAndUpload s'en charge
-      // Cela évite le double appel à handleAircraftSave
-
       // Convertir base64 en blob
       const fileData = data.manex.file || data.manex.pdfData;
       const base64Data = fileData.split(',')[1];
@@ -673,16 +674,21 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
       const byteArray = new Uint8Array(byteNumbers);
       const blob = new Blob([byteArray], { type: 'application/pdf' });
 
-      // Upload vers Supabase
-      const result = await communityService.uploadManex(data.registration, blob);
+      // Upload vers Supabase (peut échouer pour cause d'auth/RLS)
+      await communityService.uploadManex(data.registration, blob);
 
       setManexUploadSuccess(true);
       setTimeout(() => setManexUploadSuccess(false), 3000);
-
-      
+      return true;
     } catch (error) {
-      console.error('❌ Erreur upload MANEX:', error);
-      setManexUploadError(error.message);
+      // FAIL-SOFT : log + message UI, mais on ne throw pas pour ne pas casser
+      // le flow de sauvegarde locale qui suit.
+      console.warn('⚠️ Upload MANEX vers Supabase échoué (non bloquant) :', error?.message || error);
+      const msg = error?.message?.includes('row-level security')
+        ? 'Upload vers la base communautaire impossible (authentification requise). L\'avion est sauvegardé localement et reste utilisable.'
+        : `Upload vers la base communautaire échoué : ${error?.message || 'erreur inconnue'}. L'avion est sauvegardé localement.`;
+      setManexUploadError(msg);
+      return false;
     } finally {
       setIsUploadingManex(false);
     }
@@ -690,23 +696,24 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
 
   // Fonction fusionnée : Sauvegarder localement ET uploader sur Supabase
   const handleSaveAndUpload = async () => {
-    
-
-    // Si un MANEX est présent, uploader vers Supabase
+    // Tentative d'upload du MANEX vers la base communautaire si présent.
+    // Ces opérations sont FAIL-SOFT : leur échec n'empêche pas la sauvegarde locale.
     if (data.manex && (data.manex.file || data.manex.pdfData)) {
-      
-
-      // Si c'est un avion de la communauté avec preset ID, mettre à jour
-      if (data.isImportedFromCommunity && data.communityPresetId) {
-        await handleUpdateSupabase();
-      } else {
-        // Sinon, uploader le MANEX
-        await handleUploadManexToSupabase();
+      try {
+        if (data.isImportedFromCommunity && data.communityPresetId) {
+          await handleUpdateSupabase();
+        } else {
+          await handleUploadManexToSupabase();
+        }
+      } catch (uploadErr) {
+        // Filet de sécurité supplémentaire : même si handleXxx ne fail-soft pas
+        // proprement, on ne casse pas la sauvegarde locale.
+        console.warn('⚠️ Upload Supabase global échoué (non bloquant) :', uploadErr?.message || uploadErr);
       }
     }
 
-    // Toujours sauvegarder localement et naviguer vers le module aircraft
-    
+    // TOUJOURS sauvegarder localement et naviguer vers le module aircraft,
+    // quel que soit le résultat de l'upload Supabase.
     handleLocalSave();
   };
 
@@ -899,35 +906,84 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
         ) : null
       )}
 
-      {/* Masse et centrage avec graphique intégré */}
+      {/* Masse et centrage — récap exhaustif + double graphique */}
       {(() => {
-        // Construire dynamiquement la liste des champs
+        const wU = getUnitSymbol(units.weight);
+        const aU = getUnitSymbol(units.armLength);
+        const mU = `${wU}·${aU}`;
+
+        // Construire dynamiquement la liste de TOUS les champs M&C
         const weightBalanceFields = [
-          { label: 'Masse à vide', value: formatValue(data.weights?.emptyWeight, getUnitSymbol(units.weight)) },
-          { label: 'Bras de levier à vide', value: formatValue(data.arms?.empty, getUnitSymbol(units.armLength)) },
-          { label: 'MTOW', value: formatValue(data.weights?.mtow, getUnitSymbol(units.weight)) },
-          { label: 'MLW', value: formatValue(data.weights?.mlw, getUnitSymbol(units.weight)) },
-          { label: 'MZFW', value: formatValue(data.weights?.mzfw, getUnitSymbol(units.weight)) },
-          { label: 'Carburant max', value: formatValue(data.fuel?.maxCapacity || data.fuelCapacity, getUnitSymbol(units.fuel)) },
-          { label: 'Bras carburant', value: formatValue(data.arms?.fuelMain, getUnitSymbol(units.armLength)) },
-          { label: 'Bras sièges avant', value: formatValue(data.arms?.frontSeats, getUnitSymbol(units.armLength)) },
-          { label: 'Bras sièges arrière', value: formatValue(data.arms?.rearSeats, getUnitSymbol(units.armLength)) }
+          // ─── Masse à vide (trio masse/bras/moment) ───
+          { label: 'Masse à vide', value: formatValue(data.weights?.emptyWeight, wU) },
+          { label: 'Bras à vide', value: formatValue(data.arms?.empty, aU) },
+          { label: 'Moment à vide', value: formatValue(data.moments?.empty, mU) },
+
+          // ─── Masses limites ───
+          { label: 'MTOW', value: formatValue(data.weights?.mtow, wU) },
+          { label: 'MLW', value: formatValue(data.weights?.mlw, wU) },
+          { label: 'MZFW', value: formatValue(data.weights?.mzfw, wU) },
+          { label: 'Masse min de vol', value: formatValue(data.weights?.minTakeoffWeight, wU) },
+
+          // ─── Carburant principal ───
+          { label: 'Capacité totale carburant', value: formatValue(data.fuelCapacity, getUnitSymbol(units.fuel)) },
+          { label: 'Capacité réservoir principal', value: formatValue(data.fuelMainCapacity, getUnitSymbol(units.fuel)) },
+          { label: 'Bras réservoir principal', value: formatValue(data.arms?.fuelMain, aU) },
+          { label: 'Moment réservoir principal (plein)', value: formatValue(data.moments?.fuelMain, mU) },
+
+          // ─── Sièges (bras de levier uniquement — moment dépend du passager) ───
+          { label: 'Bras sièges avant', value: formatValue(data.arms?.frontSeats, aU) },
+          { label: 'Bras sièges arrière', value: formatValue(data.arms?.rearSeats, aU) }
         ];
 
-        // Ajouter dynamiquement les compartiments bagages configurés par le pilote
-        if (data.baggageCompartments && data.baggageCompartments.length > 0) {
-          data.baggageCompartments.forEach(compartment => {
-            weightBalanceFields.push({
-              label: `${compartment.name || 'Compartiment'}${compartment.maxWeight ? ` (max ${compartment.maxWeight} ${getUnitSymbol(units.weight)})` : ''}`,
-              value: formatValue(compartment.arm, getUnitSymbol(units.armLength))
-            });
+        // ─── Réservoirs additionnels (aile, optionnel, tip, aux) ───
+        if (data.additionalFuelTanks && data.additionalFuelTanks.length > 0) {
+          data.additionalFuelTanks.forEach((tank, idx) => {
+            const label = tank.name || `Réservoir ${idx + 1}`;
+            weightBalanceFields.push(
+              { label: `${label} — capacité`, value: formatValue(tank.capacity, getUnitSymbol(units.fuel)) },
+              { label: `${label} — bras`, value: formatValue(tank.arm, aU) },
+              { label: `${label} — moment (plein)`, value: formatValue(tank.momentAtFull, mU) }
+            );
           });
         }
 
-        // Ajouter les limites CG
+        // ─── Sièges additionnels (bras seul) ───
+        if (data.additionalSeats && data.additionalSeats.length > 0) {
+          data.additionalSeats.forEach((seat, idx) => {
+            const label = seat.name || `Siège ${idx + 3}`;
+            weightBalanceFields.push(
+              { label: `${label} — bras`, value: formatValue(seat.arm, aU) }
+            );
+          });
+        }
+
+        // ─── Compartiments bagages (trio par compartiment) ───
+        if (data.baggageCompartments && data.baggageCompartments.length > 0) {
+          data.baggageCompartments.forEach((comp, idx) => {
+            const label = comp.name || `Compartiment ${idx + 1}`;
+            weightBalanceFields.push(
+              { label: `${label} — masse max`, value: formatValue(comp.maxWeight, wU) },
+              { label: `${label} — bras`, value: formatValue(comp.arm, aU) },
+              { label: `${label} — moment max`, value: formatValue(comp.momentMax, mU) }
+            );
+          });
+        }
+
+        // ─── Enveloppe CG ───
+        if (data.cgEnvelope?.forwardPoints && data.cgEnvelope.forwardPoints.length > 0) {
+          data.cgEnvelope.forwardPoints.forEach((pt, idx) => {
+            weightBalanceFields.push(
+              { label: `Forward #${idx + 1} — masse`, value: formatValue(pt.weight, wU) },
+              { label: `Forward #${idx + 1} — CG`, value: formatValue(pt.cg, aU) },
+              { label: `Forward #${idx + 1} — moment`, value: formatValue(pt.moment, mU) }
+            );
+          });
+        }
         weightBalanceFields.push(
-          { label: 'CG limite avant min', value: formatValue(data.cgEnvelope?.forwardPoints?.[0]?.cg, getUnitSymbol(units.armLength)) },
-          { label: 'CG limite arrière', value: formatValue(data.cgEnvelope?.aftCG, getUnitSymbol(units.armLength)) }
+          { label: 'Aft — masse min', value: formatValue(data.cgEnvelope?.aftMinWeight, wU) },
+          { label: 'Aft — masse max', value: formatValue(data.cgEnvelope?.aftMaxWeight, wU) },
+          { label: 'Aft — CG', value: formatValue(data.cgEnvelope?.aftCG, aU) }
         );
 
         return renderSection(
@@ -943,9 +999,11 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
               border: '1px solid',
               borderColor: 'divider'
             }}>
-              <CGEnvelopeChart
+              {/* Double graphique CG + Moment côte à côte */}
+              <CGEnvelopeDualChart
                 cgEnvelope={cgEnvelopeData}
-                massUnit={data.units?.weight === 'lbs' ? 'lbs' : 'kg'}
+                massUnit={wU}
+                armUnit={aU}
               />
             </Box>
           ) : null

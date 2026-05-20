@@ -48,6 +48,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
   const units = unitsSelectors.useUnits();
   const unit = units.speed; // Utiliser l'unité de vitesse depuis le store
   const [expandedPanels, setExpandedPanels] = useState({
+    cruise: true,   // Accordion vitesse de croisière (auto-ouvert au chargement)
     flapsOut: false,
     clean: false,
     vne: false,
@@ -60,6 +61,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
     if (isExpanded) {
       // When opening a panel, close all others and open this one
       setExpandedPanels({
+        cruise: false,
         flapsOut: false,
         clean: false,
         vne: false,
@@ -73,6 +75,34 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
       setExpandedPanels(prev => ({ ...prev, [panel]: false }));
     }
   };
+
+  // ─── Vitesse de croisière + Base Factor (déplacés depuis Step1) ────────
+  // Le baseFactor (60 / cruiseSpeedKt) est utilisé par les calculs de navigation.
+  // Il est auto-calculé à chaque saisie et au montage si la vitesse existe déjà.
+  const calculateBaseFactor = (cruiseSpeed) => {
+    if (cruiseSpeed && parseFloat(cruiseSpeed) > 0) {
+      return (60 / parseFloat(cruiseSpeed)).toFixed(3);
+    }
+    return '';
+  };
+
+  const handleCruiseSpeedChange = (value) => {
+    updateData('cruiseSpeedKt', value);
+    const factor = calculateBaseFactor(value);
+    if (factor) {
+      updateData('baseFactor', factor);
+    }
+  };
+
+  useEffect(() => {
+    if (data.cruiseSpeedKt && !data.baseFactor) {
+      const factor = calculateBaseFactor(data.cruiseSpeedKt);
+      if (factor) {
+        updateData('baseFactor', factor);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // au montage uniquement
 
   // Initialiser les plages VO si elles n'existent pas
   const [voRanges, setVoRanges] = useState(data.speeds?.voRanges || [
@@ -719,8 +749,80 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
   return (
     <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
 
+      {/* 0. Vitesse de croisière + Base Factor (déplacé depuis Step1) */}
+      <Accordion
+        expanded={expandedPanels.cruise}
+        onChange={handlePanelChange('cruise')}
+        elevation={0}
+        sx={{
+          mb: 2,
+          border: '2px solid',
+          borderColor: 'primary.main',
+          '&:before': { display: 'none' }
+        }}
+      >
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          sx={{
+            minHeight: '40px',
+            '&.Mui-expanded': { minHeight: '40px' },
+            '& .MuiAccordionSummary-content': {
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              margin: '8px 0'
+            },
+            '& .MuiAccordionSummary-content.Mui-expanded': {
+              margin: '8px 0'
+            }
+          }}
+        >
+          <SpeedIcon color="primary" />
+          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+            Vitesse de croisière (obligatoire)
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ pt: 1, pb: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 1.5 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+              <StyledTextField
+                fullWidth
+                size="small"
+                variant="outlined"
+                label="Vitesse de croisière *"
+                type="number"
+                value={data.cruiseSpeedKt || ''}
+                onChange={(e) => handleCruiseSpeedChange(e.target.value)}
+                error={!!errors.cruiseSpeedKt}
+                helperText={errors.cruiseSpeedKt || "Vitesse réelle de croisière utilisée pour les calculs de navigation"}
+                required
+                placeholder="Ex: 110"
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">{getUnitSymbol(unit)}</InputAdornment>,
+                }}
+              />
+            </Grid>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+              <StyledTextField
+                fullWidth
+                size="small"
+                variant="outlined"
+                label="Base Factor"
+                type="number"
+                value={data.baseFactor || ''}
+                placeholder="Auto-calculé"
+                helperText="60 / vitesse de croisière (auto-calculé)"
+                InputProps={{
+                  readOnly: true,
+                }}
+              />
+            </Grid>
+          </Box>
+        </AccordionDetails>
+      </Accordion>
+
       {/* 1. Configuration volets sortis (obligatoire) */}
-      <Accordion 
+      <Accordion
         expanded={expandedPanels.flapsOut}
         onChange={handlePanelChange('flapsOut')}
         elevation={0}

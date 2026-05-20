@@ -82,9 +82,10 @@ function convertToStorage(value, rawUnit, category, targetUnit) {
 //             compatibleRunwaySurfaces
 //   - Step2 : speeds.{vso, vs1, vfeLdg, vfeTO, vno, vne, vr, vx, vy, vapp,
 //             initialClimb, vglide, vle, vlo}, speeds.voRanges, windLimits.limits
-//   - Step3 : weights.{emptyWeight, mtow, mlw, mzfw, minTakeoffWeight},
-//             arms.{empty, frontSeats, rearSeats, fuelMain},
-//             cgEnvelope.{forwardPoints, aftMinWeight, aftMaxWeight, aftCG}
+//   - Step3 : weights.{emptyWeight, mtow, mlw, mzfw, minTakeoffWeight}
+//             ❌ Bras de levier (arms.*) ET enveloppe CG (cgEnvelope.*) NE SONT
+//                PLUS extraits par l'IA — déterminés via le wizard CentrogramReader
+//                (lecture par clic sur le centrogramme MANEX).
 //
 // Pour les structures complexes (arrays type voRanges, windLimits.limits,
 // cgEnvelope.forwardPoints) le mapping de base extrait des valeurs scalaires
@@ -137,7 +138,17 @@ const FIELD_MAPPINGS = [
     ]
   },
   { aircraftPath: 'fuelCapacity',           src: ['fuel', 'capacity_total'],     category: 'fuel',            targetUnit: 'ltr',           label: 'Capacité totale carburant' },
+  { aircraftPath: 'fuelMainCapacity',       src: ['fuel', 'capacity_main'],      category: 'fuel',            targetUnit: 'ltr',           label: 'Capacité réservoir principal' },
   { aircraftPath: 'fuelConsumption',        src: ['fuel', 'consumption_cruise'], category: 'fuelConsumption', targetUnit: 'lph',           label: 'Conso croisière' },
+
+  // Réservoirs additionnels (pseudo-paths agrégés en additionalFuelTanks array
+  // par buildBulkUpdatePayload)
+  { aircraftPath: '_fuelTank:wing_left',  src: ['fuel', 'capacity_wing_left'],  category: 'fuel', targetUnit: 'ltr', label: 'Capacité aile gauche' },
+  { aircraftPath: '_fuelTank:wing_right', src: ['fuel', 'capacity_wing_right'], category: 'fuel', targetUnit: 'ltr', label: 'Capacité aile droite' },
+  { aircraftPath: '_fuelTank:wing',       src: ['fuel', 'capacity_wing'],       category: 'fuel', targetUnit: 'ltr', label: 'Capacité aile (unique)' },
+  { aircraftPath: '_fuelTank:tip',        src: ['fuel', 'capacity_tip'],        category: 'fuel', targetUnit: 'ltr', label: 'Capacité tip tank' },
+  { aircraftPath: '_fuelTank:aux',        src: ['fuel', 'capacity_aux'],        category: 'fuel', targetUnit: 'ltr', label: 'Capacité auxiliaire' },
+  { aircraftPath: '_fuelTank:optional',   src: ['fuel', 'capacity_optional'],   category: 'fuel', targetUnit: 'ltr', label: 'Capacité optionnel' },
 
   // ═══ COMPATIBILITÉ PISTE (Step1) ═══
   // Array d'ENUMs (multi-select)
@@ -191,19 +202,97 @@ const FIELD_MAPPINGS = [
   { aircraftPath: 'weights.mzfw',                src: ['weights', 'mzfw'],                category: 'weight', targetUnit: 'kg', label: 'MZFW (max zero fuel weight)' },
   { aircraftPath: 'weights.minTakeoffWeight',    src: ['weights', 'min_takeoff_weight'],  category: 'weight', targetUnit: 'kg', label: 'Masse min décollage' },
 
-  // ═══ BRAS DE LEVIER (Step3 — storage = cm pour FR) ═══
-  { aircraftPath: 'arms.empty',          src: ['arms', 'empty_cg_arm'],     category: 'armLength', targetUnit: 'cm', label: 'Bras CG à vide' },
-  { aircraftPath: 'arms.frontSeats',     src: ['arms', 'front_seats_arm'],  category: 'armLength', targetUnit: 'cm', label: 'Bras sièges avant' },
-  { aircraftPath: 'arms.rearSeats',      src: ['arms', 'rear_seats_arm'],   category: 'armLength', targetUnit: 'cm', label: 'Bras sièges arrière' },
-  { aircraftPath: 'arms.fuelMain',       src: ['arms', 'fuel_main_arm'],    category: 'armLength', targetUnit: 'cm', label: 'Bras carburant' },
+  // ═══ BRAS DE LEVIER & ENVELOPPE CG ═══
+  // RETIRÉS de l'extraction MANEX (refonte du wizard masse & centrage).
+  // Ces données sont désormais déterminées par le pilote via :
+  //   - Saisie manuelle dans Step3WeightBalance (voie A)
+  //   - OU lecture graphique par clic sur le centrogramme (voie B, CentrogramReader)
+  // L'IA Vision peinait à les extraire fiablement depuis les graphiques imprimés
+  // du MANEX, et l'utilisateur préfère un système déterministe avec contrôle visuel.
 
-  // ═══ ENVELOPPE CG (Step3 — partie arrière simple) ═══
-  // L'enveloppe avant (forwardPoints) est un array de points difficile à
-  // extraire automatiquement → laissé au pilote dans Step3. Pour l'arrière,
-  // on accepte 3 valeurs scalaires : poids min, poids max, CG.
-  { aircraftPath: 'cgEnvelope.aftMinWeight', src: ['arms', 'aft_cg_min_weight'], category: 'weight',    targetUnit: 'kg', label: 'Enveloppe CG arrière — masse min' },
-  { aircraftPath: 'cgEnvelope.aftMaxWeight', src: ['arms', 'aft_cg_max_weight'], category: 'weight',    targetUnit: 'kg', label: 'Enveloppe CG arrière — masse max' },
-  { aircraftPath: 'cgEnvelope.aftCG',        src: ['arms', 'cg_aft_limit'],      category: 'armLength', targetUnit: 'cm', label: 'Enveloppe CG arrière — CG' }
+  // ═══ ÉQUIPEMENTS COM (Step5Equipment — booléens) ═══
+  { aircraftPath: 'equipmentCom.vhf1',   src: ['equipment_com', 'vhf1'],   type: 'boolean', label: 'VHF COM 1' },
+  { aircraftPath: 'equipmentCom.vhf2',   src: ['equipment_com', 'vhf2'],   type: 'boolean', label: 'VHF COM 2' },
+  { aircraftPath: 'equipmentCom.hf',     src: ['equipment_com', 'hf'],     type: 'boolean', label: 'HF (Haute fréquence)' },
+  { aircraftPath: 'equipmentCom.satcom', src: ['equipment_com', 'satcom'], type: 'boolean', label: 'SATCOM' },
+  { aircraftPath: 'equipmentCom.acars',  src: ['equipment_com', 'acars'],  type: 'boolean', label: 'ACARS' },
+  { aircraftPath: 'equipmentCom.cpdlc',  src: ['equipment_com', 'cpdlc'],  type: 'boolean', label: 'CPDLC (Datalink)' },
+
+  // ═══ ÉQUIPEMENTS NAV (Step5Equipment — booléens + 2 textes) ═══
+  { aircraftPath: 'equipmentNav.vor',        src: ['equipment_nav', 'vor'],        type: 'boolean', label: 'VOR' },
+  { aircraftPath: 'equipmentNav.dme',        src: ['equipment_nav', 'dme'],        type: 'boolean', label: 'DME' },
+  { aircraftPath: 'equipmentNav.adf',        src: ['equipment_nav', 'adf'],        type: 'boolean', label: 'ADF/NDB' },
+  { aircraftPath: 'equipmentNav.gnss',       src: ['equipment_nav', 'gnss'],       type: 'boolean', label: 'GNSS/GPS' },
+  { aircraftPath: 'equipmentNav.ils',        src: ['equipment_nav', 'ils'],        type: 'boolean', label: 'ILS' },
+  { aircraftPath: 'equipmentNav.mls',        src: ['equipment_nav', 'mls'],        type: 'boolean', label: 'MLS' },
+  { aircraftPath: 'equipmentNav.gbas',       src: ['equipment_nav', 'gbas'],       type: 'boolean', label: 'GBAS' },
+  { aircraftPath: 'equipmentNav.lpv',        src: ['equipment_nav', 'lpv'],        type: 'boolean', label: 'LPV (approche GPS)' },
+  { aircraftPath: 'equipmentNav.ahrs',       src: ['equipment_nav', 'ahrs'],       type: 'boolean', label: 'AHRS' },
+  { aircraftPath: 'equipmentNav.adc',        src: ['equipment_nav', 'adc'],        type: 'boolean', label: 'ADC' },
+  { aircraftPath: 'equipmentNav.rnav',       src: ['equipment_nav', 'rnav'],       type: 'boolean', label: 'RNAV (capacité)' },
+  { aircraftPath: 'equipmentNav.rnavTypes',  src: ['equipment_nav', 'rnav_types'], type: 'string',  label: 'Types RNAV approuvés' },
+  { aircraftPath: 'equipmentNav.rnp',        src: ['equipment_nav', 'rnp'],        type: 'boolean', label: 'RNP (capacité)' },
+  { aircraftPath: 'equipmentNav.rnpTypes',   src: ['equipment_nav', 'rnp_types'],  type: 'string',  label: 'Types RNP approuvés' },
+
+  // ═══ ÉQUIPEMENTS SURVEILLANCE (Step5Equipment) ═══
+  { aircraftPath: 'equipmentSurv.adsb',             src: ['equipment_surv', 'adsb'],              type: 'boolean', label: 'ADS-B' },
+  { aircraftPath: 'equipmentSurv.adsc',             src: ['equipment_surv', 'adsc'],              type: 'boolean', label: 'ADS-C' },
+  { aircraftPath: 'equipmentSurv.tcas',             src: ['equipment_surv', 'tcas'],              type: 'boolean', label: 'TCAS I' },
+  { aircraftPath: 'equipmentSurv.acas',             src: ['equipment_surv', 'acas'],              type: 'boolean', label: 'ACAS II / TCAS II' },
+  { aircraftPath: 'equipmentSurv.taws',             src: ['equipment_surv', 'taws'],              type: 'boolean', label: 'TAWS / EGPWS' },
+  { aircraftPath: 'equipmentSurv.cvr',              src: ['equipment_surv', 'cvr'],               type: 'boolean', label: 'CVR (enregistreur voix)' },
+  { aircraftPath: 'equipmentSurv.fdr',              src: ['equipment_surv', 'fdr'],               type: 'boolean', label: 'FDR (enregistreur paramètres)' },
+  { aircraftPath: 'equipmentSurv.weather',          src: ['equipment_surv', 'weather'],           type: 'boolean', label: 'Radar météo' },
+  { aircraftPath: 'equipmentSurv.adsbOut',          src: ['equipment_surv', 'adsb_out'],          type: 'boolean', label: 'ADS-B Out' },
+  { aircraftPath: 'equipmentSurv.transponderModes', src: ['equipment_surv', 'transponder_modes'], type: 'string',  label: 'Modes transpondeur (A/C/S)' },
+
+  // ═══ CAPACITÉS SPÉCIALES (Step5Equipment) ═══
+  { aircraftPath: 'specialCapabilities.pbn',     src: ['special_capabilities', 'pbn'],     type: 'boolean', label: 'PBN approuvé' },
+  { aircraftPath: 'specialCapabilities.lvto',    src: ['special_capabilities', 'lvto'],    type: 'boolean', label: 'LVTO (Low Vis Take-Off)' },
+  { aircraftPath: 'specialCapabilities.catII',   src: ['special_capabilities', 'cat_ii'],  type: 'boolean', label: 'CAT II approche' },
+  { aircraftPath: 'specialCapabilities.catIIIa', src: ['special_capabilities', 'cat_iiia'],type: 'boolean', label: 'CAT IIIa' },
+  { aircraftPath: 'specialCapabilities.catIIIb', src: ['special_capabilities', 'cat_iiib'],type: 'boolean', label: 'CAT IIIb' },
+  { aircraftPath: 'specialCapabilities.catIIIc', src: ['special_capabilities', 'cat_iiic'],type: 'boolean', label: 'CAT IIIc' },
+  { aircraftPath: 'specialCapabilities.etops',   src: ['special_capabilities', 'etops'],   type: 'boolean', label: 'ETOPS' },
+  { aircraftPath: 'specialCapabilities.rvsm',    src: ['special_capabilities', 'rvsm'],    type: 'boolean', label: 'RVSM' },
+  { aircraftPath: 'specialCapabilities.mnps',    src: ['special_capabilities', 'mnps'],    type: 'boolean', label: 'MNPS' },
+  { aircraftPath: 'specialCapabilities.icing',   src: ['special_capabilities', 'icing'],   type: 'boolean', label: 'Vol en conditions givrantes' },
+
+  // ═══ OPÉRATIONS APPROUVÉES (Step5Equipment — approvedOperations.*) ═══
+  // Règles de vol
+  { aircraftPath: 'approvedOperations.vfrDay',       src: ['approved_operations', 'vfr_day'],     type: 'boolean', label: 'VFR jour' },
+  { aircraftPath: 'approvedOperations.vfrNight',     src: ['approved_operations', 'vfr_night'],   type: 'boolean', label: 'VFR nuit' },
+  { aircraftPath: 'approvedOperations.ifrDay',       src: ['approved_operations', 'ifr_day'],     type: 'boolean', label: 'IFR jour' },
+  { aircraftPath: 'approvedOperations.ifrNight',     src: ['approved_operations', 'ifr_night'],   type: 'boolean', label: 'IFR nuit' },
+  { aircraftPath: 'approvedOperations.svfr',         src: ['approved_operations', 'svfr'],        type: 'boolean', label: 'Special VFR' },
+  // Opérations spéciales
+  { aircraftPath: 'approvedOperations.formation',    src: ['approved_operations', 'formation'],   type: 'boolean', label: 'Vol en formation' },
+  { aircraftPath: 'approvedOperations.aerobatics',   src: ['approved_operations', 'aerobatics'],  type: 'boolean', label: 'Voltige aérienne' },
+  { aircraftPath: 'approvedOperations.banner',       src: ['approved_operations', 'banner'],      type: 'boolean', label: 'Remorquage banderoles' },
+  { aircraftPath: 'approvedOperations.glider',       src: ['approved_operations', 'glider'],      type: 'boolean', label: 'Remorquage planeurs' },
+  { aircraftPath: 'approvedOperations.parachute',    src: ['approved_operations', 'parachute'],   type: 'boolean', label: 'Largage parachutistes' },
+  { aircraftPath: 'approvedOperations.agricultural', src: ['approved_operations', 'agricultural'],type: 'boolean', label: 'Épandage agricole' },
+  { aircraftPath: 'approvedOperations.aerial',       src: ['approved_operations', 'aerial'],      type: 'boolean', label: 'Travail aérien' },
+  // Environnement et usage
+  { aircraftPath: 'approvedOperations.training',     src: ['approved_operations', 'training'],    type: 'boolean', label: 'Instruction / école' },
+  { aircraftPath: 'approvedOperations.charter',      src: ['approved_operations', 'charter'],     type: 'boolean', label: 'Transport public à la demande' },
+  { aircraftPath: 'approvedOperations.mountainous',  src: ['approved_operations', 'mountainous'], type: 'boolean', label: 'Zone montagneuse' },
+  { aircraftPath: 'approvedOperations.seaplane',     src: ['approved_operations', 'seaplane'],    type: 'boolean', label: 'Configuration hydravion' },
+  { aircraftPath: 'approvedOperations.skiPlane',     src: ['approved_operations', 'ski_plane'],   type: 'boolean', label: 'Configuration skis' },
+
+  // ═══ ÉQUIPEMENTS DE SÉCURITÉ (Step5Equipment — approvedOperations.*) ═══
+  // Ces items sont stockés dans approvedOperations bien que ce soient des équipements
+  // physiques. Conservation du namespace existant pour rétro-compat.
+  { aircraftPath: 'approvedOperations.elt',                     src: ['safety_equipment', 'elt'],                     type: 'boolean', label: 'ELT (balise détresse)' },
+  { aircraftPath: 'approvedOperations.lifeVests',               src: ['safety_equipment', 'life_vests'],              type: 'boolean', label: 'Gilets de sauvetage' },
+  { aircraftPath: 'approvedOperations.fireExtinguisherHalon',   src: ['safety_equipment', 'fire_extinguisher_halon'], type: 'boolean', label: 'Extincteur Halon' },
+  { aircraftPath: 'approvedOperations.fireExtinguisherWater',   src: ['safety_equipment', 'fire_extinguisher_water'], type: 'boolean', label: 'Extincteur eau' },
+  { aircraftPath: 'approvedOperations.fireExtinguisherPowder',  src: ['safety_equipment', 'fire_extinguisher_powder'],type: 'boolean', label: 'Extincteur poudre' },
+  { aircraftPath: 'approvedOperations.oxygenBottles',           src: ['safety_equipment', 'oxygen_bottles'],          type: 'boolean', label: 'Bouteilles oxygène' },
+  { aircraftPath: 'approvedOperations.lifeRaft',                src: ['safety_equipment', 'life_raft'],               type: 'boolean', label: 'Radeau de survie' },
+  { aircraftPath: 'approvedOperations.survivalKit',             src: ['safety_equipment', 'survival_kit'],            type: 'boolean', label: 'Kit de survie' },
+  { aircraftPath: 'approvedOperations.plb',                     src: ['safety_equipment', 'plb'],                     type: 'boolean', label: 'PLB (balise personnelle)' },
+  { aircraftPath: 'approvedOperations.firstAidKit',             src: ['safety_equipment', 'first_aid_kit'],           type: 'boolean', label: 'Trousse premiers secours' }
 ];
 
 /**
@@ -242,6 +331,23 @@ export function mapExtractionToReviewItems(extraction) {
       } else if (mapping.type === 'number') {
         const n = Number(raw.value);
         convertedValue = Number.isFinite(n) ? n : null;
+      } else if (mapping.type === 'boolean') {
+        // Conversion tolérante : 'true'/'false', 'yes'/'no', '1'/'0', true/false, 1/0
+        const v = raw.value;
+        if (typeof v === 'boolean') convertedValue = v;
+        else if (typeof v === 'number') convertedValue = v !== 0;
+        else if (typeof v === 'string') {
+          const lower = v.trim().toLowerCase();
+          if (['true', 'yes', '1', 'oui', 'present', 'installed', 'installé', 'approved', 'approuvé'].includes(lower)) {
+            convertedValue = true;
+          } else if (['false', 'no', '0', 'non', 'absent', 'not installed', 'not approved'].includes(lower)) {
+            convertedValue = false;
+          } else {
+            convertedValue = null; // Valeur ambiguë, pilote doit trancher
+          }
+        } else {
+          convertedValue = null;
+        }
       } else if (mapping.category && mapping.targetUnit) {
         convertedValue = convertToStorage(raw.value, raw.unit, mapping.category, mapping.targetUnit);
       } else {
@@ -363,6 +469,19 @@ export function buildBulkUpdatePayload(reviewItems) {
   const payload = {};
   // Accumulateur pour windLimits.limits (assemblage en array final)
   const windLimitEntries = [];
+  // Accumulateur pour additionalFuelTanks (assemblage en array final).
+  // Chaque entrée correspond à un sous-type de réservoir extrait du MANEX.
+  const fuelTankEntries = [];
+
+  // Mapping pseudo-type → type interne + nom par défaut
+  const fuelTankTypeMap = {
+    wing_left:  { type: 'wing',     name: 'Réservoir aile gauche' },
+    wing_right: { type: 'wing',     name: 'Réservoir aile droite' },
+    wing:       { type: 'wing',     name: 'Réservoir d\'aile' },
+    tip:        { type: 'tip',      name: 'Tip tank' },
+    aux:        { type: 'aux',      name: 'Réservoir auxiliaire' },
+    optional:   { type: 'optional', name: 'Réservoir optionnel' }
+  };
 
   for (const item of accepted) {
     const path = item.aircraftPath;
@@ -374,6 +493,23 @@ export function buildBulkUpdatePayload(reviewItems) {
       if (Number.isFinite(valueNum)) {
         windLimitEntries.push({ type, value: valueNum, saved: true });
       }
+      continue;
+    }
+
+    // ─── Cas spécial : pseudo-paths "_fuelTank:<sub>" ───
+    // Assemblés dans additionalFuelTanks: [{id, name, type, arm, capacity}, ...]
+    if (path.startsWith('_fuelTank:')) {
+      const sub = path.slice('_fuelTank:'.length);
+      const valueNum = typeof item.value === 'number' ? item.value : parseFloat(item.value);
+      if (!Number.isFinite(valueNum) || valueNum <= 0) continue;
+      const info = fuelTankTypeMap[sub] || { type: 'optional', name: `Réservoir ${sub}` };
+      fuelTankEntries.push({
+        id: Date.now() + Math.random(),
+        name: info.name,
+        type: info.type,
+        arm: '',        // à déterminer plus tard via centrogramme
+        capacity: valueNum
+      });
       continue;
     }
 
@@ -421,6 +557,13 @@ export function buildBulkUpdatePayload(reviewItems) {
   if (windLimitEntries.length > 0) {
     payload.windLimits = payload.windLimits || {};
     payload.windLimits.limits = windLimitEntries;
+  }
+
+  // Assembler additionalFuelTanks si on a collecté des réservoirs additionnels
+  // depuis l'extraction MANEX. Le pilote pourra ensuite ajuster les arms via
+  // le CentrogramReader (les arms sont initialisés vides).
+  if (fuelTankEntries.length > 0) {
+    payload.additionalFuelTanks = fuelTankEntries;
   }
 
   return payload;
