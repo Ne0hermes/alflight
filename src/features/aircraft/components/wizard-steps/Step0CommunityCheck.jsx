@@ -44,7 +44,7 @@ import communityService from '../../../../services/communityService';
 import { getCurrentUserId } from '../../../../lib/supabaseAuth';
 import dataBackupManager from '../../../../utils/dataBackupManager';
 import CleanDuplicatesButton from '../../../../components/CleanDuplicatesButton';
-import { AutoAwesome as AutoAwesomeIcon } from '@mui/icons-material';
+import { AutoAwesome as AutoAwesomeIcon, EditNote as EditNoteIcon } from '@mui/icons-material';
 import { extractCompleteManexData } from '../../services/manexExtractionService';
 import { mapExtractionToReviewItems, buildBulkUpdatePayload } from '../../utils/manexExtractionMapper';
 import ManexExtractionReview from '../ManexExtractionReview';
@@ -882,9 +882,21 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
             onChange={handleManexFileSelected}
           />
 
-          {/* NOTE: bouton "Saisie manuelle" retiré — la création d'un avion
-              passe désormais systématiquement par l'import du MANEX (PDF),
-              qui pré-remplit le wizard automatiquement. */}
+          {/* Bouton 2 : Saisie manuelle (sauter l'extraction MANEX).
+              Utile quand le MANEX n'est pas disponible, qu'on veut tester
+              rapidement, ou que l'extraction IA pose problème. */}
+          <Button
+            variant="outlined"
+            color="primary"
+            startIcon={<EditNoteIcon />}
+            onClick={() => {
+              if (onSkip) onSkip();
+            }}
+            sx={{ flex: { sm: 1.2 } }}
+          >
+            Saisir manuellement (sans MANEX)
+          </Button>
+
           <Button
             variant="outlined"
             onClick={() => {

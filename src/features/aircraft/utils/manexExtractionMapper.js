@@ -142,6 +142,15 @@ const FIELD_MAPPINGS = [
   { aircraftPath: 'fuelMainCapacity',       src: ['fuel', 'capacity_main'],      category: 'fuel',            targetUnit: 'ltr',           label: 'Capacité réservoir principal' },
   { aircraftPath: 'fuelConsumption',        src: ['fuel', 'consumption_cruise'], category: 'fuelConsumption', targetUnit: 'lph',           label: 'Conso croisière' },
 
+  // ═══ VITESSE DE CROISIÈRE (Step2) ═══
+  // Le prompt extrait performance_summary.cruise_speed_75percent (TAS à 75%).
+  { aircraftPath: 'cruiseSpeedKt',          src: ['performance_summary', 'cruise_speed_75percent'], category: 'speed', targetUnit: 'kt', label: 'Vitesse de croisière (75% puissance)' },
+
+  // ═══ MASSE MAX BAGAGES (Step3) ═══
+  // - max_total_baggage_mass : masse cumulée tous compartiments confondus
+  //   (utilisée comme garde-fou en préparation de vol)
+  { aircraftPath: 'maxBaggageTotalMass',    src: ['baggage', 'max_total_mass'],  category: 'weight', targetUnit: 'kg', label: 'Masse max bagages (cumulée tous compartiments)' },
+
   // Réservoirs additionnels (pseudo-paths agrégés en additionalFuelTanks array
   // par buildBulkUpdatePayload)
   { aircraftPath: '_fuelTank:wing_left',  src: ['fuel', 'capacity_wing_left'],  category: 'fuel', targetUnit: 'ltr', label: 'Capacité aile gauche' },
