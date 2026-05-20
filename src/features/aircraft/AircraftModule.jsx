@@ -395,6 +395,8 @@ export const AircraftModule = memo(() => {
         ['Immatriculation', fullAircraft.registration],
         ['Modèle', fullAircraft.model],
         ['Constructeur', fullAircraft.manufacturer],
+        ['Aéroclub d\'attache', fullAircraft.homeAeroclub],
+        ['Terrain de base', fullAircraft.homeBase],
         ['Type', fullAircraft.category],
         ['Année', fullAircraft.year],
         ['Propriétaire', fullAircraft.owner],
