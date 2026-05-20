@@ -390,6 +390,11 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success', closeable: true, duration: 6000 });
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
+  // Compteur pour déclencher l'ouverture du modal de validation MANEX depuis
+  // n'importe quelle étape. À chaque incrément, Step0 (via un useEffect)
+  // ouvre automatiquement le modal pré-rempli avec data.manexExtraction.
+  const [manexReviewTrigger, setManexReviewTrigger] = useState(0);
+
   // Effet pour gérer le retour à l'étape 0 quand on détecte une immatriculation existante
   useEffect(() => {
     if (aircraftData.shouldReturnToStep0) {
@@ -1073,7 +1078,14 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
   const renderStepContent = () => {
     switch (currentStep) {
       case 0:
-        return <Step0CommunityCheck data={aircraftData} updateData={updateData} updateDataBulk={updateDataBulk} onSkip={() => handleNext()} onComplete={onComplete} />;
+        return <Step0CommunityCheck
+                  data={aircraftData}
+                  updateData={updateData}
+                  updateDataBulk={updateDataBulk}
+                  onSkip={() => handleNext()}
+                  onComplete={onComplete}
+                  manexReviewTrigger={manexReviewTrigger}
+                />;
       case 1:
         return <Step1BasicInfo data={aircraftData} updateData={updateData} errors={errors} />;
       case 2:
@@ -1214,6 +1226,46 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
           />
         </Box>
       </Paper>
+
+      {/* ─── Bandeau MANEX extraction (accès direct depuis toutes étapes) ──
+          Visible quand une extraction est disponible dans le wizard et
+          qu'on n'est pas déjà sur Step0 (où le bouton existe déjà). Permet
+          au pilote de réouvrir le modal de validation des données extraites
+          en un clic sans relancer l'analyse IA. */}
+      {currentStep > 0 && aircraftData.manexExtraction?.items?.length > 0 && (
+        <Paper
+          elevation={0}
+          sx={{
+            mb: 2,
+            p: 1.5,
+            border: '1px dashed',
+            borderColor: 'success.main',
+            bgcolor: 'success.50',
+            borderRadius: 1,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            flexWrap: 'wrap'
+          }}
+        >
+          <Typography variant="body2" sx={{ flex: 1, minWidth: 200 }}>
+            <strong>📋 MANEX extrait :</strong>{' '}
+            {aircraftData.manexExtraction.fileName || 'fichier'} •{' '}
+            {aircraftData.manexExtraction.items.length} champs disponibles
+          </Typography>
+          <Button
+            variant="contained"
+            color="success"
+            size="small"
+            onClick={() => {
+              setCurrentStep(0);
+              setManexReviewTrigger((t) => t + 1);
+            }}
+          >
+            Voir / Modifier les données extraites
+          </Button>
+        </Paper>
+      )}
 
       {/* Vérificateur de conversion d'unités — toutes les étapes sauf Step 0
           (sur Step 0 — recherche communauté — il apparaît plutôt dans la
