@@ -486,11 +486,8 @@ export const AircraftModule = memo(() => {
           ['MLW', fullAircraft.weights?.mlw, 'kg'],
           ['MZFW', fullAircraft.weights?.mzfw || fullAircraft.weights?.zfm, 'kg'],
           ['Masse min vol', fullAircraft.weights?.minTakeoffWeight, 'kg'],
-          // Carburant principal
+          // Carburant total (somme des réservoirs ci-dessous)
           ['Capacité totale carburant', fullAircraft.fuel?.maxCapacity || fullAircraft.fuelCapacity, 'L'],
-          ['Capacité rés. principal', fullAircraft.fuelMainCapacity, 'L'],
-          ['Bras rés. principal', fullAircraft.arms?.fuelMain || fullAircraft.arms?.fuel, 'mm'],
-          ['Moment rés. principal (plein)', fullAircraft.moments?.fuelMain, 'kg·mm'],
           // Sièges (bras seul — moment dépend du passager au chargement)
           ['Bras sièges avant', fullAircraft.arms?.frontSeats, 'mm'],
           ['Bras sièges arrière', fullAircraft.arms?.rearSeats, 'mm']
@@ -505,11 +502,11 @@ export const AircraftModule = memo(() => {
           }
         });
 
-        // Réservoirs additionnels
+        // Réservoirs (principal, ailes, optionnels…)
         if (fullAircraft.additionalFuelTanks && fullAircraft.additionalFuelTanks.length > 0) {
           yPosition -= 5;
           checkNewPage(50);
-          addText('Réservoirs additionnels:', 50, yPosition, { bold: true, size: 11 });
+          addText('Réservoirs :', 50, yPosition, { bold: true, size: 11 });
           yPosition -= 18;
           fullAircraft.additionalFuelTanks.forEach((tank, idx) => {
             const name = tank.name || `Réservoir ${idx + 1}`;

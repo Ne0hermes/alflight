@@ -138,8 +138,7 @@ const FIELD_MAPPINGS = [
       { value: 'MOGAS',  label: 'MOGAS (UL91, essence auto)' }
     ]
   },
-  { aircraftPath: 'fuelCapacity',           src: ['fuel', 'capacity_total'],     category: 'fuel',            targetUnit: 'ltr',           label: 'Capacité totale carburant' },
-  { aircraftPath: 'fuelMainCapacity',       src: ['fuel', 'capacity_main'],      category: 'fuel',            targetUnit: 'ltr',           label: 'Capacité réservoir principal' },
+  { aircraftPath: 'fuelCapacity',           src: ['fuel', 'capacity_total'],     category: 'fuel',            targetUnit: 'ltr',           label: 'Capacité totale carburant (somme des réservoirs)' },
   { aircraftPath: 'fuelConsumption',        src: ['fuel', 'consumption_cruise'], category: 'fuelConsumption', targetUnit: 'lph',           label: 'Conso croisière' },
 
   // ═══ VITESSE DE CROISIÈRE (Step2) ═══
@@ -151,8 +150,10 @@ const FIELD_MAPPINGS = [
   //   (utilisée comme garde-fou en préparation de vol)
   { aircraftPath: 'maxBaggageTotalMass',    src: ['baggage', 'max_total_mass'],  category: 'weight', targetUnit: 'kg', label: 'Masse max bagages (cumulée tous compartiments)' },
 
-  // Réservoirs additionnels (pseudo-paths agrégés en additionalFuelTanks array
-  // par buildBulkUpdatePayload)
+  // Réservoirs (tous types, agrégés en additionalFuelTanks array par
+  // buildBulkUpdatePayload). Le réservoir « principal » est désormais traité
+  // au même niveau que les autres (refonte : pas de catégorie spéciale).
+  { aircraftPath: '_fuelTank:main',       src: ['fuel', 'capacity_main'],       category: 'fuel', targetUnit: 'ltr', label: 'Capacité réservoir principal' },
   { aircraftPath: '_fuelTank:wing_left',  src: ['fuel', 'capacity_wing_left'],  category: 'fuel', targetUnit: 'ltr', label: 'Capacité aile gauche' },
   { aircraftPath: '_fuelTank:wing_right', src: ['fuel', 'capacity_wing_right'], category: 'fuel', targetUnit: 'ltr', label: 'Capacité aile droite' },
   { aircraftPath: '_fuelTank:wing',       src: ['fuel', 'capacity_wing'],       category: 'fuel', targetUnit: 'ltr', label: 'Capacité aile (unique)' },
@@ -485,6 +486,7 @@ export function buildBulkUpdatePayload(reviewItems) {
 
   // Mapping pseudo-type → type interne + nom par défaut
   const fuelTankTypeMap = {
+    main:       { type: 'main',     name: 'Réservoir principal' },
     wing_left:  { type: 'wing',     name: 'Réservoir aile gauche' },
     wing_right: { type: 'wing',     name: 'Réservoir aile droite' },
     wing:       { type: 'wing',     name: 'Réservoir d\'aile' },
