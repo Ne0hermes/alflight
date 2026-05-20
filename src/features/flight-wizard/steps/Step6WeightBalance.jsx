@@ -1,5 +1,5 @@
 // src/features/flight-wizard/steps/Step6WeightBalance.jsx
-import React, { memo, useMemo, useCallback, useEffect } from 'react';
+import React, { memo, useMemo, useCallback, useEffect, useState } from 'react';
 import { useAircraft, useFuel, useWeightBalance } from '@core/contexts';
 import { LoadInput } from '@features/weight-balance/components/LoadInput';
 import { WeightBalanceChart } from '@features/weight-balance/components/WeightBalanceChart';
@@ -50,6 +50,13 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
   const { loads, updateLoad, updateFuelLoad, calculations } = useWeightBalance();
   const { getUnit, convert, getSymbol } = useUnits();
 
+  // ─── Sélection de la catégorie d'opération (N / U) ──────────────────────
+  // Seulement disponible si l'avion a une configuration utilitaire activée
+  // (data.utilityCategory.enabled === true côté wizard avion). Par défaut N
+  // (catégorie normale). Le changement N→U applique les limites utilitaires
+  // (MTOW réduit + domaine CG plus restreint).
+  const [operationCategory, setOperationCategory] = useState('N');
+
   // 🔧 FIX: Utiliser selectedAircraft du contexte ET faire le mapping weights immédiatement
   const aircraft = useMemo(() => {
     const baseAircraft = selectedAircraft || flightPlan?.aircraft;
@@ -90,8 +97,43 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
       console.log(`✅ [Step6] IMMEDIATE weightBalance created from arms`);
     }
 
+    // ─── Override CATÉGORIE UTILITAIRE (U) si sélectionnée ────────────────
+    // Si l'avion a une configuration utilitaire activée et que le pilote
+    // a sélectionné « U » en haut de page, on substitue les limites :
+    //   - maxTakeoffWeight → utilityCategory.mtow
+    //   - cgLimits.forward → utilityCategory.forwardCG
+    //   - cgLimits.aft     → utilityCategory.aftMaxCG (borne arrière la plus contraignante)
+    if (operationCategory === 'U' && mappedAircraft.utilityCategory?.enabled) {
+      const u = mappedAircraft.utilityCategory;
+      const uMtow = parseFloat(u.mtow);
+      const uForwardCG = parseFloat(u.forwardCG);
+      const uAftMaxCG = parseFloat(u.aftMaxCG);
+      if (Number.isFinite(uMtow) && uMtow > 0) {
+        mappedAircraft = {
+          ...mappedAircraft,
+          maxTakeoffWeight: uMtow,
+          weights: { ...(mappedAircraft.weights || {}), mtow: uMtow }
+        };
+      }
+      if ((Number.isFinite(uForwardCG) || Number.isFinite(uAftMaxCG)) && mappedAircraft.weightBalance) {
+        mappedAircraft.weightBalance = {
+          ...mappedAircraft.weightBalance,
+          cgLimits: {
+            ...(mappedAircraft.weightBalance.cgLimits || {}),
+            forward: Number.isFinite(uForwardCG) ? uForwardCG : mappedAircraft.weightBalance.cgLimits?.forward,
+            aft: Number.isFinite(uAftMaxCG) ? uAftMaxCG : mappedAircraft.weightBalance.cgLimits?.aft
+          }
+        };
+      }
+      console.log('🟠 [Step6] Catégorie UTILITAIRE active — limites U appliquées', {
+        mtow: uMtow,
+        forwardCG: uForwardCG,
+        aftMaxCG: uAftMaxCG
+      });
+    }
+
     return mappedAircraft;
-  }, [selectedAircraft, flightPlan?.aircraft]);
+  }, [selectedAircraft, flightPlan?.aircraft, operationCategory]);
 
   // 🔧 FIX CRITIQUE : Synchroniser l'avion complet avec le contexte
   // TOUJOURS récupérer depuis le store pour avoir les données à jour
@@ -443,6 +485,63 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
 
       return (
         <div style={commonStyles.container}>
+          {/* Sélecteur catégorie d'opération N / U — visible uniquement si
+              l'avion a une configuration utilitaire activée */}
+          {aircraft.utilityCategory?.enabled && (
+            <div style={{
+              padding: '12px 16px',
+              marginBottom: '16px',
+              backgroundColor: operationCategory === 'U' ? '#fff7ed' : '#f0fdf4',
+              border: `2px solid ${operationCategory === 'U' ? '#f59e0b' : '#16a34a'}`,
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              flexWrap: 'wrap'
+            }}>
+              <span style={{ fontSize: '15px', fontWeight: 700 }}>
+                Catégorie d'opération :
+              </span>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={() => setOperationCategory('N')}
+                  style={{
+                    padding: '6px 16px',
+                    border: 'none',
+                    borderRadius: '6px',
+                    backgroundColor: operationCategory === 'N' ? '#16a34a' : '#e5e7eb',
+                    color: operationCategory === 'N' ? 'white' : '#374151',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  Normale (N)
+                </button>
+                <button
+                  onClick={() => setOperationCategory('U')}
+                  style={{
+                    padding: '6px 16px',
+                    border: 'none',
+                    borderRadius: '6px',
+                    backgroundColor: operationCategory === 'U' ? '#f59e0b' : '#e5e7eb',
+                    color: operationCategory === 'U' ? 'white' : '#374151',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  Utilitaire (U)
+                </button>
+              </div>
+              <span style={{ fontSize: '12px', color: theme.colors.textSecondary, flex: '1 1 100%' }}>
+                {operationCategory === 'U'
+                  ? `🟠 MTOW réduit (${aircraft.utilityCategory.mtow || '—'} kg) et domaine CG plus restreint. Facteurs de charge +4,4g/−1,76g.`
+                  : `🟢 MTOW standard. Pas d'acrobatie. Facteurs +3,8g/−1,5g.`}
+              </span>
+            </div>
+          )}
+
           {weightLimitViolations && weightLimitViolations.map((violation, index) => (
             <div
               key={index}
