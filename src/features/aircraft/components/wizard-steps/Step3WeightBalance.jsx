@@ -137,9 +137,55 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
       ? data.baggageCompartments
       : [] // Vide par défaut
   );
-  // Réservoirs additionnels : aile gauche/droite, optionnel, tip-tank, etc.
-  // Le réservoir principal reste géré via data.arms.fuelMain (rétro-compat).
+  // Tous les réservoirs : principal, aile gauche/droite, optionnel, tip, aux…
+  // Refonte : le « principal » est désormais juste un réservoir parmi les autres,
+  // au même niveau (type: 'main'). data.fuelMainCapacity est legacy uniquement.
   const [additionalFuelTanks, setAdditionalFuelTanks] = useState(data.additionalFuelTanks || []);
+
+  // ─── Migration legacy → array : convertit data.fuelMainCapacity en tank ─
+  // Si l'avion a été créé avant la refonte (fuelMainCapacity > 0 et pas de
+  // tank de type 'main' dans la liste), on insère automatiquement un tank
+  // principal avec les valeurs legacy, puis on nettoie les champs obsolètes.
+  // Idempotent : une fois migré, ne s'exécute plus.
+  useEffect(() => {
+    const legacyCap = parseFloat(data.fuelMainCapacity);
+    const hasLegacy = Number.isFinite(legacyCap) && legacyCap > 0;
+    const hasMainTank = (data.additionalFuelTanks || []).some(t => t.type === 'main');
+    if (!hasLegacy || hasMainTank) return;
+
+    const mainTank = {
+      id: Date.now() + Math.random(),
+      name: 'Réservoir principal',
+      type: 'main',
+      capacity: legacyCap,
+      arm: data.arms?.fuelMain || '',
+      momentAtFull: data.moments?.fuelMain || ''
+    };
+    const newTanks = [mainTank, ...(data.additionalFuelTanks || [])];
+    setAdditionalFuelTanks(newTanks);
+    updateData('additionalFuelTanks', newTanks);
+    // Nettoyer les champs legacy (un seul endroit de vérité maintenant)
+    updateData('fuelMainCapacity', '');
+    if (data.arms?.fuelMain) updateData('arms.fuelMain', '');
+    if (data.moments?.fuelMain) updateData('moments.fuelMain', '');
+    console.log('🔄 [Step3] Migration legacy fuelMainCapacity → tank principal (additionalFuelTanks)');
+  }, []); // mount uniquement
+
+  // ─── Sync auto : data.fuelCapacity = somme des réservoirs ───────────────
+  // La capacité totale devient une valeur DÉRIVÉE de la somme de tous les
+  // réservoirs (refonte demandée par le pilote). Si la somme diverge de
+  // ce qui est stocké actuellement (ex. ancien total MANEX), on aligne.
+  useEffect(() => {
+    if (!additionalFuelTanks || additionalFuelTanks.length === 0) return;
+    const sum = additionalFuelTanks.reduce(
+      (s, t) => s + (parseFloat(t.capacity) || 0), 0
+    );
+    if (sum <= 0) return;
+    const current = parseFloat(data.fuelCapacity) || 0;
+    if (Math.abs(sum - current) > 0.5) {
+      updateData('fuelCapacity', sum);
+    }
+  }, [additionalFuelTanks, data.fuelCapacity]);
 
   // ─── Auto-calcul dynamique masse/bras/moment pour la masse à vide ───
   // Relation physique : moment = masse × bras
@@ -878,110 +924,28 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
               />
             </Box>
 
-            {/* ─── Réservoir principal — trio dynamique : capacité × densité × bras = moment ─── */}
-            <Box sx={{ width: '100%', maxWidth: 700, mb: 2 }}>
-              <Divider sx={{ mb: 1.5 }}>
-                <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                  ⛽ Réservoir principal
-                </Typography>
-              </Divider>
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <StyledTextField
-                    fullWidth
-                    size="small"
-                    label="Capacité"
-                    type="number"
-                    value={
-                      data.fuelMainCapacity
-                        ? Math.round(convertValue(data.fuelMainCapacity, 'ltr', units.fuel, 'fuel') * 10) / 10
-                        : ''
-                    }
-                    onChange={(e) => {
-                      const newCapUser = e.target.value;
-                      // Convertir saisie user → canonique (litres) pour stockage
-                      const newCapCanonical = newCapUser
-                        ? convertValue(newCapUser, units.fuel, 'ltr', 'fuel')
-                        : '';
-                      updateData('fuelMainCapacity', newCapCanonical);
-                      // Moment = capacité_litres × densité (kg/L) × bras (mm)
-                      const cap = parseFloat(newCapCanonical);
-                      const arm = parseFloat(data.arms?.fuelMain);
-                      const density = getFuelDensity(data.fuelType);
-                      if (Number.isFinite(cap) && Number.isFinite(arm)) {
-                        updateData('moments.fuelMain', Math.round(cap * density * arm * 100) / 100);
-                      }
-                    }}
-                    helperText="Litrage utilisable"
-                    InputProps={{
-                      endAdornment: <InputAdornment position="end">{getUnitSymbol(units.fuel)}</InputAdornment>,
-                    }}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <StyledTextField
-                    fullWidth
-                    size="small"
-                    label="Bras de levier"
-                    type="number"
-                    value={data.arms?.fuelMain || ''}
-                    onChange={(e) => {
-                      const newArm = e.target.value;
-                      updateData('arms.fuelMain', newArm);
-                      const cap = parseFloat(data.fuelMainCapacity);
-                      const arm = parseFloat(newArm);
-                      const density = getFuelDensity(data.fuelType);
-                      if (Number.isFinite(cap) && Number.isFinite(arm)) {
-                        updateData('moments.fuelMain', Math.round(cap * density * arm * 100) / 100);
-                      }
-                    }}
-                    error={!!errors['arms.fuelMain']}
-                    helperText="Centre de gravité"
-                    InputProps={{
-                      endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
-                    }}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <StyledTextField
-                    fullWidth
-                    size="small"
-                    label="Moment à plein"
-                    type="number"
-                    value={data.moments?.fuelMain || ''}
-                    onChange={(e) => {
-                      const newMoment = e.target.value;
-                      updateData('moments.fuelMain', newMoment);
-                      const M = parseFloat(newMoment);
-                      const cap = parseFloat(data.fuelMainCapacity);
-                      const arm = parseFloat(data.arms?.fuelMain);
-                      const density = getFuelDensity(data.fuelType);
-                      // Si capacité connue → calcule bras. Sinon si bras → calcule capacité.
-                      if (Number.isFinite(M) && Number.isFinite(cap) && cap !== 0) {
-                        updateData('arms.fuelMain', Math.round((M / (cap * density)) * 100) / 100);
-                      } else if (Number.isFinite(M) && Number.isFinite(arm) && arm !== 0 && density !== 0) {
-                        updateData('fuelMainCapacity', Math.round((M / (arm * density)) * 100) / 100);
-                      }
-                    }}
-                    placeholder="Auto"
-                    helperText={`densité ${getFuelDensity(data.fuelType)}`}
-                    InputProps={{
-                      endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}·{getUnitSymbol(units.armLength)}</InputAdornment>,
-                    }}
-                  />
-                </Grid>
-              </Grid>
-            </Box>
-
-            {/* ─── Réservoirs additionnels ─── */}
+            {/* ─── Réservoirs (refonte) ───
+                Tous les types de réservoirs (principal, aile, optionnel, tip,
+                aux…) sont gérés uniformément dans additionalFuelTanks. Chacun
+                a son type modifiable via le sélecteur en ligne. La capacité
+                totale (au-dessus) est la SOMME calculée de tous ces réservoirs. */}
             <Box sx={{ width: '100%', mt: 3 }}>
               <Divider sx={{ mb: 2 }}>
                 <Typography variant="caption" color="text.secondary">
-                  Réservoirs additionnels (ailes, optionnel, tip-tank…)
+                  Réservoirs (principal, ailes, optionnel, tip-tank…)
                 </Typography>
               </Divider>
 
               <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  startIcon={<AddIcon />}
+                  onClick={() => addFuelTank('main')}
+                >
+                  + Réservoir principal
+                </Button>
                 <Button
                   variant="outlined"
                   size="small"
@@ -1017,11 +981,13 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
               </Box>
 
               {additionalFuelTanks.length === 0 ? (
-                <Alert severity="info" icon={<InfoIcon />} sx={{ maxWidth: 700, mx: 'auto' }}>
+                <Alert severity="warning" icon={<InfoIcon />} sx={{ maxWidth: 700, mx: 'auto' }}>
                   <Typography variant="body2">
-                    Aucun réservoir additionnel. Si ton avion a uniquement un réservoir
-                    principal (cas standard GA), c'est OK. Sinon, clique sur l'un des boutons
-                    ci-dessus pour ajouter aile gauche/droite, optionnel, tip-tank, etc.
+                    <strong>Aucun réservoir défini.</strong> Ajoute au moins un réservoir
+                    en cliquant sur l'un des boutons ci-dessus. La plupart des avions
+                    GA ont juste un « Réservoir principal » ; certains ont aussi des
+                    réservoirs d'aile et/ou un optionnel. La capacité totale affichée
+                    en haut sera la <em>somme de tous les réservoirs</em>.
                   </Typography>
                 </Alert>
               ) : (
@@ -1154,18 +1120,18 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
               )}
             </Box>
 
-            {/* ─── Récap : somme calculée vs total importé ───
+            {/* ─── Récap : somme calculée vs total importé MANEX ───
                 Toutes les valeurs en mémoire sont en CANONIQUE (litres).
-                On convertit chaque valeur vers l'unité user pour l'affichage. */}
+                Le total est désormais la SOMME de tous les réservoirs (le
+                « principal » est juste un réservoir parmi les autres). On
+                garde le total MANEX en comparaison pour vérifier la cohérence. */}
             {(() => {
-              const total = parseFloat(data.fuelCapacity) || 0;          // litres
-              const mainCap = parseFloat(data.fuelMainCapacity) || 0;     // litres
-              const additionalSum = additionalFuelTanks.reduce(
+              const total = parseFloat(data.fuelCapacity) || 0;          // litres (MANEX/Step1)
+              const computed = additionalFuelTanks.reduce(
                 (sum, t) => sum + (parseFloat(t.capacity) || 0), 0        // litres
               );
-              const computed = mainCap + additionalSum;                   // litres
-              const hasData = mainCap > 0 || additionalSum > 0;
-              if (!hasData) return null;
+              const hasData = computed > 0;
+              if (!hasData && total <= 0) return null;
               const diff = computed - total;
               const isMatch = Math.abs(diff) < 0.5;
               // Helper local : convertit canonique (L) vers unité user
@@ -1180,10 +1146,6 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                       Récapitulatif des capacités
                     </Typography>
                     <Box sx={{ mt: 1, fontFamily: 'monospace', fontSize: 13 }}>
-                      <div>
-                        Réservoir principal :{' '}
-                        <strong>{toDisp(mainCap).toFixed(1)} {getUnitSymbol(units.fuel)}</strong>
-                      </div>
                       {additionalFuelTanks.map(t => (
                         <div key={t.id}>
                           {t.name || 'Réservoir'} :{' '}

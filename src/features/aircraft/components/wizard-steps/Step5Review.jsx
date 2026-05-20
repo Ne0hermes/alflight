@@ -929,18 +929,17 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           { label: 'MZFW', value: formatValue(data.weights?.mzfw, wU) },
           { label: 'Masse min de vol', value: formatValue(data.weights?.minTakeoffWeight, wU) },
 
-          // ─── Carburant principal (double affichage L / gal) ───
+          // ─── Carburant total (somme calculée des réservoirs ci-dessous) ──
           { label: 'Capacité totale carburant', value: formatCanonical(data.fuelCapacity, 'fuel', units, { both: true }) },
-          { label: 'Capacité réservoir principal', value: formatCanonical(data.fuelMainCapacity, 'fuel', units, { both: true }) },
-          { label: 'Bras réservoir principal', value: formatValue(data.arms?.fuelMain, aU) },
-          { label: 'Moment réservoir principal (plein)', value: formatValue(data.moments?.fuelMain, mU) },
 
           // ─── Sièges (bras de levier uniquement — moment dépend du passager) ───
           { label: 'Bras sièges avant', value: formatValue(data.arms?.frontSeats, aU) },
           { label: 'Bras sièges arrière', value: formatValue(data.arms?.rearSeats, aU) }
         ];
 
-        // ─── Réservoirs additionnels (aile, optionnel, tip, aux) ───
+        // ─── Tous les réservoirs (principal, ailes, optionnels…) ───
+        // Refonte : le « principal » est désormais juste un type au même
+        // niveau que les autres, dans additionalFuelTanks.
         if (data.additionalFuelTanks && data.additionalFuelTanks.length > 0) {
           data.additionalFuelTanks.forEach((tank, idx) => {
             const label = tank.name || `Réservoir ${idx + 1}`;
