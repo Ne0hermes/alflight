@@ -10,16 +10,18 @@ const CGEnvelopeChart = memo(({ cgEnvelope, massUnit = 'kg' }) => {
     }))
     .filter(p => p.weight > 0 && p.cg > 0);
 
-  // Points arrière
+  // Points arrière — modèle à 2 CG distincts (rétro-compat avec ancien aftCG)
   const aftMinWeight = parseFloat(cgEnvelope?.aftMinWeight) || 0;
-  const aftCG = parseFloat(cgEnvelope?.aftCG) || 0;
   const aftMaxWeight = parseFloat(cgEnvelope?.aftMaxWeight) || 0;
+  const legacyAftCG = parseFloat(cgEnvelope?.aftCG) || 0;
+  const aftMinCG = parseFloat(cgEnvelope?.aftMinCG) || legacyAftCG;
+  const aftMaxCG = parseFloat(cgEnvelope?.aftMaxCG) || legacyAftCG;
 
   // Calculer les échelles pour le graphique
   const forwardWeights = forwardPoints.map(p => p.weight);
   const forwardCGs = forwardPoints.map(p => p.cg);
   const aftWeights = [aftMinWeight, aftMaxWeight].filter(w => w > 0);
-  const aftCGs = [aftCG].filter(cg => cg > 0);
+  const aftCGs = [aftMinCG, aftMaxCG].filter(cg => cg > 0);
 
   const allWeights = [...forwardWeights, ...aftWeights];
   const allCGs = [...forwardCGs, ...aftCGs];
@@ -46,14 +48,16 @@ const CGEnvelopeChart = memo(({ cgEnvelope, massUnit = 'kg' }) => {
     });
   });
 
-  // 2. Point Aft Max (haut droit)
-  if (aftMaxWeight > 0 && aftCG > 0) {
-    envelopePoints.push({ w: aftMaxWeight, cg: aftCG, label: 'Aft Max' });
+  // 2. Point Aft Max (haut droit) — utilise aftMaxCG (peut diverger de aftMinCG)
+  if (aftMaxWeight > 0 && aftMaxCG > 0) {
+    envelopePoints.push({ w: aftMaxWeight, cg: aftMaxCG, label: 'Aft Max' });
   }
 
-  // 3. Point Aft Min (bas droit)
-  if (aftMinWeight > 0 && aftCG > 0 && aftMinWeight !== aftMaxWeight) {
-    envelopePoints.push({ w: aftMinWeight, cg: aftCG, label: 'Aft Min' });
+  // 3. Point Aft Min (bas droit) — utilise aftMinCG. Toujours ajouter même si
+  //    aftMinWeight === aftMaxWeight, car c'est un sommet distinct du polygone
+  //    (les 2 CG peuvent différer).
+  if (aftMinWeight > 0 && aftMinCG > 0) {
+    envelopePoints.push({ w: aftMinWeight, cg: aftMinCG, label: 'Aft Min' });
   }
 
   return (
