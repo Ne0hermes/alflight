@@ -876,7 +876,10 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
         1,
         [
           { label: 'Immatriculation', value: data.registration || '-' },
+          { label: 'Marque / Constructeur', value: data.manufacturer || '-' },
           { label: 'Modèle', value: data.model || '-' },
+          { label: 'Aéroclub d\'attache', value: data.homeAeroclub || '-' },
+          { label: 'Terrain de base', value: data.homeBase || '-' },
           { label: 'Type de moteur', value: data.engineType || '-' },
           { label: 'Catégorie de turbulence', value: data.wakeTurbulenceCategory || '-' },
           { label: 'Type de carburant', value: data.fuelType || '-' },

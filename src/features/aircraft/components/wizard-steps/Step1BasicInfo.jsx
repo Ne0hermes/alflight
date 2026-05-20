@@ -48,6 +48,8 @@ import aircraftVersioningService from '../../services/aircraftVersioningService'
 import ImageEditor from '../../../../components/ImageEditor';
 import { Description as DescriptionIcon, CloudUpload as CloudUploadIcon, Delete as DeleteIcon, CloudQueue as CloudQueueIcon } from '@mui/icons-material';
 import communityService from '../../../../services/communityService';
+import AeroclubAutocomplete from '../AeroclubAutocomplete';
+import { AIRPORT_NAMES } from '../../../../data/airportNames';
 
 // Import de la base de données communautaire mock (en production, sera un appel API)
 const COMMUNITY_DATABASE = [
@@ -454,6 +456,36 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                   <MenuItem value="S">Super (S)</MenuItem>
                 </Select>
               </StyledFormControl>
+            </Grid>
+
+            {/* Aéroclub d'attache (avec autocomplétion + ajout manuel) */}
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+              <AeroclubAutocomplete
+                value={data.homeAeroclub || ''}
+                onChange={(newName) => updateData('homeAeroclub', newName || '')}
+                label="Aéroclub d'attache"
+                helperText="Recherchez votre club ou ajoutez-le s'il manque dans la liste"
+              />
+            </Grid>
+
+            {/* Terrain de base (code OACI) */}
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+              <StyledTextField
+                fullWidth
+                variant="outlined"
+                label="Terrain de base (OACI)"
+                value={data.homeBase || ''}
+                onChange={(e) =>
+                  updateData('homeBase', e.target.value.toUpperCase().slice(0, 4))
+                }
+                placeholder="Ex: LFPN"
+                inputProps={{ maxLength: 4, style: { textTransform: 'uppercase' } }}
+                helperText={
+                  data.homeBase && AIRPORT_NAMES[data.homeBase]
+                    ? `✈️ ${AIRPORT_NAMES[data.homeBase]}`
+                    : "Code OACI à 4 lettres du terrain où l'avion est basé"
+                }
+              />
             </Grid>
 
             {/* Photo upload section within identification */}
