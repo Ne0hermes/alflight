@@ -1240,12 +1240,22 @@ export const AircraftModule = memo(() => {
                       <p>MTOW: {
                         formatCanonical(aircraft.maxTakeoffWeight || aircraft.weights?.mtow, 'weight', useUnitsStore.getState().units, { both: true })
                       }</p>
-                      {/* Affichage des informations MANEX si présent */}
-                      {(aircraft.hasManex || aircraft.manex) && (
-                        <p style={{ color: '#059669', fontSize: '12px', marginTop: '4px' }}>
-                          📚 MANEX: {aircraft.manex?.fileName || 'Chargé'} {aircraft.manex?.pageCount ? `(${aircraft.manex.pageCount} pages)` : ''}
-                        </p>
-                      )}
+                      {/* Affichage des informations MANEX et rapport de pesée si présents */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '4px' }}>
+                        {(aircraft.hasManex || aircraft.manex) && (
+                          <span style={{ color: '#059669', fontSize: '12px' }}>
+                            📚 MANEX: {aircraft.manex?.fileName || 'Chargé'} {aircraft.manex?.pageCount ? `(${aircraft.manex.pageCount} pages)` : ''}
+                          </span>
+                        )}
+                        {(aircraft.hasWeighingReport || aircraft.weighingReport?.hasData) && (
+                          <span style={{ color: '#0891b2', fontSize: '12px' }}>
+                            ⚖️ Fiche de pesée : {aircraft.weighingReport?.fileName || 'Chargée'}
+                            {aircraft.weighingReport?.weighingDate
+                              ? ` (${new Date(aircraft.weighingReport.weighingDate).toLocaleDateString('fr-FR')})`
+                              : ''}
+                          </span>
+                        )}
+                      </div>
                       {aircraft.masses?.emptyMass && (
                         <p style={{ color: '#3182CE' }}>
                           ⚖️ Masse à vide: {aircraft.masses.emptyMass || aircraft.weights?.emptyWeight} {getSymbol('weight')} • MLM: {aircraft.limitations?.maxLandingMass || aircraft.weights?.mlw ? `${aircraft.limitations?.maxLandingMass || aircraft.weights?.mlw} ${getSymbol('weight')}` : 'N/A'}
