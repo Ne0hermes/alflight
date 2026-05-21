@@ -618,19 +618,11 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               <StyledTextField
                 fullWidth
                 variant="outlined"
-                label="Capacité carburant *"
+                label="Capacité totale carburant *"
                 type="number"
                 value={
                   data.fuelCapacity
-                    ? (() => {
-                        const converted = Math.round(convertValue(data.fuelCapacity, 'ltr', units.fuel, 'fuel') * 10) / 10;
-                        console.log('🔵 [Step1] DISPLAY fuelCapacity:', {
-                          storage: data.fuelCapacity,
-                          userUnit: units.fuel,
-                          displayed: converted
-                        });
-                        return converted;
-                      })()
+                    ? Math.round(convertValue(data.fuelCapacity, 'ltr', units.fuel, 'fuel') * 10) / 10
                     : ''
                 }
                 onChange={(e) => {
@@ -641,8 +633,33 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                 error={!!errors.fuelCapacity}
                 helperText={errors.fuelCapacity || (data.fuelCapacity
                   ? `≈ ${formatCanonical(data.fuelCapacity, 'fuel', units, { both: true })}`
-                  : 'Capacité utile (les 2 unités s\'afficheront après saisie)')}
+                  : 'Volume physique total de tous les réservoirs (capacity)')}
                 required
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">{getUnitSymbol(units.fuel)}</InputAdornment>,
+                }}
+              />
+            </Grid>
+
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+              <StyledTextField
+                fullWidth
+                variant="outlined"
+                label="Volume utilisable"
+                type="number"
+                value={
+                  data.fuelUsableCapacity
+                    ? Math.round(convertValue(data.fuelUsableCapacity, 'ltr', units.fuel, 'fuel') * 10) / 10
+                    : ''
+                }
+                onChange={(e) => {
+                  const valueInStorageUnit = convertValue(e.target.value, units.fuel, 'ltr', 'fuel');
+                  updateData('fuelUsableCapacity', valueInStorageUnit);
+                }}
+                placeholder="Ex: 195"
+                helperText={data.fuelUsableCapacity
+                  ? `≈ ${formatCanonical(data.fuelUsableCapacity, 'fuel', units, { both: true })} (carburant réellement consommable)`
+                  : 'Volume utilisable (souvent < capacité totale, sans la résiduelle non aspirable). Utilisé pour M&C et autonomie.'}
                 InputProps={{
                   endAdornment: <InputAdornment position="end">{getUnitSymbol(units.fuel)}</InputAdornment>,
                 }}

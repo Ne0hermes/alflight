@@ -859,11 +859,21 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
             <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
               {renderSpeedInput('vso', {
                 name: "VSO",
-                label: "VSO - Vitesse de décrochage volets sortis *",
-                description: "Vitesse minimale de sustentation en configuration atterrissage",
+                label: "VSO - Vitesse de décrochage volets atterrissage *",
+                description: "Vitesse minimale de sustentation en configuration atterrissage (volets pleine sortie)",
                 color: "#ffffff",
                 category: "critical",
                 required: true
+              })}
+            </Grid>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+              {renderSpeedInput('vsTO', {
+                name: "VS T/O",
+                label: "VS T/O - Vitesse de décrochage volets décollage",
+                description: "Vitesse minimale de sustentation en configuration décollage (volets T/O sortis). Distinct de VSO si l'avion a une position volets décollage intermédiaire.",
+                color: "#ffffff",
+                category: "critical",
+                required: false
               })}
             </Grid>
             <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>

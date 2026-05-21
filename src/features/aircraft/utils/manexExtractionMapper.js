@@ -138,7 +138,8 @@ const FIELD_MAPPINGS = [
       { value: 'MOGAS',  label: 'MOGAS (UL91, essence auto)' }
     ]
   },
-  { aircraftPath: 'fuelCapacity',           src: ['fuel', 'capacity_total'],     category: 'fuel',            targetUnit: 'ltr',           label: 'Capacité totale carburant (somme des réservoirs)' },
+  { aircraftPath: 'fuelCapacity',           src: ['fuel', 'capacity_total'],     category: 'fuel',            targetUnit: 'ltr',           label: 'Capacité totale carburant', description: 'Volume physique total de tous les réservoirs (capacity / total tank volume).' },
+  { aircraftPath: 'fuelUsableCapacity',     src: ['fuel', 'usable_fuel_total'],  category: 'fuel',            targetUnit: 'ltr',           label: 'Volume utilisable total', description: 'Carburant réellement consommable (un peu inférieur à la capacité totale, sans la résiduelle non aspirable). C\'est cette valeur qui est utilisée pour les calculs de M&C et d\'autonomie.' },
   { aircraftPath: 'fuelConsumption',        src: ['fuel', 'consumption_cruise'], category: 'fuelConsumption', targetUnit: 'lph',           label: 'Conso croisière' },
 
   // ═══ VITESSE DE CROISIÈRE (Step2) ═══
@@ -182,21 +183,25 @@ const FIELD_MAPPINGS = [
 
   // ═══ VITESSES (Step2 — storage = kt) ═══
   // Critiques (saisies obligatoirement dans Step2)
-  { aircraftPath: 'speeds.vso',          src: ['speeds', 'vso'],          category: 'speed', targetUnit: 'kt', label: 'VSO (stall flaps LDG)' },
-  { aircraftPath: 'speeds.vs1',          src: ['speeds', 'vs1'],          category: 'speed', targetUnit: 'kt', label: 'VS1 (stall clean)' },
-  { aircraftPath: 'speeds.vfeTO',        src: ['speeds', 'vfe_takeoff'],  category: 'speed', targetUnit: 'kt', label: 'VFE T/O' },
-  { aircraftPath: 'speeds.vfeLdg',       src: ['speeds', 'vfe_landing'],  category: 'speed', targetUnit: 'kt', label: 'VFE LDG' },
-  { aircraftPath: 'speeds.vno',          src: ['speeds', 'vno'],          category: 'speed', targetUnit: 'kt', label: 'VNO' },
-  { aircraftPath: 'speeds.vne',          src: ['speeds', 'vne'],          category: 'speed', targetUnit: 'kt', label: 'VNE' },
+  // Le champ `description` est affiché en italique dans le tableau de
+  // validation MANEX pour aider le pilote (les aéroclubs n'utilisent pas
+  // toujours les mêmes noms / formulations).
+  { aircraftPath: 'speeds.vso',          src: ['speeds', 'vso'],          category: 'speed', targetUnit: 'kt', label: 'VSO',     description: 'Vitesse de décrochage en configuration d\'atterrissage (volets pleine sortie). Aussi : « stall LDG », « VS atterrissage », « VS dirty ».' },
+  { aircraftPath: 'speeds.vsTO',         src: ['speeds', 'vs_takeoff'],   category: 'speed', targetUnit: 'kt', label: 'VS T/O',  description: 'Vitesse de décrochage en configuration de décollage (volets T/O sortis). Distinct de VSO si l\'avion a une position volets décollage. Aussi : « stall takeoff », « VS décollage ».' },
+  { aircraftPath: 'speeds.vs1',          src: ['speeds', 'vs1'],          category: 'speed', targetUnit: 'kt', label: 'VS1',     description: 'Vitesse de décrochage en configuration lisse (sans volet, train rentré, configuration croisière). Aussi : « stall clean ».' },
+  { aircraftPath: 'speeds.vfeTO',        src: ['speeds', 'vfe_takeoff'],  category: 'speed', targetUnit: 'kt', label: 'VFE T/O', description: 'Vitesse maximale volets sortis en configuration décollage. À ne pas dépasser avec volets T/O.' },
+  { aircraftPath: 'speeds.vfeLdg',       src: ['speeds', 'vfe_landing'],  category: 'speed', targetUnit: 'kt', label: 'VFE LDG', description: 'Vitesse maximale volets sortis en configuration atterrissage. À ne pas dépasser avec volets pleine sortie.' },
+  { aircraftPath: 'speeds.vno',          src: ['speeds', 'vno'],          category: 'speed', targetUnit: 'kt', label: 'VNO',     description: 'Vitesse maximale en croisière normale. Au-delà : arc jaune (interdit en turbulences).' },
+  { aircraftPath: 'speeds.vne',          src: ['speeds', 'vne'],          category: 'speed', targetUnit: 'kt', label: 'VNE',     description: 'Vitesse à ne jamais dépasser (Never Exceed). Au-delà : risque de rupture structurelle.' },
   // Optionnelles (panel "Vitesses optionnelles" du wizard)
-  { aircraftPath: 'speeds.vr',           src: ['speeds', 'vr'],           category: 'speed', targetUnit: 'kt', label: 'VR (rotation)' },
-  { aircraftPath: 'speeds.vx',           src: ['speeds', 'vx'],           category: 'speed', targetUnit: 'kt', label: 'VX (best angle climb)' },
-  { aircraftPath: 'speeds.vy',           src: ['speeds', 'vy'],           category: 'speed', targetUnit: 'kt', label: 'VY (best rate climb)' },
-  { aircraftPath: 'speeds.vapp',         src: ['speeds', 'vapp'],         category: 'speed', targetUnit: 'kt', label: 'VAPP (approche)' },
-  { aircraftPath: 'speeds.initialClimb', src: ['speeds', 'initial_climb_rate'], category: 'climbRate', targetUnit: 'ft/min', label: 'Taux montée initial' },
-  { aircraftPath: 'speeds.vglide',       src: ['speeds', 'vglide'],       category: 'speed', targetUnit: 'kt', label: 'V finesse (best glide)' },
-  { aircraftPath: 'speeds.vle',          src: ['speeds', 'vle'],          category: 'speed', targetUnit: 'kt', label: 'VLE (gear extended)' },
-  { aircraftPath: 'speeds.vlo',          src: ['speeds', 'vlo'],          category: 'speed', targetUnit: 'kt', label: 'VLO (gear operating)' },
+  { aircraftPath: 'speeds.vr',           src: ['speeds', 'vr'],           category: 'speed', targetUnit: 'kt', label: 'VR',      description: 'Vitesse de rotation au décollage (tirage manche pour décoller).' },
+  { aircraftPath: 'speeds.vx',           src: ['speeds', 'vx'],           category: 'speed', targetUnit: 'kt', label: 'VX',      description: 'Vitesse de meilleur angle de montée (gain altitude maximal par unité de distance horizontale parcourue). Utile pour franchir un obstacle.' },
+  { aircraftPath: 'speeds.vy',           src: ['speeds', 'vy'],           category: 'speed', targetUnit: 'kt', label: 'VY',      description: 'Vitesse de meilleur taux de montée (gain altitude maximal par unité de temps). Utilisée en montée standard.' },
+  { aircraftPath: 'speeds.vapp',         src: ['speeds', 'vapp'],         category: 'speed', targetUnit: 'kt', label: 'VAPP',    description: 'Vitesse d\'approche finale recommandée (souvent 1,3 × VSO). Aussi : « approach speed ».' },
+  { aircraftPath: 'speeds.initialClimb', src: ['speeds', 'initial_climb_rate'], category: 'climbRate', targetUnit: 'ft/min', label: 'Taux montée initial', description: 'Vitesse verticale (ft/min) au décollage à MTOW, conditions ISA.' },
+  { aircraftPath: 'speeds.vglide',       src: ['speeds', 'vglide'],       category: 'speed', targetUnit: 'kt', label: 'V finesse', description: 'Vitesse de plané optimale (meilleure finesse) en cas de panne moteur. Aussi : « best glide speed ».' },
+  { aircraftPath: 'speeds.vle',          src: ['speeds', 'vle'],          category: 'speed', targetUnit: 'kt', label: 'VLE',     description: 'Vitesse maximale train sorti (Landing gear Extended). Si l\'avion a un train rentrant.' },
+  { aircraftPath: 'speeds.vlo',          src: ['speeds', 'vlo'],          category: 'speed', targetUnit: 'kt', label: 'VLO',     description: 'Vitesse maximale d\'opération du train (manœuvre sortie/rentrée). Si l\'avion a un train rentrant.' },
 
   // ═══ LIMITES VENT (Step2 — array windLimits.limits) ═══
   // Stockage final : windLimits.limits = array d'objets {type, value, saved}.
@@ -208,8 +213,10 @@ const FIELD_MAPPINGS = [
 
   // ═══ POIDS (Step3 — storage = kg) ═══
   { aircraftPath: 'weights.emptyWeight',         src: ['weights', 'empty_weight'],        category: 'weight', targetUnit: 'kg', label: 'Masse à vide (BEW)' },
-  { aircraftPath: 'weights.mtow',                src: ['weights', 'mtow'],                category: 'weight', targetUnit: 'kg', label: 'MTOW (masse max décollage)' },
-  { aircraftPath: 'weights.mlw',                 src: ['weights', 'mlw'],                 category: 'weight', targetUnit: 'kg', label: 'MLW (max landing weight)' },
+  { aircraftPath: 'weights.mtow',                src: ['weights', 'mtow'],                category: 'weight', targetUnit: 'kg', label: 'MTOW (cat. Normale)', description: 'Masse maximale au décollage en catégorie Normale (N). Limite standard d\'opération.' },
+  { aircraftPath: 'weights.mlw',                 src: ['weights', 'mlw'],                 category: 'weight', targetUnit: 'kg', label: 'MLW (cat. Normale)', description: 'Masse maximale à l\'atterrissage en catégorie Normale. Souvent égale au MTOW en aviation générale.' },
+  { aircraftPath: 'utilityCategory.mtow',        src: ['weights', 'mtow_utility'],        category: 'weight', targetUnit: 'kg', label: 'MTOW (cat. Utilitaire)', description: 'Masse maximale au décollage en catégorie Utilitaire (U). Souvent inférieure à la MTOW normale. Présente sur les avions certifiés CS-23 / FAR 23 catégorie U.' },
+  { aircraftPath: 'utilityCategory.mlw',         src: ['weights', 'mlw_utility'],         category: 'weight', targetUnit: 'kg', label: 'MLW (cat. Utilitaire)', description: 'Masse maximale à l\'atterrissage en catégorie Utilitaire. Souvent égale au MTOW utilitaire.' },
   { aircraftPath: 'weights.minTakeoffWeight',    src: ['weights', 'min_takeoff_weight'],  category: 'weight', targetUnit: 'kg', label: 'Masse min décollage' },
 
   // ═══ BRAS DE LEVIER & ENVELOPPE CG ═══
@@ -368,6 +375,10 @@ export function mapExtractionToReviewItems(extraction) {
     items.push({
       aircraftPath: mapping.aircraftPath,
       label: mapping.label,
+      // Description optionnelle : affichée en italique sous le libellé dans
+      // le tableau de validation MANEX. Utile pour les vitesses car les
+      // aéroclubs n'utilisent pas tous le même vocabulaire.
+      description: mapping.description || null,
       value: convertedValue,
       originalValue: found ? raw.value : null,
       originalUnit: found ? (raw.unit || null) : null,
@@ -576,6 +587,19 @@ export function buildBulkUpdatePayload(reviewItems) {
   // le CentrogramReader (les arms sont initialisés vides).
   if (fuelTankEntries.length > 0) {
     payload.additionalFuelTanks = fuelTankEntries;
+  }
+
+  // Auto-activation catégorie Utilitaire si l'IA a trouvé MTOW/MLW utility.
+  // Sans cela, les valeurs U seraient stockées mais Step3 ne montrerait pas
+  // le bloc utilitaire (qui dépend de utilityCategory.enabled = true).
+  if (payload.utilityCategory && (
+    payload.utilityCategory.mtow ||
+    payload.utilityCategory.mlw ||
+    payload.utilityCategory.forwardCG ||
+    payload.utilityCategory.aftMinCG ||
+    payload.utilityCategory.aftMaxCG
+  )) {
+    payload.utilityCategory.enabled = true;
   }
 
   return payload;
