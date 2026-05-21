@@ -1670,26 +1670,31 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
               })()}
             </Box>
 
-            {/* ─── Rapport de pesée (PDF) ─────────────────────────────────
+            {/* ─── Rapport de pesée (PDF) — OBLIGATOIRE ─────────────────
                 Justification officielle de la masse à vide et du bras de
                 levier saisis ci-dessus. Le fichier est stocké en base64
                 dans data.weighingReport (offline-accessible avec l'avion)
-                et reste accessible en préparation de vol. */}
+                et reste accessible en préparation de vol. Le wizard bloque
+                le passage à l'étape suivante tant qu'aucun PDF n'est joint. */}
             <Box sx={{ width: '100%', maxWidth: 800, mb: 2 }}>
               <Paper
                 elevation={0}
                 sx={{
                   p: 1.5,
-                  border: '1px dashed',
-                  borderColor: data.weighingReport?.hasData ? 'success.main' : 'warning.main',
-                  bgcolor: data.weighingReport?.hasData ? 'success.50' : 'warning.50',
+                  border: '2px solid',
+                  borderColor: data.weighingReport?.hasData
+                    ? 'success.main'
+                    : (errors?.weighingReport ? 'error.main' : 'warning.main'),
+                  bgcolor: data.weighingReport?.hasData
+                    ? 'success.50'
+                    : (errors?.weighingReport ? 'error.50' : 'warning.50'),
                   borderRadius: 1
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
                   <Box sx={{ flex: 1, minWidth: 200 }}>
                     <Typography variant="body2" fontWeight={600}>
-                      📋 Rapport de pesée (PDF)
+                      📋 Rapport de pesée (PDF) <span style={{ color: '#dc2626' }}>*</span>
                     </Typography>
                     {data.weighingReport?.hasData ? (
                       <Typography variant="caption" color="text.secondary">
@@ -1703,9 +1708,14 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                           : ''}
                       </Typography>
                     ) : (
-                      <Typography variant="caption" color="text.secondary">
-                        Document officiel justifiant la masse à vide et le bras de levier ci-dessus.
+                      <Typography variant="caption" color={errors?.weighingReport ? 'error.main' : 'text.secondary'}>
+                        <strong>Document obligatoire</strong> justifiant la masse à vide et le bras de levier.
                         Sera accessible <strong>en préparation de vol</strong>, même hors ligne.
+                      </Typography>
+                    )}
+                    {errors?.weighingReport && (
+                      <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5, fontWeight: 600 }}>
+                        ⚠ {errors.weighingReport}
                       </Typography>
                     )}
                   </Box>
