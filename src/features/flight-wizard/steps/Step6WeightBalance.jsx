@@ -707,6 +707,42 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                 )}
               </div>
             </div>
+            {/* Bouton « Voir rapport de pesée » — affiché uniquement si le
+                fichier est attaché à l'avion. PDF stocké en base64 → ouverture
+                directe en local, fonctionne hors ligne. */}
+            {aircraft.weighingReport?.hasData && aircraft.weighingReport?.pdfData && (
+              <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <button
+                  onClick={() => {
+                    const w = window.open();
+                    if (w) {
+                      w.document.write(
+                        `<iframe src="${aircraft.weighingReport.pdfData}" style="width:100%;height:100vh;border:none;" title="Rapport de pesée"></iframe>`
+                      );
+                    }
+                  }}
+                  style={{
+                    padding: '6px 12px',
+                    border: '1px solid #16a34a',
+                    backgroundColor: '#f0fdf4',
+                    color: '#15803d',
+                    borderRadius: 6,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6
+                  }}
+                  title={aircraft.weighingReport.fileName}
+                >
+                  📋 Voir rapport de pesée
+                </button>
+                <span style={{ fontSize: 11, color: theme.colors.textSecondary }}>
+                  ({aircraft.weighingReport.fileName})
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Sièges avant */}

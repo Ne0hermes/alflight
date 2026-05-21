@@ -37,6 +37,7 @@ export function validateAndRepairAircraft(aircraft) {
   // Sauvegarder les données volumineuses AVANT le JSON parse/stringify qui les détruirait
   const savedPhoto = aircraft.photo;
   const savedManex = aircraft.manex;
+  const savedWeighingReport = aircraft.weighingReport;
   const savedHasPhoto = aircraft.hasPhoto;
   const savedHasManex = aircraft.hasManex;
   const savedHasPerformance = aircraft.hasPerformance;
@@ -59,6 +60,9 @@ export function validateAndRepairAircraft(aircraft) {
   }
   if (savedHasPerformance !== undefined) {
     repairedAircraft.hasPerformance = savedHasPerformance;
+  }
+  if (savedWeighingReport !== undefined) {
+    repairedAircraft.weighingReport = savedWeighingReport;
   }
   
   // Réparer les propriétés de base SANS écraser les autres
