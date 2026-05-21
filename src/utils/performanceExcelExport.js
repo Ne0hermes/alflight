@@ -111,28 +111,97 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', 
     rows.push([]);
 
     tables.forEach((t, idx) => {
+      console.log(`📊 [ExcelExport] Tableau ${idx + 1} structure:`, {
+        keys: Object.keys(t),
+        table_name: t.table_name,
+        operationId: t.operationId,
+        outputUnit: t.outputUnit,
+        hasData: !!t.data,
+        dataIsArray: Array.isArray(t.data),
+        dataLength: Array.isArray(t.data) ? t.data.length : 'N/A',
+        firstRow: Array.isArray(t.data) && t.data[0] ? t.data[0] : null,
+        hasHeaders: !!t.headers,
+        hasRows: !!t.rows,
+        hasConditions: !!t.conditions
+      });
+
       rows.push([`▼ Tableau ${idx + 1} : ${t.table_name || t.title || '(sans nom)'}`]);
       if (t.pageNumber) rows.push(['Page MANEX', t.pageNumber]);
       if (t.operationId) rows.push(['Operation ID', t.operationId]);
+      if (t.outputUnit) rows.push(['Output Unit', t.outputUnit]);
       if (t.conditions && typeof t.conditions === 'object') {
         Object.entries(t.conditions).forEach(([k, v]) => {
           rows.push([`Condition: ${k}`, typeof v === 'object' ? JSON.stringify(v) : v]);
         });
+      } else if (typeof t.conditions === 'string') {
+        rows.push(['Conditions', t.conditions]);
       }
       rows.push([]);
 
-      const dataRows = Array.isArray(t.data) ? t.data : [];
-      if (dataRows.length > 0 && typeof dataRows[0] === 'object' && dataRows[0] !== null) {
-        const columns = Object.keys(dataRows[0]);
+      // ─── Stratégies multiples pour extraire les rows ──────────────────
+      // L'IA peut retourner les données sous plusieurs formats selon la
+      // version du prompt et le post-traitement appliqué :
+      //   1. t.data = [{col1: v, col2: v, value: v}, ...]   ← prompt actuel
+      //   2. t.headers = [...], t.rows = [[v1, v2], ...]    ← format ancien
+      //   3. t.data = "json string"                          ← edge case
+      let dataRows = [];
+      let columns = [];
+
+      if (Array.isArray(t.data) && t.data.length > 0) {
+        // Cas 1 : array d'objets (format standard)
+        dataRows = t.data;
+        if (typeof dataRows[0] === 'object' && dataRows[0] !== null) {
+          // Récupère TOUTES les colonnes vues dans le set de rows (pas que la 1ère)
+          const allCols = new Set();
+          dataRows.forEach(r => {
+            if (r && typeof r === 'object') Object.keys(r).forEach(k => allCols.add(k));
+          });
+          columns = Array.from(allCols);
+        }
+      } else if (Array.isArray(t.headers) && Array.isArray(t.rows)) {
+        // Cas 2 : format headers + rows séparés
+        columns = t.headers.map(h => String(h));
+        dataRows = t.rows.map(row => {
+          if (Array.isArray(row)) {
+            const obj = {};
+            t.headers.forEach((h, i) => { obj[h] = row[i]; });
+            return obj;
+          }
+          return row;
+        });
+      } else if (typeof t.data === 'string') {
+        // Cas 3 : data stringifié, tente un JSON.parse
+        try {
+          const parsed = JSON.parse(t.data);
+          if (Array.isArray(parsed)) {
+            dataRows = parsed;
+            if (parsed[0] && typeof parsed[0] === 'object') {
+              columns = Object.keys(parsed[0]);
+            }
+          }
+        } catch (e) {
+          rows.push(['Données brutes (string non parsée)', t.data]);
+        }
+      }
+
+      if (columns.length > 0 && dataRows.length > 0) {
         rows.push(columns);
         dataRows.forEach(row => {
-          rows.push(columns.map(c => row[c] ?? ''));
+          rows.push(columns.map(c => {
+            const v = row[c];
+            if (v === null || v === undefined) return '';
+            if (typeof v === 'object') return JSON.stringify(v);
+            return v;
+          }));
         });
       } else if (dataRows.length > 0) {
-        rows.push(['Données brutes']);
-        dataRows.forEach(r => rows.push([typeof r === 'object' ? JSON.stringify(r) : r]));
+        // Fallback : dump JSON brut
+        rows.push(['Données (format inconnu, JSON brut)']);
+        dataRows.forEach(r => rows.push([typeof r === 'object' ? JSON.stringify(r) : String(r)]));
       } else {
-        rows.push(['(aucune donnée)']);
+        // VRAIMENT vide → on dump l'objet entier pour debug
+        rows.push(['(aucune donnée structurée trouvée)']);
+        rows.push(['Objet brut JSON :', JSON.stringify(t, null, 2)]);
       }
       rows.push([]);
     });

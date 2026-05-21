@@ -518,6 +518,21 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
         alert('Aucun élément sélectionné. Coche au moins une case avant d\'exporter.');
         return;
       }
+
+      // Diagnostic : voir la structure des tableaux exportés
+      console.log('📊 [Step4] Export Excel — selectedTables structure:', {
+        nbTables: selectedTables.length,
+        firstTableKeys: selectedTables[0] ? Object.keys(selectedTables[0]) : null,
+        firstTable: selectedTables[0] ? {
+          table_name: selectedTables[0].table_name,
+          operationId: selectedTables[0].operationId,
+          classification: selectedTables[0].classification,
+          hasData: !!selectedTables[0].data,
+          dataLength: Array.isArray(selectedTables[0].data) ? selectedTables[0].data.length : 'N/A',
+          dataFirstRow: Array.isArray(selectedTables[0].data) ? selectedTables[0].data[0] : null
+        } : null
+      });
+
       // Un seul fichier Excel avec un onglet par modèle/classification sélectionné
       const fileName = exportPerformanceModelsToExcel(
         selectedModels,
