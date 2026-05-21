@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import PerformanceWizard from '../PerformanceWizard';
 import AdvancedPerformanceAnalyzer from '../AdvancedPerformanceAnalyzer';
 import { Button, Box, Alert, Typography, Checkbox, FormControlLabel } from '@mui/material';
@@ -395,7 +395,10 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
   const currentPerformanceModels = (savedPerformanceData?.performanceModels)
     || data.performanceModels
     || [];
-  const hasAnyModel = currentPerformanceModels.length > 0;
+  // hasAnyModel = true si on a soit des modèles abaque, soit des tableaux
+  // de performance extraits du MANEX (les 2 formats coexistent).
+  const hasAnyModel = currentPerformanceModels.length > 0
+    || ((savedPerformanceData?.advancedPerformance?.tables) || data.advancedPerformance?.tables || []).length > 0;
 
   // ─── Sélection des modèles à exporter (checkboxes) ─────────────────────
   // Set des IDs (ou indices fallback pour legacy) sélectionnés.
@@ -438,34 +441,93 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
     });
   };
 
+  // ─── Sélection des CLASSIFICATIONS de tableaux extraits du MANEX ─────
+  // Les tableaux sont stockés dans data.advancedPerformance.tables avec
+  // un champ `classification`. On les groupe par classification et le
+  // pilote coche celles à exporter.
+  const advancedTables = (savedPerformanceData?.advancedPerformance?.tables)
+    || data.advancedPerformance?.tables
+    || [];
+  const availableClassifications = useMemo(() => {
+    const set = new Set();
+    advancedTables.forEach(t => {
+      set.add(t.classification || 'non-classified');
+    });
+    return Array.from(set);
+  }, [advancedTables.length, advancedTables.map(t => t.classification || 'non-classified').join(',')]);
+
+  const [selectedClassifications, setSelectedClassifications] = useState(
+    () => new Set(availableClassifications)
+  );
+
+  useEffect(() => {
+    setSelectedClassifications(prev => {
+      const next = new Set(prev);
+      let changed = false;
+      const currentSet = new Set(availableClassifications);
+      availableClassifications.forEach(c => {
+        if (!next.has(c)) {
+          next.add(c);
+          changed = true;
+        }
+      });
+      next.forEach(c => {
+        if (!currentSet.has(c)) {
+          next.delete(c);
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [availableClassifications.join(',')]);
+
+  const toggleClassificationSelection = (cls) => {
+    setSelectedClassifications(prev => {
+      const next = new Set(prev);
+      if (next.has(cls)) next.delete(cls);
+      else next.add(cls);
+      return next;
+    });
+  };
+
   const selectAllModels = () => {
     setSelectedModelIds(new Set(currentPerformanceModels.map((m, idx) => getModelId(m, idx))));
+    setSelectedClassifications(new Set(availableClassifications));
   };
 
   const selectNoneModels = () => {
     setSelectedModelIds(new Set());
+    setSelectedClassifications(new Set());
   };
 
-  const selectedCount = selectedModelIds.size;
-  const totalCount = currentPerformanceModels.length;
+  const selectedCount = selectedModelIds.size + selectedClassifications.size;
+  const totalCount = currentPerformanceModels.length + availableClassifications.length;
   const selectedModels = currentPerformanceModels.filter((m, idx) => selectedModelIds.has(getModelId(m, idx)));
+  const selectedTables = advancedTables.filter(t =>
+    selectedClassifications.has(t.classification || 'non-classified')
+  );
 
   const handleExportExcel = () => {
     try {
-      if (!currentPerformanceModels.length) {
-        alert('Aucun modèle de performance à exporter. Lance d\'abord une extraction.');
+      const hasData = currentPerformanceModels.length > 0 || advancedTables.length > 0;
+      if (!hasData) {
+        alert('Aucune donnée de performance à exporter. Lance d\'abord une extraction.');
         return;
       }
-      if (!selectedModels.length) {
-        alert('Aucun modèle sélectionné. Coche au moins une case avant d\'exporter.');
+      if (!selectedModels.length && !selectedTables.length) {
+        alert('Aucun élément sélectionné. Coche au moins une case avant d\'exporter.');
         return;
       }
-      // Un seul fichier Excel avec un onglet par modèle sélectionné
+      // Un seul fichier Excel avec un onglet par modèle/classification sélectionné
       const fileName = exportPerformanceModelsToExcel(
         selectedModels,
-        data.registration || 'avion'
+        data.registration || 'avion',
+        { tables: selectedTables }
       );
-      console.log(`✅ [Step4] Export Excel : ${fileName} (${selectedModels.length}/${currentPerformanceModels.length} modèles)`);
+      console.log(`✅ [Step4] Export Excel : ${fileName}`, {
+        modèles: `${selectedModels.length}/${currentPerformanceModels.length}`,
+        tables: `${selectedTables.length}/${advancedTables.length}`
+      });
     } catch (err) {
       console.error('[Step4] Export Excel échoué:', err);
       alert(`Erreur export Excel : ${err.message}`);
@@ -757,22 +819,38 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                 // Utiliser le nom du premier tableau comme titre principal
                 const mainTableName = tables[0]?.table_name || displayName;
 
+                const isSelectedForExport = selectedClassifications.has(classification);
+
                 return (
                   <div key={index} style={{
-                    backgroundColor: '#f0f9ff',
-                    border: '1px solid #3b82f6',
+                    backgroundColor: isSelectedForExport ? '#dbeafe' : '#f9fafb',
+                    border: `2px solid ${isSelectedForExport ? '#2563eb' : '#9ca3af'}`,
                     borderRadius: '8px',
                     padding: '10px',
                     marginBottom: '8px',
                     display: 'flex',
-                    flexDirection: 'column'
+                    flexDirection: 'column',
+                    transition: 'background-color 0.15s, border-color 0.15s'
                   }}>
-                    <div style={{ marginBottom: '8px' }}>
-                      <div style={{ fontWeight: '600', marginBottom: '4px', fontSize: '15px' }}>
-                        {mainTableName}
-                      </div>
-                      <div style={{ fontSize: '13px', color: '#6b7280' }}>
-                        {tables.length} tableau(x) extrait(s)
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '8px' }}>
+                      {/* Checkbox export Excel pour la classification */}
+                      <Checkbox
+                        checked={isSelectedForExport}
+                        onChange={() => toggleClassificationSelection(classification)}
+                        sx={{
+                          p: 0.5,
+                          color: '#2563eb',
+                          '&.Mui-checked': { color: '#2563eb' }
+                        }}
+                        title="Inclure ces tableaux dans l'export Excel"
+                      />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: '600', marginBottom: '4px', fontSize: '15px' }}>
+                          {mainTableName}
+                        </div>
+                        <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                          {tables.length} tableau(x) extrait(s)
+                        </div>
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: '4px' }}>

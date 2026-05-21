@@ -28,13 +28,20 @@ const sanitizeSheetName = (name, fallback = 'Modèle') => {
  * Exporte la liste des modèles de performance d'un avion vers un .xlsx.
  * Déclenche automatiquement le téléchargement côté navigateur.
  *
- * @param {Array} models  Liste de data.performanceModels
+ * @param {Array} models  Liste de data.performanceModels (peut être vide
+ *                        si seuls des tables sont fournis)
  * @param {string} aircraftReg  Immatriculation (utilisée dans le nom du fichier)
+ * @param {object} options
+ * @param {Array} options.tables  Liste de data.advancedPerformance.tables
+ *                                à exporter (groupés par classification).
  * @returns {string} Nom du fichier généré
  */
-export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN') {
-  if (!Array.isArray(models) || models.length === 0) {
-    throw new Error('Aucun modèle de performance à exporter.');
+export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', options = {}) {
+  const safeModels = Array.isArray(models) ? models : [];
+  const safeTables = Array.isArray(options?.tables) ? options.tables : [];
+
+  if (safeModels.length === 0 && safeTables.length === 0) {
+    throw new Error('Aucune donnée de performance à exporter.');
   }
 
   const wb = XLSX.utils.book_new();
@@ -44,16 +51,17 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN') 
     ['ALFlight — Export performances'],
     ['Aéronef', aircraftReg],
     ['Date export', new Date().toISOString()],
-    ['Nombre de modèles', models.length],
+    ['Nombre de modèles abaque', safeModels.length],
+    ['Nombre de tableaux', safeTables.length],
     [],
-    ['Pour modifier : édite les valeurs X / Y dans chaque feuille modèle.'],
-    ['NE PAS modifier les colonnes Graph ID, Curve ID — elles servent de clés.'],
+    ['Pour modifier : édite les valeurs dans chaque feuille.'],
+    ['NE PAS modifier les colonnes ID — elles servent de clés.'],
     ['Les lignes peuvent être ajoutées/supprimées librement.'],
     [],
     ['ID', 'Nom', 'Type', 'Classification', 'Nb graphs', 'Nb courbes', 'Nb points']
   ];
 
-  models.forEach((m) => {
+  safeModels.forEach((m) => {
     const nbGraphs = m.data?.graphs?.length || 0;
     let nbCurves = 0;
     let nbPoints = 0;
@@ -84,7 +92,63 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN') 
 
   // ─── Une feuille par modèle ────────────────────────────────────────────
   const usedNames = new Set(['INDEX']);
-  models.forEach((m, idx) => {
+
+  // ─── Une feuille par tableau extrait du MANEX (advancedPerformance.tables) ─
+  // Format différent des abaques : grilles 2D (rows × columns).
+  // Groupage par classification pour la lisibilité.
+  const tablesByClassification = {};
+  safeTables.forEach(t => {
+    const cls = t.classification || 'non-classified';
+    if (!tablesByClassification[cls]) tablesByClassification[cls] = [];
+    tablesByClassification[cls].push(t);
+  });
+
+  Object.entries(tablesByClassification).forEach(([classification, tables]) => {
+    const rows = [];
+    rows.push(['--- TABLEAUX EXTRAITS ---']);
+    rows.push(['Classification', classification]);
+    rows.push(['Nombre de tableaux', tables.length]);
+    rows.push([]);
+
+    tables.forEach((t, idx) => {
+      rows.push([`▼ Tableau ${idx + 1} : ${t.table_name || t.title || '(sans nom)'}`]);
+      if (t.pageNumber) rows.push(['Page MANEX', t.pageNumber]);
+      if (t.operationId) rows.push(['Operation ID', t.operationId]);
+      if (t.conditions && typeof t.conditions === 'object') {
+        Object.entries(t.conditions).forEach(([k, v]) => {
+          rows.push([`Condition: ${k}`, typeof v === 'object' ? JSON.stringify(v) : v]);
+        });
+      }
+      rows.push([]);
+
+      const dataRows = Array.isArray(t.data) ? t.data : [];
+      if (dataRows.length > 0 && typeof dataRows[0] === 'object' && dataRows[0] !== null) {
+        const columns = Object.keys(dataRows[0]);
+        rows.push(columns);
+        dataRows.forEach(row => {
+          rows.push(columns.map(c => row[c] ?? ''));
+        });
+      } else if (dataRows.length > 0) {
+        rows.push(['Données brutes']);
+        dataRows.forEach(r => rows.push([typeof r === 'object' ? JSON.stringify(r) : r]));
+      } else {
+        rows.push(['(aucune donnée)']);
+      }
+      rows.push([]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{ wch: 32 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 20 }];
+    let safeName = sanitizeSheetName(`Tab_${classification}`, `Tableaux_${classification}`);
+    let suffix = 1;
+    while (usedNames.has(safeName)) {
+      safeName = sanitizeSheetName(`Tab_${classification}_${++suffix}`, `Tab_${classification}_${suffix}`);
+    }
+    usedNames.add(safeName);
+    XLSX.utils.book_append_sheet(wb, ws, safeName);
+  });
+
+  safeModels.forEach((m, idx) => {
     const rows = [];
 
     // Bloc métadonnées
