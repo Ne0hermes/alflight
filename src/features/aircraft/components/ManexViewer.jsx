@@ -2,39 +2,82 @@
 import React, { memo, useState, useEffect } from 'react';
 import { FileText, Download, X, Eye, Calendar, Database, BarChart3, AlertTriangle } from 'lucide-react';
 import { getManexWithPdf } from '../../../core/stores/manexStore';
+import dataBackupManager from '../../../utils/dataBackupManager';
 import { showNotification } from '../../../shared/components/Notification';
 
 export const ManexViewer = memo(({ aircraft, onClose }) => {
   const [activeTab, setActiveTab] = useState('info');
   const [manexFullData, setManexFullData] = useState(null);
   const [loading, setLoading] = useState(true);
-  
-  // Charger les données complètes du MANEX depuis le store
+
+  // Charger les données complètes du MANEX depuis tous les stores possibles.
+  // Cas 1 : aircraft.manex déjà présent (legacy / déjà chargé) → on l'utilise
+  //         et on enrichit éventuellement avec le PDF d'IndexedDB.
+  // Cas 2 : aircraft.hasManex === true mais aircraft.manex absent (liste légère)
+  //         → on va chercher dans manexStore (zustand) puis dataBackupManager
+  //           (IndexedDB) en fallback.
   useEffect(() => {
+    let cancelled = false;
+
     const loadManexData = async () => {
-      if (aircraft && aircraft.manex && (aircraft.manex.hasIndexedDBData || aircraft.manex.hasData)) {
+      if (!aircraft || !aircraft.id) {
+        setLoading(false);
+        return;
+      }
+      try {
+        // 1) Tentative via manexStore (métadonnées + PDF si présent)
+        let merged = null;
         try {
-          const fullData = await getManexWithPdf(aircraft.id);
-          setManexFullData(fullData);
-        } catch (error) {
-          console.error('Erreur lors du chargement du MANEX:', error);
+          const fromStore = await getManexWithPdf(aircraft.id);
+          if (fromStore && Object.keys(fromStore).length > 0) {
+            merged = { ...(aircraft.manex || {}), ...fromStore };
+          }
+        } catch (err) {
+          console.warn('[ManexViewer] manexStore lookup failed:', err.message);
         }
-        setLoading(false);
-      } else if (aircraft && aircraft.manex) {
-        // Données legacy (stockées directement dans l'avion)
-        setManexFullData(aircraft.manex);
-        setLoading(false);
-      } else {
-        setLoading(false);
+
+        // 2) Si toujours pas de PDF, essayer dataBackupManager (IndexedDB des
+        //    backups d'avions complets).
+        if (!merged || !merged.pdfData) {
+          try {
+            await dataBackupManager.initPromise;
+            const fullAircraft = await Promise.race([
+              dataBackupManager.getAircraftData(aircraft.id),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+            ]);
+            if (fullAircraft && fullAircraft.manex) {
+              merged = { ...(merged || {}), ...fullAircraft.manex };
+            }
+          } catch (err) {
+            console.warn('[ManexViewer] dataBackupManager lookup failed:', err.message);
+          }
+        }
+
+        // 3) Dernier recours : ce qui est déjà sur l'objet aircraft.
+        if (!merged && aircraft.manex) {
+          merged = aircraft.manex;
+        }
+
+        if (!cancelled) {
+          setManexFullData(merged);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('[ManexViewer] Erreur globale chargement MANEX:', error);
+        if (!cancelled) {
+          setManexFullData(aircraft.manex || null);
+          setLoading(false);
+        }
       }
     };
-    
+
     loadManexData();
+    return () => { cancelled = true; };
   }, [aircraft]);
-  
-  if (!aircraft || !aircraft.manex) {
-    return null;
-  }
+
+  // On accepte aussi le cas où aircraft.manex est absent mais hasManex=true :
+  // le useEffect ci-dessus s'occupe de récupérer les données.
+  if (!aircraft) return null;
 
   if (loading) {
     return (
@@ -62,8 +105,11 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
     );
   }
 
-  // Utiliser les données complètes ou les métadonnées selon ce qui est disponible
-  const manex = manexFullData || aircraft.manex;
+  // Utiliser les données complètes ou les métadonnées selon ce qui est disponible.
+  // Fallback ultime : objet vide pour éviter les crashes — un message informatif
+  // sera affiché si aucune donnée n'a pu être chargée.
+  const manex = manexFullData || aircraft.manex || {};
+  const hasNothing = !manexFullData && !aircraft.manex;
 
   // Fonction pour télécharger le PDF original
   const handleDownloadPdf = () => {
@@ -99,34 +145,40 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
     }
   };
 
-  // Fonction pour exporter les données extraites en JSON
+  // Exporte un dump complet : avion + manex + extraction. Sans le pdfData
+  // (qui peut être lourd) sauf si l'utilisateur clique « Télécharger le PDF ».
   const handleExportData = () => {
     try {
+      const { pdfData: _omitPdf, ...manexMeta } = manex || {};
       const dataToExport = {
+        exportedAt: new Date().toISOString(),
         aircraft: {
+          id: aircraft.id,
           registration: aircraft.registration,
           model: aircraft.model,
-          type: aircraft.type
+          manufacturer: aircraft.manufacturer,
+          type: aircraft.type,
+          homeAeroclub: aircraft.homeAeroclub,
+          homeBase: aircraft.homeBase
         },
-        manex: {
-          fileName: manex.fileName,
-          uploadDate: manex.uploadDate,
-          pageCount: manex.pageCount,
-          performances: manex.performances,
-          limitations: manex.limitations,
-          procedures: manex.procedures,
-          performanceCharts: manex.performanceCharts
-        }
+        manex: manexMeta,
+        // Pour debug / inspection : on inclut toute l'extraction et les méta
+        // utiles, sans le PDF binaire.
+        manexExtraction: aircraft.data?.manexExtraction || null
       };
 
       const dataStr = JSON.stringify(dataToExport, null, 2);
-      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-      
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
       const link = document.createElement('a');
-      link.href = dataUri;
-      link.download = `MANEX_DATA_${aircraft.registration}.json`;
+      link.href = url;
+      link.download = `MANEX_DATA_${aircraft.registration || aircraft.id}.json`;
+      document.body.appendChild(link);
       link.click();
-      
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
       showNotification(
         `📊 Données MANEX exportées pour ${aircraft.registration}`,
         'success',
@@ -184,6 +236,31 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
             <X size={24} />
           </button>
         </div>
+
+        {/* Avertissement si aucune donnée trouvée */}
+        {hasNothing && (
+          <div style={{
+            padding: '16px',
+            backgroundColor: '#fef3c7',
+            border: '1px solid #fbbf24',
+            borderRadius: '8px',
+            marginBottom: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <AlertTriangle size={20} color="#92400e" />
+            <div style={{ fontSize: 13, color: '#92400e' }}>
+              <strong>Aucune donnée MANEX trouvée pour cet avion.</strong>
+              <div style={{ marginTop: 4 }}>
+                Le flag <code>hasManex</code> indique qu'un MANEX existe, mais ni
+                IndexedDB ni le store local n'ont retrouvé les données. Le PDF
+                peut avoir été effacé du cache local. Réimportez-le depuis le
+                wizard si nécessaire.
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Onglets */}
         <div style={{ 
