@@ -634,6 +634,12 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
       case 2: // Masse et centrage
         if (!aircraftData.weights?.emptyWeight) newErrors.emptyWeight = "La masse à vide est requise";
         if (!aircraftData.weights?.mtow) newErrors.mtow = "La masse maximale est requise";
+        // Rapport de pesée OBLIGATOIRE — justification réglementaire des
+        // valeurs M&C saisies. Sans ce document, les calculs de centrage
+        // ne reposent que sur déclaratif (risque sécurité opérationnelle).
+        if (!aircraftData.weighingReport?.hasData) {
+          newErrors.weighingReport = "Le rapport de pesée (PDF) est obligatoire. Il justifie la masse à vide et le bras de levier.";
+        }
         break;
 
       case 3: // Vitesses
