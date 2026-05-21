@@ -398,26 +398,27 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
   const hasAnyModel = currentPerformanceModels.length > 0;
 
   // ─── Sélection des modèles à exporter (checkboxes) ─────────────────────
-  // Set des IDs sélectionnés. Par défaut : tout coché.
-  // Re-sync auto quand la liste de modèles change.
+  // Set des IDs (ou indices fallback pour legacy) sélectionnés.
+  // Par défaut : tout coché. Re-sync auto quand la liste de modèles change.
+  const getModelId = (m, idx) => m.id || `__legacy_idx_${idx}`;
+
   const [selectedModelIds, setSelectedModelIds] = useState(() => {
-    return new Set(currentPerformanceModels.map(m => m.id));
+    return new Set(currentPerformanceModels.map((m, idx) => getModelId(m, idx)));
   });
 
   useEffect(() => {
-    // Si de nouveaux modèles apparaissent (extraction / import Excel), les
-    // ajouter automatiquement à la sélection (par défaut tout coché).
     setSelectedModelIds(prev => {
       const next = new Set(prev);
       let changed = false;
-      currentPerformanceModels.forEach(m => {
-        if (m.id && !next.has(m.id)) {
-          next.add(m.id);
+      const currentIds = new Set(currentPerformanceModels.map((m, idx) => getModelId(m, idx)));
+      currentPerformanceModels.forEach((m, idx) => {
+        const id = getModelId(m, idx);
+        if (!next.has(id)) {
+          next.add(id);
           changed = true;
         }
       });
       // Nettoyer les IDs qui n'existent plus
-      const currentIds = new Set(currentPerformanceModels.map(m => m.id));
       next.forEach(id => {
         if (!currentIds.has(id)) {
           next.delete(id);
@@ -426,7 +427,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
       });
       return changed ? next : prev;
     });
-  }, [currentPerformanceModels.length, currentPerformanceModels.map(m => m.id).join(',')]);
+  }, [currentPerformanceModels.length, currentPerformanceModels.map(m => m.id || 'noid').join(',')]);
 
   const toggleModelSelection = (id) => {
     setSelectedModelIds(prev => {
@@ -438,7 +439,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
   };
 
   const selectAllModels = () => {
-    setSelectedModelIds(new Set(currentPerformanceModels.map(m => m.id)));
+    setSelectedModelIds(new Set(currentPerformanceModels.map((m, idx) => getModelId(m, idx))));
   };
 
   const selectNoneModels = () => {
@@ -447,7 +448,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
 
   const selectedCount = selectedModelIds.size;
   const totalCount = currentPerformanceModels.length;
-  const selectedModels = currentPerformanceModels.filter(m => selectedModelIds.has(m.id));
+  const selectedModels = currentPerformanceModels.filter((m, idx) => selectedModelIds.has(getModelId(m, idx)));
 
   const handleExportExcel = () => {
     try {
@@ -598,11 +599,14 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
               // Log pour debug
               
 
-              const isSelectedForExport = model.id ? selectedModelIds.has(model.id) : false;
+              // Fallback ID pour les anciens modèles sans id : on utilise un
+              // id synthétique basé sur l'index pour permettre la sélection.
+              const modelId = model.id || `__legacy_idx_${index}`;
+              const isSelectedForExport = selectedModelIds.has(modelId);
               return (
-              <div key={index} style={{
-                backgroundColor: isSelectedForExport ? '#f0f9ff' : '#f9fafb',
-                border: `1px solid ${isSelectedForExport ? '#3b82f6' : '#d1d5db'}`,
+              <div key={modelId} style={{
+                backgroundColor: isSelectedForExport ? '#dbeafe' : '#f9fafb',
+                border: `2px solid ${isSelectedForExport ? '#2563eb' : '#9ca3af'}`,
                 borderRadius: '8px',
                 padding: '10px',
                 marginBottom: '8px',
@@ -610,15 +614,18 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                 flexDirection: 'column',
                 transition: 'background-color 0.15s, border-color 0.15s'
               }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: '8px' }}>
-                  {/* Checkbox export Excel */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '8px' }}>
+                  {/* Checkbox export Excel — visible avec taille standard et
+                      couleur explicite pour qu'elle soit bien repérable */}
                   <Checkbox
-                    size="small"
                     checked={isSelectedForExport}
-                    onChange={() => model.id && toggleModelSelection(model.id)}
-                    disabled={!model.id}
-                    sx={{ p: 0, mt: 0.3 }}
-                    title={model.id ? "Inclure ce modèle dans l'export Excel" : "ID manquant — ce modèle ne peut être exporté"}
+                    onChange={() => toggleModelSelection(modelId)}
+                    sx={{
+                      p: 0.5,
+                      color: '#2563eb',
+                      '&.Mui-checked': { color: '#2563eb' }
+                    }}
+                    title="Inclure ce modèle dans l'export Excel"
                   />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: '600', marginBottom: '4px' }}>
