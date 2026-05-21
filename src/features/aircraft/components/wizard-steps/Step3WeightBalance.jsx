@@ -1670,135 +1670,9 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
               })()}
             </Box>
 
-            {/* ─── Rapport de pesée (PDF) — OBLIGATOIRE ─────────────────
-                Justification officielle de la masse à vide et du bras de
-                levier saisis ci-dessus. Le fichier est stocké en base64
-                dans data.weighingReport (offline-accessible avec l'avion)
-                et reste accessible en préparation de vol. Le wizard bloque
-                le passage à l'étape suivante tant qu'aucun PDF n'est joint. */}
-            <Box sx={{ width: '100%', maxWidth: 800, mb: 2 }}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 1.5,
-                  border: '2px solid',
-                  borderColor: data.weighingReport?.hasData
-                    ? 'success.main'
-                    : (errors?.weighingReport ? 'error.main' : 'warning.main'),
-                  bgcolor: data.weighingReport?.hasData
-                    ? 'success.50'
-                    : (errors?.weighingReport ? 'error.50' : 'warning.50'),
-                  borderRadius: 1
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-                  <Box sx={{ flex: 1, minWidth: 200 }}>
-                    <Typography variant="body2" fontWeight={600}>
-                      📋 Rapport de pesée (PDF) <span style={{ color: '#dc2626' }}>*</span>
-                    </Typography>
-                    {data.weighingReport?.hasData ? (
-                      <Typography variant="caption" color="text.secondary">
-                        ✅ {data.weighingReport.fileName}
-                        {' • '}
-                        {data.weighingReport.fileSize
-                          ? `${(data.weighingReport.fileSize / 1024 / 1024).toFixed(2)} MB`
-                          : ''}
-                        {data.weighingReport.uploadDate
-                          ? ` • ${new Date(data.weighingReport.uploadDate).toLocaleDateString('fr-FR')}`
-                          : ''}
-                      </Typography>
-                    ) : (
-                      <Typography variant="caption" color={errors?.weighingReport ? 'error.main' : 'text.secondary'}>
-                        <strong>Document obligatoire</strong> justifiant la masse à vide et le bras de levier.
-                        Sera accessible <strong>en préparation de vol</strong>, même hors ligne.
-                      </Typography>
-                    )}
-                    {errors?.weighingReport && (
-                      <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5, fontWeight: 600 }}>
-                        ⚠ {errors.weighingReport}
-                      </Typography>
-                    )}
-                  </Box>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    {data.weighingReport?.hasData && (
-                      <>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          onClick={() => {
-                            if (data.weighingReport?.pdfData) {
-                              // Ouvre le PDF dans un nouvel onglet
-                              const w = window.open();
-                              if (w) {
-                                w.document.write(
-                                  `<iframe src="${data.weighingReport.pdfData}" style="width:100%;height:100vh;border:none;" title="Rapport de pesée"></iframe>`
-                                );
-                              }
-                            }
-                          }}
-                        >
-                          Voir
-                        </Button>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => updateData('weighingReport', null)}
-                          aria-label="Supprimer le rapport de pesée"
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </>
-                    )}
-                    <Button
-                      variant={data.weighingReport?.hasData ? 'outlined' : 'contained'}
-                      color={data.weighingReport?.hasData ? 'primary' : 'warning'}
-                      size="small"
-                      component="label"
-                    >
-                      {data.weighingReport?.hasData ? 'Remplacer' : 'Importer PDF'}
-                      <input
-                        type="file"
-                        accept="application/pdf"
-                        hidden
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          if (file.type !== 'application/pdf') {
-                            alert('Le fichier doit être un PDF.');
-                            return;
-                          }
-                          if (file.size > 20 * 1024 * 1024) {
-                            alert('Le fichier dépasse 20 MB. Compresse-le ou splite-le en plusieurs pages.');
-                            return;
-                          }
-                          // Conversion base64
-                          try {
-                            const base64 = await new Promise((resolve, reject) => {
-                              const reader = new FileReader();
-                              reader.onload = () => resolve(reader.result);
-                              reader.onerror = () => reject(new Error('Lecture base64 échouée'));
-                              reader.readAsDataURL(file);
-                            });
-                            updateData('weighingReport', {
-                              fileName: file.name,
-                              fileSize: file.size,
-                              pdfData: base64,
-                              uploadDate: new Date().toISOString(),
-                              hasData: true
-                            });
-                          } catch (err) {
-                            console.error('[Step3] Upload rapport de pesée échoué:', err);
-                            alert('Erreur lors de l\'import du fichier.');
-                          }
-                          // Reset input pour permettre re-upload du même fichier
-                          e.target.value = '';
-                        }}
-                      />
-                    </Button>
-                  </Box>
-                </Box>
-              </Paper>
-            </Box>
+            {/* Rapport de pesée déplacé en bas de Step3 (juste avant les
+                boutons de navigation) pour plus de cohérence visuelle :
+                le pilote saisit ses masses puis joint le document. */}
 
             <Box sx={{ width: '100%', maxWidth: 700, mb: 1.5 }}>
               <StyledTextField
@@ -2468,6 +2342,133 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
           </Box>
         </AccordionDetails>
       </Accordion>
+
+      {/* ─── Rapport de pesée (PDF) — OBLIGATOIRE ─────────────────────────
+          Placé en bas de Step3 (juste avant la navigation) pour suivre l'ordre
+          logique : le pilote saisit toutes ses données M&C, puis joint le
+          document officiel qui les justifie. Fichier stocké en base64 dans
+          data.weighingReport (offline-accessible avec l'avion). Le wizard
+          bloque le passage à l'étape suivante tant qu'aucun PDF n'est joint. */}
+      <Box sx={{ width: '100%', maxWidth: 900, mx: 'auto', mt: 3, mb: 1 }}>
+        <Paper
+          elevation={0}
+          sx={{
+            p: 2,
+            border: '2px solid',
+            borderColor: data.weighingReport?.hasData
+              ? 'success.main'
+              : (errors?.weighingReport ? 'error.main' : 'warning.main'),
+            bgcolor: data.weighingReport?.hasData
+              ? 'success.50'
+              : (errors?.weighingReport ? 'error.50' : 'warning.50'),
+            borderRadius: 1
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+            <Box sx={{ flex: 1, minWidth: 200 }}>
+              <Typography variant="subtitle2" fontWeight={700}>
+                📋 Rapport de pesée (PDF) <span style={{ color: '#dc2626' }}>*</span>
+              </Typography>
+              {data.weighingReport?.hasData ? (
+                <Typography variant="caption" color="text.secondary">
+                  ✅ {data.weighingReport.fileName}
+                  {' • '}
+                  {data.weighingReport.fileSize
+                    ? `${(data.weighingReport.fileSize / 1024 / 1024).toFixed(2)} MB`
+                    : ''}
+                  {data.weighingReport.uploadDate
+                    ? ` • ${new Date(data.weighingReport.uploadDate).toLocaleDateString('fr-FR')}`
+                    : ''}
+                </Typography>
+              ) : (
+                <Typography variant="caption" color={errors?.weighingReport ? 'error.main' : 'text.secondary'}>
+                  <strong>Document obligatoire</strong> justifiant la masse à vide et le bras de levier.
+                  Sera accessible <strong>en préparation de vol</strong>, même hors ligne.
+                </Typography>
+              )}
+              {errors?.weighingReport && (
+                <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5, fontWeight: 600 }}>
+                  ⚠ {errors.weighingReport}
+                </Typography>
+              )}
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              {data.weighingReport?.hasData && (
+                <>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => {
+                      if (data.weighingReport?.pdfData) {
+                        const w = window.open();
+                        if (w) {
+                          w.document.write(
+                            `<iframe src="${data.weighingReport.pdfData}" style="width:100%;height:100vh;border:none;" title="Rapport de pesée"></iframe>`
+                          );
+                        }
+                      }
+                    }}
+                  >
+                    Voir
+                  </Button>
+                  <IconButton
+                    size="small"
+                    color="error"
+                    onClick={() => updateData('weighingReport', null)}
+                    aria-label="Supprimer le rapport de pesée"
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </>
+              )}
+              <Button
+                variant={data.weighingReport?.hasData ? 'outlined' : 'contained'}
+                color={data.weighingReport?.hasData ? 'primary' : 'warning'}
+                size="small"
+                component="label"
+              >
+                {data.weighingReport?.hasData ? 'Remplacer' : 'Importer PDF'}
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  hidden
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (file.type !== 'application/pdf') {
+                      alert('Le fichier doit être un PDF.');
+                      return;
+                    }
+                    if (file.size > 20 * 1024 * 1024) {
+                      alert('Le fichier dépasse 20 MB. Compresse-le ou splite-le en plusieurs pages.');
+                      return;
+                    }
+                    try {
+                      const base64 = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result);
+                        reader.onerror = () => reject(new Error('Lecture base64 échouée'));
+                        reader.readAsDataURL(file);
+                      });
+                      updateData('weighingReport', {
+                        fileName: file.name,
+                        fileSize: file.size,
+                        pdfData: base64,
+                        uploadDate: new Date().toISOString(),
+                        hasData: true
+                      });
+                    } catch (err) {
+                      console.error('[Step3] Upload rapport de pesée échoué:', err);
+                      alert('Erreur lors de l\'import du fichier.');
+                    }
+                    e.target.value = '';
+                  }}
+                />
+              </Button>
+            </Box>
+          </Box>
+        </Paper>
+      </Box>
 
       {/* Boutons de navigation */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
