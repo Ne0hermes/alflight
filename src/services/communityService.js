@@ -386,17 +386,22 @@ class CommunityService {
           console.log('✅ Preset existant trouvé - Mise à jour au lieu de création');
           console.log(`   Preset a déjà un MANEX: ${existingPreset.has_manex}`);
 
-          // 🔧 FIX: Ne pas re-uploader le MANEX s'il existe déjà
-          const shouldUploadManex = manexFile && !existingPreset.has_manex;
-          if (existingPreset.has_manex && manexFile) {
-            console.log('ℹ️ MANEX déjà présent - Skip upload pour éviter doublon');
+          // 🔧 FIX 2026-05 : on uploade TOUJOURS le MANEX si le pilote en a
+          // fourni un. L'ancien comportement « skip si has_manex déjà true »
+          // créait des orphelins quand l'upload précédent avait échoué (RLS,
+          // network…) : le flag restait true mais le fichier était absent
+          // de Storage → MANEX invisible au re-téléchargement.
+          // Le coût d'un re-upload identique (~quelques secondes) est
+          // négligeable comparé au bug silencieux qu'il évite.
+          if (manexFile) {
+            console.log('📤 MANEX fourni — upload vers Supabase Storage (garantit présence du fichier)');
           }
 
           // Utiliser la méthode updateCommunityPreset existante
           return await this.updateCommunityPreset(
             existingPreset.id,
             presetData.aircraft_data || presetData,
-            shouldUploadManex ? manexFile : null,  // Upload seulement si nécessaire
+            manexFile || null,
             manexFile?.name,
             userId
           );
