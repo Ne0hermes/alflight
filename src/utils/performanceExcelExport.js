@@ -13,6 +13,17 @@
 
 import * as XLSX from 'xlsx';
 
+// Limite des cellules Excel (32767 max selon spec, on garde une marge).
+const MAX_CELL_CHARS = 8000;
+const safeCell = (v) => {
+  if (v === null || v === undefined) return '';
+  if (typeof v === 'number' || typeof v === 'boolean') return v;
+  const s = typeof v === 'string' ? v : (() => {
+    try { return JSON.stringify(v); } catch { return String(v); }
+  })();
+  return s.length > MAX_CELL_CHARS ? s.slice(0, MAX_CELL_CHARS) + '…[truncated]' : s;
+};
+
 /**
  * Sanitize un nom de feuille Excel (max 31 chars, pas de caractères spéciaux).
  */
@@ -90,30 +101,37 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', 
   ];
   XLSX.utils.book_append_sheet(wb, wsIndex, 'INDEX');
 
-  // ─── Feuille DEBUG : dump JSON brut de tous les inputs ───────────────
-  // Inclut tous les tableaux et modèles tels qu'ils sont en mémoire au
-  // moment de l'export. Permet de diagnostiquer la structure réelle des
-  // données quand un export semble vide.
+  // ─── Feuille DEBUG (allégée) : juste les clés/tailles, pas les dumps JSON ─
+  // L'ancienne version dumpait JSON.stringify(t) pour chaque tableau, ce qui
+  // saturait le CPU et faisait freezer le navigateur sur 10+ gros tableaux.
+  // Désormais : juste un résumé. Pour un dump complet, exporter via
+  // l'option { debug: true } depuis l'appelant si nécessaire.
   const debugRows = [
-    ['ALFlight — DEBUG export performances'],
-    ['Si l\'export te paraît vide, regarde ici : tu vois le JSON brut de'],
-    ['chaque tableau / modèle au moment de l\'export. Partage le contenu'],
-    ['de cette feuille pour qu\'on identifie la vraie structure des données.'],
+    ['ALFlight — Résumé export'],
+    ['Modèles abaques', safeModels.length],
+    ['Tableaux', safeTables.length],
     [],
-    ['─── MODÈLES ABAQUES (performanceModels) ───'],
-    ['Nombre', safeModels.length],
-    []
+    ['#', 'Nom', 'Type / Classification', 'Clés disponibles']
   ];
   safeModels.forEach((m, idx) => {
-    debugRows.push([`Modèle #${idx + 1}`, JSON.stringify(m).slice(0, 32000)]);
+    debugRows.push([
+      idx + 1,
+      safeCell(m.name),
+      safeCell(m.type),
+      safeCell(Object.keys(m || {}).join(', '))
+    ]);
   });
-  debugRows.push([], ['─── TABLEAUX (advancedPerformance.tables) ───'], ['Nombre', safeTables.length], []);
   safeTables.forEach((t, idx) => {
-    debugRows.push([`Tableau #${idx + 1}`, JSON.stringify(t).slice(0, 32000)]);
+    debugRows.push([
+      `T${idx + 1}`,
+      safeCell(t.table_name || t.title),
+      safeCell(t.classification),
+      safeCell(Object.keys(t || {}).join(', '))
+    ]);
   });
   const wsDebug = XLSX.utils.aoa_to_sheet(debugRows);
-  wsDebug['!cols'] = [{ wch: 25 }, { wch: 200 }];
-  XLSX.utils.book_append_sheet(wb, wsDebug, 'DEBUG_RAW');
+  wsDebug['!cols'] = [{ wch: 6 }, { wch: 30 }, { wch: 20 }, { wch: 60 }];
+  XLSX.utils.book_append_sheet(wb, wsDebug, 'INFO');
 
   // ─── Une feuille par modèle ────────────────────────────────────────────
   const usedNames = new Set(['INDEX']);
@@ -136,30 +154,16 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', 
     rows.push([]);
 
     tables.forEach((t, idx) => {
-      console.log(`📊 [ExcelExport] Tableau ${idx + 1} structure:`, {
-        keys: Object.keys(t),
-        table_name: t.table_name,
-        operationId: t.operationId,
-        outputUnit: t.outputUnit,
-        hasData: !!t.data,
-        dataIsArray: Array.isArray(t.data),
-        dataLength: Array.isArray(t.data) ? t.data.length : 'N/A',
-        firstRow: Array.isArray(t.data) && t.data[0] ? t.data[0] : null,
-        hasHeaders: !!t.headers,
-        hasRows: !!t.rows,
-        hasConditions: !!t.conditions
-      });
-
-      rows.push([`▼ Tableau ${idx + 1} : ${t.table_name || t.title || '(sans nom)'}`]);
+      rows.push([`▼ Tableau ${idx + 1} : ${safeCell(t.table_name || t.title || '(sans nom)')}`]);
       if (t.pageNumber) rows.push(['Page MANEX', t.pageNumber]);
-      if (t.operationId) rows.push(['Operation ID', t.operationId]);
-      if (t.outputUnit) rows.push(['Output Unit', t.outputUnit]);
+      if (t.operationId) rows.push(['Operation ID', safeCell(t.operationId)]);
+      if (t.outputUnit) rows.push(['Output Unit', safeCell(t.outputUnit)]);
       if (t.conditions && typeof t.conditions === 'object') {
         Object.entries(t.conditions).forEach(([k, v]) => {
-          rows.push([`Condition: ${k}`, typeof v === 'object' ? JSON.stringify(v) : v]);
+          rows.push([`Condition: ${k}`, safeCell(v)]);
         });
       } else if (typeof t.conditions === 'string') {
-        rows.push(['Conditions', t.conditions]);
+        rows.push(['Conditions', safeCell(t.conditions)]);
       }
       rows.push([]);
 
@@ -212,21 +216,18 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', 
       if (columns.length > 0 && dataRows.length > 0) {
         rows.push(columns);
         dataRows.forEach(row => {
-          rows.push(columns.map(c => {
-            const v = row[c];
-            if (v === null || v === undefined) return '';
-            if (typeof v === 'object') return JSON.stringify(v);
-            return v;
-          }));
+          rows.push(columns.map(c => safeCell(row?.[c])));
         });
       } else if (dataRows.length > 0) {
-        // Fallback : dump JSON brut
+        // Fallback : dump JSON brut (chaque cellule capée)
         rows.push(['Données (format inconnu, JSON brut)']);
-        dataRows.forEach(r => rows.push([typeof r === 'object' ? JSON.stringify(r) : String(r)]));
+        dataRows.forEach(r => rows.push([safeCell(r)]));
       } else {
-        // VRAIMENT vide → on dump l'objet entier pour debug
+        // VRAIMENT vide → on indique uniquement les clés disponibles, sans
+        // re-stringifier tout l'objet (qui pouvait être énorme et freezer
+        // l'export pour 10+ tableaux).
         rows.push(['(aucune donnée structurée trouvée)']);
-        rows.push(['Objet brut JSON :', JSON.stringify(t, null, 2)]);
+        rows.push(['Clés disponibles', safeCell(Object.keys(t || {}).join(', '))]);
       }
       rows.push([]);
     });
@@ -310,10 +311,27 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', 
     XLSX.utils.book_append_sheet(wb, ws, safeName);
   });
 
-  // Téléchargement
+  // Téléchargement : on passe par Blob pour éviter d'utiliser XLSX.writeFile
+  // qui peut être plus long et bloquant. Le navigateur s'occupe de l'écriture
+  // disque en tâche de fond.
   const dateSlug = new Date().toISOString().slice(0, 10);
   const fileName = `Performances_${aircraftReg}_${dateSlug}.xlsx`;
-  XLSX.writeFile(wb, fileName);
+  try {
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    // Libère le blob après un petit délai pour que le téléchargement parte.
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (err) {
+    console.error('[ExcelExport] Erreur écriture xlsx:', err);
+    throw err;
+  }
   return fileName;
 }
 
