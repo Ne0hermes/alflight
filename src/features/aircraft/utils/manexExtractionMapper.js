@@ -82,7 +82,7 @@ function convertToStorage(value, rawUnit, category, targetUnit) {
 //             compatibleRunwaySurfaces
 //   - Step2 : speeds.{vso, vs1, vfeLdg, vfeTO, vno, vne, vr, vx, vy, vapp,
 //             initialClimb, vglide, vle, vlo}, speeds.voRanges, windLimits.limits
-//   - Step3 : weights.{emptyWeight, mtow, mlw, mzfw, minTakeoffWeight}
+//   - Step3 : weights.{emptyWeight, mtow, mlw, minTakeoffWeight}
 //             ❌ Bras de levier (arms.*) ET enveloppe CG (cgEnvelope.*) NE SONT
 //                PLUS extraits par l'IA — déterminés via le wizard CentrogramReader
 //                (lecture par clic sur le centrogramme MANEX).
@@ -210,7 +210,6 @@ const FIELD_MAPPINGS = [
   { aircraftPath: 'weights.emptyWeight',         src: ['weights', 'empty_weight'],        category: 'weight', targetUnit: 'kg', label: 'Masse à vide (BEW)' },
   { aircraftPath: 'weights.mtow',                src: ['weights', 'mtow'],                category: 'weight', targetUnit: 'kg', label: 'MTOW (masse max décollage)' },
   { aircraftPath: 'weights.mlw',                 src: ['weights', 'mlw'],                 category: 'weight', targetUnit: 'kg', label: 'MLW (max landing weight)' },
-  { aircraftPath: 'weights.mzfw',                src: ['weights', 'mzfw'],                category: 'weight', targetUnit: 'kg', label: 'MZFW (max zero fuel weight)' },
   { aircraftPath: 'weights.minTakeoffWeight',    src: ['weights', 'min_takeoff_weight'],  category: 'weight', targetUnit: 'kg', label: 'Masse min décollage' },
 
   // ═══ BRAS DE LEVIER & ENVELOPPE CG ═══
@@ -375,10 +374,11 @@ export function mapExtractionToReviewItems(extraction) {
       targetUnit: mapping.targetUnit || null,
       confidence: found ? (Number(raw.confidence) || 0) : 0,
       sourcePage: found ? (raw.sourcePage || null) : null,
-      // Accepté par défaut si trouvé ET confiance ≥ 70. Les champs vides sont
-      // exclus de l'acceptation par défaut (le pilote doit les remplir
-      // manuellement et cocher accepted=true pour les importer).
-      accepted: found && Number(raw.confidence) >= 70,
+      // « Importer » TOUJOURS décoché par défaut : le pilote doit cocher
+      // manuellement chaque champ qu'il veut importer. Sert d'élément de
+      // vérification active — on n'importe pas aveuglément ce que l'IA
+      // a extrait, même quand la confiance est élevée.
+      accepted: false,
       found, // ← nouveau flag pour différencier "extrait" vs "manquant"
       // category + type conservés pour l'éditeur (forcer type number ou string)
       category: mapping.category || null,

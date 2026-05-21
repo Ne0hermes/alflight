@@ -243,7 +243,6 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
       'weights.emptyWeight',
       'weights.mtow',
       'weights.mlw',
-      'weights.mzfw',
       'weights.minTakeoffWeight',
       'weights.maxBaggageFwd',
       'weights.maxBaggageAft'
@@ -666,7 +665,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
   //   Mode ✏️ 'manual'    → Accordéons standards de saisie au clavier
   //
   // Les deux modes remplissent le MÊME modèle de données (standard historique) :
-  //   data.weights.{emptyWeight, mtow, mlw, mzfw, minTakeoffWeight}
+  //   data.weights.{emptyWeight, mtow, mlw, minTakeoffWeight}
   //   data.arms.{empty, frontSeats, rearSeats, fuelMain}
   //   data.moments.empty
   //   data.fuelCapacity, data.fuelMainCapacity
@@ -1681,21 +1680,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
               />
             </Box>
 
-            <Box sx={{ width: '100%', maxWidth: 700, mb: 1.5 }}>
-              <StyledTextField
-                fullWidth
-                size="small"
-                label="MZFW"
-                type="number"
-                value={data.weights?.mzfw || ''}
-                onChange={(e) => updateData('weights.mzfw', e.target.value)}
-                error={!!errors['weights.mzfw']}
-                helperText={errors['weights.mzfw'] || "Maximum Zero Fuel Weight (MZFW)"}
-                InputProps={{
-                  endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
-                }}
-              />
-            </Box>
+            {/* MZFW retiré : peu utile en aviation générale, source de confusion */}
 
             <Box sx={{ width: '100%', maxWidth: 700 }}>
               <StyledTextField

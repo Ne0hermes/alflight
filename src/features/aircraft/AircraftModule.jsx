@@ -484,7 +484,6 @@ export const AircraftModule = memo(() => {
           // Masses limites
           ['MTOW', fullAircraft.weights?.mtow || fullAircraft.maxTakeoffWeight, 'kg'],
           ['MLW', fullAircraft.weights?.mlw, 'kg'],
-          ['MZFW', fullAircraft.weights?.mzfw || fullAircraft.weights?.zfm, 'kg'],
           ['Masse min vol', fullAircraft.weights?.minTakeoffWeight, 'kg'],
           // Carburant total (somme des réservoirs ci-dessous)
           ['Capacité totale carburant', fullAircraft.fuel?.maxCapacity || fullAircraft.fuelCapacity, 'L'],

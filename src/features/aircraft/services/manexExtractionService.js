@@ -131,7 +131,6 @@ que le wizard de création d'avion sait stocker, ni plus ni moins) :
     "empty_weight": ".. (BEW - Basic Empty Weight, masse à vide en kg ou lbs)",
     "mtow": ".. (Maximum Takeoff Weight)",
     "mlw": ".. (Maximum Landing Weight, souvent = MTOW pour avions GA)",
-    "mzfw": ".. (Maximum Zero Fuel Weight, souvent absent pour avions GA)",
     "min_takeoff_weight": ".. (masse mini décollage, rare)"
   },
   "performance_summary": {
