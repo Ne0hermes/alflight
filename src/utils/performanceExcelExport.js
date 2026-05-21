@@ -60,7 +60,8 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', 
   // Si un tableau a > 5000 rows ou des objets > 50 KB chacun, on tronque
   // pour éviter de freezer le navigateur. L'export reste utilisable.
   const MAX_ROWS_PER_TABLE = 5000;
-  const audit = { tablesTotal: 0, rowsTotal: 0, biggestTable: 0, warnings: [] };
+  const MAX_POINTS_PER_CURVE = 2000;
+  const audit = { tablesTotal: 0, rowsTotal: 0, biggestTable: 0, modelsTotal: 0, pointsTotal: 0, biggestCurve: 0, warnings: [] };
   safeTables.forEach((t, idx) => {
     audit.tablesTotal++;
     const n = Array.isArray(t?.data) ? t.data.length : 0;
@@ -70,7 +71,21 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', 
       audit.warnings.push(`Tableau ${idx + 1} : ${n} rows → tronqué à ${MAX_ROWS_PER_TABLE}`);
     }
   });
-  console.log(`📊 [ExcelExport] Audit : ${audit.tablesTotal} tableaux, ${audit.rowsTotal} rows total, plus gros = ${audit.biggestTable}`);
+  safeModels.forEach((m, idx) => {
+    audit.modelsTotal++;
+    (m.data?.graphs || []).forEach((g) => {
+      (g.curves || []).forEach((c) => {
+        const n = (c.points || []).length;
+        audit.pointsTotal += n;
+        if (n > audit.biggestCurve) audit.biggestCurve = n;
+        if (n > MAX_POINTS_PER_CURVE) {
+          audit.warnings.push(`Modèle "${m.name || idx}" courbe "${c.name || c.id}" : ${n} points → tronqué à ${MAX_POINTS_PER_CURVE}`);
+        }
+      });
+    });
+  });
+  console.log(`📊 [ExcelExport] Audit tableaux : ${audit.tablesTotal} tab, ${audit.rowsTotal} rows total, max=${audit.biggestTable}`);
+  console.log(`📊 [ExcelExport] Audit modèles  : ${audit.modelsTotal} modèles, ${audit.pointsTotal} points total, max courbe=${audit.biggestCurve}`);
   if (audit.warnings.length) console.warn('⚠️ [ExcelExport]', audit.warnings);
 
   const wb = XLSX.utils.book_new();
@@ -278,6 +293,7 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', 
 
   console.time('[ExcelExport] models');
   safeModels.forEach((m, idx) => {
+    console.time(`[ExcelExport] model #${idx + 1} ${m.name || ''}`);
     const rows = [];
 
     // Bloc métadonnées
@@ -311,7 +327,15 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', 
       const graphName = g.name || g.title || '';
       (g.curves || []).forEach((c) => {
         const curveValue = c.value !== undefined && c.value !== null ? c.value : '';
-        (c.points || []).forEach((p) => {
+        const allPoints = c.points || [];
+        // 🚧 Cap points par courbe pour éviter freeze sur abaques aberrants
+        const points = allPoints.length > MAX_POINTS_PER_CURVE
+          ? allPoints.slice(0, MAX_POINTS_PER_CURVE)
+          : allPoints;
+        if (allPoints.length > MAX_POINTS_PER_CURVE) {
+          rows.push([`⚠️ Courbe ${c.name || c.id} : ${allPoints.length} points → tronqué à ${MAX_POINTS_PER_CURVE}`]);
+        }
+        points.forEach((p) => {
           rows.push([
             g.id || '',
             graphName,
@@ -343,6 +367,7 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', 
     usedNames.add(safeName);
 
     XLSX.utils.book_append_sheet(wb, ws, safeName);
+    console.timeEnd(`[ExcelExport] model #${idx + 1} ${m.name || ''}`);
   });
   console.timeEnd('[ExcelExport] models');
 
