@@ -1273,22 +1273,39 @@ export const AircraftModule = memo(() => {
                       <p>MTOW: {
                         formatCanonical(aircraft.maxTakeoffWeight || aircraft.weights?.mtow, 'weight', useUnitsStore.getState().units, { both: true })
                       }</p>
-                      {/* Affichage des informations MANEX et rapport de pesée si présents */}
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '4px' }}>
-                        {(aircraft.hasManex || aircraft.manex) && (
-                          <span style={{ color: '#059669', fontSize: '12px' }}>
-                            📚 MANEX: {aircraft.manex?.fileName || 'Chargé'} {aircraft.manex?.pageCount ? `(${aircraft.manex.pageCount} pages)` : ''}
-                          </span>
-                        )}
-                        {(aircraft.hasWeighingReport || aircraft.weighingReport?.hasData) && (
-                          <span style={{ color: '#0891b2', fontSize: '12px' }}>
-                            ⚖️ Fiche de pesée : {aircraft.weighingReport?.fileName || 'Chargée'}
-                            {aircraft.weighingReport?.weighingDate
-                              ? ` (${new Date(aircraft.weighingReport.weighingDate).toLocaleDateString('fr-FR')})`
-                              : ''}
-                          </span>
-                        )}
-                      </div>
+                      {/* Statut MANEX et fiche de pesée : Chargé (vert) / Absent (rouge) */}
+                      {(() => {
+                        const manexLoaded = !!(aircraft.hasManex || aircraft.manex);
+                        const weighingLoaded = !!(aircraft.hasWeighingReport || aircraft.weighingReport?.hasData);
+                        const okStyle = { color: '#15803d', backgroundColor: '#dcfce7', border: '1px solid #86efac' };
+                        const koStyle = { color: '#b91c1c', backgroundColor: '#fee2e2', border: '1px solid #fca5a5' };
+                        const badge = (style) => ({
+                          ...style,
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          padding: '2px 8px',
+                          borderRadius: '12px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        });
+                        return (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '4px' }}>
+                            <span style={badge(manexLoaded ? okStyle : koStyle)}>
+                              📚 MANEX : {manexLoaded ? 'Chargé' : 'Absent'}
+                              {manexLoaded && aircraft.manex?.pageCount
+                                ? ` (${aircraft.manex.pageCount} p.)`
+                                : ''}
+                            </span>
+                            <span style={badge(weighingLoaded ? okStyle : koStyle)}>
+                              ⚖️ Fiche de pesée : {weighingLoaded ? 'Chargée' : 'Absente'}
+                              {weighingLoaded && aircraft.weighingReport?.weighingDate
+                                ? ` (${new Date(aircraft.weighingReport.weighingDate).toLocaleDateString('fr-FR')})`
+                                : ''}
+                            </span>
+                          </div>
+                        );
+                      })()}
                       {aircraft.masses?.emptyMass && (
                         <p style={{ color: '#3182CE' }}>
                           ⚖️ Masse à vide: {aircraft.masses.emptyMass || aircraft.weights?.emptyWeight} {getSymbol('weight')} • MLM: {aircraft.limitations?.maxLandingMass || aircraft.weights?.mlw ? `${aircraft.limitations?.maxLandingMass || aircraft.weights?.mlw} ${getSymbol('weight')}` : 'N/A'}
