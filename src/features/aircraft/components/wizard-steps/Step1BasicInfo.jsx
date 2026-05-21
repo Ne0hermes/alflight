@@ -289,20 +289,62 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
     return () => clearTimeout(timer);
   }, [data.registration]);
 
-  const handlePhotoUpload = (e) => {
-    const file = e.target.files[0];
-    if (file && file.type.startsWith('image/')) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('La photo est trop volumineuse. Veuillez choisir une image de moins de 5MB.');
-        return;
-      }
-      
+  // Redimensionne et compresse une image avant stockage en base64.
+  // Pourquoi : les photos de smartphone font 2-5 MB JPEG (= 3-7 MB base64),
+  // ce qui dépasse les seuils Supabase JSONB et causait un strip silencieux
+  // à l'upload → photo invisible après téléchargement. On normalise tout à
+  // 1200px max côté long en JPEG 0.85 → typiquement < 500 KB.
+  const resizeAndCompressImage = (file, maxDim = 1200, quality = 0.85) => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result);
-        updateData('photo', reader.result);
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          // Calcule les nouvelles dimensions
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          // Dessine sur un canvas et exporte en JPEG compressé
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve({ dataUrl, width, height, sizeKB: (dataUrl.length * 0.75) / 1024 });
+        };
+        img.onerror = () => reject(new Error('Image invalide'));
+        img.src = reader.result;
       };
+      reader.onerror = () => reject(new Error('Lecture fichier échouée'));
       reader.readAsDataURL(file);
+    });
+  };
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+
+    if (file.size > 20 * 1024 * 1024) {
+      alert('La photo source est trop volumineuse (> 20 MB). Choisis une image plus légère.');
+      return;
+    }
+
+    try {
+      const { dataUrl, width, height, sizeKB } = await resizeAndCompressImage(file, 1200, 0.85);
+      console.log(`📷 Photo redimensionnée : ${width}×${height}, ${sizeKB.toFixed(0)} KB (depuis ${(file.size/1024).toFixed(0)} KB)`);
+      setPhotoPreview(dataUrl);
+      updateData('photo', dataUrl);
+    } catch (err) {
+      console.error('Erreur traitement photo :', err);
+      alert('Erreur lors du traitement de la photo : ' + err.message);
     }
   };
 
