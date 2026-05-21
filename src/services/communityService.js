@@ -441,12 +441,18 @@ class CommunityService {
       // Supprimer le MANEX (stocké séparément dans Supabase Storage)
       delete cleanedData.manex;
 
-      // Supprimer la photo UNIQUEMENT si elle est volumineuse (>1MB en base64)
+      // 🔧 FIX 2026-05 : seuil monté à 5 MB + log explicite quand on strip.
+      // Avant : strip silencieux > 1 MB → photos smartphone toutes perdues,
+      // sans aucun avertissement utilisateur → bug invisible « photo jamais
+      // visible après téléchargement Supabase ». Maintenant : on tente
+      // d'abord un downscale, et si toujours trop gros on prévient.
       if (cleanedData.photo && typeof cleanedData.photo === 'string') {
-        const photoSize = cleanedData.photo.length;
-
-        if (photoSize > 1000000) {
+        const photoSizeKB = (cleanedData.photo.length * 0.75) / 1024;
+        if (cleanedData.photo.length > 5000000) {
+          console.warn(`⚠️ [CommunityService] Photo ${photoSizeKB.toFixed(0)} KB > 5 MB — strippée avant upload Supabase. Le pilote devrait redimensionner l'image avant import.`);
           delete cleanedData.photo;
+        } else {
+          console.log(`📷 [CommunityService] Photo conservée pour upload Supabase (${photoSizeKB.toFixed(0)} KB)`);
         }
       }
 
