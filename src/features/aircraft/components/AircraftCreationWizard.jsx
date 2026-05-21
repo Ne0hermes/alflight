@@ -153,6 +153,10 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
     compatibleRunwaySurfaces: existingAircraft?.compatibleRunwaySurfaces || [],
     photo: existingAircraft?.photo || null,
     manex: existingAircraft?.manex || null,
+    // Rapport de pesée — fichier PDF base64 attaché à l'avion. DOIT être
+    // rechargé en édition pour éviter de perdre le document quand le pilote
+    // ouvre la fiche de l'avion existant.
+    weighingReport: existingAircraft?.weighingReport || null,
 
     // Vitesses caractéristiques
     speeds: {
