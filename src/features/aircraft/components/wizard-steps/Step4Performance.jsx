@@ -553,33 +553,83 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const { models: newModels, sheets, warnings } = await importPerformanceModelsFromExcel(file);
-      if (!newModels.length) {
-        alert(`Aucun modèle trouvé dans le fichier Excel.\n${warnings.join('\n')}`);
+      const {
+        models: newModels,
+        tables: newTables,
+        sheets,
+        warnings
+      } = await importPerformanceModelsFromExcel(file);
+
+      if (!newModels.length && !newTables.length) {
+        alert(`Aucun modèle ou tableau trouvé dans le fichier Excel.\n${warnings.join('\n')}`);
         e.target.value = '';
         return;
       }
+
       const diff = diffPerformanceModels(currentPerformanceModels, newModels);
       const summary = [
-        `Excel parsé : ${sheets} feuille(s), ${newModels.length} modèle(s) reconstruit(s).`,
-        diff.added.length ? `+ Ajouts : ${diff.added.join(', ')}` : '',
-        diff.removed.length ? `- Suppressions : ${diff.removed.join(', ')}` : '',
+        `Excel parsé : ${sheets} feuille(s).`,
+        newModels.length ? `${newModels.length} modèle(s) abaque reconstruit(s).` : '',
+        newTables.length ? `${newTables.length} tableau(x) reconstruit(s).` : '',
+        diff.added.length ? `+ Modèles ajoutés : ${diff.added.join(', ')}` : '',
+        diff.removed.length ? `- Modèles supprimés : ${diff.removed.join(', ')}` : '',
         diff.modified.length ? `~ Modifications : ${diff.modified.join(' ; ')}` : '',
         warnings.length ? `⚠ Warnings : ${warnings.join(' ; ')}` : '',
         '',
-        'Remplacer les données performances actuelles ?'
+        'Remplacer les données performances actuelles par ces valeurs ?'
       ].filter(Boolean).join('\n');
 
       if (confirm(summary)) {
-        updateData('performanceModels', newModels);
+        // Modèles abaque
+        if (newModels.length) {
+          updateData('performanceModels', newModels);
+        }
+
+        // Tableaux : fusion dans advancedPerformance.tables
+        if (newTables.length) {
+          const existingTables = data.advancedPerformance?.tables || [];
+          // Stratégie : on REMPLACE par classification (un export Excel est
+          // une vérité complète pour les classifications qu'il contient).
+          const classificationsInExcel = new Set(newTables.map(t => t.classification));
+          const keptTables = existingTables.filter(t =>
+            !classificationsInExcel.has(t.classification || 'non-classified')
+          );
+          const mergedTables = [...keptTables, ...newTables];
+
+          const mergedAdvancedPerformance = {
+            ...(data.advancedPerformance || {}),
+            tables: mergedTables,
+            extractionMetadata: {
+              ...(data.advancedPerformance?.extractionMetadata || {}),
+              totalTables: mergedTables.length,
+              lastModified: new Date().toISOString(),
+              reimportedFromExcel: true
+            }
+          };
+          updateData('advancedPerformance', mergedAdvancedPerformance);
+        }
+
+        // Mettre à jour le snapshot local
         setSavedPerformanceData({
           ...(savedPerformanceData || {}),
-          performanceModels: newModels
+          performanceModels: newModels.length ? newModels : savedPerformanceData?.performanceModels,
+          advancedPerformance: newTables.length
+            ? {
+                ...(savedPerformanceData?.advancedPerformance || {}),
+                tables: [
+                  ...((savedPerformanceData?.advancedPerformance?.tables || []).filter(t =>
+                    !new Set(newTables.map(nt => nt.classification)).has(t.classification || 'non-classified')
+                  )),
+                  ...newTables
+                ]
+              }
+            : savedPerformanceData?.advancedPerformance
         });
-        // Forcer l'affichage du récap pour que l'utilisateur voie ses nouveaux modèles
+
+        // Forcer l'affichage du récap pour que l'utilisateur voie ses nouvelles données
         setShowExistingData(true);
         setForceShowSummary(true);
-        alert(`✅ ${newModels.length} modèle(s) importé(s) depuis Excel.`);
+        alert(`✅ Import réussi : ${newModels.length} modèle(s) abaque + ${newTables.length} tableau(x).`);
       }
     } catch (err) {
       console.error('[Step4] Import Excel échoué:', err);
