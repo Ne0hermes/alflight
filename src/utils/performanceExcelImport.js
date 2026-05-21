@@ -25,14 +25,25 @@ export async function importPerformanceModelsFromExcel(file) {
   const wb = XLSX.read(arrayBuf, { type: 'array' });
 
   const models = [];
+  const tables = [];
   const warnings = [];
   let parsedSheets = 0;
 
   for (const sheetName of wb.SheetNames) {
-    if (sheetName === 'INDEX') continue;
+    if (sheetName === 'INDEX' || sheetName === 'DEBUG_RAW') continue;
     parsedSheets++;
     const ws = wb.Sheets[sheetName];
     const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '' });
+
+    // Détecte le type de feuille via le premier marker trouvé dans les 10 premières lignes
+    const firstMarkers = rows.slice(0, 10).map(r => (r[0] !== undefined ? String(r[0]).trim() : ''));
+    const isTablesSheet = firstMarkers.includes('--- TABLEAUX EXTRAITS ---') || firstMarkers.includes('--- TABLEAUX ---');
+
+    if (isTablesSheet) {
+      const sheetTables = parseTablesSheet(rows, sheetName, warnings);
+      tables.push(...sheetTables);
+      continue;
+    }
 
     // Parser métadonnées (clé en col A, valeur en col B)
     const meta = {};
@@ -140,7 +151,153 @@ export async function importPerformanceModelsFromExcel(file) {
     });
   }
 
-  return { models, sheets: parsedSheets, warnings };
+  return { models, tables, sheets: parsedSheets, warnings };
+}
+
+/**
+ * Parse une feuille de classification de tableaux (format Tab_<classification>).
+ * Structure :
+ *   --- TABLEAUX EXTRAITS ---
+ *   Classification | <cls>
+ *   Nombre de tableaux | <N>
+ *   (vide)
+ *   ▼ Tableau 1 : <table_name>
+ *   Page MANEX | <n>
+ *   Operation ID | <id>
+ *   Output Unit | <u>
+ *   Condition: xxx | <v>
+ *   (vide)
+ *   <col1> | <col2> | ... <colN>     ← ligne d'en-tête de données
+ *   <val1> | <val2> | ... <valN>     ← rows de données
+ *   ...
+ *   (vide)
+ *   ▼ Tableau 2 : ...
+ */
+function parseTablesSheet(rows, sheetName, warnings) {
+  const result = [];
+  let classification = sheetName.startsWith('Tab_')
+    ? sheetName.slice(4)
+    : 'non-classified';
+
+  let current = null;
+  let columns = null;
+  let mode = 'header'; // 'header' | 'table-meta' | 'table-header' | 'table-data'
+
+  const pushIfValid = () => {
+    if (current && current.data.length > 0) {
+      result.push(current);
+    } else if (current) {
+      warnings.push(`Tableau « ${current.table_name} » : 0 ligne — ignoré.`);
+    }
+  };
+
+  const isRowEmpty = (r) => !r || r.filter((c) => c !== undefined && c !== null && c !== '').length === 0;
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i] || [];
+    const first = row[0] !== undefined ? String(row[0]).trim() : '';
+
+    if (first === '--- TABLEAUX EXTRAITS ---' || first === '--- TABLEAUX ---') {
+      continue;
+    }
+    if (first === 'Classification' && row[1]) {
+      classification = String(row[1]).trim();
+      continue;
+    }
+    if (first === 'Nombre de tableaux') continue;
+
+    // Nouveau tableau ?
+    if (first.startsWith('▼')) {
+      pushIfValid();
+      const nameMatch = first.match(/▼\s*Tableau\s+\d+\s*:\s*(.+)/);
+      current = {
+        classification,
+        table_name: nameMatch ? nameMatch[1].trim() : first.replace(/^▼\s*/, ''),
+        data: [],
+        validation: { errors: [], isValid: true },
+        _reimportedFromExcel: true
+      };
+      columns = null;
+      mode = 'table-meta';
+      continue;
+    }
+
+    if (!current) continue;
+
+    // Métadonnées du tableau courant
+    if (mode === 'table-meta') {
+      if (first === 'Page MANEX' && row[1] !== '') {
+        current.pageNumber = isNaN(Number(row[1])) ? row[1] : Number(row[1]);
+        continue;
+      }
+      if (first === 'Operation ID' && row[1] !== '') {
+        current.operationId = String(row[1]).trim();
+        continue;
+      }
+      if (first === 'Output Unit' && row[1] !== '') {
+        current.outputUnit = String(row[1]).trim();
+        continue;
+      }
+      if (first.startsWith('Condition:') && row[1] !== '') {
+        if (!current.conditions) current.conditions = {};
+        const key = first.replace('Condition:', '').trim();
+        current.conditions[key] = row[1];
+        continue;
+      }
+      if (isRowEmpty(row)) {
+        // Bascule en attente d'en-tête de colonnes
+        mode = 'table-header';
+        continue;
+      }
+      // Ligne non vide hors métadonnées connues → probablement l'en-tête de colonnes
+      const nonEmpty = row.filter((c) => c !== undefined && c !== null && c !== '');
+      if (nonEmpty.length >= 2) {
+        columns = nonEmpty.map((c) => String(c).trim());
+        mode = 'table-data';
+        continue;
+      }
+    }
+
+    // En attente d'en-tête de colonnes
+    if (mode === 'table-header' && !isRowEmpty(row)) {
+      const nonEmpty = row.filter((c) => c !== undefined && c !== null && c !== '');
+      columns = nonEmpty.map((c) => String(c).trim());
+      mode = 'table-data';
+      continue;
+    }
+
+    // Données du tableau
+    if (mode === 'table-data' && columns) {
+      if (isRowEmpty(row)) {
+        // Fin des données du tableau courant
+        mode = 'table-meta'; // attendre éventuel autre tableau (▼)
+        continue;
+      }
+      const dataRow = {};
+      columns.forEach((col, idx) => {
+        let v = row[idx];
+        if (v === '' || v === undefined || v === null) {
+          dataRow[col] = '';
+        } else if (typeof v === 'number') {
+          dataRow[col] = v;
+        } else if (typeof v === 'string' && !isNaN(Number(v)) && v.trim() !== '') {
+          dataRow[col] = Number(v);
+        } else {
+          dataRow[col] = v;
+        }
+      });
+      current.data.push(dataRow);
+    }
+  }
+
+  // Ne pas oublier le dernier tableau
+  pushIfValid();
+
+  if (result.length === 0) {
+    warnings.push(`Feuille « ${sheetName} » : aucun tableau valide trouvé.`);
+  }
+
+  return result;
 }
 
 /**
