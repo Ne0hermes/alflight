@@ -453,6 +453,16 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
     e.target.value = ''; // permettre re-import du même fichier
   };
 
+  // Debug — confirme que Step4Performance est bien monté
+  console.log('🟦 [Step4Performance] Render branches:', {
+    showExistingData,
+    forceShowSummary,
+    hasSavedData: !!savedPerformanceData,
+    editingTables: !!savedPerformanceData?.editingTables,
+    nbModels: currentPerformanceModels.length,
+    hasAnyModel
+  });
+
   // Banner Excel — réutilisable dans toutes les vues de Step4
   const renderExcelBanner = () => (
     <Alert severity={hasAnyModel ? 'info' : 'warning'} sx={{ mb: 2 }}>
@@ -887,6 +897,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
 
     return (
       <div style={{ padding: '10px' }}>
+        {renderExcelBanner()}
         <AdvancedPerformanceAnalyzer
           aircraft={aircraft}
           initialData={wizardInitialData}
