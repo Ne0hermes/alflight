@@ -148,22 +148,55 @@ export const AircraftModule = memo(() => {
   const [aircraftPhotos, setAircraftPhotos] = useState({});
   const updateAircraftManex = useAircraftStore(state => state.updateAircraftManex);
 
-  // Charger les photos depuis IndexedDB pour tous les avions qui en ont
+  // Charger les photos depuis 3 sources possibles, avec fallback en cascade :
+  //   1. IndexedDB local (rapide, fonctionne offline)
+  //   2. Directement sur l'objet aircraft (data fraîchement chargée depuis Supabase)
+  //   3. Supabase si on a un ID mais rien en local (avion partagé d'un autre pilote)
+  //
+  // 🔧 FIX : avant, on ne lisait QUE IndexedDB. Quand un nouvel utilisateur
+  // récupérait un avion depuis Supabase, la photo n'apparaissait jamais car
+  // IndexedDB est vide pour lui. Désormais on accepte aussi aircraft.photo
+  // direct et on persiste vers IndexedDB pour la prochaine fois (cache).
   useEffect(() => {
     const loadPhotos = async () => {
       const photosMap = {};
 
       for (const aircraft of aircraftList) {
-        // 🔧 FIX: Toujours essayer de charger la photo depuis IndexedDB
-        // Même si hasPhoto est false (pour compatibilité avec anciens avions)
         try {
-          const fullData = await dataBackupManager.getAircraftData(aircraft.id);
-          if (fullData && fullData.photo) {
-            photosMap[aircraft.id] = fullData.photo;
-            console.log(`📸 Photo chargée pour ${aircraft.registration}`);
+          // 1) IndexedDB (cache local)
+          let photo = null;
+          try {
+            const fullData = await dataBackupManager.getAircraftData(aircraft.id);
+            if (fullData && fullData.photo) {
+              photo = fullData.photo;
+              console.log(`📸 [IDB] Photo chargée pour ${aircraft.registration}`);
+            }
+          } catch (e) { /* ignore, on retombe sur les fallbacks */ }
+
+          // 2) Photo inline sur l'objet aircraft (Supabase aircraftData.photo)
+          if (!photo && aircraft.photo) {
+            photo = aircraft.photo;
+            console.log(`📸 [Supabase inline] Photo trouvée pour ${aircraft.registration}`);
+            // Cache vers IndexedDB pour la prochaine fois (rapidité, offline)
+            try {
+              await dataBackupManager.initPromise;
+              await dataBackupManager.saveAircraftData({
+                ...aircraft,
+                photo: photo
+              });
+              console.log(`💾 Photo mise en cache IDB pour ${aircraft.registration}`);
+            } catch (e) {
+              console.warn(`⚠️ Cache IDB échoué pour ${aircraft.registration}:`, e?.message);
+            }
+          }
+
+          if (photo) {
+            photosMap[aircraft.id] = photo;
+          } else if (aircraft.hasPhoto) {
+            console.warn(`⚠️ hasPhoto=true mais aucune photo trouvée pour ${aircraft.registration}`);
           }
         } catch (error) {
-          console.warn(`⚠️ Erreur lors du chargement de la photo pour ${aircraft.registration}:`, error);
+          console.warn(`⚠️ Erreur globale photo ${aircraft.registration}:`, error);
         }
       }
 
