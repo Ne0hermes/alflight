@@ -48,12 +48,30 @@ const sanitizeSheetName = (name, fallback = 'Modèle') => {
  * @returns {string} Nom du fichier généré
  */
 export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', options = {}) {
+  const t0 = performance.now();
   const safeModels = Array.isArray(models) ? models : [];
   const safeTables = Array.isArray(options?.tables) ? options.tables : [];
 
   if (safeModels.length === 0 && safeTables.length === 0) {
     throw new Error('Aucune donnée de performance à exporter.');
   }
+
+  // ─── Audit upfront du volume pour détecter les pathologies ──────────────
+  // Si un tableau a > 5000 rows ou des objets > 50 KB chacun, on tronque
+  // pour éviter de freezer le navigateur. L'export reste utilisable.
+  const MAX_ROWS_PER_TABLE = 5000;
+  const audit = { tablesTotal: 0, rowsTotal: 0, biggestTable: 0, warnings: [] };
+  safeTables.forEach((t, idx) => {
+    audit.tablesTotal++;
+    const n = Array.isArray(t?.data) ? t.data.length : 0;
+    audit.rowsTotal += n;
+    if (n > audit.biggestTable) audit.biggestTable = n;
+    if (n > MAX_ROWS_PER_TABLE) {
+      audit.warnings.push(`Tableau ${idx + 1} : ${n} rows → tronqué à ${MAX_ROWS_PER_TABLE}`);
+    }
+  });
+  console.log(`📊 [ExcelExport] Audit : ${audit.tablesTotal} tableaux, ${audit.rowsTotal} rows total, plus gros = ${audit.biggestTable}`);
+  if (audit.warnings.length) console.warn('⚠️ [ExcelExport]', audit.warnings);
 
   const wb = XLSX.utils.book_new();
 
@@ -146,7 +164,9 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', 
     tablesByClassification[cls].push(t);
   });
 
+  console.time('[ExcelExport] tables');
   Object.entries(tablesByClassification).forEach(([classification, tables]) => {
+    console.time(`[ExcelExport] cls=${classification}`);
     const rows = [];
     rows.push(['--- TABLEAUX EXTRAITS ---']);
     rows.push(['Classification', classification]);
@@ -178,13 +198,24 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', 
 
       if (Array.isArray(t.data) && t.data.length > 0) {
         // Cas 1 : array d'objets (format standard)
-        dataRows = t.data;
+        // 🚧 Cap de sécurité : pas plus de MAX_ROWS_PER_TABLE rows par tableau
+        const originalLen = t.data.length;
+        dataRows = originalLen > MAX_ROWS_PER_TABLE ? t.data.slice(0, MAX_ROWS_PER_TABLE) : t.data;
+        if (originalLen > MAX_ROWS_PER_TABLE) {
+          rows.push([`⚠️ Tronqué : ${originalLen} rows source → ${MAX_ROWS_PER_TABLE} exportées.`]);
+        }
         if (typeof dataRows[0] === 'object' && dataRows[0] !== null) {
-          // Récupère TOUTES les colonnes vues dans le set de rows (pas que la 1ère)
+          // Récupère TOUTES les colonnes vues dans les 1000 premières rows
+          // (au-delà, les colonnes additionnelles sont rares et le coût O(N*M)
+          // peut devenir bloquant si une table a beaucoup de keys différentes).
           const allCols = new Set();
-          dataRows.forEach(r => {
-            if (r && typeof r === 'object') Object.keys(r).forEach(k => allCols.add(k));
-          });
+          const sampleSize = Math.min(dataRows.length, 1000);
+          for (let i = 0; i < sampleSize; i++) {
+            const r = dataRows[i];
+            if (r && typeof r === 'object') {
+              for (const k of Object.keys(r)) allCols.add(k);
+            }
+          }
           columns = Array.from(allCols);
         }
       } else if (Array.isArray(t.headers) && Array.isArray(t.rows)) {
@@ -241,8 +272,11 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', 
     }
     usedNames.add(safeName);
     XLSX.utils.book_append_sheet(wb, ws, safeName);
+    console.timeEnd(`[ExcelExport] cls=${classification}`);
   });
+  console.timeEnd('[ExcelExport] tables');
 
+  console.time('[ExcelExport] models');
   safeModels.forEach((m, idx) => {
     const rows = [];
 
@@ -310,6 +344,7 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', 
 
     XLSX.utils.book_append_sheet(wb, ws, safeName);
   });
+  console.timeEnd('[ExcelExport] models');
 
   // Téléchargement : on passe par Blob pour éviter d'utiliser XLSX.writeFile
   // qui peut être plus long et bloquant. Le navigateur s'occupe de l'écriture
@@ -317,7 +352,11 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', 
   const dateSlug = new Date().toISOString().slice(0, 10);
   const fileName = `Performances_${aircraftReg}_${dateSlug}.xlsx`;
   try {
+    console.time('[ExcelExport] XLSX.write');
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    console.timeEnd('[ExcelExport] XLSX.write');
+
+    console.time('[ExcelExport] Blob+download');
     const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -328,6 +367,8 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', 
     document.body.removeChild(link);
     // Libère le blob après un petit délai pour que le téléchargement parte.
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+    console.timeEnd('[ExcelExport] Blob+download');
+    console.log(`✅ [ExcelExport] Terminé en ${Math.round(performance.now() - t0)}ms — ${fileName}`);
   } catch (err) {
     console.error('[ExcelExport] Erreur écriture xlsx:', err);
     throw err;
