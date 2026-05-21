@@ -90,6 +90,31 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', 
   ];
   XLSX.utils.book_append_sheet(wb, wsIndex, 'INDEX');
 
+  // ─── Feuille DEBUG : dump JSON brut de tous les inputs ───────────────
+  // Inclut tous les tableaux et modèles tels qu'ils sont en mémoire au
+  // moment de l'export. Permet de diagnostiquer la structure réelle des
+  // données quand un export semble vide.
+  const debugRows = [
+    ['ALFlight — DEBUG export performances'],
+    ['Si l\'export te paraît vide, regarde ici : tu vois le JSON brut de'],
+    ['chaque tableau / modèle au moment de l\'export. Partage le contenu'],
+    ['de cette feuille pour qu\'on identifie la vraie structure des données.'],
+    [],
+    ['─── MODÈLES ABAQUES (performanceModels) ───'],
+    ['Nombre', safeModels.length],
+    []
+  ];
+  safeModels.forEach((m, idx) => {
+    debugRows.push([`Modèle #${idx + 1}`, JSON.stringify(m).slice(0, 32000)]);
+  });
+  debugRows.push([], ['─── TABLEAUX (advancedPerformance.tables) ───'], ['Nombre', safeTables.length], []);
+  safeTables.forEach((t, idx) => {
+    debugRows.push([`Tableau #${idx + 1}`, JSON.stringify(t).slice(0, 32000)]);
+  });
+  const wsDebug = XLSX.utils.aoa_to_sheet(debugRows);
+  wsDebug['!cols'] = [{ wch: 25 }, { wch: 200 }];
+  XLSX.utils.book_append_sheet(wb, wsDebug, 'DEBUG_RAW');
+
   // ─── Une feuille par modèle ────────────────────────────────────────────
   const usedNames = new Set(['INDEX']);
 
