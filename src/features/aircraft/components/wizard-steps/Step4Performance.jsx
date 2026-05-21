@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import PerformanceWizard from '../PerformanceWizard';
 import AdvancedPerformanceAnalyzer from '../AdvancedPerformanceAnalyzer';
-import { Button, Box, Alert, Typography } from '@mui/material';
+import { Button, Box, Alert, Typography, Checkbox, FormControlLabel } from '@mui/material';
 import {
   ChevronRight as ChevronRightIcon,
   ChevronLeft as ChevronLeftIcon,
@@ -397,17 +397,74 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
     || [];
   const hasAnyModel = currentPerformanceModels.length > 0;
 
+  // ─── Sélection des modèles à exporter (checkboxes) ─────────────────────
+  // Set des IDs sélectionnés. Par défaut : tout coché.
+  // Re-sync auto quand la liste de modèles change.
+  const [selectedModelIds, setSelectedModelIds] = useState(() => {
+    return new Set(currentPerformanceModels.map(m => m.id));
+  });
+
+  useEffect(() => {
+    // Si de nouveaux modèles apparaissent (extraction / import Excel), les
+    // ajouter automatiquement à la sélection (par défaut tout coché).
+    setSelectedModelIds(prev => {
+      const next = new Set(prev);
+      let changed = false;
+      currentPerformanceModels.forEach(m => {
+        if (m.id && !next.has(m.id)) {
+          next.add(m.id);
+          changed = true;
+        }
+      });
+      // Nettoyer les IDs qui n'existent plus
+      const currentIds = new Set(currentPerformanceModels.map(m => m.id));
+      next.forEach(id => {
+        if (!currentIds.has(id)) {
+          next.delete(id);
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [currentPerformanceModels.length, currentPerformanceModels.map(m => m.id).join(',')]);
+
+  const toggleModelSelection = (id) => {
+    setSelectedModelIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllModels = () => {
+    setSelectedModelIds(new Set(currentPerformanceModels.map(m => m.id)));
+  };
+
+  const selectNoneModels = () => {
+    setSelectedModelIds(new Set());
+  };
+
+  const selectedCount = selectedModelIds.size;
+  const totalCount = currentPerformanceModels.length;
+  const selectedModels = currentPerformanceModels.filter(m => selectedModelIds.has(m.id));
+
   const handleExportExcel = () => {
     try {
       if (!currentPerformanceModels.length) {
         alert('Aucun modèle de performance à exporter. Lance d\'abord une extraction.');
         return;
       }
+      if (!selectedModels.length) {
+        alert('Aucun modèle sélectionné. Coche au moins une case avant d\'exporter.');
+        return;
+      }
+      // Un seul fichier Excel avec un onglet par modèle sélectionné
       const fileName = exportPerformanceModelsToExcel(
-        currentPerformanceModels,
+        selectedModels,
         data.registration || 'avion'
       );
-      console.log(`✅ [Step4] Export Excel : ${fileName}`);
+      console.log(`✅ [Step4] Export Excel : ${fileName} (${selectedModels.length}/${currentPerformanceModels.length} modèles)`);
     } catch (err) {
       console.error('[Step4] Export Excel échoué:', err);
       alert(`Erreur export Excel : ${err.message}`);
@@ -473,19 +530,33 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
           </Typography>
           <Typography variant="caption" color="text.secondary">
             {hasAnyModel
-              ? `Exporte les ${currentPerformanceModels.length} modèle(s) en .xlsx (1 feuille par modèle), modifie dans Excel/LibreOffice, puis réimporte. Round-trip garanti.`
+              ? <>Sélectionne les modèles à exporter (cases à cocher ci-dessous), puis clique « Exporter Excel ». Tu obtiendras un seul fichier .xlsx avec un onglet par modèle sélectionné. Modifie dans Excel/LibreOffice puis réimporte — round-trip garanti.</>
               : 'Aucun modèle extrait pour le moment. Lance une extraction MANEX ci-dessous, puis reviens ici pour exporter en Excel.'}
           </Typography>
+          {hasAnyModel && (
+            <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+              <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                {selectedCount} / {totalCount} sélectionné{selectedCount > 1 ? 's' : ''}
+              </Typography>
+              <Button size="small" variant="text" onClick={selectAllModels} sx={{ minWidth: 0, px: 1, fontSize: 11 }}>
+                Tout cocher
+              </Button>
+              <Typography variant="caption" sx={{ color: 'text.disabled' }}>·</Typography>
+              <Button size="small" variant="text" onClick={selectNoneModels} sx={{ minWidth: 0, px: 1, fontSize: 11 }}>
+                Tout décocher
+              </Button>
+            </Box>
+          )}
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
-            variant="outlined"
+            variant="contained"
             size="small"
             startIcon={<FileDownloadIcon />}
             onClick={handleExportExcel}
-            disabled={!hasAnyModel}
+            disabled={!hasAnyModel || selectedCount === 0}
           >
-            Exporter Excel
+            Exporter Excel{hasAnyModel ? ` (${selectedCount})` : ''}
           </Button>
           <Button
             variant="outlined"
@@ -527,25 +598,38 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
               // Log pour debug
               
 
+              const isSelectedForExport = model.id ? selectedModelIds.has(model.id) : false;
               return (
               <div key={index} style={{
-                backgroundColor: '#f0f9ff',
-                border: '1px solid #3b82f6',
+                backgroundColor: isSelectedForExport ? '#f0f9ff' : '#f9fafb',
+                border: `1px solid ${isSelectedForExport ? '#3b82f6' : '#d1d5db'}`,
                 borderRadius: '8px',
                 padding: '10px',
                 marginBottom: '8px',
                 display: 'flex',
-                flexDirection: 'column'
+                flexDirection: 'column',
+                transition: 'background-color 0.15s, border-color 0.15s'
               }}>
-                <div style={{ marginBottom: '8px' }}>
-                  <div style={{ fontWeight: '600', marginBottom: '4px' }}>
-                    {model.classification || model.name || `Abaque ${index + 1}`}
-                  </div>
-                  {model.data?.graphs && (
-                    <div style={{ fontSize: '14px', color: '#6b7280' }}>
-                      {model.data.graphs.length} graphique(s) configuré(s)
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: '8px' }}>
+                  {/* Checkbox export Excel */}
+                  <Checkbox
+                    size="small"
+                    checked={isSelectedForExport}
+                    onChange={() => model.id && toggleModelSelection(model.id)}
+                    disabled={!model.id}
+                    sx={{ p: 0, mt: 0.3 }}
+                    title={model.id ? "Inclure ce modèle dans l'export Excel" : "ID manquant — ce modèle ne peut être exporté"}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>
+                      {model.classification || model.name || `Abaque ${index + 1}`}
                     </div>
-                  )}
+                    {model.data?.graphs && (
+                      <div style={{ fontSize: '14px', color: '#6b7280' }}>
+                        {model.data.graphs.length} graphique(s) configuré(s)
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div style={{ display: 'flex', gap: '4px' }}>
                   <button
