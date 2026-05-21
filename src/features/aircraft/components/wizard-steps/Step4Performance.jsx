@@ -389,110 +389,123 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
   
 
   // Si des données existent, afficher une vue récapitulative avec option de modifier
+  // ─── Workflow Excel : handlers + banner JSX réutilisables ─────────────
+  // Définis ici (hors conditionnels de rendu) pour être accessibles dans les
+  // 2 vues : récapitulatif des modèles existants ET wizard de création.
+  const currentPerformanceModels = (savedPerformanceData?.performanceModels)
+    || data.performanceModels
+    || [];
+  const hasAnyModel = currentPerformanceModels.length > 0;
+
+  const handleExportExcel = () => {
+    try {
+      if (!currentPerformanceModels.length) {
+        alert('Aucun modèle de performance à exporter. Lance d\'abord une extraction.');
+        return;
+      }
+      const fileName = exportPerformanceModelsToExcel(
+        currentPerformanceModels,
+        data.registration || 'avion'
+      );
+      console.log(`✅ [Step4] Export Excel : ${fileName}`);
+    } catch (err) {
+      console.error('[Step4] Export Excel échoué:', err);
+      alert(`Erreur export Excel : ${err.message}`);
+    }
+  };
+
+  const handleImportExcel = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const { models: newModels, sheets, warnings } = await importPerformanceModelsFromExcel(file);
+      if (!newModels.length) {
+        alert(`Aucun modèle trouvé dans le fichier Excel.\n${warnings.join('\n')}`);
+        e.target.value = '';
+        return;
+      }
+      const diff = diffPerformanceModels(currentPerformanceModels, newModels);
+      const summary = [
+        `Excel parsé : ${sheets} feuille(s), ${newModels.length} modèle(s) reconstruit(s).`,
+        diff.added.length ? `+ Ajouts : ${diff.added.join(', ')}` : '',
+        diff.removed.length ? `- Suppressions : ${diff.removed.join(', ')}` : '',
+        diff.modified.length ? `~ Modifications : ${diff.modified.join(' ; ')}` : '',
+        warnings.length ? `⚠ Warnings : ${warnings.join(' ; ')}` : '',
+        '',
+        'Remplacer les données performances actuelles ?'
+      ].filter(Boolean).join('\n');
+
+      if (confirm(summary)) {
+        updateData('performanceModels', newModels);
+        setSavedPerformanceData({
+          ...(savedPerformanceData || {}),
+          performanceModels: newModels
+        });
+        // Forcer l'affichage du récap pour que l'utilisateur voie ses nouveaux modèles
+        setShowExistingData(true);
+        setForceShowSummary(true);
+        alert(`✅ ${newModels.length} modèle(s) importé(s) depuis Excel.`);
+      }
+    } catch (err) {
+      console.error('[Step4] Import Excel échoué:', err);
+      alert(`Erreur import Excel : ${err.message}`);
+    }
+    e.target.value = ''; // permettre re-import du même fichier
+  };
+
+  // Banner Excel — réutilisable dans toutes les vues de Step4
+  const renderExcelBanner = () => (
+    <Alert severity={hasAnyModel ? 'info' : 'warning'} sx={{ mb: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+        <Box sx={{ flex: 1, minWidth: 200 }}>
+          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+            📊 Vérifier / corriger les performances dans Excel
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {hasAnyModel
+              ? `Exporte les ${currentPerformanceModels.length} modèle(s) en .xlsx (1 feuille par modèle), modifie dans Excel/LibreOffice, puis réimporte. Round-trip garanti.`
+              : 'Aucun modèle extrait pour le moment. Lance une extraction MANEX ci-dessous, puis reviens ici pour exporter en Excel.'}
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<FileDownloadIcon />}
+            onClick={handleExportExcel}
+            disabled={!hasAnyModel}
+          >
+            Exporter Excel
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            color="primary"
+            startIcon={<FileUploadIcon />}
+            component="label"
+          >
+            Réimporter Excel
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              hidden
+              onChange={handleImportExcel}
+            />
+          </Button>
+        </Box>
+      </Box>
+    </Alert>
+  );
+
   if ((showExistingData || forceShowSummary) && savedPerformanceData) {
-    const performanceModels = savedPerformanceData.performanceModels || [];
-    const hasAnyModel = performanceModels.length > 0;
-
-    const handleExportExcel = () => {
-      try {
-        const fileName = exportPerformanceModelsToExcel(
-          performanceModels,
-          data.registration || 'avion'
-        );
-        console.log(`✅ [Step4] Export Excel : ${fileName}`);
-      } catch (err) {
-        console.error('[Step4] Export Excel échoué:', err);
-        alert(`Erreur export Excel : ${err.message}`);
-      }
-    };
-
-    const handleImportExcel = async (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      try {
-        const { models: newModels, sheets, warnings } = await importPerformanceModelsFromExcel(file);
-        if (!newModels.length) {
-          alert(`Aucun modèle trouvé dans le fichier Excel.\n${warnings.join('\n')}`);
-          e.target.value = '';
-          return;
-        }
-        const diff = diffPerformanceModels(performanceModels, newModels);
-        const summary = [
-          `Excel parsé : ${sheets} feuille(s), ${newModels.length} modèle(s) reconstruit(s).`,
-          diff.added.length ? `+ Ajouts : ${diff.added.join(', ')}` : '',
-          diff.removed.length ? `- Suppressions : ${diff.removed.join(', ')}` : '',
-          diff.modified.length ? `~ Modifications : ${diff.modified.join(' ; ')}` : '',
-          warnings.length ? `⚠ Warnings : ${warnings.join(' ; ')}` : '',
-          '',
-          'Remplacer les données performances actuelles ?'
-        ].filter(Boolean).join('\n');
-
-        if (confirm(summary)) {
-          updateData('performanceModels', newModels);
-          setSavedPerformanceData({
-            ...savedPerformanceData,
-            performanceModels: newModels
-          });
-          alert(`✅ ${newModels.length} modèle(s) importé(s) depuis Excel.`);
-        }
-      } catch (err) {
-        console.error('[Step4] Import Excel échoué:', err);
-        alert(`Erreur import Excel : ${err.message}`);
-      }
-      e.target.value = ''; // permettre re-import du même fichier
-    };
-
     return (
       <div>
         <h3 style={{ marginBottom: '12px', fontSize: '16px', fontWeight: 'bold' }}>
           Données de Performance Configurées
         </h3>
 
-        {/* ─── Workflow Excel : export + import ───────────────────────────
-            Permet d'exporter toutes les données performances extraites
-            dans un fichier .xlsx, de les vérifier/corriger dans Excel
-            (ou LibreOffice), puis de réimporter le fichier modifié. */}
-        {hasAnyModel && (
-          <Alert severity="info" sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-              <Box sx={{ flex: 1, minWidth: 200 }}>
-                <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
-                  📊 Vérifier / corriger dans Excel
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Exporte les {performanceModels.length} modèle(s) en .xlsx
-                  (1 feuille par modèle), modifie les valeurs dans Excel ou
-                  LibreOffice, puis réimporte. Format round-trippable.
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<FileDownloadIcon />}
-                  onClick={handleExportExcel}
-                >
-                  Exporter Excel
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  color="primary"
-                  startIcon={<FileUploadIcon />}
-                  component="label"
-                >
-                  Réimporter Excel
-                  <input
-                    type="file"
-                    accept=".xlsx,.xls"
-                    hidden
-                    onChange={handleImportExcel}
-                  />
-                </Button>
-              </Box>
-            </Box>
-          </Alert>
-        )}
+        {/* Workflow Excel — export + réimport (helper renderExcelBanner) */}
+        {renderExcelBanner()}
 
         {/* Abaques de performance */}
         {savedPerformanceData.performanceModels && savedPerformanceData.performanceModels.length > 0 && (
@@ -973,32 +986,37 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
   }
 
   // Sinon, afficher le wizard de création/édition
+  // Le banner Excel est affiché EN HAUT pour rester accessible (export
+  // possible si des modèles existent, sinon orientation vers l'extraction).
   return (
-    <PerformanceWizard
-      aircraft={aircraft}
-      onPerformanceUpdate={handlePerformanceUpdate}
-      initialData={wizardInitialData}
-      startAtStep={wizardStep}
-      abacBuilderRefCallback={handleAbacBuilderRefCallback}
-      onCancel={() => {
+    <div>
+      {renderExcelBanner()}
+      <PerformanceWizard
+        aircraft={aircraft}
+        onPerformanceUpdate={handlePerformanceUpdate}
+        initialData={wizardInitialData}
+        startAtStep={wizardStep}
+        abacBuilderRefCallback={handleAbacBuilderRefCallback}
+        onCancel={() => {
 
-        // Si on a des données de performance, revenir à la vue récapitulative
-        if (savedPerformanceData && (data.performanceModels?.length > 0 || data.advancedPerformance || data.performanceTables)) {
-          setShowExistingData(true);
-          setForceShowSummary(true);
-          // Nettoyer le mode édition
-          setSavedPerformanceData({
-            ...savedPerformanceData,
-            editingModel: null,
-            editingModelIndex: null
-          });
-          // Désactiver le mode édition dans le wizard principal
-          if (setIsEditingAbaque) {
-            setIsEditingAbaque(false);
+          // Si on a des données de performance, revenir à la vue récapitulative
+          if (savedPerformanceData && (data.performanceModels?.length > 0 || data.advancedPerformance || data.performanceTables)) {
+            setShowExistingData(true);
+            setForceShowSummary(true);
+            // Nettoyer le mode édition
+            setSavedPerformanceData({
+              ...savedPerformanceData,
+              editingModel: null,
+              editingModelIndex: null
+            });
+            // Désactiver le mode édition dans le wizard principal
+            if (setIsEditingAbaque) {
+              setIsEditingAbaque(false);
+            }
           }
-        }
-      }}
-    />
+        }}
+      />
+    </div>
   );
 };
 
