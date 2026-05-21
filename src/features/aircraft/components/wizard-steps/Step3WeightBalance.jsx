@@ -144,6 +144,29 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
   // au même niveau (type: 'main'). data.fuelMainCapacity est legacy uniquement.
   const [additionalFuelTanks, setAdditionalFuelTanks] = useState(data.additionalFuelTanks || []);
 
+  // ─── Sync local ← data après mise à jour externe (ex. CentrogramReader) ──
+  // Quand le CentrogramReader écrit dans data.additionalFuelTanks[i].arm via
+  // updateData, parsePath fait une copie profonde → nouvelle référence.
+  // Les useState locaux gardent l'ancienne référence → l'UI ne re-render pas.
+  // Ces useEffect détectent les changements de référence et re-syncent.
+  useEffect(() => {
+    if (data.additionalFuelTanks && data.additionalFuelTanks !== additionalFuelTanks) {
+      setAdditionalFuelTanks(data.additionalFuelTanks);
+    }
+  }, [data.additionalFuelTanks]);
+
+  useEffect(() => {
+    if (data.baggageCompartments && data.baggageCompartments !== baggageCompartments) {
+      setBaggageCompartments(data.baggageCompartments);
+    }
+  }, [data.baggageCompartments]);
+
+  useEffect(() => {
+    if (data.additionalSeats && data.additionalSeats !== additionalSeats) {
+      setAdditionalSeats(data.additionalSeats);
+    }
+  }, [data.additionalSeats]);
+
   // ─── Migration legacy → array : convertit data.fuelMainCapacity en tank ─
   // Si l'avion a été créé avant la refonte (fuelMainCapacity > 0 et pas de
   // tank de type 'main' dans la liste), on insère automatiquement un tank
@@ -2197,6 +2220,33 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                       });
                     }}
                     helperText="Masse max décollage en cat. utilitaire (souvent < MTOW normale)"
+                    InputProps={{
+                      endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
+                    }}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <StyledTextField
+                    fullWidth
+                    size="small"
+                    label="MLW en cat. U"
+                    type="number"
+                    value={
+                      data.utilityCategory?.mlw
+                        ? Math.round(convertValue(data.utilityCategory.mlw, 'kg', units.weight, 'weight') * 10) / 10
+                        : ''
+                    }
+                    onChange={(e) => {
+                      const newUser = e.target.value;
+                      const newCanonical = newUser
+                        ? convertValue(newUser, units.weight, 'kg', 'weight')
+                        : '';
+                      updateData('utilityCategory', {
+                        ...(data.utilityCategory || {}),
+                        mlw: newCanonical
+                      });
+                    }}
+                    helperText="Masse max atterrissage en cat. utilitaire"
                     InputProps={{
                       endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
                     }}

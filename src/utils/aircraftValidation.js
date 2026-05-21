@@ -138,13 +138,40 @@ export function validateAndRepairAircraft(aircraft) {
     repairedAircraft.flightManual = aircraft.flightManual;
   }
 
-  // ⚠️ SÉCURITÉ : Préserver weightBalance tel quel, AUCUNE valeur par défaut
+  // ⚠️ SÉCURITÉ : weightBalance n'est JAMAIS rempli avec des valeurs par défaut
+  // fictives. En revanche, si l'avion possède des `arms` (forme historique
+  // du modèle), on les TRANSPOSE dans weightBalance — ce n'est PAS un
+  // remplissage par défaut, c'est une projection des données réelles
+  // de l'avion dans une autre forme. Sans cela, le composant Step6 et les
+  // calculs M&C ne fonctionnent pas alors que les données existent.
   if (!repairedAircraft.weightBalance) {
-    console.warn('⚠️ [Validation] weightBalance is missing - NO DEFAULT VALUES (per safety requirements)');
-    console.log('Aircraft has arms?', !!aircraft.arms);
-    // Ne PAS créer de weightBalance - laisser undefined
-    // L'interface affichera "⚠️ MANQUANT" pour les valeurs manquantes
-  } else {
+    if (aircraft.arms || repairedAircraft.arms) {
+      const armsSrc = repairedAircraft.arms || aircraft.arms;
+      const parseOrNull = (value) => {
+        if (value === null || value === undefined || value === '' || value === '0') return null;
+        const parsed = parseFloat(value);
+        return Number.isNaN(parsed) ? null : parsed;
+      };
+
+      // Dérivation directe : pas de défaut, juste null si la valeur originelle est absente
+      repairedAircraft.weightBalance = {
+        emptyWeightArm:    parseOrNull(armsSrc.empty),
+        frontLeftSeatArm:  parseOrNull(armsSrc.frontSeats) ?? parseOrNull(armsSrc.frontSeat),
+        frontRightSeatArm: parseOrNull(armsSrc.frontSeats) ?? parseOrNull(armsSrc.frontSeat),
+        rearLeftSeatArm:   parseOrNull(armsSrc.rearSeats) ?? parseOrNull(armsSrc.rearSeat),
+        rearRightSeatArm:  parseOrNull(armsSrc.rearSeats) ?? parseOrNull(armsSrc.rearSeat),
+        fuelArm:           parseOrNull(armsSrc.fuelMain) ?? parseOrNull(armsSrc.fuel),
+        cgLimits: null  // sera reconstruit ci-dessous depuis cgEnvelope si dispo
+      };
+      console.log('🔄 [Validation] weightBalance dérivé depuis arms (transposition, pas de défaut)');
+    } else {
+      console.warn('⚠️ [Validation] weightBalance ET arms manquants — données M&C indisponibles. L\'avion devra être édité avant prep de vol.');
+    }
+    // Continue (peut être null ; le bloc cgLimits ci-dessous gère le cas)
+  }
+
+  // Bloc historique : amélioration de weightBalance existant (ou nouvellement dérivé)
+  if (repairedAircraft.weightBalance) {
     console.log('✅ [Validation] weightBalance exists - preserving as-is');
     // Préserver weightBalance exactement tel quel
     // NE PAS remplir les propriétés manquantes avec des valeurs par défaut

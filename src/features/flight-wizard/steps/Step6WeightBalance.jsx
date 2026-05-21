@@ -106,6 +106,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
     if (operationCategory === 'U' && mappedAircraft.utilityCategory?.enabled) {
       const u = mappedAircraft.utilityCategory;
       const uMtow = parseFloat(u.mtow);
+      const uMlw = parseFloat(u.mlw);
       const uForwardCG = parseFloat(u.forwardCG);
       const uAftMaxCG = parseFloat(u.aftMaxCG);
       if (Number.isFinite(uMtow) && uMtow > 0) {
@@ -113,6 +114,12 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
           ...mappedAircraft,
           maxTakeoffWeight: uMtow,
           weights: { ...(mappedAircraft.weights || {}), mtow: uMtow }
+        };
+      }
+      if (Number.isFinite(uMlw) && uMlw > 0) {
+        mappedAircraft = {
+          ...mappedAircraft,
+          weights: { ...(mappedAircraft.weights || {}), mlw: uMlw }
         };
       }
       if ((Number.isFinite(uForwardCG) || Number.isFinite(uAftMaxCG)) && mappedAircraft.weightBalance) {

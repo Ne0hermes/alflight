@@ -96,7 +96,8 @@ que le wizard de création d'avion sait stocker, ni plus ni moins) :
   },
   "fuel": {
     "fuel_type": ".. (UNE valeur ENUM parmi : \"AVGAS\", \"JET-A1\", \"MOGAS\". \"AVGAS 100LL\" → \"AVGAS\". \"Jet A-1\" → \"JET-A1\". \"MOGAS UL91\" → \"MOGAS\")",
-    "capacity_total": ".. (capacité totale carburant TOUS RÉSERVOIRS CONFONDUS, en L ou US gal)",
+    "capacity_total": ".. (capacité totale carburant PHYSIQUE tous réservoirs confondus, en L ou US gal. Ex : \"Total fuel capacity 200 L\" ou \"Total tank volume 53 gal\".)",
+    "usable_fuel_total": ".. (volume UTILISABLE total — généralement légèrement inférieur à capacity_total car une petite quantité résiduelle n'est pas aspirable par les pompes. Ex : \"Usable fuel 195 L\" ou \"Total usable 52 gal\". Si le MANEX n'indique pas de distinction, mets la même valeur que capacity_total.)",
     "capacity_main": ".. (capacité du réservoir PRINCIPAL seul, si distinct du total. Ex: \"main tank: 110 L\" séparé d'un total de 200 L)",
     "capacity_wing_left": ".. (réservoir AILE GAUCHE / LEFT WING TANK, si présent)",
     "capacity_wing_right": ".. (réservoir AILE DROITE / RIGHT WING TANK, si présent)",
@@ -110,7 +111,9 @@ que le wizard de création d'avion sait stocker, ni plus ni moins) :
     "runway_surfaces": ".. (liste textuelle CSV des revêtements de piste compatibles : \"asphalte, herbe, gravier, terre, sable, neige\". Le mapper convertira automatiquement vers codes ICAO.)"
   },
   "speeds": {
-    "vso": ".. (stall flaps LDG)", "vs1": ".. (stall clean)",
+    "vso": ".. (stall flaps LDG / pleine config volets)",
+    "vs_takeoff": ".. (stall en config T/O flaps / volets décollage. Distinct de VSO si l'avion a une position volets « TAKEOFF » intermédiaire. Synonymes : VS T/O, stall flaps takeoff, décrochage volets décollage. Différent de VS1 qui est sans volet.)",
+    "vs1": ".. (stall clean / sans volet, configuration de croisière)",
     "vfe_takeoff": ".. (VFE en config T/O flaps)",
     "vfe_landing": ".. (VFE en config LDG flaps)",
     "vno": ".. (max structural cruising)",
@@ -129,8 +132,10 @@ que le wizard de création d'avion sait stocker, ni plus ni moins) :
   },
   "weights": {
     "empty_weight": ".. (BEW - Basic Empty Weight, masse à vide en kg ou lbs)",
-    "mtow": ".. (Maximum Takeoff Weight)",
-    "mlw": ".. (Maximum Landing Weight, souvent = MTOW pour avions GA)",
+    "mtow": ".. (Maximum Takeoff Weight en catégorie NORMALE / Normal Category. Si le MANEX précise une seule MTOW, c'est celle-ci.)",
+    "mlw": ".. (Maximum Landing Weight en catégorie NORMALE, souvent = MTOW pour avions GA)",
+    "mtow_utility": ".. (Maximum Takeoff Weight en catégorie UTILITAIRE / Utility Category, si l'avion est certifié pour cette catégorie. Souvent inférieure à mtow normale. Présent surtout pour CS-23 / FAR 23 acrobatiques.)",
+    "mlw_utility": ".. (Maximum Landing Weight en catégorie UTILITAIRE. Souvent identique à mtow_utility pour GA.)",
     "min_takeoff_weight": ".. (masse mini décollage, rare)"
   },
   "performance_summary": {

@@ -53,17 +53,32 @@ const Row = memo(({ item, onChange }) => {
       opacity: isMissing ? 0.85 : (isAccepted ? 1 : 0.6),
       borderBottom: '1px solid #e5e7eb'
     }}>
-      {/* COLONNE — Champ */}
-      <td style={{ padding: '8px 12px', fontWeight: 500, fontSize: 13 }}>
-        {item.label}
-        {isMissing && (
-          <span style={{
-            display: 'inline-block', marginLeft: 6,
-            padding: '1px 6px', borderRadius: 3, fontSize: 10,
-            backgroundColor: '#fed7aa', color: '#9a3412', fontWeight: 700
+      {/* COLONNE — Champ + description italique optionnelle (utile pour
+          les vitesses où les aéroclubs utilisent des libellés variés) */}
+      <td style={{ padding: '8px 12px', fontWeight: 500, fontSize: 13, maxWidth: 280 }}>
+        <div>
+          {item.label}
+          {isMissing && (
+            <span style={{
+              display: 'inline-block', marginLeft: 6,
+              padding: '1px 6px', borderRadius: 3, fontSize: 10,
+              backgroundColor: '#fed7aa', color: '#9a3412', fontWeight: 700
+            }}>
+              ⚠ Manquant
+            </span>
+          )}
+        </div>
+        {item.description && (
+          <div style={{
+            fontSize: 11,
+            fontStyle: 'italic',
+            color: '#6b7280',
+            fontWeight: 400,
+            marginTop: 2,
+            lineHeight: 1.35
           }}>
-            ⚠ Manquant
-          </span>
+            {item.description}
+          </div>
         )}
       </td>
 
