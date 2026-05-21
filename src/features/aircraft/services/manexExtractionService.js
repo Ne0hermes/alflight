@@ -86,7 +86,9 @@ que le wizard de création d'avion sait stocker, ni plus ni moins) :
   "aircraft_identification": {
     "manufacturer": ".. (MARQUE / CONSTRUCTEUR seul, ex: \"Cessna\", \"Diamond Aircraft\", \"Robin Aviation\", \"Piper Aircraft\", \"Cirrus Aircraft\". Sans le modèle.)",
     "model": ".. (MODÈLE seul, ex: \"172S\", \"DA40 NG\", \"DR400-180\", \"PA-28-181\". Sans la marque.)",
-    "registration": ".. (IMMATRICULATION spécifique du tail-number, ex: \"F-HSTR\", \"N12345\", \"G-ABCD\")"
+    "registration": ".. (IMMATRICULATION spécifique du tail-number, ex: \"F-HSTR\", \"N12345\", \"G-ABCD\")",
+    "home_aeroclub": ".. (nom de l'AÉROCLUB d'attache ou propriétaire de l'avion, s'il est mentionné dans le MANEX. Ex: \"Aéro-club de France\", \"Aéroclub des Trois Vallées\". Si non mentionné, laisse vide.)",
+    "home_base_icao": ".. (code OACI 4 lettres du terrain de base de l'avion, s'il est mentionné. Ex: \"LFPN\", \"LFPT\", \"LFBO\". Si non mentionné, laisse vide.)"
   },
   "engine": {
     "type_category": ".. (UNE valeur ENUM parmi : \"singleEngine\", \"twinEngine\", \"turboprop\", \"jet\". Choisis selon : avion monomoteur thermique → singleEngine ; bimoteur thermique → twinEngine ; turbopropulseur (PT6, TPE331...) → turboprop ; turbofan/turbojet → jet)"

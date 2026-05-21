@@ -7,6 +7,7 @@
 import React, { memo, useMemo, useState } from 'react';
 import { CheckCircle2, AlertTriangle, X, Loader2, Sparkles } from 'lucide-react';
 import UnitConverterCard from './UnitConverterCard';
+import AeroclubAutocomplete from './AeroclubAutocomplete';
 
 const confidenceColor = (c) => {
   if (c >= 85) return '#10b981';
@@ -22,11 +23,12 @@ const hasValue = (v) => {
   return true;
 };
 
-const Row = memo(({ item, onChange }) => {
+const Row = memo(({ item, onChange, onSelectIcao }) => {
   const isAccepted = item.accepted;
   const isMissing = !item.found; // Champ non extrait par l'IA
   const hasOptions = Array.isArray(item.options) && item.options.length > 0;
   const isMulti = item.type === 'enum_multi';
+  const isAeroclub = item.type === 'aeroclub';
 
   // Styles ligne selon état
   const rowBg = isMissing
@@ -82,9 +84,34 @@ const Row = memo(({ item, onChange }) => {
         )}
       </td>
 
-      {/* COLONNE — Valeur (éditable). 3 variantes selon item.type */}
+      {/* COLONNE — Valeur (éditable). 4 variantes selon item.type */}
       <td style={{ padding: '8px 12px' }}>
-        {hasOptions && isMulti ? (
+        {isAeroclub ? (
+          /* ─── AUTOCOMPLETE AÉROCLUB (liste FFA + ajouts utilisateur) ───
+             Permet de sélectionner dans la liste ou d'ajouter un nouveau
+             club. Si le club sélectionné a un code OACI connu, on propose
+             aussi de remplir automatiquement le « Terrain de base ».
+          */
+          <div style={{
+            border: isMissing ? '1px dashed #fb923c' : '1px solid #d1d5db',
+            borderRadius: 4,
+            padding: 2,
+            backgroundColor: 'white'
+          }}>
+            <AeroclubAutocomplete
+              value={item.value || ''}
+              onChange={(newName) => handleValueChange(newName)}
+              onSelectIcao={onSelectIcao}
+              label=""
+              helperText=""
+              fullWidth
+              sx={{
+                '& .MuiOutlinedInput-root': { fontSize: 13, padding: '2px 4px' },
+                '& .MuiFormHelperText-root': { display: 'none' }
+              }}
+            />
+          </div>
+        ) : hasOptions && isMulti ? (
           /* ─── MULTI-SELECT (checkboxes) ─── */
           <div style={{
             display: 'grid',
@@ -290,6 +317,23 @@ const ManexExtractionReview = memo(({
     onItemsChange(items.map(it => it.aircraftPath === newItem.aircraftPath ? newItem : it));
   };
 
+  // Quand un aéroclub avec un code OACI connu est sélectionné, on auto-remplit
+  // le champ « Terrain de base (OACI) » si celui-ci est encore vide. Le pilote
+  // garde la main : si une valeur a déjà été saisie, on ne l'écrase pas.
+  const handleAeroclubSelectIcao = (icaoValue) => {
+    if (!icaoValue) return;
+    onItemsChange(items.map((it) => {
+      if (it.aircraftPath !== 'homeBase') return it;
+      if (hasValue(it.value)) return it; // ne pas écraser une saisie pilote
+      return {
+        ...it,
+        value: String(icaoValue).toUpperCase(),
+        accepted: true,
+        found: true
+      };
+    }));
+  };
+
   const handleAcceptAll = () => {
     onItemsChange(items.map(it => ({ ...it, accepted: true })));
   };
@@ -430,7 +474,12 @@ const ManexExtractionReview = memo(({
                   </tr>
                 ) : (
                   filteredItems.map(item => (
-                    <Row key={item.aircraftPath} item={item} onChange={handleRowChange} />
+                    <Row
+                      key={item.aircraftPath}
+                      item={item}
+                      onChange={handleRowChange}
+                      onSelectIcao={item.aircraftPath === 'homeAeroclub' ? handleAeroclubSelectIcao : undefined}
+                    />
                   ))
                 )}
               </tbody>

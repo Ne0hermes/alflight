@@ -95,6 +95,8 @@ const FIELD_MAPPINGS = [
   { aircraftPath: 'manufacturer',          src: ['aircraft_identification', 'manufacturer'],  type: 'string', label: 'Marque / Constructeur' },
   { aircraftPath: 'model',                 src: ['aircraft_identification', 'model'],         type: 'string', label: 'Modèle (type avion)' },
   { aircraftPath: 'registration',          src: ['aircraft_identification', 'registration'],  type: 'string', label: 'Immatriculation' },
+  { aircraftPath: 'homeAeroclub',          src: ['aircraft_identification', 'home_aeroclub'], type: 'aeroclub', label: 'Aéroclub d\'attache', description: 'Aéroclub propriétaire ou d\'attache de l\'avion. Liste déroulante intelligente avec ~150 clubs FFA + ajouts personnels.' },
+  { aircraftPath: 'homeBase',              src: ['aircraft_identification', 'home_base_icao'],type: 'string', label: 'Terrain de base (OACI)', description: 'Code OACI à 4 lettres du terrain de base. Auto-rempli si l\'aéroclub sélectionné a un terrain connu.' },
 
   // ═══ MOTORISATION (Step1) ═══
   // engineType : ENUM strict du wizard
@@ -343,7 +345,7 @@ export function mapExtractionToReviewItems(extraction) {
         convertedValue = parts
           .map(p => matchEnumValue(p, mapping.options))
           .filter(v => v !== null);
-      } else if (mapping.type === 'string' || mapping.type === 'array_csv') {
+      } else if (mapping.type === 'string' || mapping.type === 'array_csv' || mapping.type === 'aeroclub') {
         convertedValue = String(raw.value);
       } else if (mapping.type === 'number') {
         const n = Number(raw.value);
