@@ -36,6 +36,33 @@ const sanitizeSheetName = (name, fallback = 'Modèle') => {
 };
 
 /**
+ * Produit un nom de feuille unique parmi `usedNames`.
+ *
+ * 🔧 FIX BOUCLE INFINIE : auparavant on faisait
+ *   safeName = sanitizeSheetName(`${base}_${suffix}`)
+ * mais le slice(0,30) tronquait le suffixe → si deux bases tronquaient
+ * vers la même valeur, on tournait à l'infini (CPU 100%, navigateur freeze).
+ *
+ * Nouvelle stratégie : on RÉSERVE explicitement la place du suffixe à la fin.
+ */
+const uniqueSheetName = (baseName, usedNames, fallback = 'Sheet') => {
+  // Tentative 1 : nom direct
+  let candidate = sanitizeSheetName(baseName, fallback);
+  if (!usedNames.has(candidate)) return candidate;
+
+  // Sinon on tronque le base name pour réserver "_NN" en fin
+  const safeBase = String(baseName || fallback).replace(/[\\/?*[\]:]/g, '_').trim();
+  for (let n = 2; n <= 999; n++) {
+    const suffix = `_${n}`;
+    const truncated = safeBase.slice(0, 30 - suffix.length);
+    candidate = (truncated + suffix).slice(0, 30);
+    if (!usedNames.has(candidate)) return candidate;
+  }
+  // Garde-fou ultime : random pour ne JAMAIS boucler
+  return (fallback.slice(0, 23) + '_' + Math.random().toString(36).slice(2, 8)).slice(0, 30);
+};
+
+/**
  * Exporte la liste des modèles de performance d'un avion vers un .xlsx.
  * Déclenche automatiquement le téléchargement côté navigateur.
  *
@@ -280,11 +307,7 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', 
 
     const ws = XLSX.utils.aoa_to_sheet(rows);
     ws['!cols'] = [{ wch: 32 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 20 }];
-    let safeName = sanitizeSheetName(`Tab_${classification}`, `Tableaux_${classification}`);
-    let suffix = 1;
-    while (usedNames.has(safeName)) {
-      safeName = sanitizeSheetName(`Tab_${classification}_${++suffix}`, `Tab_${classification}_${suffix}`);
-    }
+    const safeName = uniqueSheetName(`Tab_${classification}`, usedNames, `Tableaux_${classification}`);
     usedNames.add(safeName);
     XLSX.utils.book_append_sheet(wb, ws, safeName);
     console.timeEnd(`[ExcelExport] cls=${classification}`);
@@ -358,12 +381,9 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', 
       { wch: 10 }, { wch: 10 }
     ];
 
-    // Sheet name unique (Excel n'accepte pas 2 feuilles homonymes)
-    let safeName = sanitizeSheetName(m.name, `Modèle_${idx + 1}`);
-    let suffix = 1;
-    while (usedNames.has(safeName)) {
-      safeName = sanitizeSheetName(`${m.name || 'Modèle'}_${++suffix}`, `Modèle_${idx + 1}_${suffix}`);
-    }
+    // Sheet name unique (Excel n'accepte pas 2 feuilles homonymes) — via
+    // helper anti-boucle-infinie qui réserve la place du suffixe.
+    const safeName = uniqueSheetName(m.name || `Modèle_${idx + 1}`, usedNames, `Modèle_${idx + 1}`);
     usedNames.add(safeName);
 
     XLSX.utils.book_append_sheet(wb, ws, safeName);
