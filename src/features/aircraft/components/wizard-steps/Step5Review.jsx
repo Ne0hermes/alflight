@@ -129,7 +129,6 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
       'weights.emptyWeight': `Masse à vide (${getUnitSymbol(units.weight)})`,
       'weights.mtow': `Masse max au décollage (${getUnitSymbol(units.weight)})`,
       'weights.mlw': `Masse max à l'atterrissage (${getUnitSymbol(units.weight)})`,
-      'weights.mzfw': `Masse max sans carburant (${getUnitSymbol(units.weight)})`,
       // Sous-objets arms
       'arms.empty': `Bras de levier à vide (${getUnitSymbol(units.armLength)})`,
       'arms.fuelMain': `Bras carburant (${getUnitSymbol(units.armLength)})`,
@@ -179,7 +178,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
       // Champs redondants ou calculés
       'maxPayload', 'maxBaggageFwd', 'maxBaggageAft',
       // Champs de premier niveau (anciens formats) - doublons avec sous-objets
-      'emptyWeight', 'mtow', 'mlw', 'mzfw',
+      'emptyWeight', 'mtow', 'mlw',
       'vso', 'vs1', 'vne', 'vno', 'vfe', 'vr', 'vx', 'vy', 'va', 'vlo', 'vle',
       // Les abaques sont traités séparément dans le tableau comparatif
       'performanceModels',
@@ -923,10 +922,9 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           { label: 'Bras à vide', value: formatValue(data.arms?.empty, aU) },
           { label: 'Moment à vide', value: formatValue(data.moments?.empty, mU) },
 
-          // ─── Masses limites ───
+          // ─── Masses limites (MZFW retiré : peu utile en aviation générale) ─
           { label: 'MTOW', value: formatValue(data.weights?.mtow, wU) },
           { label: 'MLW', value: formatValue(data.weights?.mlw, wU) },
-          { label: 'MZFW', value: formatValue(data.weights?.mzfw, wU) },
           { label: 'Masse min de vol', value: formatValue(data.weights?.minTakeoffWeight, wU) },
 
           // ─── Carburant total (somme calculée des réservoirs ci-dessous) ──

@@ -31,6 +31,9 @@ import {
  * Props:
  *   value         (string)  — current aeroclub NAME (we store the name)
  *   onChange      (fn)      — called with the new aeroclub name (string) or null
+ *   onSelectIcao  (fn)      — optional callback called with the ICAO of the
+ *                             selected aeroclub (when known). Used by the
+ *                             parent to auto-fill the « Terrain de base » field.
  *   label         (string)  — input label (default "Aéroclub d'attache")
  *   helperText    (string)  — input helper text
  *   error         (boolean)
@@ -41,6 +44,7 @@ import {
 const AeroclubAutocomplete = ({
   value,
   onChange,
+  onSelectIcao,
   label = "Aéroclub d'attache",
   helperText,
   error,
@@ -85,6 +89,10 @@ const AeroclubAutocomplete = ({
       addUserAeroclub(draft);
       setRefreshKey((k) => k + 1);
       onChange?.(draft.name.trim());
+      // Propage aussi l'OACI si l'utilisateur l'a renseigné dans le dialog
+      if (draft.icao && onSelectIcao) {
+        onSelectIcao(draft.icao);
+      }
       setAddDialogOpen(false);
     } catch (err) {
       console.error('[AeroclubAutocomplete] add failed:', err);
@@ -116,6 +124,11 @@ const AeroclubAutocomplete = ({
             return;
           }
           onChange?.(newValue.name);
+          // Propage le code OACI au parent s'il est connu (auto-fill terrain
+          // de base si le champ est encore vide).
+          if (newValue.icao && onSelectIcao) {
+            onSelectIcao(newValue.icao);
+          }
         }}
         options={options}
         getOptionLabel={(option) => {

@@ -458,11 +458,19 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               </StyledFormControl>
             </Grid>
 
-            {/* Aéroclub d'attache (avec autocomplétion + ajout manuel) */}
+            {/* Aéroclub d'attache (avec autocomplétion + ajout manuel).
+                Quand un aéroclub avec un OACI connu est sélectionné, on
+                pré-remplit automatiquement le terrain de base si celui-ci
+                est encore vide. */}
             <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
               <AeroclubAutocomplete
                 value={data.homeAeroclub || ''}
                 onChange={(newName) => updateData('homeAeroclub', newName || '')}
+                onSelectIcao={(icao) => {
+                  if (icao && !data.homeBase) {
+                    updateData('homeBase', icao.toUpperCase());
+                  }
+                }}
                 label="Aéroclub d'attache"
                 helperText="Recherchez votre club ou ajoutez-le s'il manque dans la liste"
               />
