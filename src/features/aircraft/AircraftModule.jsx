@@ -2,7 +2,7 @@
 import React, { memo, useState, useEffect } from 'react';
 import { useAircraft } from '@core/contexts';
 import { useAircraftStore } from '@core/stores/aircraftStore';
-import { Plus, Edit2, Trash2, Info, AlertTriangle, FileText, Eye, X, ChevronDown, ChevronUp, Wand2, FileDown, CheckCircle } from 'lucide-react';
+import { Plus, Edit2, Trash2, Info, AlertTriangle, FileText, Eye, X, ChevronDown, ChevronUp, Wand2, FileDown } from 'lucide-react';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { sx } from '@shared/styles/styleSystem';
 import AccordionButton from '@shared/components/AccordionButton';
@@ -1382,30 +1382,37 @@ export const AircraftModule = memo(() => {
 
                 {/* Boutons d'action en bas de la carte */}
                 <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
-                  {/* Bouton Sélectionner */}
+                    {/* Bouton Voir / Importer MANEX */}
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        console.log('✅ AircraftModule - Select button clicked for:', aircraft.registration);
-                        setSelectedAircraft(aircraft);
-                      }}
-                      style={{
-                        ...window.buttonSectionStyle,
-                        padding: '8px',
-                        background: selectedAircraft?.id === aircraft.id ? '#dcfce7' : 'rgba(55, 65, 81, 0.35)',
-                        borderColor: selectedAircraft?.id === aircraft.id ? '#10b981' : 'rgba(0, 0, 0, 0.7)'
-                      }}
-                      title={selectedAircraft?.id === aircraft.id ? "Avion sélectionné" : "Sélectionner cet avion"}
-                    >
-                      <CheckCircle size={16} color={selectedAircraft?.id === aircraft.id ? '#10b981' : undefined} />
-                    </button>
-
-                    <button
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.stopPropagation();
                         const alreadyHasManex = !!(aircraft.hasManex || aircraft.manex);
                         console.log('📚 AircraftModule - MANEX button clicked, hasManex=', alreadyHasManex);
-                        setManexAircraft(aircraft);
+
+                        // 🔧 FIX: Si l'avion vient de la liste légère, ses données
+                        // volumineuses (manex.pdfData) ne sont pas en mémoire.
+                        // On les recharge depuis IndexedDB avant d'ouvrir le viewer.
+                        let aircraftForViewer = aircraft;
+                        if (alreadyHasManex && !aircraft.manex?.pdfData) {
+                          try {
+                            console.log('🔍 Rechargement des données MANEX depuis IndexedDB…');
+                            await dataBackupManager.initPromise;
+                            const fullAircraft = await Promise.race([
+                              dataBackupManager.getAircraftData(aircraft.id),
+                              new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+                            ]);
+                            if (fullAircraft && fullAircraft.manex) {
+                              aircraftForViewer = { ...aircraft, manex: fullAircraft.manex };
+                              console.log('✅ MANEX rechargé depuis IndexedDB');
+                            } else {
+                              console.log('⚠️ Aucune donnée MANEX trouvée dans IndexedDB pour cet avion');
+                            }
+                          } catch (err) {
+                            console.warn('⚠️ Erreur de chargement MANEX:', err.message);
+                          }
+                        }
+
+                        setManexAircraft(aircraftForViewer);
                         if (alreadyHasManex) {
                           setShowManexViewer(true);
                         } else {
