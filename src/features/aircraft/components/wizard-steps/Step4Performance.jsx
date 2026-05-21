@@ -1,8 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import PerformanceWizard from '../PerformanceWizard';
 import AdvancedPerformanceAnalyzer from '../AdvancedPerformanceAnalyzer';
-import { Button, Box } from '@mui/material';
-import { ChevronRight as ChevronRightIcon, ChevronLeft as ChevronLeftIcon } from '@mui/icons-material';
+import { Button, Box, Alert, Typography } from '@mui/material';
+import {
+  ChevronRight as ChevronRightIcon,
+  ChevronLeft as ChevronLeftIcon,
+  FileDownload as FileDownloadIcon,
+  FileUpload as FileUploadIcon
+} from '@mui/icons-material';
+import { exportPerformanceModelsToExcel } from '../../../../utils/performanceExcelExport';
+import { importPerformanceModelsFromExcel, diffPerformanceModels } from '../../../../utils/performanceExcelImport';
 
 const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, setOnConstruireCourbes, setCurrentStep, onNext, onPrevious }) => {
   // État local pour stocker les données de performance temporaires
@@ -383,11 +390,109 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
 
   // Si des données existent, afficher une vue récapitulative avec option de modifier
   if ((showExistingData || forceShowSummary) && savedPerformanceData) {
+    const performanceModels = savedPerformanceData.performanceModels || [];
+    const hasAnyModel = performanceModels.length > 0;
+
+    const handleExportExcel = () => {
+      try {
+        const fileName = exportPerformanceModelsToExcel(
+          performanceModels,
+          data.registration || 'avion'
+        );
+        console.log(`✅ [Step4] Export Excel : ${fileName}`);
+      } catch (err) {
+        console.error('[Step4] Export Excel échoué:', err);
+        alert(`Erreur export Excel : ${err.message}`);
+      }
+    };
+
+    const handleImportExcel = async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        const { models: newModels, sheets, warnings } = await importPerformanceModelsFromExcel(file);
+        if (!newModels.length) {
+          alert(`Aucun modèle trouvé dans le fichier Excel.\n${warnings.join('\n')}`);
+          e.target.value = '';
+          return;
+        }
+        const diff = diffPerformanceModels(performanceModels, newModels);
+        const summary = [
+          `Excel parsé : ${sheets} feuille(s), ${newModels.length} modèle(s) reconstruit(s).`,
+          diff.added.length ? `+ Ajouts : ${diff.added.join(', ')}` : '',
+          diff.removed.length ? `- Suppressions : ${diff.removed.join(', ')}` : '',
+          diff.modified.length ? `~ Modifications : ${diff.modified.join(' ; ')}` : '',
+          warnings.length ? `⚠ Warnings : ${warnings.join(' ; ')}` : '',
+          '',
+          'Remplacer les données performances actuelles ?'
+        ].filter(Boolean).join('\n');
+
+        if (confirm(summary)) {
+          updateData('performanceModels', newModels);
+          setSavedPerformanceData({
+            ...savedPerformanceData,
+            performanceModels: newModels
+          });
+          alert(`✅ ${newModels.length} modèle(s) importé(s) depuis Excel.`);
+        }
+      } catch (err) {
+        console.error('[Step4] Import Excel échoué:', err);
+        alert(`Erreur import Excel : ${err.message}`);
+      }
+      e.target.value = ''; // permettre re-import du même fichier
+    };
+
     return (
       <div>
         <h3 style={{ marginBottom: '12px', fontSize: '16px', fontWeight: 'bold' }}>
           Données de Performance Configurées
         </h3>
+
+        {/* ─── Workflow Excel : export + import ───────────────────────────
+            Permet d'exporter toutes les données performances extraites
+            dans un fichier .xlsx, de les vérifier/corriger dans Excel
+            (ou LibreOffice), puis de réimporter le fichier modifié. */}
+        {hasAnyModel && (
+          <Alert severity="info" sx={{ mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+              <Box sx={{ flex: 1, minWidth: 200 }}>
+                <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+                  📊 Vérifier / corriger dans Excel
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Exporte les {performanceModels.length} modèle(s) en .xlsx
+                  (1 feuille par modèle), modifie les valeurs dans Excel ou
+                  LibreOffice, puis réimporte. Format round-trippable.
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<FileDownloadIcon />}
+                  onClick={handleExportExcel}
+                >
+                  Exporter Excel
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  color="primary"
+                  startIcon={<FileUploadIcon />}
+                  component="label"
+                >
+                  Réimporter Excel
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls"
+                    hidden
+                    onChange={handleImportExcel}
+                  />
+                </Button>
+              </Box>
+            </Box>
+          </Alert>
+        )}
 
         {/* Abaques de performance */}
         {savedPerformanceData.performanceModels && savedPerformanceData.performanceModels.length > 0 && (
