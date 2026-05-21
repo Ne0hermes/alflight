@@ -140,19 +140,17 @@ class CommunityService {
 
       if (error) throw error;
 
-      // 🔧 FIX MEMORY: Supprimer la photo si elle est volumineuse (>500KB en base64)
-      // Les photos peuvent causer des crashes "out of memory"
+      // 🔧 FIX 2026-05 : on conserve TOUTES les photos à la lecture.
+      // L'ancien seuil read=500KB / write=1MB causait un trou : toutes les
+      // photos entre 500KB et 1MB étaient stockées sur Supabase mais jamais
+      // affichées. Une photo de smartphone fait facilement 700-900KB en
+      // base64 → invisible pour le pilote.
+      // Le seuil de sécurité (write-side, 1MB) reste en place dans
+      // submitPreset() pour éviter de gonfler la DB.
       const aircraftDataCopy = { ...data.aircraft_data };
-
       if (aircraftDataCopy.photo && typeof aircraftDataCopy.photo === 'string') {
-        const photoSizeKB = (aircraftDataCopy.photo.length * 0.75) / 1024; // Taille approximative en KB
-
-        if (photoSizeKB > 500) {
-          console.log(`🗑️ Photo volumineuse détectée (${photoSizeKB.toFixed(0)}KB) - Suppression pour éviter crash`);
-          delete aircraftDataCopy.photo;
-        } else {
-          console.log(`✅ Photo conservée (${photoSizeKB.toFixed(0)}KB)`);
-        }
+        const photoSizeKB = (aircraftDataCopy.photo.length * 0.75) / 1024;
+        console.log(`✅ Photo lue depuis Supabase (${photoSizeKB.toFixed(0)} KB)`);
       }
 
       // Retourner les données complètes de aircraft_data avec les métadonnées
