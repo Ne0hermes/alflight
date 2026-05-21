@@ -75,7 +75,11 @@ export const useAircraftStore = create(
             id: preset.id,
             aircraftId: preset.id,
             // 🔧 FIX: Propager hasManex depuis le preset (n'est pas dans aircraftData)
-            hasManex: preset.hasManex || false
+            hasManex: preset.hasManex || false,
+            // Propage le flag rapport de pesée (si aircraftData contient
+            // weighingReport, la base64 est trop lourde — on conserve un flag
+            // et le contenu sera rechargé via IndexedDB au moment de l'édition).
+            hasWeighingReport: !!(preset.aircraftData?.weighingReport?.hasData)
           } : {
             id: preset.id,
             aircraftId: preset.id,
@@ -84,7 +88,8 @@ export const useAircraftStore = create(
             manufacturer: preset.manufacturer,
             aircraftType: preset.type || preset.aircraftType,
             category: preset.category,
-            hasManex: preset.hasManex || false
+            hasManex: preset.hasManex || false,
+            hasWeighingReport: false
           };
 
           console.log('🔍 [AircraftStore] Preset:', {
@@ -296,8 +301,9 @@ export const useAircraftStore = create(
 
           // Créer l'objet avion pour la liste locale (en STORAGE units)
           // La conversion vers USER units se fera automatiquement via format() lors de l'affichage
-          // 🔧 IMPORTANT: Filtrer les données volumineuses (photo, manex) pour la liste légère
-          const { photo, profilePhoto, manex, ...lightAircraft } = normalizedAircraft;
+          // 🔧 IMPORTANT: Filtrer les données volumineuses (photo, manex, weighingReport)
+          // pour la liste légère — elles sont rechargées à la demande depuis IndexedDB.
+          const { photo, profilePhoto, manex, weighingReport, ...lightAircraft } = normalizedAircraft;
 
           const newAircraft = {
             ...lightAircraft,
@@ -306,6 +312,7 @@ export const useAircraftStore = create(
             // 🔧 FIX: Ajouter les flags pour le chargement des données volumineuses depuis IndexedDB
             hasPhoto: !!(photo || profilePhoto),
             hasManex: !!manex,
+            hasWeighingReport: !!weighingReport,
             _metadata: {
               ...normalizedAircraft._metadata,
               supabaseId: result.id

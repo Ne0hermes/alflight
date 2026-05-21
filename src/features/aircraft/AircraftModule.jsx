@@ -199,13 +199,15 @@ export const AircraftModule = memo(() => {
     console.log('✏️ AircraftModule - Current aircraft from list:', currentAircraft);
     console.log('✏️ AircraftModule - Aircraft surfaces:', currentAircraft.compatibleRunwaySurfaces);
 
-    // Si l'avion a des données volumineuses, essayer de les récupérer depuis IndexedDB avec timeout
-    if (currentAircraft.hasPhoto || currentAircraft.hasManex) {
+    // Si l'avion a des données volumineuses (photo, manex, rapport de pesée),
+    // les récupérer depuis IndexedDB avec timeout.
+    if (currentAircraft.hasPhoto || currentAircraft.hasManex || currentAircraft.hasWeighingReport) {
       try {
         console.log('🔍 Récupération des données volumineuses depuis IndexedDB...');
         console.log('🔍 ID de l\'avion:', currentAircraft.id);
         console.log('🔍 hasPhoto:', currentAircraft.hasPhoto);
         console.log('🔍 hasManex:', currentAircraft.hasManex);
+        console.log('🔍 hasWeighingReport:', currentAircraft.hasWeighingReport);
 
         // Attendre que la DB soit initialisée
         await dataBackupManager.initPromise;
@@ -224,10 +226,12 @@ export const AircraftModule = memo(() => {
         if (fullAircraft) {
           console.log('📸 Photo présente:', !!fullAircraft.photo);
           console.log('📚 Manex présent:', !!fullAircraft.manex);
+          console.log('📋 Rapport de pesée présent:', !!fullAircraft.weighingReport);
           currentAircraft = {
             ...currentAircraft,
             photo: fullAircraft.photo || currentAircraft.photo,
-            manex: fullAircraft.manex || currentAircraft.manex
+            manex: fullAircraft.manex || currentAircraft.manex,
+            weighingReport: fullAircraft.weighingReport || currentAircraft.weighingReport
           };
           console.log('✅ Données volumineuses récupérées depuis IndexedDB');
         } else {
@@ -1557,24 +1561,28 @@ export const AircraftModule = memo(() => {
                 console.log('💾 AircraftModule - Surfaces compatibles:', processedData.compatibleRunwaySurfaces);
                 
                 try {
-                  // Séparer les données volumineuses
-                  const { photo, manex, ...lightData } = processedData;
-                  
+                  // Séparer les données volumineuses (photo, manex, weighingReport)
+                  // pour éviter de polluer la liste en mémoire avec des base64 lourds.
+                  const { photo, manex, weighingReport, ...lightData } = processedData;
+
                   if (editingAircraft) {
                     const updatedAircraft = {...lightData, id: editingAircraft.id};
-                    
-                    // Marquer si l'avion a des données volumineuses
+
+                    // Marquer si l'avion a des données volumineuses (flags pour
+                    // re-chargement lazy depuis IndexedDB lors d'une édition future)
                     if (photo) updatedAircraft.hasPhoto = true;
                     if (manex) updatedAircraft.hasManex = true;
-                    
+                    if (weighingReport) updatedAircraft.hasWeighingReport = true;
+
                     console.log('💾 AircraftModule - Updating aircraft with speeds:', updatedAircraft.speeds);
-                    
+
                     // Sauvegarder les données volumineuses dans IndexedDB si elles existent
-                    if (photo || manex) {
+                    if (photo || manex || weighingReport) {
                       const fullAircraft = {
                         ...updatedAircraft,
                         photo: photo || null,
-                        manex: manex || null
+                        manex: manex || null,
+                        weighingReport: weighingReport || null
                       };
                       await dataBackupManager.saveAircraftData(fullAircraft);
                       console.log('✅ Données volumineuses sauvegardées dans IndexedDB');
@@ -1595,13 +1603,15 @@ export const AircraftModule = memo(() => {
                     // Marquer si l'avion a des données volumineuses
                     if (photo) lightData.hasPhoto = true;
                     if (manex) lightData.hasManex = true;
-                    
+                    if (weighingReport) lightData.hasWeighingReport = true;
+
                     // Sauvegarder les données volumineuses dans IndexedDB si elles existent
-                    if (photo || manex) {
+                    if (photo || manex || weighingReport) {
                       const fullAircraft = {
                         ...lightData,
                         photo: photo || null,
-                        manex: manex || null
+                        manex: manex || null,
+                        weighingReport: weighingReport || null
                       };
                       await dataBackupManager.saveAircraftData(fullAircraft);
                       console.log('✅ Données volumineuses sauvegardées dans IndexedDB');
