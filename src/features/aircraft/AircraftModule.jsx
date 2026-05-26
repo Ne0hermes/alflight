@@ -1197,6 +1197,45 @@ export const AircraftModule = memo(() => {
         boxSizing: 'border-box'
       }}
     >
+      {/* ===== BANDEAU HERO CINEMATIC ===== */}
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: 'clamp(180px, 26vh, 320px)',
+          marginBottom: tokens.spacing[8],
+          borderRadius: tokens.radius.sm,
+          overflow: 'hidden',
+          backgroundImage: 'url("/assets/photos/hero-warbird.jpg")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center 35%',
+          filter: 'grayscale(0.2)'
+        }}
+        aria-hidden="true"
+      >
+        {/* Overlay sombre pour lisibilité éventuelle de texte par-dessus */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background:
+              'linear-gradient(180deg, rgba(10,10,10,0.40) 0%, rgba(10,10,10,0.65) 60%, rgba(10,10,10,0.92) 100%)'
+          }}
+        />
+        {/* Liseré orange subtil en bas */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: '2px',
+            background: 'var(--accent-primary)',
+            opacity: 0.4
+          }}
+        />
+      </div>
+
       {/* ===== HEADER ÉDITORIAL ===== */}
       <header
         style={{
@@ -1935,50 +1974,69 @@ export const AircraftModule = memo(() => {
             );
           })
         ) : (
-          // État vide : pas d'avion ou recherche sans résultat
+          // État vide : photo cinematic + texte centré par-dessus
           <div
             style={{
               gridColumn: '1 / -1',
+              position: 'relative',
+              minHeight: 'clamp(360px, 50vh, 520px)',
               padding: `${tokens.spacing[10]} ${tokens.spacing[6]}`,
               textAlign: 'center',
               backgroundColor: 'var(--bg-surface)',
               border: `${tokens.border.thin} solid var(--border-subtle)`,
-              borderRadius: tokens.radius.sm
+              borderRadius: tokens.radius.sm,
+              backgroundImage: 'url("/assets/photos/empty-dark.jpg")',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
           >
-            <Plane
-              size={48}
-              style={{ color: 'var(--text-tertiary)', marginBottom: tokens.spacing[4] }}
+            {/* Overlay sombre pour lisibilité du texte */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background:
+                  'linear-gradient(180deg, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.85) 100%)'
+              }}
               aria-hidden="true"
             />
-            <TechLabel style={{ display: 'block', marginBottom: tokens.spacing[3] }}>
-              {searchQuery ? 'AUCUN RÉSULTAT' : 'FLOTTE VIDE'}
-            </TechLabel>
-            <p
-              style={{
-                margin: `0 0 ${tokens.spacing[5]}`,
-                fontSize: '15px',
-                color: 'var(--text-secondary)',
-                lineHeight: 1.55
-              }}
-            >
-              {searchQuery
-                ? `Aucun avion ne correspond à « ${searchQuery} ».`
-                : 'Aucun avion enregistré. Ajoutez votre premier aéronef pour commencer.'}
-            </p>
-            {!searchQuery && (
-              <EditorialButton
-                variant="primary"
-                size="md"
-                onClick={() => {
-                  setWizardAircraft(null);
-                  setShowWizard(true);
+            {/* Contenu au-dessus de l'overlay */}
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <TechLabel style={{ display: 'block', marginBottom: tokens.spacing[3] }}>
+                {searchQuery ? 'AUCUN RÉSULTAT' : 'FLOTTE VIDE'}
+              </TechLabel>
+              <p
+                style={{
+                  margin: `0 0 ${tokens.spacing[5]}`,
+                  fontSize: '15px',
+                  color: 'var(--text-secondary)',
+                  lineHeight: 1.55,
+                  maxWidth: '420px'
                 }}
               >
-                <Plus size={14} aria-hidden="true" />
-                Nouvel avion
-              </EditorialButton>
-            )}
+                {searchQuery
+                  ? `Aucun avion ne correspond à « ${searchQuery} ».`
+                  : 'Aucun avion enregistré. Ajoutez votre premier aéronef pour commencer.'}
+              </p>
+              {!searchQuery && (
+                <EditorialButton
+                  variant="primary"
+                  size="md"
+                  onClick={() => {
+                    setWizardAircraft(null);
+                    setShowWizard(true);
+                  }}
+                >
+                  <Plus size={14} aria-hidden="true" />
+                  Nouvel avion
+                </EditorialButton>
+              )}
+            </div>
           </div>
         )}
       </div>
