@@ -17,11 +17,36 @@ export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null);
 
   useEffect(() => {
-    // Récupérer la session actuelle
+    // Récupérer la session actuelle + refresh proactif si périmée.
+    //
+    // autoRefreshToken=true rafraîchit le token AVANT son expiration tant que
+    // la page reste ouverte, mais ne rafraîchit PAS automatiquement si le token
+    // est déjà périmé au moment où l'on (re)charge l'app (typique : on rouvre
+    // l'onglet après plusieurs heures). Sans refresh explicite, la première
+    // requête part avec le vieux JWT → PGRST303 "JWT expired".
     const getSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        let { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
+
+        // Si on a une session mais qu'elle expire dans moins de 60 secondes
+        // (ou est déjà périmée), forcer un refresh.
+        if (session) {
+          const expiresAt = session.expires_at ? session.expires_at * 1000 : 0;
+          const now = Date.now();
+          const expiringSoon = expiresAt && (expiresAt - now) < 60_000;
+          if (expiringSoon) {
+            const { data: refreshData, error: refreshError } =
+              await supabase.auth.refreshSession();
+            if (refreshError) {
+              console.warn('⚠️ Échec refresh session, session probablement révoquée :', refreshError.message);
+              session = null;
+            } else {
+              session = refreshData.session;
+            }
+          }
+        }
+
         setSession(session);
         setUser(session?.user ?? null);
       } catch (error) {
