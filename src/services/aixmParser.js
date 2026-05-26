@@ -4,6 +4,7 @@
  */
 
 import { normalizeElevationToFeet } from '../utils/elevationUtils';
+import { CURRENT_AIXM_FILE } from '../data/aixm.config.js';
 
 // Fonction pour obtenir le store VAC (import dynamique pour éviter les imports circulaires)
 let getVACStore = null;
@@ -17,9 +18,9 @@ const ensureVACStore = async () => {
 
 class AIXMParser {
   constructor() {
-    console.log('🚨🚨🚨 AIXMParser CONSTRUCTOR - VERSION 2026-03-19 (Cycle AIRAC Mars)');
-    this.aixmPath = '/data/AIXM4.5_all_FR_OM_2026-03-19.xml';
-    this.siaPath = '/data/XML_SIA_2026-03-19.xml';
+    this.aixmPath = `/data/${CURRENT_AIXM_FILE}`;
+    this.siaPath = `/data/${CURRENT_AIXM_FILE.replace('AIXM4.5_all_FR_OM_', 'XML_SIA_')}`;
+    console.log(`🚨 AIXMParser CONSTRUCTOR - ${this.aixmPath}`);
     this.aerodromes = new Map();
     this.runways = new Map();
     this.frequencies = new Map();

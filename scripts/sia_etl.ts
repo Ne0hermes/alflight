@@ -10,19 +10,24 @@ import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { DOMParser } from '@xmldom/xmldom';
 import { SIAMissingDataError } from '../src/types/sia.js';
-import type { 
-  Aerodrome, 
-  Airspace, 
-  Navaid, 
-  DesignatedPoint, 
+import type {
+  Aerodrome,
+  Airspace,
+  Navaid,
+  DesignatedPoint,
   Runway,
   Obstacle,
-  AerodromeFeature,
-  AirspaceFeature,
-  NavaidFeature,
-  DesignatedPointFeature,
-  RunwayFeature,
-  ObstacleFeature
+  ILS,
+  ATSService,
+  ATCUnit,
+  Organization,
+  AerodromeService,
+  AerodromeFacility,
+  AerodromeUsageLimitation,
+  AerodromeAddress,
+  ObstacleAerodromeLink,
+  ATSRouteComplete,
+  ATSRouteSegmentDetail
 } from '../src/types/sia';
 import type { FeatureCollection, Point, Polygon, MultiPolygon, LineString } from 'geojson';
 
@@ -51,6 +56,21 @@ class SIAETL {
   private designatedPoints: DesignatedPoint[] = [];
   private runways: Runway[] = [];
   private obstacles: Obstacle[] = [];
+  private ilsList: ILS[] = [];
+  private atsServices: ATSService[] = [];
+  private atcUnits: ATCUnit[] = [];
+  private organizations: Organization[] = [];
+  private aerodromeServices: AerodromeService[] = [];
+  private aerodromeFacilities: AerodromeFacility[] = [];
+  private aerodromeUsageLimitations: AerodromeUsageLimitation[] = [];
+  private aerodromeAddresses: AerodromeAddress[] = [];
+  private obstacleLinks: ObstacleAerodromeLink[] = [];
+  private atsRoutes: ATSRouteComplete[] = [];
+
+  // Index aérodromes mid → ICAO (rempli en parseAerodromes, utilisé par les autres parsers)
+  private aerodromeMidToIcao = new Map<string, string>();
+  // Index obstacle mid → coords (rempli en parseObstacles)
+  private obstacleMidToCoords = new Map<string, { lat: number; lon: number }>();
   
   /**
    * Lance le processus ETL complet
@@ -69,7 +89,17 @@ class SIAETL {
       await this.parseDesignatedPoints();
       await this.parseRunways();
       await this.parseObstacles();
-      
+      await this.parseOrganizations();
+      await this.parseATCUnits();
+      await this.parseATSServices();
+      await this.parseILS();
+      await this.parseATSRoutes();
+      await this.parseAerodromeServices();
+      await this.parseAerodromeFacilities();
+      await this.parseAerodromeUsageLimitations();
+      await this.parseAerodromeAddresses();
+      await this.parseObstacleAerodromeLinks();
+
       // 3. Générer les GeoJSON
       await this.generateGeoJSON();
       
@@ -141,6 +171,16 @@ class SIAETL {
           throw new SIAMissingDataError('aerodrome_coordinates', codeId);
         }
         
+        // Extraction Aht (sous-bloc horaires)
+        const ahtElement = ahp.getElementsByTagName('Aht')[0];
+        const hoursCode = ahtElement?.getElementsByTagName('codeWorkHr')[0]?.textContent || undefined;
+        const hoursText = ahtElement?.getElementsByTagName('txtRmkWorkHr')[0]?.textContent || undefined;
+
+        const ahpMid = uid?.getAttribute('mid') || undefined;
+        if (ahpMid) {
+          this.aerodromeMidToIcao.set(ahpMid, codeId);
+        }
+
         const aerodrome: Aerodrome = {
           id: `AD_${codeId}`,
           icao: ahp.getElementsByTagName('codeIcao')[0]?.textContent || undefined,
@@ -154,18 +194,20 @@ class SIAETL {
           magnetic_variation: this.parseNumber(ahp.getElementsByTagName('valMagVar')[0]?.textContent),
           transition_altitude: this.parseNumber(ahp.getElementsByTagName('valTransitionAlt')[0]?.textContent),
           frequencies: this.parseFrequencies(ahp),
+          hours_code: hoursCode,
+          hours_text: hoursText,
           source: 'SIA',
           airac: this.airacDate,
-          sia_uid: ahp.getAttribute('mid') || undefined
+          sia_uid: ahpMid
         };
-        
+
         // Convertir l'élévation si nécessaire
         const elevUnit = ahp.getElementsByTagName('uomDistVer')[0]?.textContent;
         if (elevUnit === 'M' && aerodrome.elevation_ft) {
           aerodrome.elevation_m = aerodrome.elevation_ft;
           aerodrome.elevation_ft = Math.round(aerodrome.elevation_ft * 3.28084);
         }
-        
+
         this.aerodromes.push(aerodrome);
         
       } catch (error) {
@@ -464,9 +506,14 @@ class SIAETL {
         const uid = obs.getElementsByTagName('ObsUid')[0];
         const lat = this.parseCoordinate(uid?.getElementsByTagName('geoLat')[0]?.textContent);
         const lon = this.parseCoordinate(uid?.getElementsByTagName('geoLong')[0]?.textContent);
-        
+
         if (lat === null || lon === null) continue;
-        
+
+        const obsMid = uid?.getAttribute('mid') || undefined;
+        if (obsMid) {
+          this.obstacleMidToCoords.set(obsMid, { lat, lon });
+        }
+
         const obstacle: Obstacle = {
           id: `OBS_${lat}_${lon}`.replace(/\./g, '_'),
           type: obs.getElementsByTagName('codeType')[0]?.textContent || undefined,
@@ -479,7 +526,7 @@ class SIAETL {
           marking: obs.getElementsByTagName('codeMarking')[0]?.textContent || undefined,
           source: 'SIA',
           airac: this.airacDate,
-          sia_uid: obs.getAttribute('mid') || undefined
+          sia_uid: obsMid
         };
         
         // Calculer hauteur totale
@@ -495,6 +542,462 @@ class SIAETL {
     }
   }
   
+  /**
+   * Parse les organisations (Org)
+   */
+  private async parseOrganizations(): Promise<void> {
+    if (!this.aixmDoc) throw new Error('Document AIXM non chargé');
+
+    const orgElements = this.aixmDoc.getElementsByTagName('Org');
+    console.log(`🏛️ Parsing ${orgElements.length} organisations...`);
+
+    for (let i = 0; i < orgElements.length; i++) {
+      const org = orgElements[i];
+      try {
+        const uid = org.getElementsByTagName('OrgUid')[0];
+        const name = uid?.getElementsByTagName('txtName')[0]?.textContent;
+        const codeId = org.getElementsByTagName('codeId')[0]?.textContent;
+
+        if (!name || !codeId) continue;
+
+        this.organizations.push({
+          id: `ORG_${codeId}_${i}`,
+          code_id: codeId,
+          name: name,
+          type: org.getElementsByTagName('codeType')[0]?.textContent || undefined,
+          source: 'SIA',
+          airac: this.airacDate,
+          sia_uid: uid?.getAttribute('mid') || undefined
+        });
+      } catch (error) {
+        console.warn(`⚠️ Erreur parsing Org ${i}:`, error);
+      }
+    }
+  }
+
+  /**
+   * Parse les unités ATC (Uni)
+   */
+  private async parseATCUnits(): Promise<void> {
+    if (!this.aixmDoc) throw new Error('Document AIXM non chargé');
+
+    const uniElements = this.aixmDoc.getElementsByTagName('Uni');
+    console.log(`🎙️ Parsing ${uniElements.length} unités ATC...`);
+
+    for (let i = 0; i < uniElements.length; i++) {
+      const uni = uniElements[i];
+      try {
+        const uid = uni.getElementsByTagName('UniUid')[0];
+        const name = uid?.getElementsByTagName('txtName')[0]?.textContent;
+        if (!name) continue;
+
+        const orgUid = uni.getElementsByTagName('OrgUid')[0];
+        const ahpUid = uni.getElementsByTagName('AhpUid')[0];
+        const lat = this.parseCoordinate(uni.getElementsByTagName('geoLat')[0]?.textContent);
+        const lon = this.parseCoordinate(uni.getElementsByTagName('geoLong')[0]?.textContent);
+
+        this.atcUnits.push({
+          id: `UNI_${uid?.getAttribute('mid') || i}`,
+          name: name,
+          org_name: orgUid?.getElementsByTagName('txtName')[0]?.textContent || undefined,
+          aerodrome_icao: ahpUid?.getElementsByTagName('codeId')[0]?.textContent || undefined,
+          type: uni.getElementsByTagName('codeType')[0]?.textContent || undefined,
+          class: uni.getElementsByTagName('codeClass')[0]?.textContent || undefined,
+          latitude: lat ?? undefined,
+          longitude: lon ?? undefined,
+          source: 'SIA',
+          airac: this.airacDate,
+          sia_uid: uid?.getAttribute('mid') || undefined
+        });
+      } catch (error) {
+        console.warn(`⚠️ Erreur parsing Uni ${i}:`, error);
+      }
+    }
+  }
+
+  /**
+   * Parse les services ATS (Ser)
+   */
+  private async parseATSServices(): Promise<void> {
+    if (!this.aixmDoc) throw new Error('Document AIXM non chargé');
+
+    const serElements = this.aixmDoc.getElementsByTagName('Ser');
+    console.log(`📡 Parsing ${serElements.length} services ATS...`);
+
+    for (let i = 0; i < serElements.length; i++) {
+      const ser = serElements[i];
+      try {
+        const uid = ser.getElementsByTagName('SerUid')[0];
+        const uniUid = uid?.getElementsByTagName('UniUid')[0];
+        const unitName = uniUid?.getElementsByTagName('txtName')[0]?.textContent || undefined;
+        const codeType = uid?.getElementsByTagName('codeType')[0]?.textContent || 'OTHER';
+        const noSeq = this.parseNumber(uid?.getElementsByTagName('noSeq')[0]?.textContent);
+
+        const lat = this.parseCoordinate(ser.getElementsByTagName('geoLat')[0]?.textContent);
+        const lon = this.parseCoordinate(ser.getElementsByTagName('geoLong')[0]?.textContent);
+
+        this.atsServices.push({
+          id: `SER_${uid?.getAttribute('mid') || i}`,
+          unit_name: unitName,
+          type: codeType,
+          sequence: noSeq,
+          latitude: lat ?? undefined,
+          longitude: lon ?? undefined,
+          source: 'SIA',
+          airac: this.airacDate,
+          sia_uid: uid?.getAttribute('mid') || undefined
+        });
+      } catch (error) {
+        console.warn(`⚠️ Erreur parsing Ser ${i}:`, error);
+      }
+    }
+  }
+
+  /**
+   * Parse les ILS (avec Localizer Ilz, Glide path Igp, DME associé, catégorie)
+   */
+  private async parseILS(): Promise<void> {
+    if (!this.aixmDoc) throw new Error('Document AIXM non chargé');
+
+    const ilsElements = this.aixmDoc.getElementsByTagName('Ils');
+    console.log(`✈️ Parsing ${ilsElements.length} ILS...`);
+
+    for (let i = 0; i < ilsElements.length; i++) {
+      const ils = ilsElements[i];
+      try {
+        const uid = ils.getElementsByTagName('IlsUid')[0];
+        const rdnUid = uid?.getElementsByTagName('RdnUid')[0];
+        const rwyUid = rdnUid?.getElementsByTagName('RwyUid')[0];
+        const ahpUid = rwyUid?.getElementsByTagName('AhpUid')[0];
+
+        const icao = this.directChildText(ahpUid, 'codeId');
+        const rwyDesig = this.directChildText(rwyUid, 'txtDesig');
+        const rdnDesig = this.directChildText(rdnUid, 'txtDesig');
+
+        if (!icao || !rwyDesig || !rdnDesig) continue;
+
+        // Localizer (Ilz)
+        const ilz = ils.getElementsByTagName('Ilz')[0];
+        const ilzLat = this.parseCoordinate(ilz?.getElementsByTagName('geoLat')[0]?.textContent);
+        const ilzLon = this.parseCoordinate(ilz?.getElementsByTagName('geoLong')[0]?.textContent);
+        const ilt = ilz?.getElementsByTagName('Ilt')[0];
+
+        // Glide path (Igp)
+        const igp = ils.getElementsByTagName('Igp')[0];
+        const igpLat = this.parseCoordinate(igp?.getElementsByTagName('geoLat')[0]?.textContent);
+        const igpLon = this.parseCoordinate(igp?.getElementsByTagName('geoLong')[0]?.textContent);
+        const igt = igp?.getElementsByTagName('Igt')[0];
+
+        // DME associé
+        const dmeUid = ils.getElementsByTagName('DmeUid')[0];
+        const dmeIdent = dmeUid?.getElementsByTagName('codeId')[0]?.textContent || undefined;
+
+        const cat = ils.getElementsByTagName('codeCat')[0]?.textContent;
+
+        this.ilsList.push({
+          id: `ILS_${icao}_${rwyDesig}_${rdnDesig}`,
+          runway_id: `RWY_${icao}_${rwyDesig}`,
+          aerodrome_icao: icao,
+          runway_designator: rwyDesig,
+          runway_direction: rdnDesig,
+          category: (cat as ILS['category']) || undefined,
+          loc_ident: ilz?.getElementsByTagName('codeId')[0]?.textContent || undefined,
+          loc_frequency_mhz: this.parseNumber(ilz?.getElementsByTagName('valFreq')[0]?.textContent),
+          loc_latitude: ilzLat ?? undefined,
+          loc_longitude: ilzLon ?? undefined,
+          loc_elevation_ft: this.parseNumber(ilz?.getElementsByTagName('valElev')[0]?.textContent),
+          loc_hours_code: ilt?.getElementsByTagName('codeWorkHr')[0]?.textContent || undefined,
+          gp_frequency_mhz: this.parseNumber(igp?.getElementsByTagName('valFreq')[0]?.textContent),
+          gp_slope_deg: this.parseNumber(igp?.getElementsByTagName('valSlope')[0]?.textContent),
+          gp_rdh_m: this.parseNumber(igp?.getElementsByTagName('valRdh')[0]?.textContent),
+          gp_latitude: igpLat ?? undefined,
+          gp_longitude: igpLon ?? undefined,
+          gp_elevation_ft: this.parseNumber(igp?.getElementsByTagName('valElev')[0]?.textContent),
+          gp_hours_code: igt?.getElementsByTagName('codeWorkHr')[0]?.textContent || undefined,
+          dme_ident: dmeIdent,
+          source: 'SIA',
+          airac: this.airacDate,
+          sia_uid: uid?.getAttribute('mid') || undefined
+        });
+      } catch (error) {
+        console.warn(`⚠️ Erreur parsing ILS ${i}:`, error);
+      }
+    }
+  }
+
+  /**
+   * Parse les routes ATS (Rte) avec leurs segments (Rsg).
+   * Les Rsg référencent leur Rte par mid → on indexe les Rte par mid d'abord.
+   */
+  private async parseATSRoutes(): Promise<void> {
+    if (!this.aixmDoc) throw new Error('Document AIXM non chargé');
+
+    const rteElements = this.aixmDoc.getElementsByTagName('Rte');
+    console.log(`🛣️ Parsing ${rteElements.length} routes ATS...`);
+
+    // Index Rte par mid
+    const rteByMid = new Map<string, ATSRouteComplete>();
+    for (let i = 0; i < rteElements.length; i++) {
+      const rte = rteElements[i];
+      const uid = rte.getElementsByTagName('RteUid')[0];
+      const mid = uid?.getAttribute('mid');
+      const designation = uid?.getElementsByTagName('txtDesig')[0]?.textContent;
+      const locDesig = uid?.getElementsByTagName('txtLocDesig')[0]?.textContent || undefined;
+
+      if (!mid || !designation) continue;
+
+      const route: ATSRouteComplete = {
+        id: `RTE_${designation}_${locDesig || 'NA'}`,
+        designation: designation,
+        location_designator: locDesig,
+        segments: [],
+        source: 'SIA',
+        airac: this.airacDate,
+        sia_uid: mid
+      };
+      rteByMid.set(mid, route);
+      this.atsRoutes.push(route);
+    }
+
+    // Parse segments Rsg
+    const rsgElements = this.aixmDoc.getElementsByTagName('Rsg');
+    console.log(`   ↳ ${rsgElements.length} segments à attacher`);
+    let attached = 0;
+    for (let i = 0; i < rsgElements.length; i++) {
+      const rsg = rsgElements[i];
+      try {
+        const rsgUid = rsg.getElementsByTagName('RsgUid')[0];
+        const rteUidRef = rsgUid?.getElementsByTagName('RteUid')[0];
+        const rteMid = rteUidRef?.getAttribute('mid');
+        if (!rteMid) continue;
+
+        const route = rteByMid.get(rteMid);
+        if (!route) continue;
+
+        // Sta = start, End = end (peuvent être DpnUid, VorUid, DmeUid, NdbUid)
+        const findRef = (suffix: 'Sta' | 'End') => {
+          for (const tag of ['DpnUid', 'VorUid', 'DmeUid', 'NdbUid']) {
+            const refs = rsgUid?.getElementsByTagName(tag + suffix);
+            if (refs && refs.length > 0) {
+              return {
+                ident: refs[0].getElementsByTagName('codeId')[0]?.textContent || undefined,
+                type: tag.replace('Uid', '').toUpperCase()
+              };
+            }
+          }
+          return { ident: undefined, type: undefined };
+        };
+        const start = findRef('Sta');
+        const end = findRef('End');
+
+        const segment: ATSRouteSegmentDetail = {
+          start_ident: start.ident,
+          start_type: start.type,
+          end_ident: end.ident,
+          end_type: end.type,
+          type: rsg.getElementsByTagName('codeType')[0]?.textContent || undefined,
+          rnp: rsg.getElementsByTagName('codeRnp')[0]?.textContent || undefined,
+          level: rsg.getElementsByTagName('codeLvl')[0]?.textContent || undefined,
+          upper_limit: this.parseNumber(rsg.getElementsByTagName('valDistVerUpper')[0]?.textContent),
+          upper_limit_unit: rsg.getElementsByTagName('uomDistVerUpper')[0]?.textContent || undefined,
+          lower_limit: this.parseNumber(rsg.getElementsByTagName('valDistVerLower')[0]?.textContent),
+          lower_limit_unit: rsg.getElementsByTagName('uomDistVerLower')[0]?.textContent || undefined,
+          true_track: this.parseNumber(rsg.getElementsByTagName('valTrueTrack')[0]?.textContent),
+          magnetic_track: this.parseNumber(rsg.getElementsByTagName('valMagTrack')[0]?.textContent),
+          reverse_true_track: this.parseNumber(rsg.getElementsByTagName('valReversTrueTrack')[0]?.textContent),
+          reverse_magnetic_track: this.parseNumber(rsg.getElementsByTagName('valReversMagTrack')[0]?.textContent),
+          length_nm: this.parseNumber(rsg.getElementsByTagName('valLen')[0]?.textContent)
+        };
+        route.segments.push(segment);
+        attached++;
+      } catch (error) {
+        console.warn(`⚠️ Erreur parsing Rsg ${i}:`, error);
+      }
+    }
+    console.log(`   ↳ ${attached} segments attachés`);
+  }
+
+  /**
+   * Parse les services aérodrome opérationnels (Ahs) — FIRE/FUEL/HANGAR/REPAIR/CUST/etc.
+   */
+  private async parseAerodromeServices(): Promise<void> {
+    if (!this.aixmDoc) throw new Error('Document AIXM non chargé');
+
+    const ahsElements = this.aixmDoc.getElementsByTagName('Ahs');
+    console.log(`🔧 Parsing ${ahsElements.length} services aérodrome...`);
+
+    for (let i = 0; i < ahsElements.length; i++) {
+      const ahs = ahsElements[i];
+      try {
+        const uid = ahs.getElementsByTagName('AhsUid')[0];
+        const ahpUid = uid?.getElementsByTagName('AhpUid')[0];
+        const icao = ahpUid?.getElementsByTagName('codeId')[0]?.textContent;
+        const type = uid?.getElementsByTagName('codeType')[0]?.textContent;
+
+        if (!icao || !type) continue;
+
+        this.aerodromeServices.push({
+          id: `AHS_${uid?.getAttribute('mid') || i}`,
+          aerodrome_icao: icao,
+          type: type,
+          category: ahs.getElementsByTagName('codeCat')[0]?.textContent || undefined,
+          source: 'SIA',
+          airac: this.airacDate,
+          sia_uid: uid?.getAttribute('mid') || undefined
+        });
+      } catch (error) {
+        console.warn(`⚠️ Erreur parsing Ahs ${i}:`, error);
+      }
+    }
+  }
+
+  /**
+   * Parse les commodités aérodrome (Pfy) — restaurant, hôtel, banque, etc.
+   * ⚠️ Aerodrome FacilitY, PAS une procédure de vol.
+   */
+  private async parseAerodromeFacilities(): Promise<void> {
+    if (!this.aixmDoc) throw new Error('Document AIXM non chargé');
+
+    const pfyElements = this.aixmDoc.getElementsByTagName('Pfy');
+    console.log(`🏨 Parsing ${pfyElements.length} commodités aérodrome...`);
+
+    for (let i = 0; i < pfyElements.length; i++) {
+      const pfy = pfyElements[i];
+      try {
+        const uid = pfy.getElementsByTagName('PfyUid')[0];
+        const ahpUid = uid?.getElementsByTagName('AhpUid')[0];
+        const icao = ahpUid?.getElementsByTagName('codeId')[0]?.textContent;
+        const type = uid?.getElementsByTagName('codeType')[0]?.textContent;
+
+        if (!icao || !type) continue;
+
+        this.aerodromeFacilities.push({
+          id: `PFY_${uid?.getAttribute('mid') || i}`,
+          aerodrome_icao: icao,
+          type: type,
+          sequence: this.parseNumber(uid?.getElementsByTagName('noSeq')[0]?.textContent),
+          description: pfy.getElementsByTagName('txtDescr')[0]?.textContent || undefined,
+          source: 'SIA',
+          airac: this.airacDate,
+          sia_uid: uid?.getAttribute('mid') || undefined
+        });
+      } catch (error) {
+        console.warn(`⚠️ Erreur parsing Pfy ${i}:`, error);
+      }
+    }
+  }
+
+  /**
+   * Parse les limitations d'usage aérodrome (Ahu) — PPR, restrictions de vol.
+   */
+  private async parseAerodromeUsageLimitations(): Promise<void> {
+    if (!this.aixmDoc) throw new Error('Document AIXM non chargé');
+
+    const ahuElements = this.aixmDoc.getElementsByTagName('Ahu');
+    console.log(`🚧 Parsing ${ahuElements.length} limitations d'usage...`);
+
+    for (let i = 0; i < ahuElements.length; i++) {
+      const ahu = ahuElements[i];
+      try {
+        const uid = ahu.getElementsByTagName('AhuUid')[0];
+        const ahpUid = uid?.getElementsByTagName('AhpUid')[0];
+        const icao = ahpUid?.getElementsByTagName('codeId')[0]?.textContent;
+        const limitation = ahu.getElementsByTagName('codeUsageLimitation')[0]?.textContent;
+        if (!icao || !limitation) continue;
+
+        const flightClass = ahu.getElementsByTagName('FlightClass')[0];
+
+        this.aerodromeUsageLimitations.push({
+          id: `AHU_${uid?.getAttribute('mid') || i}`,
+          aerodrome_icao: icao,
+          limitation: limitation,
+          flight_rule: flightClass?.getElementsByTagName('codeRule')[0]?.textContent || undefined,
+          flight_status: flightClass?.getElementsByTagName('codeStatus')[0]?.textContent || undefined,
+          flight_origin: flightClass?.getElementsByTagName('codeOrigin')[0]?.textContent || undefined,
+          flight_purpose: flightClass?.getElementsByTagName('codePurpose')[0]?.textContent || undefined,
+          source: 'SIA',
+          airac: this.airacDate,
+          sia_uid: uid?.getAttribute('mid') || undefined
+        });
+      } catch (error) {
+        console.warn(`⚠️ Erreur parsing Ahu ${i}:`, error);
+      }
+    }
+  }
+
+  /**
+   * Parse les adresses aérodrome (Aha) — postales, etc.
+   */
+  private async parseAerodromeAddresses(): Promise<void> {
+    if (!this.aixmDoc) throw new Error('Document AIXM non chargé');
+
+    const ahaElements = this.aixmDoc.getElementsByTagName('Aha');
+    console.log(`✉️ Parsing ${ahaElements.length} adresses aérodrome...`);
+
+    for (let i = 0; i < ahaElements.length; i++) {
+      const aha = ahaElements[i];
+      try {
+        const uid = aha.getElementsByTagName('AhaUid')[0];
+        const ahpUid = uid?.getElementsByTagName('AhpUid')[0];
+        const icao = ahpUid?.getElementsByTagName('codeId')[0]?.textContent;
+        const type = uid?.getElementsByTagName('codeType')[0]?.textContent;
+        const address = aha.getElementsByTagName('txtAddress')[0]?.textContent;
+        if (!icao || !type || !address) continue;
+
+        this.aerodromeAddresses.push({
+          id: `AHA_${uid?.getAttribute('mid') || i}`,
+          aerodrome_icao: icao,
+          type: type,
+          sequence: this.parseNumber(uid?.getElementsByTagName('noSeq')[0]?.textContent),
+          address: address,
+          source: 'SIA',
+          airac: this.airacDate,
+          sia_uid: uid?.getAttribute('mid') || undefined
+        });
+      } catch (error) {
+        console.warn(`⚠️ Erreur parsing Aha ${i}:`, error);
+      }
+    }
+  }
+
+  /**
+   * Parse les liaisons Obstacle ↔ Aérodrome (Aho).
+   */
+  private async parseObstacleAerodromeLinks(): Promise<void> {
+    if (!this.aixmDoc) throw new Error('Document AIXM non chargé');
+
+    const ahoElements = this.aixmDoc.getElementsByTagName('Aho');
+    console.log(`🏗️ Parsing ${ahoElements.length} liaisons Obstacle↔AD...`);
+
+    for (let i = 0; i < ahoElements.length; i++) {
+      const aho = ahoElements[i];
+      try {
+        const uid = aho.getElementsByTagName('AhoUid')[0];
+        const obsUid = uid?.getElementsByTagName('ObsUid')[0];
+        const ahpUid = uid?.getElementsByTagName('AhpUid')[0];
+        const icao = ahpUid?.getElementsByTagName('codeId')[0]?.textContent;
+        if (!icao) continue;
+
+        const obsMid = obsUid?.getAttribute('mid') || undefined;
+        const obsLat = this.parseCoordinate(obsUid?.getElementsByTagName('geoLat')[0]?.textContent);
+        const obsLon = this.parseCoordinate(obsUid?.getElementsByTagName('geoLong')[0]?.textContent);
+
+        this.obstacleLinks.push({
+          id: `AHO_${uid?.getAttribute('mid') || i}`,
+          aerodrome_icao: icao,
+          obstacle_sia_uid: obsMid,
+          obstacle_latitude: obsLat ?? undefined,
+          obstacle_longitude: obsLon ?? undefined,
+          source: 'SIA',
+          airac: this.airacDate,
+          sia_uid: uid?.getAttribute('mid') || undefined
+        });
+      } catch (error) {
+        console.warn(`⚠️ Erreur parsing Aho ${i}:`, error);
+      }
+    }
+  }
+
   /**
    * Génère les fichiers GeoJSON
    */
@@ -605,8 +1108,119 @@ class SIAETL {
       path.join(OUTPUT_DIR, 'obstacles.geojson'),
       JSON.stringify(obstacleFeatures, null, 2)
     );
-    
-    console.log(`✅ GeoJSON générés dans ${OUTPUT_DIR}`);
+
+    // ILS (Point sur la position du Localizer, GP en propriétés)
+    const ilsFeatures: FeatureCollection<Point, ILS> = {
+      type: 'FeatureCollection',
+      features: this.ilsList
+        .filter(ils => ils.loc_latitude !== undefined && ils.loc_longitude !== undefined)
+        .map(ils => ({
+          type: 'Feature',
+          id: ils.id,
+          geometry: {
+            type: 'Point',
+            coordinates: [ils.loc_longitude!, ils.loc_latitude!]
+          },
+          properties: ils
+        }))
+    };
+    fs.writeFileSync(
+      path.join(OUTPUT_DIR, 'ils.geojson'),
+      JSON.stringify(ilsFeatures, null, 2)
+    );
+
+    // Services ATS (Point pour ceux avec coords)
+    const serviceFeatures: FeatureCollection<Point, ATSService> = {
+      type: 'FeatureCollection',
+      features: this.atsServices
+        .filter(s => s.latitude !== undefined && s.longitude !== undefined)
+        .map(s => ({
+          type: 'Feature',
+          id: s.id,
+          geometry: {
+            type: 'Point',
+            coordinates: [s.longitude!, s.latitude!]
+          },
+          properties: s
+        }))
+    };
+    fs.writeFileSync(
+      path.join(OUTPUT_DIR, 'ats_services.geojson'),
+      JSON.stringify(serviceFeatures, null, 2)
+    );
+    // Et la version table complète (incluant ceux sans coords)
+    fs.writeFileSync(
+      path.join(OUTPUT_DIR, 'ats_services.json'),
+      JSON.stringify({ airac: this.airacDate, count: this.atsServices.length, items: this.atsServices }, null, 2)
+    );
+
+    // Unités ATC (Point)
+    const unitFeatures: FeatureCollection<Point, ATCUnit> = {
+      type: 'FeatureCollection',
+      features: this.atcUnits
+        .filter(u => u.latitude !== undefined && u.longitude !== undefined)
+        .map(u => ({
+          type: 'Feature',
+          id: u.id,
+          geometry: {
+            type: 'Point',
+            coordinates: [u.longitude!, u.latitude!]
+          },
+          properties: u
+        }))
+    };
+    fs.writeFileSync(
+      path.join(OUTPUT_DIR, 'atc_units.geojson'),
+      JSON.stringify(unitFeatures, null, 2)
+    );
+    fs.writeFileSync(
+      path.join(OUTPUT_DIR, 'atc_units.json'),
+      JSON.stringify({ airac: this.airacDate, count: this.atcUnits.length, items: this.atcUnits }, null, 2)
+    );
+
+    // Organisations (table seule)
+    fs.writeFileSync(
+      path.join(OUTPUT_DIR, 'organizations.json'),
+      JSON.stringify({ airac: this.airacDate, count: this.organizations.length, items: this.organizations }, null, 2)
+    );
+
+    // Routes ATS (table avec segments imbriqués)
+    fs.writeFileSync(
+      path.join(OUTPUT_DIR, 'ats_routes.json'),
+      JSON.stringify({ airac: this.airacDate, count: this.atsRoutes.length, items: this.atsRoutes }, null, 2)
+    );
+
+    // Services aérodrome (table)
+    fs.writeFileSync(
+      path.join(OUTPUT_DIR, 'aerodrome_services.json'),
+      JSON.stringify({ airac: this.airacDate, count: this.aerodromeServices.length, items: this.aerodromeServices }, null, 2)
+    );
+
+    // Commodités aérodrome (table)
+    fs.writeFileSync(
+      path.join(OUTPUT_DIR, 'aerodrome_facilities.json'),
+      JSON.stringify({ airac: this.airacDate, count: this.aerodromeFacilities.length, items: this.aerodromeFacilities }, null, 2)
+    );
+
+    // Limitations d'usage aérodrome (table)
+    fs.writeFileSync(
+      path.join(OUTPUT_DIR, 'aerodrome_usage_limitations.json'),
+      JSON.stringify({ airac: this.airacDate, count: this.aerodromeUsageLimitations.length, items: this.aerodromeUsageLimitations }, null, 2)
+    );
+
+    // Adresses aérodrome (table)
+    fs.writeFileSync(
+      path.join(OUTPUT_DIR, 'aerodrome_addresses.json'),
+      JSON.stringify({ airac: this.airacDate, count: this.aerodromeAddresses.length, items: this.aerodromeAddresses }, null, 2)
+    );
+
+    // Liaisons Obstacle ↔ Aérodrome (table)
+    fs.writeFileSync(
+      path.join(OUTPUT_DIR, 'obstacle_aerodrome_links.json'),
+      JSON.stringify({ airac: this.airacDate, count: this.obstacleLinks.length, items: this.obstacleLinks }, null, 2)
+    );
+
+    console.log(`✅ GeoJSON + JSON générés dans ${OUTPUT_DIR}`);
   }
   
   /**
@@ -620,30 +1234,64 @@ class SIAETL {
     console.log(`  - Points désignés: ${this.designatedPoints.length}`);
     console.log(`  - Pistes: ${this.runways.length}`);
     console.log(`  - Obstacles: ${this.obstacles.length}`);
+    console.log(`  - ILS: ${this.ilsList.length}`);
+    console.log(`  - Services ATS: ${this.atsServices.length}`);
+    console.log(`  - Unités ATC: ${this.atcUnits.length}`);
+    console.log(`  - Organisations: ${this.organizations.length}`);
+    console.log(`  - Routes ATS: ${this.atsRoutes.length} (avec ${this.atsRoutes.reduce((acc, r) => acc + r.segments.length, 0)} segments)`);
+    console.log(`  - Services AD (Ahs): ${this.aerodromeServices.length}`);
+    console.log(`  - Commodités AD (Pfy): ${this.aerodromeFacilities.length}`);
+    console.log(`  - Limitations usage AD (Ahu): ${this.aerodromeUsageLimitations.length}`);
+    console.log(`  - Adresses AD (Aha): ${this.aerodromeAddresses.length}`);
+    console.log(`  - Liaisons Obstacle↔AD (Aho): ${this.obstacleLinks.length}`);
+    const adWithHours = this.aerodromes.filter(a => a.hours_code).length;
+    console.log(`  - AD avec horaires (Aht): ${adWithHours}`);
     console.log(`  - Cycle AIRAC: ${this.airacDate}`);
   }
   
   // === HELPERS DE PARSING ===
   
+  /**
+   * Récupère le textContent du premier enfant DIRECT avec le tag donné.
+   * Contrairement à getElementsByTagName qui descend récursivement.
+   */
+  private directChildText(parent: Element | undefined, tag: string): string | undefined {
+    if (!parent) return undefined;
+    for (let i = 0; i < parent.childNodes.length; i++) {
+      const child = parent.childNodes[i] as Element;
+      if (child.nodeType === 1 && child.tagName === tag) {
+        return child.textContent || undefined;
+      }
+    }
+    return undefined;
+  }
+
   private parseCoordinate(coord: string | null | undefined): number | null {
     if (!coord) return null;
-    
-    // Format AIXM: DDMMSS.ssH (ex: 484930.00N ou 0022900.00E)
-    const match = coord.match(/^(\d{2,3})(\d{2})(\d{2}(?:\.\d+)?)(N|S|E|W)$/);
-    if (!match) return null;
-    
-    const degrees = parseInt(match[1]);
-    const minutes = parseInt(match[2]);
-    const seconds = parseFloat(match[3]);
-    const direction = match[4];
-    
-    let decimal = degrees + minutes / 60 + seconds / 3600;
-    
-    if (direction === 'S' || direction === 'W') {
-      decimal = -decimal;
+
+    // Format AIXM DMS: DDMMSS.ssH (ex: 484930.00N ou 0022900.00E)
+    const dmsMatch = coord.match(/^(\d{2,3})(\d{2})(\d{2}(?:\.\d+)?)(N|S|E|W)$/);
+    if (dmsMatch) {
+      const degrees = parseInt(dmsMatch[1]);
+      const minutes = parseInt(dmsMatch[2]);
+      const seconds = parseFloat(dmsMatch[3]);
+      const direction = dmsMatch[4];
+
+      let decimal = degrees + minutes / 60 + seconds / 3600;
+      if (direction === 'S' || direction === 'W') decimal = -decimal;
+      return Math.round(decimal * 1000000) / 1000000;
     }
-    
-    return Math.round(decimal * 1000000) / 1000000;
+
+    // Format AIXM décimal: DD.ddddddH (ex: 46.16371667N ou 005.99990561E)
+    const decMatch = coord.match(/^(\d+(?:\.\d+)?)(N|S|E|W)$/);
+    if (decMatch) {
+      let decimal = parseFloat(decMatch[1]);
+      const direction = decMatch[2];
+      if (direction === 'S' || direction === 'W') decimal = -decimal;
+      return Math.round(decimal * 1000000) / 1000000;
+    }
+
+    return null;
   }
   
   private parseNumber(value: string | null | undefined): number | undefined {

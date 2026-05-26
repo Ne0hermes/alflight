@@ -3,6 +3,8 @@
  * Extraction directe et exclusive depuis les données SIA locales
  */
 
+import { CURRENT_AIXM_FILE } from '../data/aixm.config.js';
+
 class AIXMAirspacesParser {
   constructor() {
     this.airspaces = [];
@@ -31,7 +33,7 @@ class AIXMAirspacesParser {
         
         
         // Charger le fichier AIXM
-        const aixmResponse = await fetch('/data/AIXM4.5_all_FR_OM_2026-03-19.xml');
+        const aixmResponse = await fetch(`/data/${CURRENT_AIXM_FILE}`);
         const aixmText = await aixmResponse.text();
         
         // Parser le XML
