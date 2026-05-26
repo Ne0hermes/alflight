@@ -7,6 +7,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Plane, Search, X, MapPin } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { AIRPORT_NAMES } from '@data/airportNames';
+import { CURRENT_AIXM_FILE } from '@data/aixm.config.js';
+
+const CURRENT_SIA_FILE = CURRENT_AIXM_FILE.replace('AIXM4.5_all_FR_OM_', 'XML_SIA_');
 
 export const AirportInserter = ({ 
   waypoints = [],
@@ -38,7 +41,7 @@ export const AirportInserter = ({
         
         // 1. Essayer de charger depuis AIXM (plus complet)
         try {
-          const response = await fetch('/data/AIXM4.5_all_FR_OM_2026-03-19.xml');
+          const response = await fetch(`/data/${CURRENT_AIXM_FILE}`);
           if (response.ok) {
             const xmlText = await response.text();
             const parser = new DOMParser();
@@ -144,7 +147,7 @@ export const AirportInserter = ({
         // 2. Si pas assez d'aérodromes, essayer XML_SIA comme fallback
         if (allAirports.length < 100) {
           try {
-            const response = await fetch('/src/data/XML_SIA_2025-09-04.xml');
+            const response = await fetch(`/data/${CURRENT_SIA_FILE}`);
             if (response.ok) {
               const xmlText = await response.text();
               const parser = new DOMParser();

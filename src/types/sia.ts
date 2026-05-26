@@ -78,11 +78,201 @@ export interface Aerodrome {
   
   // Communications
   frequencies?: Frequency[];            // Fréquences radio
-  
+
+  // Horaires AD (depuis sous-bloc Aht)
+  hours_code?: string;                  // H24 / HX / HN / OTHER
+  hours_text?: string;                  // Texte libre quand code=OTHER
+
   // Métadonnées
   source: "SIA";
   airac: string;
   sia_uid?: string;
+}
+
+/**
+ * ILS — Instrument Landing System (avec Localizer + GlidePath + Markers + DME éventuel)
+ */
+export interface ILS {
+  id: string;
+  runway_id: string;                    // AhpUid+RwyUid+RdnUid (designator) ex: "LFGJ_05/23_05"
+  aerodrome_icao: string;
+  runway_designator: string;            // ex: "05/23"
+  runway_direction: string;             // ex: "05"
+  category?: "I" | "II" | "III" | "IIIA" | "IIIB";
+
+  // Localizer (Ilz)
+  loc_ident?: string;
+  loc_frequency_mhz?: number;
+  loc_latitude?: number;
+  loc_longitude?: number;
+  loc_elevation_ft?: number;
+  loc_hours_code?: string;
+
+  // Glide path (Igp)
+  gp_frequency_mhz?: number;
+  gp_slope_deg?: number;
+  gp_rdh_m?: number;                    // Reference Datum Height
+  gp_latitude?: number;
+  gp_longitude?: number;
+  gp_elevation_ft?: number;
+  gp_hours_code?: string;
+
+  // DME associé (DmeUid optionnel)
+  dme_ident?: string;
+
+  // Métadonnées
+  source: "SIA";
+  airac: string;
+  sia_uid?: string;
+}
+
+/**
+ * Service ATS (Ser)
+ */
+export interface ATSService {
+  id: string;
+  unit_name?: string;                   // UniUid.txtName
+  type: string;                         // TWR / AFIS / ATIS / VDF / APP / FIS / PAR / UDF / ACS / ALRS / OTHER
+  sequence?: number;                    // noSeq
+  latitude?: number;
+  longitude?: number;
+  source: "SIA";
+  airac: string;
+  sia_uid?: string;
+}
+
+/**
+ * Unité ATC (Uni)
+ */
+export interface ATCUnit {
+  id: string;
+  name: string;                         // UniUid.txtName ("LFSN NANCY")
+  org_name?: string;                    // OrgUid.txtName
+  aerodrome_icao?: string;              // AhpUid.codeId
+  type?: string;                        // OTHER / FIC / TWR / APP / UAC / ACC / MIL
+  class?: string;                       // codeClass
+  latitude?: number;
+  longitude?: number;
+  source: "SIA";
+  airac: string;
+  sia_uid?: string;
+}
+
+/**
+ * Organisation / Pays gestionnaire (Org)
+ */
+export interface Organization {
+  id: string;
+  code_id: string;                      // LF, NT, TF, FM, etc.
+  name: string;                         // OrgUid.txtName
+  type?: string;                        // codeType (toujours "O")
+  source: "SIA";
+  airac: string;
+  sia_uid?: string;
+}
+
+/**
+ * Service aérodrome opérationnel (Ahs) — carburant, pompiers, douane, etc.
+ */
+export interface AerodromeService {
+  id: string;
+  aerodrome_icao: string;
+  type: string;                         // FIRE / FUEL / HANGAR / REPAIR / CUST / DEICE / CLEAR / HAND / SECUR / SAN / OTHER
+  category?: string;                    // codeCat — ex "A7" pour FIRE, "100LL" pour FUEL
+  source: "SIA";
+  airac: string;
+  sia_uid?: string;
+}
+
+/**
+ * Facility (commodité) aérodrome (Pfy) — restaurant, hôtel, banque, etc.
+ * PAS une procédure de vol malgré le nom AIXM.
+ */
+export interface AerodromeFacility {
+  id: string;
+  aerodrome_icao: string;
+  type: string;                         // REST / TRANS / HOTEL / MEDIC / BANK / INFO / OTHER / POST
+  sequence?: number;
+  description?: string;                 // txtDescr
+  source: "SIA";
+  airac: string;
+  sia_uid?: string;
+}
+
+/**
+ * Limitation d'usage aérodrome (Ahu) — PPR, restrictions IFR/VFR, etc.
+ */
+export interface AerodromeUsageLimitation {
+  id: string;
+  aerodrome_icao: string;
+  limitation: string;                   // codeUsageLimitation : PERMIT / RESTRICT etc.
+  flight_rule?: string;                 // codeRule : IV (IFR), VV (VFR), IFR_VFR
+  flight_status?: string;               // codeStatus : STATE / OTHER / etc.
+  flight_origin?: string;               // codeOrigin : NTL / INTL / etc.
+  flight_purpose?: string;              // codePurpose : OTHER / PRIVATE / etc.
+  source: "SIA";
+  airac: string;
+  sia_uid?: string;
+}
+
+/**
+ * Adresse aérodrome (Aha)
+ */
+export interface AerodromeAddress {
+  id: string;
+  aerodrome_icao: string;
+  type: string;                         // POST / PHONE / FAX / etc.
+  sequence?: number;
+  address: string;                      // txtAddress, # = retour à la ligne
+  source: "SIA";
+  airac: string;
+  sia_uid?: string;
+}
+
+/**
+ * Liaison Obstacle ↔ Aérodrome (Aho)
+ */
+export interface ObstacleAerodromeLink {
+  id: string;
+  aerodrome_icao: string;
+  obstacle_sia_uid?: string;
+  obstacle_latitude?: number;
+  obstacle_longitude?: number;
+  source: "SIA";
+  airac: string;
+  sia_uid?: string;
+}
+
+/**
+ * Route ATS complète avec ses segments
+ */
+export interface ATSRouteComplete {
+  id: string;
+  designation: string;                  // ex: "L615", "UN460"
+  location_designator?: string;         // txtLocDesig : LF-LF, EUR, etc.
+  segments: ATSRouteSegmentDetail[];
+  source: "SIA";
+  airac: string;
+  sia_uid?: string;
+}
+
+export interface ATSRouteSegmentDetail {
+  start_ident?: string;                 // Dpn/Vor/Dme codeId
+  start_type?: string;                  // DPN / VOR / DME / NDB
+  end_ident?: string;
+  end_type?: string;
+  type?: string;                        // RNAV
+  rnp?: string;                         // codeRnp
+  level?: string;                       // codeLvl : L / U / B
+  upper_limit?: number;                 // valDistVerUpper
+  upper_limit_unit?: string;            // uomDistVerUpper
+  lower_limit?: number;
+  lower_limit_unit?: string;
+  true_track?: number;
+  magnetic_track?: number;
+  reverse_true_track?: number;
+  reverse_magnetic_track?: number;
+  length_nm?: number;
 }
 
 /**
