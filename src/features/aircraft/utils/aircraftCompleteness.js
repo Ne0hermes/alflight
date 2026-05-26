@@ -168,26 +168,22 @@ export function evaluateAircraft(aircraft) {
 
 /**
  * Couleur d'affichage selon le %.
- *  - ≥ 90 : vert
- *  - ≥ 70 : jaune
- *  - ≥ 50 : orange
- *  - < 50 : rouge
+ * Charte ALFlight : vert sapin / orange officiel / rouge critical.
  */
 export function getCompletionColor(percentage) {
-  if (percentage >= 90) return '#16a34a'; // green-600
-  if (percentage >= 70) return '#ca8a04'; // yellow-600
-  if (percentage >= 50) return '#D85410'; // orange-600
-  return '#dc2626';                        // red-600
+  if (percentage >= 90) return '#4FAE7F'; // vert sapin (status-ok ALFlight)
+  if (percentage >= 50) return '#f26921'; // orange ALFlight
+  return '#C04534';                        // rouge critical
 }
 
 /**
- * Couleur pour un niveau de criticité.
+ * Couleur pour un niveau de criticité — tout en charte ALFlight uniforme.
  */
 export function getSeverityColor(severity) {
   switch (severity) {
-    case 'CRITICAL': return '#dc2626'; // rouge
-    case 'REQUIRED': return '#D85410'; // orange
-    case 'OPTIONAL': return '#6b7280'; // gris
-    default:         return '#6b7280';
+    case 'CRITICAL': return '#C04534';   // rouge critical ALFlight
+    case 'REQUIRED': return '#f26921';   // orange officiel ALFlight
+    case 'OPTIONAL': return '#8A867E';   // gris ALFlight (text-dim)
+    default:         return '#8A867E';
   }
 }

@@ -1311,29 +1311,6 @@ export const AircraftModule = memo(() => {
               Perita Per Preparatem
             </div>
           </div>
-
-          {/* KPI flotte */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, minmax(96px, 1fr))',
-              gap: tokens.spacing[5],
-              alignItems: 'end'
-            }}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: tokens.spacing[2] }}>
-              <TechLabel>Flotte</TechLabel>
-              <DataReadout value={fleetKPI.total} size="lg" />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: tokens.spacing[2] }}>
-              <TechLabel>Complétion moy.</TechLabel>
-              <DataReadout value={fleetKPI.avgCompletion} unit="%" size="lg" />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: tokens.spacing[2] }}>
-              <TechLabel>Mise à jour</TechLabel>
-              <DataReadout value={formatLatest(fleetKPI.latestUpdateMs)} size="md" />
-            </div>
-          </div>
         </header>
       </section>
 
@@ -1482,12 +1459,15 @@ export const AircraftModule = memo(() => {
             const manexLoaded = !!(aircraft.hasManex || aircraft.manex);
             const weighingLoaded = !!(aircraft.hasWeighingReport || aircraft.weighingReport?.hasData);
 
-            // Bordure de la card : orange si sélectionné, rouge si critique, sobre sinon
+            // Bordure de la card : orange si sélectionné, rouge si critique,
+            // sinon TRANSPARENT (la card se distingue par son fond surélevé
+            // var(--bg-surface) sur le canvas var(--bg-canvas), pas besoin de
+            // bordure claire qui créait un « cadre blanc » résiduel).
             const cardBorderColor = isSelected
               ? 'var(--accent-primary)'
               : hasCriticalGaps
               ? 'var(--color-red-critical)'
-              : 'var(--border-subtle)';
+              : 'transparent';
 
             return (
               <div
@@ -1716,10 +1696,10 @@ export const AircraftModule = memo(() => {
                       <div
                         style={{
                           fontFamily: tokens.fontFamily.sans,
-                          fontSize: '13px',
-                          fontWeight: 500,
-                          color: 'var(--text-secondary)',
-                          lineHeight: 1.25,
+                          fontSize: '14px',
+                          fontWeight: 400,
+                          color: 'var(--text-primary)',
+                          lineHeight: 1.3,
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap'
@@ -1731,16 +1711,16 @@ export const AircraftModule = memo(() => {
                       </div>
                     </div>
 
-                    {/* MODÈLE */}
+                    {/* MODÈLE — poids standard (pas gras) */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
                       <TechLabel>MODÈLE</TechLabel>
                       <div
                         style={{
                           fontFamily: tokens.fontFamily.sans,
-                          fontSize: '15px',
-                          fontWeight: 600,
+                          fontSize: '14px',
+                          fontWeight: 400,
                           color: 'var(--text-primary)',
-                          lineHeight: 1.25,
+                          lineHeight: 1.3,
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap'
@@ -1750,17 +1730,16 @@ export const AircraftModule = memo(() => {
                       </div>
                     </div>
 
-                    {/* PUISSANCE */}
+                    {/* PUISSANCE — poids standard (pas gras) */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
                       <TechLabel>PUISSANCE</TechLabel>
                       <div
                         style={{
-                          fontFamily: tokens.fontFamily.mono,
-                          fontSize: '13px',
-                          fontWeight: 500,
+                          fontFamily: tokens.fontFamily.sans,
+                          fontSize: '14px',
+                          fontWeight: 400,
                           color: 'var(--text-primary)',
-                          letterSpacing: '0.04em',
-                          fontVariantNumeric: 'tabular-nums'
+                          lineHeight: 1.3
                         }}
                       >
                         {aircraft.horsepower ? `${aircraft.horsepower} CV` : '—'}
