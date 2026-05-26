@@ -1,16 +1,14 @@
 // Service pour gérer les interactions avec la base de données communautaire Supabase
+//
+// IMPORTANT : on importe le SINGLETON `supabase` depuis lib/supabaseClient.js.
+// Créer un second `createClient()` ici déclenche "Multiple GoTrueClient instances
+// detected" et — surtout — empêche l'auto-refresh du JWT car la session est
+// persistée sous une seule clé localStorage ; un second client ne réutilise pas
+// les hooks de rafraîchissement automatique, d'où les 401 "JWT expired" sur
+// community_presets quand l'app reste ouverte > 1h.
 
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabaseClient';
 import { normalizeAircraftImport } from '@utils/aircraftNormalizer';
-
-// Configuration Supabase
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'YOUR_SUPABASE_URL';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY';
-
-// Initialiser le client Supabase
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-console.log('🔗 Connexion Supabase:', SUPABASE_URL);
 
 /**
  * Service pour gérer les presets communautaires
@@ -25,34 +23,77 @@ class CommunityService {
       // 🔧 FIX MEMORY: Charger SEULEMENT les métadonnées, PAS aircraft_data !
       // aircraft_data peut contenir des photos en base64 (plusieurs MB par avion)
       // Charger aircraft_data complet uniquement lors de getPresetById()
-      const { data, error } = await supabase
+      const presetsSelect = `
+        id,
+        registration,
+        model,
+        manufacturer,
+        aircraft_type,
+        category,
+        submitted_by,
+        submitted_at,
+        downloads_count,
+        votes_up,
+        votes_down,
+        verified,
+        admin_verified,
+        description,
+        version,
+        has_manex,
+        status
+      `;
+      const runQuery = () => supabase
         .from('community_presets')
-        .select(`
-          id,
-          registration,
-          model,
-          manufacturer,
-          aircraft_type,
-          category,
-          submitted_by,
-          submitted_at,
-          downloads_count,
-          votes_up,
-          votes_down,
-          verified,
-          admin_verified,
-          description,
-          version,
-          has_manex,
-          status
-        `)
+        .select(presetsSelect)
         .eq('status', 'active')
         .order('created_at', { ascending: false });
+
+      let { data, error } = await runQuery();
+
+      // PGRST303 = "JWT expired". Peut arriver si l'app était ouverte trop longtemps
+      // ou rouverte après expiration sans qu'autoRefreshToken ait eu le temps de
+      // tourner. On force un refresh puis on retry une fois.
+      if (error && (error.code === 'PGRST303' || /jwt expired/i.test(error.message || ''))) {
+        console.warn('⚠️ JWT expiré sur community_presets, refresh session puis retry…');
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) {
+          console.warn('⚠️ Refresh impossible :', refreshError.message);
+        } else {
+          ({ data, error } = await runQuery());
+        }
+      }
 
       if (error) {
         console.error('❌ Erreur Supabase:', error);
         throw error;
       }
+
+      // 🔎 DIAGNOSTIC : si on remonte moins de presets qu'attendu, lister tout
+      // (sans filtre status) pour voir ce qui est masqué. À retirer une fois
+      // la cause confirmée.
+      try {
+        const { data: allRows, error: diagError } = await supabase
+          .from('community_presets')
+          .select('id, registration, status, verified, admin_verified, submitted_by, submitted_at');
+        if (!diagError && allRows) {
+          const byStatus = allRows.reduce((acc, r) => {
+            acc[r.status || '(null)'] = (acc[r.status || '(null)'] || 0) + 1;
+            return acc;
+          }, {});
+          console.log(`🔎 [CommunityService] DIAG total Supabase = ${allRows.length} presets, répartition par status :`, byStatus);
+          const nonActive = allRows.filter(r => r.status !== 'active');
+          if (nonActive.length > 0) {
+            console.log('🔎 [CommunityService] Presets NON-active (cachés par le filtre) :',
+              nonActive.map(r => ({
+                registration: r.registration,
+                status: r.status,
+                verified: r.verified,
+                admin_verified: r.admin_verified
+              }))
+            );
+          }
+        }
+      } catch (e) { /* ignore diag errors */ }
 
       console.log(`✅ [CommunityService] Chargé ${data.length} presets (métadonnées seulement)`);
 

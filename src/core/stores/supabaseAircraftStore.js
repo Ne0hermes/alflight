@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import communityService from '@services/communityService';
+import { getCurrentUserId } from '../../lib/supabaseAuth';
 import { createModuleLogger } from '@utils/logger';
 
 const logger = createModuleLogger('SupabaseAircraftStore');
@@ -92,13 +93,12 @@ export const useSupabaseAircraftStore = create(
       set({ isLoading: true, error: null });
 
       try {
-        // Soumettre à Supabase
+        // Soumettre à Supabase (userId réel issu de la session Supabase)
         const result = await communityService.submitPreset(
           aircraftData,
           null, // manexFile
-          'current-user-id' // TODO: Récupérer l'ID utilisateur réel
-
-        
+          await getCurrentUserId() // null si anonyme — RLS doit refuser
+        );
 
         // Recharger la liste depuis Supabase
         await get().loadAircraft();
@@ -124,9 +124,8 @@ export const useSupabaseAircraftStore = create(
         const result = await communityService.submitPreset(
           aircraftData,
           null,
-          'current-user-id'
-
-        
+          await getCurrentUserId() // userId réel ou null si anonyme
+        );
 
         // Recharger la liste depuis Supabase
         await get().loadAircraft();
@@ -154,6 +153,9 @@ export const useSupabaseAircraftStore = create(
       const id = state.selectedAircraftId;
       return state.aircraftList.find(a => a.id === id) || null;
     }
+  }))
+);
+
 // Hook pour charger automatiquement au démarrage
 export const useInitSupabaseAircraft = () => {
   const loadAircraft = useSupabaseAircraftStore(state => state.loadAircraft);
@@ -187,6 +189,7 @@ export const supabaseAircraftSelectors = {
     addAircraft: state.addAircraft,
     updateAircraft: state.updateAircraft,
     deleteAircraft: state.deleteAircraft
+  }))
 };
 
 export default useSupabaseAircraftStore;

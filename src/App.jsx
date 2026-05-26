@@ -6,6 +6,7 @@ import ErrorBoundary from '@shared/components/ErrorBoundary';
 import { sx } from '@shared/styles/styleSystem';
 import { autoMigrateIfNeeded } from '@utils/manexMigration';
 import { NotificationContainer } from '@shared/components/Notification';
+import { SupabaseErrorBanner } from '@shared/components/SupabaseErrorBanner';
 import { DataBackupUI } from '@components/DataBackupUI';
 import dataBackupManager from '@utils/dataBackupManager';
 import { useAuthStore } from '@features/account/stores/authStore';
@@ -133,24 +134,24 @@ const FlightSystemUI = memo(() => {
         </main>
       </div>
     </div>
-
+  );
 });
 
 const AppVersion = memo(() => (
   <div style={sx.combine(sx.text.sm, sx.text.muted)}>
     v3.0.0 - Architecture Zustand
   </div>
+));
 
 function App() {
   return (
     <FlightSystemProviders>
+      <SupabaseErrorBanner />
       <FlightSystemUI />
       <NotificationContainer />
     </FlightSystemProviders>
-
   );
-
-);}
+}
 
 const styles = {
   wrapper: {
