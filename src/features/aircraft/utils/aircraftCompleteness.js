@@ -13,16 +13,33 @@
  *  - OPTIONAL : confort / complétude (photo, MANEX, équipement). Pondération faible.
  */
 
-// Helper : lit une valeur potentiellement imbriquée ("speeds.vne") sur l'avion
+// Helper : lit une valeur potentiellement imbriquée ("speeds.vne") sur l'avion.
+// Supporte également des chemins MULTIPLES séparés par « | » (logique OR) :
+//   "cgLimits.forward | weightBalance.cgLimits.forward | cgEnvelope.forwardPoints"
+// → retourne la première valeur non-vide trouvée dans la liste.
 const getValue = (obj, path) => {
   if (!obj || !path) return undefined;
-  return path.split('.').reduce((acc, key) => (acc == null ? undefined : acc[key]), obj);
+  const candidates = path.split('|').map((p) => p.trim()).filter(Boolean);
+  for (const p of candidates) {
+    const v = p.split('.').reduce((acc, key) => (acc == null ? undefined : acc[key]), obj);
+    if (v !== undefined && v !== null && v !== '') return v;
+  }
+  return undefined;
 };
 
-// Considère présent : nombre > 0, chaîne non vide, tableau non vide, objet avec hasData=true ou non vide
+// Considère présent : nombre ≠ 0, chaîne non-vide ET non-placeholder, tableau non-vide,
+// objet avec hasData=true OU non-vide. Rejette les placeholders « Inconnu », « N/A », « —ʼ ».
+const PLACEHOLDER_STRINGS = new Set(['inconnu', 'unknown', 'n/a', 'na', '-', '—', '–', 'none', 'null', 'undefined']);
+
 const hasValue = (v) => {
   if (v === null || v === undefined) return false;
-  if (typeof v === 'string') return v.trim().length > 0;
+  if (typeof v === 'string') {
+    const trimmed = v.trim();
+    if (trimmed.length === 0) return false;
+    if (PLACEHOLDER_STRINGS.has(trimmed.toLowerCase())) return false;
+    return true;
+  }
+  if (typeof v === 'boolean') return v === true;
   if (typeof v === 'number') return !isNaN(v) && v !== 0;
   if (Array.isArray(v)) return v.length > 0;
   if (typeof v === 'object') {
@@ -36,26 +53,31 @@ const hasValue = (v) => {
  * Définition complète des champs vérifiés.
  * weight = poids pour le calcul du %. severity = ordre d'affichage.
  */
+/* Notes sur les chemins MULTIPLES :
+   Les données d'un avion peuvent être stockées à plusieurs endroits selon le
+   chemin d'import (manuel / MANEX / Supabase / IndexedDB). Pour chaque champ
+   on liste toutes les sources possibles séparées par « | » (logique OR).
+   La 1re source qui retourne une valeur valide gagne. */
 export const FIELD_DEFINITIONS = [
   // === REQUIRED (création de base) ===
-  { path: 'registration',         label: 'Immatriculation',           severity: 'REQUIRED', weight: 5 },
-  { path: 'model',                label: 'Modèle',                    severity: 'REQUIRED', weight: 3 },
-  { path: 'fuelType',             label: 'Type de carburant',         severity: 'REQUIRED', weight: 2 },
-  { path: 'fuelCapacity',         label: 'Capacité carburant',        severity: 'REQUIRED', weight: 3 },
-  { path: 'cruiseSpeedKt',        label: 'Vitesse de croisière',      severity: 'REQUIRED', weight: 3 },
-  { path: 'fuelConsumption',      label: 'Consommation carburant',    severity: 'REQUIRED', weight: 3 },
-  { path: 'horsepower',           label: 'Puissance moteur (CV)',     severity: 'REQUIRED', weight: 2 },
+  { path: 'registration',                                          label: 'Immatriculation',           severity: 'REQUIRED', weight: 5 },
+  { path: 'model',                                                 label: 'Modèle',                    severity: 'REQUIRED', weight: 3 },
+  { path: 'fuelType',                                              label: 'Type de carburant',         severity: 'REQUIRED', weight: 2 },
+  { path: 'fuelCapacity',                                          label: 'Capacité carburant',        severity: 'REQUIRED', weight: 3 },
+  { path: 'cruiseSpeedKt | cruiseSpeed',                           label: 'Vitesse de croisière',      severity: 'REQUIRED', weight: 3 },
+  { path: 'fuelConsumption',                                       label: 'Consommation carburant',    severity: 'REQUIRED', weight: 3 },
+  { path: 'horsepower',                                            label: 'Puissance moteur (CV)',     severity: 'REQUIRED', weight: 2 },
 
   // === CRITICAL — masse et centrage ===
-  { path: 'weights.emptyWeight',  label: 'Masse à vide',              severity: 'CRITICAL', weight: 6 },
-  { path: 'weights.mtow',         label: 'Masse maximale (MTOW)',     severity: 'CRITICAL', weight: 6 },
-  { path: 'weights.mlw',          label: 'Masse max atterrissage',    severity: 'REQUIRED', weight: 2 },
-  { path: 'arms.empty',           label: 'Bras de levier à vide',     severity: 'CRITICAL', weight: 5 },
-  { path: 'arms.frontSeats',      label: 'Bras sièges avant',         severity: 'CRITICAL', weight: 4 },
-  { path: 'arms.fuelMain',        label: 'Bras réservoir principal',  severity: 'CRITICAL', weight: 4 },
-  { path: 'cgLimits.forward',     label: 'Limite CG avant',           severity: 'CRITICAL', weight: 5 },
-  { path: 'cgLimits.aft',         label: 'Limite CG arrière',         severity: 'CRITICAL', weight: 5 },
-  { path: 'weighingReport',       label: 'Rapport de pesée (PDF)',    severity: 'CRITICAL', weight: 4 },
+  { path: 'weights.emptyWeight | emptyWeight | masses.emptyMass',  label: 'Masse à vide',              severity: 'CRITICAL', weight: 6 },
+  { path: 'weights.mtow | maxTakeoffWeight',                       label: 'Masse maximale (MTOW)',     severity: 'CRITICAL', weight: 6 },
+  { path: 'weights.mlw | limitations.maxLandingMass',              label: 'Masse max atterrissage',    severity: 'REQUIRED', weight: 2 },
+  { path: 'arms.empty | weightBalance.emptyWeightArm | armLengths.emptyMassArm', label: 'Bras de levier à vide', severity: 'CRITICAL', weight: 5 },
+  { path: 'arms.frontSeats | weightBalance.frontLeftSeatArm | armLengths.frontSeatArm', label: 'Bras sièges avant', severity: 'CRITICAL', weight: 4 },
+  { path: 'arms.fuelMain | weightBalance.fuelArm | armLengths.fuelArm', label: 'Bras réservoir principal', severity: 'CRITICAL', weight: 4 },
+  { path: 'cgLimits.forward | weightBalance.cgLimits.forward | cgEnvelope.forwardPoints | cgEnvelope.forwardCG', label: 'Limite CG avant', severity: 'CRITICAL', weight: 5 },
+  { path: 'cgLimits.aft | weightBalance.cgLimits.aft | cgEnvelope.aftCG | cgEnvelope.aftPoints', label: 'Limite CG arrière', severity: 'CRITICAL', weight: 5 },
+  { path: 'weighingReport | hasWeighingReport',                    label: 'Rapport de pesée (PDF)',    severity: 'CRITICAL', weight: 4 },
 
   // === CRITICAL — vitesses ===
   { path: 'speeds.vso',           label: 'VSO',                       severity: 'CRITICAL', weight: 4 },
@@ -71,11 +93,15 @@ export const FIELD_DEFINITIONS = [
   { path: 'speeds.vglide',        label: 'V plané',                   severity: 'REQUIRED', weight: 1 },
 
   // === CRITICAL — performance ===
-  { path: 'performanceTables',    label: 'Tables de performance',     severity: 'CRITICAL', weight: 6 },
+  // Les tables de performance peuvent être dans 3 stockages distincts selon
+  // l'origine (saisie manuelle / extraction MANEX / abaques importés).
+  { path: 'performanceTables | performanceModels | advancedPerformance.tables | hasPerformance', label: 'Tables de performance', severity: 'CRITICAL', weight: 6 },
 
   // === OPTIONAL ===
-  { path: 'manex',                label: 'MANEX (PDF)',               severity: 'OPTIONAL', weight: 2 },
-  { path: 'photo',                label: 'Photo',                     severity: 'OPTIONAL', weight: 1 },
+  // MANEX : on accepte le flag hasManex (avion light loaded) OU l'objet manex.
+  { path: 'hasManex | manex',     label: 'MANEX (PDF)',               severity: 'OPTIONAL', weight: 2 },
+  // Photo : flag hasPhoto suffit (la photo elle-même est dans IndexedDB hors aircraft).
+  { path: 'hasPhoto | photo | profilePhoto', label: 'Photo',          severity: 'OPTIONAL', weight: 1 },
   { path: 'manufacturer',         label: 'Constructeur',              severity: 'OPTIONAL', weight: 1 },
   { path: 'engineType',           label: "Type d'engine",             severity: 'OPTIONAL', weight: 1 },
   { path: 'wakeTurbulenceCategory', label: 'Catégorie turbulence',    severity: 'OPTIONAL', weight: 1 },
@@ -107,13 +133,17 @@ export function evaluateAircraft(aircraft) {
     };
   }
 
+  const bypassedFields = Array.isArray(aircraft.bypassedFields) ? aircraft.bypassedFields : [];
+  const bypassedSet = new Set(bypassedFields);
+
   let filledWeight = 0;
   let totalWeight = 0;
   const missing = [];
 
   for (const def of FIELD_DEFINITIONS) {
     totalWeight += def.weight;
-    if (hasValue(getValue(aircraft, def.path))) {
+    // Bypassed = traité comme rempli (le pilote a explicitement accepté de l'ignorer)
+    if (bypassedSet.has(def.path) || hasValue(getValue(aircraft, def.path))) {
       filledWeight += def.weight;
     } else {
       missing.push(def);
@@ -132,7 +162,7 @@ export function evaluateAircraft(aircraft) {
     criticalMissing,
     requiredMissing,
     hasCriticalGaps: criticalMissing.length > 0,
-    bypassedFields: Array.isArray(aircraft.bypassedFields) ? aircraft.bypassedFields : []
+    bypassedFields
   };
 }
 

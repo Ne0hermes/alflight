@@ -1578,39 +1578,6 @@ export const AircraftModule = memo(() => {
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: tokens.spacing[2] }}>
                       <TechLabel active={hasCriticalGaps}>COMPLÉTION</TechLabel>
                       <CompletionGauge percentage={percentage} critical={hasCriticalGaps} />
-                      {missing.length > 0 && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setExpandedMissingIds((prev) => {
-                              const next = new Set(prev);
-                              if (next.has(aircraft.id)) next.delete(aircraft.id);
-                              else next.add(aircraft.id);
-                              return next;
-                            });
-                          }}
-                          title={`${missing.length} champ${missing.length > 1 ? 's' : ''} manquant${missing.length > 1 ? 's' : ''}`}
-                          style={{
-                            background: 'transparent',
-                            border: 'none',
-                            color: hasCriticalGaps ? 'var(--color-red-critical)' : 'var(--accent-primary)',
-                            fontFamily: tokens.fontFamily.mono,
-                            fontSize: '10px',
-                            letterSpacing: '0.10em',
-                            textTransform: 'uppercase',
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            padding: 0,
-                            minHeight: '24px'
-                          }}
-                        >
-                          {missing.length} MANQUANT{missing.length > 1 ? 'S' : ''}
-                          {isMissingExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                        </button>
-                      )}
                     </div>
                   </div>
 
@@ -1674,101 +1641,176 @@ export const AircraftModule = memo(() => {
                           </div>
                         );
                       })}
-                      <div style={{ marginTop: tokens.spacing[3] }}>
-                        <EditorialButton
-                          variant="primary"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setWizardAircraft(aircraft);
-                            setShowWizard(true);
-                          }}
-                        >
-                          Compléter
-                        </EditorialButton>
-                      </div>
                     </div>
                   )}
 
                   {/* Spacer flex pour pousser le contenu vers le bas */}
                   <div style={{ flex: 1 }} />
 
-                  {/* Indicateurs MANEX / PESÉE en TechLabel + DataReadout */}
+                  {/* Indicateurs MANEX / PESÉE — badges colorés vert si chargés, sinon dim */}
+                  {(() => {
+                    const okColor = '#4FAE7F'; // vert sapin sobre (status-ok)
+                    const okBg = 'rgba(79, 174, 127, 0.10)';
+                    const dimBg = 'transparent';
+                    return (
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 1fr',
+                          gap: tokens.spacing[3],
+                          paddingTop: tokens.spacing[3],
+                          borderTop: `${tokens.border.thin} solid var(--border-subtle)`
+                        }}
+                      >
+                        {/* Carte MANEX */}
+                        <div
+                          style={{
+                            backgroundColor: manexLoaded ? okBg : dimBg,
+                            border: `${tokens.border.thin} solid ${manexLoaded ? 'rgba(79, 174, 127, 0.32)' : 'var(--border-subtle)'}`,
+                            borderRadius: '10px',
+                            padding: `${tokens.spacing[2]} ${tokens.spacing[3]}`,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '4px'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            {/* Dot LED */}
+                            <span
+                              style={{
+                                width: '6px',
+                                height: '6px',
+                                borderRadius: '50%',
+                                backgroundColor: manexLoaded ? okColor : 'var(--text-tertiary)',
+                                boxShadow: manexLoaded ? `0 0 6px ${okColor}` : 'none',
+                                flexShrink: 0
+                              }}
+                              aria-hidden="true"
+                            />
+                            <TechLabel>MANEX</TechLabel>
+                          </div>
+                          <div
+                            style={{
+                              fontFamily: tokens.fontFamily.mono,
+                              fontSize: '13px',
+                              fontWeight: 600,
+                              letterSpacing: '0.06em',
+                              color: manexLoaded ? okColor : 'var(--text-tertiary)'
+                            }}
+                          >
+                            {manexLoaded ? 'CHARGÉ' : 'ABSENT'}
+                          </div>
+                          {manexLoaded && aircraft.manex?.pageCount && (
+                            <span
+                              style={{
+                                fontFamily: tokens.fontFamily.mono,
+                                fontSize: '10px',
+                                letterSpacing: '0.10em',
+                                color: 'var(--text-tertiary)',
+                                textTransform: 'uppercase'
+                              }}
+                            >
+                              {aircraft.manex.pageCount} P.
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Carte PESÉE */}
+                        <div
+                          style={{
+                            backgroundColor: weighingLoaded ? okBg : dimBg,
+                            border: `${tokens.border.thin} solid ${weighingLoaded ? 'rgba(79, 174, 127, 0.32)' : 'var(--border-subtle)'}`,
+                            borderRadius: '10px',
+                            padding: `${tokens.spacing[2]} ${tokens.spacing[3]}`,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '4px'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span
+                              style={{
+                                width: '6px',
+                                height: '6px',
+                                borderRadius: '50%',
+                                backgroundColor: weighingLoaded ? okColor : 'var(--text-tertiary)',
+                                boxShadow: weighingLoaded ? `0 0 6px ${okColor}` : 'none',
+                                flexShrink: 0
+                              }}
+                              aria-hidden="true"
+                            />
+                            <TechLabel>PESÉE</TechLabel>
+                          </div>
+                          <div
+                            style={{
+                              fontFamily: tokens.fontFamily.mono,
+                              fontSize: '13px',
+                              fontWeight: 600,
+                              letterSpacing: '0.06em',
+                              color: weighingLoaded ? okColor : 'var(--text-tertiary)'
+                            }}
+                          >
+                            {weighingLoaded ? 'CHARGÉE' : 'ABSENTE'}
+                          </div>
+                          {weighingLoaded && aircraft.weighingReport?.weighingDate && (
+                            <span
+                              style={{
+                                fontFamily: tokens.fontFamily.mono,
+                                fontSize: '10px',
+                                letterSpacing: '0.10em',
+                                color: 'var(--text-tertiary)',
+                                textTransform: 'uppercase'
+                              }}
+                            >
+                              {new Date(aircraft.weighingReport.weighingDate).toLocaleDateString('fr-FR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: '2-digit'
+                              })}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Coins bas : MARQUE · MODÈLE · PUISSANCE · AÉROCLUB en grille datasheet */}
                   <div
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: tokens.spacing[4],
-                      paddingTop: tokens.spacing[3],
-                      borderTop: `${tokens.border.thin} solid var(--border-subtle)`
+                      gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                      gap: tokens.spacing[3]
                     }}
                   >
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <TechLabel>MANEX</TechLabel>
-                      <DataReadout
-                        value={manexLoaded ? 'CHARGÉ' : 'ABSENT'}
-                        size="sm"
-                        emphasis={manexLoaded}
-                        style={{ color: manexLoaded ? undefined : 'var(--text-tertiary)' }}
-                      />
-                      {manexLoaded && aircraft.manex?.pageCount && (
-                        <span
-                          style={{
-                            fontFamily: tokens.fontFamily.mono,
-                            fontSize: '10px',
-                            letterSpacing: '0.10em',
-                            color: 'var(--text-tertiary)',
-                            textTransform: 'uppercase'
-                          }}
-                        >
-                          {aircraft.manex.pageCount} P.
-                        </span>
-                      )}
+                    {/* MARQUE */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+                      <TechLabel>MARQUE</TechLabel>
+                      <div
+                        style={{
+                          fontFamily: tokens.fontFamily.sans,
+                          fontSize: '13px',
+                          fontWeight: 500,
+                          color: 'var(--text-secondary)',
+                          lineHeight: 1.25,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {aircraft.manufacturer && !['inconnu', 'unknown', 'n/a'].includes(String(aircraft.manufacturer).trim().toLowerCase())
+                          ? aircraft.manufacturer
+                          : '—'}
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <TechLabel>PESÉE</TechLabel>
-                      <DataReadout
-                        value={weighingLoaded ? 'CHARGÉE' : 'ABSENTE'}
-                        size="sm"
-                        emphasis={weighingLoaded}
-                        style={{ color: weighingLoaded ? undefined : 'var(--text-tertiary)' }}
-                      />
-                      {weighingLoaded && aircraft.weighingReport?.weighingDate && (
-                        <span
-                          style={{
-                            fontFamily: tokens.fontFamily.mono,
-                            fontSize: '10px',
-                            letterSpacing: '0.10em',
-                            color: 'var(--text-tertiary)',
-                            textTransform: 'uppercase'
-                          }}
-                        >
-                          {new Date(aircraft.weighingReport.weighingDate).toLocaleDateString('fr-FR', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: '2-digit'
-                          })}
-                        </span>
-                      )}
-                    </div>
-                  </div>
 
-                  {/* Coins bas : MODÈLE / AÉROCLUB */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-end',
-                      gap: tokens.spacing[4]
-                    }}
-                  >
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0, flex: 1 }}>
+                    {/* MODÈLE */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
                       <TechLabel>MODÈLE</TechLabel>
                       <div
                         style={{
                           fontFamily: tokens.fontFamily.sans,
-                          fontSize: '16px',
-                          fontWeight: 500,
+                          fontSize: '15px',
+                          fontWeight: 600,
                           color: 'var(--text-primary)',
                           lineHeight: 1.25,
                           overflow: 'hidden',
@@ -1779,38 +1821,102 @@ export const AircraftModule = memo(() => {
                         {aircraft.model || '—'}
                       </div>
                     </div>
-                    {(aircraft.homeAeroclub || aircraft.homeBase) && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end', minWidth: 0 }}>
-                        <TechLabel>{aircraft.homeAeroclub ? 'AÉROCLUB' : 'BASE'}</TechLabel>
-                        <div
-                          style={{
-                            fontFamily: tokens.fontFamily.sans,
-                            fontSize: '13px',
-                            fontWeight: 400,
-                            color: 'var(--text-secondary)',
-                            textAlign: 'right',
-                            maxWidth: '170px',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                          }}
-                        >
-                          {aircraft.homeAeroclub || aircraft.homeBase}
-                        </div>
+
+                    {/* PUISSANCE */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+                      <TechLabel>PUISSANCE</TechLabel>
+                      <div
+                        style={{
+                          fontFamily: tokens.fontFamily.mono,
+                          fontSize: '13px',
+                          fontWeight: 500,
+                          color: 'var(--text-primary)',
+                          letterSpacing: '0.04em',
+                          fontVariantNumeric: 'tabular-nums'
+                        }}
+                      >
+                        {aircraft.horsepower ? `${aircraft.horsepower} CV` : '—'}
                       </div>
-                    )}
+                    </div>
+
+                    {/* AÉROCLUB / BASE */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+                      <TechLabel>{aircraft.homeAeroclub ? 'AÉROCLUB' : 'BASE'}</TechLabel>
+                      <div
+                        style={{
+                          fontFamily: tokens.fontFamily.sans,
+                          fontSize: '13px',
+                          fontWeight: 400,
+                          color: 'var(--text-secondary)',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {aircraft.homeAeroclub || aircraft.homeBase || '—'}
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Actions */}
+                  {/* Actions — barre unifiée : dropdown manquants + 4 actions */}
                   <div
                     style={{
                       display: 'flex',
-                      justifyContent: 'flex-end',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
                       gap: tokens.spacing[2],
                       paddingTop: tokens.spacing[3],
                       borderTop: `${tokens.border.thin} solid var(--border-subtle)`
                     }}
                   >
+                    {/* Bouton dropdown MANQUANTS — style badge distinctif (gauche) */}
+                    {missing.length > 0 ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedMissingIds((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(aircraft.id)) next.delete(aircraft.id);
+                            else next.add(aircraft.id);
+                            return next;
+                          });
+                        }}
+                        title={`${missing.length} champ${missing.length > 1 ? 's' : ''} manquant${missing.length > 1 ? 's' : ''}`}
+                        aria-label={`${missing.length} champ${missing.length > 1 ? 's' : ''} manquant${missing.length > 1 ? 's' : ''}`}
+                        aria-expanded={isMissingExpanded}
+                        style={{
+                          minHeight: '44px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: `0 ${tokens.spacing[3]}`,
+                          backgroundColor: hasCriticalGaps
+                            ? 'rgba(192, 69, 52, 0.12)'
+                            : 'var(--accent-soft)',
+                          border: `${tokens.border.thin} solid ${hasCriticalGaps ? 'var(--color-red-critical)' : 'var(--accent-primary)'}`,
+                          borderRadius: '999px',
+                          color: hasCriticalGaps ? 'var(--color-red-critical)' : 'var(--accent-primary)',
+                          fontFamily: tokens.fontFamily.mono,
+                          fontSize: '11px',
+                          letterSpacing: '0.10em',
+                          textTransform: 'uppercase',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          transition: `background-color ${tokens.motion.fast}`
+                        }}
+                      >
+                        <AlertTriangle size={14} aria-hidden="true" />
+                        {missing.length} MANQUANT{missing.length > 1 ? 'S' : ''}
+                        {isMissingExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                      </button>
+                    ) : (
+                      /* Placeholder vide pour conserver l'alignement justify-between */
+                      <span aria-hidden="true" />
+                    )}
+
+                    {/* Groupe des 4 actions à droite */}
+                    <div style={{ display: 'flex', gap: tokens.spacing[2] }}>
                     <button
                       onClick={async (e) => {
                         e.stopPropagation();
@@ -1968,6 +2074,7 @@ export const AircraftModule = memo(() => {
                     >
                       <Trash2 size={16} aria-hidden="true" />
                     </button>
+                    </div>
                   </div>
                 </div>
               </div>
