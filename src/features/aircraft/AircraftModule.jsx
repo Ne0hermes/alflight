@@ -1197,32 +1197,37 @@ export const AircraftModule = memo(() => {
         boxSizing: 'border-box'
       }}
     >
-      {/* ===== BANDEAU HERO CINEMATIC ===== */}
-      <div
+      {/* ===== HERO ÉDITORIAL : photo + header + KPI superposés ===== */}
+      <section
         style={{
           position: 'relative',
           width: '100%',
-          height: 'clamp(180px, 26vh, 320px)',
-          marginBottom: tokens.spacing[8],
-          borderRadius: tokens.radius.sm,
+          minHeight: 'clamp(280px, 38vh, 440px)',
+          marginBottom: tokens.spacing[6],
+          borderRadius: '16px',
           overflow: 'hidden',
           backgroundImage: 'url("/assets/photos/hero-warbird.jpg")',
           backgroundSize: 'cover',
           backgroundPosition: 'center 35%',
-          filter: 'grayscale(0.2)'
+          display: 'flex',
+          alignItems: 'stretch',
+          flexDirection: 'column',
+          justifyContent: 'flex-end',
+          padding: `clamp(${tokens.spacing[5]}, 3vw, ${tokens.spacing[8]})`
         }}
-        aria-hidden="true"
       >
-        {/* Overlay sombre pour lisibilité éventuelle de texte par-dessus */}
+        {/* Overlay sombre dégradé pour lisibilité du texte au-dessus */}
         <div
           style={{
             position: 'absolute',
             inset: 0,
             background:
-              'linear-gradient(180deg, rgba(10,10,10,0.40) 0%, rgba(10,10,10,0.65) 60%, rgba(10,10,10,0.92) 100%)'
+              'linear-gradient(180deg, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.75) 60%, rgba(10,10,10,0.92) 100%)',
+            pointerEvents: 'none'
           }}
+          aria-hidden="true"
         />
-        {/* Liseré orange subtil en bas */}
+        {/* Liseré orange en bas */}
         <div
           style={{
             position: 'absolute',
@@ -1231,22 +1236,17 @@ export const AircraftModule = memo(() => {
             bottom: 0,
             height: '2px',
             background: 'var(--accent-primary)',
-            opacity: 0.4
+            opacity: 0.55,
+            pointerEvents: 'none'
           }}
+          aria-hidden="true"
         />
-      </div>
 
-      {/* ===== HEADER ÉDITORIAL ===== */}
-      <header
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: tokens.spacing[6],
-          marginBottom: tokens.spacing[8]
-        }}
-      >
-        <div
+        {/* Contenu superposé : header + KPI */}
+        <header
           style={{
+            position: 'relative',
+            zIndex: 1,
             display: 'flex',
             flexDirection: 'row',
             flexWrap: 'wrap',
@@ -1295,8 +1295,8 @@ export const AircraftModule = memo(() => {
               <DataReadout value={formatLatest(fleetKPI.latestUpdateMs)} size="md" />
             </div>
           </div>
-        </div>
-      </header>
+        </header>
+      </section>
 
       {/* ===== ALERTE CONFIGURATION INCOMPLÈTE (bannière sobre, pas cookie banner) ===== */}
       {showIncompleteDataAlert && incompleteAircraft.length > 0 && (

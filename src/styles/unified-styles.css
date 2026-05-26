@@ -9,17 +9,21 @@
    1. VARIABLES GLOBALES ET THÈME
    ============================================ */
 :root {
-  /* Couleurs principales */
-  --color-background: #FFFFFF;
-  --color-text: #000000;
-  --color-text-secondary: #374151;
-  --color-text-muted: #6B7280;
-  
-  /* Couleurs d'accent */
-  --color-primary: #93163C;
-  --color-primary-hover: #A91B45;
-  --color-border: #d1d5db;
-  --color-border-light: rgba(209, 213, 219, 0.3);
+  /* 🔧 ALFlight Design System v1 — variables legacy remappées vers la nouvelle charte.
+     Le mapping ci-dessous garantit que les styles existants (body, #root, et tous
+     les composants qui consomment encore --color-background/--color-text)
+     adoptent automatiquement le mode nuit ALFlight : noir profond + ivoire +
+     accent orange. Pas besoin de toucher aux centaines de fichiers legacy. */
+  --color-background: #0A0A0A;          /* noir profond ALFlight (était #FFFFFF) */
+  --color-text: #F5F2EC;                /* ivoire (était #000000) */
+  --color-text-secondary: #C9C5BD;
+  --color-text-muted: #8A867E;
+
+  /* Couleurs d'accent — bordeaux historique remappé sur l'orange officiel */
+  --color-primary: #f26921;             /* orange ALFlight (était bordeaux) */
+  --color-primary-hover: #FF7E36;
+  --color-border: rgba(245, 242, 236, 0.20);
+  --color-border-light: rgba(245, 242, 236, 0.10);
   
   /* Couleurs des boutons */
   --button-bg: rgba(55, 65, 81, 0.35);
