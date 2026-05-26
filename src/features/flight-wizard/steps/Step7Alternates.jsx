@@ -107,12 +107,17 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
   const setFobFuelStore = useFuelStore(state => state.setFobFuel);
 
   useEffect(() => {
-    if (flightPlan?.fuel?.confirmed) {
-      console.log('⛽ [Step7Alternates] Syncing fuel from flightPlan:', flightPlan.fuel.confirmed);
+    const confirmedLtr = flightPlan?.fuel?.confirmed;
+    if (confirmedLtr && confirmedLtr > 0) {
+      console.log('⛽ [Step7Alternates] Syncing fuel from flightPlan:', confirmedLtr);
+      const fuelObject = {
+        ltr: confirmedLtr,
+        gal: parseFloat((confirmedLtr / 3.78541).toFixed(2))
+      };
       // Sync local context
-      setFobFuel(flightPlan.fuel.confirmed);
+      setFobFuel(fuelObject);
       // Sync global store
-      setFobFuelStore(flightPlan.fuel.confirmed);
+      setFobFuelStore(fuelObject);
     }
   }, [flightPlan?.fuel?.confirmed, setFobFuel, setFobFuelStore]);
 

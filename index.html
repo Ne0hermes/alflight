@@ -9,6 +9,11 @@
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#93163C" />
+    <!-- Standard (non-Apple PWAs : Chrome, Edge, Firefox sur Android, etc.).
+         Doit précéder apple-mobile-web-app-capable pour éviter le warning de dépréciation. -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <!-- Conservé pour compatibilité iOS Safari (les deux tags sont nécessaires
+         tant que Safari ne supporte pas encore "mobile-web-app-capable"). -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="ALFlight" />
