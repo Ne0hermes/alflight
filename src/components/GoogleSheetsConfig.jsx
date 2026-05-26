@@ -152,7 +152,7 @@ const GoogleSheetsConfig = () => {
               padding: '12px',
               borderRadius: '8px',
               marginBottom: '16px',
-              backgroundColor: credentialsLoaded ? '#d1fae5' : '#fef3c7',
+              backgroundColor: credentialsLoaded ? '#d1fae5' : 'rgba(242, 105, 33, 0.10)',
               border: `1px solid ${credentialsLoaded ? '#86efac' : '#fde68a'}`
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -314,7 +314,7 @@ const GoogleSheetsConfig = () => {
                 padding: '12px',
                 borderRadius: '6px',
                 marginBottom: '16px',
-                backgroundColor: testStatus === 'success' ? '#d1fae5' : testStatus === 'error' ? '#fee2e2' : '#fef3c7',
+                backgroundColor: testStatus === 'success' ? '#d1fae5' : testStatus === 'error' ? '#fee2e2' : 'rgba(242, 105, 33, 0.10)',
                 border: `1px solid ${testStatus === 'success' ? '#86efac' : testStatus === 'error' ? '#fecaca' : '#fde68a'}`,
                 display: 'flex',
                 alignItems: 'center',

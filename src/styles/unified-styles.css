@@ -402,7 +402,7 @@ div[role="alert"] {
 
 .alert-warning { 
   border-left-color: #fbbf24;
-  background: #fffbeb !important;
+  background: rgba(242, 105, 33, 0.06) !important;
   color: #92400e !important;
 }
 

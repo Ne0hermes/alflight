@@ -935,7 +935,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
           )}
 
           {isCalibrating && (
-            <Paper variant="outlined" sx={{ p: 2, mb: 2, bgcolor: 'rgba(249,115,22,0.08)', borderColor: '#f97316', borderWidth: 2 }}>
+            <Paper variant="outlined" sx={{ p: 2, mb: 2, bgcolor: 'rgba(249,115,22,0.08)', borderColor: '#f26921', borderWidth: 2 }}>
               <Typography variant="h6" sx={{ color: '#9a3412' }}>
                 🎯 Clique sur la graduation <strong>{axis.toUpperCase()} = {currentValue}</strong>
               </Typography>

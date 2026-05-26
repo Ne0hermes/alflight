@@ -147,7 +147,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
         <div style={sx.combine(
           sx.components.card.base,
           sx.spacing.mb(3),
-          { backgroundColor: '#fef3c7', borderLeft: '4px solid #f59e0b' }
+          { backgroundColor: 'rgba(242, 105, 33, 0.10)', borderLeft: '4px solid #f59e0b' }
         )}>
           <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2), { color: '#d97706' })}>
             📅 TAF (Prévisions)

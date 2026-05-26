@@ -38,7 +38,7 @@ const commonStyles = {
   },
   infoBoxWarning: {
     padding: '16px',
-    backgroundColor: '#fef3c7',
+    backgroundColor: 'rgba(242, 105, 33, 0.10)',
     borderRadius: '8px',
     borderLeft: '4px solid #f59e0b',
     marginBottom: '20px',
@@ -439,7 +439,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
             )}
 
             {performanceBasedLDA && performanceBasedLDA.source === 'no_performance_data' && (
-              <div style={{ ...commonStyles.coneInfoCard, backgroundColor: '#fef3c7', borderColor: '#f59e0b' }}>
+              <div style={{ ...commonStyles.coneInfoCard, backgroundColor: 'rgba(242, 105, 33, 0.10)', borderColor: '#f59e0b' }}>
                 <div style={commonStyles.coneInfoTitle}>Piste minimale</div>
                 <div style={{ ...commonStyles.coneInfoValueLarge, color: '#92400e' }}>
                   N/A
@@ -455,7 +455,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
           {performanceBasedLDA && performanceBasedLDA.source === 'no_performance_data' && (
             <div style={{
               padding: '10px 12px',
-              backgroundColor: '#fef3c7',
+              backgroundColor: 'rgba(242, 105, 33, 0.10)',
               borderRadius: '6px',
               fontSize: '12px',
               color: '#92400e',

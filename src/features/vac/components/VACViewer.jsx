@@ -647,7 +647,7 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
         <div style={{
           marginTop: '40px',
           padding: '15px',
-          backgroundColor: '#fef3c7',
+          backgroundColor: 'rgba(242, 105, 33, 0.10)',
           borderRadius: '8px',
           fontSize: '12px',
           color: '#92400e',

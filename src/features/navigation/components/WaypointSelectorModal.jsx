@@ -140,7 +140,7 @@ export const WaypointSelectorModal = ({ isOpen, onClose, onSelect }) => {
   const getCategoryBadge = (category) => {
     const categories = {
       'large': { label: 'Grand', color: '#1e40af', bg: '#dbeafe' },
-      'medium': { label: 'Moyen', color: '#92400e', bg: '#fef3c7' },
+      'medium': { label: 'Moyen', color: '#92400e', bg: 'rgba(242, 105, 33, 0.10)' },
       'small': { label: 'Petit', color: '#065f46', bg: '#d1fae5' }
     };
     return categories[category] || { label: category || 'N/A', color: '#6b7280', bg: '#f3f4f6' };

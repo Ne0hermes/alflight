@@ -51,7 +51,7 @@ export const DataSourceBadge = memo(({
       label: 'Non officiel',
       fullLabel: 'Données non officielles',
       color: '#92400e',
-      backgroundColor: '#fef3c7',
+      backgroundColor: 'rgba(242, 105, 33, 0.10)',
       description: 'Données prédéfinies pouvant être obsolètes'
     },
     verified: {

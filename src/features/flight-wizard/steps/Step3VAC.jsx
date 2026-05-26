@@ -277,7 +277,7 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
       {/* Alerte si des VAC manquent */}
       {missingVACs.length > 0 && (
         <div style={{
-          backgroundColor: '#fef3c7',
+          backgroundColor: 'rgba(242, 105, 33, 0.10)',
           border: '2px solid #f59e0b',
           borderRadius: '8px',
           padding: '16px',

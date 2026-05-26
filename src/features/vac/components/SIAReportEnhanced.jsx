@@ -385,7 +385,7 @@ export const SIAReportEnhanced = () => {
     }
     return {
       ...styles.input,
-      backgroundColor: hasValue ? 'white' : (isRequired ? '#fee2e2' : '#fef3c7'),
+      backgroundColor: hasValue ? 'white' : (isRequired ? '#fee2e2' : 'rgba(242, 105, 33, 0.10)'),
       borderColor: hasValue ? '#d1d5db' : (isRequired ? '#ef4444' : '#f59e0b'),
       cursor: 'text'
     };
@@ -785,7 +785,7 @@ export const SIAReportEnhanced = () => {
     <div style={styles.container}>
       {/* Disclaimer important - Collapsible */}
       <div style={{
-        background: '#fef3c7',
+        background: 'rgba(242, 105, 33, 0.10)',
         border: '1px solid #f59e0b',
         borderRadius: '8px',
         marginBottom: '16px',
@@ -1275,7 +1275,7 @@ export const SIAReportEnhanced = () => {
                             title={data.circuitRemarks || 'Altitude QNH des tours de piste'}
                             style={{
                               ...styles.input,
-                              backgroundColor: data.circuitAltitude ? 'white' : '#fef3c7',
+                              backgroundColor: data.circuitAltitude ? 'white' : 'rgba(242, 105, 33, 0.10)',
                               borderColor: data.circuitAltitude ? '#d1d5db' : '#f59e0b'
                             }}
                           />
@@ -1300,7 +1300,7 @@ export const SIAReportEnhanced = () => {
                             title="Altitude QNH d'intégration dans le circuit"
                             style={{
                               ...styles.input,
-                              backgroundColor: data.integrationAltitude ? 'white' : '#fef3c7',
+                              backgroundColor: data.integrationAltitude ? 'white' : 'rgba(242, 105, 33, 0.10)',
                               borderColor: data.integrationAltitude ? '#d1d5db' : '#f59e0b'
                             }}
                           />
@@ -1442,7 +1442,7 @@ export const SIAReportEnhanced = () => {
                         <div style={{ 
                           marginTop: '8px', 
                           padding: '6px', 
-                          backgroundColor: '#fef3c7', 
+                          backgroundColor: 'rgba(242, 105, 33, 0.10)', 
                           borderRadius: '4px',
                           fontSize: '11px',
                           color: '#92400e'
@@ -1644,7 +1644,7 @@ export const SIAReportEnhanced = () => {
                                       gap: '4px',
                                       alignItems: 'center',
                                       padding: '2px 4px',
-                                      backgroundColor: '#fef3c7',
+                                      backgroundColor: 'rgba(242, 105, 33, 0.10)',
                                       borderRadius: '4px',
                                       fontSize: '11px'
                                     }}>
@@ -1722,7 +1722,7 @@ export const SIAReportEnhanced = () => {
                               'INFO': { icon: 'ℹ️', color: '#6b7280', label: 'Info' },
                               'CTAF': { icon: '🔊', color: '#ec4899', label: 'Auto-info (CTAF)' },
                               'CLRD': { icon: '📋', color: '#84cc16', label: 'Prévol (CLRD)' },
-                              'DEL': { icon: '🎯', color: '#f97316', label: 'Delivery' }
+                              'DEL': { icon: '🎯', color: '#f26921', label: 'Delivery' }
                             };
                             
                             const config = serviceConfig[service.toUpperCase()] || 
@@ -2074,7 +2074,7 @@ export const SIAReportEnhanced = () => {
                       <div style={{ 
                         marginTop: '12px', 
                         padding: '10px', 
-                        background: '#fef3c7',
+                        background: 'rgba(242, 105, 33, 0.10)',
                         borderRadius: '6px',
                         border: '1px solid #fbbf24'
                       }}>
@@ -2224,7 +2224,7 @@ export const SIAReportEnhanced = () => {
                               {charts[aerodrome.icao].needsManualExtraction && (
                                 <div style={{
                                   padding: '12px',
-                                  backgroundColor: '#fef3c7',
+                                  backgroundColor: 'rgba(242, 105, 33, 0.10)',
                                   borderRadius: '4px',
                                   marginTop: '12px',
                                   marginBottom: '12px',
@@ -2430,7 +2430,7 @@ export const SIAReportEnhanced = () => {
 
                         {/* Avertissement */}
                         <div style={{
-                          backgroundColor: '#fef3c7',
+                          backgroundColor: 'rgba(242, 105, 33, 0.10)',
                           borderRadius: '4px',
                           border: '1px solid #f59e0b',
                           marginTop: '8px'

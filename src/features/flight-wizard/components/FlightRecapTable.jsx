@@ -705,7 +705,7 @@ export const FlightRecapTable = ({
                       gap: '8px',
                       fontSize: '8px',
                       color: '#78350f',
-                      backgroundColor: '#fef3c7',
+                      backgroundColor: 'rgba(242, 105, 33, 0.10)',
                       padding: '3px 8px',
                       borderRadius: '3px',
                       border: '1px solid #f59e0b',
@@ -741,7 +741,7 @@ export const FlightRecapTable = ({
               }}>
                 {/* En-tête TOD */}
                 <div style={{
-                  backgroundColor: '#fb923c',
+                  backgroundColor: '#f26921',
                   color: 'white',
                   padding: '6px 10px',
                   fontWeight: '700',

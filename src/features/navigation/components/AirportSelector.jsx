@@ -325,7 +325,7 @@ const styles = {
     }
   },
   airportItemWarning: {
-    backgroundColor: '#fef3c7'
+    backgroundColor: 'rgba(242, 105, 33, 0.10)'
   },
   airportMain: {
     padding: '12px',
@@ -393,7 +393,7 @@ const styles = {
   },
   discrepancyDetails: {
     padding: '12px',
-    backgroundColor: '#fef3c7',
+    backgroundColor: 'rgba(242, 105, 33, 0.10)',
     borderTop: '1px solid #fbbf24'
   },
   discrepancyItem: {

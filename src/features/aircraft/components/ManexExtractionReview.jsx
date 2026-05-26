@@ -12,7 +12,7 @@ import AeroclubAutocomplete from './AeroclubAutocomplete';
 const confidenceColor = (c) => {
   if (c >= 85) return '#10b981';
   if (c >= 70) return '#eab308';
-  if (c >= 50) return '#f97316';
+  if (c >= 50) return '#f26921';
   return '#ef4444';
 };
 
@@ -93,7 +93,7 @@ const Row = memo(({ item, onChange, onSelectIcao }) => {
              aussi de remplir automatiquement le « Terrain de base ».
           */
           <div style={{
-            border: isMissing ? '1px dashed #fb923c' : '1px solid #d1d5db',
+            border: isMissing ? '1px dashed #f26921' : '1px solid #d1d5db',
             borderRadius: 4,
             padding: 2,
             backgroundColor: 'white'
@@ -118,7 +118,7 @@ const Row = memo(({ item, onChange, onSelectIcao }) => {
             gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
             gap: 4,
             padding: '4px 6px',
-            border: isMissing ? '1px dashed #fb923c' : '1px solid #d1d5db',
+            border: isMissing ? '1px dashed #f26921' : '1px solid #d1d5db',
             borderRadius: 4,
             backgroundColor: 'white',
             maxHeight: 120,
@@ -152,7 +152,7 @@ const Row = memo(({ item, onChange, onSelectIcao }) => {
             style={{
               width: '100%',
               padding: '4px 8px',
-              border: isMissing ? '1px dashed #fb923c' : '1px solid #d1d5db',
+              border: isMissing ? '1px dashed #f26921' : '1px solid #d1d5db',
               borderRadius: 4,
               fontSize: 13,
               backgroundColor: 'white',
@@ -214,7 +214,7 @@ const Row = memo(({ item, onChange, onSelectIcao }) => {
             style={{
               width: '100%',
               padding: '4px 8px',
-              border: isMissing ? '1px dashed #fb923c' : '1px solid #d1d5db',
+              border: isMissing ? '1px dashed #f26921' : '1px solid #d1d5db',
               borderRadius: 4,
               fontSize: 13,
               backgroundColor: 'white'

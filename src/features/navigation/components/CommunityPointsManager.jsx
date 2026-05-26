@@ -1144,7 +1144,7 @@ const styles = {
   setupInstructions: {
     padding: '32px 24px',
     textAlign: 'center',
-    backgroundColor: '#fffbeb',
+    backgroundColor: 'rgba(242, 105, 33, 0.06)',
     border: '2px solid #f59e0b',
     borderRadius: '12px',
     margin: '20px 0'

@@ -351,7 +351,7 @@ const VFRNavigationTable = ({
           {/* 🌅 Alerte jour/nuit si warnings détectés */}
           {dayNightAnalysis.hasWarnings && dayNightAnalysis.sunTimes && (
             <div style={{
-              backgroundColor: '#fef3c7',
+              backgroundColor: 'rgba(242, 105, 33, 0.10)',
               border: '2px solid #f59e0b',
               borderLeft: '6px solid #d97706',
               borderRadius: '6px',
@@ -398,8 +398,8 @@ const VFRNavigationTable = ({
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>ETE</th>
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', backgroundColor: '#f0f9ff' }}>HEURE THÉORIQUE</th>
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', backgroundColor: '#fef9e5' }}>JOUR/NUIT</th>
-                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', backgroundColor: '#fef3c7' }}>ATE</th>
-                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', backgroundColor: '#fef3c7' }}>HEURE RÉELLE</th>
+                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', backgroundColor: 'rgba(242, 105, 33, 0.10)' }}>ATE</th>
+                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', backgroundColor: 'rgba(242, 105, 33, 0.10)' }}>HEURE RÉELLE</th>
                   <th style={{ padding: '8px', border: '1px solid #e5e7eb', backgroundColor: '#dbeafe' }}>ESPACES AÉRIENS & FRÉQUENCES</th>
                 </tr>
               </thead>
@@ -437,7 +437,7 @@ const VFRNavigationTable = ({
                           textAlign: 'center',
                           fontSize: '12px',
                           fontWeight: 'bold',
-                          backgroundColor: '#fef3c7'
+                          backgroundColor: 'rgba(242, 105, 33, 0.10)'
                         }}
                         min="0"
                         max="50000"
@@ -507,7 +507,7 @@ const VFRNavigationTable = ({
                       padding: '8px',
                       border: '1px solid #e5e7eb',
                       textAlign: 'center',
-                      backgroundColor: '#fef3c7',
+                      backgroundColor: 'rgba(242, 105, 33, 0.10)',
                       minWidth: '60px'
                     }}>
                       {/* Champ vide pour remplir pendant le vol */}
@@ -516,7 +516,7 @@ const VFRNavigationTable = ({
                       padding: '8px',
                       border: '1px solid #e5e7eb',
                       textAlign: 'center',
-                      backgroundColor: '#fef3c7',
+                      backgroundColor: 'rgba(242, 105, 33, 0.10)',
                       minWidth: '80px'
                     }}>
                       {/* Champ vide à remplir manuellement */}

@@ -31,7 +31,7 @@ const STATUS_VISUAL = {
     badge: '✓ Calculé', badgeBg: '#16a34a'
   },
   NOT_IMPLEMENTED: {
-    bg: '#fef3c7', border: '#f59e0b', text: '#78350f',
+    bg: 'rgba(242, 105, 33, 0.10)', border: '#f59e0b', text: '#78350f',
     badge: '⚠ Non implémenté', badgeBg: '#f59e0b'
   },
   MISSING_INPUT: {

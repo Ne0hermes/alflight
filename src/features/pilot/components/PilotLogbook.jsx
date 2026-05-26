@@ -1096,7 +1096,7 @@ const PilotLogbook = ({ showFormProp }) => {
         <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '16px' }}>
           {/* Disclaimer dans le formulaire */}
           <div style={{ 
-            backgroundColor: '#fef3c7', 
+            backgroundColor: 'rgba(242, 105, 33, 0.10)', 
             border: '1px solid #fbbf24', 
             borderRadius: '6px', 
             padding: '10px 12px', 
@@ -1261,7 +1261,7 @@ const PilotLogbook = ({ showFormProp }) => {
                   }
                 }}
                 placeholder="1:30"
-                style={{...inputStyle, backgroundColor: '#fef3c7', fontWeight: 'bold', maxWidth: '200px'}}
+                style={{...inputStyle, backgroundColor: 'rgba(242, 105, 33, 0.10)', fontWeight: 'bold', maxWidth: '200px'}}
                 pattern="\d{1,3}:\d{2}"
                 title="Format: HH:MM (ex: 1:30)"
                 required

@@ -690,7 +690,7 @@ const DataField = memo(({ label, value, onCopy, copied, editMode, onChange, type
         sx.spacing.p(2), 
         sx.bg.gray, 
         sx.rounded.md,
-        isModified && { backgroundColor: '#fef3c7', borderLeft: '3px solid #f59e0b' }
+        isModified && { backgroundColor: 'rgba(242, 105, 33, 0.10)', borderLeft: '3px solid #f59e0b' }
       )}>
         <div style={{ flex: 1 }}>
           <span style={sx.combine(sx.text.sm, sx.text.secondary)}>
@@ -725,7 +725,7 @@ const DataField = memo(({ label, value, onCopy, copied, editMode, onChange, type
     sx.spacing.p(2), 
     sx.bg.gray, 
     sx.rounded.md,
-    isModified && { backgroundColor: '#fef3c7', borderLeft: '3px solid #f59e0b' }
+    isModified && { backgroundColor: 'rgba(242, 105, 33, 0.10)', borderLeft: '3px solid #f59e0b' }
   )}>
     <div style={{ flex: 1 }}>
       <span style={sx.combine(sx.text.sm, sx.text.secondary)}>

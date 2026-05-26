@@ -323,7 +323,7 @@ const UnitsPreferences = () => {
         {hasChanges && !saved && (
           <div style={{
             padding: '12px',
-            backgroundColor: '#fef3c7',
+            backgroundColor: 'rgba(242, 105, 33, 0.10)',
             borderRadius: '6px',
             border: '1px solid #fbbf24',
             display: 'flex',
@@ -392,7 +392,7 @@ const UnitsPreferences = () => {
       <div style={{
         marginTop: '16px',
         padding: '12px',
-        backgroundColor: '#fef3c7',
+        backgroundColor: 'rgba(242, 105, 33, 0.10)',
         borderRadius: '6px',
         fontSize: '13px',
         color: '#92400e'

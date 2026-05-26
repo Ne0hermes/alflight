@@ -341,7 +341,7 @@ const styles = {
     fontWeight: '600',
   },
   comparisonHeaderPro: {
-    backgroundColor: '#fef3c7',
+    backgroundColor: 'rgba(242, 105, 33, 0.10)',
   },
   comparisonCell: {
     padding: '12px',

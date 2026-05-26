@@ -297,7 +297,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 6,
                   padding: '4px 8px',
-                  backgroundColor: typeof curve.familyValue === 'number' ? '#dcfce7' : '#fef3c7',
+                  backgroundColor: typeof curve.familyValue === 'number' ? '#dcfce7' : 'rgba(242, 105, 33, 0.10)',
                   borderRadius: 3,
                   fontSize: 11
                 }}
