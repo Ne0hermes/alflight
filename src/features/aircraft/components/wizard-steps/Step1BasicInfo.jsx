@@ -480,6 +480,24 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
             </Grid>
 
             <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+              <StyledTextField
+                fullWidth
+                type="number"
+                variant="outlined"
+                label="Puissance moteur (CV)"
+                value={data.horsepower ?? ''}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  updateData('horsepower', v === '' ? undefined : Number(v));
+                }}
+                placeholder="Ex: 180"
+                inputProps={{ min: 0, step: 1 }}
+                error={!!errors.horsepower}
+                helperText={errors.horsepower || "Puissance nominale au régime maxi continu, en chevaux (HP)"}
+              />
+            </Grid>
+
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
               <StyledFormControl fullWidth variant="outlined">
                 <InputLabel shrink id="category-label">Catégorie</InputLabel>
                 <Select

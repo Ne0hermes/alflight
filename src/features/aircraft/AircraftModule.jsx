@@ -18,6 +18,7 @@ import dataBackupManager from '@utils/dataBackupManager';
 import indexedDBStorage from '@utils/indexedDBStorage';
 import { formatCanonical } from '@utils/unitsDisplay';
 import { useUnitsStore } from '@core/stores/unitsStore';
+import { evaluateAircraft, getCompletionColor, getSeverityColor } from './utils/aircraftCompleteness';
 
 // Composant pour l'aide contextuelle
 const InfoIcon = memo(({ tooltip }) => {
@@ -146,6 +147,8 @@ export const AircraftModule = memo(() => {
   const [showWizard, setShowWizard] = useState(false);
   const [wizardAircraft, setWizardAircraft] = useState(null);
   const [aircraftPhotos, setAircraftPhotos] = useState({});
+  // IDs des avions dont la liste "champs manquants" est dépliée sur la carte
+  const [expandedMissingIds, setExpandedMissingIds] = useState(new Set());
   const updateAircraftManex = useAircraftStore(state => state.updateAircraftManex);
 
   // Charger les photos depuis 3 sources possibles, avec fallback en cascade :
@@ -1146,26 +1149,27 @@ export const AircraftModule = memo(() => {
         {aircraftList && aircraftList.length > 0 ? (
           aircraftList.map((aircraft, index) => {
             const isSelected = selectedAircraft && selectedAircraft.id === aircraft.id;
-            const hasIncompleteSurfaces = !aircraft.compatibleRunwaySurfaces || aircraft.compatibleRunwaySurfaces.length === 0;
-            
-            console.log(`🔍 Rendering aircraft ${index}:`, {
-              aircraftId: aircraft.id,
-              selectedId: selectedAircraft?.id,
-              isSelected: isSelected,
-              strictEquality: selectedAircraft?.id === aircraft.id,
-              typeOfAircraftId: typeof aircraft.id,
-              typeOfSelectedId: typeof selectedAircraft?.id,
-              hasIncompleteSurfaces: hasIncompleteSurfaces
-            });
-            
+            // Évaluation complète : % de complétion + champs manquants + criticité
+            const completeness = evaluateAircraft(aircraft);
+            const { percentage, missing, criticalMissing, hasCriticalGaps } = completeness;
+            const isMissingExpanded = expandedMissingIds.has(aircraft.id);
+            const borderColor = hasCriticalGaps ? '#dc2626'
+              : missing.length > 0 ? '#f59e0b'
+              : isSelected ? '#3182CE'
+              : '#E5E7EB';
+            const bgColor = hasCriticalGaps ? '#fef2f2'
+              : missing.length > 0 ? '#fffbeb'
+              : isSelected ? '#EBF8FF'
+              : 'white';
+
             return (
               <div
                 key={aircraft.id}
                 style={{
                   padding: '10px',
                   borderRadius: '8px',
-                  border: hasIncompleteSurfaces ? '2px solid #f59e0b' : (isSelected ? '2px solid #3182CE' : '1px solid #E5E7EB'),
-                  backgroundColor: hasIncompleteSurfaces ? '#fffbeb' : (isSelected ? '#EBF8FF' : 'white'),
+                  border: `${hasCriticalGaps || missing.length > 0 ? '2px' : (isSelected ? '2px' : '1px')} solid ${borderColor}`,
+                  backgroundColor: bgColor,
                   cursor: 'pointer',
                   transition: 'all 0.2s ease-in-out',
                   marginBottom: '8px',
@@ -1176,33 +1180,136 @@ export const AircraftModule = memo(() => {
                   gap: '10px'
                 }}
                 onClick={(e) => {
-                  console.log(`🖱️ AircraftModule - Card clicked for aircraft index ${index}`);
-                  if (e.target.closest('button')) {
-                    console.log('⚠️ AircraftModule - Click on button, stopping propagation');
-                    return;
-                  }
+                  if (e.target.closest('button')) return;
                   handleSelectAircraft(aircraft);
                 }}
               >
-                {/* Badge d'avertissement pour données incomplètes */}
-                {hasIncompleteSurfaces && (
+                {/* Badge complétion + bouton d'expansion liste champs manquants */}
+                <div style={{
+                  position: 'absolute',
+                  top: '8px',
+                  right: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  zIndex: 2
+                }}>
+                  {hasCriticalGaps && (
+                    <div style={{
+                      backgroundColor: '#dc2626',
+                      color: 'white',
+                      padding: '4px 8px',
+                      borderRadius: '12px',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}>
+                      <AlertTriangle size={12} />
+                      Critique
+                    </div>
+                  )}
                   <div style={{
-                    position: 'absolute',
-                    top: '8px',
-                    right: '8px',
-                    backgroundColor: '#f59e0b',
+                    backgroundColor: getCompletionColor(percentage),
                     color: 'white',
-                    padding: '4px 8px',
+                    padding: '4px 10px',
                     borderRadius: '12px',
                     fontSize: '11px',
-                    fontWeight: '600',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    zIndex: 1
+                    fontWeight: 700
                   }}>
-                    <AlertTriangle size={12} />
-                    Config requise
+                    {percentage}%
+                  </div>
+                  {missing.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpandedMissingIds(prev => {
+                          const next = new Set(prev);
+                          if (next.has(aircraft.id)) next.delete(aircraft.id);
+                          else next.add(aircraft.id);
+                          return next;
+                        });
+                      }}
+                      title={`${missing.length} champ${missing.length > 1 ? 's' : ''} manquant${missing.length > 1 ? 's' : ''}`}
+                      style={{
+                        background: 'white',
+                        border: `1px solid ${hasCriticalGaps ? '#dc2626' : '#f59e0b'}`,
+                        color: hasCriticalGaps ? '#dc2626' : '#b45309',
+                        padding: '2px 6px',
+                        borderRadius: '12px',
+                        fontSize: '11px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '3px',
+                        fontWeight: 600
+                      }}
+                    >
+                      {missing.length} manquant{missing.length > 1 ? 's' : ''}
+                      {isMissingExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                    </button>
+                  )}
+                </div>
+
+                {/* Liste déroulante des champs manquants */}
+                {isMissingExpanded && missing.length > 0 && (
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '6px',
+                      padding: '10px 12px',
+                      fontSize: '13px',
+                      maxHeight: '220px',
+                      overflowY: 'auto',
+                      marginTop: '36px'
+                    }}
+                  >
+                    <div style={{ fontWeight: 600, marginBottom: 6, color: '#374151' }}>
+                      Champs à compléter :
+                    </div>
+                    {['CRITICAL', 'REQUIRED', 'OPTIONAL'].map(sev => {
+                      const items = missing.filter(m => m.severity === sev);
+                      if (items.length === 0) return null;
+                      const labelMap = { CRITICAL: 'Critiques', REQUIRED: 'Obligatoires', OPTIONAL: 'Optionnels' };
+                      return (
+                        <div key={sev} style={{ marginBottom: 6 }}>
+                          <div style={{ fontSize: '11px', textTransform: 'uppercase', color: getSeverityColor(sev), fontWeight: 700 }}>
+                            {labelMap[sev]}
+                          </div>
+                          {items.map(item => (
+                            <div key={item.path} style={{ display: 'flex', gap: 6, paddingLeft: 8, color: '#4b5563' }}>
+                              <span style={{ color: getSeverityColor(sev) }}>•</span>
+                              <span>{item.label}</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setWizardAircraft(aircraft);
+                        setShowWizard(true);
+                      }}
+                      style={{
+                        marginTop: 4,
+                        background: '#3b82f6',
+                        color: 'white',
+                        border: 'none',
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Compléter maintenant
+                    </button>
                   </div>
                 )}
                 
@@ -1272,7 +1379,7 @@ export const AircraftModule = memo(() => {
                       }</p>
                       <p>MTOW: {
                         formatCanonical(aircraft.maxTakeoffWeight || aircraft.weights?.mtow, 'weight', useUnitsStore.getState().units, { both: true })
-                      }</p>
+                      }{aircraft.horsepower ? ` • Puissance: ${aircraft.horsepower} CV` : ''}</p>
                       {/* Statut MANEX et fiche de pesée : Chargé (vert) / Absent (rouge) */}
                       {(() => {
                         const manexLoaded = !!(aircraft.hasManex || aircraft.manex);

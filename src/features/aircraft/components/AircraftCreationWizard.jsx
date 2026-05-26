@@ -394,6 +394,14 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success', closeable: true, duration: 6000 });
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
+  // Bypass de validation : modal de confirmation + suivi des champs ignorés
+  const [showBypassDialog, setShowBypassDialog] = useState(false);
+  const [pendingBypassErrors, setPendingBypassErrors] = useState({});
+  // bypassedFields persisté sur l'avion sauvegardé : ['speeds.vne', 'weights.mtow', ...]
+  const [bypassedFields, setBypassedFields] = useState(() => {
+    return Array.isArray(draft?.aircraftData?.bypassedFields) ? draft.aircraftData.bypassedFields : [];
+  });
+
   // Compteur pour déclencher l'ouverture du modal de validation MANEX depuis
   // n'importe quelle étape. À chaque incrément, Step0 (via un useEffect)
   // ouvre automatiquement le modal pré-rempli avec data.manexExtraction.
@@ -723,8 +731,28 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
     if (isValid) {
       setCurrentStep(prev => Math.min(prev + 1, steps.length - 1));
     } else {
-      // Les erreurs sont déjà affichées dans les composants
+      // Validation échouée → proposer le bypass plutôt que de bloquer silencieusement
+      setPendingBypassErrors(errors);
+      setShowBypassDialog(true);
     }
+  };
+
+  // Bypass confirmé : on enregistre les champs ignorés sur l'avion et on avance.
+  const handleBypassConfirm = () => {
+    const fieldKeys = Object.keys(pendingBypassErrors);
+    // Concat sans doublons
+    const merged = Array.from(new Set([...bypassedFields, ...fieldKeys]));
+    setBypassedFields(merged);
+    // Persister immédiatement dans aircraftData pour qu'il soit sauvegardé même si on quitte
+    setAircraftData(prev => ({ ...prev, bypassedFields: merged }));
+    setShowBypassDialog(false);
+    setErrors({}); // les erreurs sont "acceptées" — on ne les affiche plus
+    setCurrentStep(prev => Math.min(prev + 1, steps.length - 1));
+  };
+
+  const handleBypassCancel = () => {
+    setShowBypassDialog(false);
+    // On garde les erreurs affichées pour que l'utilisateur les voie
   };
 
   const handlePrevious = () => {
@@ -1393,6 +1421,61 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
             color="primary"
           >
             Sauvegarder et reprendre plus tard
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog de bypass de validation : permet de passer outre les erreurs avec
+          confirmation explicite. Les champs ignorés sont mémorisés dans bypassedFields
+          et affichés sur la carte avion dans "Mes Avions". */}
+      <Dialog
+        open={showBypassDialog}
+        onClose={handleBypassCancel}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#dc2626' }}>
+          <WarningIcon color="error" />
+          Ignorer les validations obligatoires
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            Les champs suivants ne sont pas renseignés mais sont normalement obligatoires :
+          </DialogContentText>
+          <Box sx={{
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fecaca',
+            borderRadius: '6px',
+            p: 2,
+            mb: 2,
+            maxHeight: '200px',
+            overflow: 'auto'
+          }}>
+            {Object.entries(pendingBypassErrors).map(([key, msg]) => (
+              <Box key={key} sx={{ display: 'flex', gap: 1, mb: 0.5, fontSize: '14px' }}>
+                <span style={{ color: '#dc2626', fontWeight: 600 }}>•</span>
+                <span><strong>{key}</strong> — {msg}</span>
+              </Box>
+            ))}
+          </Box>
+          <Alert severity="warning" sx={{ mb: 1 }}>
+            En continuant, l'avion sera créé avec ces données manquantes. Un indicateur visible
+            sera affiché sur la carte de l'avion dans <strong>Mes Avions</strong> avec la liste
+            des champs à compléter.
+          </Alert>
+          <Alert severity="error">
+            <strong>Sécurité opérationnelle :</strong> tant que <strong>Performance</strong>,
+            <strong> Masse & Centrage</strong> ou les <strong>vitesses critiques</strong> sont
+            incomplètes, l'avion ne devrait pas être utilisé pour un vol réel — uniquement pour
+            préparation/étude.
+          </Alert>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button onClick={handleBypassCancel} variant="contained" color="primary">
+            Revenir et compléter
+          </Button>
+          <Button onClick={handleBypassConfirm} variant="outlined" color="error">
+            Je confirme — passer outre
           </Button>
         </DialogActions>
       </Dialog>

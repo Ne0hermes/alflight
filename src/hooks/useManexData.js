@@ -25,13 +25,11 @@ export const useManexData = (aircraftId) => {
     try {
       setLoading(true);
       const data = getManexData(aircraftId);
-      
+
       if (data) {
-        // Reconstituer la structure complète
-        setManexData({
-          ...data.metadata,
-          pdfData: data.pdfData
-        });
+        // getManexData renvoie déjà les métadonnées aplaties (sans pdfData)
+        // Le PDF reste dans IndexedDB et est récupéré à la demande via getManexWithPdf
+        setManexData(data);
       } else {
         setManexData(null);
       }
