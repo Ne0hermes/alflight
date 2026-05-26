@@ -733,7 +733,9 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
               opacity: isReachable ? 1 : 0.45,
               flex: '1 1 0',
               minWidth: '70px',
-              border: 'none',
+              borderWidth: 0,
+              borderStyle: 'none',
+              borderColor: 'transparent',
               fontFamily: 'inherit'
             };
             const numberStyle = {
@@ -932,7 +934,9 @@ const styles = {
     height: '32px',
     borderRadius: '50%',
     background: theme.colors.background,
-    border: `2px solid ${theme.colors.border}`,
+    borderWidth: '2px',
+    borderStyle: 'solid',
+    borderColor: theme.colors.border,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

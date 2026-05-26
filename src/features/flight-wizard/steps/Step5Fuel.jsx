@@ -98,7 +98,7 @@ export const Step5Fuel = memo(({ flightPlan, onUpdate }) => {
       console.log('🔄 [Step5Fuel] Restauration CRM depuis flightPlan:', savedFuel, 'L');
       setFobFuel({
         ltr: savedFuel,
-        gal: convertValue(savedFuel, 'fuel', 'ltr', 'gal')
+        gal: convertValue(savedFuel, 'ltr', 'gal', 'fuel')
       });
       hasRestored.current = true;
     }

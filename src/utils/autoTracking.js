@@ -6,11 +6,23 @@
  */
 
 const TRACKING_ENDPOINT = 'http://localhost:3001/api/log';
-const TRACKING_ENABLED = true; // Mettre à false pour désactiver
+// 🔇 DÉSACTIVÉ PAR DÉFAUT : le sidecar localhost:3001 (Google Sheets logger) n'est pas
+// démarré par défaut. Pour l'activer, lance `npm run dev:logger` ET pose dans la console :
+//     localStorage.setItem('alflight:enableTracking', '1')
+// puis reload la page. Sans ça, aucune requête réseau n'est tentée → zéro bruit console.
+let TRACKING_ENABLED = (typeof window !== 'undefined')
+  ? window.localStorage?.getItem('alflight:enableTracking') === '1'
+  : false;
 
 // File d'attente pour éviter les logs simultanés
 let logQueue = [];
 let isProcessing = false;
+
+// Auto-désactivation : si le sidecar localhost:3001 n'est pas démarré, on cumule les échecs
+// et on coupe complètement le tracking après quelques essais pour ne pas polluer la console.
+let consecutiveFailures = 0;
+const MAX_CONSECUTIVE_FAILURES = 2;
+let trackingDisabledLogged = false;
 
 /**
  * Log une action dans Google Sheets avec vérification
@@ -40,8 +52,6 @@ async function processQueue() {
   const { action, details, category, resolve } = logQueue.shift();
 
   try {
-    
-
     const response = await fetch(TRACKING_ENDPOINT, {
       method: 'POST',
       headers: {
@@ -55,13 +65,27 @@ async function processQueue() {
     }
 
     const result = await response.json();
-
-    
-    
-
+    consecutiveFailures = 0; // reset après un succès
     resolve({ success: true, ...result });
   } catch (error) {
-    console.error(`❌ Tracking - Erreur: ${action}`, error);
+    // ⚠ Tracking non-bloquant — c'est juste un sidecar de dev (Google Sheets logger).
+    // S'il n'est pas démarré, on log discrètement et on auto-désactive après N échecs
+    // pour ne pas polluer la console à chaque sauvegarde utilisateur.
+    consecutiveFailures++;
+    if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+      TRACKING_ENABLED = false;
+      if (!trackingDisabledLogged) {
+        trackingDisabledLogged = true;
+        console.info(
+          `ℹ️ [autoTracking] Sidecar localhost:3001 non joignable après ${MAX_CONSECUTIVE_FAILURES} essais — tracking auto-désactivé pour cette session (non bloquant).`
+        );
+      }
+      // Vider la queue silencieusement
+      const drained = logQueue.splice(0);
+      drained.forEach(({ resolve: r }) => r({ success: false, reason: 'auto-disabled' }));
+    } else {
+      console.debug(`[autoTracking] échec ${consecutiveFailures}/${MAX_CONSECUTIVE_FAILURES} (${action}) — non bloquant`);
+    }
     resolve({ success: false, error: error.message });
   } finally {
     isProcessing = false;

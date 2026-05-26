@@ -56,7 +56,25 @@ export const useFuelStore = create(
     }),
     
     setFobFuel: (fuel) => set(state => {
-      state.fobFuel = fuel;
+      // Tolère un nombre (interprété comme litres) ou un objet { ltr, gal }
+      if (typeof fuel === 'number' && !isNaN(fuel)) {
+        const ltr = fuel;
+        state.fobFuel = {
+          ltr: parseFloat(ltr.toFixed(2)),
+          gal: parseFloat((ltr / 3.78541).toFixed(2))
+        };
+      } else if (fuel && typeof fuel === 'object') {
+        const ltr = typeof fuel.ltr === 'number' ? fuel.ltr
+                  : (typeof fuel.gal === 'number' ? fuel.gal * 3.78541 : 0);
+        const gal = typeof fuel.gal === 'number' ? fuel.gal
+                  : (typeof fuel.ltr === 'number' ? fuel.ltr / 3.78541 : 0);
+        state.fobFuel = {
+          ltr: parseFloat(ltr.toFixed(2)),
+          gal: parseFloat(gal.toFixed(2))
+        };
+      } else {
+        state.fobFuel = { ltr: 0, gal: 0 };
+      }
     }),
     
     // Méthodes de calcul
@@ -102,7 +120,20 @@ export const useFuelStore = create(
     partialize: (state) => ({
       fuelData: state.fuelData,
       fobFuel: state.fobFuel
-    })
+    }),
+    // Normalise fobFuel au chargement : récupère les anciens states où c'était un nombre
+    onRehydrateStorage: () => (state) => {
+      if (!state) return;
+      const f = state.fobFuel;
+      if (typeof f === 'number') {
+        state.fobFuel = {
+          ltr: parseFloat(f.toFixed(2)),
+          gal: parseFloat((f / 3.78541).toFixed(2))
+        };
+      } else if (!f || typeof f !== 'object' || typeof f.ltr !== 'number') {
+        state.fobFuel = { ltr: 0, gal: 0 };
+      }
+    }
   }
   )
 );
