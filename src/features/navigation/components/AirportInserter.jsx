@@ -594,7 +594,7 @@ export const AirportInserter = ({
           <div style={{
             marginTop: '12px',
             padding: '12px',
-            background: '#fef3c7',
+            background: 'rgba(242, 105, 33, 0.10)',
             borderRadius: '6px',
             textAlign: 'center'
           }}>

@@ -384,7 +384,7 @@ const PilotProfile = () => {
     switch(status.status) {
       case 'expired': return '#fee2e2';
       case 'urgent': return '#fed7aa';
-      case 'warning': return '#fef3c7';
+      case 'warning': return 'rgba(242, 105, 33, 0.10)';
       case 'valid': return '#d1fae5';
       case 'none': return '#f3f4f6';
       default: return '#f3f4f6';
@@ -395,7 +395,7 @@ const PilotProfile = () => {
     const status = getMedicalStatus();
     switch(status.status) {
       case 'expired': return '#fecaca';
-      case 'urgent': return '#fb923c';
+      case 'urgent': return '#f26921';
       case 'warning': return '#fcd34d';
       case 'valid': return '#86efac';
       case 'none': return '#d1d5db';
@@ -407,7 +407,7 @@ const PilotProfile = () => {
     const status = getMedicalStatus();
     const styles = {
       expired: { backgroundColor: '#991b1b', color: 'white' },
-      urgent: { backgroundColor: '#ea580c', color: 'white' },
+      urgent: { backgroundColor: '#D85410', color: 'white' },
       warning: { backgroundColor: '#f59e0b', color: 'white' },
       valid: { backgroundColor: '#10b981', color: 'white' },
       none: { backgroundColor: '#6b7280', color: 'white' }
@@ -919,11 +919,11 @@ const PilotProfile = () => {
             borderRadius: '6px',
             border: '1px solid',
             borderColor: medicalReminder.priority === 'critical' ? '#fecaca' :
-                        medicalReminder.priority === 'high' ? '#fb923c' :
+                        medicalReminder.priority === 'high' ? '#f26921' :
                         medicalReminder.priority === 'medium' ? '#fcd34d' : '#86efac',
             backgroundColor: medicalReminder.priority === 'critical' ? '#fee2e2' :
                             medicalReminder.priority === 'high' ? '#fed7aa' :
-                            medicalReminder.priority === 'medium' ? '#fef3c7' : '#f0fdf4',
+                            medicalReminder.priority === 'medium' ? 'rgba(242, 105, 33, 0.10)' : '#f0fdf4',
             marginBottom: '16px'
           }}>
             <p style={sx.combine(sx.text.sm, sx.text.bold)}>

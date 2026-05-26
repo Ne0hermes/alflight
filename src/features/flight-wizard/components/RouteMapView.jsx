@@ -628,7 +628,7 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
             radius={10}
             pathOptions={{
               color: '#f59e0b',
-              fillColor: '#fef3c7',
+              fillColor: 'rgba(242, 105, 33, 0.10)',
               fillOpacity: 0.9,
               weight: 3
             }}

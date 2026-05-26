@@ -358,7 +358,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
         <div style={{
           marginTop: '10px',
           padding: '8px',
-          background: '#fef3c7',
+          background: 'rgba(242, 105, 33, 0.10)',
           border: '1px solid #f59e0b',
           borderRadius: '4px',
           fontSize: '12px',

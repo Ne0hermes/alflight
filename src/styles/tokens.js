@@ -36,7 +36,7 @@ export const colors = {
     main: '#fbbf24',
     light: '#fcd34d',
     dark: '#f59e0b',
-    background: '#fef3c7',
+    background: 'rgba(242, 105, 33, 0.10)',
   },
   error: {
     main: '#ef4444',

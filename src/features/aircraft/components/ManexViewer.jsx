@@ -241,7 +241,7 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
         {hasNothing && (
           <div style={{
             padding: '16px',
-            backgroundColor: '#fef3c7',
+            backgroundColor: 'rgba(242, 105, 33, 0.10)',
             border: '1px solid #fbbf24',
             borderRadius: '8px',
             marginBottom: '16px',
@@ -328,7 +328,7 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
                   <div style={{ 
                     marginTop: '12px', 
                     padding: '8px 12px', 
-                    backgroundColor: '#fef3c7', 
+                    backgroundColor: 'rgba(242, 105, 33, 0.10)', 
                     border: '1px solid #fcd34d',
                     borderRadius: '4px'
                   }}>

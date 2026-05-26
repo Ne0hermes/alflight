@@ -247,7 +247,7 @@ export const VFRPointManager = ({
                     </div>
                     <div style={{
                       padding: '4px 8px',
-                      background: point.source === 'custom' ? '#fef3c7' : '#dbeafe',
+                      background: point.source === 'custom' ? 'rgba(242, 105, 33, 0.10)' : '#dbeafe',
                       color: point.source === 'custom' ? '#92400e' : '#1e40af',
                       borderRadius: '4px',
                       fontSize: '11px',

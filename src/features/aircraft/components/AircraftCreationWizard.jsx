@@ -143,6 +143,14 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
     baseAircraft: existingAircraft ? JSON.parse(JSON.stringify(existingAircraft)) : undefined,
     registration: existingAircraft?.registration || '',
     model: existingAircraft?.model || '',
+    // 🔧 FIX (2026-05) : champs OUBLIÉS dans la whitelist initiale → étaient
+    // chargés à vide à chaque édition, ce qui écrasait la valeur sur Supabase
+    // lors du save. À surveiller dès qu'on ajoute un nouveau champ avion.
+    manufacturer: existingAircraft?.manufacturer || '',
+    horsepower: existingAircraft?.horsepower ?? '',
+    homeAeroclub: existingAircraft?.homeAeroclub || '',
+    homeBase: existingAircraft?.homeBase || '',
+    bypassedFields: Array.isArray(existingAircraft?.bypassedFields) ? existingAircraft.bypassedFields : [],
     fuelType: existingAircraft?.fuelType || 'AVGAS',
     fuelCapacity: existingAircraft?.fuelCapacity || '',
     cruiseSpeedKt: existingAircraft?.cruiseSpeedKt || existingAircraft?.cruiseSpeed || '',

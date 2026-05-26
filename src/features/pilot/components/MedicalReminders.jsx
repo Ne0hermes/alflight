@@ -199,7 +199,7 @@ const MedicalReminders = () => {
     const daysUntilExpiry = Math.floor((expiry - today) / (1000 * 60 * 60 * 24));
     
     if (daysUntilExpiry < 0) return '#dc2626';
-    if (daysUntilExpiry <= 30) return '#ea580c';
+    if (daysUntilExpiry <= 30) return '#D85410';
     if (daysUntilExpiry <= 90) return '#f59e0b';
     return '#6b7280';
   };
@@ -375,7 +375,7 @@ const MedicalReminders = () => {
                 type="date"
                 value={formData.expiryDate}
                 onChange={(e) => handleChange('expiryDate', e.target.value)}
-                style={{...inputStyle, backgroundColor: '#fef3c7'}}
+                style={{...inputStyle, backgroundColor: 'rgba(242, 105, 33, 0.10)'}}
                 required
                 title="Calculée automatiquement selon l'âge et la classe"
               />

@@ -156,7 +156,7 @@ export const DataBackupUI = () => {
           alignItems: 'center',
           gap: '8px',
           padding: '6px 12px',
-          background: isProtected ? '#dcfce7' : '#fef3c7',
+          background: isProtected ? '#dcfce7' : 'rgba(242, 105, 33, 0.10)',
           borderRadius: '20px'
         }}>
           {isProtected ? (
@@ -187,7 +187,7 @@ export const DataBackupUI = () => {
           alignItems: 'center',
           gap: '8px',
           background: message.type === 'success' ? '#dcfce7' : 
-                     message.type === 'warning' ? '#fef3c7' : '#fee2e2',
+                     message.type === 'warning' ? 'rgba(242, 105, 33, 0.10)' : '#fee2e2',
           color: message.type === 'success' ? '#16a34a' : 
                  message.type === 'warning' ? '#d97706' : '#dc2626'
         }}>
@@ -280,7 +280,7 @@ export const DataBackupUI = () => {
             fontSize: '13px',
             border: '1px solid',
             borderColor: isProtected ? '#16a34a' : '#d97706',
-            background: isProtected ? '#f0fdf4' : '#fffbeb',
+            background: isProtected ? '#f0fdf4' : 'rgba(242, 105, 33, 0.06)',
             color: isProtected ? '#16a34a' : '#d97706',
             borderRadius: '6px',
             cursor: 'pointer',

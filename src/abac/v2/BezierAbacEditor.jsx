@@ -532,7 +532,7 @@ BezierAbacEditor.displayName = 'BezierAbacEditor';
 const styles = {
   root: { display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#fff' },
   toolbar: { display: 'flex', gap: 8, padding: 12, borderBottom: '1px solid #e5e7eb', flexWrap: 'wrap', alignItems: 'center' },
-  banner: { display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', backgroundColor: '#fef3c7', color: '#92400e', fontSize: 13, borderBottom: '1px solid #fde68a' },
+  banner: { display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', backgroundColor: 'rgba(242, 105, 33, 0.10)', color: '#92400e', fontSize: 13, borderBottom: '1px solid #fde68a' },
   canvasWrap: { flex: 1, overflow: 'hidden', backgroundColor: '#f9fafb', display: 'flex' },
   statsBar: { padding: '8px 16px', borderTop: '1px solid #e5e7eb', fontSize: 12, color: '#6b7280', backgroundColor: '#f9fafb' },
   btn: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 13, cursor: 'pointer' },

@@ -143,14 +143,14 @@ export function formatAIXMAlert(status) {
     },
     'expiring-today': {
       color: '#f59e0b', // Orange
-      bgColor: '#fef3c7',
+      bgColor: 'rgba(242, 105, 33, 0.10)',
       icon: '⏰',
       title: '⚠️ EXPIRATION AUJOURD\'HUI',
       priority: 'high'
     },
     warning: {
       color: '#f59e0b', // Orange
-      bgColor: '#fef3c7',
+      bgColor: 'rgba(242, 105, 33, 0.10)',
       icon: '⚠️',
       title: 'Attention : Mise à jour requise',
       priority: 'medium'

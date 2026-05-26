@@ -1845,7 +1845,7 @@ const renderStepContent = () => {
                                 style={{
                                   padding: '4px 8px', fontSize: 11,
                                   cursor: (aiDetectingGraphId === graph.id || imageAdjustGraphId === graph.id) ? 'wait' : 'pointer',
-                                  backgroundColor: aiDetectingGraphId === graph.id ? '#fef3c7' : '#ecfeff',
+                                  backgroundColor: aiDetectingGraphId === graph.id ? 'rgba(242, 105, 33, 0.10)' : '#ecfeff',
                                   color: '#0e7490',
                                   border: '1px solid #67e8f9', borderRadius: 4,
                                   opacity: (aiDetectingGraphId === graph.id || imageAdjustGraphId === graph.id) ? 0.7 : 1
@@ -1902,7 +1902,7 @@ const renderStepContent = () => {
                             style={{
                               marginBottom: 8, padding: '6px 10px', fontSize: 11,
                               backgroundColor: aiNotes[graph.id].startsWith('❌') ? '#fee2e2' :
-                                aiNotes[graph.id].startsWith('⚠️') ? '#fef3c7' : '#ecfdf5',
+                                aiNotes[graph.id].startsWith('⚠️') ? 'rgba(242, 105, 33, 0.10)' : '#ecfdf5',
                               color: aiNotes[graph.id].startsWith('❌') ? '#991b1b' :
                                 aiNotes[graph.id].startsWith('⚠️') ? '#92400e' : '#065f46',
                               border: '1px solid', borderColor: aiNotes[graph.id].startsWith('❌') ? '#fecaca' :
@@ -1918,7 +1918,7 @@ const renderStepContent = () => {
                           onClick={(e) => e.stopPropagation()}
                           style={{
                             display: 'flex', gap: 6, marginBottom: 8, alignItems: 'center',
-                            flexWrap: 'wrap', padding: '6px 8px', backgroundColor: '#fffbeb',
+                            flexWrap: 'wrap', padding: '6px 8px', backgroundColor: 'rgba(242, 105, 33, 0.06)',
                             border: '1px solid #fde68a', borderRadius: 4, fontSize: 11
                           }}
                         >
@@ -1938,7 +1938,7 @@ const renderStepContent = () => {
                               startAxisCalibration(graph.id, 'x', step);
                             }}
                             disabled={!graph.axes || !!calibrationState}
-                            style={{ padding: '3px 8px', fontSize: 11, cursor: 'pointer', backgroundColor: customAxisTicks[graph.id]?.x ? '#fef3c7' : '#fef9c3', border: '1px solid #facc15', borderRadius: 3 }}
+                            style={{ padding: '3px 8px', fontSize: 11, cursor: 'pointer', backgroundColor: customAxisTicks[graph.id]?.x ? 'rgba(242, 105, 33, 0.10)' : '#fef9c3', border: '1px solid #facc15', borderRadius: 3 }}
                           >
                             📐 X {customAxisTicks[graph.id]?.x ? `(${customAxisTicks[graph.id]?.x?.length} points ✓)` : ''}
                           </button>
@@ -1955,7 +1955,7 @@ const renderStepContent = () => {
                               startAxisCalibration(graph.id, 'y', step);
                             }}
                             disabled={!graph.axes || !!calibrationState}
-                            style={{ padding: '3px 8px', fontSize: 11, cursor: 'pointer', backgroundColor: customAxisTicks[graph.id]?.y ? '#fef3c7' : '#fef9c3', border: '1px solid #facc15', borderRadius: 3 }}
+                            style={{ padding: '3px 8px', fontSize: 11, cursor: 'pointer', backgroundColor: customAxisTicks[graph.id]?.y ? 'rgba(242, 105, 33, 0.10)' : '#fef9c3', border: '1px solid #facc15', borderRadius: 3 }}
                           >
                             📐 Y {customAxisTicks[graph.id]?.y ? `(${customAxisTicks[graph.id]?.y?.length} points ✓)` : ''}
                           </button>
@@ -1975,7 +1975,7 @@ const renderStepContent = () => {
                             onClick={(e) => e.stopPropagation()}
                             style={{
                               padding: '8px 12px', marginBottom: 8, fontSize: 12,
-                              backgroundColor: '#fef3c7', color: '#92400e',
+                              backgroundColor: 'rgba(242, 105, 33, 0.10)', color: '#92400e',
                               border: '2px solid #f59e0b', borderRadius: 4,
                               display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap'
                             }}

@@ -797,7 +797,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
           padding: '12px',
           borderRadius: '8px',
           backgroundColor: statusSummary.licenses.expired > 0 ? '#fee2e2' :
-                         statusSummary.licenses.expiring > 0 ? '#fef3c7' : '#f0fdf4',
+                         statusSummary.licenses.expiring > 0 ? 'rgba(242, 105, 33, 0.10)' : '#f0fdf4',
           border: `1px solid ${statusSummary.licenses.expired > 0 ? '#fca5a5' :
                               statusSummary.licenses.expiring > 0 ? '#fcd34d' : '#86efac'}`
         }}>
@@ -830,7 +830,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
           borderRadius: '8px',
           backgroundColor: statusSummary.qualifications.total === 0 ? '#f3f4f6' :
                          statusSummary.qualifications.expired > 0 ? '#fee2e2' :
-                         statusSummary.qualifications.expiring > 0 ? '#fef3c7' : '#f0fdf4',
+                         statusSummary.qualifications.expiring > 0 ? 'rgba(242, 105, 33, 0.10)' : '#f0fdf4',
           border: `1px solid ${statusSummary.qualifications.total === 0 ? '#d1d5db' :
                               statusSummary.qualifications.expired > 0 ? '#fca5a5' :
                               statusSummary.qualifications.expiring > 0 ? '#fcd34d' : '#86efac'}`
@@ -864,7 +864,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
           borderRadius: '8px',
           backgroundColor: statusSummary.medical.status === 'expired' ? '#fee2e2' :
                          statusSummary.medical.status === 'urgent' ? '#fee2e2' :
-                         statusSummary.medical.status === 'warning' ? '#fef3c7' :
+                         statusSummary.medical.status === 'warning' ? 'rgba(242, 105, 33, 0.10)' :
                          statusSummary.medical.status === 'valid' ? '#f0fdf4' : '#f3f4f6',
           border: `1px solid ${statusSummary.medical.status === 'expired' ? '#fca5a5' :
                               statusSummary.medical.status === 'urgent' ? '#fca5a5' :
@@ -903,7 +903,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
         <div style={{
           padding: '12px',
           borderRadius: '8px',
-          backgroundColor: statusSummary.flightRequirements.pending > 0 ? '#fef3c7' : '#f0fdf4',
+          backgroundColor: statusSummary.flightRequirements.pending > 0 ? 'rgba(242, 105, 33, 0.10)' : '#f0fdf4',
           border: `1px solid ${statusSummary.flightRequirements.pending > 0 ? '#fcd34d' : '#86efac'}`
         }}>
           <h4 style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#374151' }}>
@@ -1006,10 +1006,10 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
               marginBottom: '16px',
               backgroundColor: urgency === 'expired' ? '#fee2e2' :
                              urgency === 'critical' ? '#fee2e2' :
-                             urgency === 'warning' ? '#fed7aa' : '#fef3c7',
+                             urgency === 'warning' ? '#fed7aa' : 'rgba(242, 105, 33, 0.10)',
               border: `1px solid ${urgency === 'expired' ? '#dc2626' :
                                   urgency === 'critical' ? '#fca5a5' :
-                                  urgency === 'warning' ? '#fb923c' : '#fcd34d'}`
+                                  urgency === 'warning' ? '#f26921' : '#fcd34d'}`
             }}>
               <AlertTriangle size={16} color={urgency === 'expired' ? '#dc2626' : '#f59e0b'} />
               <div style={{ flex: 1 }}>
@@ -1136,7 +1136,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
                         borderRadius: '8px',
                         backgroundColor: status.isMissing ? '#fee2e2' :
                                        status.isExpired ? '#fee2e2' : 
-                                       status.needsAction ? '#fed7aa' : '#fef3c7',
+                                       status.needsAction ? '#fed7aa' : 'rgba(242, 105, 33, 0.10)',
                         border: `2px solid ${status.isMissing ? '#dc2626' :
                                            status.isExpired ? '#dc2626' : 
                                            status.needsAction ? '#f59e0b' : '#fcd34d'}`

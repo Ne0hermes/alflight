@@ -562,7 +562,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
                   padding: '2px 8px', 
                   borderRadius: '4px',
                   backgroundColor: customBgColor || 
-                    (label === 'Départ' ? '#d1fae5' : label === 'Arrivée' ? '#fef3c7' : '#dbeafe'),
+                    (label === 'Départ' ? '#d1fae5' : label === 'Arrivée' ? 'rgba(242, 105, 33, 0.10)' : '#dbeafe'),
                   color: customTextColor ||
                     (label === 'Départ' ? '#065f46' : label === 'Arrivée' ? '#92400e' : '#1e40af')
                 }

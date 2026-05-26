@@ -522,7 +522,7 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
                     backgroundColor: 
                       analysis === takeoffRunway || analysis === landingRunway ? '#f0f9ff' :
                       analysis.isOptimal ? '#f0fdf4' : 
-                      analysis.isGood ? '#fef3c7' :
+                      analysis.isGood ? 'rgba(242, 105, 33, 0.10)' :
                       analysis.isAcceptable ? '#fefce8' : '#fef2f2',
                     borderBottom: '1px solid #e5e7eb'
                   }}
@@ -550,12 +550,12 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
                       borderRadius: '4px',
                       backgroundColor:
                         analysis.isOptimal ? '#d1fae5' :
-                        analysis.isGood ? '#fef3c7' :
+                        analysis.isGood ? 'rgba(242, 105, 33, 0.10)' :
                         analysis.isAcceptable ? '#fed7aa' : '#fee2e2',
                       color:
                         analysis.isOptimal ? '#059669' :
                         analysis.isGood ? '#ca8a04' :
-                        analysis.isAcceptable ? '#ea580c' : '#dc2626'
+                        analysis.isAcceptable ? '#D85410' : '#dc2626'
                     }}>
                       {analysis.angleDiff}°
                     </span>
@@ -586,7 +586,7 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
                         ✓ Bon
                       </span>
                     ) : analysis.isAcceptable ? (
-                      <span style={{ color: '#ea580c' }}>
+                      <span style={{ color: '#D85410' }}>
                         ~ Acceptable
                       </span>
                     ) : (

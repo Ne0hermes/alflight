@@ -178,7 +178,7 @@ export const ReportingPointsSelector = memo(({
                 sx.text.xs,
                 sx.spacing.ml(2),
                 {
-                  backgroundColor: '#fef3c7',
+                  backgroundColor: 'rgba(242, 105, 33, 0.10)',
                   color: '#92400e',
                   padding: '2px 8px',
                   borderRadius: '4px',
@@ -229,7 +229,7 @@ export const ReportingPointsSelector = memo(({
                         sx.spacing.py(1),
                         sx.rounded.sm,
                         {
-                          backgroundColor: point.mandatory ? '#fef3c7' : '#e5e7eb',
+                          backgroundColor: point.mandatory ? 'rgba(242, 105, 33, 0.10)' : '#e5e7eb',
                           color: point.mandatory ? '#92400e' : '#4b5563',
                           fontSize: '12px'
                         }

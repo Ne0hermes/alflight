@@ -119,7 +119,7 @@ export function IndexedDBChecker({ children }) {
         alignItems: 'center',
         justifyContent: 'center',
         height: '100vh',
-        backgroundColor: '#fef3c7',
+        backgroundColor: 'rgba(242, 105, 33, 0.10)',
         padding: '20px'
       }}>
         <div style={{
@@ -147,7 +147,7 @@ export function IndexedDBChecker({ children }) {
           </h2>
 
           <div style={{
-            backgroundColor: '#fef3c7',
+            backgroundColor: 'rgba(242, 105, 33, 0.10)',
             padding: '15px',
             borderRadius: '8px',
             marginBottom: '20px',

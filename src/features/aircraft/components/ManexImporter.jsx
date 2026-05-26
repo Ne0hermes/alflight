@@ -413,7 +413,7 @@ export const ManexImporter = memo(({
         {/* Affichage du MANEX existant */}
         {(manexData || aircraft.manex) && !loading && (
           <div style={{
-            backgroundColor: manexData?.pdfData ? '#f0f9ff' : '#fef3c7',
+            backgroundColor: manexData?.pdfData ? '#f0f9ff' : 'rgba(242, 105, 33, 0.10)',
             border: `1px solid ${manexData?.pdfData ? '#3b82f6' : '#f59e0b'}`,
             borderRadius: '8px',
             padding: '16px',
@@ -428,7 +428,7 @@ export const ManexImporter = memo(({
                 </p>
                 {!manexData?.pdfData && (
                   <div style={{
-                    backgroundColor: '#fef3c7',
+                    backgroundColor: 'rgba(242, 105, 33, 0.10)',
                     border: '1px solid #f59e0b',
                     borderRadius: '6px',
                     padding: '8px 12px',
@@ -542,7 +542,7 @@ export const ManexImporter = memo(({
         {/* L'import se fait uniquement dans le wizard de création/édition d'avion */}
         {!manexData && !aircraft.manex && (
           <div style={{
-            backgroundColor: '#fef3c7',
+            backgroundColor: 'rgba(242, 105, 33, 0.10)',
             border: '1px solid #f59e0b',
             borderRadius: '8px',
             padding: '16px',

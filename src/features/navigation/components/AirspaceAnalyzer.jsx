@@ -38,7 +38,7 @@ const AIRSPACE_TYPES = {
   },
   'R': {
     name: 'Zone Réglementée',
-    color: '#f97316',
+    color: '#f26921',
     priority: 3,
     description: 'Zone réglementée (Restricted)'
   },

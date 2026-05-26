@@ -311,7 +311,7 @@ export const VFRPointInserter = ({
                       color: '#92400e',
                       marginBottom: '6px',
                       padding: '4px 8px',
-                      background: '#fef3c7',
+                      background: 'rgba(242, 105, 33, 0.10)',
                       borderRadius: '4px',
                       display: 'inline-block'
                     }}>
@@ -324,18 +324,18 @@ export const VFRPointInserter = ({
                           onClick={() => handleInsertPoint(point)}
                           style={{
                             padding: '8px',
-                            background: '#fffbeb',
+                            background: 'rgba(242, 105, 33, 0.06)',
                             borderRadius: '6px',
                             cursor: 'pointer',
                             transition: 'all 0.2s',
                             border: '1px solid #fde68a'
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.background = '#fef3c7';
+                            e.currentTarget.style.background = 'rgba(242, 105, 33, 0.10)';
                             e.currentTarget.style.borderColor = '#fbbf24';
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.background = '#fffbeb';
+                            e.currentTarget.style.background = 'rgba(242, 105, 33, 0.06)';
                             e.currentTarget.style.borderColor = '#fde68a';
                           }}
                         >

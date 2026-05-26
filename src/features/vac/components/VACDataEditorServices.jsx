@@ -136,7 +136,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
       </div>
       
       {/* Horaires d'ouverture */}
-      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#fef3c7', borderRadius: '8px' }}>
+      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'rgba(242, 105, 33, 0.10)', borderRadius: '8px' }}>
         <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: '#92400e', marginBottom: '16px' }}>
           Horaires d'ouverture
         </h5>

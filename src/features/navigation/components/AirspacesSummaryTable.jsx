@@ -354,7 +354,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
         padding: '12px',
         backgroundColor: '#fefce8',
         borderRadius: '8px',
-        border: '1px solid #fde047'
+        border: '1px solid #f26921'
       }}>
         <div style={{
           display: 'flex',

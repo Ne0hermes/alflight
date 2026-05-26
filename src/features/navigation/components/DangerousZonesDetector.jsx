@@ -137,7 +137,7 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
     borderRadius: '6px',
     border: '1px solid',
     borderColor: zones[zoneType] ? '#f59e0b' : '#e5e7eb',
-    backgroundColor: zones[zoneType] ? '#fef3c7' : '#ffffff',
+    backgroundColor: zones[zoneType] ? 'rgba(242, 105, 33, 0.10)' : '#ffffff',
     cursor: 'pointer',
     transition: 'all 0.2s'
   });
@@ -277,7 +277,7 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
             <div key={idx} style={{
               marginBottom: '12px',
               padding: '12px',
-              backgroundColor: '#fef3c7',
+              backgroundColor: 'rgba(242, 105, 33, 0.10)',
               borderRadius: '8px',
               border: '1px solid #fcd34d'
             }}>
@@ -301,7 +301,7 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
             padding: '12px',
             borderRadius: '8px',
             backgroundColor: '#fed7aa',
-            border: '1px solid #fb923c'
+            border: '1px solid #f26921'
           }}>
             <AlertTriangle size={16} />
             <p style={{ fontSize: '14px' }}>

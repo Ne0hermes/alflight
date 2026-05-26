@@ -72,7 +72,7 @@ const styles = {
     border: '1px solid #86efac'
   },
   alertWarning: {
-    backgroundColor: '#fef3c7',
+    backgroundColor: 'rgba(242, 105, 33, 0.10)',
     color: '#92400e',
     border: '1px solid #fcd34d'
   },

@@ -176,7 +176,7 @@ export function evaluateAircraft(aircraft) {
 export function getCompletionColor(percentage) {
   if (percentage >= 90) return '#16a34a'; // green-600
   if (percentage >= 70) return '#ca8a04'; // yellow-600
-  if (percentage >= 50) return '#ea580c'; // orange-600
+  if (percentage >= 50) return '#D85410'; // orange-600
   return '#dc2626';                        // red-600
 }
 
@@ -186,7 +186,7 @@ export function getCompletionColor(percentage) {
 export function getSeverityColor(severity) {
   switch (severity) {
     case 'CRITICAL': return '#dc2626'; // rouge
-    case 'REQUIRED': return '#ea580c'; // orange
+    case 'REQUIRED': return '#D85410'; // orange
     case 'OPTIONAL': return '#6b7280'; // gris
     default:         return '#6b7280';
   }

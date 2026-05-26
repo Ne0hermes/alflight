@@ -4230,7 +4230,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             
             {/* VO - Operating manoeuvring speed (variable selon la masse) */}
             <div style={{
-              backgroundColor: '#fef3c7',
+              backgroundColor: 'rgba(242, 105, 33, 0.10)',
               padding: '10px',
               borderRadius: '6px',
               border: '1px solid #fcd34d'
@@ -4808,7 +4808,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             padding: '12px', 
             borderRadius: '8px', 
             marginBottom: '16px',
-            border: '1px solid #fde047'
+            border: '1px solid #f26921'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: '#000000', margin: 0 }}>

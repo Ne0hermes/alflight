@@ -546,10 +546,10 @@ const getStatusBadge = (expiryDate) => {
     style = { backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca' };
     text = `Expiré (${Math.abs(daysUntilExpiry)}j)`;
   } else if (daysUntilExpiry <= 30) {
-    style = { backgroundColor: '#fed7aa', color: '#9a3412', border: '1px solid #fb923c' };
+    style = { backgroundColor: '#fed7aa', color: '#9a3412', border: '1px solid #f26921' };
     text = `Expire dans ${daysUntilExpiry}j`;
   } else if (daysUntilExpiry <= 90) {
-    style = { backgroundColor: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d' };
+    style = { backgroundColor: 'rgba(242, 105, 33, 0.10)', color: '#92400e', border: '1px solid #fcd34d' };
     text = `${daysUntilExpiry}j restants`;
   } else {
     style = { backgroundColor: '#d1fae5', color: '#065f46', border: '1px solid #86efac' };

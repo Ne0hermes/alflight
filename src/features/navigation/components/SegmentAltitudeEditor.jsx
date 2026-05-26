@@ -274,8 +274,8 @@ export const SegmentAltitudeEditor = ({
                     <div style={{
                       marginTop: '12px',
                       padding: '8px',
-                      background: segmentAlt.type === 'climb' ? '#f0fdf4' : '#fef3c7',
-                      border: `1px solid ${segmentAlt.type === 'climb' ? '#86efac' : '#fde047'}`,
+                      background: segmentAlt.type === 'climb' ? '#f0fdf4' : 'rgba(242, 105, 33, 0.10)',
+                      border: `1px solid ${segmentAlt.type === 'climb' ? '#86efac' : '#f26921'}`,
                       borderRadius: '4px',
                       fontSize: '13px'
                     }}>

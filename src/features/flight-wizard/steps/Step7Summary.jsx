@@ -1377,7 +1377,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                       <div style={{
                         marginBottom: '12px',
                         padding: '8px 10px',
-                        backgroundColor: '#fef3c7',
+                        backgroundColor: 'rgba(242, 105, 33, 0.10)',
                         border: '1px solid #f59e0b',
                         borderRadius: '6px',
                         fontSize: '11px',
@@ -1547,7 +1547,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                                     </span>
                                     <span style={{
                                       padding: '2px 6px',
-                                      backgroundColor: surface.includes('ASPH') || surface.includes('CONC') ? '#dbeafe' : '#fef3c7',
+                                      backgroundColor: surface.includes('ASPH') || surface.includes('CONC') ? '#dbeafe' : 'rgba(242, 105, 33, 0.10)',
                                       color: surface.includes('ASPH') || surface.includes('CONC') ? '#1e40af' : '#92400e',
                                       borderRadius: '3px',
                                       fontSize: '10px',

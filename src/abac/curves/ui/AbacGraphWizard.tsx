@@ -214,7 +214,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
           {graph.role === 'intermediate' && (
             <span style={{
               marginLeft: 8, padding: '2px 6px', fontSize: 10, fontWeight: 600,
-              backgroundColor: '#fef3c7', color: '#92400e', borderRadius: 3
+              backgroundColor: 'rgba(242, 105, 33, 0.10)', color: '#92400e', borderRadius: 3
             }}>
               🔗 Tableau {graph.cascadeOrder ?? '?'} (intermédiaire)
             </span>
@@ -338,7 +338,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
             {/* === Identité du graphique : type canonique + nom libre === */}
             <div style={{
               padding: 12, marginBottom: 16,
-              backgroundColor: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 6
+              backgroundColor: 'rgba(242, 105, 33, 0.06)', border: '1px solid #fcd34d', borderRadius: 6
             }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: '#92400e', marginBottom: 8 }}>
                 🏷 Identité du graphique
@@ -375,7 +375,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                     flex: 1, minWidth: 220, padding: '8px 10px',
                     border: `2px solid ${graph.role === 'intermediate' ? '#f59e0b' : '#d1d5db'}`,
                     borderRadius: 4, cursor: 'pointer',
-                    backgroundColor: graph.role === 'intermediate' ? '#fef3c7' : 'white',
+                    backgroundColor: graph.role === 'intermediate' ? 'rgba(242, 105, 33, 0.10)' : 'white',
                     display: 'flex', alignItems: 'flex-start', gap: 8
                   }}>
                     <input
@@ -684,7 +684,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
             {/* === Mode d'interpolation === */}
             <div style={{
               marginTop: 20, padding: 12,
-              backgroundColor: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 6
+              backgroundColor: 'rgba(242, 105, 33, 0.10)', border: '1px solid #f59e0b', borderRadius: 6
             }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: '#92400e', marginBottom: 6 }}>
                 🧮 Mode d'interpolation de ce graphe
@@ -809,7 +809,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
               </label>
               {graph.familyAxisVariable && (
                 <div style={{
-                  marginTop: 8, padding: 8, backgroundColor: '#fef3c7',
+                  marginTop: 8, padding: 8, backgroundColor: 'rgba(242, 105, 33, 0.10)',
                   border: '1px solid #f59e0b', borderRadius: 4, fontSize: 11, color: '#92400e'
                 }}>
                   ℹ Tu dois maintenant saisir la <strong>valeur de cette variable pour chaque courbe</strong> dans la sous-étape 5 (à côté du nom de la courbe). Sans cela, le bracket ne pourra pas fonctionner.
@@ -821,7 +821,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
             {graph.interpolationMode === 'slope-follow' && (
               <div style={{
                 marginTop: 12, padding: 12,
-                backgroundColor: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 6,
+                backgroundColor: 'rgba(242, 105, 33, 0.10)', border: '1px solid #f59e0b', borderRadius: 6,
                 fontSize: 11, color: '#92400e'
               }}>
                 🚀 <strong>Mode suivi de pente activé.</strong> Aucune valeur à saisir sur les courbes — elles seront utilisées comme guides.
@@ -874,7 +874,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
             </div>
             {calibrationSession && (
               <div style={{
-                padding: 10, marginBottom: 12, backgroundColor: '#fef3c7', border: '2px solid #f59e0b', borderRadius: 4,
+                padding: 10, marginBottom: 12, backgroundColor: 'rgba(242, 105, 33, 0.10)', border: '2px solid #f59e0b', borderRadius: 4,
                 display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap'
               }}>
                 <strong>📍 Calibration {calibrationSession.axis.toUpperCase()} :</strong>
@@ -901,7 +901,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
 
             {editorMode === 'placing-points' && selectedCurve ? (
               /* Mode placement de points en cours */
-              <div style={{ padding: 12, marginBottom: 12, backgroundColor: '#fef3c7', border: '2px solid #f59e0b', borderRadius: 4 }}>
+              <div style={{ padding: 12, marginBottom: 12, backgroundColor: 'rgba(242, 105, 33, 0.10)', border: '2px solid #f59e0b', borderRadius: 4 }}>
                 <strong>📍 Tracé de "{selectedCurve.name}" en cours.</strong>{' '}
                 Clique sur la courbe de l'image pour ajouter des points. Glisse un point pour le déplacer, clic droit pour le supprimer.
                 <span style={{ marginLeft: 8, color: '#374151' }}>

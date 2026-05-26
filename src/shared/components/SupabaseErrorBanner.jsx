@@ -108,7 +108,7 @@ export function SupabaseErrorBanner() {
           margin: 0,
           padding: '10px 16px 14px 50px',
           backgroundColor: 'rgba(0,0,0,0.35)',
-          color: '#fef3c7',
+          color: 'rgba(242, 105, 33, 0.10)',
           fontSize: 11,
           maxHeight: 280,
           overflow: 'auto',

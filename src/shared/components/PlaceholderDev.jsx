@@ -17,7 +17,7 @@ export const PlaceholderDev = ({
 }) => {
   const variants = {
     warning: {
-      bg: '#fef3c7',
+      bg: 'rgba(242, 105, 33, 0.10)',
       border: '#f59e0b',
       text: '#92400e',
       icon: Construction,
