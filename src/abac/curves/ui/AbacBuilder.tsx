@@ -11,6 +11,9 @@ import { ChainCalculator } from './ChainCalculator';
 import { CascadeCalculator } from './CascadeCalculator';
 import { AbacCurveManager } from '../core/manager';
 import { calculateAutoAxesLimits, calculateGraphAutoLimits, updateAxesWithAutoLimits } from '../core/axesUtils';
+import { analyzeChartImage } from '../../v2/aiChartAnalysisService';
+import { AbacGraphWizard } from './AbacGraphWizard';
+import { isValidOperationId, OPERATION_CATALOG, getOperation } from '../core/operationCatalog';
 import {
   AxesConfig,
   Curve,
@@ -47,7 +50,9 @@ function AbacBuilderComponent(
   ref: React.Ref<AbacBuilderRef>
 ) {
   const managerRef = useRef(new AbacCurveManager());
-  const [currentStep, setCurrentStep] = useState<Step>('axes');
+  // SPRINT B : on entre directement dans le wizard (l'ancienne étape 'axes' est supprimée du flux).
+  // Le choix du type de système et la config des axes sont assurés par le wizard (sous-étape 3).
+  const [currentStep, setCurrentStep] = useState<Step>('points');
 
   React.useEffect(() => {
         return () => {
@@ -57,19 +62,24 @@ function AbacBuilderComponent(
   // Exposer les méthodes via useImperativeHandle
   React.useImperativeHandle(ref, () => ({
     goToNextStep: () => {
-      const steps: Step[] = ['axes', 'points', 'final'];
+      // SPRINT B : étape 'axes' supprimée, séquence = points → final
+      const steps: Step[] = ['points', 'final'];
       const currentIndex = steps.indexOf(currentStep);
-      if (currentIndex < steps.length - 1) {
+      if (currentIndex >= 0 && currentIndex < steps.length - 1) {
         const nextStep = steps[currentIndex + 1];
-                setCurrentStep(nextStep);
+        setCurrentStep(nextStep);
       }
     },
     goToPreviousStep: () => {
-      const steps: Step[] = ['axes', 'points', 'final'];
+      // SPRINT B : étape 'axes' supprimée, séquence = points → final
+      const steps: Step[] = ['points', 'final'];
       const currentIndex = steps.indexOf(currentStep);
       if (currentIndex > 0) {
         const previousStep = steps[currentIndex - 1];
-                setCurrentStep(previousStep);
+        setCurrentStep(previousStep);
+      } else if (currentIndex === 0 && onBack) {
+        // Précédent depuis le wizard → retour à la page parent (choix tableau/graphique)
+        onBack();
       }
     },
     getCurrentStep: () => currentStep
@@ -100,7 +110,9 @@ function AbacBuilderComponent(
     modelName || SYSTEM_TYPES.find(t => t.value === 'takeoff_distance')?.label || ''
   );
   const [aircraftModelDisplay, setAircraftModelDisplay] = useState<string>(aircraftModel || '');
-  const [systemType, setSystemType] = useState<string>('takeoff_distance');
+  // SPRINT B+ : systemType contient désormais un operationId du catalogue canonique
+  // (au lieu d'une valeur SYSTEM_TYPES legacy). Vide par défaut → force l'utilisateur à choisir.
+  const [systemType, setSystemType] = useState<string>('');
   const [importSuccess, setImportSuccess] = useState<boolean>(false);
   const [autoAdjustEnabled, setAutoAdjustEnabled] = useState(false); // Désactivé par défaut
   const axesMargin = 5; // Marge fixe de 5 unités
@@ -109,6 +121,260 @@ function AbacBuilderComponent(
   const [numIntermediateCurves, setNumIntermediateCurves] = useState(1);
   const [windFilter, setWindFilter] = useState<'all' | 'headwind' | 'tailwind'>('all');
   const [expandedGraphs, setExpandedGraphs] = useState<Record<string, boolean>>({});
+
+  // Image en filigrane PDF par graphique (clé = graphId)
+  // Stockée en pixels SVG inner — reste fixe en pixels CSS quand le Chart est resize.
+  const [backgroundImages, setBackgroundImages] = useState<Record<string, { url: string; x: number; y: number; width: number; height: number }>>({});
+  // Graph pour lequel le mode "ajuster image" est actif (un seul à la fois)
+  const [imageAdjustGraphId, setImageAdjustGraphId] = useState<string | null>(null);
+  // Détection IA en cours pour ce graphId (loader)
+  const [aiDetectingGraphId, setAiDetectingGraphId] = useState<string | null>(null);
+  // Notes IA dernière analyse (pour feedback utilisateur)
+  const [aiNotes, setAiNotes] = useState<Record<string, string>>({});
+  // Indices texte libre fournis par l'utilisateur pour guider l'IA (par graphId)
+  const [aiHints, setAiHints] = useState<Record<string, string>>({});
+
+  // Calibration multi-points par axe pour chaque graphique.
+  // Permet de coller exactement aux graduations du filigrane même si l'image est déformée
+  // ou si les graduations ne sont pas équidistantes.
+  // Format : { [graphId]: { x?: [{value, pixel}, ...], y?: [...] } }
+  const [customAxisTicks, setCustomAxisTicks] = useState<Record<string, {
+    x?: { value: number; pixel: number }[];
+    y?: { value: number; pixel: number }[];
+  }>>({});
+
+  // État du mode calibration interactive en cours (un seul à la fois pour toute l'app)
+  const [calibrationState, setCalibrationState] = useState<null | {
+    graphId: string;
+    axis: 'x' | 'y';
+    valuesToCalibrate: number[]; // valeurs à calibrer dans l'ordre
+    currentIndex: number;        // index de la valeur courante
+    collected: { value: number; pixel: number }[];
+  }>(null);
+
+  // Génère la liste des valeurs de graduations à partir de min/max/pas
+  const buildAxisValuesFromConfig = useCallback((min: number, max: number, step: number): number[] => {
+    if (!isFinite(min) || !isFinite(max) || !isFinite(step) || step <= 0) return [min, max];
+    const values: number[] = [];
+    // Tolérance pour éviter d'omettre max à cause d'erreurs flottantes
+    const eps = step * 1e-6;
+    for (let v = min; v <= max + eps; v += step) {
+      values.push(parseFloat(v.toFixed(10))); // évite les artefacts type 0.30000000000000004
+    }
+    if (values[values.length - 1] < max - eps) values.push(max);
+    return values;
+  }, []);
+
+  // Démarre une session de calibration interactive pour un axe d'un graphique.
+  // L'utilisateur va cliquer sur chaque graduation visible de l'image filigrane.
+  const startAxisCalibration = useCallback((graphId: string, axis: 'x' | 'y', step?: number) => {
+    const graph = graphs.find(g => g.id === graphId);
+    if (!graph?.axes) return;
+    const cfg = axis === 'x' ? graph.axes.xAxis : graph.axes.yAxis;
+    // Pas par défaut : tente de deviner (10 ticks dans la plage) si non fourni
+    const defaultStep = step ?? ((cfg.max - cfg.min) / 10);
+    const values = buildAxisValuesFromConfig(cfg.min, cfg.max, defaultStep);
+    setCalibrationState({
+      graphId, axis,
+      valuesToCalibrate: values,
+      currentIndex: 0,
+      collected: []
+    });
+    // Sélectionner ce graphique dans la sous-étape
+    const idx = graphs.findIndex(g => g.id === graphId);
+    if (idx >= 0) setSubStepGraphIndex(idx);
+  }, [graphs, buildAxisValuesFromConfig]);
+
+  // Reçoit un clic en pixel inner depuis Chart pendant la calibration
+  const handleCalibrationClick = useCallback((pixelInner: { x: number; y: number }) => {
+    if (!calibrationState) return;
+    const { axis, valuesToCalibrate, currentIndex, collected, graphId } = calibrationState;
+    const value = valuesToCalibrate[currentIndex];
+    const pixel = axis === 'x' ? pixelInner.x : pixelInner.y;
+    const newCollected = [...collected, { value, pixel }];
+
+    // Si fini : commit dans customAxisTicks et termine la calibration
+    if (currentIndex + 1 >= valuesToCalibrate.length) {
+      setCustomAxisTicks(prev => ({
+        ...prev,
+        [graphId]: { ...prev[graphId], [axis]: newCollected }
+      }));
+      setCalibrationState(null);
+      return;
+    }
+
+    // Sinon, passe à la valeur suivante
+    setCalibrationState({ ...calibrationState, currentIndex: currentIndex + 1, collected: newCollected });
+  }, [calibrationState]);
+
+  const cancelCalibration = useCallback(() => setCalibrationState(null), []);
+
+  const resetCalibration = useCallback((graphId: string, axis?: 'x' | 'y') => {
+    setCustomAxisTicks(prev => {
+      const next = { ...prev };
+      if (!next[graphId]) return prev;
+      if (axis) {
+        const { [axis]: _, ...rest } = next[graphId];
+        if (Object.keys(rest).length === 0) delete next[graphId];
+        else next[graphId] = rest;
+      } else {
+        delete next[graphId];
+      }
+      return next;
+    });
+  }, []);
+
+  // Taille pixel du Chart par graphique (default 500x1000). L'utilisateur peut
+  // l'étirer via les poignées sur les bords pour ajuster l'espacement entre
+  // graduations sans toucher aux valeurs des bornes.
+  const [chartSizes, setChartSizes] = useState<Record<string, { width: number; height: number }>>({});
+  // Taille par défaut d'un chart d'abaque (en pixels SVG inner).
+  // L'utilisateur peut redimensionner via les poignées de bordure du Chart.
+  const DEFAULT_CHART_SIZE = 800;
+  const getChartWidth = (id: string) => chartSizes[id]?.width ?? DEFAULT_CHART_SIZE;
+  const getChartHeight = (id: string) => chartSizes[id]?.height ?? DEFAULT_CHART_SIZE;
+
+  // État du drag de resize du Chart
+  const [chartResize, setChartResize] = useState<null | {
+    graphId: string;
+    kind: 'right' | 'bottom' | 'corner';
+    startClientX: number;
+    startClientY: number;
+    originW: number;
+    originH: number;
+  }>(null);
+
+  React.useEffect(() => {
+    if (!chartResize) return;
+    const onMove = (e: MouseEvent) => {
+      const dx = e.clientX - chartResize.startClientX;
+      const dy = e.clientY - chartResize.startClientY;
+      setChartSizes(prev => ({
+        ...prev,
+        [chartResize.graphId]: {
+          width: chartResize.kind === 'bottom'
+            ? chartResize.originW
+            : Math.max(300, Math.min(2000, chartResize.originW + dx)),
+          height: chartResize.kind === 'right'
+            ? chartResize.originH
+            : Math.max(300, Math.min(2500, chartResize.originH + dy))
+        }
+      }));
+    };
+    const onUp = () => setChartResize(null);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [chartResize]);
+
+  // Sous-étape par graphique dans l'étape "Construction et Interpolation"
+  // Permet de traiter les graphiques un par un au lieu de les afficher tous ensemble.
+  const [subStepGraphIndex, setSubStepGraphIndex] = useState<number>(0);
+
+  // Synchronise selectedGraphId avec le graphique courant de la sous-étape
+  // et clamp l'index si le nombre de graphiques change.
+  React.useEffect(() => {
+    if (graphs.length === 0) return;
+    const clamped = Math.min(Math.max(0, subStepGraphIndex), graphs.length - 1);
+    if (clamped !== subStepGraphIndex) {
+      setSubStepGraphIndex(clamped);
+      return;
+    }
+    const targetGraph = graphs[clamped];
+    if (targetGraph && targetGraph.id !== selectedGraphId) {
+      setSelectedGraphId(targetGraph.id);
+      if (targetGraph.curves.length > 0 && !targetGraph.curves.find(c => c.id === selectedCurveId)) {
+        setSelectedCurveId(targetGraph.curves[0].id);
+      }
+    }
+  }, [subStepGraphIndex, graphs.length, graphs, selectedGraphId, selectedCurveId]);
+
+  // Réinitialise l'index à 0 quand on (re)rentre dans l'étape "points"
+  React.useEffect(() => {
+    if (currentStep === 'points') {
+      setSubStepGraphIndex(0);
+    }
+  }, [currentStep]);
+
+  // SPRINT B : auto-création d'un graphique par défaut si on entre dans le wizard
+  // sans graphique configuré (cas du flux normal Performance avancée → Graphique).
+  React.useEffect(() => {
+    if (currentStep === 'points' && graphs.length === 0) {
+      const defaultGraph: GraphConfig = {
+        id: uuidv4(),
+        name: 'Graphique 1',
+        isWindRelated: false,
+        axes: {
+          // title vide → force l'utilisateur à choisir une variable canonique
+          // dans la sous-étape 3 (dropdown AxisVariableSelect).
+          xAxis: { min: 0, max: 100, unit: '', title: '' },
+          yAxis: { min: 0, max: 100, unit: '', title: '' }
+        },
+        graphType: '',
+        curves: []
+      };
+      setGraphs([defaultGraph]);
+      setSelectedGraphId(defaultGraph.id);
+    }
+  }, [currentStep, graphs.length]);
+
+  // Lance l'analyse IA de l'image en filigrane et ajoute les courbes détectées
+  const handleAIDetect = useCallback(async (graphId: string) => {
+    const bg = backgroundImages[graphId];
+    const graph = graphs.find(g => g.id === graphId);
+    if (!bg || !graph?.axes) {
+      console.warn('[AI] Pas d\'image ou axes manquants pour graphId', graphId);
+      return;
+    }
+    setAiDetectingGraphId(graphId);
+    setAiNotes(prev => ({ ...prev, [graphId]: '' }));
+
+    try {
+      const result = await analyzeChartImage(bg.url, graph.axes, {
+        extraContext: aiHints[graphId]
+      });
+
+      if (!result.curves || result.curves.length === 0) {
+        setAiNotes(prev => ({ ...prev, [graphId]: '⚠️ Aucune courbe détectée. ' + (result.notes || '') }));
+        return;
+      }
+
+      // Injecter les courbes détectées dans le graph
+      setGraphs(prev => prev.map(g => {
+        if (g.id !== graphId) return g;
+        const ts = Date.now();
+        const newCurves = result.curves.map((c, i) => ({
+          id: `curve-ai-${ts}-${i}`,
+          name: c.name,
+          color: c.color,
+          points: c.points.map((p, j) => ({
+            ...p,
+            id: `point-ai-${ts}-${i}-${j}`
+          }))
+        }));
+        return { ...g, curves: [...g.curves, ...newCurves] };
+      }));
+
+      // Sélectionner la première courbe ajoutée
+      const firstNewId = `curve-ai-${Date.now()}-0`;
+      // (id exact dépend du ts au-dessus ; on prend juste la dernière courbe ajoutée du graph)
+      setTimeout(() => {
+        const updated = (graphs.find(g => g.id === graphId) || {}).curves || [];
+        if (updated.length > 0) setSelectedCurveId(updated[updated.length - 1].id);
+      }, 0);
+
+      const summary = `✅ ${result.curves.length} courbe(s) détectée(s), ${result.curves.reduce((s, c) => s + c.points.length, 0)} point(s) au total.`;
+      setAiNotes(prev => ({ ...prev, [graphId]: summary + (result.notes ? ' ' + result.notes : '') }));
+    } catch (err: any) {
+      console.error('[AI] Erreur analyse :', err);
+      setAiNotes(prev => ({ ...prev, [graphId]: `❌ Erreur : ${err.message || err}` }));
+    } finally {
+      setAiDetectingGraphId(null);
+    }
+  }, [backgroundImages, graphs, aiHints]);
 
   // Pour compatibilité avec l'ancien système
   const currentGraph = graphs.find(g => g.id === selectedGraphId);
@@ -189,9 +455,9 @@ function AbacBuilderComponent(
         setGraphs([graph]);
         setSelectedGraphId(graph.id);
       }
-      // Rester à l'étape 'axes' pour permettre la modification de la configuration
-      // L'utilisateur pourra ensuite avancer manuellement vers 'points'
-      setCurrentStep('axes');
+      // SPRINT B : on entre directement dans le wizard (l'ancienne étape 'axes' est supprimée).
+      // Les axes restent éditables via la sous-étape 3 du wizard.
+      setCurrentStep('points');
     }
   }, [initialData, aircraftModel]);
 
@@ -324,8 +590,8 @@ function AbacBuilderComponent(
     }
   }, [selectedGraphId, handleUpdateGraph]);
 
-  const handleAddCurve = useCallback((name: string, color: string, windDirection?: WindDirection) => {
-    if (!selectedGraphId) return;
+  const handleAddCurve = useCallback((name: string, color: string, windDirection?: WindDirection): string => {
+    if (!selectedGraphId) return '';
 
     const newCurve: Curve = {
       id: uuidv4(),
@@ -342,6 +608,7 @@ function AbacBuilderComponent(
     ));
 
     setSelectedCurveId(newCurve.id);
+    return newCurve.id;
   }, [selectedGraphId]);
 
   const handleRemoveCurve = useCallback((curveId: string) => {
@@ -824,6 +1091,34 @@ function AbacBuilderComponent(
   }, []);
 
   const handleExportJSON = useCallback(() => {
+    // ─── 🔒 VERROU DE SÉCURITÉ — Validation des operationId (graphiques PRIMAIRES uniquement) ───
+    // Les graphiques primaires DOIVENT porter un operationId valide.
+    // Les graphiques intermédiaires (role: 'intermediate') sont des étapes de correction
+    // et n'ont pas besoin d'operationId — ils sont chaînés en amont d'un primaire.
+    // Le set doit contenir au moins un graphique primaire avec operationId valide.
+    const issues: string[] = [];
+    const primaries = graphs.filter(g => (g.role || 'primary') === 'primary');
+    primaries.forEach((g) => {
+      const globalIdx = graphs.indexOf(g) + 1;
+      if (!g.operationId) {
+        issues.push(`• Graphique ${globalIdx} (primaire) : aucune opération canonique sélectionnée (sous-étape 1).`);
+      } else if (!isValidOperationId(g.operationId)) {
+        issues.push(`• Graphique ${globalIdx} (primaire) : operationId "${g.operationId}" inconnu du catalogue.`);
+      }
+    });
+    if (primaries.length === 0) {
+      issues.push(`• Le set ne contient aucun graphique primaire — il ne produira aucune valeur exploitable. Marque au moins un graphique comme "Primaire" en sous-étape 1.`);
+    }
+    if (issues.length > 0) {
+      const proceed = window.confirm(
+        `⚠ Le set d'abaques a ${issues.length} problème(s) bloquant(s) :\n\n` +
+        issues.join('\n') +
+        `\n\nSans cela, ces abaques NE SERONT PAS consommés par la préparation de vol.\n\n` +
+        `Veux-tu quand même sauvegarder ?`
+      );
+      if (!proceed) return;
+    }
+
     // Préparer les données au nouveau format multi-graphiques
     const json: AbacCurvesJSON = {
       version: '2.0',
@@ -831,11 +1126,11 @@ function AbacBuilderComponent(
       metadata: {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        systemType: systemType,
-        systemName: SYSTEM_TYPES.find(t => t.value === systemType)?.label || 'Système d\'abaques',
+        systemType: systemType,  // contient désormais un operationId du catalogue canonique
+        systemName: getOperation(systemType)?.labelFr || 'Système d\'abaques',
         modelName: aircraftModel || modelNameInput,
         aircraftModel: aircraftModel, // Sauvegarder explicitement le modèle d'avion
-        description: `${SYSTEM_TYPES.find(t => t.value === systemType)?.label} pour ${aircraftModel || modelNameInput || 'modèle non spécifié'}`
+        description: `${getOperation(systemType)?.labelFr || 'Set'} pour ${aircraftModel || modelNameInput || 'modèle non spécifié'}`
       }
     };
 
@@ -1128,7 +1423,141 @@ const renderStepContent = () => {
           </div>
         );
 
-      case 'points':
+      case 'points': {
+        // ─── REFONTE SPRINT B : mini-wizard par graphique ───
+        // L'ancien code de cette étape reste plus bas dans le fichier (inatteignable)
+        // jusqu'à un cleanup ultérieur — backup dans backups/sprint-B-*.
+        const currentGraphForWizard = graphs[Math.min(subStepGraphIndex, Math.max(0, graphs.length - 1))];
+        if (!currentGraphForWizard) {
+          return (
+            <div className={styles.stepContent}>
+              <h2>Étape 2 : Construction & Interpolation</h2>
+              <p style={{ padding: 16, color: '#dc2626' }}>
+                ⚠ Aucun graphique configuré.
+              </p>
+              <button onClick={() => { if (onBack) onBack(); }} style={{ padding: '8px 16px', cursor: 'pointer' }}>
+                ← Retour
+              </button>
+            </div>
+          );
+        }
+        return (
+          <div className={styles.stepContent}>
+            <h2>Étape 2 : Construction & Interpolation</h2>
+
+            {/* L'identité du set est DÉDUITE du graphique primaire (cf. handleExportJSON).
+                Pas de panneau séparé : identifier le primaire = identifier le set. */}
+            <div style={{
+              marginBottom: 12, padding: '6px 10px',
+              backgroundColor: '#eef2ff', border: '1px solid #c7d2fe', borderRadius: 4,
+              fontSize: 12, color: '#312e81'
+            }}>
+              Avion : <strong>{aircraftModel || aircraftModelDisplay || '(non spécifié)'}</strong>
+              {systemType && (
+                <span style={{ marginLeft: 12 }}>
+                  · Set : <strong>{getOperation(systemType)?.labelFr || systemType}</strong>
+                </span>
+              )}
+            </div>
+
+            <AbacGraphWizard
+              graph={currentGraphForWizard}
+              graphIndex={subStepGraphIndex}
+              totalGraphs={graphs.length}
+              backgroundImage={backgroundImages[currentGraphForWizard.id] || null}
+              customAxisTicks={customAxisTicks[currentGraphForWizard.id]}
+              chartSize={{ width: getChartWidth(currentGraphForWizard.id), height: getChartHeight(currentGraphForWizard.id) }}
+              selectedCurveId={selectedCurveId}
+              onUpdateGraph={(partial) => {
+                setGraphs(prev => prev.map(g => g.id === currentGraphForWizard.id ? { ...g, ...partial } : g));
+                // Auto-sync : le systemType du set = operationId du graphique primaire courant
+                // (si on est en train de modifier l'operationId d'un primaire).
+                const isPrimary = (currentGraphForWizard.role || 'primary') === 'primary';
+                if (isPrimary && partial.operationId !== undefined) {
+                  setSystemType(partial.operationId);
+                  const op = getOperation(partial.operationId);
+                  if (op) setModelNameInput(op.labelFr);
+                }
+              }}
+              onSetBackgroundImage={(img) => {
+                setBackgroundImages(prev => {
+                  if (img === null) { const { [currentGraphForWizard.id]: _, ...rest } = prev; return rest; }
+                  return { ...prev, [currentGraphForWizard.id]: img };
+                });
+              }}
+              onSetCustomAxisTicks={(axis, ticks) => {
+                setCustomAxisTicks(prev => {
+                  const cur = prev[currentGraphForWizard.id] || {};
+                  if (ticks === null) {
+                    const { [axis]: _, ...rest } = cur;
+                    if (Object.keys(rest).length === 0) {
+                      const { [currentGraphForWizard.id]: __, ...others } = prev;
+                      return others;
+                    }
+                    return { ...prev, [currentGraphForWizard.id]: rest };
+                  }
+                  return { ...prev, [currentGraphForWizard.id]: { ...cur, [axis]: ticks } };
+                });
+              }}
+              onSetChartSize={(size) => {
+                setChartSizes(prev => {
+                  if (size === null) { const { [currentGraphForWizard.id]: _, ...rest } = prev; return rest; }
+                  return { ...prev, [currentGraphForWizard.id]: size };
+                });
+              }}
+              onSelectCurve={setSelectedCurveId}
+              onAddCurve={handleAddCurve}
+              onRemoveCurve={handleRemoveCurve}
+              onUpdateCurve={handleUpdateCurve}
+              onReorderCurves={handleReorderCurves}
+              onPointClick={handlePointClick}
+              onPointDrag={handlePointDrag}
+              onPointDelete={handlePointDelete}
+              onPreviousGraph={() => {
+                if (subStepGraphIndex > 0) setSubStepGraphIndex(subStepGraphIndex - 1);
+                else if (onBack) onBack();
+              }}
+              onNextGraph={() => {
+                if (subStepGraphIndex < graphs.length - 1) setSubStepGraphIndex(subStepGraphIndex + 1);
+              }}
+              onAddGraph={() => {
+                // Crée un nouveau graphique vide et navigue dessus immédiatement.
+                const newGraph: GraphConfig = {
+                  id: uuidv4(),
+                  name: `Graphique ${graphs.length + 1}`,
+                  isWindRelated: false,
+                  axes: {
+                    xAxis: { min: 0, max: 100, unit: '', title: '' },
+                    yAxis: { min: 0, max: 100, unit: '', title: '' }
+                  },
+                  curves: []
+                };
+                setGraphs(prev => [...prev, newGraph]);
+                setSelectedGraphId(newGraph.id);
+                setSelectedCurveId(null);
+                // On positionne l'index sur le nouveau graphique (length AVANT l'ajout = nouvel index).
+                setSubStepGraphIndex(graphs.length);
+              }}
+              onRemoveGraph={() => {
+                const idToRemove = currentGraphForWizard.id;
+                const newIndex = Math.max(0, subStepGraphIndex - (subStepGraphIndex >= graphs.length - 1 ? 1 : 0));
+                setGraphs(prev => prev.filter(g => g.id !== idToRemove));
+                setBackgroundImages(prev => { const { [idToRemove]: _, ...rest } = prev; return rest; });
+                setCustomAxisTicks(prev => { const { [idToRemove]: _, ...rest } = prev; return rest; });
+                setChartSizes(prev => { const { [idToRemove]: _, ...rest } = prev; return rest; });
+                setSubStepGraphIndex(newIndex);
+                setSelectedCurveId(null);
+              }}
+              onFinish={() => {
+                handleFitAll({ method: interpolationMethod, numPoints: interpolationPoints });
+                setCurrentStep('final');
+              }}
+            />
+          </div>
+        );
+      }
+
+      case 'points_legacy_unused':
         return (
           <div className={styles.stepContent}>
             <h2>Étape 2: Construction et Interpolation - "{SYSTEM_TYPES.find(t => t.value === systemType)?.label || 'Abaques'}"</h2>
@@ -1158,22 +1587,8 @@ const renderStepContent = () => {
                   Ajuster les axes
                 </button>
               )}
-              <button
-                onClick={() => handleFitAll({ method: interpolationMethod, numPoints: interpolationPoints })}
-                style={{
-                  padding: '8px 16px',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  backgroundColor: '#3b82f6',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-                disabled={!currentGraph || currentGraph.curves.length === 0}
-              >
-                Interpoler
-              </button>
+              {/* Le bouton "Interpoler" classique reste accessible mais déplacé en bas (cf. nav sous-étapes).
+                  Ici on garde uniquement les actions liées au graphique courant. */}
               {currentGraph && currentGraph.curves.filter(c => c.name.includes('(interpolé)')).length > 0 && (
                 <button
                   onClick={() => {
@@ -1253,7 +1668,42 @@ const renderStepContent = () => {
                 )}
               </div>
 
-              {/* Graphiques en colonne */}
+              {/* Sous-stepper : un graphique à la fois */}
+              {graphs.length > 1 && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px',
+                  marginBottom: 8, backgroundColor: '#eef2ff', border: '1px solid #c7d2fe',
+                  borderRadius: 6, flexWrap: 'wrap'
+                }}>
+                  <span style={{ fontWeight: 600, fontSize: 13, color: '#3730a3' }}>
+                    Sous-étape : Graphique {subStepGraphIndex + 1} / {graphs.length}
+                  </span>
+                  <span style={{ fontSize: 12, color: '#4338ca' }}>
+                    « {graphs[subStepGraphIndex]?.name || ''} »
+                  </span>
+                  <div style={{ display: 'flex', gap: 4, marginLeft: 'auto' }}>
+                    {graphs.map((g, idx) => (
+                      <button
+                        key={g.id}
+                        onClick={() => setSubStepGraphIndex(idx)}
+                        style={{
+                          width: 28, height: 28, fontSize: 12, cursor: 'pointer',
+                          borderRadius: 14, border: '1px solid',
+                          borderColor: idx === subStepGraphIndex ? '#4338ca' : '#c7d2fe',
+                          backgroundColor: idx === subStepGraphIndex ? '#4338ca' : 'white',
+                          color: idx === subStepGraphIndex ? 'white' : '#4338ca',
+                          fontWeight: 600
+                        }}
+                        title={g.name}
+                      >
+                        {idx + 1}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Graphiques en colonne (filtrés sur le graphique courant de la sous-étape) */}
               <div style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -1262,7 +1712,7 @@ const renderStepContent = () => {
                 backgroundColor: '#f5f5f5',
                 borderRadius: '8px'
               }}>
-                {graphs.map(graph => (
+                {graphs.filter((_, idx) => idx === subStepGraphIndex).map(graph => (
                   <div
                     key={graph.id}
                     onClick={() => {
@@ -1331,18 +1781,340 @@ const renderStepContent = () => {
                     </div>
 
                     {graph.axes ? (
-                      <div style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
-                        <Chart
-                          axesConfig={graph.axes}
-                          curves={graph.curves}
-                          selectedCurveId={selectedGraphId === graph.id ? selectedCurveId : null}
-                          onPointClick={selectedGraphId === graph.id ? handlePointClick : undefined}
-                          onPointDrag={selectedGraphId === graph.id ? handlePointDrag : undefined}
-                          onPointDelete={selectedGraphId === graph.id ? handlePointDelete : undefined}
-                          responsive={true}
-                          width={320}
-                          height={220}
-                        />
+                      <div style={{ width: '100%', maxWidth: '100%', overflow: 'auto' }}>
+                        {/* Barre d'actions pour l'image en filigrane (par graphique) */}
+                        <div
+                          style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap', alignItems: 'center' }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <label style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 4,
+                            padding: '4px 8px', fontSize: 11, cursor: 'pointer',
+                            backgroundColor: backgroundImages[graph.id] ? '#e0e7ff' : '#f3f4f6',
+                            border: '1px solid #d1d5db', borderRadius: 4
+                          }}>
+                            📎 {backgroundImages[graph.id] ? 'Changer l\'image' : 'Image en filigrane'}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              style={{ display: 'none' }}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onload = (ev) => {
+                                  const url = ev.target?.result as string;
+                                  // Initialiser l'image sur toute la zone INNER du Chart courant.
+                                  // En pixels SVG (margin top:40 right:40 bottom:60 left:60).
+                                  const w = getChartWidth(graph.id);
+                                  const h = getChartHeight(graph.id);
+                                  const innerW = Math.max(50, w - 60 - 40);
+                                  const innerH = Math.max(50, h - 40 - 60);
+                                  setBackgroundImages(prev => ({
+                                    ...prev,
+                                    [graph.id]: {
+                                      url,
+                                      x: 0, y: 0,
+                                      width: innerW,
+                                      height: innerH
+                                    }
+                                  }));
+                                  setImageAdjustGraphId(graph.id);
+                                };
+                                reader.readAsDataURL(file);
+                                e.target.value = '';
+                              }}
+                            />
+                          </label>
+                          {backgroundImages[graph.id] && (
+                            <>
+                              <button
+                                onClick={() => setImageAdjustGraphId(imageAdjustGraphId === graph.id ? null : graph.id)}
+                                style={{
+                                  padding: '4px 8px', fontSize: 11, cursor: 'pointer',
+                                  backgroundColor: imageAdjustGraphId === graph.id ? '#a78bfa' : '#f3f4f6',
+                                  color: imageAdjustGraphId === graph.id ? 'white' : '#374151',
+                                  border: '1px solid #d1d5db', borderRadius: 4
+                                }}
+                              >
+                                {imageAdjustGraphId === graph.id ? '✓ Terminer ajustement' : '✥ Ajuster image'}
+                              </button>
+                              <button
+                                onClick={() => handleAIDetect(graph.id)}
+                                disabled={aiDetectingGraphId === graph.id || imageAdjustGraphId === graph.id}
+                                style={{
+                                  padding: '4px 8px', fontSize: 11,
+                                  cursor: (aiDetectingGraphId === graph.id || imageAdjustGraphId === graph.id) ? 'wait' : 'pointer',
+                                  backgroundColor: aiDetectingGraphId === graph.id ? '#fef3c7' : '#ecfeff',
+                                  color: '#0e7490',
+                                  border: '1px solid #67e8f9', borderRadius: 4,
+                                  opacity: (aiDetectingGraphId === graph.id || imageAdjustGraphId === graph.id) ? 0.7 : 1
+                                }}
+                                title={imageAdjustGraphId === graph.id ? 'Termine d\'ajuster l\'image avant la détection' : 'Détecte automatiquement courbes et points avec l\'IA'}
+                              >
+                                {aiDetectingGraphId === graph.id ? '⏳ Analyse en cours…' : '🪄 Détecter avec IA'}
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setBackgroundImages(prev => {
+                                    const next = { ...prev };
+                                    delete next[graph.id];
+                                    return next;
+                                  });
+                                  if (imageAdjustGraphId === graph.id) setImageAdjustGraphId(null);
+                                }}
+                                style={{
+                                  padding: '4px 8px', fontSize: 11, cursor: 'pointer',
+                                  backgroundColor: '#fee2e2', color: '#991b1b',
+                                  border: '1px solid #fecaca', borderRadius: 4
+                                }}
+                              >
+                                🗑️ Retirer
+                              </button>
+                            </>
+                          )}
+                        </div>
+                        {/* Champ optionnel pour donner des indices à l'IA — n'apparaît que si une image est chargée */}
+                        {backgroundImages[graph.id] && (
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8
+                            }}
+                          >
+                            <span style={{ fontSize: 11, color: '#6b7280' }} title="Texte libre passé à l'IA pour l'aider à interpréter les courbes">💡 Indices IA :</span>
+                            <input
+                              type="text"
+                              value={aiHints[graph.id] || ''}
+                              onChange={(e) => setAiHints(prev => ({ ...prev, [graph.id]: e.target.value }))}
+                              placeholder="Ex: Les courbes représentent des altitudes de pression en pieds"
+                              style={{
+                                flex: 1, padding: '4px 8px', fontSize: 11,
+                                border: '1px solid #d1d5db', borderRadius: 4,
+                                backgroundColor: 'white'
+                              }}
+                            />
+                          </div>
+                        )}
+                        {aiNotes[graph.id] && (
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                              marginBottom: 8, padding: '6px 10px', fontSize: 11,
+                              backgroundColor: aiNotes[graph.id].startsWith('❌') ? '#fee2e2' :
+                                aiNotes[graph.id].startsWith('⚠️') ? '#fef3c7' : '#ecfdf5',
+                              color: aiNotes[graph.id].startsWith('❌') ? '#991b1b' :
+                                aiNotes[graph.id].startsWith('⚠️') ? '#92400e' : '#065f46',
+                              border: '1px solid', borderColor: aiNotes[graph.id].startsWith('❌') ? '#fecaca' :
+                                aiNotes[graph.id].startsWith('⚠️') ? '#fde68a' : '#a7f3d0',
+                              borderRadius: 4
+                            }}
+                          >
+                            {aiNotes[graph.id]}
+                          </div>
+                        )}
+                        {/* Calibration multi-points : aligner les ticks sur les graduations de l'image */}
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            display: 'flex', gap: 6, marginBottom: 8, alignItems: 'center',
+                            flexWrap: 'wrap', padding: '6px 8px', backgroundColor: '#fffbeb',
+                            border: '1px solid #fde68a', borderRadius: 4, fontSize: 11
+                          }}
+                        >
+                          <span style={{ fontWeight: 500 }} title="Calibre les ticks de chaque axe en cliquant sur les graduations visibles de l'image filigrane. Corrige les déformations non-uniformes du scan.">
+                            📐 Calibrer axes sur l'image :
+                          </span>
+                          <button
+                            onClick={() => {
+                              const cfg = graph.axes?.xAxis; if (!cfg) return;
+                              const stepStr = window.prompt(
+                                `Pas de graduation pour l'axe X (${cfg.title} ${cfg.unit ? `(${cfg.unit})` : ''}) :\n\nValeurs générées : ${cfg.min} → ${cfg.max} avec ce pas.\n\nEntre le pas (ex: 5 pour 0, 5, 10, 15...) :`,
+                                String(Math.max(1, Math.round((cfg.max - cfg.min) / 10)))
+                              );
+                              if (stepStr === null) return;
+                              const step = Number(stepStr);
+                              if (!isFinite(step) || step <= 0) { alert('Pas invalide'); return; }
+                              startAxisCalibration(graph.id, 'x', step);
+                            }}
+                            disabled={!graph.axes || !!calibrationState}
+                            style={{ padding: '3px 8px', fontSize: 11, cursor: 'pointer', backgroundColor: customAxisTicks[graph.id]?.x ? '#fef3c7' : '#fef9c3', border: '1px solid #facc15', borderRadius: 3 }}
+                          >
+                            📐 X {customAxisTicks[graph.id]?.x ? `(${customAxisTicks[graph.id]?.x?.length} points ✓)` : ''}
+                          </button>
+                          <button
+                            onClick={() => {
+                              const cfg = graph.axes?.yAxis; if (!cfg) return;
+                              const stepStr = window.prompt(
+                                `Pas de graduation pour l'axe Y (${cfg.title} ${cfg.unit ? `(${cfg.unit})` : ''}) :\n\nValeurs générées : ${cfg.min} → ${cfg.max} avec ce pas.\n\nEntre le pas (ex: 200 pour 0, 200, 400, ...) :`,
+                                String(Math.max(1, Math.round((cfg.max - cfg.min) / 10)))
+                              );
+                              if (stepStr === null) return;
+                              const step = Number(stepStr);
+                              if (!isFinite(step) || step <= 0) { alert('Pas invalide'); return; }
+                              startAxisCalibration(graph.id, 'y', step);
+                            }}
+                            disabled={!graph.axes || !!calibrationState}
+                            style={{ padding: '3px 8px', fontSize: 11, cursor: 'pointer', backgroundColor: customAxisTicks[graph.id]?.y ? '#fef3c7' : '#fef9c3', border: '1px solid #facc15', borderRadius: 3 }}
+                          >
+                            📐 Y {customAxisTicks[graph.id]?.y ? `(${customAxisTicks[graph.id]?.y?.length} points ✓)` : ''}
+                          </button>
+                          {(customAxisTicks[graph.id]?.x || customAxisTicks[graph.id]?.y) && (
+                            <button
+                              onClick={() => resetCalibration(graph.id)}
+                              style={{ padding: '3px 8px', fontSize: 11, cursor: 'pointer', backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: 3 }}
+                            >
+                              ↺ Reset
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Bandeau d'instruction pendant la calibration */}
+                        {calibrationState?.graphId === graph.id && (
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                              padding: '8px 12px', marginBottom: 8, fontSize: 12,
+                              backgroundColor: '#fef3c7', color: '#92400e',
+                              border: '2px solid #f59e0b', borderRadius: 4,
+                              display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap'
+                            }}
+                          >
+                            <strong>📍 Calibration {calibrationState.axis.toUpperCase()} :</strong>
+                            <span>
+                              Clique sur la ligne <strong>{calibrationState.valuesToCalibrate[calibrationState.currentIndex]}</strong> de l'image filigrane.
+                            </span>
+                            <span style={{ marginLeft: 'auto', opacity: 0.8 }}>
+                              {calibrationState.currentIndex + 1} / {calibrationState.valuesToCalibrate.length}
+                            </span>
+                            <button
+                              onClick={cancelCalibration}
+                              style={{ padding: '2px 8px', fontSize: 11, cursor: 'pointer', backgroundColor: 'white', border: '1px solid #f59e0b', borderRadius: 3 }}
+                            >
+                              ✕ Annuler
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Indication discrète sur la taille du Chart (étirable via les poignées en bord) */}
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center',
+                            fontSize: 10, color: '#9ca3af'
+                          }}
+                        >
+                          <span>📐 Taille graphique : {Math.round(getChartWidth(graph.id))}×{Math.round(getChartHeight(graph.id))} px — étire via les bordures bleues pour caler sur l'image</span>
+                          {(chartSizes[graph.id]) && (
+                            <button
+                              onClick={() => setChartSizes(prev => {
+                                const next = { ...prev };
+                                delete next[graph.id];
+                                return next;
+                              })}
+                              style={{ padding: '2px 6px', fontSize: 10, cursor: 'pointer', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: 3 }}
+                            >
+                              ↺ Reset
+                            </button>
+                          )}
+                        </div>
+                        {/* Wrapper qui porte les 3 poignées de redimensionnement du Chart */}
+                        <div
+                          style={{
+                            position: 'relative',
+                            display: 'inline-block',
+                            width: getChartWidth(graph.id),
+                            paddingRight: 6,
+                            paddingBottom: 6
+                          }}
+                          onClick={(e) => {
+                            // Empêche le clic sur les poignées de remonter au parent et de
+                            // perturber la sélection du graph
+                            if (e.target !== e.currentTarget) return;
+                          }}
+                        >
+                          <Chart
+                            axesConfig={graph.axes}
+                            curves={graph.curves}
+                            selectedCurveId={selectedGraphId === graph.id ? selectedCurveId : null}
+                            onPointClick={selectedGraphId === graph.id ? handlePointClick : undefined}
+                            onPointDrag={selectedGraphId === graph.id ? handlePointDrag : undefined}
+                            onPointDelete={selectedGraphId === graph.id ? handlePointDelete : undefined}
+                            responsive={false}
+                            width={getChartWidth(graph.id)}
+                            height={getChartHeight(graph.id)}
+                            backgroundImage={backgroundImages[graph.id] || null}
+                            imageAdjustMode={imageAdjustGraphId === graph.id}
+                            onBackgroundImageChange={(next) => {
+                              setBackgroundImages(prev => ({ ...prev, [graph.id]: next }));
+                            }}
+                            customXTicks={customAxisTicks[graph.id]?.x}
+                            customYTicks={customAxisTicks[graph.id]?.y}
+                            calibrationMode={calibrationState?.graphId === graph.id ? calibrationState.axis : null}
+                            onCalibrationClick={calibrationState?.graphId === graph.id ? handleCalibrationClick : undefined}
+                          />
+                          {/* Poignée droite : étire horizontalement */}
+                          <div
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              setChartResize({
+                                graphId: graph.id, kind: 'right',
+                                startClientX: e.clientX, startClientY: e.clientY,
+                                originW: getChartWidth(graph.id),
+                                originH: getChartHeight(graph.id)
+                              });
+                            }}
+                            title="Étirer horizontalement (sans changer les valeurs)"
+                            style={{
+                              position: 'absolute', right: -2, top: 30, bottom: 60, width: 6,
+                              cursor: 'ew-resize',
+                              backgroundColor: chartResize?.graphId === graph.id && chartResize.kind === 'right' ? '#3b82f6' : '#dbeafe',
+                              borderRadius: 2,
+                              opacity: 0.7
+                            }}
+                          />
+                          {/* Poignée bas : étire verticalement */}
+                          <div
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              setChartResize({
+                                graphId: graph.id, kind: 'bottom',
+                                startClientX: e.clientX, startClientY: e.clientY,
+                                originW: getChartWidth(graph.id),
+                                originH: getChartHeight(graph.id)
+                              });
+                            }}
+                            title="Étirer verticalement (sans changer les valeurs)"
+                            style={{
+                              position: 'absolute', bottom: -2, left: 60, right: 30, height: 6,
+                              cursor: 'ns-resize',
+                              backgroundColor: chartResize?.graphId === graph.id && chartResize.kind === 'bottom' ? '#3b82f6' : '#dbeafe',
+                              borderRadius: 2,
+                              opacity: 0.7
+                            }}
+                          />
+                          {/* Poignée coin bas-droit : étire en 2D */}
+                          <div
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              setChartResize({
+                                graphId: graph.id, kind: 'corner',
+                                startClientX: e.clientX, startClientY: e.clientY,
+                                originW: getChartWidth(graph.id),
+                                originH: getChartHeight(graph.id)
+                              });
+                            }}
+                            title="Étirer dans les deux directions"
+                            style={{
+                              position: 'absolute', right: -6, bottom: -6, width: 14, height: 14,
+                              cursor: 'nwse-resize',
+                              backgroundColor: '#3b82f6',
+                              border: '2px solid white',
+                              borderRadius: 2,
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
+                            }}
+                          />
+                        </div>
                       </div>
                     ) : (
                       <div style={{
@@ -1381,9 +2153,9 @@ const renderStepContent = () => {
               </div>
             </div>
 
-            {/* Boutons de navigation */}
-            <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
-              {/* Bouton Précédent pour retourner à Configurer les Axes */}
+            {/* Boutons de navigation : intra-étape (sous-graphiques) + global (étape suivante) */}
+            <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
+              {/* Précédent : graphique précédent dans la sous-étape, ou retour à 'axes' si déjà au premier */}
               <button
                 style={{
                   padding: '10px 20px',
@@ -1397,43 +2169,102 @@ const renderStepContent = () => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  flex: 1
-                }}
-                onClick={() => setCurrentStep('axes')}
-                title="Retourner à l'étape de configuration des axes"
-              >
-                <span style={{ fontSize: '16px' }}>←</span>
-                Précédent
-              </button>
-
-              {/* Bouton Suivant pour aller à l'étape Validation */}
-              <button
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: canProceed() ? '#4CAF50' : '#cccccc',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: canProceed() ? 'pointer' : 'not-allowed',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  flex: 1
+                  flex: 1,
+                  minWidth: 180
                 }}
                 onClick={() => {
-                  if (canProceed()) {
-                    setCurrentStep('final');
-                  }
+                  if (subStepGraphIndex > 0) setSubStepGraphIndex(subStepGraphIndex - 1);
+                  else setCurrentStep('axes');
                 }}
-                disabled={!canProceed()}
-                title={canProceed() ? "Passer à l'étape de validation" : "Ajoutez au moins 2 points à une courbe pour continuer"}
+                title={subStepGraphIndex > 0 ? 'Revenir au graphique précédent' : 'Retourner à la configuration des axes'}
               >
-                Suivant
-                <span style={{ fontSize: '16px' }}>→</span>
+                <span style={{ fontSize: '16px' }}>←</span>
+                {subStepGraphIndex > 0 && graphs.length > 1
+                  ? `Graphique précédent (${subStepGraphIndex}/${graphs.length})`
+                  : 'Précédent (axes)'}
               </button>
+
+              {/* Bouton "Interpoler tous les graphiques" : ne s'affiche qu'au DERNIER graphique
+                  → l'utilisateur fait d'abord tous ses graphiques, puis lance l'interpolation une seule fois.
+                  Chaque graphique reste interpolé indépendamment (handleFitAll itère par graph/curve) */}
+              {subStepGraphIndex === graphs.length - 1 && graphs.length > 0 && (
+                <button
+                  style={{
+                    padding: '10px 20px',
+                    backgroundColor: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    flex: 1.2,
+                    minWidth: 220
+                  }}
+                  onClick={() => handleFitAll({ method: interpolationMethod, numPoints: interpolationPoints })}
+                  disabled={graphs.every(g => g.curves.length === 0)}
+                  title="Interpole chaque graphique indépendamment (les points d'un graphique ne sont jamais mélangés avec ceux d'un autre)"
+                >
+                  🪄 Interpoler les {graphs.length} graphiques
+                </button>
+              )}
+
+              {/* Suivant : graphique suivant si pas le dernier ; sinon étape Validation */}
+              {subStepGraphIndex < graphs.length - 1 ? (
+                <button
+                  style={{
+                    padding: '10px 20px',
+                    backgroundColor: '#6366f1',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    flex: 1,
+                    minWidth: 180
+                  }}
+                  onClick={() => setSubStepGraphIndex(subStepGraphIndex + 1)}
+                  title="Valider ce graphique et passer au suivant"
+                >
+                  Graphique suivant ({subStepGraphIndex + 2}/{graphs.length})
+                  <span style={{ fontSize: '16px' }}>→</span>
+                </button>
+              ) : (
+                <button
+                  style={{
+                    padding: '10px 20px',
+                    backgroundColor: canProceed() ? '#4CAF50' : '#cccccc',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: canProceed() ? 'pointer' : 'not-allowed',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    flex: 1,
+                    minWidth: 180
+                  }}
+                  onClick={() => {
+                    if (canProceed()) setCurrentStep('final');
+                  }}
+                  disabled={!canProceed()}
+                  title={canProceed() ? "Passer à l'étape de validation" : 'Ajoutez au moins 2 points à une courbe pour continuer'}
+                >
+                  Suivant (Validation)
+                  <span style={{ fontSize: '16px' }}>→</span>
+                </button>
+              )}
             </div>
           </div>
         );
