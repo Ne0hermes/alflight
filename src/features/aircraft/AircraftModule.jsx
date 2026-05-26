@@ -1,10 +1,20 @@
 // src/features/aircraft/AircraftModule.jsx
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo, useState, useEffect, useMemo } from 'react';
 import { useAircraft } from '@core/contexts';
 import { useAircraftStore } from '@core/stores/aircraftStore';
-import { Plus, Edit2, Trash2, Info, AlertTriangle, FileText, Eye, X, ChevronDown, ChevronUp, Wand2, FileDown } from 'lucide-react';
+import { Plus, Edit2, Trash2, Info, AlertTriangle, FileText, Eye, X, ChevronDown, ChevronUp, Wand2, FileDown, Plane, BookOpen } from 'lucide-react';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { sx } from '@shared/styles/styleSystem';
+import { tokens } from '@shared/styles/designSystem';
+import {
+  EditorialHeading,
+  EditorialButton,
+  DatasheetCard,
+  DataReadout,
+  TechLabel,
+  CockpitTextField,
+  NightModeAlert,
+} from '@shared/components/editorial';
 import AccordionButton from '@shared/components/AccordionButton';
 import { ManexImporter } from './components/ManexImporter';
 import ManexViewer from './components/ManexViewer';
@@ -23,12 +33,12 @@ import { evaluateAircraft, getCompletionColor, getSeverityColor } from './utils/
 // Composant pour l'aide contextuelle
 const InfoIcon = memo(({ tooltip }) => {
   const [showTooltip, setShowTooltip] = useState(false);
-  
+
   return (
-    <span 
-      style={{ 
-        position: 'relative', 
-        display: 'inline-flex', 
+    <span
+      style={{
+        position: 'relative',
+        display: 'inline-flex',
         marginLeft: '4px',
         alignItems: 'center'
       }}
@@ -37,33 +47,27 @@ const InfoIcon = memo(({ tooltip }) => {
     >
       <Info
         size={14}
-        style={{ cursor: 'help', color: '#9CA3AF' }}
+        style={{ cursor: 'help', color: 'var(--text-tertiary)' }}
       />
       {showTooltip && (
         <div style={{
           position: 'absolute',
           bottom: 'calc(100% + 8px)',
           left: '0',
-          backgroundColor: '#1F2937',
-          color: 'white',
+          backgroundColor: 'var(--bg-surface)',
+          color: 'var(--text-primary)',
+          border: `1px solid var(--border-regular)`,
           padding: '8px 12px',
-          borderRadius: '6px',
+          borderRadius: tokens.radius.sm,
           fontSize: '12px',
           lineHeight: '1.4',
           zIndex: 10000,
           minWidth: '180px',
           maxWidth: '280px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+          boxShadow: tokens.shadow.lift,
+          fontFamily: tokens.fontFamily.sans
         }}>
           {tooltip}
-          <div style={{
-            position: 'absolute',
-            top: '100%',
-            left: '12px',
-            borderLeft: '4px solid transparent',
-            borderRight: '4px solid transparent',
-            borderTop: '4px solid #1F2937',
-          }} />
         </div>
       )}
     </span>
@@ -71,6 +75,96 @@ const InfoIcon = memo(({ tooltip }) => {
 });
 
 InfoIcon.displayName = 'InfoIcon';
+
+/* ----------------------------------------------------------------------------
+ * Helpers d'affichage éditorial pour les cards d'avion
+ * -------------------------------------------------------------------------- */
+
+// Couleur de complétion adaptée à la palette éditoriale (un seul orange / blanc / rouge)
+const completionTone = (percentage, hasCriticalGaps) => {
+  if (hasCriticalGaps) return 'var(--color-red-critical)';
+  if (percentage >= 90) return 'var(--text-primary)';
+  if (percentage >= 50) return 'var(--accent-primary)';
+  return 'var(--accent-primary)';
+};
+
+// Petite jauge SVG fine de complétion (mode card)
+const CompletionGauge = memo(({ percentage = 0, critical = false }) => {
+  const safe = Math.max(0, Math.min(100, Math.round(percentage || 0)));
+  const tone = critical ? 'var(--color-red-critical)' : 'var(--accent-primary)';
+  return (
+    <div
+      role="img"
+      aria-label={`Complétion ${safe}%`}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-end',
+        gap: '6px',
+        minWidth: '110px'
+      }}
+    >
+      <DataReadout
+        value={safe}
+        unit="%"
+        size="sm"
+        emphasis={!critical && safe >= 90 ? false : true}
+        style={{ color: critical ? 'var(--color-red-critical)' : undefined }}
+      />
+      <svg width="110" height="4" viewBox="0 0 110 4" aria-hidden="true">
+        <line
+          x1="0" y1="2" x2="110" y2="2"
+          stroke="var(--border-regular)"
+          strokeWidth="2"
+        />
+        <line
+          x1="0" y1="2" x2={Math.max(2, (safe / 100) * 110)} y2="2"
+          stroke={tone}
+          strokeWidth="2"
+        />
+      </svg>
+    </div>
+  );
+});
+CompletionGauge.displayName = 'CompletionGauge';
+
+// Mapping des surfaces ICAO → label FR
+const SURFACE_LABELS = {
+  ASPH: 'Asphalte',
+  CONC: 'Béton',
+  GRASS: 'Herbe',
+  GRVL: 'Gravier',
+  UNPAVED: 'Terre',
+  SAND: 'Sable',
+  SNOW: 'Neige',
+  WATER: 'Eau'
+};
+
+// NOTE: Hack legacy — AircraftForm (Phase 3.2) consomme encore `window.buttonSectionStyle`
+// pour styler le bouton d'upload de photo. La home a été refondue sans cette dépendance ;
+// on garde le set au niveau du module (au lieu de l'IIFE intra-render initial) pour
+// préserver le comportement actuel d'AircraftForm jusqu'à sa propre refonte éditoriale.
+if (typeof window !== 'undefined') {
+  window.buttonSectionStyle = {
+    width: '100%',
+    padding: '12px',
+    backgroundColor: 'rgba(55, 65, 81, 0.35)',
+    color: 'white',
+    border: '1px solid rgba(0, 0, 0, 0.7)',
+    borderRadius: '8px',
+    fontSize: '16px',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    transition: 'all 0.2s',
+    background: 'rgba(55, 65, 81, 0.35)',
+    textTransform: 'none',
+    letterSpacing: 'normal'
+  };
+}
 
 export const AircraftModule = memo(() => {
   const aircraftContext = useAircraft();
@@ -81,9 +175,23 @@ export const AircraftModule = memo(() => {
   if (!aircraftContext) {
     console.error('❌ AircraftModule - useAircraft returned null/undefined');
     return (
-      <div style={{ padding: '20px', backgroundColor: '#FEF2F2', border: '1px solid #F87171', borderRadius: '8px' }}>
-        <h3 style={{ color: '#B91C1C', marginBottom: '10px' }}>Erreur: Contexte Aircraft non disponible</h3>
-        <p style={{ color: '#DC2626' }}>Vérifiez que AircraftProvider enveloppe bien votre application.</p>
+      <div
+        style={{
+          padding: tokens.spacing[6],
+          backgroundColor: 'var(--bg-surface)',
+          border: `${tokens.border.accent} solid var(--color-red-critical)`,
+          borderRadius: tokens.radius.sm,
+          fontFamily: tokens.fontFamily.sans,
+          color: 'var(--text-primary)'
+        }}
+      >
+        <TechLabel style={{ color: 'var(--color-red-critical)' }}>ERREUR · INITIALISATION</TechLabel>
+        <h3 style={{ marginTop: tokens.spacing[3], marginBottom: tokens.spacing[2], fontWeight: 600 }}>
+          Contexte Aircraft non disponible
+        </h3>
+        <p style={{ color: 'var(--text-secondary)' }}>
+          Vérifiez que AircraftProvider enveloppe bien votre application.
+        </p>
       </div>
     );
   };
@@ -149,6 +257,12 @@ export const AircraftModule = memo(() => {
   const [aircraftPhotos, setAircraftPhotos] = useState({});
   // IDs des avions dont la liste "champs manquants" est dépliée sur la carte
   const [expandedMissingIds, setExpandedMissingIds] = useState(new Set());
+  // Confirmation de suppression (remplace window.confirm natif)
+  const [deletePending, setDeletePending] = useState(null); // { id, registration } | null
+  // Recherche dans la flotte
+  const [searchQuery, setSearchQuery] = useState('');
+  // Erreur métier surfacée via NightModeAlert (remplace alert() natifs)
+  const [opError, setOpError] = useState(null); // { title, description, severity } | null
   const updateAircraftManex = useAircraftStore(state => state.updateAircraftManex);
 
   // Charger les photos depuis 3 sources possibles, avec fallback en cascade :
@@ -985,571 +1099,679 @@ export const AircraftModule = memo(() => {
       console.log('✅ PDF généré avec succès');
     } catch (error) {
       console.error('❌ Erreur lors de la génération du PDF:', error);
-      alert('Erreur lors de la génération du PDF. Consultez la console pour plus de détails.');
+      setOpError({
+        severity: 'critical',
+        title: 'Échec de génération du PDF',
+        description: error?.message || 'Consultez la console pour plus de détails.'
+      });
     }
   };
 
-  const handleDelete = (id) => {
-    console.log('🗑️ AircraftModule - Attempting to delete aircraft:', id);
-    if (window.confirm('Êtes-vous sûr de supprimer cet avion ?')) {
-      deleteAircraft(id);
-      console.log('✅ AircraftModule - Aircraft deleted:', id);
-    }
+  // Demande de suppression : ouvre le dialogue de confirmation éditorial
+  const handleDelete = (aircraft) => {
+    console.log('🗑️ AircraftModule - Requesting delete for aircraft:', aircraft);
+    if (!aircraft) return;
+    setDeletePending({
+      id: aircraft.id,
+      registration: aircraft.registration || '—',
+      model: aircraft.model || ''
+    });
+  };
+
+  // Confirmation effective de la suppression
+  const confirmDelete = () => {
+    if (!deletePending) return;
+    console.log('🗑️ AircraftModule - Confirming delete:', deletePending.id);
+    deleteAircraft(deletePending.id);
+    console.log('✅ AircraftModule - Aircraft deleted:', deletePending.id);
+    setDeletePending(null);
+  };
+
+  // Annulation de la demande de suppression
+  const cancelDelete = () => {
+    setDeletePending(null);
   };
 
 
+
+  // ---------------------------------------------------------------------------
+  // Données dérivées pour le header / KPI flotte + filtrage recherche
+  // ---------------------------------------------------------------------------
+  const safeList = aircraftList || [];
+
+  const filteredAircraftList = useMemo(() => {
+    const query = (searchQuery || '').trim().toLowerCase();
+    if (!query) return safeList;
+    return safeList.filter((a) => {
+      const fields = [
+        a.registration,
+        a.model,
+        a.manufacturer,
+        a.homeAeroclub,
+        a.homeBase
+      ];
+      return fields.some((f) => String(f || '').toLowerCase().includes(query));
+    });
+  }, [safeList, searchQuery]);
+
+  // KPI flotte — réévalués à chaque rendu (peu d'avions, OK)
+  const fleetKPI = useMemo(() => {
+    const total = safeList.length;
+    let criticalCount = 0;
+    let percentageSum = 0;
+    let latestUpdateMs = 0;
+    safeList.forEach((a) => {
+      const ev = evaluateAircraft(a);
+      if (ev.hasCriticalGaps) criticalCount += 1;
+      percentageSum += ev.percentage || 0;
+      const ts = new Date(a.updatedAt || a.updated_at || a.createdAt || 0).getTime();
+      if (Number.isFinite(ts) && ts > latestUpdateMs) latestUpdateMs = ts;
+    });
+    const avgCompletion = total > 0 ? Math.round(percentageSum / total) : 0;
+    return {
+      total,
+      criticalCount,
+      avgCompletion,
+      latestUpdateMs
+    };
+  }, [safeList]);
+
+  const formatLatest = (ms) => {
+    if (!ms || ms <= 0) return '—';
+    try {
+      const d = new Date(ms);
+      return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    } catch {
+      return '—';
+    }
+  };
 
   return (
-    <div>
-      {/* Alerte pour les avions avec données manquantes */}
-      {showIncompleteDataAlert && incompleteAircraft.length > 0 && (
-        <div style={{
-          marginBottom: '20px',
-          padding: '16px',
-          backgroundColor: '#fef3c7',
-          border: '2px solid #f59e0b',
-          borderRadius: '8px',
+    <div
+      style={{
+        backgroundColor: 'var(--bg-canvas)',
+        color: 'var(--text-primary)',
+        fontFamily: tokens.fontFamily.sans,
+        minHeight: '100vh',
+        padding: `clamp(${tokens.spacing[6]}, 4vw, ${tokens.spacing[9]}) clamp(${tokens.spacing[5]}, 3vw, ${tokens.spacing[8]})`,
+        boxSizing: 'border-box'
+      }}
+    >
+      {/* ===== HEADER ÉDITORIAL ===== */}
+      <header
+        style={{
           display: 'flex',
-          alignItems: 'start',
-          gap: '12px'
-        }}>
-          <AlertTriangle size={24} style={{ color: '#d97706', marginTop: '2px', flexShrink: 0 }} />
-          <div style={{ flex: 1 }}>
-            <h4 style={{ 
-              fontSize: '16px', 
-              fontWeight: '600', 
-              color: '#92400e',
-              marginBottom: '8px'
-            }}>
-              ⚠️ Configuration incomplète détectée
-            </h4>
-            <p style={{ 
-              fontSize: '14px', 
-              color: '#78350f',
-              marginBottom: '12px'
-            }}>
-              {incompleteAircraft.length} avion{incompleteAircraft.length > 1 ? 's' : ''} n'a{incompleteAircraft.length > 1 ? 'ont' : ''} pas de surfaces compatibles définies. 
-              Ces informations sont essentielles pour la sélection automatique des aérodromes compatibles.
-            </p>
-            <div style={{ 
-              marginBottom: '12px',
-              padding: '8px',
-              backgroundColor: '#fffbeb',
-              borderRadius: '4px',
-              border: '1px solid #fbbf24'
-            }}>
-              <p style={{ fontSize: '13px', fontWeight: '600', color: '#92400e', marginBottom: '4px' }}>
-                Avions concernés:
-              </p>
-              <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: '#78350f' }}>
-                {incompleteAircraft.map(aircraft => (
-                  <li key={aircraft.id}>
-                    {aircraft.registration} ({aircraft.model})
-                  </li>
-                ))}
-              </ul>
+          flexDirection: 'column',
+          gap: tokens.spacing[6],
+          marginBottom: tokens.spacing[8]
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            alignItems: 'flex-end',
+            justifyContent: 'space-between',
+            gap: tokens.spacing[6]
+          }}
+        >
+          <div style={{ flex: '1 1 320px', minWidth: 0 }}>
+            <EditorialHeading level={1} eyebrow="MES AVIONS · FLOTTE">
+              Aéronefs
+            </EditorialHeading>
+            <div
+              style={{
+                marginTop: tokens.spacing[3],
+                fontFamily: tokens.fontFamily.mono,
+                fontSize: '11px',
+                letterSpacing: '0.30em',
+                textTransform: 'uppercase',
+                color: 'var(--text-tertiary)'
+              }}
+            >
+              Perita Per Preparatem
             </div>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <button
+          </div>
+
+          {/* KPI flotte */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, minmax(96px, 1fr))',
+              gap: tokens.spacing[5],
+              alignItems: 'end'
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: tokens.spacing[2] }}>
+              <TechLabel>Flotte</TechLabel>
+              <DataReadout value={fleetKPI.total} size="lg" />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: tokens.spacing[2] }}>
+              <TechLabel>Complétion moy.</TechLabel>
+              <DataReadout value={fleetKPI.avgCompletion} unit="%" size="lg" />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: tokens.spacing[2] }}>
+              <TechLabel>Mise à jour</TechLabel>
+              <DataReadout value={formatLatest(fleetKPI.latestUpdateMs)} size="md" />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* ===== ALERTE CONFIGURATION INCOMPLÈTE (bannière sobre, pas cookie banner) ===== */}
+      {showIncompleteDataAlert && incompleteAircraft.length > 0 && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: tokens.spacing[4],
+            backgroundColor: 'var(--bg-surface)',
+            borderLeft: `${tokens.border.accent} solid var(--accent-primary)`,
+            borderTop: `${tokens.border.thin} solid var(--border-subtle)`,
+            borderRight: `${tokens.border.thin} solid var(--border-subtle)`,
+            borderBottom: `${tokens.border.thin} solid var(--border-subtle)`,
+            padding: tokens.spacing[5],
+            marginBottom: tokens.spacing[7],
+            borderRadius: tokens.radius.sm
+          }}
+        >
+          <AlertTriangle
+            size={20}
+            style={{ color: 'var(--accent-primary)', marginTop: '2px', flexShrink: 0 }}
+            aria-hidden="true"
+          />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <TechLabel style={{ color: 'var(--accent-primary)' }}>ATTENTION · DONNÉES</TechLabel>
+            <h4
+              style={{
+                margin: `${tokens.spacing[2]} 0 ${tokens.spacing[2]}`,
+                fontFamily: tokens.fontFamily.sans,
+                fontSize: '16px',
+                fontWeight: 600,
+                color: 'var(--text-primary)'
+              }}
+            >
+              Configuration incomplète détectée
+            </h4>
+            <p
+              style={{
+                margin: `0 0 ${tokens.spacing[4]}`,
+                fontSize: '13px',
+                lineHeight: 1.55,
+                color: 'var(--text-secondary)'
+              }}
+            >
+              {incompleteAircraft.length} avion{incompleteAircraft.length > 1 ? 's' : ''} n'a{incompleteAircraft.length > 1 ? 'ont' : ''}{' '}
+              pas de surfaces compatibles définies. Information requise pour la sélection automatique des aérodromes.
+            </p>
+            <ul
+              style={{
+                margin: `0 0 ${tokens.spacing[4]}`,
+                paddingLeft: tokens.spacing[5],
+                fontSize: '12px',
+                color: 'var(--text-tertiary)',
+                fontFamily: tokens.fontFamily.mono,
+                letterSpacing: '0.04em'
+              }}
+            >
+              {incompleteAircraft.slice(0, 5).map((a) => (
+                <li key={a.id}>
+                  {a.registration} — {a.model}
+                </li>
+              ))}
+              {incompleteAircraft.length > 5 && (
+                <li style={{ color: 'var(--text-tertiary)' }}>
+                  … +{incompleteAircraft.length - 5}
+                </li>
+              )}
+            </ul>
+            <div style={{ display: 'flex', gap: tokens.spacing[3], flexWrap: 'wrap' }}>
+              <EditorialButton
+                variant="primary"
+                size="sm"
                 onClick={() => {
-                  // Ouvrir le formulaire de modification pour le premier avion incomplet
                   if (incompleteAircraft.length > 0) {
                     handleEdit(incompleteAircraft[0]);
                   }
                 }}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#f59e0b',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: 'pointer'
-                }}
               >
-                📝 Configurer maintenant
-              </button>
-              <button
-                onClick={() => {
-                  setShowIncompleteDataAlert(false);
-                }}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: 'transparent',
-                  color: '#78350f',
-                  border: '1px solid #f59e0b',
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                  cursor: 'pointer'
-                }}
+                Configurer
+              </EditorialButton>
+              <EditorialButton
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowIncompleteDataAlert(false)}
               >
-                Ignorer pour le moment
-              </button>
+                Ignorer
+              </EditorialButton>
             </div>
           </div>
         </div>
       )}
-      
-      {/* Définition du style pour les boutons */}
-      {(() => {
-        const buttonSectionStyle = {
-          width: '100%',
-          padding: '12px !important',
-          backgroundColor: 'rgba(55, 65, 81, 0.35) !important',
-          color: 'white !important',
-          border: '1px solid rgba(0, 0, 0, 0.7) !important',
-          borderRadius: '8px !important',
-          fontSize: '16px !important',
-          fontWeight: 'bold !important',
-          cursor: 'pointer !important',
+
+      {/* ===== TOOLBAR : recherche + CTA NOUVEL AVION ===== */}
+      <div
+        style={{
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '8px',
-          transition: 'all 0.2s !important',
-          background: 'rgba(55, 65, 81, 0.35) !important',
-          textTransform: 'none !important',
-          letterSpacing: 'normal !important'
-        };
-        window.buttonSectionStyle = buttonSectionStyle;
-      })()}
-      
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          alignItems: 'flex-end',
+          gap: tokens.spacing[4],
+          marginBottom: tokens.spacing[7]
+        }}
+      >
+        <div style={{ flex: '1 1 320px', minWidth: 0 }}>
+          <CockpitTextField
+            label="RECHERCHE"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Immatriculation, modèle, aéroclub…"
+          />
+        </div>
+        <div style={{ flexShrink: 0 }}>
+          <EditorialButton
+            variant="primary"
+            size="md"
             onClick={() => {
               console.log('➕ AircraftModule - Opening wizard for new aircraft');
               setWizardAircraft(null);
               setShowWizard(true);
             }}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#3b82f6',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '14px',
-              fontWeight: '500',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
           >
-            <Plus size={16} />
+            <Plus size={14} aria-hidden="true" />
             Nouvel avion
-          </button>
+          </EditorialButton>
         </div>
       </div>
 
-
-      {/* Liste des avions */}
-      <div style={{ display: 'grid', gap: '12px' }}>
-        {aircraftList && aircraftList.length > 0 ? (
-          aircraftList.map((aircraft, index) => {
+      {/* ===== GRID DES AVIONS ===== */}
+      <div
+        style={{
+          display: 'grid',
+          gap: tokens.spacing[5],
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 360px), 1fr))'
+        }}
+      >
+        {filteredAircraftList.length > 0 ? (
+          filteredAircraftList.map((aircraft) => {
             const isSelected = selectedAircraft && selectedAircraft.id === aircraft.id;
             // Évaluation complète : % de complétion + champs manquants + criticité
             const completeness = evaluateAircraft(aircraft);
-            const { percentage, missing, criticalMissing, hasCriticalGaps } = completeness;
+            const { percentage, missing, hasCriticalGaps } = completeness;
             const isMissingExpanded = expandedMissingIds.has(aircraft.id);
-            const borderColor = hasCriticalGaps ? '#dc2626'
-              : missing.length > 0 ? '#f59e0b'
-              : isSelected ? '#3182CE'
-              : '#E5E7EB';
-            const bgColor = hasCriticalGaps ? '#fef2f2'
-              : missing.length > 0 ? '#fffbeb'
-              : isSelected ? '#EBF8FF'
-              : 'white';
+            const photoUrl = aircraftPhotos[aircraft.id];
+            const manexLoaded = !!(aircraft.hasManex || aircraft.manex);
+            const weighingLoaded = !!(aircraft.hasWeighingReport || aircraft.weighingReport?.hasData);
+
+            // Bordure de la card : orange si sélectionné, rouge si critique, sobre sinon
+            const cardBorderColor = isSelected
+              ? 'var(--accent-primary)'
+              : hasCriticalGaps
+              ? 'var(--color-red-critical)'
+              : 'var(--border-subtle)';
 
             return (
               <div
                 key={aircraft.id}
-                style={{
-                  padding: '10px',
-                  borderRadius: '8px',
-                  border: `${hasCriticalGaps || missing.length > 0 ? '2px' : (isSelected ? '2px' : '1px')} solid ${borderColor}`,
-                  backgroundColor: bgColor,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease-in-out',
-                  marginBottom: '8px',
-                  boxShadow: isSelected ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : 'none',
-                  position: 'relative',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '10px'
-                }}
                 onClick={(e) => {
                   if (e.target.closest('button')) return;
                   handleSelectAircraft(aircraft);
                 }}
-              >
-                {/* Badge complétion + bouton d'expansion liste champs manquants */}
-                <div style={{
-                  position: 'absolute',
-                  top: '8px',
-                  right: '8px',
+                style={{
+                  position: 'relative',
                   display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  zIndex: 2
-                }}>
-                  {hasCriticalGaps && (
-                    <div style={{
-                      backgroundColor: '#dc2626',
-                      color: 'white',
-                      padding: '4px 8px',
-                      borderRadius: '12px',
-                      fontSize: '11px',
-                      fontWeight: 700,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}>
-                      <AlertTriangle size={12} />
-                      Critique
-                    </div>
-                  )}
-                  <div style={{
-                    backgroundColor: getCompletionColor(percentage),
-                    color: 'white',
-                    padding: '4px 10px',
-                    borderRadius: '12px',
-                    fontSize: '11px',
-                    fontWeight: 700
-                  }}>
-                    {percentage}%
-                  </div>
-                  {missing.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setExpandedMissingIds(prev => {
-                          const next = new Set(prev);
-                          if (next.has(aircraft.id)) next.delete(aircraft.id);
-                          else next.add(aircraft.id);
-                          return next;
-                        });
-                      }}
-                      title={`${missing.length} champ${missing.length > 1 ? 's' : ''} manquant${missing.length > 1 ? 's' : ''}`}
-                      style={{
-                        background: 'white',
-                        border: `1px solid ${hasCriticalGaps ? '#dc2626' : '#f59e0b'}`,
-                        color: hasCriticalGaps ? '#dc2626' : '#b45309',
-                        padding: '2px 6px',
-                        borderRadius: '12px',
-                        fontSize: '11px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '3px',
-                        fontWeight: 600
-                      }}
-                    >
-                      {missing.length} manquant{missing.length > 1 ? 's' : ''}
-                      {isMissingExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                    </button>
-                  )}
-                </div>
-
-                {/* Liste déroulante des champs manquants */}
-                {isMissingExpanded && missing.length > 0 && (
+                  flexDirection: 'column',
+                  minHeight: '320px',
+                  backgroundColor: 'var(--bg-surface)',
+                  border: `${tokens.border.thin} solid ${cardBorderColor}`,
+                  borderRadius: tokens.radius.sm,
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  transition: `border-color ${tokens.motion.base}, transform ${tokens.motion.base}`
+                }}
+                onMouseEnter={(e) => {
+                  if (!isSelected && !hasCriticalGaps) {
+                    e.currentTarget.style.borderColor = 'var(--accent-primary)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = cardBorderColor;
+                }}
+              >
+                {/* Background image desaturée + gradient sombre */}
+                {photoUrl && (
                   <div
-                    onClick={(e) => e.stopPropagation()}
+                    aria-hidden="true"
                     style={{
-                      backgroundColor: 'white',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '6px',
-                      padding: '10px 12px',
-                      fontSize: '13px',
-                      maxHeight: '220px',
-                      overflowY: 'auto',
-                      marginTop: '36px'
+                      position: 'absolute',
+                      inset: 0,
+                      backgroundImage: `linear-gradient(180deg, rgba(10,10,10,0.35) 0%, rgba(10,10,10,0.92) 100%), url(${photoUrl})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      filter: 'grayscale(0.45)',
+                      zIndex: 0
+                    }}
+                  />
+                )}
+                {!photoUrl && (
+                  <div
+                    aria-hidden="true"
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      backgroundColor: 'var(--bg-overlay)',
+                      zIndex: 0
                     }}
                   >
-                    <div style={{ fontWeight: 600, marginBottom: 6, color: '#374151' }}>
-                      Champs à compléter :
-                    </div>
-                    {['CRITICAL', 'REQUIRED', 'OPTIONAL'].map(sev => {
-                      const items = missing.filter(m => m.severity === sev);
-                      if (items.length === 0) return null;
-                      const labelMap = { CRITICAL: 'Critiques', REQUIRED: 'Obligatoires', OPTIONAL: 'Optionnels' };
-                      return (
-                        <div key={sev} style={{ marginBottom: 6 }}>
-                          <div style={{ fontSize: '11px', textTransform: 'uppercase', color: getSeverityColor(sev), fontWeight: 700 }}>
-                            {labelMap[sev]}
-                          </div>
-                          {items.map(item => (
-                            <div key={item.path} style={{ display: 'flex', gap: 6, paddingLeft: 8, color: '#4b5563' }}>
-                              <span style={{ color: getSeverityColor(sev) }}>•</span>
-                              <span>{item.label}</span>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setWizardAircraft(aircraft);
-                        setShowWizard(true);
-                      }}
+                    <Plane
+                      size={120}
                       style={{
-                        marginTop: 4,
-                        background: '#3b82f6',
-                        color: 'white',
-                        border: 'none',
-                        padding: '6px 12px',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                        cursor: 'pointer'
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        color: 'var(--border-subtle)',
+                        opacity: 0.6
                       }}
-                    >
-                      Compléter maintenant
-                    </button>
+                      aria-hidden="true"
+                    />
                   </div>
                 )}
-                
-                {/* Contenu principal de la carte */}
-                <div style={{ display: 'flex', gap: '16px', flex: 1 }}>
-                  {/* Photo de l'avion */}
-                  {aircraftPhotos[aircraft.id] && (
-                    <div style={{
-                      flexShrink: 0,
-                      width: '120px',
-                      height: '90px',
-                      borderRadius: '6px',
-                      overflow: 'hidden',
-                      border: '1px solid #e5e7eb'
-                    }}>
-                      <img
-                        src={aircraftPhotos[aircraft.id]}
-                        alt={`${aircraft.registration}`}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover'
-                        }}
-                      />
-                    </div>
-                  )}
 
-                  <div style={{ flex: 1 }}>
-                    <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '4px', color: '#000000' }}>
-                      <span style={{ color: '#000000' }}>{aircraft.registration} - {aircraft.model}</span>
+                {/* Contenu de la card */}
+                <div
+                  style={{
+                    position: 'relative',
+                    zIndex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    flex: 1,
+                    padding: tokens.spacing[5],
+                    gap: tokens.spacing[4]
+                  }}
+                >
+                  {/* Coins haut : IMMAT + COMPLÉTION */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      gap: tokens.spacing[4]
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: tokens.spacing[2], minWidth: 0 }}>
+                      <TechLabel>IMMAT</TechLabel>
+                      <div
+                        style={{
+                          fontFamily: tokens.fontFamily.mono,
+                          fontSize: '22px',
+                          fontWeight: 500,
+                          letterSpacing: '0.04em',
+                          color: 'var(--text-primary)',
+                          lineHeight: 1.1,
+                          fontVariantNumeric: 'tabular-nums'
+                        }}
+                      >
+                        {aircraft.registration || '—'}
+                      </div>
                       {aircraft.wakeTurbulenceCategory && (
-                        <span style={{
-                          marginLeft: '8px',
-                          padding: '2px 6px',
-                          backgroundColor: 
-                            aircraft.wakeTurbulenceCategory === 'L' ? '#DBEAFE' :
-                            aircraft.wakeTurbulenceCategory === 'M' ? '#FEF3C7' :
-                            aircraft.wakeTurbulenceCategory === 'H' ? '#FED7AA' :
-                            '#FECACA',
-                          color: 
-                            aircraft.wakeTurbulenceCategory === 'L' ? '#1E40AF' :
-                            aircraft.wakeTurbulenceCategory === 'M' ? '#92400E' :
-                            aircraft.wakeTurbulenceCategory === 'H' ? '#9A3412' :
-                            '#991B1B',
-                          borderRadius: '4px',
-                          fontSize: '12px',
-                          fontWeight: 'bold'
-                        }}>
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            alignSelf: 'flex-start',
+                            padding: '2px 6px',
+                            border: `${tokens.border.thin} solid var(--border-regular)`,
+                            color: 'var(--text-tertiary)',
+                            fontFamily: tokens.fontFamily.mono,
+                            fontSize: '10px',
+                            letterSpacing: '0.18em',
+                            textTransform: 'uppercase',
+                            borderRadius: tokens.radius.sm
+                          }}
+                        >
                           CAT {aircraft.wakeTurbulenceCategory}
                         </span>
                       )}
-                      {isSelected && (
-                        <span style={{ fontSize: '14px', color: '#6B7280', marginLeft: '8px' }}>
-                          (sélectionné)
-                        </span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: tokens.spacing[2] }}>
+                      <TechLabel active={hasCriticalGaps}>COMPLÉTION</TechLabel>
+                      <CompletionGauge percentage={percentage} critical={hasCriticalGaps} />
+                      {missing.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedMissingIds((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(aircraft.id)) next.delete(aircraft.id);
+                              else next.add(aircraft.id);
+                              return next;
+                            });
+                          }}
+                          title={`${missing.length} champ${missing.length > 1 ? 's' : ''} manquant${missing.length > 1 ? 's' : ''}`}
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: hasCriticalGaps ? 'var(--color-red-critical)' : 'var(--accent-primary)',
+                            fontFamily: tokens.fontFamily.mono,
+                            fontSize: '10px',
+                            letterSpacing: '0.10em',
+                            textTransform: 'uppercase',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            padding: 0,
+                            minHeight: '24px'
+                          }}
+                        >
+                          {missing.length} MANQUANT{missing.length > 1 ? 'S' : ''}
+                          {isMissingExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                        </button>
                       )}
-                    </h4>
-                    <div style={{ fontSize: '14px', color: '#6B7280' }}>
-                      <p>Carburant: {aircraft.fuelType} • Capacité: {
-                        // CANONIQUE → user pref via formatCanonical (double affichage)
-                        formatCanonical(aircraft.fuelCapacity, 'fuel', useUnitsStore.getState().units, { both: true })
-                      }</p>
-                      <p>Vitesse: {
-                        formatCanonical(aircraft.cruiseSpeed || aircraft.cruiseSpeedKt, 'speed', useUnitsStore.getState().units)
-                      } • Conso: {
-                        formatCanonical(aircraft.fuelConsumption, 'fuelConsumption', useUnitsStore.getState().units, { both: true })
-                      }</p>
-                      <p>MTOW: {
-                        formatCanonical(aircraft.maxTakeoffWeight || aircraft.weights?.mtow, 'weight', useUnitsStore.getState().units, { both: true })
-                      }{aircraft.horsepower ? ` • Puissance: ${aircraft.horsepower} CV` : ''}</p>
-                      {/* Statut MANEX et fiche de pesée : Chargé (vert) / Absent (rouge) */}
-                      {(() => {
-                        const manexLoaded = !!(aircraft.hasManex || aircraft.manex);
-                        const weighingLoaded = !!(aircraft.hasWeighingReport || aircraft.weighingReport?.hasData);
-                        const okStyle = { color: '#15803d', backgroundColor: '#dcfce7', border: '1px solid #86efac' };
-                        const koStyle = { color: '#b91c1c', backgroundColor: '#fee2e2', border: '1px solid #fca5a5' };
-                        const badge = (style) => ({
-                          ...style,
-                          fontSize: '12px',
-                          fontWeight: 600,
-                          padding: '2px 8px',
-                          borderRadius: '12px',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        });
-                        return (
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '4px' }}>
-                            <span style={badge(manexLoaded ? okStyle : koStyle)}>
-                              📚 MANEX : {manexLoaded ? 'Chargé' : 'Absent'}
-                              {manexLoaded && aircraft.manex?.pageCount
-                                ? ` (${aircraft.manex.pageCount} p.)`
-                                : ''}
-                            </span>
-                            <span style={badge(weighingLoaded ? okStyle : koStyle)}>
-                              ⚖️ Fiche de pesée : {weighingLoaded ? 'Chargée' : 'Absente'}
-                              {weighingLoaded && aircraft.weighingReport?.weighingDate
-                                ? ` (${new Date(aircraft.weighingReport.weighingDate).toLocaleDateString('fr-FR')})`
-                                : ''}
-                            </span>
-                          </div>
-                        );
-                      })()}
-                      {aircraft.masses?.emptyMass && (
-                        <p style={{ color: '#3182CE' }}>
-                          ⚖️ Masse à vide: {aircraft.masses.emptyMass || aircraft.weights?.emptyWeight} {getSymbol('weight')} • MLM: {aircraft.limitations?.maxLandingMass || aircraft.weights?.mlw ? `${aircraft.limitations?.maxLandingMass || aircraft.weights?.mlw} ${getSymbol('weight')}` : 'N/A'}
-                        </p>
-                      )}
-                      {aircraft.armLengths?.emptyMassArm && (
-                        <p style={{ color: '#7C3AED' }}>
-                          📏 Bras masse à vide: {aircraft.armLengths.emptyMassArm || aircraft.arms?.empty} {getSymbol('armLength')} • Carburant: {aircraft.armLengths.fuelArm || aircraft.arms?.fuelMain} {getSymbol('armLength')}
-                        </p>
-                      )}
-                      {/* Types de pistes compatibles */}
-                      {aircraft.compatibleRunwaySurfaces && aircraft.compatibleRunwaySurfaces.length > 0 && (
-                        <p style={{ color: '#059669', fontSize: '13px', marginTop: '4px' }}>
-                          🛬 Pistes compatibles: {(() => {
-                            const surfaceMap = {
-                              'ASPH': 'Asphalte',
-                              'CONC': 'Béton',
-                              'GRASS': 'Herbe',
-                              'GRVL': 'Gravier',
-                              'UNPAVED': 'Terre',
-                              'SAND': 'Sable',
-                              'SNOW': 'Neige',
-                              'WATER': 'Eau'
-                            };
-                            return aircraft.compatibleRunwaySurfaces
-                              .map(s => surfaceMap[s] || s)
-                              .join(', ');
-                          })()}
-                        </p>
-                      )}
-                      
-                      {/* Opérations approuvées */}
-                      <div style={{ marginTop: '6px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                        {aircraft.approvedOperations?.vfrDay !== false && (
-                          <span style={{ 
-                            padding: '2px 6px', 
-                            fontSize: '10px', 
-                            backgroundColor: '#dbeafe',
-                            color: '#1e40af',
-                            borderRadius: '3px',
-                            fontWeight: '500'
-                          }}>
-                            VFR jour
-                          </span>
-                        )}
-                        {aircraft.approvedOperations?.vfrNight && (
-                          <span style={{ 
-                            padding: '2px 6px', 
-                            fontSize: '10px', 
-                            backgroundColor: '#1e293b',
-                            color: '#e0f2fe',
-                            borderRadius: '3px',
-                            fontWeight: '500'
-                          }}>
-                            VFR nuit 🌙
-                          </span>
-                        )}
-                        {aircraft.approvedOperations?.ifrDay && (
-                          <span style={{ 
-                            padding: '2px 6px', 
-                            fontSize: '10px', 
-                            backgroundColor: '#dcfce7',
-                            color: '#14532d',
-                            borderRadius: '3px',
-                            fontWeight: '500'
-                          }}>
-                            IFR jour
-                          </span>
-                        )}
-                        {aircraft.approvedOperations?.ifrNight && (
-                          <span style={{ 
-                            padding: '2px 6px', 
-                            fontSize: '10px', 
-                            backgroundColor: '#064e3b',
-                            color: '#d1fae5',
-                            borderRadius: '3px',
-                            fontWeight: '500'
-                          }}>
-                            IFR nuit 🌙
-                          </span>
-                        )}
-                        {aircraft.approvedOperations?.svfr && (
-                          <span style={{ 
-                            padding: '2px 6px', 
-                            fontSize: '10px', 
-                            backgroundColor: '#fef3c7',
-                            color: '#78350f',
-                            borderRadius: '3px',
-                            fontWeight: '500'
-                          }}>
-                            SVFR
-                          </span>
-                        )}
-                        {aircraft.approvedOperations?.training && (
-                          <span style={{ 
-                            padding: '2px 6px', 
-                            fontSize: '10px', 
-                            backgroundColor: '#fce7f3',
-                            color: '#831843',
-                            borderRadius: '3px',
-                            fontWeight: '500'
-                          }}>
-                            École ✈️
-                          </span>
-                        )}
-                        {aircraft.approvedOperations?.mountainous && (
-                          <span style={{ 
-                            padding: '2px 6px', 
-                            fontSize: '10px', 
-                            backgroundColor: '#f3f4f6',
-                            color: '#374151',
-                            borderRadius: '3px',
-                            fontWeight: '500'
-                          }}>
-                            Montagne ⛰️
-                          </span>
-                        )}
-                        {aircraft.approvedOperations?.aerobatics && (
-                          <span style={{ 
-                            padding: '2px 6px', 
-                            fontSize: '10px', 
-                            backgroundColor: '#fee2e2',
-                            color: '#991b1b',
-                            borderRadius: '3px',
-                            fontWeight: '500'
-                          }}>
-                            Voltige 🎪
-                          </span>
-                        )}
-                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Boutons d'action en bas de la carte */}
-                <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
-                    {/* Bouton Voir / Importer MANEX */}
+                  {/* Liste des champs manquants (dépliable) */}
+                  {isMissingExpanded && missing.length > 0 && (
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        backgroundColor: 'var(--bg-overlay)',
+                        border: `${tokens.border.thin} solid var(--border-subtle)`,
+                        borderRadius: tokens.radius.sm,
+                        padding: `${tokens.spacing[3]} ${tokens.spacing[4]}`,
+                        maxHeight: '200px',
+                        overflowY: 'auto'
+                      }}
+                    >
+                      <TechLabel style={{ marginBottom: tokens.spacing[2], display: 'block' }}>
+                        À compléter
+                      </TechLabel>
+                      {['CRITICAL', 'REQUIRED', 'OPTIONAL'].map((sev) => {
+                        const items = missing.filter((m) => m.severity === sev);
+                        if (items.length === 0) return null;
+                        const labelMap = { CRITICAL: 'Critiques', REQUIRED: 'Obligatoires', OPTIONAL: 'Optionnels' };
+                        const sevColor =
+                          sev === 'CRITICAL'
+                            ? 'var(--color-red-critical)'
+                            : sev === 'REQUIRED'
+                            ? 'var(--accent-primary)'
+                            : 'var(--text-tertiary)';
+                        return (
+                          <div key={sev} style={{ marginBottom: tokens.spacing[3] }}>
+                            <div
+                              style={{
+                                fontFamily: tokens.fontFamily.mono,
+                                fontSize: '10px',
+                                letterSpacing: '0.18em',
+                                textTransform: 'uppercase',
+                                color: sevColor,
+                                fontWeight: 600,
+                                marginBottom: '4px'
+                              }}
+                            >
+                              {labelMap[sev]} · {items.length}
+                            </div>
+                            {items.map((item) => (
+                              <div
+                                key={item.path}
+                                style={{
+                                  display: 'flex',
+                                  gap: tokens.spacing[2],
+                                  paddingLeft: tokens.spacing[3],
+                                  color: 'var(--text-secondary)',
+                                  fontSize: '12px',
+                                  lineHeight: 1.5
+                                }}
+                              >
+                                <span style={{ color: sevColor }}>·</span>
+                                <span>{item.label}</span>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })}
+                      <div style={{ marginTop: tokens.spacing[3] }}>
+                        <EditorialButton
+                          variant="primary"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setWizardAircraft(aircraft);
+                            setShowWizard(true);
+                          }}
+                        >
+                          Compléter
+                        </EditorialButton>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Spacer flex pour pousser le contenu vers le bas */}
+                  <div style={{ flex: 1 }} />
+
+                  {/* Indicateurs MANEX / PESÉE en TechLabel + DataReadout */}
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: tokens.spacing[4],
+                      paddingTop: tokens.spacing[3],
+                      borderTop: `${tokens.border.thin} solid var(--border-subtle)`
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <TechLabel>MANEX</TechLabel>
+                      <DataReadout
+                        value={manexLoaded ? 'CHARGÉ' : 'ABSENT'}
+                        size="sm"
+                        emphasis={manexLoaded}
+                        style={{ color: manexLoaded ? undefined : 'var(--text-tertiary)' }}
+                      />
+                      {manexLoaded && aircraft.manex?.pageCount && (
+                        <span
+                          style={{
+                            fontFamily: tokens.fontFamily.mono,
+                            fontSize: '10px',
+                            letterSpacing: '0.10em',
+                            color: 'var(--text-tertiary)',
+                            textTransform: 'uppercase'
+                          }}
+                        >
+                          {aircraft.manex.pageCount} P.
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <TechLabel>PESÉE</TechLabel>
+                      <DataReadout
+                        value={weighingLoaded ? 'CHARGÉE' : 'ABSENTE'}
+                        size="sm"
+                        emphasis={weighingLoaded}
+                        style={{ color: weighingLoaded ? undefined : 'var(--text-tertiary)' }}
+                      />
+                      {weighingLoaded && aircraft.weighingReport?.weighingDate && (
+                        <span
+                          style={{
+                            fontFamily: tokens.fontFamily.mono,
+                            fontSize: '10px',
+                            letterSpacing: '0.10em',
+                            color: 'var(--text-tertiary)',
+                            textTransform: 'uppercase'
+                          }}
+                        >
+                          {new Date(aircraft.weighingReport.weighingDate).toLocaleDateString('fr-FR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: '2-digit'
+                          })}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Coins bas : MODÈLE / AÉROCLUB */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-end',
+                      gap: tokens.spacing[4]
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0, flex: 1 }}>
+                      <TechLabel>MODÈLE</TechLabel>
+                      <div
+                        style={{
+                          fontFamily: tokens.fontFamily.sans,
+                          fontSize: '16px',
+                          fontWeight: 500,
+                          color: 'var(--text-primary)',
+                          lineHeight: 1.25,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {aircraft.model || '—'}
+                      </div>
+                    </div>
+                    {(aircraft.homeAeroclub || aircraft.homeBase) && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end', minWidth: 0 }}>
+                        <TechLabel>{aircraft.homeAeroclub ? 'AÉROCLUB' : 'BASE'}</TechLabel>
+                        <div
+                          style={{
+                            fontFamily: tokens.fontFamily.sans,
+                            fontSize: '13px',
+                            fontWeight: 400,
+                            color: 'var(--text-secondary)',
+                            textAlign: 'right',
+                            maxWidth: '170px',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {aircraft.homeAeroclub || aircraft.homeBase}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'flex-end',
+                      gap: tokens.spacing[2],
+                      paddingTop: tokens.spacing[3],
+                      borderTop: `${tokens.border.thin} solid var(--border-subtle)`
+                    }}
+                  >
                     <button
                       onClick={async (e) => {
                         e.stopPropagation();
@@ -1558,7 +1780,6 @@ export const AircraftModule = memo(() => {
 
                         // 🔧 FIX: Si l'avion vient de la liste légère, ses données
                         // volumineuses (manex.pdfData) ne sont pas en mémoire.
-                        // On les recharge depuis IndexedDB avant d'ouvrir le viewer.
                         let aircraftForViewer = aircraft;
                         if (alreadyHasManex && !aircraft.manex?.pdfData) {
                           try {
@@ -1586,82 +1807,281 @@ export const AircraftModule = memo(() => {
                           setShowManexImporter(true);
                         }
                       }}
+                      title={manexLoaded ? 'Voir le MANEX' : 'Importer le MANEX'}
+                      aria-label={manexLoaded ? 'Voir le MANEX' : 'Importer le MANEX'}
                       style={{
-                        ...window.buttonSectionStyle,
-                        padding: '8px',
-                        background: (aircraft.hasManex || aircraft.manex) ? '#fef3c7' : 'rgba(55, 65, 81, 0.35)',
-                        borderColor: (aircraft.hasManex || aircraft.manex) ? '#fbbf24' : 'rgba(0, 0, 0, 0.7)'
+                        minWidth: '44px',
+                        minHeight: '44px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: 'transparent',
+                        border: `${tokens.border.thin} solid var(--border-regular)`,
+                        borderRadius: tokens.radius.sm,
+                        color: manexLoaded ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                        cursor: 'pointer',
+                        transition: `border-color ${tokens.motion.fast}, color ${tokens.motion.fast}`
                       }}
-                      title={(aircraft.hasManex || aircraft.manex) ? "Voir le MANEX" : "Importer le MANEX"}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = 'var(--accent-primary)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = 'var(--border-regular)';
+                      }}
                     >
-                      <FileText size={16} color={(aircraft.hasManex || aircraft.manex) ? '#f59e0b' : undefined} />
+                      <BookOpen size={16} aria-hidden="true" />
                     </button>
-                    
-                    
+
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         console.log('📄 AircraftModule - Generate PDF button clicked');
                         handleGeneratePDF(aircraft);
                       }}
+                      title="Générer la fiche PDF"
+                      aria-label="Générer la fiche PDF"
                       style={{
-                        ...window.buttonSectionStyle,
-                        padding: '8px',
-                        color: '#ef4444'
+                        minWidth: '44px',
+                        minHeight: '44px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: 'transparent',
+                        border: `${tokens.border.thin} solid var(--border-regular)`,
+                        borderRadius: tokens.radius.sm,
+                        color: 'var(--text-secondary)',
+                        cursor: 'pointer',
+                        transition: `border-color ${tokens.motion.fast}, color ${tokens.motion.fast}`
                       }}
-                      title="Générer PDF"
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = 'var(--accent-primary)';
+                        e.currentTarget.style.color = 'var(--accent-primary)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = 'var(--border-regular)';
+                        e.currentTarget.style.color = 'var(--text-secondary)';
+                      }}
                     >
-                      <FileDown size={16} />
+                      <FileDown size={16} aria-hidden="true" />
                     </button>
+
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleOpenWizard(aircraft);
                       }}
-                      style={{
-                        ...window.buttonSectionStyle,
-                        padding: '8px',
-                        color: '#8b5cf6'
-                      }}
                       title="Modifier avec l'assistant"
+                      aria-label="Modifier l'avion"
+                      style={{
+                        minWidth: '44px',
+                        minHeight: '44px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: 'transparent',
+                        border: `${tokens.border.thin} solid var(--border-regular)`,
+                        borderRadius: tokens.radius.sm,
+                        color: 'var(--text-secondary)',
+                        cursor: 'pointer',
+                        transition: `border-color ${tokens.motion.fast}, color ${tokens.motion.fast}`
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = 'var(--accent-primary)';
+                        e.currentTarget.style.color = 'var(--accent-primary)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = 'var(--border-regular)';
+                        e.currentTarget.style.color = 'var(--text-secondary)';
+                      }}
                     >
-                      <Wand2 size={16} />
+                      <Edit2 size={16} aria-hidden="true" />
                     </button>
+
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         console.log('🗑️ AircraftModule - Delete button clicked');
-                        handleDelete(aircraft.id);
-                      }}
-                      style={{
-                        ...window.buttonSectionStyle,
-                        padding: '8px',
-                        color: '#dc2626'
+                        handleDelete(aircraft);
                       }}
                       title="Supprimer l'avion"
+                      aria-label="Supprimer l'avion"
+                      style={{
+                        minWidth: '44px',
+                        minHeight: '44px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: 'transparent',
+                        border: `${tokens.border.thin} solid var(--border-regular)`,
+                        borderRadius: tokens.radius.sm,
+                        color: 'var(--text-secondary)',
+                        cursor: 'pointer',
+                        transition: `border-color ${tokens.motion.fast}, color ${tokens.motion.fast}`
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = 'var(--color-red-critical)';
+                        e.currentTarget.style.color = 'var(--color-red-critical)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = 'var(--border-regular)';
+                        e.currentTarget.style.color = 'var(--text-secondary)';
+                      }}
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={16} aria-hidden="true" />
                     </button>
+                  </div>
                 </div>
               </div>
             );
           })
         ) : (
-          <div style={{ 
-            padding: '40px', 
-            textAlign: 'center', 
-            backgroundColor: 'white', 
-            borderRadius: '8px', 
-            border: '1px solid #E5E7EB' 
-          }}>
-            <p style={{ marginBottom: '16px', fontSize: '16px', color: '#6B7280' }}>Aucun avion enregistré.</p>
-            <p style={{ color: '#6B7280' }}>Cliquez sur "Nouvel avion" pour commencer.</p>
+          // État vide : pas d'avion ou recherche sans résultat
+          <div
+            style={{
+              gridColumn: '1 / -1',
+              padding: `${tokens.spacing[10]} ${tokens.spacing[6]}`,
+              textAlign: 'center',
+              backgroundColor: 'var(--bg-surface)',
+              border: `${tokens.border.thin} solid var(--border-subtle)`,
+              borderRadius: tokens.radius.sm
+            }}
+          >
+            <Plane
+              size={48}
+              style={{ color: 'var(--text-tertiary)', marginBottom: tokens.spacing[4] }}
+              aria-hidden="true"
+            />
+            <TechLabel style={{ display: 'block', marginBottom: tokens.spacing[3] }}>
+              {searchQuery ? 'AUCUN RÉSULTAT' : 'FLOTTE VIDE'}
+            </TechLabel>
+            <p
+              style={{
+                margin: `0 0 ${tokens.spacing[5]}`,
+                fontSize: '15px',
+                color: 'var(--text-secondary)',
+                lineHeight: 1.55
+              }}
+            >
+              {searchQuery
+                ? `Aucun avion ne correspond à « ${searchQuery} ».`
+                : 'Aucun avion enregistré. Ajoutez votre premier aéronef pour commencer.'}
+            </p>
+            {!searchQuery && (
+              <EditorialButton
+                variant="primary"
+                size="md"
+                onClick={() => {
+                  setWizardAircraft(null);
+                  setShowWizard(true);
+                }}
+              >
+                <Plus size={14} aria-hidden="true" />
+                Nouvel avion
+              </EditorialButton>
+            )}
           </div>
         )}
       </div>
 
+      {/* Footer éditorial sobre */}
+      <footer
+        style={{
+          marginTop: tokens.spacing[10],
+          paddingTop: tokens.spacing[6],
+          borderTop: `${tokens.border.thin} solid var(--border-subtle)`,
+          textAlign: 'center',
+          fontFamily: tokens.fontFamily.mono,
+          fontSize: '10px',
+          letterSpacing: '0.30em',
+          textTransform: 'uppercase',
+          color: 'var(--text-tertiary)'
+        }}
+      >
+        ALFLIGHT · PERITA PER PREPARATEM
+      </footer>
+
       {/* API Key Test Component - Temporairement désactivé */}
       {/* <APIKeyTest /> */}
+
+      {/* ===== Dialogue de confirmation de suppression (remplace window.confirm) ===== */}
+      {deletePending && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="aircraft-delete-title"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: tokens.palette?.alpha?.overlay || 'rgba(10,10,10,0.72)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: tokens.zIndex.modal,
+            padding: tokens.spacing[5]
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) cancelDelete();
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--bg-surface)',
+              border: `${tokens.border.thin} solid var(--border-regular)`,
+              borderLeft: `${tokens.border.accent} solid var(--color-red-critical)`,
+              borderRadius: tokens.radius.sm,
+              padding: tokens.spacing[6],
+              maxWidth: '460px',
+              width: '100%',
+              boxShadow: tokens.shadow.lift
+            }}
+          >
+            <TechLabel style={{ color: 'var(--color-red-critical)' }}>SUPPRESSION · CONFIRMATION</TechLabel>
+            <h3
+              id="aircraft-delete-title"
+              style={{
+                margin: `${tokens.spacing[3]} 0 ${tokens.spacing[3]}`,
+                fontFamily: tokens.fontFamily.sans,
+                fontSize: '20px',
+                fontWeight: 600,
+                color: 'var(--text-primary)',
+                lineHeight: 1.3
+              }}
+            >
+              Supprimer l'aéronef ?
+            </h3>
+            <p
+              style={{
+                margin: `0 0 ${tokens.spacing[5]}`,
+                fontSize: '14px',
+                color: 'var(--text-secondary)',
+                lineHeight: 1.55
+              }}
+            >
+              <DataReadout value={deletePending.registration} size="sm" />
+              {deletePending.model ? ` — ${deletePending.model}` : ''} sera retiré de votre flotte.
+              Cette action est irréversible.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: tokens.spacing[3] }}>
+              <EditorialButton variant="ghost" size="md" onClick={cancelDelete}>
+                Annuler
+              </EditorialButton>
+              <EditorialButton variant="critical" size="md" onClick={confirmDelete}>
+                Supprimer
+              </EditorialButton>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== Alerte d'erreur éditoriale (NightModeAlert) ===== */}
+      {opError && (
+        <NightModeAlert
+          severity={opError.severity || 'warn'}
+          title={opError.title}
+          description={opError.description}
+          onClose={() => setOpError(null)}
+        />
+      )}
 
       {/* Modal formulaire */}
       {showForm && (
@@ -1671,41 +2091,55 @@ export const AircraftModule = memo(() => {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
+          backgroundColor: tokens.palette?.alpha?.overlay || 'rgba(10,10,10,0.72)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 1000
+          zIndex: tokens.zIndex.modal
         }}>
           <div style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            borderRadius: '12px',
-            padding: '24px',
+            backgroundColor: 'var(--bg-surface)',
+            border: `${tokens.border.thin} solid var(--border-regular)`,
+            borderRadius: tokens.radius.sm,
+            padding: tokens.spacing[6],
             maxWidth: '800px',
             width: '90%',
             maxHeight: '90vh',
             overflow: 'auto',
             position: 'relative',
-            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.2)'
+            boxShadow: tokens.shadow.lift,
+            color: 'var(--text-primary)',
+            fontFamily: tokens.fontFamily.sans
           }}>
             <div style={{
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              marginBottom: '24px',
+              marginBottom: tokens.spacing[6],
               position: 'sticky',
-              top: '-24px',
-              backgroundColor: 'white',
-              paddingBottom: '12px',
+              top: `-${tokens.spacing[6]}`,
+              backgroundColor: 'var(--bg-surface)',
+              paddingBottom: tokens.spacing[3],
+              borderBottom: `${tokens.border.thin} solid var(--border-subtle)`,
               zIndex: 10
             }}>
-              <h3 style={sx.combine(sx.text.xl, sx.text.bold)}>
-                {editingAircraft ? `Informations ${editingAircraft.registration}` : 'Nouvel avion'}
-              </h3>
+              <div style={{ textAlign: 'center' }}>
+                <TechLabel>{editingAircraft ? 'ÉDITION · AÉRONEF' : 'CRÉATION · AÉRONEF'}</TechLabel>
+                <h3 style={{
+                  margin: `${tokens.spacing[2]} 0 0`,
+                  fontFamily: tokens.fontFamily.sans,
+                  fontSize: '20px',
+                  fontWeight: 500,
+                  color: 'var(--text-primary)'
+                }}>
+                  {editingAircraft ? `Informations ${editingAircraft.registration}` : 'Nouvel avion'}
+                </h3>
+              </div>
               <button
                 type="button"
+                aria-label="Fermer"
                 onClick={() => {
                   setShowForm(false);
                   setEditingAircraft(null);
@@ -1713,20 +2147,25 @@ export const AircraftModule = memo(() => {
                 style={{
                   position: 'absolute',
                   right: 0,
-                  padding: '8px',
+                  padding: tokens.spacing[2],
                   backgroundColor: 'transparent',
                   border: 'none',
                   cursor: 'pointer',
-                  color: '#6b7280',
-                  transition: 'color 0.2s'
+                  color: 'var(--text-tertiary)',
+                  transition: `color ${tokens.motion.fast}`,
+                  minWidth: '44px',
+                  minHeight: '44px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
-                onMouseEnter={(e) => e.target.style.color = '#000'}
-                onMouseLeave={(e) => e.target.style.color = '#6b7280'}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-tertiary)'}
               >
-                <X size={24} />
+                <X size={20} aria-hidden="true" />
               </button>
             </div>
-            
+
             <AircraftForm
               aircraft={editingAircraft}
               onSubmit={async (processedData) => {
@@ -1804,15 +2243,30 @@ export const AircraftModule = memo(() => {
                   setEditingAircraft(null);
                 } catch (error) {
                   console.error('❌ AircraftModule - Erreur lors de la sauvegarde:', error);
-                  
-                  // Si c'est une erreur de quota, proposer le nettoyage
-                  if (error.name === 'QuotaExceededError' || error.message.includes('quota')) {
-                    if (window.confirm('Le stockage est plein. Voulez-vous nettoyer le stockage et réessayer ?')) {
+
+                  // Si c'est une erreur de quota, on nettoie automatiquement et on demande de réessayer
+                  if (error.name === 'QuotaExceededError' || (error.message || '').includes('quota')) {
+                    try {
                       await dataBackupManager.cleanupLocalStorage();
-                      alert('Stockage nettoyé. Veuillez réessayer.');
+                      setOpError({
+                        severity: 'warn',
+                        title: 'Stockage local saturé',
+                        description: 'Le cache local a été nettoyé automatiquement. Veuillez réessayer la sauvegarde.'
+                      });
+                    } catch (cleanupErr) {
+                      console.error('❌ Nettoyage du stockage échoué:', cleanupErr);
+                      setOpError({
+                        severity: 'critical',
+                        title: 'Stockage local saturé',
+                        description: 'Impossible de nettoyer le stockage. Libérez de l\'espace puis réessayez.'
+                      });
                     }
                   } else {
-                    alert(`Erreur lors de la sauvegarde: ${error.message}`);
+                    setOpError({
+                      severity: 'critical',
+                      title: 'Sauvegarde impossible',
+                      description: error?.message || 'Une erreur inattendue est survenue.'
+                    });
                   }
                 }
               }}
@@ -1857,20 +2311,24 @@ export const AircraftModule = memo(() => {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          backgroundColor: tokens.palette?.alpha?.overlay || 'rgba(10,10,10,0.72)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 1000
+          zIndex: tokens.zIndex.modal
         }}>
           <div style={{
-            backgroundColor: 'white',
-            borderRadius: '12px',
+            backgroundColor: 'var(--bg-surface)',
+            border: `${tokens.border.thin} solid var(--border-regular)`,
+            borderRadius: tokens.radius.sm,
             maxWidth: '1200px',
             width: '90%',
             maxHeight: '90vh',
             overflow: 'auto',
-            position: 'relative'
+            position: 'relative',
+            boxShadow: tokens.shadow.lift
           }}>
             <AircraftCreationWizard
               existingAircraft={wizardAircraft}
@@ -2011,7 +2469,11 @@ export const AircraftModule = memo(() => {
                   setWizardAircraft(null);
                 } catch (error) {
                   console.error('❌ Wizard - Erreur lors de la sauvegarde:', error);
-                  alert(`Erreur lors de la sauvegarde: ${error.message}`);
+                  setOpError({
+                    severity: 'critical',
+                    title: 'Sauvegarde impossible',
+                    description: error?.message || 'Une erreur inattendue est survenue.'
+                  });
                 }
               }}
             />
