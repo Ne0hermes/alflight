@@ -38,7 +38,7 @@ export const Button = ({
     if (variant === 'primary') {
       return {
         ...baseStyles,
-        background: 'linear-gradient(135deg, #8B1538, #A91B45)',
+        background: 'linear-gradient(135deg, #8B1538, #FF7E36)',
         boxShadow: '0 2px 8px rgba(147, 22, 60, 0.3)',
         '&:hover': {
           background: 'linear-gradient(135deg, #6B0F2B, #8B1538)',
@@ -49,7 +49,7 @@ export const Button = ({
           transform: 'translateY(0)',
         },
         '&:focus-visible': {
-          outline: '3px solid #93163C',
+          outline: '3px solid #f26921',
           outlineOffset: '2px',
         },
       };
@@ -59,15 +59,15 @@ export const Button = ({
       return {
         ...baseStyles,
         backgroundColor: 'transparent',
-        color: '#93163C',
-        border: '2px solid #93163C',
+        color: '#f26921',
+        border: '2px solid #f26921',
         '&:hover': {
           backgroundColor: 'rgba(147, 22, 60, 0.05)',
           borderColor: '#6B0F2B',
           color: '#6B0F2B',
         },
         '&:focus-visible': {
-          outline: '3px solid #93163C',
+          outline: '3px solid #f26921',
           outlineOffset: '2px',
         },
       };
@@ -76,8 +76,8 @@ export const Button = ({
     if (variant === 'outlined') {
       return {
         ...baseStyles,
-        borderColor: '#93163C',
-        color: '#93163C',
+        borderColor: '#f26921',
+        color: '#f26921',
         '&:hover': {
           borderColor: '#6B0F2B',
           backgroundColor: 'rgba(147, 22, 60, 0.05)',
@@ -88,7 +88,7 @@ export const Button = ({
     if (variant === 'text') {
       return {
         ...baseStyles,
-        color: '#93163C',
+        color: '#f26921',
         '&:hover': {
           backgroundColor: 'rgba(147, 22, 60, 0.05)',
         },

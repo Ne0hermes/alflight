@@ -1007,7 +1007,7 @@ const PilotLogbook = ({ showFormProp }) => {
           <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
             <button
               onClick={handleImport}
-              style={{ padding: '8px 16px', backgroundColor: '#93163C', color: 'white', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+              style={{ padding: '8px 16px', backgroundColor: '#f26921', color: 'white', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
             >
               <Upload size={16} />
               Importer

@@ -1107,6 +1107,45 @@ export const AircraftModule = memo(() => {
     }
   };
 
+  // Helper générique : télécharge un PDF base64 depuis aircraft.<field>.pdfData,
+  // avec fallback IndexedDB si la donnée volumineuse n'est pas en mémoire.
+  const downloadAircraftPdf = async (aircraft, field, defaultPrefix) => {
+    if (!aircraft) return;
+    let pdfData = aircraft?.[field]?.pdfData;
+    let fileName = aircraft?.[field]?.fileName;
+    // Fallback IndexedDB
+    if (!pdfData) {
+      try {
+        await dataBackupManager.initPromise;
+        const full = await Promise.race([
+          dataBackupManager.getAircraftData(aircraft.id),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+        ]);
+        pdfData = full?.[field]?.pdfData;
+        fileName = fileName || full?.[field]?.fileName;
+      } catch (err) {
+        console.warn(`⚠️ Échec rechargement ${field} depuis IndexedDB :`, err.message);
+      }
+    }
+    if (!pdfData) {
+      setOpError({
+        severity: 'warn',
+        title: 'Fichier indisponible',
+        description: `Aucun PDF stocké localement pour cet avion (${field}). Réimporte-le via le wizard.`
+      });
+      return;
+    }
+    const link = document.createElement('a');
+    link.href = pdfData;
+    link.download = fileName || `${defaultPrefix}_${aircraft.registration || aircraft.id}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleDownloadManex = (aircraft) => downloadAircraftPdf(aircraft, 'manex', 'MANEX');
+  const handleDownloadWeighingReport = (aircraft) => downloadAircraftPdf(aircraft, 'weighingReport', 'Pesee');
+
   // Demande de suppression : ouvre le dialogue de confirmation éditorial
   const handleDelete = (aircraft) => {
     console.log('🗑️ AircraftModule - Requesting delete for aircraft:', aircraft);
@@ -1540,7 +1579,8 @@ export const AircraftModule = memo(() => {
                     }}
                   >
                     <div style={{ display: 'flex', flexDirection: 'column', gap: tokens.spacing[2], minWidth: 0 }}>
-                      <TechLabel>IMMAT</TechLabel>
+                      {/* IMMATRICULATION : libellé en orange (marque ALFlight), valeur en ivoire */}
+                      <TechLabel style={{ color: 'var(--accent-primary)' }}>IMMATRICULATION</TechLabel>
                       <div
                         style={{
                           fontFamily: tokens.fontFamily.mono,
@@ -1581,114 +1621,25 @@ export const AircraftModule = memo(() => {
                     </div>
                   </div>
 
-                  {/* Liste des champs manquants (dépliable) */}
-                  {isMissingExpanded && missing.length > 0 && (
-                    <div
-                      onClick={(e) => e.stopPropagation()}
-                      style={{
-                        backgroundColor: 'var(--bg-overlay)',
-                        border: `${tokens.border.thin} solid var(--border-subtle)`,
-                        borderRadius: tokens.radius.sm,
-                        padding: `${tokens.spacing[3]} ${tokens.spacing[4]}`,
-                        maxHeight: '200px',
-                        overflowY: 'auto'
-                      }}
-                    >
-                      <TechLabel style={{ marginBottom: tokens.spacing[2], display: 'block' }}>
-                        À compléter
-                      </TechLabel>
-                      {['CRITICAL', 'REQUIRED', 'OPTIONAL'].map((sev) => {
-                        const items = missing.filter((m) => m.severity === sev);
-                        if (items.length === 0) return null;
-                        const labelMap = { CRITICAL: 'Critiques', REQUIRED: 'Obligatoires', OPTIONAL: 'Optionnels' };
-                        const sevColor =
-                          sev === 'CRITICAL'
-                            ? 'var(--color-red-critical)'
-                            : sev === 'REQUIRED'
-                            ? 'var(--accent-primary)'
-                            : 'var(--text-tertiary)';
-                        return (
-                          <div key={sev} style={{ marginBottom: tokens.spacing[3] }}>
-                            <div
-                              style={{
-                                fontFamily: tokens.fontFamily.mono,
-                                fontSize: '10px',
-                                letterSpacing: '0.18em',
-                                textTransform: 'uppercase',
-                                color: sevColor,
-                                fontWeight: 600,
-                                marginBottom: '4px'
-                              }}
-                            >
-                              {labelMap[sev]} · {items.length}
-                            </div>
-                            {items.map((item) => (
-                              <div
-                                key={item.path}
-                                style={{
-                                  display: 'flex',
-                                  gap: tokens.spacing[2],
-                                  paddingLeft: tokens.spacing[3],
-                                  color: 'var(--text-secondary)',
-                                  fontSize: '12px',
-                                  lineHeight: 1.5
-                                }}
-                              >
-                                <span style={{ color: sevColor }}>·</span>
-                                <span>{item.label}</span>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-
                   {/* Spacer flex pour pousser le contenu vers le bas */}
                   <div style={{ flex: 1 }} />
 
-                  {/* Indicateurs MANEX / PESÉE — badges colorés vert si chargés, sinon dim */}
+                  {/* Indicateurs MANEX / PESÉE — sobres : titre gris, statut en vert si chargé */}
                   {(() => {
-                    const okColor = '#4FAE7F'; // vert sapin sobre (status-ok)
-                    const okBg = 'rgba(79, 174, 127, 0.10)';
-                    const dimBg = 'transparent';
+                    const okColor = '#4FAE7F'; // vert sapin sémantique (chargé)
                     return (
                       <div
                         style={{
                           display: 'grid',
                           gridTemplateColumns: '1fr 1fr',
-                          gap: tokens.spacing[3],
+                          gap: tokens.spacing[4],
                           paddingTop: tokens.spacing[3],
                           borderTop: `${tokens.border.thin} solid var(--border-subtle)`
                         }}
                       >
-                        {/* Carte MANEX */}
-                        <div
-                          style={{
-                            backgroundColor: manexLoaded ? okBg : dimBg,
-                            border: `${tokens.border.thin} solid ${manexLoaded ? 'rgba(79, 174, 127, 0.32)' : 'var(--border-subtle)'}`,
-                            borderRadius: '10px',
-                            padding: `${tokens.spacing[2]} ${tokens.spacing[3]}`,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '4px'
-                          }}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            {/* Dot LED */}
-                            <span
-                              style={{
-                                width: '6px',
-                                height: '6px',
-                                borderRadius: '50%',
-                                backgroundColor: manexLoaded ? okColor : 'var(--text-tertiary)',
-                                boxShadow: manexLoaded ? `0 0 6px ${okColor}` : 'none',
-                                flexShrink: 0
-                              }}
-                              aria-hidden="true"
-                            />
-                            <TechLabel>MANEX</TechLabel>
-                          </div>
+                        {/* MANEX */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <TechLabel>MANEX</TechLabel>
                           <div
                             style={{
                               fontFamily: tokens.fontFamily.mono,
@@ -1715,32 +1666,9 @@ export const AircraftModule = memo(() => {
                           )}
                         </div>
 
-                        {/* Carte PESÉE */}
-                        <div
-                          style={{
-                            backgroundColor: weighingLoaded ? okBg : dimBg,
-                            border: `${tokens.border.thin} solid ${weighingLoaded ? 'rgba(79, 174, 127, 0.32)' : 'var(--border-subtle)'}`,
-                            borderRadius: '10px',
-                            padding: `${tokens.spacing[2]} ${tokens.spacing[3]}`,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '4px'
-                          }}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span
-                              style={{
-                                width: '6px',
-                                height: '6px',
-                                borderRadius: '50%',
-                                backgroundColor: weighingLoaded ? okColor : 'var(--text-tertiary)',
-                                boxShadow: weighingLoaded ? `0 0 6px ${okColor}` : 'none',
-                                flexShrink: 0
-                              }}
-                              aria-hidden="true"
-                            />
-                            <TechLabel>PESÉE</TechLabel>
-                          </div>
+                        {/* PESÉE */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <TechLabel>PESÉE</TechLabel>
                           <div
                             style={{
                               fontFamily: tokens.fontFamily.mono,
@@ -1858,224 +1786,238 @@ export const AircraftModule = memo(() => {
                     </div>
                   </div>
 
-                  {/* Actions — barre unifiée : dropdown manquants + 4 actions */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
+                  {/* Actions — barre centrée : dropdown manquants + 5 boutons d'action.
+                      Helper local pour homogénéiser les boutons icônes. */}
+                  {(() => {
+                    const baseBtn = {
+                      minWidth: '44px',
+                      minHeight: '44px',
+                      display: 'inline-flex',
                       alignItems: 'center',
-                      gap: tokens.spacing[2],
-                      paddingTop: tokens.spacing[3],
-                      borderTop: `${tokens.border.thin} solid var(--border-subtle)`
-                    }}
-                  >
-                    {/* Bouton dropdown MANQUANTS — style badge distinctif (gauche) */}
-                    {missing.length > 0 ? (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setExpandedMissingIds((prev) => {
-                            const next = new Set(prev);
-                            if (next.has(aircraft.id)) next.delete(aircraft.id);
-                            else next.add(aircraft.id);
-                            return next;
-                          });
-                        }}
-                        title={`${missing.length} champ${missing.length > 1 ? 's' : ''} manquant${missing.length > 1 ? 's' : ''}`}
-                        aria-label={`${missing.length} champ${missing.length > 1 ? 's' : ''} manquant${missing.length > 1 ? 's' : ''}`}
-                        aria-expanded={isMissingExpanded}
+                      justifyContent: 'center',
+                      backgroundColor: 'transparent',
+                      border: `${tokens.border.thin} solid var(--border-regular)`,
+                      borderRadius: tokens.radius.sm,
+                      color: 'var(--text-secondary)',
+                      cursor: 'pointer',
+                      transition: `border-color ${tokens.motion.fast}, color ${tokens.motion.fast}, background-color ${tokens.motion.fast}`
+                    };
+                    const hoverIn = (e, color = 'var(--accent-primary)') => {
+                      e.currentTarget.style.borderColor = color;
+                      e.currentTarget.style.color = color;
+                    };
+                    const hoverOut = (e) => {
+                      e.currentTarget.style.borderColor = 'var(--border-regular)';
+                      e.currentTarget.style.color = 'var(--text-secondary)';
+                    };
+                    return (
+                      <div
                         style={{
-                          minHeight: '44px',
-                          display: 'inline-flex',
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          justifyContent: 'center',
                           alignItems: 'center',
-                          gap: '6px',
-                          padding: `0 ${tokens.spacing[3]}`,
-                          backgroundColor: hasCriticalGaps
-                            ? 'rgba(192, 69, 52, 0.12)'
-                            : 'var(--accent-soft)',
-                          border: `${tokens.border.thin} solid ${hasCriticalGaps ? 'var(--color-red-critical)' : 'var(--accent-primary)'}`,
-                          borderRadius: '999px',
-                          color: hasCriticalGaps ? 'var(--color-red-critical)' : 'var(--accent-primary)',
-                          fontFamily: tokens.fontFamily.mono,
-                          fontSize: '11px',
-                          letterSpacing: '0.10em',
-                          textTransform: 'uppercase',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          transition: `background-color ${tokens.motion.fast}`
+                          gap: tokens.spacing[2],
+                          paddingTop: tokens.spacing[3],
+                          borderTop: `${tokens.border.thin} solid var(--border-subtle)`
                         }}
                       >
-                        <AlertTriangle size={14} aria-hidden="true" />
-                        {missing.length} MANQUANT{missing.length > 1 ? 'S' : ''}
-                        {isMissingExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                      </button>
-                    ) : (
-                      /* Placeholder vide pour conserver l'alignement justify-between */
-                      <span aria-hidden="true" />
-                    )}
+                        {/* Pill MANQUANTS — visuellement distinct, sur la même ligne */}
+                        {missing.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpandedMissingIds((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(aircraft.id)) next.delete(aircraft.id);
+                                else next.add(aircraft.id);
+                                return next;
+                              });
+                            }}
+                            title={`${missing.length} champ${missing.length > 1 ? 's' : ''} manquant${missing.length > 1 ? 's' : ''}`}
+                            aria-label={`${missing.length} manquant${missing.length > 1 ? 's' : ''}`}
+                            aria-expanded={isMissingExpanded}
+                            style={{
+                              minHeight: '44px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: `0 ${tokens.spacing[3]}`,
+                              backgroundColor: hasCriticalGaps
+                                ? 'rgba(192, 69, 52, 0.12)'
+                                : 'var(--accent-soft)',
+                              border: `${tokens.border.thin} solid ${hasCriticalGaps ? 'var(--color-red-critical)' : 'var(--accent-primary)'}`,
+                              borderRadius: '999px',
+                              color: hasCriticalGaps ? 'var(--color-red-critical)' : 'var(--accent-primary)',
+                              fontFamily: tokens.fontFamily.mono,
+                              fontSize: '11px',
+                              letterSpacing: '0.10em',
+                              textTransform: 'uppercase',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              transition: `background-color ${tokens.motion.fast}`
+                            }}
+                          >
+                            <AlertTriangle size={14} aria-hidden="true" />
+                            {missing.length} MANQUANT{missing.length > 1 ? 'S' : ''}
+                            {isMissingExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          </button>
+                        )}
 
-                    {/* Groupe des 4 actions à droite */}
-                    <div style={{ display: 'flex', gap: tokens.spacing[2] }}>
-                    <button
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        const alreadyHasManex = !!(aircraft.hasManex || aircraft.manex);
-                        console.log('📚 AircraftModule - MANEX button clicked, hasManex=', alreadyHasManex);
+                        {/* 1. Télécharger MANEX */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownloadManex(aircraft);
+                          }}
+                          title={manexLoaded ? 'Télécharger le MANEX (PDF)' : 'Aucun MANEX disponible'}
+                          aria-label="Télécharger le MANEX"
+                          disabled={!manexLoaded}
+                          style={{
+                            ...baseBtn,
+                            color: manexLoaded ? 'var(--accent-primary)' : 'var(--text-tertiary)',
+                            opacity: manexLoaded ? 1 : 0.4,
+                            cursor: manexLoaded ? 'pointer' : 'not-allowed'
+                          }}
+                          onMouseEnter={manexLoaded ? (e) => hoverIn(e) : undefined}
+                          onMouseLeave={manexLoaded ? hoverOut : undefined}
+                        >
+                          <BookOpen size={16} aria-hidden="true" />
+                        </button>
 
-                        // 🔧 FIX: Si l'avion vient de la liste légère, ses données
-                        // volumineuses (manex.pdfData) ne sont pas en mémoire.
-                        let aircraftForViewer = aircraft;
-                        if (alreadyHasManex && !aircraft.manex?.pdfData) {
-                          try {
-                            console.log('🔍 Rechargement des données MANEX depuis IndexedDB…');
-                            await dataBackupManager.initPromise;
-                            const fullAircraft = await Promise.race([
-                              dataBackupManager.getAircraftData(aircraft.id),
-                              new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
-                            ]);
-                            if (fullAircraft && fullAircraft.manex) {
-                              aircraftForViewer = { ...aircraft, manex: fullAircraft.manex };
-                              console.log('✅ MANEX rechargé depuis IndexedDB');
-                            } else {
-                              console.log('⚠️ Aucune donnée MANEX trouvée dans IndexedDB pour cet avion');
-                            }
-                          } catch (err) {
-                            console.warn('⚠️ Erreur de chargement MANEX:', err.message);
-                          }
-                        }
+                        {/* 2. Télécharger fiche de pesée */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownloadWeighingReport(aircraft);
+                          }}
+                          title={weighingLoaded ? 'Télécharger la fiche de pesée (PDF)' : 'Aucune fiche de pesée disponible'}
+                          aria-label="Télécharger la fiche de pesée"
+                          disabled={!weighingLoaded}
+                          style={{
+                            ...baseBtn,
+                            color: weighingLoaded ? 'var(--accent-primary)' : 'var(--text-tertiary)',
+                            opacity: weighingLoaded ? 1 : 0.4,
+                            cursor: weighingLoaded ? 'pointer' : 'not-allowed'
+                          }}
+                          onMouseEnter={weighingLoaded ? (e) => hoverIn(e) : undefined}
+                          onMouseLeave={weighingLoaded ? hoverOut : undefined}
+                        >
+                          <FileText size={16} aria-hidden="true" />
+                        </button>
 
-                        setManexAircraft(aircraftForViewer);
-                        if (alreadyHasManex) {
-                          setShowManexViewer(true);
-                        } else {
-                          setShowManexImporter(true);
-                        }
-                      }}
-                      title={manexLoaded ? 'Voir le MANEX' : 'Importer le MANEX'}
-                      aria-label={manexLoaded ? 'Voir le MANEX' : 'Importer le MANEX'}
+                        {/* 3. Générer fiche PDF avion (rapport complet) */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleGeneratePDF(aircraft);
+                          }}
+                          title="Générer la fiche PDF complète de l'avion"
+                          aria-label="Générer la fiche PDF complète"
+                          style={baseBtn}
+                          onMouseEnter={(e) => hoverIn(e)}
+                          onMouseLeave={hoverOut}
+                        >
+                          <FileDown size={16} aria-hidden="true" />
+                        </button>
+
+                        {/* 4. Modifier */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenWizard(aircraft);
+                          }}
+                          title="Modifier avec l'assistant"
+                          aria-label="Modifier l'avion"
+                          style={baseBtn}
+                          onMouseEnter={(e) => hoverIn(e)}
+                          onMouseLeave={hoverOut}
+                        >
+                          <Edit2 size={16} aria-hidden="true" />
+                        </button>
+
+                        {/* 5. Supprimer */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(aircraft);
+                          }}
+                          title="Supprimer l'avion"
+                          aria-label="Supprimer l'avion"
+                          style={baseBtn}
+                          onMouseEnter={(e) => hoverIn(e, 'var(--color-red-critical)')}
+                          onMouseLeave={hoverOut}
+                        >
+                          <Trash2 size={16} aria-hidden="true" />
+                        </button>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Panel des champs manquants — s'ouvre EN BAS de la card */}
+                  {isMissingExpanded && missing.length > 0 && (
+                    <div
+                      onClick={(e) => e.stopPropagation()}
                       style={{
-                        minWidth: '44px',
-                        minHeight: '44px',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: 'transparent',
-                        border: `${tokens.border.thin} solid var(--border-regular)`,
+                        marginTop: tokens.spacing[2],
+                        backgroundColor: 'var(--bg-overlay)',
+                        border: `${tokens.border.thin} solid var(--border-subtle)`,
                         borderRadius: tokens.radius.sm,
-                        color: manexLoaded ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                        cursor: 'pointer',
-                        transition: `border-color ${tokens.motion.fast}, color ${tokens.motion.fast}`
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = 'var(--accent-primary)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = 'var(--border-regular)';
+                        padding: `${tokens.spacing[3]} ${tokens.spacing[4]}`,
+                        maxHeight: '240px',
+                        overflowY: 'auto'
                       }}
                     >
-                      <BookOpen size={16} aria-hidden="true" />
-                    </button>
-
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        console.log('📄 AircraftModule - Generate PDF button clicked');
-                        handleGeneratePDF(aircraft);
-                      }}
-                      title="Générer la fiche PDF"
-                      aria-label="Générer la fiche PDF"
-                      style={{
-                        minWidth: '44px',
-                        minHeight: '44px',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: 'transparent',
-                        border: `${tokens.border.thin} solid var(--border-regular)`,
-                        borderRadius: tokens.radius.sm,
-                        color: 'var(--text-secondary)',
-                        cursor: 'pointer',
-                        transition: `border-color ${tokens.motion.fast}, color ${tokens.motion.fast}`
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = 'var(--accent-primary)';
-                        e.currentTarget.style.color = 'var(--accent-primary)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = 'var(--border-regular)';
-                        e.currentTarget.style.color = 'var(--text-secondary)';
-                      }}
-                    >
-                      <FileDown size={16} aria-hidden="true" />
-                    </button>
-
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenWizard(aircraft);
-                      }}
-                      title="Modifier avec l'assistant"
-                      aria-label="Modifier l'avion"
-                      style={{
-                        minWidth: '44px',
-                        minHeight: '44px',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: 'transparent',
-                        border: `${tokens.border.thin} solid var(--border-regular)`,
-                        borderRadius: tokens.radius.sm,
-                        color: 'var(--text-secondary)',
-                        cursor: 'pointer',
-                        transition: `border-color ${tokens.motion.fast}, color ${tokens.motion.fast}`
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = 'var(--accent-primary)';
-                        e.currentTarget.style.color = 'var(--accent-primary)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = 'var(--border-regular)';
-                        e.currentTarget.style.color = 'var(--text-secondary)';
-                      }}
-                    >
-                      <Edit2 size={16} aria-hidden="true" />
-                    </button>
-
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        console.log('🗑️ AircraftModule - Delete button clicked');
-                        handleDelete(aircraft);
-                      }}
-                      title="Supprimer l'avion"
-                      aria-label="Supprimer l'avion"
-                      style={{
-                        minWidth: '44px',
-                        minHeight: '44px',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: 'transparent',
-                        border: `${tokens.border.thin} solid var(--border-regular)`,
-                        borderRadius: tokens.radius.sm,
-                        color: 'var(--text-secondary)',
-                        cursor: 'pointer',
-                        transition: `border-color ${tokens.motion.fast}, color ${tokens.motion.fast}`
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = 'var(--color-red-critical)';
-                        e.currentTarget.style.color = 'var(--color-red-critical)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = 'var(--border-regular)';
-                        e.currentTarget.style.color = 'var(--text-secondary)';
-                      }}
-                    >
-                      <Trash2 size={16} aria-hidden="true" />
-                    </button>
+                      <TechLabel style={{ marginBottom: tokens.spacing[2], display: 'block' }}>
+                        À compléter
+                      </TechLabel>
+                      {['CRITICAL', 'REQUIRED', 'OPTIONAL'].map((sev) => {
+                        const items = missing.filter((m) => m.severity === sev);
+                        if (items.length === 0) return null;
+                        const labelMap = { CRITICAL: 'Critiques', REQUIRED: 'Obligatoires', OPTIONAL: 'Optionnels' };
+                        const sevColor =
+                          sev === 'CRITICAL'
+                            ? 'var(--color-red-critical)'
+                            : sev === 'REQUIRED'
+                            ? 'var(--accent-primary)'
+                            : 'var(--text-tertiary)';
+                        return (
+                          <div key={sev} style={{ marginBottom: tokens.spacing[3] }}>
+                            <div
+                              style={{
+                                fontFamily: tokens.fontFamily.mono,
+                                fontSize: '10px',
+                                letterSpacing: '0.18em',
+                                textTransform: 'uppercase',
+                                color: sevColor,
+                                fontWeight: 600,
+                                marginBottom: '4px'
+                              }}
+                            >
+                              {labelMap[sev]} · {items.length}
+                            </div>
+                            {items.map((item) => (
+                              <div
+                                key={item.path}
+                                style={{
+                                  display: 'flex',
+                                  gap: tokens.spacing[2],
+                                  paddingLeft: tokens.spacing[3],
+                                  color: 'var(--text-secondary)',
+                                  fontSize: '12px',
+                                  lineHeight: 1.5
+                                }}
+                              >
+                                <span style={{ color: sevColor }}>·</span>
+                                <span>{item.label}</span>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })}
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             );

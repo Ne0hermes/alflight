@@ -128,9 +128,10 @@ export const DataBackupUI = () => {
   return (
     <div style={{
       padding: '16px',
-      background: '#ffffff',
-      borderRadius: '8px',
-      border: '1px solid #e5e7eb',
+      background: 'var(--bg-surface)',
+      color: 'var(--text-primary)',
+      borderRadius: '12px',
+      border: '1px solid var(--border-subtle)',
       marginBottom: '16px'
     }}>
       {/* En-t\u00eate */}

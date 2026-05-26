@@ -11,8 +11,8 @@
 export const colors = {
   // Couleurs principales ALFlight
   primary: {
-    main: '#93163C',
-    light: '#A91B45',
+    main: '#f26921',
+    light: '#FF7E36',
     dark: '#6B0F2B',
     lighter: '#B91D4C',
     darker: '#5A0C22',
@@ -20,8 +20,8 @@ export const colors = {
 
   // Couleurs secondaires
   secondary: {
-    main: '#93163C',
-    light: '#A91B45',
+    main: '#f26921',
+    light: '#FF7E36',
     dark: '#6B0F2B',
   },
 
@@ -72,8 +72,8 @@ export const colors = {
   border: {
     default: '#D1D5DB',
     light: 'rgba(209, 213, 219, 0.3)',
-    dark: '#93163C',
-    focus: '#93163C',
+    dark: '#f26921',
+    focus: '#f26921',
   },
 
   // Mode sombre (pour future implémentation complète)
@@ -210,10 +210,10 @@ export const typography = {
 // GRADIENTS
 // ============================================
 export const gradients = {
-  primary: 'linear-gradient(135deg, #8B1538, #A91B45)',
+  primary: 'linear-gradient(135deg, #8B1538, #FF7E36)',
   primaryHover: 'linear-gradient(135deg, #6B0F2B, #8B1538)',
   hero: 'linear-gradient(135deg, #8B1538 0%, #6B0F2B 100%)',
-  logo: 'linear-gradient(135deg, #ffffff, #8B1538, #A91B45, #8B1538, #ffffff)',
+  logo: 'linear-gradient(135deg, #ffffff, #8B1538, #FF7E36, #8B1538, #ffffff)',
   subtle: 'linear-gradient(135deg, rgba(147, 22, 60, 0.05), rgba(147, 22, 60, 0.02))',
 };
 

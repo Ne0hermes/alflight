@@ -39,7 +39,7 @@ export const SimpleDebugButton = () => {
           width: '60px',
           height: '60px',
           borderRadius: '50%',
-          background: 'linear-gradient(135deg, #8B1538, #A91B45)',
+          background: 'linear-gradient(135deg, #8B1538, #FF7E36)',
           border: '2px solid #6B0F2B',
           color: 'white',
           fontSize: '24px',

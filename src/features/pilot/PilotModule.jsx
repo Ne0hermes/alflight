@@ -41,7 +41,7 @@ const PilotModule = () => {
                 alignItems: 'center',
                 gap: '8px',
                 padding: '12px 20px',
-                backgroundColor: activeTab === tab.id ? '#93163C' : 'transparent',
+                backgroundColor: activeTab === tab.id ? '#f26921' : 'transparent',
                 color: activeTab === tab.id ? 'white' : '#6b7280',
                 border: 'none',
                 borderTopLeftRadius: '8px',
@@ -51,7 +51,7 @@ const PilotModule = () => {
                 cursor: 'pointer',
                 transition: 'all 0.2s',
                 marginBottom: '-2px',
-                borderBottom: activeTab === tab.id ? '2px solid #93163C' : '2px solid transparent'
+                borderBottom: activeTab === tab.id ? '2px solid #f26921' : '2px solid transparent'
               }}
               onMouseEnter={(e) => {
                 if (activeTab !== tab.id) {

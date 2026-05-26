@@ -883,7 +883,7 @@ export const SIAReportEnhanced = () => {
             width: '100%',
             textAlign: 'center',
             padding: '14px 24px',
-            backgroundColor: '#93163C',
+            backgroundColor: '#f26921',
             color: '#FFFFFF',
             border: 'none',
             borderRadius: '8px',
@@ -895,12 +895,12 @@ export const SIAReportEnhanced = () => {
             transition: 'all 0.2s ease'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#A91B45';
+            e.currentTarget.style.backgroundColor = '#FF7E36';
             e.currentTarget.style.transform = 'translateY(-2px)';
             e.currentTarget.style.boxShadow = '0 6px 16px rgba(147, 22, 60, 0.4)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#93163C';
+            e.currentTarget.style.backgroundColor = '#f26921';
             e.currentTarget.style.transform = 'translateY(0)';
             e.currentTarget.style.boxShadow = '0 4px 12px rgba(147, 22, 60, 0.3)';
           }}

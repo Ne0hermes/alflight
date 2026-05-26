@@ -62,50 +62,92 @@ Le pilote a demandé un **style glass morphism + loading page premium type sr-se
 
 #### A. Tokens (couleurs, espacements, typo)
 
-**Palette ALFlight Dark Premium** (recommandation par défaut, à adapter) :
+**Palette ALFlight v1 (validée par le pilote 2026-05-22)** — Charte PURE noir / blanc / orange en cohérence avec le Business Plan :
 
 ```css
-/* Backgrounds */
---bg-deep:        #0A0E1A   /* ciel nocturne profond */
---bg-surface:     #111827   /* surfaces principales */
---bg-elevated:    #1F2937   /* cartes surélevées */
+/* === BLANC (texte primaire et fond mode jour) === */
+--color-white-pure: #FFFFFF;            /* utilisé avec parcimonie (jamais sur grand aplat en mode nuit) */
+--color-white-soft: #F5F2EC;            /* blanc cassé, surface mode jour, texte sur fond noir mode nuit */
+--color-white-muted: #C9C5BD;           /* texte secondaire mode nuit */
+--color-white-dim:   #8A867E;           /* metadata, captions */
 
-/* Accent ALFlight */
---accent-primary: #93163C   /* rouge bordeaux ALFlight (déjà dans theme-color) */
---accent-glow:    #C72056   /* hover/active */
---accent-soft:    rgba(147, 22, 60, 0.15)
+/* === NOIR (fond mode nuit, texte mode jour) === */
+--color-black-deep:     #0A0A0A;        /* fond profond mode nuit (jamais #000000 pur) */
+--color-black-elevated: #141414;        /* cards mode nuit */
+--color-black-overlay:  #1C1C1C;        /* modales, drawers */
+--color-black-surface:  #232323;        /* instrument panels datasheet */
+--color-black-text:     #0F0F0F;        /* texte sur fond blanc en mode jour */
 
-/* Aviation cues */
---sky-blue:       #38BDF8   /* ciel jour, navigation */
---aurora-cyan:    #67E8F9   /* lueur d'horizon */
---warning-amber:  #F59E0B   /* alerte non-bloquante */
---danger-red:     #DC2626   /* alerte bloquante (NO-GO) */
---safe-green:     #10B981   /* validation, GO */
+/* === ORANGE ALFLIGHT (marque, CTA, accent unique) === */
+--color-orange-primary: #f26921;        /* ORANGE OFFICIEL ALFLIGHT — utilisé pour TOUS les CTA, focus, actifs */
+--color-orange-bright:  #FF7E36;        /* hover */
+--color-orange-dim:     #D85410;        /* active, pressed, mode nuit anti-éblouissement */
+--color-orange-soft:    rgba(242, 105, 33, 0.12);  /* fond subtile sélection, focus rings */
 
-/* Glass */
---glass-bg:       rgba(255, 255, 255, 0.06)
---glass-border:   rgba(255, 255, 255, 0.12)
---glass-blur:     blur(16px) saturate(180%)
+/* === SÉMANTIQUE (PAS de couleurs supplémentaires — on dérive l'orange + neutres) === */
+/*    Pour les statuts, on utilise orange + neutres uniquement,
+      avec des icônes pour distinguer (✓, !, ×) et du texte explicite.
+      EXCEPTION : si vraiment indispensable pour la sécurité (NO-GO catastrophique),
+      on peut utiliser un rouge tendu noir-tinté très saturé, mais à éviter. */
+--color-status-ok:      var(--color-white-soft);         /* validation : texte ivoire + icône check, pas de couleur */
+--color-status-warn:    var(--color-orange-primary);     /* alerte non-bloquante : orange */
+--color-status-critical: #C04534;                        /* SEUL rouge tolérible — réservé NO-GO catastrophique */
+--color-status-neutral:  var(--color-white-dim);         /* info, neutre */
 
-/* Text */
---text-primary:   #F9FAFB
---text-secondary: #D1D5DB
---text-muted:     #9CA3AF
+/* === BORDURES === */
+--color-border-subtle:  rgba(245, 242, 236, 0.06);       /* 1px très discret mode nuit */
+--color-border-default: rgba(245, 242, 236, 0.14);
+--color-border-strong:  rgba(245, 242, 236, 0.32);
+--color-border-accent:  var(--color-orange-primary);     /* focus, sélection */
+/* En mode jour : remplacer rgba(245,...) par rgba(15,15,15, ...) (texte sur clair) */
 
-/* Spacings : système 4 px */
---spacing-1: 4px   /* tight */
---spacing-2: 8px   /* compact */
---spacing-3: 12px  /* default cards */
---spacing-4: 16px  /* default sections */
---spacing-6: 24px  /* spacing entre blocs */
---spacing-8: 32px  /* spacing sections majeures */
---spacing-12: 48px /* hero / loading page */
+/* === SPACINGS (système 4 px) === */
+--spacing-1: 4px
+--spacing-2: 8px
+--spacing-3: 12px
+--spacing-4: 16px
+--spacing-6: 24px
+--spacing-8: 32px
+--spacing-12: 48px
+--spacing-16: 64px  /* hero / sections cinematic */
 
-/* Typo */
---font-display:   'Space Grotesk', 'Inter', system-ui  /* titres */
---font-body:      'Inter', system-ui                    /* texte */
---font-mono:      'JetBrains Mono', 'SF Mono', monospace /* coords, codes ICAO */
+/* === TYPO — Century Gothic (police du BP) ===
+   Century Gothic est propriétaire Microsoft (pas libre pour le web).
+   On la liste en première priorité (utilisable sur desktop Windows/Mac qui l'ont
+   installée), puis les équivalents libres en fallback :
+     - URW Gothic (équivalent open-source quasi-identique)
+     - Questrial (Google Fonts, géométrique proche)
+     - Jost (Google Fonts, héritier moderne)
+   Pour assurer cohérence cross-platform, charger Questrial via @import Google Fonts. */
+
+--font-primary: 'Century Gothic', 'URW Gothic', 'Questrial', 'Jost', 'Avant Garde', system-ui, sans-serif;
+--font-display: var(--font-primary);    /* PAS de serif — on garde l'identité Century Gothic */
+--font-sans:    var(--font-primary);
+--font-mono:    'JetBrains Mono', 'SF Mono', 'Consolas', monospace;  /* uniquement pour données techniques (coords, codes ICAO, immatriculations) */
+
+--letter-spacing-tech:    0.10em;    /* labels ALL CAPS — Century Gothic exige du letter-spacing pour bien respirer */
+--letter-spacing-display: -0.01em;   /* titres */
+--letter-spacing-body:    0;
+--letter-spacing-mono:    0;
+
+/* === ÉCHELLE TYPO === */
+--text-eyebrow: 11px    /* label tech ALL CAPS */
+--text-caption: 12px
+--text-body:    14px
+--text-medium:  16px
+--text-large:   18px
+--text-h3:      24px
+--text-h2:      32px
+--text-h1:      48px
+--text-hero:    72px    /* titre éditorial type SR-71 */
+--text-display: 120px   /* splash screen */
 ```
+
+**Règles d'usage strictes** :
+- **Orange `#f26921`** = couleur de marque, jamais utilisée hors CTA / focus / éléments actifs. Une seule occurrence par écran idéalement.
+- **Pas de bordeaux** — il a été retiré de la charte (le `theme-color` HTML doit aussi être migré vers `#f26921` ou `#0A0A0A`).
+- **Pas de glass morphism flashy** — le user a confirmé une charte sobre noir/blanc/orange. Les surfaces peuvent avoir un léger `backdrop-filter: blur(12px)` quand elles passent au-dessus de photos, mais sans transparence colorée.
+- **Century Gothic en tout** — pas de serif éditorial même pour les titres. La typographie géométrique du Century Gothic crée déjà un caractère premium/aviation suffisant.
 
 #### B. Composant `<GlassButton>` (référence)
 

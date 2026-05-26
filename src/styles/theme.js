@@ -2,8 +2,8 @@
 export const theme = {
   colors: {
     // Couleurs Bordeaux
-    primary: '#93163C',
-    secondary: '#A91B45', 
+    primary: '#f26921',
+    secondary: '#FF7E36', 
     accent: '#6B0F2B',
     
     // Couleurs de base
@@ -34,8 +34,8 @@ export const theme = {
   },
   
   gradients: {
-    primary: 'linear-gradient(135deg, #8B1538, #A91B45)',
-    logo: 'linear-gradient(135deg, #ffffff, #8B1538, #A91B45, #8B1538, #ffffff)',
+    primary: 'linear-gradient(135deg, #8B1538, #FF7E36)',
+    logo: 'linear-gradient(135deg, #ffffff, #8B1538, #FF7E36, #8B1538, #ffffff)',
     hero: 'linear-gradient(135deg, #8B1538 0%, #6B0F2B 100%)'
   },
   

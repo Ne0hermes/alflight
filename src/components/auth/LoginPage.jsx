@@ -96,7 +96,7 @@ const LoginPage = () => {
       >
         {/* Logo et Titre */}
         <Box sx={{ textAlign: 'center', mb: 3 }}>
-          <FlightIcon sx={{ fontSize: 48, color: '#93163C', mb: 1 }} />
+          <FlightIcon sx={{ fontSize: 48, color: '#f26921', mb: 1 }} />
           <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 700 }}>
             ALFlight
           </Typography>

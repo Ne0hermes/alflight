@@ -400,11 +400,11 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
         padding: '16px',
         backgroundColor: '#f0f9ff',
         borderRadius: '8px',
-        borderLeft: '4px solid #93163c',
+        borderLeft: '4px solid #f26921',
         marginTop: '20px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-          <Info size={18} color="#93163c" />
+          <Info size={18} color="#f26921" />
           <span style={{ fontWeight: '600', color: '#1e293b' }}>Sélection des déroutements</span>
         </div>
         <p style={{ margin: 0, fontSize: '14px', color: '#475569' }}>

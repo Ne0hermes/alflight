@@ -1,0 +1,1196 @@
+{
+  "airac": "2026-05-14",
+  "count": 119,
+  "items": [
+    {
+      "id": "AHO_23305419",
+      "aerodrome_icao": "FMEE",
+      "obstacle_sia_uid": "23305380",
+      "obstacle_latitude": -20.894417,
+      "obstacle_longitude": 55.533028,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "23305419"
+    },
+    {
+      "id": "AHO_23305421",
+      "aerodrome_icao": "FMEE",
+      "obstacle_sia_uid": "23305383",
+      "obstacle_latitude": -20.899139,
+      "obstacle_longitude": 55.530778,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "23305421"
+    },
+    {
+      "id": "AHO_23305423",
+      "aerodrome_icao": "FMEE",
+      "obstacle_sia_uid": "23305386",
+      "obstacle_latitude": -20.902389,
+      "obstacle_longitude": 55.536833,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "23305423"
+    },
+    {
+      "id": "AHO_23305425",
+      "aerodrome_icao": "FMEE",
+      "obstacle_sia_uid": "23305388",
+      "obstacle_latitude": -20.897944,
+      "obstacle_longitude": 55.544194,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "23305425"
+    },
+    {
+      "id": "AHO_23305427",
+      "aerodrome_icao": "FMEE",
+      "obstacle_sia_uid": "23305391",
+      "obstacle_latitude": -20.897472,
+      "obstacle_longitude": 55.544972,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "23305427"
+    },
+    {
+      "id": "AHO_23305430",
+      "aerodrome_icao": "FMEE",
+      "obstacle_sia_uid": "23305393",
+      "obstacle_latitude": -20.901639,
+      "obstacle_longitude": 55.557528,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "23305430"
+    },
+    {
+      "id": "AHO_23305432",
+      "aerodrome_icao": "FMEE",
+      "obstacle_sia_uid": "23305398",
+      "obstacle_latitude": -20.903972,
+      "obstacle_longitude": 55.559806,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "23305432"
+    },
+    {
+      "id": "AHO_23305404",
+      "aerodrome_icao": "FMEE",
+      "obstacle_sia_uid": "23305352",
+      "obstacle_latitude": -20.897333,
+      "obstacle_longitude": 55.529583,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "23305404"
+    },
+    {
+      "id": "AHO_23305728",
+      "aerodrome_icao": "FMEE",
+      "obstacle_sia_uid": "23305718",
+      "obstacle_latitude": -20.896333,
+      "obstacle_longitude": 55.554556,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "23305728"
+    },
+    {
+      "id": "AHO_23305730",
+      "aerodrome_icao": "FMEE",
+      "obstacle_sia_uid": "23305726",
+      "obstacle_latitude": -20.898944,
+      "obstacle_longitude": 55.55625,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "23305730"
+    },
+    {
+      "id": "AHO_23305413",
+      "aerodrome_icao": "FMEE",
+      "obstacle_sia_uid": "23305371",
+      "obstacle_latitude": -20.899389,
+      "obstacle_longitude": 55.555639,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "23305413"
+    },
+    {
+      "id": "AHO_23305415",
+      "aerodrome_icao": "FMEE",
+      "obstacle_sia_uid": "23305373",
+      "obstacle_latitude": -20.897306,
+      "obstacle_longitude": 55.568361,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "23305415"
+    },
+    {
+      "id": "AHO_23305417",
+      "aerodrome_icao": "FMEE",
+      "obstacle_sia_uid": "23305375",
+      "obstacle_latitude": -20.898194,
+      "obstacle_longitude": 55.5305,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "23305417"
+    },
+    {
+      "id": "AHO_35095651",
+      "aerodrome_icao": "FMEE",
+      "obstacle_sia_uid": "35095483",
+      "obstacle_latitude": -20.894042,
+      "obstacle_longitude": 55.538589,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "35095651"
+    },
+    {
+      "id": "AHO_35095653",
+      "aerodrome_icao": "FMEE",
+      "obstacle_sia_uid": "35095487",
+      "obstacle_latitude": -20.886153,
+      "obstacle_longitude": 55.502928,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "35095653"
+    },
+    {
+      "id": "AHO_35095655",
+      "aerodrome_icao": "FMEE",
+      "obstacle_sia_uid": "35095489",
+      "obstacle_latitude": -20.885636,
+      "obstacle_longitude": 55.503033,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "35095655"
+    },
+    {
+      "id": "AHO_35095657",
+      "aerodrome_icao": "FMEE",
+      "obstacle_sia_uid": "35095494",
+      "obstacle_latitude": -20.884736,
+      "obstacle_longitude": 55.502794,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "35095657"
+    },
+    {
+      "id": "AHO_35095649",
+      "aerodrome_icao": "FMEE",
+      "obstacle_sia_uid": "35095481",
+      "obstacle_latitude": -20.894444,
+      "obstacle_longitude": 55.540278,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "35095649"
+    },
+    {
+      "id": "AHO_45308290",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308268",
+      "obstacle_latitude": -12.800344,
+      "obstacle_longitude": 45.278713,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308290"
+    },
+    {
+      "id": "AHO_45308294",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308272",
+      "obstacle_latitude": -12.793711,
+      "obstacle_longitude": 45.273508,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308294"
+    },
+    {
+      "id": "AHO_45308296",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308274",
+      "obstacle_latitude": -12.801903,
+      "obstacle_longitude": 45.279372,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308296"
+    },
+    {
+      "id": "AHO_45308298",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308276",
+      "obstacle_latitude": -12.80046,
+      "obstacle_longitude": 45.278779,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308298"
+    },
+    {
+      "id": "AHO_45308300",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308278",
+      "obstacle_latitude": -12.801366,
+      "obstacle_longitude": 45.27895,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308300"
+    },
+    {
+      "id": "AHO_45308302",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308280",
+      "obstacle_latitude": -12.800338,
+      "obstacle_longitude": 45.27876,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308302"
+    },
+    {
+      "id": "AHO_45308304",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308282",
+      "obstacle_latitude": -12.795628,
+      "obstacle_longitude": 45.275309,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308304"
+    },
+    {
+      "id": "AHO_45308469",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308311",
+      "obstacle_latitude": -12.797703,
+      "obstacle_longitude": 45.276424,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308469"
+    },
+    {
+      "id": "AHO_45308471",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308314",
+      "obstacle_latitude": -12.796491,
+      "obstacle_longitude": 45.275585,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308471"
+    },
+    {
+      "id": "AHO_45308473",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308318",
+      "obstacle_latitude": -12.800948,
+      "obstacle_longitude": 45.27857,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308473"
+    },
+    {
+      "id": "AHO_45308475",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308320",
+      "obstacle_latitude": -12.797897,
+      "obstacle_longitude": 45.27615,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308475"
+    },
+    {
+      "id": "AHO_45308477",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308323",
+      "obstacle_latitude": -12.80181,
+      "obstacle_longitude": 45.279225,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308477"
+    },
+    {
+      "id": "AHO_45308479",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308326",
+      "obstacle_latitude": -12.793772,
+      "obstacle_longitude": 45.27348,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308479"
+    },
+    {
+      "id": "AHO_45308481",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308329",
+      "obstacle_latitude": -12.800535,
+      "obstacle_longitude": 45.277885,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308481"
+    },
+    {
+      "id": "AHO_45308485",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308331",
+      "obstacle_latitude": -12.801649,
+      "obstacle_longitude": 45.279052,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308485"
+    },
+    {
+      "id": "AHO_45308487",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308333",
+      "obstacle_latitude": -12.800372,
+      "obstacle_longitude": 45.277613,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308487"
+    },
+    {
+      "id": "AHO_45308489",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308335",
+      "obstacle_latitude": -12.800527,
+      "obstacle_longitude": 45.278378,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308489"
+    },
+    {
+      "id": "AHO_45308491",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308337",
+      "obstacle_latitude": -12.801475,
+      "obstacle_longitude": 45.279136,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308491"
+    },
+    {
+      "id": "AHO_45308493",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308339",
+      "obstacle_latitude": -12.79561,
+      "obstacle_longitude": 45.274949,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308493"
+    },
+    {
+      "id": "AHO_45308495",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308341",
+      "obstacle_latitude": -12.800993,
+      "obstacle_longitude": 45.278544,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308495"
+    },
+    {
+      "id": "AHO_45308497",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308343",
+      "obstacle_latitude": -12.794201,
+      "obstacle_longitude": 45.274254,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308497"
+    },
+    {
+      "id": "AHO_45308499",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308345",
+      "obstacle_latitude": -12.801163,
+      "obstacle_longitude": 45.279069,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308499"
+    },
+    {
+      "id": "AHO_45308501",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308347",
+      "obstacle_latitude": -12.800432,
+      "obstacle_longitude": 45.27785,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308501"
+    },
+    {
+      "id": "AHO_45308503",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308349",
+      "obstacle_latitude": -12.800846,
+      "obstacle_longitude": 45.27888,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308503"
+    },
+    {
+      "id": "AHO_45308505",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308351",
+      "obstacle_latitude": -12.801746,
+      "obstacle_longitude": 45.279156,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308505"
+    },
+    {
+      "id": "AHO_45308507",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308353",
+      "obstacle_latitude": -12.800944,
+      "obstacle_longitude": 45.27831,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308507"
+    },
+    {
+      "id": "AHO_45308509",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308355",
+      "obstacle_latitude": -12.800646,
+      "obstacle_longitude": 45.278138,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308509"
+    },
+    {
+      "id": "AHO_45308511",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308357",
+      "obstacle_latitude": -12.799954,
+      "obstacle_longitude": 45.277432,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308511"
+    },
+    {
+      "id": "AHO_45308513",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308359",
+      "obstacle_latitude": -12.799149,
+      "obstacle_longitude": 45.277937,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308513"
+    },
+    {
+      "id": "AHO_45308515",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308361",
+      "obstacle_latitude": -12.799175,
+      "obstacle_longitude": 45.277552,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308515"
+    },
+    {
+      "id": "AHO_45308517",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308363",
+      "obstacle_latitude": -12.798964,
+      "obstacle_longitude": 45.277319,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308517"
+    },
+    {
+      "id": "AHO_45308519",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308365",
+      "obstacle_latitude": -12.798642,
+      "obstacle_longitude": 45.276962,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308519"
+    },
+    {
+      "id": "AHO_45308521",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308367",
+      "obstacle_latitude": -12.797504,
+      "obstacle_longitude": 45.277345,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308521"
+    },
+    {
+      "id": "AHO_45308523",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308369",
+      "obstacle_latitude": -12.797966,
+      "obstacle_longitude": 45.276202,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308523"
+    },
+    {
+      "id": "AHO_45308525",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308371",
+      "obstacle_latitude": -12.795702,
+      "obstacle_longitude": 45.275381,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308525"
+    },
+    {
+      "id": "AHO_45308527",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308373",
+      "obstacle_latitude": -12.79506,
+      "obstacle_longitude": 45.275967,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308527"
+    },
+    {
+      "id": "AHO_45308529",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308375",
+      "obstacle_latitude": -12.794204,
+      "obstacle_longitude": 45.275769,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308529"
+    },
+    {
+      "id": "AHO_45308531",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308377",
+      "obstacle_latitude": -12.794387,
+      "obstacle_longitude": 45.27488,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308531"
+    },
+    {
+      "id": "AHO_45308533",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308379",
+      "obstacle_latitude": -12.79388,
+      "obstacle_longitude": 45.274847,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308533"
+    },
+    {
+      "id": "AHO_45308535",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308381",
+      "obstacle_latitude": -12.793425,
+      "obstacle_longitude": 45.275432,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308535"
+    },
+    {
+      "id": "AHO_45308537",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308383",
+      "obstacle_latitude": -12.791781,
+      "obstacle_longitude": 45.274779,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308537"
+    },
+    {
+      "id": "AHO_45308539",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308385",
+      "obstacle_latitude": -12.791583,
+      "obstacle_longitude": 45.274772,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308539"
+    },
+    {
+      "id": "AHO_45308541",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308387",
+      "obstacle_latitude": -12.791087,
+      "obstacle_longitude": 45.274522,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308541"
+    },
+    {
+      "id": "AHO_45308543",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308389",
+      "obstacle_latitude": -12.791722,
+      "obstacle_longitude": 45.272354,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308543"
+    },
+    {
+      "id": "AHO_45308545",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308391",
+      "obstacle_latitude": -12.791858,
+      "obstacle_longitude": 45.272369,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308545"
+    },
+    {
+      "id": "AHO_45308547",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308395",
+      "obstacle_latitude": -12.791483,
+      "obstacle_longitude": 45.272196,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308547"
+    },
+    {
+      "id": "AHO_45308549",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308397",
+      "obstacle_latitude": -12.791819,
+      "obstacle_longitude": 45.272448,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308549"
+    },
+    {
+      "id": "AHO_45308551",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308411",
+      "obstacle_latitude": -12.791525,
+      "obstacle_longitude": 45.27226,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308551"
+    },
+    {
+      "id": "AHO_45308553",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308413",
+      "obstacle_latitude": -12.791543,
+      "obstacle_longitude": 45.272205,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308553"
+    },
+    {
+      "id": "AHO_45308555",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308415",
+      "obstacle_latitude": -12.791901,
+      "obstacle_longitude": 45.272276,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308555"
+    },
+    {
+      "id": "AHO_45308603",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308446",
+      "obstacle_latitude": -12.801447,
+      "obstacle_longitude": 45.279223,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308603"
+    },
+    {
+      "id": "AHO_45308605",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308448",
+      "obstacle_latitude": -12.800554,
+      "obstacle_longitude": 45.278761,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308605"
+    },
+    {
+      "id": "AHO_45308607",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308450",
+      "obstacle_latitude": -12.801357,
+      "obstacle_longitude": 45.278897,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308607"
+    },
+    {
+      "id": "AHO_45308610",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308452",
+      "obstacle_latitude": -12.80175,
+      "obstacle_longitude": 45.279314,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308610"
+    },
+    {
+      "id": "AHO_45308612",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308454",
+      "obstacle_latitude": -12.801375,
+      "obstacle_longitude": 45.279153,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308612"
+    },
+    {
+      "id": "AHO_45308614",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308456",
+      "obstacle_latitude": -12.800531,
+      "obstacle_longitude": 45.278763,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308614"
+    },
+    {
+      "id": "AHO_45308616",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308458",
+      "obstacle_latitude": -12.799799,
+      "obstacle_longitude": 45.277808,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308616"
+    },
+    {
+      "id": "AHO_45308618",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308460",
+      "obstacle_latitude": -12.798468,
+      "obstacle_longitude": 45.276586,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308618"
+    },
+    {
+      "id": "AHO_45308620",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308462",
+      "obstacle_latitude": -12.793646,
+      "obstacle_longitude": 45.275108,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308620"
+    },
+    {
+      "id": "AHO_45308622",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308465",
+      "obstacle_latitude": -12.790747,
+      "obstacle_longitude": 45.27432,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308622"
+    },
+    {
+      "id": "AHO_45308624",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308467",
+      "obstacle_latitude": -12.790933,
+      "obstacle_longitude": 45.273691,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308624"
+    },
+    {
+      "id": "AHO_45308251",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308241",
+      "obstacle_latitude": -12.792065,
+      "obstacle_longitude": 45.272665,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308251"
+    },
+    {
+      "id": "AHO_45308253",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308243",
+      "obstacle_latitude": -12.801825,
+      "obstacle_longitude": 45.279293,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308253"
+    },
+    {
+      "id": "AHO_45308255",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308249",
+      "obstacle_latitude": -12.801276,
+      "obstacle_longitude": 45.279148,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308255"
+    },
+    {
+      "id": "AHO_45308257",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308247",
+      "obstacle_latitude": -12.795467,
+      "obstacle_longitude": 45.275096,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308257"
+    },
+    {
+      "id": "AHO_45308259",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308239",
+      "obstacle_latitude": -12.80232,
+      "obstacle_longitude": 45.279538,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308259"
+    },
+    {
+      "id": "AHO_45308284",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308262",
+      "obstacle_latitude": -12.793568,
+      "obstacle_longitude": 45.27366,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308284"
+    },
+    {
+      "id": "AHO_45308286",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308264",
+      "obstacle_latitude": -12.8003,
+      "obstacle_longitude": 45.278722,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308286"
+    },
+    {
+      "id": "AHO_45308288",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308266",
+      "obstacle_latitude": -12.801321,
+      "obstacle_longitude": 45.279189,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308288"
+    },
+    {
+      "id": "AHO_45308292",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308270",
+      "obstacle_latitude": -12.80152,
+      "obstacle_longitude": 45.279204,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308292"
+    },
+    {
+      "id": "AHO_45308559",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308557",
+      "obstacle_latitude": -12.791389,
+      "obstacle_longitude": 45.272236,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308559"
+    },
+    {
+      "id": "AHO_45308561",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308419",
+      "obstacle_latitude": -12.802064,
+      "obstacle_longitude": 45.279498,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308561"
+    },
+    {
+      "id": "AHO_45308576",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308421",
+      "obstacle_latitude": -12.800409,
+      "obstacle_longitude": 45.278809,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308576"
+    },
+    {
+      "id": "AHO_45308578",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308423",
+      "obstacle_latitude": -12.800428,
+      "obstacle_longitude": 45.278812,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308578"
+    },
+    {
+      "id": "AHO_45308580",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308425",
+      "obstacle_latitude": -12.80226,
+      "obstacle_longitude": 45.279559,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308580"
+    },
+    {
+      "id": "AHO_45308582",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308427",
+      "obstacle_latitude": -12.79799,
+      "obstacle_longitude": 45.276152,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308582"
+    },
+    {
+      "id": "AHO_45308584",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308429",
+      "obstacle_latitude": -12.801591,
+      "obstacle_longitude": 45.27929,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308584"
+    },
+    {
+      "id": "AHO_45308586",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308431",
+      "obstacle_latitude": -12.80109,
+      "obstacle_longitude": 45.278951,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308586"
+    },
+    {
+      "id": "AHO_45308589",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308433",
+      "obstacle_latitude": -12.792666,
+      "obstacle_longitude": 45.272727,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308589"
+    },
+    {
+      "id": "AHO_45308591",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308435",
+      "obstacle_latitude": -12.80102,
+      "obstacle_longitude": 45.279037,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308591"
+    },
+    {
+      "id": "AHO_45308593",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308437",
+      "obstacle_latitude": -12.801479,
+      "obstacle_longitude": 45.279093,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308593"
+    },
+    {
+      "id": "AHO_45308595",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308439",
+      "obstacle_latitude": -12.801231,
+      "obstacle_longitude": 45.278695,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308595"
+    },
+    {
+      "id": "AHO_45308597",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308441",
+      "obstacle_latitude": -12.800927,
+      "obstacle_longitude": 45.278942,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308597"
+    },
+    {
+      "id": "AHO_45308599",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308417",
+      "obstacle_latitude": -12.80111,
+      "obstacle_longitude": 45.279107,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308599"
+    },
+    {
+      "id": "AHO_45308601",
+      "aerodrome_icao": "FMCZ",
+      "obstacle_sia_uid": "45308444",
+      "obstacle_latitude": -12.791909,
+      "obstacle_longitude": 45.272216,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "45308601"
+    },
+    {
+      "id": "AHO_50462581",
+      "aerodrome_icao": "FMEE",
+      "obstacle_sia_uid": "50462573",
+      "obstacle_latitude": -20.895508,
+      "obstacle_longitude": 55.502056,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "50462581"
+    },
+    {
+      "id": "AHO_50462583",
+      "aerodrome_icao": "FMEE",
+      "obstacle_sia_uid": "50462575",
+      "obstacle_latitude": -20.895719,
+      "obstacle_longitude": 55.501194,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "50462583"
+    },
+    {
+      "id": "AHO_50462585",
+      "aerodrome_icao": "FMEE",
+      "obstacle_sia_uid": "50462577",
+      "obstacle_latitude": -20.894353,
+      "obstacle_longitude": 55.501733,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "50462585"
+    },
+    {
+      "id": "AHO_50462587",
+      "aerodrome_icao": "FMEE",
+      "obstacle_sia_uid": "50462579",
+      "obstacle_latitude": -20.894578,
+      "obstacle_longitude": 55.500856,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "50462587"
+    },
+    {
+      "id": "AHO_55729412",
+      "aerodrome_icao": "FMEP",
+      "obstacle_sia_uid": "54790897",
+      "obstacle_latitude": -21.311667,
+      "obstacle_longitude": 55.416667,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "55729412"
+    },
+    {
+      "id": "AHO_55729447",
+      "aerodrome_icao": "FMEP",
+      "obstacle_sia_uid": "54790921",
+      "obstacle_latitude": -21.315,
+      "obstacle_longitude": 55.420278,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "55729447"
+    },
+    {
+      "id": "AHO_55729445",
+      "aerodrome_icao": "FMEP",
+      "obstacle_sia_uid": "54790918",
+      "obstacle_latitude": -21.315,
+      "obstacle_longitude": 55.420556,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "55729445"
+    },
+    {
+      "id": "AHO_55729443",
+      "aerodrome_icao": "FMEP",
+      "obstacle_sia_uid": "54790916",
+      "obstacle_latitude": -21.311111,
+      "obstacle_longitude": 55.414722,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "55729443"
+    },
+    {
+      "id": "AHO_55729441",
+      "aerodrome_icao": "FMEP",
+      "obstacle_sia_uid": "54790914",
+      "obstacle_latitude": -21.311667,
+      "obstacle_longitude": 55.415278,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "55729441"
+    },
+    {
+      "id": "AHO_55729439",
+      "aerodrome_icao": "FMEP",
+      "obstacle_sia_uid": "54790912",
+      "obstacle_latitude": -21.314722,
+      "obstacle_longitude": 55.419722,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "55729439"
+    },
+    {
+      "id": "AHO_55729437",
+      "aerodrome_icao": "FMEP",
+      "obstacle_sia_uid": "54790910",
+      "obstacle_latitude": -21.314722,
+      "obstacle_longitude": 55.421389,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "55729437"
+    },
+    {
+      "id": "AHO_55729435",
+      "aerodrome_icao": "FMEP",
+      "obstacle_sia_uid": "54790908",
+      "obstacle_latitude": -21.311944,
+      "obstacle_longitude": 55.416667,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "55729435"
+    },
+    {
+      "id": "AHO_55729433",
+      "aerodrome_icao": "FMEP",
+      "obstacle_sia_uid": "54790906",
+      "obstacle_latitude": -21.309444,
+      "obstacle_longitude": 55.411944,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "55729433"
+    },
+    {
+      "id": "AHO_55729431",
+      "aerodrome_icao": "FMEP",
+      "obstacle_sia_uid": "54790902",
+      "obstacle_latitude": -21.319722,
+      "obstacle_longitude": 55.427222,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "55729431"
+    },
+    {
+      "id": "AHO_55729429",
+      "aerodrome_icao": "FMEP",
+      "obstacle_sia_uid": "54790899",
+      "obstacle_latitude": -21.314444,
+      "obstacle_longitude": 55.419444,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "55729429"
+    },
+    {
+      "id": "AHO_55729449",
+      "aerodrome_icao": "FMEP",
+      "obstacle_sia_uid": "54790904",
+      "obstacle_latitude": -21.304722,
+      "obstacle_longitude": 55.417778,
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "55729449"
+    }
+  ]
+}

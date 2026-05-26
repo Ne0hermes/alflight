@@ -527,7 +527,7 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
                 {/* Aller (bordeaux) avec flèches */}
                 <PolylineWithArrows
                   positions={outboundRoute}
-                  color="#93163c"
+                  color="#f26921"
                   weight={3}
                   opacity={0.7}
                   dashArray="10, 0"
@@ -549,7 +549,7 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
             return (
               <PolylineWithArrows
                 positions={routeCoordinates}
-                color="#93163c"
+                color="#f26921"
                 weight={3}
                 opacity={0.7}
                 isReturn={false}
@@ -564,8 +564,8 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
             center={[departure.lat, departure.lon]}
             radius={8}
             pathOptions={{
-              color: '#93163c',
-              fillColor: '#93163c',
+              color: '#f26921',
+              fillColor: '#f26921',
               fillOpacity: 1,
               weight: 2
             }}
@@ -584,8 +584,8 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
             center={[arrival.lat, arrival.lon]}
             radius={8}
             pathOptions={{
-              color: '#93163c',
-              fillColor: '#93163c',
+              color: '#f26921',
+              fillColor: '#f26921',
               fillOpacity: 1,
               weight: 2
             }}
@@ -605,8 +605,8 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
             center={[waypoint.lat, waypoint.lon]}
             radius={6}
             pathOptions={{
-              color: '#93163c',
-              fillColor: '#93163c',
+              color: '#f26921',
+              fillColor: '#f26921',
               fillOpacity: 0.8,
               weight: 2
             }}

@@ -735,11 +735,11 @@ a.vac-download-button:active,
 a.vac-download-button:focus {
   color: white !important;
   text-decoration: none !important;
-  background-color: #93163C !important;
+  background-color: #f26921 !important;
 }
 
 a.vac-download-button:hover {
-  background-color: #A91B45 !important;
+  background-color: #FF7E36 !important;
 }
 
 /* ============================================
