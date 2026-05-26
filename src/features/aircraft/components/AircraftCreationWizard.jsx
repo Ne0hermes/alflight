@@ -197,19 +197,53 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
       maxBaggageAft: existingAircraft?.weights?.maxBaggageAft || ''
     },
     
-    arms: {
-      empty: existingAircraft?.arms?.empty || '',
-      frontSeats: existingAircraft?.arms?.frontSeats || '',
-      rearSeats: existingAircraft?.arms?.rearSeats || '',
-      fuelMain: existingAircraft?.arms?.fuelMain || '',
-      baggageFwd: existingAircraft?.arms?.baggageFwd || '',
-      baggageAft: existingAircraft?.arms?.baggageAft || ''
-    },
-    
-    cgLimits: {
-      forward: existingAircraft?.cgLimits?.forward || '',
-      aft: existingAircraft?.cgLimits?.aft || ''
-    },
+    // 🔧 FIX (2026-05) : init MULTI-SOURCE pour les bras de levier.
+    // Les arms peuvent être stockés à 3 emplacements selon l'origine de
+    // l'avion (saisie manuelle / extraction MANEX / import Supabase legacy) :
+    //   - aircraft.arms.* (forme canonique récente)
+    //   - aircraft.weightBalance.* (forme alternative widgets M&C)
+    //   - aircraft.armLengths.* (forme legacy)
+    // On lit la 1re valeur non-vide trouvée pour éviter d'afficher un champ
+    // vide alors que la donnée existe ailleurs → ce qui menait à un
+    // écrasement à la sauvegarde si le pilote ne re-saisissait pas le champ.
+    arms: (() => {
+      const pick = (...candidates) => {
+        for (const c of candidates) {
+          if (c !== null && c !== undefined && c !== '') return c;
+        }
+        return '';
+      };
+      const a = existingAircraft?.arms || {};
+      const wb = existingAircraft?.weightBalance || {};
+      const al = existingAircraft?.armLengths || {};
+      return {
+        empty:      pick(a.empty,      wb.emptyWeightArm,    al.emptyMassArm),
+        frontSeats: pick(a.frontSeats, wb.frontLeftSeatArm,  al.frontSeatArm),
+        rearSeats:  pick(a.rearSeats,  wb.rearLeftSeatArm,   al.rearSeatArm),
+        fuelMain:   pick(a.fuelMain,   wb.fuelArm,           al.fuelArm),
+        baggageFwd: pick(a.baggageFwd, wb.baggageArm,        al.baggageFwdArm),
+        baggageAft: pick(a.baggageAft, wb.auxiliaryArm,      al.baggageAftArm)
+      };
+    })(),
+
+    cgLimits: (() => {
+      const pick = (...candidates) => {
+        for (const c of candidates) {
+          if (c !== null && c !== undefined && c !== '') return c;
+        }
+        return '';
+      };
+      const cg = existingAircraft?.cgLimits || {};
+      const wbCg = existingAircraft?.weightBalance?.cgLimits || {};
+      const env = existingAircraft?.cgEnvelope || {};
+      const fwdFromEnv = Array.isArray(env.forwardPoints) && env.forwardPoints.length > 0
+        ? env.forwardPoints[0]?.cg
+        : env.forwardCG;
+      return {
+        forward: pick(cg.forward, wbCg.forward, fwdFromEnv),
+        aft:     pick(cg.aft,     wbCg.aft,     env.aftCG)
+      };
+    })(),
 
     // Enveloppe de centrage (CG Envelope)
     cgEnvelope: {
@@ -803,6 +837,49 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
 
       // 🔧 FIX: Utiliser aircraftData du state qui contient baseAircraft
       const dataToSave = { ...aircraftData };
+
+      // 🛡️ ANTI-ÉCRASEMENT : ne JAMAIS écraser un champ existant avec
+      // une valeur vide. Si un champ est vide dans dataToSave mais
+      // renseigné dans existingAircraft, on conserve l'ancienne valeur.
+      //
+      // Couvre les bugs où le wizard charge un avion incomplet (chemin
+      // multi-source raté), affiche un champ vide, l'utilisateur ne saisit
+      // pas la valeur et le save écrase la DB. Approche défensive.
+      if (existingAircraft) {
+        const isEmpty = (v) => v === null || v === undefined || v === '';
+        const isObject = (v) => v && typeof v === 'object' && !Array.isArray(v);
+        const isArray = Array.isArray;
+
+        // Merge récursif : pour chaque clé de existingAircraft, si dataToSave
+        // a une valeur vide alors que existingAircraft a une vraie valeur, on
+        // remet l'ancienne. Pour les sous-objets (arms, weights, speeds, etc.)
+        // on descend récursivement.
+        const mergeNonEmpty = (target, source, depth = 0) => {
+          if (depth > 4) return target; // Garde-fou contre cycles
+          for (const key of Object.keys(source || {})) {
+            // Champs gérés explicitement séparément
+            if (['id', 'aircraftId', 'baseAircraft', '_metadata', 'createdAt'].includes(key)) continue;
+
+            const srcVal = source[key];
+            const tgtVal = target[key];
+
+            if (isEmpty(tgtVal) && !isEmpty(srcVal)) {
+              // Le wizard a un champ vide mais l'avion existant l'avait : on restaure
+              target[key] = srcVal;
+              console.log(`🛡️ [Save Guard] Conserve ${key} = ${JSON.stringify(srcVal).slice(0, 80)} (était vide dans dataToSave)`);
+            } else if (isObject(tgtVal) && isObject(srcVal)) {
+              // Sous-objet : descendre
+              mergeNonEmpty(tgtVal, srcVal, depth + 1);
+            } else if (isArray(tgtVal) && isArray(srcVal) && tgtVal.length === 0 && srcVal.length > 0) {
+              // Tableau vide alors qu'il était rempli : restaurer
+              target[key] = srcVal;
+              console.log(`🛡️ [Save Guard] Conserve ${key} (tableau ${srcVal.length} items) — était vide dans dataToSave`);
+            }
+          }
+          return target;
+        };
+        mergeNonEmpty(dataToSave, existingAircraft);
+      }
 
       // Convertir flightManual en manex si présent
       if (dataToSave.flightManual?.file) {
