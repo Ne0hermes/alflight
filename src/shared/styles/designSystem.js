@@ -183,14 +183,15 @@ const spacing = {
  * RAYONS
  *
  *  L'esprit éditorial cinematic privilégie les angles vifs.
- *  Maximum 4px — pas de rounded-xl, pas de pilules.
+ *  Arrondis modérés pour cohérence avec l'app existante (cards 12-16px).
  * ------------------------------------------------------------------------- */
 const radius = {
   none: '0',
-  sm: '2px',
-  md: '3px',
-  lg: '4px',
-  pill: '999px', // réservé aux badges très petits
+  sm: '8px',     /* éléments compacts (chips, boutons icônes, inputs) */
+  md: '12px',    /* default cards, sections */
+  lg: '16px',    /* hero, grandes surfaces */
+  xl: '20px',    /* modales pleine page */
+  pill: '999px', /* badges très petits, toggles */
 };
 
 /* ---------------------------------------------------------------------------
