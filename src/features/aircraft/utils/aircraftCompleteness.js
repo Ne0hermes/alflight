@@ -66,6 +66,7 @@ export const FIELD_DEFINITIONS = [
   { path: 'fuelCapacity',                                          label: 'Capacité carburant',        severity: 'REQUIRED', weight: 3 },
   { path: 'cruiseSpeedKt | cruiseSpeed',                           label: 'Vitesse de croisière',      severity: 'REQUIRED', weight: 3 },
   { path: 'fuelConsumption',                                       label: 'Consommation carburant',    severity: 'REQUIRED', weight: 3 },
+  { path: 'fuelUsableCapacity | fuelCapacity',                     label: 'Volume utilisable',         severity: 'REQUIRED', weight: 2 },
   { path: 'horsepower',                                            label: 'Puissance moteur (CV)',     severity: 'REQUIRED', weight: 2 },
 
   // === CRITICAL — masse et centrage ===
@@ -77,7 +78,7 @@ export const FIELD_DEFINITIONS = [
   { path: 'arms.fuelMain | weightBalance.fuelArm | armLengths.fuelArm', label: 'Bras réservoir principal', severity: 'CRITICAL', weight: 4 },
   { path: 'cgLimits.forward | weightBalance.cgLimits.forward | cgEnvelope.forwardPoints | cgEnvelope.forwardCG', label: 'Limite CG avant', severity: 'CRITICAL', weight: 5 },
   { path: 'cgLimits.aft | weightBalance.cgLimits.aft | cgEnvelope.aftCG | cgEnvelope.aftPoints', label: 'Limite CG arrière', severity: 'CRITICAL', weight: 5 },
-  { path: 'weighingReport | hasWeighingReport',                    label: 'Rapport de pesée (PDF)',    severity: 'CRITICAL', weight: 4 },
+  { path: 'weighingReport | hasWeighingReport | weighingReport.fileName | weighingReport.pdfData', label: 'Rapport de pesée (PDF)', severity: 'CRITICAL', weight: 4 },
 
   // === CRITICAL — vitesses ===
   { path: 'speeds.vso',           label: 'VSO',                       severity: 'CRITICAL', weight: 4 },
@@ -93,9 +94,25 @@ export const FIELD_DEFINITIONS = [
   { path: 'speeds.vglide',        label: 'V plané',                   severity: 'REQUIRED', weight: 1 },
 
   // === CRITICAL — performance ===
-  // Les tables de performance peuvent être dans 3 stockages distincts selon
-  // l'origine (saisie manuelle / extraction MANEX / abaques importés).
-  { path: 'performanceTables | performanceModels | advancedPerformance.tables | hasPerformance', label: 'Tables de performance', severity: 'CRITICAL', weight: 6 },
+  // Les tables/abaques de performance peuvent être stockées à plusieurs
+  // emplacements selon l'origine (saisie manuelle / extraction MANEX /
+  // CentrogramReader / Sprint B abaque v2). On les couvre toutes.
+  {
+    path: [
+      'performanceTables',
+      'performanceModels',
+      'advancedPerformance.tables',
+      'advancedPerformance.performanceModels',
+      'advancedPerformance.performanceTables',
+      'data.advancedPerformance.tables',
+      'data.performanceTables',
+      'data.performanceModels',
+      'hasPerformance'
+    ].join(' | '),
+    label: 'Tables de performance',
+    severity: 'CRITICAL',
+    weight: 6
+  },
 
   // === OPTIONAL ===
   // MANEX : on accepte le flag hasManex (avion light loaded) OU l'objet manex.
