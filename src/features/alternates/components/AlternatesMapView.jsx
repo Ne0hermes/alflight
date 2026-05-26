@@ -549,7 +549,7 @@ export const AlternatesMapView = memo(({
               <span style={{ fontSize: '12px', color: '#6b7280', marginRight: '8px' }}>
                 Distance de route:
               </span>
-              <strong style={{ fontSize: '14px', color: '#93163c' }}>
+              <strong style={{ fontSize: '14px', color: '#f26921' }}>
                 {routeDistance.toFixed(1)} NM
               </strong>
             </div>

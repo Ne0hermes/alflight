@@ -29,7 +29,7 @@ const commonStyles = {
     padding: '16px',
     backgroundColor: '#f0f9ff',
     borderRadius: '8px',
-    borderLeft: '4px solid #93163c',
+    borderLeft: '4px solid #f26921',
     marginBottom: '20px',
     fontSize: '14px'
   },
@@ -45,7 +45,7 @@ const commonStyles = {
     minWidth: '180px'
   },
   infoValue: {
-    color: '#93163c',
+    color: '#f26921',
     fontWeight: '700'
   }
 };

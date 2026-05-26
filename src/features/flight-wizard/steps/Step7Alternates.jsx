@@ -32,7 +32,7 @@ const commonStyles = {
     padding: '16px',
     backgroundColor: '#f0f9ff',
     borderRadius: '8px',
-    borderLeft: '4px solid #93163c',
+    borderLeft: '4px solid #f26921',
     marginBottom: '20px',
     fontSize: '14px'
   },
@@ -56,7 +56,7 @@ const commonStyles = {
     minWidth: '180px'
   },
   infoValue: {
-    color: '#93163c',
+    color: '#f26921',
     fontWeight: '700'
   },
   coneInfoGrid: {
@@ -347,7 +347,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
       {searchRadius.isCone && (
         <div style={commonStyles.infoBox}>
           <div style={commonStyles.infoRow}>
-            <Info size={18} color="#93163c" />
+            <Info size={18} color="#f26921" />
             <span style={{ fontWeight: '600' }}>Zone de recherche en forme de cône</span>
           </div>
           <p style={{ margin: '8px 0 12px 26px', color: '#374151', fontSize: '13px' }}>

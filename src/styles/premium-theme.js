@@ -5,8 +5,8 @@ export const premiumTheme = {
     black: '#000000',
 
     bordeaux: {
-      DEFAULT: '#93163C',
-      light: '#A91B45',
+      DEFAULT: '#f26921',
+      light: '#FF7E36',
       dark: '#6B0F2B',
       glow: 'rgba(147, 22, 60, 0.3)',
     },

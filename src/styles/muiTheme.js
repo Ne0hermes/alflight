@@ -5,14 +5,14 @@ const muiTheme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#93163C',      // Bordeaux ALFlight
-      light: '#A91B45',     // Bordeaux clair
+      main: '#f26921',      // Bordeaux ALFlight
+      light: '#FF7E36',     // Bordeaux clair
       dark: '#6B0F2B',      // Bordeaux foncé
       contrastText: '#FFFFFF',
     },
     secondary: {
-      main: '#93163C',      // Bordeaux également pour cohérence
-      light: '#A91B45',
+      main: '#f26921',      // Bordeaux également pour cohérence
+      light: '#FF7E36',
       dark: '#6B0F2B',
       contrastText: '#FFFFFF',
     },
@@ -101,12 +101,12 @@ const muiTheme = createTheme({
           padding: '12px 24px',
           fontWeight: 600,
           '&:focus-visible': {
-            outline: '3px solid #93163C',
+            outline: '3px solid #f26921',
             outlineOffset: '2px',
           },
         },
         contained: {
-          background: 'linear-gradient(135deg, #8B1538, #A91B45)',
+          background: 'linear-gradient(135deg, #8B1538, #FF7E36)',
           boxShadow: '0 2px 8px rgba(147, 22, 60, 0.3)',
           '&:hover': {
             background: 'linear-gradient(135deg, #6B0F2B, #8B1538)',
@@ -144,17 +144,17 @@ const muiTheme = createTheme({
               borderColor: 'rgba(209, 213, 219, 1)',
             },
             '&:hover fieldset': {
-              borderColor: '#93163C',
+              borderColor: '#f26921',
             },
             '&.Mui-focused fieldset': {
-              borderColor: '#93163C',
+              borderColor: '#f26921',
               borderWidth: '2px',
             },
           },
           '& .MuiInputLabel-root': {
             transform: 'translate(14px, -9px) scale(0.75)',
             '&.Mui-focused': {
-              color: '#93163C',
+              color: '#f26921',
             },
           },
         },

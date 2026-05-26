@@ -292,7 +292,7 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
               alignItems: 'center',
               gap: '8px',
               padding: '12px 20px',
-              backgroundColor: activeTab === 'navigation' ? '#93163C' : 'transparent',
+              backgroundColor: activeTab === 'navigation' ? '#f26921' : 'transparent',
               color: activeTab === 'navigation' ? 'white' : '#6b7280',
               border: 'none',
               borderTopLeftRadius: '8px',
@@ -302,7 +302,7 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
               cursor: 'pointer',
               transition: 'all 0.2s',
               marginBottom: '-2px',
-              borderBottom: activeTab === 'navigation' ? '2px solid #93163C' : '2px solid transparent'
+              borderBottom: activeTab === 'navigation' ? '2px solid #f26921' : '2px solid transparent'
             }}
           >
             <Navigation2 size={18} />
@@ -315,7 +315,7 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
               alignItems: 'center',
               gap: '8px',
               padding: '12px 20px',
-              backgroundColor: activeTab === 'alternates' ? '#93163C' : 'transparent',
+              backgroundColor: activeTab === 'alternates' ? '#f26921' : 'transparent',
               color: activeTab === 'alternates' ? 'white' : '#6b7280',
               border: 'none',
               borderTopLeftRadius: '8px',
@@ -325,7 +325,7 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
               cursor: 'pointer',
               transition: 'all 0.2s',
               marginBottom: '-2px',
-              borderBottom: activeTab === 'alternates' ? '2px solid #93163C' : '2px solid transparent'
+              borderBottom: activeTab === 'alternates' ? '2px solid #f26921' : '2px solid transparent'
             }}
           >
             <Plane size={18} />

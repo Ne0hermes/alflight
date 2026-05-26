@@ -10,7 +10,7 @@ export const PremiumButton = ({ children, onClick, style, disabled, ...props }) 
         padding: '12px 24px',
         borderRadius: '8px',
         border: 'none',
-        background: 'linear-gradient(135deg, #93163C, #A91B45)',
+        background: 'linear-gradient(135deg, #f26921, #FF7E36)',
         color: 'white',
         fontSize: '14px',
         fontWeight: '600',
@@ -50,7 +50,7 @@ export const PremiumBadge = ({ children, variant = 'default', style, ...props })
   const variants = {
     default: {
       background: 'rgba(147, 22, 60, 0.1)',
-      color: '#93163C'
+      color: '#f26921'
     },
     success: {
       background: 'rgba(16, 185, 129, 0.1)',
@@ -93,7 +93,7 @@ export const PremiumSpinner = ({ size = 24, style, ...props }) => {
         width: size,
         height: size,
         border: `3px solid rgba(147, 22, 60, 0.2)`,
-        borderTopColor: '#93163C',
+        borderTopColor: '#f26921',
         borderRadius: '50%',
         animation: 'spin 1s linear infinite',
         ...style

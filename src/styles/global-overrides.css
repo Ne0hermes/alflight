@@ -9,7 +9,7 @@ body {
 /* Light theme styles */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #93163C #f0f0f0;
+  scrollbar-color: #f26921 #f0f0f0;
 }
 
 *::-webkit-scrollbar {
@@ -22,12 +22,12 @@ body {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: #93163C;
+  background: #f26921;
   border-radius: 4px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: #A91B45;
+  background: #FF7E36;
 }
 
 /* Override all cards and panels - DÉSACTIVÉ POUR FOND BLANC */
@@ -57,7 +57,7 @@ input:focus,
 textarea:focus,
 select:focus {
   outline: none !important;
-  border-color: #93163C !important;
+  border-color: #f26921 !important;
   box-shadow: 0 0 0 2px rgba(147, 22, 60, 0.2) !important;
 }
 
@@ -68,7 +68,7 @@ textarea::placeholder {
 
 /* Override all buttons - DÉSACTIVÉ POUR UTILISER LE STYLE UNIFIÉ */
 /* button {
-  background: linear-gradient(135deg, #93163C, #A91B45) !important;
+  background: linear-gradient(135deg, #f26921, #FF7E36) !important;
   color: #FFFFFF !important;
   border: none !important;
   font-family: 'Space Grotesk', 'Inter', sans-serif !important;
@@ -93,8 +93,8 @@ button:disabled {
 button[variant="secondary"],
 .btn-secondary {
   background: transparent !important;
-  border: 2px solid #93163C !important;
-  color: #93163C !important;
+  border: 2px solid #f26921 !important;
+  color: #f26921 !important;
 }
 
 button.secondary:hover:not(:disabled),
@@ -115,7 +115,7 @@ th {
   font-weight: 600 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
-  border-bottom: 2px solid #93163C !important;
+  border-bottom: 2px solid #f26921 !important;
 }
 
 td {
@@ -146,15 +146,15 @@ button[role="tab"] {
 
 .tab:hover,
 button[role="tab"]:hover {
-  color: #93163C !important;
+  color: #f26921 !important;
   background: rgba(147, 22, 60, 0.05) !important;
 }
 
 .tab.active,
 .tab[aria-selected="true"],
 button[role="tab"][aria-selected="true"] {
-  color: #93163C !important;
-  border-bottom-color: #93163C !important;
+  color: #f26921 !important;
+  border-bottom-color: #f26921 !important;
   background: transparent !important;
 }
 
@@ -174,7 +174,7 @@ p, span, div, label {
 
 /* Override links */
 a {
-  color: #A91B45 !important;
+  color: #FF7E36 !important;
   text-decoration: none !important;
 }
 
@@ -187,15 +187,15 @@ a.vac-download-button:active,
 a.vac-download-button:focus {
   color: white !important;
   text-decoration: none !important;
-  background-color: #93163C !important;
+  background-color: #f26921 !important;
 }
 
 a.vac-download-button:hover {
-  background-color: #A91B45 !important;
+  background-color: #FF7E36 !important;
 }
 
 a:hover {
-  color: #93163C !important;
+  color: #f26921 !important;
   text-decoration: underline !important;
 }
 
@@ -211,7 +211,7 @@ a:hover {
 }
 
 .leaflet-control a {
-  color: #93163C !important;
+  color: #f26921 !important;
   background: rgba(255, 255, 255, 0.95) !important;
 }
 
@@ -243,7 +243,7 @@ a:hover {
 div[class*="spinner"],
 div[class*="loading"] {
   border-color: rgba(147, 22, 60, 0.2) !important;
-  border-top-color: #93163C !important;
+  border-top-color: #f26921 !important;
 }
 
 /* Notifications and alerts */
@@ -251,7 +251,7 @@ div[class*="loading"] {
 .alert,
 div[role="alert"] {
   background: rgba(255, 255, 255, 0.95) !important;
-  border-left: 4px solid #93163C !important;
+  border-left: 4px solid #f26921 !important;
   color: #111827 !important;
 }
 
@@ -298,14 +298,14 @@ div[role="progressbar"] {
 
 .progress-bar,
 .progress-fill {
-  background: linear-gradient(90deg, #93163C, #A91B45) !important;
+  background: linear-gradient(90deg, #f26921, #FF7E36) !important;
 }
 
 /* Tooltips - MODIFIÉ POUR FOND BLANC */
 .tooltip,
 div[role="tooltip"] {
   background: rgba(255, 255, 255, 0.95) !important;
-  border: 1px solid #93163C !important;
+  border: 1px solid #f26921 !important;
   color: #111827 !important;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
 }

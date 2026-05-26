@@ -108,7 +108,7 @@ export const RouteStaticMapSnapshot = ({ waypoints }) => {
     }
 
     // Dessiner les segments de route
-    ctx.strokeStyle = '#93163c';
+    ctx.strokeStyle = '#f26921';
     ctx.lineWidth = 3;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';

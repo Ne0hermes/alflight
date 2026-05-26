@@ -1,0 +1,285 @@
+{
+  "airac": "2026-05-14",
+  "count": 31,
+  "items": [
+    {
+      "id": "ORG_NT_0",
+      "code_id": "NT",
+      "name": "POLYNESIE FRANCAISE",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520776"
+    },
+    {
+      "id": "ORG_DA_1",
+      "code_id": "DA",
+      "name": "ALGERIE",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520778"
+    },
+    {
+      "id": "ORG_ED-LS_2",
+      "code_id": "ED-LS",
+      "name": "ALLEMAGNE/SUISSE",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520780"
+    },
+    {
+      "id": "ORG_LF_3",
+      "code_id": "LF",
+      "name": "ST PIERRE ET MIQUELON",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520782"
+    },
+    {
+      "id": "ORG_ED_4",
+      "code_id": "ED",
+      "name": "ALLEMAGNE",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520784"
+    },
+    {
+      "id": "ORG_ED-EL_5",
+      "code_id": "ED-EL",
+      "name": "ALLEMAGNE/LUXEMBOURG",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520786"
+    },
+    {
+      "id": "ORG_TF_6",
+      "code_id": "TF",
+      "name": "ANTILLES FRANCAISES",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520788"
+    },
+    {
+      "id": "ORG_FM_7",
+      "code_id": "FM",
+      "name": "REUNION",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520790"
+    },
+    {
+      "id": "ORG_LE_8",
+      "code_id": "LE",
+      "name": "ESPAGNE",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520792"
+    },
+    {
+      "id": "ORG_LI_9",
+      "code_id": "LI",
+      "name": "ITALIE",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520794"
+    },
+    {
+      "id": "ORG_LF-ED_10",
+      "code_id": "LF-ED",
+      "name": "FRANCE/ALLEMAGNE",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520796"
+    },
+    {
+      "id": "ORG_LF-EL_11",
+      "code_id": "LF-EL",
+      "name": "FRANCE/LUXEMBOURG",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520798"
+    },
+    {
+      "id": "ORG_LF_12",
+      "code_id": "LF",
+      "name": "FRANCE",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520800"
+    },
+    {
+      "id": "ORG_LF-EB_13",
+      "code_id": "LF-EB",
+      "name": "FRANCE/BELGIQUE",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520802"
+    },
+    {
+      "id": "ORG_SO_14",
+      "code_id": "SO",
+      "name": "GUYANE FRANCAISE",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520804"
+    },
+    {
+      "id": "ORG_NL_15",
+      "code_id": "NL",
+      "name": "WALLIS ET FUTUNA",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520806"
+    },
+    {
+      "id": "ORG_EG_16",
+      "code_id": "EG",
+      "name": "GRANDE BRETAGNE",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520808"
+    },
+    {
+      "id": "ORG_LF-LS_17",
+      "code_id": "LF-LS",
+      "name": "FRANCE/SUISSE",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520810"
+    },
+    {
+      "id": "ORG_LF-LE_18",
+      "code_id": "LF-LE",
+      "name": "FRANCE/ESPAGNE",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520812"
+    },
+    {
+      "id": "ORG_LF-LI_19",
+      "code_id": "LF-LI",
+      "name": "FRANCE/ITALIE",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520814"
+    },
+    {
+      "id": "ORG_NW_20",
+      "code_id": "NW",
+      "name": "NOUVELLE CALEDONIE",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520816"
+    },
+    {
+      "id": "ORG_ZZ_21",
+      "code_id": "ZZ",
+      "name": "AUTRES",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520818"
+    },
+    {
+      "id": "ORG_EL_22",
+      "code_id": "EL",
+      "name": "LUXEMBOURG",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520820"
+    },
+    {
+      "id": "ORG_LS_23",
+      "code_id": "LS",
+      "name": "SUISSE",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520822"
+    },
+    {
+      "id": "ORG_EB_24",
+      "code_id": "EB",
+      "name": "BELGIQUE",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520824"
+    },
+    {
+      "id": "ORG_EB-ED_25",
+      "code_id": "EB-ED",
+      "name": "BELGIQUE/ALLEMAGNE",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520826"
+    },
+    {
+      "id": "ORG_EB-EL_26",
+      "code_id": "EB-EL",
+      "name": "BELGIQUE/LUXEMBOURG",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "1520828"
+    },
+    {
+      "id": "ORG_LF-EG_27",
+      "code_id": "LF-EG",
+      "name": "FRANCE/GRANDE BRETAGNE",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "25181924"
+    },
+    {
+      "id": "ORG_FM-FM_28",
+      "code_id": "FM-FM",
+      "name": "REUNION/COMORES",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "25181951"
+    },
+    {
+      "id": "ORG_TF-TN_29",
+      "code_id": "TF-TN",
+      "name": "ANTILLES FRANCAISES/ANTILLES NEERLANDAISES",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "25181953"
+    },
+    {
+      "id": "ORG_TF-TL_30",
+      "code_id": "TF-TL",
+      "name": "ANTILLES FRANCAISES/SAINTE LUCIE",
+      "type": "O",
+      "source": "SIA",
+      "airac": "2026-05-14",
+      "sia_uid": "25181956"
+    }
+  ]
+}
