@@ -68,33 +68,6 @@ class CommunityService {
         throw error;
       }
 
-      // 🔎 DIAGNOSTIC : si on remonte moins de presets qu'attendu, lister tout
-      // (sans filtre status) pour voir ce qui est masqué. À retirer une fois
-      // la cause confirmée.
-      try {
-        const { data: allRows, error: diagError } = await supabase
-          .from('community_presets')
-          .select('id, registration, status, verified, admin_verified, submitted_by, submitted_at');
-        if (!diagError && allRows) {
-          const byStatus = allRows.reduce((acc, r) => {
-            acc[r.status || '(null)'] = (acc[r.status || '(null)'] || 0) + 1;
-            return acc;
-          }, {});
-          console.log(`🔎 [CommunityService] DIAG total Supabase = ${allRows.length} presets, répartition par status :`, byStatus);
-          const nonActive = allRows.filter(r => r.status !== 'active');
-          if (nonActive.length > 0) {
-            console.log('🔎 [CommunityService] Presets NON-active (cachés par le filtre) :',
-              nonActive.map(r => ({
-                registration: r.registration,
-                status: r.status,
-                verified: r.verified,
-                admin_verified: r.admin_verified
-              }))
-            );
-          }
-        }
-      } catch (e) { /* ignore diag errors */ }
-
       console.log(`✅ [CommunityService] Chargé ${data.length} presets (métadonnées seulement)`);
 
       // Transformer les données pour correspondre au format attendu

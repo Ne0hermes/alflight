@@ -2,7 +2,7 @@
 import React, { memo, useState, useEffect, useMemo } from 'react';
 import { useAircraft } from '@core/contexts';
 import { useAircraftStore } from '@core/stores/aircraftStore';
-import { Plus, Edit2, Trash2, Info, AlertTriangle, FileText, Eye, X, ChevronDown, ChevronUp, Wand2, FileDown, Plane, BookOpen } from 'lucide-react';
+import { Plus, Edit2, Trash2, Info, AlertTriangle, FileText, Eye, X, ChevronDown, ChevronUp, Wand2, FileDown, Plane, BookOpen, Scale, Download } from 'lucide-react';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { sx } from '@shared/styles/styleSystem';
 import { tokens } from '@shared/styles/designSystem';
@@ -1840,21 +1840,23 @@ export const AircraftModule = memo(() => {
                           >
                             <AlertTriangle size={14} aria-hidden="true" />
                             {missing.length} MANQUANT{missing.length > 1 ? 'S' : ''}
-                            {isMissingExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                           </button>
                         )}
 
-                        {/* 1. Télécharger MANEX */}
+                        {/* Helper render bouton avec icône + libellé court mono pour clarté */}
+                        {/* 1. MANEX — icône Book = manuel d'utilisation, plus reconnaissable */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDownloadManex(aircraft);
                           }}
-                          title={manexLoaded ? 'Télécharger le MANEX (PDF)' : 'Aucun MANEX disponible'}
+                          title={manexLoaded ? 'Télécharger le MANEX (manuel de vol)' : 'Aucun MANEX disponible'}
                           aria-label="Télécharger le MANEX"
                           disabled={!manexLoaded}
                           style={{
                             ...baseBtn,
+                            padding: `0 ${tokens.spacing[2]}`,
+                            gap: '6px',
                             color: manexLoaded ? 'var(--accent-primary)' : 'var(--text-tertiary)',
                             opacity: manexLoaded ? 1 : 0.4,
                             cursor: manexLoaded ? 'pointer' : 'not-allowed'
@@ -1863,9 +1865,10 @@ export const AircraftModule = memo(() => {
                           onMouseLeave={manexLoaded ? hoverOut : undefined}
                         >
                           <BookOpen size={16} aria-hidden="true" />
+                          <span style={{ fontFamily: tokens.fontFamily.mono, fontSize: '11px', letterSpacing: '0.08em' }}>MANEX</span>
                         </button>
 
-                        {/* 2. Télécharger fiche de pesée */}
+                        {/* 2. Fiche de pesée — icône Scale = balance, sémantique aviation */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -1876,6 +1879,8 @@ export const AircraftModule = memo(() => {
                           disabled={!weighingLoaded}
                           style={{
                             ...baseBtn,
+                            padding: `0 ${tokens.spacing[2]}`,
+                            gap: '6px',
                             color: weighingLoaded ? 'var(--accent-primary)' : 'var(--text-tertiary)',
                             opacity: weighingLoaded ? 1 : 0.4,
                             cursor: weighingLoaded ? 'pointer' : 'not-allowed'
@@ -1883,10 +1888,11 @@ export const AircraftModule = memo(() => {
                           onMouseEnter={weighingLoaded ? (e) => hoverIn(e) : undefined}
                           onMouseLeave={weighingLoaded ? hoverOut : undefined}
                         >
-                          <FileText size={16} aria-hidden="true" />
+                          <Scale size={16} aria-hidden="true" />
+                          <span style={{ fontFamily: tokens.fontFamily.mono, fontSize: '11px', letterSpacing: '0.08em' }}>PESÉE</span>
                         </button>
 
-                        {/* 3. Générer fiche PDF avion (rapport complet) */}
+                        {/* 3. Fiche PDF avion (rapport complet) — icône Download distincte */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -1894,11 +1900,12 @@ export const AircraftModule = memo(() => {
                           }}
                           title="Générer la fiche PDF complète de l'avion"
                           aria-label="Générer la fiche PDF complète"
-                          style={baseBtn}
+                          style={{ ...baseBtn, padding: `0 ${tokens.spacing[2]}`, gap: '6px' }}
                           onMouseEnter={(e) => hoverIn(e)}
                           onMouseLeave={hoverOut}
                         >
-                          <FileDown size={16} aria-hidden="true" />
+                          <Download size={16} aria-hidden="true" />
+                          <span style={{ fontFamily: tokens.fontFamily.mono, fontSize: '11px', letterSpacing: '0.08em' }}>FICHE</span>
                         </button>
 
                         {/* 4. Modifier */}
