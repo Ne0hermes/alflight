@@ -21,3 +21,141 @@
 
    Tout est maintenant dans unified-styles.css
 */
+
+/* ============================================================================
+   ALFlight DESIGN SYSTEM v1 — Charte noir / blanc / orange
+   Référence : sr-seventy.one (datasheet cinematic SR-71 Blackbird)
+   ============================================================================ */
+
+/* Polices web libres (fallbacks de Century Gothic) */
+@import url('https://fonts.googleapis.com/css2?family=Questrial&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ----------------------------------------------------------------------------
+   Variables CSS — Mode nuit (par défaut)
+   ---------------------------------------------------------------------------- */
+:root {
+  /* Couleurs de marque */
+  --color-orange-primary: #f26921;
+  --color-orange-bright: #FF7E36;
+  --color-orange-dim: #D85410;
+  --color-orange-soft: rgba(242, 105, 33, 0.16);
+
+  /* Noirs */
+  --color-black-deep: #0A0A0A;
+  --color-black-elevated: #141414;
+  --color-black-overlay: #1C1C1C;
+  --color-black-surface: #232323;
+
+  /* Blancs */
+  --color-white-pure: #FFFFFF;
+  --color-white-soft: #F5F2EC;
+  --color-white-muted: #C9C5BD;
+  --color-white-dim: #8A867E;
+
+  /* Rouge réservé NO-GO catastrophique */
+  --color-red-critical: #C04534;
+  --color-red-critical-dim: #8B2E22;
+
+  /* Bordures transparentes (mode nuit) */
+  --color-border-subtle: rgba(245, 242, 236, 0.10);
+  --color-border-regular: rgba(245, 242, 236, 0.20);
+  --color-border-ghost: rgba(245, 242, 236, 0.32);
+
+  /* Thème actif — mode nuit par défaut */
+  --bg-canvas: var(--color-black-deep);
+  --bg-surface: var(--color-black-elevated);
+  --bg-overlay: var(--color-black-overlay);
+  --bg-raised: var(--color-black-surface);
+
+  --text-primary: var(--color-white-soft);
+  --text-secondary: var(--color-white-muted);
+  --text-tertiary: var(--color-white-dim);
+  --text-inverse: var(--color-black-deep);
+  --text-accent: var(--color-orange-primary);
+
+  --border-subtle: var(--color-border-subtle);
+  --border-regular: var(--color-border-regular);
+  --border-ghost: var(--color-border-ghost);
+  --border-accent: var(--color-orange-primary);
+
+  --accent-primary: var(--color-orange-primary);
+  --accent-hover: var(--color-orange-bright);
+  --accent-active: var(--color-orange-dim);
+  --accent-soft: var(--color-orange-soft);
+
+  /* Polices */
+  --font-sans: 'Century Gothic', 'URW Gothic', 'Questrial', 'Jost', 'Avant Garde', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Motion */
+  --motion-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-base: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-slow: 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-cinematic: 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ----------------------------------------------------------------------------
+   Mode jour — override via data-theme
+   ---------------------------------------------------------------------------- */
+[data-theme="day-cockpit"] {
+  --bg-canvas: #F5F2EC;
+  --bg-surface: #FFFFFF;
+  --bg-overlay: #EFECE5;
+  --bg-raised: #E5E1D9;
+
+  --text-primary: #0F0F0F;
+  --text-secondary: #3A3A3A;
+  --text-tertiary: #6B6B6B;
+  --text-inverse: #F5F2EC;
+  --text-accent: var(--color-orange-dim);
+
+  --border-subtle: rgba(15, 15, 15, 0.10);
+  --border-regular: rgba(15, 15, 15, 0.20);
+  --border-ghost: rgba(15, 15, 15, 0.32);
+  --border-accent: var(--color-orange-dim);
+
+  --accent-primary: var(--color-orange-dim);
+  --accent-hover: var(--color-orange-primary);
+  --accent-active: #A8420C;
+  --accent-soft: rgba(242, 105, 33, 0.12);
+}
+
+/* ----------------------------------------------------------------------------
+   Classes utilitaires typographiques
+   ---------------------------------------------------------------------------- */
+.text-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--text-tertiary);
+}
+
+.text-mono {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.text-display {
+  font-family: var(--font-sans);
+  font-size: 56px;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.text-hero {
+  font-family: var(--font-sans);
+  font-size: 96px;
+  line-height: 1.0;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: var(--text-primary);
+}
