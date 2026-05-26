@@ -112,6 +112,14 @@ const FIELD_MAPPINGS = [
       { value: 'jet',          label: 'Jet (turbofan/turbojet)' }
     ]
   },
+  // Puissance moteur (CV/HP), nombre entier. Pour multimoteur, c'est par moteur.
+  {
+    aircraftPath: 'horsepower',
+    src: ['engine', 'horsepower'],
+    type: 'number',
+    label: 'Puissance moteur (CV)',
+    description: 'Puissance nominale au régime maxi continu, en chevaux (HP). Pour bimoteur : valeur par moteur.'
+  },
 
   // ═══ CATÉGORIE TURBULENCE (Step1) ═══
   // L (Light < 7000 kg) | M (Medium 7-136 t) | H (Heavy > 136 t) | S (Super)

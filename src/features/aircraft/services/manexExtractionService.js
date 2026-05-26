@@ -91,7 +91,8 @@ que le wizard de création d'avion sait stocker, ni plus ni moins) :
     "home_base_icao": ".. (code OACI 4 lettres du terrain de base de l'avion, s'il est mentionné. Ex: \"LFPN\", \"LFPT\", \"LFBO\". Si non mentionné, laisse vide.)"
   },
   "engine": {
-    "type_category": ".. (UNE valeur ENUM parmi : \"singleEngine\", \"twinEngine\", \"turboprop\", \"jet\". Choisis selon : avion monomoteur thermique → singleEngine ; bimoteur thermique → twinEngine ; turbopropulseur (PT6, TPE331...) → turboprop ; turbofan/turbojet → jet)"
+    "type_category": ".. (UNE valeur ENUM parmi : \"singleEngine\", \"twinEngine\", \"turboprop\", \"jet\". Choisis selon : avion monomoteur thermique → singleEngine ; bimoteur thermique → twinEngine ; turbopropulseur (PT6, TPE331...) → turboprop ; turbofan/turbojet → jet)",
+    "horsepower": ".. (puissance moteur en CHEVAUX / HP au régime maxi continu. Pour bimoteur, indique la puissance PAR moteur, pas le total. Synonymes : HP, BHP, SHP (shaft HP pour turboprop), CV. Ex : Lycoming O-360 → 180, Continental IO-540 → 260, PT6A-114A → 675. Si donné en kW dans le MANEX, convertis : kW × 1.341 = HP. Nombre entier.)"
   },
   "certification": {
     "wake_turbulence_category": ".. (ICAO catégorie turbulence : \"L\" (Light < 7000 kg), \"M\" (Medium 7-136 t), \"H\" (Heavy > 136 t), \"S\" (Super). Pour un monomoteur GA léger, c'est \"L\")"
