@@ -142,13 +142,12 @@ const FlightSystemUI = memo(() => {
           onTabChange={handleTabChange}
         />
 
+        {/* Pas de wrapper <main> stylé — chaque module gère son propre
+            fond/padding pour une expérience immersive edge-to-edge. */}
         <main
           style={{
-            backgroundColor: 'var(--bg-surface)',
+            background: 'transparent',
             color: 'var(--text-primary)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: '16px',
-            padding: 'clamp(16px, 2.5vw, 32px)',
             marginTop: '16px'
           }}
         >
