@@ -49,6 +49,48 @@ const hasValue = (v) => {
   return Boolean(v);
 };
 
+// ──────────────────────────────────────────────────────────────────────────
+// Extractors complémentaires pour les données stockées dans
+// `additionalFuelTanks[]` (refonte M&B 2025).
+//
+// Le wizard moderne stocke le réservoir principal comme un élément de
+// `additionalFuelTanks` avec `type: 'main'` au lieu des anciens champs
+// `arms.fuelMain` / `moments.fuelMain`. Pour rester compatible avec les
+// avions historiques ET les avions créés via le nouveau wizard, on accepte
+// les deux emplacements via un getter custom `get(aircraft)`.
+// ──────────────────────────────────────────────────────────────────────────
+const findTank = (aircraft, type) => {
+  const tanks = aircraft?.additionalFuelTanks;
+  if (!Array.isArray(tanks)) return null;
+  return tanks.find((t) => t && t.type === type) || null;
+};
+
+const sumTankCapacities = (aircraft) => {
+  const tanks = aircraft?.additionalFuelTanks;
+  if (!Array.isArray(tanks) || tanks.length === 0) return undefined;
+  const sum = tanks.reduce((s, t) => s + (parseFloat(t?.capacity) || 0), 0);
+  return sum > 0 ? sum : undefined;
+};
+
+// Résolution unifiée d'un champ : essaye le `path` traditionnel (legacy
+// + alternatives via « | »), puis si rien n'a été trouvé, tente le getter
+// custom `get` si présent. Permet d'ajouter des chemins « non-statiques »
+// (lookup dans un array, agrégation, etc.) sans casser l'API existante.
+const valueOf = (aircraft, def) => {
+  if (def.path) {
+    const v = getValue(aircraft, def.path);
+    if (hasValue(v)) return v;
+  }
+  if (typeof def.get === 'function') {
+    try {
+      return def.get(aircraft);
+    } catch (_) {
+      return undefined;
+    }
+  }
+  return undefined;
+};
+
 /**
  * Définition complète des champs vérifiés.
  * weight = poids pour le calcul du %. severity = ordre d'affichage.
@@ -63,10 +105,15 @@ export const FIELD_DEFINITIONS = [
   { path: 'registration',                                          label: 'Immatriculation',           severity: 'REQUIRED', weight: 5 },
   { path: 'model',                                                 label: 'Modèle',                    severity: 'REQUIRED', weight: 3 },
   { path: 'fuelType',                                              label: 'Type de carburant',         severity: 'REQUIRED', weight: 2 },
-  { path: 'fuelCapacity',                                          label: 'Capacité carburant',        severity: 'REQUIRED', weight: 3 },
+  { path: 'fuelCapacity',                                          label: 'Capacité carburant',        severity: 'REQUIRED', weight: 3,
+    // Fallback : si fuelCapacity est vide, accepter la somme des
+    // capacités des réservoirs additionnels (refonte M&B).
+    get: sumTankCapacities },
   { path: 'cruiseSpeedKt | cruiseSpeed',                           label: 'Vitesse de croisière',      severity: 'REQUIRED', weight: 3 },
   { path: 'fuelConsumption',                                       label: 'Consommation carburant',    severity: 'REQUIRED', weight: 3 },
-  { path: 'fuelUsableCapacity | fuelCapacity',                     label: 'Volume utilisable',         severity: 'REQUIRED', weight: 2 },
+  { path: 'fuelUsableCapacity | fuelCapacity',                     label: 'Volume utilisable',         severity: 'REQUIRED', weight: 2,
+    // Fallback : capacité du tank principal, sinon somme totale.
+    get: (a) => findTank(a, 'main')?.capacity ?? sumTankCapacities(a) },
   { path: 'horsepower',                                            label: 'Puissance moteur (CV)',     severity: 'REQUIRED', weight: 2 },
 
   // === CRITICAL — masse et centrage ===
@@ -75,7 +122,11 @@ export const FIELD_DEFINITIONS = [
   { path: 'weights.mlw | limitations.maxLandingMass',              label: 'Masse max atterrissage',    severity: 'REQUIRED', weight: 2 },
   { path: 'arms.empty | weightBalance.emptyWeightArm | armLengths.emptyMassArm', label: 'Bras de levier à vide', severity: 'CRITICAL', weight: 5 },
   { path: 'arms.frontSeats | weightBalance.frontLeftSeatArm | armLengths.frontSeatArm', label: 'Bras sièges avant', severity: 'CRITICAL', weight: 4 },
-  { path: 'arms.fuelMain | weightBalance.fuelArm | armLengths.fuelArm', label: 'Bras réservoir principal', severity: 'CRITICAL', weight: 4 },
+  { path: 'arms.fuelMain | weightBalance.fuelArm | armLengths.fuelArm', label: 'Bras réservoir principal', severity: 'CRITICAL', weight: 4,
+    // Fallback : si les paths legacy sont vides, lire le bras depuis le
+    // réservoir de type 'main' dans additionalFuelTanks. C'est là que
+    // le wizard moderne le stocke (Step3 → updateData('additionalFuelTanks', ...)).
+    get: (a) => findTank(a, 'main')?.arm },
   { path: 'cgLimits.forward | weightBalance.cgLimits.forward | cgEnvelope.forwardPoints | cgEnvelope.forwardCG', label: 'Limite CG avant', severity: 'CRITICAL', weight: 5 },
   { path: 'cgLimits.aft | weightBalance.cgLimits.aft | cgEnvelope.aftCG | cgEnvelope.aftPoints', label: 'Limite CG arrière', severity: 'CRITICAL', weight: 5 },
   { path: 'weighingReport | hasWeighingReport | weighingReport.fileName | weighingReport.pdfData', label: 'Rapport de pesée (PDF)', severity: 'CRITICAL', weight: 4 },
@@ -160,7 +211,9 @@ export function evaluateAircraft(aircraft) {
   for (const def of FIELD_DEFINITIONS) {
     totalWeight += def.weight;
     // Bypassed = traité comme rempli (le pilote a explicitement accepté de l'ignorer)
-    if (bypassedSet.has(def.path) || hasValue(getValue(aircraft, def.path))) {
+    // `valueOf` essaye d'abord le `path` traditionnel, puis le getter custom `def.get`
+    // pour les champs qui peuvent vivre dans `additionalFuelTanks[]` (refonte M&B).
+    if (bypassedSet.has(def.path) || hasValue(valueOf(aircraft, def))) {
       filledWeight += def.weight;
     } else {
       missing.push(def);
@@ -185,20 +238,24 @@ export function evaluateAircraft(aircraft) {
 
 /**
  * Couleur d'affichage selon le %.
- * Charte ALFlight : vert sapin / orange officiel / rouge critical.
+ * Charte ALFlight unifiée — vert sapin / orange officiel (plus de rouge brique
+ * qui rendait « orange foncé sale » à l'écran).
  */
 export function getCompletionColor(percentage) {
   if (percentage >= 90) return '#4FAE7F'; // vert sapin (status-ok ALFlight)
-  if (percentage >= 50) return '#f26921'; // orange ALFlight
-  return '#C04534';                        // rouge critical
+  return '#f26921';                        // orange ALFlight (toutes valeurs < 90%)
 }
 
 /**
- * Couleur pour un niveau de criticité — tout en charte ALFlight uniforme.
+ * Couleur pour un niveau de criticité — palette unifiée (plus de rouge critique).
+ * Le rouge brique #C04534 paraissait « orange foncé sale » à l'écran et polluait
+ * la charte éditoriale ALFlight. CRITICAL et REQUIRED partagent désormais
+ * l'orange officiel ; seul OPTIONAL reste en gris doux. La hiérarchie reste
+ * portée par l'ordre d'affichage et le libellé (« Critiques », « Obligatoires »).
  */
 export function getSeverityColor(severity) {
   switch (severity) {
-    case 'CRITICAL': return '#C04534';   // rouge critical ALFlight
+    case 'CRITICAL': return '#f26921';   // orange officiel ALFlight
     case 'REQUIRED': return '#f26921';   // orange officiel ALFlight
     case 'OPTIONAL': return '#8A867E';   // gris ALFlight (text-dim)
     default:         return '#8A867E';

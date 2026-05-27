@@ -21,6 +21,9 @@ import {
 import { sx } from '@shared/styles/styleSystem';
 import { useChecklistStore } from '@core/stores/checklistStore';
 import AccordionButton from '@shared/components/AccordionButton';
+// 🎨 Charte éditoriale ALFlight
+import { EditorialHeading } from '@shared/components/editorial';
+import { tokens } from '@shared/styles/designSystem';
 
 export const ChecklistModule = memo(({ wizardMode = false, config = {} }) => {
   const {
@@ -126,7 +129,16 @@ export const ChecklistModule = memo(({ wizardMode = false, config = {} }) => {
   };
 
   return (
-    <div style={sx.spacing.p(6)}>
+    <div style={{ ...sx.spacing.p(6), color: 'var(--text-primary)' }}>
+      {/* 🎨 En-tête éditorial ALFlight */}
+      {!wizardMode && (
+        <header style={{ marginBottom: tokens.spacing[6] }}>
+          <EditorialHeading level={2} eyebrow="OPS · CHECKLISTS COCKPIT">
+            Checklists
+          </EditorialHeading>
+        </header>
+      )}
+
       {/* En-tête */}
       <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
         {/* Titre */}

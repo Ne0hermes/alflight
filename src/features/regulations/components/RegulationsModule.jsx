@@ -6,6 +6,9 @@ import {
 } from 'lucide-react';
 import { regulationsData, getAllRegulations } from '../data/regulationsData';
 import { theme } from '@styles/theme';
+// 🎨 Charte éditoriale ALFlight
+import { EditorialHeading } from '@shared/components/editorial';
+import { tokens } from '@shared/styles/designSystem';
 
 const iconMap = {
   User: User,
@@ -135,14 +138,17 @@ const RegulationsModule = () => {
   }
 
   return (
-    <div style={styles.container}>
-      {/* En-tête */}
+    <div style={{ ...styles.container, color: 'var(--text-primary)' }}>
+      {/* 🎨 En-tête éditorial ALFlight */}
+      <header style={{ marginBottom: tokens.spacing[6], padding: tokens.spacing[5] }}>
+        <EditorialHeading level={2} eyebrow="DOCS · RÉFÉRENTIEL EASA">
+          Réglementations
+        </EditorialHeading>
+      </header>
+
+      {/* En-tête (existant - conservé pour la logique du bouton suggestion) */}
       <div style={styles.header}>
         <div style={styles.headerContent}>
-          <h1 style={styles.title}>
-            <Book size={28} style={{ marginRight: '12px' }} />
-            Références Réglementaires
-          </h1>
           <p style={styles.subtitle}>
             Consultez toutes les réglementations EASA applicables à l'aviation légère
           </p>

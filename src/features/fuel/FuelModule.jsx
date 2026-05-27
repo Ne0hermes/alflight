@@ -10,6 +10,9 @@ import { DataField } from '@shared/components';
 import { useUnits } from '@hooks/useUnits';
 import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
 import { toUserUnit, formatCanonical } from '@utils/unitsDisplay';
+// 🎨 Charte éditoriale ALFlight
+import { EditorialHeading } from '@shared/components/editorial';
+import { tokens } from '@shared/styles/designSystem';
 
 const FuelRow = memo(({ type, label, description, fuel, onChange, readonly = false, automatic = false, totalGal }) => {
   const { format, convert, getSymbol, toStorage, getUnit } = useUnits();
@@ -351,7 +354,16 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
   ];
 
   return (
-    <div>
+    <div style={{ color: 'var(--text-primary)' }}>
+      {/* 🎨 En-tête éditorial ALFlight */}
+      {!wizardMode && (
+        <header style={{ marginBottom: tokens.spacing[6] }}>
+          <EditorialHeading level={2} eyebrow="FUEL · BILAN CARBURANT">
+            Bilan carburant
+          </EditorialHeading>
+        </header>
+      )}
+
       {/* Alerte si l'avion manque de données */}
       {selectedAircraft && (!selectedAircraft.fuelConsumption || (!selectedAircraft.cruiseSpeedKt && !selectedAircraft.cruiseSpeed)) && (
         <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning, sx.spacing.mb(4))}>

@@ -16,6 +16,9 @@ import { DataSourceBadge, DataField } from '@shared/components';
 import { calculateDistance } from '@utils/navigationCalculations';
 import { useWeatherStore } from '@core/stores/weatherStore';
 import { coordinateConversions } from '@utils/unitConversions';
+// 🎨 Charte éditoriale ALFlight
+import { EditorialHeading } from '@shared/components/editorial';
+import { tokens } from '@shared/styles/designSystem';
 
 // Composant pour afficher une carte de statistique
 const StatCard = memo(({ icon, label, value, detail, dataSource = 'static' }) => (
@@ -477,7 +480,14 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
   }
 
   return (
-    <div>
+    <div style={{ color: 'var(--text-primary)' }}>
+      {/* 🎨 En-tête éditorial ALFlight */}
+      <header style={{ marginBottom: tokens.spacing[6] }}>
+        <EditorialHeading level={2} eyebrow="OPS · DÉROUTEMENTS">
+          Déroutements
+        </EditorialHeading>
+      </header>
+
       {/* Indicateur de rate limiting météo */}
       <WeatherRateLimitIndicator />
 

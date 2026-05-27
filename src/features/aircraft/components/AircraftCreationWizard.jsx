@@ -895,6 +895,54 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         delete dataToSave.flightManual;
       }
 
+      // ─── Sync réservoir principal → champs legacy ──────────────────────
+      // Le wizard moderne stocke le réservoir principal comme un élément
+      // de `additionalFuelTanks` avec `type: 'main'`. Pour compatibilité
+      // avec tout le reste de l'app (aircraftCompleteness, calcul M&B,
+      // PDF, performance analyzer) on miroir aussi les valeurs dans les
+      // anciens emplacements `arms.fuelMain`, `moments.fuelMain` et
+      // `fuelUsableCapacity` / `fuelCapacity`. Sans ce sync, l'avion
+      // apparaît comme « bras réservoir principal manquant » même après
+      // que l'utilisateur a renseigné le tank dans Step3.
+      try {
+        const tanks = Array.isArray(dataToSave.additionalFuelTanks) ? dataToSave.additionalFuelTanks : [];
+        const mainTank = tanks.find((t) => t && t.type === 'main');
+        if (mainTank) {
+          dataToSave.arms = { ...(dataToSave.arms || {}) };
+          dataToSave.moments = { ...(dataToSave.moments || {}) };
+          const armVal = parseFloat(mainTank.arm);
+          const momVal = parseFloat(mainTank.momentAtFull);
+          const capVal = parseFloat(mainTank.capacity);
+          if (Number.isFinite(armVal) && armVal !== 0) dataToSave.arms.fuelMain = armVal;
+          if (Number.isFinite(momVal) && momVal > 0) dataToSave.moments.fuelMain = momVal;
+          if (Number.isFinite(capVal) && capVal > 0) {
+            // fuelUsableCapacity = capacité utile du tank principal
+            if (!Number.isFinite(parseFloat(dataToSave.fuelUsableCapacity))) {
+              dataToSave.fuelUsableCapacity = capVal;
+            }
+          }
+        }
+        // fuelCapacity = somme totale de tous les réservoirs (s'il n'est pas déjà
+        // défini explicitement). Step3 le fait déjà au runtime, mais on
+        // sécurise ici au save pour les cas où la sync useEffect ne se
+        // serait pas déclenchée (édition rapide, données héritées, etc.).
+        if (tanks.length > 0) {
+          const sum = tanks.reduce((s, t) => s + (parseFloat(t?.capacity) || 0), 0);
+          const current = parseFloat(dataToSave.fuelCapacity);
+          if (sum > 0 && (!Number.isFinite(current) || Math.abs(sum - current) > 0.5)) {
+            dataToSave.fuelCapacity = sum;
+          }
+        }
+        console.log('🔄 [Save] Sync additionalFuelTanks → arms.fuelMain / moments.fuelMain / fuelUsableCapacity', {
+          fuelMain: dataToSave.arms?.fuelMain,
+          momentMain: dataToSave.moments?.fuelMain,
+          usable: dataToSave.fuelUsableCapacity,
+          total: dataToSave.fuelCapacity
+        });
+      } catch (syncErr) {
+        console.warn('⚠️ [Save] Sync tank principal échoué (non bloquant):', syncErr);
+      }
+
       // Calculer le baseFactor si nécessaire
       if (dataToSave.cruiseSpeedKt && !dataToSave.baseFactor) {
         dataToSave.baseFactor = (60 / parseFloat(dataToSave.cruiseSpeedKt)).toFixed(3);

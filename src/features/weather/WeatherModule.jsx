@@ -10,6 +10,9 @@ import { sx } from '@shared/styles/styleSystem';
 import { DataSourceBadge, DataField, DataFieldGroup } from '@shared/components';
 import { useUnits } from '@hooks/useUnits';
 import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
+// 🎨 Charte éditoriale ALFlight
+import { EditorialHeading } from '@shared/components/editorial';
+import { tokens } from '@shared/styles/designSystem';
 
 export const WeatherModule = memo(({ wizardMode = false, config = {} }) => {
   const { waypoints } = useNavigation();
@@ -148,7 +151,16 @@ export const WeatherModule = memo(({ wizardMode = false, config = {} }) => {
   };
   
   return (
-    <div style={sx.spacing.p(6)}>
+    <div style={{ ...sx.spacing.p(6), color: 'var(--text-primary)' }}>
+      {/* 🎨 En-tête éditorial ALFlight */}
+      {!wizardMode && (
+        <header style={{ marginBottom: tokens.spacing[6] }}>
+          <EditorialHeading level={2} eyebrow="MÉTÉO · CONDITIONS DE VOL">
+            Briefing météorologique
+          </EditorialHeading>
+        </header>
+      )}
+
       {/* En-tête et recherche */}
       <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
         <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4), sx.flex.start)}>

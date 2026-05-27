@@ -1,11 +1,20 @@
 // src/features/logbook/LogbookModule.jsx
-// Module Carnet de bord - Carnet de vol électronique
+// ============================================================================
+//  LogbookModule — Refonte charte éditoriale ALFlight (Phase 3.4)
+//
+//  Conteneur sur fond --bg-surface avec bordure éditoriale subtile.
+//  Plus aucune couleur hardcodée (white/box-shadow remplacés par variables).
+// ============================================================================
 
 import React, { useState, lazy, Suspense, useEffect } from 'react';
 import { LoadingSpinner } from '../../shared/components/LoadingSpinner';
+import { EditorialHeading } from '@shared/components/editorial';
+import { tokens } from '@shared/styles/designSystem';
 
 // Import lazy pour éviter les problèmes de dépendances circulaires
-const PilotLogbook = lazy(() => import('../pilot/components/PilotLogbook').then(module => ({ default: module.default })));
+const PilotLogbook = lazy(() =>
+  import('../pilot/components/PilotLogbook').then((module) => ({ default: module.default }))
+);
 // Note: TechnicalLogModule supprimé - fonctionnalité retirée de l'application
 
 const LogbookModule = () => {
@@ -15,31 +24,39 @@ const LogbookModule = () => {
 
   // Écouter les changements de navigation pour détecter si on vient du bouton "Ajouter un vol"
   useEffect(() => {
-    // Si on avait l'action 'add', la réinitialiser
     if (window.logbookAction === 'add') {
       setForceShowForm(true);
-      window.logbookAction = null; // Réinitialiser pour la prochaine fois
+      window.logbookAction = null;
     }
-
-    // Vérifier aussi les paramètres d'URL
     const params = new URLSearchParams(window.location.search);
     if (params.get('action') === 'add') {
       setForceShowForm(true);
     }
   }, []);
 
-
   return (
-    <div style={{
-      backgroundColor: 'white',
-      borderRadius: '8px',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-      marginBottom: '20px',
-      padding: '20px'
-    }}>
-      <Suspense fallback={<LoadingSpinner />}>
-        <PilotLogbook showFormProp={forceShowForm} />
-      </Suspense>
+    <div style={{ padding: tokens.spacing[4], color: 'var(--text-primary)' }}>
+      {/* En-tête éditorial */}
+      <header style={{ marginBottom: tokens.spacing[6] }}>
+        <EditorialHeading level={2} eyebrow="LOGBOOK · CARNET ÉLECTRONIQUE">
+          Carnet de bord
+        </EditorialHeading>
+      </header>
+
+      {/* Conteneur principal */}
+      <section
+        style={{
+          backgroundColor: 'var(--bg-surface)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: tokens.radius?.sm || '2px',
+          padding: tokens.spacing[6],
+          marginBottom: tokens.spacing[5],
+        }}
+      >
+        <Suspense fallback={<LoadingSpinner />}>
+          <PilotLogbook showFormProp={forceShowForm} />
+        </Suspense>
+      </section>
     </div>
   );
 };
