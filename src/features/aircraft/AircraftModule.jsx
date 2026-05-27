@@ -29,6 +29,10 @@ import indexedDBStorage from '@utils/indexedDBStorage';
 import { formatCanonical } from '@utils/unitsDisplay';
 import { useUnitsStore } from '@core/stores/unitsStore';
 import { evaluateAircraft, getCompletionColor, getSeverityColor } from './utils/aircraftCompleteness';
+// 🔧 FIX persistance bras-de-levier : la liste store ne contient PAS aircraft_data
+// (optim mémoire de getAllPresets). On hydrate depuis Supabase au moment de l'édition
+// pour récupérer arms, weightBalance, cgEnvelope, armLengths, etc.
+import communityService from '@services/communityService';
 
 // Composant pour l'aide contextuelle
 const InfoIcon = memo(({ tooltip }) => {
@@ -80,18 +84,19 @@ InfoIcon.displayName = 'InfoIcon';
  * Helpers d'affichage éditorial pour les cards d'avion
  * -------------------------------------------------------------------------- */
 
-// Couleur de complétion adaptée à la palette éditoriale (un seul orange / blanc / rouge)
+// Couleur de complétion — palette unifiée orange/blanc, plus de rouge critique
+// (le user a explicitement demandé d'éliminer ce ton qui paraît « orange foncé
+// sale » à l'écran). L'info critique reste portée par le bouton MANQUANTS.
 const completionTone = (percentage, hasCriticalGaps) => {
-  if (hasCriticalGaps) return 'var(--color-red-critical)';
   if (percentage >= 90) return 'var(--text-primary)';
-  if (percentage >= 50) return 'var(--accent-primary)';
   return 'var(--accent-primary)';
 };
 
 // Petite jauge SVG fine de complétion (mode card)
 const CompletionGauge = memo(({ percentage = 0, critical = false }) => {
   const safe = Math.max(0, Math.min(100, Math.round(percentage || 0)));
-  const tone = critical ? 'var(--color-red-critical)' : 'var(--accent-primary)';
+  // Un seul ton : orange ALFlight officiel. Plus de rouge critique.
+  const tone = 'var(--accent-primary)';
   return (
     <div
       role="img"
@@ -108,8 +113,7 @@ const CompletionGauge = memo(({ percentage = 0, critical = false }) => {
         value={safe}
         unit="%"
         size="sm"
-        emphasis={!critical && safe >= 90 ? false : true}
-        style={{ color: critical ? 'var(--color-red-critical)' : undefined }}
+        emphasis={safe >= 90 ? false : true}
       />
       <svg width="110" height="4" viewBox="0 0 110 4" aria-hidden="true">
         <line
@@ -270,59 +274,98 @@ export const AircraftModule = memo(() => {
   //   2. Directement sur l'objet aircraft (data fraîchement chargée depuis Supabase)
   //   3. Supabase si on a un ID mais rien en local (avion partagé d'un autre pilote)
   //
-  // 🔧 FIX : avant, on ne lisait QUE IndexedDB. Quand un nouvel utilisateur
-  // récupérait un avion depuis Supabase, la photo n'apparaissait jamais car
-  // IndexedDB est vide pour lui. Désormais on accepte aussi aircraft.photo
-  // direct et on persiste vers IndexedDB pour la prochaine fois (cache).
+  // 🛡️ FIX OOM (Out Of Memory) :
+  // L'ancienne implémentation appelait `dataBackupManager.getAircraftData(id)` pour
+  // CHAQUE avion de la liste, ce qui chargeait en mémoire la totalité du blob
+  // IDB (photo base64 + MANEX PDF base64 + tables performance). Avec 3-5 avions
+  // équipés MANEX, ça représentait facilement 50-100 MB temporairement, et
+  // Chrome tuait le renderer ("Render process gone, out of memory") avant même
+  // l'affichage des cards.
+  //
+  // Solution :
+  //   • on ne lit IDB QUE si l'avion a la flag `hasPhoto` (sinon inutile),
+  //   • on libère explicitement la référence `fullData` après extraction de la
+  //     photo (sortie du scope, garbage collection rapide),
+  //   • on évite de tout charger en parallèle : la boucle reste séquentielle
+  //     pour ne pas accumuler N blobs en mémoire au même instant.
+  // 🛡️ FIX OOM CRITIQUE — Chargement photos memory-safe.
+  //
+  // Pourquoi c'est délicat : `dataBackupManager.getAircraftData(id)` retourne
+  // le record IDB COMPLET (photo base64 ~3 MB + MANEX PDF base64 ~12 MB +
+  // performance tables ~10 MB + weighingReport). On veut seulement la photo.
+  //
+  // Anciennement on accumulait tout ça en mémoire (le `fullData` restait
+  // référencé dans le scope du closure jusqu'à la fin de l'itération) et,
+  // combiné aux clones de AircraftProvider.loadFromIndexedDB, le renderer
+  // Chrome explosait avec "Render process gone, out of memory".
+  //
+  // Solution 3-couches :
+  //   1. Photos inline (déjà en mémoire sur l'objet aircraft) — priorité.
+  //   2. Pour les autres, lecture IDB SÉQUENTIELLE (jamais parallèle), avec
+  //      extraction immédiate de la photo puis nullify de la réf au full
+  //      record. Le GC peut alors libérer le MANEX/perf tables AVANT la
+  //      prochaine itération.
+  //   3. Yield explicite entre itérations (`await Promise.resolve()`) pour
+  //      laisser au moteur JS l'opportunité de GC.
+  //
+  // On poste les photos AU FUR ET À MESURE (setState à chaque itération)
+  // pour que l'utilisateur voie les images s'afficher progressivement plutôt
+  // qu'attendre le chargement complet.
   useEffect(() => {
-    const loadPhotos = async () => {
-      const photosMap = {};
+    if (aircraftList.length === 0) {
+      setAircraftPhotos({});
+      return;
+    }
 
+    let cancelled = false;
+
+    // Pass 1 — photos inline, sans I/O, synchrone.
+    const inlineMap = {};
+    for (const a of aircraftList) {
+      if (a.photo) inlineMap[a.id] = a.photo;
+    }
+    if (Object.keys(inlineMap).length > 0) {
+      setAircraftPhotos((prev) => ({ ...prev, ...inlineMap }));
+    }
+
+    // Pass 2 — IDB séquentiel pour les avions sans photo inline.
+    const loadFromIDB = async () => {
       for (const aircraft of aircraftList) {
+        if (cancelled) return;
+        // Skip si déjà inline ou si pas de hasPhoto.
+        if (aircraft.photo || !aircraft.hasPhoto) continue;
+
+        let extractedPhoto = null;
         try {
-          // 1) IndexedDB (cache local)
-          let photo = null;
-          try {
+          // Bloc isolé pour que `fullData` sorte de scope dès que la photo
+          // est extraite. Important pour libérer le MANEX/perf tables.
+          {
             const fullData = await dataBackupManager.getAircraftData(aircraft.id);
             if (fullData && fullData.photo) {
-              photo = fullData.photo;
-              console.log(`📸 [IDB] Photo chargée pour ${aircraft.registration}`);
+              extractedPhoto = fullData.photo;
             }
-          } catch (e) { /* ignore, on retombe sur les fallbacks */ }
-
-          // 2) Photo inline sur l'objet aircraft (Supabase aircraftData.photo)
-          if (!photo && aircraft.photo) {
-            photo = aircraft.photo;
-            console.log(`📸 [Supabase inline] Photo trouvée pour ${aircraft.registration}`);
-            // Cache vers IndexedDB pour la prochaine fois (rapidité, offline)
-            try {
-              await dataBackupManager.initPromise;
-              await dataBackupManager.saveAircraftData({
-                ...aircraft,
-                photo: photo
-              });
-              console.log(`💾 Photo mise en cache IDB pour ${aircraft.registration}`);
-            } catch (e) {
-              console.warn(`⚠️ Cache IDB échoué pour ${aircraft.registration}:`, e?.message);
-            }
+            // `fullData` perd sa dernière référence ici → éligible GC.
           }
-
-          if (photo) {
-            photosMap[aircraft.id] = photo;
-          } else if (aircraft.hasPhoto) {
-            console.warn(`⚠️ hasPhoto=true mais aucune photo trouvée pour ${aircraft.registration}`);
-          }
-        } catch (error) {
-          console.warn(`⚠️ Erreur globale photo ${aircraft.registration}:`, error);
+        } catch (err) {
+          // IDB indispo, avion absent, ou enregistrement corrompu.
+          // Pas grave, on passe au suivant.
+          continue;
         }
-      }
 
-      setAircraftPhotos(photosMap);
+        if (cancelled) return;
+        if (extractedPhoto) {
+          setAircraftPhotos((prev) => ({ ...prev, [aircraft.id]: extractedPhoto }));
+        }
+
+        // Yield au moteur JS — permet au GC de tourner entre 2 lectures IDB
+        // de 25 MB avant que la suivante alloue à nouveau.
+        await new Promise((r) => setTimeout(r, 0));
+      }
     };
 
-    if (aircraftList.length > 0) {
-      loadPhotos();
-    }
+    loadFromIDB();
+
+    return () => { cancelled = true; };
   }, [aircraftList]);
 
   const handleSelectAircraft = (aircraft) => {
@@ -346,7 +389,33 @@ export const AircraftModule = memo(() => {
     console.log('✏️ AircraftModule - Editing aircraft:', aircraft);
     // Récupérer l'avion le plus récent depuis la liste pour avoir les dernières modifications
     let currentAircraft = aircraftList.find(a => a.id === aircraft.id) || aircraft;
-    console.log('✏️ AircraftModule - Current aircraft from list:', currentAircraft);
+
+    // 🛡️ FIX CRITIQUE persistance bras-de-levier (M&C):
+    // `getAllPresets()` ne charge PAS la colonne aircraft_data pour optimiser
+    // la mémoire (les photos base64 sont volumineuses). Le store contient donc
+    // un AVION SQUELETTE sans arms / weightBalance / cgEnvelope / armLengths /
+    // speeds / advancedPerformance. Si on ouvre le wizard sur ce squelette, les
+    // données fraichement saisies (par exemple arms.fuelMain) paraissent perdues
+    // alors qu'elles sont bien en base.
+    // → On hydrate depuis Supabase APRÈS la lecture de la liste pour récupérer
+    //   tous les champs métier complets.
+    if (currentAircraft.communityPresetId || currentAircraft.id) {
+      try {
+        const fullFromSupabase = await communityService.getPresetById(
+          currentAircraft.communityPresetId || currentAircraft.id
+        );
+        if (fullFromSupabase) {
+          // On garde les flags/champs déjà résolus dans la liste (ex: hasPhoto)
+          // et on superpose les champs métier complets venant de Supabase.
+          currentAircraft = { ...currentAircraft, ...fullFromSupabase };
+          console.log('🔄 Avion hydraté depuis Supabase (arms/weightBalance/cgEnvelope OK)');
+        }
+      } catch (err) {
+        console.warn('⚠️ Hydratation Supabase échouée (avion local uniquement ?):', err?.message || err);
+      }
+    }
+
+    console.log('✏️ AircraftModule - Current aircraft from list (post-hydrate):', currentAircraft);
     console.log('✏️ AircraftModule - Aircraft surfaces:', currentAircraft.compatibleRunwaySurfaces);
 
     // Si l'avion a des données volumineuses (photo, manex, rapport de pesée),
@@ -405,6 +474,24 @@ export const AircraftModule = memo(() => {
     console.log('🪄 AircraftModule - Opening wizard for aircraft:', aircraft);
     // Récupérer l'avion le plus récent depuis la liste pour avoir les dernières modifications
     let currentAircraft = aircraftList.find(a => a.id === aircraft.id) || aircraft;
+
+    // 🛡️ FIX CRITIQUE persistance bras-de-levier (M&C) — voir handleEdit ci-dessus.
+    // Le wizard est encore plus sensible : il édite arms, weightBalance, cgEnvelope.
+    // Sans hydratation Supabase, les valeurs sauvegardées paraissent perdues à
+    // chaque réouverture.
+    if (currentAircraft.communityPresetId || currentAircraft.id) {
+      try {
+        const fullFromSupabase = await communityService.getPresetById(
+          currentAircraft.communityPresetId || currentAircraft.id
+        );
+        if (fullFromSupabase) {
+          currentAircraft = { ...currentAircraft, ...fullFromSupabase };
+          console.log('🔄 Wizard hydraté depuis Supabase (arms/weightBalance/cgEnvelope OK)');
+        }
+      } catch (err) {
+        console.warn('⚠️ Hydratation Supabase échouée pour wizard:', err?.message || err);
+      }
+    }
 
     // Si l'avion a des données volumineuses, essayer de les récupérer depuis IndexedDB
     if (currentAircraft.hasPhoto || currentAircraft.hasManex || currentAircraft.hasPerformance) {
@@ -1261,7 +1348,7 @@ export const AircraftModule = memo(() => {
             position: 'absolute',
             inset: 0,
             background:
-              'linear-gradient(180deg, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.75) 60%, rgba(10,10,10,0.92) 100%)',
+              'linear-gradient(180deg, var(--app-bg-alpha-55) 0%, var(--app-bg-alpha-75) 60%, var(--app-bg-alpha-92) 100%)',
             pointerEvents: 'none'
           }}
           aria-hidden="true"
@@ -1459,14 +1546,16 @@ export const AircraftModule = memo(() => {
             const manexLoaded = !!(aircraft.hasManex || aircraft.manex);
             const weighingLoaded = !!(aircraft.hasWeighingReport || aircraft.weighingReport?.hasData);
 
-            // Bordure de la card : orange si sélectionné, rouge si critique,
-            // sinon TRANSPARENT (la card se distingue par son fond surélevé
-            // var(--bg-surface) sur le canvas var(--bg-canvas), pas besoin de
-            // bordure claire qui créait un « cadre blanc » résiduel).
+            // Bordure de la card : orange si sélectionné, sinon TRANSPARENT.
+            // La card se distingue par son fond surélevé var(--bg-surface) sur
+            // le canvas var(--bg-canvas) — pas besoin de bordure claire (qui
+            // créait un « cadre blanc » résiduel) ni de bordure rouge critique
+            // (orange foncé pollueur). L'info « critique » est déjà transmise
+            // par :
+            //   • le % en rouge dans CompletionGauge,
+            //   • le bouton MANQUANTS avec son texte/icône rouge.
             const cardBorderColor = isSelected
               ? 'var(--accent-primary)'
-              : hasCriticalGaps
-              ? 'var(--color-red-critical)'
               : 'transparent';
 
             return (
@@ -1489,7 +1578,7 @@ export const AircraftModule = memo(() => {
                   transition: `border-color ${tokens.motion.base}, transform ${tokens.motion.base}`
                 }}
                 onMouseEnter={(e) => {
-                  if (!isSelected && !hasCriticalGaps) {
+                  if (!isSelected) {
                     e.currentTarget.style.borderColor = 'var(--accent-primary)';
                   }
                 }}
@@ -1497,20 +1586,48 @@ export const AircraftModule = memo(() => {
                   e.currentTarget.style.borderColor = cardBorderColor;
                 }}
               >
-                {/* Background image desaturée + gradient sombre */}
+                {/* Background photo : on rend via <img> avec loading="lazy"
+                    + decoding="async" plutôt que background-image:url(base64),
+                    car Chrome conserve un bitmap RGBA décodé en mémoire pour
+                    chaque background-image. Avec 2 photos en pleine résolution
+                    caméra (4000×3000), ça représente ~100 MB de bitmap qui
+                    saturait le renderer ("Render process gone, out of memory").
+                    Le <img> permet au moteur de gérer la mémoire de manière
+                    plus agressive (drop si non visible, downsampling natif). */}
                 {photoUrl && (
-                  <div
-                    aria-hidden="true"
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      backgroundImage: `linear-gradient(180deg, rgba(10,10,10,0.35) 0%, rgba(10,10,10,0.92) 100%), url(${photoUrl})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      filter: 'grayscale(0.45)',
-                      zIndex: 0
-                    }}
-                  />
+                  <>
+                    <img
+                      src={photoUrl}
+                      alt=""
+                      aria-hidden="true"
+                      loading="lazy"
+                      decoding="async"
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        objectPosition: 'center',
+                        filter: 'grayscale(0.45)',
+                        zIndex: 0,
+                        pointerEvents: 'none'
+                      }}
+                    />
+                    {/* Gradient sombre par-dessus la photo, sans background-image
+                        sur la photo elle-même → pas de double bitmap en mémoire. */}
+                    <div
+                      aria-hidden="true"
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        backgroundImage:
+                          'linear-gradient(180deg, var(--app-bg-alpha-35) 0%, var(--app-bg-alpha-92) 100%)',
+                        zIndex: 0,
+                        pointerEvents: 'none'
+                      }}
+                    />
+                  </>
                 )}
                 {!photoUrl && (
                   <div
@@ -1581,7 +1698,7 @@ export const AircraftModule = memo(() => {
                             alignItems: 'center',
                             alignSelf: 'flex-start',
                             padding: '2px 6px',
-                            border: `${tokens.border.thin} solid var(--border-regular)`,
+                            border: `${tokens.border.thin} solid var(--border-subtle)`,
                             color: 'var(--text-tertiary)',
                             fontFamily: tokens.fontFamily.mono,
                             fontSize: '10px',
@@ -1682,92 +1799,75 @@ export const AircraftModule = memo(() => {
                     );
                   })()}
 
-                  {/* Coins bas : MARQUE · MODÈLE · PUISSANCE · AÉROCLUB en grille datasheet */}
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                      gap: tokens.spacing[3]
-                    }}
-                  >
-                    {/* MARQUE */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
-                      <TechLabel>MARQUE</TechLabel>
+                  {/* Coins bas : MARQUE · MODÈLE · PUISSANCE · AÉROCLUB en grille datasheet.
+                      Style unifié sur les 4 champs (factorisé via `fieldValueStyle`) :
+                      14px / text-primary / line-height 1.3, pour donner à l'aéroclub
+                      la même présence visuelle que la marque/modèle/puissance et
+                      éviter qu'il paraisse « secondaire » ou rétréci. */}
+                  {(() => {
+                    const fieldValueStyle = {
+                      fontFamily: tokens.fontFamily.sans,
+                      fontSize: '14px',
+                      fontWeight: 400,
+                      color: 'var(--text-primary)',
+                      lineHeight: 1.3,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    };
+                    const fieldWrapStyle = { display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 };
+                    return (
                       <div
                         style={{
-                          fontFamily: tokens.fontFamily.sans,
-                          fontSize: '14px',
-                          fontWeight: 400,
-                          color: 'var(--text-primary)',
-                          lineHeight: 1.3,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                          gap: tokens.spacing[3]
                         }}
                       >
-                        {aircraft.manufacturer && !['inconnu', 'unknown', 'n/a'].includes(String(aircraft.manufacturer).trim().toLowerCase())
-                          ? aircraft.manufacturer
-                          : '—'}
-                      </div>
-                    </div>
+                        {/* MARQUE */}
+                        <div style={fieldWrapStyle}>
+                          <TechLabel>MARQUE</TechLabel>
+                          <div style={fieldValueStyle}>
+                            {aircraft.manufacturer && !['inconnu', 'unknown', 'n/a'].includes(String(aircraft.manufacturer).trim().toLowerCase())
+                              ? aircraft.manufacturer
+                              : '—'}
+                          </div>
+                        </div>
 
-                    {/* MODÈLE — poids standard (pas gras) */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
-                      <TechLabel>MODÈLE</TechLabel>
-                      <div
-                        style={{
-                          fontFamily: tokens.fontFamily.sans,
-                          fontSize: '14px',
-                          fontWeight: 400,
-                          color: 'var(--text-primary)',
-                          lineHeight: 1.3,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        {aircraft.model || '—'}
-                      </div>
-                    </div>
+                        {/* MODÈLE */}
+                        <div style={fieldWrapStyle}>
+                          <TechLabel>MODÈLE</TechLabel>
+                          <div style={fieldValueStyle}>
+                            {aircraft.model || '—'}
+                          </div>
+                        </div>
 
-                    {/* PUISSANCE — poids standard (pas gras) */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
-                      <TechLabel>PUISSANCE</TechLabel>
-                      <div
-                        style={{
-                          fontFamily: tokens.fontFamily.sans,
-                          fontSize: '14px',
-                          fontWeight: 400,
-                          color: 'var(--text-primary)',
-                          lineHeight: 1.3
-                        }}
-                      >
-                        {aircraft.horsepower ? `${aircraft.horsepower} CV` : '—'}
-                      </div>
-                    </div>
+                        {/* PUISSANCE */}
+                        <div style={fieldWrapStyle}>
+                          <TechLabel>PUISSANCE</TechLabel>
+                          <div style={fieldValueStyle}>
+                            {aircraft.horsepower ? `${aircraft.horsepower} CV` : '—'}
+                          </div>
+                        </div>
 
-                    {/* AÉROCLUB / BASE */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
-                      <TechLabel>{aircraft.homeAeroclub ? 'AÉROCLUB' : 'BASE'}</TechLabel>
-                      <div
-                        style={{
-                          fontFamily: tokens.fontFamily.sans,
-                          fontSize: '13px',
-                          fontWeight: 400,
-                          color: 'var(--text-secondary)',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        {aircraft.homeAeroclub || aircraft.homeBase || '—'}
+                        {/* AÉROCLUB / BASE */}
+                        <div style={fieldWrapStyle}>
+                          <TechLabel>{aircraft.homeAeroclub ? 'AÉROCLUB' : 'BASE'}</TechLabel>
+                          <div style={fieldValueStyle}>
+                            {aircraft.homeAeroclub || aircraft.homeBase || '—'}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
+                    );
+                  })()}
 
                   {/* Actions — barre centrée : dropdown manquants + 5 boutons d'action.
                       Helper local pour homogénéiser les boutons icônes. */}
                   {(() => {
+                    // baseBtn — utilise --border-subtle (très discret) plutôt
+                    // que --border-regular (ivoire visible) pour éviter
+                    // l'effet « contours blancs » sur la card. Hover révèle
+                    // l'orange ALFlight pour signaler l'interactivité.
                     const baseBtn = {
                       minWidth: '44px',
                       minHeight: '44px',
@@ -1775,7 +1875,7 @@ export const AircraftModule = memo(() => {
                       alignItems: 'center',
                       justifyContent: 'center',
                       backgroundColor: 'transparent',
-                      border: `${tokens.border.thin} solid var(--border-regular)`,
+                      border: `${tokens.border.thin} solid var(--border-subtle)`,
                       borderRadius: tokens.radius.sm,
                       color: 'var(--text-secondary)',
                       cursor: 'pointer',
@@ -1786,7 +1886,7 @@ export const AircraftModule = memo(() => {
                       e.currentTarget.style.color = color;
                     };
                     const hoverOut = (e) => {
-                      e.currentTarget.style.borderColor = 'var(--border-regular)';
+                      e.currentTarget.style.borderColor = 'var(--border-subtle)';
                       e.currentTarget.style.color = 'var(--text-secondary)';
                     };
                     return (
@@ -1801,7 +1901,12 @@ export const AircraftModule = memo(() => {
                           borderTop: `${tokens.border.thin} solid var(--border-subtle)`
                         }}
                       >
-                        {/* Pill MANQUANTS — visuellement distinct, sur la même ligne */}
+                        {/* Bouton MANQUANTS — aligné visuellement et typographiquement
+                            sur les boutons d'action (MANEX, PESÉE, FICHE) :
+                            fond transparent, bordure subtile, libellé mono dans
+                            un <span> avec font-size 11px / letter-spacing 0.08em.
+                            Pas d'icône décorative (triangle), pas de gras 600,
+                            pas de pill rouge — l'info « X manquants » suffit. */}
                         {missing.length > 0 && (
                           <button
                             type="button"
@@ -1818,28 +1923,23 @@ export const AircraftModule = memo(() => {
                             aria-label={`${missing.length} manquant${missing.length > 1 ? 's' : ''}`}
                             aria-expanded={isMissingExpanded}
                             style={{
-                              minHeight: '44px',
-                              display: 'inline-flex',
-                              alignItems: 'center',
+                              ...baseBtn,
+                              padding: `0 ${tokens.spacing[2]}`,
                               gap: '6px',
-                              padding: `0 ${tokens.spacing[3]}`,
-                              backgroundColor: hasCriticalGaps
-                                ? 'rgba(192, 69, 52, 0.12)'
-                                : 'var(--accent-soft)',
-                              border: `${tokens.border.thin} solid ${hasCriticalGaps ? 'var(--color-red-critical)' : 'var(--accent-primary)'}`,
-                              borderRadius: '999px',
-                              color: hasCriticalGaps ? 'var(--color-red-critical)' : 'var(--accent-primary)',
-                              fontFamily: tokens.fontFamily.mono,
-                              fontSize: '11px',
-                              letterSpacing: '0.10em',
-                              textTransform: 'uppercase',
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                              transition: `background-color ${tokens.motion.fast}`
+                              color: 'var(--accent-primary)'
                             }}
+                            onMouseEnter={(e) => hoverIn(e)}
+                            onMouseLeave={hoverOut}
                           >
-                            <AlertTriangle size={14} aria-hidden="true" />
-                            {missing.length} MANQUANT{missing.length > 1 ? 'S' : ''}
+                            <span
+                              style={{
+                                fontFamily: tokens.fontFamily.mono,
+                                fontSize: '11px',
+                                letterSpacing: '0.08em'
+                              }}
+                            >
+                              {missing.length} MANQUANT{missing.length > 1 ? 'S' : ''}
+                            </span>
                           </button>
                         )}
 
@@ -1962,12 +2062,13 @@ export const AircraftModule = memo(() => {
                         const items = missing.filter((m) => m.severity === sev);
                         if (items.length === 0) return null;
                         const labelMap = { CRITICAL: 'Critiques', REQUIRED: 'Obligatoires', OPTIONAL: 'Optionnels' };
+                        // Palette unifiée — plus de rouge critique parasite.
+                        // L'ordre du dropdown (CRITICAL > REQUIRED > OPTIONAL)
+                        // et le libellé suffisent à porter la hiérarchie.
                         const sevColor =
-                          sev === 'CRITICAL'
-                            ? 'var(--color-red-critical)'
-                            : sev === 'REQUIRED'
-                            ? 'var(--accent-primary)'
-                            : 'var(--text-tertiary)';
+                          sev === 'OPTIONAL'
+                            ? 'var(--text-tertiary)'
+                            : 'var(--accent-primary)';
                         return (
                           <div key={sev} style={{ marginBottom: tokens.spacing[3] }}>
                             <div
@@ -2036,7 +2137,7 @@ export const AircraftModule = memo(() => {
                 position: 'absolute',
                 inset: 0,
                 background:
-                  'linear-gradient(180deg, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.85) 100%)'
+                  'linear-gradient(180deg, var(--app-bg-alpha-55) 0%, var(--app-bg-alpha-85) 100%)'
               }}
               aria-hidden="true"
             />
@@ -2105,7 +2206,7 @@ export const AircraftModule = memo(() => {
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: tokens.palette?.alpha?.overlay || 'rgba(10,10,10,0.72)',
+            backgroundColor: tokens.palette?.alpha?.overlay || 'var(--app-bg-alpha-72)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -2184,7 +2285,7 @@ export const AircraftModule = memo(() => {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: tokens.palette?.alpha?.overlay || 'rgba(10,10,10,0.72)',
+          backgroundColor: tokens.palette?.alpha?.overlay || 'var(--app-bg-alpha-72)',
           backdropFilter: 'blur(8px)',
           WebkitBackdropFilter: 'blur(8px)',
           display: 'flex',
@@ -2404,7 +2505,7 @@ export const AircraftModule = memo(() => {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: tokens.palette?.alpha?.overlay || 'rgba(10,10,10,0.72)',
+          backgroundColor: tokens.palette?.alpha?.overlay || 'var(--app-bg-alpha-72)',
           backdropFilter: 'blur(8px)',
           WebkitBackdropFilter: 'blur(8px)',
           display: 'flex',

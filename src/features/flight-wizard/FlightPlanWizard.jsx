@@ -3,6 +3,9 @@ import { ChevronLeft, ChevronRight, Check, Plane, X, AlertTriangle } from 'lucid
 import { theme } from '../../styles/theme';
 import { FlightPlanData } from './models/FlightPlanData';
 import { WizardConfigProvider } from './contexts/WizardConfigContext';
+// 🎨 Charte éditoriale ALFlight
+import { EditorialHeading } from '@shared/components/editorial';
+import { tokens } from '@shared/styles/designSystem';
 import { useAircraft, useNavigation, useFuel, useWeather } from '@core/contexts';
 import { aircraftSelectors } from '../../core/stores/aircraftStore';
 import { flightPlanSupabaseService } from '../../services/flightPlanSupabaseService';
@@ -691,23 +694,27 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
         }
       `}</style>
 
-      <div style={styles.container}>
-        {/* Header */}
-        <div className="wizard-header" style={styles.header}>
-          <h1 style={styles.title}>
-            <Plane size={24} style={{ marginRight: '12px' }} />
-            Je prépare mon vol
-          </h1>
+      <div style={{ ...styles.container, color: 'var(--text-primary)' }}>
+        {/* 🎨 Header éditorial ALFlight — eyebrow + titre Century Gothic + chip mono */}
+        <div className="wizard-header" style={{ ...styles.header, padding: tokens.spacing[5] }}>
+          <EditorialHeading level={2} eyebrow="OPS · BRIEFING PRÉ-VOL">
+            Préparation de vol
+          </EditorialHeading>
           {hasDraft && (
-            <div style={{ marginTop: '8px' }}>
+            <div style={{ marginTop: tokens.spacing[3] }}>
               <span style={{
-                fontSize: '14px',
-                padding: '4px 12px',
-                backgroundColor: '#10b981',
-                color: '#fff',
-                borderRadius: '12px'
+                fontFamily: tokens.fontFamily.mono,
+                fontSize: '11px',
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                fontWeight: 600,
+                padding: '4px 10px',
+                backgroundColor: 'var(--accent-soft)',
+                color: 'var(--accent-primary)',
+                border: '1px solid var(--accent-primary)',
+                borderRadius: tokens.radius?.sm || '2px',
               }}>
-                Brouillon sauvegardé
+                DRAFT · AUTO-SAVED
               </span>
             </div>
           )}

@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { Box, Button, Card, CardContent, Typography, Alert, Chip } from '@mui/material';
 import { Delete, CloudUpload, Restore, Warning } from '@mui/icons-material';
 import { useAircraftStore } from '@core/stores/aircraftStore';
+// 🎨 Charte éditoriale ALFlight
+import { EditorialHeading } from '@shared/components/editorial';
+import { tokens } from '@shared/styles/designSystem';
 
 /**
  * Panel d'administration pour gérer le localStorage et la migration Supabase
@@ -116,10 +119,13 @@ export default function AdminPanel() {
   const backupInfo = getBackupInfo();
 
   return (
-    <Box sx={{ p: 3, maxWidth: 800, mx: 'auto' }}>
-      <Typography variant="h4" gutterBottom>
-        🛠️ Panel d'Administration
-      </Typography>
+    <Box sx={{ p: 3, maxWidth: 800, mx: 'auto', color: 'var(--text-primary)' }}>
+      {/* 🎨 En-tête éditorial ALFlight */}
+      <Box sx={{ mb: tokens.spacing[6] }}>
+        <EditorialHeading level={2} eyebrow="SYS · OUTILS DE MAINTENANCE">
+          Administration
+        </EditorialHeading>
+      </Box>
 
       <Card sx={{ mb: 3 }}>
         <CardContent>

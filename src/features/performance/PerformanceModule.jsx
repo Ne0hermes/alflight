@@ -15,6 +15,9 @@ import airportDataService from '../../services/airportDataService';
 import { FUEL_DENSITIES } from '../../utils/constants';
 import { getWaypointIcao } from '../../shared/utils/getWaypointIcao';
 import { SAFETY_FACTOR_PRESETS, DEFAULT_SAFETY_FACTOR } from '../../utils/performanceSafetyFactor';
+// 🎨 Charte éditoriale ALFlight
+import { EditorialHeading } from '@shared/components/editorial';
+import { tokens } from '@shared/styles/designSystem';
 
 const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   const { selectedAircraft } = useAircraft();
@@ -680,7 +683,16 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   // (chacune avec encart Conditions + matrice de couverture + analyse pistes).
 
   return (
-    <div>
+    <div style={{ color: 'var(--text-primary)' }}>
+      {/* 🎨 En-tête éditorial ALFlight */}
+      {!wizardMode && (
+        <header style={{ marginBottom: tokens.spacing[6] }}>
+          <EditorialHeading level={2} eyebrow="PERF · DÉCOLLAGE & ATTERRISSAGE">
+            Performances
+          </EditorialHeading>
+        </header>
+      )}
+
       {/* Sélecteur de facteur de sécurité réglementaire + note corrections piste */}
       <div style={{ padding: '0 8px' }}>
         {renderSafetyFactorSelector()}

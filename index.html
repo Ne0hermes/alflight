@@ -56,18 +56,23 @@
     <!-- Apple Sign In JS - Désactivé temporairement -->
     <!-- <script type="text/javascript" src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"></script> -->
     
-    <!-- Force le fond blanc immédiatement -->
+    <!-- Force le fond NOIR ALFlight immédiatement (anti-FOUC + anti-cadre-blanc au zoom).
+         La valeur est synchronisée avec la variable --app-bg définie dans src/index.css.
+         Si tu changes la couleur de --app-bg, change AUSSI le theme-color ci-dessus et
+         ces 3 occurrences ci-dessous. C'est le SEUL endroit où cette couleur peut être
+         dupliquée (pré-CSS), parce que ces styles s'appliquent avant le chargement de
+         index.css. -->
     <style>
       html, body {
-        background-color: #FFFFFF !important;
-        background: #FFFFFF !important;
-        color: #000000 !important;
+        background-color: #0A0A0A !important;
+        background: #0A0A0A !important;
+        color: #F5F2EC !important;
         /* Support des safe areas pour iPhone (encoche, barre d'état) */
         padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
       }
       #root {
-        background-color: #FFFFFF !important;
-        background: #FFFFFF !important;
+        background-color: #0A0A0A !important;
+        background: #0A0A0A !important;
         min-height: 100vh;
       }
     </style>

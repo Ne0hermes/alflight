@@ -83,41 +83,57 @@ export const AircraftProvider = memo(({ children }) => {
           // 🔧 FIX: Charger TOUS les avions mais SANS les données volumineuses
           const allAircraft = await dataBackupManager.getAllFromStore('aircraftData');
 
-          // 🔧 FIX CRITIQUE: Ne charger QUE les métadonnées légères (pas MANEX/photos/images)
-          // Sinon: 6 avions × 12 MB MANEX = 72 MB en mémoire → Out of Memory!
-          const lightAircraft = allAircraft.map(aircraft => {
-            const light = { ...aircraft };
+          // 🛡️ FIX OOM (Out of Memory) CRITIQUE :
+          // L'ancien code faisait `const light = { ...aircraft }` qui CLONE
+          // le champ `photo` (base64 jusqu'à 3 MB) ET `manex` (PDF base64
+          // jusqu'à 12 MB par avion) AVANT de les supprimer. Pour 2 avions
+          // équipés, ça doublait temporairement la mémoire (~50-60 MB d'un
+          // coup, plus l'overhead du .map), suffisant pour faire crasher le
+          // renderer Chrome avec "out of memory" sur navigation vers
+          // n'importe quel onglet wrappé par FlightSystemProviders.
+          //
+          // Solution : on EXTRAIT les champs lourds via destructuring AU LIEU
+          // de les cloner. `rest` ne contient que les pointeurs vers les
+          // champs légers — la photo et le MANEX du blob IDB d'origine
+          // ne sont jamais référencés ni copiés dans `light`. La string
+          // base64 originale reste référencée par `aircraft` (le tableau
+          // `allAircraft`) jusqu'à la fin du map, puis tout est ramassé en
+          // une seule passe par le GC.
+          const lightAircraft = allAircraft.map((aircraft) => {
+            const {
+              photo,
+              profilePhoto,
+              manex,
+              ...rest
+            } = aircraft;
 
-            // 🔧 FIX: Ajouter les flags AVANT de supprimer les données
-            light.hasPhoto = !!(aircraft.photo || aircraft.profilePhoto);
-            light.hasManex = !!aircraft.manex;
+            const light = rest;
 
-            // Supprimer les données volumineuses (on les chargera à la demande)
-            delete light.manex;           // ❌ 12 MB par avion
-            delete light.photo;           // ❌ Photos base64
-            delete light.profilePhoto;    // ❌ Photos base64
+            // Flags légers basés sur la présence (pas la valeur) — pas de
+            // référence aux strings base64 retenue dans `light`.
+            light.hasPhoto = !!(photo || profilePhoto);
+            light.hasManex = !!manex;
 
-            // Supprimer les images des performance tables
+            // Pour les performance tables : on remplace `sourceImage` (gros
+            // base64) par `null` plutôt que de cloner et delete. On crée
+            // de nouveaux objets pour ne pas muter `aircraft`.
             if (light.advancedPerformance?.tables) {
-              light.advancedPerformance.tables = light.advancedPerformance.tables.map(table => {
-                const lightTable = { ...table };
-                delete lightTable.sourceImage;
-                return lightTable;
-              });
+              light.advancedPerformance = {
+                ...light.advancedPerformance,
+                tables: light.advancedPerformance.tables.map(({ sourceImage, ...t }) => t)
+              };
             }
 
-            // Supprimer les images des performance models
             if (light.performanceModels) {
-              light.performanceModels = light.performanceModels.map(model => {
-                const lightModel = { ...model };
-                if (lightModel.data?.graphs) {
-                  lightModel.data.graphs = lightModel.data.graphs.map(graph => {
-                    const lightGraph = { ...graph };
-                    delete lightGraph.sourceImage;
-                    return lightGraph;
-                  });
-                }
-                return lightModel;
+              light.performanceModels = light.performanceModels.map((model) => {
+                if (!model.data?.graphs) return model;
+                return {
+                  ...model,
+                  data: {
+                    ...model.data,
+                    graphs: model.data.graphs.map(({ sourceImage, ...g }) => g)
+                  }
+                };
               });
             }
 

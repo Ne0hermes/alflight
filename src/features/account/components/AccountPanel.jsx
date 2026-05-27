@@ -4,6 +4,9 @@ import { useAuthStore } from '../stores/authStore';
 import { GoogleSignIn } from './GoogleSignIn';
 import { AppleSignIn } from './AppleSignIn';
 import { ManageSubscriptionButton } from '../../billing/components/ManageSubscriptionButton';
+// 🎨 Charte éditoriale ALFlight
+import { EditorialHeading } from '@shared/components/editorial';
+import { tokens } from '@shared/styles/designSystem';
 
 export const AccountPanel = () => {
   const { user, status, isOffline, actions, hasEntitlement } = useAuthStore();
@@ -85,7 +88,14 @@ export const AccountPanel = () => {
   const isPro = hasEntitlement('pro');
 
   return (
-    <div className="account-panel" style={styles.container}>
+    <div className="account-panel" style={{ ...styles.container, color: 'var(--text-primary)' }}>
+      {/* 🎨 En-tête éditorial ALFlight */}
+      <header style={{ marginBottom: tokens.spacing[6] }}>
+        <EditorialHeading level={2} eyebrow="ACCOUNT · IDENTIFIANT ALFLIGHT">
+          Mon compte
+        </EditorialHeading>
+      </header>
+
       {/* Connection status */}
       {isOffline && (
         <div style={styles.offlineBar}>

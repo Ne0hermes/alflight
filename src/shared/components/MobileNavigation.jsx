@@ -1,50 +1,58 @@
+// src/shared/components/MobileNavigation.jsx
+// ============================================================================
+//  MobileNavigation — Refonte charte éditoriale ALFlight (Phase 3.10)
+//
+//  Drawer mono ALL CAPS, underline orange sur item actif, fond --bg-surface,
+//  bordures via --border-*. Plus aucune trace de bordeaux #93163C ni couleurs
+//  hardcodées.
+// ============================================================================
+
 import React, { useState } from 'react';
 import {
   Menu, X, User, Book, Navigation, Plane, Cloud,
   CheckSquare, TrendingUp, Package, Fuel, Settings,
-  Map, UserCircle, Info, Shield
+  Map, UserCircle, Info, Shield,
 } from 'lucide-react';
-import { theme } from '../../styles/theme';
 import LogoutButton from '../../components/auth/LogoutButton';
+import { EditorialHeading, TechLabel } from './editorial';
+import { tokens } from '../styles/designSystem';
 
 const ICON_MAP = {
-  UserCircle: UserCircle,
-  User: User,
-  Book: Book,
-  Navigation: Navigation,
-  Plane: Plane,
-  Cloud: Cloud,
-  CheckSquare: CheckSquare,
-  TrendingUp: TrendingUp,
+  UserCircle,
+  User,
+  Book,
+  Navigation,
+  Plane,
+  Cloud,
+  CheckSquare,
+  TrendingUp,
   Scale: Package,
-  Fuel: Fuel,
-  Settings: Settings,
-  Map: Map
+  Fuel,
+  Settings,
+  Map,
 };
 
 export const MobileNavigation = ({ tabs, activeTab, onTabChange, isProfileConfigured = true }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
 
-  // Modules à exclure du menu (modules séparés)
+  // Modules à exclure du menu (modules séparés via TabNavigation desktop)
   const excludedModuleIds = ['navigation', 'weather', 'weight-balance', 'fuel', 'performance'];
-
-  // Filtrer les tabs pour exclure les modules séparés
-  const allMainTabs = tabs.filter(tab => !excludedModuleIds.includes(tab.id));
+  const allMainTabs = tabs.filter((tab) => !excludedModuleIds.includes(tab.id));
 
   // Réorganiser pour placer VAC après checklist
-  const checklistIndex = allMainTabs.findIndex(tab => tab.id === 'checklist');
-  const vacTab = allMainTabs.find(tab => tab.id === 'vac');
-  const mainTabsWithoutVac = allMainTabs.filter(tab => tab.id !== 'vac');
+  const checklistIndex = allMainTabs.findIndex((tab) => tab.id === 'checklist');
+  const vacTab = allMainTabs.find((tab) => tab.id === 'vac');
+  const mainTabsWithoutVac = allMainTabs.filter((tab) => tab.id !== 'vac');
 
   const mainTabs = vacTab && checklistIndex !== -1
     ? [
         ...mainTabsWithoutVac.slice(0, checklistIndex + 1),
         vacTab,
-        ...mainTabsWithoutVac.slice(checklistIndex + 1)
+        ...mainTabsWithoutVac.slice(checklistIndex + 1),
       ]
     : allMainTabs;
-  
+
   const handleTabSelect = (tabId) => {
     onTabChange(tabId);
     setIsMenuOpen(false);
@@ -52,86 +60,108 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange, isProfileConfig
 
   return (
     <>
-      {/* Mobile Header */}
+      {/* Header mobile fixe */}
       <div style={styles.header}>
         <button
+          type="button"
           style={styles.menuButton}
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           aria-label="Menu"
         >
-          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
+        <div style={styles.headerTitle}>
+          <span style={styles.headerLogo}>ALFLIGHT</span>
+        </div>
+        <div style={styles.spacer} aria-hidden="true" />
       </div>
 
-      {/* Mobile Menu Overlay */}
+      {/* Drawer overlay */}
       {isMenuOpen && (
         <div style={styles.overlay} onClick={() => setIsMenuOpen(false)}>
-          <div 
+          <div
             style={styles.drawer}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={styles.drawerHeader}>
-              <h2 style={styles.drawerTitle}>ALFlight</h2>
+              <EditorialHeading level={3} eyebrow="MENU · NAVIGATION">
+                ALFlight
+              </EditorialHeading>
               <button
+                type="button"
                 style={styles.closeButton}
                 onClick={() => setIsMenuOpen(false)}
+                aria-label="Fermer le menu"
               >
-                <X size={12} />
+                <X size={14} />
               </button>
             </div>
-            
+
             <nav style={styles.nav}>
-              {/* Home button */}
+              {/* Accueil */}
               <button
+                type="button"
                 style={{
                   ...styles.navItem,
                   ...(activeTab === 'landing' ? styles.navItemActive : {}),
-                  backgroundColor: activeTab === 'landing' ? 'rgba(139, 21, 56, 0.1)' : 'transparent',
                 }}
                 onClick={() => handleTabSelect('landing')}
               >
-                <span>Accueil</span>
+                <span style={styles.navItemLabel}>Accueil</span>
               </button>
 
-              <div style={{ height: '1px', backgroundColor: theme.colors.border, margin: '8px 0' }} />
+              <div style={styles.divider} aria-hidden="true" />
 
               {/* Modules principaux */}
-              {mainTabs.map(tab => {
+              {mainTabs.map((tab) => {
                 const isActive = tab.id === activeTab;
-
+                const Icon = tab.icon ? ICON_MAP[tab.icon] : null;
                 return (
                   <button
                     key={tab.id}
+                    type="button"
                     style={{
                       ...styles.navItem,
-                      ...(isActive ? styles.navItemActive : {})
+                      ...(isActive ? styles.navItemActive : {}),
                     }}
                     onClick={() => handleTabSelect(tab.id)}
                   >
-                    <span>{tab.label}</span>
+                    {Icon && (
+                      <Icon
+                        size={14}
+                        style={{
+                          marginRight: tokens.spacing[3],
+                          color: isActive ? 'var(--accent-primary)' : 'var(--text-tertiary)',
+                          flexShrink: 0,
+                        }}
+                      />
+                    )}
+                    <span style={styles.navItemLabel}>{tab.label}</span>
                   </button>
                 );
               })}
 
-              <div style={{ height: '1px', backgroundColor: theme.colors.border, margin: '8px 0' }} />
+              <div style={styles.divider} aria-hidden="true" />
 
-              {/* Bouton À propos */}
+              {/* À propos */}
               <button
+                type="button"
                 style={styles.navItem}
                 onClick={() => setShowAbout(true)}
               >
-                <Info size={16} style={{ marginRight: '8px' }} />
-                <span>À propos</span>
+                <Info size={14} style={{ marginRight: tokens.spacing[3], color: 'var(--text-tertiary)', flexShrink: 0 }} />
+                <span style={styles.navItemLabel}>À propos</span>
               </button>
 
-              {/* Bouton de déconnexion */}
+              {/* Déconnexion */}
               <LogoutButton
                 variant="contained"
                 fullWidth
                 size="medium"
                 className="mobile-menu-button"
                 sx={{
-                  color: theme.colors.textSecondary
+                  marginTop: 1,
+                  color: 'var(--text-secondary)',
                 }}
               />
             </nav>
@@ -139,42 +169,41 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange, isProfileConfig
         </div>
       )}
 
-      {/* Modal À propos */}
+      {/* Modal À propos — charte éditoriale */}
       {showAbout && (
         <div style={styles.aboutOverlay} onClick={() => setShowAbout(false)}>
           <div style={styles.aboutModal} onClick={(e) => e.stopPropagation()}>
             <button
+              type="button"
               style={styles.aboutCloseButton}
               onClick={() => setShowAbout(false)}
+              aria-label="Fermer"
             >
-              <X size={20} />
+              <X size={16} />
             </button>
-            <h2 style={styles.aboutTitle}>ALFlight v1.0.0</h2>
+            <EditorialHeading level={3} eyebrow="ABOUT · ALFLIGHT v1.0.0">
+              À propos
+            </EditorialHeading>
             <p style={styles.aboutText}>
-              Application d'assistance au vol pour pilotes privés VFR
+              Application d'assistance au vol pour pilotes privés VFR.
             </p>
 
             <div style={styles.aboutLinks}>
-              <button style={styles.aboutLink}>
-                <Shield size={14} />
-                Mentions légales
+              <button type="button" style={styles.aboutLink}>
+                <Shield size={12} /> Mentions légales
               </button>
-              <button style={styles.aboutLink}>
-                <Shield size={14} />
-                Confidentialité
+              <button type="button" style={styles.aboutLink}>
+                <Shield size={12} /> Confidentialité
               </button>
-              <button style={styles.aboutLink}>
-                <Shield size={14} />
-                CGU
+              <button type="button" style={styles.aboutLink}>
+                <Shield size={12} /> CGU
               </button>
             </div>
 
-            <p style={styles.aboutCopyright}>
-              © 2025 ALFlight. Tous droits réservés.
-            </p>
+            <TechLabel>© 2026 ALFlight · Tous droits réservés</TechLabel>
             <p style={styles.aboutDisclaimer}>
-              Cette application est un outil d'aide à la décision.
-              Le pilote reste seul responsable de la préparation et de la conduite du vol.
+              Outil d'aide à la décision. Le pilote reste seul responsable de la
+              préparation et de la conduite du vol.
             </p>
           </div>
         </div>
@@ -183,138 +212,69 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange, isProfileConfig
   );
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  Styles éditoriaux — 100% variables CSS
+// ─────────────────────────────────────────────────────────────────────────────
 const styles = {
-  aboutOverlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 2000,
-    padding: '20px',
-  },
-  aboutModal: {
-    backgroundColor: theme.colors.backgroundCard,
-    borderRadius: '16px',
-    padding: '24px',
-    maxWidth: '350px',
-    width: '100%',
-    position: 'relative',
-    border: `1px solid ${theme.colors.border}`,
-    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
-  },
-  aboutCloseButton: {
-    position: 'absolute',
-    top: '12px',
-    right: '12px',
-    background: 'transparent',
-    border: 'none',
-    color: theme.colors.textSecondary,
-    cursor: 'pointer',
-    padding: '4px',
-  },
-  aboutTitle: {
-    fontSize: '18px',
-    fontWeight: '700',
-    marginBottom: '8px',
-    color: theme.colors.textPrimary,
-  },
-  aboutText: {
-    fontSize: '14px',
-    color: theme.colors.textSecondary,
-    marginBottom: '16px',
-  },
-  aboutLinks: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '8px',
-    marginBottom: '16px',
-  },
-  aboutLink: {
-    backgroundColor: 'transparent',
-    border: `1px solid ${theme.colors.border}`,
-    borderRadius: '6px',
-    padding: '6px 10px',
-    fontSize: '11px',
-    color: theme.colors.textSecondary,
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '4px',
-  },
-  aboutCopyright: {
-    fontSize: '11px',
-    color: theme.colors.textMuted,
-    marginBottom: '8px',
-  },
-  aboutDisclaimer: {
-    fontSize: '10px',
-    color: theme.colors.textMuted,
-    fontStyle: 'italic',
-    lineHeight: '1.4',
-  },
+  // Header mobile sticky
   header: {
     position: 'fixed',
     top: 0,
     left: 0,
     right: 0,
     height: '56px',
-    backgroundColor: 'rgba(30, 28, 28, 0.95)',
-    borderBottom: `1px solid ${theme.colors.border}`,
+    backgroundColor: 'var(--app-bg-alpha-92)',
+    borderBottom: '1px solid var(--border-subtle)',
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'space-between',
     padding: '0 16px',
-    paddingTop: 'max(env(safe-area-inset-top), 16px)',
-    paddingBottom: '16px',
+    paddingTop: 'max(env(safe-area-inset-top), 0px)',
     paddingLeft: 'max(env(safe-area-inset-left), 16px)',
     paddingRight: 'max(env(safe-area-inset-right), 16px)',
     zIndex: 1000,
-    boxShadow: theme.shadows.md,
     backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
   },
   menuButton: {
     background: 'transparent',
-    border: `1px solid ${theme.colors.border}`,
+    border: '1px solid var(--border-regular)',
     padding: '8px',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: '6px',
-    transition: 'all 0.2s',
-    color: theme.colors.primary,
-    '&:hover': {
-      backgroundColor: 'rgba(139, 21, 56, 0.1)',
-    },
+    borderRadius: tokens.radius?.sm || '2px',
+    transition: `border-color ${tokens.motion.fast}, color ${tokens.motion.fast}`,
+    color: 'var(--text-primary)',
   },
-  titleSection: {
+  headerTitle: {
+    flex: 1,
     display: 'flex',
     alignItems: 'center',
-    marginLeft: '16px',
-    flex: 1,
+    justifyContent: 'center',
   },
-  title: {
-    fontSize: '18px',
-    fontWeight: '700',
-    margin: 0,
-    color: theme.colors.textPrimary,
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
+  headerLogo: {
+    fontFamily: tokens.fontFamily.sans,
+    fontSize: '15px',
+    fontWeight: 700,
+    letterSpacing: '0.12em',
+    color: 'var(--text-primary)',
   },
   spacer: {
-    width: '40px',
+    width: '36px', // pour équilibrer le bouton menu
   },
+
+  // Drawer overlay
   overlay: {
     position: 'fixed',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'var(--app-bg-alpha-85)',
+    backdropFilter: 'blur(4px)',
+    WebkitBackdropFilter: 'blur(4px)',
     zIndex: 1100,
     animation: 'fadeIn 0.2s',
   },
@@ -323,10 +283,10 @@ const styles = {
     top: 0,
     left: 0,
     bottom: 0,
-    width: '280px',
-    backgroundColor: theme.colors.backgroundCard,
-    borderRight: `1px solid ${theme.colors.border}`,
-    boxShadow: '2px 0 20px rgba(139, 21, 56, 0.3)',
+    width: '300px',
+    backgroundColor: 'var(--bg-surface)',
+    borderRight: '1px solid var(--border-subtle)',
+    boxShadow: '2px 0 20px rgba(0, 0, 0, 0.5)',
     animation: 'slideIn 0.3s',
     overflowY: 'auto',
     paddingTop: 'env(safe-area-inset-top)',
@@ -334,64 +294,144 @@ const styles = {
     paddingBottom: 'env(safe-area-inset-bottom)',
   },
   drawerHeader: {
-    padding: '20px',
-    borderBottom: `1px solid ${theme.colors.border}`,
+    padding: tokens.spacing[5],
+    borderBottom: '1px solid var(--border-subtle)',
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
-    background: `linear-gradient(135deg, ${theme.colors.primary}15, ${theme.colors.accent}08)`,
-  },
-  drawerTitle: {
-    fontSize: '20px',
-    fontWeight: '700',
-    margin: 0,
-    color: theme.colors.primary,
-    textTransform: 'uppercase',
-    letterSpacing: '0.1em',
+    gap: tokens.spacing[3],
   },
   closeButton: {
     background: 'transparent',
-    border: `1px solid ${theme.colors.border}`,
-    padding: '4px',
+    border: '1px solid var(--border-regular)',
+    padding: '6px',
     cursor: 'pointer',
-    borderRadius: '6px',
+    borderRadius: tokens.radius?.sm || '2px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: theme.colors.textSecondary,
-    transition: 'all 0.2s',
+    color: 'var(--text-secondary)',
+    transition: `border-color ${tokens.motion.fast}`,
+    flexShrink: 0,
   },
   nav: {
-    padding: '8px',
+    padding: tokens.spacing[3],
   },
   navItem: {
     width: '100%',
-    padding: '10px 20px',
+    padding: '12px 16px',
     backgroundColor: 'transparent',
-    border: `1px solid transparent`,
-    borderRadius: '6px',
+    border: '1px solid transparent',
+    borderRadius: tokens.radius?.sm || '2px',
     display: 'flex',
     alignItems: 'center',
-    fontSize: '14px',
-    color: theme.colors.textSecondary,
+    color: 'var(--text-secondary)',
     cursor: 'pointer',
-    transition: 'all 0.2s',
+    transition: `color ${tokens.motion.fast}, background-color ${tokens.motion.fast}, border-color ${tokens.motion.fast}`,
     marginBottom: '4px',
     textAlign: 'left',
-    fontWeight: '500',
-    textTransform: 'none',
-    letterSpacing: 'normal',
     justifyContent: 'flex-start',
   },
   navItemActive: {
-    backgroundColor: 'rgba(139, 21, 56, 0.1)',
-    color: theme.colors.primary,
-    fontWeight: '700',
-    borderColor: theme.colors.border,
+    backgroundColor: 'var(--accent-soft)',
+    color: 'var(--text-primary)',
+    borderColor: 'var(--accent-primary)',
+  },
+  navItemLabel: {
+    fontFamily: tokens.fontFamily.mono,
+    fontSize: '11px',
+    fontWeight: 500,
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
+  },
+  divider: {
+    height: '1px',
+    backgroundColor: 'var(--border-subtle)',
+    margin: '8px 0',
+  },
+
+  // Modal About
+  aboutOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'var(--app-bg-alpha-85)',
+    backdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2000,
+    padding: '20px',
+  },
+  aboutModal: {
+    backgroundColor: 'var(--bg-surface)',
+    borderRadius: tokens.radius?.sm || '2px',
+    padding: tokens.spacing[6],
+    maxWidth: '380px',
+    width: '100%',
+    position: 'relative',
+    border: '1px solid var(--border-regular)',
+    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+  },
+  aboutCloseButton: {
+    position: 'absolute',
+    top: '12px',
+    right: '12px',
+    background: 'transparent',
+    border: '1px solid var(--border-regular)',
+    padding: '6px',
+    cursor: 'pointer',
+    color: 'var(--text-secondary)',
+    borderRadius: tokens.radius?.sm || '2px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  aboutText: {
+    fontFamily: tokens.fontFamily.sans,
+    fontSize: '14px',
+    color: 'var(--text-secondary)',
+    marginTop: tokens.spacing[4],
+    marginBottom: tokens.spacing[5],
+    lineHeight: 1.55,
+  },
+  aboutLinks: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px',
+    marginBottom: tokens.spacing[5],
+  },
+  aboutLink: {
+    backgroundColor: 'transparent',
+    border: '1px solid var(--border-regular)',
+    borderRadius: tokens.radius?.sm || '2px',
+    padding: '6px 10px',
+    fontFamily: tokens.fontFamily.mono,
+    fontSize: '10px',
+    fontWeight: 500,
+    letterSpacing: '0.10em',
+    textTransform: 'uppercase',
+    color: 'var(--text-secondary)',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+    transition: `border-color ${tokens.motion.fast}`,
+  },
+  aboutDisclaimer: {
+    fontFamily: tokens.fontFamily.sans,
+    fontSize: '11px',
+    color: 'var(--text-tertiary)',
+    fontStyle: 'italic',
+    lineHeight: 1.5,
+    marginTop: tokens.spacing[3],
   },
 };
 
-// Add CSS animations
+// Animations CSS (injectées une fois)
 if (typeof document !== 'undefined' && !document.getElementById('mobile-nav-styles')) {
   const style = document.createElement('style');
   style.id = 'mobile-nav-styles';

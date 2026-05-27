@@ -2,6 +2,9 @@
 import React, { memo, useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { SIAReportEnhanced } from './components/SIAReportEnhanced';
+// 🎨 Charte éditoriale ALFlight
+import { EditorialHeading } from '@shared/components/editorial';
+import { tokens } from '@shared/styles/designSystem';
 
 export const VACModule = memo(({ wizardMode = false, config = {} }) => {
   const [showWizardReturn, setShowWizardReturn] = useState(false);
@@ -21,24 +24,39 @@ export const VACModule = memo(({ wizardMode = false, config = {} }) => {
   };
 
   return (
-    <div>
-      {/* Bandeau de retour au wizard */}
+    <div style={{ color: 'var(--text-primary)' }}>
+      {/* 🎨 En-tête éditorial ALFlight */}
+      <header style={{ marginBottom: tokens.spacing[6] }}>
+        <EditorialHeading level={2} eyebrow="DOCS · CARTES VAC SIA">
+          Cartes VAC
+        </EditorialHeading>
+      </header>
+
+      {/* Bandeau de retour au wizard — couleurs éditoriales */}
       {showWizardReturn && (
         <div style={{
-          backgroundColor: '#3b82f6',
-          color: 'white',
+          backgroundColor: 'var(--accent-primary)',
+          color: 'var(--text-inverse)',
           padding: '12px 16px',
           marginBottom: '16px',
-          borderRadius: '8px',
+          borderRadius: tokens.radius?.sm || '2px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)'
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '24px' }}>✈️</span>
+            <span style={{
+              fontFamily: tokens.fontFamily.mono,
+              fontSize: '11px',
+              fontWeight: 600,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+            }}>
+              EN VOL
+            </span>
             <div>
-              <div style={{ fontWeight: '600', fontSize: '15px' }}>
+              <div style={{ fontWeight: 600, fontSize: '15px' }}>
                 Préparation de vol en cours
               </div>
               <div style={{ fontSize: '13px', opacity: 0.9 }}>
@@ -53,21 +71,24 @@ export const VACModule = memo(({ wizardMode = false, config = {} }) => {
               alignItems: 'center',
               gap: '8px',
               padding: '10px 20px',
-              backgroundColor: 'white',
-              color: '#3b82f6',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '14px',
-              fontWeight: '600',
+              backgroundColor: 'var(--bg-canvas)',
+              color: 'var(--accent-primary)',
+              border: '1px solid var(--border-regular)',
+              borderRadius: tokens.radius?.sm || '2px',
+              fontFamily: tokens.fontFamily.mono,
+              fontSize: '11px',
+              fontWeight: 600,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
               cursor: 'pointer',
               whiteSpace: 'nowrap',
-              transition: 'transform 0.2s'
+              transition: `transform ${tokens.motion.fast}`,
             }}
-            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.03)')}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
           >
-            <ArrowLeft size={18} />
-            Retour au wizard
+            <ArrowLeft size={14} />
+            Retour wizard
           </button>
         </div>
       )}

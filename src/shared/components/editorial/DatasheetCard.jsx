@@ -93,7 +93,7 @@ export const DatasheetCard = ({
           style={{
             position: 'absolute',
             inset: 0,
-            backgroundImage: `linear-gradient(180deg, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.85) 100%), url(${image})`,
+            backgroundImage: `linear-gradient(180deg, var(--app-bg-alpha-55) 0%, var(--app-bg-alpha-85) 100%), url(${image})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             zIndex: 0,

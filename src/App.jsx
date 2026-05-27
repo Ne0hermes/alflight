@@ -10,6 +10,9 @@ import { SupabaseErrorBanner } from '@shared/components/SupabaseErrorBanner';
 import { DataBackupUI } from '@components/DataBackupUI';
 import dataBackupManager from '@utils/dataBackupManager';
 import { useAuthStore } from '@features/account/stores/authStore';
+// 🎨 Charte éditoriale ALFlight — primitives partagées
+import { EditorialHeading, TechLabel } from '@shared/components/editorial';
+import { tokens } from '@shared/styles/designSystem';
 
 // Import automatique du logger Google Sheets direct
 import '@services/directGoogleSheetsLogger';
@@ -118,19 +121,18 @@ const FlightSystemUI = memo(() => {
       }}
     >
       <div style={styles.wrapper}>
-        <header style={sx.combine(sx.flex.between, sx.spacing.mb(5))}>
-          <h1
-            style={{
-              fontFamily: "'Century Gothic', 'URW Gothic', 'Questrial', 'Jost', system-ui, sans-serif",
-              fontSize: '24px',
-              fontWeight: 600,
-              letterSpacing: '0.04em',
-              color: 'var(--text-primary)',
-              margin: 0
-            }}
-          >
-            ALFLIGHT — Système de Gestion de Vol
-          </h1>
+        {/* 🎨 En-tête éditorial ALFlight — eyebrow mono + titre Century Gothic */}
+        <header
+          style={{
+            ...sx.combine(sx.flex.between, sx.spacing.mb(5)),
+            alignItems: 'flex-end',
+            gap: tokens.spacing[4],
+            flexWrap: 'wrap',
+          }}
+        >
+          <EditorialHeading level={3} eyebrow="ALFLIGHT · OPS COCKPIT">
+            Système de Gestion de Vol
+          </EditorialHeading>
           <AppVersion />
         </header>
 
@@ -162,10 +164,11 @@ const FlightSystemUI = memo(() => {
   );
 });
 
+// Version chip — mono ALL CAPS pour cohérence editorial
 const AppVersion = memo(() => (
-  <div style={sx.combine(sx.text.sm, sx.text.muted)}>
-    v3.0.0 - Architecture Zustand
-  </div>
+  <TechLabel>
+    v3.0.0 · Zustand
+  </TechLabel>
 ));
 
 function App() {

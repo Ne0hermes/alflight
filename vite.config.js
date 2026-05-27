@@ -19,8 +19,13 @@ export default defineConfig(({ mode }) => ({
         start_url: '/',
         display: 'standalone',
         orientation: 'portrait',
-        theme_color: '#93163C',
-        background_color: '#ffffff',
+        // 🎨 Couleurs PWA alignees sur la charte editoriale ALFlight v1
+        //    --app-bg (#0A0A0A noir profond) + accent orange #f26921.
+        //    Le theme_color colore la barre status mobile (Android) et la
+        //    barre de titre PWA installee. background_color est affiche
+        //    pendant le chargement initial de l app avant que React monte.
+        theme_color: '#0A0A0A',
+        background_color: '#0A0A0A',
         categories: ['navigation', 'productivity', 'utilities'],
         icons: [
           {
@@ -108,12 +113,16 @@ export default defineConfig(({ mode }) => ({
     }
   },
   server: {
-    port: 4001,
+    // Port aligné avec le script `npm run dev` (vite --port 4000).
+    // Le HMR doit utiliser le MÊME port que le serveur HTTP sinon le
+    // WebSocket de hot-reload ne se connecte jamais et les modifs ne
+    // sont jamais poussées au navigateur (cache éternel côté client).
+    port: 4000,
     host: '0.0.0.0',
     strictPort: false,
     hmr: {
-      clientPort: 4001,
-      port: 4001,
+      clientPort: 4000,
+      port: 4000,
       protocol: 'ws',
       host: 'localhost'
     },

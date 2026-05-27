@@ -569,45 +569,73 @@ class CommunityService {
    * @returns {Promise<Blob>}
    */
   async downloadManex(filePath) {
-    try {
-      
-      // Méthode 1: Essayer avec .download() (nécessite authentification)
-      try {
-        const { data, error } = await supabase.storage
-          .from('manex-files')
-          .download(filePath);
-
-        if (!error && data) {
-
-          return data;
-        }
-      } catch (downloadError) {
-        // Fallback to public URL
-      }
-
-      // Méthode 2: Utiliser l'URL publique (fallback)
-      const { data: urlData } = supabase.storage
-        .from('manex-files')
-        .getPublicUrl(filePath);
-
-      if (!urlData?.publicUrl) {
-        throw new Error('Impossible d\'obtenir l\'URL publique du MANEX');
-      }
-
-      
-      // Télécharger via fetch
-      const response = await fetch(urlData.publicUrl);
-      if (!response.ok) {
-        throw new Error(`Erreur HTTP ${response.status} lors du téléchargement`);
-      }
-
-      const blob = await response.blob();
-      
-      return blob;
-    } catch (error) {
-      console.error('❌ Erreur lors du téléchargement du MANEX:', error);
-      throw error;
+    if (!filePath) {
+      throw new Error('downloadManex appelé sans filePath — impossible de continuer');
     }
+    console.log('📥 [downloadManex] Téléchargement MANEX:', filePath);
+
+    let lastDownloadError = null;
+
+    // Méthode 1 : .download() authentifié — chemin nominal pour les
+    // utilisateurs connectés. Couvre les buckets en RLS strict.
+    try {
+      const { data, error } = await supabase.storage
+        .from('manex-files')
+        .download(filePath);
+
+      if (!error && data) {
+        console.log('✅ [downloadManex] OK via .download() authentifié');
+        return data;
+      }
+      // Cas erreur explicite : on log et on bascule sur le fallback.
+      lastDownloadError = error;
+      if (error) {
+        console.warn('⚠️ [downloadManex] .download() a échoué:', {
+          message: error.message,
+          statusCode: error.statusCode,
+          name: error.name,
+          filePath
+        });
+      }
+    } catch (downloadError) {
+      lastDownloadError = downloadError;
+      console.warn('⚠️ [downloadManex] .download() exception:', downloadError?.message);
+    }
+
+    // Méthode 2 : URL publique — uniquement si le bucket est en lecture
+    // publique. Si .download() a échoué pour cause d'auth manquante ou
+    // RLS, le fallback peut renvoyer 400 si le bucket n'est pas public.
+    const { data: urlData } = supabase.storage
+      .from('manex-files')
+      .getPublicUrl(filePath);
+
+    if (!urlData?.publicUrl) {
+      throw new Error(
+        `Impossible d'obtenir l'URL publique du MANEX (filePath: ${filePath}). ` +
+        `Erreur .download() précédente : ${lastDownloadError?.message || 'inconnue'}`
+      );
+    }
+
+    console.log('🔁 [downloadManex] Fallback URL publique:', urlData.publicUrl);
+    const response = await fetch(urlData.publicUrl);
+
+    if (!response.ok) {
+      // Message d'erreur enrichi : on inclut l'erreur de la méthode 1 ET
+      // le statut HTTP, pour distinguer auth manquante / bucket privé /
+      // chemin invalide.
+      const errorBody = await response.text().catch(() => '<corps illisible>');
+      throw new Error(
+        `Erreur HTTP ${response.status} lors du téléchargement (filePath: ${filePath}). ` +
+        `Réponse Supabase Storage: ${errorBody.slice(0, 200)}. ` +
+        `Cause possible : bucket "manex-files" non public OU user non authentifié ` +
+        `OU RLS rejette le download. Erreur .download() précédente : ` +
+        `${lastDownloadError?.message || 'inconnue'}`
+      );
+    }
+
+    const blob = await response.blob();
+    console.log('✅ [downloadManex] OK via URL publique fallback, taille:', blob.size, 'octets');
+    return blob;
   }
 
   /**

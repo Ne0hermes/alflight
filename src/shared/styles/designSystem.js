@@ -32,11 +32,15 @@ const palette = {
   },
 
   // Noirs (mode nuit)
+  // ⚠️ palette.black.deep est conservé en valeur littérale UNIQUEMENT comme
+  // fallback de secours pour les rares contextes JS qui ne peuvent pas
+  // consommer une CSS variable. Pour tout style React/CSS, préférer
+  // 'var(--app-bg)' (variable maître définie dans src/index.css).
   black: {
-    deep: '#0A0A0A',     // canvas
-    elevated: '#141414', // cards, surfaces
-    overlay: '#1C1C1C',  // inputs, modals
-    surface: '#232323',  // separators, progress track
+    deep: 'var(--app-bg)', // canvas — référence la variable maître --app-bg
+    elevated: '#141414',   // cards, surfaces
+    overlay: '#1C1C1C',    // inputs, modals
+    surface: '#232323',    // separators, progress track
   },
 
   // Blancs (mode nuit + mode jour)
@@ -53,12 +57,14 @@ const palette = {
     criticalDim: '#8B2E22',
   },
 
-  // Transparents utilitaires (mode nuit)
+  // Transparents utilitaires (mode nuit) — référencent les variables CSS maîtres.
+  // Le noir est dérivé de --app-bg (défini dans src/index.css). Pour changer le ton
+  // de fond global, modifier UNIQUEMENT --app-bg : tout suit automatiquement.
   alpha: {
-    border: 'rgba(245, 242, 236, 0.10)',
-    borderStrong: 'rgba(245, 242, 236, 0.20)',
-    borderGhost: 'rgba(245, 242, 236, 0.32)',
-    overlay: 'rgba(10, 10, 10, 0.72)',
+    border: 'var(--border-subtle, rgba(245, 242, 236, 0.10))',
+    borderStrong: 'var(--border-regular, rgba(245, 242, 236, 0.20))',
+    borderGhost: 'var(--border-ghost, rgba(245, 242, 236, 0.32))',
+    overlay: 'var(--app-bg-alpha-72)',
   },
 };
 

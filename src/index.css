@@ -35,14 +35,35 @@
    Variables CSS — Mode nuit (par défaut)
    ---------------------------------------------------------------------------- */
 :root {
+  /* ============================================================
+     🎨 VARIABLE MAÎTRE — UNIQUE SOURCE DE VÉRITÉ POUR LE NOIR
+     ============================================================
+     Toutes les couleurs sombres de l'application DOIVENT dériver
+     de --app-bg. Pour changer le ton global (gris profond, navy,
+     etc.), modifier UNIQUEMENT cette ligne et tout suit.
+     ----------------------------------------------------------- */
+  --app-bg: #0A0A0A;
+  --app-bg-rgb: 10, 10, 10; /* identique à --app-bg, utilisable en rgba() */
+
+  /* Variantes d'opacité dérivées (pour overlays, dégradés cinematic) */
+  --app-bg-alpha-20: rgba(var(--app-bg-rgb), 0.20);
+  --app-bg-alpha-35: rgba(var(--app-bg-rgb), 0.35);
+  --app-bg-alpha-40: rgba(var(--app-bg-rgb), 0.40);
+  --app-bg-alpha-55: rgba(var(--app-bg-rgb), 0.55);
+  --app-bg-alpha-72: rgba(var(--app-bg-rgb), 0.72);
+  --app-bg-alpha-75: rgba(var(--app-bg-rgb), 0.75);
+  --app-bg-alpha-80: rgba(var(--app-bg-rgb), 0.80);
+  --app-bg-alpha-85: rgba(var(--app-bg-rgb), 0.85);
+  --app-bg-alpha-92: rgba(var(--app-bg-rgb), 0.92);
+
   /* Couleurs de marque */
   --color-orange-primary: #f26921;
   --color-orange-bright: #FF7E36;
   --color-orange-dim: #D85410;
   --color-orange-soft: rgba(242, 105, 33, 0.16);
 
-  /* Noirs */
-  --color-black-deep: #0A0A0A;
+  /* Noirs — alias legacy maintenus, tous référencent --app-bg */
+  --color-black-deep: var(--app-bg);
   --color-black-elevated: #141414;
   --color-black-overlay: #1C1C1C;
   --color-black-surface: #232323;
@@ -62,8 +83,9 @@
   --color-border-regular: rgba(245, 242, 236, 0.20);
   --color-border-ghost: rgba(245, 242, 236, 0.32);
 
-  /* Thème actif — mode nuit par défaut */
-  --bg-canvas: var(--color-black-deep);
+  /* Thème actif — mode nuit par défaut.
+     --bg-canvas DOIT toujours pointer sur --app-bg pour garantir l'unicité. */
+  --bg-canvas: var(--app-bg);
   --bg-surface: var(--color-black-elevated);
   --bg-overlay: var(--color-black-overlay);
   --bg-raised: var(--color-black-surface);
@@ -96,9 +118,37 @@
 }
 
 /* ----------------------------------------------------------------------------
+   🛡️ ANTI-CADRE-BLANC — Fond noir verrouillé sur html / body / #root
+   Empêche tout cadre blanc lors du zoom navigateur, redimensionnement,
+   rubber-banding macOS/iOS, ou overscroll. Toujours --app-bg, partout.
+   ---------------------------------------------------------------------------- */
+html,
+body,
+#root {
+  background-color: var(--app-bg) !important;
+  background: var(--app-bg) !important;
+}
+
+html {
+  /* Couvre la zone d'overscroll (rubber band) et le bandeau de zoom */
+  background-color: var(--app-bg) !important;
+}
+
+/* iOS Safari / Chrome — couvre la barre de status hors viewport */
+@supports (-webkit-touch-callout: none) {
+  html,
+  body {
+    background-color: var(--app-bg) !important;
+  }
+}
+
+/* ----------------------------------------------------------------------------
    Mode jour — override via data-theme
    ---------------------------------------------------------------------------- */
 [data-theme="day-cockpit"] {
+  /* En mode jour, --app-bg devient le canvas ivoire */
+  --app-bg: #F5F2EC;
+  --app-bg-rgb: 245, 242, 236;
   --bg-canvas: #F5F2EC;
   --bg-surface: #FFFFFF;
   --bg-overlay: #EFECE5;

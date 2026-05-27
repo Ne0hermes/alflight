@@ -287,11 +287,20 @@ const MobileApp = () => {
           <ErrorBoundary>
             {/* Suspense pour gérer le chargement des modules lazy-loaded */}
             <React.Suspense fallback={
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', fontSize: '18px', color: '#3b82f6' }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ marginBottom: '16px' }}>⏳</div>
-                  <div>Chargement du module...</div>
-                </div>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100%',
+                minHeight: '200px',
+                fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
+                fontSize: '11px',
+                fontWeight: 500,
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                color: 'var(--accent-primary)',
+              }}>
+                Chargement du module…
               </div>
             }>
               {ActiveComponent && (
@@ -321,7 +330,10 @@ const styles = {
   app: {
     position: 'relative',
     minHeight: '100vh',
-    backgroundColor: '#FFFFFF',
+    // 🎨 Fond noir ALFlight — référence la variable maître --app-bg (index.css).
+    // NE JAMAIS coder en dur une couleur ici : pour changer la teinte de fond,
+    // modifier UNIQUEMENT --app-bg dans index.css.
+    backgroundColor: 'var(--app-bg)',
   },
   profileRequiredHeader: {
     position: 'fixed',
@@ -351,27 +363,30 @@ const styles = {
     position: 'sticky',
     top: 0,
     zIndex: 100,
-    backgroundColor: 'rgba(30, 28, 28, 0.95)',
-    borderBottom: '1px solid rgba(147, 22, 60, 0.3)',
+    // Surcouche sticky : version semi-opaque du fond noir maître
+    backgroundColor: 'var(--app-bg-alpha-92)',
+    borderBottom: '1px solid var(--border-subtle)',
     backdropFilter: 'blur(10px)',
   },
+  // Fond unifié sur les conteneurs <main> de MobileApp.
+  // Tout référence --app-bg (variable maître) — plus aucune couleur codée en dur.
   content: {
     position: 'relative',
     width: '100%',
     minHeight: 'calc(100vh - 60px)',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'var(--app-bg)',
   },
   mobileContent: {
     marginTop: '56px',
     padding: '16px',
     paddingBottom: '32px',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'var(--app-bg)',
   },
   desktopContent: {
     padding: '24px',
     maxWidth: '1400px',
     margin: '0 auto',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'var(--app-bg)',
   },
 };
 

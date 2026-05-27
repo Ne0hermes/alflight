@@ -4,6 +4,9 @@ import { MapPin, Plus, Trash2, Navigation2, Home, Sun, Moon, List, Loader, Alert
 import { sx } from '@shared/styles/styleSystem';
 import { useUnits } from '@hooks/useUnits';
 import { ValueWithUnit, ValueGrid } from '@shared/components/ValueWithUnit';
+// 🎨 Charte éditoriale ALFlight (Phase 3.5)
+import { EditorialHeading } from '@shared/components/editorial';
+import { tokens } from '@shared/styles/designSystem';
 
 // Import des contextes et hooks
 import { useNavigation, useAircraft } from '@core/contexts';
@@ -275,63 +278,68 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
   const arrivalIcao = arrivalAirport?.name && arrivalAirport.name.match(/^[A-Z]{4}$/) ? arrivalAirport.name : null;
 
   return (
-    <div>
-      {/* Onglets - masqués en mode wizard */}
+    <div style={{ color: 'var(--text-primary)' }}>
+      {/* 🎨 En-tête éditorial + sous-onglets mono ALL CAPS, masqués en mode wizard */}
       {!wizardMode && (
-        <div style={{
-          display: 'flex',
-          gap: '8px',
-          marginBottom: '20px',
-          borderBottom: '2px solid #e5e7eb',
-          paddingBottom: '0'
-        }}>
-          <button
-            onClick={() => setActiveTab('navigation')}
+        <>
+          <header style={{ marginBottom: tokens.spacing[5] }}>
+            <EditorialHeading level={2} eyebrow="OPS · PRÉPARATION VOL VFR">
+              Navigation
+            </EditorialHeading>
+          </header>
+          <nav
+            role="tablist"
             style={{
               display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '12px 20px',
-              backgroundColor: activeTab === 'navigation' ? '#f26921' : 'transparent',
-              color: activeTab === 'navigation' ? 'white' : '#6b7280',
-              border: 'none',
-              borderTopLeftRadius: '8px',
-              borderTopRightRadius: '8px',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              marginBottom: '-2px',
-              borderBottom: activeTab === 'navigation' ? '2px solid #f26921' : '2px solid transparent'
+              gap: tokens.spacing[1],
+              marginBottom: tokens.spacing[5],
+              borderBottom: '1px solid var(--border-subtle)',
             }}
           >
-            <Navigation2 size={18} />
-            Navigation VFR
-          </button>
-          <button
-            onClick={() => setActiveTab('alternates')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '12px 20px',
-              backgroundColor: activeTab === 'alternates' ? '#f26921' : 'transparent',
-              color: activeTab === 'alternates' ? 'white' : '#6b7280',
-              border: 'none',
-              borderTopLeftRadius: '8px',
-              borderTopRightRadius: '8px',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              marginBottom: '-2px',
-              borderBottom: activeTab === 'alternates' ? '2px solid #f26921' : '2px solid transparent'
-            }}
-          >
-            <Plane size={18} />
-            Déroutements
-          </button>
-        </div>
+            {[
+              { id: 'navigation', label: 'Navigation VFR', Icon: Navigation2 },
+              { id: 'alternates', label: 'Déroutements', Icon: Plane },
+            ].map(({ id, label, Icon }) => {
+              const isActive = activeTab === id;
+              return (
+                <button
+                  key={id}
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => setActiveTab(id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '10px 16px 12px',
+                    backgroundColor: 'transparent',
+                    color: isActive ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                    border: 'none',
+                    borderBottom: isActive
+                      ? '2px solid var(--accent-primary)'
+                      : '2px solid transparent',
+                    marginBottom: '-1px',
+                    fontFamily: tokens.fontFamily.mono,
+                    fontSize: '11px',
+                    fontWeight: isActive ? 600 : 500,
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    cursor: 'pointer',
+                    transition: `color ${tokens.motion.fast}, border-color ${tokens.motion.fast}`,
+                  }}
+                >
+                  <Icon
+                    size={14}
+                    style={{
+                      color: isActive ? 'var(--accent-primary)' : 'inherit',
+                    }}
+                  />
+                  {label}
+                </button>
+              );
+            })}
+          </nav>
+        </>
       )}
 
       {/* Contenu des onglets - En mode wizard, afficher toujours la navigation */}

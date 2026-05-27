@@ -414,11 +414,25 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
           status: 'success'
         };
 
-        await fetch('http://localhost:3001/api/log', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(logData)
-        }).catch(err => console.error('Error logging to server:', err));
+        // Logging vers le serveur Google Sheets local — DEV uniquement.
+        // Si le serveur n'est pas lancé (`npm run dev:logger`), le fetch
+        // échoue avec "Failed to fetch" (TypeError, pas de réseau). On
+        // ignore SILENCIEUSEMENT ce cas pour ne pas polluer la console
+        // avec un message d'erreur trompeur sur un sous-système optionnel.
+        try {
+          await fetch('http://localhost:3001/api/log', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(logData),
+            // Timeout court : si le serveur logger est down, on échoue vite
+            // au lieu de bloquer 30 s sur le timeout par défaut du navigateur.
+            signal: AbortSignal.timeout(2000)
+          });
+        } catch (_logServerUnreachable) {
+          // No-op : le serveur logger n'est pas démarré, c'est attendu en
+          // mode dev "léger". Le vrai logging des actions Claude se fait
+          // via `claude-log-action.ps1` côté Node, pas depuis le navigateur.
+        }
       } catch (logError) {
         console.error('Error in logging attempt:', logError);
       }

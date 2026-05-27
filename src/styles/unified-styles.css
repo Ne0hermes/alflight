@@ -10,11 +10,11 @@
    ============================================ */
 :root {
   /* 🔧 ALFlight Design System v1 — variables legacy remappées vers la nouvelle charte.
-     Le mapping ci-dessous garantit que les styles existants (body, #root, et tous
-     les composants qui consomment encore --color-background/--color-text)
-     adoptent automatiquement le mode nuit ALFlight : noir profond + ivoire +
-     accent orange. Pas besoin de toucher aux centaines de fichiers legacy. */
-  --color-background: #0A0A0A;          /* noir profond ALFlight (était #FFFFFF) */
+     IMPORTANT : --color-background NE PEUT PAS être une valeur en dur.
+     Elle référence --app-bg (défini dans src/index.css) — variable maître unique
+     pour le fond noir ALFlight. Pour changer la teinte globale, modifier
+     UNIQUEMENT --app-bg dans index.css : tout suit automatiquement. */
+  --color-background: var(--app-bg);    /* noir profond ALFlight (mapping legacy) */
   --color-text: #F5F2EC;                /* ivoire (était #000000) */
   --color-text-secondary: #C9C5BD;
   --color-text-muted: #8A867E;
@@ -342,10 +342,10 @@ button[role="tab"][aria-selected="true"] {
   border-bottom-color: var(--color-primary) !important;
 }
 
-/* Navigation desktop */
+/* Navigation desktop — fond noir ALFlight semi-opaque (référence --app-bg) */
 .desktop-nav,
 .desktopNav {
-  background: rgba(255, 255, 255, 0.95) !important;
+  background: var(--app-bg-alpha-92) !important;
   border-bottom: 1px solid var(--color-border-light) !important;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -529,7 +529,8 @@ div[role="progressbar"] {
 }
 
 .leaflet-control {
-  background: rgba(255, 255, 255, 0.9) !important;
+  /* Contrôles carte — noir ALFlight semi-opaque pour cohérence dark theme */
+  background: var(--app-bg-alpha-85) !important;
   border: 1px solid var(--color-border-light) !important;
 }
 
@@ -593,7 +594,8 @@ div[class*="loading"] {
 
   .mobile-header,
   .mobile-nav {
-    background: rgba(255, 255, 255, 0.95) !important;
+    /* Header / nav mobile — fond noir ALFlight semi-opaque */
+    background: var(--app-bg-alpha-92) !important;
     border-bottom: 1px solid var(--color-border-light) !important;
   }
 
