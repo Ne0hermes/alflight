@@ -345,12 +345,14 @@ const styles = {
   },
 
   // ─── Dashboard ───
-  // ⚠️ Largeur ALIGNÉE sur la grille des actions rapides en dessous (maxWidth
-  // 720px) : le dashboard démarre à gauche du bouton "Info pilote" et termine
-  // à droite du bouton "Carnet de vol". Les cards internes de PilotDashboard
-  // occupent toute la largeur disponible de ce conteneur.
+  // ⚠️ Largeur et padding STRICTEMENT ALIGNÉS sur la grille des actions
+  // rapides en dessous (.quickActions : maxWidth 720px, padding horizontal
+  // 16px). Les cards du PilotDashboard démarrent à gauche du bouton
+  // "Info pilote" et terminent à droite du bouton "Carnet de vol".
+  // Padding vertical réduit (16px top, 8px bottom) car PilotDashboard a son
+  // propre marginBottom sur ses cards.
   dashboardSection: {
-    padding: '24px 16px',
+    padding: '16px 16px 8px',
     backgroundColor: 'var(--app-bg)',
     maxWidth: '720px',
     margin: '0 auto',

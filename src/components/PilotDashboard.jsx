@@ -1215,16 +1215,26 @@ export const PilotDashboard = ({ onNavigate }) => {
 };
 
 const styles = {
+  // ⚠️ Container neutre (plus de "sous-section" visuelle).
+  // L'ancien wrapper avait un padding horizontal, un fond gradient bordeaux
+  // hardcodé et une borderBottom qui "encapsulaient" le dashboard en sous-bloc
+  // et empêchaient les cards d'avoir exactement la largeur des boutons de la
+  // home. Maintenant le container est totalement transparent : les cards
+  // remplissent la largeur du parent (= largeur de la grille d'actions sur
+  // la page d'accueil = 720px max).
   container: {
-    padding: '32px 16px',
-    background: `linear-gradient(135deg, ${theme.colors.primary}15, ${theme.colors.accent}10)`,
-    borderBottom: `1px solid ${theme.colors.border}`,
+    padding: 0,
+    background: 'transparent',
+    border: 'none',
   },
+  // Titre éditorial ALFlight — Century Gothic, sobre, sans uppercase
   title: {
-    fontSize: '22px',
-    fontWeight: '700',
+    fontFamily: "'Century Gothic', 'Questrial', 'Jost', system-ui, sans-serif",
+    fontSize: '20px',
+    fontWeight: 600,
+    letterSpacing: '-0.01em',
     marginBottom: '20px',
-    color: theme.colors.textPrimary,
+    color: 'var(--text-primary)',
     display: 'flex',
     alignItems: 'center',
   },
