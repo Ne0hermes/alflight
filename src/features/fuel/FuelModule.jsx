@@ -366,10 +366,12 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
         boxSizing: 'border-box',
       }}
     >
-      {/* 🎨 Hero éditorial unifié */}
+      {/* 🎨 Hero éditorial unifié.
+          NOTE : actuellement hero-fuel.png (~16.7 Mo). À recompresser en JPG
+          < 500 Ko pour optimiser le LCP (utiliser https://squoosh.app). */}
       {!wizardMode && (
         <ModuleHero
-          image="/assets/photos/hero-fuel.jpg"
+          image="/assets/photos/hero-fuel.png"
           eyebrow="FUEL · BILAN CARBURANT"
           title="Bilan carburant"
         />

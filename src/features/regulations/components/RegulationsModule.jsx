@@ -149,9 +149,11 @@ const RegulationsModule = () => {
         boxSizing: 'border-box',
       }}
     >
-      {/* 🎨 Hero éditorial unifié */}
+      {/* 🎨 Hero éditorial unifié.
+          NOTE : actuellement hero-regulations.png (~31 Mo). À recompresser en JPG
+          < 500 Ko URGEMMENT pour ne pas tuer le LCP mobile/4G (Squoosh.app). */}
       <ModuleHero
-        image="/assets/photos/hero-regulations.jpg"
+        image="/assets/photos/hero-regulations.png"
         eyebrow="DOCS · RÉFÉRENTIEL EASA"
         title="Réglementations"
       />
