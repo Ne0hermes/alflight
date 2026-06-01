@@ -1431,10 +1431,10 @@ Do NOT return empty tables array.`;
                         position: 'absolute',
                         top: '4px',
                         left: '4px',
-                        backgroundColor: '#10b981',
-                        color: 'white',
+                        backgroundColor: 'var(--text-primary)',
+                        color: 'var(--text-primary)',
                         padding: '2px 6px',
-                        borderRadius: '4px',
+                        borderRadius: '8px',
                         fontSize: '10px',
                         fontWeight: 'bold',
                         zIndex: 1
@@ -1449,10 +1449,10 @@ Do NOT return empty tables array.`;
                         position: 'absolute',
                         bottom: '4px',
                         left: '4px',
-                        backgroundColor: image.tableType === 'takeoff' ? '#3b82f6' : '#f59e0b',
-                        color: 'white',
+                        backgroundColor: image.tableType === 'takeoff' ? 'var(--text-secondary)' : 'var(--accent-primary)',
+                        color: 'var(--text-primary)',
                         padding: '2px 6px',
-                        borderRadius: '4px',
+                        borderRadius: '8px',
                         fontSize: '10px',
                         fontWeight: 'bold',
                         zIndex: 1
@@ -1468,7 +1468,7 @@ Do NOT return empty tables array.`;
                         width: '100%',
                         height: '100px',
                         objectFit: 'cover',
-                        borderRadius: '4px'
+                        borderRadius: '8px'
                       }}
                     />
                     <button
@@ -1477,8 +1477,8 @@ Do NOT return empty tables array.`;
                         position: 'absolute',
                         top: '4px',
                         right: '4px',
-                        backgroundColor: '#ef4444',
-                        color: 'white',
+                        backgroundColor: '#C04534',
+                        color: 'var(--text-primary)',
                         border: 'none',
                         borderRadius: '50%',
                         width: '20px',
@@ -1511,14 +1511,14 @@ Do NOT return empty tables array.`;
           <div style={{
             width: '100%',
             height: '8px',
-            backgroundColor: '#e5e7eb',
-            borderRadius: '4px',
+            backgroundColor: 'var(--border-subtle)',
+            borderRadius: '8px',
             overflow: 'hidden'
           }}>
             <div style={{
               width: `${analysisProgress}%`,
               height: '100%',
-              backgroundColor: '#3b82f6',
+              backgroundColor: 'var(--text-secondary)',
               transition: 'width 0.3s ease'
             }} />
           </div>
@@ -1631,8 +1631,8 @@ Do NOT return empty tables array.`;
                     setExtractedTables(newTables);
                   }}
                   style={sx.combine(sx.components.button.base, {
-                    backgroundColor: '#dc2626',
-                    color: 'white',
+                    backgroundColor: '#C04534',
+                    color: 'var(--text-primary)',
                     padding: '4px 12px'
                   })}
                 >
@@ -1662,8 +1662,8 @@ Do NOT return empty tables array.`;
                   setExtractedTables(newTables);
                 }}
                 style={sx.combine(sx.components.button.base, {
-                  backgroundColor: '#dc2626',
-                  color: 'white',
+                  backgroundColor: '#C04534',
+                  color: 'var(--text-primary)',
                   padding: '4px 12px'
                 })}
               >
@@ -1717,8 +1717,8 @@ Do NOT return empty tables array.`;
                   onChange={(e) => setSelectedTableIndex(parseInt(e.target.value))}
                   style={{
                     padding: '8px 12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
+                    border: '1px solid var(--text-tertiary)',
+                    borderRadius: '8px',
                     fontSize: '14px',
                     flex: 1
                   }}
@@ -1767,8 +1767,8 @@ Do NOT return empty tables array.`;
                     style={sx.combine(
                       sx.components.button.base,
                       {
-                        backgroundColor: '#f59e0b',
-                        color: 'white',
+                        backgroundColor: 'var(--accent-primary)',
+                        color: 'var(--text-primary)',
                         padding: '8px 12px',
                         display: 'flex',
                         alignItems: 'center',
@@ -1790,8 +1790,8 @@ Do NOT return empty tables array.`;
                     style={sx.combine(
                     sx.components.button.base,
                     { 
-                      backgroundColor: '#ef4444',
-                      color: 'white',
+                      backgroundColor: '#C04534',
+                      color: 'var(--text-primary)',
                       padding: '8px 12px',
                       display: 'flex',
                       alignItems: 'center',
@@ -1882,8 +1882,8 @@ Do NOT return empty tables array.`;
                           style={{
                             width: '100%',
                             padding: '6px 8px',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '4px',
+                            border: '1px solid var(--text-tertiary)',
+                            borderRadius: '8px',
                             fontSize: '14px'
                           }}
                           placeholder="Valeur"
@@ -1956,8 +1956,8 @@ Do NOT return empty tables array.`;
                             }
                             
                             return `
-                              <div style="margin: 8px 0; padding: 8px; background: #e0f2fe; border-radius: 4px;">
-                                <strong style="color: #0369a1;">${displayName}:</strong>
+                              <div style="margin: 8px 0; padding: 8px; background: var(--bg-overlay); border-radius: 4px;">
+                                <strong style="color: var(--text-secondary);">${displayName}:</strong>
                                 <span style="font-size: 20px; font-weight: bold; margin-left: 10px;">
                                   ${value} ${unit}
                                 </span>
@@ -1967,15 +1967,15 @@ Do NOT return empty tables array.`;
                         }
                         
                         resultDiv.innerHTML = `
-                          <div style="padding: 12px; background: ${result.method === 'no_result_column' ? '#fef2f2' : '#f0f9ff'}; border: 1px solid ${result.method === 'no_result_column' ? '#dc2626' : '#0ea5e9'}; border-radius: 6px; margin-top: 12px;">
+                          <div style="padding: 12px; background: ${result.method === 'no_result_column' ? 'var(--bg-overlay)' : 'var(--bg-overlay)'}; border: 1px solid ${result.method === 'no_result_column' ? '#C04534' : 'var(--text-secondary)'}; border-radius: 6px; margin-top: 12px;">
                             <strong style="font-size: 16px;">📊 Résultat de la prédiction</strong><br/>
                             ${result.method !== 'no_result_column' ? `
                               <div style="margin-top: 12px;">
                                 <div style="background: white; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
-                                  ${distancesHtml || '<span style="color: #dc2626;">Aucune distance calculée</span>'}
+                                  ${distancesHtml || '<span style="color: #C04534;">Aucune distance calculée</span>'}
                                 </div>
-                                <div style="border-top: 1px solid #cbd5e1; padding-top: 8px; margin-top: 8px;">
-                                  <span style="color: #64748b; font-size: 12px;">
+                                <div style="border-top: 1px solid var(--border-subtle); padding-top: 8px; margin-top: 8px;">
+                                  <span style="color: var(--text-tertiary); font-size: 12px;">
                                     <strong>Conditions:</strong> ${testValuesText}<br/>
                                     <strong>Méthode:</strong> ${methodText}<br/>
                                     <strong>Confiance:</strong> ${result.confidence}%<br/>
@@ -1985,8 +1985,8 @@ Do NOT return empty tables array.`;
                               </div>
                             ` : `
                               <div style="margin-top: 8px;">
-                                <span style="color: #dc2626;">${methodText}</span><br/>
-                                <span style="color: #64748b; font-size: 12px;">
+                                <span style="color: #C04534;">${methodText}</span><br/>
+                                <span style="color: var(--text-tertiary); font-size: 12px;">
                                   <strong>Colonnes disponibles:</strong><br/>
                                   ${Object.keys(selectedTable.data[0] || {}).join(', ')}
                                 </span>
@@ -2026,10 +2026,10 @@ Do NOT return empty tables array.`;
               onClick={onRetourClick}
               style={{
                 padding: '12px 24px',
-                backgroundColor: '#e5e7eb',
-                color: '#374151',
+                backgroundColor: 'var(--border-subtle)',
+                color: 'var(--text-secondary)',
                 border: 'none',
-                borderRadius: '6px',
+                borderRadius: '8px',
                 fontSize: '16px',
                 cursor: 'pointer',
                 fontWeight: '600',
@@ -2061,7 +2061,7 @@ Do NOT return empty tables array.`;
                 position: fixed;
                 top: 20px;
                 right: 20px;
-                background: #10b981;
+                background: var(--text-primary);
                 color: white;
                 padding: 16px 24px;
                 border-radius: 8px;
@@ -2141,7 +2141,7 @@ Do NOT return empty tables array.`;
           zIndex: 1000
         }}>
           <div style={{
-            backgroundColor: 'white',
+            backgroundColor: 'var(--bg-overlay)',
             borderRadius: '8px',
             padding: '20px',
             maxWidth: '500px',
@@ -2173,7 +2173,7 @@ Do NOT return empty tables array.`;
           zIndex: 9999
         }}>
           <div style={{
-            backgroundColor: 'white',
+            backgroundColor: 'var(--bg-overlay)',
             borderRadius: '8px',
             padding: '24px',
             width: '90%',
@@ -2230,11 +2230,11 @@ Do NOT return empty tables array.`;
                       }
                     }}
                     style={{
-                      border: isSelected ? '3px solid #3b82f6' : '1px solid #e5e7eb',
+                      border: isSelected ? '3px solid var(--text-secondary)' : '1px solid var(--border-subtle)',
                       borderRadius: '8px',
                       padding: '8px',
                       cursor: 'pointer',
-                      backgroundColor: isSelected ? '#eff6ff' : 'white',
+                      backgroundColor: isSelected ? 'var(--bg-overlay)' : 'white',
                       transition: 'all 0.2s',
                       position: 'relative'
                     }}
@@ -2244,10 +2244,10 @@ Do NOT return empty tables array.`;
                         position: 'absolute',
                         top: '4px',
                         right: '4px',
-                        backgroundColor: '#10b981',
-                        color: 'white',
+                        backgroundColor: 'var(--text-primary)',
+                        color: 'var(--text-primary)',
                         padding: '2px 6px',
-                        borderRadius: '4px',
+                        borderRadius: '8px',
                         fontSize: '10px',
                         fontWeight: 'bold'
                       }}>
@@ -2259,7 +2259,7 @@ Do NOT return empty tables array.`;
                       fontSize: '12px',
                       fontWeight: 'bold',
                       marginBottom: '4px',
-                      color: isSelected ? '#3b82f6' : '#6b7280'
+                      color: isSelected ? 'var(--text-secondary)' : 'var(--text-secondary)'
                     }}>
                       Page {page.pageNumber}
                     </div>
@@ -2268,8 +2268,8 @@ Do NOT return empty tables array.`;
                       width: '100%',
                       paddingBottom: '141.4%', // A4 ratio
                       position: 'relative',
-                      backgroundColor: '#f3f4f6',
-                      borderRadius: '4px',
+                      backgroundColor: 'var(--bg-overlay)',
+                      borderRadius: '8px',
                       overflow: 'hidden'
                     }}>
                       <img
@@ -2288,7 +2288,7 @@ Do NOT return empty tables array.`;
                     
                     <div style={{
                       fontSize: '10px',
-                      color: '#9ca3af',
+                      color: 'var(--text-tertiary)',
                       marginTop: '4px'
                     }}>
                       {page.size} KB

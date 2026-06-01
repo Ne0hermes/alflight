@@ -131,7 +131,7 @@ const styles = {
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#ffffff',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '2px',
     transition: 'width 0.4s ease',
     boxShadow: '0 0 10px rgba(255,255,255,0.5)',

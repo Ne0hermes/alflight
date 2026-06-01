@@ -406,11 +406,11 @@ const PilotProfile = () => {
   const getMedicalStatusBadge = () => {
     const status = getMedicalStatus();
     const styles = {
-      expired: { backgroundColor: '#C04534', color: 'white' },
-      urgent: { backgroundColor: 'var(--accent-primary)', color: 'white' },
-      warning: { backgroundColor: 'var(--accent-primary)', color: 'white' },
-      valid: { backgroundColor: 'var(--text-primary)', color: 'white' },
-      none: { backgroundColor: 'var(--text-secondary)', color: 'white' }
+      expired: { backgroundColor: '#C04534', color: 'var(--text-primary)' },
+      urgent: { backgroundColor: 'var(--accent-primary)', color: 'var(--text-primary)' },
+      warning: { backgroundColor: 'var(--accent-primary)', color: 'var(--text-primary)' },
+      valid: { backgroundColor: 'var(--text-primary)', color: 'var(--text-primary)' },
+      none: { backgroundColor: 'var(--text-secondary)', color: 'var(--text-primary)' }
     };
     
     const icons = {
@@ -757,7 +757,7 @@ const PilotProfile = () => {
                 style={{
                   padding: '8px 12px',
                   backgroundColor: 'var(--text-primary)',
-                  color: 'white',
+                  color: 'var(--text-primary)',
                   border: 'none',
                   borderRadius: '8px',
                   fontSize: '13px',
@@ -780,7 +780,7 @@ const PilotProfile = () => {
                 style={{
                   padding: '8px 12px',
                   backgroundColor: 'var(--text-secondary)',
-                  color: 'white',
+                  color: 'var(--text-primary)',
                   border: 'none',
                   borderRadius: '8px',
                   fontSize: '13px',
@@ -1272,7 +1272,7 @@ const PilotProfile = () => {
           style={{
             padding: '12px 48px',
             backgroundColor: 'var(--text-secondary)',
-            color: 'white',
+            color: 'var(--text-primary)',
             border: 'none',
             borderRadius: '8px',
             fontSize: '16px',

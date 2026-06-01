@@ -101,7 +101,7 @@ export const LoadInput = memo(({ label, value, onChange, max, highlight = false 
           padding: '6px 8px',
           backgroundColor: sx.theme.colors.danger[50],
           borderLeft: `3px solid ${sx.theme.colors.danger[500]}`,
-          borderRadius: '4px',
+          borderRadius: '8px',
           fontSize: '12px',
           color: sx.theme.colors.danger[700],
           fontWeight: '600'

@@ -64,7 +64,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
       top: '50%',
       left: '50%',
       transform: 'translate(-50%, -50%)',
-      background: 'white',
+      background: 'var(--bg-overlay)',
       padding: '20px',
       borderRadius: '8px',
       boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
@@ -78,7 +78,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
         alignItems: 'center',
         marginBottom: '20px',
         paddingBottom: '10px',
-        borderBottom: '1px solid #e5e7eb'
+        borderBottom: '1px solid var(--border-subtle)'
       }}>
         <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
           <Edit2 size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />
@@ -103,7 +103,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
           marginBottom: '5px',
           fontSize: '14px',
           fontWeight: '500',
-          color: '#374151'
+          color: 'var(--text-secondary)'
         }}>
           Type d'espace aérien
         </label>
@@ -113,10 +113,10 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
           style={{
             width: '100%',
             padding: '8px 12px',
-            border: '1px solid #d1d5db',
-            borderRadius: '4px',
+            border: '1px solid var(--text-tertiary)',
+            borderRadius: '8px',
             fontSize: '14px',
-            background: 'white'
+            background: 'var(--bg-overlay)'
           }}
         >
           {airspaceTypes.map(type => (
@@ -133,7 +133,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
           marginBottom: '5px',
           fontSize: '14px',
           fontWeight: '500',
-          color: '#374151'
+          color: 'var(--text-secondary)'
         }}>
           Nom
         </label>
@@ -144,8 +144,8 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
           style={{
             width: '100%',
             padding: '8px 12px',
-            border: '1px solid #d1d5db',
-            borderRadius: '4px',
+            border: '1px solid var(--text-tertiary)',
+            borderRadius: '8px',
             fontSize: '14px'
           }}
         />
@@ -157,7 +157,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
           marginBottom: '5px',
           fontSize: '14px',
           fontWeight: '500',
-          color: '#374151'
+          color: 'var(--text-secondary)'
         }}>
           Classe
         </label>
@@ -167,10 +167,10 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
           style={{
             width: '100%',
             padding: '8px 12px',
-            border: '1px solid #d1d5db',
-            borderRadius: '4px',
+            border: '1px solid var(--text-tertiary)',
+            borderRadius: '8px',
             fontSize: '14px',
-            background: 'white'
+            background: 'var(--bg-overlay)'
           }}
         >
           {classes.map(cls => (
@@ -186,7 +186,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
             marginBottom: '5px',
             fontSize: '14px',
             fontWeight: '500',
-            color: '#374151'
+            color: 'var(--text-secondary)'
           }}>
             Plancher
           </label>
@@ -198,8 +198,8 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
             style={{
               width: '100%',
               padding: '8px 12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '4px',
+              border: '1px solid var(--text-tertiary)',
+              borderRadius: '8px',
               fontSize: '14px'
             }}
           />
@@ -211,7 +211,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
             marginBottom: '5px',
             fontSize: '14px',
             fontWeight: '500',
-            color: '#374151'
+            color: 'var(--text-secondary)'
           }}>
             Plafond
           </label>
@@ -223,8 +223,8 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
             style={{
               width: '100%',
               padding: '8px 12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '4px',
+              border: '1px solid var(--text-tertiary)',
+              borderRadius: '8px',
               fontSize: '14px'
             }}
           />
@@ -238,7 +238,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
             marginBottom: '5px',
             fontSize: '14px',
             fontWeight: '500',
-            color: '#374151'
+            color: 'var(--text-secondary)'
           }}>
             Activité
           </label>
@@ -250,8 +250,8 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
             style={{
               width: '100%',
               padding: '8px 12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '4px',
+              border: '1px solid var(--text-tertiary)',
+              borderRadius: '8px',
               fontSize: '14px'
             }}
           />
@@ -263,7 +263,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
             marginBottom: '5px',
             fontSize: '14px',
             fontWeight: '500',
-            color: '#374151'
+            color: 'var(--text-secondary)'
           }}>
             Horaires
           </label>
@@ -275,8 +275,8 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
             style={{
               width: '100%',
               padding: '8px 12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '4px',
+              border: '1px solid var(--text-tertiary)',
+              borderRadius: '8px',
               fontSize: '14px'
             }}
           />
@@ -289,7 +289,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
           marginBottom: '5px',
           fontSize: '14px',
           fontWeight: '500',
-          color: '#374151'
+          color: 'var(--text-secondary)'
         }}>
           Remarques
         </label>
@@ -300,8 +300,8 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
           style={{
             width: '100%',
             padding: '8px 12px',
-            border: '1px solid #d1d5db',
-            borderRadius: '4px',
+            border: '1px solid var(--text-tertiary)',
+            borderRadius: '8px',
             fontSize: '14px',
             resize: 'vertical'
           }}
@@ -313,15 +313,15 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
         justifyContent: 'flex-end',
         gap: '10px',
         paddingTop: '10px',
-        borderTop: '1px solid #e5e7eb'
+        borderTop: '1px solid var(--border-subtle)'
       }}>
         <button
           onClick={onCancel}
           style={{
             padding: '8px 16px',
-            background: '#f3f4f6',
-            border: '1px solid #d1d5db',
-            borderRadius: '4px',
+            background: 'var(--bg-overlay)',
+            border: '1px solid var(--text-tertiary)',
+            borderRadius: '8px',
             fontSize: '14px',
             fontWeight: '500',
             cursor: 'pointer',
@@ -337,10 +337,10 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
           onClick={handleSave}
           style={{
             padding: '8px 16px',
-            background: '#3b82f6',
-            color: 'white',
+            background: 'var(--text-secondary)',
+            color: 'var(--text-primary)',
             border: 'none',
-            borderRadius: '4px',
+            borderRadius: '8px',
             fontSize: '14px',
             fontWeight: '500',
             cursor: 'pointer',
@@ -359,10 +359,10 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
           marginTop: '10px',
           padding: '8px',
           background: 'rgba(242, 105, 33, 0.10)',
-          border: '1px solid #f59e0b',
-          borderRadius: '4px',
+          border: '1px solid var(--accent-primary)',
+          borderRadius: '8px',
           fontSize: '12px',
-          color: '#78350f'
+          color: 'var(--accent-primary)'
         }}>
           ⚠️ Cet espace aérien a été modifié localement
         </div>
@@ -372,11 +372,11 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
         <div style={{
           marginTop: '10px',
           padding: '8px',
-          background: '#e0e7ff',
+          background: 'var(--bg-overlay)',
           border: '1px solid #818cf8',
-          borderRadius: '4px',
+          borderRadius: '8px',
           fontSize: '12px',
-          color: '#312e81'
+          color: 'var(--text-primary)'
         }}>
           ℹ️ Type original : <strong>{airspace.properties.type}</strong>
         </div>

@@ -57,12 +57,12 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
   
   return (
     <div>
-      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f0f9ff', borderRadius: '8px' }}>
+      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: '#0369a1' }}>
+          <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
             Caractéristiques des pistes
             {(!editedData.runways || editedData.runways.length === 0) && (
-              <span style={{ color: '#ef4444', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
+              <span style={{ color: '#C04534', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
                 ⚠️ Aucune piste définie
               </span>
             )}
@@ -72,10 +72,10 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
             style={{
               padding: '6px 12px',
               fontSize: '13px',
-              backgroundColor: '#10b981',
-              color: 'white',
+              backgroundColor: 'var(--text-primary)',
+              color: 'var(--text-primary)',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '8px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -91,9 +91,9 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
             {editedData.runways.map((runway, idx) => (
               <div key={idx} style={{ 
                 padding: '16px', 
-                backgroundColor: 'white', 
-                borderRadius: '6px',
-                border: '1px solid #e5e7eb'
+                backgroundColor: 'var(--bg-overlay)', 
+                borderRadius: '8px',
+                border: '1px solid var(--border-subtle)'
               }}>
                 {/* En-tête de la piste */}
                 <div style={{ 
@@ -102,15 +102,15 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                   alignItems: 'center',
                   marginBottom: '16px',
                   paddingBottom: '12px',
-                  borderBottom: '1px solid #e5e7eb'
+                  borderBottom: '1px solid var(--border-subtle)'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Plane size={18} style={{ color: '#3b82f6' }} />
-                    <h6 style={{ fontSize: '15px', fontWeight: 'bold', color: '#1f2937' }}>
+                    <Plane size={18} style={{ color: 'var(--text-secondary)' }} />
+                    <h6 style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
                       Piste {runway.identifier || runway.designation || `#${idx + 1}`}
                     </h6>
                     {runway.magneticBearing > 0 && (
-                      <span style={{ fontSize: '13px', color: '#6b7280' }}>
+                      <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
                         (QFU {runway.magneticBearing}°)
                       </span>
                     )}
@@ -119,10 +119,10 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                     onClick={() => removeRunway(idx)}
                     style={{
                       padding: '4px 8px',
-                      backgroundColor: '#ef4444',
-                      color: 'white',
+                      backgroundColor: '#C04534',
+                      color: 'var(--text-primary)',
                       border: 'none',
-                      borderRadius: '4px',
+                      borderRadius: '8px',
                       cursor: 'pointer'
                     }}
                   >
@@ -132,12 +132,12 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                 
                 {/* Identification et orientation */}
                 <div style={{ marginBottom: '16px' }}>
-                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: '#4b5563' }}>
+                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                     Identification et orientation
                   </h6>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
                     <div>
-                      <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Désignation
                       </label>
                       <input
@@ -149,7 +149,7 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         QFU Magnétique
                       </label>
                       <input
@@ -161,7 +161,7 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         QFU Vrai
                       </label>
                       <input
@@ -174,7 +174,7 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         PCN
                       </label>
                       <input
@@ -190,12 +190,12 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                 
                 {/* Dimensions */}
                 <div style={{ marginBottom: '16px' }}>
-                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: '#4b5563' }}>
+                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                     Dimensions et surface
                   </h6>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
                     <div>
-                      <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Longueur (m)
                       </label>
                       <input
@@ -206,7 +206,7 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Largeur (m)
                       </label>
                       <input
@@ -217,7 +217,7 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Surface
                       </label>
                       <input
@@ -233,12 +233,12 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                 
                 {/* Distances déclarées */}
                 <div style={{ marginBottom: '16px' }}>
-                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: '#4b5563' }}>
+                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                     Distances déclarées (m)
                   </h6>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
                     <div>
-                      <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         TORA
                       </label>
                       <input
@@ -249,7 +249,7 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         TODA
                       </label>
                       <input
@@ -260,7 +260,7 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         ASDA
                       </label>
                       <input
@@ -271,7 +271,7 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         LDA
                       </label>
                       <input
@@ -286,16 +286,16 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                 
                 {/* Aides visuelles et ILS */}
                 <div style={{ marginBottom: '16px' }}>
-                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: '#4b5563' }}>
+                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                     Aides à l'approche
                   </h6>
                   
                   {/* VASIS/PAPI */}
                   {runway.vasis && (
-                    <div style={{ marginBottom: '12px', padding: '8px', backgroundColor: '#f9fafb', borderRadius: '4px' }}>
+                    <div style={{ marginBottom: '12px', padding: '8px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
                         <div>
-                          <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                          <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                             Type VASIS
                           </label>
                           <input
@@ -307,7 +307,7 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                           />
                         </div>
                         <div>
-                          <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                          <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                             Angle (°)
                           </label>
                           <input
@@ -319,7 +319,7 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                           />
                         </div>
                         <div>
-                          <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                          <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                             MEHT (ft)
                           </label>
                           <input
@@ -335,10 +335,10 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                   
                   {/* ILS */}
                   {runway.ils && (
-                    <div style={{ padding: '8px', backgroundColor: '#f0fdf4', borderRadius: '4px' }}>
+                    <div style={{ padding: '8px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
                         <div>
-                          <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                          <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                             ILS Cat.
                           </label>
                           <input
@@ -350,7 +350,7 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                           />
                         </div>
                         <div>
-                          <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                          <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                             Fréquence
                           </label>
                           <input
@@ -363,7 +363,7 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                           />
                         </div>
                         <div>
-                          <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                          <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                             Indicatif
                           </label>
                           <input
@@ -376,7 +376,7 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                           />
                         </div>
                         <div>
-                          <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                          <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                             GP Slope (°)
                           </label>
                           <input
@@ -400,10 +400,10 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                         style={{
                           padding: '4px 8px',
                           fontSize: '12px',
-                          backgroundColor: '#3b82f6',
-                          color: 'white',
+                          backgroundColor: 'var(--text-secondary)',
+                          color: 'var(--text-primary)',
                           border: 'none',
-                          borderRadius: '4px',
+                          borderRadius: '8px',
                           cursor: 'pointer'
                         }}
                       >
@@ -421,10 +421,10 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                         style={{
                           padding: '4px 8px',
                           fontSize: '12px',
-                          backgroundColor: '#3b82f6',
-                          color: 'white',
+                          backgroundColor: 'var(--text-secondary)',
+                          color: 'var(--text-primary)',
                           border: 'none',
-                          borderRadius: '4px',
+                          borderRadius: '8px',
                           cursor: 'pointer'
                         }}
                       >
@@ -437,12 +437,12 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                 {/* Coordonnées du seuil */}
                 {runway.threshold && (
                   <div>
-                    <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: '#4b5563' }}>
+                    <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                       Coordonnées du seuil
                     </h6>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                       <div>
-                        <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                           Latitude
                         </label>
                         <input
@@ -454,7 +454,7 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                         />
                       </div>
                       <div>
-                        <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                           Longitude
                         </label>
                         <input
@@ -472,7 +472,7 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
             ))}
           </div>
         ) : (
-          <div style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
+          <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-secondary)' }}>
             <Info size={32} style={{ marginBottom: '8px', opacity: 0.5 }} />
             <p>Aucune piste définie. Cliquez sur "Ajouter une piste" pour commencer.</p>
           </div>

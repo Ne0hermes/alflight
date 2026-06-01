@@ -90,11 +90,11 @@ export const SIAReport = () => {
       maxWidth: '1400px',
       margin: '0 auto',
       padding: '20px',
-      backgroundColor: '#f9fafb'
+      backgroundColor: 'var(--bg-overlay)'
     },
     header: {
-      backgroundColor: 'white',
-      borderRadius: '12px',
+      backgroundColor: 'var(--bg-overlay)',
+      borderRadius: '8px',
       padding: '24px',
       marginBottom: '24px',
       boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
@@ -102,7 +102,7 @@ export const SIAReport = () => {
     title: {
       fontSize: '28px',
       fontWeight: 'bold',
-      color: '#111827',
+      color: 'var(--text-primary)',
       marginBottom: '16px'
     },
     controls: {
@@ -115,7 +115,7 @@ export const SIAReport = () => {
       flex: '1',
       minWidth: '300px',
       padding: '10px 16px',
-      border: '1px solid #d1d5db',
+      border: '1px solid var(--text-tertiary)',
       borderRadius: '8px',
       fontSize: '14px'
     },
@@ -132,29 +132,29 @@ export const SIAReport = () => {
       transition: 'all 0.2s'
     },
     primaryButton: {
-      backgroundColor: '#3b82f6',
-      color: 'white'
+      backgroundColor: 'var(--text-secondary)',
+      color: 'var(--text-primary)'
     },
     secondaryButton: {
-      backgroundColor: 'white',
-      color: '#374151',
-      border: '1px solid #d1d5db'
+      backgroundColor: 'var(--bg-overlay)',
+      color: 'var(--text-secondary)',
+      border: '1px solid var(--text-tertiary)'
     },
     successButton: {
-      backgroundColor: '#10b981',
-      color: 'white'
+      backgroundColor: 'var(--text-primary)',
+      color: 'var(--text-primary)'
     },
     aerodrome: {
-      backgroundColor: 'white',
-      borderRadius: '12px',
+      backgroundColor: 'var(--bg-overlay)',
+      borderRadius: '8px',
       marginBottom: '20px',
       overflow: 'hidden',
       boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
     },
     aerodromeHeader: {
       padding: '20px',
-      backgroundColor: '#1e293b',
-      color: 'white',
+      backgroundColor: 'var(--text-primary)',
+      color: 'var(--text-primary)',
       cursor: 'pointer'
     },
     aerodromeTitle: {
@@ -171,7 +171,7 @@ export const SIAReport = () => {
     },
     section: {
       marginBottom: '24px',
-      borderBottom: '1px solid #e5e7eb',
+      borderBottom: '1px solid var(--border-subtle)',
       paddingBottom: '24px'
     },
     sectionHeader: {
@@ -181,13 +181,13 @@ export const SIAReport = () => {
       marginBottom: '16px',
       cursor: 'pointer',
       padding: '8px',
-      borderRadius: '6px',
-      backgroundColor: '#f3f4f6'
+      borderRadius: '8px',
+      backgroundColor: 'var(--bg-overlay)'
     },
     sectionTitle: {
       fontSize: '16px',
       fontWeight: '600',
-      color: '#374151'
+      color: 'var(--text-secondary)'
     },
     grid: {
       display: 'grid',
@@ -200,29 +200,29 @@ export const SIAReport = () => {
     label: {
       fontSize: '12px',
       fontWeight: '500',
-      color: '#6b7280',
+      color: 'var(--text-secondary)',
       marginBottom: '4px',
       display: 'block'
     },
     input: {
       width: '100%',
       padding: '8px 12px',
-      border: '1px solid #d1d5db',
-      borderRadius: '6px',
+      border: '1px solid var(--text-tertiary)',
+      borderRadius: '8px',
       fontSize: '14px',
-      backgroundColor: 'white',
+      backgroundColor: 'var(--bg-overlay)',
       transition: 'border-color 0.2s'
     },
     inputFocus: {
       outline: 'none',
-      borderColor: '#3b82f6',
+      borderColor: 'var(--text-secondary)',
       boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)'
     },
     textarea: {
       width: '100%',
       padding: '8px 12px',
-      border: '1px solid #d1d5db',
-      borderRadius: '6px',
+      border: '1px solid var(--text-tertiary)',
+      borderRadius: '8px',
       fontSize: '14px',
       minHeight: '80px',
       resize: 'vertical',
@@ -235,39 +235,39 @@ export const SIAReport = () => {
     th: {
       textAlign: 'left',
       padding: '8px',
-      backgroundColor: '#f3f4f6',
-      borderBottom: '1px solid #e5e7eb',
+      backgroundColor: 'var(--bg-overlay)',
+      borderBottom: '1px solid var(--border-subtle)',
       fontSize: '12px',
       fontWeight: '600',
-      color: '#374151'
+      color: 'var(--text-secondary)'
     },
     td: {
       padding: '8px',
-      borderBottom: '1px solid #f3f4f6'
+      borderBottom: '1px solid var(--bg-overlay)'
     },
     badge: {
       display: 'inline-block',
       padding: '2px 8px',
-      borderRadius: '4px',
+      borderRadius: '8px',
       fontSize: '11px',
       fontWeight: '600'
     },
     badgeBlue: {
-      backgroundColor: '#dbeafe',
-      color: '#1e40af'
+      backgroundColor: 'var(--bg-overlay)',
+      color: 'var(--text-primary)'
     },
     badgeGreen: {
-      backgroundColor: '#d1fae5',
-      color: '#065f46'
+      backgroundColor: 'var(--bg-overlay)',
+      color: 'var(--text-primary)'
     },
     badgeRed: {
-      backgroundColor: '#fee2e2',
-      color: '#991b1b'
+      backgroundColor: 'var(--bg-overlay)',
+      color: '#C04534'
     },
     emptyState: {
       textAlign: 'center',
       padding: '40px',
-      color: '#6b7280'
+      color: 'var(--text-secondary)'
     }
   };
 
@@ -321,7 +321,7 @@ export const SIAReport = () => {
             </button>
           )}
         </div>
-        <div style={{ marginTop: '12px', fontSize: '14px', color: '#6b7280' }}>
+        <div style={{ marginTop: '12px', fontSize: '14px', color: 'var(--text-secondary)' }}>
           {filteredAerodromes.length} aérodrome(s) affiché(s) sur {aerodromes.length}
         </div>
       </div>
@@ -604,7 +604,7 @@ export const SIAReport = () => {
                                     style={{ ...styles.input, marginBottom: '2px' }}
                                   />
                                   {freq.schedule && freq.schedule !== 'H24' && (
-                                    <span style={{ fontSize: '11px', color: '#6b7280', marginLeft: '8px' }}>
+                                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)', marginLeft: '8px' }}>
                                       {freq.schedule}
                                     </span>
                                   )}

@@ -8,7 +8,7 @@ const UnitsModule = () => {
     <div style={{ padding: '20px' }}>
       {/* En-tête du module */}
       <div style={{ 
-        backgroundColor: 'white', 
+        backgroundColor: 'var(--bg-overlay)', 
         padding: '20px', 
         borderRadius: '8px', 
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)', 
@@ -25,7 +25,7 @@ const UnitsModule = () => {
           <Settings size={28} />
           Système d'Unités
         </h2>
-        <p style={{ color: '#6b7280', fontSize: '14px' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
           Configuration des unités de mesure pour l'ensemble de l'application
         </p>
       </div>
@@ -38,7 +38,7 @@ const UnitsModule = () => {
         marginBottom: '20px'
       }}>
         <div style={{
-          backgroundColor: 'white',
+          backgroundColor: 'var(--bg-overlay)',
           padding: '12px',
           borderRadius: '8px',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
@@ -46,15 +46,15 @@ const UnitsModule = () => {
           alignItems: 'center',
           gap: '8px'
         }}>
-          <Ruler size={20} color="#3b82f6" />
+          <Ruler size={20} color="var(--text-secondary)" />
           <div>
-            <p style={{ fontSize: '12px', color: '#6b7280' }}>Distance</p>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Distance</p>
             <p style={{ fontSize: '14px', fontWeight: 'bold' }}>NM / km</p>
           </div>
         </div>
 
         <div style={{
-          backgroundColor: 'white',
+          backgroundColor: 'var(--bg-overlay)',
           padding: '12px',
           borderRadius: '8px',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
@@ -62,15 +62,15 @@ const UnitsModule = () => {
           alignItems: 'center',
           gap: '8px'
         }}>
-          <Gauge size={20} color="#10b981" />
+          <Gauge size={20} color="var(--text-primary)" />
           <div>
-            <p style={{ fontSize: '12px', color: '#6b7280' }}>Altitude</p>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Altitude</p>
             <p style={{ fontSize: '14px', fontWeight: 'bold' }}>ft / m</p>
           </div>
         </div>
 
         <div style={{
-          backgroundColor: 'white',
+          backgroundColor: 'var(--bg-overlay)',
           padding: '12px',
           borderRadius: '8px',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
@@ -78,15 +78,15 @@ const UnitsModule = () => {
           alignItems: 'center',
           gap: '8px'
         }}>
-          <Scale size={20} color="#f59e0b" />
+          <Scale size={20} color="var(--accent-primary)" />
           <div>
-            <p style={{ fontSize: '12px', color: '#6b7280' }}>Poids</p>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Poids</p>
             <p style={{ fontSize: '14px', fontWeight: 'bold' }}>kg / lbs</p>
           </div>
         </div>
 
         <div style={{
-          backgroundColor: 'white',
+          backgroundColor: 'var(--bg-overlay)',
           padding: '12px',
           borderRadius: '8px',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
@@ -94,9 +94,9 @@ const UnitsModule = () => {
           alignItems: 'center',
           gap: '8px'
         }}>
-          <Thermometer size={20} color="#ef4444" />
+          <Thermometer size={20} color="#C04534" />
           <div>
-            <p style={{ fontSize: '12px', color: '#6b7280' }}>Température</p>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Température</p>
             <p style={{ fontSize: '14px', fontWeight: 'bold' }}>°C / °F</p>
           </div>
         </div>
@@ -104,7 +104,7 @@ const UnitsModule = () => {
 
       {/* Composant des préférences d'unités */}
       <div style={{ 
-        backgroundColor: 'white', 
+        backgroundColor: 'var(--bg-overlay)', 
         borderRadius: '8px', 
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
         padding: '20px'

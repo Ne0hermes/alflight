@@ -413,12 +413,12 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
         borderRadius: '8px',
         borderWidth: '1px',
         borderStyle: 'solid',
-        borderColor: '#ddd',
+        borderColor: 'var(--border-subtle)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#f9fafb',
-        color: '#6b7280',
+        backgroundColor: 'var(--bg-overlay)',
+        color: 'var(--text-secondary)',
         fontSize: '14px'
       }}>
         🗺️ Chargement de la carte...
@@ -435,12 +435,12 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
         borderRadius: '8px',
         borderWidth: '1px',
         borderStyle: 'solid',
-        borderColor: '#ddd',
+        borderColor: 'var(--border-subtle)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#f9fafb',
-        color: '#6b7280',
+        backgroundColor: 'var(--bg-overlay)',
+        color: 'var(--text-secondary)',
         fontSize: '14px',
         fontStyle: 'italic'
       }}>
@@ -483,7 +483,7 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
 
       <div
         className="route-map-container"
-        style={{ height: '500px', width: '100%', borderRadius: '8px', overflow: 'hidden', borderWidth: '1px', borderStyle: 'solid', borderColor: '#ddd' }}
+        style={{ height: '500px', width: '100%', borderRadius: '8px', overflow: 'hidden', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border-subtle)' }}
       >
         <MapContainer
           center={center}
@@ -536,7 +536,7 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
                 {/* Retour (bleu) avec flèches */}
                 <PolylineWithArrows
                   positions={offsetReturnRoute}
-                  color="#1e40af"
+                  color="var(--text-primary)"
                   weight={3}
                   opacity={0.7}
                   dashArray="5, 5"
@@ -627,7 +627,7 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
             center={[todPoint.lat, todPoint.lon]}
             radius={10}
             pathOptions={{
-              color: '#f59e0b',
+              color: 'var(--accent-primary)',
               fillColor: 'rgba(242, 105, 33, 0.10)',
               fillOpacity: 0.9,
               weight: 3
@@ -635,10 +635,10 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
           >
             <Popup>
               <div style={{ padding: '8px', minWidth: '200px' }}>
-                <strong style={{ fontSize: '14px', color: '#f59e0b', display: 'block', marginBottom: '6px' }}>
+                <strong style={{ fontSize: '14px', color: 'var(--accent-primary)', display: 'block', marginBottom: '6px' }}>
                   ⬇️ Top of Descent (TOD)
                 </strong>
-                <div style={{ fontSize: '11px', color: '#374151', lineHeight: '1.6' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
                   <div style={{ marginBottom: '4px' }}>
                     <strong>Arrivée :</strong> {todPoint.arrivalName}
                   </div>

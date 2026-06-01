@@ -92,8 +92,8 @@ export const CustomVFRPointForm = ({
       top: '50%',
       left: '50%',
       transform: 'translate(-50%, -50%)',
-      background: 'white',
-      borderRadius: '12px',
+      background: 'var(--bg-overlay)',
+      borderRadius: '8px',
       boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
       padding: '24px',
       zIndex: 10000,
@@ -130,8 +130,8 @@ export const CustomVFRPointForm = ({
           </label>
           <div style={{
             padding: '8px 12px',
-            background: '#f3f4f6',
-            borderRadius: '6px',
+            background: 'var(--bg-overlay)',
+            borderRadius: '8px',
             fontFamily: 'monospace',
             fontSize: '14px'
           }}>
@@ -151,8 +151,8 @@ export const CustomVFRPointForm = ({
             style={{
               width: '100%',
               padding: '8px 12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '6px',
+              border: '1px solid var(--text-tertiary)',
+              borderRadius: '8px',
               fontSize: '14px'
             }}
             required
@@ -172,8 +172,8 @@ export const CustomVFRPointForm = ({
             style={{
               width: '100%',
               padding: '8px 12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '6px',
+              border: '1px solid var(--text-tertiary)',
+              borderRadius: '8px',
               fontSize: '14px',
               resize: 'vertical'
             }}
@@ -202,8 +202,8 @@ export const CustomVFRPointForm = ({
               style={{
                 width: '100%',
                 padding: '8px 12px',
-                border: '1px solid #d1d5db',
-                borderRadius: '6px',
+                border: '1px solid var(--text-tertiary)',
+                borderRadius: '8px',
                 fontSize: '14px'
               }}
             />
@@ -215,7 +215,7 @@ export const CustomVFRPointForm = ({
           gap: '12px',
           marginTop: '24px',
           paddingTop: '20px',
-          borderTop: '1px solid #e5e7eb'
+          borderTop: '1px solid var(--border-subtle)'
         }}>
           <button
             type="button"
@@ -223,10 +223,10 @@ export const CustomVFRPointForm = ({
             style={{
               flex: 1,
               padding: '10px 20px',
-              background: '#f3f4f6',
-              color: '#4b5563',
+              background: 'var(--bg-overlay)',
+              color: 'var(--text-secondary)',
               border: 'none',
-              borderRadius: '6px',
+              borderRadius: '8px',
               fontSize: '14px',
               fontWeight: '500',
               cursor: 'pointer'
@@ -239,10 +239,10 @@ export const CustomVFRPointForm = ({
             style={{
               flex: 1,
               padding: '10px 20px',
-              background: '#3b82f6',
-              color: 'white',
+              background: 'var(--text-secondary)',
+              color: 'var(--text-primary)',
               border: 'none',
-              borderRadius: '6px',
+              borderRadius: '8px',
               fontSize: '14px',
               fontWeight: '500',
               cursor: 'pointer',

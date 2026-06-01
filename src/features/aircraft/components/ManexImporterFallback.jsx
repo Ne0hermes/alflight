@@ -151,8 +151,8 @@ export const ManexImporterFallback = memo(({
       zIndex: 1000
     }}>
       <div style={{
-        backgroundColor: 'white',
-        borderRadius: '12px',
+        backgroundColor: 'var(--bg-overlay)',
+        borderRadius: '8px',
         padding: '24px',
         maxWidth: '600px',
         width: '90%',
@@ -179,8 +179,8 @@ export const ManexImporterFallback = memo(({
         </div>
 
         {/* Info */}
-        <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '6px', padding: '12px', marginBottom: '16px' }}>
-          <Info size={16} style={{ display: 'inline', marginRight: '8px', color: '#2563eb' }} />
+        <div style={{ backgroundColor: 'var(--bg-overlay)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '12px', marginBottom: '16px' }}>
+          <Info size={16} style={{ display: 'inline', marginRight: '8px', color: 'var(--text-secondary)' }} />
           <span style={{ fontSize: '14px' }}>
             Import PDF temporairement indisponible. Vous pouvez utiliser les valeurs par défaut ou entrer manuellement les données.
           </span>
@@ -218,7 +218,7 @@ export const ManexImporterFallback = memo(({
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
               {['vso', 'vs1', 'vfe', 'vno', 'vne', 'va', 'vx', 'vy', 'vr'].map(field => (
                 <div key={field}>
-                  <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                     {field.toUpperCase()}
                   </label>
                   <input
@@ -228,8 +228,8 @@ export const ManexImporterFallback = memo(({
                     style={{
                       width: '100%',
                       padding: '6px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '4px',
+                      border: '1px solid var(--text-tertiary)',
+                      borderRadius: '8px',
                       fontSize: '14px'
                     }}
                   />
@@ -243,7 +243,7 @@ export const ManexImporterFallback = memo(({
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
               {['takeoffRoll', 'takeoffDistance', 'landingRoll', 'landingDistance'].map(field => (
                 <div key={field}>
-                  <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                     {field.replace(/([A-Z])/g, ' $1').trim()}
                   </label>
                   <input
@@ -253,8 +253,8 @@ export const ManexImporterFallback = memo(({
                     style={{
                       width: '100%',
                       padding: '6px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '4px',
+                      border: '1px solid var(--text-tertiary)',
+                      borderRadius: '8px',
                       fontSize: '14px'
                     }}
                   />
@@ -266,11 +266,11 @@ export const ManexImporterFallback = memo(({
 
         {/* Valeurs par défaut preview */}
         {useDefaults && (
-          <div style={{ backgroundColor: '#f9fafb', padding: '16px', borderRadius: '8px', marginBottom: '20px' }}>
+          <div style={{ backgroundColor: 'var(--bg-overlay)', padding: '16px', borderRadius: '8px', marginBottom: '20px' }}>
             <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px' }}>
               Valeurs par défaut qui seront utilisées:
             </h4>
-            <div style={{ fontSize: '14px', color: '#4b5563' }}>
+            <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
               <p>• Catégorie: {aircraft.maxTakeoffWeight <= 7000 ? 'Avion léger' : aircraft.maxTakeoffWeight <= 136000 ? 'Avion moyen' : 'Avion lourd'}</p>
               <p>• Abaques de performances standards</p>
               <p>• Vitesses et limitations typiques</p>
@@ -285,10 +285,10 @@ export const ManexImporterFallback = memo(({
             onClick={onClose}
             style={{
               padding: '8px 16px',
-              backgroundColor: '#e5e7eb',
-              color: '#374151',
+              backgroundColor: 'var(--border-subtle)',
+              color: 'var(--text-secondary)',
               border: 'none',
-              borderRadius: '6px',
+              borderRadius: '8px',
               fontSize: '14px',
               fontWeight: '500',
               cursor: 'pointer'
@@ -300,10 +300,10 @@ export const ManexImporterFallback = memo(({
             onClick={useDefaults ? handleSaveWithDefaults : handleSaveManual}
             style={{
               padding: '8px 16px',
-              backgroundColor: '#3b82f6',
-              color: 'white',
+              backgroundColor: 'var(--text-secondary)',
+              color: 'var(--text-primary)',
               border: 'none',
-              borderRadius: '6px',
+              borderRadius: '8px',
               fontSize: '14px',
               fontWeight: '500',
               cursor: 'pointer',

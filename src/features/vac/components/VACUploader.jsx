@@ -26,7 +26,7 @@ export const VACUploader = memo(({ icao }) => {
       )}
       
       <div style={{
-        backgroundColor: 'white',
+        backgroundColor: 'var(--bg-overlay)',
         padding: '20px',
         borderRadius: '8px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
@@ -49,9 +49,9 @@ export const VACUploader = memo(({ icao }) => {
           style={{
             width: '100%',
             padding: '24px',
-            border: '2px dashed #3b82f6',
+            border: '2px dashed var(--text-secondary)',
             borderRadius: '8px',
-            backgroundColor: '#f0f9ff',
+            backgroundColor: 'var(--bg-overlay)',
             cursor: 'pointer',
             transition: 'all 0.2s',
             display: 'flex',
@@ -60,19 +60,19 @@ export const VACUploader = memo(({ icao }) => {
             gap: '8px'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#dbeafe';
-            e.currentTarget.style.borderColor = '#2563eb';
+            e.currentTarget.style.backgroundColor = 'var(--bg-overlay)';
+            e.currentTarget.style.borderColor = 'var(--text-secondary)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#f0f9ff';
-            e.currentTarget.style.borderColor = '#3b82f6';
+            e.currentTarget.style.backgroundColor = 'var(--bg-overlay)';
+            e.currentTarget.style.borderColor = 'var(--text-secondary)';
           }}
         >
-          <Upload size={40} style={{ color: '#3b82f6' }} />
-          <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#1e40af' }}>
+          <Upload size={40} style={{ color: 'var(--text-secondary)' }} />
+          <p style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
             Cliquez pour importer une carte VAC
           </p>
-          <p style={{ fontSize: '14px', color: '#6b7280' }}>
+          <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
             Extraction automatique des données (fréquences, pistes, procédures...)
           </p>
         </button>
@@ -81,18 +81,18 @@ export const VACUploader = memo(({ icao }) => {
         {extractedData && (
           <div style={{ marginTop: '16px' }}>
             <div style={{
-              backgroundColor: '#d1fae5',
-              border: '1px solid #86efac',
-              borderRadius: '6px',
+              backgroundColor: 'var(--bg-overlay)',
+              border: '1px solid var(--bg-overlay)',
+              borderRadius: '8px',
               padding: '12px',
               display: 'flex',
               gap: '12px',
               alignItems: 'center'
             }}>
-              <CheckCircle size={20} style={{ color: '#065f46' }} />
+              <CheckCircle size={20} style={{ color: 'var(--text-primary)' }} />
               <div>
                 <p style={{ fontSize: '14px', fontWeight: 'bold' }}>Carte VAC importée avec succès!</p>
-                <p style={{ fontSize: '12px', color: '#6b7280' }}>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                   {extractedData.runways?.length || 0} piste(s) • 
                   {Object.keys(extractedData.frequencies || {}).length} fréquence(s) • 
                   {extractedData.navaids?.length || 0} aide(s) à la navigation
@@ -102,14 +102,14 @@ export const VACUploader = memo(({ icao }) => {
             
             {/* Aperçu des données */}
             <details style={{ marginTop: '12px' }}>
-              <summary style={{ cursor: 'pointer', fontSize: '14px', color: '#374151' }}>
+              <summary style={{ cursor: 'pointer', fontSize: '14px', color: 'var(--text-secondary)' }}>
                 Voir les données extraites
               </summary>
               <pre style={{
                 fontSize: '12px',
-                backgroundColor: '#f9fafb',
+                backgroundColor: 'var(--bg-overlay)',
                 padding: '12px',
-                borderRadius: '6px',
+                borderRadius: '8px',
                 marginTop: '8px',
                 overflow: 'auto',
                 maxHeight: '300px'

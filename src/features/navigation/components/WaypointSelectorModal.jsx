@@ -139,11 +139,11 @@ export const WaypointSelectorModal = ({ isOpen, onClose, onSelect }) => {
   // Fonction pour la catégorie d'aérodrome
   const getCategoryBadge = (category) => {
     const categories = {
-      'large': { label: 'Grand', color: '#1e40af', bg: '#dbeafe' },
-      'medium': { label: 'Moyen', color: '#92400e', bg: 'rgba(242, 105, 33, 0.10)' },
-      'small': { label: 'Petit', color: '#065f46', bg: '#d1fae5' }
+      'large': { label: 'Grand', color: 'var(--text-primary)', bg: 'var(--bg-overlay)' },
+      'medium': { label: 'Moyen', color: 'var(--accent-primary)', bg: 'rgba(242, 105, 33, 0.10)' },
+      'small': { label: 'Petit', color: 'var(--text-primary)', bg: 'var(--bg-overlay)' }
     };
-    return categories[category] || { label: category || 'N/A', color: '#6b7280', bg: '#f3f4f6' };
+    return categories[category] || { label: category || 'N/A', color: 'var(--text-secondary)', bg: 'var(--bg-overlay)' };
   };
 
   if (!isOpen) return null;
@@ -188,7 +188,7 @@ export const WaypointSelectorModal = ({ isOpen, onClose, onSelect }) => {
             Aerodromes
             <span style={{
               ...styles.tabBadge,
-              backgroundColor: activeTab === 'aerodromes' ? '#2563eb' : '#9ca3af',
+              backgroundColor: activeTab === 'aerodromes' ? 'var(--text-secondary)' : 'var(--text-tertiary)',
             }}>
               {aerodromesCount}
             </span>
@@ -204,7 +204,7 @@ export const WaypointSelectorModal = ({ isOpen, onClose, onSelect }) => {
             Points d'interet
             <span style={{
               ...styles.tabBadge,
-              backgroundColor: activeTab === 'poi' ? '#059669' : '#9ca3af',
+              backgroundColor: activeTab === 'poi' ? 'var(--text-primary)' : 'var(--text-tertiary)',
             }}>
               {poiCount}
             </span>
@@ -218,7 +218,7 @@ export const WaypointSelectorModal = ({ isOpen, onClose, onSelect }) => {
             <>
               {filteredAirports.length === 0 ? (
                 <div style={styles.emptyState}>
-                  <Plane size={48} color="#e5e7eb" />
+                  <Plane size={48} color="var(--border-subtle)" />
                   <p style={styles.emptyText}>Aucun aerodrome trouve</p>
                   <p style={styles.emptySubText}>Essayez un code OACI (LFST) ou un nom de ville</p>
                 </div>
@@ -234,10 +234,10 @@ export const WaypointSelectorModal = ({ isOpen, onClose, onSelect }) => {
                         style={styles.resultItem}
                         className="result-item"
                       >
-                        <div style={{ ...styles.iconWrapper, backgroundColor: '#eff6ff' }}
+                        <div style={{ ...styles.iconWrapper, backgroundColor: 'var(--bg-overlay)' }}
                           onClick={() => handleSelect({ type: 'aerodrome', data: airport })}
                         >
-                          <Plane size={20} color="#2563eb" />
+                          <Plane size={20} color="var(--text-secondary)" />
                         </div>
                         <div style={styles.itemContent}
                           onClick={() => handleSelect({ type: 'aerodrome', data: airport })}
@@ -259,7 +259,7 @@ export const WaypointSelectorModal = ({ isOpen, onClose, onSelect }) => {
                         {/* Category badge */}
                         <div style={{
                           padding: '2px 8px',
-                          borderRadius: '10px',
+                          borderRadius: '8px',
                           fontSize: '10px',
                           fontWeight: '600',
                           color: catBadge.color,
@@ -303,7 +303,7 @@ export const WaypointSelectorModal = ({ isOpen, onClose, onSelect }) => {
             <>
               {filteredPOIs.length === 0 ? (
                 <div style={styles.emptyState}>
-                  <MapPin size={48} color="#e5e7eb" />
+                  <MapPin size={48} color="var(--border-subtle)" />
                   <p style={styles.emptyText}>Aucun point d'interet trouve</p>
                   <p style={styles.emptySubText}>Essayez un nom ou une description</p>
                 </div>
@@ -317,11 +317,11 @@ export const WaypointSelectorModal = ({ isOpen, onClose, onSelect }) => {
                       <div
                         style={{
                           ...styles.resultItem,
-                          borderLeft: '3px solid #10b981'
+                          borderLeft: '3px solid var(--text-primary)'
                         }}
                         className="result-item"
                       >
-                        <div style={{ ...styles.iconWrapper, backgroundColor: '#ecfdf5' }}
+                        <div style={{ ...styles.iconWrapper, backgroundColor: 'var(--bg-overlay)' }}
                           onClick={() => handleSelect({
                             type: 'community',
                             data: point
@@ -334,12 +334,12 @@ export const WaypointSelectorModal = ({ isOpen, onClose, onSelect }) => {
                               style={{
                                 width: '40px',
                                 height: '40px',
-                                borderRadius: '10px',
+                                borderRadius: '8px',
                                 objectFit: 'cover'
                               }}
                             />
                           ) : (
-                            <MapPin size={20} color="#16a34a" />
+                            <MapPin size={20} color="var(--text-primary)" />
                           )}
                         </div>
                         <div style={styles.itemContent}
@@ -408,7 +408,7 @@ const AerodromeDetails = ({ airport, formatSurface }) => {
       <div style={styles.detailsGrid}>
         <div style={styles.detailCard}>
           <div style={styles.detailCardIcon}>
-            <Navigation2 size={14} color="#6366f1" />
+            <Navigation2 size={14} color="var(--accent-primary)" />
           </div>
           <div>
             <div style={styles.detailCardLabel}>Coordonnees</div>
@@ -420,7 +420,7 @@ const AerodromeDetails = ({ airport, formatSurface }) => {
 
         <div style={styles.detailCard}>
           <div style={styles.detailCardIcon}>
-            <Layers size={14} color="#6366f1" />
+            <Layers size={14} color="var(--accent-primary)" />
           </div>
           <div>
             <div style={styles.detailCardLabel}>Elevation</div>
@@ -432,7 +432,7 @@ const AerodromeDetails = ({ airport, formatSurface }) => {
 
         <div style={styles.detailCard}>
           <div style={styles.detailCardIcon}>
-            <Info size={14} color="#6366f1" />
+            <Info size={14} color="var(--accent-primary)" />
           </div>
           <div>
             <div style={styles.detailCardLabel}>Type</div>
@@ -509,7 +509,7 @@ const POIDetails = ({ point }) => {
           <div style={styles.detailsGrid}>
             <div style={styles.detailCard}>
               <div style={styles.detailCardIcon}>
-                <Navigation2 size={14} color="#059669" />
+                <Navigation2 size={14} color="var(--text-primary)" />
               </div>
               <div>
                 <div style={styles.detailCardLabel}>Coordonnees</div>
@@ -522,7 +522,7 @@ const POIDetails = ({ point }) => {
             {point.altitude && (
               <div style={styles.detailCard}>
                 <div style={styles.detailCardIcon}>
-                  <Layers size={14} color="#059669" />
+                  <Layers size={14} color="var(--text-primary)" />
                 </div>
                 <div>
                   <div style={styles.detailCardLabel}>Altitude</div>
@@ -536,7 +536,7 @@ const POIDetails = ({ point }) => {
             {point.frequency && (
               <div style={styles.detailCard}>
                 <div style={styles.detailCardIcon}>
-                  <Wind size={14} color="#059669" />
+                  <Wind size={14} color="var(--text-primary)" />
                 </div>
                 <div>
                   <div style={styles.detailCardLabel}>Frequence</div>
@@ -616,8 +616,8 @@ const styles = {
     backdropFilter: 'blur(4px)'
   },
   modal: {
-    backgroundColor: 'white',
-    borderRadius: '16px',
+    backgroundColor: 'var(--bg-overlay)',
+    borderRadius: '8px',
     maxWidth: '700px',
     width: '100%',
     height: '85vh',
@@ -631,19 +631,19 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '20px 24px',
-    borderBottom: '1px solid #f3f4f6'
+    borderBottom: '1px solid var(--bg-overlay)'
   },
   title: {
     fontSize: '20px',
     fontWeight: '700',
-    color: '#111827',
+    color: 'var(--text-primary)',
     margin: 0
   },
   closeButton: {
     background: 'none',
     border: 'none',
     cursor: 'pointer',
-    color: '#9ca3af',
+    color: 'var(--text-tertiary)',
     padding: '8px',
     borderRadius: '8px',
     transition: 'all 0.2s',
@@ -653,7 +653,7 @@ const styles = {
   },
   searchContainer: {
     padding: '16px 24px',
-    backgroundColor: '#f9fafb'
+    backgroundColor: 'var(--bg-overlay)'
   },
   inputWrapper: {
     position: 'relative',
@@ -663,32 +663,32 @@ const styles = {
   searchIcon: {
     position: 'absolute',
     left: '16px',
-    color: '#9ca3af'
+    color: 'var(--text-tertiary)'
   },
   input: {
     width: '100%',
     padding: '14px 16px 14px 48px',
     fontSize: '16px',
-    border: '1px solid #e5e7eb',
-    borderRadius: '12px',
+    border: '1px solid var(--border-subtle)',
+    borderRadius: '8px',
     outline: 'none',
     transition: 'all 0.2s',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-overlay)',
     boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
   },
   loader: {
     position: 'absolute',
     right: '16px',
-    color: '#3b82f6',
+    color: 'var(--text-secondary)',
     animation: 'spin 1s linear infinite'
   },
 
   // Tabs
   tabContainer: {
     display: 'flex',
-    borderBottom: '2px solid #f3f4f6',
+    borderBottom: '2px solid var(--bg-overlay)',
     padding: '0 24px',
-    backgroundColor: '#fafafa'
+    backgroundColor: 'var(--bg-overlay)'
   },
   tab: {
     flex: 1,
@@ -707,25 +707,25 @@ const styles = {
     background: 'none'
   },
   tabActive: {
-    color: '#2563eb',
-    borderBottomColor: '#2563eb',
-    backgroundColor: '#eff6ff'
+    color: 'var(--text-secondary)',
+    borderBottomColor: 'var(--text-secondary)',
+    backgroundColor: 'var(--bg-overlay)'
   },
   tabActivePOI: {
-    color: '#059669',
-    borderBottomColor: '#059669',
-    backgroundColor: '#ecfdf5'
+    color: 'var(--text-primary)',
+    borderBottomColor: 'var(--text-primary)',
+    backgroundColor: 'var(--bg-overlay)'
   },
   tabInactive: {
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     borderBottomColor: 'transparent'
   },
   tabBadge: {
     padding: '2px 8px',
-    borderRadius: '10px',
+    borderRadius: '8px',
     fontSize: '11px',
     fontWeight: '700',
-    color: 'white',
+    color: 'var(--text-primary)',
     minWidth: '20px',
     textAlign: 'center'
   },
@@ -742,7 +742,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '60px 20px',
-    color: '#9ca3af',
+    color: 'var(--text-tertiary)',
     textAlign: 'center'
   },
   emptyText: {
@@ -752,13 +752,13 @@ const styles = {
   },
   emptySubText: {
     fontSize: '14px',
-    color: '#d1d5db'
+    color: 'var(--text-tertiary)'
   },
   cardWrapper: {
     marginBottom: '4px',
-    borderRadius: '12px',
+    borderRadius: '8px',
     overflow: 'hidden',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border-subtle)',
     transition: 'all 0.2s'
   },
   resultItem: {
@@ -767,12 +767,12 @@ const styles = {
     padding: '12px 16px',
     cursor: 'pointer',
     transition: 'all 0.2s',
-    backgroundColor: 'white'
+    backgroundColor: 'var(--bg-overlay)'
   },
   iconWrapper: {
     width: '40px',
     height: '40px',
-    borderRadius: '10px',
+    borderRadius: '8px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -792,29 +792,29 @@ const styles = {
   itemLabel: {
     fontSize: '15px',
     fontWeight: '700',
-    color: '#1f2937'
+    color: 'var(--text-primary)'
   },
   itemLabelSeparator: {
-    color: '#9ca3af',
+    color: 'var(--text-tertiary)',
     fontSize: '14px'
   },
   itemLabelName: {
     fontSize: '14px',
     fontWeight: '500',
-    color: '#374151'
+    color: 'var(--text-secondary)'
   },
   itemSubLabel: {
     fontSize: '12px',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     marginTop: '2px'
   },
   expandButton: {
     background: 'none',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border-subtle)',
     cursor: 'pointer',
     padding: '6px',
     borderRadius: '8px',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -828,8 +828,8 @@ const styles = {
     width: '28px',
     height: '28px',
     borderRadius: '50%',
-    backgroundColor: '#eff6ff',
-    color: '#3b82f6',
+    backgroundColor: 'var(--bg-overlay)',
+    color: 'var(--text-secondary)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -842,29 +842,29 @@ const styles = {
   poiTypeBadge: {
     display: 'inline-block',
     padding: '1px 6px',
-    borderRadius: '4px',
+    borderRadius: '8px',
     fontSize: '10px',
     fontWeight: '600',
-    backgroundColor: '#ecfdf5',
-    color: '#065f46',
+    backgroundColor: 'var(--bg-overlay)',
+    color: 'var(--text-primary)',
     marginRight: '4px'
   },
   poiAerodromeBadge: {
     display: 'inline-block',
     padding: '1px 6px',
-    borderRadius: '4px',
+    borderRadius: '8px',
     fontSize: '10px',
     fontWeight: '600',
-    backgroundColor: '#e0f2fe',
-    color: '#0c4a6e',
+    backgroundColor: 'var(--bg-overlay)',
+    color: 'var(--text-primary)',
     marginRight: '4px'
   },
 
   // Details panel (expanded)
   detailsPanel: {
     padding: '16px',
-    backgroundColor: '#f9fafb',
-    borderTop: '1px solid #e5e7eb'
+    backgroundColor: 'var(--bg-overlay)',
+    borderTop: '1px solid var(--border-subtle)'
   },
   detailsGrid: {
     display: 'grid',
@@ -877,14 +877,14 @@ const styles = {
     alignItems: 'flex-start',
     gap: '8px',
     padding: '8px 10px',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '8px',
-    border: '1px solid #e5e7eb'
+    border: '1px solid var(--border-subtle)'
   },
   detailCardIcon: {
     padding: '4px',
-    borderRadius: '6px',
-    backgroundColor: '#f3f4f6',
+    borderRadius: '8px',
+    backgroundColor: 'var(--bg-overlay)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -893,14 +893,14 @@ const styles = {
   detailCardLabel: {
     fontSize: '10px',
     fontWeight: '600',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     textTransform: 'uppercase',
     letterSpacing: '0.05em'
   },
   detailCardValue: {
     fontSize: '13px',
     fontWeight: '600',
-    color: '#1f2937',
+    color: 'var(--text-primary)',
     marginTop: '2px'
   },
 
@@ -914,7 +914,7 @@ const styles = {
     gap: '6px',
     fontSize: '12px',
     fontWeight: '700',
-    color: '#4b5563',
+    color: 'var(--text-secondary)',
     marginBottom: '8px',
     textTransform: 'uppercase',
     letterSpacing: '0.05em'
@@ -929,14 +929,14 @@ const styles = {
     alignItems: 'center',
     gap: '12px',
     padding: '8px 12px',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '8px',
-    border: '1px solid #e5e7eb'
+    border: '1px solid var(--border-subtle)'
   },
   runwayDesignation: {
     fontSize: '16px',
     fontWeight: '700',
-    color: '#1e40af',
+    color: 'var(--text-primary)',
     minWidth: '60px'
   },
   runwayDetails: {
@@ -948,25 +948,25 @@ const styles = {
   runwayDimension: {
     fontSize: '13px',
     fontWeight: '600',
-    color: '#374151'
+    color: 'var(--text-secondary)'
   },
   runwaySurface: {
     fontSize: '11px',
-    color: '#6b7280'
+    color: 'var(--text-secondary)'
   },
   runwayQFU: {
     fontSize: '11px',
-    color: '#6366f1',
+    color: 'var(--accent-primary)',
     fontWeight: '600',
     padding: '2px 8px',
-    backgroundColor: '#eef2ff',
-    borderRadius: '4px'
+    backgroundColor: 'var(--bg-overlay)',
+    borderRadius: '8px'
   },
   noRunwaysMsg: {
     padding: '12px',
     textAlign: 'center',
     fontSize: '12px',
-    color: '#9ca3af',
+    color: 'var(--text-tertiary)',
     fontStyle: 'italic'
   },
 
@@ -975,10 +975,10 @@ const styles = {
     flexShrink: 0,
     width: '140px',
     height: '140px',
-    borderRadius: '12px',
+    borderRadius: '8px',
     overflow: 'hidden',
-    border: '1px solid #e5e7eb',
-    backgroundColor: '#f3f4f6'
+    border: '1px solid var(--border-subtle)',
+    backgroundColor: 'var(--bg-overlay)'
   },
   poiPhoto: {
     width: '100%',
@@ -987,11 +987,11 @@ const styles = {
   },
   poiDescription: {
     fontSize: '13px',
-    color: '#374151',
+    color: 'var(--text-secondary)',
     padding: '8px 12px',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '8px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border-subtle)',
     marginBottom: '8px',
     lineHeight: '1.4'
   },
@@ -1003,17 +1003,17 @@ const styles = {
   poiMetaItem: {
     fontSize: '12px',
     padding: '4px 8px',
-    backgroundColor: 'white',
-    borderRadius: '6px',
-    border: '1px solid #e5e7eb'
+    backgroundColor: 'var(--bg-overlay)',
+    borderRadius: '8px',
+    border: '1px solid var(--border-subtle)'
   },
   poiMetaLabel: {
     fontWeight: '600',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     marginRight: '4px'
   },
   poiMetaValue: {
-    color: '#1f2937'
+    color: 'var(--text-primary)'
   }
 };
 
@@ -1021,10 +1021,10 @@ const styles = {
 const styleSheet = document.createElement("style");
 styleSheet.innerText = `
   .result-item:hover {
-    background-color: #f9fafb !important;
+    background-color: var(--bg-overlay) !important;
   }
   .result-item:hover .plus-button {
-    background-color: #3b82f6 !important;
+    background-color: var(--text-secondary) !important;
     color: white !important;
   }
   @keyframes spin {

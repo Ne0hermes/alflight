@@ -163,10 +163,10 @@ export const ReportingPointsSelector = memo(({
                 sx.text.xs,
                 sx.spacing.ml(2),
                 {
-                  backgroundColor: '#d1fae5',
-                  color: '#065f46',
+                  backgroundColor: 'var(--bg-overlay)',
+                  color: 'var(--text-primary)',
                   padding: '2px 8px',
-                  borderRadius: '4px',
+                  borderRadius: '8px',
                   fontWeight: 'normal'
                 }
               )}>
@@ -179,9 +179,9 @@ export const ReportingPointsSelector = memo(({
                 sx.spacing.ml(2),
                 {
                   backgroundColor: 'rgba(242, 105, 33, 0.10)',
-                  color: '#92400e',
+                  color: 'var(--accent-primary)',
                   padding: '2px 8px',
-                  borderRadius: '4px',
+                  borderRadius: '8px',
                   fontWeight: 'normal'
                 }
               )}>
@@ -215,8 +215,8 @@ export const ReportingPointsSelector = memo(({
                     {
                       cursor: canSelect || isSelected ? 'pointer' : 'not-allowed',
                       opacity: !canSelect && !isSelected ? 0.5 : 1,
-                      border: `2px solid ${isSelected ? '#3b82f6' : 'transparent'}`,
-                      backgroundColor: isSelected ? '#dbeafe' : '#f9fafb',
+                      border: `2px solid ${isSelected ? 'var(--text-secondary)' : 'transparent'}`,
+                      backgroundColor: isSelected ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
                       transition: 'all 0.2s'
                     }
                   )}
@@ -229,8 +229,8 @@ export const ReportingPointsSelector = memo(({
                         sx.spacing.py(1),
                         sx.rounded.sm,
                         {
-                          backgroundColor: point.mandatory ? 'rgba(242, 105, 33, 0.10)' : '#e5e7eb',
-                          color: point.mandatory ? '#92400e' : '#4b5563',
+                          backgroundColor: point.mandatory ? 'rgba(242, 105, 33, 0.10)' : 'var(--border-subtle)',
+                          color: point.mandatory ? 'var(--accent-primary)' : 'var(--text-secondary)',
                           fontSize: '12px'
                         }
                       )}>
@@ -250,14 +250,14 @@ export const ReportingPointsSelector = memo(({
                         </p>
                         <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
                           📍 {point.coordinates.lat.toFixed(4)}°, {point.coordinates.lon.toFixed(4)}°<br />
-                          <span style={{ fontSize: '10px', color: '#9ca3af' }}>
+                          <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>
                             {coordinateConversions.coordinatesToDMS(point.coordinates.lat, point.coordinates.lon).formatted}
                           </span>
                         </p>
                       </div>
                     </div>
                     {isSelected && (
-                      <CheckCircle size={20} color="#3b82f6" />
+                      <CheckCircle size={20} color="var(--text-secondary)" />
                     )}
                   </div>
                 </div>
@@ -288,7 +288,7 @@ export const ReportingPointsSelector = memo(({
                   <p style={sx.text.bold}>{point.name}</p>
                   <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
                     📍 {point.coordinates.lat.toFixed(4)}°, {point.coordinates.lon.toFixed(4)}°<br />
-                    <span style={{ fontSize: '10px', color: '#9ca3af' }}>
+                    <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>
                       {coordinateConversions.coordinatesToDMS(point.coordinates.lat, point.coordinates.lon).formatted}
                     </span>
                   </p>

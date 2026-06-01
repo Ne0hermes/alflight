@@ -690,7 +690,7 @@ const DataField = memo(({ label, value, onCopy, copied, editMode, onChange, type
         sx.spacing.p(2), 
         sx.bg.gray, 
         sx.rounded.md,
-        isModified && { backgroundColor: 'rgba(242, 105, 33, 0.10)', borderLeft: '3px solid #f59e0b' }
+        isModified && { backgroundColor: 'rgba(242, 105, 33, 0.10)', borderLeft: '3px solid var(--accent-primary)' }
       )}>
         <div style={{ flex: 1 }}>
           <span style={sx.combine(sx.text.sm, sx.text.secondary)}>
@@ -725,7 +725,7 @@ const DataField = memo(({ label, value, onCopy, copied, editMode, onChange, type
     sx.spacing.p(2), 
     sx.bg.gray, 
     sx.rounded.md,
-    isModified && { backgroundColor: 'rgba(242, 105, 33, 0.10)', borderLeft: '3px solid #f59e0b' }
+    isModified && { backgroundColor: 'rgba(242, 105, 33, 0.10)', borderLeft: '3px solid var(--accent-primary)' }
   )}>
     <div style={{ flex: 1 }}>
       <span style={sx.combine(sx.text.sm, sx.text.secondary)}>
@@ -757,15 +757,15 @@ const DataField = memo(({ label, value, onCopy, copied, editMode, onChange, type
         onClick={onCopy}
         style={{
           padding: '4px 8px',
-          backgroundColor: copied ? '#10b981' : '#f3f4f6',
-          border: `1px solid ${copied ? '#10b981' : '#e5e7eb'}`,
-          borderRadius: '4px',
+          backgroundColor: copied ? 'var(--text-primary)' : 'var(--bg-overlay)',
+          border: `1px solid ${copied ? 'var(--text-primary)' : 'var(--border-subtle)'}`,
+          borderRadius: '8px',
           cursor: 'pointer',
           transition: 'all 0.2s'
         }}
         title="Copier dans le presse-papier"
       >
-        {copied ? <CheckCircle size={14} color="white" /> : <Copy size={14} color="#6b7280" />}
+        {copied ? <CheckCircle size={14} color="white" /> : <Copy size={14} color="var(--text-secondary)" />}
       </button>
     )}
   </div>

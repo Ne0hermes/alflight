@@ -8,31 +8,31 @@ import { calculateDistance } from '@utils/navigationCalculations';
 const AIRSPACE_TYPES = {
   'CTR': {
     name: 'Control Zone',
-    color: '#dc2626',
+    color: '#C04534',
     priority: 1,
     description: 'Zone de contrôle d\'aérodrome'
   },
   'TMA': {
     name: 'Terminal Control Area',
-    color: '#f59e0b',
+    color: 'var(--accent-primary)',
     priority: 2,
     description: 'Zone de contrôle terminale'
   },
   'ATZ': {
     name: 'Aerodrome Traffic Zone',
-    color: '#3b82f6',
+    color: 'var(--text-secondary)',
     priority: 3,
     description: 'Zone de circulation d\'aérodrome'
   },
   'D': {
     name: 'Zone Dangereuse',
-    color: '#ef4444',
+    color: '#C04534',
     priority: 4,
     description: 'Zone dangereuse'
   },
   'P': {
     name: 'Zone Interdite',
-    color: '#991b1b',
+    color: '#C04534',
     priority: 1,
     description: 'Zone interdite (Prohibited)'
   },
@@ -44,19 +44,19 @@ const AIRSPACE_TYPES = {
   },
   'TSA': {
     name: 'Zone Temporaire',
-    color: '#8b5cf6',
+    color: 'var(--accent-primary)',
     priority: 5,
     description: 'Zone temporairement ségrégée'
   },
   'TRA': {
     name: 'Zone d\'Entraînement',
-    color: '#6366f1',
+    color: 'var(--accent-primary)',
     priority: 5,
     description: 'Zone temporaire réservée aux activités'
   },
   'OTHER': {
     name: 'Autre',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     priority: 6,
     description: 'Autre type d\'espace'
   }
@@ -585,7 +585,7 @@ export const AirspaceAnalyzer = ({ waypoints, plannedAltitude, onAltitudeChange,
                   sx.spacing.p(3),
                   {
                     borderLeft: `4px solid ${typeInfo.color}`,
-                    backgroundColor: conflict === 'inside' ? '#fef2f2' : 'white'
+                    backgroundColor: conflict === 'inside' ? 'var(--bg-overlay)' : 'white'
                   }
                 )}
               >
@@ -605,7 +605,7 @@ export const AirspaceAnalyzer = ({ waypoints, plannedAltitude, onAltitudeChange,
                     </div>
                     {conflict === 'inside' && (
                       <div style={sx.spacing.ml(3)}>
-                        <AlertTriangle size={16} color="#dc2626" />
+                        <AlertTriangle size={16} color="#C04534" />
                       </div>
                     )}
                   </div>
@@ -647,7 +647,7 @@ export const AirspaceAnalyzer = ({ waypoints, plannedAltitude, onAltitudeChange,
 
                 {/* Détails étendus */}
                 {isExpanded && (
-                  <div style={sx.combine(sx.spacing.mt(3), sx.spacing.pt(3), { borderTop: '1px solid #e5e7eb' })}>
+                  <div style={sx.combine(sx.spacing.mt(3), sx.spacing.pt(3), { borderTop: '1px solid var(--border-subtle)' })}>
                     {/* Fréquences */}
                     {airspace.frequencies && airspace.frequencies.length > 0 && (
                       <div style={sx.spacing.mb(3)}>

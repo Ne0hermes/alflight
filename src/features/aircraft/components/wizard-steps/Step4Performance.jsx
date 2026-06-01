@@ -732,8 +732,8 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
               const isSelectedForExport = selectedModelIds.has(modelId);
               return (
               <div key={modelId} style={{
-                backgroundColor: isSelectedForExport ? '#dbeafe' : '#f9fafb',
-                border: `2px solid ${isSelectedForExport ? '#2563eb' : '#9ca3af'}`,
+                backgroundColor: isSelectedForExport ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
+                border: `2px solid ${isSelectedForExport ? 'var(--text-secondary)' : 'var(--text-tertiary)'}`,
                 borderRadius: '8px',
                 padding: '10px',
                 marginBottom: '8px',
@@ -749,8 +749,8 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                     onChange={() => toggleModelSelection(modelId)}
                     sx={{
                       p: 0.5,
-                      color: '#2563eb',
-                      '&.Mui-checked': { color: '#2563eb' }
+                      color: 'var(--text-secondary)',
+                      '&.Mui-checked': { color: 'var(--text-secondary)' }
                     }}
                     title="Inclure ce modèle dans l'export Excel"
                   />
@@ -759,7 +759,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                       {model.classification || model.name || `Abaque ${index + 1}`}
                     </div>
                     {model.data?.graphs && (
-                      <div style={{ fontSize: '14px', color: '#6b7280' }}>
+                      <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
                         {model.data.graphs.length} graphique(s) configuré(s)
                       </div>
                     )}
@@ -799,12 +799,12 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                     style={{
                       flex: 1,
                       padding: '4px 8px',
-                      backgroundColor: 'white',
-                      border: '1px solid #3b82f6',
-                      borderRadius: '4px',
+                      backgroundColor: 'var(--bg-overlay)',
+                      border: '1px solid var(--text-secondary)',
+                      borderRadius: '8px',
                       fontSize: '12px',
                       cursor: 'pointer',
-                      color: '#3b82f6',
+                      color: 'var(--text-secondary)',
                       fontWeight: '500'
                     }}
                   >
@@ -830,12 +830,12 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                     style={{
                       flex: 1,
                       padding: '4px 8px',
-                      backgroundColor: '#fee2e2',
+                      backgroundColor: 'var(--bg-overlay)',
                       border: 'none',
-                      borderRadius: '4px',
+                      borderRadius: '8px',
                       fontSize: '12px',
                       cursor: 'pointer',
-                      color: '#991b1b',
+                      color: '#C04534',
                       fontWeight: '500'
                     }}
                   >
@@ -888,8 +888,8 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
 
                 return (
                   <div key={index} style={{
-                    backgroundColor: isSelectedForExport ? '#dbeafe' : '#f9fafb',
-                    border: `2px solid ${isSelectedForExport ? '#2563eb' : '#9ca3af'}`,
+                    backgroundColor: isSelectedForExport ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
+                    border: `2px solid ${isSelectedForExport ? 'var(--text-secondary)' : 'var(--text-tertiary)'}`,
                     borderRadius: '8px',
                     padding: '10px',
                     marginBottom: '8px',
@@ -904,8 +904,8 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                         onChange={() => toggleClassificationSelection(classification)}
                         sx={{
                           p: 0.5,
-                          color: '#2563eb',
-                          '&.Mui-checked': { color: '#2563eb' }
+                          color: 'var(--text-secondary)',
+                          '&.Mui-checked': { color: 'var(--text-secondary)' }
                         }}
                         title="Inclure ces tableaux dans l'export Excel"
                       />
@@ -913,7 +913,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                         <div style={{ fontWeight: '600', marginBottom: '4px', fontSize: '15px' }}>
                           {mainTableName}
                         </div>
-                        <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                        <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
                           {tables.length} tableau(x) extrait(s)
                         </div>
                       </div>
@@ -947,12 +947,12 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                         style={{
                           flex: 1,
                           padding: '4px 8px',
-                          backgroundColor: 'white',
-                          border: '1px solid #3b82f6',
-                          borderRadius: '4px',
+                          backgroundColor: 'var(--bg-overlay)',
+                          border: '1px solid var(--text-secondary)',
+                          borderRadius: '8px',
                           fontSize: '12px',
                           cursor: 'pointer',
-                          color: '#3b82f6',
+                          color: 'var(--text-secondary)',
                           fontWeight: '500'
                         }}
                       >
@@ -1002,12 +1002,12 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                         style={{
                           flex: 1,
                           padding: '4px 8px',
-                          backgroundColor: '#fee2e2',
+                          backgroundColor: 'var(--bg-overlay)',
                           border: 'none',
-                          borderRadius: '4px',
+                          borderRadius: '8px',
                           fontSize: '12px',
                           cursor: 'pointer',
-                          color: '#991b1b',
+                          color: '#C04534',
                           fontWeight: '500'
                         }}
                       >
@@ -1028,8 +1028,8 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
               Tables de Performance
             </h4>
             <div style={{
-              backgroundColor: '#f0f9ff',
-              border: '1px solid #3b82f6',
+              backgroundColor: 'var(--bg-overlay)',
+              border: '1px solid var(--text-secondary)',
               borderRadius: '8px',
               padding: '10px'
             }}>
@@ -1047,10 +1047,10 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
           style={{
             marginTop: '8px',
             padding: '10px',
-            backgroundColor: '#3b82f6',
-            color: 'white',
+            backgroundColor: 'var(--text-secondary)',
+            color: 'var(--text-primary)',
             border: 'none',
-            borderRadius: '4px',
+            borderRadius: '8px',
             fontSize: '12px',
             cursor: 'pointer',
             fontWeight: '500',

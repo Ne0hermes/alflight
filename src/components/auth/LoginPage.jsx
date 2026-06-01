@@ -81,7 +81,7 @@ const LoginPage = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #8B1538 0%, #6B0F2B 100%)',
+        background: 'linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary) 100%)',
         padding: 2
       }}
     >
@@ -167,7 +167,7 @@ const LoginPage = () => {
           >
             {loading ? (
               <>
-                <CircularProgress size={20} sx={{ mr: 1, color: 'white' }} />
+                <CircularProgress size={20} sx={{ mr: 1, color: 'var(--text-primary)' }} />
                 Connexion en cours...
               </>
             ) : (
@@ -184,7 +184,7 @@ const LoginPage = () => {
         </form>
 
         {/* Informations pour les testeurs */}
-        <Box sx={{ mt: 4, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+        <Box sx={{ mt: 4, p: 2, bgcolor: 'var(--bg-overlay)', borderRadius: 1 }}>
           <Typography variant="caption" color="text.secondary" display="block">
             <strong>Testeurs Beta :</strong> Vous n'avez pas encore de compte ?
             Contactez l'administrateur pour recevoir vos identifiants.

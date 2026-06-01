@@ -285,7 +285,7 @@ const styles = {
   },
   badgeSmall: {
     backgroundColor: 'var(--text-secondary)',
-    color: 'white',
+    color: 'var(--text-primary)',
     padding: '3px 10px',
     borderRadius: '8px',
     fontSize: '12px',
@@ -326,7 +326,7 @@ const styles = {
     gap: '4px',
     padding: '6px 10px',
     backgroundColor: 'var(--text-secondary)',
-    color: 'white',
+    color: 'var(--text-primary)',
     border: 'none',
     borderRadius: '8px',
     cursor: 'pointer',
@@ -382,7 +382,7 @@ const styles = {
   retryButton: {
     padding: '8px 16px',
     backgroundColor: 'var(--text-secondary)',
-    color: 'white',
+    color: 'var(--text-primary)',
     border: 'none',
     borderRadius: '8px',
     cursor: 'pointer',

@@ -285,7 +285,7 @@ export const ChecklistModule = memo(({ wizardMode = false, config = {} }) => {
         </section>
       ) : (
         <div style={sx.combine(sx.components.card.base, sx.text.left, sx.spacing.p(8))}>
-          <CheckSquare size={48} style={{ color: '#9ca3af', marginBottom: '16px' }} />
+          <CheckSquare size={48} style={{ color: 'var(--text-tertiary)', marginBottom: '16px' }} />
           <p style={sx.combine(sx.text.lg, sx.text.secondary, sx.spacing.mb(2))}>
             Aucune checklist sélectionnée
           </p>
@@ -418,14 +418,14 @@ const ActiveChecklistView = memo(({
         </div>
         <div style={{ 
           height: '8px', 
-          backgroundColor: '#e5e7eb', 
-          borderRadius: '4px',
+          backgroundColor: 'var(--border-subtle)', 
+          borderRadius: '8px',
           overflow: 'hidden'
         }}>
           <div style={{
             height: '100%',
             width: `${stats.percentage}%`,
-            backgroundColor: stats.percentage === 100 ? '#10b981' : '#3b82f6',
+            backgroundColor: stats.percentage === 100 ? 'var(--text-primary)' : 'var(--text-secondary)',
             transition: 'width 0.3s ease'
           }} />
         </div>
@@ -455,10 +455,10 @@ const ActiveChecklistView = memo(({
               {section.critical && (
                 <span style={sx.combine(sx.text.xs, {
                   padding: '2px 8px',
-                  backgroundColor: '#fef2f2',
-                  color: '#dc2626',
-                  borderRadius: '4px',
-                  border: '1px solid #fca5a5'
+                  backgroundColor: 'var(--bg-overlay)',
+                  color: '#C04534',
+                  borderRadius: '8px',
+                  border: '1px solid var(--bg-overlay)'
                 })}>
                   <AlertTriangle size={12} style={{ display: 'inline', marginRight: '4px' }} />
                   Critique
@@ -475,9 +475,9 @@ const ActiveChecklistView = memo(({
                       sx.flex.start,
                       sx.spacing.p(2),
                       {
-                        backgroundColor: item.checked ? '#f0fdf4' : '#fafafa',
-                        border: `1px solid ${item.checked ? '#86efac' : '#e5e7eb'}`,
-                        borderRadius: '6px',
+                        backgroundColor: item.checked ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
+                        border: `1px solid ${item.checked ? 'var(--bg-overlay)' : 'var(--border-subtle)'}`,
+                        borderRadius: '8px',
                         cursor: 'pointer',
                         transition: 'all 0.2s'
                       }
@@ -492,7 +492,7 @@ const ActiveChecklistView = memo(({
                     <div style={{ flex: 1 }}>
                       <span style={sx.combine(
                         sx.text.sm,
-                        item.checked && { textDecoration: 'line-through', color: '#6b7280' }
+                        item.checked && { textDecoration: 'line-through', color: 'var(--text-secondary)' }
                       )}>
                         {item.text}
                       </span>
@@ -503,7 +503,7 @@ const ActiveChecklistView = memo(({
                       )}
                     </div>
                     {item.warning && (
-                      <AlertTriangle size={16} style={{ color: '#f59e0b', marginLeft: '8px' }} />
+                      <AlertTriangle size={16} style={{ color: 'var(--accent-primary)', marginLeft: '8px' }} />
                     )}
                   </label>
                 ))}
@@ -692,8 +692,8 @@ const ChecklistForm = memo(({ checklist, onSave, onCancel }) => {
       zIndex: 1000
     }}>
       <div style={{
-        backgroundColor: 'white',
-        borderRadius: '12px',
+        backgroundColor: 'var(--bg-overlay)',
+        borderRadius: '8px',
         padding: '24px',
         maxWidth: '900px',
         width: '90%',

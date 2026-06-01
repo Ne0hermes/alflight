@@ -218,7 +218,7 @@ const MobileApp = () => {
               }}>
                 <ErrorBoundary>
                   <React.Suspense fallback={
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', fontSize: '18px', color: '#3b82f6' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', fontSize: '18px', color: 'var(--text-secondary)' }}>
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ marginBottom: '16px' }}>⏳</div>
                         <div>Chargement...</div>

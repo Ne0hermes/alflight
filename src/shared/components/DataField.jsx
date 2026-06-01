@@ -51,7 +51,7 @@ export const DataField = memo(({
   const getFieldStyle = () => {
     const base = {
       ...sizeConfig,
-      borderRadius: '6px',
+      borderRadius: '8px',
       display: inline ? 'inline-flex' : 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -63,28 +63,28 @@ export const DataField = memo(({
     if (source === 'vac' || source === 'api') {
       return {
         ...base,
-        backgroundColor: '#f0fdf4',
-        border: '1px solid #86efac'
+        backgroundColor: 'var(--bg-overlay)',
+        border: '1px solid var(--bg-overlay)'
       };
     } else if (source === 'modified') {
       return {
         ...base,
-        backgroundColor: '#fef2f2',
-        border: '1px solid #fca5a5'
+        backgroundColor: 'var(--bg-overlay)',
+        border: '1px solid var(--bg-overlay)'
       };
     } else if (source === 'verified') {
       return {
         ...base,
-        backgroundColor: '#f0fdf4',
-        border: '1px solid #86efac'
+        backgroundColor: 'var(--bg-overlay)',
+        border: '1px solid var(--bg-overlay)'
       };
     }
     
     // Style neutre pour les données statiques
     return {
       ...base,
-      backgroundColor: '#f9fafb',
-      border: '1px solid #e5e7eb'
+      backgroundColor: 'var(--bg-overlay)',
+      border: '1px solid var(--border-subtle)'
     };
   };
 
@@ -95,7 +95,7 @@ export const DataField = memo(({
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
         {label && (
           <span style={{ 
-            color: '#6b7280', 
+            color: 'var(--text-secondary)', 
             fontSize: sizeConfig.fontSize,
             minWidth: 'fit-content'
           }}>
@@ -104,7 +104,7 @@ export const DataField = memo(({
         )}
         <span style={{ 
           fontWeight: emphasis ? '600' : '500',
-          color: '#111827',
+          color: 'var(--text-primary)',
           fontSize: sizeConfig.fontSize
         }}>
           {value}{unit && ` ${unit}`}
@@ -124,9 +124,9 @@ export const DataField = memo(({
           onClick={handleCopy}
           style={{
             padding: '4px',
-            backgroundColor: copied ? '#10b981' : 'transparent',
+            backgroundColor: copied ? 'var(--text-primary)' : 'transparent',
             border: 'none',
-            borderRadius: '4px',
+            borderRadius: '8px',
             cursor: 'pointer',
             transition: 'all 0.2s',
             display: 'flex',
@@ -138,7 +138,7 @@ export const DataField = memo(({
           {copied ? (
             <CheckCircle size={14} color="white" />
           ) : (
-            <Copy size={14} color="#6b7280" />
+            <Copy size={14} color="var(--text-secondary)" />
           )}
         </button>
       )}

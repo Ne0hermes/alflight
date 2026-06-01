@@ -74,14 +74,14 @@ export const captureDebugScreenshot = () => {
   // Capture le viewport actuel
   html2canvas(document.body).then(canvas => {
     // Ajoute annotations
-    ctx.strokeStyle = '#FF0000';
+    ctx.strokeStyle = '#C04534';
     ctx.lineWidth = 2;
     
     // Marque les éléments problématiques
     document.querySelectorAll('[data-debug-issue]').forEach(elem => {
       const rect = elem.getBoundingClientRect();
       ctx.strokeRect(rect.left, rect.top, rect.width, rect.height);
-      ctx.fillStyle = '#FF0000';
+      ctx.fillStyle = '#C04534';
       ctx.fillText(elem.dataset.debugIssue, rect.left, rect.top - 5);
     });
     

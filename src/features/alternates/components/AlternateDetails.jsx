@@ -50,7 +50,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
           <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.flex.start, sx.spacing.gap(2))}>
             <span style={{
               backgroundColor: getAlternateColor(index),
-              color: 'white',
+              color: 'var(--text-primary)',
               width: '28px',
               height: '28px',
               borderRadius: '50%',
@@ -73,7 +73,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
                 {alternate.distance.toFixed(1)} NM de la route
               </span>
             </div>
-            <div style={sx.combine(sx.text.xs, sx.spacing.mt(1), { color: '#9ca3af' })}>
+            <div style={sx.combine(sx.text.xs, sx.spacing.mt(1), { color: 'var(--text-tertiary)' })}>
               {coordinateConversions.coordinatesToDMS(alternate.position.lat, alternate.position.lon).formatted}
             </div>
           </div>
@@ -84,7 +84,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
           padding: '8px 16px',
           backgroundColor: getScoreColor(alternate.score),
           borderRadius: '8px',
-          color: 'white',
+          color: 'var(--text-primary)',
           fontWeight: 'bold'
         }}>
           Score: {(alternate.score * 100).toFixed(0)}%
@@ -96,12 +96,12 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
         sx.components.card.base,
         sx.spacing.mb(3),
         weather?.metar ?
-          { backgroundColor: '#f0f9ff', borderLeft: '4px solid #0284c7' } :
-          { backgroundColor: '#fef2f2', borderLeft: '4px solid #dc2626' }
+          { backgroundColor: 'var(--bg-overlay)', borderLeft: '4px solid var(--text-secondary)' } :
+          { backgroundColor: 'var(--bg-overlay)', borderLeft: '4px solid #C04534' }
       )}>
         <h5 style={sx.combine(
           sx.text.sm, sx.text.bold, sx.spacing.mb(2),
-          { color: weather?.metar ? '#0369a1' : '#991b1b' }
+          { color: weather?.metar ? 'var(--text-secondary)' : '#C04534' }
         )}>
           📡 METAR
         </h5>
@@ -109,7 +109,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
           <>
             <div style={sx.combine(
               sx.text.sm,
-              { fontFamily: 'monospace', backgroundColor: '#ffffff', padding: '12px', borderRadius: '6px', whiteSpace: 'pre-wrap' }
+              { fontFamily: 'monospace', backgroundColor: 'var(--bg-overlay)', padding: '12px', borderRadius: '8px', whiteSpace: 'pre-wrap' }
             )}>
               {weather.metar.raw}
             </div>
@@ -133,7 +133,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
             )}
           </>
         ) : (
-          <div style={sx.combine(sx.text.sm, { color: '#991b1b' })}>
+          <div style={sx.combine(sx.text.sm, { color: '#C04534' })}>
             <p>⚠️ METAR non disponible pour cet aérodrome</p>
             <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
               L'aérodrome {alternate.icao} pourrait être un aérodrome privé ou les données météo ne sont pas disponibles.
@@ -147,14 +147,14 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
         <div style={sx.combine(
           sx.components.card.base,
           sx.spacing.mb(3),
-          { backgroundColor: 'rgba(242, 105, 33, 0.10)', borderLeft: '4px solid #f59e0b' }
+          { backgroundColor: 'rgba(242, 105, 33, 0.10)', borderLeft: '4px solid var(--accent-primary)' }
         )}>
-          <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2), { color: '#d97706' })}>
+          <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2), { color: 'var(--accent-primary)' })}>
             📅 TAF (Prévisions)
           </h5>
           <div style={sx.combine(
             sx.text.sm,
-            { fontFamily: 'monospace', backgroundColor: '#ffffff', padding: '12px', borderRadius: '6px', whiteSpace: 'pre-wrap', maxHeight: '150px', overflowY: 'auto' }
+            { fontFamily: 'monospace', backgroundColor: 'var(--bg-overlay)', padding: '12px', borderRadius: '8px', whiteSpace: 'pre-wrap', maxHeight: '150px', overflowY: 'auto' }
           )}>
             {weather.taf.raw}
           </div>
@@ -286,20 +286,20 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
                       sx.spacing.mb(2),
                       sx.rounded.sm,
                       {
-                        background: '#f9fafb',
-                        borderLeft: `3px solid #3b82f6`
+                        background: 'var(--bg-overlay)',
+                        borderLeft: `3px solid var(--text-secondary)`
                       }
                     )}>
                       {/* Ligne 1: Piste, QFU et Orientation */}
                       <div style={{ marginBottom: '4px' }}>
                         <strong>Piste {runwayNumber}</strong>
                         {qfu !== null && (
-                          <span style={{ color: '#6b7280' }}>
+                          <span style={{ color: 'var(--text-secondary)' }}>
                             {' '}• QFU {qfu}°
                           </span>
                         )}
                         {orientation && (
-                          <span style={{ color: '#6b7280' }}>
+                          <span style={{ color: 'var(--text-secondary)' }}>
                             {' '}• Orientation: {orientation}°
                           </span>
                         )}
@@ -307,11 +307,11 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
 
                       {/* Ligne 2: Longueur et Largeur */}
                       <div style={{ marginBottom: '4px' }}>
-                        <span style={{ color: '#6b7280' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>
                           Longueur: {lengthFt} ft ({lengthM} m)
                         </span>
                         {widthM > 0 && (
-                          <span style={{ color: '#6b7280' }}>
+                          <span style={{ color: 'var(--text-secondary)' }}>
                             {' '}• Largeur: {widthM} m
                           </span>
                         )}
@@ -319,7 +319,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
 
                       {/* Ligne 3: Revêtement */}
                       <div style={{ marginBottom: '4px' }}>
-                        <span style={{ color: '#6b7280' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>
                           Revêtement: {surfaceType}
                         </span>
                       </div>
@@ -331,27 +331,27 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
                         (typeof runway.asda === 'number') ||
                         (typeof runway.lda === 'number')
                       ) && (
-                          <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #e5e7eb' }}>
+                          <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid var(--border-subtle)' }}>
                             <div style={{ fontWeight: 'bold', marginBottom: '3px' }}>
                               Distances déclarées :
                             </div>
                             {typeof runway.tora === 'number' && (
-                              <div style={{ color: '#6b7280' }}>
+                              <div style={{ color: 'var(--text-secondary)' }}>
                                 • TORA: {runway.tora} m ({Math.round(runway.tora * 3.28084)} ft)
                               </div>
                             )}
                             {typeof runway.toda === 'number' && (
-                              <div style={{ color: '#6b7280' }}>
+                              <div style={{ color: 'var(--text-secondary)' }}>
                                 • TODA: {runway.toda} m ({Math.round(runway.toda * 3.28084)} ft)
                               </div>
                             )}
                             {typeof runway.asda === 'number' && (
-                              <div style={{ color: '#6b7280' }}>
+                              <div style={{ color: 'var(--text-secondary)' }}>
                                 • ASDA: {runway.asda} m ({Math.round(runway.asda * 3.28084)} ft)
                               </div>
                             )}
                             {typeof runway.lda === 'number' && (
-                              <div style={{ color: '#6b7280' }}>
+                              <div style={{ color: 'var(--text-secondary)' }}>
                                 • LDA: {runway.lda} m ({Math.round(runway.lda * 3.28084)} ft)
                               </div>
                             )}
@@ -413,7 +413,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
             📄 Carte VAC
           </h5>
           {vacChart?.isDownloaded ? (
-            <div style={sx.combine(sx.text.sm, { color: '#10b981' })}>
+            <div style={sx.combine(sx.text.sm, { color: 'var(--text-primary)' })}>
               ✅ Carte téléchargée
               <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
                 {new Date(vacChart.downloadDate).toLocaleDateString('fr-FR')}
@@ -446,7 +446,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
       {/* Facteurs de score */}
       {alternate.scoreFactors && (
         <details style={sx.spacing.mt(3)}>
-          <summary style={{ cursor: 'pointer', fontSize: '13px', color: '#6b7280' }}>
+          <summary style={{ cursor: 'pointer', fontSize: '13px', color: 'var(--text-secondary)' }}>
             Voir le détail du score
           </summary>
           <div style={sx.combine(sx.spacing.mt(2), sx.spacing.p(2), sx.bg.gray, sx.rounded.md)}>
@@ -479,7 +479,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
 const ServiceIndicator = memo(({ available, label, icon }) => (
   <div style={sx.combine(sx.flex.start, sx.spacing.gap(1), sx.spacing.mb(1))}>
     {typeof icon === 'string' ? <span>{icon}</span> : icon}
-    <span style={{ color: available ? '#10b981' : '#ef4444' }}>
+    <span style={{ color: available ? 'var(--text-primary)' : '#C04534' }}>
       {available ? '✓' : '✗'}
     </span>
     <span>{label}</span>
@@ -496,8 +496,8 @@ const ScoreBreakdown = memo(({ factors }) => (
           <div style={{
             width: '100px',
             height: '8px',
-            backgroundColor: '#e5e7eb',
-            borderRadius: '4px',
+            backgroundColor: 'var(--border-subtle)',
+            borderRadius: '8px',
             marginRight: '8px',
             overflow: 'hidden'
           }}>
@@ -519,14 +519,14 @@ const ScoreBreakdown = memo(({ factors }) => (
 
 // Fonctions utilitaires
 const getAlternateColor = (index) => {
-  const colors = ['#3b82f6', '#10b981', '#f59e0b'];
-  return colors[index] || '#6b7280';
+  const colors = ['var(--text-secondary)', 'var(--text-primary)', 'var(--accent-primary)'];
+  return colors[index] || 'var(--text-secondary)';
 };
 
 const getScoreColor = (score) => {
-  if (score >= 0.8) return '#10b981';
-  if (score >= 0.6) return '#f59e0b';
-  return '#ef4444';
+  if (score >= 0.8) return 'var(--text-primary)';
+  if (score >= 0.6) return 'var(--accent-primary)';
+  return '#C04534';
 };
 
 const getFactorLabel = (factor) => {

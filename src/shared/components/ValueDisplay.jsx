@@ -69,27 +69,27 @@ export const ValueDisplay = ({
     display: 'flex',
     alignItems: 'center',
     gap: '4px',
-    backgroundColor: emphasis ? '#eff6ff' : '#f9fafb',
-    borderRadius: '6px',
-    border: emphasis ? '1px solid #3b82f6' : '1px solid #e5e7eb',
+    backgroundColor: emphasis ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
+    borderRadius: '8px',
+    border: emphasis ? '1px solid var(--text-secondary)' : '1px solid var(--border-subtle)',
     ...sizeStyles[size]
   };
   
   const labelStyle = {
     fontSize: size === 'xs' ? '10px' : '12px',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     fontWeight: '500'
   };
   
   const valueStyle = {
     fontWeight: emphasis ? 'bold' : '600',
-    color: emphasis ? '#1e40af' : '#1f2937',
+    color: emphasis ? 'var(--text-primary)' : 'var(--text-primary)',
     minWidth: '40px',
     textAlign: 'right'
   };
   
   const unitStyle = {
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     fontSize: size === 'xs' ? '10px' : size === 'sm' ? '11px' : '12px'
   };
   

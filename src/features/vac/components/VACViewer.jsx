@@ -147,7 +147,7 @@ const CustomChartViewer = memo(({ chart, zoom, rotation }) => {
       alignItems: 'center',
       justifyContent: 'center',
       overflow: 'auto',
-      backgroundColor: '#f3f4f6',
+      backgroundColor: 'var(--bg-overlay)',
       position: 'relative'
     }}>
       {isImage ? (
@@ -193,7 +193,7 @@ const CustomChartViewer = memo(({ chart, zoom, rotation }) => {
             bottom: '20px',
             padding: '10px 20px',
             backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            color: 'white',
+            color: 'var(--text-primary)',
             borderRadius: '8px',
             fontSize: '14px'
           }}>
@@ -202,7 +202,7 @@ const CustomChartViewer = memo(({ chart, zoom, rotation }) => {
               href={chart.url} 
               target="_blank" 
               rel="noopener noreferrer"
-              style={{ color: '#60a5fa', marginLeft: '5px' }}
+              style={{ color: 'var(--text-secondary)', marginLeft: '5px' }}
             >
               cliquez ici pour l'ouvrir
             </a>
@@ -212,7 +212,7 @@ const CustomChartViewer = memo(({ chart, zoom, rotation }) => {
         <div style={{
           padding: '40px',
           textAlign: 'center',
-          color: '#6b7280'
+          color: 'var(--text-secondary)'
         }}>
           <p>Format de fichier non supporté pour l'affichage</p>
           <p style={{ marginTop: '10px' }}>
@@ -227,8 +227,8 @@ const CustomChartViewer = memo(({ chart, zoom, rotation }) => {
         top: '20px',
         right: '20px',
         padding: '8px 16px',
-        backgroundColor: '#8b5cf6',
-        color: 'white',
+        backgroundColor: 'var(--accent-primary)',
+        color: 'var(--text-primary)',
         borderRadius: '8px',
         fontSize: '12px',
         fontWeight: 'bold',
@@ -252,13 +252,13 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
       alignItems: 'center',
       justifyContent: 'center',
       overflow: 'auto',
-      backgroundColor: '#f3f4f6'
+      backgroundColor: 'var(--bg-overlay)'
     }}>
       <div style={{
         transform: `scale(${zoom / 100}) rotate(${rotation}deg)`,
         transformOrigin: 'center',
         transition: 'transform 0.3s',
-        backgroundColor: 'white',
+        backgroundColor: 'var(--bg-overlay)',
         padding: '40px',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
         minWidth: '600px',
@@ -268,13 +268,13 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
         <div style={{
           textAlign: 'center',
           marginBottom: '30px',
-          borderBottom: '2px solid #1f2937',
+          borderBottom: '2px solid var(--text-primary)',
           paddingBottom: '20px'
         }}>
           <h1 style={{ fontSize: '32px', fontWeight: 'bold', margin: '0 0 10px 0' }}>
             {chart.icao}
           </h1>
-          <h2 style={{ fontSize: '24px', color: '#6b7280', margin: 0 }}>
+          <h2 style={{ fontSize: '24px', color: 'var(--text-secondary)', margin: 0 }}>
             {chart.name}
           </h2>
         </div>
@@ -367,7 +367,7 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
             </h3>
             <table style={{ width: '100%', fontSize: '14px', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ backgroundColor: '#f3f4f6' }}>
+                <tr style={{ backgroundColor: 'var(--bg-overlay)' }}>
                   <th style={styles.tableHeader}>Piste</th>
                   <th style={styles.tableHeader}>QFU (Mag)</th>
                   <th style={styles.tableHeader}>QFU (Vrai)</th>
@@ -409,7 +409,7 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
               </tbody>
             </table>
             {/* Légende des distances */}
-            <div style={{ marginTop: '10px', fontSize: '12px', color: '#6b7280' }}>
+            <div style={{ marginTop: '10px', fontSize: '12px', color: 'var(--text-secondary)' }}>
               <p><strong>TORA</strong>: Take-Off Run Available (Distance de roulement au décollage)</p>
               <p><strong>TODA</strong>: Take-Off Distance Available (Distance utilisable au décollage)</p>
               <p><strong>ASDA</strong>: Accelerate-Stop Distance Available (Distance accélération-arrêt)</p>
@@ -423,7 +423,7 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
             
             {/* Détails des équipements de piste */}
             {data.runways.length > 0 && (
-              <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+              <div style={{ marginTop: '20px', padding: '15px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
                 <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '10px' }}>
                   ÉQUIPEMENTS ET AIDES VISUELLES
                 </h4>
@@ -483,7 +483,7 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
                         <tr key={`${type}_${idx}`}>
                           <td style={styles.tableCell}>
                             {type.toUpperCase()}
-                            {freq.remarks && <span style={{ fontSize: '12px', color: '#6b7280' }}> ({freq.remarks})</span>}
+                            {freq.remarks && <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}> ({freq.remarks})</span>}
                             :
                           </td>
                           <td style={styles.tableCell}>
@@ -514,7 +514,7 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
             </h3>
             <table style={{ width: '100%', fontSize: '14px', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ backgroundColor: '#f3f4f6' }}>
+                <tr style={{ backgroundColor: 'var(--bg-overlay)' }}>
                   <th style={styles.tableHeader}>Type</th>
                   <th style={styles.tableHeader}>Identifiant</th>
                   <th style={styles.tableHeader}>Fréquence</th>
@@ -620,24 +620,24 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
         <div style={{
           marginTop: '40px',
           padding: '20px',
-          border: '2px solid #e5e7eb',
+          border: '2px solid var(--border-subtle)',
           borderRadius: '8px',
           textAlign: 'center'
         }}>
-          <p style={{ color: '#6b7280', fontSize: '14px' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
             [Schéma de l'aérodrome]
           </p>
           <div style={{
             margin: '20px auto',
             width: '400px',
             height: '200px',
-            backgroundColor: '#f9fafb',
-            border: '1px dashed #9ca3af',
+            backgroundColor: 'var(--bg-overlay)',
+            border: '1px dashed var(--text-tertiary)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
           }}>
-            <span style={{ color: '#9ca3af' }}>
+            <span style={{ color: 'var(--text-tertiary)' }}>
               Vue aérienne de l'aérodrome
             </span>
           </div>
@@ -650,7 +650,7 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
           backgroundColor: 'rgba(242, 105, 33, 0.10)',
           borderRadius: '8px',
           fontSize: '12px',
-          color: '#92400e',
+          color: 'var(--accent-primary)',
           textAlign: 'center'
         }}>
           <strong>MODE DÉMONSTRATION</strong><br />
@@ -679,69 +679,69 @@ const styles = {
     width: '90%',
     height: '90%',
     maxWidth: '1400px',
-    backgroundColor: 'white',
-    borderRadius: '12px',
+    backgroundColor: 'var(--bg-overlay)',
+    borderRadius: '8px',
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden'
   },
   header: {
     padding: '16px 24px',
-    borderBottom: '1px solid #e5e7eb',
+    borderBottom: '1px solid var(--border-subtle)',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center'
   },
   toolbar: {
     padding: '12px 24px',
-    backgroundColor: '#f9fafb',
-    borderBottom: '1px solid #e5e7eb',
+    backgroundColor: 'var(--bg-overlay)',
+    borderBottom: '1px solid var(--border-subtle)',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center'
   },
   toolButton: {
     padding: '8px',
-    backgroundColor: 'white',
-    border: '1px solid #e5e7eb',
-    borderRadius: '6px',
+    backgroundColor: 'var(--bg-overlay)',
+    border: '1px solid var(--border-subtle)',
+    borderRadius: '8px',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     transition: 'all 0.2s',
     '&:hover': {
-      backgroundColor: '#f3f4f6',
-      borderColor: '#d1d5db'
+      backgroundColor: 'var(--bg-overlay)',
+      borderColor: 'var(--text-tertiary)'
     }
   },
   zoomIndicator: {
     padding: '4px 12px',
-    backgroundColor: 'white',
-    border: '1px solid #e5e7eb',
-    borderRadius: '6px',
+    backgroundColor: 'var(--bg-overlay)',
+    border: '1px solid var(--border-subtle)',
+    borderRadius: '8px',
     fontSize: '14px',
     fontWeight: '500'
   },
   pdfContainer: {
     flex: 1,
     overflow: 'hidden',
-    backgroundColor: '#e5e7eb'
+    backgroundColor: 'var(--border-subtle)'
   },
   infoPanel: {
     padding: '12px 24px',
-    backgroundColor: '#f0f9ff',
-    borderTop: '1px solid #bae6fd'
+    backgroundColor: 'var(--bg-overlay)',
+    borderTop: '1px solid var(--border-subtle)'
   },
   tableCell: {
     padding: '8px',
-    borderBottom: '1px solid #e5e7eb'
+    borderBottom: '1px solid var(--border-subtle)'
   },
   tableHeader: {
     padding: '8px',
     fontWeight: 'bold',
     textAlign: 'left',
-    borderBottom: '2px solid #d1d5db'
+    borderBottom: '2px solid var(--text-tertiary)'
   }
 };
 

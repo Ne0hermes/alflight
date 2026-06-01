@@ -29,8 +29,8 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
   const getMissingFieldStyle = (value) => {
     if (isMissingData(value)) {
       return {
-        backgroundColor: '#fef2f2',
-        borderColor: '#fca5a5',
+        backgroundColor: 'var(--bg-overlay)',
+        borderColor: 'var(--bg-overlay)',
         borderWidth: '2px'
       };
     }
@@ -254,7 +254,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
               <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
                 Informations générales
                 {isMissingData(editedData.airportName) && (
-                  <span style={{ color: '#ef4444', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
+                  <span style={{ color: '#C04534', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
                     ⚠️ Certaines données sont manquantes
                   </span>
                 )}
@@ -277,7 +277,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                   <label style={sx.components.label.base}>
                     Code IATA
                     {isMissingData(editedData.airportIATA) && (
-                      <span style={{ color: '#fbbf24', marginLeft: '8px', fontSize: '11px' }}>
+                      <span style={{ color: 'var(--accent-primary)', marginLeft: '8px', fontSize: '11px' }}>
                         (optionnel)
                       </span>
                     )}
@@ -299,7 +299,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                   <label style={sx.components.label.base}>
                     Nom de l'aérodrome
                     {isMissingData(editedData.airportName) && (
-                      <span style={{ color: '#ef4444', marginLeft: '8px', fontSize: '12px' }}>
+                      <span style={{ color: '#C04534', marginLeft: '8px', fontSize: '12px' }}>
                         ⚠️ Requis
                       </span>
                     )}
@@ -348,7 +348,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                     const isOutdated = publicationDate < oneYearAgo;
                     
                     return isOutdated ? (
-                      <p style={sx.combine(sx.text.xs, { color: '#ef4444' }, sx.spacing.mt(1))}>
+                      <p style={sx.combine(sx.text.xs, { color: '#C04534' }, sx.spacing.mt(1))}>
                         ⚠️ Cette carte date de plus d'un an
                       </p>
                     ) : (
@@ -362,7 +362,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                   <label style={sx.components.label.base}>
                     Altitude terrain (ft)
                     {isMissingData(editedData.airportElevation) && (
-                      <span style={{ color: '#ef4444', marginLeft: '8px', fontSize: '12px' }}>
+                      <span style={{ color: '#C04534', marginLeft: '8px', fontSize: '12px' }}>
                         ⚠️ Donnée manquante
                       </span>
                     )}
@@ -382,7 +382,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                   <label style={sx.components.label.base}>
                     Tour de piste (ft)
                     {isMissingData(editedData.circuitAltitude) && (
-                      <span style={{ color: '#ef4444', marginLeft: '8px', fontSize: '12px' }}>
+                      <span style={{ color: '#C04534', marginLeft: '8px', fontSize: '12px' }}>
                         ⚠️ Donnée manquante
                       </span>
                     )}
@@ -402,7 +402,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                   <label style={sx.components.label.base}>
                     Variation magnétique (°)
                     {editedData.magneticVariationDate && (
-                      <span style={{ fontSize: '11px', color: '#6b7280', marginLeft: '8px' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)', marginLeft: '8px' }}>
                         ({editedData.magneticVariationDate})
                       </span>
                     )}
@@ -435,7 +435,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                   <label style={sx.components.label.base}>
                     Altitude de transition (ft)
                     {isMissingData(editedData.transitionAltitude) && (
-                      <span style={{ color: '#fbbf24', marginLeft: '8px', fontSize: '11px' }}>
+                      <span style={{ color: 'var(--accent-primary)', marginLeft: '8px', fontSize: '11px' }}>
                         ⚠️ Important
                       </span>
                     )}
@@ -470,8 +470,8 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                 
                 {/* Métadonnées */}
                 {editedData.dataSource && (
-                  <div style={{ gridColumn: 'span 2', padding: '12px', backgroundColor: '#f3f4f6', borderRadius: '8px' }}>
-                    <div style={{ display: 'flex', gap: '16px', fontSize: '13px', color: '#6b7280' }}>
+                  <div style={{ gridColumn: 'span 2', padding: '12px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
+                    <div style={{ display: 'flex', gap: '16px', fontSize: '13px', color: 'var(--text-secondary)' }}>
                       <span><strong>Source:</strong> {editedData.dataSource}</span>
                       {editedData.airac && <span><strong>AIRAC:</strong> {editedData.airac}</span>}
                       {editedData.lastUpdate && (
@@ -522,18 +522,18 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
             <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
               Fréquences radio (MHz)
               {(!editedData.frequencies || Object.keys(editedData.frequencies).length === 0) && (
-                <span style={{ color: '#ef4444', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
+                <span style={{ color: '#C04534', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
                   ⚠️ Aucune fréquence définie
                 </span>
               )}
             </h4>
             
             {/* Fréquences AIXM/SIA modifiables */}
-            <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f0f9ff', borderRadius: '8px' }}>
-              <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '12px', color: '#0369a1' }}>
+            <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
+              <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--text-secondary)' }}>
                 Fréquences radio (MHz)
                 {(!editedData.frequencies || Object.keys(editedData.frequencies).length === 0) && (
-                  <span style={{ color: '#ef4444', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
+                  <span style={{ color: '#C04534', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
                     ⚠️ Aucune fréquence définie
                   </span>
                 )}
@@ -547,9 +547,9 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                       return (
                         <div key={service} style={{ 
                           padding: '12px', 
-                          backgroundColor: 'white', 
-                          borderRadius: '6px',
-                          border: '1px solid #e5e7eb'
+                          backgroundColor: 'var(--bg-overlay)', 
+                          borderRadius: '8px',
+                          border: '1px solid var(--border-subtle)'
                         }}>
                           <div style={{ 
                             display: 'flex', 
@@ -557,7 +557,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                             alignItems: 'center',
                             marginBottom: '8px'
                           }}>
-                            <label style={{ fontWeight: 'bold', color: '#1f2937', fontSize: '14px' }}>
+                            <label style={{ fontWeight: 'bold', color: 'var(--text-primary)', fontSize: '14px' }}>
                               {service.toUpperCase()}
                             </label>
                             <button
@@ -568,10 +568,10 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                               style={{
                                 padding: '4px 8px',
                                 fontSize: '12px',
-                                backgroundColor: '#3b82f6',
-                                color: 'white',
+                                backgroundColor: 'var(--text-secondary)',
+                                color: 'var(--text-primary)',
                                 border: 'none',
-                                borderRadius: '4px',
+                                borderRadius: '8px',
                                 cursor: 'pointer'
                               }}
                             >
@@ -640,10 +640,10 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                                 }}
                                 style={{
                                   padding: '6px',
-                                  backgroundColor: '#ef4444',
-                                  color: 'white',
+                                  backgroundColor: '#C04534',
+                                  color: 'var(--text-primary)',
                                   border: 'none',
-                                  borderRadius: '4px',
+                                  borderRadius: '8px',
                                   cursor: 'pointer'
                                 }}
                               >
@@ -660,9 +660,9 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                   {/* Bouton pour ajouter un nouveau service */}
                   <div style={{ 
                     padding: '12px', 
-                    backgroundColor: 'white', 
-                    borderRadius: '6px',
-                    border: '1px dashed #d1d5db',
+                    backgroundColor: 'var(--bg-overlay)', 
+                    borderRadius: '8px',
+                    border: '1px dashed var(--text-tertiary)',
                     textAlign: 'center'
                   }}>
                     <button
@@ -678,10 +678,10 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                       style={{
                         padding: '8px 16px',
                         fontSize: '14px',
-                        backgroundColor: '#10b981',
-                        color: 'white',
+                        backgroundColor: 'var(--text-primary)',
+                        color: 'var(--text-primary)',
                         border: 'none',
-                        borderRadius: '4px',
+                        borderRadius: '8px',
                         cursor: 'pointer'
                       }}
                     >
@@ -692,7 +692,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                 </div>
               ) : (
                 <div style={{ textAlign: 'center', padding: '20px' }}>
-                  <p style={{ color: '#6b7280', marginBottom: '12px' }}>
+                  <p style={{ color: 'var(--text-secondary)', marginBottom: '12px' }}>
                     Aucune fréquence disponible. Ajoutez des fréquences manuellement.
                   </p>
                   <button
@@ -706,10 +706,10 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                     }}
                     style={{
                       padding: '8px 16px',
-                      backgroundColor: '#3b82f6',
-                      color: 'white',
+                      backgroundColor: 'var(--text-secondary)',
+                      color: 'var(--text-primary)',
                       border: 'none',
-                      borderRadius: '6px',
+                      borderRadius: '8px',
                       cursor: 'pointer'
                     }}
                   >
@@ -786,7 +786,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
           display: 'flex',
           flexDirection: 'column',
           padding: '24px',
-          backgroundColor: 'white'
+          backgroundColor: 'var(--bg-overlay)'
         }
       )}>
         {/* En-tête */}
@@ -819,7 +819,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
         )}
         
         {/* Onglets */}
-        <div style={sx.combine(sx.flex.row, { overflowX: 'auto', borderBottom: '1px solid #e5e7eb' })}>
+        <div style={sx.combine(sx.flex.row, { overflowX: 'auto', borderBottom: '1px solid var(--border-subtle)' })}>
           {[
             { id: 'general', label: 'Général', icon: Edit2 },
             { id: 'runways', label: 'Pistes', icon: Plane },
@@ -837,8 +837,8 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                 padding: '8px 16px',
                 background: 'none',
                 border: 'none',
-                borderBottom: activeTab === tab.id ? '2px solid #3b82f6' : '2px solid transparent',
-                color: activeTab === tab.id ? '#3b82f6' : '#6b7280',
+                borderBottom: activeTab === tab.id ? '2px solid var(--text-secondary)' : '2px solid transparent',
+                color: activeTab === tab.id ? 'var(--text-secondary)' : 'var(--text-secondary)',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -860,7 +860,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
         </div>
         
         {/* Actions */}
-        <div style={sx.combine(sx.flex.end, sx.spacing.gap(3), sx.spacing.pt(4), { borderTop: '1px solid #e5e7eb' })}>
+        <div style={sx.combine(sx.flex.end, sx.spacing.gap(3), sx.spacing.pt(4), { borderTop: '1px solid var(--border-subtle)' })}>
           <button
             onClick={onClose}
             style={sx.combine(sx.components.button.base, sx.components.button.secondary)}

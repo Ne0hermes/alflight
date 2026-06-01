@@ -315,7 +315,7 @@ const UnitConverterCard = () => {
               size="medium"
               sx={{
                 bgcolor: 'primary.main',
-                color: 'white',
+                color: 'var(--text-primary)',
                 '&:hover': { bgcolor: 'primary.dark' }
               }}
             >
@@ -334,7 +334,7 @@ const UnitConverterCard = () => {
             }}
             sx={{
               width: 150,
-              '& .MuiInputBase-root': { bgcolor: '#ecfdf5' }
+              '& .MuiInputBase-root': { bgcolor: 'var(--bg-overlay)' }
             }}
           />
 

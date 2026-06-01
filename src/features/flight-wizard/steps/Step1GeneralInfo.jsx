@@ -422,7 +422,7 @@ const styles = {
     color: 'var(--bg-surface)',
     backgroundColor: 'var(--accent-primary)',
     padding: '3px 6px',
-    borderRadius: '4px',
+    borderRadius: '8px',
     textTransform: 'uppercase',
     letterSpacing: '0.03em',
     whiteSpace: 'nowrap',

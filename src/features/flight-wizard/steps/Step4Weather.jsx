@@ -63,7 +63,7 @@ export const Step4Weather = memo(({ flightPlan, onUpdate }) => {
         padding: '16px',
         backgroundColor: theme.colors.info[50],
         borderLeft: `4px solid ${theme.colors.info[500]}`,
-        borderRadius: '4px'
+        borderRadius: '8px'
       }}>
         <p style={{
           margin: 0,

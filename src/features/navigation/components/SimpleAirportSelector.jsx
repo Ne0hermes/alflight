@@ -203,7 +203,7 @@ export const SimpleAirportSelector = ({ label, value, onChange, placeholder, exc
             { 
               paddingLeft: '36px', 
               paddingRight: '36px',
-              color: value && !inputValue ? '#374151' : '#111827'
+              color: value && !inputValue ? 'var(--text-secondary)' : 'var(--text-primary)'
             }
           )}
         />
@@ -215,7 +215,7 @@ export const SimpleAirportSelector = ({ label, value, onChange, placeholder, exc
             left: '12px',
             top: '50%',
             transform: 'translateY(-50%)',
-            color: '#10b981'
+            color: 'var(--text-primary)'
           }} />
         ) : (
           <Search size={16} style={{
@@ -223,7 +223,7 @@ export const SimpleAirportSelector = ({ label, value, onChange, placeholder, exc
             left: '12px',
             top: '50%',
             transform: 'translateY(-50%)',
-            color: '#6b7280'
+            color: 'var(--text-secondary)'
           }} />
         )}
         
@@ -235,7 +235,7 @@ export const SimpleAirportSelector = ({ label, value, onChange, placeholder, exc
             right: '12px',
             top: '50%',
             transform: 'translateY(-50%)',
-            color: '#6b7280',
+            color: 'var(--text-secondary)',
             cursor: 'pointer'
           }} 
           onClick={() => {
@@ -275,7 +275,7 @@ export const SimpleAirportSelector = ({ label, value, onChange, placeholder, exc
               )}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <MapPin size={14} style={{ color: '#6b7280', flexShrink: 0 }} />
+                <MapPin size={14} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
                   <div>
                     <span style={sx.text.bold}>{airport.icao}</span>
@@ -308,8 +308,8 @@ const styles = {
     left: 0,
     right: 0,
     marginTop: '4px',
-    backgroundColor: 'white',
-    border: '1px solid #e5e7eb',
+    backgroundColor: 'var(--bg-overlay)',
+    border: '1px solid var(--border-subtle)',
     borderRadius: '8px',
     boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
     maxHeight: '320px',
@@ -320,12 +320,12 @@ const styles = {
   dropdownItem: {
     padding: '10px 12px',
     cursor: 'pointer',
-    borderBottom: '1px solid #f3f4f6',
+    borderBottom: '1px solid var(--bg-overlay)',
     transition: 'background-color 0.15s ease'
   },
   
   dropdownItemSelected: {
-    backgroundColor: '#eff6ff'
+    backgroundColor: 'var(--bg-overlay)'
   }
 };
 

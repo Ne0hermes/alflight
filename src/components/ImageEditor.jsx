@@ -175,8 +175,8 @@ const ImageEditor = ({
     width: '100%',
     height: '100%',
     overflow: 'hidden',
-    backgroundColor: '#f3f4f6',
-    border: '2px solid #e5e7eb',
+    backgroundColor: 'var(--bg-overlay)',
+    border: '2px solid var(--border-subtle)',
     cursor: showControls ? 'pointer' : 'default',
     ...getMaskStyle()
   };
@@ -215,8 +215,8 @@ const ImageEditor = ({
     position: 'relative',
     width: '600px',
     height: '400px',
-    backgroundColor: '#ffffff',
-    borderRadius: '12px',
+    backgroundColor: 'var(--bg-overlay)',
+    borderRadius: '8px',
     overflow: 'hidden',
     boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)'
   };
@@ -237,7 +237,7 @@ const ImageEditor = ({
     transform: 'translate(-50%, -50%)',
     width: shape === 'circle' || shape === 'square' ? '250px' : '300px',
     height: shape === 'circle' || shape === 'square' ? '250px' : '200px',
-    border: '3px dashed #3b82f6',
+    border: '3px dashed var(--text-secondary)',
     pointerEvents: 'none',
     zIndex: 10,
     ...getMaskStyle(),
@@ -266,14 +266,14 @@ const ImageEditor = ({
     gap: '8px',
     padding: '12px',
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: '12px',
+    borderRadius: '8px',
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
   };
 
   const buttonStyle = {
     padding: '8px',
-    backgroundColor: '#3b82f6',
-    color: 'white',
+    backgroundColor: 'var(--text-secondary)',
+    color: 'var(--text-primary)',
     border: 'none',
     borderRadius: '8px',
     cursor: 'pointer',
@@ -295,7 +295,7 @@ const ImageEditor = ({
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: '8px',
     fontSize: '13px',
-    color: '#374151',
+    color: 'var(--text-secondary)',
     fontWeight: '500'
   };
 
@@ -311,7 +311,7 @@ const ImageEditor = ({
               left: '50%',
               transform: 'translate(-50%, -50%)',
               textAlign: 'center',
-              color: '#9ca3af'
+              color: 'var(--text-tertiary)'
             }}>
               Aucune image
             </div>
@@ -356,10 +356,10 @@ const ImageEditor = ({
                 left: '50%',
                 transform: 'translateX(-50%)',
                 fontSize: '12px',
-                color: '#3b82f6',
-                backgroundColor: 'white',
+                color: 'var(--text-secondary)',
+                backgroundColor: 'var(--bg-overlay)',
                 padding: '2px 8px',
-                borderRadius: '4px',
+                borderRadius: '8px',
                 whiteSpace: 'nowrap'
               }}>
                 Zone visible après validation
@@ -401,11 +401,11 @@ const ImageEditor = ({
               <FitIcon size={18} />
             </button>
 
-            <div style={{ width: '1px', backgroundColor: '#e5e7eb', margin: '0 4px' }} />
+            <div style={{ width: '1px', backgroundColor: 'var(--border-subtle)', margin: '0 4px' }} />
 
             <button
               onClick={handleCancel}
-              style={{ ...buttonStyle, backgroundColor: '#ef4444' }}
+              style={{ ...buttonStyle, backgroundColor: '#C04534' }}
               title="Annuler"
             >
               <CloseIcon size={18} />
@@ -413,7 +413,7 @@ const ImageEditor = ({
 
             <button
               onClick={handleSave}
-              style={{ ...buttonStyle, backgroundColor: '#10b981', padding: '8px 16px' }}
+              style={{ ...buttonStyle, backgroundColor: 'var(--text-primary)', padding: '8px 16px' }}
               title="Valider"
             >
               <CheckIcon size={18} style={{ marginRight: '4px' }} />
@@ -427,7 +427,7 @@ const ImageEditor = ({
           padding: '12px',
           backgroundColor: 'rgba(255, 255, 255, 0.1)',
           borderRadius: '8px',
-          color: 'white',
+          color: 'var(--text-primary)',
           fontSize: '13px',
           textAlign: 'center'
         }}>
@@ -461,9 +461,9 @@ const ImageEditor = ({
             top: '8px',
             right: '8px',
             backgroundColor: 'rgba(59, 130, 246, 0.9)',
-            color: 'white',
+            color: 'var(--text-primary)',
             padding: '6px',
-            borderRadius: '6px',
+            borderRadius: '8px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',

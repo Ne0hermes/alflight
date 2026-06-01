@@ -21,9 +21,9 @@ const ProtectedRoute = ({ children }) => {
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         }}
       >
-        <FlightIcon sx={{ fontSize: 64, color: 'white', mb: 2 }} />
-        <CircularProgress size={40} sx={{ color: 'white', mb: 2 }} />
-        <Typography variant="h6" sx={{ color: 'white' }}>
+        <FlightIcon sx={{ fontSize: 64, color: 'var(--text-primary)', mb: 2 }} />
+        <CircularProgress size={40} sx={{ color: 'var(--text-primary)', mb: 2 }} />
+        <Typography variant="h6" sx={{ color: 'var(--text-primary)' }}>
           Chargement...
         </Typography>
       </Box>

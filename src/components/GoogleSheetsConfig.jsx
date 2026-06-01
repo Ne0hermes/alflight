@@ -89,8 +89,8 @@ const GoogleSheetsConfig = () => {
     position: 'fixed',
     bottom: '140px',
     right: '20px',
-    backgroundColor: '#10b981',
-    color: 'white',
+    backgroundColor: 'var(--text-primary)',
+    color: 'var(--text-primary)',
     border: 'none',
     borderRadius: '50%',
     width: '56px',
@@ -108,9 +108,9 @@ const GoogleSheetsConfig = () => {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-overlay)',
     padding: '24px',
-    borderRadius: '12px',
+    borderRadius: '8px',
     boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
     zIndex: 1003,
     width: '90%',
@@ -143,7 +143,7 @@ const GoogleSheetsConfig = () => {
         <>
           <div style={overlayStyle} onClick={() => setShowConfig(false)} />
           <div style={modalStyle}>
-            <h2 style={{ marginTop: 0, marginBottom: '20px', color: '#1f2937' }}>
+            <h2 style={{ marginTop: 0, marginBottom: '20px', color: 'var(--text-primary)' }}>
               📊 Configuration Google Sheets Direct
             </h2>
 
@@ -152,28 +152,28 @@ const GoogleSheetsConfig = () => {
               padding: '12px',
               borderRadius: '8px',
               marginBottom: '16px',
-              backgroundColor: credentialsLoaded ? '#d1fae5' : 'rgba(242, 105, 33, 0.10)',
-              border: `1px solid ${credentialsLoaded ? '#86efac' : '#fde68a'}`
+              backgroundColor: credentialsLoaded ? 'var(--bg-overlay)' : 'rgba(242, 105, 33, 0.10)',
+              border: `1px solid ${credentialsLoaded ? 'var(--bg-overlay)' : 'var(--bg-overlay)'}`
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 {credentialsLoaded ? (
                   <>
-                    <CheckCircle size={20} color="#10b981" />
+                    <CheckCircle size={20} color="var(--text-primary)" />
                     <span>Credentials chargés : claude-code@alfight.iam.gserviceaccount.com</span>
                   </>
                 ) : (
                   <>
-                    <AlertCircle size={20} color="#f59e0b" />
+                    <AlertCircle size={20} color="var(--accent-primary)" />
                     <span>Credentials non chargés</span>
                     <button
                       onClick={handleLoadCredentials}
                       style={{
                         marginLeft: 'auto',
                         padding: '4px 12px',
-                        backgroundColor: '#3b82f6',
-                        color: 'white',
+                        backgroundColor: 'var(--text-secondary)',
+                        color: 'var(--text-primary)',
                         border: 'none',
-                        borderRadius: '4px',
+                        borderRadius: '8px',
                         fontSize: '12px',
                         cursor: 'pointer'
                       }}
@@ -187,17 +187,17 @@ const GoogleSheetsConfig = () => {
 
             {/* Configuration du webhook */}
             <div style={{
-              backgroundColor: '#f0f9ff',
+              backgroundColor: 'var(--bg-overlay)',
               padding: '12px',
               borderRadius: '8px',
               marginBottom: '16px',
-              border: '1px solid #0284c7'
+              border: '1px solid var(--text-secondary)'
             }}>
-              <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#075985' }}>
+              <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--text-secondary)' }}>
                 📝 Configuration du Webhook Google Apps Script
               </h4>
-              <ol style={{ margin: '8px 0', paddingLeft: '20px', fontSize: '13px', color: '#075985' }}>
-                <li>Ouvrez votre <a href="https://docs.google.com/spreadsheets/d/1Y26_Zf7-jHPgpjWasubXpzQE-k0eMl0pHIMpg8OHw_k" target="_blank" rel="noopener noreferrer" style={{ color: '#0284c7' }}>Google Sheets</a></li>
+              <ol style={{ margin: '8px 0', paddingLeft: '20px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                <li>Ouvrez votre <a href="https://docs.google.com/spreadsheets/d/1Y26_Zf7-jHPgpjWasubXpzQE-k0eMl0pHIMpg8OHw_k" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-secondary)' }}>Google Sheets</a></li>
                 <li>Extensions → Apps Script</li>
                 <li>Copiez le script ci-dessous</li>
                 <li>Déployez comme Web App (accès: Tout le monde)</li>
@@ -211,10 +211,10 @@ const GoogleSheetsConfig = () => {
                 onClick={() => setShowScript(!showScript)}
                 style={{
                   padding: '8px 12px',
-                  backgroundColor: '#6b7280',
-                  color: 'white',
+                  backgroundColor: 'var(--text-secondary)',
+                  color: 'var(--text-primary)',
                   border: 'none',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   fontSize: '13px',
                   cursor: 'pointer',
                   display: 'flex',
@@ -229,10 +229,10 @@ const GoogleSheetsConfig = () => {
               {showScript && (
                 <div style={{
                   position: 'relative',
-                  backgroundColor: '#1f2937',
-                  color: '#e5e7eb',
+                  backgroundColor: 'var(--text-primary)',
+                  color: 'var(--border-subtle)',
                   padding: '12px',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   fontSize: '12px',
                   fontFamily: 'monospace',
                   maxHeight: '200px',
@@ -246,10 +246,10 @@ const GoogleSheetsConfig = () => {
                       top: '8px',
                       right: '8px',
                       padding: '4px 8px',
-                      backgroundColor: '#3b82f6',
-                      color: 'white',
+                      backgroundColor: 'var(--text-secondary)',
+                      color: 'var(--text-primary)',
                       border: 'none',
-                      borderRadius: '4px',
+                      borderRadius: '8px',
                       fontSize: '11px',
                       cursor: 'pointer',
                       display: 'flex',
@@ -274,7 +274,7 @@ const GoogleSheetsConfig = () => {
                 marginBottom: '8px',
                 fontSize: '14px',
                 fontWeight: '500',
-                color: '#374151'
+                color: 'var(--text-secondary)'
               }}>
                 URL du webhook déployé :
               </label>
@@ -286,8 +286,8 @@ const GoogleSheetsConfig = () => {
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '6px',
+                  border: '1px solid var(--text-tertiary)',
+                  borderRadius: '8px',
                   fontSize: '14px'
                 }}
               />
@@ -302,7 +302,7 @@ const GoogleSheetsConfig = () => {
                   onChange={(e) => setIsEnabled(e.target.checked)}
                   style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                 />
-                <span style={{ fontSize: '14px', color: '#374151' }}>
+                <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
                   Activer l'envoi automatique vers Google Sheets
                 </span>
               </label>
@@ -312,17 +312,17 @@ const GoogleSheetsConfig = () => {
             {testStatus && (
               <div style={{
                 padding: '12px',
-                borderRadius: '6px',
+                borderRadius: '8px',
                 marginBottom: '16px',
-                backgroundColor: testStatus === 'success' ? '#d1fae5' : testStatus === 'error' ? '#fee2e2' : 'rgba(242, 105, 33, 0.10)',
-                border: `1px solid ${testStatus === 'success' ? '#86efac' : testStatus === 'error' ? '#fecaca' : '#fde68a'}`,
+                backgroundColor: testStatus === 'success' ? 'var(--bg-overlay)' : testStatus === 'error' ? 'var(--bg-overlay)' : 'rgba(242, 105, 33, 0.10)',
+                border: `1px solid ${testStatus === 'success' ? 'var(--bg-overlay)' : testStatus === 'error' ? 'var(--border-subtle)' : 'var(--bg-overlay)'}`,
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                {testStatus === 'success' && <CheckCircle size={20} color="#10b981" />}
-                {testStatus === 'error' && <AlertCircle size={20} color="#ef4444" />}
-                {testStatus === 'testing' && <Send size={20} color="#f59e0b" />}
+                {testStatus === 'success' && <CheckCircle size={20} color="var(--text-primary)" />}
+                {testStatus === 'error' && <AlertCircle size={20} color="#C04534" />}
+                {testStatus === 'testing' && <Send size={20} color="var(--accent-primary)" />}
                 <span style={{ fontSize: '14px' }}>
                   {testStatus === 'success' && 'Test réussi ! Vérifiez votre Google Sheets.'}
                   {testStatus === 'error' && 'Erreur lors du test. Vérifiez la configuration.'}
@@ -337,10 +337,10 @@ const GoogleSheetsConfig = () => {
                 onClick={handleLogLastUpdate}
                 style={{
                   padding: '8px 12px',
-                  backgroundColor: '#8b5cf6',
-                  color: 'white',
+                  backgroundColor: 'var(--accent-primary)',
+                  color: 'var(--text-primary)',
                   border: 'none',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   fontSize: '13px',
                   cursor: 'pointer',
                   display: 'flex',
@@ -359,10 +359,10 @@ const GoogleSheetsConfig = () => {
                 onClick={() => setShowConfig(false)}
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: '#f3f4f6',
-                  color: '#374151',
+                  backgroundColor: 'var(--bg-overlay)',
+                  color: 'var(--text-secondary)',
                   border: 'none',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   fontSize: '14px',
                   fontWeight: '500',
                   cursor: 'pointer'
@@ -376,10 +376,10 @@ const GoogleSheetsConfig = () => {
                 disabled={!webhookUrl}
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: webhookUrl ? '#f59e0b' : '#d1d5db',
-                  color: 'white',
+                  backgroundColor: webhookUrl ? 'var(--accent-primary)' : 'var(--text-tertiary)',
+                  color: 'var(--text-primary)',
                   border: 'none',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   fontSize: '14px',
                   fontWeight: '500',
                   cursor: webhookUrl ? 'pointer' : 'not-allowed',
@@ -396,10 +396,10 @@ const GoogleSheetsConfig = () => {
                 onClick={handleSave}
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: '#10b981',
-                  color: 'white',
+                  backgroundColor: 'var(--text-primary)',
+                  color: 'var(--text-primary)',
                   border: 'none',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   fontSize: '14px',
                   fontWeight: '500',
                   cursor: 'pointer'

@@ -24,24 +24,24 @@ export const DataSourceBadge = memo(({
       icon: FileText,
       label: 'VAC',
       fullLabel: 'Carte VAC officielle',
-      color: '#065f46',
-      backgroundColor: '#d1fae5',
+      color: 'var(--text-primary)',
+      backgroundColor: 'var(--bg-overlay)',
       description: 'Données extraites de la documentation officielle'
     },
     api: {
       icon: Globe,
       label: 'API',
       fullLabel: 'API officielle',
-      color: '#1e40af',
-      backgroundColor: '#dbeafe',
+      color: 'var(--text-primary)',
+      backgroundColor: 'var(--bg-overlay)',
       description: 'Données temps réel depuis une API officielle'
     },
     modified: {
       icon: Edit3,
       label: 'Modifié',
       fullLabel: 'Modifié manuellement',
-      color: '#dc2626',
-      backgroundColor: '#fee2e2',
+      color: '#C04534',
+      backgroundColor: 'var(--bg-overlay)',
       description: modificationDate 
         ? `Modifié le ${new Date(modificationDate).toLocaleDateString('fr-FR')}`
         : 'Données modifiées par l\'utilisateur'
@@ -50,7 +50,7 @@ export const DataSourceBadge = memo(({
       icon: AlertTriangle,
       label: 'Non officiel',
       fullLabel: 'Données non officielles',
-      color: '#92400e',
+      color: 'var(--accent-primary)',
       backgroundColor: 'rgba(242, 105, 33, 0.10)',
       description: 'Données prédéfinies pouvant être obsolètes'
     },
@@ -58,8 +58,8 @@ export const DataSourceBadge = memo(({
       icon: CheckCircle,
       label: 'Vérifié',
       fullLabel: 'Données vérifiées',
-      color: '#059669',
-      backgroundColor: '#d1fae5',
+      color: 'var(--text-primary)',
+      backgroundColor: 'var(--bg-overlay)',
       description: 'Données vérifiées et validées'
     }
   };
@@ -83,7 +83,7 @@ export const DataSourceBadge = memo(({
     padding: sizeConfig.padding,
     backgroundColor: config.backgroundColor,
     color: config.color,
-    borderRadius: '4px',
+    borderRadius: '8px',
     fontSize: sizeConfig.fontSize,
     fontWeight: '500',
     border: `1px solid ${config.color}33`,

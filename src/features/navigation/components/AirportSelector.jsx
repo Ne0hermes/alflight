@@ -107,7 +107,7 @@ export const AirportSelector = memo(({
         <div style={styles.dropdown}>
           {/* Barre de recherche */}
           <div style={styles.searchBar}>
-            <Search size={16} style={{ color: '#6b7280' }} />
+            <Search size={16} style={{ color: 'var(--text-secondary)' }} />
             <input
               type="text"
               value={search}
@@ -256,7 +256,7 @@ const DiscrepancyDetails = memo(({ airportIcao }) => {
           <div style={sx.text.xs}>
             <div>OpenAIP: {disc.openAipCoords.lat.toFixed(6)}°, {disc.openAipCoords.lon.toFixed(6)}°</div>
             <div>VAC: {disc.vacCoords.lat.toFixed(6)}°, {disc.vacCoords.lon.toFixed(6)}°</div>
-            <div style={{ color: '#dc2626' }}>
+            <div style={{ color: '#C04534' }}>
               Écart: {disc.distance.toFixed(0)}m
             </div>
           </div>
@@ -290,8 +290,8 @@ const styles = {
     left: 0,
     right: 0,
     marginTop: '4px',
-    backgroundColor: 'white',
-    border: '1px solid #e5e7eb',
+    backgroundColor: 'var(--bg-overlay)',
+    border: '1px solid var(--border-subtle)',
     borderRadius: '8px',
     boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
     zIndex: 1000,
@@ -302,7 +302,7 @@ const styles = {
   },
   searchBar: {
     padding: '12px',
-    borderBottom: '1px solid #e5e7eb',
+    borderBottom: '1px solid var(--border-subtle)',
     display: 'flex',
     alignItems: 'center',
     gap: '8px'
@@ -318,10 +318,10 @@ const styles = {
     overflow: 'auto'
   },
   airportItem: {
-    borderBottom: '1px solid #e5e7eb',
+    borderBottom: '1px solid var(--border-subtle)',
     transition: 'background-color 0.2s',
     '&:hover': {
-      backgroundColor: '#f9fafb'
+      backgroundColor: 'var(--bg-overlay)'
     }
   },
   airportItemWarning: {
@@ -347,44 +347,44 @@ const styles = {
   },
   downloadButton: {
     padding: '4px 8px',
-    backgroundColor: '#3b82f6',
-    color: 'white',
+    backgroundColor: 'var(--text-secondary)',
+    color: 'var(--text-primary)',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '8px',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     transition: 'background-color 0.2s',
     '&:hover': {
-      backgroundColor: '#2563eb'
+      backgroundColor: 'var(--text-secondary)'
     }
   },
   infoButton: {
     padding: '4px 8px',
-    backgroundColor: '#f59e0b',
-    color: 'white',
+    backgroundColor: 'var(--accent-primary)',
+    color: 'var(--text-primary)',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '8px',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     transition: 'background-color 0.2s',
     '&:hover': {
-      backgroundColor: '#d97706'
+      backgroundColor: 'var(--accent-primary)'
     }
   },
   noResults: {
     padding: '24px',
     textAlign: 'center',
-    color: '#6b7280'
+    color: 'var(--text-secondary)'
   },
   legend: {
     padding: '8px 12px',
-    borderTop: '1px solid #e5e7eb',
+    borderTop: '1px solid var(--border-subtle)',
     display: 'flex',
     gap: '16px',
     fontSize: '12px',
-    color: '#6b7280'
+    color: 'var(--text-secondary)'
   },
   legendItem: {
     display: 'flex',
@@ -394,13 +394,13 @@ const styles = {
   discrepancyDetails: {
     padding: '12px',
     backgroundColor: 'rgba(242, 105, 33, 0.10)',
-    borderTop: '1px solid #fbbf24'
+    borderTop: '1px solid var(--accent-primary)'
   },
   discrepancyItem: {
     marginBottom: '8px',
     padding: '8px',
-    backgroundColor: 'white',
-    borderRadius: '4px'
+    backgroundColor: 'var(--bg-overlay)',
+    borderRadius: '8px'
   }
 };
 

@@ -549,7 +549,7 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
                 {/* Message vide */}
                 {waypoints.length === 0 && (
                   <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-                    <p style={{ color: '#6b7280', marginBottom: '16px' }}>
+                    <p style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>
                       Aucun point de navigation défini
                     </p>
                     <button
@@ -560,9 +560,9 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
                       style={{
                         padding: '12px 24px',
                         borderRadius: '8px',
-                        border: '2px solid #3b82f6',
-                        background: '#3b82f6',
-                        color: 'white',
+                        border: '2px solid var(--text-secondary)',
+                        background: 'var(--text-secondary)',
+                        color: 'var(--text-primary)',
                         fontSize: '16px',
                         fontWeight: '600',
                         cursor: 'pointer',
@@ -615,7 +615,7 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
                           <div style={{
                             width: '2px',
                             height: '100%',
-                            backgroundColor: '#e5e7eb'
+                            backgroundColor: 'var(--border-subtle)'
                           }}></div>
                         </div>
                       )}
@@ -633,10 +633,10 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
                     style={{
                       width: '100%',
                       padding: '16px',
-                      borderRadius: '12px',
-                      border: '2px dashed #e5e7eb',
-                      background: '#f9fafb',
-                      color: '#6b7280',
+                      borderRadius: '8px',
+                      border: '2px dashed var(--border-subtle)',
+                      background: 'var(--bg-overlay)',
+                      color: 'var(--text-secondary)',
                       fontSize: '16px',
                       fontWeight: '600',
                       cursor: 'pointer',
@@ -648,14 +648,14 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
                       marginTop: '8px'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = '#3b82f6';
-                      e.currentTarget.style.color = '#3b82f6';
-                      e.currentTarget.style.background = '#eff6ff';
+                      e.currentTarget.style.borderColor = 'var(--text-secondary)';
+                      e.currentTarget.style.color = 'var(--text-secondary)';
+                      e.currentTarget.style.background = 'var(--bg-overlay)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = '#e5e7eb';
-                      e.currentTarget.style.color = '#6b7280';
-                      e.currentTarget.style.background = '#f9fafb';
+                      e.currentTarget.style.borderColor = 'var(--border-subtle)';
+                      e.currentTarget.style.color = 'var(--text-secondary)';
+                      e.currentTarget.style.background = 'var(--bg-overlay)';
                     }}
                   >
                     <Plus size={20} />
@@ -672,13 +672,13 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
               <h3 style={{
                 fontSize: '16px',
                 fontWeight: '600',
-                color: '#1f2937',
+                color: 'var(--text-primary)',
                 marginBottom: '16px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                <Shield size={20} color="#3b82f6" />
+                <Shield size={20} color="var(--text-secondary)" />
                 Espaces Aériens et Zones Traversés
               </h3>
               {/* Section Espaces Aériens - DÉPLACÉE vers l'étape 7 (Synthèse) */}

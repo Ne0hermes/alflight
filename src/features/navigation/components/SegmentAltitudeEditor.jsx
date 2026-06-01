@@ -72,11 +72,11 @@ export const SegmentAltitudeEditor = ({
   const getSegmentIcon = (type) => {
     switch (type) {
       case 'climb':
-        return <TrendingUp size={16} color="#10b981" />;
+        return <TrendingUp size={16} color="var(--text-primary)" />;
       case 'descent':
-        return <TrendingDown size={16} color="#f59e0b" />;
+        return <TrendingDown size={16} color="var(--accent-primary)" />;
       default:
-        return <Plane size={16} color="#3b82f6" />;
+        return <Plane size={16} color="var(--text-secondary)" />;
     }
   };
 
@@ -139,9 +139,9 @@ export const SegmentAltitudeEditor = ({
             <div 
               key={segmentId}
               style={{
-                background: '#f9fafb',
+                background: 'var(--bg-overlay)',
                 borderRadius: '8px',
-                border: '1px solid #e5e7eb',
+                border: '1px solid var(--border-subtle)',
                 overflow: 'hidden'
               }}
             >
@@ -153,7 +153,7 @@ export const SegmentAltitudeEditor = ({
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   cursor: 'pointer',
-                  background: isExpanded ? '#f3f4f6' : 'transparent'
+                  background: isExpanded ? 'var(--bg-overlay)' : 'transparent'
                 }}
                 onClick={() => toggleSegment(segmentId)}
               >
@@ -167,10 +167,10 @@ export const SegmentAltitudeEditor = ({
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <span style={{ 
                     fontSize: '13px', 
-                    color: '#6b7280',
+                    color: 'var(--text-secondary)',
                     padding: '4px 8px',
-                    background: 'white',
-                    borderRadius: '4px'
+                    background: 'var(--bg-overlay)',
+                    borderRadius: '8px'
                   }}>
                     {formatAltitude(segmentAlt.startAlt)} → {formatAltitude(segmentAlt.endAlt)}
                   </span>
@@ -182,8 +182,8 @@ export const SegmentAltitudeEditor = ({
               {isExpanded && (
                 <div style={{ 
                   padding: '16px', 
-                  borderTop: '1px solid #e5e7eb',
-                  background: 'white' 
+                  borderTop: '1px solid var(--border-subtle)',
+                  background: 'var(--bg-overlay)' 
                 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                     {/* Altitude de départ */}
@@ -202,8 +202,8 @@ export const SegmentAltitudeEditor = ({
                           style={{
                             flex: 1,
                             padding: '8px',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '4px',
+                            border: '1px solid var(--text-tertiary)',
+                            borderRadius: '8px',
                             fontSize: '14px'
                           }}
                         />
@@ -211,10 +211,10 @@ export const SegmentAltitudeEditor = ({
                           onChange={(e) => handleAltitudeUpdate(segmentId, 'startAlt', parseInt(e.target.value))}
                           style={{
                             padding: '8px',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '4px',
+                            border: '1px solid var(--text-tertiary)',
+                            borderRadius: '8px',
                             fontSize: '13px',
-                            background: 'white'
+                            background: 'var(--bg-overlay)'
                           }}
                         >
                           <option value="">Suggestions...</option>
@@ -243,8 +243,8 @@ export const SegmentAltitudeEditor = ({
                           style={{
                             flex: 1,
                             padding: '8px',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '4px',
+                            border: '1px solid var(--text-tertiary)',
+                            borderRadius: '8px',
                             fontSize: '14px'
                           }}
                         />
@@ -252,10 +252,10 @@ export const SegmentAltitudeEditor = ({
                           onChange={(e) => handleAltitudeUpdate(segmentId, 'endAlt', parseInt(e.target.value))}
                           style={{
                             padding: '8px',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '4px',
+                            border: '1px solid var(--text-tertiary)',
+                            borderRadius: '8px',
                             fontSize: '13px',
-                            background: 'white'
+                            background: 'var(--bg-overlay)'
                           }}
                         >
                           <option value="">Suggestions...</option>
@@ -274,9 +274,9 @@ export const SegmentAltitudeEditor = ({
                     <div style={{
                       marginTop: '12px',
                       padding: '8px',
-                      background: segmentAlt.type === 'climb' ? '#f0fdf4' : 'rgba(242, 105, 33, 0.10)',
-                      border: `1px solid ${segmentAlt.type === 'climb' ? '#86efac' : '#f26921'}`,
-                      borderRadius: '4px',
+                      background: segmentAlt.type === 'climb' ? 'var(--bg-overlay)' : 'rgba(242, 105, 33, 0.10)',
+                      border: `1px solid ${segmentAlt.type === 'climb' ? 'var(--bg-overlay)' : '#f26921'}`,
+                      borderRadius: '8px',
                       fontSize: '13px'
                     }}>
                       {segmentAlt.type === 'climb' ? '📈' : '📉'} 
@@ -300,9 +300,9 @@ export const SegmentAltitudeEditor = ({
                       }}
                       style={{
                         padding: '6px 12px',
-                        background: '#e5e7eb',
+                        background: 'var(--border-subtle)',
                         border: 'none',
-                        borderRadius: '4px',
+                        borderRadius: '8px',
                         fontSize: '12px',
                         cursor: 'pointer'
                       }}
@@ -319,9 +319,9 @@ export const SegmentAltitudeEditor = ({
                         }}
                         style={{
                           padding: '6px 12px',
-                          background: '#dbeafe',
+                          background: 'var(--bg-overlay)',
                           border: 'none',
-                          borderRadius: '4px',
+                          borderRadius: '8px',
                           fontSize: '12px',
                           cursor: 'pointer'
                         }}
@@ -341,14 +341,14 @@ export const SegmentAltitudeEditor = ({
       <div style={{
         marginTop: '20px',
         padding: '12px',
-        background: '#f0f9ff',
-        border: '1px solid #bfdbfe',
-        borderRadius: '6px'
+        background: 'var(--bg-overlay)',
+        border: '1px solid var(--border-subtle)',
+        borderRadius: '8px'
       }}>
         <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600' }}>
           📊 Profil de vol
         </h4>
-        <div style={{ fontSize: '13px', color: '#1e40af' }}>
+        <div style={{ fontSize: '13px', color: 'var(--text-primary)' }}>
           Altitude min: <strong>{Math.min(...Object.values(localAltitudes).flatMap(a => [a.startAlt, a.endAlt]))} ft</strong>
           {' | '}
           Altitude max: <strong>{Math.max(...Object.values(localAltitudes).flatMap(a => [a.startAlt, a.endAlt]))} ft</strong>

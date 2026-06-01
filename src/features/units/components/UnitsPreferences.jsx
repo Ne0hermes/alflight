@@ -249,7 +249,7 @@ const UnitsPreferences = () => {
 
       {/* Configuration détaillée */}
       <div style={{
-        backgroundColor: '#f9fafb',
+        backgroundColor: 'var(--bg-overlay)',
         borderRadius: '8px',
         padding: '16px'
       }}>
@@ -266,13 +266,13 @@ const UnitsPreferences = () => {
                     display: 'flex',
                     alignItems: 'center',
                     padding: '8px 12px',
-                    backgroundColor: units[unitConfig.key] === option.value ? '#3b82f6' : 'white',
-                    color: units[unitConfig.key] === option.value ? 'white' : '#374151',
-                    borderRadius: '6px',
+                    backgroundColor: units[unitConfig.key] === option.value ? 'var(--text-secondary)' : 'white',
+                    color: units[unitConfig.key] === option.value ? 'white' : 'var(--text-secondary)',
+                    borderRadius: '8px',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
                     border: '1px solid',
-                    borderColor: units[unitConfig.key] === option.value ? '#3b82f6' : '#e5e7eb'
+                    borderColor: units[unitConfig.key] === option.value ? 'var(--text-secondary)' : 'var(--border-subtle)'
                   }}
                 >
                   <input
@@ -295,9 +295,9 @@ const UnitsPreferences = () => {
       <div style={{
         marginTop: '20px',
         padding: '16px',
-        backgroundColor: '#eff6ff',
+        backgroundColor: 'var(--bg-overlay)',
         borderRadius: '8px',
-        border: '1px solid #3b82f6'
+        border: '1px solid var(--text-secondary)'
       }}>
         <h4 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
           Configuration actuelle
@@ -324,14 +324,14 @@ const UnitsPreferences = () => {
           <div style={{
             padding: '12px',
             backgroundColor: 'rgba(242, 105, 33, 0.10)',
-            borderRadius: '6px',
-            border: '1px solid #fbbf24',
+            borderRadius: '8px',
+            border: '1px solid var(--accent-primary)',
             display: 'flex',
             alignItems: 'center',
             gap: '8px'
           }}>
-            <AlertCircle size={16} style={{ color: '#f59e0b' }} />
-            <span style={{ fontSize: '14px', color: '#92400e' }}>
+            <AlertCircle size={16} style={{ color: 'var(--accent-primary)' }} />
+            <span style={{ fontSize: '14px', color: 'var(--accent-primary)' }}>
               Des modifications non sauvegardées sont en attente
             </span>
           </div>
@@ -341,15 +341,15 @@ const UnitsPreferences = () => {
         {saved && (
           <div style={{
             padding: '12px',
-            backgroundColor: '#d1fae5',
-            borderRadius: '6px',
-            border: '1px solid #10b981',
+            backgroundColor: 'var(--bg-overlay)',
+            borderRadius: '8px',
+            border: '1px solid var(--text-primary)',
             display: 'flex',
             alignItems: 'center',
             gap: '8px'
           }}>
-            <Check size={16} style={{ color: '#059669' }} />
-            <span style={{ fontSize: '14px', color: '#065f46' }}>
+            <Check size={16} style={{ color: 'var(--text-primary)' }} />
+            <span style={{ fontSize: '14px', color: 'var(--text-primary)' }}>
               Préférences sauvegardées et appliquées dans toute l'application !
             </span>
           </div>
@@ -393,9 +393,9 @@ const UnitsPreferences = () => {
         marginTop: '16px',
         padding: '12px',
         backgroundColor: 'rgba(242, 105, 33, 0.10)',
-        borderRadius: '6px',
+        borderRadius: '8px',
         fontSize: '13px',
-        color: '#92400e'
+        color: 'var(--accent-primary)'
       }}>
         <strong>Note :</strong> Les changements d'unités s'appliquent immédiatement à toute l'application. 
         Les valeurs sont automatiquement converties dans les nouvelles unités sélectionnées.

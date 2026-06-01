@@ -153,7 +153,7 @@ if (typeof window !== 'undefined') {
     width: '100%',
     padding: '12px',
     backgroundColor: 'rgba(55, 65, 81, 0.35)',
-    color: 'white',
+    color: 'var(--text-primary)',
     border: '1px solid rgba(0, 0, 0, 0.7)',
     borderRadius: '8px',
     fontSize: '16px',
@@ -1330,7 +1330,7 @@ export const AircraftModule = memo(() => {
           width: '100%',
           minHeight: 'clamp(280px, 38vh, 440px)',
           marginBottom: tokens.spacing[6],
-          borderRadius: '16px',
+          borderRadius: '8px',
           overflow: 'hidden',
           backgroundImage: 'url("/assets/photos/hero-warbird.jpg")',
           backgroundSize: 'cover',
@@ -3516,7 +3516,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
     sx.text.sm,
     sx.text.bold,
     sx.spacing.mb(1),
-    { display: 'flex', alignItems: 'center', color: '#000000' }
+    { display: 'flex', alignItems: 'center', color: 'var(--app-bg)' }
   );
 
   const buttonSectionStyle = {
@@ -3540,7 +3540,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ color: '#000000' }}>
+    <form onSubmit={handleSubmit} style={{ color: 'var(--app-bg)' }}>
       {/* Section Général */}
       <div style={{ marginBottom: '16px' }}>
         <AccordionButton
@@ -3552,11 +3552,11 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       </div>
 
       {showGeneral && (
-        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', color: '#000000' }}>
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px', color: 'var(--app-bg)' }}>
           <>
             {/* Informations de base */}
-            <div style={{ color: '#000000' }}>
-              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000', WebkitTextFillColor: '#000000', opacity: 1, filter: 'none' }}>
+            <div style={{ color: 'var(--app-bg)' }}>
+              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--app-bg)', WebkitTextFillColor: 'var(--app-bg)', opacity: 1, filter: 'none' }}>
                 Informations générales
               </h4>
               
@@ -3574,7 +3574,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                           height: '100%', 
                           objectFit: 'cover', 
                           borderRadius: '8px',
-                          border: '1px solid #d1d5db'
+                          border: '1px solid var(--text-tertiary)'
                         }} 
                       />
                       <button
@@ -3585,7 +3585,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                           top: '5px',
                           right: '5px',
                           backgroundColor: 'rgba(239, 68, 68, 0.9)',
-                          color: 'white',
+                          color: 'var(--text-primary)',
                           border: 'none',
                           borderRadius: '50%',
                           width: '24px',
@@ -3603,18 +3603,18 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                     <div style={{ 
                       width: '200px', 
                       height: '150px', 
-                      border: '2px dashed #d1d5db',
+                      border: '2px dashed var(--text-tertiary)',
                       borderRadius: '8px',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      backgroundColor: '#f9fafb'
+                      backgroundColor: 'var(--bg-overlay)'
                     }}>
-                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.5">
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="1.5">
                         <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
-                      <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px' }}>Aucune photo</p>
+                      <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px' }}>Aucune photo</p>
                     </div>
                   )}
                   <div style={{ textAlign: 'center' }}>
@@ -3635,7 +3635,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                     >
                       {aircraftPhoto ? 'Changer la photo' : 'Ajouter une photo'}
                     </label>
-                    <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px', textAlign: 'center' }}>
+                    <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px', textAlign: 'center' }}>
                       Max 5MB • JPG, PNG
                     </p>
                   </div>
@@ -3707,8 +3707,8 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
         </div>
 
         {/* Carburant */}
-        <div style={{ color: '#000000' }}>
-          <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000', WebkitTextFillColor: '#000000', opacity: 1, filter: 'none' }}>
+        <div style={{ color: 'var(--app-bg)' }}>
+          <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--app-bg)', WebkitTextFillColor: 'var(--app-bg)', opacity: 1, filter: 'none' }}>
             Carburant
           </h4>
           {/* Première ligne : Type et capacités */}
@@ -3785,10 +3785,10 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                   readOnly
                   style={{
                     ...inputStyle, 
-                    backgroundColor: '#f3f4f6', 
+                    backgroundColor: 'var(--bg-overlay)', 
                     cursor: 'not-allowed',
                     fontWeight: '600',
-                    color: formData.baseFactor ? '#059669' : '#9ca3af'
+                    color: formData.baseFactor ? 'var(--text-primary)' : 'var(--text-tertiary)'
                   }}
                   placeholder="Auto"
                 />
@@ -3798,8 +3798,8 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
         </div>
 
         {/* Types de pistes compatibles */}
-        <div style={{ color: '#000000' }}>
-          <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000', WebkitTextFillColor: '#000000', opacity: 1, filter: 'none' }}>
+        <div style={{ color: 'var(--app-bg)' }}>
+          <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--app-bg)', WebkitTextFillColor: 'var(--app-bg)', opacity: 1, filter: 'none' }}>
             Types de pistes compatibles
           </h4>
           <div>
@@ -3826,10 +3826,10 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                     display: 'flex',
                     alignItems: 'center',
                     padding: '8px',
-                    backgroundColor: formData.compatibleRunwaySurfaces?.includes(surface.code) ? '#3b82f6' : 'white',
-                    color: formData.compatibleRunwaySurfaces?.includes(surface.code) ? 'white' : '#374151',
-                    border: `1px solid ${formData.compatibleRunwaySurfaces?.includes(surface.code) ? '#3b82f6' : '#e5e7eb'}`,
-                    borderRadius: '6px',
+                    backgroundColor: formData.compatibleRunwaySurfaces?.includes(surface.code) ? 'var(--text-secondary)' : 'white',
+                    color: formData.compatibleRunwaySurfaces?.includes(surface.code) ? 'white' : 'var(--text-secondary)',
+                    border: `1px solid ${formData.compatibleRunwaySurfaces?.includes(surface.code) ? 'var(--text-secondary)' : 'var(--border-subtle)'}`,
+                    borderRadius: '8px',
                     cursor: 'pointer',
                     fontSize: '13px'
                   }}
@@ -3862,11 +3862,11 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       </div>
 
       {showPerformances && (
-        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
           <>
             {/* Section Performances - Vitesses caractéristiques */}
         <div>
-          <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000', display: 'flex', alignItems: 'center' }}>
+          <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--app-bg)', display: 'flex', alignItems: 'center' }}>
             <span style={{ marginRight: '8px' }}>✈️</span>
             Vitesses caractéristiques (kt)
             <InfoIcon tooltip="Vitesses de référence pour les différentes phases de vol" />
@@ -3874,30 +3874,30 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
           
           {/* Vitesses critiques pour les arcs de l'indicateur */}
           <div style={{
-            backgroundColor: '#f9fafb',
+            backgroundColor: 'var(--bg-overlay)',
             padding: '16px',
             borderRadius: '8px',
             marginBottom: '16px',
-            border: '2px solid #374151'
+            border: '2px solid var(--text-secondary)'
           }}>
-            <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '12px', color: '#000000' }}>
+            <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--app-bg)' }}>
               Vitesses critiques de l'indicateur de vitesse
             </h5>
             
             {/* Arcs de limitation de vitesse (Airspeed Indicator Markings) */}
             <div style={{
-              backgroundColor: '#1f2937',
+              backgroundColor: 'var(--text-primary)',
               padding: '16px',
               borderRadius: '8px',
               marginBottom: '16px'
             }}>
-              <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px', color: '#000000' }}>
+              <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--app-bg)' }}>
                 🎯 Arcs de limitation de vitesse (Airspeed Indicator Markings)
               </h6>
               
               {/* Indicateur visuel des arcs */}
               <div style={{
-                backgroundColor: '#374151',
+                backgroundColor: 'var(--text-secondary)',
                 padding: '20px',
                 borderRadius: '8px',
                 marginBottom: '16px',
@@ -3933,7 +3933,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                         left: '20px',
                         right: '20px',
                         height: '4px',
-                        backgroundColor: '#4b5563',
+                        backgroundColor: 'var(--text-secondary)',
                         borderRadius: '2px'
                       }}>
                         {/* Arc blanc - Volets sortis (Vso à VfeLdg) */}
@@ -3944,9 +3944,9 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                               left: `${vso * scale}%`,
                               width: `${(vfeLdg - vso) * scale}%`,
                               height: '20px',
-                              backgroundColor: 'white',
+                              backgroundColor: 'var(--bg-overlay)',
                               bottom: '0',
-                              borderRadius: '4px',
+                              borderRadius: '8px',
                               boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
                             }}
                             title={`Arc blanc: ${vso} - ${vfeLdg} kt (Plage volets)`}
@@ -3961,9 +3961,9 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                               left: `${vs1 * scale}%`,
                               width: `${(vno - vs1) * scale}%`,
                               height: '20px',
-                              backgroundColor: '#10b981',
+                              backgroundColor: 'var(--text-primary)',
                               bottom: '25px',
-                              borderRadius: '4px',
+                              borderRadius: '8px',
                               boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
                             }}
                             title={`Arc vert: ${vs1} - ${vno} kt (Plage normale)`}
@@ -3978,9 +3978,9 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                               left: `${vno * scale}%`,
                               width: `${(vne - vno) * scale}%`,
                               height: '20px',
-                              backgroundColor: '#fbbf24',
+                              backgroundColor: 'var(--accent-primary)',
                               bottom: '25px',
-                              borderRadius: '4px',
+                              borderRadius: '8px',
                               boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
                             }}
                             title={`Arc jaune: ${vno} - ${vne} kt (Précaution)`}
@@ -3995,7 +3995,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                               left: `${vne * scale}%`,
                               width: '3px',
                               height: '40px',
-                              backgroundColor: '#dc2626',
+                              backgroundColor: '#C04534',
                               bottom: '15px',
                               borderRadius: '2px',
                               boxShadow: '0 2px 4px rgba(0,0,0,0.5)'
@@ -4012,7 +4012,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                               left: `${vfeTO * scale}%`,
                               width: '2px',
                               height: '30px',
-                              backgroundColor: 'white',
+                              backgroundColor: 'var(--bg-overlay)',
                               bottom: '10px',
                               borderRadius: '1px',
                               boxShadow: '0 2px 4px rgba(0,0,0,0.5)'
@@ -4047,7 +4047,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                         right: '20px',
                         height: '20px',
                         fontSize: '10px',
-                        color: '#9ca3af'
+                        color: 'var(--text-tertiary)'
                       }}>
                         {vso > 0 && (
                           <span style={{
@@ -4081,7 +4081,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                             position: 'absolute',
                             left: `${vne * scale}%`,
                             transform: 'translateX(-50%)',
-                            color: '#dc2626',
+                            color: '#C04534',
                             fontWeight: 'bold'
                           }}>
                             {vne}
@@ -4104,11 +4104,11 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                   <div style={{
                     width: '30px',
                     height: '8px',
-                    backgroundColor: 'white',
+                    backgroundColor: 'var(--bg-overlay)',
                     borderRadius: '2px',
-                    border: '1px solid #6b7280'
+                    border: '1px solid var(--text-secondary)'
                   }} />
-                  <span style={{ color: '#d1d5db' }}>
+                  <span style={{ color: 'var(--text-tertiary)' }}>
                     <strong>Arc blanc:</strong> Plage volets (Vso - Vfe LDG)
                   </span>
                 </div>
@@ -4117,10 +4117,10 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                   <div style={{
                     width: '30px',
                     height: '8px',
-                    backgroundColor: '#10b981',
+                    backgroundColor: 'var(--text-primary)',
                     borderRadius: '2px'
                   }} />
-                  <span style={{ color: '#d1d5db' }}>
+                  <span style={{ color: 'var(--text-tertiary)' }}>
                     <strong>Arc vert:</strong> Plage normale (Vs1 - Vno)
                   </span>
                 </div>
@@ -4129,10 +4129,10 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                   <div style={{
                     width: '30px',
                     height: '8px',
-                    backgroundColor: '#fbbf24',
+                    backgroundColor: 'var(--accent-primary)',
                     borderRadius: '2px'
                   }} />
-                  <span style={{ color: '#d1d5db' }}>
+                  <span style={{ color: 'var(--text-tertiary)' }}>
                     <strong>Arc jaune:</strong> Air calme (Vno - Vne)
                   </span>
                 </div>
@@ -4141,10 +4141,10 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                   <div style={{
                     width: '30px',
                     height: '8px',
-                    backgroundColor: '#dc2626',
+                    backgroundColor: '#C04534',
                     borderRadius: '2px'
                   }} />
-                  <span style={{ color: '#d1d5db' }}>
+                  <span style={{ color: 'var(--text-tertiary)' }}>
                     <strong>Trait rouge:</strong> Ne jamais dépasser (Vne)
                   </span>
                 </div>
@@ -4153,12 +4153,12 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                   <div style={{
                     width: '2px',
                     height: '20px',
-                    backgroundColor: 'white',
+                    backgroundColor: 'var(--bg-overlay)',
                     marginLeft: '14px',
                     marginRight: '14px',
                     boxShadow: '0 1px 2px rgba(0,0,0,0.5)'
                   }} />
-                  <span style={{ color: '#d1d5db' }}>
+                  <span style={{ color: 'var(--text-tertiary)' }}>
                     <strong>Trait blanc:</strong> VFE T/O (Max volets décollage)
                   </span>
                 </div>
@@ -4170,7 +4170,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                     background: 'repeating-linear-gradient(to bottom, white 0px, white 3px, transparent 3px, transparent 6px)',
                     borderRadius: '1px'
                   }} />
-                  <span style={{ color: '#d1d5db' }}>
+                  <span style={{ color: 'var(--text-tertiary)' }}>
                     <strong>Trait pointillé:</strong> VO (Manœuvre max)
                   </span>
                 </div>
@@ -4179,12 +4179,12 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
               {/* Avertissement si des vitesses manquent */}
               {(!formData.speeds.vso || !formData.speeds.vs1 || !formData.speeds.vno || !formData.speeds.vne) && (
                 <div style={{
-                  backgroundColor: '#7f1d1d',
+                  backgroundColor: '#C04534',
                   padding: '10px',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   marginTop: '12px'
                 }}>
-                  <p style={{ fontSize: '12px', color: '#fca5a5', margin: 0 }}>
+                  <p style={{ fontSize: '12px', color: 'var(--bg-overlay)', margin: 0 }}>
                     ⚠️ Certaines vitesses critiques ne sont pas définies. Remplissez les vitesses pour afficher les arcs complets.
                   </p>
                 </div>
@@ -4193,13 +4193,13 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             
             {/* Configuration volets sortis */}
             <div style={{
-              backgroundColor: '#f0f9ff',
+              backgroundColor: 'var(--bg-overlay)',
               padding: '10px',
-              borderRadius: '6px',
+              borderRadius: '8px',
               marginBottom: '12px',
-              border: '1px solid #93c5fd'
+              border: '1px solid var(--border-subtle)'
             }}>
-              <h6 style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#000000' }}>
+              <h6 style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--app-bg)' }}>
                 Configuration volets sortis
               </h6>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -4250,13 +4250,13 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             
             {/* Configuration lisse */}
             <div style={{
-              backgroundColor: '#f0fdf4',
+              backgroundColor: 'var(--bg-overlay)',
               padding: '10px',
-              borderRadius: '6px',
+              borderRadius: '8px',
               marginBottom: '12px',
-              border: '1px solid #86efac'
+              border: '1px solid var(--bg-overlay)'
             }}>
-              <h6 style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#000000' }}>
+              <h6 style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--app-bg)' }}>
                 Configuration lisse
               </h6>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -4293,11 +4293,11 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             
             {/* Vitesse limite absolue */}
             <div style={{
-              backgroundColor: '#fef2f2',
+              backgroundColor: 'var(--bg-overlay)',
               padding: '10px',
-              borderRadius: '6px',
+              borderRadius: '8px',
               marginBottom: '12px',
-              border: '1px solid #fca5a5'
+              border: '1px solid var(--bg-overlay)'
             }}>
               <div>
                 <label style={labelStyle}>
@@ -4319,18 +4319,18 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             <div style={{
               backgroundColor: 'rgba(242, 105, 33, 0.10)',
               padding: '10px',
-              borderRadius: '6px',
-              border: '1px solid #fcd34d'
+              borderRadius: '8px',
+              border: '1px solid var(--bg-overlay)'
             }}>
-              <h6 style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#000000' }}>
+              <h6 style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--app-bg)' }}>
                 VO - Operating Manoeuvring Speed (variable selon la masse)
               </h6>
-              <p style={{ fontSize: '11px', color: '#78350f', marginBottom: '8px' }}>
+              <p style={{ fontSize: '11px', color: 'var(--accent-primary)', marginBottom: '8px' }}>
                 Ne pas effectuer de mouvements complets ou brusques des commandes au-dessus de ces vitesses
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', alignItems: 'end' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                  <label style={{ ...labelStyle, fontSize: '11px', color: '#000000' }}>
+                  <label style={{ ...labelStyle, fontSize: '11px', color: 'var(--app-bg)' }}>
                     Jusqu'à ({massUnit})
                     <InfoIcon tooltip="Masse max pour cette VO" />
                   </label>
@@ -4342,7 +4342,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                     min="0"
                     style={{ ...inputStyle, marginBottom: '4px' }}
                   />
-                  <label style={{ ...labelStyle, fontSize: '11px', color: '#000000' }}>VO (KIAS)</label>
+                  <label style={{ ...labelStyle, fontSize: '11px', color: 'var(--app-bg)' }}>VO (KIAS)</label>
                   <input
                     type="number"
                     value={formData.speeds.voSpeed1}
@@ -4353,7 +4353,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                  <label style={{ ...labelStyle, fontSize: '11px', color: '#000000' }}>
+                  <label style={{ ...labelStyle, fontSize: '11px', color: 'var(--app-bg)' }}>
                     De ({massUnit}) à ({massUnit})
                     <InfoIcon tooltip="Plage de masse intermédiaire" />
                   </label>
@@ -4375,7 +4375,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                       style={{ ...inputStyle, marginBottom: '4px', flex: 1 }}
                     />
                   </div>
-                  <label style={{ ...labelStyle, fontSize: '11px', color: '#000000' }}>VO (KIAS)</label>
+                  <label style={{ ...labelStyle, fontSize: '11px', color: 'var(--app-bg)' }}>VO (KIAS)</label>
                   <input
                     type="number"
                     value={formData.speeds.voSpeed2}
@@ -4386,7 +4386,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                  <label style={{ ...labelStyle, fontSize: '11px', color: '#000000' }}>
+                  <label style={{ ...labelStyle, fontSize: '11px', color: 'var(--app-bg)' }}>
                     Au-dessus de ({massUnit})
                     <InfoIcon tooltip="Masse min pour cette VO" />
                   </label>
@@ -4398,7 +4398,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                     min="0"
                     style={{ ...inputStyle, marginBottom: '4px' }}
                   />
-                  <label style={{ ...labelStyle, fontSize: '11px', color: '#000000' }}>VO (KIAS)</label>
+                  <label style={{ ...labelStyle, fontSize: '11px', color: 'var(--app-bg)' }}>VO (KIAS)</label>
                   <input
                     type="number"
                     value={formData.speeds.voSpeed3}
@@ -4415,13 +4415,13 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
 
           {/* Vitesses de montée et plané */}
           <div style={{
-            backgroundColor: '#f3f4f6',
+            backgroundColor: 'var(--bg-overlay)',
             padding: '12px',
             borderRadius: '8px',
             marginTop: '16px',
             marginBottom: '16px'
           }}>
-            <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '12px', color: '#000000' }}>
+            <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--app-bg)' }}>
               Vitesses de montée et plané
             </h5>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
@@ -4546,7 +4546,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
 
         {/* Section Limitations de vent */}
         <div>
-          <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000', display: 'flex', alignItems: 'center' }}>
+          <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--app-bg)', display: 'flex', alignItems: 'center' }}>
             <span style={{ marginRight: '8px' }}>💨</span>
             Limitations de vent (kt)
             <InfoIcon tooltip="Limites maximales démontrées" />
@@ -4613,24 +4613,24 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       </div>
 
       {showMasseCentrage && (
-        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
           <>
 
             {/* Masses et Centrage */}
         <div>
-          <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000' }}>
+          <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--app-bg)' }}>
             ⚖️ Masses et Centrage
           </h4>
           
           {/* Masse à vide et son bras de levier */}
           <div style={{ 
-            backgroundColor: '#f8f9fa', 
+            backgroundColor: 'var(--bg-overlay)', 
             padding: '12px', 
             borderRadius: '8px', 
             marginBottom: '16px',
-            border: '1px solid #e5e7eb'
+            border: '1px solid var(--border-subtle)'
           }}>
-            <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#000000' }}>
+            <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--app-bg)' }}>
               Masse à vide
             </h5>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -4668,13 +4668,13 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
 
           {/* Carburant et son bras de levier */}
           <div style={{ 
-            backgroundColor: '#f0f9ff', 
+            backgroundColor: 'var(--bg-overlay)', 
             padding: '12px', 
             borderRadius: '8px', 
             marginBottom: '16px',
-            border: '1px solid #bfdbfe'
+            border: '1px solid var(--border-subtle)'
           }}>
-            <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#000000' }}>
+            <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--app-bg)' }}>
               Carburant
             </h5>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -4720,9 +4720,9 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             padding: '12px', 
             borderRadius: '8px', 
             marginBottom: '16px',
-            border: '1px solid #fecaca'
+            border: '1px solid var(--border-subtle)'
           }}>
-            <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#000000' }}>
+            <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--app-bg)' }}>
               Sièges (bras de levier en m)
             </h5>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -4791,14 +4791,14 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
 
           {/* Sièges supplémentaires dynamiques */}
           <div style={{ 
-            backgroundColor: '#f0f9ff', 
+            backgroundColor: 'var(--bg-overlay)', 
             padding: '12px', 
             borderRadius: '8px', 
             marginBottom: '16px',
-            border: '1px solid #93c5fd'
+            border: '1px solid var(--border-subtle)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: '#000000', margin: 0 }}>
+              <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--app-bg)', margin: 0 }}>
                 💺 Sièges supplémentaires
               </h5>
               <button
@@ -4806,10 +4806,10 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                 onClick={addAdditionalSeat}
                 style={{
                   padding: '4px 12px',
-                  backgroundColor: '#3b82f6',
-                  color: 'white',
+                  backgroundColor: 'var(--text-secondary)',
+                  color: 'var(--text-primary)',
                   border: 'none',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   fontSize: '12px',
                   cursor: 'pointer',
                   fontWeight: '500'
@@ -4820,7 +4820,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             </div>
             
             {!formData.additionalSeats || formData.additionalSeats.length === 0 ? (
-              <p style={{ fontSize: '12px', color: '#6b7280', margin: '8px 0' }}>
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '8px 0' }}>
                 Aucun siège supplémentaire. Cliquez sur "Ajouter un siège" pour les configurations 6+ places.
               </p>
             ) : (
@@ -4831,12 +4831,12 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                     gridTemplateColumns: '2fr 1fr auto', 
                     gap: '12px',
                     padding: '8px',
-                    backgroundColor: 'white',
-                    borderRadius: '4px',
-                    border: '1px solid #e5e7eb'
+                    backgroundColor: 'var(--bg-overlay)',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-subtle)'
                   }}>
                     <div>
-                      <label style={{...labelStyle, fontSize: '11px', color: '#000000'}}>
+                      <label style={{...labelStyle, fontSize: '11px', color: 'var(--app-bg)'}}>
                         Nom du siège
                         <InfoIcon tooltip="Identifiant du siège (ex: Rangée 3 gauche)" />
                       </label>
@@ -4849,7 +4849,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                       />
                     </div>
                     <div>
-                      <label style={{...labelStyle, fontSize: '11px', color: '#000000'}}>
+                      <label style={{...labelStyle, fontSize: '11px', color: 'var(--app-bg)'}}>
                         Bras de levier ({armUnit})
                         <InfoIcon tooltip="Distance par rapport à la référence" />
                       </label>
@@ -4868,10 +4868,10 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                       onClick={() => removeAdditionalSeat(seat.id)}
                       style={{
                         padding: '4px',
-                        backgroundColor: '#ef4444',
-                        color: 'white',
+                        backgroundColor: '#C04534',
+                        color: 'var(--text-primary)',
                         border: 'none',
-                        borderRadius: '4px',
+                        borderRadius: '8px',
                         cursor: 'pointer',
                         alignSelf: 'end',
                         marginBottom: '4px'
@@ -4884,31 +4884,31 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                 ))}
               </div>
             )}
-            <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '8px', marginBottom: 0 }}>
+            <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '8px', marginBottom: 0 }}>
               Utile pour les avions 6+ places, les configurations club ou les sièges additionnels
             </p>
           </div>
 
           {/* Compartiments bagages dynamiques */}
           <div style={{ 
-            backgroundColor: '#fefce8', 
+            backgroundColor: 'var(--bg-overlay)', 
             padding: '12px', 
             borderRadius: '8px', 
             marginBottom: '16px',
             border: '1px solid #f26921'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: '#000000', margin: 0 }}>
+              <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--app-bg)', margin: 0 }}>
                 🏎️ Compartiments bagages
               </h5>
               <button
                 type="button"
                 onClick={addBaggageCompartment}
                 style={{
-                  backgroundColor: '#fbbf24',
-                  color: '#78350f',
+                  backgroundColor: 'var(--accent-primary)',
+                  color: 'var(--accent-primary)',
                   border: 'none',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   padding: '6px 12px',
                   fontSize: '13px',
                   fontWeight: '600',
@@ -4931,12 +4931,12 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                     gridTemplateColumns: '2fr 1fr 1fr auto',
                     gap: '12px',
                     padding: '12px',
-                    backgroundColor: 'white',
-                    borderRadius: '6px',
-                    border: '1px solid #e5e7eb'
+                    backgroundColor: 'var(--bg-overlay)',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-subtle)'
                   }}>
                     <div>
-                      <label style={{...labelStyle, fontSize: '11px', color: '#000000'}}>
+                      <label style={{...labelStyle, fontSize: '11px', color: 'var(--app-bg)'}}>
                         Nom du compartiment
                       </label>
                       <input
@@ -4948,7 +4948,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                       />
                     </div>
                     <div>
-                      <label style={{...labelStyle, fontSize: '11px', color: '#000000'}}>
+                      <label style={{...labelStyle, fontSize: '11px', color: 'var(--app-bg)'}}>
                         Bras de levier ({armUnit})
                         <InfoIcon tooltip="Distance par rapport à la référence" />
                       </label>
@@ -4963,7 +4963,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                       />
                     </div>
                     <div>
-                      <label style={{...labelStyle, fontSize: '11px', color: '#000000'}}>
+                      <label style={{...labelStyle, fontSize: '11px', color: 'var(--app-bg)'}}>
                         Masse max ({massUnit})
                         <InfoIcon tooltip="Masse maximale autorisée" />
                       </label>
@@ -4989,10 +4989,10 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                           type="button"
                           onClick={() => removeBaggageCompartment(compartment.id)}
                           style={{
-                            backgroundColor: '#ef4444',
-                            color: 'white',
+                            backgroundColor: '#C04534',
+                            color: 'var(--text-primary)',
                             border: 'none',
-                            borderRadius: '4px',
+                            borderRadius: '8px',
                             padding: '8px',
                             fontSize: '12px',
                             cursor: 'pointer',
@@ -5012,7 +5012,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
               <div style={{
                 textAlign: 'center',
                 padding: '20px',
-                color: '#9ca3af',
+                color: 'var(--text-tertiary)',
                 fontStyle: 'italic'
               }}>
                 Aucun compartiment défini. Cliquez sur "Ajouter un compartiment" pour commencer.
@@ -5022,13 +5022,13 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
 
           {/* Masses limites */}
           <div style={{ 
-            backgroundColor: '#fee2e2', 
+            backgroundColor: 'var(--bg-overlay)', 
             padding: '12px', 
             borderRadius: '8px', 
             marginBottom: '16px',
-            border: '1px solid #fca5a5'
+            border: '1px solid var(--bg-overlay)'
           }}>
-            <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#000000' }}>
+            <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--app-bg)' }}>
               Masses limites ({massUnit})
             </h5>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
@@ -5079,31 +5079,31 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
 
           {/* CENTER OF GRAVITY - Enveloppe de centrage */}
           <div style={{ 
-            backgroundColor: '#fef2f2', 
+            backgroundColor: 'var(--bg-overlay)', 
             padding: '16px', 
             borderRadius: '8px', 
             marginBottom: '16px',
-            border: '2px solid #dc2626',
+            border: '2px solid #C04534',
             marginTop: '24px'
           }}>
-            <h5 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000' }}>
+            <h5 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--app-bg)' }}>
               ⚠️ CENTER OF GRAVITY - Enveloppe de centrage
             </h5>
 
             {/* CG Avant (Most forward) - Points dynamiques */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <h6 style={{ fontSize: '14px', fontWeight: 'bold', color: '#000000' }}>
+                <h6 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--app-bg)' }}>
                   📍 Most Forward CG (Limite avant)
                 </h6>
                 <button
                   type="button"
                   onClick={addForwardPoint}
                   style={{
-                    backgroundColor: '#22c55e',
-                    color: 'white',
+                    backgroundColor: 'var(--text-primary)',
+                    color: 'var(--text-primary)',
                     border: 'none',
-                    borderRadius: '6px',
+                    borderRadius: '8px',
                     padding: '6px 12px',
                     fontSize: '12px',
                     cursor: 'pointer',
@@ -5117,12 +5117,12 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
               </div>
               
               <div style={{
-                backgroundColor: '#f8fafc',
+                backgroundColor: 'var(--bg-overlay)',
                 padding: '12px',
-                borderRadius: '6px',
-                border: '1px solid #e2e8f0'
+                borderRadius: '8px',
+                border: '1px solid var(--border-subtle)'
               }}>
-                <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '12px', margin: '0 0 12px 0' }}>
+                <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '12px', margin: '0 0 12px 0' }}>
                   💡 <strong>Astuce:</strong> Ajoutez plusieurs points pour définir une courbe de limite CG avant. Les points seront connectés par ordre croissant de masse.
                 </p>
                 
@@ -5133,12 +5133,12 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                     gap: '12px',
                     marginBottom: '12px',
                     padding: '12px',
-                    backgroundColor: 'white',
-                    borderRadius: '6px',
-                    border: '1px solid #e5e7eb'
+                    backgroundColor: 'var(--bg-overlay)',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-subtle)'
                   }}>
                     <div>
-                      <label style={{...labelStyle, fontSize: '11px', color: '#000000'}}>
+                      <label style={{...labelStyle, fontSize: '11px', color: 'var(--app-bg)'}}>
                         Masse ({massUnit})
                         <InfoIcon tooltip={`Point ${index + 1} - Masse pour la limite CG avant`} />
                       </label>
@@ -5152,7 +5152,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                       />
                     </div>
                     <div>
-                      <label style={{...labelStyle, fontSize: '11px', color: '#000000'}}>
+                      <label style={{...labelStyle, fontSize: '11px', color: 'var(--app-bg)'}}>
                         CG (m)
                         <InfoIcon tooltip={`Point ${index + 1} - Position CG avant à cette masse`} />
                       </label>
@@ -5172,10 +5172,10 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                           type="button"
                           onClick={() => removeForwardPoint(point.id)}
                           style={{
-                            backgroundColor: '#ef4444',
-                            color: 'white',
+                            backgroundColor: '#C04534',
+                            color: 'var(--text-primary)',
                             border: 'none',
-                            borderRadius: '4px',
+                            borderRadius: '8px',
                             padding: '8px',
                             fontSize: '12px',
                             cursor: 'pointer',
@@ -5189,7 +5189,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                       )}
                       <span style={{ 
                         fontSize: '11px', 
-                        color: '#6b7280', 
+                        color: 'var(--text-secondary)', 
                         alignSelf: 'center',
                         minWidth: '40px',
                         textAlign: 'center'
@@ -5204,7 +5204,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                   <div style={{
                     textAlign: 'center',
                     padding: '20px',
-                    color: '#9ca3af',
+                    color: 'var(--text-tertiary)',
                     fontStyle: 'italic'
                   }}>
                     Aucun point défini. Cliquez sur "Ajouter un point" pour commencer.
@@ -5215,7 +5215,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
 
             {/* CG Arrière (Most rearward) */}
             <div>
-              <h6 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '12px', color: '#000000' }}>
+              <h6 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--app-bg)' }}>
                 📍 Most Rearward CG (Limite arrière)
               </h6>
               
@@ -5322,11 +5322,11 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
 
               return (
                 <div style={{
-                  backgroundColor: '#f0f9ff',
+                  backgroundColor: 'var(--bg-overlay)',
                   padding: '20px',
-                  borderRadius: '12px',
+                  borderRadius: '8px',
                   marginTop: '20px',
-                  border: '2px solid #0ea5e9',
+                  border: '2px solid var(--text-secondary)',
                   boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
                 }}>
                   <div style={{ 
@@ -5335,9 +5335,9 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                     alignItems: 'center',
                     marginBottom: '16px',
                     padding: '20px',
-                    backgroundColor: '#ffffff',
+                    backgroundColor: 'var(--bg-overlay)',
                     borderRadius: '8px',
-                    border: '2px solid #e2e8f0',
+                    border: '2px solid var(--border-subtle)',
                     boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
                   }}>
                     <div style={{
@@ -5351,9 +5351,9 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                         style={{ 
                           width: '100%',
                           height: '100%',
-                          border: '1px solid #cbd5e1', 
-                          borderRadius: '4px', 
-                          backgroundColor: 'white'
+                          border: '1px solid var(--border-subtle)', 
+                          borderRadius: '8px', 
+                          backgroundColor: 'var(--bg-overlay)'
                         }}>
                       {/* Grille */}
                       <defs>
@@ -5364,12 +5364,12 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                       <rect width="500" height="300" fill="url(#cgGrid)" />
                       
                       {/* Axes */}
-                      <line x1="50" y1="250" x2="450" y2="250" stroke="#374151" strokeWidth="2" />
-                      <line x1="50" y1="50" x2="50" y2="250" stroke="#374151" strokeWidth="2" />
+                      <line x1="50" y1="250" x2="450" y2="250" stroke="var(--text-secondary)" strokeWidth="2" />
+                      <line x1="50" y1="50" x2="50" y2="250" stroke="var(--text-secondary)" strokeWidth="2" />
                       
                       {/* Labels des axes */}
-                      <text x="250" y="280" textAnchor="middle" fontSize="12" fill="#374151">Centre de Gravité (m)</text>
-                      <text x="20" y="150" textAnchor="middle" fontSize="12" fill="#374151" transform="rotate(-90 20 150)">Masse ({massUnit})</text>
+                      <text x="250" y="280" textAnchor="middle" fontSize="12" fill="var(--text-secondary)">Centre de Gravité (m)</text>
+                      <text x="20" y="150" textAnchor="middle" fontSize="12" fill="var(--text-secondary)" transform="rotate(-90 20 150)">Masse ({massUnit})</text>
                       
                       {/* Graduations X (CG) */}
                       {(() => {
@@ -5379,8 +5379,8 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                           const x = 50 + (400 * i) / 4;
                           ticks.push(
                             <g key={`x-${i}`}>
-                              <line x1={x} y1="250" x2={x} y2="255" stroke="#374151" strokeWidth="1" />
-                              <text x={x} y="270" textAnchor="middle" fontSize="10" fill="#374151">
+                              <line x1={x} y1="250" x2={x} y2="255" stroke="var(--text-secondary)" strokeWidth="1" />
+                              <text x={x} y="270" textAnchor="middle" fontSize="10" fill="var(--text-secondary)">
                                 {cgValue.toFixed(2)}
                               </text>
                             </g>
@@ -5397,8 +5397,8 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                           const y = 250 - (200 * i) / 4;
                           ticks.push(
                             <g key={`y-${i}`}>
-                              <line x1="45" y1={y} x2="50" y2={y} stroke="#374151" strokeWidth="1" />
-                              <text x="40" y={y + 3} textAnchor="end" fontSize="10" fill="#374151">
+                              <line x1="45" y1={y} x2="50" y2={y} stroke="var(--text-secondary)" strokeWidth="1" />
+                              <text x="40" y={y + 3} textAnchor="end" fontSize="10" fill="var(--text-secondary)">
                                 {Math.round(weightValue)}
                               </text>
                             </g>
@@ -5412,7 +5412,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                         <polygon 
                           points={envelopePoints.map(p => `${toSvgX(p.cg)},${toSvgY(p.w)}`).join(' ')}
                           fill="rgba(34, 197, 94, 0.2)" 
-                          stroke="#22c55e" 
+                          stroke="var(--text-primary)" 
                           strokeWidth="2"
                         />
                       )}
@@ -5424,7 +5424,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                             cx={toSvgX(point.cg)} 
                             cy={toSvgY(point.w)} 
                             r="4" 
-                            fill="#dc2626" 
+                            fill="#C04534" 
                             stroke="white" 
                             strokeWidth="2"
                           />
@@ -5433,7 +5433,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                             y={toSvgY(point.w) + 20} 
                             textAnchor="middle" 
                             fontSize="8" 
-                            fill="#6b7280"
+                            fill="var(--text-secondary)"
                           >
                             {point.w}kg / {point.cg}m
                           </text>
@@ -5442,7 +5442,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                       
                       {/* Message si pas assez de données */}
                       {envelopePoints.length < 3 && (
-                        <text x="250" y="150" textAnchor="middle" fontSize="14" fill="#9ca3af">
+                        <text x="250" y="150" textAnchor="middle" fontSize="14" fill="var(--text-tertiary)">
                           Saisissez au moins 3 points pour visualiser l'enveloppe
                         </text>
                       )}
@@ -5472,12 +5472,12 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       </div>
 
       {showEquipements && (
-        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
           <>
 
             {/* Section Communication */}
             <div>
-              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000', display: 'flex', alignItems: 'center' }}>
+              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--app-bg)', display: 'flex', alignItems: 'center' }}>
                 <span style={{ marginRight: '8px' }}>📻</span>
                 Équipements de radiocommunication (COM)
                 <InfoIcon tooltip="Équipements de communication avec l'ATC et autres aéronefs" />
@@ -5487,10 +5487,10 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                 display: 'grid', 
                 gridTemplateColumns: 'repeat(2, 1fr)', 
                 gap: '12px',
-                backgroundColor: '#F9FAFB',
+                backgroundColor: 'var(--bg-overlay)',
                 padding: '16px',
                 borderRadius: '8px',
-                border: '1px solid #E5E7EB'
+                border: '1px solid var(--border-subtle)'
               }}>
                 <label style={sx.flex.start}>
                   <input
@@ -5560,7 +5560,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
 
             {/* Section Navigation et Approche */}
             <div>
-              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000', display: 'flex', alignItems: 'center' }}>
+              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--app-bg)', display: 'flex', alignItems: 'center' }}>
                 <span style={{ marginRight: '8px' }}>🧭</span>
                 Équipements de navigation et approche (NAV/APP)
                 <InfoIcon tooltip="Systèmes de navigation et capacités d'approche aux instruments" />
@@ -5697,7 +5697,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
 
             {/* Section Surveillance */}
             <div>
-              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000', display: 'flex', alignItems: 'center' }}>
+              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--app-bg)', display: 'flex', alignItems: 'center' }}>
                 <span style={{ marginRight: '8px' }}>📍</span>
                 Équipements de surveillance
                 <InfoIcon tooltip="Systèmes de surveillance et anti-collision" />
@@ -5826,7 +5826,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
 
             {/* Capacités spéciales */}
             <div>
-              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000', display: 'flex', alignItems: 'center' }}>
+              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--app-bg)', display: 'flex', alignItems: 'center' }}>
                 <span style={{ marginRight: '8px' }}>🌟</span>
                 Capacités spéciales et approbations
                 <InfoIcon tooltip="Approbations opérationnelles spéciales" />
@@ -5836,7 +5836,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                 display: 'grid', 
                 gridTemplateColumns: 'repeat(2, 1fr)', 
                 gap: '12px',
-                backgroundColor: '#F0FDF4',
+                backgroundColor: 'var(--bg-overlay)',
                 padding: '16px',
                 borderRadius: '8px',
                 border: '1px solid #86EFAC',
@@ -5939,12 +5939,12 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       </div>
 
       {showOperations && (
-        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
           <>
 
             {/* Opérations de base */}
             <div>
-              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000' }}>
+              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--app-bg)' }}>
                 📋 Règles de vol
               </h4>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -5998,7 +5998,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
 
             {/* Opérations spéciales */}
             <div>
-              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000' }}>
+              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--app-bg)' }}>
                 🎯 Opérations spéciales
               </h4>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -6070,7 +6070,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
 
             {/* Opérations commerciales et environnement */}
             <div>
-              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000' }}>
+              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--app-bg)' }}>
                 🏔️ Environnement et usage
               </h4>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -6146,11 +6146,11 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       </div>
 
       {showRemarques && (
-        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
           <>
 
             <div>
-              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: '#000000' }}>
+              <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--app-bg)' }}>
                 Notes et remarques
               </h4>
               
@@ -6231,7 +6231,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       </div>
 
       {showPerformancesIA && (
-        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
           <>
             <div style={{ marginTop: '20px' }}>
               <AdvancedPerformanceAnalyzer 

@@ -489,7 +489,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
   const curves = useMemo(() => [{
     id: CURVE_ID,
     name: currentStage?.label || 'Courbe en cours',
-    color: '#ef4444',
+    color: '#C04534',
     points: curvePoints
   }], [curvePoints, currentStage]);
 
@@ -754,10 +754,10 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
             sx={{
               position: 'absolute', right: -3, top: 40, bottom: 60, width: 8,
               cursor: 'ew-resize',
-              bgcolor: chartResize?.kind === 'right' ? '#3b82f6' : '#dbeafe',
+              bgcolor: chartResize?.kind === 'right' ? 'var(--text-secondary)' : 'var(--bg-overlay)',
               borderRadius: 1,
               opacity: 0.8,
-              '&:hover': { bgcolor: '#3b82f6' }
+              '&:hover': { bgcolor: 'var(--text-secondary)' }
             }}
           />
           {/* Poignée bord bas : étire verticalement */}
@@ -774,10 +774,10 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
             sx={{
               position: 'absolute', bottom: -3, left: 60, right: 40, height: 8,
               cursor: 'ns-resize',
-              bgcolor: chartResize?.kind === 'bottom' ? '#3b82f6' : '#dbeafe',
+              bgcolor: chartResize?.kind === 'bottom' ? 'var(--text-secondary)' : 'var(--bg-overlay)',
               borderRadius: 1,
               opacity: 0.8,
-              '&:hover': { bgcolor: '#3b82f6' }
+              '&:hover': { bgcolor: 'var(--text-secondary)' }
             }}
           />
           {/* Poignée coin bas-droit : étire en 2D */}
@@ -794,7 +794,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
             sx={{
               position: 'absolute', right: -8, bottom: -8, width: 18, height: 18,
               cursor: 'nwse-resize',
-              bgcolor: chartResize?.kind === 'corner' ? '#3b82f6' : '#3b82f6',
+              bgcolor: chartResize?.kind === 'corner' ? 'var(--text-secondary)' : 'var(--text-secondary)',
               border: '2px solid white',
               borderRadius: 1,
               opacity: 0.9,
@@ -936,7 +936,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
 
           {isCalibrating && (
             <Paper variant="outlined" sx={{ p: 2, mb: 2, bgcolor: 'rgba(249,115,22,0.08)', borderColor: '#f26921', borderWidth: 2 }}>
-              <Typography variant="h6" sx={{ color: '#9a3412' }}>
+              <Typography variant="h6" sx={{ color: 'var(--accent-primary)' }}>
                 🎯 Clique sur la graduation <strong>{axis.toUpperCase()} = {currentValue}</strong>
               </Typography>
               <Typography variant="caption" color="text.secondary">
@@ -963,8 +963,8 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
                   <Box key={i} sx={{ display: 'flex', alignItems: 'center', p: 1, borderBottom: i < ticks.length - 1 ? '1px solid' : 'none', borderColor: 'divider' }}>
                     <Box sx={{
                       width: 28, height: 28, borderRadius: '50%',
-                      bgcolor: axis === 'x' ? '#22c55e' : '#3b82f6',
-                      color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      bgcolor: axis === 'x' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontWeight: 700, mr: 2
                     }}>
                       {i + 1}

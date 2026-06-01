@@ -1076,29 +1076,29 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                         sx={{
                           mb: 2,
                           p: 1.5,
-                          bgcolor: '#f0f9ff',
-                          borderRadius: '6px',
-                          border: '2px solid #2196F3'
+                          bgcolor: 'var(--bg-overlay)',
+                          borderRadius: '8px',
+                          border: '2px solid var(--text-secondary)'
                         }}
                       >
                         <Typography sx={{ fontWeight: 500, mb: 1, fontSize: '15px' }}>
                           {model.name || `Abaque ${index + 1}`}
                         </Typography>
-                        <Typography sx={{ fontSize: '14px', color: '#6b7280' }}>
+                        <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
                           Type: {model.type || 'abaque'}
                         </Typography>
                         {model.data?.graphs && (
                           <>
-                            <Typography sx={{ fontSize: '14px', color: '#6b7280', mt: 0.5 }}>
+                            <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)', mt: 0.5 }}>
                               📊 {model.data.graphs.length} graphique(s)
                             </Typography>
                             {totalCurves > 0 && (
-                              <Typography sx={{ fontSize: '14px', color: '#6b7280', mt: 0.5 }}>
+                              <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)', mt: 0.5 }}>
                                 📈 {totalCurves} courbe(s)
                               </Typography>
                             )}
                             {totalPoints > 0 && (
-                              <Typography sx={{ fontSize: '14px', color: '#6b7280', mt: 0.5 }}>
+                              <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)', mt: 0.5 }}>
                                 📍 {totalPoints} point(s) de données
                               </Typography>
                             )}
@@ -1130,12 +1130,12 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                         fontSize: '0.875rem'
                       }}>
                         <thead>
-                          <tr style={{ backgroundColor: '#f5f5f5' }}>
+                          <tr style={{ backgroundColor: 'var(--bg-overlay)' }}>
                             {table.headers.map((header, headerIndex) => (
                               <th key={headerIndex} style={{ 
                                 padding: '8px',
-                                borderBottom: '1px solid #e0e0e0',
-                                borderRight: headerIndex < table.headers.length - 1 ? '1px solid #e0e0e0' : 'none',
+                                borderBottom: '1px solid var(--border-subtle)',
+                                borderRight: headerIndex < table.headers.length - 1 ? '1px solid var(--border-subtle)' : 'none',
                                 textAlign: 'left',
                                 fontWeight: 600
                               }}>
@@ -1147,13 +1147,13 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                         <tbody>
                           {table.rows && table.rows.map((row, rowIndex) => (
                             <tr key={rowIndex} style={{ 
-                              backgroundColor: rowIndex % 2 === 0 ? 'white' : '#fafafa' 
+                              backgroundColor: rowIndex % 2 === 0 ? 'white' : 'var(--bg-overlay)' 
                             }}>
                               {row.map((cell, cellIndex) => (
                                 <td key={cellIndex} style={{ 
                                   padding: '8px',
-                                  borderBottom: rowIndex < table.rows.length - 1 ? '1px solid #e0e0e0' : 'none',
-                                  borderRight: cellIndex < row.length - 1 ? '1px solid #e0e0e0' : 'none'
+                                  borderBottom: rowIndex < table.rows.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                                  borderRight: cellIndex < row.length - 1 ? '1px solid var(--border-subtle)' : 'none'
                                 }}>
                                   {cell}
                                 </td>
@@ -1648,29 +1648,29 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                             sx={{
                               mb: 2,
                               p: 1.5,
-                              bgcolor: '#f0f9ff',
-                              borderRadius: '6px',
-                              border: '2px solid #2196F3'
+                              bgcolor: 'var(--bg-overlay)',
+                              borderRadius: '8px',
+                              border: '2px solid var(--text-secondary)'
                             }}
                           >
                             <Typography sx={{ fontWeight: 500, mb: 1, fontSize: '15px' }}>
                               {model.name || `Abaque ${index + 1}`}
                             </Typography>
-                            <Typography sx={{ fontSize: '14px', color: '#6b7280' }}>
+                            <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
                               Type: {model.type || 'abaque'}
                             </Typography>
                             {model.data?.graphs && (
                               <>
-                                <Typography sx={{ fontSize: '14px', color: '#6b7280', mt: 0.5 }}>
+                                <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)', mt: 0.5 }}>
                                   📊 {model.data.graphs.length} graphique(s)
                                 </Typography>
                                 {totalCurves > 0 && (
-                                  <Typography sx={{ fontSize: '14px', color: '#6b7280', mt: 0.5 }}>
+                                  <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)', mt: 0.5 }}>
                                     📈 {totalCurves} courbe(s)
                                   </Typography>
                                 )}
                                 {totalPoints > 0 && (
-                                  <Typography sx={{ fontSize: '14px', color: '#6b7280', mt: 0.5 }}>
+                                  <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)', mt: 0.5 }}>
                                     📍 {totalPoints} point(s) de données
                                   </Typography>
                                 )}
@@ -1858,8 +1858,8 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                                 maxWidth: '150px',
                                 maxHeight: '150px',
                                 objectFit: 'contain',
-                                borderRadius: '4px',
-                                border: '1px solid #ddd'
+                                borderRadius: '8px',
+                                border: '1px solid var(--border-subtle)'
                               }}
                             />
                           </Box>

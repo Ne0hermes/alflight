@@ -191,17 +191,17 @@ const GlobalVFRPointsManager = () => {
   };
 
   const vfrTypeColors = {
-    'Entry': '#10b981',
-    'Exit': '#ef4444',
-    'Transit': '#3b82f6',
-    'VRP': '#8b5cf6',
-    'Custom': '#f59e0b'
+    'Entry': 'var(--text-primary)',
+    'Exit': '#C04534',
+    'Transit': 'var(--text-secondary)',
+    'VRP': 'var(--accent-primary)',
+    'Custom': 'var(--accent-primary)'
   };
 
   return (
     <div style={{
       padding: '20px',
-      backgroundColor: 'white',
+      backgroundColor: 'var(--bg-overlay)',
       borderRadius: '8px',
       boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
     }}>
@@ -229,7 +229,7 @@ const GlobalVFRPointsManager = () => {
           {lastSyncTime && (
             <p style={{
               fontSize: '11px',
-              color: '#6b7280',
+              color: 'var(--text-secondary)',
               margin: 0,
               display: 'flex',
               alignItems: 'center',
@@ -247,10 +247,10 @@ const GlobalVFRPointsManager = () => {
             disabled={isSyncing}
             style={{
               padding: '8px 16px',
-              backgroundColor: isSyncing ? '#9ca3af' : '#10b981',
-              color: 'white',
+              backgroundColor: isSyncing ? 'var(--text-tertiary)' : 'var(--text-primary)',
+              color: 'var(--text-primary)',
               border: 'none',
-              borderRadius: '6px',
+              borderRadius: '8px',
               fontSize: '14px',
               cursor: isSyncing ? 'not-allowed' : 'pointer',
               display: 'flex',
@@ -268,10 +268,10 @@ const GlobalVFRPointsManager = () => {
             disabled={isUploading || localGlobalPoints.length === 0}
             style={{
               padding: '8px 16px',
-              backgroundColor: isUploading || localGlobalPoints.length === 0 ? '#9ca3af' : '#f59e0b',
-              color: 'white',
+              backgroundColor: isUploading || localGlobalPoints.length === 0 ? 'var(--text-tertiary)' : 'var(--accent-primary)',
+              color: 'var(--text-primary)',
               border: 'none',
-              borderRadius: '6px',
+              borderRadius: '8px',
               fontSize: '14px',
               cursor: isUploading || localGlobalPoints.length === 0 ? 'not-allowed' : 'pointer',
               display: 'flex',
@@ -288,10 +288,10 @@ const GlobalVFRPointsManager = () => {
             onClick={() => setIsAdding(true)}
             style={{
               padding: '8px 16px',
-              backgroundColor: '#3b82f6',
-              color: 'white',
+              backgroundColor: 'var(--text-secondary)',
+              color: 'var(--text-primary)',
               border: 'none',
-              borderRadius: '6px',
+              borderRadius: '8px',
               fontSize: '14px',
               cursor: 'pointer',
               display: 'flex',
@@ -315,7 +315,7 @@ const GlobalVFRPointsManager = () => {
           left: '10px',
           top: '50%',
           transform: 'translateY(-50%)',
-          color: '#6b7280'
+          color: 'var(--text-secondary)'
         }} />
         <input
           type="text"
@@ -325,8 +325,8 @@ const GlobalVFRPointsManager = () => {
           style={{
             width: '100%',
             padding: '8px 8px 8px 36px',
-            border: '1px solid #d1d5db',
-            borderRadius: '6px',
+            border: '1px solid var(--text-tertiary)',
+            borderRadius: '8px',
             fontSize: '14px'
           }}
         />
@@ -337,9 +337,9 @@ const GlobalVFRPointsManager = () => {
         <div style={{
           marginBottom: '20px',
           padding: '16px',
-          backgroundColor: '#f3f4f6',
+          backgroundColor: 'var(--bg-overlay)',
           borderRadius: '8px',
-          border: '2px solid #3b82f6'
+          border: '2px solid var(--text-secondary)'
         }}>
           <h3 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>
             Nouveau point VFR global
@@ -353,8 +353,8 @@ const GlobalVFRPointsManager = () => {
               onChange={(e) => setNewPoint({ ...newPoint, name: e.target.value })}
               style={{
                 padding: '8px',
-                border: '1px solid #d1d5db',
-                borderRadius: '4px',
+                border: '1px solid var(--text-tertiary)',
+                borderRadius: '8px',
                 fontSize: '14px'
               }}
             />
@@ -364,8 +364,8 @@ const GlobalVFRPointsManager = () => {
               onChange={(e) => setNewPoint({ ...newPoint, type: e.target.value })}
               style={{
                 padding: '8px',
-                border: '1px solid #d1d5db',
-                borderRadius: '4px',
+                border: '1px solid var(--text-tertiary)',
+                borderRadius: '8px',
                 fontSize: '14px'
               }}
             >
@@ -384,8 +384,8 @@ const GlobalVFRPointsManager = () => {
               step="0.0001"
               style={{
                 padding: '8px',
-                border: '1px solid #d1d5db',
-                borderRadius: '4px',
+                border: '1px solid var(--text-tertiary)',
+                borderRadius: '8px',
                 fontSize: '14px'
               }}
             />
@@ -398,8 +398,8 @@ const GlobalVFRPointsManager = () => {
               step="0.0001"
               style={{
                 padding: '8px',
-                border: '1px solid #d1d5db',
-                borderRadius: '4px',
+                border: '1px solid var(--text-tertiary)',
+                borderRadius: '8px',
                 fontSize: '14px'
               }}
             />
@@ -411,8 +411,8 @@ const GlobalVFRPointsManager = () => {
               onChange={(e) => setNewPoint({ ...newPoint, altitude: e.target.value })}
               style={{
                 padding: '8px',
-                border: '1px solid #d1d5db',
-                borderRadius: '4px',
+                border: '1px solid var(--text-tertiary)',
+                borderRadius: '8px',
                 fontSize: '14px'
               }}
             />
@@ -424,8 +424,8 @@ const GlobalVFRPointsManager = () => {
               onChange={(e) => setNewPoint({ ...newPoint, description: e.target.value })}
               style={{
                 padding: '8px',
-                border: '1px solid #d1d5db',
-                borderRadius: '4px',
+                border: '1px solid var(--text-tertiary)',
+                borderRadius: '8px',
                 fontSize: '14px'
               }}
             />
@@ -440,10 +440,10 @@ const GlobalVFRPointsManager = () => {
               onClick={handleAddPoint}
               style={{
                 padding: '6px 12px',
-                backgroundColor: '#10b981',
-                color: 'white',
+                backgroundColor: 'var(--text-primary)',
+                color: 'var(--text-primary)',
                 border: 'none',
-                borderRadius: '4px',
+                borderRadius: '8px',
                 fontSize: '14px',
                 cursor: 'pointer'
               }}
@@ -464,10 +464,10 @@ const GlobalVFRPointsManager = () => {
               }}
               style={{
                 padding: '6px 12px',
-                backgroundColor: '#6b7280',
-                color: 'white',
+                backgroundColor: 'var(--text-secondary)',
+                color: 'var(--text-primary)',
                 border: 'none',
-                borderRadius: '4px',
+                borderRadius: '8px',
                 fontSize: '14px',
                 cursor: 'pointer'
               }}
@@ -490,9 +490,9 @@ const GlobalVFRPointsManager = () => {
               key={point.id}
               style={{
                 padding: '12px',
-                backgroundColor: '#f9fafb',
-                borderRadius: '6px',
-                border: '1px solid #e5e7eb'
+                backgroundColor: 'var(--bg-overlay)',
+                borderRadius: '8px',
+                border: '1px solid var(--border-subtle)'
               }}
             >
               {editingPoint?.id === point.id ? (
@@ -504,8 +504,8 @@ const GlobalVFRPointsManager = () => {
                     onChange={(e) => setEditingPoint({ ...editingPoint, name: e.target.value })}
                     style={{
                       padding: '6px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '4px',
+                      border: '1px solid var(--text-tertiary)',
+                      borderRadius: '8px',
                       fontSize: '12px'
                     }}
                   />
@@ -515,8 +515,8 @@ const GlobalVFRPointsManager = () => {
                     onChange={(e) => setEditingPoint({ ...editingPoint, type: e.target.value })}
                     style={{
                       padding: '6px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '4px',
+                      border: '1px solid var(--text-tertiary)',
+                      borderRadius: '8px',
                       fontSize: '12px'
                     }}
                   >
@@ -535,8 +535,8 @@ const GlobalVFRPointsManager = () => {
                     placeholder="Latitude"
                     style={{
                       padding: '6px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '4px',
+                      border: '1px solid var(--text-tertiary)',
+                      borderRadius: '8px',
                       fontSize: '12px'
                     }}
                   />
@@ -549,8 +549,8 @@ const GlobalVFRPointsManager = () => {
                     placeholder="Longitude"
                     style={{
                       padding: '6px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '4px',
+                      border: '1px solid var(--text-tertiary)',
+                      borderRadius: '8px',
                       fontSize: '12px'
                     }}
                   />
@@ -562,8 +562,8 @@ const GlobalVFRPointsManager = () => {
                     placeholder="Altitude"
                     style={{
                       padding: '6px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '4px',
+                      border: '1px solid var(--text-tertiary)',
+                      borderRadius: '8px',
                       fontSize: '12px'
                     }}
                   />
@@ -575,8 +575,8 @@ const GlobalVFRPointsManager = () => {
                     placeholder="Description"
                     style={{
                       padding: '6px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '4px',
+                      border: '1px solid var(--text-tertiary)',
+                      borderRadius: '8px',
                       fontSize: '12px'
                     }}
                   />
@@ -586,10 +586,10 @@ const GlobalVFRPointsManager = () => {
                       onClick={handleUpdatePoint}
                       style={{
                         padding: '4px 8px',
-                        backgroundColor: '#10b981',
-                        color: 'white',
+                        backgroundColor: 'var(--text-primary)',
+                        color: 'var(--text-primary)',
                         border: 'none',
-                        borderRadius: '4px',
+                        borderRadius: '8px',
                         fontSize: '12px',
                         cursor: 'pointer'
                       }}
@@ -600,10 +600,10 @@ const GlobalVFRPointsManager = () => {
                       onClick={() => setEditingPoint(null)}
                       style={{
                         padding: '4px 8px',
-                        backgroundColor: '#6b7280',
-                        color: 'white',
+                        backgroundColor: 'var(--text-secondary)',
+                        color: 'var(--text-primary)',
                         border: 'none',
-                        borderRadius: '4px',
+                        borderRadius: '8px',
                         fontSize: '12px',
                         cursor: 'pointer'
                       }}
@@ -627,7 +627,7 @@ const GlobalVFRPointsManager = () => {
                       marginBottom: '4px',
                       flexWrap: 'wrap'
                     }}>
-                      <MapPin size={16} style={{ color: vfrTypeColors[point.type] || '#6b7280' }} />
+                      <MapPin size={16} style={{ color: vfrTypeColors[point.type] || 'var(--text-secondary)' }} />
                       <span style={{
                         fontSize: '14px',
                         fontWeight: '600'
@@ -637,9 +637,9 @@ const GlobalVFRPointsManager = () => {
                       <span style={{
                         fontSize: '11px',
                         padding: '2px 6px',
-                        backgroundColor: vfrTypeColors[point.type] || '#6b7280',
-                        color: 'white',
-                        borderRadius: '4px'
+                        backgroundColor: vfrTypeColors[point.type] || 'var(--text-secondary)',
+                        color: 'var(--text-primary)',
+                        borderRadius: '8px'
                       }}>
                         {point.type}
                       </span>
@@ -647,9 +647,9 @@ const GlobalVFRPointsManager = () => {
                         <span style={{
                           fontSize: '10px',
                           padding: '2px 6px',
-                          backgroundColor: '#10b981',
-                          color: 'white',
-                          borderRadius: '4px',
+                          backgroundColor: 'var(--text-primary)',
+                          color: 'var(--text-primary)',
+                          borderRadius: '8px',
                           display: 'flex',
                           alignItems: 'center',
                           gap: '3px'
@@ -661,9 +661,9 @@ const GlobalVFRPointsManager = () => {
                         <span style={{
                           fontSize: '10px',
                           padding: '2px 6px',
-                          backgroundColor: '#6b7280',
-                          color: 'white',
-                          borderRadius: '4px',
+                          backgroundColor: 'var(--text-secondary)',
+                          color: 'var(--text-primary)',
+                          borderRadius: '8px',
                           display: 'flex',
                           alignItems: 'center',
                           gap: '3px'
@@ -676,7 +676,7 @@ const GlobalVFRPointsManager = () => {
                     
                     <div style={{
                       fontSize: '12px',
-                      color: '#6b7280',
+                      color: 'var(--text-secondary)',
                       marginBottom: '2px'
                     }}>
                       {formatCoordinates(point.lat, point.lon)}
@@ -685,7 +685,7 @@ const GlobalVFRPointsManager = () => {
                     {point.altitude && (
                       <div style={{
                         fontSize: '12px',
-                        color: '#6b7280'
+                        color: 'var(--text-secondary)'
                       }}>
                         Altitude: {point.altitude} ft
                       </div>
@@ -694,7 +694,7 @@ const GlobalVFRPointsManager = () => {
                     {point.description && (
                       <div style={{
                         fontSize: '12px',
-                        color: '#4b5563',
+                        color: 'var(--text-secondary)',
                         marginTop: '4px'
                       }}>
                         {point.description}
@@ -715,7 +715,7 @@ const GlobalVFRPointsManager = () => {
                             backgroundColor: 'transparent',
                             border: 'none',
                             cursor: 'pointer',
-                            color: '#6b7280'
+                            color: 'var(--text-secondary)'
                           }}
                           title="Modifier"
                         >
@@ -732,7 +732,7 @@ const GlobalVFRPointsManager = () => {
                             backgroundColor: 'transparent',
                             border: 'none',
                             cursor: 'pointer',
-                            color: '#ef4444'
+                            color: '#C04534'
                           }}
                           title="Supprimer"
                         >
@@ -744,7 +744,7 @@ const GlobalVFRPointsManager = () => {
                       <div style={{
                         padding: '4px 8px',
                         fontSize: '11px',
-                        color: '#6b7280',
+                        color: 'var(--text-secondary)',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '4px'
@@ -763,7 +763,7 @@ const GlobalVFRPointsManager = () => {
           <div style={{
             padding: '40px',
             textAlign: 'center',
-            color: '#9ca3af'
+            color: 'var(--text-tertiary)'
           }}>
             <MapPin size={48} style={{ opacity: 0.3, margin: '0 auto 16px' }} />
             <p style={{ fontSize: '14px' }}>
@@ -781,11 +781,11 @@ const GlobalVFRPointsManager = () => {
         <div style={{
           marginTop: '20px',
           padding: '12px',
-          backgroundColor: '#eff6ff',
-          borderRadius: '6px',
-          border: '1px solid #3b82f6',
+          backgroundColor: 'var(--bg-overlay)',
+          borderRadius: '8px',
+          border: '1px solid var(--text-secondary)',
           fontSize: '12px',
-          color: '#1e40af'
+          color: 'var(--text-primary)'
         }}>
           <div style={{ marginBottom: '8px' }}>
             <strong>{globalPoints.length}</strong> point{globalPoints.length > 1 ? 's' : ''} VFR global{globalPoints.length > 1 ? 'aux' : ''}

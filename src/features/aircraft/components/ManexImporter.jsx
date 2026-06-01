@@ -382,8 +382,8 @@ export const ManexImporter = memo(({
       zIndex: 1000
     }}>
       <div style={{
-        backgroundColor: 'white',
-        borderRadius: '12px',
+        backgroundColor: 'var(--bg-overlay)',
+        borderRadius: '8px',
         padding: '24px',
         maxWidth: '600px',
         width: '90%',
@@ -393,7 +393,7 @@ export const ManexImporter = memo(({
         {/* En-tête */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h3 style={{ fontSize: '20px', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
-            <FileText size={24} style={{ marginRight: '8px', color: '#3b82f6' }} />
+            <FileText size={24} style={{ marginRight: '8px', color: 'var(--text-secondary)' }} />
             Manuel de Vol (MANEX)
           </h3>
           <button
@@ -403,7 +403,7 @@ export const ManexImporter = memo(({
               border: 'none',
               cursor: 'pointer',
               padding: '4px',
-              color: '#6b7280'
+              color: 'var(--text-secondary)'
             }}
           >
             <X size={24} />
@@ -413,31 +413,31 @@ export const ManexImporter = memo(({
         {/* Affichage du MANEX existant */}
         {(manexData || aircraft.manex) && !loading && (
           <div style={{
-            backgroundColor: manexData?.pdfData ? '#f0f9ff' : 'rgba(242, 105, 33, 0.10)',
-            border: `1px solid ${manexData?.pdfData ? '#3b82f6' : '#f59e0b'}`,
+            backgroundColor: manexData?.pdfData ? 'var(--bg-overlay)' : 'rgba(242, 105, 33, 0.10)',
+            border: `1px solid ${manexData?.pdfData ? 'var(--text-secondary)' : 'var(--accent-primary)'}`,
             borderRadius: '8px',
             padding: '16px',
             marginBottom: '20px'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-              <FileText size={20} style={{ marginRight: '8px', color: manexData?.pdfData ? '#3b82f6' : '#f59e0b' }} />
+              <FileText size={20} style={{ marginRight: '8px', color: manexData?.pdfData ? 'var(--text-secondary)' : 'var(--accent-primary)' }} />
               <div style={{ flex: 1 }}>
                 <p style={{ fontWeight: '600', marginBottom: '4px' }}>{manexData?.fileName || aircraft.manex?.fileName || 'MANEX'}</p>
-                <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
                   {manexData?.fileSize || aircraft.manex?.fileSize} • Importé le {new Date(manexData?.uploadDate || aircraft.manex?.uploadDate || Date.now()).toLocaleDateString('fr-FR')}
                 </p>
                 {!manexData?.pdfData && (
                   <div style={{
                     backgroundColor: 'rgba(242, 105, 33, 0.10)',
-                    border: '1px solid #f59e0b',
-                    borderRadius: '6px',
+                    border: '1px solid var(--accent-primary)',
+                    borderRadius: '8px',
                     padding: '8px 12px',
                     marginTop: '4px'
                   }}>
-                    <p style={{ fontSize: '13px', color: '#92400e', fontWeight: '500', margin: 0 }}>
+                    <p style={{ fontSize: '13px', color: 'var(--accent-primary)', fontWeight: '500', margin: 0 }}>
                       ⚠️ PDF non disponible localement
                     </p>
-                    <p style={{ fontSize: '12px', color: '#78350f', margin: '4px 0 0 0' }}>
+                    <p style={{ fontSize: '12px', color: 'var(--accent-primary)', margin: '4px 0 0 0' }}>
                       {(manexData?.remoteUrl || aircraft.manex?.remoteUrl)
                         ? '→ Cliquez sur "Récupérer le PDF" pour le télécharger, puis vous pourrez l\'uploader sur Supabase'
                         : '→ Cliquez sur "Remplacer le MANEX" pour réimporter le PDF, puis vous pourrez l\'uploader sur Supabase'
@@ -447,23 +447,23 @@ export const ManexImporter = memo(({
                 )}
                 {manexData?.pdfData && !manexData?.uploadedToSupabase && (
                   <div style={{
-                    backgroundColor: '#dbeafe',
-                    border: '1px solid #3b82f6',
-                    borderRadius: '6px',
+                    backgroundColor: 'var(--bg-overlay)',
+                    border: '1px solid var(--text-secondary)',
+                    borderRadius: '8px',
                     padding: '8px 12px',
                     marginTop: '4px'
                   }}>
-                    <p style={{ fontSize: '13px', color: '#1e40af', fontWeight: '500', margin: 0 }}>
+                    <p style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: '500', margin: 0 }}>
                       📤 Prêt pour l'upload
                     </p>
-                    <p style={{ fontSize: '12px', color: '#1e3a8a', margin: '4px 0 0 0' }}>
+                    <p style={{ fontSize: '12px', color: 'var(--text-primary)', margin: '4px 0 0 0' }}>
                       → Cliquez sur "Uploader sur Supabase" ci-dessous pour partager ce MANEX avec la communauté
                     </p>
                   </div>
                 )}
                 {manexData?.uploadedToSupabase && (
                   <div>
-                    <p style={{ fontSize: '13px', color: '#10b981', marginTop: '4px', fontWeight: '500' }}>
+                    <p style={{ fontSize: '13px', color: 'var(--text-primary)', marginTop: '4px', fontWeight: '500' }}>
                       ✅ MANEX disponible sur Supabase
                     </p>
                   </div>
@@ -478,10 +478,10 @@ export const ManexImporter = memo(({
                 disabled={!manexData?.pdfData}
                 style={{
                   padding: '6px 12px',
-                  backgroundColor: manexData?.pdfData ? '#10b981' : 'white',
-                  color: manexData?.pdfData ? 'white' : '#6b7280',
-                  border: `1px solid ${manexData?.pdfData ? '#10b981' : '#d1d5db'}`,
-                  borderRadius: '6px',
+                  backgroundColor: manexData?.pdfData ? 'var(--text-primary)' : 'white',
+                  color: manexData?.pdfData ? 'white' : 'var(--text-secondary)',
+                  border: `1px solid ${manexData?.pdfData ? 'var(--text-primary)' : 'var(--text-tertiary)'}`,
+                  borderRadius: '8px',
                   fontSize: '14px',
                   cursor: manexData?.pdfData ? 'pointer' : 'not-allowed',
                   display: 'flex',
@@ -508,10 +508,10 @@ export const ManexImporter = memo(({
                 disabled={!manexData?.pdfData && !(manexData?.remoteUrl || aircraft.manex?.remoteUrl)}
                 style={{
                   padding: '6px 12px',
-                  backgroundColor: (manexData?.pdfData || manexData?.remoteUrl || aircraft.manex?.remoteUrl) ? '#3b82f6' : 'white',
-                  color: (manexData?.pdfData || manexData?.remoteUrl || aircraft.manex?.remoteUrl) ? 'white' : '#6b7280',
-                  border: `1px solid ${(manexData?.pdfData || manexData?.remoteUrl || aircraft.manex?.remoteUrl) ? '#3b82f6' : '#d1d5db'}`,
-                  borderRadius: '6px',
+                  backgroundColor: (manexData?.pdfData || manexData?.remoteUrl || aircraft.manex?.remoteUrl) ? 'var(--text-secondary)' : 'white',
+                  color: (manexData?.pdfData || manexData?.remoteUrl || aircraft.manex?.remoteUrl) ? 'white' : 'var(--text-secondary)',
+                  border: `1px solid ${(manexData?.pdfData || manexData?.remoteUrl || aircraft.manex?.remoteUrl) ? 'var(--text-secondary)' : 'var(--text-tertiary)'}`,
+                  borderRadius: '8px',
                   fontSize: '14px',
                   cursor: (manexData?.pdfData || manexData?.remoteUrl || aircraft.manex?.remoteUrl) ? 'pointer' : 'not-allowed',
                   display: 'flex',
@@ -543,15 +543,15 @@ export const ManexImporter = memo(({
         {!manexData && !aircraft.manex && (
           <div style={{
             backgroundColor: 'rgba(242, 105, 33, 0.10)',
-            border: '1px solid #f59e0b',
+            border: '1px solid var(--accent-primary)',
             borderRadius: '8px',
             padding: '16px',
             textAlign: 'center'
           }}>
-            <p style={{ color: '#92400e', fontWeight: '500', marginBottom: '8px' }}>
+            <p style={{ color: 'var(--accent-primary)', fontWeight: '500', marginBottom: '8px' }}>
               ⚠️ Aucun MANEX importé pour cet avion
             </p>
-            <p style={{ fontSize: '14px', color: '#78350f', margin: 0 }}>
+            <p style={{ fontSize: '14px', color: 'var(--accent-primary)', margin: 0 }}>
               → Utilisez le wizard de création/édition d'avion pour importer un MANEX
             </p>
           </div>

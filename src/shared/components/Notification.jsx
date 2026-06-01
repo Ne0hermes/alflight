@@ -70,24 +70,24 @@ export const Notification = ({
 
   const styles = {
     success: {
-      backgroundColor: '#10b981',
-      color: 'white',
-      borderLeft: '4px solid #047857'
+      backgroundColor: 'var(--text-primary)',
+      color: 'var(--text-primary)',
+      borderLeft: '4px solid var(--text-primary)'
     },
     error: {
-      backgroundColor: '#ef4444',
-      color: 'white',
-      borderLeft: '4px solid #b91c1c'
+      backgroundColor: '#C04534',
+      color: 'var(--text-primary)',
+      borderLeft: '4px solid #C04534'
     },
     warning: {
-      backgroundColor: '#f59e0b',
-      color: 'white',
-      borderLeft: '4px solid #d97706'
+      backgroundColor: 'var(--accent-primary)',
+      color: 'var(--text-primary)',
+      borderLeft: '4px solid var(--accent-primary)'
     },
     info: {
-      backgroundColor: '#3b82f6',
-      color: 'white',
-      borderLeft: '4px solid #1d4ed8'
+      backgroundColor: 'var(--text-secondary)',
+      color: 'var(--text-primary)',
+      borderLeft: '4px solid var(--text-primary)'
     }
   };
 

@@ -84,8 +84,8 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
   return (
     <div>
       {/* Services de base */}
-      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f0fdf4', borderRadius: '8px' }}>
-        <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: '#166534', marginBottom: '16px' }}>
+      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
+        <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '16px' }}>
           Services disponibles sur l'aérodrome
         </h5>
         
@@ -100,9 +100,9 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
                 onClick={() => toggleService(service.key)}
                 style={{
                   padding: '12px',
-                  backgroundColor: isActive ? '#dcfce7' : '#f9fafb',
-                  border: `2px solid ${isActive ? '#86efac' : '#e5e7eb'}`,
-                  borderRadius: '6px',
+                  backgroundColor: isActive ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
+                  border: `2px solid ${isActive ? 'var(--bg-overlay)' : 'var(--border-subtle)'}`,
+                  borderRadius: '8px',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -118,13 +118,13 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
                     width: '18px',
                     height: '18px',
                     cursor: 'pointer',
-                    accentColor: '#22c55e'
+                    accentColor: 'var(--text-primary)'
                   }}
                 />
-                <Icon size={16} style={{ color: isActive ? '#16a34a' : '#6b7280' }} />
+                <Icon size={16} style={{ color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)' }} />
                 <span style={{
                   fontSize: '13px',
-                  color: isActive ? '#166534' : '#4b5563',
+                  color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
                   fontWeight: isActive ? 'bold' : 'normal'
                 }}>
                   {service.label}
@@ -137,13 +137,13 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
       
       {/* Horaires d'ouverture */}
       <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'rgba(242, 105, 33, 0.10)', borderRadius: '8px' }}>
-        <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: '#92400e', marginBottom: '16px' }}>
+        <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--accent-primary)', marginBottom: '16px' }}>
           Horaires d'ouverture
         </h5>
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
           <div>
-            <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+            <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
               Aérodrome
             </label>
             <input
@@ -155,7 +155,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
             />
           </div>
           <div>
-            <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+            <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
               Tour de contrôle
             </label>
             <input
@@ -167,7 +167,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
             />
           </div>
           <div>
-            <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+            <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
               Avitaillement
             </label>
             <input
@@ -179,7 +179,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
             />
           </div>
           <div>
-            <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+            <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
               Douanes
             </label>
             <input
@@ -193,7 +193,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
         </div>
         
         <div style={{ marginTop: '12px' }}>
-          <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+          <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
             Remarques sur les horaires
           </label>
           <textarea
@@ -212,8 +212,8 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
       </div>
       
       {/* Contacts */}
-      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#eff6ff', borderRadius: '8px' }}>
-        <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: '#1e40af', marginBottom: '16px' }}>
+      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
+        <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '16px' }}>
           <Phone size={16} style={{ display: 'inline', marginRight: '4px' }} />
           Contacts
         </h5>
@@ -222,11 +222,11 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
           {['operations', 'fuel', 'maintenance', 'emergency'].map(contactType => (
             <div key={contactType} style={{
               padding: '12px',
-              backgroundColor: 'white',
-              borderRadius: '4px',
-              border: '1px solid #dbeafe'
+              backgroundColor: 'var(--bg-overlay)',
+              borderRadius: '8px',
+              border: '1px solid var(--bg-overlay)'
             }}>
-              <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: '#4b5563', textTransform: 'capitalize' }}>
+              <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>
                 {contactType === 'operations' ? 'Opérations' :
                  contactType === 'fuel' ? 'Avitaillement' :
                  contactType === 'maintenance' ? 'Maintenance' :
@@ -261,9 +261,9 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
       </div>
       
       {/* Services personnalisés */}
-      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f3f4f6', borderRadius: '8px' }}>
+      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: '#374151' }}>
+          <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
             Services additionnels / Remarques
           </h5>
           <button
@@ -271,10 +271,10 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
             style={{
               padding: '6px 12px',
               fontSize: '13px',
-              backgroundColor: '#6b7280',
-              color: 'white',
+              backgroundColor: 'var(--text-secondary)',
+              color: 'var(--text-primary)',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '8px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -290,9 +290,9 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
             {editedData.customServices.map((service, idx) => (
               <div key={idx} style={{
                 padding: '12px',
-                backgroundColor: 'white',
-                borderRadius: '4px',
-                border: '1px solid #e5e7eb'
+                backgroundColor: 'var(--bg-overlay)',
+                borderRadius: '8px',
+                border: '1px solid var(--border-subtle)'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <input
@@ -306,10 +306,10 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
                     onClick={() => removeCustomService(idx)}
                     style={{
                       padding: '4px 8px',
-                      backgroundColor: '#ef4444',
-                      color: 'white',
+                      backgroundColor: '#C04534',
+                      color: 'var(--text-primary)',
                       border: 'none',
-                      borderRadius: '4px',
+                      borderRadius: '8px',
                       cursor: 'pointer',
                       fontSize: '12px'
                     }}
@@ -359,7 +359,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
             ))}
           </div>
         ) : (
-          <div style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
+          <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-secondary)' }}>
             <Settings size={32} style={{ marginBottom: '8px', opacity: 0.5 }} />
             <p style={{ fontSize: '13px' }}>Aucun service additionnel défini.</p>
           </div>
@@ -367,8 +367,8 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
       </div>
       
       {/* Notes générales */}
-      <div style={{ padding: '16px', backgroundColor: '#fafafa', borderRadius: '8px' }}>
-        <label style={{ fontSize: '13px', fontWeight: 'bold', color: '#374151', display: 'block', marginBottom: '8px' }}>
+      <div style={{ padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
+        <label style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>
           Notes et informations complémentaires
         </label>
         <textarea

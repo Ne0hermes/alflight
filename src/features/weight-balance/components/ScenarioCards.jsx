@@ -88,11 +88,11 @@ export const ScenarioCards = memo(({ scenarios, fobFuel, fuelData, aircraft }) =
             display: 'flex',
             gap: '16px',
             fontSize: '11px',
-            color: '#6b7280',
-            backgroundColor: '#f3f4f6',
+            color: 'var(--text-secondary)',
+            backgroundColor: 'var(--bg-overlay)',
             padding: '8px 16px',
-            borderRadius: '6px',
-            border: '1px solid #e5e7eb'
+            borderRadius: '8px',
+            border: '1px solid var(--border-subtle)'
           }}>
             {aircraft.equipment && <span>📦 Équipements SAR: {aircraft.equipment}</span>}
             {aircraft.cruiseSpeed && <span>⚡ Vitesse de croisière: {aircraft.cruiseSpeed} kt</span>}
@@ -198,11 +198,11 @@ const ScenarioCard = memo(({ color, title, data, description }) => {
               <div style={{
                 marginTop: '8px',
                 padding: '6px 8px',
-                backgroundColor: '#fee2e2',
-                borderLeft: '3px solid #dc2626',
-                borderRadius: '4px',
+                backgroundColor: 'var(--bg-overlay)',
+                borderLeft: '3px solid #C04534',
+                borderRadius: '8px',
                 fontSize: '10px',
-                color: '#991b1b'
+                color: '#C04534'
               }}>
                 <strong>⚠️ MZFW DÉPASSÉ</strong>
                 <br />

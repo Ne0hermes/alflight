@@ -251,7 +251,7 @@ const styles = {
     gap: '16px',
     padding: '20px',
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '12px',
+    borderRadius: '8px',
     border: '1px solid var(--accent-primary)',
   },
   infoTitle: {
@@ -316,7 +316,7 @@ const styles = {
   },
   resultsCard: {
     padding: '24px',
-    borderRadius: '12px',
+    borderRadius: '8px',
     border: '2px solid',
     marginTop: '8px',
   },
@@ -412,7 +412,7 @@ const styles = {
   tipsCard: {
     padding: '20px',
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '12px',
+    borderRadius: '8px',
     border: '1px solid var(--bg-overlay)',
   },
   tipsTitle: {

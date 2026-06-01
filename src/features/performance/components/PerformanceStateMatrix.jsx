@@ -27,24 +27,24 @@ const PHASE_ICONS = {
 
 const STATUS_VISUAL = {
   COMPUTED: {
-    bg: '#dcfce7', border: '#16a34a', text: '#065f46',
-    badge: '✓ Calculé', badgeBg: '#16a34a'
+    bg: 'var(--bg-overlay)', border: 'var(--text-primary)', text: 'var(--text-primary)',
+    badge: '✓ Calculé', badgeBg: 'var(--text-primary)'
   },
   NOT_IMPLEMENTED: {
-    bg: 'rgba(242, 105, 33, 0.10)', border: '#f59e0b', text: '#78350f',
-    badge: '⚠ Non implémenté', badgeBg: '#f59e0b'
+    bg: 'rgba(242, 105, 33, 0.10)', border: 'var(--accent-primary)', text: 'var(--accent-primary)',
+    badge: '⚠ Non implémenté', badgeBg: 'var(--accent-primary)'
   },
   MISSING_INPUT: {
-    bg: '#fef9c3', border: '#eab308', text: '#713f12',
-    badge: '⚠ Input manquant', badgeBg: '#eab308'
+    bg: 'var(--bg-overlay)', border: 'var(--accent-primary)', text: '#713f12',
+    badge: '⚠ Input manquant', badgeBg: 'var(--accent-primary)'
   },
   AMBIGUOUS: {
-    bg: '#fee2e2', border: '#dc2626', text: '#7f1d1d',
-    badge: '⚠ Ambigu', badgeBg: '#dc2626'
+    bg: 'var(--bg-overlay)', border: '#C04534', text: '#C04534',
+    badge: '⚠ Ambigu', badgeBg: '#C04534'
   },
   ERROR: {
-    bg: '#fecaca', border: '#dc2626', text: '#7f1d1d',
-    badge: '✕ Erreur', badgeBg: '#dc2626'
+    bg: 'var(--border-subtle)', border: '#C04534', text: '#C04534',
+    badge: '✕ Erreur', badgeBg: '#C04534'
   }
 };
 
@@ -86,44 +86,44 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
     return { total: filteredOps.length, computed, notImplemented, missingInput, ambiguous, error };
   }, [state, filteredOps]);
   const coverageRatio = coverage.total > 0 ? (coverage.computed / coverage.total) : 0;
-  const coverageColor = coverageRatio >= 0.8 ? '#16a34a' : coverageRatio >= 0.5 ? '#f59e0b' : '#dc2626';
+  const coverageColor = coverageRatio >= 0.8 ? 'var(--text-primary)' : coverageRatio >= 0.5 ? 'var(--accent-primary)' : '#C04534';
 
   return (
     <div style={{
       border: '2px solid #4338ca',
       borderRadius: 8,
-      backgroundColor: 'white',
+      backgroundColor: 'var(--bg-overlay)',
       marginBottom: 16,
       overflow: 'hidden'
     }}>
       {/* En-tête avec barre de couverture */}
       <div style={{
         padding: 12,
-        backgroundColor: '#eef2ff',
-        borderBottom: '1px solid #c7d2fe'
+        backgroundColor: 'var(--bg-overlay)',
+        borderBottom: '1px solid var(--border-subtle)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <div>
-            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#312e81' }}>
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>
               {title}
             </h3>
           </div>
           <div style={{
             display: 'flex', gap: 8, alignItems: 'center',
-            backgroundColor: 'white', padding: '6px 10px', borderRadius: 6,
+            backgroundColor: 'var(--bg-overlay)', padding: '6px 10px', borderRadius: 6,
             border: `2px solid ${coverageColor}`
           }}>
             <span style={{ fontSize: 18, fontWeight: 800, color: coverageColor }}>
               {coverage.computed}/{coverage.total}
             </span>
-            <span style={{ fontSize: 11, color: '#374151' }}>
+            <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
               opérations<br/>calculées
             </span>
           </div>
         </div>
 
         {/* Barre de progression */}
-        <div style={{ height: 6, backgroundColor: '#e5e7eb', borderRadius: 3, marginTop: 8, overflow: 'hidden' }}>
+        <div style={{ height: 6, backgroundColor: 'var(--border-subtle)', borderRadius: 3, marginTop: 8, overflow: 'hidden' }}>
           <div style={{
             height: '100%', width: `${coverageRatio * 100}%`,
             backgroundColor: coverageColor, transition: 'width 0.3s'
@@ -134,10 +134,10 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
             (l'info "N/M opérations calculées" est déjà dans le compteur principal à droite). */}
         {(coverage.notImplemented > 0 || coverage.missingInput > 0 || coverage.ambiguous > 0 || coverage.error > 0) && (
           <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: 11, flexWrap: 'wrap' }}>
-            {coverage.notImplemented > 0 && <span style={{ color: '#f59e0b' }}>⚠ {coverage.notImplemented} non implémenté{coverage.notImplemented > 1 ? 's' : ''}</span>}
-            {coverage.missingInput > 0 && <span style={{ color: '#eab308' }}>⚠ {coverage.missingInput} input manquant</span>}
-            {coverage.ambiguous > 0 && <span style={{ color: '#dc2626' }}>⚠ {coverage.ambiguous} ambigu{coverage.ambiguous > 1 ? 's' : ''}</span>}
-            {coverage.error > 0 && <span style={{ color: '#dc2626' }}>✕ {coverage.error} erreur{coverage.error > 1 ? 's' : ''}</span>}
+            {coverage.notImplemented > 0 && <span style={{ color: 'var(--accent-primary)' }}>⚠ {coverage.notImplemented} non implémenté{coverage.notImplemented > 1 ? 's' : ''}</span>}
+            {coverage.missingInput > 0 && <span style={{ color: 'var(--accent-primary)' }}>⚠ {coverage.missingInput} input manquant</span>}
+            {coverage.ambiguous > 0 && <span style={{ color: '#C04534' }}>⚠ {coverage.ambiguous} ambigu{coverage.ambiguous > 1 ? 's' : ''}</span>}
+            {coverage.error > 0 && <span style={{ color: '#C04534' }}>✕ {coverage.error} erreur{coverage.error > 1 ? 's' : ''}</span>}
           </div>
         )}
       </div>
@@ -154,7 +154,7 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
             <div
               key={op.id}
               style={{
-                borderBottom: '1px solid #e5e7eb',
+                borderBottom: '1px solid var(--border-subtle)',
                 backgroundColor: visual.bg,
                 borderLeft: `4px solid ${visual.border}`
               }}
@@ -199,7 +199,7 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
                               {formatValue(displayedValue)} <span style={{ fontSize: 12, fontWeight: 500 }}>{result.unit}</span>
                             </div>
                             {factorApplies && (
-                              <div style={{ fontSize: 10, color: '#854d0e', marginTop: 1, fontStyle: 'italic' }}>
+                              <div style={{ fontSize: 10, color: 'var(--accent-primary)', marginTop: 1, fontStyle: 'italic' }}>
                                 brut : {formatValue(result.value)} × {safetyFactor.value}
                               </div>
                             )}
@@ -207,7 +207,7 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
                         );
                       })()}
                       {result.warnings?.length > 0 && (
-                        <div style={{ fontSize: 10, color: '#92400e', marginTop: 2 }}>
+                        <div style={{ fontSize: 10, color: 'var(--accent-primary)', marginTop: 2 }}>
                           ⚠ {result.warnings.length} warning{result.warnings.length > 1 ? 's' : ''}
                         </div>
                       )}
@@ -222,7 +222,7 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
                   padding: '3px 8px',
                   borderRadius: 4,
                   backgroundColor: visual.badgeBg,
-                  color: 'white',
+                  color: 'var(--text-primary)',
                   whiteSpace: 'nowrap'
                 }}>
                   {visual.badge}
@@ -246,8 +246,8 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
                       <span style={{
                         display: 'inline-block', padding: '1px 6px', borderRadius: 3,
                         fontSize: 9, fontWeight: 700, marginRight: 6,
-                        backgroundColor: result.source.kind === 'table' ? '#0891b2' : '#3b82f6',
-                        color: 'white'
+                        backgroundColor: result.source.kind === 'table' ? '#0891b2' : 'var(--text-secondary)',
+                        color: 'var(--text-primary)'
                       }}>
                         {result.source.kind === 'table' ? 'TABLEAU' : 'ABAQUE'}
                       </span>
@@ -290,16 +290,16 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
                   {result.cascadeSteps && result.cascadeSteps.length > 0 && (
                     <div style={{
                       marginBottom: 8, padding: 8,
-                      backgroundColor: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 4
+                      backgroundColor: 'var(--bg-overlay)', border: '1px solid var(--bg-overlay)', borderRadius: 4
                     }}>
-                      <strong style={{ color: '#9a3412' }}>🔗 Chaîne de cascade ({result.cascadeSteps.length} étape{result.cascadeSteps.length > 1 ? 's' : ''}) :</strong>
+                      <strong style={{ color: 'var(--accent-primary)' }}>🔗 Chaîne de cascade ({result.cascadeSteps.length} étape{result.cascadeSteps.length > 1 ? 's' : ''}) :</strong>
                       <div style={{ marginTop: 6, fontSize: 11, fontFamily: 'monospace' }}>
                         {result.cascadeSteps.map((step, sIdx) => {
                           const usedBadgeColor =
-                            step.used === 'bracket'      ? '#16a34a' :
-                            step.used === 'slope-follow' ? '#7c3aed' :
+                            step.used === 'bracket'      ? 'var(--text-primary)' :
+                            step.used === 'slope-follow' ? 'var(--accent-primary)' :
                             step.used === 'trilinear'    ? '#0891b2' :
-                            step.used === 'idw'          ? '#f59e0b' : '#dc2626';
+                            step.used === 'idw'          ? 'var(--accent-primary)' : '#C04534';
                           const usedLabel =
                             step.used === 'bracket'      ? 'BRACKET' :
                             step.used === 'slope-follow' ? 'SLOPE-FOLLOW' :
@@ -309,8 +309,8 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
                           <div key={step.graphId || sIdx} style={{
                             padding: '4px 8px',
                             marginBottom: 4,
-                            backgroundColor: step.role === 'primary' ? '#dcfce7' : 'white',
-                            borderLeft: `3px solid ${step.role === 'primary' ? '#16a34a' : '#f59e0b'}`,
+                            backgroundColor: step.role === 'primary' ? 'var(--bg-overlay)' : 'white',
+                            borderLeft: `3px solid ${step.role === 'primary' ? 'var(--text-primary)' : 'var(--accent-primary)'}`,
                             borderRadius: 3
                           }}>
                             <div style={{ fontWeight: 700 }}>
@@ -320,18 +320,18 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
                               <span style={{
                                 display: 'inline-block', padding: '1px 5px', borderRadius: 3,
                                 fontSize: 9, fontWeight: 700,
-                                backgroundColor: usedBadgeColor, color: 'white'
+                                backgroundColor: usedBadgeColor, color: 'var(--text-primary)'
                               }}>
                                 {usedLabel}
                               </span>
                             </div>
-                            <div style={{ fontSize: 10, color: '#6b7280' }}>
+                            <div style={{ fontSize: 10, color: 'var(--text-secondary)' }}>
                               X = <code>{step.xDim}</code> = <strong>{step.queryX !== null && step.queryX !== undefined ? Number(step.queryX).toFixed(2) : '—'}</strong>
                               {step.entryY !== null && step.entryY !== undefined && (
                                 <> · Y_in = <strong>{Number(step.entryY).toFixed(2)}</strong></>
                               )}
                               {' → '}
-                              Y = <code>{step.yTitle}</code> = <strong style={{ color: '#065f46' }}>{step.output !== null ? Number(step.output).toFixed(2) : '—'}</strong>
+                              Y = <code>{step.yTitle}</code> = <strong style={{ color: 'var(--text-primary)' }}>{step.output !== null ? Number(step.output).toFixed(2) : '—'}</strong>
                               {step.bracketResult && !step.bracketResult.error && step.used === 'bracket' && (
                                 <>
                                   {' '}(entre
@@ -353,18 +353,18 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
                             </div>
                             {/* En mode strict (déclaré) et échec : afficher l'erreur de l'étape */}
                             {step.modeDeclared && step.used === null && step.error && (
-                              <div style={{ fontSize: 10, color: '#7f1d1d', backgroundColor: '#fee2e2', padding: '4px 6px', marginTop: 4, borderRadius: 3, fontWeight: 600 }}>
+                              <div style={{ fontSize: 10, color: '#C04534', backgroundColor: 'var(--bg-overlay)', padding: '4px 6px', marginTop: 4, borderRadius: 3, fontWeight: 600 }}>
                                 ❌ Échec mode déclaré « {step.mode} » : {step.error}
                               </div>
                             )}
                             {/* En mode auto, on peut afficher les méthodes tentées mais échouées (legacy debug) */}
                             {!step.modeDeclared && step.slopeResult?.error && step.used !== 'slope-follow' && (
-                              <div style={{ fontSize: 10, color: '#dc2626', marginTop: 2 }}>
+                              <div style={{ fontSize: 10, color: '#C04534', marginTop: 2 }}>
                                 ❌ Slope-follow tenté en auto : {step.slopeResult.error}
                               </div>
                             )}
                             {!step.modeDeclared && step.bracketResult?.error && step.used !== 'bracket' && (
-                              <div style={{ fontSize: 10, color: '#dc2626', marginTop: 2 }}>
+                              <div style={{ fontSize: 10, color: '#C04534', marginTop: 2 }}>
                                 ❌ Bracket tenté en auto : {step.bracketResult.error}
                               </div>
                             )}
@@ -436,10 +436,10 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
       {/* Pied avec horodatage */}
       <div style={{
         padding: '6px 12px',
-        backgroundColor: '#f9fafb',
-        borderTop: '1px solid #e5e7eb',
+        backgroundColor: 'var(--bg-overlay)',
+        borderTop: '1px solid var(--border-subtle)',
         fontSize: 10,
-        color: '#6b7280',
+        color: 'var(--text-secondary)',
         textAlign: 'right'
       }}>
         Généré à {new Date(state.generatedAt).toLocaleTimeString()} —

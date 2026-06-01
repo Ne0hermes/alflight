@@ -6,12 +6,12 @@ import React from 'react';
 const AirspaceFilters = ({ filters, onFilterChange, airspaceStats = {} }) => {
   // Types d'espaces aériens avec leurs labels et couleurs
   const airspaceTypes = [
-    { id: 'CTR', label: 'CTR', color: '#FF6B6B', description: 'Zone de contrôle' },
+    { id: 'CTR', label: 'CTR', color: '#C04534', description: 'Zone de contrôle' },
     { id: 'TMA', label: 'TMA', color: '#4ECDC4', description: 'Région de contrôle terminale' },
     { id: 'CTA', label: 'CTA', color: '#45B7D1', description: 'Région de contrôle' },
     { id: 'AWY', label: 'AWY', color: '#96CEB4', description: 'Voie aérienne' },
-    { id: 'R', label: 'R', color: '#FFA500', description: 'Zone réglementée' },
-    { id: 'P', label: 'P', color: '#FF0000', description: 'Zone interdite' },
+    { id: 'R', label: 'R', color: 'var(--accent-primary)', description: 'Zone réglementée' },
+    { id: 'P', label: 'P', color: '#C04534', description: 'Zone interdite' },
     { id: 'D', label: 'D', color: '#FF1493', description: 'Zone dangereuse' },
     { id: 'TMZ', label: 'TMZ', color: '#9370DB', description: 'Zone à transpondeur obligatoire' },
     { id: 'RMZ', label: 'RMZ', color: '#8A2BE2', description: 'Zone radio obligatoire' },
@@ -19,15 +19,15 @@ const AirspaceFilters = ({ filters, onFilterChange, airspaceStats = {} }) => {
     { id: 'TRA', label: 'TRA', color: '#FF6347', description: 'Zone réservée temporaire' },
     { id: 'FIR', label: 'FIR', color: '#708090', description: 'Région d\'information de vol' },
     { id: 'UIR', label: 'UIR', color: '#696969', description: 'Région supérieure' },
-    { id: 'ATZ', label: 'ATZ', color: '#FFD700', description: 'Zone de trafic d\'aérodrome' },
+    { id: 'ATZ', label: 'ATZ', color: 'var(--accent-primary)', description: 'Zone de trafic d\'aérodrome' },
   ];
 
   // Classes d'espaces aériens (simplifiées sans préfixe)
   const airspaceClasses = [
-    { id: 'A', label: 'Classe A', color: '#FF0000' },
+    { id: 'A', label: 'Classe A', color: '#C04534' },
     { id: 'B', label: 'Classe B', color: '#FF4500' },
-    { id: 'C', label: 'Classe C', color: '#FFA500' },
-    { id: 'D', label: 'Classe D', color: '#FFD700' },
+    { id: 'C', label: 'Classe C', color: 'var(--accent-primary)' },
+    { id: 'D', label: 'Classe D', color: 'var(--accent-primary)' },
     { id: 'E', label: 'Classe E', color: '#90EE90' },
     { id: 'F', label: 'Classe F', color: '#87CEEB' },
     { id: 'G', label: 'Classe G', color: '#E6E6FA' },
@@ -189,7 +189,7 @@ const AirspaceFilters = ({ filters, onFilterChange, airspaceStats = {} }) => {
           background: white;
           border-radius: 8px;
           box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-          border: 1px solid #e0e0e0;
+          border: 1px solid var(--border-subtle);
         }
 
         .filters-content {
@@ -202,7 +202,7 @@ const AirspaceFilters = ({ filters, onFilterChange, airspaceStats = {} }) => {
           align-items: center;
           margin-bottom: 16px;
           padding-bottom: 8px;
-          border-bottom: 1px solid #e0e0e0;
+          border-bottom: 1px solid var(--border-subtle);
         }
 
         .filters-header h3 {
@@ -215,27 +215,27 @@ const AirspaceFilters = ({ filters, onFilterChange, airspaceStats = {} }) => {
           padding: 4px 8px;
           font-size: 12px;
           background: #f0f0f0;
-          border: 1px solid #d0d0d0;
+          border: 1px solid var(--text-tertiary);
           border-radius: 4px;
           cursor: pointer;
         }
 
         .toggle-all-btn:hover {
-          background: #e0e0e0;
+          background: var(--border-subtle);
         }
 
         .reset-btn {
           padding: 4px 8px;
           font-size: 12px;
-          background: #fee2e2;
-          border: 1px solid #fca5a5;
+          background: var(--bg-overlay);
+          border: 1px solid var(--bg-overlay);
           border-radius: 4px;
           cursor: pointer;
-          color: #991b1b;
+          color: #C04534;
         }
 
         .reset-btn:hover {
-          background: #fecaca;
+          background: var(--border-subtle);
         }
 
         .filter-section {
@@ -265,7 +265,7 @@ const AirspaceFilters = ({ filters, onFilterChange, airspaceStats = {} }) => {
         }
 
         .filter-item:hover {
-          background: #f5f5f5;
+          background: var(--bg-overlay);
         }
 
         .filter-item input[type="checkbox"] {
@@ -284,7 +284,7 @@ const AirspaceFilters = ({ filters, onFilterChange, airspaceStats = {} }) => {
 
         .count {
           font-size: 11px;
-          color: #666;
+          color: var(--text-secondary);
           margin-left: 4px;
         }
 
@@ -302,13 +302,13 @@ const AirspaceFilters = ({ filters, onFilterChange, airspaceStats = {} }) => {
 
         .altitude-input label {
           font-size: 13px;
-          color: #666;
+          color: var(--text-secondary);
         }
 
         .altitude-input input {
           flex: 1;
           padding: 4px 8px;
-          border: 1px solid #d0d0d0;
+          border: 1px solid var(--text-tertiary);
           border-radius: 4px;
           font-size: 13px;
         }

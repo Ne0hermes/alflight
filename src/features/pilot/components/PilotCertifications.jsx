@@ -730,7 +730,7 @@ const PilotCertifications = () => {
               style={{ 
                 padding: '8px 16px', 
                 backgroundColor: 'var(--text-secondary)', 
-                color: 'white', 
+                color: 'var(--text-primary)', 
                 border: 'none', 
                 borderRadius: '8px', 
                 fontSize: '14px', 
@@ -769,7 +769,7 @@ const PilotCertifications = () => {
             style={{ 
               padding: '8px 24px', 
               backgroundColor: showForm ? '#C04534' : 'var(--text-secondary)', 
-              color: 'white', 
+              color: 'var(--text-primary)', 
               border: 'none', 
               borderRadius: '8px', 
               fontSize: '14px', 

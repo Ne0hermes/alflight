@@ -515,7 +515,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                   style={{
                     padding: '6px 16px',
                     border: 'none',
-                    borderRadius: '6px',
+                    borderRadius: '8px',
                     backgroundColor: operationCategory === 'N' ? 'var(--text-primary)' : 'var(--border-subtle)',
                     color: operationCategory === 'N' ? 'white' : 'var(--text-secondary)',
                     fontWeight: 700,
@@ -530,7 +530,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                   style={{
                     padding: '6px 16px',
                     border: 'none',
-                    borderRadius: '6px',
+                    borderRadius: '8px',
                     backgroundColor: operationCategory === 'U' ? 'var(--accent-primary)' : 'var(--border-subtle)',
                     color: operationCategory === 'U' ? 'white' : 'var(--text-secondary)',
                     fontWeight: 700,
@@ -796,7 +796,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                 color: 'var(--text-secondary)',
                 backgroundColor: 'var(--bg-overlay)',
                 padding: '6px 12px',
-                borderRadius: '6px',
+                borderRadius: '8px',
                 border: '1px solid var(--border-subtle)'
               }}>
                 <span>⛽ <strong>{aircraft.fuelType || 'JET-A1'}</strong>: {fuelDensity} kg/L</span>

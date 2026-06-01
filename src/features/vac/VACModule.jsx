@@ -736,10 +736,10 @@ const VACModuleOld = memo(() => {
             <div style={sx.combine(
               sx.components.card.base,
               sx.spacing.p(6),
-              { borderColor: '#ef4444', borderWidth: '2px' }
+              { borderColor: '#C04534', borderWidth: '2px' }
             )}>
               <div style={sx.combine(sx.flex.center, sx.spacing.mb(4))}>
-                <AlertTriangle size={48} color="#ef4444" />
+                <AlertTriangle size={48} color="#C04534" />
               </div>
               
               <h3 style={sx.combine(sx.text.xl, sx.text.bold, sx.text.left, sx.spacing.mb(4))}>
@@ -805,8 +805,8 @@ const VACModuleOld = memo(() => {
                     sx.components.button.base,
                     sx.components.button.primary,
                     { 
-                      backgroundColor: '#dc2626',
-                      '&:hover': { backgroundColor: '#b91c1c' }
+                      backgroundColor: '#C04534',
+                      '&:hover': { backgroundColor: '#C04534' }
                     }
                   )}
                 >
@@ -841,7 +841,7 @@ const VACModuleOld = memo(() => {
                   style={{
                     marginLeft: '12px',
                     fontSize: '12px',
-                    color: '#dc2626',
+                    color: '#C04534',
                     textDecoration: 'underline',
                     background: 'none',
                     border: 'none',
@@ -949,7 +949,7 @@ const VACModuleOld = memo(() => {
                 />
               </div>
               
-              <div style={{ fontSize: '13px', color: '#666', marginBottom: '12px' }}>
+              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
                 {filteredSIAAerodromes.length} aérodrome(s) trouvé(s) dans la base SIA
               </div>
               
@@ -957,7 +957,7 @@ const VACModuleOld = memo(() => {
               <div style={{
                 maxHeight: '400px',
                 overflowY: 'auto',
-                border: '1px solid #e0e0e0',
+                border: '1px solid var(--border-subtle)',
                 borderRadius: '8px',
                 padding: '12px'
               }}>
@@ -976,12 +976,12 @@ const VACModuleOld = memo(() => {
                         onClick={() => !isImported && handleSIAImport(aerodrome)}
                         style={{
                           padding: '10px',
-                          border: `1px solid ${isImported ? '#4CAF50' : '#e0e0e0'}`,
-                          borderRadius: '6px',
+                          border: `1px solid ${isImported ? 'var(--text-primary)' : 'var(--border-subtle)'}`,
+                          borderRadius: '8px',
                           cursor: isImported ? 'default' : 'pointer',
                           background: isImported ? '#E8F5E9' : 'white',
                           transition: 'all 0.2s',
-                          ':hover': !isImported && { borderColor: '#2196F3', background: '#f5f5f5' }
+                          ':hover': !isImported && { borderColor: 'var(--text-secondary)', background: 'var(--bg-overlay)' }
                         }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
@@ -1000,7 +1000,7 @@ const VACModuleOld = memo(() => {
                                 </span>
                               )}
                             </div>
-                            <div style={{ fontSize: '12px', color: '#666' }}>
+                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                               {props.name || 'Sans nom'}
                             </div>
                             {props.city && (
@@ -1009,17 +1009,17 @@ const VACModuleOld = memo(() => {
                               </div>
                             )}
                             {props.elevation_ft > 0 && (
-                              <div style={{ fontSize: '10px', color: '#666', marginTop: '2px' }}>
+                              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '2px' }}>
                                 Alt: {props.elevation_ft}ft
                               </div>
                             )}
                           </div>
                           {isImported && (
-                            <CheckCircle size={16} color="#4CAF50" />
+                            <CheckCircle size={16} color="var(--text-primary)" />
                           )}
                         </div>
                         {(props.frequencies?.twr || props.frequencies?.info) && (
-                          <div style={{ fontSize: '10px', color: '#666', marginTop: '2px' }}>
+                          <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '2px' }}>
                             {props.frequencies.twr && `TWR: ${props.frequencies.twr}`}
                             {props.frequencies.twr && props.frequencies.info && ' • '}
                             {props.frequencies.info && `INFO: ${props.frequencies.info}`}
@@ -1030,7 +1030,7 @@ const VACModuleOld = memo(() => {
                   })}
                 </div>
                 {filteredSIAAerodromes.length > 50 && (
-                  <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '12px', color: '#666' }}>
+                  <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
                     Affichage limité aux 50 premiers résultats. Affinez votre recherche.
                   </div>
                 )}
@@ -1107,7 +1107,7 @@ const VACModuleOld = memo(() => {
                   maxWidth: '500px',
                   width: '90%',
                   padding: '24px',
-                  backgroundColor: 'white'
+                  backgroundColor: 'var(--bg-overlay)'
                 }
               )}>
                 <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4))}>
@@ -1148,17 +1148,17 @@ const VACModuleOld = memo(() => {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px',
-                      backgroundColor: selectedFile ? '#f0fdf4' : 'white',
-                      borderColor: selectedFile ? '#10b981' : '#d1d5db'
+                      backgroundColor: selectedFile ? 'var(--bg-overlay)' : 'white',
+                      borderColor: selectedFile ? 'var(--text-primary)' : 'var(--text-tertiary)'
                     })}
                   >
-                    <FileImage size={20} color={selectedFile ? '#10b981' : '#6b7280'} />
+                    <FileImage size={20} color={selectedFile ? 'var(--text-primary)' : 'var(--text-secondary)'} />
                     {selectedFile ? (
-                      <span style={{ color: '#10b981' }}>
+                      <span style={{ color: 'var(--text-primary)' }}>
                         ✓ {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
                       </span>
                     ) : (
-                      <span style={{ color: '#6b7280' }}>Cliquez pour sélectionner un fichier...</span>
+                      <span style={{ color: 'var(--text-secondary)' }}>Cliquez pour sélectionner un fichier...</span>
                     )}
                   </div>
                   <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
@@ -1226,11 +1226,11 @@ const VACModuleOld = memo(() => {
 const StatCard = memo(({ icon: Icon, value, total, label, color }) => {
   // Utiliser une couleur par défaut si la couleur n'existe pas
   const validColors = {
-    primary: '#3b82f6',
-    success: '#10b981',
-    warning: '#f59e0b',
-    danger: '#ef4444',
-    secondary: '#6b7280'
+    primary: 'var(--text-secondary)',
+    success: 'var(--text-primary)',
+    warning: 'var(--accent-primary)',
+    danger: '#C04534',
+    secondary: 'var(--text-secondary)'
   };
   
   const iconColor = validColors[color] || validColors.primary;
@@ -1299,9 +1299,9 @@ const ChartCard = memo(({ chart, isInNavigation, onDelete, onView, onImportManua
                   sx.spacing.ml(2),
                   {
                     backgroundColor: sx.theme.colors.primary[600],
-                    color: 'white',
+                    color: 'var(--text-primary)',
                     padding: '2px 8px',
-                    borderRadius: '4px'
+                    borderRadius: '8px'
                   }
                 )}>
                   Navigation
@@ -1313,10 +1313,10 @@ const ChartCard = memo(({ chart, isInNavigation, onDelete, onView, onImportManua
                   sx.text.xs,
                   sx.spacing.ml(2),
                   {
-                    backgroundColor: '#8b5cf6',
-                    color: 'white',
+                    backgroundColor: 'var(--accent-primary)',
+                    color: 'var(--text-primary)',
                     padding: '2px 8px',
-                    borderRadius: '4px'
+                    borderRadius: '8px'
                   }
                 )}>
                   Version perso
@@ -1327,10 +1327,10 @@ const ChartCard = memo(({ chart, isInNavigation, onDelete, onView, onImportManua
                   sx.text.xs,
                   sx.spacing.ml(2),
                   {
-                    backgroundColor: '#8b5cf6',
-                    color: 'white',
+                    backgroundColor: 'var(--accent-primary)',
+                    color: 'var(--text-primary)',
                     padding: '2px 8px',
-                    borderRadius: '4px'
+                    borderRadius: '8px'
                   }
                 )}>
                   Import manuel
@@ -1349,7 +1349,7 @@ const ChartCard = memo(({ chart, isInNavigation, onDelete, onView, onImportManua
                   <span>Lat: {chart.coordinates.lat.toFixed(4)}°</span>
                   <span>Lon: {chart.coordinates.lon.toFixed(4)}°</span>
                 </div>
-                <div style={sx.combine(sx.text.xs, sx.spacing.mt(1), { color: '#9ca3af' })}>
+                <div style={sx.combine(sx.text.xs, sx.spacing.mt(1), { color: 'var(--text-tertiary)' })}>
                   {Conversions.coordinatesToDMS(chart.coordinates.lat, chart.coordinates.lon).formatted}
                 </div>
               </>
@@ -1361,7 +1361,7 @@ const ChartCard = memo(({ chart, isInNavigation, onDelete, onView, onImportManua
                   <span style={sx.combine(
                     sx.flex.start, 
                     sx.spacing.gap(1),
-                    isOutdated && { color: '#ef4444', fontWeight: 'bold' }
+                    isOutdated && { color: '#C04534', fontWeight: 'bold' }
                   )}>
                     <Clock size={12} />
                     Carte: {formatPublicationDate()}
@@ -1405,9 +1405,9 @@ const ChartCard = memo(({ chart, isInNavigation, onDelete, onView, onImportManua
             style={sx.combine(
               sx.components.button.base,
               {
-                backgroundColor: '#8b5cf6',
-                color: 'white',
-                '&:hover': { backgroundColor: '#7c3aed' }
+                backgroundColor: 'var(--accent-primary)',
+                color: 'var(--text-primary)',
+                '&:hover': { backgroundColor: 'var(--accent-primary)' }
               }
             )}
             title={chart.url ? "Remplacer la carte VAC" : "Importer une carte VAC"}

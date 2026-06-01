@@ -352,7 +352,7 @@ export const CommunityPointsManager = ({ onSelectPoint, mode = 'browse' }) => {
       {activeMode === 'browse' && !tableNotFound && (
         <div style={styles.header}>
           <div style={styles.searchBar}>
-            <Search size={16} style={{ color: '#9ca3af' }} />
+            <Search size={16} style={{ color: 'var(--text-tertiary)' }} />
             <input
               type="text"
               placeholder="Rechercher un point VFR..."
@@ -390,7 +390,7 @@ export const CommunityPointsManager = ({ onSelectPoint, mode = 'browse' }) => {
       {/* Message d'erreur : Table non trouvée */}
       {tableNotFound && (
         <div style={styles.setupInstructions}>
-          <AlertCircle size={48} style={{ color: '#f59e0b', marginBottom: '16px' }} />
+          <AlertCircle size={48} style={{ color: 'var(--accent-primary)', marginBottom: '16px' }} />
           <h3 style={styles.setupTitle}>⚙️ Configuration requise</h3>
           <p style={styles.setupDescription}>
             La table <code>vfr_points</code> n'existe pas encore dans votre base Supabase.
@@ -428,8 +428,8 @@ export const CommunityPointsManager = ({ onSelectPoint, mode = 'browse' }) => {
             </div>
           ) : filteredPoints.length === 0 ? (
             <div style={styles.emptyState}>
-              <MapPin size={48} style={{ color: '#d1d5db', marginBottom: '12px' }} />
-              <p style={{ color: '#6b7280' }}>
+              <MapPin size={48} style={{ color: 'var(--text-tertiary)', marginBottom: '12px' }} />
+              <p style={{ color: 'var(--text-secondary)' }}>
                 {searchTerm ? 'Aucun point trouvé' : 'Aucun point communautaire disponible'}
               </p>
             </div>
@@ -449,7 +449,7 @@ export const CommunityPointsManager = ({ onSelectPoint, mode = 'browse' }) => {
                     )}
 
                     <div style={styles.pointHeader}>
-                      <MapPin size={20} style={{ color: '#3b82f6' }} />
+                      <MapPin size={20} style={{ color: 'var(--text-secondary)' }} />
                       <div style={styles.pointInfo}>
                         <h4 style={styles.pointName}>{point.name}</h4>
                         <p style={styles.pointType}>{point.type}</p>
@@ -802,10 +802,10 @@ const styles = {
   },
   createButtonHeader: {
     padding: '10px 16px',
-    backgroundColor: '#3b82f6',
+    backgroundColor: 'var(--text-secondary)',
     border: 'none',
-    borderRadius: '6px',
-    color: 'white',
+    borderRadius: '8px',
+    color: 'var(--text-primary)',
     fontSize: '14px',
     fontWeight: '500',
     cursor: 'pointer',
@@ -818,9 +818,9 @@ const styles = {
   backButton: {
     padding: '10px 16px',
     backgroundColor: 'transparent',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
-    color: '#374151',
+    border: '1px solid var(--text-tertiary)',
+    borderRadius: '8px',
+    color: 'var(--text-secondary)',
     fontSize: '14px',
     fontWeight: '500',
     cursor: 'pointer',
@@ -838,16 +838,16 @@ const styles = {
     alignItems: 'center',
     gap: '8px',
     padding: '10px 12px',
-    border: '1px solid #e5e7eb',
-    borderRadius: '6px',
-    backgroundColor: 'white'
+    border: '1px solid var(--border-subtle)',
+    borderRadius: '8px',
+    backgroundColor: 'var(--bg-overlay)'
   },
   searchInput: {
     flex: 1,
     border: 'none',
     outline: 'none',
     fontSize: '14px',
-    color: '#111827'
+    color: 'var(--text-primary)'
   },
   loadingState: {
     display: 'flex',
@@ -855,14 +855,14 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '40px 20px',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     fontSize: '14px'
   },
   spinner: {
     width: '32px',
     height: '32px',
-    border: '3px solid #e5e7eb',
-    borderTop: '3px solid #3b82f6',
+    border: '3px solid var(--border-subtle)',
+    borderTop: '3px solid var(--text-secondary)',
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',
     marginBottom: '12px'
@@ -884,16 +884,16 @@ const styles = {
   },
   pointCard: {
     padding: '16px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border-subtle)',
     borderRadius: '8px',
     cursor: 'pointer',
     transition: 'all 0.2s',
-    backgroundColor: 'white'
+    backgroundColor: 'var(--bg-overlay)'
   },
   cardPhotoContainer: {
     marginBottom: '12px',
     width: '100%',
-    borderRadius: '6px',
+    borderRadius: '8px',
     overflow: 'hidden'
   },
   cardPhoto: {
@@ -914,12 +914,12 @@ const styles = {
   pointName: {
     fontSize: '15px',
     fontWeight: '600',
-    color: '#111827',
+    color: 'var(--text-primary)',
     margin: '0 0 4px 0'
   },
   pointType: {
     fontSize: '12px',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     margin: 0
   },
   pointDetails: {
@@ -930,23 +930,23 @@ const styles = {
   },
   pointCoords: {
     fontSize: '12px',
-    color: '#374151',
+    color: 'var(--text-secondary)',
     margin: 0
   },
   pointAltitude: {
     fontSize: '12px',
-    color: '#374151',
+    color: 'var(--text-secondary)',
     margin: 0
   },
   pointDescription: {
     fontSize: '13px',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     margin: '4px 0 0 0',
     fontStyle: 'italic'
   },
   pointMeta: {
     fontSize: '11px',
-    color: '#9ca3af',
+    color: 'var(--text-tertiary)',
     margin: '8px 0 0 0',
     display: 'flex',
     alignItems: 'center',
@@ -956,26 +956,26 @@ const styles = {
     display: 'flex',
     gap: '8px',
     padding: '8px 0',
-    borderTop: '1px solid #f3f4f6',
+    borderTop: '1px solid var(--bg-overlay)',
     marginTop: '12px'
   },
   actionButton: {
     padding: '8px 12px',
-    backgroundColor: 'white',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
+    backgroundColor: 'var(--bg-overlay)',
+    border: '1px solid var(--text-tertiary)',
+    borderRadius: '8px',
     cursor: 'pointer',
     transition: 'all 0.2s',
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
-    color: '#374151',
+    color: 'var(--text-secondary)',
     fontSize: '13px',
     fontWeight: '500'
   },
   deleteButton: {
-    color: '#ef4444',
-    borderColor: '#fca5a5'
+    color: '#C04534',
+    borderColor: 'var(--bg-overlay)'
   },
   createMode: {
     flex: 1,
@@ -983,7 +983,7 @@ const styles = {
   },
   createDescription: {
     fontSize: '13px',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     marginBottom: '20px'
   },
   form: {
@@ -1004,50 +1004,50 @@ const styles = {
   label: {
     fontSize: '13px',
     fontWeight: '500',
-    color: '#374151'
+    color: 'var(--text-secondary)'
   },
   input: {
     padding: '10px 12px',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
+    border: '1px solid var(--text-tertiary)',
+    borderRadius: '8px',
     fontSize: '14px',
-    color: '#111827',
+    color: 'var(--text-primary)',
     outline: 'none',
     transition: 'border-color 0.2s'
   },
   select: {
     padding: '10px 12px',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
+    border: '1px solid var(--text-tertiary)',
+    borderRadius: '8px',
     fontSize: '14px',
-    color: '#111827',
+    color: 'var(--text-primary)',
     outline: 'none',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-overlay)',
     cursor: 'pointer'
   },
   textarea: {
     padding: '10px 12px',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
+    border: '1px solid var(--text-tertiary)',
+    borderRadius: '8px',
     fontSize: '14px',
-    color: '#111827',
+    color: 'var(--text-primary)',
     outline: 'none',
     resize: 'vertical',
     fontFamily: 'inherit'
   },
   fileInput: {
     padding: '10px 12px',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
+    border: '1px solid var(--text-tertiary)',
+    borderRadius: '8px',
     fontSize: '14px',
-    color: '#111827',
+    color: 'var(--text-primary)',
     outline: 'none',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-overlay)',
     cursor: 'pointer'
   },
   fileInputHint: {
     fontSize: '12px',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     margin: '4px 0 0 0',
     fontStyle: 'italic'
   },
@@ -1060,17 +1060,17 @@ const styles = {
     maxWidth: '100%',
     maxHeight: '200px',
     borderRadius: '8px',
-    border: '2px solid #e5e7eb'
+    border: '2px solid var(--border-subtle)'
   },
   removePhotoButton: {
     position: 'absolute',
     top: '8px',
     right: '8px',
     padding: '4px 8px',
-    backgroundColor: '#ef4444',
-    color: 'white',
+    backgroundColor: '#C04534',
+    color: 'var(--text-primary)',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '8px',
     cursor: 'pointer',
     fontSize: '12px',
     fontWeight: '600'
@@ -1078,10 +1078,10 @@ const styles = {
   createButton: {
     marginTop: '8px',
     padding: '12px 20px',
-    backgroundColor: '#3b82f6',
+    backgroundColor: 'var(--text-secondary)',
     border: 'none',
-    borderRadius: '6px',
-    color: 'white',
+    borderRadius: '8px',
+    color: 'var(--text-primary)',
     fontSize: '14px',
     fontWeight: '500',
     cursor: 'pointer',
@@ -1091,7 +1091,7 @@ const styles = {
     justifyContent: 'center'
   },
   createButtonDisabled: {
-    backgroundColor: '#d1d5db',
+    backgroundColor: 'var(--text-tertiary)',
     cursor: 'not-allowed'
   },
   formActions: {
@@ -1101,10 +1101,10 @@ const styles = {
   },
   cancelButton: {
     padding: '12px 20px',
-    backgroundColor: 'white',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
-    color: '#374151',
+    backgroundColor: 'var(--bg-overlay)',
+    border: '1px solid var(--text-tertiary)',
+    borderRadius: '8px',
+    color: 'var(--text-secondary)',
     fontSize: '14px',
     fontWeight: '500',
     cursor: 'pointer',
@@ -1121,10 +1121,10 @@ const styles = {
   },
   successMessage: {
     padding: '12px',
-    backgroundColor: '#d1fae5',
-    border: '1px solid #10b981',
-    borderRadius: '6px',
-    color: '#065f46',
+    backgroundColor: 'var(--bg-overlay)',
+    border: '1px solid var(--text-primary)',
+    borderRadius: '8px',
+    color: 'var(--text-primary)',
     fontSize: '13px',
     display: 'flex',
     alignItems: 'center',
@@ -1132,10 +1132,10 @@ const styles = {
   },
   errorMessage: {
     padding: '12px',
-    backgroundColor: '#fee2e2',
-    border: '1px solid #ef4444',
-    borderRadius: '6px',
-    color: '#991b1b',
+    backgroundColor: 'var(--bg-overlay)',
+    border: '1px solid #C04534',
+    borderRadius: '8px',
+    color: '#C04534',
     fontSize: '13px',
     display: 'flex',
     alignItems: 'center',
@@ -1145,53 +1145,53 @@ const styles = {
     padding: '32px 24px',
     textAlign: 'center',
     backgroundColor: 'rgba(242, 105, 33, 0.06)',
-    border: '2px solid #f59e0b',
-    borderRadius: '12px',
+    border: '2px solid var(--accent-primary)',
+    borderRadius: '8px',
     margin: '20px 0'
   },
   setupTitle: {
     fontSize: '18px',
     fontWeight: '600',
-    color: '#92400e',
+    color: 'var(--accent-primary)',
     margin: '0 0 12px 0'
   },
   setupDescription: {
     fontSize: '14px',
-    color: '#78350f',
+    color: 'var(--accent-primary)',
     marginBottom: '20px',
     lineHeight: '1.5'
   },
   setupSteps: {
     textAlign: 'left',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-overlay)',
     padding: '16px',
     borderRadius: '8px',
     marginBottom: '20px',
-    border: '1px solid #fbbf24'
+    border: '1px solid var(--accent-primary)'
   },
   setupStep: {
     fontSize: '13px',
-    color: '#374151',
+    color: 'var(--text-secondary)',
     margin: '8px 0',
     lineHeight: '1.6'
   },
   setupLink: {
-    color: '#3b82f6',
+    color: 'var(--text-secondary)',
     textDecoration: 'none',
     fontWeight: '500'
   },
   setupFooter: {
     fontSize: '12px',
-    color: '#92400e',
+    color: 'var(--accent-primary)',
     marginBottom: '16px',
     fontStyle: 'italic'
   },
   retryButton: {
     padding: '12px 24px',
-    backgroundColor: '#f59e0b',
+    backgroundColor: 'var(--accent-primary)',
     border: 'none',
     borderRadius: '8px',
-    color: 'white',
+    color: 'var(--text-primary)',
     fontSize: '14px',
     fontWeight: '500',
     cursor: 'pointer',
