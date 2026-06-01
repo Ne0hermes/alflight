@@ -1257,49 +1257,52 @@ const PilotProfile = () => {
       </div>
       )}
 
-      {/* Bouton Sauvegarder toujours visible en bas de page */}
+      {/* 🎨 Bouton Sauvegarder cockpit ALFlight — orange plein, mono ALL CAPS,
+          plus d'ombre portée bleue ni d'effet hover scale agressif. */}
       <div style={{
         marginTop: '32px',
         marginBottom: '24px',
         textAlign: 'center',
         padding: '20px',
         backgroundColor: 'var(--bg-overlay)',
+        border: '1px solid var(--border-subtle)',
         borderRadius: 'var(--radius-sm)',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
       }}>
         <button
           onClick={handleSave}
           style={{
-            padding: '12px 48px',
-            backgroundColor: 'var(--text-secondary)',
-            color: 'var(--text-primary)',
+            padding: '12px 24px',
+            backgroundColor: 'var(--accent-primary)',
+            color: 'var(--text-inverse)',
             border: 'none',
             borderRadius: 'var(--radius-sm)',
-            fontSize: '16px',
-            fontWeight: 'bold',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '11px',
+            fontWeight: 600,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
             cursor: 'pointer',
-            boxShadow: '0 2px 4px rgba(59, 130, 246, 0.4)',
-            transition: 'all 0.2s',
+            transition: 'background-color 0.2s ease',
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '8px'
+            gap: '8px',
+            minHeight: '44px',
           }}
           onMouseEnter={(e) => {
-            e.target.style.backgroundColor = 'var(--text-secondary)';
-            e.target.style.transform = 'scale(1.05)';
+            e.currentTarget.style.backgroundColor = 'var(--accent-hover)';
           }}
           onMouseLeave={(e) => {
-            e.target.style.backgroundColor = 'var(--text-secondary)';
-            e.target.style.transform = 'scale(1)';
+            e.currentTarget.style.backgroundColor = 'var(--accent-primary)';
           }}
         >
-          <Save size={20} />
+          <Save size={14} />
           Sauvegarder toutes les modifications
         </button>
         <p style={{
           marginTop: '12px',
+          fontFamily: 'var(--font-sans)',
           fontSize: '12px',
-          color: 'var(--text-secondary)'
+          color: 'var(--text-secondary)',
         }}>
           Cliquez pour enregistrer toutes vos modifications (profil, licences, medical, etc.)
         </p>
