@@ -250,19 +250,19 @@ const styles = {
     display: 'flex',
     gap: '16px',
     padding: '20px',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '12px',
-    border: '1px solid #FCD34D',
+    border: '1px solid var(--accent-primary)',
   },
   infoTitle: {
     fontSize: '18px',
     fontWeight: '600',
-    color: '#92400E',
+    color: 'var(--accent-primary)',
     marginBottom: '4px',
   },
   infoText: {
     fontSize: '14px',
-    color: '#78350F',
+    color: 'var(--accent-primary)',
     margin: 0,
   },
   parametersGrid: {
@@ -278,7 +278,7 @@ const styles = {
   label: {
     fontSize: '15px',
     fontWeight: '600',
-    color: '#1F2937',
+    color: 'var(--text-primary)',
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
@@ -296,21 +296,21 @@ const styles = {
     padding: '12px 16px',
     fontSize: '16px',
     borderRadius: '8px',
-    border: '1px solid #D1D5DB',
-    backgroundColor: '#FFFFFF',
-    color: '#1F2937',
+    border: '1px solid var(--text-tertiary)',
+    backgroundColor: 'var(--bg-surface)',
+    color: 'var(--text-primary)',
     fontFamily: theme.fonts.primary,
     transition: 'all 0.3s',
   },
   unit: {
     fontSize: '14px',
     fontWeight: '600',
-    color: '#6B7280',
+    color: 'var(--text-secondary)',
     minWidth: '60px',
   },
   hint: {
     fontSize: '13px',
-    color: '#6B7280',
+    color: 'var(--text-secondary)',
     fontStyle: 'italic',
     margin: 0,
   },
@@ -321,16 +321,16 @@ const styles = {
     marginTop: '8px',
   },
   resultsCardSuccess: {
-    backgroundColor: '#ECFDF5',
-    borderColor: '#10B981',
+    backgroundColor: 'var(--bg-overlay)',
+    borderColor: 'var(--text-primary)',
   },
   resultsCardWarning: {
-    backgroundColor: '#FEF3C7',
-    borderColor: '#F59E0B',
+    backgroundColor: 'var(--bg-overlay)',
+    borderColor: 'var(--accent-primary)',
   },
   resultsCardError: {
-    backgroundColor: '#FEE2E2',
-    borderColor: '#EF4444',
+    backgroundColor: 'var(--bg-overlay)',
+    borderColor: '#C04534',
   },
   resultsHeader: {
     display: 'flex',
@@ -341,7 +341,7 @@ const styles = {
   resultsTitle: {
     fontSize: '18px',
     fontWeight: '700',
-    color: '#1F2937',
+    color: 'var(--text-primary)',
     margin: 0,
   },
   resultRow: {
@@ -354,7 +354,7 @@ const styles = {
   resultLabel: {
     fontSize: '15px',
     fontWeight: '500',
-    color: '#374151',
+    color: 'var(--text-secondary)',
   },
   resultValue: {
     fontSize: '20px',
@@ -363,7 +363,7 @@ const styles = {
   },
   resultDescription: {
     fontSize: '14px',
-    color: '#6B7280',
+    color: 'var(--text-secondary)',
     fontStyle: 'italic',
     marginTop: '8px',
     marginBottom: '16px',
@@ -377,7 +377,7 @@ const styles = {
   detailsTitle: {
     fontSize: '14px',
     fontWeight: '600',
-    color: '#374151',
+    color: 'var(--text-secondary)',
     marginBottom: '12px',
   },
   detailsGrid: {
@@ -385,7 +385,7 @@ const styles = {
     gridTemplateColumns: 'repeat(2, 1fr)',
     gap: '8px',
     fontSize: '13px',
-    color: '#6B7280',
+    color: 'var(--text-secondary)',
   },
   errorMessage: {
     padding: '16px',
@@ -395,7 +395,7 @@ const styles = {
   errorTitle: {
     fontSize: '16px',
     fontWeight: '600',
-    color: '#DC2626',
+    color: '#C04534',
     marginBottom: '8px',
   },
   warningMessage: {
@@ -406,26 +406,26 @@ const styles = {
   warningTitle: {
     fontSize: '16px',
     fontWeight: '600',
-    color: '#D97706',
+    color: 'var(--accent-primary)',
     marginBottom: '8px',
   },
   tipsCard: {
     padding: '20px',
-    backgroundColor: '#EFF6FF',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '12px',
-    border: '1px solid #DBEAFE',
+    border: '1px solid var(--bg-overlay)',
   },
   tipsTitle: {
     fontSize: '16px',
     fontWeight: '600',
-    color: '#1E40AF',
+    color: 'var(--text-primary)',
     marginBottom: '12px',
   },
   tipsList: {
     margin: 0,
     paddingLeft: '20px',
     fontSize: '14px',
-    color: '#1E40AF',
+    color: 'var(--text-primary)',
     lineHeight: '1.8',
   },
 };

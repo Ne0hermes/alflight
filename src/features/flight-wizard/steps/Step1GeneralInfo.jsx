@@ -419,8 +419,8 @@ const styles = {
   badge: {
     fontSize: '10px',
     fontWeight: '600',
-    color: '#FFF',
-    backgroundColor: '#F59E0B',
+    color: 'var(--bg-surface)',
+    backgroundColor: 'var(--accent-primary)',
     padding: '3px 6px',
     borderRadius: '4px',
     textTransform: 'uppercase',
