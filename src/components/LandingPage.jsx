@@ -85,9 +85,10 @@ export const LandingPage = ({ onNavigate, isProfileConfigured = true }) => {
 
   // Actions rapides — toutes monochromes éditoriales (plus de couleurs SaaS).
   // Le seul accent visuel = orange ALFlight, et UNIQUEMENT comme indicateur d'alerte.
+  // NOTE : "Configurer mon avion" et "Je prépare mon vol" sont les 2 actions
+  // hero, séparées de cette grille en bas (cf. <section> dédiée).
   const quickActions = [
     { id: 'pilot',           title: 'Info pilote',              eyebrow: 'PROFIL · IDENTITÉ',       Icon: User,     action: () => onNavigate('pilot') },
-    { id: 'aircraft-config', title: 'Configurer mon avion',     eyebrow: 'WIZARD · ASSISTANT',      Icon: Settings, action: () => onNavigate('aircraft-wizard') },
     { id: 'logbook',         title: 'Carnet de vol',            eyebrow: 'OPS · HISTORIQUE',         Icon: Book,     action: () => onNavigate('logbook') },
     { id: 'checklist',       title: 'Mes checklists',           eyebrow: 'OPS · COCKPIT',            Icon: BookOpen, action: () => onNavigate('checklist') },
     { id: 'regulations',     title: 'Références réglementaires',eyebrow: 'DOCS · EASA',              Icon: Shield,   action: () => onNavigate('regulations') },
@@ -155,7 +156,7 @@ export const LandingPage = ({ onNavigate, isProfileConfigured = true }) => {
             let hasIndicator = false;
             if (action.id === 'pilot') {
               hasIndicator = pilotStatus.hasExpired || pilotStatus.hasWarning || pilotStatus.hasMissingInfo;
-            } else if (action.id === 'aircraft' || action.id === 'aircraft-config') {
+            } else if (action.id === 'aircraft') {
               hasIndicator = aircraftStatus.hasNoAircraft || aircraftStatus.hasMissingPerformance;
             }
 
@@ -188,16 +189,50 @@ export const LandingPage = ({ onNavigate, isProfileConfigured = true }) => {
           })}
         </div>
 
-        {/* Action principale wizard vol — accent orange unique de la page */}
-        <button
-          type="button"
-          style={styles.primaryButton}
-          onClick={() => onNavigate('flight-wizard')}
-        >
-          <Plane size={16} />
-          <span style={styles.primaryButtonText}>Je prépare mon vol</span>
-          <span style={styles.primaryButtonEyebrow}>BRIEFING · WIZARD</span>
-        </button>
+        {/* ─── Actions hero : 2 grands boutons (wizard vol + wizard avion) ───
+            Pattern charte ALFlight : un seul accent orange plein par écran.
+            "Je prépare mon vol" = primary (orange plein) car c'est l'action
+            la plus fréquente. "Configurer un avion" = secondary (outline orange)
+            pour rester visuellement hiérarchisé sans dédoubler l'accent. */}
+        <div style={styles.heroActionsGrid}>
+          {/* Bouton primary — wizard vol (orange plein) */}
+          <button
+            type="button"
+            style={styles.primaryButton}
+            onClick={() => onNavigate('flight-wizard')}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--accent-hover)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--accent-primary)';
+            }}
+          >
+            <Plane size={16} />
+            <span style={styles.primaryButtonText}>Je prépare mon vol</span>
+            <span style={styles.primaryButtonEyebrow}>BRIEFING · WIZARD</span>
+          </button>
+
+          {/* Bouton secondary — wizard avion (outline orange) */}
+          <button
+            type="button"
+            style={styles.secondaryButton}
+            onClick={() => onNavigate('aircraft-wizard')}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--accent-soft)';
+              e.currentTarget.style.color = 'var(--accent-hover)';
+              e.currentTarget.style.borderColor = 'var(--accent-hover)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = 'var(--accent-primary)';
+              e.currentTarget.style.borderColor = 'var(--accent-primary)';
+            }}
+          >
+            <Settings size={16} />
+            <span style={styles.secondaryButtonText}>Configurer un avion</span>
+            <span style={styles.secondaryButtonEyebrow}>WIZARD · ASSISTANT</span>
+          </button>
+        </div>
       </section>
     </div>
   );
@@ -392,7 +427,17 @@ const styles = {
     boxShadow: '0 0 0 2px var(--bg-surface)',
   },
 
-  // ─── Bouton primaire — wizard vol ───
+  // ─── Grille hero actions (2 grands boutons : wizard vol + wizard avion) ───
+  // Sur desktop : 2 colonnes côte à côte (1fr 1fr)
+  // Sur mobile/tablette étroite : auto-fit empile naturellement
+  heroActionsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gap: tokens.spacing[3],
+    marginTop: tokens.spacing[2],
+  },
+
+  // ─── Bouton primary — wizard vol (orange plein, accent unique) ───
   primaryButton: {
     display: 'flex',
     flexDirection: 'column',
@@ -427,5 +472,44 @@ const styles = {
     letterSpacing: '0.18em',
     textTransform: 'uppercase',
     opacity: 0.85,
+  },
+
+  // ─── Bouton secondary — wizard avion (outline orange, transparent) ───
+  // Même format que le primary mais en outline pour respecter la règle
+  // "un seul accent plein par écran" de la charte ALFlight.
+  secondaryButton: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+    width: '100%',
+    padding: '20px 24px',
+    backgroundColor: 'transparent',
+    color: 'var(--accent-primary)',
+    border: '1px solid var(--accent-primary)',
+    borderRadius: tokens.radius?.sm || '2px',
+    cursor: 'pointer',
+    fontFamily: tokens.fontFamily.sans,
+    fontSize: '18px',
+    fontWeight: 600,
+    transition: `background-color ${tokens.motion.fast}, color ${tokens.motion.fast}, border-color ${tokens.motion.fast}`,
+  },
+  secondaryButtonText: {
+    fontFamily: tokens.fontFamily.sans,
+    fontSize: '18px',
+    fontWeight: 600,
+    letterSpacing: '0.02em',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  secondaryButtonEyebrow: {
+    fontFamily: tokens.fontFamily.mono,
+    fontSize: '10px',
+    fontWeight: 500,
+    letterSpacing: '0.18em',
+    textTransform: 'uppercase',
+    opacity: 0.75,
   },
 };
