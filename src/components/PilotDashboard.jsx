@@ -6,6 +6,9 @@ import {
 } from 'lucide-react';
 import { theme } from '../styles/theme';
 import { getAIXMDataStatus, formatAIXMAlert } from '../utils/aixmDataValidator';
+// 🎨 Charte éditoriale ALFlight — alignement avec le titre "Démarrer" de la home
+import { EditorialHeading } from '@shared/components/editorial';
+import { tokens } from '@shared/styles/designSystem';
 
 export const PilotDashboard = ({ onNavigate }) => {
   const [medicalStatus, setMedicalStatus] = useState(null);
@@ -585,10 +588,14 @@ export const PilotDashboard = ({ onNavigate }) => {
 
   return (
     <section style={styles.container}>
-      <h2 style={styles.title}>
-        <Shield size={24} style={{ marginRight: '8px' }} />
-        Tableau de bord pilote
-      </h2>
+      {/* 🎨 Titre éditorial — strictement aligné sur le pattern "Démarrer"
+          (LandingPage actionsHeader) : EditorialHeading level={3} avec
+          eyebrow mono ALL CAPS au-dessus. */}
+      <div style={styles.titleWrapper}>
+        <EditorialHeading level={3} eyebrow="STATUT · CERTIFICATIONS & EXPÉRIENCE">
+          Tableau de bord pilote
+        </EditorialHeading>
+      </div>
       
       {/* Alerte si l'âge n'est pas configuré */}
       {hasAgeError && (
@@ -1227,16 +1234,15 @@ const styles = {
     background: 'transparent',
     border: 'none',
   },
-  // Titre éditorial ALFlight — Century Gothic, sobre, sans uppercase
+  // Wrapper du titre éditorial — même marginBottom que actionsHeader
+  // de LandingPage (tokens.spacing[5]) pour respiration identique.
+  titleWrapper: {
+    marginBottom: tokens.spacing[5],
+  },
+  // ⚠️ Ancien style `title` conservé (compatibilité pour références éventuelles
+  // ailleurs dans le composant — sinon supprimé par un audit ultérieur).
   title: {
-    fontFamily: "'Century Gothic', 'Questrial', 'Jost', system-ui, sans-serif",
-    fontSize: '20px',
-    fontWeight: 600,
-    letterSpacing: '-0.01em',
-    marginBottom: '20px',
-    color: 'var(--text-primary)',
-    display: 'flex',
-    alignItems: 'center',
+    display: 'none',
   },
   ageErrorAlert: {
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
