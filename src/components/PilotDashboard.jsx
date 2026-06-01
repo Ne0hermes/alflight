@@ -627,11 +627,11 @@ export const PilotDashboard = ({ onNavigate }) => {
         <div style={{
           ...styles.ageErrorAlert,
           backgroundColor: formatAIXMAlert(aixmDataStatus.status).bgColor,
-          // borderLeft 3px accent (au lieu de border full 2px qui fait "box")
-          borderLeft: `3px solid ${formatAIXMAlert(aixmDataStatus.status).color}`,
+          // Pas de border-left coloré (le trait à gauche serait incohérent
+          // avec les autres cards du dashboard) — border subtle uniforme
+          // sur les 4 côtés comme les boutons et cards du dashboard.
           border: '1px solid var(--border-subtle)',
-          borderLeftWidth: '3px',
-          borderLeftColor: formatAIXMAlert(aixmDataStatus.status).color,
+          borderLeft: '1px solid var(--border-subtle)',
           width: '100%',
           marginBottom: '20px',
         }}>
@@ -765,7 +765,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                   padding: '8px',
                   backgroundColor: 'transparent',
                   border: '1px solid var(--accent-soft)',
-                  borderRadius: '4px',
+                  borderRadius: '2px',
                   color: 'var(--accent-primary)',
                   cursor: 'pointer',
                   display: 'flex',
@@ -804,56 +804,56 @@ export const PilotDashboard = ({ onNavigate }) => {
                 <Clock size={16} style={{ color: 'var(--text-secondary)' }} />
                 <div>
                   <div style={styles.statValue}>{flightStats.totalHours.toFixed(1)}h</div>
-                  <div style={styles.statLabel}>Heures totales (auto)</div>
+                  <div style={styles.statLabel}>Heures totales</div>
                 </div>
               </div>
               <div style={styles.statItem}>
                 <Award size={16} style={{ color: 'var(--text-primary)' }} />
                 <div>
                   <div style={styles.statValue}>{flightStats.picHours.toFixed(1)}h</div>
-                  <div style={styles.statLabel}>Heures P1/CDB (auto)</div>
+                  <div style={styles.statLabel}>Heures P1/CDB</div>
                 </div>
               </div>
               <div style={styles.statItem}>
                 <Navigation size={16} style={{ color: 'var(--accent-primary)' }} />
                 <div>
                   <div style={styles.statValue}>{flightStats.p2Hours.toFixed(1)}h</div>
-                  <div style={styles.statLabel}>Heures P2/OPL (auto)</div>
+                  <div style={styles.statLabel}>Heures P2/OPL</div>
                 </div>
               </div>
               <div style={styles.statItem}>
                 <Plane size={16} style={{ color: 'var(--accent-primary)' }} />
                 <div>
                   <div style={styles.statValue}>{flightStats.totalLandings}</div>
-                  <div style={styles.statLabel}>Atterrissages totaux (auto)</div>
+                  <div style={styles.statLabel}>Atterrissages totaux</div>
                 </div>
               </div>
               <div style={styles.statItem}>
                 <Moon size={16} style={{ color: 'var(--accent-primary)' }} />
                 <div>
                   <div style={styles.statValue}>{flightStats.nightHours.toFixed(1)}h</div>
-                  <div style={styles.statLabel}>Heures de nuit (auto)</div>
+                  <div style={styles.statLabel}>Heures de nuit</div>
                 </div>
               </div>
               <div style={styles.statItem}>
                 <Cloud size={16} style={{ color: 'var(--accent-primary)' }} />
                 <div>
                   <div style={styles.statValue}>{flightStats.ifrHours.toFixed(1)}h</div>
-                  <div style={styles.statLabel}>Heures IFR (auto)</div>
+                  <div style={styles.statLabel}>Heures IFR</div>
                 </div>
               </div>
               <div style={styles.statItem}>
                 <Sun size={16} style={{ color: 'var(--accent-primary)' }} />
                 <div>
                   <div style={styles.statValue}>{flightStats.dayHours.toFixed(1)}h</div>
-                  <div style={styles.statLabel}>Heures voyage (auto)</div>
+                  <div style={styles.statLabel}>Heures voyage</div>
                 </div>
               </div>
               <div style={styles.statItem}>
                 <TrendingUp size={16} style={{ color: 'var(--accent-primary)' }} />
                 <div>
                   <div style={styles.statValue}>{flightStats.last30Days.toFixed(1)}h</div>
-                  <div style={styles.statLabel}>Heures instruction (auto)</div>
+                  <div style={styles.statLabel}>Heures instruction</div>
                 </div>
               </div>
             </div>
@@ -873,7 +873,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                   backgroundColor: 'var(--text-secondary)',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   fontSize: '14px',
                   fontWeight: '600',
                   cursor: 'pointer',
@@ -1278,11 +1278,12 @@ const styles = {
   },
   // 🎨 Alerte cockpit (utilisée pour profil incomplet, statut AIXM, draft wizard).
   // Toutes les couleurs et fonts sont aux variables ALFlight + Century Gothic.
+  // Bordure uniforme sur les 4 côtés (pas de trait coloré à gauche) pour
+  // cohérence visuelle avec les cards du dashboard et les boutons d'actions.
   ageErrorAlert: {
     backgroundColor: 'var(--bg-overlay)',
     border: '1px solid var(--border-subtle)',
-    borderLeft: '3px solid var(--accent-primary)',
-    borderRadius: '2px', // angles vifs cockpit
+    borderRadius: '2px', // angles vifs cockpit (identique aux boutons)
     padding: '16px',
     marginBottom: '20px',
     fontFamily: "'Century Gothic', 'Questrial', 'Jost', system-ui, sans-serif",
@@ -1364,7 +1365,7 @@ const styles = {
     alignItems: 'center',
     gap: '6px',
     padding: '6px 12px',
-    borderRadius: '20px',
+    borderRadius: '2px',
     border: '1px solid',
     fontSize: '13px',
     fontWeight: '600',
@@ -1439,7 +1440,7 @@ const styles = {
     display: 'inline-flex',
     alignItems: 'center',
     padding: '4px 8px',
-    borderRadius: '12px',
+    borderRadius: '2px',
     border: '1px solid',
     fontSize: '11px',
     fontWeight: '600',
@@ -1475,7 +1476,7 @@ const styles = {
   renewalAdvice: {
     marginTop: '12px',
     padding: '8px',
-    borderRadius: '6px',
+    borderRadius: '2px',
   },
   adviceSuccess: {
     display: 'flex',
@@ -1483,7 +1484,7 @@ const styles = {
     gap: '8px',
     padding: '8px',
     backgroundColor: 'rgba(16, 185, 129, 0.1)',
-    borderRadius: '6px',
+    borderRadius: '2px',
     border: '1px solid rgba(16, 185, 129, 0.3)',
     fontSize: '12px',
     color: 'var(--text-primary)',
@@ -1494,7 +1495,7 @@ const styles = {
     gap: '8px',
     padding: '8px',
     backgroundColor: 'rgba(245, 158, 11, 0.1)',
-    borderRadius: '6px',
+    borderRadius: '2px',
     border: '1px solid rgba(245, 158, 11, 0.3)',
     fontSize: '12px',
     color: 'var(--accent-primary)',
@@ -1537,7 +1538,7 @@ const styles = {
     alignItems: 'center',
     gap: '4px',
     padding: '4px 8px',
-    borderRadius: '12px',
+    borderRadius: '2px',
     border: '1px solid',
     fontSize: '11px',
     fontWeight: '600',
@@ -1548,7 +1549,7 @@ const styles = {
     gap: '4px',
     padding: '4px 8px',
     backgroundColor: 'var(--accent-soft)',
-    borderRadius: '12px',
+    borderRadius: '2px',
     fontSize: '11px',
     fontWeight: '600',
     color: 'var(--text-secondary)',
@@ -1558,7 +1559,7 @@ const styles = {
     alignItems: 'center',
     padding: '4px 12px',
     backgroundColor: 'var(--accent-soft)',
-    borderRadius: '12px',
+    borderRadius: '2px',
     fontSize: '13px',
     fontWeight: '700',
     color: 'var(--accent-primary)',
@@ -1590,7 +1591,7 @@ const styles = {
   },
   renewalProcedure: {
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '8px',
+    borderRadius: '2px',
     padding: '12px',
     marginTop: '12px',
   },
@@ -1617,7 +1618,7 @@ const styles = {
     color: 'var(--accent-primary)',
     backgroundColor: 'var(--bg-overlay)',
     padding: '8px',
-    borderRadius: '4px',
+    borderRadius: '2px',
     borderLeft: '3px solid var(--accent-primary)',
   },
   actionButton: {
@@ -1625,7 +1626,7 @@ const styles = {
     alignItems: 'center',
     gap: '6px',
     padding: '6px 12px',
-    borderRadius: '6px',
+    borderRadius: '2px',
     border: 'none',
     color: 'white',
     fontSize: '12px',
@@ -1643,7 +1644,7 @@ const styles = {
     gap: '12px',
     padding: '16px',
     backgroundColor: 'rgba(245, 158, 11, 0.1)',
-    borderRadius: '8px',
+    borderRadius: '2px',
     border: '1px solid rgba(245, 158, 11, 0.3)',
   },
   noQualificationTitle: {
