@@ -52,7 +52,7 @@ export const CollapsibleSection = ({
       <div
         className="collapsible-section"
         style={{
-          backgroundColor: 'white',
+          backgroundColor: 'var(--bg-surface)',
           borderRadius: '8px',
           border: `1px solid ${theme.colors.border}`,
           overflow: 'hidden',

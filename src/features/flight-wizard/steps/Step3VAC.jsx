@@ -752,7 +752,7 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
 const styles = {
   container: {
     padding: '0',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-surface)',
     borderRadius: '8px',
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
   },
@@ -808,7 +808,7 @@ const styles = {
     fontSize: '13px',
     fontFamily: 'monospace',
     color: '#374151',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-surface)',
     padding: '12px',
     borderRadius: '4px',
     border: '1px solid #e5e7eb',
@@ -856,7 +856,7 @@ const styles = {
   meteoEmptyState: {
     padding: '20px',
     textAlign: 'center',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-surface)',
     borderRadius: '6px',
     border: '1px solid #e5e7eb'
   },
@@ -916,7 +916,7 @@ const styles = {
   aerodromeCard: {
     border: '1px solid #e5e7eb',
     borderRadius: '8px',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-surface)',
     overflow: 'hidden',
     transition: 'box-shadow 0.2s'
   },
@@ -1046,7 +1046,7 @@ const styles = {
     alignItems: 'center',
     gap: '6px',
     padding: '6px 12px',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-surface)',
     color: theme.colors.primary,
     border: `1px solid ${theme.colors.border}`,
     borderRadius: '6px',
@@ -1080,7 +1080,7 @@ const styles = {
     gap: '8px',
     padding: '10px 16px',
     width: '100%',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-surface)',
     color: theme.colors.primary,
     border: `1px solid ${theme.colors.border}`,
     borderRadius: '6px',
@@ -1093,7 +1093,7 @@ const styles = {
   },
   detailsContainer: {
     borderTop: '1px solid #e5e7eb',
-    backgroundColor: 'white'
+    backgroundColor: 'var(--bg-surface)'
   },
   sectionTabs: {
     display: 'flex',
@@ -1110,7 +1110,7 @@ const styles = {
     gap: '8px',
     padding: '10px 16px',
     width: '100%',
-    backgroundColor: '#ffffff',
+    backgroundColor: 'var(--bg-surface)',
     border: '1px solid #e5e7eb',
     borderRadius: '6px',
     cursor: 'pointer',
