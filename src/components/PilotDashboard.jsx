@@ -620,27 +620,36 @@ export const PilotDashboard = ({ onNavigate }) => {
       )}
 
 
-      {/* Alerte statut base de données AIXM - Réductible */}
+      {/* 🎨 Alerte statut base de données AIXM — refonte cockpit éditoriale.
+          Plus de fond bleu ni mauvaise police : utilise les variables ALFlight
+          via formatAIXMAlert() (color/bgColor sont des var(--...) maintenant). */}
       {aixmDataStatus && (
         <div style={{
           ...styles.ageErrorAlert,
           backgroundColor: formatAIXMAlert(aixmDataStatus.status).bgColor,
-          borderColor: formatAIXMAlert(aixmDataStatus.status).color,
-          border: `2px solid ${formatAIXMAlert(aixmDataStatus.status).color}`,
+          // borderLeft 3px accent (au lieu de border full 2px qui fait "box")
+          borderLeft: `3px solid ${formatAIXMAlert(aixmDataStatus.status).color}`,
+          border: '1px solid var(--border-subtle)',
+          borderLeftWidth: '3px',
+          borderLeftColor: formatAIXMAlert(aixmDataStatus.status).color,
           width: '100%',
           marginBottom: '20px',
         }}>
           <div style={{
             ...styles.ageErrorContent,
             color: formatAIXMAlert(aixmDataStatus.status).color,
-            alignItems: 'flex-start'
+            alignItems: 'flex-start',
           }}>
-            <div style={{ fontSize: '20px', marginTop: '2px' }}>
-              {formatAIXMAlert(aixmDataStatus.status).icon}
-            </div>
+            <Database
+              size={18}
+              style={{
+                marginTop: '2px',
+                flexShrink: 0,
+                color: formatAIXMAlert(aixmDataStatus.status).color,
+              }}
+            />
             <div style={{ flex: 1 }}>
               <p style={{ ...styles.ageErrorTitle, margin: 0, marginBottom: '4px' }}>
-                <Database size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
                 {formatAIXMAlert(aixmDataStatus.status).title}
               </p>
               <p style={styles.ageErrorMessage}>
@@ -649,12 +658,31 @@ export const PilotDashboard = ({ onNavigate }) => {
             </div>
           </div>
           {aixmDetailsExpanded && (
-            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: '1.6', marginTop: '12px', paddingLeft: '32px' }}>
-              <div><strong>Fichier :</strong> {aixmDataStatus.filename}</div>
-              <div><strong>Date effective :</strong> {aixmDataStatus.effectiveDate}</div>
-              <div><strong>Date expiration :</strong> {aixmDataStatus.expiryDate}</div>
+            <div style={{
+              fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
+              fontSize: '11px',
+              color: 'var(--text-secondary)',
+              lineHeight: 1.7,
+              marginTop: '12px',
+              paddingLeft: '30px',
+            }}>
+              <div>
+                <span style={{ color: 'var(--text-tertiary)', letterSpacing: '0.10em', textTransform: 'uppercase' }}>Fichier · </span>
+                <span style={{ color: 'var(--text-primary)' }}>{aixmDataStatus.filename}</span>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-tertiary)', letterSpacing: '0.10em', textTransform: 'uppercase' }}>Effective · </span>
+                <span style={{ color: 'var(--text-primary)' }}>{aixmDataStatus.effectiveDate}</span>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-tertiary)', letterSpacing: '0.10em', textTransform: 'uppercase' }}>Expiration · </span>
+                <span style={{ color: 'var(--text-primary)' }}>{aixmDataStatus.expiryDate}</span>
+              </div>
               {aixmDataStatus.nextAIRACDate && (
-                <div><strong>Prochain cycle AIRAC :</strong> {aixmDataStatus.nextAIRACDate}</div>
+                <div>
+                  <span style={{ color: 'var(--text-tertiary)', letterSpacing: '0.10em', textTransform: 'uppercase' }}>Prochain AIRAC · </span>
+                  <span style={{ color: 'var(--text-primary)' }}>{aixmDataStatus.nextAIRACDate}</span>
+                </div>
               )}
             </div>
           )}
@@ -663,21 +691,24 @@ export const PilotDashboard = ({ onNavigate }) => {
               onClick={() => setAixmDetailsExpanded(!aixmDetailsExpanded)}
               style={{
                 ...styles.configureButton,
-                backgroundColor: formatAIXMAlert(aixmDataStatus.status).color,
+                // Bouton détails : style ghost (outline accent), pas plein
+                backgroundColor: 'transparent',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-regular)',
                 flex: 1,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '4px'
+                gap: '6px',
               }}
             >
               {aixmDetailsExpanded ? (
                 <>
-                  Masquer <ChevronUp size={16} />
+                  Masquer <ChevronUp size={14} />
                 </>
               ) : (
                 <>
-                  Détails <ChevronDown size={16} />
+                  Détails <ChevronDown size={14} />
                 </>
               )}
             </button>
@@ -688,15 +719,16 @@ export const PilotDashboard = ({ onNavigate }) => {
                 rel="noopener noreferrer"
                 style={{
                   ...styles.configureButton,
-                  backgroundColor: formatAIXMAlert(aixmDataStatus.status).color,
+                  // Bouton télécharger : plein orange ALFlight (action primaire)
                   textDecoration: 'none',
                   flex: 1,
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  gap: '6px',
                 }}
               >
-                📥 Télécharger
+                Télécharger
               </a>
             )}
           </div>
@@ -1244,40 +1276,53 @@ const styles = {
   title: {
     display: 'none',
   },
+  // 🎨 Alerte cockpit (utilisée pour profil incomplet, statut AIXM, draft wizard).
+  // Toutes les couleurs et fonts sont aux variables ALFlight + Century Gothic.
   ageErrorAlert: {
     backgroundColor: 'var(--bg-overlay)',
     border: '1px solid var(--border-subtle)',
-    borderRadius: '12px',
+    borderLeft: '3px solid var(--accent-primary)',
+    borderRadius: '2px', // angles vifs cockpit
     padding: '16px',
     marginBottom: '20px',
+    fontFamily: "'Century Gothic', 'Questrial', 'Jost', system-ui, sans-serif",
   },
   ageErrorContent: {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
-    color: '#C04534',
+    color: 'var(--text-primary)',
   },
+  // Titre du bloc alerte — Century Gothic, taille modérée, cockpit
   ageErrorTitle: {
+    fontFamily: "'Century Gothic', 'Questrial', 'Jost', system-ui, sans-serif",
     fontSize: '14px',
-    fontWeight: '600',
+    fontWeight: 600,
+    letterSpacing: '-0.01em',
+    color: 'var(--text-primary)',
     marginBottom: '4px',
   },
   ageErrorMessage: {
+    fontFamily: "'Century Gothic', 'Questrial', 'Jost', system-ui, sans-serif",
     fontSize: '12px',
     color: 'var(--text-secondary)',
-    lineHeight: '1.4',
+    lineHeight: 1.5,
   },
+  // Bouton d'action dans alerte — mono ALL CAPS cockpit, orange ALFlight
   configureButton: {
     backgroundColor: 'var(--accent-primary)',
-    color: 'var(--bg-overlay)',
+    color: 'var(--text-inverse)',
     border: 'none',
-    borderRadius: '8px',
-    padding: '8px 16px',
-    fontSize: '13px',
-    fontWeight: '600',
+    borderRadius: '2px',
+    padding: '10px 16px',
+    fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
+    fontSize: '11px',
+    fontWeight: 600,
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
     cursor: 'pointer',
     whiteSpace: 'nowrap',
-    transition: 'all 0.3s ease',
+    transition: 'background-color 0.2s ease',
   },
   grid: {
     display: 'grid',

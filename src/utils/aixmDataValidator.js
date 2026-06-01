@@ -131,51 +131,61 @@ export async function getAIXMDataStatus() {
  * Formate le message d'alerte selon le statut
  * @param {Object} status - Statut retourné par checkAIXMDataValidity
  * @returns {Object} Objet avec message, couleur et icône
+ *
+ * 🎨 Couleurs alignées sur la charte éditoriale ALFlight v1 :
+ *  - critical (NO-GO) : rouge ALFlight #C04534
+ *  - high/medium (warning) : orange ALFlight var(--accent-primary)
+ *  - low/info/valid (neutre cockpit) : pas de bleu / vert SaaS, tout est
+ *    rendu sobrement avec --text-secondary + --bg-overlay pour rester dans
+ *    le langage cockpit (un seul accent par écran).
+ *
+ *  Icônes : emojis remplacés par des marqueurs textuels mono ou retirés
+ *  (pas d'emoji en prod selon la charte).
  */
 export function formatAIXMAlert(status) {
   const alerts = {
     expired: {
-      color: '#ef4444', // Rouge
-      bgColor: '#fee2e2',
-      icon: '⚠️',
-      title: '🚨 DONNÉES PÉRIMÉES',
-      priority: 'critical'
+      color: '#C04534', // red-critical ALFlight (NO-GO catastrophique)
+      bgColor: 'var(--bg-overlay)',
+      icon: '!',
+      title: 'Données périmées',
+      priority: 'critical',
     },
     'expiring-today': {
-      color: '#f59e0b', // Orange
-      bgColor: 'rgba(242, 105, 33, 0.10)',
-      icon: '⏰',
-      title: '⚠️ EXPIRATION AUJOURD\'HUI',
-      priority: 'high'
+      color: 'var(--accent-primary)', // orange ALFlight (warning)
+      bgColor: 'var(--accent-soft)',
+      icon: '!',
+      title: "Expiration aujourd'hui",
+      priority: 'high',
     },
     warning: {
-      color: '#f59e0b', // Orange
-      bgColor: 'rgba(242, 105, 33, 0.10)',
-      icon: '⚠️',
-      title: 'Attention : Mise à jour requise',
-      priority: 'medium'
+      color: 'var(--accent-primary)', // orange ALFlight (warning)
+      bgColor: 'var(--accent-soft)',
+      icon: '!',
+      title: 'Mise à jour requise',
+      priority: 'medium',
     },
     notice: {
-      color: '#3b82f6', // Bleu
-      bgColor: '#dbeafe',
-      icon: 'ℹ️',
+      color: 'var(--text-secondary)', // neutre cockpit (pas de bleu SaaS)
+      bgColor: 'var(--bg-overlay)',
+      icon: 'i',
       title: 'Information',
-      priority: 'low'
+      priority: 'low',
     },
     valid: {
-      color: '#10b981', // Vert
-      bgColor: '#d1fae5',
-      icon: '✅',
+      color: 'var(--text-secondary)', // neutre cockpit (pas de vert SaaS)
+      bgColor: 'var(--bg-overlay)',
+      icon: '✓',
       title: 'Données à jour',
-      priority: 'info'
+      priority: 'info',
     },
     unknown: {
-      color: '#6b7280', // Gris
-      bgColor: '#f3f4f6',
-      icon: '❓',
+      color: 'var(--text-tertiary)', // gris muted
+      bgColor: 'var(--bg-overlay)',
+      icon: '?',
       title: 'Statut inconnu',
-      priority: 'info'
-    }
+      priority: 'info',
+    },
   };
 
   return alerts[status] || alerts.unknown;
