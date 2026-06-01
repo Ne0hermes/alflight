@@ -60,18 +60,19 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange, isProfileConfig
     <>
       {/* Header mobile fixe */}
       <div style={styles.header}>
+        {/* 🧭 Header MobileNavigation — bouton menu burger CENTRÉ.
+            Le logo ALFLIGHT est positionné en absolute à gauche pour ne
+            pas perturber le centrage du bouton burger qui reste la cible
+            principale d'interaction. */}
+        <span style={styles.headerLogoAbsolute}>ALFLIGHT</span>
         <button
           type="button"
           style={styles.menuButton}
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           aria-label="Menu"
         >
-          {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
-        <div style={styles.headerTitle}>
-          <span style={styles.headerLogo}>ALFLIGHT</span>
-        </div>
-        <div style={styles.spacer} aria-hidden="true" />
       </div>
 
       {/* Drawer overlay */}
@@ -214,7 +215,11 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange, isProfileConfig
 //  Styles éditoriaux — 100% variables CSS
 // ─────────────────────────────────────────────────────────────────────────────
 const styles = {
-  // Header mobile sticky
+  // Header sticky persistant — sur toutes les pages, toutes les tailles.
+  // Le bouton burger est CENTRÉ (transform translateX(-50%) sur position
+  // absolute) pour servir de cible visuelle principale. Le logo ALFLIGHT
+  // est positionné en absolute à gauche pour rester visible sans casser
+  // le centrage du burger.
   header: {
     position: 'fixed',
     top: 0,
@@ -225,7 +230,7 @@ const styles = {
     borderBottom: '1px solid var(--border-subtle)',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center', // ← bouton burger centré
     padding: '0 16px',
     paddingTop: 'max(env(safe-area-inset-top), 0px)',
     paddingLeft: 'max(env(safe-area-inset-left), 16px)',
@@ -234,33 +239,33 @@ const styles = {
     backdropFilter: 'blur(10px)',
     WebkitBackdropFilter: 'blur(10px)',
   },
+  // Bouton burger central (cible principale d'interaction)
   menuButton: {
     background: 'transparent',
     border: '1px solid var(--border-regular)',
-    padding: '8px',
+    padding: '10px',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: tokens.radius?.sm || '2px',
-    transition: `border-color ${tokens.motion.fast}, color ${tokens.motion.fast}`,
+    transition: `border-color ${tokens.motion.fast}, color ${tokens.motion.fast}, background-color ${tokens.motion.fast}`,
     color: 'var(--text-primary)',
+    minWidth: '44px',
+    minHeight: '44px',
   },
-  headerTitle: {
-    flex: 1,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerLogo: {
+  // Logo en absolute à gauche, ne perturbe pas le centrage du burger
+  headerLogoAbsolute: {
+    position: 'absolute',
+    left: 'max(env(safe-area-inset-left), 16px)',
+    top: '50%',
+    transform: 'translateY(-50%)',
     fontFamily: tokens.fontFamily.sans,
     fontSize: '15px',
     fontWeight: 700,
     letterSpacing: '0.12em',
     color: 'var(--text-primary)',
-  },
-  spacer: {
-    width: '36px', // pour équilibrer le bouton menu
+    pointerEvents: 'none', // ne capture pas les clics
   },
 
   // Drawer overlay

@@ -245,15 +245,14 @@ const MobileApp = () => {
         <ThemeProvider theme={muiTheme}>
           <CssBaseline />
           <div style={styles.app}>
-            {/* Afficher le menu burger aussi sur la page d'accueil */}
-            {isMobile && (
-              <MobileNavigation
-                tabs={TAB_CONFIG}
-                activeTab={activeTab}
-                onTabChange={handleNavigate}
-                isProfileConfigured={isProfileConfigured}
-              />
-            )}
+            {/* 🧭 Menu burger PERSISTANT — sur la home aussi, quelle que soit
+                la taille d'écran (desktop / tablette / mobile). */}
+            <MobileNavigation
+              tabs={MENU_TABS}
+              activeTab={activeTab}
+              onTabChange={handleNavigate}
+              isProfileConfigured={isProfileConfigured}
+            />
             <LandingPage onNavigate={handleNavigate} isProfileConfigured={isProfileConfigured} />
             <NotificationContainer />
           </div>
@@ -281,28 +280,22 @@ const MobileApp = () => {
 
         <FlightSystemProviders>
         <div style={styles.app}>
-        {/* Navigation */}
-        {isMobile ? (
-          <MobileNavigation
-            tabs={MENU_TABS}
-            activeTab={activeTab}
-            onTabChange={handleNavigate}
-            isProfileConfigured={isProfileConfigured}
-          />
-        ) : (
-          <div className="app-navigation" style={styles.desktopNav}>
-            <TabNavigation
-              tabs={MENU_TABS}
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-            />
-          </div>
-        )}
-        
-        {/* Content */}
+        {/* 🧭 Navigation UNIQUE : menu burger persistant sur TOUTES les tailles
+            d'écran et toutes les pages. La TabNavigation desktop horizontale
+            est volontairement supprimée — un menu unique pour une UX cohérente
+            mobile / tablette / desktop. */}
+        <MobileNavigation
+          tabs={MENU_TABS}
+          activeTab={activeTab}
+          onTabChange={handleNavigate}
+          isProfileConfigured={isProfileConfigured}
+        />
+
+        {/* Content — padding mobile pour tous (le header fixed à 56px
+            nécessite un padding-top constant indépendamment du viewport). */}
         <main style={{
           ...styles.content,
-          ...(isMobile ? styles.mobileContent : styles.desktopContent)
+          ...styles.mobileContent,
         }}>
           <ErrorBoundary>
             {/* Suspense pour gérer le chargement des modules lazy-loaded */}
