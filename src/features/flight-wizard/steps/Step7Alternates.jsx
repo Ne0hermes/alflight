@@ -30,7 +30,7 @@ const commonStyles = {
   },
   infoBox: {
     padding: '16px',
-    backgroundColor: '#f0f9ff',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '8px',
     borderLeft: '4px solid #f26921',
     marginBottom: '20px',
@@ -40,7 +40,7 @@ const commonStyles = {
     padding: '16px',
     backgroundColor: 'rgba(242, 105, 33, 0.10)',
     borderRadius: '8px',
-    borderLeft: '4px solid #f59e0b',
+    borderLeft: '4px solid var(--accent-primary)',
     marginBottom: '20px',
     fontSize: '14px'
   },
@@ -52,7 +52,7 @@ const commonStyles = {
   },
   infoLabel: {
     fontWeight: '600',
-    color: '#374151',
+    color: 'var(--text-secondary)',
     minWidth: '180px'
   },
   infoValue: {
@@ -67,13 +67,13 @@ const commonStyles = {
   },
   coneInfoCard: {
     padding: '12px 16px',
-    backgroundColor: '#f8fafc',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '8px',
-    border: '1px solid #e2e8f0'
+    border: '1px solid var(--border-subtle)'
   },
   coneInfoTitle: {
     fontSize: '12px',
-    color: '#64748b',
+    color: 'var(--text-tertiary)',
     marginBottom: '4px',
     textTransform: 'uppercase',
     letterSpacing: '0.05em'
@@ -81,11 +81,11 @@ const commonStyles = {
   coneInfoValueLarge: {
     fontSize: '24px',
     fontWeight: '700',
-    color: '#1e293b'
+    color: 'var(--text-primary)'
   },
   coneInfoValueSmall: {
     fontSize: '14px',
-    color: '#64748b'
+    color: 'var(--text-tertiary)'
   }
 };
 
@@ -333,10 +333,10 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
       {!hasFuelData && (
         <div style={commonStyles.infoBoxWarning}>
           <div style={commonStyles.infoRow}>
-            <AlertTriangle size={18} color="#f59e0b" />
+            <AlertTriangle size={18} color="var(--accent-primary)" />
             <span style={{ fontWeight: '600' }}>Bilan carburant non disponible</span>
           </div>
-          <p style={{ margin: '8px 0 0 26px', color: '#92400e' }}>
+          <p style={{ margin: '8px 0 0 26px', color: 'var(--accent-primary)' }}>
             Le FOB (Fuel On Board) n'est pas défini. La zone de recherche utilise les paramètres par défaut.
             Pour une sélection optimale, complétez d'abord l'étape "Bilan carburant".
           </p>
@@ -350,7 +350,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
             <Info size={18} color="#f26921" />
             <span style={{ fontWeight: '600' }}>Zone de recherche en forme de cône</span>
           </div>
-          <p style={{ margin: '8px 0 12px 26px', color: '#374151', fontSize: '13px' }}>
+          <p style={{ margin: '8px 0 12px 26px', color: 'var(--text-secondary)', fontSize: '13px' }}>
             La zone de déroutement est calculée en fonction du carburant restant théorique le long de la route.
             Elle est plus large au départ (plus de carburant) et plus étroite à l'arrivée.
           </p>
@@ -365,7 +365,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
               <div style={commonStyles.coneInfoValueSmall}>
                 Autonomie: {searchRadius.enduranceAtDep?.toFixed(1)}h
               </div>
-              <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
                 = {convert(searchRadius.fobLiters || 0, 'fuel', 'ltr').toFixed(0)} {getSymbol('fuel')} / {(selectedAircraft?.fuelConsumption || 40).toFixed(0)} {getSymbol('fuelConsumption')} × {selectedAircraft?.cruiseSpeedKt || selectedAircraft?.cruiseSpeed || 120} kt × 0.5
               </div>
             </div>
@@ -378,7 +378,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
               <div style={commonStyles.coneInfoValueSmall}>
                 Autonomie: {searchRadius.enduranceAtArr?.toFixed(1)}h
               </div>
-              <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
                 = ({convert(searchRadius.fobLiters || 0, 'fuel', 'ltr').toFixed(0)} - {convert(searchRadius.tripFuel || 0, 'fuel', 'ltr').toFixed(0)}) {getSymbol('fuel')} / {(selectedAircraft?.fuelConsumption || 40).toFixed(0)} {getSymbol('fuelConsumption')} × {selectedAircraft?.cruiseSpeedKt || selectedAircraft?.cruiseSpeed || 120} kt × 0.5
               </div>
             </div>
@@ -402,14 +402,14 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                 <div style={commonStyles.coneInfoValueSmall}>
                   Dép: {performanceBasedLDA.departureLandingDistance} m | Arr: {performanceBasedLDA.arrivalLandingDistance} m
                 </div>
-                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
                   = ({performanceBasedLDA.departureLandingDistance} + {performanceBasedLDA.arrivalLandingDistance}) / 2 × 1.43
                 </div>
               </div>
             )}
 
             {performanceBasedLDA && performanceBasedLDA.source === 'performance_departure_only' && (
-              <div style={{ ...commonStyles.coneInfoCard, backgroundColor: '#fef9c3' }}>
+              <div style={{ ...commonStyles.coneInfoCard, backgroundColor: 'var(--bg-overlay)' }}>
                 <div style={commonStyles.coneInfoTitle}>Piste minimale × 1.43</div>
                 <div style={commonStyles.coneInfoValueLarge}>
                   {performanceBasedLDA.minRunwayRequired} m
@@ -417,14 +417,14 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                 <div style={commonStyles.coneInfoValueSmall}>
                   Départ: {performanceBasedLDA.departureLandingDistance} m
                 </div>
-                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
                   = {performanceBasedLDA.departureLandingDistance} × 1.43 (arrivée N/A)
                 </div>
               </div>
             )}
 
             {performanceBasedLDA && performanceBasedLDA.source === 'performance_arrival_only' && (
-              <div style={{ ...commonStyles.coneInfoCard, backgroundColor: '#fef9c3' }}>
+              <div style={{ ...commonStyles.coneInfoCard, backgroundColor: 'var(--bg-overlay)' }}>
                 <div style={commonStyles.coneInfoTitle}>Piste minimale × 1.43</div>
                 <div style={commonStyles.coneInfoValueLarge}>
                   {performanceBasedLDA.minRunwayRequired} m
@@ -432,19 +432,19 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                 <div style={commonStyles.coneInfoValueSmall}>
                   Arrivée: {performanceBasedLDA.arrivalLandingDistance} m
                 </div>
-                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
                   = {performanceBasedLDA.arrivalLandingDistance} × 1.43 (départ N/A)
                 </div>
               </div>
             )}
 
             {performanceBasedLDA && performanceBasedLDA.source === 'no_performance_data' && (
-              <div style={{ ...commonStyles.coneInfoCard, backgroundColor: 'rgba(242, 105, 33, 0.10)', borderColor: '#f59e0b' }}>
+              <div style={{ ...commonStyles.coneInfoCard, backgroundColor: 'rgba(242, 105, 33, 0.10)', borderColor: 'var(--accent-primary)' }}>
                 <div style={commonStyles.coneInfoTitle}>Piste minimale</div>
-                <div style={{ ...commonStyles.coneInfoValueLarge, color: '#92400e' }}>
+                <div style={{ ...commonStyles.coneInfoValueLarge, color: 'var(--accent-primary)' }}>
                   N/A
                 </div>
-                <div style={{ ...commonStyles.coneInfoValueSmall, color: '#92400e' }}>
+                <div style={{ ...commonStyles.coneInfoValueSmall, color: 'var(--accent-primary)' }}>
                   Données Performance non disponibles
                 </div>
               </div>
@@ -458,7 +458,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
               backgroundColor: 'rgba(242, 105, 33, 0.10)',
               borderRadius: '6px',
               fontSize: '12px',
-              color: '#92400e',
+              color: 'var(--accent-primary)',
               marginTop: '12px'
             }}>
               <AlertTriangle size={14} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
@@ -471,9 +471,9 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
 
       {/* Filtres manuels */}
       <div style={{
-        backgroundColor: '#f8fafc',
+        backgroundColor: 'var(--bg-overlay)',
         borderRadius: '8px',
-        border: '1px solid #e2e8f0',
+        border: '1px solid var(--border-subtle)',
         marginBottom: '20px',
         overflow: 'hidden'
       }}>
@@ -491,16 +491,16 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
             cursor: 'pointer',
             fontSize: '14px',
             fontWeight: '600',
-            color: '#374151'
+            color: 'var(--text-secondary)'
           }}
         >
           <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Filter size={16} color="#6366f1" />
+            <Filter size={16} color="var(--accent-primary)" />
             Filtres de recherche
             {(filters.hideShortRunways || filters.hideIncompatibleSurface || filters.hideIncompatibleType) && (
               <span style={{
                 padding: '2px 8px',
-                backgroundColor: '#6366f1',
+                backgroundColor: 'var(--accent-primary)',
                 color: 'white',
                 borderRadius: '10px',
                 fontSize: '11px'
@@ -522,22 +522,22 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                 alignItems: 'center',
                 gap: '10px',
                 padding: '10px 12px',
-                backgroundColor: filters.hideShortRunways ? '#eef2ff' : '#ffffff',
+                backgroundColor: filters.hideShortRunways ? 'var(--bg-overlay)' : 'var(--bg-surface)',
                 borderRadius: '6px',
-                border: '1px solid #e2e8f0',
+                border: '1px solid var(--border-subtle)',
                 cursor: 'pointer'
               }}>
                 <input
                   type="checkbox"
                   checked={filters.hideShortRunways}
                   onChange={e => setFilters(prev => ({ ...prev, hideShortRunways: e.target.checked }))}
-                  style={{ width: '18px', height: '18px', accentColor: '#6366f1' }}
+                  style={{ width: '18px', height: '18px', accentColor: 'var(--accent-primary)' }}
                 />
                 <div>
-                  <div style={{ fontWeight: '500', fontSize: '13px', color: '#1f2937' }}>
+                  <div style={{ fontWeight: '500', fontSize: '13px', color: 'var(--text-primary)' }}>
                     Masquer les pistes trop courtes
                   </div>
-                  <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
                     Piste minimale requise: {performanceBasedLDA?.minRunwayRequired ? `${performanceBasedLDA.minRunwayRequired} m` : 'N/A (données Performance requises)'}
                   </div>
                 </div>
@@ -549,22 +549,22 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                 alignItems: 'center',
                 gap: '10px',
                 padding: '10px 12px',
-                backgroundColor: filters.hideIncompatibleSurface ? '#eef2ff' : '#ffffff',
+                backgroundColor: filters.hideIncompatibleSurface ? 'var(--bg-overlay)' : 'var(--bg-surface)',
                 borderRadius: '6px',
-                border: '1px solid #e2e8f0',
+                border: '1px solid var(--border-subtle)',
                 cursor: 'pointer'
               }}>
                 <input
                   type="checkbox"
                   checked={filters.hideIncompatibleSurface}
                   onChange={e => setFilters(prev => ({ ...prev, hideIncompatibleSurface: e.target.checked }))}
-                  style={{ width: '18px', height: '18px', accentColor: '#6366f1' }}
+                  style={{ width: '18px', height: '18px', accentColor: 'var(--accent-primary)' }}
                 />
                 <div>
-                  <div style={{ fontWeight: '500', fontSize: '13px', color: '#1f2937' }}>
+                  <div style={{ fontWeight: '500', fontSize: '13px', color: 'var(--text-primary)' }}>
                     Masquer les revêtements incompatibles
                   </div>
-                  <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
                     Surfaces compatibles: {aircraftCompatibleSurfaces.slice(0, 3).join(', ')}{aircraftCompatibleSurfaces.length > 3 ? '...' : ''}
                   </div>
                 </div>
@@ -576,22 +576,22 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                 alignItems: 'center',
                 gap: '10px',
                 padding: '10px 12px',
-                backgroundColor: filters.hideIncompatibleType ? '#eef2ff' : '#ffffff',
+                backgroundColor: filters.hideIncompatibleType ? 'var(--bg-overlay)' : 'var(--bg-surface)',
                 borderRadius: '6px',
-                border: '1px solid #e2e8f0',
+                border: '1px solid var(--border-subtle)',
                 cursor: 'pointer'
               }}>
                 <input
                   type="checkbox"
                   checked={filters.hideIncompatibleType}
                   onChange={e => setFilters(prev => ({ ...prev, hideIncompatibleType: e.target.checked }))}
-                  style={{ width: '18px', height: '18px', accentColor: '#6366f1' }}
+                  style={{ width: '18px', height: '18px', accentColor: 'var(--accent-primary)' }}
                 />
                 <div>
-                  <div style={{ fontWeight: '500', fontSize: '13px', color: '#1f2937' }}>
+                  <div style={{ fontWeight: '500', fontSize: '13px', color: 'var(--text-primary)' }}>
                     Masquer les types d'aérodromes incompatibles
                   </div>
-                  <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
                     Type avion: {aircraftType === 'airplane' ? 'Avion (exclure héliports, ULM...)' : aircraftType}
                   </div>
                 </div>

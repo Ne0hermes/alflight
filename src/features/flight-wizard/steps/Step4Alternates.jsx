@@ -27,7 +27,7 @@ const commonStyles = {
   },
   infoBox: {
     padding: '16px',
-    backgroundColor: '#f0f9ff',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '8px',
     borderLeft: '4px solid #f26921',
     marginBottom: '20px',
@@ -41,7 +41,7 @@ const commonStyles = {
   },
   infoLabel: {
     fontWeight: '600',
-    color: '#374151',
+    color: 'var(--text-secondary)',
     minWidth: '180px'
   },
   infoValue: {

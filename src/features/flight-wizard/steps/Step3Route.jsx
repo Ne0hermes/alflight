@@ -32,11 +32,11 @@ const commonStyles = {
   mapSection: {
     marginBottom: '32px',
     padding: '16px',
-    backgroundColor: '#f9fafb',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '8px',
     borderWidth: '1px',
     borderStyle: 'solid',
-    borderColor: '#e5e7eb'
+    borderColor: 'var(--border-subtle)'
   },
   mapLabel: {
     fontSize: '14px',
@@ -49,14 +49,14 @@ const commonStyles = {
   },
   infoText: {
     fontSize: '13px',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     marginBottom: '12px',
     fontStyle: 'italic'
   },
   alternatesSection: {
     marginTop: '48px',
     paddingTop: '32px',
-    borderTop: '2px solid #e5e7eb',
+    borderTop: '2px solid var(--border-subtle)',
   },
   alternatesHeader: {
     display: 'flex',
@@ -398,16 +398,16 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
       {/* Note: Sélection des déroutements déplacée à l'étape 7 */}
       <div style={{
         padding: '16px',
-        backgroundColor: '#f0f9ff',
+        backgroundColor: 'var(--bg-overlay)',
         borderRadius: '8px',
         borderLeft: '4px solid #f26921',
         marginTop: '20px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
           <Info size={18} color="#f26921" />
-          <span style={{ fontWeight: '600', color: '#1e293b' }}>Sélection des déroutements</span>
+          <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Sélection des déroutements</span>
         </div>
-        <p style={{ margin: 0, fontSize: '14px', color: '#475569' }}>
+        <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-tertiary)' }}>
           La sélection des aérodromes de déroutement se fait à l'<strong>étape 7</strong>, après le bilan carburant.
           Cela permet d'utiliser le <strong>FOB (Fuel On Board)</strong> pour calculer une zone de recherche
           en forme de cône, plus précise et adaptée à votre autonomie réelle.

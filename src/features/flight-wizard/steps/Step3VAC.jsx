@@ -58,19 +58,19 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
     const isDeparture = waypoints?.find(wp =>
       wp.type === 'departure' && (wp.icao === icao || wp.name === icao)
     );
-    if (isDeparture) return { role: 'departure', label: 'Départ', color: '#10b981' };
+    if (isDeparture) return { role: 'departure', label: 'Départ', color: 'var(--text-primary)' };
 
     // Vérifier si c'est l'arrivée
     const isArrival = waypoints?.find(wp =>
       wp.type === 'arrival' && (wp.icao === icao || wp.name === icao)
     );
-    if (isArrival) return { role: 'arrival', label: 'Arrivée', color: '#3b82f6' };
+    if (isArrival) return { role: 'arrival', label: 'Arrivée', color: 'var(--text-secondary)' };
 
     // Vérifier si c'est un déroutement
     const isAlternate = flightPlan?.alternates?.find(alt => alt.icao === icao);
-    if (isAlternate) return { role: 'alternate', label: 'Déroutement', color: '#f59e0b' };
+    if (isAlternate) return { role: 'alternate', label: 'Déroutement', color: 'var(--accent-primary)' };
 
-    return { role: 'unknown', label: 'Autre', color: '#6b7280' };
+    return { role: 'unknown', label: 'Autre', color: 'var(--text-secondary)' };
   };
 
   // Récupérer les aérodromes depuis les waypoints
@@ -261,7 +261,7 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
     return (
       <div style={styles.container}>
         <div style={styles.emptyState}>
-          <FileText size={48} style={{ color: '#9ca3af', marginBottom: '16px' }} />
+          <FileText size={48} style={{ color: 'var(--text-tertiary)', marginBottom: '16px' }} />
           <p style={styles.emptyText}>
             Aucun aérodrome sélectionné. Veuillez d'abord définir votre trajet à l'étape 2.
           </p>
@@ -278,7 +278,7 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
       {missingVACs.length > 0 && (
         <div style={{
           backgroundColor: 'rgba(242, 105, 33, 0.10)',
-          border: '2px solid #f59e0b',
+          border: '2px solid var(--accent-primary)',
           borderRadius: '8px',
           padding: '16px',
           marginBottom: '20px'
@@ -289,18 +289,18 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
             gap: '8px',
             marginBottom: '12px'
           }}>
-            <AlertCircle size={22} color="#d97706" />
+            <AlertCircle size={22} color="var(--accent-primary)" />
             <span style={{
               fontWeight: 'bold',
               fontSize: '16px',
-              color: '#92400e'
+              color: 'var(--accent-primary)'
             }}>
               {missingVACs.length} carte(s) VAC manquante(s)
             </span>
           </div>
           <div style={{
             fontSize: '14px',
-            color: '#78350f',
+            color: 'var(--accent-primary)',
             lineHeight: '1.6'
           }}>
             <p style={{ margin: '0 0 8px 0', fontWeight: '500' }}>
@@ -347,7 +347,7 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
                       gap: '4px',
                       padding: '4px 10px',
                       backgroundColor: aerodromeRole.color,
-                      color: '#ffffff',
+                      color: 'var(--bg-surface)',
                       borderRadius: '12px',
                       fontSize: '11px',
                       fontWeight: '600',
@@ -774,21 +774,21 @@ const styles = {
   infoBox: {
     marginTop: '16px',
     padding: '16px',
-    backgroundColor: '#eff6ff',
-    borderLeft: '4px solid #3b82f6',
+    backgroundColor: 'var(--bg-overlay)',
+    borderLeft: '4px solid var(--text-secondary)',
     borderRadius: '4px'
   },
   infoText: {
     margin: 0,
     fontSize: '14px',
-    color: '#1e3a8a',
+    color: 'var(--text-primary)',
     lineHeight: '1.6'
   },
   weatherBlock: {
     padding: '16px',
-    backgroundColor: '#f9fafb',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '8px',
-    border: '1px solid #e5e7eb'
+    border: '1px solid var(--border-subtle)'
   },
   weatherTitle: {
     margin: '0 0 12px 0',
@@ -807,11 +807,11 @@ const styles = {
     margin: 0,
     fontSize: '13px',
     fontFamily: 'monospace',
-    color: '#374151',
+    color: 'var(--text-secondary)',
     backgroundColor: 'var(--bg-surface)',
     padding: '12px',
     borderRadius: '4px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border-subtle)',
     whiteSpace: 'pre-wrap',
     wordBreak: 'break-word',
     lineHeight: '1.6'
@@ -819,7 +819,7 @@ const styles = {
   weatherMeta: {
     margin: 0,
     fontSize: '12px',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     fontStyle: 'italic'
   },
   weatherLoading: {
@@ -831,8 +831,8 @@ const styles = {
   },
   meteoSection: {
     padding: '16px',
-    backgroundColor: '#f9fafb',
-    border: '1px solid #e5e7eb',
+    backgroundColor: 'var(--bg-overlay)',
+    border: '1px solid var(--border-subtle)',
     borderRadius: '8px',
     margin: '12px'
   },
@@ -858,19 +858,19 @@ const styles = {
     textAlign: 'center',
     backgroundColor: 'var(--bg-surface)',
     borderRadius: '6px',
-    border: '1px solid #e5e7eb'
+    border: '1px solid var(--border-subtle)'
   },
   meteoEmptyText: {
     margin: 0,
     fontSize: '13px',
-    color: '#9ca3af',
+    color: 'var(--text-tertiary)',
     fontStyle: 'italic'
   },
   terrainSection: {
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border-subtle)',
     borderRadius: '8px',
     margin: '12px',
-    backgroundColor: '#f9fafb',
+    backgroundColor: 'var(--bg-overlay)',
     overflow: 'hidden'
   },
   terrainHeader: {
@@ -887,14 +887,14 @@ const styles = {
   },
   description: {
     fontSize: '14px',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     marginBottom: '24px',
     lineHeight: '1.5'
   },
   loading: {
     textAlign: 'center',
     padding: '48px',
-    color: '#6b7280'
+    color: 'var(--text-secondary)'
   },
   emptyState: {
     textAlign: 'center',
@@ -905,7 +905,7 @@ const styles = {
   },
   emptyText: {
     fontSize: '14px',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     margin: 0
   },
   aerodromeList: {
@@ -914,7 +914,7 @@ const styles = {
     gap: '16px'
   },
   aerodromeCard: {
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border-subtle)',
     borderRadius: '8px',
     backgroundColor: 'var(--bg-surface)',
     overflow: 'hidden',
@@ -924,7 +924,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     padding: '12px 16px',
-    backgroundColor: '#f9fafb',
+    backgroundColor: 'var(--bg-overlay)',
     cursor: 'pointer',
     transition: 'background-color 0.2s'
   },
@@ -947,7 +947,7 @@ const styles = {
   },
   aerodromeNameLine: {
     fontSize: '14px',
-    color: '#374151',
+    color: 'var(--text-secondary)',
     fontWeight: '500'
   },
   aerodromeButtonsStack: {
@@ -957,7 +957,7 @@ const styles = {
     marginTop: '4px'
   },
   expandIconInline: {
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     display: 'flex',
     alignItems: 'center',
     marginLeft: 'auto'
@@ -970,15 +970,15 @@ const styles = {
   },
   aerodromeName: {
     fontSize: '14px',
-    color: '#6b7280'
+    color: 'var(--text-secondary)'
   },
   aerodromeElevation: {
     fontSize: '12px',
-    color: '#9ca3af',
+    color: 'var(--text-tertiary)',
     fontStyle: 'italic'
   },
   expandIcon: {
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     display: 'flex',
     alignItems: 'center'
   },
@@ -991,8 +991,8 @@ const styles = {
     alignItems: 'center',
     gap: '4px',
     padding: '4px 8px',
-    backgroundColor: '#d1fae5',
-    color: '#065f46',
+    backgroundColor: 'var(--bg-overlay)',
+    color: 'var(--text-primary)',
     borderRadius: '4px',
     fontSize: '11px',
     fontWeight: '600'
@@ -1002,8 +1002,8 @@ const styles = {
     alignItems: 'center',
     gap: '4px',
     padding: '4px 8px',
-    backgroundColor: '#fee2e2',
-    color: '#991b1b',
+    backgroundColor: 'var(--bg-overlay)',
+    color: '#C04534',
     borderRadius: '4px',
     fontSize: '11px',
     fontWeight: '600'
@@ -1018,7 +1018,7 @@ const styles = {
     alignItems: 'center',
     gap: '6px',
     padding: '6px 12px',
-    backgroundColor: '#3b82f6',
+    backgroundColor: 'var(--text-secondary)',
     color: 'white',
     border: 'none',
     borderRadius: '6px',
@@ -1032,7 +1032,7 @@ const styles = {
     alignItems: 'center',
     gap: '6px',
     padding: '6px 12px',
-    backgroundColor: '#10b981',
+    backgroundColor: 'var(--text-primary)',
     color: 'white',
     border: 'none',
     borderRadius: '6px',
@@ -1063,7 +1063,7 @@ const styles = {
     gap: '8px',
     padding: '10px 16px',
     width: '100%',
-    backgroundColor: '#10b981',
+    backgroundColor: 'var(--text-primary)',
     color: 'white',
     border: 'none',
     borderRadius: '6px',
@@ -1092,7 +1092,7 @@ const styles = {
     boxSizing: 'border-box'
   },
   detailsContainer: {
-    borderTop: '1px solid #e5e7eb',
+    borderTop: '1px solid var(--border-subtle)',
     backgroundColor: 'var(--bg-surface)'
   },
   sectionTabs: {
@@ -1100,8 +1100,8 @@ const styles = {
     flexDirection: 'column',
     gap: '4px',
     padding: '12px 16px',
-    borderBottom: '1px solid #e5e7eb',
-    backgroundColor: '#fafafa'
+    borderBottom: '1px solid var(--border-subtle)',
+    backgroundColor: 'var(--bg-overlay)'
   },
   sectionTab: {
     display: 'flex',
@@ -1111,19 +1111,19 @@ const styles = {
     padding: '10px 16px',
     width: '100%',
     backgroundColor: 'var(--bg-surface)',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border-subtle)',
     borderRadius: '6px',
     cursor: 'pointer',
     fontSize: '13px',
     fontWeight: '500',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     transition: 'all 0.2s',
     boxSizing: 'border-box'
   },
   sectionTabActive: {
-    color: '#ffffff',
-    backgroundColor: '#3b82f6',
-    borderColor: '#3b82f6'
+    color: 'var(--bg-surface)',
+    backgroundColor: 'var(--text-secondary)',
+    borderColor: 'var(--text-secondary)'
   },
   sectionContent: {
     padding: '16px'
@@ -1144,7 +1144,7 @@ const styles = {
   infoLabel: {
     fontSize: '11px',
     fontWeight: '600',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     textTransform: 'uppercase',
     letterSpacing: '0.05em'
   },
@@ -1155,15 +1155,15 @@ const styles = {
   },
   infoValueSecondary: {
     fontSize: '11px',
-    color: '#9ca3af',
+    color: 'var(--text-tertiary)',
     fontStyle: 'italic'
   },
   runwayCard: {
     padding: '12px',
-    backgroundColor: '#f9fafb',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '6px',
     marginBottom: '8px',
-    border: '1px solid #e5e7eb'
+    border: '1px solid var(--border-subtle)'
   },
   runwayHeader: {
     display: 'flex',
@@ -1178,7 +1178,7 @@ const styles = {
   },
   runwayDimensions: {
     fontSize: '13px',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     fontWeight: '500'
   },
   runwayDetails: {
@@ -1192,11 +1192,11 @@ const styles = {
     flexDirection: 'column',
     gap: '2px',
     fontSize: '12px',
-    color: '#6b7280'
+    color: 'var(--text-secondary)'
   },
   runwayInfo: {
     fontSize: '12px',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     display: 'flex',
     gap: '8px',
     flexWrap: 'wrap'
@@ -1206,10 +1206,10 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '10px 12px',
-    backgroundColor: '#f9fafb',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '6px',
     marginBottom: '6px',
-    border: '1px solid #e5e7eb'
+    border: '1px solid var(--border-subtle)'
   },
   frequencyService: {
     fontSize: '13px',
@@ -1222,15 +1222,15 @@ const styles = {
   frequencyValue: {
     fontSize: '14px',
     fontWeight: '700',
-    color: '#3b82f6',
+    color: 'var(--text-secondary)',
     fontFamily: 'monospace'
   },
   vfrPointItem: {
     padding: '10px',
-    backgroundColor: '#f9fafb',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '6px',
     marginBottom: '8px',
-    border: '1px solid #e5e7eb'
+    border: '1px solid var(--border-subtle)'
   },
   vfrPointHeader: {
     display: 'flex',
@@ -1246,19 +1246,19 @@ const styles = {
   vfrPointType: {
     fontSize: '11px',
     fontWeight: '600',
-    color: '#6b7280',
-    backgroundColor: '#e5e7eb',
+    color: 'var(--text-secondary)',
+    backgroundColor: 'var(--border-subtle)',
     padding: '2px 6px',
     borderRadius: '3px'
   },
   vfrPointDescription: {
     fontSize: '12px',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     margin: '4px 0'
   },
   vfrPointCoords: {
     fontSize: '11px',
-    color: '#9ca3af',
+    color: 'var(--text-tertiary)',
     fontFamily: 'monospace',
     margin: '4px 0 0'
   },
@@ -1267,20 +1267,20 @@ const styles = {
     alignItems: 'center',
     gap: '8px',
     padding: '12px',
-    backgroundColor: '#fef2f2',
-    border: '2px solid #ef4444',
+    backgroundColor: 'var(--bg-overlay)',
+    border: '2px solid #C04534',
     borderRadius: '6px',
     marginBottom: '16px'
   },
   contactLabel: {
     fontSize: '13px',
     fontWeight: '600',
-    color: '#991b1b'
+    color: '#C04534'
   },
   contactValue: {
     fontSize: '14px',
     fontWeight: '700',
-    color: '#dc2626',
+    color: '#C04534',
     fontFamily: 'monospace'
   },
   servicesGrid: {
@@ -1293,17 +1293,17 @@ const styles = {
     alignItems: 'center',
     gap: '8px',
     padding: '8px 12px',
-    backgroundColor: '#f0fdf4',
-    border: '1px solid #86efac',
+    backgroundColor: 'var(--bg-overlay)',
+    border: '1px solid var(--bg-overlay)',
     borderRadius: '6px',
     fontSize: '12px',
     fontWeight: '500',
-    color: '#166534'
+    color: 'var(--text-primary)'
   },
   noData: {
     textAlign: 'center',
     padding: '20px',
-    color: '#9ca3af',
+    color: 'var(--text-tertiary)',
     fontSize: '13px',
     fontStyle: 'italic'
   }
