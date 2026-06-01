@@ -7,7 +7,7 @@ import { theme } from '../../../styles/theme';
 const commonStyles = {
   container: {
     padding: '24px',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-surface)',
     borderRadius: '8px',
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
   },

@@ -1283,19 +1283,43 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Header */}
-      <Box sx={{ textAlign: 'center', mb: 4 }}>
+    <Container
+      maxWidth="lg"
+      sx={{
+        py: 4,
+        backgroundColor: 'var(--app-bg)',
+        color: 'var(--text-primary)',
+        minHeight: '100vh',
+      }}
+    >
+      {/* 🎨 En-tête éditorial ALFlight */}
+      <Box sx={{ mb: 4 }}>
+        <Box
+          component="span"
+          sx={{
+            display: 'block',
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: '11px',
+            fontWeight: 500,
+            letterSpacing: '0.20em',
+            textTransform: 'uppercase',
+            color: 'var(--text-tertiary)',
+            mb: 1.5,
+          }}
+        >
+          WIZARD · ASSISTANT
+        </Box>
         <Typography
           variant="h3"
           sx={{
-            fontWeight: 700,
-            color: 'primary.main',
-            mb: 1,
-            textAlign: 'center'
+            fontFamily: "'Century Gothic', 'Questrial', sans-serif",
+            fontWeight: 600,
+            letterSpacing: '-0.01em',
+            color: 'var(--text-primary)',
+            m: 0,
           }}
         >
-          Assistant de création d'avion
+          Création d'avion
         </Typography>
       </Box>
 
@@ -1408,32 +1432,49 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
           elevation={0}
           sx={{
             mb: 2,
-            p: 1.5,
-            border: '1px dashed',
-            borderColor: 'success.main',
-            bgcolor: 'success.50',
-            borderRadius: 1,
+            p: 2,
+            border: '1px solid var(--accent-primary)',
+            borderLeft: '3px solid var(--accent-primary)',
+            backgroundColor: 'var(--accent-soft)',
             display: 'flex',
             alignItems: 'center',
             gap: 2,
-            flexWrap: 'wrap'
+            flexWrap: 'wrap',
           }}
         >
-          <Typography variant="body2" sx={{ flex: 1, minWidth: 200 }}>
-            <strong>📋 MANEX extrait :</strong>{' '}
-            {aircraftData.manexExtraction.fileName || 'fichier'} •{' '}
-            {aircraftData.manexExtraction.items.length} champs disponibles
-          </Typography>
+          <Box sx={{ flex: 1, minWidth: 200 }}>
+            <Box
+              component="span"
+              sx={{
+                display: 'block',
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: '10px',
+                fontWeight: 600,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: 'var(--accent-primary)',
+                mb: 0.5,
+              }}
+            >
+              MANEX · EXTRACTION DISPONIBLE
+            </Box>
+            <Typography
+              variant="body2"
+              sx={{ color: 'var(--text-primary)', fontSize: '13px' }}
+            >
+              {aircraftData.manexExtraction.fileName || 'fichier'} ·{' '}
+              {aircraftData.manexExtraction.items.length} champs
+            </Typography>
+          </Box>
           <Button
             variant="contained"
-            color="success"
             size="small"
             onClick={() => {
               setCurrentStep(0);
               setManexReviewTrigger((t) => t + 1);
             }}
           >
-            Voir / Modifier les données extraites
+            Voir les données
           </Button>
         </Paper>
       )}
@@ -1464,7 +1505,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         </React.Suspense>
       </Paper>
 
-      {/* Navigation */}
+      {/* 🎨 Navigation footer — boutons cockpit harmonisés */}
       <Box
         sx={{
           display: 'flex',
@@ -1474,19 +1515,24 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
           pb: 'max(env(safe-area-inset-bottom), 16px)',
           pl: 'max(env(safe-area-inset-left), 16px)',
           pr: 'max(env(safe-area-inset-right), 16px)',
-          borderTop: '1px solid',
-          borderColor: 'divider',
+          borderTop: '1px solid var(--border-subtle)',
           flexWrap: 'wrap',
-          gap: 1
+          gap: 1.5,
+          backgroundColor: 'var(--app-bg)',
         }}
       >
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-          {/* Bouton Annuler */}
+        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+          {/* Bouton Annuler — ghost neutre (pas rouge agressif) */}
           <Button
-            variant="outlined"
-            color="error"
+            variant="text"
             onClick={handleCancel}
-            sx={{ padding: '10px 20px' }}
+            sx={{
+              color: 'var(--text-tertiary)',
+              '&:hover': {
+                backgroundColor: 'rgba(245, 242, 236, 0.04)',
+                color: 'var(--text-primary)',
+              },
+            }}
           >
             Annuler
           </Button>
@@ -1495,7 +1541,6 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
             <Button
               variant="outlined"
               onClick={handlePrevious}
-              sx={{ padding: '10px 20px' }}
             >
               ← Précédent
             </Button>
@@ -1507,7 +1552,6 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
             <Button
               variant="contained"
               onClick={handleNext}
-              sx={{ padding: '10px 20px' }}
             >
               Suivant →
             </Button>
@@ -1567,8 +1611,8 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#dc2626' }}>
-          <WarningIcon color="error" />
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'var(--accent-primary)' }}>
+          <WarningIcon color="warning" />
           Ignorer les validations obligatoires
         </DialogTitle>
         <DialogContent>
@@ -1576,17 +1620,18 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
             Les champs suivants ne sont pas renseignés mais sont normalement obligatoires :
           </DialogContentText>
           <Box sx={{
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fecaca',
-            borderRadius: '6px',
+            backgroundColor: 'var(--bg-overlay)',
+            border: '1px solid var(--border-subtle)',
+            borderLeft: '3px solid var(--accent-primary)',
+            borderRadius: '2px',
             p: 2,
             mb: 2,
             maxHeight: '200px',
             overflow: 'auto'
           }}>
             {Object.entries(pendingBypassErrors).map(([key, msg]) => (
-              <Box key={key} sx={{ display: 'flex', gap: 1, mb: 0.5, fontSize: '14px' }}>
-                <span style={{ color: '#dc2626', fontWeight: 600 }}>•</span>
+              <Box key={key} sx={{ display: 'flex', gap: 1, mb: 0.5, fontSize: '14px', color: 'var(--text-primary)' }}>
+                <span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>•</span>
                 <span><strong>{key}</strong> — {msg}</span>
               </Box>
             ))}

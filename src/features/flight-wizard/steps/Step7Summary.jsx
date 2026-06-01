@@ -724,7 +724,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
                 <div style={{
                   padding: '16px',
-                  backgroundColor: 'white',
+                  backgroundColor: 'var(--bg-surface)',
                   borderRadius: '8px',
                   border: `2px solid ${theme.colors.border}`
                 }}>
@@ -831,7 +831,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
                 <div style={{
                   padding: '16px',
-                  backgroundColor: 'white',
+                  backgroundColor: 'var(--bg-surface)',
                   borderRadius: '8px',
                   border: `2px solid ${theme.colors.border}`
                 }}>
@@ -1165,7 +1165,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                     key={aerodrome.icao}
                     style={{
                       padding: '16px',
-                      backgroundColor: '#fff',
+                      backgroundColor: 'var(--bg-surface)',
                       borderRadius: '8px',
                       border: '2px solid #e5e7eb',
                       boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
@@ -1568,7 +1568,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                                   {/* QFU 1 */}
                                   <div style={{
                                     padding: '10px',
-                                    backgroundColor: '#fff',
+                                    backgroundColor: 'var(--bg-surface)',
                                     borderRadius: '4px',
                                     border: '1px solid #e5e7eb'
                                   }}>
@@ -1636,7 +1636,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                                   {runway2 && (
                                     <div style={{
                                       padding: '10px',
-                                      backgroundColor: '#fff',
+                                      backgroundColor: 'var(--bg-surface)',
                                       borderRadius: '4px',
                                       border: '1px solid #e5e7eb'
                                     }}>
@@ -1774,7 +1774,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             maxWidth: '600px'
           }}>
             <li style={{
-              backgroundColor: '#ffffff',
+              backgroundColor: 'var(--bg-surface)',
               border: '2px solid #3b82f6',
               borderRadius: '8px',
               padding: '20px 24px',
@@ -1790,7 +1790,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
               <span>Ajouter les cartes VAC des aérodromes de la nav</span>
             </li>
             <li style={{
-              backgroundColor: '#ffffff',
+              backgroundColor: 'var(--bg-surface)',
               border: '2px solid #3b82f6',
               borderRadius: '8px',
               padding: '20px 24px',
