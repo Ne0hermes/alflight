@@ -22,7 +22,7 @@ import { sx } from '@shared/styles/styleSystem';
 import { useChecklistStore } from '@core/stores/checklistStore';
 import AccordionButton from '@shared/components/AccordionButton';
 // 🎨 Charte éditoriale ALFlight
-import { EditorialHeading } from '@shared/components/editorial';
+import { ModuleHero } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
 
 export const ChecklistModule = memo(({ wizardMode = false, config = {} }) => {
@@ -129,14 +129,25 @@ export const ChecklistModule = memo(({ wizardMode = false, config = {} }) => {
   };
 
   return (
-    <div style={{ ...sx.spacing.p(6), color: 'var(--text-primary)' }}>
-      {/* 🎨 En-tête éditorial ALFlight */}
+    <div
+      style={{
+        backgroundColor: 'var(--bg-canvas)',
+        color: 'var(--text-primary)',
+        fontFamily: tokens.fontFamily.sans,
+        minHeight: '100vh',
+        padding: wizardMode
+          ? 0
+          : `clamp(${tokens.spacing[6]}, 4vw, ${tokens.spacing[9]}) clamp(${tokens.spacing[5]}, 3vw, ${tokens.spacing[8]})`,
+        boxSizing: 'border-box',
+      }}
+    >
+      {/* 🎨 Hero éditorial unifié */}
       {!wizardMode && (
-        <header style={{ marginBottom: tokens.spacing[6] }}>
-          <EditorialHeading level={2} eyebrow="OPS · CHECKLISTS COCKPIT">
-            Checklists
-          </EditorialHeading>
-        </header>
+        <ModuleHero
+          image="/assets/photos/hero-checklist.jpg"
+          eyebrow="OPS · CHECKLISTS COCKPIT"
+          title="Checklists"
+        />
       )}
 
       {/* En-tête */}

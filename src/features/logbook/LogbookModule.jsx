@@ -8,7 +8,7 @@
 
 import React, { useState, lazy, Suspense, useEffect } from 'react';
 import { LoadingSpinner } from '../../shared/components/LoadingSpinner';
-import { EditorialHeading } from '@shared/components/editorial';
+import { ModuleHero } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
 
 // Import lazy pour éviter les problèmes de dépendances circulaires
@@ -35,13 +35,22 @@ const LogbookModule = () => {
   }, []);
 
   return (
-    <div style={{ padding: tokens.spacing[4], color: 'var(--text-primary)' }}>
-      {/* En-tête éditorial */}
-      <header style={{ marginBottom: tokens.spacing[6] }}>
-        <EditorialHeading level={2} eyebrow="LOGBOOK · CARNET ÉLECTRONIQUE">
-          Carnet de bord
-        </EditorialHeading>
-      </header>
+    <div
+      style={{
+        backgroundColor: 'var(--bg-canvas)',
+        color: 'var(--text-primary)',
+        fontFamily: tokens.fontFamily.sans,
+        minHeight: '100vh',
+        padding: `clamp(${tokens.spacing[6]}, 4vw, ${tokens.spacing[9]}) clamp(${tokens.spacing[5]}, 3vw, ${tokens.spacing[8]})`,
+        boxSizing: 'border-box',
+      }}
+    >
+      {/* 🎨 Hero éditorial unifié */}
+      <ModuleHero
+        image="/assets/photos/hero-logbook.jpg"
+        eyebrow="LOGBOOK · CARNET ÉLECTRONIQUE"
+        title="Carnet de bord"
+      />
 
       {/* Conteneur principal */}
       <section

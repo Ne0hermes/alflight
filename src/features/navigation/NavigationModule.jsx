@@ -5,7 +5,7 @@ import { sx } from '@shared/styles/styleSystem';
 import { useUnits } from '@hooks/useUnits';
 import { ValueWithUnit, ValueGrid } from '@shared/components/ValueWithUnit';
 // 🎨 Charte éditoriale ALFlight (Phase 3.5)
-import { EditorialHeading } from '@shared/components/editorial';
+import { ModuleHero } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
 
 // Import des contextes et hooks
@@ -278,15 +278,26 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
   const arrivalIcao = arrivalAirport?.name && arrivalAirport.name.match(/^[A-Z]{4}$/) ? arrivalAirport.name : null;
 
   return (
-    <div style={{ color: 'var(--text-primary)' }}>
-      {/* 🎨 En-tête éditorial + sous-onglets mono ALL CAPS, masqués en mode wizard */}
+    <div
+      style={{
+        backgroundColor: 'var(--bg-canvas)',
+        color: 'var(--text-primary)',
+        fontFamily: tokens.fontFamily.sans,
+        minHeight: '100vh',
+        padding: wizardMode
+          ? 0
+          : `clamp(${tokens.spacing[6]}, 4vw, ${tokens.spacing[9]}) clamp(${tokens.spacing[5]}, 3vw, ${tokens.spacing[8]})`,
+        boxSizing: 'border-box',
+      }}
+    >
+      {/* 🎨 Hero éditorial + sous-onglets, masqués en mode wizard */}
       {!wizardMode && (
         <>
-          <header style={{ marginBottom: tokens.spacing[5] }}>
-            <EditorialHeading level={2} eyebrow="OPS · PRÉPARATION VOL VFR">
-              Navigation
-            </EditorialHeading>
-          </header>
+          <ModuleHero
+            image="/assets/photos/hero-navigation.jpg"
+            eyebrow="OPS · PRÉPARATION VOL VFR"
+            title="Navigation"
+          />
           <nav
             role="tablist"
             style={{

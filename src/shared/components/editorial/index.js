@@ -24,3 +24,4 @@ export { CockpitTextField, default as CockpitTextFieldDefault } from './CockpitT
 export { LoadingCockpit, default as LoadingCockpitDefault } from './LoadingCockpit';
 export { NightModeAlert, default as NightModeAlertDefault } from './NightModeAlert';
 export { StepDial, default as StepDialDefault } from './StepDial';
+export { ModuleHero, default as ModuleHeroDefault } from './ModuleHero';

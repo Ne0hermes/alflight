@@ -11,7 +11,7 @@ import React, { useState } from 'react';
 import { User, FileText } from 'lucide-react';
 import PilotProfile from './components/PilotProfile';
 import { FlightHistory } from './components/FlightHistory';
-import { EditorialHeading } from '@shared/components/editorial';
+import { ModuleHero } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
 
 const PilotModule = () => {
@@ -23,13 +23,22 @@ const PilotModule = () => {
   ];
 
   return (
-    <div style={{ padding: tokens.spacing[4], color: 'var(--text-primary)' }}>
-      {/* En-tête éditorial */}
-      <header style={{ marginBottom: tokens.spacing[6] }}>
-        <EditorialHeading level={2} eyebrow="PILOT · IDENTITÉ & EXPÉRIENCE">
-          Espace pilote
-        </EditorialHeading>
-      </header>
+    <div
+      style={{
+        backgroundColor: 'var(--bg-canvas)',
+        color: 'var(--text-primary)',
+        fontFamily: tokens.fontFamily.sans,
+        minHeight: '100vh',
+        padding: `clamp(${tokens.spacing[6]}, 4vw, ${tokens.spacing[9]}) clamp(${tokens.spacing[5]}, 3vw, ${tokens.spacing[8]})`,
+        boxSizing: 'border-box',
+      }}
+    >
+      {/* 🎨 Hero éditorial unifié */}
+      <ModuleHero
+        image="/assets/photos/hero-pilot.jpg"
+        eyebrow="PILOT · IDENTITÉ & EXPÉRIENCE"
+        title="Espace pilote"
+      />
 
       {/* Sous-onglets éditoriaux : mono ALL CAPS + underline orange */}
       <nav
