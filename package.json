@@ -13,6 +13,7 @@
     "dev:full-tracked": "concurrently \"vite\" \"node scripts/autoTracker.cjs\" \"node scripts/claude-code-tracker.cjs\"",
     "dev:old": "vite",
     "build": "vite build",
+    "compress-photos": "node scripts/compress-hero-photos.mjs",
     "preview": "vite preview",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "proxy": "node start-openaip-proxy.js",
@@ -99,6 +100,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
     "jsdom": "^26.1.0",
+    "sharp": "^0.34.5",
     "typescript": "^5.9.2",
     "vite": "^7.0.6",
     "vite-plugin-pwa": "^1.0.2"
