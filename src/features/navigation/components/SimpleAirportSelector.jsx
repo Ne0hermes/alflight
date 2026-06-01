@@ -310,7 +310,7 @@ const styles = {
     marginTop: '4px',
     backgroundColor: 'var(--bg-overlay)',
     border: '1px solid var(--border-subtle)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
     maxHeight: '320px',
     overflowY: 'auto',

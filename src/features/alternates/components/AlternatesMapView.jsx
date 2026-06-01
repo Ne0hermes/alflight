@@ -265,7 +265,7 @@ export const AlternatesMapView = memo(({
         padding: '60px 40px',
         textAlign: 'center',
         backgroundColor: 'var(--bg-overlay)',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         borderWidth: '2px',
         borderStyle: 'dashed',
         borderColor: 'var(--text-tertiary)',
@@ -281,7 +281,7 @@ export const AlternatesMapView = memo(({
   return (
     <div style={{
       height: '400px',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       overflow: 'hidden',
       borderWidth: '1px',
       borderStyle: 'solid',
@@ -422,7 +422,7 @@ export const AlternatesMapView = memo(({
                         borderWidth: currentSelection.departure?.icao === marker.icao ? '0' : '1px',
                         borderStyle: 'solid',
                         borderColor: '#C04534',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         backgroundColor: currentSelection.departure?.icao === marker.icao ? '#C04534' : '#ffffff',
                         color: currentSelection.departure?.icao === marker.icao ? '#ffffff' : '#C04534',
                         cursor: 'pointer',
@@ -445,7 +445,7 @@ export const AlternatesMapView = memo(({
                         borderWidth: currentSelection.arrival?.icao === marker.icao ? '0' : '1px',
                         borderStyle: 'solid',
                         borderColor: 'var(--text-primary)',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         backgroundColor: currentSelection.arrival?.icao === marker.icao ? 'var(--text-primary)' : '#ffffff',
                         color: currentSelection.arrival?.icao === marker.icao ? '#ffffff' : 'var(--text-primary)',
                         cursor: 'pointer',
@@ -493,7 +493,7 @@ export const AlternatesMapView = memo(({
                   color: 'var(--text-primary)',
                   backgroundColor: marker.selectionType === 'departure' ? '#C04534' : 'var(--text-primary)',
                   padding: '2px 6px',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   display: 'inline-block'
                 }}>
                   {marker.selectionType === 'departure' ? 'Déroutement départ' : 'Déroutement arrivée'}
@@ -512,7 +512,7 @@ export const AlternatesMapView = memo(({
                       marginTop: '12px',
                       padding: '6px 12px',
                       border: 'none',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       backgroundColor: '#C04534',
                       color: '#ffffff',
                       cursor: 'pointer',

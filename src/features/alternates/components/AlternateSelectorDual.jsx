@@ -131,7 +131,7 @@ export const AlternateSelectorDual = memo(({
                     borderWidth: '2px',
                     borderStyle: 'solid',
                     borderColor: isSelected ? sideColor : (isHovered ? `${sideColor}60` : 'var(--border-subtle)'),
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     backgroundColor: isSelected ? (side === 'departure' ? 'var(--bg-overlay)' : 'var(--bg-overlay)') : (isHovered ? 'var(--bg-overlay)' : '#ffffff'),
                     cursor: 'pointer',
                     transition: 'all 0.2s',
@@ -234,7 +234,7 @@ export const AlternateSelectorDual = memo(({
                           padding: '1px 4px',
                           backgroundColor: getScoreColor(airport.score) + '20',
                           color: getScoreColor(airport.score),
-                          borderRadius: '3px',
+                          borderRadius: 'var(--radius-sm)',
                           fontWeight: 'bold',
                           fontSize: '10px'
                         }}>

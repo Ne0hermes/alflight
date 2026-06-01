@@ -547,7 +547,7 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
                   <td style={{ padding: '6px', textAlign: 'center' }}>
                     <span style={{
                       padding: '2px 6px',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       backgroundColor:
                         analysis.isOptimal ? 'var(--bg-overlay)' :
                         analysis.isGood ? 'rgba(242, 105, 33, 0.10)' :

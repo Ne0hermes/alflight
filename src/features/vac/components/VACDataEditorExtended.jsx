@@ -470,7 +470,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                 
                 {/* Métadonnées */}
                 {editedData.dataSource && (
-                  <div style={{ gridColumn: 'span 2', padding: '12px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
+                  <div style={{ gridColumn: 'span 2', padding: '12px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
                     <div style={{ display: 'flex', gap: '16px', fontSize: '13px', color: 'var(--text-secondary)' }}>
                       <span><strong>Source:</strong> {editedData.dataSource}</span>
                       {editedData.airac && <span><strong>AIRAC:</strong> {editedData.airac}</span>}
@@ -529,7 +529,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
             </h4>
             
             {/* Fréquences AIXM/SIA modifiables */}
-            <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
+            <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
               <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--text-secondary)' }}>
                 Fréquences radio (MHz)
                 {(!editedData.frequencies || Object.keys(editedData.frequencies).length === 0) && (
@@ -548,7 +548,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                         <div key={service} style={{ 
                           padding: '12px', 
                           backgroundColor: 'var(--bg-overlay)', 
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-sm)',
                           border: '1px solid var(--border-subtle)'
                         }}>
                           <div style={{ 
@@ -571,7 +571,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                                 backgroundColor: 'var(--text-secondary)',
                                 color: 'var(--text-primary)',
                                 border: 'none',
-                                borderRadius: '8px',
+                                borderRadius: 'var(--radius-sm)',
                                 cursor: 'pointer'
                               }}
                             >
@@ -643,7 +643,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                                   backgroundColor: '#C04534',
                                   color: 'var(--text-primary)',
                                   border: 'none',
-                                  borderRadius: '8px',
+                                  borderRadius: 'var(--radius-sm)',
                                   cursor: 'pointer'
                                 }}
                               >
@@ -661,7 +661,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                   <div style={{ 
                     padding: '12px', 
                     backgroundColor: 'var(--bg-overlay)', 
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     border: '1px dashed var(--text-tertiary)',
                     textAlign: 'center'
                   }}>
@@ -681,7 +681,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                         backgroundColor: 'var(--text-primary)',
                         color: 'var(--text-primary)',
                         border: 'none',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         cursor: 'pointer'
                       }}
                     >
@@ -709,7 +709,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                       backgroundColor: 'var(--text-secondary)',
                       color: 'var(--text-primary)',
                       border: 'none',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       cursor: 'pointer'
                     }}
                   >

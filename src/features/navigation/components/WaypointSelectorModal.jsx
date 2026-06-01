@@ -259,7 +259,7 @@ export const WaypointSelectorModal = ({ isOpen, onClose, onSelect }) => {
                         {/* Category badge */}
                         <div style={{
                           padding: '2px 8px',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-sm)',
                           fontSize: '10px',
                           fontWeight: '600',
                           color: catBadge.color,
@@ -334,7 +334,7 @@ export const WaypointSelectorModal = ({ isOpen, onClose, onSelect }) => {
                               style={{
                                 width: '40px',
                                 height: '40px',
-                                borderRadius: '8px',
+                                borderRadius: 'var(--radius-sm)',
                                 objectFit: 'cover'
                               }}
                             />
@@ -617,7 +617,7 @@ const styles = {
   },
   modal: {
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     maxWidth: '700px',
     width: '100%',
     height: '85vh',
@@ -645,7 +645,7 @@ const styles = {
     cursor: 'pointer',
     color: 'var(--text-tertiary)',
     padding: '8px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     transition: 'all 0.2s',
     display: 'flex',
     alignItems: 'center',
@@ -670,7 +670,7 @@ const styles = {
     padding: '14px 16px 14px 48px',
     fontSize: '16px',
     border: '1px solid var(--border-subtle)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     outline: 'none',
     transition: 'all 0.2s',
     backgroundColor: 'var(--bg-overlay)',
@@ -722,7 +722,7 @@ const styles = {
   },
   tabBadge: {
     padding: '2px 8px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '11px',
     fontWeight: '700',
     color: 'var(--text-primary)',
@@ -756,7 +756,7 @@ const styles = {
   },
   cardWrapper: {
     marginBottom: '4px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     overflow: 'hidden',
     border: '1px solid var(--border-subtle)',
     transition: 'all 0.2s'
@@ -772,7 +772,7 @@ const styles = {
   iconWrapper: {
     width: '40px',
     height: '40px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -813,7 +813,7 @@ const styles = {
     border: '1px solid var(--border-subtle)',
     cursor: 'pointer',
     padding: '6px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     color: 'var(--text-secondary)',
     display: 'flex',
     alignItems: 'center',
@@ -842,7 +842,7 @@ const styles = {
   poiTypeBadge: {
     display: 'inline-block',
     padding: '1px 6px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '10px',
     fontWeight: '600',
     backgroundColor: 'var(--bg-overlay)',
@@ -852,7 +852,7 @@ const styles = {
   poiAerodromeBadge: {
     display: 'inline-block',
     padding: '1px 6px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '10px',
     fontWeight: '600',
     backgroundColor: 'var(--bg-overlay)',
@@ -878,12 +878,12 @@ const styles = {
     gap: '8px',
     padding: '8px 10px',
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     border: '1px solid var(--border-subtle)'
   },
   detailCardIcon: {
     padding: '4px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     backgroundColor: 'var(--bg-overlay)',
     display: 'flex',
     alignItems: 'center',
@@ -930,7 +930,7 @@ const styles = {
     gap: '12px',
     padding: '8px 12px',
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     border: '1px solid var(--border-subtle)'
   },
   runwayDesignation: {
@@ -960,7 +960,7 @@ const styles = {
     fontWeight: '600',
     padding: '2px 8px',
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '8px'
+    borderRadius: 'var(--radius-sm)'
   },
   noRunwaysMsg: {
     padding: '12px',
@@ -975,7 +975,7 @@ const styles = {
     flexShrink: 0,
     width: '140px',
     height: '140px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     overflow: 'hidden',
     border: '1px solid var(--border-subtle)',
     backgroundColor: 'var(--bg-overlay)'
@@ -990,7 +990,7 @@ const styles = {
     color: 'var(--text-secondary)',
     padding: '8px 12px',
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     border: '1px solid var(--border-subtle)',
     marginBottom: '8px',
     lineHeight: '1.4'
@@ -1004,7 +1004,7 @@ const styles = {
     fontSize: '12px',
     padding: '4px 8px',
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     border: '1px solid var(--border-subtle)'
   },
   poiMetaLabel: {

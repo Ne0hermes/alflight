@@ -70,7 +70,7 @@ export const ValueDisplay = ({
     alignItems: 'center',
     gap: '4px',
     backgroundColor: emphasis ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     border: emphasis ? '1px solid var(--text-secondary)' : '1px solid var(--border-subtle)',
     ...sizeStyles[size]
   };

@@ -363,7 +363,7 @@ const ABACIngestionFlow = ({ aircraft, onComplete }) => {
         </div>
 
         {/* Indicateur de phases */}
-        <div style={sx.combine(sx.flex.between, sx.spacing.p(3), sx.bg.gray, { borderRadius: '8px' })}>
+        <div style={sx.combine(sx.flex.between, sx.spacing.p(3), sx.bg.gray, { borderRadius: 'var(--radius-sm)' })}>
           {phases.map((phase, index) => {
             const Icon = phase.icon;
             const isActive = currentPhase === phase.id;
@@ -420,7 +420,7 @@ const ABACIngestionFlow = ({ aircraft, onComplete }) => {
           
           <div style={{
             backgroundColor: 'var(--text-primary)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             padding: '12px',
             height: '400px',
             overflowY: 'auto',
@@ -480,7 +480,7 @@ const ABACIngestionFlow = ({ aircraft, onComplete }) => {
                       sx.spacing.mb(2),
                       sx.bg.gray,
                       { 
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         cursor: 'pointer',
                         transition: 'all 0.2s',
                         ':hover': { backgroundColor: 'var(--border-subtle)' }
@@ -523,7 +523,7 @@ const ABACIngestionFlow = ({ aircraft, onComplete }) => {
               </h3>
               
               {testResults.map((result, idx) => (
-                <div key={idx} style={sx.combine(sx.spacing.mb(3), sx.spacing.p(3), sx.bg.gray, { borderRadius: '8px' })}>
+                <div key={idx} style={sx.combine(sx.spacing.mb(3), sx.spacing.p(3), sx.bg.gray, { borderRadius: 'var(--radius-sm)' })}>
                   <div style={sx.combine(sx.flex.between, sx.spacing.mb(2))}>
                     <span style={sx.text.sm}>{result.id}</span>
                     <span style={sx.combine(
@@ -533,7 +533,7 @@ const ABACIngestionFlow = ({ aircraft, onComplete }) => {
                       {
                         backgroundColor: result.status === 'pass' ? 'var(--text-primary)' : '#C04534',
                         color: 'var(--text-primary)',
-                        borderRadius: '8px'
+                        borderRadius: 'var(--radius-sm)'
                       }
                     )}>
                       {result.status}
@@ -561,7 +561,7 @@ const ABACIngestionFlow = ({ aircraft, onComplete }) => {
                 Modèle compilé
               </h3>
               
-              <div style={sx.combine(sx.spacing.p(3), sx.bg.gray, { borderRadius: '8px' })}>
+              <div style={sx.combine(sx.spacing.p(3), sx.bg.gray, { borderRadius: 'var(--radius-sm)' })}>
                 <p style={sx.combine(sx.text.sm, sx.spacing.mb(2))}>
                   <strong>ABACs inclus:</strong> {compiledModel.abacs_included?.length || 0}
                 </p>

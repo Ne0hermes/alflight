@@ -1077,7 +1077,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                           mb: 2,
                           p: 1.5,
                           bgcolor: 'var(--bg-overlay)',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-sm)',
                           border: '2px solid var(--text-secondary)'
                         }}
                       >
@@ -1649,7 +1649,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                               mb: 2,
                               p: 1.5,
                               bgcolor: 'var(--bg-overlay)',
-                              borderRadius: '8px',
+                              borderRadius: 'var(--radius-sm)',
                               border: '2px solid var(--text-secondary)'
                             }}
                           >
@@ -1858,7 +1858,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                                 maxWidth: '150px',
                                 maxHeight: '150px',
                                 objectFit: 'contain',
-                                borderRadius: '8px',
+                                borderRadius: 'var(--radius-sm)',
                                 border: '1px solid var(--border-subtle)'
                               }}
                             />

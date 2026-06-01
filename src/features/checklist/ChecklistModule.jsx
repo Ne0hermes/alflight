@@ -419,7 +419,7 @@ const ActiveChecklistView = memo(({
         <div style={{ 
           height: '8px', 
           backgroundColor: 'var(--border-subtle)', 
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           overflow: 'hidden'
         }}>
           <div style={{
@@ -457,7 +457,7 @@ const ActiveChecklistView = memo(({
                   padding: '2px 8px',
                   backgroundColor: 'var(--bg-overlay)',
                   color: '#C04534',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--bg-overlay)'
                 })}>
                   <AlertTriangle size={12} style={{ display: 'inline', marginRight: '4px' }} />
@@ -477,7 +477,7 @@ const ActiveChecklistView = memo(({
                       {
                         backgroundColor: item.checked ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
                         border: `1px solid ${item.checked ? 'var(--bg-overlay)' : 'var(--border-subtle)'}`,
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         cursor: 'pointer',
                         transition: 'all 0.2s'
                       }
@@ -693,7 +693,7 @@ const ChecklistForm = memo(({ checklist, onSave, onCancel }) => {
     }}>
       <div style={{
         backgroundColor: 'var(--bg-overlay)',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         padding: '24px',
         maxWidth: '900px',
         width: '90%',

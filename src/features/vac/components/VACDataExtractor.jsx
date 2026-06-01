@@ -759,7 +759,7 @@ const DataField = memo(({ label, value, onCopy, copied, editMode, onChange, type
           padding: '4px 8px',
           backgroundColor: copied ? 'var(--text-primary)' : 'var(--bg-overlay)',
           border: `1px solid ${copied ? 'var(--text-primary)' : 'var(--border-subtle)'}`,
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           cursor: 'pointer',
           transition: 'all 0.2s'
         }}

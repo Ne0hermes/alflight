@@ -94,7 +94,7 @@ export const SIAReport = () => {
     },
     header: {
       backgroundColor: 'var(--bg-overlay)',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       padding: '24px',
       marginBottom: '24px',
       boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
@@ -116,12 +116,12 @@ export const SIAReport = () => {
       minWidth: '300px',
       padding: '10px 16px',
       border: '1px solid var(--text-tertiary)',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       fontSize: '14px'
     },
     button: {
       padding: '10px 20px',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       border: 'none',
       fontSize: '14px',
       fontWeight: '500',
@@ -146,7 +146,7 @@ export const SIAReport = () => {
     },
     aerodrome: {
       backgroundColor: 'var(--bg-overlay)',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       marginBottom: '20px',
       overflow: 'hidden',
       boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
@@ -181,7 +181,7 @@ export const SIAReport = () => {
       marginBottom: '16px',
       cursor: 'pointer',
       padding: '8px',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       backgroundColor: 'var(--bg-overlay)'
     },
     sectionTitle: {
@@ -208,7 +208,7 @@ export const SIAReport = () => {
       width: '100%',
       padding: '8px 12px',
       border: '1px solid var(--text-tertiary)',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       fontSize: '14px',
       backgroundColor: 'var(--bg-overlay)',
       transition: 'border-color 0.2s'
@@ -222,7 +222,7 @@ export const SIAReport = () => {
       width: '100%',
       padding: '8px 12px',
       border: '1px solid var(--text-tertiary)',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       fontSize: '14px',
       minHeight: '80px',
       resize: 'vertical',
@@ -248,7 +248,7 @@ export const SIAReport = () => {
     badge: {
       display: 'inline-block',
       padding: '2px 8px',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       fontSize: '11px',
       fontWeight: '600'
     },

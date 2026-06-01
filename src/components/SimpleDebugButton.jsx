@@ -61,7 +61,7 @@ export const SimpleDebugButton = () => {
           right: '20px',
           background: 'rgba(30, 28, 28, 0.95)',
           border: '1px solid var(--accent-primary)',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           padding: '12px',
           color: 'var(--text-primary)',
           fontSize: '12px',

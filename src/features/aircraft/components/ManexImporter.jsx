@@ -383,7 +383,7 @@ export const ManexImporter = memo(({
     }}>
       <div style={{
         backgroundColor: 'var(--bg-overlay)',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         padding: '24px',
         maxWidth: '600px',
         width: '90%',
@@ -415,7 +415,7 @@ export const ManexImporter = memo(({
           <div style={{
             backgroundColor: manexData?.pdfData ? 'var(--bg-overlay)' : 'rgba(242, 105, 33, 0.10)',
             border: `1px solid ${manexData?.pdfData ? 'var(--text-secondary)' : 'var(--accent-primary)'}`,
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             padding: '16px',
             marginBottom: '20px'
           }}>
@@ -430,7 +430,7 @@ export const ManexImporter = memo(({
                   <div style={{
                     backgroundColor: 'rgba(242, 105, 33, 0.10)',
                     border: '1px solid var(--accent-primary)',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     padding: '8px 12px',
                     marginTop: '4px'
                   }}>
@@ -449,7 +449,7 @@ export const ManexImporter = memo(({
                   <div style={{
                     backgroundColor: 'var(--bg-overlay)',
                     border: '1px solid var(--text-secondary)',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     padding: '8px 12px',
                     marginTop: '4px'
                   }}>
@@ -481,7 +481,7 @@ export const ManexImporter = memo(({
                   backgroundColor: manexData?.pdfData ? 'var(--text-primary)' : 'white',
                   color: manexData?.pdfData ? 'white' : 'var(--text-secondary)',
                   border: `1px solid ${manexData?.pdfData ? 'var(--text-primary)' : 'var(--text-tertiary)'}`,
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   fontSize: '14px',
                   cursor: manexData?.pdfData ? 'pointer' : 'not-allowed',
                   display: 'flex',
@@ -511,7 +511,7 @@ export const ManexImporter = memo(({
                   backgroundColor: (manexData?.pdfData || manexData?.remoteUrl || aircraft.manex?.remoteUrl) ? 'var(--text-secondary)' : 'white',
                   color: (manexData?.pdfData || manexData?.remoteUrl || aircraft.manex?.remoteUrl) ? 'white' : 'var(--text-secondary)',
                   border: `1px solid ${(manexData?.pdfData || manexData?.remoteUrl || aircraft.manex?.remoteUrl) ? 'var(--text-secondary)' : 'var(--text-tertiary)'}`,
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   fontSize: '14px',
                   cursor: (manexData?.pdfData || manexData?.remoteUrl || aircraft.manex?.remoteUrl) ? 'pointer' : 'not-allowed',
                   display: 'flex',
@@ -544,7 +544,7 @@ export const ManexImporter = memo(({
           <div style={{
             backgroundColor: 'rgba(242, 105, 33, 0.10)',
             border: '1px solid var(--accent-primary)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             padding: '16px',
             textAlign: 'center'
           }}>

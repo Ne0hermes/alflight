@@ -560,7 +560,7 @@ const getStatusBadge = (expiryDate) => {
     <span style={{
       ...style,
       padding: '4px 12px',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       fontSize: '12px',
       fontWeight: '600',
       display: 'inline-flex',

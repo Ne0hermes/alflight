@@ -545,7 +545,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                     color: 'purple',
                     px: 0.75,
                     py: 0.25,
-                    borderRadius: '3px',
+                    borderRadius: 'var(--radius-sm)',
                     whiteSpace: 'nowrap',
                     zIndex: 10
                   }}
@@ -570,7 +570,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 color: 'var(--text-secondary)',
                 px: 0.75,
                 py: 0.25,
-                borderRadius: '3px',
+                borderRadius: 'var(--radius-sm)',
                 whiteSpace: 'nowrap',
                 zIndex: 10
               }}
@@ -592,7 +592,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 color: 'var(--text-secondary)',
                 px: 0.75,
                 py: 0.25,
-                borderRadius: '3px',
+                borderRadius: 'var(--radius-sm)',
                 whiteSpace: 'nowrap',
                 zIndex: 10
               }}
@@ -614,7 +614,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 color: 'success.main',
                 px: 0.75,
                 py: 0.25,
-                borderRadius: '3px',
+                borderRadius: 'var(--radius-sm)',
                 whiteSpace: 'nowrap',
                 zIndex: 10
               }}
@@ -636,7 +636,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 color: 'warning.main',
                 px: 0.75,
                 py: 0.25,
-                borderRadius: '3px',
+                borderRadius: 'var(--radius-sm)',
                 whiteSpace: 'nowrap',
                 zIndex: 10
               }}
@@ -658,7 +658,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 color: 'error.main',
                 px: 0.75,
                 py: 0.25,
-                borderRadius: '3px',
+                borderRadius: 'var(--radius-sm)',
                 whiteSpace: 'nowrap',
                 zIndex: 10
               }}
@@ -692,7 +692,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                   color: 'var(--accent-primary)',
                   px: 0.75,
                   py: 0.25,
-                  borderRadius: '3px',
+                  borderRadius: 'var(--radius-sm)',
                   whiteSpace: 'nowrap',
                   zIndex: 10
                 }}

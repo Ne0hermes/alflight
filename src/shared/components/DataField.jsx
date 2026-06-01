@@ -51,7 +51,7 @@ export const DataField = memo(({
   const getFieldStyle = () => {
     const base = {
       ...sizeConfig,
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       display: inline ? 'inline-flex' : 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -126,7 +126,7 @@ export const DataField = memo(({
             padding: '4px',
             backgroundColor: copied ? 'var(--text-primary)' : 'transparent',
             border: 'none',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             cursor: 'pointer',
             transition: 'all 0.2s',
             display: 'flex',

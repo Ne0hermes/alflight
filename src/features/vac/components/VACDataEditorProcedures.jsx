@@ -129,7 +129,7 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
     const bgColor = type === 'departure' ? 'var(--bg-overlay)' : 'var(--bg-overlay)';
     
     return (
-      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: bgColor, borderRadius: '8px' }}>
+      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: bgColor, borderRadius: 'var(--radius-sm)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <h5 style={{ fontSize: '14px', fontWeight: 'bold', color, display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Icon size={18} />
@@ -148,7 +148,7 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
               backgroundColor: color,
               color: 'var(--text-primary)',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -165,7 +165,7 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
               <div key={idx} style={{ 
                 padding: '16px', 
                 backgroundColor: 'var(--bg-overlay)', 
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--border-subtle)'
               }}>
                 {/* En-tête de la procédure */}
@@ -187,7 +187,7 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
                         padding: '2px 6px', 
                         backgroundColor: 'var(--bg-overlay)', 
                         color: 'var(--text-primary)',
-                        borderRadius: '3px'
+                        borderRadius: 'var(--radius-sm)'
                       }}>
                         RWY {procedure.runway}
                       </span>
@@ -200,7 +200,7 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
                       backgroundColor: '#C04534',
                       color: 'var(--text-primary)',
                       border: 'none',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       cursor: 'pointer'
                     }}
                   >
@@ -288,7 +288,7 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
                         backgroundColor: 'var(--text-secondary)',
                         color: 'var(--text-primary)',
                         border: 'none',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         cursor: 'pointer'
                       }}
                     >
@@ -305,7 +305,7 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
                           gap: '8px',
                           padding: '8px',
                           backgroundColor: 'var(--bg-overlay)',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-sm)',
                           alignItems: 'center'
                         }}>
                           <input
@@ -354,7 +354,7 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
                               backgroundColor: '#C04534',
                               color: 'var(--text-primary)',
                               border: 'none',
-                              borderRadius: '3px',
+                              borderRadius: 'var(--radius-sm)',
                               cursor: 'pointer',
                               fontSize: '11px'
                             }}
@@ -365,7 +365,7 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
                       ))}
                     </div>
                   ) : (
-                    <div style={{ padding: '12px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>
+                    <div style={{ padding: '12px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>
                       Aucun waypoint défini
                     </div>
                   )}

@@ -250,7 +250,7 @@ const UnitsPreferences = () => {
       {/* Configuration détaillée */}
       <div style={{
         backgroundColor: 'var(--bg-overlay)',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         padding: '16px'
       }}>
         {unitsConfig[activeTab].units.map(unitConfig => (
@@ -268,7 +268,7 @@ const UnitsPreferences = () => {
                     padding: '8px 12px',
                     backgroundColor: units[unitConfig.key] === option.value ? 'var(--text-secondary)' : 'white',
                     color: units[unitConfig.key] === option.value ? 'white' : 'var(--text-secondary)',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
                     border: '1px solid',
@@ -296,7 +296,7 @@ const UnitsPreferences = () => {
         marginTop: '20px',
         padding: '16px',
         backgroundColor: 'var(--bg-overlay)',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         border: '1px solid var(--text-secondary)'
       }}>
         <h4 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
@@ -324,7 +324,7 @@ const UnitsPreferences = () => {
           <div style={{
             padding: '12px',
             backgroundColor: 'rgba(242, 105, 33, 0.10)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--accent-primary)',
             display: 'flex',
             alignItems: 'center',
@@ -342,7 +342,7 @@ const UnitsPreferences = () => {
           <div style={{
             padding: '12px',
             backgroundColor: 'var(--bg-overlay)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--text-primary)',
             display: 'flex',
             alignItems: 'center',
@@ -393,7 +393,7 @@ const UnitsPreferences = () => {
         marginTop: '16px',
         padding: '12px',
         backgroundColor: 'rgba(242, 105, 33, 0.10)',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         fontSize: '13px',
         color: 'var(--accent-primary)'
       }}>

@@ -108,7 +108,7 @@ export const AppleSignIn = ({ onSuccess, onError }) => {
           backgroundColor: 'var(--app-bg)',
           color: 'var(--bg-overlay)',
           border: '1px solid var(--app-bg)',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           padding: '8px 24px',
           fontSize: '16px',
           fontWeight: '500',

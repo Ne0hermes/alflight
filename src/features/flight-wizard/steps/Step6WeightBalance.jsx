@@ -15,13 +15,13 @@ const commonStyles = {
   container: {
     padding: '0',
     backgroundColor: 'var(--bg-surface)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
   },
   card: {
     padding: '16px',
     backgroundColor: 'rgba(245, 245, 245, 0.5)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     marginBottom: '16px'
   },
   field: {
@@ -500,7 +500,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
               marginBottom: '16px',
               backgroundColor: operationCategory === 'U' ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
               border: `2px solid ${operationCategory === 'U' ? 'var(--accent-primary)' : 'var(--text-primary)'}`,
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               display: 'flex',
               alignItems: 'center',
               gap: '12px',
@@ -515,7 +515,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                   style={{
                     padding: '6px 16px',
                     border: 'none',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     backgroundColor: operationCategory === 'N' ? 'var(--text-primary)' : 'var(--border-subtle)',
                     color: operationCategory === 'N' ? 'white' : 'var(--text-secondary)',
                     fontWeight: 700,
@@ -530,7 +530,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                   style={{
                     padding: '6px 16px',
                     border: 'none',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     backgroundColor: operationCategory === 'U' ? 'var(--accent-primary)' : 'var(--border-subtle)',
                     color: operationCategory === 'U' ? 'white' : 'var(--text-secondary)',
                     fontWeight: 700,
@@ -557,7 +557,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                 marginBottom: '16px',
                 backgroundColor: violation.type === 'critical' ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
                 border: `2px solid ${violation.type === 'critical' ? '#C04534' : 'var(--accent-primary)'}`,
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '12px'
@@ -796,7 +796,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                 color: 'var(--text-secondary)',
                 backgroundColor: 'var(--bg-overlay)',
                 padding: '6px 12px',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--border-subtle)'
               }}>
                 <span>⛽ <strong>{aircraft.fuelType || 'JET-A1'}</strong>: {fuelDensity} kg/L</span>

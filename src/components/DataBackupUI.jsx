@@ -130,7 +130,7 @@ export const DataBackupUI = () => {
       padding: '16px',
       background: 'var(--bg-surface)',
       color: 'var(--text-primary)',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       border: '1px solid var(--border-subtle)',
       marginBottom: '16px'
     }}>
@@ -157,7 +157,7 @@ export const DataBackupUI = () => {
           gap: '8px',
           padding: '6px 12px',
           background: isProtected ? 'var(--bg-overlay)' : 'rgba(242, 105, 33, 0.10)',
-          borderRadius: '8px'
+          borderRadius: 'var(--radius-sm)'
         }}>
           {isProtected ? (
             <>
@@ -182,7 +182,7 @@ export const DataBackupUI = () => {
         <div style={{
           padding: '12px',
           marginBottom: '16px',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
@@ -282,7 +282,7 @@ export const DataBackupUI = () => {
             borderColor: isProtected ? 'var(--text-primary)' : 'var(--accent-primary)',
             background: isProtected ? 'var(--bg-overlay)' : 'rgba(242, 105, 33, 0.06)',
             color: isProtected ? 'var(--text-primary)' : 'var(--accent-primary)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             cursor: 'pointer',
             transition: 'all 0.2s'
           }}
@@ -327,7 +327,7 @@ export const DataBackupUI = () => {
             maxHeight: '200px',
             overflowY: 'auto',
             border: '1px solid var(--border-subtle)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             padding: '8px'
           }}>
             {backups.length === 0 ? (
@@ -350,7 +350,7 @@ export const DataBackupUI = () => {
                     padding: '8px',
                     marginBottom: '4px',
                     background: 'var(--bg-overlay)',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     fontSize: '12px'
                   }}
                 >
@@ -370,7 +370,7 @@ export const DataBackupUI = () => {
                       background: 'var(--text-secondary)',
                       color: 'var(--text-primary)',
                       border: 'none',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       fontSize: '11px',
                       cursor: loading ? 'not-allowed' : 'pointer',
                       opacity: loading ? 0.6 : 1
@@ -389,7 +389,7 @@ export const DataBackupUI = () => {
         marginTop: '16px',
         padding: '12px',
         background: 'var(--bg-overlay)',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         fontSize: '12px',
         color: 'var(--text-secondary)'
       }}>

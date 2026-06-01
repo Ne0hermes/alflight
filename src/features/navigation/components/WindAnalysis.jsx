@@ -223,7 +223,7 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
         <div style={{
           backgroundColor: 'var(--bg-overlay)',
           padding: '16px',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           textAlign: 'center'
         }}>
           <Loader size={24} style={{ color: 'var(--text-secondary)', marginBottom: '8px', animation: 'spin 1s linear infinite' }} />
@@ -246,7 +246,7 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
         <div style={{
           backgroundColor: 'var(--bg-overlay)',
           padding: '16px',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           textAlign: 'center'
         }}>
           <Info size={24} style={{ color: 'var(--text-secondary)', marginBottom: '8px' }} />
@@ -303,7 +303,7 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
       <div style={{
         backgroundColor: 'rgba(242, 105, 33, 0.10)',
         border: '1px solid var(--bg-overlay)',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         padding: '12px',
         marginBottom: '20px'
       }}>
@@ -329,7 +329,7 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
         <div style={{
           backgroundColor: 'var(--bg-overlay)',
           padding: '12px',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           textAlign: 'center'
         }}>
           <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mb(1))}>
@@ -348,7 +348,7 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
           backgroundColor: getWindImpactColor(windAnalysis.timeDifference) + '20',
           border: `1px solid ${getWindImpactColor(windAnalysis.timeDifference)}`,
           padding: '12px',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           textAlign: 'center'
         }}>
           <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mb(1))}>
@@ -367,7 +367,7 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
           backgroundColor: 'var(--bg-overlay)',
           border: '1px solid var(--text-secondary)',
           padding: '12px',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           textAlign: 'center'
         }}>
           <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mb(1))}>
@@ -396,7 +396,7 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
             <div style={{
               backgroundColor: 'var(--bg-overlay)',
               padding: '16px',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               marginBottom: '12px'
             }}>
               <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
@@ -435,7 +435,7 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
             <div style={{
               backgroundColor: 'var(--bg-overlay)',
               padding: '16px',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               marginBottom: '12px'
             }}>
               <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
@@ -473,7 +473,7 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
           <div style={{
             backgroundColor: 'var(--bg-overlay)',
             padding: '16px',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--bg-overlay)'
           }}>
             <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>

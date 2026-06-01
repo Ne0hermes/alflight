@@ -28,7 +28,7 @@ export const VACUploader = memo(({ icao }) => {
       <div style={{
         backgroundColor: 'var(--bg-overlay)',
         padding: '20px',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
         marginTop: '16px'
       }}>
@@ -50,7 +50,7 @@ export const VACUploader = memo(({ icao }) => {
             width: '100%',
             padding: '24px',
             border: '2px dashed var(--text-secondary)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             backgroundColor: 'var(--bg-overlay)',
             cursor: 'pointer',
             transition: 'all 0.2s',
@@ -83,7 +83,7 @@ export const VACUploader = memo(({ icao }) => {
             <div style={{
               backgroundColor: 'var(--bg-overlay)',
               border: '1px solid var(--bg-overlay)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               padding: '12px',
               display: 'flex',
               gap: '12px',
@@ -109,7 +109,7 @@ export const VACUploader = memo(({ icao }) => {
                 fontSize: '12px',
                 backgroundColor: 'var(--bg-overlay)',
                 padding: '12px',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 marginTop: '8px',
                 overflow: 'auto',
                 maxHeight: '300px'

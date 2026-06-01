@@ -198,7 +198,7 @@ export const VFRPointManager = ({
           marginTop: '16px',
           padding: '16px',
           background: 'var(--bg-overlay)',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           border: '1px solid var(--border-subtle)'
         }}>
           <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
@@ -222,7 +222,7 @@ export const VFRPointManager = ({
                   style={{
                     padding: '10px',
                     background: 'var(--bg-overlay)',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--border-subtle)',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
@@ -249,7 +249,7 @@ export const VFRPointManager = ({
                       padding: '4px 8px',
                       background: point.source === 'custom' ? 'rgba(242, 105, 33, 0.10)' : 'var(--bg-overlay)',
                       color: point.source === 'custom' ? 'var(--accent-primary)' : 'var(--text-primary)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       fontSize: '11px',
                       fontWeight: '600'
                     }}>
@@ -287,7 +287,7 @@ export const VFRPointManager = ({
               style={{
                 padding: '8px 12px',
                 background: 'var(--bg-overlay)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center'
@@ -312,7 +312,7 @@ export const VFRPointManager = ({
                       padding: '4px',
                       background: 'var(--bg-overlay)',
                       border: '1px solid var(--border-subtle)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
@@ -337,7 +337,7 @@ export const VFRPointManager = ({
                       background: 'var(--text-secondary)',
                       color: 'var(--text-primary)',
                       border: 'none',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',

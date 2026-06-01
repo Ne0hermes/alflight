@@ -14,7 +14,7 @@ const commonStyles = {
   container: {
     padding: '24px',
     backgroundColor: 'var(--bg-surface)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
   },
   label: {
@@ -33,7 +33,7 @@ const commonStyles = {
     marginBottom: '32px',
     padding: '16px',
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     borderWidth: '1px',
     borderStyle: 'solid',
     borderColor: 'var(--border-subtle)'
@@ -399,7 +399,7 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
       <div style={{
         padding: '16px',
         backgroundColor: 'var(--bg-overlay)',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         borderLeft: '4px solid #f26921',
         marginTop: '20px'
       }}>

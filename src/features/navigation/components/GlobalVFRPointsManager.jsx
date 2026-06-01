@@ -202,7 +202,7 @@ const GlobalVFRPointsManager = () => {
     <div style={{
       padding: '20px',
       backgroundColor: 'var(--bg-overlay)',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
     }}>
       {/* En-tête */}
@@ -250,7 +250,7 @@ const GlobalVFRPointsManager = () => {
               backgroundColor: isSyncing ? 'var(--text-tertiary)' : 'var(--text-primary)',
               color: 'var(--text-primary)',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               fontSize: '14px',
               cursor: isSyncing ? 'not-allowed' : 'pointer',
               display: 'flex',
@@ -271,7 +271,7 @@ const GlobalVFRPointsManager = () => {
               backgroundColor: isUploading || localGlobalPoints.length === 0 ? 'var(--text-tertiary)' : 'var(--accent-primary)',
               color: 'var(--text-primary)',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               fontSize: '14px',
               cursor: isUploading || localGlobalPoints.length === 0 ? 'not-allowed' : 'pointer',
               display: 'flex',
@@ -291,7 +291,7 @@ const GlobalVFRPointsManager = () => {
               backgroundColor: 'var(--text-secondary)',
               color: 'var(--text-primary)',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               fontSize: '14px',
               cursor: 'pointer',
               display: 'flex',
@@ -326,7 +326,7 @@ const GlobalVFRPointsManager = () => {
             width: '100%',
             padding: '8px 8px 8px 36px',
             border: '1px solid var(--text-tertiary)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             fontSize: '14px'
           }}
         />
@@ -338,7 +338,7 @@ const GlobalVFRPointsManager = () => {
           marginBottom: '20px',
           padding: '16px',
           backgroundColor: 'var(--bg-overlay)',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           border: '2px solid var(--text-secondary)'
         }}>
           <h3 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>
@@ -354,7 +354,7 @@ const GlobalVFRPointsManager = () => {
               style={{
                 padding: '8px',
                 border: '1px solid var(--text-tertiary)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 fontSize: '14px'
               }}
             />
@@ -365,7 +365,7 @@ const GlobalVFRPointsManager = () => {
               style={{
                 padding: '8px',
                 border: '1px solid var(--text-tertiary)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 fontSize: '14px'
               }}
             >
@@ -385,7 +385,7 @@ const GlobalVFRPointsManager = () => {
               style={{
                 padding: '8px',
                 border: '1px solid var(--text-tertiary)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 fontSize: '14px'
               }}
             />
@@ -399,7 +399,7 @@ const GlobalVFRPointsManager = () => {
               style={{
                 padding: '8px',
                 border: '1px solid var(--text-tertiary)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 fontSize: '14px'
               }}
             />
@@ -412,7 +412,7 @@ const GlobalVFRPointsManager = () => {
               style={{
                 padding: '8px',
                 border: '1px solid var(--text-tertiary)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 fontSize: '14px'
               }}
             />
@@ -425,7 +425,7 @@ const GlobalVFRPointsManager = () => {
               style={{
                 padding: '8px',
                 border: '1px solid var(--text-tertiary)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 fontSize: '14px'
               }}
             />
@@ -443,7 +443,7 @@ const GlobalVFRPointsManager = () => {
                 backgroundColor: 'var(--text-primary)',
                 color: 'var(--text-primary)',
                 border: 'none',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 fontSize: '14px',
                 cursor: 'pointer'
               }}
@@ -467,7 +467,7 @@ const GlobalVFRPointsManager = () => {
                 backgroundColor: 'var(--text-secondary)',
                 color: 'var(--text-primary)',
                 border: 'none',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 fontSize: '14px',
                 cursor: 'pointer'
               }}
@@ -491,7 +491,7 @@ const GlobalVFRPointsManager = () => {
               style={{
                 padding: '12px',
                 backgroundColor: 'var(--bg-overlay)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--border-subtle)'
               }}
             >
@@ -505,7 +505,7 @@ const GlobalVFRPointsManager = () => {
                     style={{
                       padding: '6px',
                       border: '1px solid var(--text-tertiary)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       fontSize: '12px'
                     }}
                   />
@@ -516,7 +516,7 @@ const GlobalVFRPointsManager = () => {
                     style={{
                       padding: '6px',
                       border: '1px solid var(--text-tertiary)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       fontSize: '12px'
                     }}
                   >
@@ -536,7 +536,7 @@ const GlobalVFRPointsManager = () => {
                     style={{
                       padding: '6px',
                       border: '1px solid var(--text-tertiary)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       fontSize: '12px'
                     }}
                   />
@@ -550,7 +550,7 @@ const GlobalVFRPointsManager = () => {
                     style={{
                       padding: '6px',
                       border: '1px solid var(--text-tertiary)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       fontSize: '12px'
                     }}
                   />
@@ -563,7 +563,7 @@ const GlobalVFRPointsManager = () => {
                     style={{
                       padding: '6px',
                       border: '1px solid var(--text-tertiary)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       fontSize: '12px'
                     }}
                   />
@@ -576,7 +576,7 @@ const GlobalVFRPointsManager = () => {
                     style={{
                       padding: '6px',
                       border: '1px solid var(--text-tertiary)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       fontSize: '12px'
                     }}
                   />
@@ -589,7 +589,7 @@ const GlobalVFRPointsManager = () => {
                         backgroundColor: 'var(--text-primary)',
                         color: 'var(--text-primary)',
                         border: 'none',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         fontSize: '12px',
                         cursor: 'pointer'
                       }}
@@ -603,7 +603,7 @@ const GlobalVFRPointsManager = () => {
                         backgroundColor: 'var(--text-secondary)',
                         color: 'var(--text-primary)',
                         border: 'none',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         fontSize: '12px',
                         cursor: 'pointer'
                       }}
@@ -639,7 +639,7 @@ const GlobalVFRPointsManager = () => {
                         padding: '2px 6px',
                         backgroundColor: vfrTypeColors[point.type] || 'var(--text-secondary)',
                         color: 'var(--text-primary)',
-                        borderRadius: '8px'
+                        borderRadius: 'var(--radius-sm)'
                       }}>
                         {point.type}
                       </span>
@@ -649,7 +649,7 @@ const GlobalVFRPointsManager = () => {
                           padding: '2px 6px',
                           backgroundColor: 'var(--text-primary)',
                           color: 'var(--text-primary)',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-sm)',
                           display: 'flex',
                           alignItems: 'center',
                           gap: '3px'
@@ -663,7 +663,7 @@ const GlobalVFRPointsManager = () => {
                           padding: '2px 6px',
                           backgroundColor: 'var(--text-secondary)',
                           color: 'var(--text-primary)',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-sm)',
                           display: 'flex',
                           alignItems: 'center',
                           gap: '3px'
@@ -782,7 +782,7 @@ const GlobalVFRPointsManager = () => {
           marginTop: '20px',
           padding: '12px',
           backgroundColor: 'var(--bg-overlay)',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           border: '1px solid var(--text-secondary)',
           fontSize: '12px',
           color: 'var(--text-primary)'

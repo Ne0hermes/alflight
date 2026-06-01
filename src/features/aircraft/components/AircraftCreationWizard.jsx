@@ -1298,7 +1298,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
           component="span"
           sx={{
             display: 'block',
-            fontFamily: "'JetBrains Mono', monospace",
+            fontFamily: 'var(--font-mono)',
             fontSize: '11px',
             fontWeight: 500,
             letterSpacing: '0.20em',
@@ -1312,7 +1312,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         <Typography
           variant="h3"
           sx={{
-            fontFamily: "'Century Gothic', 'Questrial', sans-serif",
+            fontFamily: 'var(--font-sans)',
             fontWeight: 600,
             letterSpacing: '-0.01em',
             color: 'var(--text-primary)',
@@ -1447,7 +1447,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
               component="span"
               sx={{
                 display: 'block',
-                fontFamily: "'JetBrains Mono', monospace",
+                fontFamily: 'var(--font-mono)',
                 fontSize: '10px',
                 fontWeight: 600,
                 letterSpacing: '0.12em',
@@ -1623,7 +1623,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
             backgroundColor: 'var(--bg-overlay)',
             border: '1px solid var(--border-subtle)',
             borderLeft: '3px solid var(--accent-primary)',
-            borderRadius: '2px',
+            borderRadius: 'var(--radius-sm)',
             p: 2,
             mb: 2,
             maxHeight: '200px',

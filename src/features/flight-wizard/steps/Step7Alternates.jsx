@@ -16,7 +16,7 @@ const commonStyles = {
   container: {
     padding: '24px',
     backgroundColor: 'var(--bg-surface)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
   },
   label: {
@@ -31,7 +31,7 @@ const commonStyles = {
   infoBox: {
     padding: '16px',
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     borderLeft: '4px solid #f26921',
     marginBottom: '20px',
     fontSize: '14px'
@@ -39,7 +39,7 @@ const commonStyles = {
   infoBoxWarning: {
     padding: '16px',
     backgroundColor: 'rgba(242, 105, 33, 0.10)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     borderLeft: '4px solid var(--accent-primary)',
     marginBottom: '20px',
     fontSize: '14px'
@@ -68,7 +68,7 @@ const commonStyles = {
   coneInfoCard: {
     padding: '12px 16px',
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     border: '1px solid var(--border-subtle)'
   },
   coneInfoTitle: {
@@ -456,7 +456,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
             <div style={{
               padding: '10px 12px',
               backgroundColor: 'rgba(242, 105, 33, 0.10)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               fontSize: '12px',
               color: 'var(--accent-primary)',
               marginTop: '12px'
@@ -472,7 +472,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
       {/* Filtres manuels */}
       <div style={{
         backgroundColor: 'var(--bg-overlay)',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         border: '1px solid var(--border-subtle)',
         marginBottom: '20px',
         overflow: 'hidden'
@@ -502,7 +502,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                 padding: '2px 8px',
                 backgroundColor: 'var(--accent-primary)',
                 color: 'var(--text-primary)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 fontSize: '11px'
               }}>
                 {[filters.hideShortRunways, filters.hideIncompatibleSurface, filters.hideIncompatibleType].filter(Boolean).length} actif(s)
@@ -523,7 +523,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                 gap: '10px',
                 padding: '10px 12px',
                 backgroundColor: filters.hideShortRunways ? 'var(--bg-overlay)' : 'var(--bg-surface)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--border-subtle)',
                 cursor: 'pointer'
               }}>
@@ -550,7 +550,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                 gap: '10px',
                 padding: '10px 12px',
                 backgroundColor: filters.hideIncompatibleSurface ? 'var(--bg-overlay)' : 'var(--bg-surface)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--border-subtle)',
                 cursor: 'pointer'
               }}>
@@ -577,7 +577,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                 gap: '10px',
                 padding: '10px 12px',
                 backgroundColor: filters.hideIncompatibleType ? 'var(--bg-overlay)' : 'var(--bg-surface)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--border-subtle)',
                 cursor: 'pointer'
               }}>

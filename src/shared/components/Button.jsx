@@ -28,7 +28,7 @@ export const Button = ({
   // Styles de base selon le variant
   const getVariantStyles = () => {
     const baseStyles = {
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       fontWeight: 600,
       textTransform: 'none',
       letterSpacing: 'normal',

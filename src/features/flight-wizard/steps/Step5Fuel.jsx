@@ -10,7 +10,7 @@ const commonStyles = {
   container: {
     padding: '0',
     backgroundColor: 'var(--bg-surface)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
   },
   label: {
@@ -31,7 +31,7 @@ const reserveCardStyle = {
   gap: '12px',
   padding: '12px 16px',
   marginBottom: '20px',
-  borderRadius: '8px',
+  borderRadius: 'var(--radius-sm)',
   border: `1px solid ${theme.colors.border}`,
   backgroundColor: 'rgba(59, 130, 246, 0.05)',
 };

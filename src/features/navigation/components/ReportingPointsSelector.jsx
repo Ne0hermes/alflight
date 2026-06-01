@@ -166,7 +166,7 @@ export const ReportingPointsSelector = memo(({
                   backgroundColor: 'var(--bg-overlay)',
                   color: 'var(--text-primary)',
                   padding: '2px 8px',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   fontWeight: 'normal'
                 }
               )}>
@@ -181,7 +181,7 @@ export const ReportingPointsSelector = memo(({
                   backgroundColor: 'rgba(242, 105, 33, 0.10)',
                   color: 'var(--accent-primary)',
                   padding: '2px 8px',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   fontWeight: 'normal'
                 }
               )}>

@@ -91,7 +91,7 @@ export const ScenarioCards = memo(({ scenarios, fobFuel, fuelData, aircraft }) =
             color: 'var(--text-secondary)',
             backgroundColor: 'var(--bg-overlay)',
             padding: '8px 16px',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--border-subtle)'
           }}>
             {aircraft.equipment && <span>📦 Équipements SAR: {aircraft.equipment}</span>}
@@ -200,7 +200,7 @@ const ScenarioCard = memo(({ color, title, data, description }) => {
                 padding: '6px 8px',
                 backgroundColor: 'var(--bg-overlay)',
                 borderLeft: '3px solid #C04534',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 fontSize: '10px',
                 color: '#C04534'
               }}>

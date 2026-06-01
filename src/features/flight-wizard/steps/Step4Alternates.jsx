@@ -13,7 +13,7 @@ const commonStyles = {
   container: {
     padding: '24px',
     backgroundColor: 'var(--bg-surface)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
   },
   label: {
@@ -28,7 +28,7 @@ const commonStyles = {
   infoBox: {
     padding: '16px',
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     borderLeft: '4px solid #f26921',
     marginBottom: '20px',
     fontSize: '14px'

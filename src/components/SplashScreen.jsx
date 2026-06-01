@@ -125,14 +125,14 @@ const styles = {
   progressBar: {
     height: '4px',
     backgroundColor: 'rgba(255,255,255,0.3)',
-    borderRadius: '2px',
+    borderRadius: 'var(--radius-sm)',
     overflow: 'hidden',
     marginBottom: '16px',
   },
   progressFill: {
     height: '100%',
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '2px',
+    borderRadius: 'var(--radius-sm)',
     transition: 'width 0.4s ease',
     boxShadow: '0 0 10px rgba(255,255,255,0.5)',
   },

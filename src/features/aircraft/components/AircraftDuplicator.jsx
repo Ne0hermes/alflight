@@ -8,7 +8,7 @@ const styles = {
   container: {
     padding: '24px',
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
     maxWidth: '800px',
     margin: '0 auto'
@@ -42,7 +42,7 @@ const styles = {
     padding: '12px',
     fontSize: '14px',
     border: `1px solid ${theme.colors.border}`,
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     backgroundColor: 'var(--bg-overlay)',
     cursor: 'pointer',
     outline: 'none',
@@ -56,7 +56,7 @@ const styles = {
     padding: '12px',
     fontSize: '14px',
     border: `1px solid ${theme.colors.border}`,
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     outline: 'none',
     transition: 'border-color 0.2s'
   },
@@ -70,7 +70,7 @@ const styles = {
     padding: '12px 24px',
     fontSize: '14px',
     fontWeight: '600',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     border: 'none',
     cursor: 'pointer',
     display: 'flex',
@@ -93,7 +93,7 @@ const styles = {
   },
   alert: {
     padding: '12px 16px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '14px',
     display: 'flex',
     alignItems: 'center',
@@ -118,7 +118,7 @@ const styles = {
   sourceInfo: {
     padding: '16px',
     backgroundColor: theme.colors.primary[50],
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     border: `1px solid ${theme.colors.primary[200]}`,
     marginTop: '16px'
   },

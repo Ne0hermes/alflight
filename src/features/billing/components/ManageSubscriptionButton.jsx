@@ -55,7 +55,7 @@ const styles = {
     backgroundColor: 'var(--text-secondary)',
     color: 'var(--bg-overlay)',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '14px',
     fontWeight: '500',
     cursor: 'pointer',

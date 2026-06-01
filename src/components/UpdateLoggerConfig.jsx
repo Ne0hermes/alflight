@@ -137,7 +137,7 @@ const UpdateLoggerConfig = () => {
     transform: 'translate(-50%, -50%)',
     backgroundColor: 'var(--bg-overlay)',
     padding: '24px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
     zIndex: 1002,
     width: '90%',
@@ -193,7 +193,7 @@ const UpdateLoggerConfig = () => {
             <div style={{
               backgroundColor: 'var(--bg-overlay)',
               padding: '12px',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               marginBottom: '20px',
               border: '1px solid var(--text-secondary)'
             }}>
@@ -233,7 +233,7 @@ const UpdateLoggerConfig = () => {
                   width: '100%',
                   padding: '8px 12px',
                   border: '1px solid var(--text-tertiary)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   fontSize: '14px'
                 }}
               />
@@ -258,7 +258,7 @@ const UpdateLoggerConfig = () => {
                   width: '100%',
                   padding: '8px 12px',
                   border: '1px solid var(--text-tertiary)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   fontSize: '14px'
                 }}
               />
@@ -283,7 +283,7 @@ const UpdateLoggerConfig = () => {
                   width: '100%',
                   padding: '8px 12px',
                   border: '1px solid var(--text-tertiary)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   fontSize: '14px'
                 }}
               />
@@ -311,7 +311,7 @@ const UpdateLoggerConfig = () => {
             {testStatus && (
               <div style={{
                 padding: '12px',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 marginBottom: '16px',
                 backgroundColor: testStatus === 'success' ? 'var(--bg-overlay)' : testStatus === 'error' ? 'var(--bg-overlay)' : 'rgba(242, 105, 33, 0.10)',
                 border: `1px solid ${testStatus === 'success' ? 'var(--bg-overlay)' : testStatus === 'error' ? 'var(--border-subtle)' : 'var(--bg-overlay)'}`,
@@ -334,7 +334,7 @@ const UpdateLoggerConfig = () => {
             <div style={{
               backgroundColor: 'var(--bg-overlay)',
               padding: '12px',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               marginBottom: '16px'
             }}>
               <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: 'var(--text-secondary)' }}>Actions rapides</h4>
@@ -346,7 +346,7 @@ const UpdateLoggerConfig = () => {
                     backgroundColor: 'var(--accent-primary)',
                     color: 'var(--text-primary)',
                     border: 'none',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     fontSize: '13px',
                     cursor: 'pointer',
                     display: 'flex',
@@ -365,7 +365,7 @@ const UpdateLoggerConfig = () => {
                     backgroundColor: 'var(--text-secondary)',
                     color: 'var(--text-primary)',
                     border: 'none',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     fontSize: '13px',
                     cursor: 'pointer',
                     display: 'flex',
@@ -384,7 +384,7 @@ const UpdateLoggerConfig = () => {
                     backgroundColor: 'var(--text-primary)',
                     color: 'var(--text-primary)',
                     border: 'none',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     fontSize: '13px',
                     cursor: 'pointer',
                     display: 'flex',
@@ -403,7 +403,7 @@ const UpdateLoggerConfig = () => {
               <div style={{
                 backgroundColor: 'var(--bg-overlay)',
                 padding: '12px',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 marginBottom: '16px',
                 maxHeight: '200px',
                 overflow: 'auto'
@@ -415,7 +415,7 @@ const UpdateLoggerConfig = () => {
                   <div key={log.id || index} style={{
                     padding: '8px',
                     backgroundColor: 'var(--bg-overlay)',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     marginBottom: '8px',
                     fontSize: '13px'
                   }}>
@@ -436,7 +436,7 @@ const UpdateLoggerConfig = () => {
                   backgroundColor: 'var(--bg-overlay)',
                   color: 'var(--text-secondary)',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   fontSize: '14px',
                   fontWeight: '500',
                   cursor: 'pointer'
@@ -453,7 +453,7 @@ const UpdateLoggerConfig = () => {
                   backgroundColor: clientId && apiKey ? 'var(--accent-primary)' : 'var(--text-tertiary)',
                   color: 'var(--text-primary)',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   fontSize: '14px',
                   fontWeight: '500',
                   cursor: clientId && apiKey ? 'pointer' : 'not-allowed',
@@ -473,7 +473,7 @@ const UpdateLoggerConfig = () => {
                   backgroundColor: 'var(--accent-primary)',
                   color: 'var(--text-primary)',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   fontSize: '14px',
                   fontWeight: '500',
                   cursor: 'pointer',

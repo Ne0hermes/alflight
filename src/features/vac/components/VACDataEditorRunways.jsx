@@ -57,7 +57,7 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
   
   return (
     <div>
-      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
+      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
             Caractéristiques des pistes
@@ -75,7 +75,7 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
               backgroundColor: 'var(--text-primary)',
               color: 'var(--text-primary)',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -92,7 +92,7 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
               <div key={idx} style={{ 
                 padding: '16px', 
                 backgroundColor: 'var(--bg-overlay)', 
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--border-subtle)'
               }}>
                 {/* En-tête de la piste */}
@@ -122,7 +122,7 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                       backgroundColor: '#C04534',
                       color: 'var(--text-primary)',
                       border: 'none',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       cursor: 'pointer'
                     }}
                   >
@@ -292,7 +292,7 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                   
                   {/* VASIS/PAPI */}
                   {runway.vasis && (
-                    <div style={{ marginBottom: '12px', padding: '8px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
+                    <div style={{ marginBottom: '12px', padding: '8px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
                         <div>
                           <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
@@ -335,7 +335,7 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                   
                   {/* ILS */}
                   {runway.ils && (
-                    <div style={{ padding: '8px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
+                    <div style={{ padding: '8px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
                         <div>
                           <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
@@ -403,7 +403,7 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                           backgroundColor: 'var(--text-secondary)',
                           color: 'var(--text-primary)',
                           border: 'none',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-sm)',
                           cursor: 'pointer'
                         }}
                       >
@@ -424,7 +424,7 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
                           backgroundColor: 'var(--text-secondary)',
                           color: 'var(--text-primary)',
                           border: 'none',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-sm)',
                           cursor: 'pointer'
                         }}
                       >

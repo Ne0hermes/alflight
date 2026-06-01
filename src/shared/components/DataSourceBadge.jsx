@@ -83,7 +83,7 @@ export const DataSourceBadge = memo(({
     padding: sizeConfig.padding,
     backgroundColor: config.backgroundColor,
     color: config.color,
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: sizeConfig.fontSize,
     fontWeight: '500',
     border: `1px solid ${config.color}33`,

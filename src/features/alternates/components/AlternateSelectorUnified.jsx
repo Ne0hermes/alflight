@@ -234,7 +234,7 @@ export const AlternateSelectorUnified = memo(({
                   borderWidth: '2px',
                   borderStyle: isFiltered ? 'dashed' : 'solid',
                   borderColor: isFiltered ? 'var(--text-tertiary)' : ((isSelectedDeparture || isSelectedArrival) ? selectionColor : (isHovered ? `${sideColor}60` : 'var(--border-subtle)')),
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   backgroundColor: isFiltered ? 'var(--bg-overlay)' : ((isSelectedDeparture || isSelectedArrival) ? selectionBgColor : (isHovered ? 'var(--bg-overlay)' : '#ffffff')),
                   cursor: 'pointer',
                   transition: 'all 0.2s',
@@ -310,7 +310,7 @@ export const AlternateSelectorUnified = memo(({
                         padding: '2px 8px',
                         backgroundColor: `${sideColor}15`,
                         color: sideColor,
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         fontSize: '11px',
                         fontWeight: 'bold'
                       }}>
@@ -359,7 +359,7 @@ export const AlternateSelectorUnified = memo(({
                         padding: '2px 6px',
                         backgroundColor: getScoreColor(airport.score) + '20',
                         color: getScoreColor(airport.score),
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         fontWeight: 'bold',
                         fontSize: '11px'
                       }}>
@@ -380,7 +380,7 @@ export const AlternateSelectorUnified = memo(({
                         borderWidth: '2px',
                         borderStyle: 'solid',
                         borderColor: (isSelectedDeparture || isSelectedArrival) ? (isSelectedDeparture ? '#C04534' : 'var(--text-primary)') : 'var(--text-secondary)',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         backgroundColor: (isSelectedDeparture || isSelectedArrival) ? (isSelectedDeparture ? '#C04534' : 'var(--text-primary)') : '#ffffff',
                         color: (isSelectedDeparture || isSelectedArrival) ? '#ffffff' : 'var(--text-secondary)',
                         cursor: 'pointer',
@@ -414,7 +414,7 @@ export const AlternateSelectorUnified = memo(({
                         borderWidth: '1px',
                         borderStyle: 'solid',
                         borderColor: 'var(--border-subtle)',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                         zIndex: 1000,
                         minWidth: '180px',

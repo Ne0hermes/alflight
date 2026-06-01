@@ -410,7 +410,7 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
       <div style={{
         height: '500px',
         width: '100%',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         borderWidth: '1px',
         borderStyle: 'solid',
         borderColor: 'var(--border-subtle)',
@@ -432,7 +432,7 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
       <div style={{
         height: '500px',
         width: '100%',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         borderWidth: '1px',
         borderStyle: 'solid',
         borderColor: 'var(--border-subtle)',
@@ -483,7 +483,7 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
 
       <div
         className="route-map-container"
-        style={{ height: '500px', width: '100%', borderRadius: '8px', overflow: 'hidden', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border-subtle)' }}
+        style={{ height: '500px', width: '100%', borderRadius: 'var(--radius-sm)', overflow: 'hidden', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border-subtle)' }}
       >
         <MapContainer
           center={center}

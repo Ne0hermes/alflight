@@ -134,7 +134,7 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
   
   const zoneCheckboxStyle = (zoneType) => ({
     padding: '12px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     border: '1px solid',
     borderColor: zones[zoneType] ? 'var(--accent-primary)' : 'var(--border-subtle)',
     backgroundColor: zones[zoneType] ? 'rgba(242, 105, 33, 0.10)' : '#ffffff',
@@ -146,7 +146,7 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
     <div style={{
       padding: '16px',
       backgroundColor: 'var(--bg-overlay)',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
     }}>
       <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px', display: 'flex', alignItems: 'center' }}>
@@ -159,7 +159,7 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
         display: 'flex',
         gap: '12px',
         padding: '12px',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         marginBottom: '16px',
         backgroundColor: 'var(--bg-overlay)',
         border: '1px solid var(--text-secondary)'
@@ -278,7 +278,7 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
               marginBottom: '12px',
               padding: '12px',
               backgroundColor: 'rgba(242, 105, 33, 0.10)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--bg-overlay)'
             }}>
               <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>
@@ -299,7 +299,7 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
             display: 'flex',
             gap: '12px',
             padding: '12px',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             backgroundColor: 'var(--bg-overlay)',
             border: '1px solid #f26921'
           }}>
@@ -317,7 +317,7 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
         marginTop: '16px',
         padding: '12px',
         backgroundColor: 'var(--bg-overlay)',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         border: '1px solid var(--border-subtle)'
       }}>
         <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>

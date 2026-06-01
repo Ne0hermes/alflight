@@ -10,7 +10,7 @@ const UnitsModule = () => {
       <div style={{ 
         backgroundColor: 'var(--bg-overlay)', 
         padding: '20px', 
-        borderRadius: '8px', 
+        borderRadius: 'var(--radius-sm)', 
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)', 
         marginBottom: '20px' 
       }}>
@@ -40,7 +40,7 @@ const UnitsModule = () => {
         <div style={{
           backgroundColor: 'var(--bg-overlay)',
           padding: '12px',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
           display: 'flex',
           alignItems: 'center',
@@ -56,7 +56,7 @@ const UnitsModule = () => {
         <div style={{
           backgroundColor: 'var(--bg-overlay)',
           padding: '12px',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
           display: 'flex',
           alignItems: 'center',
@@ -72,7 +72,7 @@ const UnitsModule = () => {
         <div style={{
           backgroundColor: 'var(--bg-overlay)',
           padding: '12px',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
           display: 'flex',
           alignItems: 'center',
@@ -88,7 +88,7 @@ const UnitsModule = () => {
         <div style={{
           backgroundColor: 'var(--bg-overlay)',
           padding: '12px',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
           display: 'flex',
           alignItems: 'center',
@@ -105,7 +105,7 @@ const UnitsModule = () => {
       {/* Composant des préférences d'unités */}
       <div style={{ 
         backgroundColor: 'var(--bg-overlay)', 
-        borderRadius: '8px', 
+        borderRadius: 'var(--radius-sm)', 
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
         padding: '20px'
       }}>

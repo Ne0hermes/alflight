@@ -66,7 +66,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
       transform: 'translate(-50%, -50%)',
       background: 'var(--bg-overlay)',
       padding: '20px',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
       zIndex: 10000,
       minWidth: '400px',
@@ -114,7 +114,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
             width: '100%',
             padding: '8px 12px',
             border: '1px solid var(--text-tertiary)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             fontSize: '14px',
             background: 'var(--bg-overlay)'
           }}
@@ -145,7 +145,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
             width: '100%',
             padding: '8px 12px',
             border: '1px solid var(--text-tertiary)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             fontSize: '14px'
           }}
         />
@@ -168,7 +168,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
             width: '100%',
             padding: '8px 12px',
             border: '1px solid var(--text-tertiary)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             fontSize: '14px',
             background: 'var(--bg-overlay)'
           }}
@@ -199,7 +199,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
               width: '100%',
               padding: '8px 12px',
               border: '1px solid var(--text-tertiary)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               fontSize: '14px'
             }}
           />
@@ -224,7 +224,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
               width: '100%',
               padding: '8px 12px',
               border: '1px solid var(--text-tertiary)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               fontSize: '14px'
             }}
           />
@@ -251,7 +251,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
               width: '100%',
               padding: '8px 12px',
               border: '1px solid var(--text-tertiary)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               fontSize: '14px'
             }}
           />
@@ -276,7 +276,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
               width: '100%',
               padding: '8px 12px',
               border: '1px solid var(--text-tertiary)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               fontSize: '14px'
             }}
           />
@@ -301,7 +301,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
             width: '100%',
             padding: '8px 12px',
             border: '1px solid var(--text-tertiary)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             fontSize: '14px',
             resize: 'vertical'
           }}
@@ -321,7 +321,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
             padding: '8px 16px',
             background: 'var(--bg-overlay)',
             border: '1px solid var(--text-tertiary)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             fontSize: '14px',
             fontWeight: '500',
             cursor: 'pointer',
@@ -340,7 +340,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
             background: 'var(--text-secondary)',
             color: 'var(--text-primary)',
             border: 'none',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             fontSize: '14px',
             fontWeight: '500',
             cursor: 'pointer',
@@ -360,7 +360,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
           padding: '8px',
           background: 'rgba(242, 105, 33, 0.10)',
           border: '1px solid var(--accent-primary)',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           fontSize: '12px',
           color: 'var(--accent-primary)'
         }}>
@@ -374,7 +374,7 @@ const AirspaceEditor = ({ airspace, onSave, onCancel }) => {
           padding: '8px',
           background: 'var(--bg-overlay)',
           border: '1px solid #818cf8',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           fontSize: '12px',
           color: 'var(--text-primary)'
         }}>

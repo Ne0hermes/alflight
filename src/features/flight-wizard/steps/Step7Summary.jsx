@@ -661,7 +661,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                       fontSize: '13px',
                       backgroundColor: 'var(--bg-overlay)',
                       padding: '12px',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       border: '1px solid var(--border-subtle)',
                       lineHeight: '1.6',
                       color: 'var(--text-primary)'
@@ -685,7 +685,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                       fontSize: '13px',
                       backgroundColor: 'var(--bg-overlay)',
                       padding: '12px',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       border: '1px solid var(--border-subtle)',
                       lineHeight: '1.6',
                       color: 'var(--text-primary)'
@@ -725,7 +725,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                 <div style={{
                   padding: '16px',
                   backgroundColor: 'var(--bg-surface)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   border: `2px solid ${theme.colors.border}`
                 }}>
                   <div style={{
@@ -749,7 +749,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                         <div key={idx} style={{
                           padding: '12px',
                           backgroundColor: 'var(--bg-overlay)',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-sm)',
                           border: '1px solid var(--border-subtle)'
                         }}>
                           <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>
@@ -832,7 +832,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                 <div style={{
                   padding: '16px',
                   backgroundColor: 'var(--bg-surface)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   border: `2px solid ${theme.colors.border}`
                 }}>
                   <div style={{
@@ -856,7 +856,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                         <div key={idx} style={{
                           padding: '12px',
                           backgroundColor: 'var(--bg-overlay)',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-sm)',
                           border: '1px solid var(--bg-overlay)'
                         }}>
                           <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>
@@ -973,7 +973,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             <div style={{
               backgroundColor: 'var(--bg-overlay)',
               padding: '12px',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               fontSize: '13px'
             }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1038,7 +1038,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             {/* Statut suffisance carburant */}
             <div style={{
               padding: '10px 12px',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               backgroundColor: fuelInfo.confirmed >= fuelInfo.required ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
               border: `1px solid ${fuelInfo.confirmed >= fuelInfo.required ? 'var(--text-primary)' : '#C04534'}`
             }}>
@@ -1166,7 +1166,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                     style={{
                       padding: '16px',
                       backgroundColor: 'var(--bg-surface)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       border: '2px solid var(--border-subtle)',
                       boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
                     }}
@@ -1183,7 +1183,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                               padding: '2px 8px',
                               backgroundColor: 'var(--bg-overlay)',
                               border: '1px solid var(--text-primary)',
-                              borderRadius: '8px',
+                              borderRadius: 'var(--radius-sm)',
                               fontSize: '10px',
                               fontWeight: '600',
                               color: 'var(--text-primary)'
@@ -1195,7 +1195,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                               padding: '2px 8px',
                               backgroundColor: 'var(--bg-overlay)',
                               border: '1px solid #C04534',
-                              borderRadius: '8px',
+                              borderRadius: 'var(--radius-sm)',
                               fontSize: '10px',
                               fontWeight: '600',
                               color: '#C04534'
@@ -1223,7 +1223,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                       marginBottom: '12px',
                       padding: '10px',
                       backgroundColor: 'var(--bg-overlay)',
-                      borderRadius: '8px'
+                      borderRadius: 'var(--radius-sm)'
                     }}>
                       {/* Altitude terrain */}
                       {aerodrome.elevation && (
@@ -1337,7 +1337,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                           marginBottom: '12px',
                           padding: '10px',
                           backgroundColor: 'var(--bg-overlay)',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-sm)',
                           border: '1px solid var(--border-subtle)'
                         }}>
                           <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px' }}>
@@ -1379,7 +1379,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                         padding: '8px 10px',
                         backgroundColor: 'rgba(242, 105, 33, 0.10)',
                         border: '1px solid var(--accent-primary)',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         fontSize: '11px',
                         color: 'var(--accent-primary)'
                       }}>
@@ -1529,7 +1529,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                                 marginBottom: pairIdx < Object.keys(runwayPairs).length - 1 ? '12px' : '0',
                                 padding: '12px',
                                 backgroundColor: 'var(--bg-overlay)',
-                                borderRadius: '8px',
+                                borderRadius: 'var(--radius-sm)',
                                 border: '1px solid var(--border-subtle)'
                               }}>
                                 {/* En-tête piste */}
@@ -1549,7 +1549,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                                       padding: '2px 6px',
                                       backgroundColor: surface.includes('ASPH') || surface.includes('CONC') ? 'var(--bg-overlay)' : 'rgba(242, 105, 33, 0.10)',
                                       color: surface.includes('ASPH') || surface.includes('CONC') ? 'var(--text-primary)' : 'var(--accent-primary)',
-                                      borderRadius: '3px',
+                                      borderRadius: 'var(--radius-sm)',
                                       fontSize: '10px',
                                       fontWeight: '600'
                                     }}>
@@ -1569,7 +1569,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                                   <div style={{
                                     padding: '10px',
                                     backgroundColor: 'var(--bg-surface)',
-                                    borderRadius: '8px',
+                                    borderRadius: 'var(--radius-sm)',
                                     border: '1px solid var(--border-subtle)'
                                   }}>
                                     <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '6px' }}>
@@ -1637,7 +1637,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                                     <div style={{
                                       padding: '10px',
                                       backgroundColor: 'var(--bg-surface)',
-                                      borderRadius: '8px',
+                                      borderRadius: 'var(--radius-sm)',
                                       border: '1px solid var(--border-subtle)'
                                     }}>
                                       <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '6px' }}>
@@ -1745,7 +1745,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             minHeight: '400px',
             backgroundColor: 'var(--bg-overlay)',
             border: '3px solid var(--text-secondary)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
@@ -1776,7 +1776,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             <li style={{
               backgroundColor: 'var(--bg-surface)',
               border: '2px solid var(--text-secondary)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               padding: '20px 24px',
               marginBottom: '20px',
               fontSize: '16px',
@@ -1792,7 +1792,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             <li style={{
               backgroundColor: 'var(--bg-surface)',
               border: '2px solid var(--text-secondary)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               padding: '20px 24px',
               marginBottom: '20px',
               fontSize: '16px',
@@ -1834,7 +1834,7 @@ const styles = {
   card: {
     padding: '16px',
     backgroundColor: theme.colors.backgroundCard,
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     border: `1px solid ${theme.colors.border}`,
   },
   icon: {

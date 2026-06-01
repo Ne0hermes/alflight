@@ -152,7 +152,7 @@ export const ManexImporterFallback = memo(({
     }}>
       <div style={{
         backgroundColor: 'var(--bg-overlay)',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         padding: '24px',
         maxWidth: '600px',
         width: '90%',
@@ -179,7 +179,7 @@ export const ManexImporterFallback = memo(({
         </div>
 
         {/* Info */}
-        <div style={{ backgroundColor: 'var(--bg-overlay)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '12px', marginBottom: '16px' }}>
+        <div style={{ backgroundColor: 'var(--bg-overlay)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)', padding: '12px', marginBottom: '16px' }}>
           <Info size={16} style={{ display: 'inline', marginRight: '8px', color: 'var(--text-secondary)' }} />
           <span style={{ fontSize: '14px' }}>
             Import PDF temporairement indisponible. Vous pouvez utiliser les valeurs par défaut ou entrer manuellement les données.
@@ -229,7 +229,7 @@ export const ManexImporterFallback = memo(({
                       width: '100%',
                       padding: '6px',
                       border: '1px solid var(--text-tertiary)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       fontSize: '14px'
                     }}
                   />
@@ -254,7 +254,7 @@ export const ManexImporterFallback = memo(({
                       width: '100%',
                       padding: '6px',
                       border: '1px solid var(--text-tertiary)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       fontSize: '14px'
                     }}
                   />
@@ -266,7 +266,7 @@ export const ManexImporterFallback = memo(({
 
         {/* Valeurs par défaut preview */}
         {useDefaults && (
-          <div style={{ backgroundColor: 'var(--bg-overlay)', padding: '16px', borderRadius: '8px', marginBottom: '20px' }}>
+          <div style={{ backgroundColor: 'var(--bg-overlay)', padding: '16px', borderRadius: 'var(--radius-sm)', marginBottom: '20px' }}>
             <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px' }}>
               Valeurs par défaut qui seront utilisées:
             </h4>
@@ -288,7 +288,7 @@ export const ManexImporterFallback = memo(({
               backgroundColor: 'var(--border-subtle)',
               color: 'var(--text-secondary)',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               fontSize: '14px',
               fontWeight: '500',
               cursor: 'pointer'
@@ -303,7 +303,7 @@ export const ManexImporterFallback = memo(({
               backgroundColor: 'var(--text-secondary)',
               color: 'var(--text-primary)',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               fontSize: '14px',
               fontWeight: '500',
               cursor: 'pointer',

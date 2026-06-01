@@ -804,7 +804,7 @@ const styles = {
     padding: '10px 16px',
     backgroundColor: 'var(--text-secondary)',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     color: 'var(--text-primary)',
     fontSize: '14px',
     fontWeight: '500',
@@ -819,7 +819,7 @@ const styles = {
     padding: '10px 16px',
     backgroundColor: 'transparent',
     border: '1px solid var(--text-tertiary)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     color: 'var(--text-secondary)',
     fontSize: '14px',
     fontWeight: '500',
@@ -839,7 +839,7 @@ const styles = {
     gap: '8px',
     padding: '10px 12px',
     border: '1px solid var(--border-subtle)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     backgroundColor: 'var(--bg-overlay)'
   },
   searchInput: {
@@ -885,7 +885,7 @@ const styles = {
   pointCard: {
     padding: '16px',
     border: '1px solid var(--border-subtle)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     cursor: 'pointer',
     transition: 'all 0.2s',
     backgroundColor: 'var(--bg-overlay)'
@@ -893,7 +893,7 @@ const styles = {
   cardPhotoContainer: {
     marginBottom: '12px',
     width: '100%',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     overflow: 'hidden'
   },
   cardPhoto: {
@@ -963,7 +963,7 @@ const styles = {
     padding: '8px 12px',
     backgroundColor: 'var(--bg-overlay)',
     border: '1px solid var(--text-tertiary)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     cursor: 'pointer',
     transition: 'all 0.2s',
     display: 'flex',
@@ -1009,7 +1009,7 @@ const styles = {
   input: {
     padding: '10px 12px',
     border: '1px solid var(--text-tertiary)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '14px',
     color: 'var(--text-primary)',
     outline: 'none',
@@ -1018,7 +1018,7 @@ const styles = {
   select: {
     padding: '10px 12px',
     border: '1px solid var(--text-tertiary)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '14px',
     color: 'var(--text-primary)',
     outline: 'none',
@@ -1028,7 +1028,7 @@ const styles = {
   textarea: {
     padding: '10px 12px',
     border: '1px solid var(--text-tertiary)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '14px',
     color: 'var(--text-primary)',
     outline: 'none',
@@ -1038,7 +1038,7 @@ const styles = {
   fileInput: {
     padding: '10px 12px',
     border: '1px solid var(--text-tertiary)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '14px',
     color: 'var(--text-primary)',
     outline: 'none',
@@ -1059,7 +1059,7 @@ const styles = {
   photoPreviewImage: {
     maxWidth: '100%',
     maxHeight: '200px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     border: '2px solid var(--border-subtle)'
   },
   removePhotoButton: {
@@ -1070,7 +1070,7 @@ const styles = {
     backgroundColor: '#C04534',
     color: 'var(--text-primary)',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     cursor: 'pointer',
     fontSize: '12px',
     fontWeight: '600'
@@ -1080,7 +1080,7 @@ const styles = {
     padding: '12px 20px',
     backgroundColor: 'var(--text-secondary)',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     color: 'var(--text-primary)',
     fontSize: '14px',
     fontWeight: '500',
@@ -1103,7 +1103,7 @@ const styles = {
     padding: '12px 20px',
     backgroundColor: 'var(--bg-overlay)',
     border: '1px solid var(--text-tertiary)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     color: 'var(--text-secondary)',
     fontSize: '14px',
     fontWeight: '500',
@@ -1123,7 +1123,7 @@ const styles = {
     padding: '12px',
     backgroundColor: 'var(--bg-overlay)',
     border: '1px solid var(--text-primary)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     color: 'var(--text-primary)',
     fontSize: '13px',
     display: 'flex',
@@ -1134,7 +1134,7 @@ const styles = {
     padding: '12px',
     backgroundColor: 'var(--bg-overlay)',
     border: '1px solid #C04534',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     color: '#C04534',
     fontSize: '13px',
     display: 'flex',
@@ -1146,7 +1146,7 @@ const styles = {
     textAlign: 'center',
     backgroundColor: 'rgba(242, 105, 33, 0.06)',
     border: '2px solid var(--accent-primary)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     margin: '20px 0'
   },
   setupTitle: {
@@ -1165,7 +1165,7 @@ const styles = {
     textAlign: 'left',
     backgroundColor: 'var(--bg-overlay)',
     padding: '16px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     marginBottom: '20px',
     border: '1px solid var(--accent-primary)'
   },
@@ -1190,7 +1190,7 @@ const styles = {
     padding: '12px 24px',
     backgroundColor: 'var(--accent-primary)',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     color: 'var(--text-primary)',
     fontSize: '14px',
     fontWeight: '500',

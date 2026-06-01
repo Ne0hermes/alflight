@@ -292,7 +292,7 @@ const styles = {
     marginTop: '4px',
     backgroundColor: 'var(--bg-overlay)',
     border: '1px solid var(--border-subtle)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
     zIndex: 1000,
     maxHeight: '400px',
@@ -350,7 +350,7 @@ const styles = {
     backgroundColor: 'var(--text-secondary)',
     color: 'var(--text-primary)',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
@@ -364,7 +364,7 @@ const styles = {
     backgroundColor: 'var(--accent-primary)',
     color: 'var(--text-primary)',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
@@ -400,7 +400,7 @@ const styles = {
     marginBottom: '8px',
     padding: '8px',
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '8px'
+    borderRadius: 'var(--radius-sm)'
   }
 };
 

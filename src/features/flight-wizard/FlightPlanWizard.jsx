@@ -928,7 +928,7 @@ const styles = {
     alignItems: 'center',
     gap: '6px',
     padding: '8px',
-    borderRadius: '2px',
+    borderRadius: 'var(--radius-sm)',
     transition: 'all 0.2s ease',
     minWidth: '80px',
     background: 'var(--bg-surface)',
@@ -978,7 +978,7 @@ const styles = {
     flex: 1,
     padding: '24px',
     background: 'var(--bg-surface)',
-    borderRadius: '2px',
+    borderRadius: 'var(--radius-sm)',
     margin: '20px',
     border: '1px solid var(--border-subtle)',
   },
@@ -1017,7 +1017,7 @@ const styles = {
     justifyContent: 'center',
     gap: '8px',
     padding: '12px 24px',
-    borderRadius: '2px',
+    borderRadius: 'var(--radius-sm)',
     border: 'none',
     background: 'var(--accent-primary)',
     color: 'var(--text-inverse)',
@@ -1049,7 +1049,7 @@ const styles = {
     color: 'var(--text-secondary)',
     padding: '8px 16px',
     background: 'var(--bg-overlay)',
-    borderRadius: '2px',
+    borderRadius: 'var(--radius-sm)',
     border: '1px solid var(--border-subtle)',
   },
   // Bouton Annuler — text-only neutre (pas de rouge agressif)
@@ -1058,7 +1058,7 @@ const styles = {
     alignItems: 'center',
     gap: '8px',
     padding: '10px 16px',
-    borderRadius: '2px',
+    borderRadius: 'var(--radius-sm)',
     border: 'none',
     background: 'transparent',
     color: 'var(--text-tertiary)',
@@ -1090,7 +1090,7 @@ const styles = {
   },
   dialogContent: {
     backgroundColor: 'var(--bg-surface)',
-    borderRadius: '2px',
+    borderRadius: 'var(--radius-sm)',
     padding: '24px',
     maxWidth: '500px',
     width: '100%',
@@ -1125,7 +1125,7 @@ const styles = {
     marginBottom: '24px',
     padding: '12px',
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '2px',
+    borderRadius: 'var(--radius-sm)',
     border: '1px solid var(--border-subtle)',
     borderLeft: '3px solid var(--accent-primary)',
     lineHeight: 1.55,
@@ -1139,7 +1139,7 @@ const styles = {
   // Bouton ghost (Continuer l'édition)
   dialogButtonOutline: {
     padding: '10px 16px',
-    borderRadius: '2px',
+    borderRadius: 'var(--radius-sm)',
     border: '1px solid var(--border-regular)',
     background: 'transparent',
     color: 'var(--text-primary)',
@@ -1154,7 +1154,7 @@ const styles = {
   // Bouton danger (Annuler sans sauvegarder) — text neutre, pas rouge agressif
   dialogButtonDanger: {
     padding: '10px 16px',
-    borderRadius: '2px',
+    borderRadius: 'var(--radius-sm)',
     border: 'none',
     background: 'transparent',
     color: 'var(--text-tertiary)',
@@ -1169,7 +1169,7 @@ const styles = {
   // Bouton primary (Sauvegarder et reprendre) — orange plein cockpit
   dialogButtonPrimary: {
     padding: '10px 16px',
-    borderRadius: '2px',
+    borderRadius: 'var(--radius-sm)',
     border: 'none',
     background: 'var(--accent-primary)',
     color: 'var(--text-inverse)',

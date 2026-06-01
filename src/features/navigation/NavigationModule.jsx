@@ -559,7 +559,7 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
                       }}
                       style={{
                         padding: '12px 24px',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         border: '2px solid var(--text-secondary)',
                         background: 'var(--text-secondary)',
                         color: 'var(--text-primary)',
@@ -633,7 +633,7 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
                     style={{
                       width: '100%',
                       padding: '16px',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       border: '2px dashed var(--border-subtle)',
                       background: 'var(--bg-overlay)',
                       color: 'var(--text-secondary)',

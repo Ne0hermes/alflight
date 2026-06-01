@@ -425,7 +425,7 @@ const PilotProfile = () => {
       <div style={{
         ...styles[status.status],
         padding: '8px 12px',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         fontSize: '16px',
         fontWeight: 'bold',
         display: 'inline-block'
@@ -607,7 +607,7 @@ const PilotProfile = () => {
   const inputStyle = {
     padding: '8px 12px',
     border: '1px solid var(--text-tertiary)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '14px',
     width: '100%',
     minWidth: 0,
@@ -647,7 +647,7 @@ const PilotProfile = () => {
     // fontFamily explicite). Cohérence visuelle avec le reste de l'app.
     <div
       style={{
-        fontFamily: "'Century Gothic', 'Questrial', 'Jost', system-ui, sans-serif",
+        fontFamily: 'var(--font-sans)',
         color: 'var(--text-primary)',
       }}
     >
@@ -759,7 +759,7 @@ const PilotProfile = () => {
                   backgroundColor: 'var(--text-primary)',
                   color: 'var(--text-primary)',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   fontSize: '13px',
                   fontWeight: '500',
                   cursor: 'pointer',
@@ -782,7 +782,7 @@ const PilotProfile = () => {
                   backgroundColor: 'var(--text-secondary)',
                   color: 'var(--text-primary)',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   fontSize: '13px',
                   fontWeight: '500',
                   cursor: 'pointer',
@@ -924,7 +924,7 @@ const PilotProfile = () => {
           
           <div style={{
             padding: '12px',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             border: '1px solid',
             borderColor: medicalReminder.priority === 'critical' ? 'var(--border-subtle)' :
                         medicalReminder.priority === 'high' ? '#f26921' :
@@ -957,7 +957,7 @@ const PilotProfile = () => {
           <div style={{
             backgroundColor: 'var(--bg-overlay)',
             padding: '16px',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             marginBottom: '16px'
           }}>
             <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
@@ -980,7 +980,7 @@ const PilotProfile = () => {
           <div style={{
             backgroundColor: 'var(--bg-overlay)',
             padding: '16px',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--bg-overlay)'
           }}>
             <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
@@ -1264,7 +1264,7 @@ const PilotProfile = () => {
         textAlign: 'center',
         padding: '20px',
         backgroundColor: 'var(--bg-overlay)',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
       }}>
         <button
@@ -1274,7 +1274,7 @@ const PilotProfile = () => {
             backgroundColor: 'var(--text-secondary)',
             color: 'var(--text-primary)',
             border: 'none',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             fontSize: '16px',
             fontWeight: 'bold',
             cursor: 'pointer',

@@ -251,7 +251,7 @@ const styles = {
     gap: '16px',
     padding: '20px',
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     border: '1px solid var(--accent-primary)',
   },
   infoTitle: {
@@ -295,7 +295,7 @@ const styles = {
     flex: 1,
     padding: '12px 16px',
     fontSize: '16px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     border: '1px solid var(--text-tertiary)',
     backgroundColor: 'var(--bg-surface)',
     color: 'var(--text-primary)',
@@ -316,7 +316,7 @@ const styles = {
   },
   resultsCard: {
     padding: '24px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     border: '2px solid',
     marginTop: '8px',
   },
@@ -372,7 +372,7 @@ const styles = {
     marginTop: '16px',
     padding: '16px',
     backgroundColor: 'rgba(255, 255, 255, 0.5)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
   },
   detailsTitle: {
     fontSize: '14px',
@@ -390,7 +390,7 @@ const styles = {
   errorMessage: {
     padding: '16px',
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
   },
   errorTitle: {
     fontSize: '16px',
@@ -401,7 +401,7 @@ const styles = {
   warningMessage: {
     padding: '16px',
     backgroundColor: 'rgba(245, 158, 11, 0.1)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
   },
   warningTitle: {
     fontSize: '16px',
@@ -412,7 +412,7 @@ const styles = {
   tipsCard: {
     padding: '20px',
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     border: '1px solid var(--bg-overlay)',
   },
   tipsTitle: {

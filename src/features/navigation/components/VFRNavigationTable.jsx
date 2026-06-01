@@ -300,7 +300,7 @@ const VFRNavigationTable = ({
   return (
     <div style={{
       backgroundColor: 'var(--bg-overlay)',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       padding: '20px',
       boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
     }}>
@@ -332,7 +332,7 @@ const VFRNavigationTable = ({
               backgroundColor: 'var(--text-secondary)',
               color: 'var(--text-primary)',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               cursor: 'pointer',
               fontSize: '14px',
               fontWeight: '500',
@@ -354,7 +354,7 @@ const VFRNavigationTable = ({
               backgroundColor: 'rgba(242, 105, 33, 0.10)',
               border: '2px solid var(--accent-primary)',
               borderLeft: '6px solid var(--accent-primary)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               padding: '12px',
               marginBottom: '16px'
             }}>
@@ -433,7 +433,7 @@ const VFRNavigationTable = ({
                           width: '70px',
                           padding: '4px 6px',
                           border: '1px solid var(--text-tertiary)',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-sm)',
                           textAlign: 'center',
                           fontSize: '12px',
                           fontWeight: 'bold',
@@ -536,7 +536,7 @@ const VFRNavigationTable = ({
                           padding: '6px',
                           backgroundColor: 'var(--bg-overlay)',
                           border: '2px solid var(--text-secondary)',
-                          borderRadius: '8px'
+                          borderRadius: 'var(--radius-sm)'
                         }}>
                           <div style={{
                             display: 'flex',
@@ -555,7 +555,7 @@ const VFRNavigationTable = ({
                               marginTop: '4px',
                               padding: '4px',
                               backgroundColor: 'var(--bg-overlay)',
-                              borderRadius: '3px',
+                              borderRadius: 'var(--radius-sm)',
                               border: '1px solid var(--text-secondary)'
                             }}>
                               <strong style={{ color: 'var(--text-secondary)' }}>
@@ -600,7 +600,7 @@ const VFRNavigationTable = ({
                               marginBottom: '4px',
                               padding: '4px',
                               backgroundColor: 'var(--bg-overlay)',
-                              borderRadius: '3px',
+                              borderRadius: 'var(--radius-sm)',
                               border: '1px solid var(--text-secondary)'
                             }}>
                               <div style={{ marginBottom: '2px' }}>
@@ -649,7 +649,7 @@ const VFRNavigationTable = ({
                               marginBottom: '4px',
                               padding: '4px',
                               backgroundColor: 'var(--bg-overlay)',
-                              borderRadius: '3px',
+                              borderRadius: 'var(--radius-sm)',
                               border: '1px solid var(--text-tertiary)'
                             }}>
                               <div style={{ marginBottom: '2px' }}>
@@ -716,7 +716,7 @@ const VFRNavigationTable = ({
               backgroundColor: 'var(--bg-overlay)',
               border: '2px solid #C04534',
               borderLeft: '6px solid #C04534',
-              borderRadius: '8px'
+              borderRadius: 'var(--radius-sm)'
             }}>
                 <div style={{
                   display: 'flex',
@@ -734,7 +734,7 @@ const VFRNavigationTable = ({
                 <div style={{
                   backgroundColor: 'var(--bg-overlay)',
                   padding: '10px',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   marginTop: '8px',
                   maxHeight: '300px',
                   overflowY: 'auto'
@@ -794,7 +794,7 @@ const VFRNavigationTable = ({
                             backgroundColor: '#C04534',
                             color: 'var(--text-primary)',
                             padding: '2px 6px',
-                            borderRadius: '3px',
+                            borderRadius: 'var(--radius-sm)',
                             fontSize: '11px'
                           }}>
                             Segment {seg.index + 1}
@@ -813,7 +813,7 @@ const VFRNavigationTable = ({
                             padding: '8px',
                             backgroundColor: 'var(--bg-overlay)',
                             border: '1px solid var(--bg-overlay)',
-                            borderRadius: '8px'
+                            borderRadius: 'var(--radius-sm)'
                           }}>
                             {/* Type et nom de la zone */}
                             <div style={{
@@ -859,7 +859,7 @@ const VFRNavigationTable = ({
                   marginTop: '10px',
                   padding: '8px',
                   backgroundColor: 'var(--bg-overlay)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   fontSize: '11px',
                   color: '#C04534',
                   fontWeight: '500'

@@ -409,7 +409,7 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
               padding: '24px',
               cursor: 'pointer',
               border: '2px dashed var(--text-tertiary)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               minHeight: '150px',
               position: 'relative',
               overflow: 'hidden'
@@ -489,7 +489,7 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
               padding: '24px',
               cursor: 'pointer',
               border: '2px dashed var(--text-tertiary)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               minHeight: '150px',
               position: 'relative',
               overflow: 'hidden'
@@ -663,7 +663,7 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
                         width: '100%',
                         padding: '4px 8px',
                         border: '1px solid var(--text-tertiary)',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         fontSize: '14px'
                       }}
                     />
@@ -678,7 +678,7 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
                         width: '100%',
                         padding: '4px 8px',
                         border: '1px solid var(--text-tertiary)',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         fontSize: '14px'
                       }}
                     />
@@ -693,7 +693,7 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
                         width: '100%',
                         padding: '4px 8px',
                         border: '1px solid var(--text-tertiary)',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         fontSize: '14px'
                       }}
                     />
@@ -716,7 +716,7 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
                         width: '100%',
                         padding: '4px 8px',
                         border: '1px solid var(--text-tertiary)',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         fontSize: '14px'
                       }}
                     />
@@ -731,7 +731,7 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
                         width: '100%',
                         padding: '4px 8px',
                         border: '1px solid var(--text-tertiary)',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         fontSize: '14px'
                       }}
                     />
@@ -746,7 +746,7 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
                         width: '100%',
                         padding: '4px 8px',
                         border: '1px solid var(--text-tertiary)',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         fontSize: '14px'
                       }}
                     />

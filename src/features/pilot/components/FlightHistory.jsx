@@ -213,14 +213,14 @@ const styles = {
   container: {
     padding: '0',
     backgroundColor: 'transparent',
-    borderRadius: '8px'
+    borderRadius: 'var(--radius-sm)'
   },
   flightList: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0',
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     border: '1px solid var(--border-subtle)',
     scrollBehavior: 'smooth',
     WebkitOverflowScrolling: 'touch'
@@ -287,7 +287,7 @@ const styles = {
     backgroundColor: 'var(--text-secondary)',
     color: 'var(--text-primary)',
     padding: '3px 10px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '12px',
     fontWeight: '600',
     whiteSpace: 'nowrap'
@@ -315,7 +315,7 @@ const styles = {
     backgroundColor: 'var(--bg-overlay)',
     color: 'var(--text-tertiary)',
     padding: '2px 6px',
-    borderRadius: '3px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '11px',
     fontWeight: '500',
     whiteSpace: 'nowrap'
@@ -328,7 +328,7 @@ const styles = {
     backgroundColor: 'var(--text-secondary)',
     color: 'var(--text-primary)',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     cursor: 'pointer',
     fontSize: '13px',
     fontWeight: '500',
@@ -384,7 +384,7 @@ const styles = {
     backgroundColor: 'var(--text-secondary)',
     color: 'var(--text-primary)',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     cursor: 'pointer',
     fontSize: '14px',
     fontWeight: '500'
