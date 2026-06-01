@@ -45,9 +45,12 @@ const LogbookModule = () => {
         boxSizing: 'border-box',
       }}
     >
-      {/* 🎨 Hero éditorial unifié */}
+      {/* 🎨 Hero éditorial unifié.
+          PLACEHOLDER : splash-cockpit.jpg en attendant hero-logbook.jpg dédié.
+          Une fois le fichier hero-logbook.jpg ajouté dans public/assets/photos/,
+          changer cette URL pour /assets/photos/hero-logbook.jpg. */}
       <ModuleHero
-        image="/assets/photos/hero-logbook.jpg"
+        image="/assets/photos/splash-cockpit.jpg"
         eyebrow="LOGBOOK · CARNET ÉLECTRONIQUE"
         title="Carnet de bord"
       />
