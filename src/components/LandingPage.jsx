@@ -345,9 +345,17 @@ const styles = {
   },
 
   // ─── Dashboard ───
+  // ⚠️ Largeur ALIGNÉE sur la grille des actions rapides en dessous (maxWidth
+  // 720px) : le dashboard démarre à gauche du bouton "Info pilote" et termine
+  // à droite du bouton "Carnet de vol". Les cards internes de PilotDashboard
+  // occupent toute la largeur disponible de ce conteneur.
   dashboardSection: {
     padding: '24px 16px',
     backgroundColor: 'var(--app-bg)',
+    maxWidth: '720px',
+    margin: '0 auto',
+    width: '100%',
+    boxSizing: 'border-box',
   },
 
   // ─── Quick actions ───
@@ -427,12 +435,14 @@ const styles = {
     boxShadow: '0 0 0 2px var(--bg-surface)',
   },
 
-  // ─── Grille hero actions (2 grands boutons : wizard vol + wizard avion) ───
-  // Sur desktop : 2 colonnes côte à côte (1fr 1fr)
-  // Sur mobile/tablette étroite : auto-fit empile naturellement
+  // ─── Stack hero actions (2 grands boutons EMPILÉS verticalement) ─────
+  // Chaque bouton occupe TOUTE la largeur du conteneur (= même largeur que
+  // l'union des 2 colonnes des actions rapides en dessous, soit ~720px max).
+  // Choix de l'empilement (au lieu d'un side-by-side) : ces 2 actions sont
+  // les workflows principaux, on leur donne le maximum de présence visuelle.
   heroActionsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    display: 'flex',
+    flexDirection: 'column',
     gap: tokens.spacing[3],
     marginTop: tokens.spacing[2],
   },

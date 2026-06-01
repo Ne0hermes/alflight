@@ -36,22 +36,20 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange, isProfileConfig
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
 
-  // Modules à exclure du menu (modules séparés via TabNavigation desktop)
-  const excludedModuleIds = ['navigation', 'weather', 'weight-balance', 'fuel', 'performance'];
-  const allMainTabs = tabs.filter((tab) => !excludedModuleIds.includes(tab.id));
-
-  // Réorganiser pour placer VAC après checklist
-  const checklistIndex = allMainTabs.findIndex((tab) => tab.id === 'checklist');
-  const vacTab = allMainTabs.find((tab) => tab.id === 'vac');
-  const mainTabsWithoutVac = allMainTabs.filter((tab) => tab.id !== 'vac');
+  // Le filtrage des modules cachés est fait en amont dans MobileApp.jsx
+  // (cf. HIDDEN_FROM_MENU / MENU_TABS). Ici on se contente de réorganiser :
+  // placer VAC juste après checklist pour grouper les outils opérationnels.
+  const checklistIndex = tabs.findIndex((tab) => tab.id === 'checklist');
+  const vacTab = tabs.find((tab) => tab.id === 'vac');
+  const tabsWithoutVac = tabs.filter((tab) => tab.id !== 'vac');
 
   const mainTabs = vacTab && checklistIndex !== -1
     ? [
-        ...mainTabsWithoutVac.slice(0, checklistIndex + 1),
+        ...tabsWithoutVac.slice(0, checklistIndex + 1),
         vacTab,
-        ...mainTabsWithoutVac.slice(checklistIndex + 1),
+        ...tabsWithoutVac.slice(checklistIndex + 1),
       ]
-    : allMainTabs;
+    : tabs;
 
   const handleTabSelect = (tabId) => {
     onTabChange(tabId);

@@ -56,6 +56,24 @@ const TAB_CONFIG = [
   { id: 'vac', label: 'VAC', icon: 'Map', component: VACModule }
 ];
 
+// 🧭 Onglets MASQUÉS du menu de navigation (mobile drawer + desktop tabnav).
+// Ces modules sont des CALCULATEURS DE PRÉPARATION DE VOL, accessibles
+// uniquement via le wizard "Je prépare mon vol" (étapes Step3VAC, Step4Weather,
+// Step5Performance, Step5Fuel, Step6WeightBalance, etc.). Ils restent dans
+// TAB_CONFIG pour la résolution programmatique du composant actif (ex. quand
+// le wizard navigue vers ces tabs via setActiveTab) mais n'apparaissent plus
+// dans la barre de navigation principale pour ne pas brouiller l'UX.
+const HIDDEN_FROM_MENU = new Set([
+  'navigation',
+  'weather',
+  'performance',
+  'weight-balance',
+  'fuel',
+]);
+
+// Liste des tabs visibles dans les menus de navigation (drawer + tabnav).
+const MENU_TABS = TAB_CONFIG.filter((tab) => !HIDDEN_FROM_MENU.has(tab.id));
+
 const MobileApp = () => {
   const { user, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('landing');
@@ -111,9 +129,11 @@ const MobileApp = () => {
     };
     window.addEventListener('profile-configured', handleProfileConfigured);
 
-    // Check if mobile
+    // Check if mobile / tablette : breakpoint 1024px pour que tablettes en
+    // mode portrait (768-1024) bénéficient aussi du menu burger (la TabNav
+    // horizontale est cramée par 8-12 onglets sur une tablette portrait).
     const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
+      setIsMobile(window.innerWidth <= 1024);
     };
 
     checkMobile();
@@ -264,7 +284,7 @@ const MobileApp = () => {
         {/* Navigation */}
         {isMobile ? (
           <MobileNavigation
-            tabs={TAB_CONFIG}
+            tabs={MENU_TABS}
             activeTab={activeTab}
             onTabChange={handleNavigate}
             isProfileConfigured={isProfileConfigured}
@@ -272,7 +292,7 @@ const MobileApp = () => {
         ) : (
           <div className="app-navigation" style={styles.desktopNav}>
             <TabNavigation
-              tabs={TAB_CONFIG}
+              tabs={MENU_TABS}
               activeTab={activeTab}
               onTabChange={setActiveTab}
             />
