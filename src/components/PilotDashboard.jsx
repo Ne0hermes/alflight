@@ -801,14 +801,14 @@ export const PilotDashboard = ({ onNavigate }) => {
           <div style={styles.cardContent}>
             <div style={styles.statsGrid}>
               <div style={styles.statItem}>
-                <Clock size={16} style={{ color: 'var(--text-secondary)' }} />
+                <Clock size={16} style={{ color: 'var(--accent-primary)' }} />
                 <div>
                   <div style={styles.statValue}>{flightStats.totalHours.toFixed(1)}h</div>
                   <div style={styles.statLabel}>Heures totales</div>
                 </div>
               </div>
               <div style={styles.statItem}>
-                <Award size={16} style={{ color: 'var(--text-primary)' }} />
+                <Award size={16} style={{ color: 'var(--accent-primary)' }} />
                 <div>
                   <div style={styles.statValue}>{flightStats.picHours.toFixed(1)}h</div>
                   <div style={styles.statLabel}>Heures P1/CDB</div>
