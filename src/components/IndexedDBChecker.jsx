@@ -126,7 +126,7 @@ export function IndexedDBChecker({ children }) {
           maxWidth: '600px',
           backgroundColor: 'var(--bg-overlay)',
           padding: '30px',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
           border: '2px solid var(--accent-primary)'
         }}>
@@ -149,7 +149,7 @@ export function IndexedDBChecker({ children }) {
           <div style={{
             backgroundColor: 'rgba(242, 105, 33, 0.10)',
             padding: '15px',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             marginBottom: '20px',
             fontSize: '14px',
             color: 'var(--accent-primary)'
@@ -188,7 +188,7 @@ export function IndexedDBChecker({ children }) {
                 backgroundColor: 'var(--accent-primary)',
                 color: 'var(--text-primary)',
                 border: 'none',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 fontSize: '16px',
                 fontWeight: '600',
                 cursor: 'pointer',
@@ -205,7 +205,7 @@ export function IndexedDBChecker({ children }) {
                 backgroundColor: 'var(--border-subtle)',
                 color: 'var(--text-secondary)',
                 border: 'none',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 fontSize: '16px',
                 fontWeight: '600',
                 cursor: 'pointer'

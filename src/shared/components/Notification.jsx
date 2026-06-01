@@ -108,7 +108,7 @@ export const Notification = ({
         minWidth: '300px',
         maxWidth: '500px',
         padding: '16px',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
         display: 'flex',
         alignItems: 'center',

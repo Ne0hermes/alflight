@@ -84,7 +84,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
   return (
     <div>
       {/* Services de base */}
-      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
+      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
         <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '16px' }}>
           Services disponibles sur l'aérodrome
         </h5>
@@ -102,7 +102,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
                   padding: '12px',
                   backgroundColor: isActive ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
                   border: `2px solid ${isActive ? 'var(--bg-overlay)' : 'var(--border-subtle)'}`,
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -136,7 +136,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
       </div>
       
       {/* Horaires d'ouverture */}
-      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'rgba(242, 105, 33, 0.10)', borderRadius: '8px' }}>
+      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'rgba(242, 105, 33, 0.10)', borderRadius: 'var(--radius-sm)' }}>
         <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--accent-primary)', marginBottom: '16px' }}>
           Horaires d'ouverture
         </h5>
@@ -212,7 +212,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
       </div>
       
       {/* Contacts */}
-      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
+      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
         <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '16px' }}>
           <Phone size={16} style={{ display: 'inline', marginRight: '4px' }} />
           Contacts
@@ -223,7 +223,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
             <div key={contactType} style={{
               padding: '12px',
               backgroundColor: 'var(--bg-overlay)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--bg-overlay)'
             }}>
               <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>
@@ -261,7 +261,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
       </div>
       
       {/* Services personnalisés */}
-      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
+      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
             Services additionnels / Remarques
@@ -274,7 +274,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
               backgroundColor: 'var(--text-secondary)',
               color: 'var(--text-primary)',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -291,7 +291,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
               <div key={idx} style={{
                 padding: '12px',
                 backgroundColor: 'var(--bg-overlay)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--border-subtle)'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -309,7 +309,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
                       backgroundColor: '#C04534',
                       color: 'var(--text-primary)',
                       border: 'none',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       cursor: 'pointer',
                       fontSize: '12px'
                     }}
@@ -367,7 +367,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
       </div>
       
       {/* Notes générales */}
-      <div style={{ padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
+      <div style={{ padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
         <label style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>
           Notes et informations complémentaires
         </label>

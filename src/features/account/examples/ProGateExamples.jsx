@@ -53,7 +53,7 @@ export const ExportWithPaywall = ({ onExport }) => {
         <div style={{ 
           padding: '20px', 
           backgroundColor: 'var(--bg-overlay)', 
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           textAlign: 'center' 
         }}>
           <h3>Export basique disponible</h3>

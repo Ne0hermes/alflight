@@ -227,7 +227,7 @@ export const VFRPointInserter = ({
           marginTop: '8px',
           background: 'var(--bg-overlay)',
           border: '1px solid var(--border-subtle)',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
           padding: '12px',
           width: '100%',
@@ -261,7 +261,7 @@ export const VFRPointInserter = ({
                   width: '100%',
                   padding: '6px 8px 6px 28px',
                   border: '1px solid var(--text-tertiary)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   fontSize: '13px'
                 }}
                 autoFocus
@@ -312,7 +312,7 @@ export const VFRPointInserter = ({
                       marginBottom: '6px',
                       padding: '4px 8px',
                       background: 'rgba(242, 105, 33, 0.10)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       display: 'inline-block'
                     }}>
                       📝 Points personnalisés
@@ -325,7 +325,7 @@ export const VFRPointInserter = ({
                           style={{
                             padding: '8px',
                             background: 'rgba(242, 105, 33, 0.06)',
-                            borderRadius: '8px',
+                            borderRadius: 'var(--radius-sm)',
                             cursor: 'pointer',
                             transition: 'all 0.2s',
                             border: '1px solid var(--bg-overlay)'
@@ -370,7 +370,7 @@ export const VFRPointInserter = ({
                       marginBottom: '6px',
                       padding: '4px 8px',
                       background: 'var(--bg-overlay)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       display: 'inline-block'
                     }}>
                       ✈️ Points VFR des aérodromes de la route
@@ -383,7 +383,7 @@ export const VFRPointInserter = ({
                           style={{
                             padding: '8px',
                             background: 'var(--bg-overlay)',
-                            borderRadius: '8px',
+                            borderRadius: 'var(--radius-sm)',
                             cursor: 'pointer',
                             transition: 'all 0.2s',
                             border: '1px solid var(--border-subtle)'
@@ -416,7 +416,7 @@ export const VFRPointInserter = ({
                                 padding: '2px 6px',
                                 background: 'var(--bg-overlay)',
                                 color: 'var(--text-primary)',
-                                borderRadius: '8px',
+                                borderRadius: 'var(--radius-sm)',
                                 fontSize: '10px',
                                 fontWeight: '600',
                                 marginLeft: '8px'
@@ -439,7 +439,7 @@ export const VFRPointInserter = ({
             marginTop: '12px',
             padding: '8px',
             background: 'var(--bg-overlay)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             fontSize: '11px',
             color: 'var(--text-secondary)'
           }}>

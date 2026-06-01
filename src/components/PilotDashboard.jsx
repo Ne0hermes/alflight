@@ -659,7 +659,7 @@ export const PilotDashboard = ({ onNavigate }) => {
           </div>
           {aixmDetailsExpanded && (
             <div style={{
-              fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
+              fontFamily: 'var(--font-mono)',
               fontSize: '11px',
               color: 'var(--text-secondary)',
               lineHeight: 1.7,
@@ -765,7 +765,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                   padding: '8px',
                   backgroundColor: 'transparent',
                   border: '1px solid var(--accent-soft)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   color: 'var(--accent-primary)',
                   cursor: 'pointer',
                   display: 'flex',
@@ -873,7 +873,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                   backgroundColor: 'var(--text-secondary)',
                   color: 'var(--text-primary)',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   fontSize: '14px',
                   fontWeight: '600',
                   cursor: 'pointer',
@@ -1283,10 +1283,10 @@ const styles = {
   ageErrorAlert: {
     backgroundColor: 'var(--bg-overlay)',
     border: '1px solid var(--border-subtle)',
-    borderRadius: '8px', // identique aux boutons (tokens.radius.sm)
+    borderRadius: 'var(--radius-sm)', // identique aux boutons (tokens.radius.sm)
     padding: '16px',
     marginBottom: '20px',
-    fontFamily: "'Century Gothic', 'Questrial', 'Jost', system-ui, sans-serif",
+    fontFamily: 'var(--font-sans)',
   },
   ageErrorContent: {
     display: 'flex',
@@ -1296,7 +1296,7 @@ const styles = {
   },
   // Titre du bloc alerte — Century Gothic, taille modérée, cockpit
   ageErrorTitle: {
-    fontFamily: "'Century Gothic', 'Questrial', 'Jost', system-ui, sans-serif",
+    fontFamily: 'var(--font-sans)',
     fontSize: '14px',
     fontWeight: 600,
     letterSpacing: '-0.01em',
@@ -1304,7 +1304,7 @@ const styles = {
     marginBottom: '4px',
   },
   ageErrorMessage: {
-    fontFamily: "'Century Gothic', 'Questrial', 'Jost', system-ui, sans-serif",
+    fontFamily: 'var(--font-sans)',
     fontSize: '12px',
     color: 'var(--text-secondary)',
     lineHeight: 1.5,
@@ -1314,9 +1314,9 @@ const styles = {
     backgroundColor: 'var(--accent-primary)',
     color: 'var(--text-inverse)',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     padding: '10px 16px',
-    fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
+    fontFamily: 'var(--font-mono)',
     fontSize: '11px',
     fontWeight: 600,
     letterSpacing: '0.12em',
@@ -1337,7 +1337,7 @@ const styles = {
   card: {
     backgroundColor: 'var(--bg-overlay)',
     border: '1px solid var(--border-subtle)',
-    borderRadius: '8px', // identique aux boutons (tokens.radius.sm)
+    borderRadius: 'var(--radius-sm)', // identique aux boutons (tokens.radius.sm)
     padding: '16px',
     transition: 'border-color 0.2s ease',
   },
@@ -1349,7 +1349,7 @@ const styles = {
     gap: '8px',
     marginBottom: '12px',
     color: 'var(--accent-primary)',
-    fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
+    fontFamily: 'var(--font-mono)',
     fontSize: '11px',
     fontWeight: 600,
     textTransform: 'uppercase',
@@ -1365,7 +1365,7 @@ const styles = {
     alignItems: 'center',
     gap: '6px',
     padding: '6px 12px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     border: '1px solid',
     fontSize: '13px',
     fontWeight: '600',
@@ -1440,7 +1440,7 @@ const styles = {
     display: 'inline-flex',
     alignItems: 'center',
     padding: '4px 8px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     border: '1px solid',
     fontSize: '11px',
     fontWeight: '600',
@@ -1476,7 +1476,7 @@ const styles = {
   renewalAdvice: {
     marginTop: '12px',
     padding: '8px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
   },
   adviceSuccess: {
     display: 'flex',
@@ -1484,7 +1484,7 @@ const styles = {
     gap: '8px',
     padding: '8px',
     backgroundColor: 'rgba(16, 185, 129, 0.1)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     border: '1px solid rgba(16, 185, 129, 0.3)',
     fontSize: '12px',
     color: 'var(--text-primary)',
@@ -1495,7 +1495,7 @@ const styles = {
     gap: '8px',
     padding: '8px',
     backgroundColor: 'rgba(245, 158, 11, 0.1)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     border: '1px solid rgba(245, 158, 11, 0.3)',
     fontSize: '12px',
     color: 'var(--accent-primary)',
@@ -1538,7 +1538,7 @@ const styles = {
     alignItems: 'center',
     gap: '4px',
     padding: '4px 8px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     border: '1px solid',
     fontSize: '11px',
     fontWeight: '600',
@@ -1549,7 +1549,7 @@ const styles = {
     gap: '4px',
     padding: '4px 8px',
     backgroundColor: 'var(--accent-soft)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '11px',
     fontWeight: '600',
     color: 'var(--text-secondary)',
@@ -1559,7 +1559,7 @@ const styles = {
     alignItems: 'center',
     padding: '4px 12px',
     backgroundColor: 'var(--accent-soft)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '13px',
     fontWeight: '700',
     color: 'var(--accent-primary)',
@@ -1591,7 +1591,7 @@ const styles = {
   },
   renewalProcedure: {
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     padding: '12px',
     marginTop: '12px',
   },
@@ -1618,7 +1618,7 @@ const styles = {
     color: 'var(--accent-primary)',
     backgroundColor: 'var(--bg-overlay)',
     padding: '8px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     borderLeft: '3px solid var(--accent-primary)',
   },
   actionButton: {
@@ -1626,7 +1626,7 @@ const styles = {
     alignItems: 'center',
     gap: '6px',
     padding: '6px 12px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     border: 'none',
     color: 'var(--text-primary)',
     fontSize: '12px',
@@ -1644,7 +1644,7 @@ const styles = {
     gap: '12px',
     padding: '16px',
     backgroundColor: 'rgba(245, 158, 11, 0.1)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     border: '1px solid rgba(245, 158, 11, 0.3)',
   },
   noQualificationTitle: {

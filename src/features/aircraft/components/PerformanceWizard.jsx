@@ -24,14 +24,14 @@ const styles = {
   },
   card: {
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     padding: '10px',
     boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
     border: '1px solid var(--border-subtle)'
   },
   cardHover: {
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     padding: '10px',
     border: '2px solid var(--border-subtle)',
     cursor: 'pointer',
@@ -40,7 +40,7 @@ const styles = {
   },
   button: {
     padding: '10px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '14px',
     fontWeight: '500',
     border: 'none',
@@ -60,7 +60,7 @@ const styles = {
   },
   alert: {
     padding: '10px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     marginBottom: '10px',
     display: 'flex',
     alignItems: 'flex-start',
@@ -563,7 +563,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                     padding: '10px',
                     backgroundColor: 'var(--bg-overlay)',
                     border: '2px solid var(--text-secondary)',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     cursor: hasManex ? 'pointer' : 'not-allowed',
                     transition: 'all 0.2s',
                     opacity: hasManex ? 1 : 0.4,
@@ -606,7 +606,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                     padding: '10px',
                     backgroundColor: 'var(--bg-overlay)',
                     border: '2px solid var(--text-primary)',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     cursor: hasManex ? 'pointer' : 'not-allowed',
                     transition: 'all 0.2s',
                     opacity: hasManex ? 1 : 0.4,
@@ -724,7 +724,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                 gap: '10px',
                 padding: '10px',
                 backgroundColor: 'var(--bg-overlay)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 marginBottom: '10px',
                 flexWrap: 'wrap'
               }}>
@@ -798,7 +798,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                 <div style={{
                   padding: '10px',
                   backgroundColor: 'var(--bg-overlay)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   marginBottom: '10px',
                   border: '1px solid var(--text-secondary)'
                 }}>
@@ -860,7 +860,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                 overflowY: 'auto',
                 padding: '10px',
                 border: '1px solid var(--border-subtle)',
-                borderRadius: '8px'
+                borderRadius: 'var(--radius-sm)'
               }}>
                 {extractedPages.map((page, index) => (
                   <div
@@ -876,7 +876,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                       position: 'relative',
                       cursor: 'pointer',
                       border: selectedPages.includes(index) ? '3px solid var(--text-primary)' : '1px solid var(--border-subtle)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       padding: '4px',
                       backgroundColor: selectedPages.includes(index) ? 'var(--bg-overlay)' : 'white'
                     }}
@@ -884,7 +884,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                     <img
                       src={page.image}
                       alt={`Page ${page.pageNumber}`}
-                      style={{ width: '100%', height: 'auto', borderRadius: '8px' }}
+                      style={{ width: '100%', height: 'auto', borderRadius: 'var(--radius-sm)' }}
                     />
                     <div style={{
                       position: 'absolute',
@@ -892,7 +892,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                       right: '8px',
                       backgroundColor: selectedPages.includes(index) ? 'var(--text-primary)' : 'rgba(0,0,0,0.5)',
                       color: 'var(--text-primary)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       padding: '2px 6px',
                       fontSize: '12px'
                     }}>
@@ -910,7 +910,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                             right: '4px',
                             padding: '8px 6px',
                             fontSize: '12px',
-                            borderRadius: '8px',
+                            borderRadius: 'var(--radius-sm)',
                             border: '2px solid var(--text-primary)',
                             backgroundColor: 'var(--bg-overlay)',
                             color: 'var(--text-primary)',
@@ -950,7 +950,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                             backgroundColor: '#C04534',
                             color: 'var(--text-primary)',
                             padding: '3px 8px',
-                            borderRadius: '8px',
+                            borderRadius: 'var(--radius-sm)',
                             fontSize: '10px',
                             fontWeight: 'bold',
                             whiteSpace: 'nowrap'

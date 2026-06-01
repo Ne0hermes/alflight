@@ -711,7 +711,7 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
               padding: '24px',
               cursor: 'pointer',
               border: '2px dashed var(--text-tertiary)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               minHeight: '200px',
               position: 'relative',
               overflow: 'hidden'
@@ -796,7 +796,7 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
               padding: '24px',
               cursor: 'pointer',
               border: '2px dashed var(--text-tertiary)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               minHeight: '200px',
               position: 'relative',
               overflow: 'hidden'
@@ -1021,7 +1021,7 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
             <h6 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
               Masse de décollage
             </h6>
-            <div style={sx.combine(sx.text.xs, { fontFamily: 'monospace', backgroundColor: 'var(--bg-overlay)', padding: '8px', borderRadius: '8px' })}>
+            <div style={sx.combine(sx.text.xs, { fontFamily: 'monospace', backgroundColor: 'var(--bg-overlay)', padding: '8px', borderRadius: 'var(--radius-sm)' })}>
               <p>Masse décollage = Masse totale (depuis Masse & Centrage)</p>
               <p style={{ marginTop: '4px', color: 'var(--text-secondary)' }}>
                 Source: Module Masse & Centrage → Calculs → Masse totale
@@ -1039,7 +1039,7 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
             <h6 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
               Masse d'atterrissage
             </h6>
-            <div style={sx.combine(sx.text.xs, { fontFamily: 'monospace', backgroundColor: 'var(--bg-overlay)', padding: '8px', borderRadius: '8px' })}>
+            <div style={sx.combine(sx.text.xs, { fontFamily: 'monospace', backgroundColor: 'var(--bg-overlay)', padding: '8px', borderRadius: 'var(--radius-sm)' })}>
               <p>1. Densité carburant = {selectedAircraft?.fuelType === 'JET A-1' ? '0.84' : '0.72'} kg/L ({selectedAircraft?.fuelType || 'AVGAS 100LL'})</p>
               <p>2. FOB (kg) = FOB (L) × Densité</p>
               <p>3. ZFW = Masse décollage - FOB (kg)</p>
@@ -1065,7 +1065,7 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
             <h6 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
               Altitude des aérodromes
             </h6>
-            <div style={sx.combine(sx.text.xs, { fontFamily: 'monospace', backgroundColor: 'var(--bg-overlay)', padding: '8px', borderRadius: '8px' })}>
+            <div style={sx.combine(sx.text.xs, { fontFamily: 'monospace', backgroundColor: 'var(--bg-overlay)', padding: '8px', borderRadius: 'var(--radius-sm)' })}>
               <p>Altitude = Élévation officielle AIP (Service Information Aéronautique)</p>
               <p style={{ marginTop: '4px', color: 'var(--text-secondary)' }}>
                 Sources: Données SIA exclusivement depuis src/data
@@ -1088,7 +1088,7 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
             <h6 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
               Température
             </h6>
-            <div style={sx.combine(sx.text.xs, { fontFamily: 'monospace', backgroundColor: 'var(--bg-overlay)', padding: '8px', borderRadius: '8px' })}>
+            <div style={sx.combine(sx.text.xs, { fontFamily: 'monospace', backgroundColor: 'var(--bg-overlay)', padding: '8px', borderRadius: 'var(--radius-sm)' })}>
               <p>Température = METAR → Temperature (si disponible)</p>
               <p>Sinon: Température ISA standard = 15°C</p>
               <p style={{ marginTop: '4px', color: 'var(--accent-primary)' }}>

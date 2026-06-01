@@ -53,7 +53,7 @@ export const CollapsibleSection = ({
         className="collapsible-section"
         style={{
           backgroundColor: 'var(--bg-surface)',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           border: `1px solid ${theme.colors.border}`,
           overflow: 'hidden',
           ...containerStyle

@@ -306,7 +306,7 @@ const MobileApp = () => {
                 alignItems: 'center',
                 height: '100%',
                 minHeight: '200px',
-                fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
+                fontFamily: 'var(--font-mono)',
                 fontSize: '11px',
                 fontWeight: 500,
                 letterSpacing: '0.18em',

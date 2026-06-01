@@ -9,7 +9,7 @@ const commonStyles = {
   container: {
     padding: '0',
     backgroundColor: 'var(--bg-surface)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
   },
   label: {

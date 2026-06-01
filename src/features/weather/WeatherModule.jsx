@@ -203,7 +203,7 @@ export const WeatherModule = memo(({ wizardMode = false, config = {} }) => {
                   right: 0,
                   backgroundColor: 'var(--bg-overlay)',
                   border: '1px solid var(--border-subtle)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   marginTop: '4px',
                   maxHeight: '300px',
                   overflowY: 'auto',
@@ -229,7 +229,7 @@ export const WeatherModule = memo(({ wizardMode = false, config = {} }) => {
                           fontSize: '11px', 
                           padding: '2px 6px', 
                           backgroundColor: 'var(--border-subtle)',
-                          borderRadius: '8px'
+                          borderRadius: 'var(--radius-sm)'
                         }}>
                           {airport.type === 'large_airport' ? 'Grand' : 
                            airport.type === 'medium_airport' ? 'Moyen' : 'Petit'}
@@ -512,7 +512,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
               sx.text.xs,
               { 
                 padding: '0px 4px', 
-                borderRadius: '2px',
+                borderRadius: 'var(--radius-sm)',
                 backgroundColor: customBgColor,
                 color: customTextColor,
                 fontSize: '10px'
@@ -583,7 +583,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
                 sx.spacing.ml(2),
                 { 
                   padding: '2px 8px', 
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   backgroundColor: customBgColor || 
                     (label === 'Départ' ? 'var(--bg-overlay)' : label === 'Arrivée' ? 'rgba(242, 105, 33, 0.10)' : 'var(--bg-overlay)'),
                   color: customTextColor ||
@@ -625,7 +625,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
             fontSize: '13px', 
             backgroundColor: 'var(--bg-overlay)', 
             padding: '12px', 
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             fontFamily: 'monospace',
             lineHeight: '1.5',
             color: 'var(--text-primary)',
@@ -644,7 +644,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
             fontSize: '13px', 
             backgroundColor: 'var(--bg-overlay)', 
             padding: '12px', 
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             fontFamily: 'monospace',
             lineHeight: '1.5',
             color: 'var(--text-primary)',
@@ -723,7 +723,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
                       <span key={i} style={sx.combine(sx.text.sm, {
                         padding: '2px 8px',
                         backgroundColor: 'var(--border-subtle)',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         fontSize: '12px'
                       })}>
                         {cloud.type} {format(cloud.altitude, 'altitude', 0)}

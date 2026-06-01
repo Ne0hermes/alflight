@@ -452,7 +452,7 @@ const PilotCertifications = () => {
   const inputStyle = {
     padding: '8px 12px',
     border: '1px solid var(--text-tertiary)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '14px',
     width: '100%',
     minWidth: 0,
@@ -550,7 +550,7 @@ const PilotCertifications = () => {
               padding: '6px', 
               backgroundColor: 'transparent',
               border: 'none', 
-              borderRadius: '8px', 
+              borderRadius: 'var(--radius-sm)', 
               cursor: 'pointer',
               color: 'var(--text-secondary)',
               transition: 'all 0.2s'
@@ -566,7 +566,7 @@ const PilotCertifications = () => {
             padding: '6px', 
             backgroundColor: 'transparent',
             border: 'none', 
-            borderRadius: '8px', 
+            borderRadius: 'var(--radius-sm)', 
             cursor: 'pointer',
             color: 'var(--text-secondary)',
             transition: 'all 0.2s'
@@ -582,7 +582,7 @@ const PilotCertifications = () => {
             backgroundColor: 'transparent',
             color: '#C04534', 
             border: 'none', 
-            borderRadius: '8px', 
+            borderRadius: 'var(--radius-sm)', 
             cursor: 'pointer',
             transition: 'all 0.2s'
           }}
@@ -597,7 +597,7 @@ const PilotCertifications = () => {
   return (
     <div
       style={{
-        fontFamily: "'Century Gothic', 'Questrial', 'Jost', system-ui, sans-serif",
+        fontFamily: 'var(--font-sans)',
         color: 'var(--text-primary)',
       }}
     >
@@ -606,7 +606,7 @@ const PilotCertifications = () => {
         <div style={{
           backgroundColor: 'var(--bg-overlay)',
           padding: '20px',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
           marginBottom: '16px',
           overflow: 'hidden',
@@ -697,7 +697,7 @@ const PilotCertifications = () => {
                 backgroundColor: 'var(--border-subtle)', 
                 color: 'var(--text-secondary)', 
                 border: 'none', 
-                borderRadius: '8px', 
+                borderRadius: 'var(--radius-sm)', 
                 fontSize: '14px', 
                 fontWeight: '500', 
                 cursor: 'pointer', 
@@ -732,7 +732,7 @@ const PilotCertifications = () => {
                 backgroundColor: 'var(--text-secondary)', 
                 color: 'var(--text-primary)', 
                 border: 'none', 
-                borderRadius: '8px', 
+                borderRadius: 'var(--radius-sm)', 
                 fontSize: '14px', 
                 fontWeight: '500', 
                 cursor: 'pointer' 
@@ -748,7 +748,7 @@ const PilotCertifications = () => {
                 backgroundColor: 'var(--border-subtle)', 
                 color: 'var(--text-secondary)', 
                 border: 'none', 
-                borderRadius: '8px', 
+                borderRadius: 'var(--radius-sm)', 
                 fontSize: '14px', 
                 fontWeight: '500', 
                 cursor: 'pointer' 
@@ -761,7 +761,7 @@ const PilotCertifications = () => {
       )}
 
       {/* Listes des certifications par catégorie */}
-      <div style={{ backgroundColor: 'var(--bg-overlay)', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '20px' }}>
+      <div style={{ backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '20px' }}>
         {/* Bouton Ajouter centré */}
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <button
@@ -771,7 +771,7 @@ const PilotCertifications = () => {
               backgroundColor: showForm ? '#C04534' : 'var(--text-secondary)', 
               color: 'var(--text-primary)', 
               border: 'none', 
-              borderRadius: '8px', 
+              borderRadius: 'var(--radius-sm)', 
               fontSize: '14px', 
               fontWeight: '500', 
               cursor: 'pointer'

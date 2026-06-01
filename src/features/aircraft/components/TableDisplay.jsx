@@ -261,7 +261,7 @@ const TableDisplay = ({
         <pre style={{
           backgroundColor: 'var(--bg-overlay)',
           padding: '16px',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           fontSize: '12px',
           overflow: 'auto',
           maxHeight: '400px',
@@ -287,7 +287,7 @@ const TableDisplay = ({
                 onChange={(e) => handleTableChange('table_name', e.target.value)}
                 style={{
                   border: '1px solid var(--text-tertiary)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   padding: '2px 6px',
                   fontSize: '14px',
                   fontWeight: 'bold'
@@ -311,7 +311,7 @@ const TableDisplay = ({
                   onChange={(e) => handleTableChange('conditions', e.target.value)}
                   style={{
                     border: '1px solid var(--text-tertiary)',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     padding: '2px 6px',
                     fontSize: '12px',
                     minWidth: '200px'
@@ -511,7 +511,7 @@ const TableDisplay = ({
                           onChange={(e) => renameColumn(column, e.target.value)}
                           style={{
                             border: '1px solid var(--text-tertiary)',
-                            borderRadius: '3px',
+                            borderRadius: 'var(--radius-sm)',
                             padding: '2px 4px',
                             fontSize: '11px',
                             fontWeight: 'bold'
@@ -532,7 +532,7 @@ const TableDisplay = ({
                             onChange={(e) => handleUnitsChange(column, e.target.value)}
                             style={{
                               border: '1px solid var(--text-tertiary)',
-                              borderRadius: '3px',
+                              borderRadius: 'var(--radius-sm)',
                               padding: '1px 3px',
                               fontSize: '10px',
                               width: '50px'
@@ -546,7 +546,7 @@ const TableDisplay = ({
                               color: 'var(--text-secondary)',
                               backgroundColor: 'var(--bg-overlay)',
                               padding: '1px 4px',
-                              borderRadius: '3px'
+                              borderRadius: 'var(--radius-sm)'
                             }}>
                               {editedTable.units[column]}
                             </span>
@@ -566,7 +566,7 @@ const TableDisplay = ({
                               background: '#C04534',
                               color: 'var(--text-primary)',
                               border: 'none',
-                              borderRadius: '3px',
+                              borderRadius: 'var(--radius-sm)',
                               width: '16px',
                               height: '16px',
                               display: 'flex',
@@ -607,7 +607,7 @@ const TableDisplay = ({
                           background: editedTable.data.length <= 1 ? 'var(--text-tertiary)' : '#C04534',
                           color: 'var(--text-primary)',
                           border: 'none',
-                          borderRadius: '3px',
+                          borderRadius: 'var(--radius-sm)',
                           width: '16px',
                           height: '16px',
                           display: 'flex',
@@ -635,7 +635,7 @@ const TableDisplay = ({
                           onChange={(e) => handleDataChange(rowIndex, column, e.target.value)}
                           style={{
                             border: '1px solid var(--text-tertiary)',
-                            borderRadius: '3px',
+                            borderRadius: 'var(--radius-sm)',
                             padding: '2px 4px',
                             fontSize: '11px',
                             width: '100%'

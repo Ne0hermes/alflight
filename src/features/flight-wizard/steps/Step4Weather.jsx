@@ -8,7 +8,7 @@ const commonStyles = {
   container: {
     padding: '24px',
     backgroundColor: 'var(--bg-surface)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
   },
   header: {
@@ -63,7 +63,7 @@ export const Step4Weather = memo(({ flightPlan, onUpdate }) => {
         padding: '16px',
         backgroundColor: theme.colors.info[50],
         borderLeft: `4px solid ${theme.colors.info[500]}`,
-        borderRadius: '8px'
+        borderRadius: 'var(--radius-sm)'
       }}>
         <p style={{
           margin: 0,

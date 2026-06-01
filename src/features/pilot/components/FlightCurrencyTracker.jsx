@@ -782,7 +782,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
     <div style={{
       padding: '16px',
       backgroundColor: 'var(--bg-overlay)',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
     }}>
       {/* Résumé global des statuts */}
@@ -795,7 +795,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
         {/* Statut des licences */}
         <div style={{
           padding: '12px',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           backgroundColor: statusSummary.licenses.expired > 0 ? 'var(--bg-overlay)' :
                          statusSummary.licenses.expiring > 0 ? 'rgba(242, 105, 33, 0.10)' : 'var(--bg-overlay)',
           border: `1px solid ${statusSummary.licenses.expired > 0 ? 'var(--bg-overlay)' :
@@ -827,7 +827,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
         {/* Statut des qualifications */}
         <div style={{
           padding: '12px',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           backgroundColor: statusSummary.qualifications.total === 0 ? 'var(--bg-overlay)' :
                          statusSummary.qualifications.expired > 0 ? 'var(--bg-overlay)' :
                          statusSummary.qualifications.expiring > 0 ? 'rgba(242, 105, 33, 0.10)' : 'var(--bg-overlay)',
@@ -861,7 +861,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
         {/* Statut médical */}
         <div style={{
           padding: '12px',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           backgroundColor: statusSummary.medical.status === 'expired' ? 'var(--bg-overlay)' :
                          statusSummary.medical.status === 'urgent' ? 'var(--bg-overlay)' :
                          statusSummary.medical.status === 'warning' ? 'rgba(242, 105, 33, 0.10)' :
@@ -902,7 +902,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
         {/* Exigences de vol */}
         <div style={{
           padding: '12px',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           backgroundColor: statusSummary.flightRequirements.pending > 0 ? 'rgba(242, 105, 33, 0.10)' : 'var(--bg-overlay)',
           border: `1px solid ${statusSummary.flightRequirements.pending > 0 ? 'var(--bg-overlay)' : 'var(--bg-overlay)'}`
         }}>
@@ -940,7 +940,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
             padding: '8px 16px',
             backgroundColor: 'var(--text-secondary)',
             color: 'var(--text-primary)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             border: 'none',
             cursor: 'pointer',
             fontSize: '12px',
@@ -1002,7 +1002,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
               display: 'flex',
               gap: '12px',
               padding: '12px',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               marginBottom: '16px',
               backgroundColor: urgency === 'expired' ? 'var(--bg-overlay)' :
                              urgency === 'critical' ? 'var(--bg-overlay)' :
@@ -1050,7 +1050,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
             <div style={{
               padding: '20px',
               backgroundColor: 'var(--bg-overlay)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               border: '2px solid #C04534',
               marginBottom: '16px'
             }}>
@@ -1074,7 +1074,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
                     padding: '10px 20px',
                     backgroundColor: '#C04534',
                     color: 'var(--text-primary)',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     border: 'none',
                     cursor: 'pointer',
                     fontSize: '14px',
@@ -1133,7 +1133,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
                     {grouped.medical.map(status => (
                       <div key={status.key} style={{
                         padding: '12px',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         backgroundColor: status.isMissing ? 'var(--bg-overlay)' :
                                        status.isExpired ? 'var(--bg-overlay)' : 
                                        status.needsAction ? 'var(--bg-overlay)' : 'rgba(242, 105, 33, 0.10)',
@@ -1168,7 +1168,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
                                 backgroundColor: status.isExpired ? '#C04534' : 'var(--accent-primary)',
                                 color: 'var(--text-primary)',
                                 border: 'none',
-                                borderRadius: '8px',
+                                borderRadius: 'var(--radius-sm)',
                                 cursor: 'pointer',
                                 fontSize: '11px',
                                 fontWeight: 'bold'
@@ -1194,7 +1194,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
                     {grouped.expired.map(status => (
                       <div key={status.key} style={{
                         padding: '12px',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         backgroundColor: 'var(--bg-overlay)',
                         border: '2px solid #C04534'
                       }}>
@@ -1218,7 +1218,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
                               backgroundColor: '#C04534',
                               color: 'var(--text-primary)',
                               border: 'none',
-                              borderRadius: '8px',
+                              borderRadius: 'var(--radius-sm)',
                               cursor: 'pointer',
                               fontSize: '11px',
                               fontWeight: 'bold'
@@ -1245,7 +1245,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
                     {grouped.valid.map(status => (
                       <div key={status.key} style={{
                         padding: '8px 12px',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         backgroundColor: 'var(--bg-overlay)',
                         border: '1px solid var(--bg-overlay)',
                         fontSize: '12px'

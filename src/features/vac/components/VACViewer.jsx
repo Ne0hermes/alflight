@@ -194,7 +194,7 @@ const CustomChartViewer = memo(({ chart, zoom, rotation }) => {
             padding: '10px 20px',
             backgroundColor: 'rgba(0, 0, 0, 0.7)',
             color: 'var(--text-primary)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             fontSize: '14px'
           }}>
             Si le PDF ne s'affiche pas, 
@@ -229,7 +229,7 @@ const CustomChartViewer = memo(({ chart, zoom, rotation }) => {
         padding: '8px 16px',
         backgroundColor: 'var(--accent-primary)',
         color: 'var(--text-primary)',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         fontSize: '12px',
         fontWeight: 'bold',
         boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)'
@@ -423,7 +423,7 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
             
             {/* Détails des équipements de piste */}
             {data.runways.length > 0 && (
-              <div style={{ marginTop: '20px', padding: '15px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
+              <div style={{ marginTop: '20px', padding: '15px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
                 <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '10px' }}>
                   ÉQUIPEMENTS ET AIDES VISUELLES
                 </h4>
@@ -621,7 +621,7 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
           marginTop: '40px',
           padding: '20px',
           border: '2px solid var(--border-subtle)',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           textAlign: 'center'
         }}>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
@@ -648,7 +648,7 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
           marginTop: '40px',
           padding: '15px',
           backgroundColor: 'rgba(242, 105, 33, 0.10)',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           fontSize: '12px',
           color: 'var(--accent-primary)',
           textAlign: 'center'
@@ -680,7 +680,7 @@ const styles = {
     height: '90%',
     maxWidth: '1400px',
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden'
@@ -704,7 +704,7 @@ const styles = {
     padding: '8px',
     backgroundColor: 'var(--bg-overlay)',
     border: '1px solid var(--border-subtle)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
@@ -719,7 +719,7 @@ const styles = {
     padding: '4px 12px',
     backgroundColor: 'var(--bg-overlay)',
     border: '1px solid var(--border-subtle)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '14px',
     fontWeight: '500'
   },

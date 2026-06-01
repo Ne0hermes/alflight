@@ -83,7 +83,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
         <div style={{
           padding: '8px 16px',
           backgroundColor: getScoreColor(alternate.score),
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           color: 'var(--text-primary)',
           fontWeight: 'bold'
         }}>
@@ -109,7 +109,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
           <>
             <div style={sx.combine(
               sx.text.sm,
-              { fontFamily: 'monospace', backgroundColor: 'var(--bg-overlay)', padding: '12px', borderRadius: '8px', whiteSpace: 'pre-wrap' }
+              { fontFamily: 'monospace', backgroundColor: 'var(--bg-overlay)', padding: '12px', borderRadius: 'var(--radius-sm)', whiteSpace: 'pre-wrap' }
             )}>
               {weather.metar.raw}
             </div>
@@ -154,7 +154,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
           </h5>
           <div style={sx.combine(
             sx.text.sm,
-            { fontFamily: 'monospace', backgroundColor: 'var(--bg-overlay)', padding: '12px', borderRadius: '8px', whiteSpace: 'pre-wrap', maxHeight: '150px', overflowY: 'auto' }
+            { fontFamily: 'monospace', backgroundColor: 'var(--bg-overlay)', padding: '12px', borderRadius: 'var(--radius-sm)', whiteSpace: 'pre-wrap', maxHeight: '150px', overflowY: 'auto' }
           )}>
             {weather.taf.raw}
           </div>
@@ -497,7 +497,7 @@ const ScoreBreakdown = memo(({ factors }) => (
             width: '100px',
             height: '8px',
             backgroundColor: 'var(--border-subtle)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             marginRight: '8px',
             overflow: 'hidden'
           }}>

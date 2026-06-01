@@ -296,7 +296,7 @@ export const RouteStaticMapSnapshot = ({ waypoints }) => {
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: 'var(--bg-overlay)',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         border: '1px solid var(--border-subtle)',
         color: 'var(--text-secondary)'
       }}>
@@ -309,7 +309,7 @@ export const RouteStaticMapSnapshot = ({ waypoints }) => {
   return (
     <div style={{
       backgroundColor: 'var(--bg-overlay)',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       border: '1px solid var(--border-subtle)',
       padding: '16px',
       boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
@@ -332,7 +332,7 @@ export const RouteStaticMapSnapshot = ({ waypoints }) => {
         style={{
           width: '100%',
           height: 'auto',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           border: '1px solid var(--border-subtle)'
         }}
       />

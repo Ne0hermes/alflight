@@ -109,7 +109,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
   const badgeStyle = (color) => ({
     display: 'inline-block',
     padding: '2px 8px',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '11px',
     fontWeight: '600',
     backgroundColor: color,
@@ -155,7 +155,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
         textAlign: 'center',
         color: 'var(--text-secondary)',
         backgroundColor: 'var(--bg-overlay)',
-        borderRadius: '8px'
+        borderRadius: 'var(--radius-sm)'
       }}>
         <Plane size={24} style={{ marginBottom: '8px', opacity: 0.5 }} />
         <p>Ajoutez au moins 2 waypoints pour voir les espaces aériens traversés</p>
@@ -189,7 +189,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
         textAlign: 'center',
         color: 'var(--text-primary)',
         backgroundColor: 'var(--bg-overlay)',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         border: '1px solid #a7f3d0'
       }}>
         <Shield size={24} style={{ marginBottom: '8px' }} />
@@ -210,7 +210,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
         gap: '8px',
         padding: '12px',
         backgroundColor: 'var(--bg-overlay)',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         marginBottom: '16px',
         border: '1px solid var(--border-subtle)'
       }}>
@@ -353,7 +353,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
         marginTop: '16px',
         padding: '12px',
         backgroundColor: 'var(--bg-overlay)',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         border: '1px solid #f26921'
       }}>
         <div style={{
@@ -389,7 +389,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
         marginTop: '16px',
         padding: '12px',
         backgroundColor: 'var(--bg-overlay)',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         fontSize: '11px',
         color: 'var(--text-secondary)'
       }}>

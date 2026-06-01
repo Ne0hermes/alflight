@@ -403,7 +403,7 @@ export const AirportInserter = ({
           marginTop: '8px',
           background: 'var(--bg-overlay)',
           border: '1px solid var(--border-subtle)',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
           padding: '12px',
           minWidth: '350px',
@@ -437,7 +437,7 @@ export const AirportInserter = ({
                   width: '100%',
                   padding: '6px 8px 6px 28px',
                   border: '1px solid var(--text-tertiary)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   fontSize: '13px'
                 }}
                 autoFocus
@@ -495,7 +495,7 @@ export const AirportInserter = ({
                   style={{
                     padding: '10px',
                     background: 'var(--bg-overlay)',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
                     border: '1px solid transparent'
@@ -552,7 +552,7 @@ export const AirportInserter = ({
                       padding: '2px 6px',
                       background: airport.type === 'AD' ? 'var(--bg-overlay)' : 'var(--border-subtle)',
                       color: airport.type === 'AD' ? 'var(--text-primary)' : 'var(--text-secondary)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       fontSize: '10px',
                       fontWeight: '600',
                       marginLeft: '8px'
@@ -581,7 +581,7 @@ export const AirportInserter = ({
               marginTop: '8px',
               padding: '8px',
               background: 'var(--bg-overlay)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               fontSize: '11px',
               color: 'var(--text-primary)',
               textAlign: 'center'
@@ -595,7 +595,7 @@ export const AirportInserter = ({
             marginTop: '12px',
             padding: '12px',
             background: 'rgba(242, 105, 33, 0.10)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             textAlign: 'center'
           }}>
             <div style={{ marginBottom: '8px', fontSize: '12px', color: 'var(--accent-primary)' }}>
@@ -608,7 +608,7 @@ export const AirportInserter = ({
                 background: 'var(--accent-primary)',
                 color: 'var(--accent-primary)',
                 border: 'none',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 fontSize: '13px',
                 fontWeight: '600',
                 cursor: 'pointer'
@@ -624,7 +624,7 @@ export const AirportInserter = ({
               marginTop: '12px',
               padding: '12px',
               background: 'var(--bg-overlay)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--border-subtle)'
             }}>
               <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600' }}>
@@ -646,7 +646,7 @@ export const AirportInserter = ({
                       width: '100%',
                       padding: '6px',
                       border: '1px solid var(--text-tertiary)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       fontSize: '13px'
                     }}
                   />
@@ -665,7 +665,7 @@ export const AirportInserter = ({
                       width: '100%',
                       padding: '6px',
                       border: '1px solid var(--text-tertiary)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       fontSize: '13px'
                     }}
                   />
@@ -686,7 +686,7 @@ export const AirportInserter = ({
                         width: '100%',
                         padding: '6px',
                         border: '1px solid var(--text-tertiary)',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         fontSize: '13px'
                       }}
                     />
@@ -706,7 +706,7 @@ export const AirportInserter = ({
                         width: '100%',
                         padding: '6px',
                         border: '1px solid var(--text-tertiary)',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         fontSize: '13px'
                       }}
                     />
@@ -720,7 +720,7 @@ export const AirportInserter = ({
                     background: 'var(--text-secondary)',
                     color: 'var(--text-primary)',
                     border: 'none',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     fontSize: '13px',
                     fontWeight: '600',
                     cursor: 'pointer',
@@ -739,7 +739,7 @@ export const AirportInserter = ({
               marginTop: '12px',
               padding: '8px',
               background: 'var(--bg-overlay)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               fontSize: '11px',
               color: 'var(--text-secondary)'
             }}>

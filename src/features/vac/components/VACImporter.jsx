@@ -180,7 +180,7 @@ export const VACImporter = memo(({
       }}>
         <div style={{
           backgroundColor: 'var(--bg-overlay)',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           padding: '24px',
           maxWidth: '900px',
           width: '90%',
@@ -222,7 +222,7 @@ export const VACImporter = memo(({
             <div style={{ 
               backgroundColor: 'var(--bg-overlay)', 
               padding: '16px', 
-              borderRadius: '8px', 
+              borderRadius: 'var(--radius-sm)', 
               marginBottom: '20px',
               border: '1px solid var(--border-subtle)'
             }}>
@@ -247,7 +247,7 @@ export const VACImporter = memo(({
                 onClick={() => fileInputRef.current?.click()}
                 style={{
                   border: '2px dashed var(--text-tertiary)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   padding: '40px',
                   textAlign: 'center',
                   cursor: 'pointer',
@@ -287,7 +287,7 @@ export const VACImporter = memo(({
                     backgroundColor: 'var(--border-subtle)',
                     color: 'var(--text-secondary)',
                     border: 'none',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     fontSize: '14px',
                     cursor: 'pointer'
                   }}
@@ -324,7 +324,7 @@ export const VACImporter = memo(({
               <div style={{ 
                 backgroundColor: 'var(--bg-overlay)', 
                 border: '1px solid var(--bg-overlay)', 
-                borderRadius: '8px', 
+                borderRadius: 'var(--radius-sm)', 
                 padding: '12px', 
                 display: 'flex', 
                 gap: '12px', 
@@ -347,7 +347,7 @@ export const VACImporter = memo(({
                 <div style={{ 
                   backgroundColor: 'var(--bg-overlay)', 
                   padding: '16px', 
-                  borderRadius: '8px', 
+                  borderRadius: 'var(--radius-sm)', 
                   marginBottom: '16px' 
                 }}>
                   <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px' }}>
@@ -387,7 +387,7 @@ export const VACImporter = memo(({
                 <div style={{ 
                   backgroundColor: 'var(--bg-overlay)', 
                   padding: '16px', 
-                  borderRadius: '8px', 
+                  borderRadius: 'var(--radius-sm)', 
                   marginBottom: '16px',
                   border: '1px solid var(--border-subtle)'
                 }}>
@@ -407,7 +407,7 @@ export const VACImporter = memo(({
                       <div key={idx} style={{ 
                         backgroundColor: 'var(--bg-overlay)', 
                         padding: '8px', 
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         fontSize: '13px'
                       }}>
                         <strong>{runway.designation}</strong>
@@ -424,7 +424,7 @@ export const VACImporter = memo(({
                 <div style={{ 
                   backgroundColor: 'rgba(242, 105, 33, 0.10)', 
                   padding: '16px', 
-                  borderRadius: '8px', 
+                  borderRadius: 'var(--radius-sm)', 
                   marginBottom: '16px',
                   border: '1px solid var(--bg-overlay)'
                 }}>
@@ -458,7 +458,7 @@ export const VACImporter = memo(({
                 <div style={{ 
                   backgroundColor: 'var(--bg-overlay)', 
                   padding: '16px', 
-                  borderRadius: '8px', 
+                  borderRadius: 'var(--radius-sm)', 
                   marginBottom: '16px',
                   border: '1px solid #e9d5ff'
                 }}>
@@ -488,7 +488,7 @@ export const VACImporter = memo(({
                 <div style={{ 
                   backgroundColor: 'var(--bg-overlay)', 
                   padding: '16px', 
-                  borderRadius: '8px', 
+                  borderRadius: 'var(--radius-sm)', 
                   marginBottom: '16px' 
                 }}>
                   <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px' }}>
@@ -536,7 +536,7 @@ export const VACImporter = memo(({
                     backgroundColor: 'var(--border-subtle)', 
                     color: 'var(--text-secondary)', 
                     border: 'none', 
-                    borderRadius: '8px', 
+                    borderRadius: 'var(--radius-sm)', 
                     fontSize: '14px', 
                     fontWeight: '500', 
                     cursor: 'pointer' 
@@ -551,7 +551,7 @@ export const VACImporter = memo(({
                     backgroundColor: 'var(--text-secondary)', 
                     color: 'var(--text-primary)', 
                     border: 'none', 
-                    borderRadius: '8px', 
+                    borderRadius: 'var(--radius-sm)', 
                     fontSize: '14px', 
                     fontWeight: '500', 
                     cursor: 'pointer', 
@@ -572,7 +572,7 @@ export const VACImporter = memo(({
             <div style={{ 
               backgroundColor: 'var(--bg-overlay)', 
               border: '1px solid var(--border-subtle)', 
-              borderRadius: '8px', 
+              borderRadius: 'var(--radius-sm)', 
               padding: '12px', 
               display: 'flex', 
               gap: '12px', 

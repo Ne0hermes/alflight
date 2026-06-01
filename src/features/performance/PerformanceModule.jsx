@@ -925,7 +925,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
                   marginBottom: '24px',
                   padding: '16px',
                   backgroundColor: 'var(--bg-overlay)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--border-subtle)'
                 }}
               >
@@ -968,7 +968,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
                   <div style={{
                     padding: '12px',
                     backgroundColor: 'var(--bg-overlay)',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--border-subtle)',
                     fontSize: '13px',
                     color: '#C04534'

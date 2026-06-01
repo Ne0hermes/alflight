@@ -93,7 +93,7 @@ export const CustomVFRPointForm = ({
       left: '50%',
       transform: 'translate(-50%, -50%)',
       background: 'var(--bg-overlay)',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
       padding: '24px',
       zIndex: 10000,
@@ -131,7 +131,7 @@ export const CustomVFRPointForm = ({
           <div style={{
             padding: '8px 12px',
             background: 'var(--bg-overlay)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             fontFamily: 'monospace',
             fontSize: '14px'
           }}>
@@ -152,7 +152,7 @@ export const CustomVFRPointForm = ({
               width: '100%',
               padding: '8px 12px',
               border: '1px solid var(--text-tertiary)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               fontSize: '14px'
             }}
             required
@@ -173,7 +173,7 @@ export const CustomVFRPointForm = ({
               width: '100%',
               padding: '8px 12px',
               border: '1px solid var(--text-tertiary)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               fontSize: '14px',
               resize: 'vertical'
             }}
@@ -203,7 +203,7 @@ export const CustomVFRPointForm = ({
                 width: '100%',
                 padding: '8px 12px',
                 border: '1px solid var(--text-tertiary)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 fontSize: '14px'
               }}
             />
@@ -226,7 +226,7 @@ export const CustomVFRPointForm = ({
               background: 'var(--bg-overlay)',
               color: 'var(--text-secondary)',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               fontSize: '14px',
               fontWeight: '500',
               cursor: 'pointer'
@@ -242,7 +242,7 @@ export const CustomVFRPointForm = ({
               background: 'var(--text-secondary)',
               color: 'var(--text-primary)',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               fontSize: '14px',
               fontWeight: '500',
               cursor: 'pointer',

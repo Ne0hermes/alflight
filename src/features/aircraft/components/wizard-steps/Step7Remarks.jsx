@@ -41,7 +41,7 @@ const Step7Remarks = ({ data, updateData, errors = {}, onNext, onPrevious }) => 
               lineHeight: 1.6,
               border: errors.remarks ? '2px solid' : '1px solid',
               borderColor: errors.remarks ? 'error.main' : 'rgba(0, 0, 0, 0.23)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               bgcolor: 'background.paper',
               resize: 'vertical',
               outline: 'none',

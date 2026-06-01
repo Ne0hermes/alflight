@@ -958,7 +958,7 @@ const VACModuleOld = memo(() => {
                 maxHeight: '400px',
                 overflowY: 'auto',
                 border: '1px solid var(--border-subtle)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 padding: '12px'
               }}>
                 <div style={{
@@ -977,7 +977,7 @@ const VACModuleOld = memo(() => {
                         style={{
                           padding: '10px',
                           border: `1px solid ${isImported ? 'var(--text-primary)' : 'var(--border-subtle)'}`,
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-sm)',
                           cursor: isImported ? 'default' : 'pointer',
                           background: isImported ? '#E8F5E9' : 'white',
                           transition: 'all 0.2s',
@@ -992,7 +992,7 @@ const VACModuleOld = memo(() => {
                                 <span style={{ 
                                   fontSize: '9px', 
                                   padding: '1px 4px', 
-                                  borderRadius: '3px',
+                                  borderRadius: 'var(--radius-sm)',
                                   backgroundColor: props.source === 'AIXM' ? '#e3f2fd' : '#fff3e0',
                                   color: props.source === 'AIXM' ? '#1976d2' : '#f57c00'
                                 }}>
@@ -1301,7 +1301,7 @@ const ChartCard = memo(({ chart, isInNavigation, onDelete, onView, onImportManua
                     backgroundColor: sx.theme.colors.primary[600],
                     color: 'var(--text-primary)',
                     padding: '2px 8px',
-                    borderRadius: '8px'
+                    borderRadius: 'var(--radius-sm)'
                   }
                 )}>
                   Navigation
@@ -1316,7 +1316,7 @@ const ChartCard = memo(({ chart, isInNavigation, onDelete, onView, onImportManua
                     backgroundColor: 'var(--accent-primary)',
                     color: 'var(--text-primary)',
                     padding: '2px 8px',
-                    borderRadius: '8px'
+                    borderRadius: 'var(--radius-sm)'
                   }
                 )}>
                   Version perso
@@ -1330,7 +1330,7 @@ const ChartCard = memo(({ chart, isInNavigation, onDelete, onView, onImportManua
                     backgroundColor: 'var(--accent-primary)',
                     color: 'var(--text-primary)',
                     padding: '2px 8px',
-                    borderRadius: '8px'
+                    borderRadius: 'var(--radius-sm)'
                   }
                 )}>
                   Import manuel

@@ -10,7 +10,7 @@ const PerformanceDataDebugger = ({ tables }) => {
         <div style={{
             marginTop: '20px',
             border: '1px solid var(--border-subtle)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             backgroundColor: 'var(--bg-overlay)',
             overflow: 'hidden'
         }}>
@@ -56,7 +56,7 @@ const PerformanceDataDebugger = ({ tables }) => {
                                 backgroundColor: 'var(--text-primary)',
                                 color: 'var(--text-primary)',
                                 padding: '12px',
-                                borderRadius: '8px',
+                                borderRadius: 'var(--radius-sm)',
                                 fontSize: '11px',
                                 fontFamily: 'monospace',
                                 whiteSpace: 'pre-wrap',

@@ -150,12 +150,12 @@ const ImageEditor = ({
         };
       case 'square':
         return {
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           aspectRatio: '1'
         };
       default:
         return {
-          borderRadius: '8px'
+          borderRadius: 'var(--radius-sm)'
         };
     }
   };
@@ -216,7 +216,7 @@ const ImageEditor = ({
     width: '600px',
     height: '400px',
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     overflow: 'hidden',
     boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)'
   };
@@ -266,7 +266,7 @@ const ImageEditor = ({
     gap: '8px',
     padding: '12px',
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
   };
 
@@ -275,7 +275,7 @@ const ImageEditor = ({
     backgroundColor: 'var(--text-secondary)',
     color: 'var(--text-primary)',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
@@ -293,7 +293,7 @@ const ImageEditor = ({
     transform: 'translateX(-50%)',
     padding: '8px 16px',
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '13px',
     color: 'var(--text-secondary)',
     fontWeight: '500'
@@ -359,7 +359,7 @@ const ImageEditor = ({
                 color: 'var(--text-secondary)',
                 backgroundColor: 'var(--bg-overlay)',
                 padding: '2px 8px',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 whiteSpace: 'nowrap'
               }}>
                 Zone visible après validation
@@ -426,7 +426,7 @@ const ImageEditor = ({
           marginTop: '20px',
           padding: '12px',
           backgroundColor: 'rgba(255, 255, 255, 0.1)',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           color: 'var(--text-primary)',
           fontSize: '13px',
           textAlign: 'center'
@@ -463,7 +463,7 @@ const ImageEditor = ({
             backgroundColor: 'rgba(59, 130, 246, 0.9)',
             color: 'var(--text-primary)',
             padding: '6px',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',

@@ -102,7 +102,7 @@ const AerodromeDetailsCard = memo(({ airport, side, sideColor, sideEmoji, sideLa
       borderWidth: '2px',
       borderStyle: 'solid',
       borderColor: sideColor,
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       backgroundColor: side === 'departure' ? 'var(--bg-overlay)' : 'var(--bg-overlay)'
     }}>
       <p style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
@@ -186,7 +186,7 @@ const AerodromeDetailsCard = memo(({ airport, side, sideColor, sideEmoji, sideLa
                     borderWidth: '1px',
                     borderStyle: 'solid',
                     borderColor: 'var(--border-subtle)',
-                    borderRadius: '8px'
+                    borderRadius: 'var(--radius-sm)'
                   }}
                 >
                   <div style={sx.combine(sx.flex.between, sx.spacing.mb(2))}>
@@ -195,7 +195,7 @@ const AerodromeDetailsCard = memo(({ airport, side, sideColor, sideEmoji, sideLa
                       <span style={sx.combine(sx.text.xs, {
                         padding: '2px 6px',
                         backgroundColor: 'var(--bg-overlay)',
-                        borderRadius: '8px'
+                        borderRadius: 'var(--radius-sm)'
                       })}>
                         {runway.designation}
                       </span>
@@ -522,7 +522,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
                 marginTop: '0',
                 padding: '12px',
                 backgroundColor: 'var(--bg-overlay)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--border-subtle)'
               }}>
                 <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: 'var(--text-primary)' }}>

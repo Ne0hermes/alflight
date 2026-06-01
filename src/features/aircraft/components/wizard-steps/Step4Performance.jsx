@@ -734,7 +734,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
               <div key={modelId} style={{
                 backgroundColor: isSelectedForExport ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
                 border: `2px solid ${isSelectedForExport ? 'var(--text-secondary)' : 'var(--text-tertiary)'}`,
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 padding: '10px',
                 marginBottom: '8px',
                 display: 'flex',
@@ -801,7 +801,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                       padding: '4px 8px',
                       backgroundColor: 'var(--bg-overlay)',
                       border: '1px solid var(--text-secondary)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       fontSize: '12px',
                       cursor: 'pointer',
                       color: 'var(--text-secondary)',
@@ -832,7 +832,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                       padding: '4px 8px',
                       backgroundColor: 'var(--bg-overlay)',
                       border: 'none',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       fontSize: '12px',
                       cursor: 'pointer',
                       color: '#C04534',
@@ -890,7 +890,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                   <div key={index} style={{
                     backgroundColor: isSelectedForExport ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
                     border: `2px solid ${isSelectedForExport ? 'var(--text-secondary)' : 'var(--text-tertiary)'}`,
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     padding: '10px',
                     marginBottom: '8px',
                     display: 'flex',
@@ -949,7 +949,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                           padding: '4px 8px',
                           backgroundColor: 'var(--bg-overlay)',
                           border: '1px solid var(--text-secondary)',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-sm)',
                           fontSize: '12px',
                           cursor: 'pointer',
                           color: 'var(--text-secondary)',
@@ -1004,7 +1004,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                           padding: '4px 8px',
                           backgroundColor: 'var(--bg-overlay)',
                           border: 'none',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-sm)',
                           fontSize: '12px',
                           cursor: 'pointer',
                           color: '#C04534',
@@ -1030,7 +1030,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
             <div style={{
               backgroundColor: 'var(--bg-overlay)',
               border: '1px solid var(--text-secondary)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               padding: '10px'
             }}>
               Configurées
@@ -1050,7 +1050,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
             backgroundColor: 'var(--text-secondary)',
             color: 'var(--text-primary)',
             border: 'none',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             fontSize: '12px',
             cursor: 'pointer',
             fontWeight: '500',

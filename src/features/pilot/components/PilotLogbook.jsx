@@ -975,7 +975,7 @@ const PilotLogbook = ({ showFormProp }) => {
   const inputStyle = {
     padding: '8px 12px',
     border: '1px solid var(--text-tertiary)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '14px',
     width: '100%',
     backgroundColor: 'var(--bg-overlay)'
@@ -994,7 +994,7 @@ const PilotLogbook = ({ showFormProp }) => {
     // qui cascadent à tous les sous-éléments sans fontFamily explicite.
     <div
       style={{
-        fontFamily: "'Century Gothic', 'Questrial', 'Jost', system-ui, sans-serif",
+        fontFamily: 'var(--font-sans)',
         color: 'var(--text-primary)',
       }}
     >
@@ -1009,12 +1009,12 @@ const PilotLogbook = ({ showFormProp }) => {
 
       {/* Statistiques globales - Afficher seulement si on n'est pas dans le formulaire */}
       {!isFormVisible && (
-        <div style={{ backgroundColor: 'var(--bg-overlay)', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '16px' }}>
+        <div style={{ backgroundColor: 'var(--bg-overlay)', padding: '20px', borderRadius: 'var(--radius-sm)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '16px' }}>
           <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '12px' }}>Statistiques de vol</h3>
           <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
             <button
               onClick={handleImport}
-              style={{ padding: '8px 16px', backgroundColor: '#f26921', color: 'var(--text-primary)', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+              style={{ padding: '8px 16px', backgroundColor: '#f26921', color: 'var(--text-primary)', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: '14px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
             >
               <Upload size={16} />
               Importer
@@ -1022,7 +1022,7 @@ const PilotLogbook = ({ showFormProp }) => {
             {entries.length > 0 && (
               <button
                 onClick={handleExport}
-                style={{ padding: '8px 16px', backgroundColor: 'var(--border-subtle)', color: 'var(--text-secondary)', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                style={{ padding: '8px 16px', backgroundColor: 'var(--border-subtle)', color: 'var(--text-secondary)', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: '14px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
               >
                 <Download size={16} />
                 Exporter
@@ -1037,7 +1037,7 @@ const PilotLogbook = ({ showFormProp }) => {
             gap: '12px',
             padding: '16px',
             backgroundColor: 'var(--bg-overlay)',
-            borderRadius: '8px'
+            borderRadius: 'var(--radius-sm)'
           }}>
             {/* Total général - Plus important */}
             <div style={{ borderLeft: '3px solid var(--text-secondary)', paddingLeft: '12px' }}>
@@ -1100,12 +1100,12 @@ const PilotLogbook = ({ showFormProp }) => {
 
       {/* Formulaire d'ajout/édition */}
       {isFormVisible && (
-        <div style={{ backgroundColor: 'var(--bg-overlay)', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '16px' }}>
+        <div style={{ backgroundColor: 'var(--bg-overlay)', padding: '20px', borderRadius: 'var(--radius-sm)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '16px' }}>
           {/* Disclaimer dans le formulaire */}
           <div style={{ 
             backgroundColor: 'rgba(242, 105, 33, 0.10)', 
             border: '1px solid var(--accent-primary)', 
-            borderRadius: '8px', 
+            borderRadius: 'var(--radius-sm)', 
             padding: '10px 12px', 
             marginBottom: '20px',
             fontSize: '12px',
@@ -1217,7 +1217,7 @@ const PilotLogbook = ({ showFormProp }) => {
               <div style={{
                 backgroundColor: 'var(--bg-overlay)',
                 border: '1px solid var(--bg-overlay)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 padding: '8px 12px',
                 marginTop: '12px',
                 color: '#C04534',
@@ -1292,7 +1292,7 @@ const PilotLogbook = ({ showFormProp }) => {
               <div key={segment.id} style={{
                 padding: '12px',
                 backgroundColor: index % 2 === 0 ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 marginBottom: '8px',
                 border: '1px solid var(--border-subtle)'
               }}>
@@ -1396,7 +1396,7 @@ const PilotLogbook = ({ showFormProp }) => {
                           backgroundColor: '#C04534',
                           color: 'var(--text-primary)',
                           border: 'none',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-sm)',
                           cursor: 'pointer',
                           fontSize: '12px'
                         }}
@@ -1421,7 +1421,7 @@ const PilotLogbook = ({ showFormProp }) => {
                           backgroundColor: 'var(--text-primary)',
                           color: 'var(--text-primary)',
                           border: 'none',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-sm)',
                           cursor: 'pointer',
                           fontSize: '12px'
                         }}
@@ -1524,7 +1524,7 @@ const PilotLogbook = ({ showFormProp }) => {
                 marginTop: '12px',
                 padding: '8px',
                 backgroundColor: 'var(--bg-overlay)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 fontSize: '12px',
                 color: 'var(--text-secondary)'
               }}>
@@ -1612,7 +1612,7 @@ const PilotLogbook = ({ showFormProp }) => {
                   }
                   style={{
                     padding: '8px 12px',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--text-tertiary)',
                     fontSize: '14px',
                     width: '100%',
@@ -1702,7 +1702,7 @@ const PilotLogbook = ({ showFormProp }) => {
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
               onClick={handleSubmit}
-              style={{ padding: '8px 16px', backgroundColor: 'var(--text-secondary)', color: 'var(--text-primary)', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}
+              style={{ padding: '8px 16px', backgroundColor: 'var(--text-secondary)', color: 'var(--text-primary)', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}
             >
               {editingEntry ? 'Modifier' : 'Enregistrer'}
             </button>
@@ -1711,7 +1711,7 @@ const PilotLogbook = ({ showFormProp }) => {
             {showFormProp === undefined && (
               <button
                 onClick={resetForm}
-                style={{ padding: '8px 16px', backgroundColor: 'var(--border-subtle)', color: 'var(--text-secondary)', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}
+                style={{ padding: '8px 16px', backgroundColor: 'var(--border-subtle)', color: 'var(--text-secondary)', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}
               >
                 Annuler
               </button>
@@ -1722,7 +1722,7 @@ const PilotLogbook = ({ showFormProp }) => {
 
       {/* Filtres et recherche - Afficher seulement si on n'est pas dans le formulaire */}
       {!isFormVisible && (
-        <div style={{ backgroundColor: 'var(--bg-overlay)', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '16px' }}>
+        <div style={{ backgroundColor: 'var(--bg-overlay)', padding: '20px', borderRadius: 'var(--radius-sm)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '8px' }}>
             <div style={{ position: 'relative' }}>
@@ -1757,7 +1757,7 @@ const PilotLogbook = ({ showFormProp }) => {
       {!isFormVisible && filteredEntries.length > 0 ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {filteredEntries.map(entry => (
-            <div key={entry.id} style={{ backgroundColor: 'var(--bg-overlay)', padding: '12px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <div key={entry.id} style={{ backgroundColor: 'var(--bg-overlay)', padding: '12px', borderRadius: 'var(--radius-sm)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
                 <strong style={{ marginRight: '12px' }}>{entry.date}</strong>
                 <span style={{ fontSize: '16px', marginRight: '12px' }}>
@@ -1828,13 +1828,13 @@ const PilotLogbook = ({ showFormProp }) => {
                   onClick={() => {
                     handleEdit(entry);
                   }}
-                  style={{ padding: '4px 8px', backgroundColor: 'var(--bg-overlay)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+                  style={{ padding: '4px 8px', backgroundColor: 'var(--bg-overlay)', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}
                 >
                   <Edit2 size={14} />
                 </button>
                 <button
                   onClick={() => handleDelete(entry.id)}
-                  style={{ padding: '4px 8px', backgroundColor: 'var(--bg-overlay)', color: '#C04534', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+                  style={{ padding: '4px 8px', backgroundColor: 'var(--bg-overlay)', color: '#C04534', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}
                 >
                   <Trash2 size={14} />
                 </button>
@@ -1843,7 +1843,7 @@ const PilotLogbook = ({ showFormProp }) => {
           ))}
         </div>
       ) : !isFormVisible ? (
-        <div style={{ backgroundColor: 'var(--bg-overlay)', textAlign: 'center', padding: '32px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <div style={{ backgroundColor: 'var(--bg-overlay)', textAlign: 'center', padding: '32px', borderRadius: 'var(--radius-sm)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
           <Plane size={48} style={{ margin: '0 auto 16px', color: 'var(--text-tertiary)' }} />
           <p style={{ fontSize: '16px' }}>Aucun vol enregistré</p>
           <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '8px' }}>

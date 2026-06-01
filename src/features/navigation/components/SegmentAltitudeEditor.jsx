@@ -140,7 +140,7 @@ export const SegmentAltitudeEditor = ({
               key={segmentId}
               style={{
                 background: 'var(--bg-overlay)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--border-subtle)',
                 overflow: 'hidden'
               }}
@@ -170,7 +170,7 @@ export const SegmentAltitudeEditor = ({
                     color: 'var(--text-secondary)',
                     padding: '4px 8px',
                     background: 'var(--bg-overlay)',
-                    borderRadius: '8px'
+                    borderRadius: 'var(--radius-sm)'
                   }}>
                     {formatAltitude(segmentAlt.startAlt)} → {formatAltitude(segmentAlt.endAlt)}
                   </span>
@@ -203,7 +203,7 @@ export const SegmentAltitudeEditor = ({
                             flex: 1,
                             padding: '8px',
                             border: '1px solid var(--text-tertiary)',
-                            borderRadius: '8px',
+                            borderRadius: 'var(--radius-sm)',
                             fontSize: '14px'
                           }}
                         />
@@ -212,7 +212,7 @@ export const SegmentAltitudeEditor = ({
                           style={{
                             padding: '8px',
                             border: '1px solid var(--text-tertiary)',
-                            borderRadius: '8px',
+                            borderRadius: 'var(--radius-sm)',
                             fontSize: '13px',
                             background: 'var(--bg-overlay)'
                           }}
@@ -244,7 +244,7 @@ export const SegmentAltitudeEditor = ({
                             flex: 1,
                             padding: '8px',
                             border: '1px solid var(--text-tertiary)',
-                            borderRadius: '8px',
+                            borderRadius: 'var(--radius-sm)',
                             fontSize: '14px'
                           }}
                         />
@@ -253,7 +253,7 @@ export const SegmentAltitudeEditor = ({
                           style={{
                             padding: '8px',
                             border: '1px solid var(--text-tertiary)',
-                            borderRadius: '8px',
+                            borderRadius: 'var(--radius-sm)',
                             fontSize: '13px',
                             background: 'var(--bg-overlay)'
                           }}
@@ -276,7 +276,7 @@ export const SegmentAltitudeEditor = ({
                       padding: '8px',
                       background: segmentAlt.type === 'climb' ? 'var(--bg-overlay)' : 'rgba(242, 105, 33, 0.10)',
                       border: `1px solid ${segmentAlt.type === 'climb' ? 'var(--bg-overlay)' : '#f26921'}`,
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       fontSize: '13px'
                     }}>
                       {segmentAlt.type === 'climb' ? '📈' : '📉'} 
@@ -302,7 +302,7 @@ export const SegmentAltitudeEditor = ({
                         padding: '6px 12px',
                         background: 'var(--border-subtle)',
                         border: 'none',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         fontSize: '12px',
                         cursor: 'pointer'
                       }}
@@ -321,7 +321,7 @@ export const SegmentAltitudeEditor = ({
                           padding: '6px 12px',
                           background: 'var(--bg-overlay)',
                           border: 'none',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-sm)',
                           fontSize: '12px',
                           cursor: 'pointer'
                         }}
@@ -343,7 +343,7 @@ export const SegmentAltitudeEditor = ({
         padding: '12px',
         background: 'var(--bg-overlay)',
         border: '1px solid var(--border-subtle)',
-        borderRadius: '8px'
+        borderRadius: 'var(--radius-sm)'
       }}>
         <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600' }}>
           📊 Profil de vol

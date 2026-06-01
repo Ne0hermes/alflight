@@ -265,7 +265,7 @@ export const WaypointCardWithRunways = memo(({
           color: label.color,
           backgroundColor: label.color + '20',
           padding: '4px 12px',
-          borderRadius: '8px'
+          borderRadius: 'var(--radius-sm)'
         }}>
           {label.text}
         </span>
@@ -463,7 +463,7 @@ export const WaypointCardWithRunways = memo(({
                             padding: '2px 6px',
                             backgroundColor: 'var(--text-secondary)',
                             color: 'var(--text-primary)',
-                            borderRadius: '3px',
+                            borderRadius: 'var(--radius-sm)',
                             fontSize: '10px',
                             fontWeight: 'bold'
                           }}>
@@ -502,7 +502,7 @@ export const WaypointCardWithRunways = memo(({
                             fontSize: '10px',
                             fontWeight: 'bold',
                             padding: '2px 6px',
-                            borderRadius: '3px',
+                            borderRadius: 'var(--radius-sm)',
                             ...(isCompatible && surfaceCompatible ? {
                               backgroundColor: 'var(--bg-overlay)',
                               color: 'var(--text-primary)'
@@ -622,7 +622,7 @@ export const WaypointCardWithRunways = memo(({
                   color: 'var(--text-secondary)',
                   backgroundColor: 'var(--bg-overlay)',
                   padding: '2px 8px',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--text-secondary)'
                 }}>
                   {linkedVfrPoints.length}
@@ -641,7 +641,7 @@ export const WaypointCardWithRunways = memo(({
                     alignItems: 'center',
                     padding: '8px 10px',
                     background: 'var(--bg-overlay)',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--border-subtle)',
                     fontSize: '12px'
                   }}
@@ -679,7 +679,7 @@ export const WaypointCardWithRunways = memo(({
                       border: 'none',
                       background: 'var(--bg-overlay)',
                       color: '#C04534',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',

@@ -93,7 +93,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
   
   return (
     <div>
-      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
+      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: '#C04534' }}>
             Obstacles remarquables
@@ -111,7 +111,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
               backgroundColor: '#C04534',
               color: 'var(--text-primary)',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -128,7 +128,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
               <div key={idx} style={{ 
                 padding: '16px', 
                 backgroundColor: 'var(--bg-overlay)', 
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--bg-overlay)'
               }}>
                 {/* En-tête de l'obstacle */}
@@ -151,7 +151,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                         padding: '2px 6px', 
                         backgroundColor: 'var(--bg-overlay)', 
                         color: '#C04534',
-                        borderRadius: '3px',
+                        borderRadius: 'var(--radius-sm)',
                         fontWeight: 'bold'
                       }}>
                         {obstacle.type}
@@ -163,7 +163,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                         padding: '2px 6px', 
                         backgroundColor: '#C04534', 
                         color: 'var(--text-primary)',
-                        borderRadius: '3px',
+                        borderRadius: 'var(--radius-sm)',
                         fontWeight: 'bold'
                       }}>
                         {obstacle.totalHeight} ft AMSL
@@ -177,7 +177,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                       backgroundColor: '#C04534',
                       color: 'var(--text-primary)',
                       border: 'none',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       cursor: 'pointer'
                     }}
                   >

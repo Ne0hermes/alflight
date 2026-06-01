@@ -197,7 +197,7 @@ const ScoreBadge = memo(({ score }) => {
       padding: '2px 8px',
       backgroundColor: color + '20',
       color: color,
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       fontSize: '11px',
       fontWeight: 'bold'
     }}>

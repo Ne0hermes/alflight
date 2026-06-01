@@ -589,7 +589,7 @@ export const SIAReportEnhanced = () => {
     },
     header: {
       backgroundColor: 'var(--bg-overlay)',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       padding: '16px',
       marginBottom: '16px',
       boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
@@ -637,12 +637,12 @@ export const SIAReportEnhanced = () => {
       minWidth: '200px',
       padding: '8px 12px',
       border: '1px solid var(--text-tertiary)',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       fontSize: '14px'
     },
     button: {
       padding: '8px 16px',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       border: 'none',
       fontSize: '13px',
       fontWeight: '500',
@@ -672,7 +672,7 @@ export const SIAReportEnhanced = () => {
     },
     aerodromeCard: {
       backgroundColor: 'var(--bg-overlay)',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       overflow: 'hidden',
       boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
       transition: 'transform 0.2s, box-shadow 0.2s',
@@ -747,14 +747,14 @@ export const SIAReportEnhanced = () => {
       width: '100%',
       padding: '6px 8px',
       border: '1px solid var(--text-tertiary)',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       fontSize: '13px',
       backgroundColor: 'var(--bg-overlay)'
     },
     badge: {
       display: 'inline-block',
       padding: '2px 6px',
-      borderRadius: '3px',
+      borderRadius: 'var(--radius-sm)',
       fontSize: '10px',
       fontWeight: '600'
     },
@@ -787,7 +787,7 @@ export const SIAReportEnhanced = () => {
       <div style={{
         background: 'rgba(242, 105, 33, 0.10)',
         border: '1px solid var(--accent-primary)',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         marginBottom: '16px',
         fontSize: '12px',
         lineHeight: '1.6'
@@ -818,7 +818,7 @@ export const SIAReportEnhanced = () => {
                 fontWeight: '600',
                 backgroundColor: 'var(--bg-overlay)',
                 padding: '2px 8px',
-                borderRadius: '8px'
+                borderRadius: 'var(--radius-sm)'
               }}>
                 📅 Cycle AIRAC: {dataDate}
               </span>
@@ -886,7 +886,7 @@ export const SIAReportEnhanced = () => {
             backgroundColor: '#f26921',
             color: '#FFFFFF',
             border: 'none',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             fontSize: '15px',
             fontWeight: '600',
             textDecoration: 'none',
@@ -1023,7 +1023,7 @@ export const SIAReportEnhanced = () => {
                   style={{
                     padding: '8px',
                     border: '1px solid var(--text-tertiary)',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     backgroundColor: 'var(--bg-overlay)',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
@@ -1443,7 +1443,7 @@ export const SIAReportEnhanced = () => {
                           marginTop: '8px', 
                           padding: '6px', 
                           backgroundColor: 'rgba(242, 105, 33, 0.10)', 
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-sm)',
                           fontSize: '11px',
                           color: 'var(--accent-primary)'
                         }}>
@@ -1461,7 +1461,7 @@ export const SIAReportEnhanced = () => {
                               <div key={idx} style={{ 
                                 padding: '6px', 
                                 backgroundColor: idx % 2 ? 'var(--bg-overlay)' : 'white',
-                                borderRadius: '8px',
+                                borderRadius: 'var(--radius-sm)',
                                 marginBottom: '4px'
                               }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
@@ -1645,7 +1645,7 @@ export const SIAReportEnhanced = () => {
                                       alignItems: 'center',
                                       padding: '2px 4px',
                                       backgroundColor: 'rgba(242, 105, 33, 0.10)',
-                                      borderRadius: '8px',
+                                      borderRadius: 'var(--radius-sm)',
                                       fontSize: '11px'
                                     }}>
                                       <span style={{ fontWeight: '600' }}>💡 {rwy.vasis.type}</span>
@@ -1672,7 +1672,7 @@ export const SIAReportEnhanced = () => {
                             padding: '10px',
                             backgroundColor: 'var(--bg-overlay)',
                             border: '2px solid #C04534',
-                            borderRadius: '8px'
+                            borderRadius: 'var(--radius-sm)'
                           }}>
                             <div style={{
                               display: 'flex',
@@ -1733,7 +1733,7 @@ export const SIAReportEnhanced = () => {
                                 marginBottom: '8px',
                                 padding: '6px',
                                 backgroundColor: 'var(--bg-overlay)',
-                                borderRadius: '8px',
+                                borderRadius: 'var(--radius-sm)',
                                 border: `1px solid ${config.color}20`
                               }}>
                                 <div style={{ 
@@ -1837,7 +1837,7 @@ export const SIAReportEnhanced = () => {
                             backgroundColor: 'var(--text-secondary)',
                             color: 'var(--text-primary)',
                             border: 'none',
-                            borderRadius: '8px',
+                            borderRadius: 'var(--radius-sm)',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
@@ -1868,7 +1868,7 @@ export const SIAReportEnhanced = () => {
                                 padding: '6px',
                                 marginBottom: '4px',
                                 backgroundColor: point.isCustom ? 'var(--bg-overlay)' : (idx % 2 ? 'var(--bg-overlay)' : 'white'),
-                                borderRadius: '8px',
+                                borderRadius: 'var(--radius-sm)',
                                 border: point.isCustom ? '1px solid var(--text-primary)' : 'none'
                               }}>
                                 <div style={{ 
@@ -1900,7 +1900,7 @@ export const SIAReportEnhanced = () => {
                                           backgroundColor: '#C04534',
                                           color: 'var(--text-primary)',
                                           border: 'none',
-                                          borderRadius: '2px',
+                                          borderRadius: 'var(--radius-sm)',
                                           cursor: 'pointer'
                                         }}
                                         title="Supprimer ce point personnalisé"
@@ -1959,7 +1959,7 @@ export const SIAReportEnhanced = () => {
                             backgroundColor: 'var(--text-primary)',
                             color: 'var(--text-primary)',
                             border: 'none',
-                            borderRadius: '8px',
+                            borderRadius: 'var(--radius-sm)',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
@@ -1979,7 +1979,7 @@ export const SIAReportEnhanced = () => {
                             marginBottom: '12px',
                             padding: '8px',
                             backgroundColor: 'var(--bg-overlay)',
-                            borderRadius: '8px',
+                            borderRadius: 'var(--radius-sm)',
                             border: '1px solid var(--text-secondary)'
                           }}>
                             <h4 style={{ 
@@ -2075,7 +2075,7 @@ export const SIAReportEnhanced = () => {
                         marginTop: '12px', 
                         padding: '10px', 
                         background: 'rgba(242, 105, 33, 0.10)',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         border: '1px solid var(--accent-primary)'
                       }}>
                         <div style={{ 
@@ -2129,7 +2129,7 @@ export const SIAReportEnhanced = () => {
                       marginTop: '12px', 
                       padding: '10px', 
                       background: 'var(--bg-overlay)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       border: '1px solid var(--text-secondary)'
                     }}>
                       <div style={{ 
@@ -2149,7 +2149,7 @@ export const SIAReportEnhanced = () => {
                           minHeight: '80px',
                           padding: '6px',
                           border: '1px solid var(--border-subtle)',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-sm)',
                           fontSize: '11px',
                           fontFamily: 'inherit',
                           resize: 'vertical',
@@ -2173,7 +2173,7 @@ export const SIAReportEnhanced = () => {
                         <div style={{
                           padding: '12px',
                           backgroundColor: 'var(--bg-overlay)',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-sm)',
                           border: '1px solid var(--text-secondary)',
                           marginBottom: '12px'
                         }}>
@@ -2208,7 +2208,7 @@ export const SIAReportEnhanced = () => {
                                   fontSize: '11px',
                                   padding: '8px',
                                   backgroundColor: 'var(--bg-overlay)',
-                                  borderRadius: '8px',
+                                  borderRadius: 'var(--radius-sm)',
                                   marginBottom: '8px'
                                 }}>
                                   {charts[aerodrome.icao].extractedData.circuitAltitude && (
@@ -2225,7 +2225,7 @@ export const SIAReportEnhanced = () => {
                                 <div style={{
                                   padding: '12px',
                                   backgroundColor: 'rgba(242, 105, 33, 0.10)',
-                                  borderRadius: '8px',
+                                  borderRadius: 'var(--radius-sm)',
                                   marginTop: '12px',
                                   marginBottom: '12px',
                                   border: '1px solid var(--accent-primary)'
@@ -2248,7 +2248,7 @@ export const SIAReportEnhanced = () => {
                                             padding: '4px 8px',
                                             fontSize: '11px',
                                             border: '1px solid var(--accent-primary)',
-                                            borderRadius: '8px',
+                                            borderRadius: 'var(--radius-sm)',
                                             width: '100px'
                                           }}
                                         />
@@ -2266,7 +2266,7 @@ export const SIAReportEnhanced = () => {
                                             padding: '4px 8px',
                                             fontSize: '11px',
                                             border: '1px solid var(--accent-primary)',
-                                            borderRadius: '8px',
+                                            borderRadius: 'var(--radius-sm)',
                                             width: '100px'
                                           }}
                                         />
@@ -2284,7 +2284,7 @@ export const SIAReportEnhanced = () => {
                                             padding: '4px 8px',
                                             fontSize: '11px',
                                             border: '1px solid var(--accent-primary)',
-                                            borderRadius: '8px',
+                                            borderRadius: 'var(--radius-sm)',
                                             width: '100px'
                                           }}
                                         />
@@ -2316,7 +2316,7 @@ export const SIAReportEnhanced = () => {
                                         backgroundColor: 'var(--text-primary)',
                                         color: 'var(--text-primary)',
                                         border: 'none',
-                                        borderRadius: '8px',
+                                        borderRadius: 'var(--radius-sm)',
                                         fontSize: '11px',
                                         cursor: 'pointer',
                                         marginTop: '8px'
@@ -2342,7 +2342,7 @@ export const SIAReportEnhanced = () => {
                                     backgroundColor: 'var(--text-secondary)',
                                     color: 'var(--text-primary)',
                                     border: 'none',
-                                    borderRadius: '8px',
+                                    borderRadius: 'var(--radius-sm)',
                                     fontSize: '11px',
                                     cursor: 'pointer',
                                     display: 'flex',
@@ -2374,7 +2374,7 @@ export const SIAReportEnhanced = () => {
                                     backgroundColor: 'var(--text-primary)',
                                     color: 'var(--text-primary)',
                                     border: 'none',
-                                    borderRadius: '8px',
+                                    borderRadius: 'var(--radius-sm)',
                                     fontSize: '11px',
                                     cursor: 'pointer',
                                     display: 'flex',
@@ -2413,7 +2413,7 @@ export const SIAReportEnhanced = () => {
                                   backgroundColor: 'var(--text-secondary)',
                                   color: 'var(--text-primary)',
                                   border: 'none',
-                                  borderRadius: '8px',
+                                  borderRadius: 'var(--radius-sm)',
                                   fontSize: '12px',
                                   cursor: 'pointer',
                                   display: 'flex',
@@ -2431,7 +2431,7 @@ export const SIAReportEnhanced = () => {
                         {/* Avertissement */}
                         <div style={{
                           backgroundColor: 'rgba(242, 105, 33, 0.10)',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-sm)',
                           border: '1px solid var(--accent-primary)',
                           marginTop: '8px'
                         }}>

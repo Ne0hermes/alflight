@@ -155,7 +155,7 @@ if (typeof window !== 'undefined') {
     backgroundColor: 'rgba(55, 65, 81, 0.35)',
     color: 'var(--text-primary)',
     border: '1px solid rgba(0, 0, 0, 0.7)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '16px',
     fontWeight: 'bold',
     cursor: 'pointer',
@@ -1330,7 +1330,7 @@ export const AircraftModule = memo(() => {
           width: '100%',
           minHeight: 'clamp(280px, 38vh, 440px)',
           marginBottom: tokens.spacing[6],
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           overflow: 'hidden',
           backgroundImage: 'url("/assets/photos/hero-warbird.jpg")',
           backgroundSize: 'cover',
@@ -3552,7 +3552,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       </div>
 
       {showGeneral && (
-        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px', color: 'var(--app-bg)' }}>
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)', color: 'var(--app-bg)' }}>
           <>
             {/* Informations de base */}
             <div style={{ color: 'var(--app-bg)' }}>
@@ -3573,7 +3573,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                           width: '100%', 
                           height: '100%', 
                           objectFit: 'cover', 
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-sm)',
                           border: '1px solid var(--text-tertiary)'
                         }} 
                       />
@@ -3604,7 +3604,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                       width: '200px', 
                       height: '150px', 
                       border: '2px dashed var(--text-tertiary)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
@@ -3829,7 +3829,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                     backgroundColor: formData.compatibleRunwaySurfaces?.includes(surface.code) ? 'var(--text-secondary)' : 'white',
                     color: formData.compatibleRunwaySurfaces?.includes(surface.code) ? 'white' : 'var(--text-secondary)',
                     border: `1px solid ${formData.compatibleRunwaySurfaces?.includes(surface.code) ? 'var(--text-secondary)' : 'var(--border-subtle)'}`,
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     cursor: 'pointer',
                     fontSize: '13px'
                   }}
@@ -3862,7 +3862,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       </div>
 
       {showPerformances && (
-        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
           <>
             {/* Section Performances - Vitesses caractéristiques */}
         <div>
@@ -3876,7 +3876,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
           <div style={{
             backgroundColor: 'var(--bg-overlay)',
             padding: '16px',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             marginBottom: '16px',
             border: '2px solid var(--text-secondary)'
           }}>
@@ -3888,7 +3888,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             <div style={{
               backgroundColor: 'var(--text-primary)',
               padding: '16px',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               marginBottom: '16px'
             }}>
               <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--app-bg)' }}>
@@ -3899,7 +3899,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
               <div style={{
                 backgroundColor: 'var(--text-secondary)',
                 padding: '20px',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 marginBottom: '16px',
                 position: 'relative',
                 minHeight: '120px'
@@ -3934,7 +3934,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                         right: '20px',
                         height: '4px',
                         backgroundColor: 'var(--text-secondary)',
-                        borderRadius: '2px'
+                        borderRadius: 'var(--radius-sm)'
                       }}>
                         {/* Arc blanc - Volets sortis (Vso à VfeLdg) */}
                         {vso > 0 && vfeLdg > 0 && (
@@ -3946,7 +3946,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                               height: '20px',
                               backgroundColor: 'var(--bg-overlay)',
                               bottom: '0',
-                              borderRadius: '8px',
+                              borderRadius: 'var(--radius-sm)',
                               boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
                             }}
                             title={`Arc blanc: ${vso} - ${vfeLdg} kt (Plage volets)`}
@@ -3963,7 +3963,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                               height: '20px',
                               backgroundColor: 'var(--text-primary)',
                               bottom: '25px',
-                              borderRadius: '8px',
+                              borderRadius: 'var(--radius-sm)',
                               boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
                             }}
                             title={`Arc vert: ${vs1} - ${vno} kt (Plage normale)`}
@@ -3980,7 +3980,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                               height: '20px',
                               backgroundColor: 'var(--accent-primary)',
                               bottom: '25px',
-                              borderRadius: '8px',
+                              borderRadius: 'var(--radius-sm)',
                               boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
                             }}
                             title={`Arc jaune: ${vno} - ${vne} kt (Précaution)`}
@@ -3997,7 +3997,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                               height: '40px',
                               backgroundColor: '#C04534',
                               bottom: '15px',
-                              borderRadius: '2px',
+                              borderRadius: 'var(--radius-sm)',
                               boxShadow: '0 2px 4px rgba(0,0,0,0.5)'
                             }}
                             title={`Trait rouge: ${vne} kt (Ne jamais dépasser)`}
@@ -4014,7 +4014,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                               height: '30px',
                               backgroundColor: 'var(--bg-overlay)',
                               bottom: '10px',
-                              borderRadius: '1px',
+                              borderRadius: 'var(--radius-sm)',
                               boxShadow: '0 2px 4px rgba(0,0,0,0.5)'
                             }}
                             title={`VFE T/O: ${vfeTO} kt (Max volets décollage)`}
@@ -4031,7 +4031,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                               height: '35px',
                               background: 'repeating-linear-gradient(to bottom, white 0px, white 4px, transparent 4px, transparent 8px)',
                               bottom: '12px',
-                              borderRadius: '1px',
+                              borderRadius: 'var(--radius-sm)',
                               filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))'
                             }}
                             title={`VO: ${vo} kt (Operating manoeuvring speed - ne pas faire de mouvements brusques au-dessus)`}
@@ -4105,7 +4105,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                     width: '30px',
                     height: '8px',
                     backgroundColor: 'var(--bg-overlay)',
-                    borderRadius: '2px',
+                    borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--text-secondary)'
                   }} />
                   <span style={{ color: 'var(--text-tertiary)' }}>
@@ -4118,7 +4118,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                     width: '30px',
                     height: '8px',
                     backgroundColor: 'var(--text-primary)',
-                    borderRadius: '2px'
+                    borderRadius: 'var(--radius-sm)'
                   }} />
                   <span style={{ color: 'var(--text-tertiary)' }}>
                     <strong>Arc vert:</strong> Plage normale (Vs1 - Vno)
@@ -4130,7 +4130,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                     width: '30px',
                     height: '8px',
                     backgroundColor: 'var(--accent-primary)',
-                    borderRadius: '2px'
+                    borderRadius: 'var(--radius-sm)'
                   }} />
                   <span style={{ color: 'var(--text-tertiary)' }}>
                     <strong>Arc jaune:</strong> Air calme (Vno - Vne)
@@ -4142,7 +4142,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                     width: '30px',
                     height: '8px',
                     backgroundColor: '#C04534',
-                    borderRadius: '2px'
+                    borderRadius: 'var(--radius-sm)'
                   }} />
                   <span style={{ color: 'var(--text-tertiary)' }}>
                     <strong>Trait rouge:</strong> Ne jamais dépasser (Vne)
@@ -4168,7 +4168,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                     width: '30px',
                     height: '20px',
                     background: 'repeating-linear-gradient(to bottom, white 0px, white 3px, transparent 3px, transparent 6px)',
-                    borderRadius: '1px'
+                    borderRadius: 'var(--radius-sm)'
                   }} />
                   <span style={{ color: 'var(--text-tertiary)' }}>
                     <strong>Trait pointillé:</strong> VO (Manœuvre max)
@@ -4181,7 +4181,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                 <div style={{
                   backgroundColor: '#C04534',
                   padding: '10px',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   marginTop: '12px'
                 }}>
                   <p style={{ fontSize: '12px', color: 'var(--bg-overlay)', margin: 0 }}>
@@ -4195,7 +4195,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             <div style={{
               backgroundColor: 'var(--bg-overlay)',
               padding: '10px',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               marginBottom: '12px',
               border: '1px solid var(--border-subtle)'
             }}>
@@ -4252,7 +4252,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             <div style={{
               backgroundColor: 'var(--bg-overlay)',
               padding: '10px',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               marginBottom: '12px',
               border: '1px solid var(--bg-overlay)'
             }}>
@@ -4295,7 +4295,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             <div style={{
               backgroundColor: 'var(--bg-overlay)',
               padding: '10px',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               marginBottom: '12px',
               border: '1px solid var(--bg-overlay)'
             }}>
@@ -4319,7 +4319,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             <div style={{
               backgroundColor: 'rgba(242, 105, 33, 0.10)',
               padding: '10px',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--bg-overlay)'
             }}>
               <h6 style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--app-bg)' }}>
@@ -4417,7 +4417,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
           <div style={{
             backgroundColor: 'var(--bg-overlay)',
             padding: '12px',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             marginTop: '16px',
             marginBottom: '16px'
           }}>
@@ -4613,7 +4613,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       </div>
 
       {showMasseCentrage && (
-        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
           <>
 
             {/* Masses et Centrage */}
@@ -4626,7 +4626,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
           <div style={{ 
             backgroundColor: 'var(--bg-overlay)', 
             padding: '12px', 
-            borderRadius: '8px', 
+            borderRadius: 'var(--radius-sm)', 
             marginBottom: '16px',
             border: '1px solid var(--border-subtle)'
           }}>
@@ -4670,7 +4670,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
           <div style={{ 
             backgroundColor: 'var(--bg-overlay)', 
             padding: '12px', 
-            borderRadius: '8px', 
+            borderRadius: 'var(--radius-sm)', 
             marginBottom: '16px',
             border: '1px solid var(--border-subtle)'
           }}>
@@ -4718,7 +4718,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
           <div style={{ 
             backgroundColor: '#fef3f2', 
             padding: '12px', 
-            borderRadius: '8px', 
+            borderRadius: 'var(--radius-sm)', 
             marginBottom: '16px',
             border: '1px solid var(--border-subtle)'
           }}>
@@ -4793,7 +4793,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
           <div style={{ 
             backgroundColor: 'var(--bg-overlay)', 
             padding: '12px', 
-            borderRadius: '8px', 
+            borderRadius: 'var(--radius-sm)', 
             marginBottom: '16px',
             border: '1px solid var(--border-subtle)'
           }}>
@@ -4809,7 +4809,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                   backgroundColor: 'var(--text-secondary)',
                   color: 'var(--text-primary)',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   fontSize: '12px',
                   cursor: 'pointer',
                   fontWeight: '500'
@@ -4832,7 +4832,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                     gap: '12px',
                     padding: '8px',
                     backgroundColor: 'var(--bg-overlay)',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--border-subtle)'
                   }}>
                     <div>
@@ -4871,7 +4871,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                         backgroundColor: '#C04534',
                         color: 'var(--text-primary)',
                         border: 'none',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         cursor: 'pointer',
                         alignSelf: 'end',
                         marginBottom: '4px'
@@ -4893,7 +4893,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
           <div style={{ 
             backgroundColor: 'var(--bg-overlay)', 
             padding: '12px', 
-            borderRadius: '8px', 
+            borderRadius: 'var(--radius-sm)', 
             marginBottom: '16px',
             border: '1px solid #f26921'
           }}>
@@ -4908,7 +4908,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                   backgroundColor: 'var(--accent-primary)',
                   color: 'var(--accent-primary)',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   padding: '6px 12px',
                   fontSize: '13px',
                   fontWeight: '600',
@@ -4932,7 +4932,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                     gap: '12px',
                     padding: '12px',
                     backgroundColor: 'var(--bg-overlay)',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--border-subtle)'
                   }}>
                     <div>
@@ -4992,7 +4992,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                             backgroundColor: '#C04534',
                             color: 'var(--text-primary)',
                             border: 'none',
-                            borderRadius: '8px',
+                            borderRadius: 'var(--radius-sm)',
                             padding: '8px',
                             fontSize: '12px',
                             cursor: 'pointer',
@@ -5024,7 +5024,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
           <div style={{ 
             backgroundColor: 'var(--bg-overlay)', 
             padding: '12px', 
-            borderRadius: '8px', 
+            borderRadius: 'var(--radius-sm)', 
             marginBottom: '16px',
             border: '1px solid var(--bg-overlay)'
           }}>
@@ -5081,7 +5081,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
           <div style={{ 
             backgroundColor: 'var(--bg-overlay)', 
             padding: '16px', 
-            borderRadius: '8px', 
+            borderRadius: 'var(--radius-sm)', 
             marginBottom: '16px',
             border: '2px solid #C04534',
             marginTop: '24px'
@@ -5103,7 +5103,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                     backgroundColor: 'var(--text-primary)',
                     color: 'var(--text-primary)',
                     border: 'none',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     padding: '6px 12px',
                     fontSize: '12px',
                     cursor: 'pointer',
@@ -5119,7 +5119,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
               <div style={{
                 backgroundColor: 'var(--bg-overlay)',
                 padding: '12px',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--border-subtle)'
               }}>
                 <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '12px', margin: '0 0 12px 0' }}>
@@ -5134,7 +5134,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                     marginBottom: '12px',
                     padding: '12px',
                     backgroundColor: 'var(--bg-overlay)',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--border-subtle)'
                   }}>
                     <div>
@@ -5175,7 +5175,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                             backgroundColor: '#C04534',
                             color: 'var(--text-primary)',
                             border: 'none',
-                            borderRadius: '8px',
+                            borderRadius: 'var(--radius-sm)',
                             padding: '8px',
                             fontSize: '12px',
                             cursor: 'pointer',
@@ -5324,7 +5324,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                 <div style={{
                   backgroundColor: 'var(--bg-overlay)',
                   padding: '20px',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-sm)',
                   marginTop: '20px',
                   border: '2px solid var(--text-secondary)',
                   boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
@@ -5336,7 +5336,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                     marginBottom: '16px',
                     padding: '20px',
                     backgroundColor: 'var(--bg-overlay)',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     border: '2px solid var(--border-subtle)',
                     boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
                   }}>
@@ -5352,7 +5352,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                           width: '100%',
                           height: '100%',
                           border: '1px solid var(--border-subtle)', 
-                          borderRadius: '8px', 
+                          borderRadius: 'var(--radius-sm)', 
                           backgroundColor: 'var(--bg-overlay)'
                         }}>
                       {/* Grille */}
@@ -5472,7 +5472,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       </div>
 
       {showEquipements && (
-        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
           <>
 
             {/* Section Communication */}
@@ -5489,7 +5489,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                 gap: '12px',
                 backgroundColor: 'var(--bg-overlay)',
                 padding: '16px',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--border-subtle)'
               }}>
                 <label style={sx.flex.start}>
@@ -5572,7 +5572,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                 gap: '12px',
                 backgroundColor: '#F0F9FF',
                 padding: '16px',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 border: '1px solid #BAE6FD',
                 marginBottom: '16px'
               }}>
@@ -5737,7 +5737,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                 gap: '12px',
                 backgroundColor: '#FFF7ED',
                 padding: '16px',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 border: '1px solid #FED7AA'
               }}>
                 <label style={sx.flex.start}>
@@ -5838,7 +5838,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                 gap: '12px',
                 backgroundColor: 'var(--bg-overlay)',
                 padding: '16px',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 border: '1px solid #86EFAC',
                 marginBottom: '16px'
               }}>
@@ -5939,7 +5939,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       </div>
 
       {showOperations && (
-        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
           <>
 
             {/* Opérations de base */}
@@ -6146,7 +6146,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       </div>
 
       {showRemarques && (
-        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
           <>
 
             <div>
@@ -6231,7 +6231,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       </div>
 
       {showPerformancesIA && (
-        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
           <>
             <div style={{ marginTop: '20px' }}>
               <AdvancedPerformanceAnalyzer 

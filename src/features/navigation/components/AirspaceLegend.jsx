@@ -21,7 +21,7 @@ export const AirspaceLegend = () => {
       right: '20px',
       background: 'var(--bg-overlay)',
       padding: '12px',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-sm)',
       boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
       fontSize: '12px',
       zIndex: 1000,
@@ -39,7 +39,7 @@ export const AirspaceLegend = () => {
             opacity: 0.4,
             marginRight: '8px',
             border: `${item.weight || 2}px ${item.dash ? 'dashed' : 'solid'} ${item.color}`,
-            borderRadius: '2px'
+            borderRadius: 'var(--radius-sm)'
           }}></div>
           <span style={{ fontSize: '11px' }}>{item.label}</span>
         </div>

@@ -171,7 +171,7 @@ export const PerformanceCalculator = memo(() => {
   const inputStyle = {
     padding: '8px 12px',
     border: '1px solid var(--text-tertiary)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '14px',
     width: '100%',
     backgroundColor: 'var(--bg-overlay)'
@@ -535,7 +535,7 @@ export const PerformanceCalculator = memo(() => {
             <div style={{
               backgroundColor: '#DBEAFE',
               padding: '16px',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               border: '1px solid #93C5FD'
             }}>
               <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
@@ -571,7 +571,7 @@ export const PerformanceCalculator = memo(() => {
             <div style={{
               backgroundColor: 'var(--bg-overlay)',
               padding: '16px',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--accent-primary)'
             }}>
               <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
@@ -609,7 +609,7 @@ export const PerformanceCalculator = memo(() => {
             <div style={sx.combine(sx.spacing.mt(3), {
               backgroundColor: '#E0E7FF',
               padding: '12px',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               border: '1px solid #A5B4FC'
             })}>
               <p style={sx.text.sm}>

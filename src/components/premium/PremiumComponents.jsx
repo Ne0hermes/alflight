@@ -8,7 +8,7 @@ export const PremiumButton = ({ children, onClick, style, disabled, ...props }) 
       disabled={disabled}
       style={{
         padding: '12px 24px',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         border: 'none',
         background: 'linear-gradient(135deg, #f26921, #FF7E36)',
         color: 'var(--text-primary)',
@@ -32,7 +32,7 @@ export const PremiumCard = ({ children, style, ...props }) => {
     <div
       style={{
         background: 'rgba(255, 255, 255, 0.95)',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         padding: '20px',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
         border: '1px solid rgba(147, 22, 60, 0.1)',
@@ -72,7 +72,7 @@ export const PremiumBadge = ({ children, variant = 'default', style, ...props })
         display: 'inline-flex',
         alignItems: 'center',
         padding: '4px 12px',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         fontSize: '12px',
         fontWeight: '600',
         ...variants[variant],

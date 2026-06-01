@@ -1434,7 +1434,7 @@ Do NOT return empty tables array.`;
                         backgroundColor: 'var(--text-primary)',
                         color: 'var(--text-primary)',
                         padding: '2px 6px',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         fontSize: '10px',
                         fontWeight: 'bold',
                         zIndex: 1
@@ -1452,7 +1452,7 @@ Do NOT return empty tables array.`;
                         backgroundColor: image.tableType === 'takeoff' ? 'var(--text-secondary)' : 'var(--accent-primary)',
                         color: 'var(--text-primary)',
                         padding: '2px 6px',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         fontSize: '10px',
                         fontWeight: 'bold',
                         zIndex: 1
@@ -1468,7 +1468,7 @@ Do NOT return empty tables array.`;
                         width: '100%',
                         height: '100px',
                         objectFit: 'cover',
-                        borderRadius: '8px'
+                        borderRadius: 'var(--radius-sm)'
                       }}
                     />
                     <button
@@ -1512,7 +1512,7 @@ Do NOT return empty tables array.`;
             width: '100%',
             height: '8px',
             backgroundColor: 'var(--border-subtle)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             overflow: 'hidden'
           }}>
             <div style={{
@@ -1718,7 +1718,7 @@ Do NOT return empty tables array.`;
                   style={{
                     padding: '8px 12px',
                     border: '1px solid var(--text-tertiary)',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     fontSize: '14px',
                     flex: 1
                   }}
@@ -1883,7 +1883,7 @@ Do NOT return empty tables array.`;
                             width: '100%',
                             padding: '6px 8px',
                             border: '1px solid var(--text-tertiary)',
-                            borderRadius: '8px',
+                            borderRadius: 'var(--radius-sm)',
                             fontSize: '14px'
                           }}
                           placeholder="Valeur"
@@ -2029,7 +2029,7 @@ Do NOT return empty tables array.`;
                 backgroundColor: 'var(--border-subtle)',
                 color: 'var(--text-secondary)',
                 border: 'none',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 fontSize: '16px',
                 cursor: 'pointer',
                 fontWeight: '600',
@@ -2142,7 +2142,7 @@ Do NOT return empty tables array.`;
         }}>
           <div style={{
             backgroundColor: 'var(--bg-overlay)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             padding: '20px',
             maxWidth: '500px',
             width: '90%',
@@ -2174,7 +2174,7 @@ Do NOT return empty tables array.`;
         }}>
           <div style={{
             backgroundColor: 'var(--bg-overlay)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             padding: '24px',
             width: '90%',
             maxWidth: '1200px',
@@ -2231,7 +2231,7 @@ Do NOT return empty tables array.`;
                     }}
                     style={{
                       border: isSelected ? '3px solid var(--text-secondary)' : '1px solid var(--border-subtle)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       padding: '8px',
                       cursor: 'pointer',
                       backgroundColor: isSelected ? 'var(--bg-overlay)' : 'white',
@@ -2247,7 +2247,7 @@ Do NOT return empty tables array.`;
                         backgroundColor: 'var(--text-primary)',
                         color: 'var(--text-primary)',
                         padding: '2px 6px',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-sm)',
                         fontSize: '10px',
                         fontWeight: 'bold'
                       }}>
@@ -2269,7 +2269,7 @@ Do NOT return empty tables array.`;
                       paddingBottom: '141.4%', // A4 ratio
                       position: 'relative',
                       backgroundColor: 'var(--bg-overlay)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       overflow: 'hidden'
                     }}>
                       <img

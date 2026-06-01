@@ -66,7 +66,7 @@ export const VFREditor = ({ editedData, updateValue }) => {
   
   return (
     <div>
-      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
+      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
             Points de report VFR
@@ -84,7 +84,7 @@ export const VFREditor = ({ editedData, updateValue }) => {
               backgroundColor: 'var(--text-primary)',
               color: 'var(--text-primary)',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -101,7 +101,7 @@ export const VFREditor = ({ editedData, updateValue }) => {
               <div key={idx} style={{ 
                 padding: '16px', 
                 backgroundColor: 'var(--bg-overlay)', 
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--border-subtle)'
               }}>
                 {/* En-tête du point */}
@@ -124,7 +124,7 @@ export const VFREditor = ({ editedData, updateValue }) => {
                         padding: '2px 6px', 
                         backgroundColor: 'var(--bg-overlay)', 
                         color: 'var(--text-primary)',
-                        borderRadius: '3px',
+                        borderRadius: 'var(--radius-sm)',
                         fontWeight: 'bold'
                       }}>
                         {point.type}
@@ -136,7 +136,7 @@ export const VFREditor = ({ editedData, updateValue }) => {
                         padding: '2px 6px', 
                         backgroundColor: 'var(--bg-overlay)', 
                         color: '#C04534',
-                        borderRadius: '3px'
+                        borderRadius: 'var(--radius-sm)'
                       }}>
                         OBLIGATOIRE
                       </span>
@@ -149,7 +149,7 @@ export const VFREditor = ({ editedData, updateValue }) => {
                       backgroundColor: '#C04534',
                       color: 'var(--text-primary)',
                       border: 'none',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-sm)',
                       cursor: 'pointer'
                     }}
                   >

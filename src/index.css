@@ -110,6 +110,21 @@
   --font-sans: 'Century Gothic', 'URW Gothic', 'Questrial', 'Jost', 'Avant Garde', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'SF Mono', Menlo, Consolas, monospace;
 
+  /* ============================================================
+     📐 RAYONS DE BORDURE — Canonical source of truth
+     ============================================================
+     Tous les borderRadius de l'app DOIVENT référencer ces variables.
+     Pour changer l'arrondi global (par ex. passer de 8px à 4px ou
+     à 0 px pour un look cockpit plus dur), modifier UNIQUEMENT
+     --radius-sm ci-dessous : tous les boutons, cards, badges, alertes
+     suivent automatiquement.
+     ----------------------------------------------------------- */
+  --radius-none: 0;
+  --radius-sm: 8px;     /* Boutons, cards, badges, alertes (le plus utilisé) */
+  --radius-md: 12px;    /* Cards larges, sections de page */
+  --radius-lg: 16px;    /* Hero, grandes surfaces, modales */
+  --radius-pill: 9999px; /* Pills/chips arrondis (à utiliser parcimonieusement) */
+
   /* Motion */
   --motion-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);
   --motion-base: 180ms cubic-bezier(0.4, 0, 0.2, 1);

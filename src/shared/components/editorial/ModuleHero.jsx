@@ -51,7 +51,7 @@ export const ModuleHero = ({
         width: '100%',
         minHeight: 'clamp(220px, 32vh, 380px)',
         marginBottom: tokens.spacing[6],
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-sm)',
         overflow: 'hidden',
         // Fallback : dégradé noir profond → orange subtle si la photo manque.
         // Le backgroundImage cumule l'image (au-dessus) + le gradient (dessous)
