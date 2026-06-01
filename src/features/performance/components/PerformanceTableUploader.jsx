@@ -543,7 +543,7 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
               <label style={sx.combine(sx.text.xs, sx.text.secondary)}>
                 Masse (kg)
                 {calculations?.totalWeight && (
-                  <span style={{ marginLeft: '4px', color: '#10b981' }}>
+                  <span style={{ marginLeft: '4px', color: 'var(--text-primary)' }}>
                     ✓ M&C
                   </span>
                 )}
@@ -559,7 +559,7 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
               <label style={sx.combine(sx.text.xs, sx.text.secondary)}>
                 Altitude (ft)
                 {getDepartureAltitude() > 0 && (
-                  <span style={{ marginLeft: '4px', color: '#10b981' }}>
+                  <span style={{ marginLeft: '4px', color: 'var(--text-primary)' }}>
                     ✓ {getDepartureAltitude()}ft
                   </span>
                 )}
@@ -575,11 +575,11 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
               <label style={sx.combine(sx.text.xs, sx.text.secondary)}>
                 Temp. (°C)
                 {hasMetarTemperature(false) ? (
-                  <span style={{ marginLeft: '4px', color: '#10b981' }}>
+                  <span style={{ marginLeft: '4px', color: 'var(--text-primary)' }}>
                     ✓ METAR
                   </span>
                 ) : (
-                  <span style={{ marginLeft: '4px', color: '#f59e0b' }}>
+                  <span style={{ marginLeft: '4px', color: 'var(--accent-primary)' }}>
                     ⚠️ ISA 15°C
                   </span>
                 )}
@@ -609,7 +609,7 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
               <label style={sx.combine(sx.text.xs, sx.text.secondary)}>
                 Masse (kg)
                 {fuelData?.trip?.ltr > 0 && (
-                  <span style={{ marginLeft: '4px', color: '#10b981' }}>
+                  <span style={{ marginLeft: '4px', color: 'var(--text-primary)' }}>
                     ✓ Trip -{Math.round(fuelData.trip.ltr * (selectedAircraft?.fuelType === 'JET A-1' ? 0.84 : 0.72))}kg
                   </span>
                 )}
@@ -625,7 +625,7 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
               <label style={sx.combine(sx.text.xs, sx.text.secondary)}>
                 Altitude (ft)
                 {getArrivalAltitude() > 0 && (
-                  <span style={{ marginLeft: '4px', color: '#10b981' }}>
+                  <span style={{ marginLeft: '4px', color: 'var(--text-primary)' }}>
                     ✓ {getArrivalAltitude()}ft
                   </span>
                 )}
@@ -641,11 +641,11 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
               <label style={sx.combine(sx.text.xs, sx.text.secondary)}>
                 Temp. (°C)
                 {hasMetarTemperature(true) ? (
-                  <span style={{ marginLeft: '4px', color: '#10b981' }}>
+                  <span style={{ marginLeft: '4px', color: 'var(--text-primary)' }}>
                     ✓ METAR
                   </span>
                 ) : (
-                  <span style={{ marginLeft: '4px', color: '#f59e0b' }}>
+                  <span style={{ marginLeft: '4px', color: 'var(--accent-primary)' }}>
                     ⚠️ ISA 15°C
                   </span>
                 )}
@@ -710,7 +710,7 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
               justifyContent: 'center',
               padding: '24px',
               cursor: 'pointer',
-              border: '2px dashed #9ca3af',
+              border: '2px dashed var(--text-tertiary)',
               borderRadius: '8px',
               minHeight: '200px',
               position: 'relative',
@@ -725,7 +725,7 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
             />
             {takeoffPreview === 'loading' ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                <Loader size={32} className="animate-spin" color="#6b7280" />
+                <Loader size={32} className="animate-spin" color="var(--text-secondary)" />
                 <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
                   Conversion du PDF...
                 </p>
@@ -749,7 +749,7 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
                   position: 'absolute',
                   top: '8px',
                   right: '8px',
-                  backgroundColor: 'white',
+                  backgroundColor: 'var(--bg-overlay)',
                   borderRadius: '50%',
                   padding: '4px',
                   cursor: 'pointer'
@@ -761,14 +761,14 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
                 }}>
                   <X size={16} />
                 </div>
-                <CheckCircle size={32} color="#10b981" style={{ position: 'relative', zIndex: 1 }} />
-                <p style={sx.combine(sx.text.sm, sx.text.bold, { position: 'relative', zIndex: 1, color: '#10b981' })}>
+                <CheckCircle size={32} color="var(--text-primary)" style={{ position: 'relative', zIndex: 1 }} />
+                <p style={sx.combine(sx.text.sm, sx.text.bold, { position: 'relative', zIndex: 1, color: 'var(--text-primary)' })}>
                   Tableau chargé
                 </p>
               </>
             ) : (
               <>
-                <Upload size={32} color="#6b7280" />
+                <Upload size={32} color="var(--text-secondary)" />
                 <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mt(2))}>
                   Cliquez pour charger
                 </p>
@@ -795,7 +795,7 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
               justifyContent: 'center',
               padding: '24px',
               cursor: 'pointer',
-              border: '2px dashed #9ca3af',
+              border: '2px dashed var(--text-tertiary)',
               borderRadius: '8px',
               minHeight: '200px',
               position: 'relative',
@@ -810,7 +810,7 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
             />
             {landingPreview === 'loading' ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                <Loader size={32} className="animate-spin" color="#6b7280" />
+                <Loader size={32} className="animate-spin" color="var(--text-secondary)" />
                 <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
                   Conversion du PDF...
                 </p>
@@ -834,7 +834,7 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
                   position: 'absolute',
                   top: '8px',
                   right: '8px',
-                  backgroundColor: 'white',
+                  backgroundColor: 'var(--bg-overlay)',
                   borderRadius: '50%',
                   padding: '4px',
                   cursor: 'pointer'
@@ -846,14 +846,14 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
                 }}>
                   <X size={16} />
                 </div>
-                <CheckCircle size={32} color="#10b981" style={{ position: 'relative', zIndex: 1 }} />
-                <p style={sx.combine(sx.text.sm, sx.text.bold, { position: 'relative', zIndex: 1, color: '#10b981' })}>
+                <CheckCircle size={32} color="var(--text-primary)" style={{ position: 'relative', zIndex: 1 }} />
+                <p style={sx.combine(sx.text.sm, sx.text.bold, { position: 'relative', zIndex: 1, color: 'var(--text-primary)' })}>
                   Tableau chargé
                 </p>
               </>
             ) : (
               <>
-                <Upload size={32} color="#6b7280" />
+                <Upload size={32} color="var(--text-secondary)" />
                 <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mt(2))}>
                   Cliquez pour charger
                 </p>
@@ -1021,9 +1021,9 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
             <h6 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
               Masse de décollage
             </h6>
-            <div style={sx.combine(sx.text.xs, { fontFamily: 'monospace', backgroundColor: '#f3f4f6', padding: '8px', borderRadius: '4px' })}>
+            <div style={sx.combine(sx.text.xs, { fontFamily: 'monospace', backgroundColor: 'var(--bg-overlay)', padding: '8px', borderRadius: '8px' })}>
               <p>Masse décollage = Masse totale (depuis Masse & Centrage)</p>
-              <p style={{ marginTop: '4px', color: '#6b7280' }}>
+              <p style={{ marginTop: '4px', color: 'var(--text-secondary)' }}>
                 Source: Module Masse & Centrage → Calculs → Masse totale
               </p>
             </div>
@@ -1039,14 +1039,14 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
             <h6 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
               Masse d'atterrissage
             </h6>
-            <div style={sx.combine(sx.text.xs, { fontFamily: 'monospace', backgroundColor: '#f3f4f6', padding: '8px', borderRadius: '4px' })}>
+            <div style={sx.combine(sx.text.xs, { fontFamily: 'monospace', backgroundColor: 'var(--bg-overlay)', padding: '8px', borderRadius: '8px' })}>
               <p>1. Densité carburant = {selectedAircraft?.fuelType === 'JET A-1' ? '0.84' : '0.72'} kg/L ({selectedAircraft?.fuelType || 'AVGAS 100LL'})</p>
               <p>2. FOB (kg) = FOB (L) × Densité</p>
               <p>3. ZFW = Masse décollage - FOB (kg)</p>
               <p>4. Carburant consommé (kg) = Trip (L) × Densité</p>
               <p>5. Carburant restant (kg) = FOB (kg) - Carburant consommé (kg)</p>
               <p>6. <strong>Masse atterrissage = ZFW + Carburant restant (kg)</strong></p>
-              <p style={{ marginTop: '4px', color: '#6b7280' }}>
+              <p style={{ marginTop: '4px', color: 'var(--text-secondary)' }}>
                 Sources: M&C, Module Carburant → FOB & Trip
               </p>
             </div>
@@ -1065,9 +1065,9 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
             <h6 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
               Altitude des aérodromes
             </h6>
-            <div style={sx.combine(sx.text.xs, { fontFamily: 'monospace', backgroundColor: '#f3f4f6', padding: '8px', borderRadius: '4px' })}>
+            <div style={sx.combine(sx.text.xs, { fontFamily: 'monospace', backgroundColor: 'var(--bg-overlay)', padding: '8px', borderRadius: '8px' })}>
               <p>Altitude = Élévation officielle AIP (Service Information Aéronautique)</p>
-              <p style={{ marginTop: '4px', color: '#6b7280' }}>
+              <p style={{ marginTop: '4px', color: 'var(--text-secondary)' }}>
                 Sources: Données SIA exclusivement depuis src/data
               </p>
             </div>
@@ -1088,13 +1088,13 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
             <h6 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
               Température
             </h6>
-            <div style={sx.combine(sx.text.xs, { fontFamily: 'monospace', backgroundColor: '#f3f4f6', padding: '8px', borderRadius: '4px' })}>
+            <div style={sx.combine(sx.text.xs, { fontFamily: 'monospace', backgroundColor: 'var(--bg-overlay)', padding: '8px', borderRadius: '8px' })}>
               <p>Température = METAR → Temperature (si disponible)</p>
               <p>Sinon: Température ISA standard = 15°C</p>
-              <p style={{ marginTop: '4px', color: '#f59e0b' }}>
+              <p style={{ marginTop: '4px', color: 'var(--accent-primary)' }}>
                 ⚠️ IMPORTANT: Si ISA utilisée, la température réelle peut différer significativement
               </p>
-              <p style={{ marginTop: '4px', color: '#6b7280' }}>
+              <p style={{ marginTop: '4px', color: 'var(--text-secondary)' }}>
                 Source: Module Météo → METAR de l'aérodrome
               </p>
             </div>
@@ -1104,8 +1104,8 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
                   <p>
                     Départ ({waypoints[0].name}): {getTemperatureFromWeather(false)}°C 
                     {hasMetarTemperature(false) ? 
-                      <span style={{ color: '#10b981', marginLeft: '8px' }}>(METAR)</span> : 
-                      <span style={{ color: '#f59e0b', marginLeft: '8px' }}>(ISA - pas de METAR)</span>
+                      <span style={{ color: 'var(--text-primary)', marginLeft: '8px' }}>(METAR)</span> : 
+                      <span style={{ color: 'var(--accent-primary)', marginLeft: '8px' }}>(ISA - pas de METAR)</span>
                     }
                   </p>
                 )}
@@ -1113,8 +1113,8 @@ const PerformanceTableUploader = ({ onAnalysisComplete }) => {
                   <p>
                     Arrivée ({waypoints[waypoints.length - 1].name}): {getTemperatureFromWeather(true)}°C
                     {hasMetarTemperature(true) ? 
-                      <span style={{ color: '#10b981', marginLeft: '8px' }}>(METAR)</span> : 
-                      <span style={{ color: '#f59e0b', marginLeft: '8px' }}>(ISA - pas de METAR)</span>
+                      <span style={{ color: 'var(--text-primary)', marginLeft: '8px' }}>(METAR)</span> : 
+                      <span style={{ color: 'var(--accent-primary)', marginLeft: '8px' }}>(ISA - pas de METAR)</span>
                     }
                   </p>
                 )}

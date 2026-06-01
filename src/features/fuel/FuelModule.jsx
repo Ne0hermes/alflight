@@ -73,7 +73,7 @@ const FuelRow = memo(({ type, label, description, fuel, onChange, readonly = fal
             )}
             step="0.1"
           />
-          <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: '500' }}>
+          <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '500' }}>
             {getSymbol('fuel')}
           </span>
         </div>

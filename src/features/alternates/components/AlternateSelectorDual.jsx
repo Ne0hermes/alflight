@@ -130,9 +130,9 @@ export const AlternateSelectorDual = memo(({
                     marginBottom: '6px',
                     borderWidth: '2px',
                     borderStyle: 'solid',
-                    borderColor: isSelected ? sideColor : (isHovered ? `${sideColor}60` : '#e5e7eb'),
-                    borderRadius: '6px',
-                    backgroundColor: isSelected ? (side === 'departure' ? '#fef2f2' : '#f0fdf4') : (isHovered ? '#fafafa' : '#ffffff'),
+                    borderColor: isSelected ? sideColor : (isHovered ? `${sideColor}60` : 'var(--border-subtle)'),
+                    borderRadius: '8px',
+                    backgroundColor: isSelected ? (side === 'departure' ? 'var(--bg-overlay)' : 'var(--bg-overlay)') : (isHovered ? 'var(--bg-overlay)' : '#ffffff'),
                     cursor: 'pointer',
                     transition: 'all 0.2s',
                     position: 'relative',
@@ -165,7 +165,7 @@ export const AlternateSelectorDual = memo(({
                       top: 0,
                       right: 0,
                       backgroundColor: sideColor,
-                      color: 'white',
+                      color: 'var(--text-primary)',
                       padding: '4px 12px',
                       borderBottomLeftRadius: '8px',
                       fontSize: '11px',
@@ -291,7 +291,7 @@ export const AlternateSelectorDual = memo(({
           onSelect={handleSelect}
           side="departure"
           referencePoint={searchZone.departure}
-          sideColor="#dc2626"
+          sideColor="#C04534"
         />
 
         {/* Côté arrivée */}
@@ -302,7 +302,7 @@ export const AlternateSelectorDual = memo(({
           onSelect={handleSelect}
           side="arrival"
           referencePoint={searchZone.arrival}
-          sideColor="#059669"
+          sideColor="var(--text-primary)"
         />
       </div>
     </div>
@@ -311,10 +311,10 @@ export const AlternateSelectorDual = memo(({
 
 // Fonction pour obtenir la couleur selon le score
 const getScoreColor = (score) => {
-  if (!score) return '#6b7280';
-  if (score >= 0.8) return '#10b981';
-  if (score >= 0.6) return '#f59e0b';
-  return '#ef4444';
+  if (!score) return 'var(--text-secondary)';
+  if (score >= 0.8) return 'var(--text-primary)';
+  if (score >= 0.6) return 'var(--accent-primary)';
+  return '#C04534';
 };
 
 AlternateSelectorDual.displayName = 'AlternateSelectorDual';

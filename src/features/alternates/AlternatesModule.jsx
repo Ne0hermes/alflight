@@ -24,7 +24,7 @@ import { tokens } from '@shared/styles/designSystem';
 const StatCard = memo(({ icon, label, value, detail, dataSource = 'static' }) => (
   <div style={sx.combine(sx.spacing.p(3), sx.bg.gray, sx.rounded.lg)}>
     <div style={sx.combine(sx.flex.start, sx.spacing.gap(2), sx.spacing.mb(2))}>
-      <div style={{ color: '#3b82f6' }}>{icon}</div>
+      <div style={{ color: 'var(--text-secondary)' }}>{icon}</div>
       <span style={sx.combine(sx.text.sm, sx.text.muted)}>{label}</span>
       {dataSource !== 'static' && (
         <DataSourceBadge source={dataSource} size="xs" showLabel={false} inline={true} />
@@ -102,8 +102,8 @@ const AerodromeDetailsCard = memo(({ airport, side, sideColor, sideEmoji, sideLa
       borderWidth: '2px',
       borderStyle: 'solid',
       borderColor: sideColor,
-      borderRadius: '12px',
-      backgroundColor: side === 'departure' ? '#fef2f2' : '#f0fdf4'
+      borderRadius: '8px',
+      backgroundColor: side === 'departure' ? 'var(--bg-overlay)' : 'var(--bg-overlay)'
     }}>
       <p style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
         {sideEmoji} {sideLabel}
@@ -182,11 +182,11 @@ const AerodromeDetailsCard = memo(({ airport, side, sideColor, sideEmoji, sideLa
                   style={{
                     padding: '12px',
                     marginBottom: '8px',
-                    backgroundColor: 'white',
+                    backgroundColor: 'var(--bg-overlay)',
                     borderWidth: '1px',
                     borderStyle: 'solid',
-                    borderColor: '#e5e7eb',
-                    borderRadius: '6px'
+                    borderColor: 'var(--border-subtle)',
+                    borderRadius: '8px'
                   }}
                 >
                   <div style={sx.combine(sx.flex.between, sx.spacing.mb(2))}>
@@ -194,8 +194,8 @@ const AerodromeDetailsCard = memo(({ airport, side, sideColor, sideEmoji, sideLa
                     {runway.designation && (
                       <span style={sx.combine(sx.text.xs, {
                         padding: '2px 6px',
-                        backgroundColor: '#f3f4f6',
-                        borderRadius: '4px'
+                        backgroundColor: 'var(--bg-overlay)',
+                        borderRadius: '8px'
                       })}>
                         {runway.designation}
                       </span>
@@ -423,7 +423,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
           display: 'inline-block',
           animation: 'spin 2s linear infinite'
         }}>
-          <Plane size={48} style={{ color: '#3b82f6' }} />
+          <Plane size={48} style={{ color: 'var(--text-secondary)' }} />
         </div>
         <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mt(4), sx.spacing.mb(2))}>
           Chargement de l'avion...
@@ -449,7 +449,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
           display: 'inline-block',
           animation: 'spin 2s linear infinite'
         }}>
-          <MapPin size={48} style={{ color: '#10b981' }} />
+          <MapPin size={48} style={{ color: 'var(--text-primary)' }} />
         </div>
         <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mt(4), sx.spacing.mb(2))}>
           Chargement des aérodromes...
@@ -517,18 +517,18 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
               </h4>
               <div style={{
                 fontSize: '13px',
-                color: '#374151',
+                color: 'var(--text-secondary)',
                 marginBottom: '16px',
                 marginTop: '0',
                 padding: '12px',
-                backgroundColor: '#f0f9ff',
+                backgroundColor: 'var(--bg-overlay)',
                 borderRadius: '8px',
-                border: '1px solid #bfdbfe'
+                border: '1px solid var(--border-subtle)'
               }}>
-                <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: '#1e40af' }}>
+                <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: 'var(--text-primary)' }}>
                   🛩️ Zone de recherche : {Math.ceil(dynamicRadius || 25)} NM de rayon
                 </p>
-                <p style={{ margin: '0', fontSize: '12px', color: '#6b7280', lineHeight: '1.4' }}>
+                <p style={{ margin: '0', fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                   Le rayon correspond à un temps de déroutement de 20-30 min selon l'autonomie de l'avion.
                   Cela représente la zone où vous pourriez rejoindre un aérodrome de déroutement en cas de besoin.
                 </p>
@@ -569,7 +569,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
                     display: 'inline-block',
                     animation: 'spin 2s linear infinite'
                   }}>
-                    <RefreshCw size={48} style={{ color: '#3b82f6' }} />
+                    <RefreshCw size={48} style={{ color: 'var(--text-secondary)' }} />
                   </div>
                   <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mt(4), sx.spacing.mb(2))}>
                     Recherche en cours...
@@ -600,7 +600,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
                 <AerodromeDetailsCard
                   airport={manualSelection.departure}
                   side="departure"
-                  sideColor="#dc2626"
+                  sideColor="#C04534"
                   sideEmoji="🔴"
                   sideLabel="Déroutement côté départ"
                   distanceLabel="NM depuis le départ"
@@ -612,7 +612,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
                 <AerodromeDetailsCard
                   airport={manualSelection.arrival}
                   side="arrival"
-                  sideColor="#059669"
+                  sideColor="var(--text-primary)"
                   sideEmoji="🟢"
                   sideLabel="Déroutement côté arrivée"
                   distanceLabel="NM depuis l'arrivée"

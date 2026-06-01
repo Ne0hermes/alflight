@@ -299,7 +299,7 @@ const VFRNavigationTable = ({
 
   return (
     <div style={{
-      backgroundColor: 'white',
+      backgroundColor: 'var(--bg-overlay)',
       borderRadius: '8px',
       padding: '20px',
       boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
@@ -329,10 +329,10 @@ const VFRNavigationTable = ({
             onClick={() => setShowTable(!showTable)}
             style={{
               padding: '8px 16px',
-              backgroundColor: '#3b82f6',
-              color: 'white',
+              backgroundColor: 'var(--text-secondary)',
+              color: 'var(--text-primary)',
               border: 'none',
-              borderRadius: '6px',
+              borderRadius: '8px',
               cursor: 'pointer',
               fontSize: '14px',
               fontWeight: '500',
@@ -352,9 +352,9 @@ const VFRNavigationTable = ({
           {dayNightAnalysis.hasWarnings && dayNightAnalysis.sunTimes && (
             <div style={{
               backgroundColor: 'rgba(242, 105, 33, 0.10)',
-              border: '2px solid #f59e0b',
-              borderLeft: '6px solid #d97706',
-              borderRadius: '6px',
+              border: '2px solid var(--accent-primary)',
+              borderLeft: '6px solid var(--accent-primary)',
+              borderRadius: '8px',
               padding: '12px',
               marginBottom: '16px'
             }}>
@@ -364,12 +364,12 @@ const VFRNavigationTable = ({
                 gap: '8px',
                 marginBottom: '8px'
               }}>
-                <Sunset size={18} color="#d97706" />
-                <span style={{ fontWeight: 'bold', color: '#92400e', fontSize: '14px' }}>
+                <Sunset size={18} color="var(--accent-primary)" />
+                <span style={{ fontWeight: 'bold', color: 'var(--accent-primary)', fontSize: '14px' }}>
                   ⚠️ ALERTE JOUR/NUIT : Une partie du vol se déroulera au crépuscule ou de nuit
                 </span>
               </div>
-              <div style={{ fontSize: '12px', color: '#78350f', lineHeight: '1.5' }}>
+              <div style={{ fontSize: '12px', color: 'var(--accent-primary)', lineHeight: '1.5' }}>
                 <div><strong>Coucher du soleil :</strong> {formatSunTime(dayNightAnalysis.sunTimes.sunset)}</div>
                 <div><strong>Début nuit aéronautique :</strong> {formatSunTime(dayNightAnalysis.sunTimes.nightStart)} (coucher + 30min)</div>
                 <div><strong>Lever du soleil :</strong> {formatSunTime(dayNightAnalysis.sunTimes.sunrise)}</div>
@@ -388,34 +388,34 @@ const VFRNavigationTable = ({
               fontSize: '12px'
             }}>
               <thead>
-                <tr style={{ backgroundColor: '#f3f4f6' }}>
-                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>#</th>
-                  <th style={{ padding: '8px', border: '1px solid #e5e7eb' }}>De</th>
-                  <th style={{ padding: '8px', border: '1px solid #e5e7eb' }}>Vers</th>
-                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>Alt ({getSymbol('altitude')})</th>
-                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>CAP (°)</th>
-                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>DIST ({getSymbol('distance')})</th>
-                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>ETE</th>
-                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', backgroundColor: '#f0f9ff' }}>HEURE THÉORIQUE</th>
-                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', backgroundColor: '#fef9e5' }}>JOUR/NUIT</th>
-                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', backgroundColor: 'rgba(242, 105, 33, 0.10)' }}>ATE</th>
-                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', backgroundColor: 'rgba(242, 105, 33, 0.10)' }}>HEURE RÉELLE</th>
-                  <th style={{ padding: '8px', border: '1px solid #e5e7eb', backgroundColor: '#dbeafe' }}>ESPACES AÉRIENS & FRÉQUENCES</th>
+                <tr style={{ backgroundColor: 'var(--bg-overlay)' }}>
+                  <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>#</th>
+                  <th style={{ padding: '8px', border: '1px solid var(--border-subtle)' }}>De</th>
+                  <th style={{ padding: '8px', border: '1px solid var(--border-subtle)' }}>Vers</th>
+                  <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>Alt ({getSymbol('altitude')})</th>
+                  <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>CAP (°)</th>
+                  <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>DIST ({getSymbol('distance')})</th>
+                  <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>ETE</th>
+                  <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', backgroundColor: 'var(--bg-overlay)' }}>HEURE THÉORIQUE</th>
+                  <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', backgroundColor: 'var(--bg-overlay)' }}>JOUR/NUIT</th>
+                  <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', backgroundColor: 'rgba(242, 105, 33, 0.10)' }}>ATE</th>
+                  <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', backgroundColor: 'rgba(242, 105, 33, 0.10)' }}>HEURE RÉELLE</th>
+                  <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-overlay)' }}>ESPACES AÉRIENS & FRÉQUENCES</th>
                 </tr>
               </thead>
               <tbody>
                 {navigationData.map((seg, idx) => (
                   <tr key={idx}>
-                    <td style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', fontWeight: 'bold' }}>
+                    <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', fontWeight: 'bold' }}>
                       {idx + 1}
                     </td>
-                    <td style={{ padding: '8px', border: '1px solid #e5e7eb', fontWeight: 'bold' }}>
+                    <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', fontWeight: 'bold' }}>
                       {seg.from}
                     </td>
-                    <td style={{ padding: '8px', border: '1px solid #e5e7eb', fontWeight: 'bold' }}>
+                    <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', fontWeight: 'bold' }}>
                       {seg.to}
                     </td>
-                    <td style={{ padding: '4px', border: '1px solid #e5e7eb', textAlign: 'center' }}>
+                    <td style={{ padding: '4px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>
                       <input
                         type="number"
                         value={seg.altitude}
@@ -432,8 +432,8 @@ const VFRNavigationTable = ({
                         style={{
                           width: '70px',
                           padding: '4px 6px',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '4px',
+                          border: '1px solid var(--text-tertiary)',
+                          borderRadius: '8px',
                           textAlign: 'center',
                           fontSize: '12px',
                           fontWeight: 'bold',
@@ -444,22 +444,22 @@ const VFRNavigationTable = ({
                         step="500"
                       />
                     </td>
-                    <td style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', fontWeight: 'bold', color: '#3b82f6' }}>
+                    <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
                       {seg.magneticHeading}°
                     </td>
-                    <td style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>
+                    <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>
                       {seg.distanceDisplay || format(seg.distance, 'distance', 1)}
                     </td>
-                    <td style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center', fontWeight: 'bold' }}>
+                    <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', fontWeight: 'bold' }}>
                       {formatTime(seg.estimatedTime)}
                     </td>
                     <td style={{
                       padding: '8px',
-                      border: '1px solid #e5e7eb',
+                      border: '1px solid var(--border-subtle)',
                       textAlign: 'center',
-                      backgroundColor: '#f0f9ff',
+                      backgroundColor: 'var(--bg-overlay)',
                       minWidth: '80px',
-                      color: '#1e40af',
+                      color: 'var(--text-primary)',
                       fontWeight: 'bold'
                     }}>
                       {departureTimeTheoretical ? addMinutesToTime(departureTimeTheoretical, seg.cumulativeETEMinutes) : '-'}
@@ -468,9 +468,9 @@ const VFRNavigationTable = ({
                     {/* Indicateur jour/nuit */}
                     <td style={{
                       padding: '8px',
-                      border: '1px solid #e5e7eb',
+                      border: '1px solid var(--border-subtle)',
                       textAlign: 'center',
-                      backgroundColor: '#fef9e5'
+                      backgroundColor: 'var(--bg-overlay)'
                     }}>
                       {(() => {
                         const segAnalysis = dayNightAnalysis.segments[idx];
@@ -480,22 +480,22 @@ const VFRNavigationTable = ({
                         if (status === 'day') {
                           return (
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                              <Sun size={14} color="#f59e0b" />
-                              <span style={{ fontSize: '11px', color: '#92400e' }}>Jour</span>
+                              <Sun size={14} color="var(--accent-primary)" />
+                              <span style={{ fontSize: '11px', color: 'var(--accent-primary)' }}>Jour</span>
                             </div>
                           );
                         } else if (status === 'twilight') {
                           return (
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                              <Sunset size={14} color="#f59e0b" />
-                              <span style={{ fontSize: '11px', color: '#d97706', fontWeight: 'bold' }}>Crépuscule</span>
+                              <Sunset size={14} color="var(--accent-primary)" />
+                              <span style={{ fontSize: '11px', color: 'var(--accent-primary)', fontWeight: 'bold' }}>Crépuscule</span>
                             </div>
                           );
                         } else if (status === 'night') {
                           return (
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                              <Moon size={14} color="#7c3aed" />
-                              <span style={{ fontSize: '11px', color: '#5b21b6', fontWeight: 'bold' }}>Nuit</span>
+                              <Moon size={14} color="var(--accent-primary)" />
+                              <span style={{ fontSize: '11px', color: 'var(--accent-primary)', fontWeight: 'bold' }}>Nuit</span>
                             </div>
                           );
                         }
@@ -505,7 +505,7 @@ const VFRNavigationTable = ({
 
                     <td style={{
                       padding: '8px',
-                      border: '1px solid #e5e7eb',
+                      border: '1px solid var(--border-subtle)',
                       textAlign: 'center',
                       backgroundColor: 'rgba(242, 105, 33, 0.10)',
                       minWidth: '60px'
@@ -514,7 +514,7 @@ const VFRNavigationTable = ({
                     </td>
                     <td style={{
                       padding: '8px',
-                      border: '1px solid #e5e7eb',
+                      border: '1px solid var(--border-subtle)',
                       textAlign: 'center',
                       backgroundColor: 'rgba(242, 105, 33, 0.10)',
                       minWidth: '80px'
@@ -524,9 +524,9 @@ const VFRNavigationTable = ({
                     {/* 🛫 Colonne Espaces aériens */}
                     <td style={{
                       padding: '6px',
-                      border: '1px solid #e5e7eb',
+                      border: '1px solid var(--border-subtle)',
                       fontSize: '11px',
-                      backgroundColor: '#f0f9ff',
+                      backgroundColor: 'var(--bg-overlay)',
                       maxWidth: '200px'
                     }}>
                       {/* 🚨 ZONES RÉGLEMENTÉES/INTERDITES - Priorité 1 */}
@@ -534,16 +534,16 @@ const VFRNavigationTable = ({
                         <div style={{
                           marginBottom: '8px',
                           padding: '6px',
-                          backgroundColor: '#e0f2fe',
-                          border: '2px solid #0284c7',
-                          borderRadius: '4px'
+                          backgroundColor: 'var(--bg-overlay)',
+                          border: '2px solid var(--text-secondary)',
+                          borderRadius: '8px'
                         }}>
                           <div style={{
                             display: 'flex',
                             alignItems: 'center',
                             gap: '4px',
                             marginBottom: '4px',
-                            color: '#0369a1',
+                            color: 'var(--text-secondary)',
                             fontWeight: 'bold',
                             fontSize: '12px'
                           }}>
@@ -554,11 +554,11 @@ const VFRNavigationTable = ({
                             <div key={idx} style={{
                               marginTop: '4px',
                               padding: '4px',
-                              backgroundColor: '#e0f2fe',
+                              backgroundColor: 'var(--bg-overlay)',
                               borderRadius: '3px',
-                              border: '1px solid #0284c7'
+                              border: '1px solid var(--text-secondary)'
                             }}>
-                              <strong style={{ color: '#0369a1' }}>
+                              <strong style={{ color: 'var(--text-secondary)' }}>
                                 {zone.type === 'P' && '🚫 INTERDITE'}
                                 {zone.type === 'R' && '⚠️ RÉGLEMENTÉE'}
                                 {zone.type === 'D' && '⚠️ DANGEREUSE'}
@@ -568,13 +568,13 @@ const VFRNavigationTable = ({
                               </strong>
                               {' '}{zone.name}
                               <br />
-                              <span style={{ fontSize: '10px', color: '#075985' }}>
+                              <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
                                 {zone.floor_raw} - {zone.ceiling_raw}
                               </span>
                               {zone.activity && (
                                 <>
                                   <br />
-                                  <span style={{ fontSize: '9px', color: '#075985', fontStyle: 'italic' }}>
+                                  <span style={{ fontSize: '9px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
                                     Activité: {zone.activity}
                                   </span>
                                 </>
@@ -582,7 +582,7 @@ const VFRNavigationTable = ({
                               {zone.schedule && (
                                 <>
                                   <br />
-                                  <span style={{ fontSize: '9px', color: '#075985', fontStyle: 'italic' }}>
+                                  <span style={{ fontSize: '9px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
                                     Horaires: {zone.schedule}
                                   </span>
                                 </>
@@ -599,14 +599,14 @@ const VFRNavigationTable = ({
                             <div key={idx} style={{
                               marginBottom: '4px',
                               padding: '4px',
-                              backgroundColor: '#e0f2fe',
+                              backgroundColor: 'var(--bg-overlay)',
                               borderRadius: '3px',
-                              border: '1px solid #0284c7'
+                              border: '1px solid var(--text-secondary)'
                             }}>
                               <div style={{ marginBottom: '2px' }}>
                                 <strong>{airspace.type}</strong> {airspace.name}
                                 <br />
-                                <span style={{ fontSize: '10px', color: '#666' }}>
+                                <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
                                   Classe {airspace.class} | {airspace.floor_raw} ({airspace.floor}ft) - {airspace.ceiling_raw} ({airspace.ceiling}ft)
                                 </span>
                               </div>
@@ -615,18 +615,18 @@ const VFRNavigationTable = ({
                                 <div style={{
                                   marginTop: '3px',
                                   paddingTop: '3px',
-                                  borderTop: '1px solid #94a3b8'
+                                  borderTop: '1px solid var(--text-tertiary)'
                                 }}>
                                   {airspace.frequencies.map((freq, fIdx) => (
                                     <div key={fIdx} style={{
                                       fontSize: '10px',
                                       fontWeight: 'bold',
-                                      color: '#1e40af',
+                                      color: 'var(--text-primary)',
                                       marginBottom: '1px'
                                     }}>
                                       📻 {freq.frequency} ({freq.type})
                                       {freq.schedule && (
-                                        <span style={{ fontSize: '9px', fontWeight: 'normal', color: '#64748b', marginLeft: '4px' }}>
+                                        <span style={{ fontSize: '9px', fontWeight: 'normal', color: 'var(--text-tertiary)', marginLeft: '4px' }}>
                                           {freq.schedule}
                                         </span>
                                       )}
@@ -638,7 +638,7 @@ const VFRNavigationTable = ({
                           ))}
                         </div>
                       ) : !seg.hasRestrictedZones && !seg.hasInformationalAirspaces && (
-                        <span style={{ color: '#9ca3af' }}>-</span>
+                        <span style={{ color: 'var(--text-tertiary)' }}>-</span>
                       )}
 
                       {/* ℹ️ ESPACES INFORMATIFS (FIR, ATZ, SIV, etc.) */}
@@ -648,14 +648,14 @@ const VFRNavigationTable = ({
                             <div key={idx} style={{
                               marginBottom: '4px',
                               padding: '4px',
-                              backgroundColor: '#f3f4f6',
+                              backgroundColor: 'var(--bg-overlay)',
                               borderRadius: '3px',
-                              border: '1px solid #9ca3af'
+                              border: '1px solid var(--text-tertiary)'
                             }}>
                               <div style={{ marginBottom: '2px' }}>
                                 <strong>{airspace.type}</strong> {airspace.name}
                                 <br />
-                                <span style={{ fontSize: '10px', color: '#666' }}>
+                                <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
                                   Classe {airspace.class} | {airspace.floor_raw} ({airspace.floor}ft) - {airspace.ceiling_raw} ({airspace.ceiling}ft)
                                 </span>
                               </div>
@@ -664,18 +664,18 @@ const VFRNavigationTable = ({
                                 <div style={{
                                   marginTop: '3px',
                                   paddingTop: '3px',
-                                  borderTop: '1px solid #9ca3af'
+                                  borderTop: '1px solid var(--text-tertiary)'
                                 }}>
                                   {airspace.frequencies.map((freq, fIdx) => (
                                     <div key={fIdx} style={{
                                       fontSize: '10px',
                                       fontWeight: 'bold',
-                                      color: '#4b5563',
+                                      color: 'var(--text-secondary)',
                                       marginBottom: '1px'
                                     }}>
                                       📻 {freq.frequency} ({freq.type})
                                       {freq.schedule && (
-                                        <span style={{ fontSize: '9px', fontWeight: 'normal', color: '#64748b', marginLeft: '4px' }}>
+                                        <span style={{ fontSize: '9px', fontWeight: 'normal', color: 'var(--text-tertiary)', marginLeft: '4px' }}>
                                           {freq.schedule}
                                         </span>
                                       )}
@@ -692,17 +692,17 @@ const VFRNavigationTable = ({
                 ))}
                 
                 {/* Ligne des totaux */}
-                <tr style={{ backgroundColor: '#f9fafb', fontWeight: 'bold' }}>
-                  <td colSpan="5" style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'right' }}>
+                <tr style={{ backgroundColor: 'var(--bg-overlay)', fontWeight: 'bold' }}>
+                  <td colSpan="5" style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'right' }}>
                     TOTAUX:
                   </td>
-                  <td style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>
+                  <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>
                     {format(totals?.distance || 0, 'distance', 1)}
                   </td>
-                  <td style={{ padding: '8px', border: '1px solid #e5e7eb', textAlign: 'center' }}>
+                  <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>
                     {formatTime(totals?.estimatedTime || 0)}
                   </td>
-                  <td colSpan="4" style={{ padding: '8px', border: '1px solid #e5e7eb' }}></td>
+                  <td colSpan="4" style={{ padding: '8px', border: '1px solid var(--border-subtle)' }}></td>
                 </tr>
               </tbody>
             </table>
@@ -713,10 +713,10 @@ const VFRNavigationTable = ({
             <div style={{
               marginTop: '16px',
               padding: '12px',
-              backgroundColor: '#fef2f2',
-              border: '2px solid #dc2626',
-              borderLeft: '6px solid #991b1b',
-              borderRadius: '4px'
+              backgroundColor: 'var(--bg-overlay)',
+              border: '2px solid #C04534',
+              borderLeft: '6px solid #C04534',
+              borderRadius: '8px'
             }}>
                 <div style={{
                   display: 'flex',
@@ -724,17 +724,17 @@ const VFRNavigationTable = ({
                   gap: '8px',
                   marginBottom: '10px'
                 }}>
-                  <AlertTriangle size={20} color="#991b1b" />
-                  <span style={{ color: '#991b1b', fontWeight: 'bold', fontSize: '14px' }}>
+                  <AlertTriangle size={20} color="#C04534" />
+                  <span style={{ color: '#C04534', fontWeight: 'bold', fontSize: '14px' }}>
                     🚫 ALERTE CRITIQUE : Votre route traverse des zones RÉGLEMENTÉES, INTERDITES ou DANGEREUSES !
                   </span>
                 </div>
 
                 {/* Liste détaillée des zones par segment */}
                 <div style={{
-                  backgroundColor: 'white',
+                  backgroundColor: 'var(--bg-overlay)',
                   padding: '10px',
-                  borderRadius: '4px',
+                  borderRadius: '8px',
                   marginTop: '8px',
                   maxHeight: '300px',
                   overflowY: 'auto'
@@ -757,7 +757,7 @@ const VFRNavigationTable = ({
                     // 🔍 Si aucun segment avec zones trouvé, afficher message debug
                     if (segmentsWithZones.length === 0) {
                       return (
-                        <div style={{ color: '#dc2626', fontSize: '11px', padding: '8px' }}>
+                        <div style={{ color: '#C04534', fontSize: '11px', padding: '8px' }}>
                           🔍 DEBUG: Aucun segment avec zones trouvé dans navigationData
                           <br />
                           <strong>Total segments:</strong> {navigationData.length}
@@ -778,12 +778,12 @@ const VFRNavigationTable = ({
                       <div key={idx} style={{
                         marginBottom: '12px',
                         paddingBottom: '12px',
-                        borderBottom: idx < navigationData.filter(s => s.hasRestrictedZones).length - 1 ? '1px solid #fee2e2' : 'none'
+                        borderBottom: idx < navigationData.filter(s => s.hasRestrictedZones).length - 1 ? '1px solid var(--bg-overlay)' : 'none'
                       }}>
                         {/* En-tête du segment */}
                         <div style={{
                           fontWeight: 'bold',
-                          color: '#dc2626',
+                          color: '#C04534',
                           fontSize: '12px',
                           marginBottom: '6px',
                           display: 'flex',
@@ -791,8 +791,8 @@ const VFRNavigationTable = ({
                           gap: '6px'
                         }}>
                           <span style={{
-                            backgroundColor: '#dc2626',
-                            color: 'white',
+                            backgroundColor: '#C04534',
+                            color: 'var(--text-primary)',
                             padding: '2px 6px',
                             borderRadius: '3px',
                             fontSize: '11px'
@@ -800,7 +800,7 @@ const VFRNavigationTable = ({
                             Segment {seg.index + 1}
                           </span>
                           <span>{seg.from} → {seg.to}</span>
-                          <span style={{ fontSize: '11px', fontWeight: 'normal', color: '#7f1d1d' }}>
+                          <span style={{ fontSize: '11px', fontWeight: 'normal', color: '#C04534' }}>
                             (Alt: {seg.altitude} ft)
                           </span>
                         </div>
@@ -811,15 +811,15 @@ const VFRNavigationTable = ({
                             marginLeft: '12px',
                             marginTop: '6px',
                             padding: '8px',
-                            backgroundColor: '#fef2f2',
-                            border: '1px solid #fca5a5',
-                            borderRadius: '4px'
+                            backgroundColor: 'var(--bg-overlay)',
+                            border: '1px solid var(--bg-overlay)',
+                            borderRadius: '8px'
                           }}>
                             {/* Type et nom de la zone */}
                             <div style={{
                               fontSize: '11px',
                               fontWeight: 'bold',
-                              color: '#991b1b',
+                              color: '#C04534',
                               marginBottom: '4px'
                             }}>
                               {zone.type === 'P' && '🚫 ZONE INTERDITE (P)'}
@@ -832,7 +832,7 @@ const VFRNavigationTable = ({
                             </div>
 
                             {/* Détails de la zone */}
-                            <div style={{ fontSize: '10px', color: '#7f1d1d', lineHeight: '1.4' }}>
+                            <div style={{ fontSize: '10px', color: '#C04534', lineHeight: '1.4' }}>
                               <div>
                                 <strong>Altitudes:</strong> {zone.floor_raw} ({zone.floor}ft) - {zone.ceiling_raw} ({zone.ceiling}ft)
                               </div>
@@ -858,10 +858,10 @@ const VFRNavigationTable = ({
                 <div style={{
                   marginTop: '10px',
                   padding: '8px',
-                  backgroundColor: '#fee2e2',
-                  borderRadius: '4px',
+                  backgroundColor: 'var(--bg-overlay)',
+                  borderRadius: '8px',
                   fontSize: '11px',
-                  color: '#7f1d1d',
+                  color: '#C04534',
                   fontWeight: '500'
                 }}>
                   ⚠️ <strong>ACTION REQUISE:</strong> Vérifiez les horaires d'activation, obtenez les autorisations nécessaires (clairances) ou modifiez votre route pour contourner ces zones avant le vol.

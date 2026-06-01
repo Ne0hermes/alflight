@@ -89,7 +89,7 @@ const APIConfiguration = ({ onClose }) => {
       <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3), sx.spacing.mb(3))}>
         <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
           🟣 Clé API Anthropic (Claude)
-          {provider === 'anthropic' && <span style={{ color: '#16a34a', marginLeft: 8, fontWeight: 600 }}>● ACTIF</span>}
+          {provider === 'anthropic' && <span style={{ color: 'var(--text-primary)', marginLeft: 8, fontWeight: 600 }}>● ACTIF</span>}
         </h5>
         <div style={{ position: 'relative' }}>
           <input
@@ -123,7 +123,7 @@ const APIConfiguration = ({ onClose }) => {
       <div style={sx.combine(sx.components.card.base, sx.bg.gray, sx.spacing.p(3), sx.spacing.mb(3))}>
         <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
           🟢 Clé API OpenAI (GPT-4o)
-          {provider === 'openai' && <span style={{ color: '#16a34a', marginLeft: 8, fontWeight: 600 }}>● ACTIF</span>}
+          {provider === 'openai' && <span style={{ color: 'var(--text-primary)', marginLeft: 8, fontWeight: 600 }}>● ACTIF</span>}
         </h5>
         <div style={{ position: 'relative' }}>
           <input

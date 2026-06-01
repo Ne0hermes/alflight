@@ -197,9 +197,9 @@ export const VFRPointManager = ({
         <div style={{
           marginTop: '16px',
           padding: '16px',
-          background: '#f9fafb',
+          background: 'var(--bg-overlay)',
           borderRadius: '8px',
-          border: '1px solid #e5e7eb'
+          border: '1px solid var(--border-subtle)'
         }}>
           <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
             Sélectionner un point VFR
@@ -221,14 +221,14 @@ export const VFRPointManager = ({
                   key={point.id}
                   style={{
                     padding: '10px',
-                    background: 'white',
-                    borderRadius: '6px',
-                    border: '1px solid #e5e7eb',
+                    background: 'var(--bg-overlay)',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-subtle)',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
                     ':hover': {
-                      borderColor: '#3b82f6',
-                      background: '#f0f9ff'
+                      borderColor: 'var(--text-secondary)',
+                      background: 'var(--bg-overlay)'
                     }
                   }}
                   onClick={() => addVFRPointToRoute(point)}
@@ -247,9 +247,9 @@ export const VFRPointManager = ({
                     </div>
                     <div style={{
                       padding: '4px 8px',
-                      background: point.source === 'custom' ? 'rgba(242, 105, 33, 0.10)' : '#dbeafe',
-                      color: point.source === 'custom' ? '#92400e' : '#1e40af',
-                      borderRadius: '4px',
+                      background: point.source === 'custom' ? 'rgba(242, 105, 33, 0.10)' : 'var(--bg-overlay)',
+                      color: point.source === 'custom' ? 'var(--accent-primary)' : 'var(--text-primary)',
+                      borderRadius: '8px',
                       fontSize: '11px',
                       fontWeight: '600'
                     }}>
@@ -286,8 +286,8 @@ export const VFRPointManager = ({
               key={wp.id}
               style={{
                 padding: '8px 12px',
-                background: '#f9fafb',
-                borderRadius: '6px',
+                background: 'var(--bg-overlay)',
+                borderRadius: '8px',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center'
@@ -310,9 +310,9 @@ export const VFRPointManager = ({
                     onClick={() => duplicateWaypoint(index)}
                     style={{
                       padding: '4px',
-                      background: 'white',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '4px',
+                      background: 'var(--bg-overlay)',
+                      border: '1px solid var(--border-subtle)',
+                      borderRadius: '8px',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
@@ -334,10 +334,10 @@ export const VFRPointManager = ({
                     }}
                     style={{
                       padding: '4px',
-                      background: '#3b82f6',
-                      color: 'white',
+                      background: 'var(--text-secondary)',
+                      color: 'var(--text-primary)',
                       border: 'none',
-                      borderRadius: '4px',
+                      borderRadius: '8px',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',

@@ -170,16 +170,16 @@ export const PerformanceCalculator = memo(() => {
 
   const inputStyle = {
     padding: '8px 12px',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
+    border: '1px solid var(--text-tertiary)',
+    borderRadius: '8px',
     fontSize: '14px',
     width: '100%',
-    backgroundColor: 'white'
+    backgroundColor: 'var(--bg-overlay)'
   };
 
   const labelStyle = {
     fontSize: '12px',
-    color: '#374151',
+    color: 'var(--text-secondary)',
     fontWeight: '500',
     marginBottom: '4px',
     display: 'block'
@@ -188,7 +188,7 @@ export const PerformanceCalculator = memo(() => {
   if (!selectedAircraft) {
     return (
       <div style={sx.combine(sx.components.card.base, sx.text.center, sx.spacing.p(8))}>
-        <Plane size={48} style={{ margin: '0 auto 16px', color: '#9ca3af' }} />
+        <Plane size={48} style={{ margin: '0 auto 16px', color: 'var(--text-tertiary)' }} />
         <p style={sx.text.base}>Sélectionnez un avion pour calculer les performances</p>
       </div>
     );
@@ -420,8 +420,8 @@ export const PerformanceCalculator = memo(() => {
               </label>
               <div style={{
                 ...inputStyle,
-                backgroundColor: '#FEF3C7',
-                border: '1px solid #FCD34D',
+                backgroundColor: 'var(--bg-overlay)',
+                border: '1px solid var(--accent-primary)',
                 fontWeight: 'bold'
               }}>
                 {calculatePerformances.densityAltitude}
@@ -569,10 +569,10 @@ export const PerformanceCalculator = memo(() => {
 
             {/* Performances à l'atterrissage */}
             <div style={{
-              backgroundColor: '#FEF3C7',
+              backgroundColor: 'var(--bg-overlay)',
               padding: '16px',
               borderRadius: '8px',
-              border: '1px solid #FCD34D'
+              border: '1px solid var(--accent-primary)'
             }}>
               <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
                 Atterrissage
@@ -609,7 +609,7 @@ export const PerformanceCalculator = memo(() => {
             <div style={sx.combine(sx.spacing.mt(3), {
               backgroundColor: '#E0E7FF',
               padding: '12px',
-              borderRadius: '6px',
+              borderRadius: '8px',
               border: '1px solid #A5B4FC'
             })}>
               <p style={sx.text.sm}>

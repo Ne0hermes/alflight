@@ -38,10 +38,10 @@ export const Button = ({
     if (variant === 'primary') {
       return {
         ...baseStyles,
-        background: 'linear-gradient(135deg, #8B1538, #FF7E36)',
+        background: 'linear-gradient(135deg, var(--accent-primary), #FF7E36)',
         boxShadow: '0 2px 8px rgba(147, 22, 60, 0.3)',
         '&:hover': {
-          background: 'linear-gradient(135deg, #6B0F2B, #8B1538)',
+          background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-primary))',
           boxShadow: '0 4px 12px rgba(147, 22, 60, 0.4)',
           transform: 'translateY(-1px)',
         },
@@ -63,8 +63,8 @@ export const Button = ({
         border: '2px solid #f26921',
         '&:hover': {
           backgroundColor: 'rgba(147, 22, 60, 0.05)',
-          borderColor: '#6B0F2B',
-          color: '#6B0F2B',
+          borderColor: 'var(--accent-primary)',
+          color: 'var(--accent-primary)',
         },
         '&:focus-visible': {
           outline: '3px solid #f26921',
@@ -79,7 +79,7 @@ export const Button = ({
         borderColor: '#f26921',
         color: '#f26921',
         '&:hover': {
-          borderColor: '#6B0F2B',
+          borderColor: 'var(--accent-primary)',
           backgroundColor: 'rgba(147, 22, 60, 0.05)',
         },
       };

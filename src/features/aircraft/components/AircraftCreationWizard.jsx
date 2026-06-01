@@ -1400,7 +1400,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
                 alignItems: 'center',
                 justifyContent: 'center',
                 bgcolor: 'primary.main',
-                color: 'white'
+                color: 'var(--text-primary)'
               }}
             >
               {steps[currentStep].icon}

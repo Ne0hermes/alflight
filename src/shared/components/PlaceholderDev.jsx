@@ -18,24 +18,24 @@ export const PlaceholderDev = ({
   const variants = {
     warning: {
       bg: 'rgba(242, 105, 33, 0.10)',
-      border: '#f59e0b',
-      text: '#92400e',
+      border: 'var(--accent-primary)',
+      text: 'var(--accent-primary)',
       icon: Construction,
-      iconColor: '#f59e0b'
+      iconColor: 'var(--accent-primary)'
     },
     info: {
-      bg: '#dbeafe',
-      border: '#3b82f6',
-      text: '#1e40af',
+      bg: 'var(--bg-overlay)',
+      border: 'var(--text-secondary)',
+      text: 'var(--text-primary)',
       icon: Info,
-      iconColor: '#3b82f6'
+      iconColor: 'var(--text-secondary)'
     },
     error: {
-      bg: '#fee2e2',
-      border: '#ef4444',
-      text: '#991b1b',
+      bg: 'var(--bg-overlay)',
+      border: '#C04534',
+      text: '#C04534',
       icon: AlertCircle,
-      iconColor: '#ef4444'
+      iconColor: '#C04534'
     }
   };
 
@@ -96,9 +96,9 @@ export const DevBadge = ({ compact = false, text = 'DEV' }) => {
     display: 'inline-flex',
     alignItems: 'center',
     padding: compact ? '2px 6px' : '4px 8px',
-    backgroundColor: '#f59e0b',
-    color: 'white',
-    borderRadius: '4px',
+    backgroundColor: 'var(--accent-primary)',
+    color: 'var(--text-primary)',
+    borderRadius: '8px',
     fontSize: compact ? '10px' : '12px',
     fontWeight: 600,
     textTransform: 'uppercase',
@@ -125,7 +125,7 @@ export const DevOverlay = ({ children, message = "Cette section est en cours de 
     left: '50%',
     transform: 'translate(-50%, -50%)',
     backgroundColor: 'rgba(245, 158, 11, 0.95)',
-    color: 'white',
+    color: 'var(--text-primary)',
     padding: '12px 24px',
     borderRadius: '8px',
     fontWeight: 600,
@@ -154,7 +154,7 @@ export const DevInlineMessage = ({ text = "Données non disponibles", icon = tru
     display: 'inline-flex',
     alignItems: 'center',
     gap: '4px',
-    color: '#f59e0b',
+    color: 'var(--accent-primary)',
     fontSize: '14px',
     fontStyle: 'italic'
   };

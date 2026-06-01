@@ -170,7 +170,7 @@ const RegulationsModule = () => {
               gap: '8px',
               padding: '10px 20px',
               backgroundColor: theme.colors.primary,
-              color: 'white',
+              color: 'var(--text-primary)',
               border: 'none',
               borderRadius: '8px',
               fontSize: '14px',
@@ -232,7 +232,7 @@ const RegulationsModule = () => {
       <div style={styles.content}>
         {filteredModules.length === 0 ? (
           <div style={styles.noResults}>
-            <Info size={48} style={{ color: '#9ca3af', marginBottom: '16px' }} />
+            <Info size={48} style={{ color: 'var(--text-tertiary)', marginBottom: '16px' }} />
             <p>Aucune réglementation trouvée pour "{searchTerm}"</p>
           </div>
         ) : (
@@ -437,7 +437,7 @@ const RegulationsModule = () => {
             </div>
 
             <div style={styles.modalBody}>
-              <p style={{ marginBottom: '20px', color: '#6b7280' }}>
+              <p style={{ marginBottom: '20px', color: 'var(--text-secondary)' }}>
                 Vous avez repéré une erreur ou souhaitez suggérer l'ajout d'une référence ?
                 Utilisez ce formulaire pour nous le signaler.
               </p>
@@ -505,7 +505,7 @@ const RegulationsModule = () => {
                   onChange={(e) => setSuggestionForm({ ...suggestionForm, contact: e.target.value })}
                   style={styles.formInput}
                 />
-                <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px' }}>
+                <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
                   Si vous souhaitez être informé de la prise en compte de votre suggestion
                 </p>
               </div>
@@ -515,8 +515,8 @@ const RegulationsModule = () => {
                   onClick={() => setShowSuggestionModal(false)}
                   style={{
                     padding: '10px 20px',
-                    backgroundColor: '#f3f4f6',
-                    color: '#374151',
+                    backgroundColor: 'var(--bg-overlay)',
+                    color: 'var(--text-secondary)',
                     border: 'none',
                     borderRadius: '8px',
                     fontSize: '14px',
@@ -534,8 +534,8 @@ const RegulationsModule = () => {
                     alignItems: 'center',
                     gap: '8px',
                     padding: '10px 20px',
-                    backgroundColor: suggestionForm.description ? theme.colors.primary : '#d1d5db',
-                    color: 'white',
+                    backgroundColor: suggestionForm.description ? theme.colors.primary : 'var(--text-tertiary)',
+                    color: 'var(--text-primary)',
                     border: 'none',
                     borderRadius: '8px',
                     fontSize: '14px',
@@ -558,11 +558,11 @@ const RegulationsModule = () => {
 const styles = {
   container: {
     minHeight: '100vh',
-    backgroundColor: '#f9fafb',
+    backgroundColor: 'var(--bg-overlay)',
   },
   header: {
-    backgroundColor: 'white',
-    borderBottom: '1px solid #e5e7eb',
+    backgroundColor: 'var(--bg-overlay)',
+    borderBottom: '1px solid var(--border-subtle)',
     padding: '24px',
     marginBottom: '24px',
   },
@@ -580,7 +580,7 @@ const styles = {
   },
   subtitle: {
     fontSize: '16px',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
   },
   controlsBar: {
     maxWidth: '1200px',
@@ -599,13 +599,13 @@ const styles = {
     left: '12px',
     top: '50%',
     transform: 'translateY(-50%)',
-    color: '#9ca3af',
+    color: 'var(--text-tertiary)',
   },
   searchInput: {
     width: '100%',
     padding: '12px 12px 12px 44px',
     borderRadius: '8px',
-    border: '1px solid #d1d5db',
+    border: '1px solid var(--text-tertiary)',
     fontSize: '15px',
     outline: 'none',
     transition: 'border-color 0.2s',
@@ -615,9 +615,9 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     padding: '12px 16px',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '8px',
-    border: '1px solid #d1d5db',
+    border: '1px solid var(--text-tertiary)',
   },
   filterSelect: {
     border: 'none',
@@ -637,13 +637,13 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     padding: '12px 20px',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '8px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border-subtle)',
   },
   statLabel: {
     fontSize: '12px',
-    color: '#9ca3af',
+    color: 'var(--text-tertiary)',
     marginBottom: '4px',
   },
   statValue: {
@@ -659,14 +659,14 @@ const styles = {
   noResults: {
     textAlign: 'center',
     padding: '48px',
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    border: '1px solid #e5e7eb',
+    backgroundColor: 'var(--bg-overlay)',
+    borderRadius: '8px',
+    border: '1px solid var(--border-subtle)',
   },
   moduleCard: {
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    border: '1px solid #e5e7eb',
+    backgroundColor: 'var(--bg-overlay)',
+    borderRadius: '8px',
+    border: '1px solid var(--border-subtle)',
     marginBottom: '24px',
     overflow: 'hidden',
   },
@@ -674,8 +674,8 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     padding: '20px',
-    borderBottom: '1px solid #e5e7eb',
-    backgroundColor: '#f9fafb',
+    borderBottom: '1px solid var(--border-subtle)',
+    backgroundColor: 'var(--bg-overlay)',
   },
   moduleTitle: {
     fontSize: '20px',
@@ -685,7 +685,7 @@ const styles = {
   },
   moduleDescription: {
     fontSize: '14px',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
   },
   sectionsContainer: {
     padding: '16px',
@@ -698,8 +698,8 @@ const styles = {
     alignItems: 'center',
     width: '100%',
     padding: '12px',
-    backgroundColor: '#f3f4f6',
-    border: '1px solid #e5e7eb',
+    backgroundColor: 'var(--bg-overlay)',
+    border: '1px solid var(--border-subtle)',
     borderRadius: '8px',
     cursor: 'pointer',
     transition: 'background-color 0.2s',
@@ -713,10 +713,10 @@ const styles = {
   },
   sectionCount: {
     fontSize: '13px',
-    color: '#6b7280',
-    backgroundColor: 'white',
+    color: 'var(--text-secondary)',
+    backgroundColor: 'var(--bg-overlay)',
     padding: '2px 8px',
-    borderRadius: '12px',
+    borderRadius: '8px',
   },
   regulationsContainer: {
     marginTop: '12px',
@@ -724,7 +724,7 @@ const styles = {
   },
   regulationCard: {
     marginBottom: '12px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border-subtle)',
     borderRadius: '8px',
     overflow: 'hidden',
   },
@@ -732,7 +732,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     padding: '12px',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-overlay)',
     cursor: 'pointer',
     transition: 'background-color 0.2s',
   },
@@ -742,8 +742,8 @@ const styles = {
     color: theme.colors.primary,
     marginRight: '12px',
     padding: '4px 8px',
-    backgroundColor: '#eff6ff',
-    borderRadius: '4px',
+    backgroundColor: 'var(--bg-overlay)',
+    borderRadius: '8px',
   },
   regulationTitle: {
     flex: 1,
@@ -754,26 +754,26 @@ const styles = {
     padding: '6px',
     backgroundColor: 'transparent',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '8px',
     cursor: 'pointer',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     transition: 'all 0.2s',
   },
   regulationContent: {
     padding: '16px',
-    backgroundColor: '#f9fafb',
-    borderTop: '1px solid #e5e7eb',
+    backgroundColor: 'var(--bg-overlay)',
+    borderTop: '1px solid var(--border-subtle)',
   },
   regulationDescription: {
     fontSize: '14px',
-    color: '#4b5563',
+    color: 'var(--text-secondary)',
     marginBottom: '12px',
     lineHeight: '1.6',
   },
   requirementsList: {
     marginLeft: '20px',
     fontSize: '14px',
-    color: '#4b5563',
+    color: 'var(--text-secondary)',
     lineHeight: '1.8',
   },
   requirementItem: {
@@ -790,19 +790,19 @@ const styles = {
   },
   tableHeader: {
     padding: '10px',
-    backgroundColor: '#f3f4f6',
-    borderBottom: '2px solid #d1d5db',
+    backgroundColor: 'var(--bg-overlay)',
+    borderBottom: '2px solid var(--text-tertiary)',
     textAlign: 'left',
     fontWeight: '600',
-    color: '#374151',
+    color: 'var(--text-secondary)',
   },
   tableCell: {
     padding: '10px',
-    borderBottom: '1px solid #e5e7eb',
-    color: '#4b5563',
+    borderBottom: '1px solid var(--border-subtle)',
+    color: 'var(--text-secondary)',
   },
   tableRowEven: {
-    backgroundColor: '#f9fafb',
+    backgroundColor: 'var(--bg-overlay)',
   },
   modalOverlay: {
     position: 'fixed',
@@ -817,8 +817,8 @@ const styles = {
     zIndex: 1000,
   },
   modalContent: {
-    backgroundColor: 'white',
-    borderRadius: '12px',
+    backgroundColor: 'var(--bg-overlay)',
+    borderRadius: '8px',
     width: '90%',
     maxWidth: '800px',
     maxHeight: '85vh',
@@ -830,7 +830,7 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '24px',
-    borderBottom: '1px solid #e5e7eb',
+    borderBottom: '1px solid var(--border-subtle)',
   },
   modalTitle: {
     fontSize: '20px',
@@ -841,9 +841,9 @@ const styles = {
     padding: '8px',
     backgroundColor: 'transparent',
     border: 'none',
-    borderRadius: '6px',
+    borderRadius: '8px',
     cursor: 'pointer',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
   },
   modalBody: {
     padding: '24px',
@@ -862,14 +862,14 @@ const styles = {
     fontWeight: '600',
   },
   modalSeparator: {
-    color: '#9ca3af',
+    color: 'var(--text-tertiary)',
   },
   modalSection: {
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
   },
   modalDescription: {
     fontSize: '15px',
-    color: '#4b5563',
+    color: 'var(--text-secondary)',
     lineHeight: '1.6',
     marginBottom: '20px',
   },
@@ -885,7 +885,7 @@ const styles = {
   modalList: {
     marginLeft: '20px',
     fontSize: '14px',
-    color: '#4b5563',
+    color: 'var(--text-secondary)',
     lineHeight: '1.8',
   },
   modalTable: {
@@ -894,13 +894,13 @@ const styles = {
   modalFooter: {
     marginTop: '24px',
     paddingTop: '20px',
-    borderTop: '1px solid #e5e7eb',
+    borderTop: '1px solid var(--border-subtle)',
   },
   modalNote: {
     display: 'flex',
     alignItems: 'center',
     fontSize: '13px',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     fontStyle: 'italic',
   },
   formLabel: {
@@ -908,13 +908,13 @@ const styles = {
     fontSize: '14px',
     fontWeight: '600',
     marginBottom: '8px',
-    color: '#374151',
+    color: 'var(--text-secondary)',
   },
   formInput: {
     width: '100%',
     padding: '10px 12px',
     borderRadius: '8px',
-    border: '1px solid #d1d5db',
+    border: '1px solid var(--text-tertiary)',
     fontSize: '14px',
     outline: 'none',
     transition: 'border-color 0.2s',
@@ -923,10 +923,10 @@ const styles = {
     width: '100%',
     padding: '10px 12px',
     borderRadius: '8px',
-    border: '1px solid #d1d5db',
+    border: '1px solid var(--text-tertiary)',
     fontSize: '14px',
     outline: 'none',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-overlay)',
     cursor: 'pointer',
   },
 };

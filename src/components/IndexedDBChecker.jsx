@@ -91,7 +91,7 @@ export function IndexedDBChecker({ children }) {
         alignItems: 'center',
         justifyContent: 'center',
         height: '100vh',
-        backgroundColor: '#f3f4f6',
+        backgroundColor: 'var(--bg-overlay)',
         padding: '20px'
       }}>
         <div style={{
@@ -100,10 +100,10 @@ export function IndexedDBChecker({ children }) {
         }}>
           🔍
         </div>
-        <h2 style={{ marginBottom: '10px', color: '#1f2937' }}>
+        <h2 style={{ marginBottom: '10px', color: 'var(--text-primary)' }}>
           Vérification du stockage local...
         </h2>
-        <p style={{ color: '#6b7280' }}>
+        <p style={{ color: 'var(--text-secondary)' }}>
           Veuillez patienter
         </p>
       </div>
@@ -124,11 +124,11 @@ export function IndexedDBChecker({ children }) {
       }}>
         <div style={{
           maxWidth: '600px',
-          backgroundColor: 'white',
+          backgroundColor: 'var(--bg-overlay)',
           padding: '30px',
-          borderRadius: '12px',
+          borderRadius: '8px',
           boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-          border: '2px solid #f59e0b'
+          border: '2px solid var(--accent-primary)'
         }}>
           <div style={{
             fontSize: '48px',
@@ -141,7 +141,7 @@ export function IndexedDBChecker({ children }) {
           <h2 style={{
             textAlign: 'center',
             marginBottom: '20px',
-            color: '#92400e'
+            color: 'var(--accent-primary)'
           }}>
             Problème de stockage détecté
           </h2>
@@ -152,7 +152,7 @@ export function IndexedDBChecker({ children }) {
             borderRadius: '8px',
             marginBottom: '20px',
             fontSize: '14px',
-            color: '#78350f'
+            color: 'var(--accent-primary)'
           }}>
             {!diagnosis.supported && (
               <p>❌ Votre navigateur ne supporte pas IndexedDB.</p>
@@ -185,8 +185,8 @@ export function IndexedDBChecker({ children }) {
               onClick={handleFix}
               style={{
                 padding: '12px 24px',
-                backgroundColor: '#f59e0b',
-                color: 'white',
+                backgroundColor: 'var(--accent-primary)',
+                color: 'var(--text-primary)',
                 border: 'none',
                 borderRadius: '8px',
                 fontSize: '16px',
@@ -202,8 +202,8 @@ export function IndexedDBChecker({ children }) {
               onClick={handleContinueAnyway}
               style={{
                 padding: '12px 24px',
-                backgroundColor: '#e5e7eb',
-                color: '#374151',
+                backgroundColor: 'var(--border-subtle)',
+                color: 'var(--text-secondary)',
                 border: 'none',
                 borderRadius: '8px',
                 fontSize: '16px',
@@ -218,7 +218,7 @@ export function IndexedDBChecker({ children }) {
           <p style={{
             marginTop: '20px',
             fontSize: '12px',
-            color: '#6b7280',
+            color: 'var(--text-secondary)',
             textAlign: 'center'
           }}>
             💡 Astuce: Exportez régulièrement vos données importantes

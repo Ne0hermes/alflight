@@ -63,7 +63,7 @@ export const RouteStaticMapSnapshot = ({ waypoints }) => {
 
     if (lats.length === 0 || lons.length === 0) {
       // Pas de coordonnées valides
-      ctx.fillStyle = '#6b7280';
+      ctx.fillStyle = 'var(--text-secondary)';
       ctx.font = '14px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('Aucune donnée de coordonnées disponible', width / 2, height / 2);
@@ -88,7 +88,7 @@ export const RouteStaticMapSnapshot = ({ waypoints }) => {
     const lonToX = (lon) => margin + ((lon - minLon) / lonRange) * plotWidth;
 
     // Dessiner la grille de fond
-    ctx.strokeStyle = '#e5e7eb';
+    ctx.strokeStyle = 'var(--border-subtle)';
     ctx.lineWidth = 1;
     for (let i = 0; i <= 10; i++) {
       const x = margin + (plotWidth / 10) * i;
@@ -143,7 +143,7 @@ export const RouteStaticMapSnapshot = ({ waypoints }) => {
 
       // Dessiner un triangle pour les points VFR
       const size = 6;
-      ctx.fillStyle = '#f59e0b'; // Orange pour points VFR
+      ctx.fillStyle = 'var(--accent-primary)'; // Orange pour points VFR
       ctx.beginPath();
       ctx.moveTo(x, y - size);
       ctx.lineTo(x - size, y + size);
@@ -172,7 +172,7 @@ export const RouteStaticMapSnapshot = ({ waypoints }) => {
       );
 
       // Texte du point VFR
-      ctx.fillStyle = '#f59e0b';
+      ctx.fillStyle = 'var(--accent-primary)';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
       ctx.fillText(vfrLabelText, x, y + size + 6);
@@ -186,9 +186,9 @@ export const RouteStaticMapSnapshot = ({ waypoints }) => {
       const y = latToY(wp.lat);
 
       // Déterminer la couleur selon le type
-      let color = '#3b82f6'; // Par défaut bleu
-      if (wp.type === 'departure') color = '#10b981'; // Vert pour départ
-      if (wp.type === 'arrival') color = '#ef4444'; // Rouge pour arrivée
+      let color = 'var(--text-secondary)'; // Par défaut bleu
+      if (wp.type === 'departure') color = 'var(--text-primary)'; // Vert pour départ
+      if (wp.type === 'arrival') color = '#C04534'; // Rouge pour arrivée
 
       // Dessiner le point
       ctx.fillStyle = color;
@@ -248,40 +248,40 @@ export const RouteStaticMapSnapshot = ({ waypoints }) => {
     ctx.textAlign = 'left';
 
     // Départ
-    ctx.fillStyle = '#10b981';
+    ctx.fillStyle = 'var(--text-primary)';
     ctx.beginPath();
     ctx.arc(margin, legendY, 5, 0, 2 * Math.PI);
     ctx.fill();
-    ctx.fillStyle = '#374151';
+    ctx.fillStyle = 'var(--text-secondary)';
     ctx.fillText('Départ', margin + 12, legendY + 1);
 
     // Route
-    ctx.fillStyle = '#3b82f6';
+    ctx.fillStyle = 'var(--text-secondary)';
     ctx.beginPath();
     ctx.arc(margin + 80, legendY, 5, 0, 2 * Math.PI);
     ctx.fill();
-    ctx.fillStyle = '#374151';
+    ctx.fillStyle = 'var(--text-secondary)';
     ctx.fillText('Route', margin + 92, legendY + 1);
 
     // Arrivée
-    ctx.fillStyle = '#ef4444';
+    ctx.fillStyle = '#C04534';
     ctx.beginPath();
     ctx.arc(margin + 145, legendY, 5, 0, 2 * Math.PI);
     ctx.fill();
-    ctx.fillStyle = '#374151';
+    ctx.fillStyle = 'var(--text-secondary)';
     ctx.fillText('Arrivée', margin + 157, legendY + 1);
 
     // Points VFR
     if (vfrPoints.length > 0) {
       const vfrX = margin + 225;
-      ctx.fillStyle = '#f59e0b';
+      ctx.fillStyle = 'var(--accent-primary)';
       ctx.beginPath();
       ctx.moveTo(vfrX, legendY - 5);
       ctx.lineTo(vfrX - 5, legendY + 5);
       ctx.lineTo(vfrX + 5, legendY + 5);
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = '#374151';
+      ctx.fillStyle = 'var(--text-secondary)';
       ctx.fillText('Points VFR', vfrX + 12, legendY + 1);
     }
 
@@ -295,10 +295,10 @@ export const RouteStaticMapSnapshot = ({ waypoints }) => {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#f9fafb',
-        borderRadius: '6px',
-        border: '1px solid #e5e7eb',
-        color: '#6b7280'
+        backgroundColor: 'var(--bg-overlay)',
+        borderRadius: '8px',
+        border: '1px solid var(--border-subtle)',
+        color: 'var(--text-secondary)'
       }}>
         <MapIcon size={48} style={{ marginBottom: '12px', opacity: 0.5 }} />
         <p style={{ fontSize: '14px' }}>Aucun waypoint défini pour afficher la carte</p>
@@ -308,9 +308,9 @@ export const RouteStaticMapSnapshot = ({ waypoints }) => {
 
   return (
     <div style={{
-      backgroundColor: '#ffffff',
+      backgroundColor: 'var(--bg-overlay)',
       borderRadius: '8px',
-      border: '1px solid #e5e7eb',
+      border: '1px solid var(--border-subtle)',
       padding: '16px',
       boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
     }}>
@@ -319,7 +319,7 @@ export const RouteStaticMapSnapshot = ({ waypoints }) => {
         alignItems: 'center',
         gap: '8px',
         marginBottom: '12px',
-        color: '#374151',
+        color: 'var(--text-secondary)',
         fontWeight: '600'
       }}>
         <MapIcon size={18} />
@@ -332,13 +332,13 @@ export const RouteStaticMapSnapshot = ({ waypoints }) => {
         style={{
           width: '100%',
           height: 'auto',
-          borderRadius: '4px',
-          border: '1px solid #e5e7eb'
+          borderRadius: '8px',
+          border: '1px solid var(--border-subtle)'
         }}
       />
       <p style={{
         fontSize: '12px',
-        color: '#6b7280',
+        color: 'var(--text-secondary)',
         marginTop: '8px',
         textAlign: 'center',
         fontStyle: 'italic'

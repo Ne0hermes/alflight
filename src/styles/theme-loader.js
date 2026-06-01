@@ -6,7 +6,7 @@ export const applyTheme = () => {
   style.innerHTML = `
     body {
       background-color: #FFFFFF !important;
-      color: #000000 !important;
+      color: var(--app-bg) !important;
       font-family: 'Space Grotesk', 'Inter', sans-serif !important;
     }
     

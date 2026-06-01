@@ -171,7 +171,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
           maxHeight: '90vh',
           overflow: 'auto',
           padding: '24px',
-          backgroundColor: 'white'
+          backgroundColor: 'var(--bg-overlay)'
         }
       )}>
         {/* En-tête */}
@@ -204,7 +204,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
         )}
         
         {/* Onglets */}
-        <div style={sx.combine(sx.flex.row, sx.spacing.gap(2), sx.spacing.mb(4), { borderBottom: '1px solid #e5e7eb' })}>
+        <div style={sx.combine(sx.flex.row, sx.spacing.gap(2), sx.spacing.mb(4), { borderBottom: '1px solid var(--border-subtle)' })}>
           {[
             { id: 'general', label: 'Général', icon: Edit2 },
             { id: 'runways', label: 'Pistes', icon: Plane },
@@ -222,8 +222,8 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                 padding: '8px 16px',
                 background: 'none',
                 border: 'none',
-                borderBottom: activeTab === tab.id ? '2px solid #3b82f6' : '2px solid transparent',
-                color: activeTab === tab.id ? '#3b82f6' : '#6b7280',
+                borderBottom: activeTab === tab.id ? '2px solid var(--text-secondary)' : '2px solid transparent',
+                color: activeTab === tab.id ? 'var(--text-secondary)' : 'var(--text-secondary)',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',

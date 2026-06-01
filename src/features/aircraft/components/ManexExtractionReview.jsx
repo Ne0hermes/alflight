@@ -10,10 +10,10 @@ import UnitConverterCard from './UnitConverterCard';
 import AeroclubAutocomplete from './AeroclubAutocomplete';
 
 const confidenceColor = (c) => {
-  if (c >= 85) return '#10b981';
-  if (c >= 70) return '#eab308';
+  if (c >= 85) return 'var(--text-primary)';
+  if (c >= 70) return 'var(--accent-primary)';
   if (c >= 50) return '#f26921';
-  return '#ef4444';
+  return '#C04534';
 };
 
 // Helper : détermine si une valeur "courante" est considérée comme "saisie"
@@ -32,10 +32,10 @@ const Row = memo(({ item, onChange, onSelectIcao }) => {
 
   // Styles ligne selon état
   const rowBg = isMissing
-    ? '#fff7ed'
+    ? 'var(--bg-overlay)'
     : isAccepted
-      ? '#f0fdf4'
-      : '#fafafa';
+      ? 'var(--bg-overlay)'
+      : 'var(--bg-overlay)';
 
   // Handler unifié de changement de valeur (auto-accept si on remplit un champ manquant)
   const handleValueChange = (newValue) => {
@@ -53,7 +53,7 @@ const Row = memo(({ item, onChange, onSelectIcao }) => {
     <tr style={{
       backgroundColor: rowBg,
       opacity: isMissing ? 0.85 : (isAccepted ? 1 : 0.6),
-      borderBottom: '1px solid #e5e7eb'
+      borderBottom: '1px solid var(--border-subtle)'
     }}>
       {/* COLONNE — Champ + description italique optionnelle (utile pour
           les vitesses où les aéroclubs utilisent des libellés variés) */}
@@ -64,7 +64,7 @@ const Row = memo(({ item, onChange, onSelectIcao }) => {
             <span style={{
               display: 'inline-block', marginLeft: 6,
               padding: '1px 6px', borderRadius: 3, fontSize: 10,
-              backgroundColor: '#fed7aa', color: '#9a3412', fontWeight: 700
+              backgroundColor: 'var(--bg-overlay)', color: 'var(--accent-primary)', fontWeight: 700
             }}>
               ⚠ Manquant
             </span>
@@ -74,7 +74,7 @@ const Row = memo(({ item, onChange, onSelectIcao }) => {
           <div style={{
             fontSize: 11,
             fontStyle: 'italic',
-            color: '#6b7280',
+            color: 'var(--text-secondary)',
             fontWeight: 400,
             marginTop: 2,
             lineHeight: 1.35
@@ -93,10 +93,10 @@ const Row = memo(({ item, onChange, onSelectIcao }) => {
              aussi de remplir automatiquement le « Terrain de base ».
           */
           <div style={{
-            border: isMissing ? '1px dashed #f26921' : '1px solid #d1d5db',
+            border: isMissing ? '1px dashed #f26921' : '1px solid var(--text-tertiary)',
             borderRadius: 4,
             padding: 2,
-            backgroundColor: 'white'
+            backgroundColor: 'var(--bg-overlay)'
           }}>
             <AeroclubAutocomplete
               value={item.value || ''}
@@ -118,9 +118,9 @@ const Row = memo(({ item, onChange, onSelectIcao }) => {
             gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
             gap: 4,
             padding: '4px 6px',
-            border: isMissing ? '1px dashed #f26921' : '1px solid #d1d5db',
+            border: isMissing ? '1px dashed #f26921' : '1px solid var(--text-tertiary)',
             borderRadius: 4,
-            backgroundColor: 'white',
+            backgroundColor: 'var(--bg-overlay)',
             maxHeight: 120,
             overflowY: 'auto'
           }}>
@@ -152,10 +152,10 @@ const Row = memo(({ item, onChange, onSelectIcao }) => {
             style={{
               width: '100%',
               padding: '4px 8px',
-              border: isMissing ? '1px dashed #f26921' : '1px solid #d1d5db',
+              border: isMissing ? '1px dashed #f26921' : '1px solid var(--text-tertiary)',
               borderRadius: 4,
               fontSize: 13,
-              backgroundColor: 'white',
+              backgroundColor: 'var(--bg-overlay)',
               cursor: 'pointer'
             }}
           >
@@ -185,7 +185,7 @@ const Row = memo(({ item, onChange, onSelectIcao }) => {
               />
               ❌ Absent
             </label>
-            <label style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', color: '#9ca3af' }}>
+            <label style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', color: 'var(--text-tertiary)' }}>
               <input
                 type="radio"
                 checked={item.value === null || item.value === undefined}
@@ -214,22 +214,22 @@ const Row = memo(({ item, onChange, onSelectIcao }) => {
             style={{
               width: '100%',
               padding: '4px 8px',
-              border: isMissing ? '1px dashed #f26921' : '1px solid #d1d5db',
+              border: isMissing ? '1px dashed #f26921' : '1px solid var(--text-tertiary)',
               borderRadius: 4,
               fontSize: 13,
-              backgroundColor: 'white'
+              backgroundColor: 'var(--bg-overlay)'
             }}
           />
         )}
       </td>
 
       {/* COLONNE — Unité cible */}
-      <td style={{ padding: '8px 12px', fontSize: 12, color: '#6b7280' }}>
+      <td style={{ padding: '8px 12px', fontSize: 12, color: 'var(--text-secondary)' }}>
         {item.targetUnit || '—'}
       </td>
 
       {/* COLONNE — Source MANEX (valeur brute IA) */}
-      <td style={{ padding: '8px 12px', fontSize: 12, color: '#9ca3af' }}>
+      <td style={{ padding: '8px 12px', fontSize: 12, color: 'var(--text-tertiary)' }}>
         {isMissing
           ? <span style={{ fontStyle: 'italic' }}>—</span>
           : <>{Array.isArray(item.originalValue) ? item.originalValue.join(', ') : item.originalValue} {item.originalUnit || ''}</>}
@@ -242,15 +242,15 @@ const Row = memo(({ item, onChange, onSelectIcao }) => {
             display: 'inline-block',
             padding: '2px 8px',
             borderRadius: 10,
-            backgroundColor: '#dbeafe',
-            color: '#1e40af',
+            backgroundColor: 'var(--bg-overlay)',
+            color: 'var(--text-primary)',
             fontWeight: 600,
             fontSize: 11
           }} title="Numéro de page du MANEX où la donnée a été extraite">
             p. {item.sourcePage}
           </span>
         ) : (
-          <span style={{ color: '#cbd5e1' }}>—</span>
+          <span style={{ color: 'var(--border-subtle)' }}>—</span>
         )}
       </td>
 
@@ -262,8 +262,8 @@ const Row = memo(({ item, onChange, onSelectIcao }) => {
           gap: 6,
           padding: '2px 8px',
           borderRadius: 12,
-          backgroundColor: isMissing ? '#fed7aa' : confidenceColor(item.confidence) + '20',
-          color: isMissing ? '#9a3412' : confidenceColor(item.confidence),
+          backgroundColor: isMissing ? 'var(--bg-overlay)' : confidenceColor(item.confidence) + '20',
+          color: isMissing ? 'var(--accent-primary)' : confidenceColor(item.confidence),
           fontSize: 12,
           fontWeight: 600
         }}>
@@ -348,14 +348,14 @@ const ManexExtractionReview = memo(({
       display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100
     }}>
       <div style={{
-        backgroundColor: 'white', borderRadius: 12, padding: 24,
+        backgroundColor: 'var(--bg-overlay)', borderRadius: 12, padding: 24,
         maxWidth: 1100, width: '95%', maxHeight: '92vh',
         display: 'flex', flexDirection: 'column'
       }}>
         {/* En-tête */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h3 style={{ fontSize: 20, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
-            <Sparkles size={22} color="#8b5cf6" />
+            <Sparkles size={22} color="var(--accent-primary)" />
             Validation des données extraites du MANEX
           </h3>
           <button onClick={onCancel} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
@@ -374,17 +374,17 @@ const ManexExtractionReview = memo(({
         {isLoading && (
           <div style={{
             padding: 32, textAlign: 'center',
-            backgroundColor: '#f9fafb', borderRadius: 8, marginBottom: 16
+            backgroundColor: 'var(--bg-overlay)', borderRadius: 8, marginBottom: 16
           }}>
             <Loader2 size={32} className="spin" style={{ margin: '0 auto 12px', animation: 'spin 1s linear infinite' }} />
-            <div style={{ fontSize: 14, color: '#374151', marginBottom: 8 }}>{progressMessage || 'Analyse en cours...'}</div>
-            <div style={{ height: 6, backgroundColor: '#e5e7eb', borderRadius: 3, overflow: 'hidden', maxWidth: 400, margin: '0 auto' }}>
+            <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8 }}>{progressMessage || 'Analyse en cours...'}</div>
+            <div style={{ height: 6, backgroundColor: 'var(--border-subtle)', borderRadius: 3, overflow: 'hidden', maxWidth: 400, margin: '0 auto' }}>
               <div style={{
                 height: '100%', width: `${progress}%`,
-                backgroundColor: '#8b5cf6', transition: 'width 0.3s'
+                backgroundColor: 'var(--accent-primary)', transition: 'width 0.3s'
               }} />
             </div>
-            <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 6 }}>{progress}%</div>
+            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 6 }}>{progress}%</div>
           </div>
         )}
 
@@ -392,27 +392,27 @@ const ManexExtractionReview = memo(({
         {!isLoading && metadata && (
           <div style={{
             display: 'flex', gap: 16, marginBottom: 12,
-            padding: '12px 16px', backgroundColor: '#f0f9ff',
-            border: '1px solid #bae6fd', borderRadius: 8
+            padding: '12px 16px', backgroundColor: 'var(--bg-overlay)',
+            border: '1px solid var(--border-subtle)', borderRadius: 8
           }}>
             <div><strong>{foundCount}</strong>/{items.length} champs extraits</div>
             <div>
               {metadata.pagesAnalyzed} page{metadata.pagesAnalyzed > 1 ? 's' : ''} analysée{metadata.pagesAnalyzed > 1 ? 's' : ''}
               {metadata.pagesWithData !== undefined && (
-                <span style={{ color: '#6b7280', fontSize: 11, marginLeft: 4 }}>
+                <span style={{ color: 'var(--text-secondary)', fontSize: 11, marginLeft: 4 }}>
                   ({metadata.pagesWithData} avec données, {metadata.pagesEmpty || 0} vides)
                 </span>
               )}
             </div>
             <div>Confiance moyenne : <strong style={{ color: confidenceColor(metadata.overallConfidence) }}>{metadata.overallConfidence}%</strong></div>
             {missingCount > 0 && (
-              <div style={{ color: '#9a3412' }}>
+              <div style={{ color: 'var(--accent-primary)' }}>
                 <AlertTriangle size={14} style={{ display: 'inline', marginRight: 4 }} />
                 {missingCount} manquant{missingCount > 1 ? 's' : ''} à compléter
               </div>
             )}
             {lowConfidenceCount > 0 && (
-              <div style={{ color: '#b45309', marginLeft: 'auto' }}>
+              <div style={{ color: 'var(--accent-primary)', marginLeft: 'auto' }}>
                 <AlertTriangle size={14} style={{ display: 'inline', marginRight: 4 }} />
                 {lowConfidenceCount} à vérifier
               </div>
@@ -452,9 +452,9 @@ const ManexExtractionReview = memo(({
 
         {/* Tableau */}
         {!isLoading && (
-          <div style={{ flex: 1, overflow: 'auto', border: '1px solid #e5e7eb', borderRadius: 8 }}>
+          <div style={{ flex: 1, overflow: 'auto', border: '1px solid var(--border-subtle)', borderRadius: 8 }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead style={{ backgroundColor: '#f9fafb', position: 'sticky', top: 0 }}>
+              <thead style={{ backgroundColor: 'var(--bg-overlay)', position: 'sticky', top: 0 }}>
                 <tr>
                   <th style={th}>Champ</th>
                   <th style={th}>Valeur (storage)</th>
@@ -468,7 +468,7 @@ const ManexExtractionReview = memo(({
               <tbody>
                 {filteredItems.length === 0 ? (
                   <tr>
-                    <td colSpan={7} style={{ padding: 24, textAlign: 'center', color: '#9ca3af' }}>
+                    <td colSpan={7} style={{ padding: 24, textAlign: 'center', color: 'var(--text-tertiary)' }}>
                       {items.length === 0 ? 'Aucune donnée extraite' : 'Aucun champ ne correspond au filtre'}
                     </td>
                   </tr>
@@ -488,7 +488,7 @@ const ManexExtractionReview = memo(({
         )}
 
         {/* Boutons */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16, paddingTop: 16, borderTop: '1px solid #e5e7eb' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border-subtle)' }}>
           <button onClick={onCancel} style={btnGhost}>
             Annuler
           </button>
@@ -515,11 +515,11 @@ const ManexExtractionReview = memo(({
 });
 ManexExtractionReview.displayName = 'ManexExtractionReview';
 
-const th = { padding: '10px 12px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#374151', borderBottom: '1px solid #e5e7eb' };
-const btnPrimary = { padding: '8px 16px', backgroundColor: '#8b5cf6', color: 'white', border: 'none', borderRadius: 6, fontSize: 14, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 };
-const btnSecondary = { padding: '6px 12px', backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 13, cursor: 'pointer' };
-const btnGhost = { padding: '8px 16px', backgroundColor: 'transparent', color: '#6b7280', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14, cursor: 'pointer' };
-const btnTab = { padding: '4px 10px', backgroundColor: 'transparent', color: '#6b7280', border: '1px solid #e5e7eb', borderRadius: 16, fontSize: 12, cursor: 'pointer' };
-const btnTabActive = { ...btnTab, backgroundColor: '#8b5cf6', color: 'white', borderColor: '#8b5cf6' };
+const th = { padding: '10px 12px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-subtle)' };
+const btnPrimary = { padding: '8px 16px', backgroundColor: 'var(--accent-primary)', color: 'var(--text-primary)', border: 'none', borderRadius: 6, fontSize: 14, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 };
+const btnSecondary = { padding: '6px 12px', backgroundColor: 'var(--bg-overlay)', color: 'var(--text-secondary)', border: '1px solid var(--text-tertiary)', borderRadius: 6, fontSize: 13, cursor: 'pointer' };
+const btnGhost = { padding: '8px 16px', backgroundColor: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--text-tertiary)', borderRadius: 6, fontSize: 14, cursor: 'pointer' };
+const btnTab = { padding: '4px 10px', backgroundColor: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 16, fontSize: 12, cursor: 'pointer' };
+const btnTabActive = { ...btnTab, backgroundColor: 'var(--accent-primary)', color: 'var(--text-primary)', borderColor: 'var(--accent-primary)' };
 
 export default ManexExtractionReview;

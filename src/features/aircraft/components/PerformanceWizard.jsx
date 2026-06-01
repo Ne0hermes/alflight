@@ -23,24 +23,24 @@ const styles = {
     alignItems: 'center'
   },
   card: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '8px',
     padding: '10px',
     boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-    border: '1px solid #e5e7eb'
+    border: '1px solid var(--border-subtle)'
   },
   cardHover: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '8px',
     padding: '10px',
-    border: '2px solid #e5e7eb',
+    border: '2px solid var(--border-subtle)',
     cursor: 'pointer',
     transition: 'all 0.2s',
     textAlign: 'center'
   },
   button: {
     padding: '10px',
-    borderRadius: '6px',
+    borderRadius: '8px',
     fontSize: '14px',
     fontWeight: '500',
     border: 'none',
@@ -51,42 +51,42 @@ const styles = {
     gap: '8px'
   },
   buttonPrimary: {
-    backgroundColor: '#1e40af',
-    color: 'white'
+    backgroundColor: 'var(--text-primary)',
+    color: 'var(--text-primary)'
   },
   buttonSecondary: {
-    backgroundColor: '#e5e7eb',
-    color: '#374151'
+    backgroundColor: 'var(--border-subtle)',
+    color: 'var(--text-secondary)'
   },
   alert: {
     padding: '10px',
-    borderRadius: '6px',
+    borderRadius: '8px',
     marginBottom: '10px',
     display: 'flex',
     alignItems: 'flex-start',
     gap: '8px'
   },
   alertSuccess: {
-    backgroundColor: '#f0fdf4',
-    color: '#166534',
-    border: '1px solid #86efac'
+    backgroundColor: 'var(--bg-overlay)',
+    color: 'var(--text-primary)',
+    border: '1px solid var(--bg-overlay)'
   },
   alertWarning: {
     backgroundColor: 'rgba(242, 105, 33, 0.10)',
-    color: '#92400e',
-    border: '1px solid #fcd34d'
+    color: 'var(--accent-primary)',
+    border: '1px solid var(--bg-overlay)'
   },
   alertError: {
-    backgroundColor: '#fee2e2',
-    color: '#991b1b',
-    border: '1px solid #fca5a5'
+    backgroundColor: 'var(--bg-overlay)',
+    color: '#C04534',
+    border: '1px solid var(--bg-overlay)'
   },
   text: {
     sm: { fontSize: '14px' },
     md: { fontSize: '16px' },
     lg: { fontSize: '18px' },
     bold: { fontWeight: 'bold' },
-    muted: { color: '#6b7280' }
+    muted: { color: 'var(--text-secondary)' }
   }
 };
 
@@ -561,8 +561,8 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                   }}
                   style={{
                     padding: '10px',
-                    backgroundColor: '#eff6ff',
-                    border: '2px solid #3b82f6',
+                    backgroundColor: 'var(--bg-overlay)',
+                    border: '2px solid var(--text-secondary)',
                     borderRadius: '8px',
                     cursor: hasManex ? 'pointer' : 'not-allowed',
                     transition: 'all 0.2s',
@@ -574,22 +574,22 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                     if (hasManex) {
                       e.currentTarget.style.transform = 'scale(1.05)';
                       e.currentTarget.style.boxShadow = '0 4px 12px rgba(30, 64, 175, 0.3)';
-                      e.currentTarget.style.backgroundColor = '#dbeafe';
+                      e.currentTarget.style.backgroundColor = 'var(--bg-overlay)';
                     }
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'scale(1)';
                     e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
-                    e.currentTarget.style.backgroundColor = '#eff6ff';
+                    e.currentTarget.style.backgroundColor = 'var(--bg-overlay)';
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                    <Table size={28} style={{ color: '#1e40af' }} />
-                    <h4 style={{ ...styles.text.md, ...styles.text.bold, color: '#1e40af', margin: 0 }}>
+                    <Table size={28} style={{ color: 'var(--text-primary)' }} />
+                    <h4 style={{ ...styles.text.md, ...styles.text.bold, color: 'var(--text-primary)', margin: 0 }}>
                       Tableaux
                     </h4>
                   </div>
-                  <p style={{ ...styles.text.sm, color: '#6b7280', margin: 0 }}>
+                  <p style={{ ...styles.text.sm, color: 'var(--text-secondary)', margin: 0 }}>
                     Extraction automatique avec OpenAI
                   </p>
                 </div>
@@ -604,8 +604,8 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                   }}
                   style={{
                     padding: '10px',
-                    backgroundColor: '#f0fdf4',
-                    border: '2px solid #22c55e',
+                    backgroundColor: 'var(--bg-overlay)',
+                    border: '2px solid var(--text-primary)',
                     borderRadius: '8px',
                     cursor: hasManex ? 'pointer' : 'not-allowed',
                     transition: 'all 0.2s',
@@ -617,22 +617,22 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                     if (hasManex) {
                       e.currentTarget.style.transform = 'scale(1.05)';
                       e.currentTarget.style.boxShadow = '0 4px 12px rgba(22, 163, 74, 0.3)';
-                      e.currentTarget.style.backgroundColor = '#dcfce7';
+                      e.currentTarget.style.backgroundColor = 'var(--bg-overlay)';
                     }
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'scale(1)';
                     e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
-                    e.currentTarget.style.backgroundColor = '#f0fdf4';
+                    e.currentTarget.style.backgroundColor = 'var(--bg-overlay)';
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                    <LineChart size={28} style={{ color: '#16a34a' }} />
-                    <h4 style={{ ...styles.text.md, ...styles.text.bold, color: '#16a34a', margin: 0 }}>
+                    <LineChart size={28} style={{ color: 'var(--text-primary)' }} />
+                    <h4 style={{ ...styles.text.md, ...styles.text.bold, color: 'var(--text-primary)', margin: 0 }}>
                       Graphiques/Abaques
                     </h4>
                   </div>
-                  <p style={{ ...styles.text.sm, color: '#6b7280', margin: 0 }}>
+                  <p style={{ ...styles.text.sm, color: 'var(--text-secondary)', margin: 0 }}>
                     Construction manuelle interactive
                   </p>
                 </div>
@@ -723,15 +723,15 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                 alignItems: 'center',
                 gap: '10px',
                 padding: '10px',
-                backgroundColor: '#f9fafb',
+                backgroundColor: 'var(--bg-overlay)',
                 borderRadius: '8px',
                 marginBottom: '10px',
                 flexWrap: 'wrap'
               }}>
                 {/* Statut API OpenAI */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Check size={14} style={{ color: '#10b981' }} />
-                  <span style={{ ...styles.text.sm, color: '#10b981', fontWeight: '500' }}>
+                  <Check size={14} style={{ color: 'var(--text-primary)' }} />
+                  <span style={{ ...styles.text.sm, color: 'var(--text-primary)', fontWeight: '500' }}>
                     API connectée
                   </span>
                 </div>
@@ -739,8 +739,8 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                 {/* Nombre de pages */}
                 {extractedPages.length > 0 && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <FileText size={14} style={{ color: '#3b82f6' }} />
-                    <span style={{ ...styles.text.sm, color: '#3b82f6', fontWeight: '500' }}>
+                    <FileText size={14} style={{ color: 'var(--text-secondary)' }} />
+                    <span style={{ ...styles.text.sm, color: 'var(--text-secondary)', fontWeight: '500' }}>
                       {extractedPages.length} page(s) chargée(s)
                     </span>
                   </div>
@@ -749,7 +749,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                 {/* Message d'action */}
                 {selectedPages.length > 0 && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
-                    <span style={{ ...styles.text.sm, color: '#6b7280' }}>
+                    <span style={{ ...styles.text.sm, color: 'var(--text-secondary)' }}>
                       Cliquez sur le bouton "Continuer" pour lancer l'extraction automatique
                     </span>
                   </div>
@@ -761,7 +761,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                   <div style={{
                     width: '16px',
                     height: '16px',
-                    border: '2px solid #166534',
+                    border: '2px solid var(--text-primary)',
                     borderTopColor: 'transparent',
                     borderRadius: '50%',
                     animation: 'spin 1s linear infinite',
@@ -797,10 +797,10 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
               {selectedPages.length > 0 && (
                 <div style={{
                   padding: '10px',
-                  backgroundColor: '#eff6ff',
+                  backgroundColor: 'var(--bg-overlay)',
                   borderRadius: '8px',
                   marginBottom: '10px',
-                  border: '1px solid #3b82f6'
+                  border: '1px solid var(--text-secondary)'
                 }}>
                   <h4 style={{ ...styles.text.sm, fontWeight: 'bold', marginBottom: '8px' }}>
                     📋 Pages sélectionnées et leurs configurations :
@@ -859,7 +859,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                 maxHeight: '600px',
                 overflowY: 'auto',
                 padding: '10px',
-                border: '1px solid #e5e7eb',
+                border: '1px solid var(--border-subtle)',
                 borderRadius: '8px'
               }}>
                 {extractedPages.map((page, index) => (
@@ -875,24 +875,24 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                     style={{
                       position: 'relative',
                       cursor: 'pointer',
-                      border: selectedPages.includes(index) ? '3px solid #1e40af' : '1px solid #e5e7eb',
+                      border: selectedPages.includes(index) ? '3px solid var(--text-primary)' : '1px solid var(--border-subtle)',
                       borderRadius: '8px',
                       padding: '4px',
-                      backgroundColor: selectedPages.includes(index) ? '#eff6ff' : 'white'
+                      backgroundColor: selectedPages.includes(index) ? 'var(--bg-overlay)' : 'white'
                     }}
                   >
                     <img
                       src={page.image}
                       alt={`Page ${page.pageNumber}`}
-                      style={{ width: '100%', height: 'auto', borderRadius: '4px' }}
+                      style={{ width: '100%', height: 'auto', borderRadius: '8px' }}
                     />
                     <div style={{
                       position: 'absolute',
                       top: '8px',
                       right: '8px',
-                      backgroundColor: selectedPages.includes(index) ? '#1e40af' : 'rgba(0,0,0,0.5)',
-                      color: 'white',
-                      borderRadius: '4px',
+                      backgroundColor: selectedPages.includes(index) ? 'var(--text-primary)' : 'rgba(0,0,0,0.5)',
+                      color: 'var(--text-primary)',
+                      borderRadius: '8px',
                       padding: '2px 6px',
                       fontSize: '12px'
                     }}>
@@ -910,10 +910,10 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                             right: '4px',
                             padding: '8px 6px',
                             fontSize: '12px',
-                            borderRadius: '6px',
-                            border: '2px solid #1e40af',
-                            backgroundColor: '#eff6ff',
-                            color: '#1e40af',
+                            borderRadius: '8px',
+                            border: '2px solid var(--text-primary)',
+                            backgroundColor: 'var(--bg-overlay)',
+                            color: 'var(--text-primary)',
                             fontWeight: 'bold',
                             cursor: 'pointer',
                             zIndex: 10,
@@ -947,10 +947,10 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                             position: 'absolute',
                             top: '8px',
                             left: '8px',
-                            backgroundColor: '#ef4444',
-                            color: 'white',
+                            backgroundColor: '#C04534',
+                            color: 'var(--text-primary)',
                             padding: '3px 8px',
-                            borderRadius: '4px',
+                            borderRadius: '8px',
                             fontSize: '10px',
                             fontWeight: 'bold',
                             whiteSpace: 'nowrap'
@@ -966,8 +966,8 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                               position: 'absolute',
                               top: '8px',
                               right: '8px',
-                              backgroundColor: '#16a34a',
-                              color: 'white',
+                              backgroundColor: 'var(--text-primary)',
+                              color: 'var(--text-primary)',
                               borderRadius: '50%',
                               padding: '2px'
                             }}

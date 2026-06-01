@@ -408,7 +408,7 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
               justifyContent: 'center',
               padding: '24px',
               cursor: 'pointer',
-              border: '2px dashed #9ca3af',
+              border: '2px dashed var(--text-tertiary)',
               borderRadius: '8px',
               minHeight: '150px',
               position: 'relative',
@@ -423,7 +423,7 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
             />
             {takeoffPreview === 'loading' ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                <Loader size={32} className="animate-spin" color="#6b7280" />
+                <Loader size={32} className="animate-spin" color="var(--text-secondary)" />
                 <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
                   Conversion du PDF...
                 </p>
@@ -447,7 +447,7 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
                   position: 'absolute',
                   top: '8px',
                   right: '8px',
-                  backgroundColor: 'white',
+                  backgroundColor: 'var(--bg-overlay)',
                   borderRadius: '50%',
                   padding: '4px',
                   cursor: 'pointer',
@@ -460,11 +460,11 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
                 }}>
                   <X size={16} />
                 </div>
-                <CheckCircle size={32} color="#10b981" style={{ position: 'relative', zIndex: 1 }} />
+                <CheckCircle size={32} color="var(--text-primary)" style={{ position: 'relative', zIndex: 1 }} />
               </>
             ) : (
               <>
-                <Upload size={32} color="#6b7280" />
+                <Upload size={32} color="var(--text-secondary)" />
                 <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mt(2))}>
                   Cliquez pour charger
                 </p>
@@ -488,7 +488,7 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
               justifyContent: 'center',
               padding: '24px',
               cursor: 'pointer',
-              border: '2px dashed #9ca3af',
+              border: '2px dashed var(--text-tertiary)',
               borderRadius: '8px',
               minHeight: '150px',
               position: 'relative',
@@ -503,7 +503,7 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
             />
             {landingPreview === 'loading' ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                <Loader size={32} className="animate-spin" color="#6b7280" />
+                <Loader size={32} className="animate-spin" color="var(--text-secondary)" />
                 <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
                   Conversion du PDF...
                 </p>
@@ -527,7 +527,7 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
                   position: 'absolute',
                   top: '8px',
                   right: '8px',
-                  backgroundColor: 'white',
+                  backgroundColor: 'var(--bg-overlay)',
                   borderRadius: '50%',
                   padding: '4px',
                   cursor: 'pointer',
@@ -540,11 +540,11 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
                 }}>
                   <X size={16} />
                 </div>
-                <CheckCircle size={32} color="#10b981" style={{ position: 'relative', zIndex: 1 }} />
+                <CheckCircle size={32} color="var(--text-primary)" style={{ position: 'relative', zIndex: 1 }} />
               </>
             ) : (
               <>
-                <Upload size={32} color="#6b7280" />
+                <Upload size={32} color="var(--text-secondary)" />
                 <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mt(2))}>
                   Cliquez pour charger
                 </p>
@@ -662,8 +662,8 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
                       style={{
                         width: '100%',
                         padding: '4px 8px',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '4px',
+                        border: '1px solid var(--text-tertiary)',
+                        borderRadius: '8px',
                         fontSize: '14px'
                       }}
                     />
@@ -677,8 +677,8 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
                       style={{
                         width: '100%',
                         padding: '4px 8px',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '4px',
+                        border: '1px solid var(--text-tertiary)',
+                        borderRadius: '8px',
                         fontSize: '14px'
                       }}
                     />
@@ -692,8 +692,8 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
                       style={{
                         width: '100%',
                         padding: '4px 8px',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '4px',
+                        border: '1px solid var(--text-tertiary)',
+                        borderRadius: '8px',
                         fontSize: '14px'
                       }}
                     />
@@ -715,8 +715,8 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
                       style={{
                         width: '100%',
                         padding: '4px 8px',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '4px',
+                        border: '1px solid var(--text-tertiary)',
+                        borderRadius: '8px',
                         fontSize: '14px'
                       }}
                     />
@@ -730,8 +730,8 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
                       style={{
                         width: '100%',
                         padding: '4px 8px',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '4px',
+                        border: '1px solid var(--text-tertiary)',
+                        borderRadius: '8px',
                         fontSize: '14px'
                       }}
                     />
@@ -745,8 +745,8 @@ const PerformanceAnalyzer = memo(({ aircraft, onPerformanceUpdate }) => {
                       style={{
                         width: '100%',
                         padding: '4px 8px',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '4px',
+                        border: '1px solid var(--text-tertiary)',
+                        borderRadius: '8px',
                         fontSize: '14px'
                       }}
                     />

@@ -10,7 +10,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
  * @param {Function} props.onClick - Fonction de callback lors du clic
  * @param {React.ReactNode} props.icon - Icône à afficher (optionnel)
  * @param {string} props.title - Titre du bouton
- * @param {string} props.color - Couleur du bouton (optionnel, défaut: #3b82f6)
+ * @param {string} props.color - Couleur du bouton (optionnel, défaut: var(--text-secondary))
  * @param {boolean} props.fullWidth - Si le bouton doit prendre toute la largeur (défaut: true)
  * @param {Object} props.style - Styles personnalisés additionnels (optionnel)
  * @param {string} props.variant - Variante du bouton: 'default', 'minimal', 'outlined' (défaut: 'default')
@@ -20,7 +20,7 @@ const AccordionButton = ({
   onClick,
   icon,
   title,
-  color = '#3b82f6',
+  color = 'var(--text-secondary)',
   fullWidth = true,
   style = {},
   variant = 'default',
@@ -34,8 +34,8 @@ const AccordionButton = ({
     default: {
       padding: '12px 16px',
       backgroundColor: isOpen ? color : 'white',
-      color: isOpen ? 'white' : '#374151',
-      border: `1px solid ${isOpen ? color : '#e5e7eb'}`,
+      color: isOpen ? 'white' : 'var(--text-secondary)',
+      border: `1px solid ${isOpen ? color : 'var(--border-subtle)'}`,
       borderRadius: '8px',
       fontSize: '14px',
       fontWeight: '500',
@@ -51,9 +51,9 @@ const AccordionButton = ({
     minimal: {
       padding: '8px 12px',
       backgroundColor: 'transparent',
-      color: isOpen ? color : '#6b7280',
+      color: isOpen ? color : 'var(--text-secondary)',
       border: 'none',
-      borderRadius: '6px',
+      borderRadius: '8px',
       fontSize: '14px',
       fontWeight: '500',
       cursor: disabled ? 'not-allowed' : 'pointer',
@@ -67,9 +67,9 @@ const AccordionButton = ({
     },
     outlined: {
       padding: '10px 14px',
-      backgroundColor: 'white',
-      color: isOpen ? color : '#374151',
-      border: `2px solid ${isOpen ? color : '#d1d5db'}`,
+      backgroundColor: 'var(--bg-overlay)',
+      color: isOpen ? color : 'var(--text-secondary)',
+      border: `2px solid ${isOpen ? color : 'var(--text-tertiary)'}`,
       borderRadius: '8px',
       fontSize: '14px',
       fontWeight: '500',

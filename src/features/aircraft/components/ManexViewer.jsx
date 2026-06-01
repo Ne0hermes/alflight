@@ -94,8 +94,8 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
         zIndex: 1000
       }}>
         <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
+          backgroundColor: 'var(--bg-overlay)',
+          borderRadius: '8px',
           padding: '24px',
           textAlign: 'center'
         }}>
@@ -208,8 +208,8 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
       zIndex: 1000
     }}>
       <div style={{
-        backgroundColor: 'white',
-        borderRadius: '12px',
+        backgroundColor: 'var(--bg-overlay)',
+        borderRadius: '8px',
         padding: '24px',
         maxWidth: '800px',
         width: '90%',
@@ -242,15 +242,15 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
           <div style={{
             padding: '16px',
             backgroundColor: 'rgba(242, 105, 33, 0.10)',
-            border: '1px solid #fbbf24',
+            border: '1px solid var(--accent-primary)',
             borderRadius: '8px',
             marginBottom: '16px',
             display: 'flex',
             alignItems: 'center',
             gap: '12px'
           }}>
-            <AlertTriangle size={20} color="#92400e" />
-            <div style={{ fontSize: 13, color: '#92400e' }}>
+            <AlertTriangle size={20} color="var(--accent-primary)" />
+            <div style={{ fontSize: 13, color: 'var(--accent-primary)' }}>
               <strong>Aucune donnée MANEX trouvée pour cet avion.</strong>
               <div style={{ marginTop: 4 }}>
                 Le flag <code>hasManex</code> indique qu'un MANEX existe, mais ni
@@ -265,7 +265,7 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
         {/* Onglets */}
         <div style={{ 
           display: 'flex', 
-          borderBottom: '2px solid #e5e7eb',
+          borderBottom: '2px solid var(--border-subtle)',
           marginBottom: '20px'
         }}>
           {['info', 'performances', 'limitations', 'charts'].map(tab => (
@@ -274,10 +274,10 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
               onClick={() => setActiveTab(tab)}
               style={{
                 padding: '10px 20px',
-                backgroundColor: activeTab === tab ? '#3b82f6' : 'transparent',
-                color: activeTab === tab ? 'white' : '#6b7280',
+                backgroundColor: activeTab === tab ? 'var(--text-secondary)' : 'transparent',
+                color: activeTab === tab ? 'white' : 'var(--text-secondary)',
                 border: 'none',
-                borderBottom: activeTab === tab ? '2px solid #3b82f6' : '2px solid transparent',
+                borderBottom: activeTab === tab ? '2px solid var(--text-secondary)' : '2px solid transparent',
                 marginBottom: '-2px',
                 cursor: 'pointer',
                 fontWeight: activeTab === tab ? 'bold' : 'normal',
@@ -298,25 +298,25 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
           {/* Onglet Info */}
           {activeTab === 'info' && (
             <div>
-              <div style={{ backgroundColor: '#f9fafb', padding: '16px', borderRadius: '8px', marginBottom: '16px' }}>
+              <div style={{ backgroundColor: 'var(--bg-overlay)', padding: '16px', borderRadius: '8px', marginBottom: '16px' }}>
                 <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px' }}>
                   Informations du document
                 </h4>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                   <div>
-                    <p style={{ fontSize: '12px', color: '#6b7280' }}>Nom du fichier</p>
+                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Nom du fichier</p>
                     <p style={{ fontSize: '14px', fontWeight: '500' }}>{manex.fileName}</p>
                   </div>
                   <div>
-                    <p style={{ fontSize: '12px', color: '#6b7280' }}>Taille</p>
+                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Taille</p>
                     <p style={{ fontSize: '14px', fontWeight: '500' }}>{manex.fileSize}</p>
                   </div>
                   <div>
-                    <p style={{ fontSize: '12px', color: '#6b7280' }}>Nombre de pages</p>
+                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Nombre de pages</p>
                     <p style={{ fontSize: '14px', fontWeight: '500' }}>{manex.pageCount || 'N/A'}</p>
                   </div>
                   <div>
-                    <p style={{ fontSize: '12px', color: '#6b7280' }}>Date d'import</p>
+                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Date d'import</p>
                     <p style={{ fontSize: '14px', fontWeight: '500' }}>
                       {manex.uploadDate ? new Date(manex.uploadDate).toLocaleDateString() : 'N/A'}
                     </p>
@@ -329,10 +329,10 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
                     marginTop: '12px', 
                     padding: '8px 12px', 
                     backgroundColor: 'rgba(242, 105, 33, 0.10)', 
-                    border: '1px solid #fcd34d',
-                    borderRadius: '4px'
+                    border: '1px solid var(--bg-overlay)',
+                    borderRadius: '8px'
                   }}>
-                    <p style={{ fontSize: '12px', color: '#92400e', margin: 0 }}>
+                    <p style={{ fontSize: '12px', color: 'var(--accent-primary)', margin: 0 }}>
                       ⚠️ Source des données : {manex.dataSource}
                     </p>
                   </div>
@@ -341,7 +341,7 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
 
               {/* Sections trouvées */}
               {manex.sections && manex.sections.length > 0 && (
-                <div style={{ backgroundColor: '#f9fafb', padding: '16px', borderRadius: '8px' }}>
+                <div style={{ backgroundColor: 'var(--bg-overlay)', padding: '16px', borderRadius: '8px' }}>
                   <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px' }}>
                     Sections identifiées
                   </h4>
@@ -360,21 +360,21 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
           {/* Onglet Performances */}
           {activeTab === 'performances' && (
             <div>
-              <div style={{ backgroundColor: '#f9fafb', padding: '16px', borderRadius: '8px' }}>
+              <div style={{ backgroundColor: 'var(--bg-overlay)', padding: '16px', borderRadius: '8px' }}>
                 <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px' }}>
                   Vitesses caractéristiques
                 </h4>
                 {manex.performances && Object.keys(manex.performances).length > 0 ? (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
                     {Object.entries(manex.performances).map(([key, value]) => (
-                      <div key={key} style={{ backgroundColor: 'white', padding: '8px', borderRadius: '4px' }}>
-                        <p style={{ fontSize: '12px', color: '#6b7280' }}>{key.toUpperCase()}</p>
+                      <div key={key} style={{ backgroundColor: 'var(--bg-overlay)', padding: '8px', borderRadius: '8px' }}>
+                        <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{key.toUpperCase()}</p>
                         <p style={{ fontSize: '16px', fontWeight: 'bold' }}>{value} kt</p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p style={{ fontSize: '14px', color: '#6b7280' }}>Aucune donnée de performance extraite</p>
+                  <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Aucune donnée de performance extraite</p>
                 )}
               </div>
             </div>
@@ -383,7 +383,7 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
           {/* Onglet Limitations */}
           {activeTab === 'limitations' && (
             <div>
-              <div style={{ backgroundColor: '#fff4ed', padding: '16px', borderRadius: '8px', border: '1px solid #fed7aa' }}>
+              <div style={{ backgroundColor: '#fff4ed', padding: '16px', borderRadius: '8px', border: '1px solid var(--bg-overlay)' }}>
                 <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px' }}>
                   Limitations opérationnelles
                 </h4>
@@ -391,13 +391,13 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                     {Object.entries(manex.limitations).map(([key, value]) => (
                       <div key={key}>
-                        <p style={{ fontSize: '12px', color: '#92400e' }}>{key.toUpperCase()}</p>
+                        <p style={{ fontSize: '12px', color: 'var(--accent-primary)' }}>{key.toUpperCase()}</p>
                         <p style={{ fontSize: '16px', fontWeight: 'bold' }}>{value}</p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p style={{ fontSize: '14px', color: '#92400e' }}>Aucune limitation extraite</p>
+                  <p style={{ fontSize: '14px', color: 'var(--accent-primary)' }}>Aucune limitation extraite</p>
                 )}
               </div>
             </div>
@@ -406,7 +406,7 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
           {/* Onglet Charts */}
           {activeTab === 'charts' && (
             <div>
-              <div style={{ backgroundColor: '#eff6ff', padding: '16px', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
+              <div style={{ backgroundColor: 'var(--bg-overlay)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
                 <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px' }}>
                   Abaques de performances
                 </h4>
@@ -414,11 +414,11 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
                   <div>
                     {Object.entries(manex.performanceCharts).map(([chartType, chart]) => (
                       chart && (
-                        <div key={chartType} style={{ marginBottom: '16px', backgroundColor: 'white', padding: '12px', borderRadius: '6px' }}>
+                        <div key={chartType} style={{ marginBottom: '16px', backgroundColor: 'var(--bg-overlay)', padding: '12px', borderRadius: '8px' }}>
                           <p style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>
                             {chartType.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                           </p>
-                          <div style={{ fontSize: '12px', color: '#1e40af' }}>
+                          <div style={{ fontSize: '12px', color: 'var(--text-primary)' }}>
                             {chart.pressureAltitudes && (
                               <p>• Altitudes: {chart.pressureAltitudes.join(', ')} ft</p>
                             )}
@@ -437,7 +437,7 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
                     ))}
                   </div>
                 ) : (
-                  <p style={{ fontSize: '14px', color: '#1e40af' }}>Aucun abaque de performance disponible</p>
+                  <p style={{ fontSize: '14px', color: 'var(--text-primary)' }}>Aucun abaque de performance disponible</p>
                 )}
               </div>
             </div>
@@ -445,17 +445,17 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
         </div>
 
         {/* Boutons d'action */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e5e7eb', paddingTop: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-subtle)', paddingTop: '16px' }}>
           <div style={{ display: 'flex', gap: '8px' }}>
             {manex.pdfData && (
               <button
                 onClick={handleDownloadPdf}
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: '#3b82f6',
-                  color: 'white',
+                  backgroundColor: 'var(--text-secondary)',
+                  color: 'var(--text-primary)',
                   border: 'none',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   fontSize: '14px',
                   fontWeight: '500',
                   cursor: 'pointer',
@@ -472,10 +472,10 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
               onClick={handleExportData}
               style={{
                 padding: '8px 16px',
-                backgroundColor: '#10b981',
-                color: 'white',
+                backgroundColor: 'var(--text-primary)',
+                color: 'var(--text-primary)',
                 border: 'none',
-                borderRadius: '6px',
+                borderRadius: '8px',
                 fontSize: '14px',
                 fontWeight: '500',
                 cursor: 'pointer',
@@ -492,10 +492,10 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
             onClick={onClose}
             style={{
               padding: '8px 16px',
-              backgroundColor: '#e5e7eb',
-              color: '#374151',
+              backgroundColor: 'var(--border-subtle)',
+              color: 'var(--text-secondary)',
               border: 'none',
-              borderRadius: '6px',
+              borderRadius: '8px',
               fontSize: '14px',
               fontWeight: '500',
               cursor: 'pointer'

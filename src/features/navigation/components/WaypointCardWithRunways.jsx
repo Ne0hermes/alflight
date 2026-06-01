@@ -38,9 +38,9 @@ export const WaypointCardWithRunways = memo(({
   const canDelete = totalWaypoints > 2;
 
   const getLabel = () => {
-    if (isFirst) return { text: 'Départ', color: '#10b981' };
-    if (isLast) return { text: 'Arrivée', color: '#f59e0b' };
-    return { text: `Étape ${index}`, color: '#3b82f6' };
+    if (isFirst) return { text: 'Départ', color: 'var(--text-primary)' };
+    if (isLast) return { text: 'Arrivée', color: 'var(--accent-primary)' };
+    return { text: `Étape ${index}`, color: 'var(--text-secondary)' };
   };
 
   const label = getLabel();
@@ -258,14 +258,14 @@ export const WaypointCardWithRunways = memo(({
 
       {/* Label Aérodrome + info départ/arrivée sur la même ligne */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-        <span style={{ fontSize: '14px', fontWeight: '600', color: '#374151' }}>Aérodrome</span>
+        <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-secondary)' }}>Aérodrome</span>
         <span style={{
           fontSize: '12px',
           fontWeight: '600',
           color: label.color,
           backgroundColor: label.color + '20',
           padding: '4px 12px',
-          borderRadius: '4px'
+          borderRadius: '8px'
         }}>
           {label.text}
         </span>
@@ -300,8 +300,8 @@ export const WaypointCardWithRunways = memo(({
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                backgroundColor: showDetails ? '#f3f4f6' : '#f9fafb',
-                border: '1px solid #e5e7eb',
+                backgroundColor: showDetails ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
+                border: '1px solid var(--border-subtle)',
                 padding: '10px 12px'
               }
             )}
@@ -348,9 +348,9 @@ export const WaypointCardWithRunways = memo(({
               sx.spacing.p(2),
               sx.rounded.sm,
               {
-                background: '#dbeafe',
-                color: '#1e40af',
-                border: '1px solid #93c5fd'
+                background: 'var(--bg-overlay)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-subtle)'
               }
             )}>
               ✅ Données issues de la carte VAC officielle
@@ -450,8 +450,8 @@ export const WaypointCardWithRunways = memo(({
                       sx.spacing.mb(1),
                       sx.rounded.sm,
                       {
-                        background: '#f9fafb',
-                        borderLeft: `3px solid #3b82f6`
+                        background: 'var(--bg-overlay)',
+                        borderLeft: `3px solid var(--text-secondary)`
                       }
                     )}>
                       {/* Ligne 1: Piste, QFU et Orientation */}
@@ -461,8 +461,8 @@ export const WaypointCardWithRunways = memo(({
                           <span style={{
                             marginLeft: '6px',
                             padding: '2px 6px',
-                            backgroundColor: '#3b82f6',
-                            color: 'white',
+                            backgroundColor: 'var(--text-secondary)',
+                            color: 'var(--text-primary)',
                             borderRadius: '3px',
                             fontSize: '10px',
                             fontWeight: 'bold'
@@ -504,11 +504,11 @@ export const WaypointCardWithRunways = memo(({
                             padding: '2px 6px',
                             borderRadius: '3px',
                             ...(isCompatible && surfaceCompatible ? {
-                              backgroundColor: '#d1fae5',
-                              color: '#065f46'
+                              backgroundColor: 'var(--bg-overlay)',
+                              color: 'var(--text-primary)'
                             } : {
-                              backgroundColor: '#fee2e2',
-                              color: '#991b1b'
+                              backgroundColor: 'var(--bg-overlay)',
+                              color: '#C04534'
                             })
                           }}>
                             {isCompatible && surfaceCompatible ? '✓ Compatible' : '✗ Incompatible'}
@@ -583,7 +583,7 @@ export const WaypointCardWithRunways = memo(({
         <div style={sx.combine(
           sx.spacing.mt(3),
           sx.spacing.pt(3),
-          { borderTop: '1px solid #e5e7eb' }
+          { borderTop: '1px solid var(--border-subtle)' }
         )}>
           {/* Cartouche unique pour tous les points VFR */}
           <div
@@ -591,8 +591,8 @@ export const WaypointCardWithRunways = memo(({
               sx.spacing.p(3),
               sx.rounded.md,
               {
-                background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
-                border: '2px solid #0ea5e9',
+                background: 'linear-gradient(135deg, var(--bg-overlay) 0%, var(--bg-overlay) 100%)',
+                border: '2px solid var(--text-secondary)',
                 boxShadow: '0 2px 8px rgba(14, 165, 233, 0.1)'
               }
             )}
@@ -604,12 +604,12 @@ export const WaypointCardWithRunways = memo(({
               alignItems: 'center',
               marginBottom: '12px',
               paddingBottom: '8px',
-              borderBottom: '1px solid #bae6fd'
+              borderBottom: '1px solid var(--border-subtle)'
             }}>
               <h5 style={{
                 fontSize: '13px',
                 fontWeight: '700',
-                color: '#0c4a6e',
+                color: 'var(--text-primary)',
                 margin: 0,
                 display: 'flex',
                 alignItems: 'center',
@@ -619,11 +619,11 @@ export const WaypointCardWithRunways = memo(({
                 <span style={{
                   fontSize: '11px',
                   fontWeight: '600',
-                  color: '#0ea5e9',
-                  backgroundColor: '#ffffff',
+                  color: 'var(--text-secondary)',
+                  backgroundColor: 'var(--bg-overlay)',
                   padding: '2px 8px',
-                  borderRadius: '12px',
-                  border: '1px solid #0ea5e9'
+                  borderRadius: '8px',
+                  border: '1px solid var(--text-secondary)'
                 }}>
                   {linkedVfrPoints.length}
                 </span>
@@ -640,23 +640,23 @@ export const WaypointCardWithRunways = memo(({
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     padding: '8px 10px',
-                    background: '#ffffff',
-                    borderRadius: '6px',
-                    border: '1px solid #bae6fd',
+                    background: 'var(--bg-overlay)',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-subtle)',
                     fontSize: '12px'
                   }}
                 >
                   <div style={{ display: 'flex', gap: '10px', flex: 1, alignItems: 'center' }}>
                     <div style={{
                       fontWeight: '700',
-                      color: '#0284c7',
+                      color: 'var(--text-secondary)',
                       minWidth: '60px',
                       fontSize: '13px'
                     }}>
                       {vfrPoint.name}
                     </div>
                     {vfrPoint.lat && vfrPoint.lon && (
-                      <div style={{ color: '#64748b', fontSize: '11px' }}>
+                      <div style={{ color: 'var(--text-tertiary)', fontSize: '11px' }}>
                         📍 {vfrPoint.lat.toFixed(2)}°, {vfrPoint.lon.toFixed(2)}°
                       </div>
                     )}
@@ -677,9 +677,9 @@ export const WaypointCardWithRunways = memo(({
                     style={{
                       padding: '4px 6px',
                       border: 'none',
-                      background: '#fee2e2',
-                      color: '#dc2626',
-                      borderRadius: '4px',
+                      background: 'var(--bg-overlay)',
+                      color: '#C04534',
+                      borderRadius: '8px',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
@@ -688,11 +688,11 @@ export const WaypointCardWithRunways = memo(({
                       fontSize: '11px'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#fca5a5';
+                      e.currentTarget.style.background = 'var(--bg-overlay)';
                       e.currentTarget.style.transform = 'scale(1.05)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = '#fee2e2';
+                      e.currentTarget.style.background = 'var(--bg-overlay)';
                       e.currentTarget.style.transform = 'scale(1)';
                     }}
                     title="Supprimer ce point VFR"
@@ -710,7 +710,7 @@ export const WaypointCardWithRunways = memo(({
       <div style={sx.combine(
         sx.spacing.mt(3),
         sx.spacing.pt(3),
-        { borderTop: '1px solid #e5e7eb' }
+        { borderTop: '1px solid var(--border-subtle)' }
       )}>
         {/* Bouton Ajouter un point VFR - pleine largeur */}
         {onInsertWaypoint ? (
@@ -727,7 +727,7 @@ export const WaypointCardWithRunways = memo(({
             />
           </div>
         ) : (
-          <div style={{ fontSize: '11px', color: '#9ca3af', fontStyle: 'italic', marginBottom: '10px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontStyle: 'italic', marginBottom: '10px' }}>
             (Pas de fonction d'insertion disponible)
           </div>
         )}
@@ -744,8 +744,8 @@ export const WaypointCardWithRunways = memo(({
                 sx.components.button.base,
                 {
                   padding: '6px',
-                  backgroundColor: index <= 1 ? '#e5e7eb' : '#dbeafe',
-                  color: index <= 1 ? '#9ca3af' : '#1e40af',
+                  backgroundColor: index <= 1 ? 'var(--border-subtle)' : 'var(--bg-overlay)',
+                  color: index <= 1 ? 'var(--text-tertiary)' : 'var(--text-primary)',
                   cursor: index <= 1 ? 'not-allowed' : 'pointer',
                   opacity: index <= 1 ? 0.5 : 1
                 }
@@ -763,8 +763,8 @@ export const WaypointCardWithRunways = memo(({
                 sx.components.button.base,
                 {
                   padding: '6px',
-                  backgroundColor: index >= totalWaypoints - 2 ? '#e5e7eb' : '#dbeafe',
-                  color: index >= totalWaypoints - 2 ? '#9ca3af' : '#1e40af',
+                  backgroundColor: index >= totalWaypoints - 2 ? 'var(--border-subtle)' : 'var(--bg-overlay)',
+                  color: index >= totalWaypoints - 2 ? 'var(--text-tertiary)' : 'var(--text-primary)',
                   cursor: index >= totalWaypoints - 2 ? 'not-allowed' : 'pointer',
                   opacity: index >= totalWaypoints - 2 ? 0.5 : 1
                 }

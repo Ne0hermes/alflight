@@ -221,12 +221,12 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
           Analyse du vent et impact sur le vol
         </h3>
         <div style={{
-          backgroundColor: '#eff6ff',
+          backgroundColor: 'var(--bg-overlay)',
           padding: '16px',
           borderRadius: '8px',
           textAlign: 'center'
         }}>
-          <Loader size={24} style={{ color: '#3b82f6', marginBottom: '8px', animation: 'spin 1s linear infinite' }} />
+          <Loader size={24} style={{ color: 'var(--text-secondary)', marginBottom: '8px', animation: 'spin 1s linear infinite' }} />
           <p style={sx.combine(sx.text.sm)}>
             Chargement des données météo...
           </p>
@@ -244,12 +244,12 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
           Analyse du vent et impact sur le vol
         </h3>
         <div style={{
-          backgroundColor: '#f3f4f6',
+          backgroundColor: 'var(--bg-overlay)',
           padding: '16px',
           borderRadius: '8px',
           textAlign: 'center'
         }}>
-          <Info size={24} style={{ color: '#6b7280', marginBottom: '8px' }} />
+          <Info size={24} style={{ color: 'var(--text-secondary)', marginBottom: '8px' }} />
           <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
             Aucune donnée météo disponible pour cette route.
           </p>
@@ -277,10 +277,10 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
   };
   
   const getWindImpactColor = (difference) => {
-    if (difference > 10) return '#ef4444'; // Rouge - retard important
+    if (difference > 10) return '#C04534'; // Rouge - retard important
     if (difference > 5) return '#f26921'; // Orange - retard modéré
-    if (difference > -5) return '#10b981'; // Vert - impact faible
-    return '#3b82f6'; // Bleu - gain de temps
+    if (difference > -5) return 'var(--text-primary)'; // Vert - impact faible
+    return 'var(--text-secondary)'; // Bleu - gain de temps
   };
 
   return (
@@ -302,13 +302,13 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
       {/* Avertissement simulation */}
       <div style={{
         backgroundColor: 'rgba(242, 105, 33, 0.10)',
-        border: '1px solid #fcd34d',
+        border: '1px solid var(--bg-overlay)',
         borderRadius: '8px',
         padding: '12px',
         marginBottom: '20px'
       }}>
         <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(1))}>
-          <AlertTriangle size={16} style={{ display: 'inline', marginRight: '6px', color: '#f59e0b' }} />
+          <AlertTriangle size={16} style={{ display: 'inline', marginRight: '6px', color: 'var(--accent-primary)' }} />
           Simulation théorique
         </p>
         <p style={sx.combine(sx.text.xs, { lineHeight: '1.5' })}>
@@ -327,7 +327,7 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
       }}>
         {/* Temps sans vent */}
         <div style={{
-          backgroundColor: '#f3f4f6',
+          backgroundColor: 'var(--bg-overlay)',
           padding: '12px',
           borderRadius: '8px',
           textAlign: 'center'
@@ -364,8 +364,8 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
         
         {/* Correction de cap suggérée */}
         <div style={{
-          backgroundColor: '#eff6ff',
-          border: '1px solid #3b82f6',
+          backgroundColor: 'var(--bg-overlay)',
+          border: '1px solid var(--text-secondary)',
           padding: '12px',
           borderRadius: '8px',
           textAlign: 'center'
@@ -394,7 +394,7 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
           {/* Vent au départ */}
           {windAnalysis.departure && (
             <div style={{
-              backgroundColor: '#f9fafb',
+              backgroundColor: 'var(--bg-overlay)',
               padding: '16px',
               borderRadius: '8px',
               marginBottom: '12px'
@@ -433,7 +433,7 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
           {/* Vent à l'arrivée */}
           {windAnalysis.arrival && (
             <div style={{
-              backgroundColor: '#f9fafb',
+              backgroundColor: 'var(--bg-overlay)',
               padding: '16px',
               borderRadius: '8px',
               marginBottom: '12px'
@@ -471,10 +471,10 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
           
           {/* Recommandations */}
           <div style={{
-            backgroundColor: '#eff6ff',
+            backgroundColor: 'var(--bg-overlay)',
             padding: '16px',
             borderRadius: '8px',
-            border: '1px solid #dbeafe'
+            border: '1px solid var(--bg-overlay)'
           }}>
             <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
               <Info size={14} style={{ display: 'inline', marginRight: '6px' }} />

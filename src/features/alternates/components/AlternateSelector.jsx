@@ -105,7 +105,7 @@ const SelectedAlternateItem = memo(({ alternate, index, onRemove }) => (
     <div style={sx.flex.start}>
       <span style={{
         backgroundColor: getAlternateColor(index),
-        color: 'white',
+        color: 'var(--text-primary)',
         width: '24px',
         height: '24px',
         borderRadius: '50%',
@@ -143,8 +143,8 @@ const CandidateItem = memo(({ candidate, isSelected, onAdd, disabled }) => (
     sx.rounded.md,
     sx.flex.between,
     {
-      backgroundColor: isSelected ? '#dcfce7' : '#f9fafb',
-      border: isSelected ? '1px solid #86efac' : '1px solid #e5e7eb'
+      backgroundColor: isSelected ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
+      border: isSelected ? '1px solid var(--bg-overlay)' : '1px solid var(--border-subtle)'
     }
   )}>
     <div style={{ flex: 1 }}>
@@ -190,14 +190,14 @@ const CandidateItem = memo(({ candidate, isSelected, onAdd, disabled }) => (
 
 // Composant pour afficher le score
 const ScoreBadge = memo(({ score }) => {
-  const color = score >= 0.8 ? '#10b981' : score >= 0.6 ? '#f59e0b' : '#ef4444';
+  const color = score >= 0.8 ? 'var(--text-primary)' : score >= 0.6 ? 'var(--accent-primary)' : '#C04534';
   
   return (
     <span style={{
       padding: '2px 8px',
       backgroundColor: color + '20',
       color: color,
-      borderRadius: '4px',
+      borderRadius: '8px',
       fontSize: '11px',
       fontWeight: 'bold'
     }}>
@@ -209,8 +209,8 @@ const ScoreBadge = memo(({ score }) => {
 });
 
 const getAlternateColor = (index) => {
-  const colors = ['#3b82f6', '#10b981', '#f59e0b'];
-  return colors[index] || '#6b7280';
+  const colors = ['var(--text-secondary)', 'var(--text-primary)', 'var(--accent-primary)'];
+  return colors[index] || 'var(--text-secondary)';
 };
 
 AlternateSelector.displayName = 'AlternateSelector';

@@ -178,7 +178,7 @@ export const ValueWithUnit = ({
   
   const labelStyle = {
     ...currentSize.label,
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     fontWeight: '500',
     marginBottom: '2px'
   };
@@ -186,12 +186,12 @@ export const ValueWithUnit = ({
   const mainStyle = {
     ...currentSize.main,
     fontWeight: emphasis ? 'bold' : '600',
-    color: emphasis ? '#1e40af' : '#1f2937'
+    color: emphasis ? 'var(--text-primary)' : 'var(--text-primary)'
   };
   
   const altStyle = {
     ...currentSize.alt,
-    color: '#9ca3af',
+    color: 'var(--text-tertiary)',
     marginTop: '2px'
   };
   

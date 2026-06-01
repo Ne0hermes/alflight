@@ -176,7 +176,7 @@ const styles = {
     flex: 1,
     background: 'rgba(0, 0, 0, 0.5)',
     border: `1px solid ${theme.colors.border}`,
-    borderRadius: '10px',
+    borderRadius: '8px',
     padding: '2rem',
     height: '300px',
     overflow: 'hidden',

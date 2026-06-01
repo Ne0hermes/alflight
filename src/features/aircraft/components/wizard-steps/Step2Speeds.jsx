@@ -286,7 +286,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
       name: "VNO",
       label: "Vitesse maximale de croisière",
       description: "",
-      color: "#ffc107",
+      color: "var(--accent-primary)",
       category: "critical",
       required: true
     },
@@ -294,7 +294,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
       name: "VNE",
       label: "Vitesse à ne jamais dépasser",
       description: "",
-      color: "#dc3545",
+      color: "#C04534",
       category: "critical",
       required: true
     }
@@ -470,7 +470,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'white',
+                color: 'var(--text-primary)',
                 fontSize: '0.75rem',
                 fontWeight: 'bold',
                 zIndex: 2
@@ -567,7 +567,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 transform: 'translateX(-50%)',
                 fontSize: '11px',
                 fontWeight: 'bold',
-                color: '#6b7280',
+                color: 'var(--text-secondary)',
                 px: 0.75,
                 py: 0.25,
                 borderRadius: '3px',
@@ -589,7 +589,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 transform: 'translateX(-50%)',
                 fontSize: '11px',
                 fontWeight: 'bold',
-                color: '#6b7280',
+                color: 'var(--text-secondary)',
                 px: 0.75,
                 py: 0.25,
                 borderRadius: '3px',
@@ -677,7 +677,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                   width: '2px',
                   height: '60%',
                   top: 0,
-                  bgcolor: '#06b6d4',
+                  bgcolor: 'var(--accent-primary)',
                   zIndex: 5
                 }}
               />
@@ -689,7 +689,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                   transform: 'translateX(-50%)',
                   fontSize: '11px',
                   fontWeight: 'bold',
-                  color: '#06b6d4',
+                  color: 'var(--accent-primary)',
                   px: 0.75,
                   py: 0.25,
                   borderRadius: '3px',
@@ -737,7 +737,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Box sx={{ width: 16, height: 16, bgcolor: '#06b6d4', borderRadius: 0.5 }} />
+              <Box sx={{ width: 16, height: 16, bgcolor: 'var(--accent-primary)', borderRadius: 0.5 }} />
               Trait cyan: VFE T/O (Volets décollage)
             </Typography>
           </Grid>
@@ -950,7 +950,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 name: "VNO",
                 label: "VNO - Vitesse max en air calme *",
                 description: "Vitesse maximale pour opérations normales",
-                color: "#ffc107",
+                color: "var(--accent-primary)",
                 category: "critical",
                 required: true
               })}
@@ -999,7 +999,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 name: "VNE",
                 label: "VNE - Vitesse à ne jamais dépasser *",
                 description: "Vitesse maximale absolue de l'avion",
-                color: "#dc3545",
+                color: "#C04534",
                 category: "critical",
                 required: true
               })}
@@ -1061,7 +1061,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                       label={`VO${index + 1}`}
                       sx={{
                         bgcolor: 'purple',
-                        color: 'white',
+                        color: 'var(--text-primary)',
                         mt: 1.5,
                         fontWeight: 'bold',
                         minWidth: '50px'

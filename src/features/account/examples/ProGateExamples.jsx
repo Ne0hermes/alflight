@@ -52,7 +52,7 @@ export const ExportWithPaywall = ({ onExport }) => {
       fallback={
         <div style={{ 
           padding: '20px', 
-          backgroundColor: '#f9fafb', 
+          backgroundColor: 'var(--bg-overlay)', 
           borderRadius: '8px',
           textAlign: 'center' 
         }}>

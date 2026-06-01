@@ -179,8 +179,8 @@ export const VACImporter = memo(({
         zIndex: 1000
       }}>
         <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
+          backgroundColor: 'var(--bg-overlay)',
+          borderRadius: '8px',
           padding: '24px',
           maxWidth: '900px',
           width: '90%',
@@ -220,11 +220,11 @@ export const VACImporter = memo(({
           {/* Info aéroport */}
           {icao && (
             <div style={{ 
-              backgroundColor: '#f0f9ff', 
+              backgroundColor: 'var(--bg-overlay)', 
               padding: '16px', 
               borderRadius: '8px', 
               marginBottom: '20px',
-              border: '1px solid #bfdbfe'
+              border: '1px solid var(--border-subtle)'
             }}>
               <p style={{ fontSize: '14px' }}>
                 <strong>Aéroport:</strong> {icao}
@@ -246,31 +246,31 @@ export const VACImporter = memo(({
               <div
                 onClick={() => fileInputRef.current?.click()}
                 style={{
-                  border: '2px dashed #d1d5db',
+                  border: '2px dashed var(--text-tertiary)',
                   borderRadius: '8px',
                   padding: '40px',
                   textAlign: 'center',
                   cursor: 'pointer',
-                  backgroundColor: '#fafafa',
+                  backgroundColor: 'var(--bg-overlay)',
                   transition: 'all 0.2s'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#3b82f6';
-                  e.currentTarget.style.backgroundColor = '#f0f9ff';
+                  e.currentTarget.style.borderColor = 'var(--text-secondary)';
+                  e.currentTarget.style.backgroundColor = 'var(--bg-overlay)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = '#d1d5db';
-                  e.currentTarget.style.backgroundColor = '#fafafa';
+                  e.currentTarget.style.borderColor = 'var(--text-tertiary)';
+                  e.currentTarget.style.backgroundColor = 'var(--bg-overlay)';
                 }}
               >
-                <Upload size={48} style={{ margin: '0 auto 16px', color: '#9ca3af' }} />
+                <Upload size={48} style={{ margin: '0 auto 16px', color: 'var(--text-tertiary)' }} />
                 <p style={{ fontSize: '16px', marginBottom: '8px' }}>
                   Cliquez pour sélectionner une carte VAC PDF
                 </p>
-                <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
                   ou glissez-déposez le fichier ici
                 </p>
-                <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '12px' }}>
+                <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '12px' }}>
                   Formats supportés: Cartes VAC SIA, Jeppesen, autres PDF aéronautiques
                 </p>
               </div>
@@ -284,10 +284,10 @@ export const VACImporter = memo(({
                   onClick={handleManualEntry}
                   style={{
                     padding: '8px 16px',
-                    backgroundColor: '#e5e7eb',
-                    color: '#374151',
+                    backgroundColor: 'var(--border-subtle)',
+                    color: 'var(--text-secondary)',
                     border: 'none',
-                    borderRadius: '6px',
+                    borderRadius: '8px',
                     fontSize: '14px',
                     cursor: 'pointer'
                   }}
@@ -304,14 +304,14 @@ export const VACImporter = memo(({
               <div style={{
                 width: '48px',
                 height: '48px',
-                border: '4px solid #e5e7eb',
-                borderTopColor: '#3b82f6',
+                border: '4px solid var(--border-subtle)',
+                borderTopColor: 'var(--text-secondary)',
                 borderRadius: '50%',
                 margin: '0 auto 16px',
                 animation: 'spin 1s linear infinite'
               }} />
               <p style={{ fontSize: '16px' }}>Extraction des données VAC en cours...</p>
-              <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '8px' }}>
+              <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '8px' }}>
                 Analyse des fréquences, pistes, procédures...
               </p>
             </div>
@@ -322,21 +322,21 @@ export const VACImporter = memo(({
             <div>
               {/* Alerte de succès */}
               <div style={{ 
-                backgroundColor: '#d1fae5', 
-                border: '1px solid #86efac', 
-                borderRadius: '6px', 
+                backgroundColor: 'var(--bg-overlay)', 
+                border: '1px solid var(--bg-overlay)', 
+                borderRadius: '8px', 
                 padding: '12px', 
                 display: 'flex', 
                 gap: '12px', 
                 alignItems: 'center', 
                 marginBottom: '20px' 
               }}>
-                <CheckCircle size={20} style={{ color: '#065f46' }} />
+                <CheckCircle size={20} style={{ color: 'var(--text-primary)' }} />
                 <div>
                   <p style={{ fontSize: '14px', fontWeight: 'bold' }}>
                     Carte VAC traitée avec succès!
                   </p>
-                  <p style={{ fontSize: '12px', color: '#6b7280' }}>
+                  <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                     {extractedData.pageCount} pages analysées • {extractedData.dataSource}
                   </p>
                 </div>
@@ -345,7 +345,7 @@ export const VACImporter = memo(({
               {/* Informations de base */}
               {(extractedData.icao || extractedData.airportName) && (
                 <div style={{ 
-                  backgroundColor: '#f9fafb', 
+                  backgroundColor: 'var(--bg-overlay)', 
                   padding: '16px', 
                   borderRadius: '8px', 
                   marginBottom: '16px' 
@@ -356,25 +356,25 @@ export const VACImporter = memo(({
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                     {extractedData.icao && (
                       <div>
-                        <span style={{ fontSize: '12px', color: '#6b7280' }}>Code ICAO</span>
+                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Code ICAO</span>
                         <p style={{ fontSize: '14px', fontWeight: 'bold' }}>{extractedData.icao}</p>
                       </div>
                     )}
                     {extractedData.airportName && (
                       <div>
-                        <span style={{ fontSize: '12px', color: '#6b7280' }}>Nom</span>
+                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Nom</span>
                         <p style={{ fontSize: '14px', fontWeight: 'bold' }}>{extractedData.airportName}</p>
                       </div>
                     )}
                     {extractedData.elevation && (
                       <div>
-                        <span style={{ fontSize: '12px', color: '#6b7280' }}>Élévation</span>
+                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Élévation</span>
                         <p style={{ fontSize: '14px', fontWeight: 'bold' }}>{extractedData.elevation} ft</p>
                       </div>
                     )}
                     {extractedData.coordinates && (
                       <div>
-                        <span style={{ fontSize: '12px', color: '#6b7280' }}>Coordonnées</span>
+                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Coordonnées</span>
                         <p style={{ fontSize: '14px', fontWeight: 'bold' }}>{extractedData.coordinates.formatted}</p>
                       </div>
                     )}
@@ -385,11 +385,11 @@ export const VACImporter = memo(({
               {/* Pistes */}
               {extractedData.runways && extractedData.runways.length > 0 && (
                 <div style={{ 
-                  backgroundColor: '#eff6ff', 
+                  backgroundColor: 'var(--bg-overlay)', 
                   padding: '16px', 
                   borderRadius: '8px', 
                   marginBottom: '16px',
-                  border: '1px solid #bfdbfe'
+                  border: '1px solid var(--border-subtle)'
                 }}>
                   <h4 style={{ 
                     fontSize: '16px', 
@@ -405,9 +405,9 @@ export const VACImporter = memo(({
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '8px' }}>
                     {extractedData.runways.map((runway, idx) => (
                       <div key={idx} style={{ 
-                        backgroundColor: 'white', 
+                        backgroundColor: 'var(--bg-overlay)', 
                         padding: '8px', 
-                        borderRadius: '4px',
+                        borderRadius: '8px',
                         fontSize: '13px'
                       }}>
                         <strong>{runway.designation}</strong>
@@ -426,7 +426,7 @@ export const VACImporter = memo(({
                   padding: '16px', 
                   borderRadius: '8px', 
                   marginBottom: '16px',
-                  border: '1px solid #fcd34d'
+                  border: '1px solid var(--bg-overlay)'
                 }}>
                   <h4 style={{ 
                     fontSize: '16px', 
@@ -456,7 +456,7 @@ export const VACImporter = memo(({
               {/* Aides à la navigation */}
               {extractedData.navaids && extractedData.navaids.length > 0 && (
                 <div style={{ 
-                  backgroundColor: '#f3e8ff', 
+                  backgroundColor: 'var(--bg-overlay)', 
                   padding: '16px', 
                   borderRadius: '8px', 
                   marginBottom: '16px',
@@ -486,7 +486,7 @@ export const VACImporter = memo(({
               {/* Procédures */}
               {extractedData.procedures && (
                 <div style={{ 
-                  backgroundColor: '#f9fafb', 
+                  backgroundColor: 'var(--bg-overlay)', 
                   padding: '16px', 
                   borderRadius: '8px', 
                   marginBottom: '16px' 
@@ -523,7 +523,7 @@ export const VACImporter = memo(({
                 justifyContent: 'space-between', 
                 marginTop: '20px',
                 paddingTop: '16px',
-                borderTop: '1px solid #e5e7eb'
+                borderTop: '1px solid var(--border-subtle)'
               }}>
                 <button
                   onClick={() => {
@@ -533,10 +533,10 @@ export const VACImporter = memo(({
                   }}
                   style={{ 
                     padding: '8px 16px', 
-                    backgroundColor: '#e5e7eb', 
-                    color: '#374151', 
+                    backgroundColor: 'var(--border-subtle)', 
+                    color: 'var(--text-secondary)', 
                     border: 'none', 
-                    borderRadius: '6px', 
+                    borderRadius: '8px', 
                     fontSize: '14px', 
                     fontWeight: '500', 
                     cursor: 'pointer' 
@@ -548,10 +548,10 @@ export const VACImporter = memo(({
                   onClick={handleSave}
                   style={{ 
                     padding: '8px 16px', 
-                    backgroundColor: '#3b82f6', 
-                    color: 'white', 
+                    backgroundColor: 'var(--text-secondary)', 
+                    color: 'var(--text-primary)', 
                     border: 'none', 
-                    borderRadius: '6px', 
+                    borderRadius: '8px', 
                     fontSize: '14px', 
                     fontWeight: '500', 
                     cursor: 'pointer', 
@@ -570,16 +570,16 @@ export const VACImporter = memo(({
           {/* Affichage des erreurs */}
           {error && (
             <div style={{ 
-              backgroundColor: '#fee2e2', 
-              border: '1px solid #fecaca', 
-              borderRadius: '6px', 
+              backgroundColor: 'var(--bg-overlay)', 
+              border: '1px solid var(--border-subtle)', 
+              borderRadius: '8px', 
               padding: '12px', 
               display: 'flex', 
               gap: '12px', 
               alignItems: 'center', 
               marginTop: '16px' 
             }}>
-              <AlertTriangle size={20} style={{ color: '#991b1b' }} />
+              <AlertTriangle size={20} style={{ color: '#C04534' }} />
               <p style={{ fontSize: '14px' }}>{error}</p>
             </div>
           )}

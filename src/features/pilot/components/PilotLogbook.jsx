@@ -1014,7 +1014,7 @@ const PilotLogbook = ({ showFormProp }) => {
           <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
             <button
               onClick={handleImport}
-              style={{ padding: '8px 16px', backgroundColor: '#f26921', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+              style={{ padding: '8px 16px', backgroundColor: '#f26921', color: 'var(--text-primary)', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
             >
               <Upload size={16} />
               Importer
@@ -1042,7 +1042,7 @@ const PilotLogbook = ({ showFormProp }) => {
             {/* Total général - Plus important */}
             <div style={{ borderLeft: '3px solid var(--text-secondary)', paddingLeft: '12px' }}>
               <p style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Total général</p>
-              <p style={{ fontSize: '24px', fontWeight: 'bold', color: 'black' }}>{totals.totalHours.toFixed(1)}h</p>
+              <p style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--app-bg)' }}>{totals.totalHours.toFixed(1)}h</p>
             </div>
 
             {/* Fonction à bord */}
@@ -1394,7 +1394,7 @@ const PilotLogbook = ({ showFormProp }) => {
                         style={{
                           padding: '12px',
                           backgroundColor: '#C04534',
-                          color: 'white',
+                          color: 'var(--text-primary)',
                           border: 'none',
                           borderRadius: '8px',
                           cursor: 'pointer',
@@ -1419,7 +1419,7 @@ const PilotLogbook = ({ showFormProp }) => {
                         style={{
                           padding: '12px',
                           backgroundColor: 'var(--text-primary)',
-                          color: 'white',
+                          color: 'var(--text-primary)',
                           border: 'none',
                           borderRadius: '8px',
                           cursor: 'pointer',
@@ -1702,7 +1702,7 @@ const PilotLogbook = ({ showFormProp }) => {
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
               onClick={handleSubmit}
-              style={{ padding: '8px 16px', backgroundColor: 'var(--text-secondary)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}
+              style={{ padding: '8px 16px', backgroundColor: 'var(--text-secondary)', color: 'var(--text-primary)', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}
             >
               {editingEntry ? 'Modifier' : 'Enregistrer'}
             </button>

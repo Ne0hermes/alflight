@@ -13,7 +13,7 @@ export const colors = {
   primary: {
     main: '#f26921',
     light: '#FF7E36',
-    dark: '#6B0F2B',
+    dark: 'var(--accent-primary)',
     lighter: '#B91D4C',
     darker: '#5A0C22',
   },
@@ -22,55 +22,55 @@ export const colors = {
   secondary: {
     main: '#f26921',
     light: '#FF7E36',
-    dark: '#6B0F2B',
+    dark: 'var(--accent-primary)',
   },
 
   // Couleurs de statut
   success: {
-    main: '#10b981',
+    main: 'var(--text-primary)',
     light: '#34d399',
-    dark: '#059669',
-    background: '#d1fae5',
+    dark: 'var(--text-primary)',
+    background: 'var(--bg-overlay)',
   },
   warning: {
-    main: '#fbbf24',
-    light: '#fcd34d',
-    dark: '#f59e0b',
+    main: 'var(--accent-primary)',
+    light: 'var(--bg-overlay)',
+    dark: 'var(--accent-primary)',
     background: 'rgba(242, 105, 33, 0.10)',
   },
   error: {
-    main: '#ef4444',
-    light: '#f87171',
-    dark: '#dc2626',
-    background: '#fee2e2',
+    main: '#C04534',
+    light: '#C04534',
+    dark: '#C04534',
+    background: 'var(--bg-overlay)',
   },
   info: {
-    main: '#3b82f6',
-    light: '#60a5fa',
-    dark: '#2563eb',
-    background: '#dbeafe',
+    main: 'var(--text-secondary)',
+    light: 'var(--text-secondary)',
+    dark: 'var(--text-secondary)',
+    background: 'var(--bg-overlay)',
   },
 
   // Couleurs de fond
   background: {
     default: '#FFFFFF',
     paper: '#FFFFFF',
-    elevated: '#F9FAFB',
-    subtle: '#F3F4F6',
+    elevated: 'var(--bg-overlay)',
+    subtle: 'var(--bg-overlay)',
   },
 
   // Couleurs de texte
   text: {
-    primary: '#000000',
-    secondary: '#374151',
+    primary: 'var(--app-bg)',
+    secondary: 'var(--text-secondary)',
     tertiary: '#6B7280',
-    muted: '#9CA3AF',
-    disabled: '#D1D5DB',
+    muted: 'var(--text-tertiary)',
+    disabled: 'var(--text-tertiary)',
   },
 
   // Couleurs de bordure
   border: {
-    default: '#D1D5DB',
+    default: 'var(--text-tertiary)',
     light: 'rgba(209, 213, 219, 0.3)',
     dark: '#f26921',
     focus: '#f26921',
@@ -84,9 +84,9 @@ export const colors = {
       elevated: '#3a3a3a',
     },
     text: {
-      primary: '#f9fafb',
-      secondary: '#d1d5db',
-      tertiary: '#9ca3af',
+      primary: 'var(--bg-overlay)',
+      secondary: 'var(--text-tertiary)',
+      tertiary: 'var(--text-tertiary)',
     },
   },
 };
@@ -210,10 +210,10 @@ export const typography = {
 // GRADIENTS
 // ============================================
 export const gradients = {
-  primary: 'linear-gradient(135deg, #8B1538, #FF7E36)',
-  primaryHover: 'linear-gradient(135deg, #6B0F2B, #8B1538)',
-  hero: 'linear-gradient(135deg, #8B1538 0%, #6B0F2B 100%)',
-  logo: 'linear-gradient(135deg, #ffffff, #8B1538, #FF7E36, #8B1538, #ffffff)',
+  primary: 'linear-gradient(135deg, var(--accent-primary), #FF7E36)',
+  primaryHover: 'linear-gradient(135deg, var(--accent-primary), var(--accent-primary))',
+  hero: 'linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary) 100%)',
+  logo: 'linear-gradient(135deg, #ffffff, var(--accent-primary), #FF7E36, var(--accent-primary), #ffffff)',
   subtle: 'linear-gradient(135deg, rgba(147, 22, 60, 0.05), rgba(147, 22, 60, 0.02))',
 };
 

@@ -401,8 +401,8 @@ export const AirportInserter = ({
           top: '100%',
           left: 0,
           marginTop: '8px',
-          background: 'white',
-          border: '1px solid #e5e7eb',
+          background: 'var(--bg-overlay)',
+          border: '1px solid var(--border-subtle)',
           borderRadius: '8px',
           boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
           padding: '12px',
@@ -426,7 +426,7 @@ export const AirportInserter = ({
                 left: '8px',
                 top: '50%',
                 transform: 'translateY(-50%)',
-                color: '#9ca3af'
+                color: 'var(--text-tertiary)'
               }} />
               <input
                 type="text"
@@ -436,8 +436,8 @@ export const AirportInserter = ({
                 style={{
                   width: '100%',
                   padding: '6px 8px 6px 28px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '6px',
+                  border: '1px solid var(--text-tertiary)',
+                  borderRadius: '8px',
                   fontSize: '13px'
                 }}
                 autoFocus
@@ -450,7 +450,7 @@ export const AirportInserter = ({
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                color: '#6b7280'
+                color: 'var(--text-secondary)'
               }}
             >
               <X size={16} />
@@ -469,7 +469,7 @@ export const AirportInserter = ({
               <p style={{
                 padding: '12px',
                 textAlign: 'center',
-                color: '#9ca3af',
+                color: 'var(--text-tertiary)',
                 fontSize: '13px'
               }}>
                 Chargement des aérodromes...
@@ -478,7 +478,7 @@ export const AirportInserter = ({
               <p style={{
                 padding: '12px',
                 textAlign: 'center',
-                color: '#9ca3af',
+                color: 'var(--text-tertiary)',
                 fontSize: '13px'
               }}>
                 {searchTerm 
@@ -494,18 +494,18 @@ export const AirportInserter = ({
                   onClick={() => handleInsertAirport(airport)}
                   style={{
                     padding: '10px',
-                    background: '#f9fafb',
-                    borderRadius: '6px',
+                    background: 'var(--bg-overlay)',
+                    borderRadius: '8px',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
                     border: '1px solid transparent'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#f3f4f6';
-                    e.currentTarget.style.borderColor = '#3b82f6';
+                    e.currentTarget.style.background = 'var(--bg-overlay)';
+                    e.currentTarget.style.borderColor = 'var(--text-secondary)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '#f9fafb';
+                    e.currentTarget.style.background = 'var(--bg-overlay)';
                     e.currentTarget.style.borderColor = 'transparent';
                   }}
                 >
@@ -515,14 +515,14 @@ export const AirportInserter = ({
                         fontWeight: '600', 
                         fontSize: '14px',
                         marginBottom: '3px',
-                        color: '#1f2937'
+                        color: 'var(--text-primary)'
                       }}>
                         {airport.icao}
                         <span style={{ 
                           fontWeight: '400', 
                           fontSize: '13px',
                           marginLeft: '8px',
-                          color: '#4b5563'
+                          color: 'var(--text-secondary)'
                         }}>
                           {airport.name}
                         </span>
@@ -530,7 +530,7 @@ export const AirportInserter = ({
                       {airport.city && (
                         <div style={{ 
                           fontSize: '12px', 
-                          color: '#6b7280',
+                          color: 'var(--text-secondary)',
                           marginBottom: '2px'
                         }}>
                           📍 {airport.city}
@@ -538,7 +538,7 @@ export const AirportInserter = ({
                       )}
                       <div style={{ 
                         fontSize: '11px', 
-                        color: '#9ca3af',
+                        color: 'var(--text-tertiary)',
                         display: 'flex',
                         gap: '12px'
                       }}>
@@ -550,9 +550,9 @@ export const AirportInserter = ({
                     </div>
                     <div style={{
                       padding: '2px 6px',
-                      background: airport.type === 'AD' ? '#dbeafe' : '#e5e7eb',
-                      color: airport.type === 'AD' ? '#1e40af' : '#374151',
-                      borderRadius: '4px',
+                      background: airport.type === 'AD' ? 'var(--bg-overlay)' : 'var(--border-subtle)',
+                      color: airport.type === 'AD' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      borderRadius: '8px',
                       fontSize: '10px',
                       fontWeight: '600',
                       marginLeft: '8px'
@@ -567,8 +567,8 @@ export const AirportInserter = ({
                 padding: '8px',
                 textAlign: 'center',
                 fontSize: '12px',
-                color: '#6b7280',
-                borderTop: '1px solid #e5e7eb'
+                color: 'var(--text-secondary)',
+                borderTop: '1px solid var(--border-subtle)'
               }}>
                 ... et {filteredAirports.length - 50} autres aérodromes
               </div>
@@ -580,10 +580,10 @@ export const AirportInserter = ({
             <div style={{
               marginTop: '8px',
               padding: '8px',
-              background: '#eff6ff',
-              borderRadius: '6px',
+              background: 'var(--bg-overlay)',
+              borderRadius: '8px',
               fontSize: '11px',
-              color: '#1e40af',
+              color: 'var(--text-primary)',
               textAlign: 'center'
             }}>
               📊 {availableAirports.length} aérodromes disponibles
@@ -595,20 +595,20 @@ export const AirportInserter = ({
             marginTop: '12px',
             padding: '12px',
             background: 'rgba(242, 105, 33, 0.10)',
-            borderRadius: '6px',
+            borderRadius: '8px',
             textAlign: 'center'
           }}>
-            <div style={{ marginBottom: '8px', fontSize: '12px', color: '#78350f' }}>
+            <div style={{ marginBottom: '8px', fontSize: '12px', color: 'var(--accent-primary)' }}>
               Aérodrome non trouvé ?
             </div>
             <button
               onClick={() => setShowCustomForm(!showCustomForm)}
               style={{
                 padding: '8px 16px',
-                background: '#fbbf24',
-                color: '#78350f',
+                background: 'var(--accent-primary)',
+                color: 'var(--accent-primary)',
                 border: 'none',
-                borderRadius: '4px',
+                borderRadius: '8px',
                 fontSize: '13px',
                 fontWeight: '600',
                 cursor: 'pointer'
@@ -623,9 +623,9 @@ export const AirportInserter = ({
             <div style={{
               marginTop: '12px',
               padding: '12px',
-              background: '#f9fafb',
-              borderRadius: '6px',
-              border: '1px solid #e5e7eb'
+              background: 'var(--bg-overlay)',
+              borderRadius: '8px',
+              border: '1px solid var(--border-subtle)'
             }}>
               <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600' }}>
                 Ajouter un aérodrome personnalisé
@@ -633,7 +633,7 @@ export const AirportInserter = ({
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: '#374151' }}>
+                  <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: 'var(--text-secondary)' }}>
                     Code ICAO *
                   </label>
                   <input
@@ -645,15 +645,15 @@ export const AirportInserter = ({
                     style={{
                       width: '100%',
                       padding: '6px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '4px',
+                      border: '1px solid var(--text-tertiary)',
+                      borderRadius: '8px',
                       fontSize: '13px'
                     }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: '#374151' }}>
+                  <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: 'var(--text-secondary)' }}>
                     Nom (optionnel)
                   </label>
                   <input
@@ -664,8 +664,8 @@ export const AirportInserter = ({
                     style={{
                       width: '100%',
                       padding: '6px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '4px',
+                      border: '1px solid var(--text-tertiary)',
+                      borderRadius: '8px',
                       fontSize: '13px'
                     }}
                   />
@@ -673,7 +673,7 @@ export const AirportInserter = ({
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: '#374151' }}>
+                    <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: 'var(--text-secondary)' }}>
                       Latitude *
                     </label>
                     <input
@@ -685,15 +685,15 @@ export const AirportInserter = ({
                       style={{
                         width: '100%',
                         padding: '6px',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '4px',
+                        border: '1px solid var(--text-tertiary)',
+                        borderRadius: '8px',
                         fontSize: '13px'
                       }}
                     />
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: '#374151' }}>
+                    <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: 'var(--text-secondary)' }}>
                       Longitude *
                     </label>
                     <input
@@ -705,8 +705,8 @@ export const AirportInserter = ({
                       style={{
                         width: '100%',
                         padding: '6px',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '4px',
+                        border: '1px solid var(--text-tertiary)',
+                        borderRadius: '8px',
                         fontSize: '13px'
                       }}
                     />
@@ -717,10 +717,10 @@ export const AirportInserter = ({
                   onClick={handleAddCustomAirport}
                   style={{
                     padding: '8px',
-                    background: '#3b82f6',
-                    color: 'white',
+                    background: 'var(--text-secondary)',
+                    color: 'var(--text-primary)',
                     border: 'none',
-                    borderRadius: '4px',
+                    borderRadius: '8px',
                     fontSize: '13px',
                     fontWeight: '600',
                     cursor: 'pointer',
@@ -738,10 +738,10 @@ export const AirportInserter = ({
             <div style={{
               marginTop: '12px',
               padding: '8px',
-              background: '#f0f9ff',
-              borderRadius: '6px',
+              background: 'var(--bg-overlay)',
+              borderRadius: '8px',
               fontSize: '11px',
-              color: '#0369a1'
+              color: 'var(--text-secondary)'
             }}>
               💡 L'aérodrome sera ajouté avant votre destination. Vous pouvez le déplacer ensuite.
             </div>

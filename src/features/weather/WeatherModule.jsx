@@ -201,8 +201,8 @@ export const WeatherModule = memo(({ wizardMode = false, config = {} }) => {
                   top: '100%',
                   left: 0,
                   right: 0,
-                  backgroundColor: 'white',
-                  border: '1px solid #e5e7eb',
+                  backgroundColor: 'var(--bg-overlay)',
+                  border: '1px solid var(--border-subtle)',
                   borderRadius: '8px',
                   marginTop: '4px',
                   maxHeight: '300px',
@@ -217,10 +217,10 @@ export const WeatherModule = memo(({ wizardMode = false, config = {} }) => {
                       style={{
                         padding: '8px 12px',
                         cursor: 'pointer',
-                        borderBottom: '1px solid #f3f4f6',
-                        ':hover': { backgroundColor: '#f9fafb' }
+                        borderBottom: '1px solid var(--bg-overlay)',
+                        ':hover': { backgroundColor: 'var(--bg-overlay)' }
                       }}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#f9fafb'}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--bg-overlay)'}
                       onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -228,14 +228,14 @@ export const WeatherModule = memo(({ wizardMode = false, config = {} }) => {
                         <span style={{ 
                           fontSize: '11px', 
                           padding: '2px 6px', 
-                          backgroundColor: '#e5e7eb',
-                          borderRadius: '4px'
+                          backgroundColor: 'var(--border-subtle)',
+                          borderRadius: '8px'
                         }}>
                           {airport.type === 'large_airport' ? 'Grand' : 
                            airport.type === 'medium_airport' ? 'Moyen' : 'Petit'}
                         </span>
                       </div>
-                      <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
                         {airport.name}
                       </div>
                     </div>
@@ -291,9 +291,9 @@ export const WeatherModule = memo(({ wizardMode = false, config = {} }) => {
             icao={selectedAirport.icao} 
             label="Recherche"
             additionalInfo={selectedAirport.name}
-            customBorderColor="#8b5cf6"
-            customBgColor="#f3e8ff"
-            customTextColor="#5b21b6"
+            customBorderColor="var(--accent-primary)"
+            customBgColor="var(--bg-overlay)"
+            customTextColor="var(--accent-primary)"
           />
           
           {/* Informations supplémentaires si disponibles */}
@@ -396,9 +396,9 @@ export const WeatherModule = memo(({ wizardMode = false, config = {} }) => {
                     key={`alt-${alternate.icao}`} 
                     icao={alternate.icao}
                     label="Déroutement"
-                    customBorderColor="#8b5cf6"
-                    customBgColor="#f3e8ff"
-                    customTextColor="#5b21b6"
+                    customBorderColor="var(--accent-primary)"
+                    customBgColor="var(--bg-overlay)"
+                    customTextColor="var(--accent-primary)"
                     additionalInfo={alternate.name ? `${alternate.name}` : ''}
                     compact={true}
                   />
@@ -417,10 +417,10 @@ export const WeatherModule = memo(({ wizardMode = false, config = {} }) => {
         </h3>
 
         <div style={sx.combine(sx.components.card.base, sx.spacing.p(4), {
-          backgroundColor: '#f9fafb',
+          backgroundColor: 'var(--bg-overlay)',
           textAlign: 'center'
         })}>
-          <Info size={32} style={{ color: '#6b7280', marginBottom: '16px' }} />
+          <Info size={32} style={{ color: 'var(--text-secondary)', marginBottom: '16px' }} />
           <p style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(2))}>
             Cartes WINTEM/TEMSI - Fonction à venir
           </p>
@@ -452,8 +452,8 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
           <div style={{
             width: 40,
             height: 40,
-            border: '3px solid #e5e7eb',
-            borderTopColor: '#3b82f6',
+            border: '3px solid var(--border-subtle)',
+            borderTopColor: 'var(--text-secondary)',
             borderRadius: '50%',
             animation: 'spin 1s linear infinite',
             marginBottom: '12px'
@@ -529,7 +529,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              color: '#6b7280'
+              color: 'var(--text-secondary)'
             }}
             title="Actualiser"
           >
@@ -566,9 +566,9 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
       { 
         border: `1px solid ${
           customBorderColor ||
-          (label === 'Départ' ? '#10b981' : 
-          label === 'Arrivée' ? '#f59e0b' : 
-          '#3b82f6')
+          (label === 'Départ' ? 'var(--text-primary)' : 
+          label === 'Arrivée' ? 'var(--accent-primary)' : 
+          'var(--text-secondary)')
         }` 
       }
     )}>
@@ -583,11 +583,11 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
                 sx.spacing.ml(2),
                 { 
                   padding: '2px 8px', 
-                  borderRadius: '4px',
+                  borderRadius: '8px',
                   backgroundColor: customBgColor || 
-                    (label === 'Départ' ? '#d1fae5' : label === 'Arrivée' ? 'rgba(242, 105, 33, 0.10)' : '#dbeafe'),
+                    (label === 'Départ' ? 'var(--bg-overlay)' : label === 'Arrivée' ? 'rgba(242, 105, 33, 0.10)' : 'var(--bg-overlay)'),
                   color: customTextColor ||
-                    (label === 'Départ' ? '#065f46' : label === 'Arrivée' ? '#92400e' : '#1e40af')
+                    (label === 'Départ' ? 'var(--text-primary)' : label === 'Arrivée' ? 'var(--accent-primary)' : 'var(--text-primary)')
                 }
               )}>
                 {label}
@@ -604,7 +604,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
             <Clock size={12} />
             <span style={sx.spacing.ml(1)}>
               {new Date(weather.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-              {isOld && <span style={{ color: '#f59e0b' }}> (données anciennes)</span>}
+              {isOld && <span style={{ color: 'var(--accent-primary)' }}> (données anciennes)</span>}
             </span>
           </p>
         </div>
@@ -623,13 +623,13 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
           <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>METAR :</p>
           <div style={{ 
             fontSize: '13px', 
-            backgroundColor: '#f3f4f6', 
+            backgroundColor: 'var(--bg-overlay)', 
             padding: '12px', 
-            borderRadius: '6px',
+            borderRadius: '8px',
             fontFamily: 'monospace',
             lineHeight: '1.5',
-            color: '#1f2937',
-            border: '1px solid #d1d5db'
+            color: 'var(--text-primary)',
+            border: '1px solid var(--text-tertiary)'
           }}>
             {weather.metar.raw}
           </div>
@@ -642,13 +642,13 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
           <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>TAF :</p>
           <div style={{ 
             fontSize: '13px', 
-            backgroundColor: '#f3f4f6', 
+            backgroundColor: 'var(--bg-overlay)', 
             padding: '12px', 
-            borderRadius: '6px',
+            borderRadius: '8px',
             fontFamily: 'monospace',
             lineHeight: '1.5',
-            color: '#1f2937',
-            border: '1px solid #d1d5db'
+            color: 'var(--text-primary)',
+            border: '1px solid var(--text-tertiary)'
           }}>
             {weather.taf.raw}
           </div>
@@ -657,7 +657,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
       
       {/* Données METAR décodées - juste après le METAR/TAF */}
       {metar && (
-        <div style={sx.combine(sx.spacing.mt(3), sx.components.card.base, { backgroundColor: '#fafafa' })}>
+        <div style={sx.combine(sx.spacing.mt(3), sx.components.card.base, { backgroundColor: 'var(--bg-overlay)' })}>
           <div style={sx.spacing.mb(showDecoded ? 2 : 0)}>
             <AccordionButton
               isOpen={showDecoded}
@@ -722,8 +722,8 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
                     {metar.clouds.map((cloud, i) => (
                       <span key={i} style={sx.combine(sx.text.sm, {
                         padding: '2px 8px',
-                        backgroundColor: '#e5e7eb',
-                        borderRadius: '4px',
+                        backgroundColor: 'var(--border-subtle)',
+                        borderRadius: '8px',
                         fontSize: '12px'
                       })}>
                         {cloud.type} {format(cloud.altitude, 'altitude', 0)}

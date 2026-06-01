@@ -29,22 +29,22 @@ export const colors = {
   // Couleurs secondaires - Gris neutres
   neutral: {
     0: '#FFFFFF',    // Blanc pur
-    50: '#F9FAFB',   
-    100: '#F3F4F6',
-    200: '#E5E7EB',
-    300: '#D1D5DB',
-    400: '#9CA3AF',
+    50: 'var(--bg-overlay)',   
+    100: 'var(--bg-overlay)',
+    200: 'var(--border-subtle)',
+    300: 'var(--text-tertiary)',
+    400: 'var(--text-tertiary)',
     500: '#6B7280',
     600: '#4B5563',
-    700: '#374151',
+    700: 'var(--text-secondary)',
     800: '#1F2937',
-    900: '#111827',  // Presque noir
-    1000: '#000000', // Noir pur
+    900: 'var(--text-primary)',  // Presque noir
+    1000: 'var(--app-bg)', // Noir pur
   },
 
   // États - Success (Vert)
   success: {
-    50: '#F0FDF4',
+    50: 'var(--bg-overlay)',
     100: '#DCFCE7',
     200: '#BBF7D0',
     300: '#86EFAC',
@@ -52,16 +52,16 @@ export const colors = {
     500: '#22C55E',  // Principal
     600: '#16A34A',
     700: '#15803D',
-    800: '#166534',
+    800: 'var(--text-primary)',
     900: '#14532D',
   },
 
   // États - Warning (Jaune/Orange)
   warning: {
     50: '#FFFBEB',
-    100: '#FEF3C7',
+    100: 'var(--bg-overlay)',
     200: '#FDE68A',
-    300: '#FCD34D',
+    300: 'var(--accent-primary)',
     400: '#FBBF24',
     500: '#F59E0B',  // Principal
     600: '#D97706',
@@ -94,7 +94,7 @@ export const colors = {
     500: '#0EA5E9',  // Principal
     600: '#0284C7',
     700: '#0369A1',
-    800: '#075985',
+    800: 'var(--text-secondary)',
     900: '#0C4A6E',
   },
 
@@ -106,18 +106,18 @@ export const colors = {
     taxiway: '#F4D03F',
     grass: '#2ECC71',
     vfr: '#00A86B',
-    ifr: '#FF6B6B',
+    ifr: '#C04534',
     night: '#2C3E50',
     military: '#8B0000',
-    danger: '#FF0000',
+    danger: '#C04534',
   },
 
   // Couleurs sémantiques
   semantic: {
     text: {
-      primary: '#111827',    // Texte principal (noir)
+      primary: 'var(--text-primary)',    // Texte principal (noir)
       secondary: '#4B5563',  // Texte secondaire
-      muted: '#9CA3AF',      // Texte désactivé
+      muted: 'var(--text-tertiary)',      // Texte désactivé
       inverse: '#FFFFFF',    // Texte sur fond sombre
       link: '#2563EB',       // Liens
       danger: '#DC2626',     // Texte d'erreur
@@ -126,17 +126,17 @@ export const colors = {
     },
     background: {
       primary: '#FFFFFF',    // Fond principal
-      secondary: '#F9FAFB',  // Fond secondaire
-      tertiary: '#F3F4F6',   // Fond tertiaire
-      hover: '#E5E7EB',      // Fond au survol
-      active: '#D1D5DB',     // Fond actif
-      disabled: '#F3F4F6',   // Fond désactivé
+      secondary: 'var(--bg-overlay)',  // Fond secondaire
+      tertiary: 'var(--bg-overlay)',   // Fond tertiaire
+      hover: 'var(--border-subtle)',      // Fond au survol
+      active: 'var(--text-tertiary)',     // Fond actif
+      disabled: 'var(--bg-overlay)',   // Fond désactivé
       overlay: 'rgba(0, 0, 0, 0.5)', // Overlay
     },
     border: {
-      light: '#E5E7EB',      // Bordure légère
-      default: '#D1D5DB',    // Bordure par défaut
-      strong: '#9CA3AF',     // Bordure forte
+      light: 'var(--border-subtle)',      // Bordure légère
+      default: 'var(--text-tertiary)',    // Bordure par défaut
+      strong: 'var(--text-tertiary)',     // Bordure forte
       focus: '#3B82F6',      // Bordure au focus
       error: '#EF4444',      // Bordure d'erreur
     }

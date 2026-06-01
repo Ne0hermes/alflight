@@ -456,7 +456,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
             <div style={{
               padding: '10px 12px',
               backgroundColor: 'rgba(242, 105, 33, 0.10)',
-              borderRadius: '6px',
+              borderRadius: '8px',
               fontSize: '12px',
               color: 'var(--accent-primary)',
               marginTop: '12px'
@@ -501,8 +501,8 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
               <span style={{
                 padding: '2px 8px',
                 backgroundColor: 'var(--accent-primary)',
-                color: 'white',
-                borderRadius: '10px',
+                color: 'var(--text-primary)',
+                borderRadius: '8px',
                 fontSize: '11px'
               }}>
                 {[filters.hideShortRunways, filters.hideIncompatibleSurface, filters.hideIncompatibleType].filter(Boolean).length} actif(s)
@@ -523,7 +523,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                 gap: '10px',
                 padding: '10px 12px',
                 backgroundColor: filters.hideShortRunways ? 'var(--bg-overlay)' : 'var(--bg-surface)',
-                borderRadius: '6px',
+                borderRadius: '8px',
                 border: '1px solid var(--border-subtle)',
                 cursor: 'pointer'
               }}>
@@ -550,7 +550,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                 gap: '10px',
                 padding: '10px 12px',
                 backgroundColor: filters.hideIncompatibleSurface ? 'var(--bg-overlay)' : 'var(--bg-surface)',
-                borderRadius: '6px',
+                borderRadius: '8px',
                 border: '1px solid var(--border-subtle)',
                 cursor: 'pointer'
               }}>
@@ -577,7 +577,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                 gap: '10px',
                 padding: '10px 12px',
                 backgroundColor: filters.hideIncompatibleType ? 'var(--bg-overlay)' : 'var(--bg-surface)',
-                borderRadius: '6px',
+                borderRadius: '8px',
                 border: '1px solid var(--border-subtle)',
                 cursor: 'pointer'
               }}>

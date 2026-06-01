@@ -25,11 +25,11 @@ const ABACIngestionFlow = ({ aircraft, onComplete }) => {
 
   // Phases du protocole
   const phases = [
-    { id: 0, name: 'Inventaire', icon: FileText, color: '#3b82f6' },
-    { id: 1, name: 'Extraction', icon: Brain, color: '#8b5cf6' },
-    { id: 2, name: 'Validation', icon: TestTube, color: '#f59e0b' },
-    { id: 3, name: 'Compilation', icon: Database, color: '#10b981' },
-    { id: 4, name: 'Finalisation', icon: Save, color: '#06b6d4' }
+    { id: 0, name: 'Inventaire', icon: FileText, color: 'var(--text-secondary)' },
+    { id: 1, name: 'Extraction', icon: Brain, color: 'var(--accent-primary)' },
+    { id: 2, name: 'Validation', icon: TestTube, color: 'var(--accent-primary)' },
+    { id: 3, name: 'Compilation', icon: Database, color: 'var(--text-primary)' },
+    { id: 4, name: 'Finalisation', icon: Save, color: 'var(--accent-primary)' }
   ];
 
   // Initialisation du service unifié
@@ -246,12 +246,12 @@ const ABACIngestionFlow = ({ aircraft, onComplete }) => {
 
     const getColor = () => {
       switch (message.type) {
-        case 'input': return '#3b82f6';
-        case 'output': return '#8b5cf6';
-        case 'info': return '#6b7280';
-        case 'error': return '#ef4444';
-        case 'success': return '#10b981';
-        default: return '#9ca3af';
+        case 'input': return 'var(--text-secondary)';
+        case 'output': return 'var(--accent-primary)';
+        case 'info': return 'var(--text-secondary)';
+        case 'error': return '#C04534';
+        case 'success': return 'var(--text-primary)';
+        default: return 'var(--text-tertiary)';
       }
     };
 
@@ -267,20 +267,20 @@ const ABACIngestionFlow = ({ aircraft, onComplete }) => {
           {getIcon()}
         </span>
         <div style={{ flex: 1 }}>
-          <span style={{ color: '#9ca3af', marginRight: '8px' }}>
+          <span style={{ color: 'var(--text-tertiary)', marginRight: '8px' }}>
             {new Date(message.timestamp).toLocaleTimeString()}
           </span>
-          <span style={{ color: message.type === 'error' ? '#ef4444' : '#e5e7eb' }}>
+          <span style={{ color: message.type === 'error' ? '#C04534' : 'var(--border-subtle)' }}>
             {message.content}
           </span>
           {message.data && (
             <details style={{ marginTop: '4px', marginLeft: '16px' }}>
-              <summary style={{ cursor: 'pointer', color: '#6b7280' }}>
+              <summary style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>
                 Data
               </summary>
               <pre style={{
                 fontSize: '10px',
-                color: '#9ca3af',
+                color: 'var(--text-tertiary)',
                 marginTop: '4px',
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-all'
@@ -363,7 +363,7 @@ const ABACIngestionFlow = ({ aircraft, onComplete }) => {
         </div>
 
         {/* Indicateur de phases */}
-        <div style={sx.combine(sx.flex.between, sx.spacing.p(3), sx.bg.gray, { borderRadius: '6px' })}>
+        <div style={sx.combine(sx.flex.between, sx.spacing.p(3), sx.bg.gray, { borderRadius: '8px' })}>
           {phases.map((phase, index) => {
             const Icon = phase.icon;
             const isActive = currentPhase === phase.id;
@@ -382,16 +382,16 @@ const ABACIngestionFlow = ({ aircraft, onComplete }) => {
                   width: '32px',
                   height: '32px',
                   borderRadius: '50%',
-                  backgroundColor: isActive ? phase.color : isCompleted ? '#10b981' : '#e5e7eb',
+                  backgroundColor: isActive ? phase.color : isCompleted ? 'var(--text-primary)' : 'var(--border-subtle)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginRight: '8px'
                 }}>
                   {isCompleted ? (
-                    <CheckCircle size={16} style={{ color: 'white' }} />
+                    <CheckCircle size={16} style={{ color: 'var(--text-primary)' }} />
                   ) : (
-                    <Icon size={16} style={{ color: isActive ? 'white' : '#6b7280' }} />
+                    <Icon size={16} style={{ color: isActive ? 'white' : 'var(--text-secondary)' }} />
                   )}
                 </div>
                 <span style={sx.combine(
@@ -401,7 +401,7 @@ const ABACIngestionFlow = ({ aircraft, onComplete }) => {
                   {phase.name}
                 </span>
                 {index < phases.length - 1 && (
-                  <ChevronRight size={16} style={{ margin: '0 8px', color: '#9ca3af' }} />
+                  <ChevronRight size={16} style={{ margin: '0 8px', color: 'var(--text-tertiary)' }} />
                 )}
               </div>
 
@@ -419,12 +419,12 @@ const ABACIngestionFlow = ({ aircraft, onComplete }) => {
           </h3>
           
           <div style={{
-            backgroundColor: '#111827',
-            borderRadius: '6px',
+            backgroundColor: 'var(--text-primary)',
+            borderRadius: '8px',
             padding: '12px',
             height: '400px',
             overflowY: 'auto',
-            border: '1px solid #374151'
+            border: '1px solid var(--text-secondary)'
           }}>
             {messages.map(msg => (
               <MessageDisplay key={msg.id} message={msg} />
@@ -480,10 +480,10 @@ const ABACIngestionFlow = ({ aircraft, onComplete }) => {
                       sx.spacing.mb(2),
                       sx.bg.gray,
                       { 
-                        borderRadius: '6px',
+                        borderRadius: '8px',
                         cursor: 'pointer',
                         transition: 'all 0.2s',
-                        ':hover': { backgroundColor: '#e5e7eb' }
+                        ':hover': { backgroundColor: 'var(--border-subtle)' }
                       }
                     )}
                     onClick={() => selectAbac(abac.id)}
@@ -523,7 +523,7 @@ const ABACIngestionFlow = ({ aircraft, onComplete }) => {
               </h3>
               
               {testResults.map((result, idx) => (
-                <div key={idx} style={sx.combine(sx.spacing.mb(3), sx.spacing.p(3), sx.bg.gray, { borderRadius: '6px' })}>
+                <div key={idx} style={sx.combine(sx.spacing.mb(3), sx.spacing.p(3), sx.bg.gray, { borderRadius: '8px' })}>
                   <div style={sx.combine(sx.flex.between, sx.spacing.mb(2))}>
                     <span style={sx.text.sm}>{result.id}</span>
                     <span style={sx.combine(
@@ -531,9 +531,9 @@ const ABACIngestionFlow = ({ aircraft, onComplete }) => {
                       sx.spacing.px(2),
                       sx.spacing.py(1),
                       {
-                        backgroundColor: result.status === 'pass' ? '#10b981' : '#ef4444',
-                        color: 'white',
-                        borderRadius: '4px'
+                        backgroundColor: result.status === 'pass' ? 'var(--text-primary)' : '#C04534',
+                        color: 'var(--text-primary)',
+                        borderRadius: '8px'
                       }
                     )}>
                       {result.status}
@@ -542,7 +542,7 @@ const ABACIngestionFlow = ({ aircraft, onComplete }) => {
                   
                   {result.details?.slice(0, 3).map((detail, detailIdx) => (
                     <div key={detailIdx} style={sx.combine(sx.text.xs, sx.spacing.mb(1))}>
-                      <span style={{ color: detail.ok ? '#10b981' : '#ef4444' }}>
+                      <span style={{ color: detail.ok ? 'var(--text-primary)' : '#C04534' }}>
                         {detail.ok ? '✓' : '✗'}
                       </span>
                       {' '}{detail.case}: {detail.pred.toFixed(1)} (±{detail.pct_err.toFixed(1)}%)
@@ -561,7 +561,7 @@ const ABACIngestionFlow = ({ aircraft, onComplete }) => {
                 Modèle compilé
               </h3>
               
-              <div style={sx.combine(sx.spacing.p(3), sx.bg.gray, { borderRadius: '6px' })}>
+              <div style={sx.combine(sx.spacing.p(3), sx.bg.gray, { borderRadius: '8px' })}>
                 <p style={sx.combine(sx.text.sm, sx.spacing.mb(2))}>
                   <strong>ABACs inclus:</strong> {compiledModel.abacs_included?.length || 0}
                 </p>
@@ -595,7 +595,7 @@ const ABACIngestionFlow = ({ aircraft, onComplete }) => {
           {/* Phase 4: Finalisation */}
           {currentPhase === 4 && (
             <div style={sx.text.center}>
-              <CheckCircle size={48} style={{ color: '#10b981', margin: '0 auto 16px' }} />
+              <CheckCircle size={48} style={{ color: 'var(--text-primary)', margin: '0 auto 16px' }} />
               <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(2))}>
                 Processus terminé
               </h3>

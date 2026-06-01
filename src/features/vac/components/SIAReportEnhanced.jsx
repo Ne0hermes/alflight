@@ -378,15 +378,15 @@ export const SIAReportEnhanced = () => {
     if (!isEditable) {
       return {
         ...styles.input,
-        backgroundColor: '#f3f4f6',
+        backgroundColor: 'var(--bg-overlay)',
         cursor: 'default',
-        borderColor: '#d1d5db'
+        borderColor: 'var(--text-tertiary)'
       };
     }
     return {
       ...styles.input,
-      backgroundColor: hasValue ? 'white' : (isRequired ? '#fee2e2' : 'rgba(242, 105, 33, 0.10)'),
-      borderColor: hasValue ? '#d1d5db' : (isRequired ? '#ef4444' : '#f59e0b'),
+      backgroundColor: hasValue ? 'white' : (isRequired ? 'var(--bg-overlay)' : 'rgba(242, 105, 33, 0.10)'),
+      borderColor: hasValue ? 'var(--text-tertiary)' : (isRequired ? '#C04534' : 'var(--accent-primary)'),
       cursor: 'text'
     };
   };
@@ -585,10 +585,10 @@ export const SIAReportEnhanced = () => {
       maxWidth: '1600px',
       margin: '0 auto',
       padding: '16px',
-      backgroundColor: '#f3f4f6'
+      backgroundColor: 'var(--bg-overlay)'
     },
     header: {
-      backgroundColor: 'white',
+      backgroundColor: 'var(--bg-overlay)',
       borderRadius: '8px',
       padding: '16px',
       marginBottom: '16px',
@@ -597,14 +597,14 @@ export const SIAReportEnhanced = () => {
     title: {
       fontSize: '24px',
       fontWeight: 'bold',
-      color: '#111827',
+      color: 'var(--text-primary)',
       marginBottom: '12px'
     },
     tabs: {
       display: 'flex',
       gap: '4px',
       marginBottom: '12px',
-      borderBottom: '2px solid #e5e7eb',
+      borderBottom: '2px solid var(--border-subtle)',
       paddingBottom: '0',
       justifyContent: 'space-between'
     },
@@ -618,13 +618,13 @@ export const SIAReportEnhanced = () => {
       cursor: 'pointer',
       fontSize: '14px',
       fontWeight: '500',
-      color: '#6b7280',
+      color: 'var(--text-secondary)',
       transition: 'all 0.2s',
       marginBottom: '-2px'
     },
     tabActive: {
-      color: '#3b82f6',
-      borderBottomColor: '#3b82f6'
+      color: 'var(--text-secondary)',
+      borderBottomColor: 'var(--text-secondary)'
     },
     controls: {
       display: 'flex',
@@ -636,13 +636,13 @@ export const SIAReportEnhanced = () => {
       flex: '1',
       minWidth: '200px',
       padding: '8px 12px',
-      border: '1px solid #d1d5db',
-      borderRadius: '6px',
+      border: '1px solid var(--text-tertiary)',
+      borderRadius: '8px',
       fontSize: '14px'
     },
     button: {
       padding: '8px 16px',
-      borderRadius: '6px',
+      borderRadius: '8px',
       border: 'none',
       fontSize: '13px',
       fontWeight: '500',
@@ -653,17 +653,17 @@ export const SIAReportEnhanced = () => {
       transition: 'all 0.2s'
     },
     primaryButton: {
-      backgroundColor: '#3b82f6',
-      color: 'white'
+      backgroundColor: 'var(--text-secondary)',
+      color: 'var(--text-primary)'
     },
     secondaryButton: {
-      backgroundColor: 'white',
-      color: '#374151',
-      border: '1px solid #d1d5db'
+      backgroundColor: 'var(--bg-overlay)',
+      color: 'var(--text-secondary)',
+      border: '1px solid var(--text-tertiary)'
     },
     successButton: {
-      backgroundColor: '#10b981',
-      color: 'white'
+      backgroundColor: 'var(--text-primary)',
+      color: 'var(--text-primary)'
     },
     gridContainer: {
       display: 'grid',
@@ -671,7 +671,7 @@ export const SIAReportEnhanced = () => {
       gap: '12px'
     },
     aerodromeCard: {
-      backgroundColor: 'white',
+      backgroundColor: 'var(--bg-overlay)',
       borderRadius: '8px',
       overflow: 'hidden',
       boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
@@ -679,13 +679,13 @@ export const SIAReportEnhanced = () => {
       cursor: 'pointer'
     },
     aerodromeCardSelected: {
-      boxShadow: '0 0 0 2px #3b82f6',
+      boxShadow: '0 0 0 2px var(--text-secondary)',
       transform: 'scale(1.02)'
     },
     cardHeader: {
       padding: '12px',
-      backgroundColor: '#1e293b',
-      color: 'white',
+      backgroundColor: 'var(--text-primary)',
+      color: 'var(--text-primary)',
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center'
@@ -710,7 +710,7 @@ export const SIAReportEnhanced = () => {
       flexWrap: 'wrap', // Permet aux onglets de passer à la ligne si nécessaire
       gap: '2px',
       marginBottom: '12px',
-      borderBottom: '1px solid #e5e7eb'
+      borderBottom: '1px solid var(--border-subtle)'
     },
     sectionTab: {
       padding: '6px 12px',
@@ -722,16 +722,16 @@ export const SIAReportEnhanced = () => {
       cursor: 'pointer',
       fontSize: '12px',
       fontWeight: '500',
-      color: '#6b7280',
+      color: 'var(--text-secondary)',
       display: 'flex',
       alignItems: 'center',
       gap: '4px',
       marginBottom: '-1px'
     },
     sectionTabActive: {
-      color: '#3b82f6',
-      borderBottomColor: '#3b82f6',
-      backgroundColor: '#eff6ff'
+      color: 'var(--text-secondary)',
+      borderBottomColor: 'var(--text-secondary)',
+      backgroundColor: 'var(--bg-overlay)'
     },
     field: {
       marginBottom: '8px'
@@ -739,17 +739,17 @@ export const SIAReportEnhanced = () => {
     label: {
       fontSize: '11px',
       fontWeight: '500',
-      color: '#6b7280',
+      color: 'var(--text-secondary)',
       marginBottom: '2px',
       display: 'block'
     },
     input: {
       width: '100%',
       padding: '6px 8px',
-      border: '1px solid #d1d5db',
-      borderRadius: '4px',
+      border: '1px solid var(--text-tertiary)',
+      borderRadius: '8px',
       fontSize: '13px',
-      backgroundColor: 'white'
+      backgroundColor: 'var(--bg-overlay)'
     },
     badge: {
       display: 'inline-block',
@@ -766,7 +766,7 @@ export const SIAReportEnhanced = () => {
     emptyState: {
       textAlign: 'center',
       padding: '40px',
-      color: '#6b7280'
+      color: 'var(--text-secondary)'
     }
   };
 
@@ -786,7 +786,7 @@ export const SIAReportEnhanced = () => {
       {/* Disclaimer important - Collapsible */}
       <div style={{
         background: 'rgba(242, 105, 33, 0.10)',
-        border: '1px solid #f59e0b',
+        border: '1px solid var(--accent-primary)',
         borderRadius: '8px',
         marginBottom: '16px',
         fontSize: '12px',
@@ -805,8 +805,8 @@ export const SIAReportEnhanced = () => {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <AlertTriangle size={16} style={{ color: '#f59e0b' }} />
-            <strong style={{ color: '#92400e', fontSize: '13px' }}>
+            <AlertTriangle size={16} style={{ color: 'var(--accent-primary)' }} />
+            <strong style={{ color: 'var(--accent-primary)', fontSize: '13px' }}>
               AVERTISSEMENT IMPORTANT - Données SIA incomplètes
             </strong>
           </div>
@@ -814,16 +814,16 @@ export const SIAReportEnhanced = () => {
             {dataDate && (
               <span style={{
                 fontSize: '11px',
-                color: '#92400e',
+                color: 'var(--accent-primary)',
                 fontWeight: '600',
-                backgroundColor: '#fed7aa',
+                backgroundColor: 'var(--bg-overlay)',
                 padding: '2px 8px',
-                borderRadius: '4px'
+                borderRadius: '8px'
               }}>
                 📅 Cycle AIRAC: {dataDate}
               </span>
             )}
-            {warningExpanded ? <ChevronUp size={18} style={{ color: '#92400e' }} /> : <ChevronDown size={18} style={{ color: '#92400e' }} />}
+            {warningExpanded ? <ChevronUp size={18} style={{ color: 'var(--accent-primary)' }} /> : <ChevronDown size={18} style={{ color: 'var(--accent-primary)' }} />}
           </div>
         </div>
 
@@ -831,9 +831,9 @@ export const SIAReportEnhanced = () => {
         {warningExpanded && (
           <div style={{
             padding: '0 16px 12px 16px',
-            borderTop: '1px solid #fbbf24',
+            borderTop: '1px solid var(--accent-primary)',
             paddingTop: '12px',
-            color: '#78350f'
+            color: 'var(--accent-primary)'
           }}>
             Les extraits du SIA affichés ne comprennent PAS les sections suivantes qui doivent être consultées séparément :
             <ul style={{
@@ -859,7 +859,7 @@ export const SIAReportEnhanced = () => {
             <div style={{
               marginTop: '8px',
               paddingTop: '8px',
-              borderTop: '1px solid #fbbf24',
+              borderTop: '1px solid var(--accent-primary)',
               fontWeight: '600'
             }}>
               📋 Ces éléments essentiels doivent être ajoutés manuellement par le commandant de bord après consultation des documents officiels (AIP, VAC, NOTAM).
@@ -918,7 +918,7 @@ export const SIAReportEnhanced = () => {
               display: 'block',
               fontSize: '14px',
               fontWeight: 'normal',
-              color: '#6b7280',
+              color: 'var(--text-secondary)',
               marginTop: '4px'
             }}>
               (Données du {dataDate})
@@ -948,7 +948,7 @@ export const SIAReportEnhanced = () => {
             onClick={() => setHideClosedAirports(!hideClosedAirports)}
             style={{
               ...styles.tab,
-              ...(hideClosedAirports ? { backgroundColor: '#ef4444', color: 'white' } : {})
+              ...(hideClosedAirports ? { backgroundColor: '#C04534', color: 'var(--text-primary)' } : {})
             }}
             title={hideClosedAirports ? "Afficher les aérodromes fermés" : "Masquer les aérodromes fermés"}
           >
@@ -965,7 +965,7 @@ export const SIAReportEnhanced = () => {
                 left: '10px',
                 top: '50%',
                 transform: 'translateY(-50%)',
-                color: '#6b7280'
+                color: 'var(--text-secondary)'
               }} />
               <input
                 type="text"
@@ -993,7 +993,7 @@ export const SIAReportEnhanced = () => {
           )}
         </div>
         
-        <div style={{ marginTop: '8px', fontSize: '13px', color: '#6b7280' }}>
+        <div style={{ marginTop: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}>
           {filteredAerodromes.length} aérodrome(s) affiché(s) • 
           {favoriteAerodromes.size} favori(s) • 
           {hideClosedAirports && (() => {
@@ -1010,7 +1010,7 @@ export const SIAReportEnhanced = () => {
       {/* Afficher les résultats de recherche uniquement si une recherche est active */}
       {searchTerm && (
         <div style={{ marginBottom: '16px' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: 'var(--text-secondary)' }}>
             Résultats de recherche ({filteredAerodromes.filter(ad => ad && ad.icao && !favoriteAerodromes.has(ad.icao)).length} trouvés)
           </h3>
           <div style={styles.gridContainer}>
@@ -1022,30 +1022,30 @@ export const SIAReportEnhanced = () => {
                   key={aerodrome.icao}
                   style={{
                     padding: '8px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    backgroundColor: 'white',
+                    border: '1px solid var(--text-tertiary)',
+                    borderRadius: '8px',
+                    backgroundColor: 'var(--bg-overlay)',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
-                    ':hover': { borderColor: '#3b82f6', backgroundColor: '#eff6ff' }
+                    ':hover': { borderColor: 'var(--text-secondary)', backgroundColor: 'var(--bg-overlay)' }
                   }}
                   onClick={() => toggleFavorite(aerodrome.icao)}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <div style={{ fontWeight: '500', fontSize: '14px' }}>{aerodrome.icao}</div>
-                      <div style={{ fontSize: '12px', color: '#6b7280' }}>{aerodrome.name}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{aerodrome.name}</div>
                       {aerodrome.city && (
-                        <div style={{ fontSize: '11px', color: '#9ca3af' }}>{aerodrome.city}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{aerodrome.city}</div>
                       )}
                     </div>
-                    <Plus size={16} color="#3b82f6" />
+                    <Plus size={16} color="var(--text-secondary)" />
                   </div>
                 </div>
               ))}
           </div>
           {filteredAerodromes.filter(ad => !favoriteAerodromes.has(ad.icao)).length > 10 && (
-            <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px', textAlign: 'center' }}>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px', textAlign: 'center' }}>
               Affinez votre recherche pour voir plus de résultats
             </p>
           )}
@@ -1072,7 +1072,7 @@ export const SIAReportEnhanced = () => {
               style={{
                 ...styles.aerodromeCard,
                 ...(isFavorite ? styles.aerodromeCardSelected : {}),
-                ...(isClosed ? { opacity: 0.7, backgroundColor: '#fee2e2' } : {})
+                ...(isClosed ? { opacity: 0.7, backgroundColor: 'var(--bg-overlay)' } : {})
               }}
             >
               {/* En-tête de la carte */}
@@ -1089,8 +1089,8 @@ export const SIAReportEnhanced = () => {
                     {isClosed && (
                       <span style={{ 
                         ...styles.badge, 
-                        backgroundColor: '#dc2626', 
-                        color: 'white' 
+                        backgroundColor: '#C04534', 
+                        color: 'var(--text-primary)' 
                       }}>
                         FERMÉ
                       </span>
@@ -1100,8 +1100,8 @@ export const SIAReportEnhanced = () => {
                       <div
                         style={{
                           ...styles.badge,
-                          backgroundColor: '#10b981',
-                          color: 'white',
+                          backgroundColor: 'var(--text-primary)',
+                          color: 'var(--text-primary)',
                           padding: '2px 8px',
                           fontSize: '10px',
                           display: 'flex',
@@ -1116,9 +1116,9 @@ export const SIAReportEnhanced = () => {
                       <div
                         style={{
                           ...styles.badge,
-                          backgroundColor: '#f3f4f6',
-                          color: '#9ca3af',
-                          border: '1px solid #d1d5db',
+                          backgroundColor: 'var(--bg-overlay)',
+                          color: 'var(--text-tertiary)',
+                          border: '1px solid var(--text-tertiary)',
                           padding: '2px 8px',
                           fontSize: '10px'
                         }}
@@ -1150,9 +1150,9 @@ export const SIAReportEnhanced = () => {
                     title={editMode[aerodrome.icao] ? 'Verrouiller les modifications' : 'Éditer les données'}
                   >
                     {editMode[aerodrome.icao] ? (
-                      <Lock size={20} color="#ef4444" />
+                      <Lock size={20} color="#C04534" />
                     ) : (
-                      <Edit2 size={20} color="#6b7280" />
+                      <Edit2 size={20} color="var(--text-secondary)" />
                     )}
                   </div>
 
@@ -1164,8 +1164,8 @@ export const SIAReportEnhanced = () => {
                   >
                     <Star
                       size={20}
-                      color={isFavorite ? '#fbbf24' : 'white'}
-                      fill={isFavorite ? '#fbbf24' : 'none'}
+                      color={isFavorite ? 'var(--accent-primary)' : 'white'}
+                      fill={isFavorite ? 'var(--accent-primary)' : 'none'}
                       style={{ transition: 'all 0.2s' }}
                     />
                   </div>
@@ -1276,11 +1276,11 @@ export const SIAReportEnhanced = () => {
                             style={{
                               ...styles.input,
                               backgroundColor: data.circuitAltitude ? 'white' : 'rgba(242, 105, 33, 0.10)',
-                              borderColor: data.circuitAltitude ? '#d1d5db' : '#f59e0b'
+                              borderColor: data.circuitAltitude ? 'var(--text-tertiary)' : 'var(--accent-primary)'
                             }}
                           />
                           {data.circuitAltitude && (
-                            <small style={{ fontSize: '10px', color: '#6b7280', marginTop: '2px', display: 'block' }}>
+                            <small style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '2px', display: 'block' }}>
                               ({data.circuitAltitude} ft AAL)
                             </small>
                           )}
@@ -1301,11 +1301,11 @@ export const SIAReportEnhanced = () => {
                             style={{
                               ...styles.input,
                               backgroundColor: data.integrationAltitude ? 'white' : 'rgba(242, 105, 33, 0.10)',
-                              borderColor: data.integrationAltitude ? '#d1d5db' : '#f59e0b'
+                              borderColor: data.integrationAltitude ? 'var(--text-tertiary)' : 'var(--accent-primary)'
                             }}
                           />
                           {data.integrationAltitude && (
-                            <small style={{ fontSize: '10px', color: '#6b7280', marginTop: '2px', display: 'block' }}>
+                            <small style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '2px', display: 'block' }}>
                               ({data.integrationAltitude} ft AAL)
                             </small>
                           )}
@@ -1320,8 +1320,8 @@ export const SIAReportEnhanced = () => {
                             placeholder="?"
                             style={{
                               ...styles.input,
-                              backgroundColor: data.coordinates?.lat ? 'white' : '#fee2e2',
-                              borderColor: data.coordinates?.lat ? '#d1d5db' : '#ef4444'
+                              backgroundColor: data.coordinates?.lat ? 'white' : 'var(--bg-overlay)',
+                              borderColor: data.coordinates?.lat ? 'var(--text-tertiary)' : '#C04534'
                             }}
                           />
                         </div>
@@ -1335,8 +1335,8 @@ export const SIAReportEnhanced = () => {
                             placeholder="?"
                             style={{
                               ...styles.input,
-                              backgroundColor: data.coordinates?.lon ? 'white' : '#fee2e2',
-                              borderColor: data.coordinates?.lon ? '#d1d5db' : '#ef4444'
+                              backgroundColor: data.coordinates?.lon ? 'white' : 'var(--bg-overlay)',
+                              borderColor: data.coordinates?.lon ? 'var(--text-tertiary)' : '#C04534'
                             }}
                           />
                         </div>
@@ -1358,7 +1358,7 @@ export const SIAReportEnhanced = () => {
                                 }}
                                 style={{
                                   ...styles.input,
-                                  backgroundColor: data.coordinates?.latDMS ? '#f9fafb' : 'white'
+                                  backgroundColor: data.coordinates?.latDMS ? 'var(--bg-overlay)' : 'white'
                                 }}
                                 title={'Format: DD°MM\'SS"N (ex: 48°06\'37"N)'}
                                 placeholder={'48°06\'37"N'}
@@ -1379,7 +1379,7 @@ export const SIAReportEnhanced = () => {
                                 }}
                                 style={{
                                   ...styles.input,
-                                  backgroundColor: data.coordinates?.lonDMS ? '#f9fafb' : 'white'
+                                  backgroundColor: data.coordinates?.lonDMS ? 'var(--bg-overlay)' : 'white'
                                 }}
                                 title={'Format: DDD°MM\'SS"E (ex: 007°21\'33"E)'}
                                 placeholder={'007°21\'33"E'}
@@ -1400,11 +1400,11 @@ export const SIAReportEnhanced = () => {
                               style={{
                                 ...styles.input,
                                 flex: '1',
-                                backgroundColor: data.magneticVariation?.value ? 'white' : '#f3f4f6'
+                                backgroundColor: data.magneticVariation?.value ? 'white' : 'var(--bg-overlay)'
                               }}
                               title="Déclinaison magnétique en degrés (+ pour Est, - pour Ouest)"
                             />
-                            <span style={{ fontSize: '11px', color: '#6b7280' }}>°</span>
+                            <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>°</span>
                             <select
                               value={data.magneticVariation?.value > 0 ? 'E' : 'W'}
                               onChange={(e) => {
@@ -1414,7 +1414,7 @@ export const SIAReportEnhanced = () => {
                               style={{
                                 ...styles.input,
                                 width: '50px',
-                                backgroundColor: data.magneticVariation?.value ? 'white' : '#f3f4f6'
+                                backgroundColor: data.magneticVariation?.value ? 'white' : 'var(--bg-overlay)'
                               }}
                             >
                               <option value="E">E</option>
@@ -1432,7 +1432,7 @@ export const SIAReportEnhanced = () => {
                             maxLength="4"
                             style={{
                               ...styles.input,
-                              backgroundColor: data.magneticVariation?.date ? 'white' : '#f3f4f6'
+                              backgroundColor: data.magneticVariation?.date ? 'white' : 'var(--bg-overlay)'
                             }}
                             title="Année de référence pour la déclinaison magnétique"
                           />
@@ -1443,9 +1443,9 @@ export const SIAReportEnhanced = () => {
                           marginTop: '8px', 
                           padding: '6px', 
                           backgroundColor: 'rgba(242, 105, 33, 0.10)', 
-                          borderRadius: '4px',
+                          borderRadius: '8px',
                           fontSize: '11px',
-                          color: '#92400e'
+                          color: 'var(--accent-primary)'
                         }}>
                           <strong>⚠️ Altitudes indicatives</strong> : Les altitudes de circuit affichées sont des valeurs standards (1000/1500 ft AAL). 
                           Consultez impérativement les cartes VAC officielles.
@@ -1460,8 +1460,8 @@ export const SIAReportEnhanced = () => {
                             {data.runways.map((rwy, idx) => (
                               <div key={idx} style={{ 
                                 padding: '6px', 
-                                backgroundColor: idx % 2 ? '#f9fafb' : 'white',
-                                borderRadius: '4px',
+                                backgroundColor: idx % 2 ? 'var(--bg-overlay)' : 'white',
+                                borderRadius: '8px',
                                 marginBottom: '4px'
                               }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
@@ -1470,7 +1470,7 @@ export const SIAReportEnhanced = () => {
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
                                   <div>
-                                    <label style={{ fontSize: '10px', color: '#6b7280' }}>TORA</label>
+                                    <label style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>TORA</label>
                                     <input
                                       type="number"
                                       value={rwy.tora || ''}
@@ -1480,13 +1480,13 @@ export const SIAReportEnhanced = () => {
                                         ...styles.input, 
                                         padding: '2px 4px', 
                                         fontSize: '11px',
-                                        backgroundColor: rwy.tora ? 'white' : '#fee2e2',
-                                        borderColor: rwy.tora ? '#d1d5db' : '#ef4444'
+                                        backgroundColor: rwy.tora ? 'white' : 'var(--bg-overlay)',
+                                        borderColor: rwy.tora ? 'var(--text-tertiary)' : '#C04534'
                                       }}
                                     />
                                   </div>
                                   <div>
-                                    <label style={{ fontSize: '10px', color: '#6b7280' }}>TODA</label>
+                                    <label style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>TODA</label>
                                     <input
                                       type="number"
                                       value={rwy.toda || ''}
@@ -1496,13 +1496,13 @@ export const SIAReportEnhanced = () => {
                                         ...styles.input, 
                                         padding: '2px 4px', 
                                         fontSize: '11px',
-                                        backgroundColor: rwy.toda ? 'white' : '#fee2e2',
-                                        borderColor: rwy.toda ? '#d1d5db' : '#ef4444'
+                                        backgroundColor: rwy.toda ? 'white' : 'var(--bg-overlay)',
+                                        borderColor: rwy.toda ? 'var(--text-tertiary)' : '#C04534'
                                       }}
                                     />
                                   </div>
                                   <div>
-                                    <label style={{ fontSize: '10px', color: '#6b7280' }}>ASDA</label>
+                                    <label style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>ASDA</label>
                                     <input
                                       type="number"
                                       value={rwy.asda || ''}
@@ -1512,13 +1512,13 @@ export const SIAReportEnhanced = () => {
                                         ...styles.input, 
                                         padding: '2px 4px', 
                                         fontSize: '11px',
-                                        backgroundColor: rwy.asda ? 'white' : '#fee2e2',
-                                        borderColor: rwy.asda ? '#d1d5db' : '#ef4444'
+                                        backgroundColor: rwy.asda ? 'white' : 'var(--bg-overlay)',
+                                        borderColor: rwy.asda ? 'var(--text-tertiary)' : '#C04534'
                                       }}
                                     />
                                   </div>
                                   <div>
-                                    <label style={{ fontSize: '10px', color: '#6b7280' }}>LDA</label>
+                                    <label style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>LDA</label>
                                     <input
                                       type="number"
                                       value={rwy.lda || ''}
@@ -1528,15 +1528,15 @@ export const SIAReportEnhanced = () => {
                                         ...styles.input, 
                                         padding: '2px 4px', 
                                         fontSize: '11px',
-                                        backgroundColor: rwy.lda ? 'white' : '#fee2e2',
-                                        borderColor: rwy.lda ? '#d1d5db' : '#ef4444'
+                                        backgroundColor: rwy.lda ? 'white' : 'var(--bg-overlay)',
+                                        borderColor: rwy.lda ? 'var(--text-tertiary)' : '#C04534'
                                       }}
                                     />
                                   </div>
                                 </div>
                                 <div style={{ marginTop: '4px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '4px' }}>
                                   <div>
-                                    <label style={{ fontSize: '10px', color: '#6b7280' }}>Surface</label>
+                                    <label style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>Surface</label>
                                     <input
                                       type="text"
                                       value={rwy.surface || ''}
@@ -1546,13 +1546,13 @@ export const SIAReportEnhanced = () => {
                                         ...styles.input, 
                                         padding: '2px 4px', 
                                         fontSize: '11px',
-                                        backgroundColor: rwy.surface ? 'white' : '#fee2e2',
-                                        borderColor: rwy.surface ? '#d1d5db' : '#ef4444'
+                                        backgroundColor: rwy.surface ? 'white' : 'var(--bg-overlay)',
+                                        borderColor: rwy.surface ? 'var(--text-tertiary)' : '#C04534'
                                       }}
                                     />
                                   </div>
                                   <div>
-                                    <label style={{ fontSize: '10px', color: '#6b7280' }}>QFU (°)</label>
+                                    <label style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>QFU (°)</label>
                                     <input
                                       type="number"
                                       value={rwy.qfu || rwy.magneticBearing || ''}
@@ -1563,14 +1563,14 @@ export const SIAReportEnhanced = () => {
                                         ...styles.input, 
                                         padding: '2px 4px', 
                                         fontSize: '11px',
-                                        backgroundColor: (rwy.qfu || rwy.magneticBearing) ? 'white' : '#fee2e2',
-                                        borderColor: (rwy.qfu || rwy.magneticBearing) ? '#d1d5db' : '#ef4444'
+                                        backgroundColor: (rwy.qfu || rwy.magneticBearing) ? 'white' : 'var(--bg-overlay)',
+                                        borderColor: (rwy.qfu || rwy.magneticBearing) ? 'var(--text-tertiary)' : '#C04534'
                                       }}
                                     />
                                   </div>
                                 </div>
                                 <div style={{ marginTop: '4px' }}>
-                                  <label style={{ fontSize: '10px', color: '#6b7280' }}>ILS</label>
+                                  <label style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>ILS</label>
                                   <div style={{ display: 'flex', gap: '4px' }}>
                                     <select
                                       value={rwy.ils?.category || ''}
@@ -1584,8 +1584,8 @@ export const SIAReportEnhanced = () => {
                                         padding: '2px 4px', 
                                         fontSize: '11px',
                                         flex: '0 0 80px',
-                                        backgroundColor: rwy.ils ? 'white' : '#fee2e2',
-                                        borderColor: rwy.ils ? '#d1d5db' : '#ef4444'
+                                        backgroundColor: rwy.ils ? 'white' : 'var(--bg-overlay)',
+                                        borderColor: rwy.ils ? 'var(--text-tertiary)' : '#C04534'
                                       }}
                                     >
                                       <option value="">Aucun</option>
@@ -1638,14 +1638,14 @@ export const SIAReportEnhanced = () => {
                                 {/* Aides lumineuses */}
                                 {rwy.vasis?.type && (
                                   <div style={{ marginTop: '4px' }}>
-                                    <label style={{ fontSize: '10px', color: '#6b7280' }}>Aide visuelle</label>
+                                    <label style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>Aide visuelle</label>
                                     <div style={{ 
                                       display: 'flex', 
                                       gap: '4px',
                                       alignItems: 'center',
                                       padding: '2px 4px',
                                       backgroundColor: 'rgba(242, 105, 33, 0.10)',
-                                      borderRadius: '4px',
+                                      borderRadius: '8px',
                                       fontSize: '11px'
                                     }}>
                                       <span style={{ fontWeight: '600' }}>💡 {rwy.vasis.type}</span>
@@ -1658,7 +1658,7 @@ export const SIAReportEnhanced = () => {
                             ))}
                           </div>
                         ) : (
-                          <p style={{ fontSize: '12px', color: '#6b7280' }}>Aucune piste définie</p>
+                          <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Aucune piste définie</p>
                         )}
                       </div>
                     )}
@@ -1670,9 +1670,9 @@ export const SIAReportEnhanced = () => {
                           <div style={{
                             marginBottom: '12px',
                             padding: '10px',
-                            backgroundColor: '#fef2f2',
-                            border: '2px solid #ef4444',
-                            borderRadius: '6px'
+                            backgroundColor: 'var(--bg-overlay)',
+                            border: '2px solid #C04534',
+                            borderRadius: '8px'
                           }}>
                             <div style={{
                               display: 'flex',
@@ -1684,7 +1684,7 @@ export const SIAReportEnhanced = () => {
                                 <div style={{
                                   fontSize: '11px',
                                   fontWeight: '600',
-                                  color: '#991b1b',
+                                  color: '#C04534',
                                   marginBottom: '2px'
                                 }}>
                                   URGENCE - Téléphone aérodrome
@@ -1692,13 +1692,13 @@ export const SIAReportEnhanced = () => {
                                 <div style={{
                                   fontSize: '14px',
                                   fontWeight: '700',
-                                  color: '#dc2626'
+                                  color: '#C04534'
                                 }}>
                                   {data.adminInfo.telephone}
                                 </div>
                                 <div style={{
                                   fontSize: '10px',
-                                  color: '#7f1d1d',
+                                  color: '#C04534',
                                   marginTop: '2px',
                                   fontStyle: 'italic'
                                 }}>
@@ -1713,27 +1713,27 @@ export const SIAReportEnhanced = () => {
                           Object.entries(data.frequencies).map(([service, freqs]) => {
                             // Définir les styles et icônes selon le type de service
                             const serviceConfig = {
-                              'TWR': { icon: '🗼', color: '#ef4444', label: 'Tour (TWR)' },
-                              'GND': { icon: '🚖', color: '#f59e0b', label: 'Sol (GND)' },
-                              'APP': { icon: '📡', color: '#3b82f6', label: 'Approche (APP)' },
-                              'DEP': { icon: '✈️', color: '#8b5cf6', label: 'Départ (DEP)' },
-                              'ATIS': { icon: '📻', color: '#10b981', label: 'ATIS' },
-                              'AFIS': { icon: '📢', color: '#06b6d4', label: 'AFIS' },
-                              'INFO': { icon: 'ℹ️', color: '#6b7280', label: 'Info' },
-                              'CTAF': { icon: '🔊', color: '#ec4899', label: 'Auto-info (CTAF)' },
+                              'TWR': { icon: '🗼', color: '#C04534', label: 'Tour (TWR)' },
+                              'GND': { icon: '🚖', color: 'var(--accent-primary)', label: 'Sol (GND)' },
+                              'APP': { icon: '📡', color: 'var(--text-secondary)', label: 'Approche (APP)' },
+                              'DEP': { icon: '✈️', color: 'var(--accent-primary)', label: 'Départ (DEP)' },
+                              'ATIS': { icon: '📻', color: 'var(--text-primary)', label: 'ATIS' },
+                              'AFIS': { icon: '📢', color: 'var(--accent-primary)', label: 'AFIS' },
+                              'INFO': { icon: 'ℹ️', color: 'var(--text-secondary)', label: 'Info' },
+                              'CTAF': { icon: '🔊', color: 'var(--accent-primary)', label: 'Auto-info (CTAF)' },
                               'CLRD': { icon: '📋', color: '#84cc16', label: 'Prévol (CLRD)' },
                               'DEL': { icon: '🎯', color: '#f26921', label: 'Delivery' }
                             };
                             
                             const config = serviceConfig[service.toUpperCase()] || 
-                                          { icon: '📻', color: '#6b7280', label: service };
+                                          { icon: '📻', color: 'var(--text-secondary)', label: service };
                             
                             return (
                               <div key={service} style={{ 
                                 marginBottom: '8px',
                                 padding: '6px',
-                                backgroundColor: '#f9fafb',
-                                borderRadius: '4px',
+                                backgroundColor: 'var(--bg-overlay)',
+                                borderRadius: '8px',
                                 border: `1px solid ${config.color}20`
                               }}>
                                 <div style={{ 
@@ -1766,7 +1766,7 @@ export const SIAReportEnhanced = () => {
                                           style={{ 
                                             ...styles.input, 
                                             flex: 1,
-                                            backgroundColor: 'white',
+                                            backgroundColor: 'var(--bg-overlay)',
                                             borderColor: config.color + '40'
                                           }}
                                           placeholder="118.000"
@@ -1783,7 +1783,7 @@ export const SIAReportEnhanced = () => {
                                             style={{ 
                                               ...styles.input,
                                               flex: 1,
-                                              backgroundColor: 'white',
+                                              backgroundColor: 'var(--bg-overlay)',
                                               borderColor: config.color + '40'
                                             }}
                                             placeholder="Nom"
@@ -1799,7 +1799,7 @@ export const SIAReportEnhanced = () => {
                                     onChange={(e) => updateValue(aerodrome.icao, `frequencies.${service}`, e.target.value)}
                                     style={{ 
                                       ...styles.input,
-                                      backgroundColor: 'white',
+                                      backgroundColor: 'var(--bg-overlay)',
                                       borderColor: config.color + '40'
                                     }}
                                     placeholder="118.000"
@@ -1812,7 +1812,7 @@ export const SIAReportEnhanced = () => {
                           <div style={{ 
                             padding: '20px',
                             textAlign: 'center',
-                            color: '#9ca3af'
+                            color: 'var(--text-tertiary)'
                           }}>
                             <Radio size={32} style={{ opacity: 0.3, marginBottom: '8px' }} />
                             <p style={{ fontSize: '12px' }}>Aucune fréquence définie</p>
@@ -1834,10 +1834,10 @@ export const SIAReportEnhanced = () => {
                             marginTop: '8px',
                             padding: '4px 8px',
                             fontSize: '11px',
-                            backgroundColor: '#3b82f6',
-                            color: 'white',
+                            backgroundColor: 'var(--text-secondary)',
+                            color: 'var(--text-primary)',
                             border: 'none',
-                            borderRadius: '4px',
+                            borderRadius: '8px',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
@@ -1852,7 +1852,7 @@ export const SIAReportEnhanced = () => {
                     {expandedSection === 'vfr' && (
                       <div>
                         {/* Tous les points VFR (officiels + personnalisés) */}
-                        <h4 style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#374151' }}>
+                        <h4 style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                           📍 Points VFR
                         </h4>
                         {(() => {
@@ -1867,9 +1867,9 @@ export const SIAReportEnhanced = () => {
                               <div key={point.id || idx} style={{ 
                                 padding: '6px',
                                 marginBottom: '4px',
-                                backgroundColor: point.isCustom ? '#ecfdf5' : (idx % 2 ? '#f9fafb' : 'white'),
-                                borderRadius: '4px',
-                                border: point.isCustom ? '1px solid #10b981' : 'none'
+                                backgroundColor: point.isCustom ? 'var(--bg-overlay)' : (idx % 2 ? 'var(--bg-overlay)' : 'white'),
+                                borderRadius: '8px',
+                                border: point.isCustom ? '1px solid var(--text-primary)' : 'none'
                               }}>
                                 <div style={{ 
                                   display: 'flex', 
@@ -1882,7 +1882,7 @@ export const SIAReportEnhanced = () => {
                                     <strong>{point.name || point.id}</strong>
                                   </div>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    <span style={{ color: '#6b7280', fontSize: '10px' }}>
+                                    <span style={{ color: 'var(--text-secondary)', fontSize: '10px' }}>
                                       {point.type || 'VRP'}
                                     </span>
                                     {point.isCustom && (
@@ -1897,8 +1897,8 @@ export const SIAReportEnhanced = () => {
                                         style={{
                                           padding: '2px',
                                           fontSize: '10px',
-                                          backgroundColor: '#ef4444',
-                                          color: 'white',
+                                          backgroundColor: '#C04534',
+                                          color: 'var(--text-primary)',
                                           border: 'none',
                                           borderRadius: '2px',
                                           cursor: 'pointer'
@@ -1910,11 +1910,11 @@ export const SIAReportEnhanced = () => {
                                     )}
                                   </div>
                                 </div>
-                                <div style={{ fontSize: '11px', color: point.isCustom ? '#047857' : '#6b7280' }}>
+                                <div style={{ fontSize: '11px', color: point.isCustom ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
                                   {point.description}
                                 </div>
                                 {point.coordinates && (
-                                  <div style={{ fontSize: '10px', color: point.isCustom ? '#059669' : '#9ca3af', marginTop: '2px' }}>
+                                  <div style={{ fontSize: '10px', color: point.isCustom ? 'var(--text-primary)' : 'var(--text-tertiary)', marginTop: '2px' }}>
                                     {point.coordinates.lat?.toFixed(4)}°N, {point.coordinates.lon?.toFixed(4)}°E
                                   </div>
                                 )}
@@ -1922,7 +1922,7 @@ export const SIAReportEnhanced = () => {
                             ))}
                             </div>
                           ) : (
-                            <div style={{ fontSize: '12px', color: '#6b7280', textAlign: 'center', padding: '12px' }}>
+                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'center', padding: '12px' }}>
                               Aucun point VFR défini
                             </div>
                           );
@@ -1956,10 +1956,10 @@ export const SIAReportEnhanced = () => {
                             marginTop: '8px',
                             padding: '6px 12px',
                             fontSize: '11px',
-                            backgroundColor: '#10b981',
-                            color: 'white',
+                            backgroundColor: 'var(--text-primary)',
+                            color: 'var(--text-primary)',
                             border: 'none',
-                            borderRadius: '4px',
+                            borderRadius: '8px',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
@@ -1978,14 +1978,14 @@ export const SIAReportEnhanced = () => {
                           <div style={{ 
                             marginBottom: '12px',
                             padding: '8px',
-                            backgroundColor: '#f0f9ff',
-                            borderRadius: '6px',
-                            border: '1px solid #0284c7'
+                            backgroundColor: 'var(--bg-overlay)',
+                            borderRadius: '8px',
+                            border: '1px solid var(--text-secondary)'
                           }}>
                             <h4 style={{ 
                               fontSize: '12px', 
                               fontWeight: '600', 
-                              color: '#075985',
+                              color: 'var(--text-secondary)',
                               marginBottom: '6px'
                             }}>
                               📞 Informations de contact
@@ -2005,13 +2005,13 @@ export const SIAReportEnhanced = () => {
                             
                             {data.adminInfo.email && (
                               <div style={{ fontSize: '11px', marginBottom: '4px' }}>
-                                <strong>Email:</strong> <a href={`mailto:${data.adminInfo.email}`} style={{ color: '#0284c7' }}>{data.adminInfo.email}</a>
+                                <strong>Email:</strong> <a href={`mailto:${data.adminInfo.email}`} style={{ color: 'var(--text-secondary)' }}>{data.adminInfo.email}</a>
                               </div>
                             )}
                             
                             {data.adminInfo.website && (
                               <div style={{ fontSize: '11px', marginBottom: '4px' }}>
-                                <strong>Site web:</strong> <a href={data.adminInfo.website} target="_blank" rel="noopener noreferrer" style={{ color: '#0284c7' }}>{data.adminInfo.website}</a>
+                                <strong>Site web:</strong> <a href={data.adminInfo.website} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-secondary)' }}>{data.adminInfo.website}</a>
                               </div>
                             )}
                             
@@ -2033,7 +2033,7 @@ export const SIAReportEnhanced = () => {
                         <h4 style={{ 
                           fontSize: '12px', 
                           fontWeight: '600', 
-                          color: '#374151',
+                          color: 'var(--text-secondary)',
                           marginBottom: '6px'
                         }}>
                           ✈️ Services disponibles
@@ -2075,13 +2075,13 @@ export const SIAReportEnhanced = () => {
                         marginTop: '12px', 
                         padding: '10px', 
                         background: 'rgba(242, 105, 33, 0.10)',
-                        borderRadius: '6px',
-                        border: '1px solid #fbbf24'
+                        borderRadius: '8px',
+                        border: '1px solid var(--accent-primary)'
                       }}>
                         <div style={{ 
                           fontSize: '11px', 
                           fontWeight: '600', 
-                          color: '#92400e',
+                          color: 'var(--accent-primary)',
                           marginBottom: '6px'
                         }}>
                           📋 Consignes extraites automatiquement
@@ -2090,7 +2090,7 @@ export const SIAReportEnhanced = () => {
                         {data.specialInstructions && (
                           <div style={{ 
                             fontSize: '11px', 
-                            color: '#78350f',
+                            color: 'var(--accent-primary)',
                             marginBottom: '4px',
                             whiteSpace: 'pre-wrap'
                           }}>
@@ -2101,7 +2101,7 @@ export const SIAReportEnhanced = () => {
                         {data.remarks && (
                           <div style={{ 
                             fontSize: '11px', 
-                            color: '#78350f',
+                            color: 'var(--accent-primary)',
                             marginBottom: '4px',
                             fontStyle: 'italic'
                           }}>
@@ -2114,7 +2114,7 @@ export const SIAReportEnhanced = () => {
                             margin: '4px 0 0 16px', 
                             padding: 0,
                             fontSize: '11px',
-                            color: '#78350f'
+                            color: 'var(--accent-primary)'
                           }}>
                             {data.additionalRemarks.map((remark, idx) => (
                               <li key={idx}>{remark}</li>
@@ -2128,14 +2128,14 @@ export const SIAReportEnhanced = () => {
                     <div style={{ 
                       marginTop: '12px', 
                       padding: '10px', 
-                      background: '#e0f2fe',
-                      borderRadius: '6px',
-                      border: '1px solid #0284c7'
+                      background: 'var(--bg-overlay)',
+                      borderRadius: '8px',
+                      border: '1px solid var(--text-secondary)'
                     }}>
                       <div style={{ 
                         fontSize: '11px', 
                         fontWeight: '600', 
-                        color: '#075985',
+                        color: 'var(--text-secondary)',
                         marginBottom: '6px'
                       }}>
                         ✏️ Consignes particulières à ajouter manuellement
@@ -2148,17 +2148,17 @@ export const SIAReportEnhanced = () => {
                           width: '100%',
                           minHeight: '80px',
                           padding: '6px',
-                          border: '1px solid #cbd5e1',
-                          borderRadius: '4px',
+                          border: '1px solid var(--border-subtle)',
+                          borderRadius: '8px',
                           fontSize: '11px',
                           fontFamily: 'inherit',
                           resize: 'vertical',
-                          backgroundColor: 'white'
+                          backgroundColor: 'var(--bg-overlay)'
                         }}
                       />
                       <div style={{ 
                         fontSize: '10px', 
-                        color: '#64748b',
+                        color: 'var(--text-tertiary)',
                         marginTop: '4px'
                       }}>
                         Consulter AIP, VAC et NOTAM pour les informations complètes
@@ -2172,15 +2172,15 @@ export const SIAReportEnhanced = () => {
                       <div>
                         <div style={{
                           padding: '12px',
-                          backgroundColor: '#f0f9ff',
-                          borderRadius: '6px',
-                          border: '1px solid #3b82f6',
+                          backgroundColor: 'var(--bg-overlay)',
+                          borderRadius: '8px',
+                          border: '1px solid var(--text-secondary)',
                           marginBottom: '12px'
                         }}>
                           <h4 style={{
                             fontSize: '12px',
                             fontWeight: '600',
-                            color: '#1e40af',
+                            color: 'var(--text-primary)',
                             marginBottom: '8px',
                             display: 'flex',
                             alignItems: 'center',
@@ -2196,7 +2196,7 @@ export const SIAReportEnhanced = () => {
                               <div style={{ fontSize: '11px', marginBottom: '8px' }}>
                                 ✅ Carte VAC importée
                                 {charts[aerodrome.icao].downloadDate && (
-                                  <span style={{ color: '#6b7280', marginLeft: '8px' }}>
+                                  <span style={{ color: 'var(--text-secondary)', marginLeft: '8px' }}>
                                     {new Date(charts[aerodrome.icao].downloadDate).toLocaleDateString('fr-FR')}
                                   </span>
                                 )}
@@ -2207,8 +2207,8 @@ export const SIAReportEnhanced = () => {
                                 <div style={{
                                   fontSize: '11px',
                                   padding: '8px',
-                                  backgroundColor: 'white',
-                                  borderRadius: '4px',
+                                  backgroundColor: 'var(--bg-overlay)',
+                                  borderRadius: '8px',
                                   marginBottom: '8px'
                                 }}>
                                   {charts[aerodrome.icao].extractedData.circuitAltitude && (
@@ -2225,20 +2225,20 @@ export const SIAReportEnhanced = () => {
                                 <div style={{
                                   padding: '12px',
                                   backgroundColor: 'rgba(242, 105, 33, 0.10)',
-                                  borderRadius: '4px',
+                                  borderRadius: '8px',
                                   marginTop: '12px',
                                   marginBottom: '12px',
-                                  border: '1px solid #f59e0b'
+                                  border: '1px solid var(--accent-primary)'
                                 }}>
-                                  <div style={{ fontSize: '11px', fontWeight: '600', color: '#92400e', marginBottom: '8px' }}>
+                                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent-primary)', marginBottom: '8px' }}>
                                     ⚠️ Extraction manuelle requise
                                   </div>
-                                  <div style={{ fontSize: '10px', color: '#78350f', marginBottom: '12px' }}>
+                                  <div style={{ fontSize: '10px', color: 'var(--accent-primary)', marginBottom: '12px' }}>
                                     Entrez les données depuis la carte VAC :
                                   </div>
                                   <div style={{ display: 'grid', gap: '8px' }}>
                                     <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '8px', alignItems: 'center' }}>
-                                      <label style={{ fontSize: '10px', color: '#78350f' }}>Altitude transition:</label>
+                                      <label style={{ fontSize: '10px', color: 'var(--accent-primary)' }}>Altitude transition:</label>
                                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                         <input
                                           type="number"
@@ -2247,16 +2247,16 @@ export const SIAReportEnhanced = () => {
                                           style={{
                                             padding: '4px 8px',
                                             fontSize: '11px',
-                                            border: '1px solid #d97706',
-                                            borderRadius: '4px',
+                                            border: '1px solid var(--accent-primary)',
+                                            borderRadius: '8px',
                                             width: '100px'
                                           }}
                                         />
-                                        <span style={{ fontSize: '10px', color: '#78350f' }}>ft</span>
+                                        <span style={{ fontSize: '10px', color: 'var(--accent-primary)' }}>ft</span>
                                       </div>
                                     </div>
                                     <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '8px', alignItems: 'center' }}>
-                                      <label style={{ fontSize: '10px', color: '#78350f' }}>Alt. tour de piste:</label>
+                                      <label style={{ fontSize: '10px', color: 'var(--accent-primary)' }}>Alt. tour de piste:</label>
                                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                         <input
                                           type="number"
@@ -2265,16 +2265,16 @@ export const SIAReportEnhanced = () => {
                                           style={{
                                             padding: '4px 8px',
                                             fontSize: '11px',
-                                            border: '1px solid #d97706',
-                                            borderRadius: '4px',
+                                            border: '1px solid var(--accent-primary)',
+                                            borderRadius: '8px',
                                             width: '100px'
                                           }}
                                         />
-                                        <span style={{ fontSize: '10px', color: '#78350f' }}>ft AAL</span>
+                                        <span style={{ fontSize: '10px', color: 'var(--accent-primary)' }}>ft AAL</span>
                                       </div>
                                     </div>
                                     <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '8px', alignItems: 'center' }}>
-                                      <label style={{ fontSize: '10px', color: '#78350f' }}>Alt. intégration:</label>
+                                      <label style={{ fontSize: '10px', color: 'var(--accent-primary)' }}>Alt. intégration:</label>
                                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                         <input
                                           type="number"
@@ -2283,12 +2283,12 @@ export const SIAReportEnhanced = () => {
                                           style={{
                                             padding: '4px 8px',
                                             fontSize: '11px',
-                                            border: '1px solid #d97706',
-                                            borderRadius: '4px',
+                                            border: '1px solid var(--accent-primary)',
+                                            borderRadius: '8px',
                                             width: '100px'
                                           }}
                                         />
-                                        <span style={{ fontSize: '10px', color: '#78350f' }}>ft AAL</span>
+                                        <span style={{ fontSize: '10px', color: 'var(--accent-primary)' }}>ft AAL</span>
                                       </div>
                                     </div>
                                     <button
@@ -2313,10 +2313,10 @@ export const SIAReportEnhanced = () => {
                                       }}
                                       style={{
                                         padding: '6px 12px',
-                                        backgroundColor: '#10b981',
-                                        color: 'white',
+                                        backgroundColor: 'var(--text-primary)',
+                                        color: 'var(--text-primary)',
                                         border: 'none',
-                                        borderRadius: '4px',
+                                        borderRadius: '8px',
                                         fontSize: '11px',
                                         cursor: 'pointer',
                                         marginTop: '8px'
@@ -2339,10 +2339,10 @@ export const SIAReportEnhanced = () => {
                                   }}
                                   style={{
                                     padding: '6px 12px',
-                                    backgroundColor: '#3b82f6',
-                                    color: 'white',
+                                    backgroundColor: 'var(--text-secondary)',
+                                    color: 'var(--text-primary)',
                                     border: 'none',
-                                    borderRadius: '4px',
+                                    borderRadius: '8px',
                                     fontSize: '11px',
                                     cursor: 'pointer',
                                     display: 'flex',
@@ -2371,10 +2371,10 @@ export const SIAReportEnhanced = () => {
                                   }}
                                   style={{
                                     padding: '6px 12px',
-                                    backgroundColor: '#10b981',
-                                    color: 'white',
+                                    backgroundColor: 'var(--text-primary)',
+                                    color: 'var(--text-primary)',
                                     border: 'none',
-                                    borderRadius: '4px',
+                                    borderRadius: '8px',
                                     fontSize: '11px',
                                     cursor: 'pointer',
                                     display: 'flex',
@@ -2389,7 +2389,7 @@ export const SIAReportEnhanced = () => {
                             </div>
                           ) : (
                             <div>
-                              <div style={{ fontSize: '11px', marginBottom: '8px', color: '#6b7280' }}>
+                              <div style={{ fontSize: '11px', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                                 ℹ️ Aucune carte VAC importée pour cet aérodrome
                               </div>
                               <button
@@ -2410,10 +2410,10 @@ export const SIAReportEnhanced = () => {
                                 }}
                                 style={{
                                   padding: '8px 16px',
-                                  backgroundColor: '#3b82f6',
-                                  color: 'white',
+                                  backgroundColor: 'var(--text-secondary)',
+                                  color: 'var(--text-primary)',
                                   border: 'none',
-                                  borderRadius: '4px',
+                                  borderRadius: '8px',
                                   fontSize: '12px',
                                   cursor: 'pointer',
                                   display: 'flex',
@@ -2431,8 +2431,8 @@ export const SIAReportEnhanced = () => {
                         {/* Avertissement */}
                         <div style={{
                           backgroundColor: 'rgba(242, 105, 33, 0.10)',
-                          borderRadius: '4px',
-                          border: '1px solid #f59e0b',
+                          borderRadius: '8px',
+                          border: '1px solid var(--accent-primary)',
                           marginTop: '8px'
                         }}>
                           {/* En-tête cliquable */}
@@ -2446,7 +2446,7 @@ export const SIAReportEnhanced = () => {
                               cursor: 'pointer',
                               fontSize: '12px',
                               fontWeight: '600',
-                              color: '#92400e'
+                              color: 'var(--accent-primary)'
                             }}
                           >
                             <span>⚠️ Avertissement</span>
@@ -2457,9 +2457,9 @@ export const SIAReportEnhanced = () => {
                           {warningExpanded && (
                             <div style={{
                               fontSize: '10px',
-                              color: '#6b7280',
+                              color: 'var(--text-secondary)',
                               padding: '0 8px 8px 8px',
-                              borderTop: '1px solid #f59e0b'
+                              borderTop: '1px solid var(--accent-primary)'
                             }}>
                               Les cartes VAC doivent être téléchargées depuis le site officiel du SIA.
                               Les données affichées sont indicatives.
@@ -2475,7 +2475,7 @@ export const SIAReportEnhanced = () => {
               {/* Résumé quand replié */}
               {!isExpanded && (
                 <div style={{ ...styles.cardBody, padding: '8px 12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#6b7280' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-secondary)' }}>
                     <span>
                       {data.elevation?.value ? `${data.elevation.value}ft` : '-'}
                       {data.runways?.length > 0 && ` • ${data.runways.length} piste(s)`}
@@ -2498,9 +2498,9 @@ export const SIAReportEnhanced = () => {
       {/* État vide - Aucun favori */}
       {!searchTerm && favoriteAerodromes.size === 0 && (
         <div style={styles.emptyState}>
-          <Star size={48} style={{ opacity: 0.3, marginBottom: '16px', color: '#fbbf24' }} />
+          <Star size={48} style={{ opacity: 0.3, marginBottom: '16px', color: 'var(--accent-primary)' }} />
           <p style={{ fontSize: '18px', fontWeight: '500', marginBottom: '8px' }}>Aucun aérodrome sauvegardé</p>
-          <p style={{ fontSize: '14px', color: '#6b7280' }}>
+          <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
             Utilisez la barre de recherche ci-dessus pour trouver et ajouter des aérodromes
           </p>
         </div>

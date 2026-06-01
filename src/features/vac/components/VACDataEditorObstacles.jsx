@@ -93,12 +93,12 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
   
   return (
     <div>
-      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#fef2f2', borderRadius: '8px' }}>
+      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: '8px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: '#991b1b' }}>
+          <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: '#C04534' }}>
             Obstacles remarquables
             {(!editedData.obstacles || editedData.obstacles.length === 0) && (
-              <span style={{ color: '#ef4444', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
+              <span style={{ color: '#C04534', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
                 ⚠️ Aucun obstacle défini
               </span>
             )}
@@ -108,10 +108,10 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
             style={{
               padding: '6px 12px',
               fontSize: '13px',
-              backgroundColor: '#dc2626',
-              color: 'white',
+              backgroundColor: '#C04534',
+              color: 'var(--text-primary)',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '8px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -127,9 +127,9 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
             {editedData.obstacles.map((obstacle, idx) => (
               <div key={idx} style={{ 
                 padding: '16px', 
-                backgroundColor: 'white', 
-                borderRadius: '6px',
-                border: '1px solid #fca5a5'
+                backgroundColor: 'var(--bg-overlay)', 
+                borderRadius: '8px',
+                border: '1px solid var(--bg-overlay)'
               }}>
                 {/* En-tête de l'obstacle */}
                 <div style={{ 
@@ -138,19 +138,19 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                   alignItems: 'center',
                   marginBottom: '16px',
                   paddingBottom: '12px',
-                  borderBottom: '1px solid #fecaca'
+                  borderBottom: '1px solid var(--border-subtle)'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <AlertTriangle size={18} style={{ color: '#dc2626' }} />
-                    <h6 style={{ fontSize: '15px', fontWeight: 'bold', color: '#1f2937' }}>
+                    <AlertTriangle size={18} style={{ color: '#C04534' }} />
+                    <h6 style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
                       {obstacle.name || `Obstacle #${idx + 1}`}
                     </h6>
                     {obstacle.type && (
                       <span style={{ 
                         fontSize: '12px', 
                         padding: '2px 6px', 
-                        backgroundColor: '#fee2e2', 
-                        color: '#991b1b',
+                        backgroundColor: 'var(--bg-overlay)', 
+                        color: '#C04534',
                         borderRadius: '3px',
                         fontWeight: 'bold'
                       }}>
@@ -161,8 +161,8 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                       <span style={{ 
                         fontSize: '11px', 
                         padding: '2px 6px', 
-                        backgroundColor: '#dc2626', 
-                        color: 'white',
+                        backgroundColor: '#C04534', 
+                        color: 'var(--text-primary)',
                         borderRadius: '3px',
                         fontWeight: 'bold'
                       }}>
@@ -174,10 +174,10 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                     onClick={() => removeObstacle(idx)}
                     style={{
                       padding: '4px 8px',
-                      backgroundColor: '#ef4444',
-                      color: 'white',
+                      backgroundColor: '#C04534',
+                      color: 'var(--text-primary)',
                       border: 'none',
-                      borderRadius: '4px',
+                      borderRadius: '8px',
                       cursor: 'pointer'
                     }}
                   >
@@ -187,12 +187,12 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                 
                 {/* Type et identification */}
                 <div style={{ marginBottom: '16px' }}>
-                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: '#4b5563' }}>
+                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                     Type et identification
                   </h6>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                     <div>
-                      <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Type d'obstacle
                       </label>
                       <select
@@ -208,7 +208,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                       </select>
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Nom / Description
                       </label>
                       <input
@@ -224,12 +224,12 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                 
                 {/* Hauteurs */}
                 <div style={{ marginBottom: '16px' }}>
-                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: '#4b5563' }}>
+                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                     Dimensions
                   </h6>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
                     <div>
-                      <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Hauteur structure (ft)
                       </label>
                       <input
@@ -241,7 +241,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Élévation sol (ft)
                       </label>
                       <input
@@ -253,7 +253,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Altitude totale (ft AMSL)
                       </label>
                       <input
@@ -262,7 +262,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                         disabled
                         style={{
                           ...sx.components.input.base,
-                          backgroundColor: '#f3f4f6',
+                          backgroundColor: 'var(--bg-overlay)',
                           cursor: 'not-allowed',
                           fontWeight: 'bold'
                         }}
@@ -273,12 +273,12 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                 
                 {/* Position */}
                 <div style={{ marginBottom: '16px' }}>
-                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: '#4b5563' }}>
+                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                     Position géographique
                   </h6>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                     <div>
-                      <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Latitude
                       </label>
                       <input
@@ -291,7 +291,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Longitude
                       </label>
                       <input
@@ -308,12 +308,12 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                 
                 {/* Position relative à l'aérodrome */}
                 <div style={{ marginBottom: '16px' }}>
-                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: '#4b5563' }}>
+                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                     Position relative à l'aérodrome
                   </h6>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                     <div>
-                      <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Distance (NM)
                       </label>
                       <input
@@ -326,7 +326,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Relèvement (°)
                       </label>
                       <input
@@ -344,12 +344,12 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                 
                 {/* Balisage */}
                 <div style={{ marginBottom: '16px' }}>
-                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: '#4b5563' }}>
+                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                     Balisage et signalisation
                   </h6>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                     <div>
-                      <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Balisage lumineux
                       </label>
                       <select
@@ -365,7 +365,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                       </select>
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Marques diurnes
                       </label>
                       <div style={{ display: 'flex', alignItems: 'center', height: '32px' }}>
@@ -375,7 +375,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                           onChange={(e) => updateObstacleField(idx, 'markings', e.target.checked)}
                           style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                         />
-                        <span style={{ marginLeft: '8px', fontSize: '13px', color: '#6b7280' }}>
+                        <span style={{ marginLeft: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}>
                           {obstacle.markings ? 'Bandes rouges/blanches' : 'Non balisé'}
                         </span>
                       </div>
@@ -385,7 +385,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                 
                 {/* Remarques */}
                 <div>
-                  <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                     Remarques / Informations complémentaires
                   </label>
                   <textarea
@@ -404,7 +404,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
             ))}
           </div>
         ) : (
-          <div style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
+          <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-secondary)' }}>
             <Radio size={32} style={{ marginBottom: '8px', opacity: 0.5 }} />
             <p>Aucun obstacle défini. Cliquez sur "Ajouter un obstacle" pour commencer.</p>
           </div>

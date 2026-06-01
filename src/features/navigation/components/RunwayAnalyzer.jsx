@@ -188,7 +188,7 @@ export const RunwayAnalyzer = ({ icao }) => {
           sx.components.alert.base, 
           sx.components.alert.warning, 
           sx.spacing.mb(4),
-          { borderColor: '#f59e0b', borderWidth: '2px' }
+          { borderColor: 'var(--accent-primary)', borderWidth: '2px' }
         )}>
           <Download size={20} style={{ flexShrink: 0 }} />
           <div style={{ flex: 1 }}>
@@ -205,8 +205,8 @@ export const RunwayAnalyzer = ({ icao }) => {
                 sx.components.button.base,
                 sx.components.button.primary,
                 { 
-                  backgroundColor: '#f59e0b',
-                  '&:hover': { backgroundColor: '#d97706' }
+                  backgroundColor: 'var(--accent-primary)',
+                  '&:hover': { backgroundColor: 'var(--accent-primary)' }
                 }
               )}
             >
@@ -241,8 +241,8 @@ export const RunwayAnalyzer = ({ icao }) => {
                   sx.spacing.p(3),
                   {
                     borderLeft: analysis 
-                      ? `4px solid ${analysis.compatible ? '#10b981' : '#ef4444'}`
-                      : '4px solid #6b7280'
+                      ? `4px solid ${analysis.compatible ? 'var(--text-primary)' : '#C04534'}`
+                      : '4px solid var(--text-secondary)'
                   }
                 )}
               >
@@ -264,9 +264,9 @@ export const RunwayAnalyzer = ({ icao }) => {
                     {analysis && (
                       <div style={sx.spacing.ml(3)}>
                         {analysis.compatible ? (
-                          <CheckCircle size={20} color="#10b981" />
+                          <CheckCircle size={20} color="var(--text-primary)" />
                         ) : (
-                          <AlertTriangle size={20} color="#ef4444" />
+                          <AlertTriangle size={20} color="#C04534" />
                         )}
                       </div>
                     )}
@@ -305,7 +305,7 @@ export const RunwayAnalyzer = ({ icao }) => {
 
                 {/* Détails étendus */}
                 {isExpanded && (
-                  <div style={sx.combine(sx.spacing.mt(3), sx.spacing.pt(3), { borderTop: '1px solid #e5e7eb' })}>
+                  <div style={sx.combine(sx.spacing.mt(3), sx.spacing.pt(3), { borderTop: '1px solid var(--border-subtle)' })}>
                     {/* Toutes les distances */}
                     <div style={sx.spacing.mb(3)}>
                       <h6 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(1))}>
@@ -367,7 +367,7 @@ export const RunwayAnalyzer = ({ icao }) => {
                           <p>Éclairage: {runway.lighting}</p>
                         )}
                         {runway.closed && (
-                          <p style={{ color: '#dc2626' }}>⚠️ PISTE FERMÉE</p>
+                          <p style={{ color: '#C04534' }}>⚠️ PISTE FERMÉE</p>
                         )}
                       </div>
                     </div>

@@ -7,7 +7,7 @@ import { theme } from '../../../styles/theme';
 const styles = {
   container: {
     padding: '24px',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '8px',
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
     maxWidth: '800px',
@@ -42,8 +42,8 @@ const styles = {
     padding: '12px',
     fontSize: '14px',
     border: `1px solid ${theme.colors.border}`,
-    borderRadius: '6px',
-    backgroundColor: 'white',
+    borderRadius: '8px',
+    backgroundColor: 'var(--bg-overlay)',
     cursor: 'pointer',
     outline: 'none',
     transition: 'border-color 0.2s',
@@ -56,7 +56,7 @@ const styles = {
     padding: '12px',
     fontSize: '14px',
     border: `1px solid ${theme.colors.border}`,
-    borderRadius: '6px',
+    borderRadius: '8px',
     outline: 'none',
     transition: 'border-color 0.2s'
   },
@@ -70,7 +70,7 @@ const styles = {
     padding: '12px 24px',
     fontSize: '14px',
     fontWeight: '600',
-    borderRadius: '6px',
+    borderRadius: '8px',
     border: 'none',
     cursor: 'pointer',
     display: 'flex',
@@ -81,7 +81,7 @@ const styles = {
   },
   buttonPrimary: {
     backgroundColor: theme.colors.primary[500],
-    color: 'white',
+    color: 'var(--text-primary)',
     ':hover': {
       backgroundColor: theme.colors.primary[600]
     }
@@ -93,7 +93,7 @@ const styles = {
   },
   alert: {
     padding: '12px 16px',
-    borderRadius: '6px',
+    borderRadius: '8px',
     fontSize: '14px',
     display: 'flex',
     alignItems: 'center',
@@ -118,7 +118,7 @@ const styles = {
   sourceInfo: {
     padding: '16px',
     backgroundColor: theme.colors.primary[50],
-    borderRadius: '6px',
+    borderRadius: '8px',
     border: `1px solid ${theme.colors.primary[200]}`,
     marginTop: '16px'
   },

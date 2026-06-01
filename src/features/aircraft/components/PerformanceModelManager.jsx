@@ -67,7 +67,7 @@ const PerformanceModelManager = ({
       key: 'takeoff', 
       label: 'Décollage', 
       icon: <FlightTakeoff />,
-      color: '#4CAF50',
+      color: 'var(--text-primary)',
       description: 'Distances de décollage, roulage et passage 50ft'
     },
     { 
@@ -81,7 +81,7 @@ const PerformanceModelManager = ({
       key: 'climb', 
       label: 'Montée', 
       icon: <TrendingUp />,
-      color: '#2196F3',
+      color: 'var(--text-secondary)',
       description: 'Taux de montée et performances en altitude'
     },
     { 
@@ -246,7 +246,7 @@ const PerformanceModelManager = ({
                         top: 8, 
                         right: 8,
                         bgcolor: category.color,
-                        color: 'white'
+                        color: 'var(--text-primary)'
                       }}
                     />
                   )}

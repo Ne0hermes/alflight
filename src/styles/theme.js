@@ -1,51 +1,68 @@
-// Thème ALFlight - Charte graphique Bordeaux
+// ============================================================================
+//  Thème legacy ALFlight — remappé sur la charte éditoriale v1
+//  ----------------------------------------------------------------------------
+//  Ce fichier existait historiquement avec une palette bordeaux/SaaS hardcodée.
+//  Pour éviter de toucher aux 277 consommateurs de theme.colors.* à travers
+//  l'app, les valeurs sont maintenant remappées vers les variables CSS
+//  ALFlight officielles définies dans src/index.css.
+//
+//  ⚠️ NE PAS AJOUTER DE NOUVELLES VALEURS HARDCODÉES ICI.
+//  Pour de nouvelles couleurs ou tokens, utiliser directement les variables
+//  CSS (var(--app-bg), var(--accent-primary), etc.) ou tokens.* depuis
+//  src/shared/styles/designSystem.js.
+// ============================================================================
+
 export const theme = {
   colors: {
-    // Couleurs Bordeaux
-    primary: '#f26921',
-    secondary: '#FF7E36', 
-    accent: '#6B0F2B',
-    
-    // Couleurs de base
-    background: '#FFFFFF',
-    backgroundCard: 'rgba(255, 255, 255, 0.95)',
-    backgroundGlass: 'rgba(255, 255, 255, 0.8)',
-    
-    // Texte
-    textPrimary: '#000000',
-    textSecondary: '#9CA3AF',
-    textMuted: '#D1D5DB',
-    
-    // Bordures
-    border: 'rgba(147, 22, 60, 0.2)',
-    borderHover: 'rgba(147, 22, 60, 0.5)',
-    
-    // États
-    success: '#10b981',
-    warning: '#fbbf24',
-    error: '#ef4444',
-    info: '#3b82f6'
+    // ─── Couleurs de marque (orange ALFlight officiel) ───
+    primary: 'var(--accent-primary)',         // #f26921
+    secondary: 'var(--accent-hover)',         // #FF7E36 (orange clair)
+    accent: 'var(--accent-active)',           // #D85410 (orange foncé)
+
+    // ─── Surfaces ───
+    background: 'var(--app-bg)',              // #0A0A0A (noir profond)
+    backgroundCard: 'var(--bg-surface)',      // #141414 (cards)
+    backgroundGlass: 'var(--bg-overlay)',     // #1C1C1C (surface plus claire)
+
+    // ─── Texte ───
+    textPrimary: 'var(--text-primary)',       // #F5F2EC (ivoire)
+    textSecondary: 'var(--text-secondary)',   // #C9C5BD (ivoire muted)
+    textMuted: 'var(--text-tertiary)',        // #8A867E (gris muted)
+
+    // ─── Bordures ───
+    border: 'var(--border-subtle)',           // rgba(245, 242, 236, 0.10)
+    borderHover: 'var(--border-regular)',     // rgba(245, 242, 236, 0.20)
+
+    // ─── États sémantiques ───
+    success: 'var(--accent-primary)',         // pas de vert SaaS — accent ALFlight
+    warning: 'var(--accent-primary)',         // pas de jaune fluo — accent ALFlight
+    error: '#C04534',                          // red-critical ALFlight (NO-GO)
+    info: 'var(--text-secondary)',            // pas de bleu SaaS — neutre cockpit
   },
-  
+
+  // ─── Polices (charte éditoriale ALFlight) ───
   fonts: {
-    primary: "'Space Grotesk', 'Inter', sans-serif",
-    secondary: "'Inter', sans-serif",
-    mono: "'JetBrains Mono', monospace"
+    primary: "'Century Gothic', 'URW Gothic', 'Questrial', 'Jost', system-ui, sans-serif",
+    secondary: "'Century Gothic', 'URW Gothic', 'Questrial', system-ui, sans-serif",
+    mono: "'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', monospace",
   },
-  
+
+  // ─── Gradients — simplifiés en aplat orange (pas de gradient bordeaux historique) ───
   gradients: {
-    primary: 'linear-gradient(135deg, #8B1538, #FF7E36)',
-    logo: 'linear-gradient(135deg, #ffffff, #8B1538, #FF7E36, #8B1538, #ffffff)',
-    hero: 'linear-gradient(135deg, #8B1538 0%, #6B0F2B 100%)'
+    primary: 'var(--accent-primary)',
+    logo: 'var(--accent-primary)',
+    hero: 'var(--app-bg)',
   },
-  
+
+  // ─── Shadows — neutralisées (pas de boxShadow rose bordeaux) ───
   shadows: {
-    sm: '0 2px 8px rgba(0, 0, 0, 0.3)',
-    md: '0 10px 30px rgba(0, 0, 0, 0.5)',
-    lg: '0 20px 50px rgba(139, 21, 56, 0.3)',
-    xl: '0 30px 60px rgba(139, 21, 56, 0.4)'
+    sm: '0 1px 2px rgba(0, 0, 0, 0.3)',
+    md: '0 4px 12px rgba(0, 0, 0, 0.4)',
+    lg: '0 8px 24px rgba(0, 0, 0, 0.5)',
+    xl: '0 20px 40px rgba(0, 0, 0, 0.6)',
   },
-  
+
+  // ─── Animations (conservées) ───
   animations: {
     gradientShift: `
       @keyframes gradientShift {
@@ -66,62 +83,62 @@ export const theme = {
         25% { transform: translateX(5px) rotate(2deg); }
         75% { transform: translateX(-5px) rotate(-2deg); }
       }
-    `
-  }
+    `,
+  },
 };
 
-// Fonction pour créer un style de carte
+// Fonction pour créer un style de carte (legacy — remappée charte ALFlight)
 export const createCardStyle = (isHovered = false) => ({
   background: theme.colors.backgroundCard,
   border: `1px solid ${isHovered ? theme.colors.borderHover : theme.colors.border}`,
-  borderRadius: '15px',
-  padding: '2.5rem',
-  transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-  boxShadow: isHovered ? theme.shadows.lg : theme.shadows.md,
-  transform: isHovered ? 'translateY(-10px) scale(1.02)' : 'none'
+  borderRadius: '8px', // = tokens.radius.sm (cohérent boutons + dashboard)
+  padding: '24px',
+  transition: 'border-color 0.2s ease',
+  boxShadow: 'none', // pas de boxShadow en cockpit dark (le fond suffit)
+  transform: 'none', // pas de transform agressif au hover (cockpit sobre)
 });
 
-// Fonction pour créer un style de bouton
+// Fonction pour créer un style de bouton (legacy — remappée charte ALFlight)
 export const createButtonStyle = (variant = 'primary') => {
   const baseStyle = {
-    padding: '1rem 2rem',
+    padding: '10px 20px',
     border: 'none',
     borderRadius: '8px',
-    fontWeight: '600',
-    fontSize: '16px',
+    fontWeight: 600,
+    fontSize: '11px',
     cursor: 'pointer',
-    transition: 'all 0.3s ease',
+    transition: 'background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease',
     textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-    fontFamily: theme.fonts.primary
+    letterSpacing: '0.12em',
+    fontFamily: theme.fonts.mono, // boutons en JetBrains Mono cockpit
   };
-  
+
   if (variant === 'primary') {
     return {
       ...baseStyle,
-      background: theme.gradients.primary,
-      color: theme.colors.textPrimary,
-      boxShadow: theme.shadows.sm
+      background: 'var(--accent-primary)',
+      color: 'var(--text-inverse)',
+      boxShadow: 'none',
     };
   }
-  
+
   if (variant === 'secondary') {
     return {
       ...baseStyle,
       background: 'transparent',
-      color: theme.colors.primary,
-      border: `2px solid ${theme.colors.primary}`
+      color: 'var(--accent-primary)',
+      border: '1px solid var(--accent-primary)',
     };
   }
-  
+
   return baseStyle;
 };
 
-// Fonction pour créer un style glass effect
+// Glass effect — simplifié charte cockpit dark
 export const createGlassStyle = () => ({
   background: theme.colors.backgroundGlass,
   backdropFilter: 'blur(10px)',
   WebkitBackdropFilter: 'blur(10px)',
   border: `1px solid ${theme.colors.border}`,
-  borderRadius: '15px'
+  borderRadius: '8px',
 });

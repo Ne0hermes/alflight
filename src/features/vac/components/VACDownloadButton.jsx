@@ -71,8 +71,8 @@ export const VACDownloadButton = memo(({ icao, size = 'normal' }) => {
           top: '100%',
           right: 0,
           marginTop: '4px',
-          backgroundColor: 'white',
-          border: '1px solid #e5e7eb',
+          backgroundColor: 'var(--bg-overlay)',
+          border: '1px solid var(--border-subtle)',
           borderRadius: '8px',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
           zIndex: 1000,
@@ -146,7 +146,7 @@ const styles = {
     fontSize: '14px',
     transition: 'background-color 0.2s',
     ':hover': {
-      backgroundColor: '#f3f4f6'
+      backgroundColor: 'var(--bg-overlay)'
     }
   }
 };

@@ -191,7 +191,7 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
   if (!runways.length && !loading) {
     console.log('❌ [RunwaySuggestionEnhanced] Affichage "Pas de données" pour', icao);
     return (
-      <div style={sx.combine(sx.spacing.mt(3), sx.spacing.pt(3), { borderTop: '1px solid #e5e7eb' })}>
+      <div style={sx.combine(sx.spacing.mt(3), sx.spacing.pt(3), { borderTop: '1px solid var(--border-subtle)' })}>
         <p style={sx.combine(sx.text.sm, sx.text.secondary)}>
           <Info size={14} style={{ display: 'inline', marginRight: '4px' }} />
           Pas de données de pistes disponibles
@@ -404,7 +404,7 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
       <div style={sx.combine(sx.spacing.mt(2), sx.text.xs)}>
         <span style={sx.text.secondary}>Piste suggérée: </span>
         <span style={sx.combine(sx.text.bold, {
-          color: bestRunway?.isOptimal ? '#059669' : '#d97706'
+          color: bestRunway?.isOptimal ? 'var(--text-primary)' : 'var(--accent-primary)'
         })}>
           {bestRunway?.ident}
         </span>
@@ -416,7 +416,7 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
   }
   
   return (
-    <div style={sx.combine(sx.spacing.mt(3), sx.spacing.pt(3), { borderTop: '1px solid #e5e7eb' })}>
+    <div style={sx.combine(sx.spacing.mt(3), sx.spacing.pt(3), { borderTop: '1px solid var(--border-subtle)' })}>
       {/* Alertes si conditions limites */}
       {bestRunway && (
         <>
@@ -487,29 +487,29 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
             <thead>
-              <tr style={{ backgroundColor: '#f3f4f6' }}>
-                <th style={{ padding: '6px', textAlign: 'left', borderBottom: '2px solid #d1d5db' }}>
+              <tr style={{ backgroundColor: 'var(--bg-overlay)' }}>
+                <th style={{ padding: '6px', textAlign: 'left', borderBottom: '2px solid var(--text-tertiary)' }}>
                   Piste
                 </th>
-                <th style={{ padding: '6px', textAlign: 'center', borderBottom: '2px solid #d1d5db' }}>
+                <th style={{ padding: '6px', textAlign: 'center', borderBottom: '2px solid var(--text-tertiary)' }}>
                   QFU
                 </th>
-                <th style={{ padding: '6px', textAlign: 'center', borderBottom: '2px solid #d1d5db' }}>
+                <th style={{ padding: '6px', textAlign: 'center', borderBottom: '2px solid var(--text-tertiary)' }}>
                   Surface
                 </th>
-                <th style={{ padding: '6px', textAlign: 'center', borderBottom: '2px solid #d1d5db' }}>
+                <th style={{ padding: '6px', textAlign: 'center', borderBottom: '2px solid var(--text-tertiary)' }}>
                   LDA
                 </th>
-                <th style={{ padding: '6px', textAlign: 'center', borderBottom: '2px solid #d1d5db' }}>
+                <th style={{ padding: '6px', textAlign: 'center', borderBottom: '2px solid var(--text-tertiary)' }}>
                   Angle vent
                 </th>
-                <th style={{ padding: '6px', textAlign: 'center', borderBottom: '2px solid #d1d5db' }}>
+                <th style={{ padding: '6px', textAlign: 'center', borderBottom: '2px solid var(--text-tertiary)' }}>
                   Vent face
                 </th>
-                <th style={{ padding: '6px', textAlign: 'center', borderBottom: '2px solid #d1d5db' }}>
+                <th style={{ padding: '6px', textAlign: 'center', borderBottom: '2px solid var(--text-tertiary)' }}>
                   Travers
                 </th>
-                <th style={{ padding: '6px', textAlign: 'center', borderBottom: '2px solid #d1d5db' }}>
+                <th style={{ padding: '6px', textAlign: 'center', borderBottom: '2px solid var(--text-tertiary)' }}>
                   Évaluation
                 </th>
               </tr>
@@ -520,11 +520,11 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
                   key={idx} 
                   style={{
                     backgroundColor: 
-                      analysis === takeoffRunway || analysis === landingRunway ? '#f0f9ff' :
-                      analysis.isOptimal ? '#f0fdf4' : 
+                      analysis === takeoffRunway || analysis === landingRunway ? 'var(--bg-overlay)' :
+                      analysis.isOptimal ? 'var(--bg-overlay)' : 
                       analysis.isGood ? 'rgba(242, 105, 33, 0.10)' :
-                      analysis.isAcceptable ? '#fefce8' : '#fef2f2',
-                    borderBottom: '1px solid #e5e7eb'
+                      analysis.isAcceptable ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
+                    borderBottom: '1px solid var(--border-subtle)'
                   }}
                 >
                   <td style={{
@@ -547,15 +547,15 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
                   <td style={{ padding: '6px', textAlign: 'center' }}>
                     <span style={{
                       padding: '2px 6px',
-                      borderRadius: '4px',
+                      borderRadius: '8px',
                       backgroundColor:
-                        analysis.isOptimal ? '#d1fae5' :
+                        analysis.isOptimal ? 'var(--bg-overlay)' :
                         analysis.isGood ? 'rgba(242, 105, 33, 0.10)' :
-                        analysis.isAcceptable ? '#fed7aa' : '#fee2e2',
+                        analysis.isAcceptable ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
                       color:
-                        analysis.isOptimal ? '#059669' :
-                        analysis.isGood ? '#ca8a04' :
-                        analysis.isAcceptable ? '#D85410' : '#dc2626'
+                        analysis.isOptimal ? 'var(--text-primary)' :
+                        analysis.isGood ? 'var(--accent-primary)' :
+                        analysis.isAcceptable ? '#D85410' : '#C04534'
                     }}>
                       {analysis.angleDiff}°
                     </span>
@@ -563,26 +563,26 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
                   <td style={{ 
                     padding: '6px', 
                     textAlign: 'center',
-                    color: analysis.headwind < 0 ? '#dc2626' : '#059669'
+                    color: analysis.headwind < 0 ? '#C04534' : 'var(--text-primary)'
                   }}>
                     {analysis.headwind > 0 ? '+' : ''}{analysis.headwind}kt
                   </td>
                   <td style={{ 
                     padding: '6px', 
                     textAlign: 'center',
-                    color: analysis.crosswind > 15 ? '#dc2626' : 
-                           analysis.crosswind > 10 ? '#d97706' : '#6b7280'
+                    color: analysis.crosswind > 15 ? '#C04534' : 
+                           analysis.crosswind > 10 ? 'var(--accent-primary)' : 'var(--text-secondary)'
                   }}>
                     {analysis.crosswind}kt
                     {analysis.crosswind > 5 && ` (${analysis.crosswindSide})`}
                   </td>
                   <td style={{ padding: '6px', textAlign: 'center' }}>
                     {analysis.isOptimal ? (
-                      <span style={{ color: '#059669' }}>
+                      <span style={{ color: 'var(--text-primary)' }}>
                         <CheckCircle size={14} style={{ display: 'inline' }} /> Optimal
                       </span>
                     ) : analysis.isGood ? (
-                      <span style={{ color: '#ca8a04' }}>
+                      <span style={{ color: 'var(--accent-primary)' }}>
                         ✓ Bon
                       </span>
                     ) : analysis.isAcceptable ? (
@@ -590,7 +590,7 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
                         ~ Acceptable
                       </span>
                     ) : (
-                      <span style={{ color: '#dc2626' }}>
+                      <span style={{ color: '#C04534' }}>
                         <AlertTriangle size={14} style={{ display: 'inline' }} /> Déconseillé
                       </span>
                     )}

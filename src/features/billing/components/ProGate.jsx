@@ -80,7 +80,7 @@ export const ProGate = ({
     <>
       <div style={styles.lockedContainer}>
         <div style={styles.lockedCard}>
-          <Lock size={48} style={{ color: '#9ca3af' }} />
+          <Lock size={48} style={{ color: 'var(--text-tertiary)' }} />
           <h3 style={styles.lockedTitle}>Fonctionnalité PRO</h3>
           <p style={styles.lockedDescription}>
             {feature} nécessite un abonnement PRO pour être utilisée.
@@ -108,13 +108,13 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '40px',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
   },
   spinner: {
     width: '32px',
     height: '32px',
-    border: '3px solid #e5e7eb',
-    borderTopColor: '#3b82f6',
+    border: '3px solid var(--border-subtle)',
+    borderTopColor: 'var(--text-secondary)',
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',
   },
@@ -141,8 +141,8 @@ const styles = {
   lockCard: {
     textAlign: 'center',
     padding: '32px',
-    backgroundColor: '#fff',
-    borderRadius: '12px',
+    backgroundColor: 'var(--bg-overlay)',
+    borderRadius: '8px',
     boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
     maxWidth: '400px',
   },
@@ -152,12 +152,12 @@ const styles = {
     margin: '16px 0 8px',
   },
   lockDescription: {
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     marginBottom: '24px',
   },
   unlockButton: {
-    backgroundColor: '#3b82f6',
-    color: '#fff',
+    backgroundColor: 'var(--text-secondary)',
+    color: 'var(--bg-overlay)',
     border: 'none',
     borderRadius: '8px',
     padding: '12px 24px',
@@ -176,26 +176,26 @@ const styles = {
   lockedCard: {
     textAlign: 'center',
     padding: '48px',
-    backgroundColor: '#f9fafb',
-    borderRadius: '16px',
-    border: '2px dashed #e5e7eb',
+    backgroundColor: 'var(--bg-overlay)',
+    borderRadius: '8px',
+    border: '2px dashed var(--border-subtle)',
     maxWidth: '500px',
   },
   lockedTitle: {
     fontSize: '24px',
     fontWeight: '600',
     margin: '24px 0 12px',
-    color: '#374151',
+    color: 'var(--text-secondary)',
   },
   lockedDescription: {
     fontSize: '16px',
-    color: '#6b7280',
+    color: 'var(--text-secondary)',
     marginBottom: '32px',
     lineHeight: '1.5',
   },
   upgradeButton: {
-    backgroundColor: '#fbbf24',
-    color: '#000',
+    backgroundColor: 'var(--accent-primary)',
+    color: 'var(--app-bg)',
     border: 'none',
     borderRadius: '8px',
     padding: '14px 28px',

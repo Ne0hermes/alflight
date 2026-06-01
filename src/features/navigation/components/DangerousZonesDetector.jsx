@@ -134,9 +134,9 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
   
   const zoneCheckboxStyle = (zoneType) => ({
     padding: '12px',
-    borderRadius: '6px',
+    borderRadius: '8px',
     border: '1px solid',
-    borderColor: zones[zoneType] ? '#f59e0b' : '#e5e7eb',
+    borderColor: zones[zoneType] ? 'var(--accent-primary)' : 'var(--border-subtle)',
     backgroundColor: zones[zoneType] ? 'rgba(242, 105, 33, 0.10)' : '#ffffff',
     cursor: 'pointer',
     transition: 'all 0.2s'
@@ -145,7 +145,7 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
   return (
     <div style={{
       padding: '16px',
-      backgroundColor: 'white',
+      backgroundColor: 'var(--bg-overlay)',
       borderRadius: '8px',
       boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
     }}>
@@ -161,8 +161,8 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
         padding: '12px',
         borderRadius: '8px',
         marginBottom: '16px',
-        backgroundColor: '#eff6ff',
-        border: '1px solid #60a5fa'
+        backgroundColor: 'var(--bg-overlay)',
+        border: '1px solid var(--text-secondary)'
       }}>
         <Info size={16} />
         <div>
@@ -187,19 +187,19 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
                   <Waves size={16} style={{ marginRight: '6px' }} />
                   Survol maritime
                 </div>
-                <p style={{ fontSize: '12px', color: '#6b7280' }}>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                   Vol au-dessus de l'eau à plus de 50 NM des côtes ou temps de vol {'>'} 30 min
                   {detectedZones.maritime && !manualOverride.maritime && 
-                    <span style={{ color: '#10b981' }}> (Détecté automatiquement)</span>
+                    <span style={{ color: 'var(--text-primary)' }}> (Détecté automatiquement)</span>
                   }
                   {detectedZones.corsicaFlight && 
-                    <span style={{ color: '#f59e0b' }}> - Vol vers/depuis la Corse</span>
+                    <span style={{ color: 'var(--accent-primary)' }}> - Vol vers/depuis la Corse</span>
                   }
                   {detectedZones.coastalAirports?.length > 0 && 
-                    <span style={{ color: '#6b7280' }}> - Aéroports: {detectedZones.coastalAirports.join(', ')}</span>
+                    <span style={{ color: 'var(--text-secondary)' }}> - Aéroports: {detectedZones.coastalAirports.join(', ')}</span>
                   }
                   {manualOverride.maritime !== null && 
-                    <span style={{ color: '#3b82f6' }}> (Ajusté manuellement)</span>
+                    <span style={{ color: 'var(--text-secondary)' }}> (Ajusté manuellement)</span>
                   }
                 </p>
               </div>
@@ -220,19 +220,19 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
                   <Mountain size={16} style={{ marginRight: '6px' }} />
                   Survol montagneux
                 </div>
-                <p style={{ fontSize: '12px', color: '#6b7280' }}>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                   Vol au-dessus de reliefs {'>'} 1500m ou zones difficiles d'accès
                   {detectedZones.mountain && !manualOverride.mountain && 
-                    <span style={{ color: '#10b981' }}> (Détecté automatiquement)</span>
+                    <span style={{ color: 'var(--text-primary)' }}> (Détecté automatiquement)</span>
                   }
                   {detectedZones.mountainZones?.length > 0 && 
-                    <span style={{ color: '#6b7280' }}> - Zones: {detectedZones.mountainZones.join(', ')}</span>
+                    <span style={{ color: 'var(--text-secondary)' }}> - Zones: {detectedZones.mountainZones.join(', ')}</span>
                   }
                   {detectedZones.mountainAltitude > 0 && 
-                    <span style={{ color: '#f59e0b' }}> - Alt. max: {detectedZones.mountainAltitude}m</span>
+                    <span style={{ color: 'var(--accent-primary)' }}> - Alt. max: {detectedZones.mountainAltitude}m</span>
                   }
                   {manualOverride.mountain !== null && 
-                    <span style={{ color: '#3b82f6' }}> (Ajusté manuellement)</span>
+                    <span style={{ color: 'var(--text-secondary)' }}> (Ajusté manuellement)</span>
                   }
                 </p>
               </div>
@@ -253,10 +253,10 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
                   <MapPin size={16} style={{ marginRight: '6px' }} />
                   Région hostile/inhabitée
                 </div>
-                <p style={{ fontSize: '12px', color: '#6b7280' }}>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                   Désert, arctique, jungle ou zone sans infrastructure de secours
                   {manualOverride.hostile !== null && 
-                    <span style={{ color: '#3b82f6' }}> (Sélection manuelle)</span>
+                    <span style={{ color: 'var(--text-secondary)' }}> (Sélection manuelle)</span>
                   }
                 </p>
               </div>
@@ -279,7 +279,7 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
               padding: '12px',
               backgroundColor: 'rgba(242, 105, 33, 0.10)',
               borderRadius: '8px',
-              border: '1px solid #fcd34d'
+              border: '1px solid var(--bg-overlay)'
             }}>
               <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>
                 {category.category}
@@ -289,7 +289,7 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
                   <li key={itemIdx} style={{ marginBottom: '4px' }}>{item}</li>
                 ))}
               </ul>
-              <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px' }}>
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px' }}>
                 📋 Référence: {category.regulation}
               </p>
             </div>
@@ -300,7 +300,7 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
             gap: '12px',
             padding: '12px',
             borderRadius: '8px',
-            backgroundColor: '#fed7aa',
+            backgroundColor: 'var(--bg-overlay)',
             border: '1px solid #f26921'
           }}>
             <AlertTriangle size={16} />
@@ -316,11 +316,11 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
       <div style={{
         marginTop: '16px',
         padding: '12px',
-        backgroundColor: '#f9fafb',
+        backgroundColor: 'var(--bg-overlay)',
         borderRadius: '8px',
-        border: '1px solid #e5e7eb'
+        border: '1px solid var(--border-subtle)'
       }}>
-        <p style={{ fontSize: '12px', color: '#6b7280' }}>
+        <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
           <strong>Pour le plan de vol (case 19) :</strong><br/>
           {zones.maritime && 'J (Gilets) '}
           {zones.maritime && zones.maritimeDistance > 50 && 'D (Canots) '}

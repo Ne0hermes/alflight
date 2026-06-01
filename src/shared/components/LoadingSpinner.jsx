@@ -14,8 +14,8 @@ export const LoadingSpinner = memo(({ size = 'medium' }) => {
       <div style={{
         width: sizes[size],
         height: sizes[size],
-        border: '3px solid #e5e7eb',
-        borderTopColor: '#3b82f6',
+        border: '3px solid var(--border-subtle)',
+        borderTopColor: 'var(--text-secondary)',
         borderRadius: '50%',
         animation: 'spin 1s linear infinite'
       }} />

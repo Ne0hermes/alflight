@@ -9,9 +9,9 @@ const PerformanceDataDebugger = ({ tables }) => {
     return (
         <div style={{
             marginTop: '20px',
-            border: '1px solid #e5e7eb',
+            border: '1px solid var(--border-subtle)',
             borderRadius: '8px',
-            backgroundColor: '#f9fafb',
+            backgroundColor: 'var(--bg-overlay)',
             overflow: 'hidden'
         }}>
             <button
@@ -22,15 +22,15 @@ const PerformanceDataDebugger = ({ tables }) => {
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    backgroundColor: '#f3f4f6',
+                    backgroundColor: 'var(--bg-overlay)',
                     border: 'none',
                     cursor: 'pointer',
                     textAlign: 'left'
                 }}
             >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Database size={16} color="#6b7280" />
-                    <span style={{ fontWeight: '600', color: '#374151', fontSize: '14px' }}>
+                    <Database size={16} color="var(--text-secondary)" />
+                    <span style={{ fontWeight: '600', color: 'var(--text-secondary)', fontSize: '14px' }}>
                         Données brutes extraites ({tables.length} tableaux)
                     </span>
                 </div>
@@ -45,18 +45,18 @@ const PerformanceDataDebugger = ({ tables }) => {
                                 fontSize: '13px',
                                 fontWeight: '700',
                                 marginBottom: '8px',
-                                color: '#1f2937',
-                                borderBottom: '1px solid #e5e7eb',
+                                color: 'var(--text-primary)',
+                                borderBottom: '1px solid var(--border-subtle)',
                                 paddingBottom: '4px'
                             }}>
                                 Tableau {idx + 1}: {table.name || table.table_name || 'Sans nom'} ({table.type || table.table_type})
                             </h4>
 
                             <div style={{
-                                backgroundColor: '#1f2937',
-                                color: '#10b981',
+                                backgroundColor: 'var(--text-primary)',
+                                color: 'var(--text-primary)',
                                 padding: '12px',
-                                borderRadius: '6px',
+                                borderRadius: '8px',
                                 fontSize: '11px',
                                 fontFamily: 'monospace',
                                 whiteSpace: 'pre-wrap',

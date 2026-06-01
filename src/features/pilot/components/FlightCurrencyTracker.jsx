@@ -939,7 +939,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
           style={{
             padding: '8px 16px',
             backgroundColor: 'var(--text-secondary)',
-            color: 'white',
+            color: 'var(--text-primary)',
             borderRadius: '8px',
             border: 'none',
             cursor: 'pointer',
@@ -1073,7 +1073,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
                   style={{
                     padding: '10px 20px',
                     backgroundColor: '#C04534',
-                    color: 'white',
+                    color: 'var(--text-primary)',
                     borderRadius: '8px',
                     border: 'none',
                     cursor: 'pointer',
@@ -1166,7 +1166,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
                               style={{
                                 padding: '6px 12px',
                                 backgroundColor: status.isExpired ? '#C04534' : 'var(--accent-primary)',
-                                color: 'white',
+                                color: 'var(--text-primary)',
                                 border: 'none',
                                 borderRadius: '8px',
                                 cursor: 'pointer',
@@ -1216,7 +1216,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
                             style={{
                               padding: '6px 12px',
                               backgroundColor: '#C04534',
-                              color: 'white',
+                              color: 'var(--text-primary)',
                               border: 'none',
                               borderRadius: '8px',
                               cursor: 'pointer',

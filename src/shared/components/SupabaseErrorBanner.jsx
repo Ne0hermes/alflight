@@ -65,13 +65,13 @@ export function SupabaseErrorBanner() {
         left: 0,
         right: 0,
         zIndex: 99999,
-        backgroundColor: '#7f1d1d',
-        color: 'white',
+        backgroundColor: '#C04534',
+        color: 'var(--text-primary)',
         boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         fontSize: 13,
         lineHeight: 1.4,
-        borderBottom: '3px solid #ef4444'
+        borderBottom: '3px solid #C04534'
       }}
     >
       <div style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -99,7 +99,7 @@ export function SupabaseErrorBanner() {
         <button onClick={handleCopy} style={btnStyle('rgba(255,255,255,0.15)')}>
           {copyOk ? '✓ Copié' : '📋 Copier'}
         </button>
-        <button onClick={handleDismiss} style={btnStyle('#ef4444')}>
+        <button onClick={handleDismiss} style={btnStyle('#C04534')}>
           ✕ Fermer
         </button>
       </div>
@@ -129,7 +129,7 @@ const btnStyle = (bg) => ({
   cursor: 'pointer',
   fontSize: 12,
   fontWeight: 500,
-  color: 'white',
+  color: 'var(--text-primary)',
   backgroundColor: bg,
   whiteSpace: 'nowrap'
 });

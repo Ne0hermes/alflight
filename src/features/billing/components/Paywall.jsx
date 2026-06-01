@@ -59,7 +59,7 @@ export const Paywall = ({ feature = null, onClose }) => {
         )}
 
         <div style={styles.header}>
-          <Crown size={48} style={{ color: '#fbbf24' }} />
+          <Crown size={48} style={{ color: 'var(--accent-primary)' }} />
           <h2 style={styles.title}>Débloquez ALFlight PRO</h2>
           {feature && (
             <p style={styles.featureBlocked}>
@@ -115,7 +115,7 @@ export const Paywall = ({ feature = null, onClose }) => {
           <ul style={styles.featuresList}>
             {product.features.map((feature, index) => (
               <li key={index} style={styles.featureItem}>
-                <Check size={16} style={{ color: '#10b981', flexShrink: 0 }} />
+                <Check size={16} style={{ color: 'var(--text-primary)', flexShrink: 0 }} />
                 <span>{feature}</span>
               </li>
             ))}
@@ -139,9 +139,9 @@ export const Paywall = ({ feature = null, onClose }) => {
                   <td style={styles.comparisonCell}>
                     {typeof freeValue === 'boolean' ? (
                       freeValue ? (
-                        <Check size={16} style={{ color: '#10b981' }} />
+                        <Check size={16} style={{ color: 'var(--text-primary)' }} />
                       ) : (
-                        <X size={16} style={{ color: '#ef4444' }} />
+                        <X size={16} style={{ color: '#C04534' }} />
                     ) : (
                       <span>{freeValue}</span>
                     )}
@@ -151,9 +151,9 @@ export const Paywall = ({ feature = null, onClose }) => {
                       const proValue = FEATURES_COMPARISON.pro.features[feature];
                       return typeof proValue === 'boolean' ? (
                         proValue ? (
-                          <Check size={16} style={{ color: '#10b981' }} />
+                          <Check size={16} style={{ color: 'var(--text-primary)' }} />
                         ) : (
-                          <X size={16} style={{ color: '#ef4444' }} />
+                          <X size={16} style={{ color: '#C04534' }} />
                       ) : (
                         <span style={{ fontWeight: '600' }}>{proValue}</span>
                     })()}
@@ -195,8 +195,8 @@ const styles = {
     padding: '20px',
   },
   modal: {
-    backgroundColor: '#fff',
-    borderRadius: '16px',
+    backgroundColor: 'var(--bg-overlay)',
+    borderRadius: '8px',
     maxWidth: '800px',
     width: '100%',
     maxHeight: '90vh',
@@ -228,7 +228,7 @@ const styles = {
     margin: '16px 0 8px',
   },
   featureBlocked: {
-    color: '#666',
+    color: 'var(--text-secondary)',
     fontSize: '16px',
     margin: '8px 0',
   },
@@ -240,29 +240,29 @@ const styles = {
   },
   plan: {
     flex: 1,
-    border: '2px solid #e5e7eb',
-    borderRadius: '12px',
+    border: '2px solid var(--border-subtle)',
+    borderRadius: '8px',
     padding: '20px',
     cursor: 'pointer',
     position: 'relative',
     transition: 'all 0.2s',
   },
   planSelected: {
-    borderColor: '#3b82f6',
-    backgroundColor: '#eff6ff',
+    borderColor: 'var(--text-secondary)',
+    backgroundColor: 'var(--bg-overlay)',
   },
   planPopular: {
-    borderColor: '#fbbf24',
+    borderColor: 'var(--accent-primary)',
   },
   popularBadge: {
     position: 'absolute',
     top: '-12px',
     left: '50%',
     transform: 'translateX(-50%)',
-    backgroundColor: '#fbbf24',
-    color: '#000',
+    backgroundColor: 'var(--accent-primary)',
+    color: 'var(--app-bg)',
     padding: '4px 12px',
-    borderRadius: '12px',
+    borderRadius: '8px',
     fontSize: '12px',
     fontWeight: '600',
     display: 'flex',
@@ -291,15 +291,15 @@ const styles = {
     fontWeight: '700',
   },
   priceInterval: {
-    color: '#666',
+    color: 'var(--text-secondary)',
     fontSize: '14px',
   },
   savings: {
     marginTop: '8px',
     padding: '4px 8px',
-    backgroundColor: '#10b981',
-    color: '#fff',
-    borderRadius: '4px',
+    backgroundColor: 'var(--text-primary)',
+    color: 'var(--bg-overlay)',
+    borderRadius: '8px',
     fontSize: '12px',
     fontWeight: '600',
     display: 'inline-block',
@@ -336,7 +336,7 @@ const styles = {
   comparisonHeader: {
     textAlign: 'left',
     padding: '12px',
-    borderBottom: '2px solid #e5e7eb',
+    borderBottom: '2px solid var(--border-subtle)',
     fontSize: '14px',
     fontWeight: '600',
   },
@@ -345,18 +345,18 @@ const styles = {
   },
   comparisonCell: {
     padding: '12px',
-    borderBottom: '1px solid #f3f4f6',
+    borderBottom: '1px solid var(--bg-overlay)',
     fontSize: '14px',
   },
   cta: {
     padding: '32px 40px',
-    backgroundColor: '#f9fafb',
-    borderTop: '1px solid #e5e7eb',
+    backgroundColor: 'var(--bg-overlay)',
+    borderTop: '1px solid var(--border-subtle)',
     textAlign: 'center',
   },
   ctaButton: {
-    backgroundColor: '#3b82f6',
-    color: '#fff',
+    backgroundColor: 'var(--text-secondary)',
+    color: 'var(--bg-overlay)',
     border: 'none',
     borderRadius: '8px',
     padding: '14px 32px',
@@ -368,6 +368,6 @@ const styles = {
   ctaNote: {
     marginTop: '12px',
     fontSize: '12px',
-    color: '#666',
+    color: 'var(--text-secondary)',
   },
 };

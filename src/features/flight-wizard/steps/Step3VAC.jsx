@@ -348,7 +348,7 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
                       padding: '4px 10px',
                       backgroundColor: aerodromeRole.color,
                       color: 'var(--bg-surface)',
-                      borderRadius: '12px',
+                      borderRadius: '8px',
                       fontSize: '11px',
                       fontWeight: '600',
                       textTransform: 'uppercase',
@@ -776,7 +776,7 @@ const styles = {
     padding: '16px',
     backgroundColor: 'var(--bg-overlay)',
     borderLeft: '4px solid var(--text-secondary)',
-    borderRadius: '4px'
+    borderRadius: '8px'
   },
   infoText: {
     margin: 0,
@@ -810,7 +810,7 @@ const styles = {
     color: 'var(--text-secondary)',
     backgroundColor: 'var(--bg-surface)',
     padding: '12px',
-    borderRadius: '4px',
+    borderRadius: '8px',
     border: '1px solid var(--border-subtle)',
     whiteSpace: 'pre-wrap',
     wordBreak: 'break-word',
@@ -857,7 +857,7 @@ const styles = {
     padding: '20px',
     textAlign: 'center',
     backgroundColor: 'var(--bg-surface)',
-    borderRadius: '6px',
+    borderRadius: '8px',
     border: '1px solid var(--border-subtle)'
   },
   meteoEmptyText: {
@@ -993,7 +993,7 @@ const styles = {
     padding: '4px 8px',
     backgroundColor: 'var(--bg-overlay)',
     color: 'var(--text-primary)',
-    borderRadius: '4px',
+    borderRadius: '8px',
     fontSize: '11px',
     fontWeight: '600'
   },
@@ -1004,7 +1004,7 @@ const styles = {
     padding: '4px 8px',
     backgroundColor: 'var(--bg-overlay)',
     color: '#C04534',
-    borderRadius: '4px',
+    borderRadius: '8px',
     fontSize: '11px',
     fontWeight: '600'
   },
@@ -1019,9 +1019,9 @@ const styles = {
     gap: '6px',
     padding: '6px 12px',
     backgroundColor: 'var(--text-secondary)',
-    color: 'white',
+    color: 'var(--text-primary)',
     border: 'none',
-    borderRadius: '6px',
+    borderRadius: '8px',
     fontSize: '13px',
     fontWeight: '500',
     cursor: 'pointer',
@@ -1033,9 +1033,9 @@ const styles = {
     gap: '6px',
     padding: '6px 12px',
     backgroundColor: 'var(--text-primary)',
-    color: 'white',
+    color: 'var(--text-primary)',
     border: 'none',
-    borderRadius: '6px',
+    borderRadius: '8px',
     fontSize: '14px',
     fontWeight: '500',
     cursor: 'pointer',
@@ -1049,7 +1049,7 @@ const styles = {
     backgroundColor: 'var(--bg-surface)',
     color: theme.colors.primary,
     border: `1px solid ${theme.colors.border}`,
-    borderRadius: '6px',
+    borderRadius: '8px',
     fontSize: '13px',
     fontWeight: '500',
     cursor: 'pointer',
@@ -1064,9 +1064,9 @@ const styles = {
     padding: '10px 16px',
     width: '100%',
     backgroundColor: 'var(--text-primary)',
-    color: 'white',
+    color: 'var(--text-primary)',
     border: 'none',
-    borderRadius: '6px',
+    borderRadius: '8px',
     fontSize: '14px',
     fontWeight: '500',
     cursor: 'pointer',
@@ -1083,7 +1083,7 @@ const styles = {
     backgroundColor: 'var(--bg-surface)',
     color: theme.colors.primary,
     border: `1px solid ${theme.colors.border}`,
-    borderRadius: '6px',
+    borderRadius: '8px',
     fontSize: '14px',
     fontWeight: '500',
     cursor: 'pointer',
@@ -1112,7 +1112,7 @@ const styles = {
     width: '100%',
     backgroundColor: 'var(--bg-surface)',
     border: '1px solid var(--border-subtle)',
-    borderRadius: '6px',
+    borderRadius: '8px',
     cursor: 'pointer',
     fontSize: '13px',
     fontWeight: '500',
@@ -1161,7 +1161,7 @@ const styles = {
   runwayCard: {
     padding: '12px',
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '6px',
+    borderRadius: '8px',
     marginBottom: '8px',
     border: '1px solid var(--border-subtle)'
   },
@@ -1207,7 +1207,7 @@ const styles = {
     alignItems: 'center',
     padding: '10px 12px',
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '6px',
+    borderRadius: '8px',
     marginBottom: '6px',
     border: '1px solid var(--border-subtle)'
   },
@@ -1228,7 +1228,7 @@ const styles = {
   vfrPointItem: {
     padding: '10px',
     backgroundColor: 'var(--bg-overlay)',
-    borderRadius: '6px',
+    borderRadius: '8px',
     marginBottom: '8px',
     border: '1px solid var(--border-subtle)'
   },
@@ -1269,7 +1269,7 @@ const styles = {
     padding: '12px',
     backgroundColor: 'var(--bg-overlay)',
     border: '2px solid #C04534',
-    borderRadius: '6px',
+    borderRadius: '8px',
     marginBottom: '16px'
   },
   contactLabel: {
@@ -1295,7 +1295,7 @@ const styles = {
     padding: '8px 12px',
     backgroundColor: 'var(--bg-overlay)',
     border: '1px solid var(--bg-overlay)',
-    borderRadius: '6px',
+    borderRadius: '8px',
     fontSize: '12px',
     fontWeight: '500',
     color: 'var(--text-primary)'

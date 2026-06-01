@@ -259,13 +259,13 @@ const TableDisplay = ({
           </button>
         </div>
         <pre style={{
-          backgroundColor: '#f8fafc',
+          backgroundColor: 'var(--bg-overlay)',
           padding: '16px',
-          borderRadius: '6px',
+          borderRadius: '8px',
           fontSize: '12px',
           overflow: 'auto',
           maxHeight: '400px',
-          border: '1px solid #e2e8f0'
+          border: '1px solid var(--border-subtle)'
         }}>
           {JSON.stringify(editedTable, null, 2)}
         </pre>
@@ -286,8 +286,8 @@ const TableDisplay = ({
                 value={editedTable.table_name || ''}
                 onChange={(e) => handleTableChange('table_name', e.target.value)}
                 style={{
-                  border: '1px solid #d1d5db',
-                  borderRadius: '4px',
+                  border: '1px solid var(--text-tertiary)',
+                  borderRadius: '8px',
                   padding: '2px 6px',
                   fontSize: '14px',
                   fontWeight: 'bold'
@@ -310,8 +310,8 @@ const TableDisplay = ({
                     (editedTable.conditions || '')}
                   onChange={(e) => handleTableChange('conditions', e.target.value)}
                   style={{
-                    border: '1px solid #d1d5db',
-                    borderRadius: '4px',
+                    border: '1px solid var(--text-tertiary)',
+                    borderRadius: '8px',
                     padding: '2px 6px',
                     fontSize: '12px',
                     minWidth: '200px'
@@ -492,13 +492,13 @@ const TableDisplay = ({
             borderCollapse: 'collapse',
             fontSize: '12px'
           }}>
-            <thead style={{ backgroundColor: '#f8fafc', position: 'sticky', top: 0 }}>
+            <thead style={{ backgroundColor: 'var(--bg-overlay)', position: 'sticky', top: 0 }}>
               <tr>
-                {isEditMode && <th style={{ padding: '8px', border: '1px solid #e2e8f0', width: '30px' }}>#</th>}
+                {isEditMode && <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', width: '30px' }}>#</th>}
                 {columns.map((column) => (
                   <th key={column} style={{ 
                     padding: '8px', 
-                    border: '1px solid #e2e8f0',
+                    border: '1px solid var(--border-subtle)',
                     textAlign: 'left',
                     minWidth: '100px'
                   }}>
@@ -510,7 +510,7 @@ const TableDisplay = ({
                           value={column}
                           onChange={(e) => renameColumn(column, e.target.value)}
                           style={{
-                            border: '1px solid #d1d5db',
+                            border: '1px solid var(--text-tertiary)',
                             borderRadius: '3px',
                             padding: '2px 4px',
                             fontSize: '11px',
@@ -531,7 +531,7 @@ const TableDisplay = ({
                             value={editedTable.units?.[column] || ''}
                             onChange={(e) => handleUnitsChange(column, e.target.value)}
                             style={{
-                              border: '1px solid #d1d5db',
+                              border: '1px solid var(--text-tertiary)',
                               borderRadius: '3px',
                               padding: '1px 3px',
                               fontSize: '10px',
@@ -543,8 +543,8 @@ const TableDisplay = ({
                           editedTable.units?.[column] && (
                             <span style={{
                               fontSize: '10px',
-                              color: '#6b7280',
-                              backgroundColor: '#f3f4f6',
+                              color: 'var(--text-secondary)',
+                              backgroundColor: 'var(--bg-overlay)',
                               padding: '1px 4px',
                               borderRadius: '3px'
                             }}>
@@ -563,8 +563,8 @@ const TableDisplay = ({
                               removeColumn(column);
                             }}
                             style={{
-                              background: '#ef4444',
-                              color: 'white',
+                              background: '#C04534',
+                              color: 'var(--text-primary)',
                               border: 'none',
                               borderRadius: '3px',
                               width: '16px',
@@ -588,11 +588,11 @@ const TableDisplay = ({
             <tbody>
               {editedTable.data.map((row, rowIndex) => (
                 <tr key={rowIndex} style={{ 
-                  backgroundColor: rowIndex % 2 === 0 ? 'white' : '#f9fafb' 
+                  backgroundColor: rowIndex % 2 === 0 ? 'white' : 'var(--bg-overlay)' 
                 }}>
                   {/* Bouton supprimer ligne */}
                   {isEditMode && (
-                    <td style={{ padding: '8px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+                    <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>
                       <button
                         type="button"
                         onClick={(e) => {
@@ -604,8 +604,8 @@ const TableDisplay = ({
                         }}
                         disabled={editedTable.data.length <= 1}
                         style={{
-                          background: editedTable.data.length <= 1 ? '#d1d5db' : '#ef4444',
-                          color: 'white',
+                          background: editedTable.data.length <= 1 ? 'var(--text-tertiary)' : '#C04534',
+                          color: 'var(--text-primary)',
                           border: 'none',
                           borderRadius: '3px',
                           width: '16px',
@@ -626,7 +626,7 @@ const TableDisplay = ({
                   {columns.map((column) => (
                     <td key={`${rowIndex}-${column}`} style={{ 
                       padding: '8px', 
-                      border: '1px solid #e2e8f0' 
+                      border: '1px solid var(--border-subtle)' 
                     }}>
                       {isEditMode ? (
                         <input
@@ -634,7 +634,7 @@ const TableDisplay = ({
                           value={row[column] || ''}
                           onChange={(e) => handleDataChange(rowIndex, column, e.target.value)}
                           style={{
-                            border: '1px solid #d1d5db',
+                            border: '1px solid var(--text-tertiary)',
                             borderRadius: '3px',
                             padding: '2px 4px',
                             fontSize: '11px',
@@ -669,7 +669,7 @@ const TableDisplay = ({
         <div style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(3))}>
           {editedTable.data.length} ligne(s) × {columns.length} colonne(s)
           {editedTable.validation?.isValid === false && (
-            <span style={{ color: '#ef4444', marginLeft: '8px' }}>
+            <span style={{ color: '#C04534', marginLeft: '8px' }}>
               ⚠️ Erreurs de validation détectées
             </span>
           )}

@@ -748,10 +748,10 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
             const numberStyle = {
               ...styles.progressNumber,
               ...(isCurrent
-                ? { background: theme.colors.primary, color: '#fff', borderColor: theme.colors.primary }
+                ? { background: theme.colors.primary, color: 'var(--bg-overlay)', borderColor: theme.colors.primary }
                 : {}),
               ...(isCompleted && !isCurrent
-                ? { background: theme.colors.success, color: '#fff', borderColor: theme.colors.success }
+                ? { background: theme.colors.success, color: 'var(--bg-overlay)', borderColor: theme.colors.success }
                 : {})
             };
             return (

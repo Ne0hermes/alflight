@@ -130,7 +130,7 @@ export const DataBackupUI = () => {
       padding: '16px',
       background: 'var(--bg-surface)',
       color: 'var(--text-primary)',
-      borderRadius: '12px',
+      borderRadius: '8px',
       border: '1px solid var(--border-subtle)',
       marginBottom: '16px'
     }}>
@@ -145,7 +145,7 @@ export const DataBackupUI = () => {
           margin: 0,
           fontSize: '16px',
           fontWeight: '600',
-          color: '#1f2937'
+          color: 'var(--text-primary)'
         }}>
           Gestion des donn\u00e9es permanentes
         </h3>
@@ -156,20 +156,20 @@ export const DataBackupUI = () => {
           alignItems: 'center',
           gap: '8px',
           padding: '6px 12px',
-          background: isProtected ? '#dcfce7' : 'rgba(242, 105, 33, 0.10)',
-          borderRadius: '20px'
+          background: isProtected ? 'var(--bg-overlay)' : 'rgba(242, 105, 33, 0.10)',
+          borderRadius: '8px'
         }}>
           {isProtected ? (
             <>
-              <Shield size={16} color="#16a34a" />
-              <span style={{ fontSize: '13px', color: '#16a34a', fontWeight: '500' }}>
+              <Shield size={16} color="var(--text-primary)" />
+              <span style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: '500' }}>
                 Protection activ\u00e9e
               </span>
             </>
           ) : (
             <>
-              <ShieldOff size={16} color="#d97706" />
-              <span style={{ fontSize: '13px', color: '#d97706', fontWeight: '500' }}>
+              <ShieldOff size={16} color="var(--accent-primary)" />
+              <span style={{ fontSize: '13px', color: 'var(--accent-primary)', fontWeight: '500' }}>
                 Protection d\u00e9sactiv\u00e9e
               </span>
             </>
@@ -182,14 +182,14 @@ export const DataBackupUI = () => {
         <div style={{
           padding: '12px',
           marginBottom: '16px',
-          borderRadius: '6px',
+          borderRadius: '8px',
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
-          background: message.type === 'success' ? '#dcfce7' : 
-                     message.type === 'warning' ? 'rgba(242, 105, 33, 0.10)' : '#fee2e2',
-          color: message.type === 'success' ? '#16a34a' : 
-                 message.type === 'warning' ? '#d97706' : '#dc2626'
+          background: message.type === 'success' ? 'var(--bg-overlay)' : 
+                     message.type === 'warning' ? 'rgba(242, 105, 33, 0.10)' : 'var(--bg-overlay)',
+          color: message.type === 'success' ? 'var(--text-primary)' : 
+                 message.type === 'warning' ? 'var(--accent-primary)' : '#C04534'
         }}>
           {message.type === 'success' ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
           <span style={{ fontSize: '13px' }}>{message.text}</span>
@@ -279,10 +279,10 @@ export const DataBackupUI = () => {
             padding: '10px',
             fontSize: '13px',
             border: '1px solid',
-            borderColor: isProtected ? '#16a34a' : '#d97706',
-            background: isProtected ? '#f0fdf4' : 'rgba(242, 105, 33, 0.06)',
-            color: isProtected ? '#16a34a' : '#d97706',
-            borderRadius: '6px',
+            borderColor: isProtected ? 'var(--text-primary)' : 'var(--accent-primary)',
+            background: isProtected ? 'var(--bg-overlay)' : 'rgba(242, 105, 33, 0.06)',
+            color: isProtected ? 'var(--text-primary)' : 'var(--accent-primary)',
+            borderRadius: '8px',
             cursor: 'pointer',
             transition: 'all 0.2s'
           }}
@@ -294,7 +294,7 @@ export const DataBackupUI = () => {
 
       {/* Liste des sauvegardes */}
       <div style={{
-        borderTop: '1px solid #e5e7eb',
+        borderTop: '1px solid var(--border-subtle)',
         paddingTop: '12px'
       }}>
         <button
@@ -307,7 +307,7 @@ export const DataBackupUI = () => {
             border: 'none',
             padding: '4px',
             cursor: 'pointer',
-            color: '#4b5563',
+            color: 'var(--text-secondary)',
             fontSize: '13px',
             fontWeight: '500',
             width: '100%',
@@ -326,14 +326,14 @@ export const DataBackupUI = () => {
             marginTop: '12px',
             maxHeight: '200px',
             overflowY: 'auto',
-            border: '1px solid #e5e7eb',
-            borderRadius: '6px',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '8px',
             padding: '8px'
           }}>
             {backups.length === 0 ? (
               <p style={{
                 textAlign: 'center',
-                color: '#9ca3af',
+                color: 'var(--text-tertiary)',
                 fontSize: '13px',
                 margin: '16px 0'
               }}>
@@ -349,16 +349,16 @@ export const DataBackupUI = () => {
                     justifyContent: 'space-between',
                     padding: '8px',
                     marginBottom: '4px',
-                    background: '#f9fafb',
-                    borderRadius: '4px',
+                    background: 'var(--bg-overlay)',
+                    borderRadius: '8px',
                     fontSize: '12px'
                   }}
                 >
                   <div>
-                    <div style={{ fontWeight: '500', color: '#374151' }}>
+                    <div style={{ fontWeight: '500', color: 'var(--text-secondary)' }}>
                       {backup.name || (backup.type === 'auto' ? 'Sauvegarde auto' : 'Sauvegarde manuelle')}
                     </div>
-                    <div style={{ color: '#6b7280', fontSize: '11px' }}>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: '11px' }}>
                       {formatDate(backup.timestamp)}
                     </div>
                   </div>
@@ -367,10 +367,10 @@ export const DataBackupUI = () => {
                     disabled={loading}
                     style={{
                       padding: '4px 8px',
-                      background: '#3b82f6',
-                      color: 'white',
+                      background: 'var(--text-secondary)',
+                      color: 'var(--text-primary)',
                       border: 'none',
-                      borderRadius: '4px',
+                      borderRadius: '8px',
                       fontSize: '11px',
                       cursor: loading ? 'not-allowed' : 'pointer',
                       opacity: loading ? 0.6 : 1
@@ -388,10 +388,10 @@ export const DataBackupUI = () => {
       <div style={{
         marginTop: '16px',
         padding: '12px',
-        background: '#f0f9ff',
-        borderRadius: '6px',
+        background: 'var(--bg-overlay)',
+        borderRadius: '8px',
         fontSize: '12px',
-        color: '#0369a1'
+        color: 'var(--text-secondary)'
       }}>
         <p style={{ margin: '0 0 8px 0', fontWeight: '500' }}>
           \ud83d\udd12 Syst\u00e8me de protection des donn\u00e9es

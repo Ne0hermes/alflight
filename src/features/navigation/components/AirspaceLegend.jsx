@@ -8,10 +8,10 @@ export const AirspaceLegend = () => {
   const legendItems = [
     { type: 'CTR', color: '#0099FF', label: 'CTR - Zone de contrôle' },
     { type: 'TMA', color: '#FF6600', label: 'TMA - Zone terminale' },
-    { type: 'CTA', color: '#FF9900', label: 'CTA - Zone de contrôle régional' },
+    { type: 'CTA', color: 'var(--accent-primary)', label: 'CTA - Zone de contrôle régional' },
     { type: 'P', color: '#CC0000', label: 'Zone P - Interdite', weight: 3 },
     { type: 'R', color: '#CC0066', label: 'Zone R - Réglementée', dash: true },
-    { type: 'D', color: '#FF9900', label: 'Zone D - Dangereuse', dash: true },
+    { type: 'D', color: 'var(--accent-primary)', label: 'Zone D - Dangereuse', dash: true },
   ];
 
   return (
@@ -19,7 +19,7 @@ export const AirspaceLegend = () => {
       position: 'absolute',
       bottom: '20px',
       right: '20px',
-      background: 'white',
+      background: 'var(--bg-overlay)',
       padding: '12px',
       borderRadius: '8px',
       boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
@@ -44,7 +44,7 @@ export const AirspaceLegend = () => {
           <span style={{ fontSize: '11px' }}>{item.label}</span>
         </div>
       ))}
-      <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #e0e0e0', fontSize: '11px', color: '#666' }}>
+      <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid var(--border-subtle)', fontSize: '11px', color: 'var(--text-secondary)' }}>
         <strong>Classes d'espace:</strong><br/>
         A: IFR uniquement<br/>
         D: IFR/VFR avec contact radio<br/>

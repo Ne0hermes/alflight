@@ -225,8 +225,8 @@ export const VFRPointInserter = ({
           left: 0,
           right: 0,
           marginTop: '8px',
-          background: 'white',
-          border: '1px solid #e5e7eb',
+          background: 'var(--bg-overlay)',
+          border: '1px solid var(--border-subtle)',
           borderRadius: '8px',
           boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
           padding: '12px',
@@ -250,7 +250,7 @@ export const VFRPointInserter = ({
                 left: '8px',
                 top: '50%',
                 transform: 'translateY(-50%)',
-                color: '#9ca3af'
+                color: 'var(--text-tertiary)'
               }} />
               <input
                 type="text"
@@ -260,8 +260,8 @@ export const VFRPointInserter = ({
                 style={{
                   width: '100%',
                   padding: '6px 8px 6px 28px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '6px',
+                  border: '1px solid var(--text-tertiary)',
+                  borderRadius: '8px',
                   fontSize: '13px'
                 }}
                 autoFocus
@@ -274,7 +274,7 @@ export const VFRPointInserter = ({
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                color: '#6b7280'
+                color: 'var(--text-secondary)'
               }}
             >
               <X size={16} />
@@ -293,7 +293,7 @@ export const VFRPointInserter = ({
               <p style={{
                 padding: '12px',
                 textAlign: 'center',
-                color: '#9ca3af',
+                color: 'var(--text-tertiary)',
                 fontSize: '13px'
               }}>
                 {airportsInRoute.size === 0 
@@ -308,11 +308,11 @@ export const VFRPointInserter = ({
                     <div style={{
                       fontSize: '11px',
                       fontWeight: '600',
-                      color: '#92400e',
+                      color: 'var(--accent-primary)',
                       marginBottom: '6px',
                       padding: '4px 8px',
                       background: 'rgba(242, 105, 33, 0.10)',
-                      borderRadius: '4px',
+                      borderRadius: '8px',
                       display: 'inline-block'
                     }}>
                       📝 Points personnalisés
@@ -325,18 +325,18 @@ export const VFRPointInserter = ({
                           style={{
                             padding: '8px',
                             background: 'rgba(242, 105, 33, 0.06)',
-                            borderRadius: '6px',
+                            borderRadius: '8px',
                             cursor: 'pointer',
                             transition: 'all 0.2s',
-                            border: '1px solid #fde68a'
+                            border: '1px solid var(--bg-overlay)'
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.background = 'rgba(242, 105, 33, 0.10)';
-                            e.currentTarget.style.borderColor = '#fbbf24';
+                            e.currentTarget.style.borderColor = 'var(--accent-primary)';
                           }}
                           onMouseLeave={(e) => {
                             e.currentTarget.style.background = 'rgba(242, 105, 33, 0.06)';
-                            e.currentTarget.style.borderColor = '#fde68a';
+                            e.currentTarget.style.borderColor = 'var(--bg-overlay)';
                           }}
                         >
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
@@ -345,11 +345,11 @@ export const VFRPointInserter = ({
                                 {point.displayName}
                               </div>
                               {point.description && (
-                                <div style={{ fontSize: '11px', color: '#92400e', marginBottom: '2px' }}>
+                                <div style={{ fontSize: '11px', color: 'var(--accent-primary)', marginBottom: '2px' }}>
                                   {point.description}
                                 </div>
                               )}
-                              <div style={{ fontSize: '10px', color: '#b45309' }}>
+                              <div style={{ fontSize: '10px', color: 'var(--accent-primary)' }}>
                                 📍 {point.lat?.toFixed(4)}°, {point.lon?.toFixed(4)}°
                               </div>
                             </div>
@@ -366,11 +366,11 @@ export const VFRPointInserter = ({
                     <div style={{
                       fontSize: '11px',
                       fontWeight: '600',
-                      color: '#1e40af',
+                      color: 'var(--text-primary)',
                       marginBottom: '6px',
                       padding: '4px 8px',
-                      background: '#dbeafe',
-                      borderRadius: '4px',
+                      background: 'var(--bg-overlay)',
+                      borderRadius: '8px',
                       display: 'inline-block'
                     }}>
                       ✈️ Points VFR des aérodromes de la route
@@ -382,19 +382,19 @@ export const VFRPointInserter = ({
                           onClick={() => handleInsertPoint(point)}
                           style={{
                             padding: '8px',
-                            background: '#f0f9ff',
-                            borderRadius: '6px',
+                            background: 'var(--bg-overlay)',
+                            borderRadius: '8px',
                             cursor: 'pointer',
                             transition: 'all 0.2s',
-                            border: '1px solid #bfdbfe'
+                            border: '1px solid var(--border-subtle)'
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.background = '#dbeafe';
-                            e.currentTarget.style.borderColor = '#60a5fa';
+                            e.currentTarget.style.background = 'var(--bg-overlay)';
+                            e.currentTarget.style.borderColor = 'var(--text-secondary)';
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.background = '#f0f9ff';
-                            e.currentTarget.style.borderColor = '#bfdbfe';
+                            e.currentTarget.style.background = 'var(--bg-overlay)';
+                            e.currentTarget.style.borderColor = 'var(--border-subtle)';
                           }}
                         >
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
@@ -403,20 +403,20 @@ export const VFRPointInserter = ({
                                 {point.displayName}
                               </div>
                               {point.description && (
-                                <div style={{ fontSize: '11px', color: '#1e40af', marginBottom: '2px' }}>
+                                <div style={{ fontSize: '11px', color: 'var(--text-primary)', marginBottom: '2px' }}>
                                   {point.description}
                                 </div>
                               )}
-                              <div style={{ fontSize: '10px', color: '#3b82f6' }}>
+                              <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
                                 📍 {point.lat?.toFixed(4)}°, {point.lon?.toFixed(4)}°
                               </div>
                             </div>
                             {point.airportIcao && (
                               <div style={{
                                 padding: '2px 6px',
-                                background: '#e0f2fe',
-                                color: '#0c4a6e',
-                                borderRadius: '4px',
+                                background: 'var(--bg-overlay)',
+                                color: 'var(--text-primary)',
+                                borderRadius: '8px',
                                 fontSize: '10px',
                                 fontWeight: '600',
                                 marginLeft: '8px'
@@ -438,10 +438,10 @@ export const VFRPointInserter = ({
           <div style={{
             marginTop: '12px',
             padding: '8px',
-            background: '#f0f9ff',
-            borderRadius: '6px',
+            background: 'var(--bg-overlay)',
+            borderRadius: '8px',
             fontSize: '11px',
-            color: '#0369a1'
+            color: 'var(--text-secondary)'
           }}>
             💡 Affichage limité aux points VFR des aérodromes présents dans votre navigation. Les points peuvent être réutilisés.
           </div>

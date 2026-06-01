@@ -11,7 +11,7 @@ export const PremiumButton = ({ children, onClick, style, disabled, ...props }) 
         borderRadius: '8px',
         border: 'none',
         background: 'linear-gradient(135deg, #f26921, #FF7E36)',
-        color: 'white',
+        color: 'var(--text-primary)',
         fontSize: '14px',
         fontWeight: '600',
         cursor: disabled ? 'not-allowed' : 'pointer',
@@ -32,7 +32,7 @@ export const PremiumCard = ({ children, style, ...props }) => {
     <div
       style={{
         background: 'rgba(255, 255, 255, 0.95)',
-        borderRadius: '12px',
+        borderRadius: '8px',
         padding: '20px',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
         border: '1px solid rgba(147, 22, 60, 0.1)',
@@ -54,15 +54,15 @@ export const PremiumBadge = ({ children, variant = 'default', style, ...props })
     },
     success: {
       background: 'rgba(16, 185, 129, 0.1)',
-      color: '#10b981'
+      color: 'var(--text-primary)'
     },
     warning: {
       background: 'rgba(251, 191, 36, 0.1)',
-      color: '#fbbf24'
+      color: 'var(--accent-primary)'
     },
     error: {
       background: 'rgba(239, 68, 68, 0.1)',
-      color: '#ef4444'
+      color: '#C04534'
     }
   };
 
@@ -72,7 +72,7 @@ export const PremiumBadge = ({ children, variant = 'default', style, ...props })
         display: 'inline-flex',
         alignItems: 'center',
         padding: '4px 12px',
-        borderRadius: '9999px',
+        borderRadius: '8px',
         fontSize: '12px',
         fontWeight: '600',
         ...variants[variant],
