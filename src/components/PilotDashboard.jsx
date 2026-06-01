@@ -592,7 +592,7 @@ export const PilotDashboard = ({ onNavigate }) => {
       
       {/* Alerte si l'âge n'est pas configuré */}
       {hasAgeError && (
-        <div style={{ ...styles.ageErrorAlert, maxWidth: '400px', width: '100%', margin: '0 auto 20px auto' }}>
+        <div style={{ ...styles.ageErrorAlert, width: '100%', marginBottom: '20px' }}>
           <div style={styles.ageErrorContent}>
             <AlertTriangle size={20} />
             <div style={{ flex: 1 }}>
@@ -620,9 +620,8 @@ export const PilotDashboard = ({ onNavigate }) => {
           backgroundColor: formatAIXMAlert(aixmDataStatus.status).bgColor,
           borderColor: formatAIXMAlert(aixmDataStatus.status).color,
           border: `2px solid ${formatAIXMAlert(aixmDataStatus.status).color}`,
-          maxWidth: '400px',
           width: '100%',
-          margin: '0 auto 20px auto'
+          marginBottom: '20px',
         }}>
           <div style={{
             ...styles.ageErrorContent,
@@ -701,15 +700,14 @@ export const PilotDashboard = ({ onNavigate }) => {
       {wizardDraft && (
         <div style={{
           ...styles.ageErrorAlert,
-          backgroundColor: 'rgba(139, 92, 246, 0.1)',
-          borderColor: 'rgba(139, 92, 246, 0.3)',
-          maxWidth: '400px',
+          backgroundColor: 'var(--accent-soft)',
+          borderColor: 'var(--accent-primary)',
           width: '100%',
-          margin: '0 auto 20px auto'
+          marginBottom: '20px',
         }}>
           <div style={{
             ...styles.ageErrorContent,
-            color: '#8b5cf6'
+            color: 'var(--accent-primary)',
           }}>
             <Wand2 size={20} />
             <div style={{ flex: 1 }}>
@@ -754,7 +752,7 @@ export const PilotDashboard = ({ onNavigate }) => {
         </div>
       )}
 
-      <div style={{ ...styles.grid, maxWidth: '400px', width: '100%', margin: '0 auto' }}>
+      <div style={{ ...styles.grid, width: '100%' }}>
         {/* Statistiques de vol */}
         <div style={styles.card}>
           <div style={styles.cardHeader}>
