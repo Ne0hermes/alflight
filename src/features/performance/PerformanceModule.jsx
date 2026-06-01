@@ -16,7 +16,7 @@ import { FUEL_DENSITIES } from '../../utils/constants';
 import { getWaypointIcao } from '../../shared/utils/getWaypointIcao';
 import { SAFETY_FACTOR_PRESETS, DEFAULT_SAFETY_FACTOR } from '../../utils/performanceSafetyFactor';
 // 🎨 Charte éditoriale ALFlight
-import { EditorialHeading } from '@shared/components/editorial';
+import { ModuleHero } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
 
 const PerformanceModule = ({ wizardMode = false, config = {} }) => {
@@ -683,14 +683,25 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   // (chacune avec encart Conditions + matrice de couverture + analyse pistes).
 
   return (
-    <div style={{ color: 'var(--text-primary)' }}>
-      {/* 🎨 En-tête éditorial ALFlight */}
+    <div
+      style={{
+        backgroundColor: 'var(--bg-canvas)',
+        color: 'var(--text-primary)',
+        fontFamily: tokens.fontFamily.sans,
+        minHeight: '100vh',
+        padding: wizardMode
+          ? 0
+          : `clamp(${tokens.spacing[6]}, 4vw, ${tokens.spacing[9]}) clamp(${tokens.spacing[5]}, 3vw, ${tokens.spacing[8]})`,
+        boxSizing: 'border-box',
+      }}
+    >
+      {/* 🎨 Hero éditorial unifié */}
       {!wizardMode && (
-        <header style={{ marginBottom: tokens.spacing[6] }}>
-          <EditorialHeading level={2} eyebrow="PERF · DÉCOLLAGE & ATTERRISSAGE">
-            Performances
-          </EditorialHeading>
-        </header>
+        <ModuleHero
+          image="/assets/photos/hero-performance.jpg"
+          eyebrow="PERF · DÉCOLLAGE & ATTERRISSAGE"
+          title="Performances"
+        />
       )}
 
       {/* Sélecteur de facteur de sécurité réglementaire + note corrections piste */}

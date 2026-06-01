@@ -17,7 +17,7 @@ import { calculateDistance } from '@utils/navigationCalculations';
 import { useWeatherStore } from '@core/stores/weatherStore';
 import { coordinateConversions } from '@utils/unitConversions';
 // 🎨 Charte éditoriale ALFlight
-import { EditorialHeading } from '@shared/components/editorial';
+import { ModuleHero } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
 
 // Composant pour afficher une carte de statistique
@@ -480,13 +480,22 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
   }
 
   return (
-    <div style={{ color: 'var(--text-primary)' }}>
-      {/* 🎨 En-tête éditorial ALFlight */}
-      <header style={{ marginBottom: tokens.spacing[6] }}>
-        <EditorialHeading level={2} eyebrow="OPS · DÉROUTEMENTS">
-          Déroutements
-        </EditorialHeading>
-      </header>
+    <div
+      style={{
+        backgroundColor: 'var(--bg-canvas)',
+        color: 'var(--text-primary)',
+        fontFamily: tokens.fontFamily.sans,
+        minHeight: '100vh',
+        padding: `clamp(${tokens.spacing[6]}, 4vw, ${tokens.spacing[9]}) clamp(${tokens.spacing[5]}, 3vw, ${tokens.spacing[8]})`,
+        boxSizing: 'border-box',
+      }}
+    >
+      {/* 🎨 Hero éditorial unifié */}
+      <ModuleHero
+        image="/assets/photos/hero-alternates.jpg"
+        eyebrow="OPS · DÉROUTEMENTS"
+        title="Déroutements"
+      />
 
       {/* Indicateur de rate limiting météo */}
       <WeatherRateLimitIndicator />

@@ -8,7 +8,7 @@ import { ScenarioCards } from './ScenarioCards';
 import { calculateScenarios } from '../utils/calculations';
 import { sx } from '@shared/styles/styleSystem';
 // 🎨 Charte éditoriale ALFlight
-import { EditorialHeading } from '@shared/components/editorial';
+import { ModuleHero } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
 
 // Composant principal optimisé
@@ -43,13 +43,22 @@ export const WeightBalanceModule = memo(() => {
   }
 
   return (
-    <div style={{ ...sx.spacing.p(6), color: 'var(--text-primary)' }}>
-      {/* 🎨 En-tête éditorial ALFlight */}
-      <header style={{ marginBottom: tokens.spacing[6] }}>
-        <EditorialHeading level={2} eyebrow="M&C · MASSE ET CENTRAGE">
-          Masse et centrage
-        </EditorialHeading>
-      </header>
+    <div
+      style={{
+        backgroundColor: 'var(--bg-canvas)',
+        color: 'var(--text-primary)',
+        fontFamily: tokens.fontFamily.sans,
+        minHeight: '100vh',
+        padding: `clamp(${tokens.spacing[6]}, 4vw, ${tokens.spacing[9]}) clamp(${tokens.spacing[5]}, 3vw, ${tokens.spacing[8]})`,
+        boxSizing: 'border-box',
+      }}
+    >
+      {/* 🎨 Hero éditorial unifié */}
+      <ModuleHero
+        image="/assets/photos/hero-weight-balance.jpg"
+        eyebrow="M&C · MASSE ET CENTRAGE"
+        title="Masse et centrage"
+      />
 
       {/* Section Chargement */}
       <LoadingSection

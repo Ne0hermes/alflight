@@ -11,7 +11,7 @@ import { DataSourceBadge, DataField, DataFieldGroup } from '@shared/components';
 import { useUnits } from '@hooks/useUnits';
 import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
 // 🎨 Charte éditoriale ALFlight
-import { EditorialHeading } from '@shared/components/editorial';
+import { ModuleHero } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
 
 export const WeatherModule = memo(({ wizardMode = false, config = {} }) => {
@@ -151,14 +151,25 @@ export const WeatherModule = memo(({ wizardMode = false, config = {} }) => {
   };
   
   return (
-    <div style={{ ...sx.spacing.p(6), color: 'var(--text-primary)' }}>
-      {/* 🎨 En-tête éditorial ALFlight */}
+    <div
+      style={{
+        backgroundColor: 'var(--bg-canvas)',
+        color: 'var(--text-primary)',
+        fontFamily: tokens.fontFamily.sans,
+        minHeight: '100vh',
+        padding: wizardMode
+          ? 0
+          : `clamp(${tokens.spacing[6]}, 4vw, ${tokens.spacing[9]}) clamp(${tokens.spacing[5]}, 3vw, ${tokens.spacing[8]})`,
+        boxSizing: 'border-box',
+      }}
+    >
+      {/* 🎨 Hero éditorial unifié */}
       {!wizardMode && (
-        <header style={{ marginBottom: tokens.spacing[6] }}>
-          <EditorialHeading level={2} eyebrow="MÉTÉO · CONDITIONS DE VOL">
-            Briefing météorologique
-          </EditorialHeading>
-        </header>
+        <ModuleHero
+          image="/assets/photos/hero-weather.jpg"
+          eyebrow="MÉTÉO · CONDITIONS DE VOL"
+          title="Briefing météorologique"
+        />
       )}
 
       {/* En-tête et recherche */}

@@ -7,7 +7,7 @@ import {
 import { regulationsData, getAllRegulations } from '../data/regulationsData';
 import { theme } from '@styles/theme';
 // 🎨 Charte éditoriale ALFlight
-import { EditorialHeading } from '@shared/components/editorial';
+import { ModuleHero } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
 
 const iconMap = {
@@ -138,13 +138,23 @@ const RegulationsModule = () => {
   }
 
   return (
-    <div style={{ ...styles.container, color: 'var(--text-primary)' }}>
-      {/* 🎨 En-tête éditorial ALFlight */}
-      <header style={{ marginBottom: tokens.spacing[6], padding: tokens.spacing[5] }}>
-        <EditorialHeading level={2} eyebrow="DOCS · RÉFÉRENTIEL EASA">
-          Réglementations
-        </EditorialHeading>
-      </header>
+    <div
+      style={{
+        ...styles.container,
+        backgroundColor: 'var(--bg-canvas)',
+        color: 'var(--text-primary)',
+        fontFamily: tokens.fontFamily.sans,
+        minHeight: '100vh',
+        padding: `clamp(${tokens.spacing[6]}, 4vw, ${tokens.spacing[9]}) clamp(${tokens.spacing[5]}, 3vw, ${tokens.spacing[8]})`,
+        boxSizing: 'border-box',
+      }}
+    >
+      {/* 🎨 Hero éditorial unifié */}
+      <ModuleHero
+        image="/assets/photos/hero-regulations.jpg"
+        eyebrow="DOCS · RÉFÉRENTIEL EASA"
+        title="Réglementations"
+      />
 
       {/* En-tête (existant - conservé pour la logique du bouton suggestion) */}
       <div style={styles.header}>

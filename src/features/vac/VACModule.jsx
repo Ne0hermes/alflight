@@ -3,7 +3,7 @@ import React, { memo, useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { SIAReportEnhanced } from './components/SIAReportEnhanced';
 // 🎨 Charte éditoriale ALFlight
-import { EditorialHeading } from '@shared/components/editorial';
+import { ModuleHero } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
 
 export const VACModule = memo(({ wizardMode = false, config = {} }) => {
@@ -24,13 +24,26 @@ export const VACModule = memo(({ wizardMode = false, config = {} }) => {
   };
 
   return (
-    <div style={{ color: 'var(--text-primary)' }}>
-      {/* 🎨 En-tête éditorial ALFlight */}
-      <header style={{ marginBottom: tokens.spacing[6] }}>
-        <EditorialHeading level={2} eyebrow="DOCS · CARTES VAC SIA">
-          Cartes VAC
-        </EditorialHeading>
-      </header>
+    <div
+      style={{
+        backgroundColor: 'var(--bg-canvas)',
+        color: 'var(--text-primary)',
+        fontFamily: tokens.fontFamily.sans,
+        minHeight: '100vh',
+        padding: wizardMode
+          ? 0
+          : `clamp(${tokens.spacing[6]}, 4vw, ${tokens.spacing[9]}) clamp(${tokens.spacing[5]}, 3vw, ${tokens.spacing[8]})`,
+        boxSizing: 'border-box',
+      }}
+    >
+      {/* 🎨 Hero éditorial unifié */}
+      {!wizardMode && (
+        <ModuleHero
+          image="/assets/photos/hero-vac.jpg"
+          eyebrow="DOCS · CARTES VAC SIA"
+          title="Cartes VAC"
+        />
+      )}
 
       {/* Bandeau de retour au wizard — couleurs éditoriales */}
       {showWizardReturn && (

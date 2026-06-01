@@ -11,7 +11,7 @@ import { useUnits } from '@hooks/useUnits';
 import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
 import { toUserUnit, formatCanonical } from '@utils/unitsDisplay';
 // 🎨 Charte éditoriale ALFlight
-import { EditorialHeading } from '@shared/components/editorial';
+import { ModuleHero } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
 
 const FuelRow = memo(({ type, label, description, fuel, onChange, readonly = false, automatic = false, totalGal }) => {
@@ -354,14 +354,25 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
   ];
 
   return (
-    <div style={{ color: 'var(--text-primary)' }}>
-      {/* 🎨 En-tête éditorial ALFlight */}
+    <div
+      style={{
+        backgroundColor: 'var(--bg-canvas)',
+        color: 'var(--text-primary)',
+        fontFamily: tokens.fontFamily.sans,
+        minHeight: '100vh',
+        padding: wizardMode
+          ? 0
+          : `clamp(${tokens.spacing[6]}, 4vw, ${tokens.spacing[9]}) clamp(${tokens.spacing[5]}, 3vw, ${tokens.spacing[8]})`,
+        boxSizing: 'border-box',
+      }}
+    >
+      {/* 🎨 Hero éditorial unifié */}
       {!wizardMode && (
-        <header style={{ marginBottom: tokens.spacing[6] }}>
-          <EditorialHeading level={2} eyebrow="FUEL · BILAN CARBURANT">
-            Bilan carburant
-          </EditorialHeading>
-        </header>
+        <ModuleHero
+          image="/assets/photos/hero-fuel.jpg"
+          eyebrow="FUEL · BILAN CARBURANT"
+          title="Bilan carburant"
+        />
       )}
 
       {/* Alerte si l'avion manque de données */}
