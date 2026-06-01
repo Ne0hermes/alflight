@@ -37,6 +37,11 @@ src/config/secrets.js
 *.backup
 *.bak
 
+# Backups des photos originales (créés par scripts/compress-hero-photos.mjs)
+# Conservés localement pour pouvoir restaurer si nécessaire, mais pas
+# déployés en production (gain ~47 Mo sur le déploiement Vercel).
+public/assets/photos/_originals/
+
 # IMPORTANT: Google Sheets credentials
 server/credentials.json
 alfight-*.json
