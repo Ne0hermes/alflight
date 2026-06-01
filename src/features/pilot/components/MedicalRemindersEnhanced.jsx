@@ -313,7 +313,7 @@ const MedicalRemindersEnhanced = () => {
               <label style={sx.combine(sx.text.sm, sx.text.secondary)}>
                 Type de certificat * 
                 {!pilotAge && (
-                  <span style={{ color: '#ef4444', marginLeft: '8px' }}>
+                  <span style={{ color: '#C04534', marginLeft: '8px' }}>
                     (Configurez votre date de naissance dans le profil)
                   </span>
                 )}
@@ -349,7 +349,7 @@ const MedicalRemindersEnhanced = () => {
               <label style={sx.combine(sx.text.sm, sx.text.secondary)}>
                 Date d'expiration *
                 {pilotAge && formData.type && (
-                  <span style={{ color: '#10b981', marginLeft: '8px' }}>
+                  <span style={{ color: 'var(--text-primary)', marginLeft: '8px' }}>
                     (Validité: {medicalClasses[formData.type].validity(pilotAge)} mois)
                   </span>
                 )}
@@ -383,7 +383,7 @@ const MedicalRemindersEnhanced = () => {
                 <label style={sx.combine(sx.text.sm, sx.text.secondary)}>
                   <Activity size={14} style={{ display: 'inline', marginRight: '4px' }} />
                   Prochain ECG
-                  <span style={{ color: '#f59e0b', marginLeft: '4px' }}>
+                  <span style={{ color: 'var(--accent-primary)', marginLeft: '4px' }}>
                     (Requis pour votre âge)
                   </span>
                 </label>
@@ -402,7 +402,7 @@ const MedicalRemindersEnhanced = () => {
                 <label style={sx.combine(sx.text.sm, sx.text.secondary)}>
                   <Brain size={14} style={{ display: 'inline', marginRight: '4px' }} />
                   Prochaine audiométrie
-                  <span style={{ color: '#f59e0b', marginLeft: '4px' }}>
+                  <span style={{ color: 'var(--accent-primary)', marginLeft: '4px' }}>
                     (Requis pour votre âge)
                   </span>
                 </label>
@@ -421,7 +421,7 @@ const MedicalRemindersEnhanced = () => {
                 <label style={sx.combine(sx.text.sm, sx.text.secondary)}>
                   <Eye size={14} style={{ display: 'inline', marginRight: '4px' }} />
                   Prochaine ophtalmologie
-                  <span style={{ color: '#f59e0b', marginLeft: '4px' }}>
+                  <span style={{ color: 'var(--accent-primary)', marginLeft: '4px' }}>
                     (Requis pour votre âge)
                   </span>
                 </label>
@@ -543,16 +543,16 @@ const getStatusBadge = (expiryDate) => {
   
   let style, text;
   if (daysUntilExpiry < 0) {
-    style = { backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca' };
+    style = { backgroundColor: 'var(--bg-overlay)', color: '#C04534', border: '1px solid var(--border-subtle)' };
     text = `Expiré (${Math.abs(daysUntilExpiry)}j)`;
   } else if (daysUntilExpiry <= 30) {
-    style = { backgroundColor: '#fed7aa', color: '#9a3412', border: '1px solid #f26921' };
+    style = { backgroundColor: 'var(--bg-overlay)', color: 'var(--accent-primary)', border: '1px solid #f26921' };
     text = `Expire dans ${daysUntilExpiry}j`;
   } else if (daysUntilExpiry <= 90) {
-    style = { backgroundColor: 'rgba(242, 105, 33, 0.10)', color: '#92400e', border: '1px solid #fcd34d' };
+    style = { backgroundColor: 'rgba(242, 105, 33, 0.10)', color: 'var(--accent-primary)', border: '1px solid var(--bg-overlay)' };
     text = `${daysUntilExpiry}j restants`;
   } else {
-    style = { backgroundColor: '#d1fae5', color: '#065f46', border: '1px solid #86efac' };
+    style = { backgroundColor: 'var(--bg-overlay)', color: 'var(--text-primary)', border: '1px solid var(--bg-overlay)' };
     text = 'Valide';
   }
   
@@ -560,7 +560,7 @@ const getStatusBadge = (expiryDate) => {
     <span style={{
       ...style,
       padding: '4px 12px',
-      borderRadius: '16px',
+      borderRadius: '8px',
       fontSize: '12px',
       fontWeight: '600',
       display: 'inline-flex',

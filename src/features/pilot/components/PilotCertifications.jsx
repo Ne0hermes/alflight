@@ -110,10 +110,10 @@ const PilotCertifications = () => {
   };
 
   const categoryColors = {
-    licenses: '#3b82f6',
-    ratings: '#10b981',
-    endorsements: '#f59e0b',
-    training: '#8b5cf6'
+    licenses: 'var(--text-secondary)',
+    ratings: 'var(--text-primary)',
+    endorsements: 'var(--accent-primary)',
+    training: 'var(--accent-primary)'
   };
 
   // Charger les certifications depuis localStorage
@@ -451,14 +451,14 @@ const PilotCertifications = () => {
   // Style pour les inputs - contraintes fortes pour éviter le débordement sur mobile
   const inputStyle = {
     padding: '8px 12px',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
+    border: '1px solid var(--text-tertiary)',
+    borderRadius: '8px',
     fontSize: '14px',
     width: '100%',
     minWidth: 0,
     maxWidth: '100%',
     boxSizing: 'border-box',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-overlay)',
     WebkitAppearance: 'none',  // Supprime le style natif iOS
     MozAppearance: 'none',
     appearance: 'none'
@@ -473,7 +473,7 @@ const PilotCertifications = () => {
 
   const labelStyle = {
     fontSize: '12px',
-    color: '#374151',
+    color: 'var(--text-secondary)',
     fontWeight: '500',
     marginBottom: '4px',
     display: 'block'
@@ -484,15 +484,15 @@ const PilotCertifications = () => {
 
   // Vérifier les dates d'expiration
   const getExpiryColor = (expiryDate) => {
-    if (!expiryDate) return '#6b7280';
+    if (!expiryDate) return 'var(--text-secondary)';
     const today = new Date();
     const expiry = new Date(expiryDate);
     const daysUntilExpiry = Math.floor((expiry - today) / (1000 * 60 * 60 * 24));
     
-    if (daysUntilExpiry < 0) return '#dc2626';
-    if (daysUntilExpiry <= 30) return '#D85410';
-    if (daysUntilExpiry <= 90) return '#f59e0b';
-    return '#6b7280';
+    if (daysUntilExpiry < 0) return '#C04534';
+    if (daysUntilExpiry <= 30) return 'var(--accent-primary)';
+    if (daysUntilExpiry <= 90) return 'var(--accent-primary)';
+    return 'var(--text-secondary)';
   };
 
   const renderCertificationItem = (category, item) => (
@@ -507,7 +507,7 @@ const PilotCertifications = () => {
         <p style={{ 
           fontSize: '14px', 
           fontWeight: '600',
-          color: '#111827',
+          color: 'var(--text-primary)',
           marginBottom: '4px'
         }}>
           {item.name || item.type}
@@ -517,7 +517,7 @@ const PilotCertifications = () => {
           flexWrap: 'wrap',
           gap: '16px', 
           fontSize: '12px', 
-          color: '#6b7280',
+          color: 'var(--text-secondary)',
           marginBottom: item.remarks ? '4px' : '0'
         }}>
           {item.number && <span>N° {item.number}</span>}
@@ -534,7 +534,7 @@ const PilotCertifications = () => {
         {item.remarks && (
           <p style={{ 
             fontSize: '12px', 
-            color: '#9ca3af', 
+            color: 'var(--text-tertiary)', 
             fontStyle: 'italic'
           }}>
             {item.remarks}
@@ -550,9 +550,9 @@ const PilotCertifications = () => {
               padding: '6px', 
               backgroundColor: 'transparent',
               border: 'none', 
-              borderRadius: '4px', 
+              borderRadius: '8px', 
               cursor: 'pointer',
-              color: '#6b7280',
+              color: 'var(--text-secondary)',
               transition: 'all 0.2s'
             }}
             title="Voir le document"
@@ -566,9 +566,9 @@ const PilotCertifications = () => {
             padding: '6px', 
             backgroundColor: 'transparent',
             border: 'none', 
-            borderRadius: '4px', 
+            borderRadius: '8px', 
             cursor: 'pointer',
-            color: '#6b7280',
+            color: 'var(--text-secondary)',
             transition: 'all 0.2s'
           }}
           title="Modifier"
@@ -580,9 +580,9 @@ const PilotCertifications = () => {
           style={{ 
             padding: '6px', 
             backgroundColor: 'transparent',
-            color: '#ef4444', 
+            color: '#C04534', 
             border: 'none', 
-            borderRadius: '4px', 
+            borderRadius: '8px', 
             cursor: 'pointer',
             transition: 'all 0.2s'
           }}
@@ -595,11 +595,16 @@ const PilotCertifications = () => {
   );
 
   return (
-    <div>
+    <div
+      style={{
+        fontFamily: "'Century Gothic', 'Questrial', 'Jost', system-ui, sans-serif",
+        color: 'var(--text-primary)',
+      }}
+    >
       {/* Formulaire unifié */}
       {showForm && (
         <div style={{
-          backgroundColor: 'white',
+          backgroundColor: 'var(--bg-overlay)',
           padding: '20px',
           borderRadius: '8px',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
@@ -689,10 +694,10 @@ const PilotCertifications = () => {
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <label style={{ 
                 padding: '8px 16px', 
-                backgroundColor: '#e5e7eb', 
-                color: '#374151', 
+                backgroundColor: 'var(--border-subtle)', 
+                color: 'var(--text-secondary)', 
                 border: 'none', 
-                borderRadius: '6px', 
+                borderRadius: '8px', 
                 fontSize: '14px', 
                 fontWeight: '500', 
                 cursor: 'pointer', 
@@ -710,7 +715,7 @@ const PilotCertifications = () => {
                 />
               </label>
               {formData.documentName && (
-                <span style={{ fontSize: '14px', color: '#6b7280' }}>
+                <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
                   <FileText size={14} style={{ display: 'inline', marginRight: '4px' }} />
                   {formData.documentName}
                 </span>
@@ -724,10 +729,10 @@ const PilotCertifications = () => {
               onClick={handleSubmit}
               style={{ 
                 padding: '8px 16px', 
-                backgroundColor: '#3b82f6', 
+                backgroundColor: 'var(--text-secondary)', 
                 color: 'white', 
                 border: 'none', 
-                borderRadius: '6px', 
+                borderRadius: '8px', 
                 fontSize: '14px', 
                 fontWeight: '500', 
                 cursor: 'pointer' 
@@ -740,10 +745,10 @@ const PilotCertifications = () => {
               onClick={resetForm}
               style={{ 
                 padding: '8px 16px', 
-                backgroundColor: '#e5e7eb', 
-                color: '#374151', 
+                backgroundColor: 'var(--border-subtle)', 
+                color: 'var(--text-secondary)', 
                 border: 'none', 
-                borderRadius: '6px', 
+                borderRadius: '8px', 
                 fontSize: '14px', 
                 fontWeight: '500', 
                 cursor: 'pointer' 
@@ -756,17 +761,17 @@ const PilotCertifications = () => {
       )}
 
       {/* Listes des certifications par catégorie */}
-      <div style={{ backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '20px' }}>
+      <div style={{ backgroundColor: 'var(--bg-overlay)', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '20px' }}>
         {/* Bouton Ajouter centré */}
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <button
             onClick={() => setShowForm(!showForm)}
             style={{ 
               padding: '8px 24px', 
-              backgroundColor: showForm ? '#ef4444' : '#3b82f6', 
+              backgroundColor: showForm ? '#C04534' : 'var(--text-secondary)', 
               color: 'white', 
               border: 'none', 
-              borderRadius: '6px', 
+              borderRadius: '8px', 
               fontSize: '14px', 
               fontWeight: '500', 
               cursor: 'pointer'
@@ -778,7 +783,7 @@ const PilotCertifications = () => {
         
         <div style={{ 
           height: '2px',
-          backgroundColor: '#3b82f6',
+          backgroundColor: 'var(--text-secondary)',
           marginBottom: '20px'
         }} />
         
@@ -796,7 +801,7 @@ const PilotCertifications = () => {
                   <h4 style={{ 
                     fontSize: '16px', 
                     fontWeight: '600',
-                    color: '#111827'
+                    color: 'var(--text-primary)'
                   }}>
                     {categoryLabels[category]}
                   </h4>
@@ -820,9 +825,9 @@ const PilotCertifications = () => {
           <div style={{ 
             padding: '40px',
             textAlign: 'center',
-            color: '#9ca3af'
+            color: 'var(--text-tertiary)'
           }}>
-            <AlertCircle size={48} style={{ color: '#e5e7eb', marginBottom: '16px' }} />
+            <AlertCircle size={48} style={{ color: 'var(--border-subtle)', marginBottom: '16px' }} />
             <p style={{ fontSize: '16px', fontWeight: '500', marginBottom: '8px' }}>
               Aucune certification enregistrée
             </p>

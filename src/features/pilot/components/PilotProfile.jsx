@@ -382,35 +382,35 @@ const PilotProfile = () => {
   const getMedicalStatusColor = () => {
     const status = getMedicalStatus();
     switch(status.status) {
-      case 'expired': return '#fee2e2';
-      case 'urgent': return '#fed7aa';
+      case 'expired': return 'var(--bg-overlay)';
+      case 'urgent': return 'var(--bg-overlay)';
       case 'warning': return 'rgba(242, 105, 33, 0.10)';
-      case 'valid': return '#d1fae5';
-      case 'none': return '#f3f4f6';
-      default: return '#f3f4f6';
+      case 'valid': return 'var(--bg-overlay)';
+      case 'none': return 'var(--bg-overlay)';
+      default: return 'var(--bg-overlay)';
     }
   };
 
   const getMedicalStatusBorderColor = () => {
     const status = getMedicalStatus();
     switch(status.status) {
-      case 'expired': return '#fecaca';
+      case 'expired': return 'var(--border-subtle)';
       case 'urgent': return '#f26921';
-      case 'warning': return '#fcd34d';
-      case 'valid': return '#86efac';
-      case 'none': return '#d1d5db';
-      default: return '#d1d5db';
+      case 'warning': return 'var(--bg-overlay)';
+      case 'valid': return 'var(--bg-overlay)';
+      case 'none': return 'var(--text-tertiary)';
+      default: return 'var(--text-tertiary)';
     }
   };
 
   const getMedicalStatusBadge = () => {
     const status = getMedicalStatus();
     const styles = {
-      expired: { backgroundColor: '#991b1b', color: 'white' },
-      urgent: { backgroundColor: '#D85410', color: 'white' },
-      warning: { backgroundColor: '#f59e0b', color: 'white' },
-      valid: { backgroundColor: '#10b981', color: 'white' },
-      none: { backgroundColor: '#6b7280', color: 'white' }
+      expired: { backgroundColor: '#C04534', color: 'white' },
+      urgent: { backgroundColor: 'var(--accent-primary)', color: 'white' },
+      warning: { backgroundColor: 'var(--accent-primary)', color: 'white' },
+      valid: { backgroundColor: 'var(--text-primary)', color: 'white' },
+      none: { backgroundColor: 'var(--text-secondary)', color: 'white' }
     };
     
     const icons = {
@@ -606,13 +606,13 @@ const PilotProfile = () => {
   // Style pour les inputs - contraintes fortes pour éviter le débordement sur mobile
   const inputStyle = {
     padding: '8px 12px',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
+    border: '1px solid var(--text-tertiary)',
+    borderRadius: '8px',
     fontSize: '14px',
     width: '100%',
     minWidth: 0,
     maxWidth: '100%',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-overlay)',
     boxSizing: 'border-box',
     WebkitAppearance: 'none',  // Supprime le style natif iOS
     MozAppearance: 'none',
@@ -630,7 +630,7 @@ const PilotProfile = () => {
 
   const labelStyle = {
     fontSize: '12px',
-    color: '#374151',
+    color: 'var(--text-secondary)',
     fontWeight: '500',
     marginBottom: '4px',
     display: 'block'
@@ -642,7 +642,15 @@ const PilotProfile = () => {
   };
 
   return (
-    <div>
+    // 🎨 Wrapper racine — applique Century Gothic + couleur ALFlight
+    // qui cascadent à tous les sous-éléments (cards, badges, inputs sans
+    // fontFamily explicite). Cohérence visuelle avec le reste de l'app.
+    <div
+      style={{
+        fontFamily: "'Century Gothic', 'Questrial', 'Jost', system-ui, sans-serif",
+        color: 'var(--text-primary)',
+      }}
+    >
       {/* Suivi des obligations réglementaires - Désactivé */}
       {false && (
         <FlightCurrencyTracker 
@@ -680,12 +688,12 @@ const PilotProfile = () => {
                   width: '120px',
                   height: '120px',
                   borderRadius: '50%',
-                  backgroundColor: '#e5e7eb',
+                  backgroundColor: 'var(--border-subtle)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <User size={40} color="#9ca3af" />
+                  <User size={40} color="var(--text-tertiary)" />
                 </div>
               }
             />
@@ -693,7 +701,7 @@ const PilotProfile = () => {
               position: 'absolute',
               bottom: 0,
               right: 0,
-              backgroundColor: '#3b82f6',
+              backgroundColor: 'var(--text-secondary)',
               borderRadius: '50%',
               padding: '8px',
               cursor: 'pointer',
@@ -748,10 +756,10 @@ const PilotProfile = () => {
                 onClick={() => fileInputRef.current?.click()}
                 style={{
                   padding: '8px 12px',
-                  backgroundColor: '#10b981',
+                  backgroundColor: 'var(--text-primary)',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   fontSize: '13px',
                   fontWeight: '500',
                   cursor: 'pointer',
@@ -771,10 +779,10 @@ const PilotProfile = () => {
                 onClick={() => exportPilotData()}
                 style={{
                   padding: '8px 12px',
-                  backgroundColor: '#3b82f6',
+                  backgroundColor: 'var(--text-secondary)',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   fontSize: '13px',
                   fontWeight: '500',
                   cursor: 'pointer',
@@ -797,8 +805,8 @@ const PilotProfile = () => {
       {/* Configuration actuelle des unités */}
       <div style={{
         ...sx.combine(sx.components.card.base, sx.spacing.mb(4)),
-        backgroundColor: '#f8f9fa',
-        border: '1px solid #e5e7eb',
+        backgroundColor: 'var(--bg-overlay)',
+        border: '1px solid var(--border-subtle)',
         padding: '20px'
       }}>
         <h4 style={{
@@ -808,7 +816,7 @@ const PilotProfile = () => {
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
-          color: '#374151'
+          color: 'var(--text-secondary)'
         }}>
           <Settings size={18} />
           Configuration actuelle
@@ -820,85 +828,85 @@ const PilotProfile = () => {
           gap: '16px'
         }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Distance</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Distance</div>
+            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.distance?.toUpperCase() || 'NM'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Altitude</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Altitude</div>
+            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.altitude?.toUpperCase() || 'FT'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Vitesse</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Vitesse</div>
+            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.speed?.toUpperCase() || 'KT'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Température</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Température</div>
+            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               °{units?.temperature?.toUpperCase() || 'C'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Pression</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Pression</div>
+            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.pressure || 'hPa'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Carburant</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Carburant</div>
+            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.fuel?.toUpperCase() === 'LTR' ? 'L' : units?.fuel?.toUpperCase() || 'GAL'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Masse</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Masse</div>
+            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.weight?.toUpperCase() || 'KG'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Piste</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Piste</div>
+            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.runway?.toUpperCase() || 'M'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Vent</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Vent</div>
+            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.windSpeed?.toUpperCase() || 'KT'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Bras de levier</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Bras de levier</div>
+            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.armLength?.toUpperCase() || 'MM'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Visibilité</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Visibilité</div>
+            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.visibility?.toUpperCase() || 'KM'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Coordonnées</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Coordonnées</div>
+            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.coordinates?.toUpperCase() || 'DMS'}
             </div>
           </div>
@@ -916,14 +924,14 @@ const PilotProfile = () => {
           
           <div style={{
             padding: '12px',
-            borderRadius: '6px',
+            borderRadius: '8px',
             border: '1px solid',
-            borderColor: medicalReminder.priority === 'critical' ? '#fecaca' :
+            borderColor: medicalReminder.priority === 'critical' ? 'var(--border-subtle)' :
                         medicalReminder.priority === 'high' ? '#f26921' :
-                        medicalReminder.priority === 'medium' ? '#fcd34d' : '#86efac',
-            backgroundColor: medicalReminder.priority === 'critical' ? '#fee2e2' :
-                            medicalReminder.priority === 'high' ? '#fed7aa' :
-                            medicalReminder.priority === 'medium' ? 'rgba(242, 105, 33, 0.10)' : '#f0fdf4',
+                        medicalReminder.priority === 'medium' ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
+            backgroundColor: medicalReminder.priority === 'critical' ? 'var(--bg-overlay)' :
+                            medicalReminder.priority === 'high' ? 'var(--bg-overlay)' :
+                            medicalReminder.priority === 'medium' ? 'rgba(242, 105, 33, 0.10)' : 'var(--bg-overlay)',
             marginBottom: '16px'
           }}>
             <p style={sx.combine(sx.text.sm, sx.text.bold)}>
@@ -947,7 +955,7 @@ const PilotProfile = () => {
 
           {/* Méthode de relance détaillée */}
           <div style={{
-            backgroundColor: '#f9fafb',
+            backgroundColor: 'var(--bg-overlay)',
             padding: '16px',
             borderRadius: '8px',
             marginBottom: '16px'
@@ -970,10 +978,10 @@ const PilotProfile = () => {
 
           {/* Réglementation EASA */}
           <div style={{
-            backgroundColor: '#eff6ff',
+            backgroundColor: 'var(--bg-overlay)',
             padding: '16px',
             borderRadius: '8px',
-            border: '1px solid #dbeafe'
+            border: '1px solid var(--bg-overlay)'
           }}>
             <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
               📚 Réglementation EASA Part-MED
@@ -986,39 +994,39 @@ const PilotProfile = () => {
               
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ backgroundColor: '#e0e7ff' }}>
-                    <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid #c7d2fe' }}>Classe</th>
-                    <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid #c7d2fe' }}>Âge</th>
-                    <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid #c7d2fe' }}>Validité</th>
+                  <tr style={{ backgroundColor: 'var(--bg-overlay)' }}>
+                    <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid var(--border-subtle)' }}>Classe</th>
+                    <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid var(--border-subtle)' }}>Âge</th>
+                    <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid var(--border-subtle)' }}>Validité</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td rowSpan="3" style={{ padding: '8px', borderBottom: '1px solid #e5e7eb' }}><strong>Classe 1</strong></td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #e5e7eb' }}>&lt; 40 ans</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #e5e7eb' }}>12 mois</td>
+                    <td rowSpan="3" style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}><strong>Classe 1</strong></td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>&lt; 40 ans</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>12 mois</td>
                   </tr>
                   <tr>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #e5e7eb' }}>40-60 ans</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #e5e7eb' }}>6 mois</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>40-60 ans</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>6 mois</td>
                   </tr>
                   <tr>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #e5e7eb' }}>&gt; 60 ans</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #e5e7eb' }}>6 mois</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>&gt; 60 ans</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>6 mois</td>
                   </tr>
                   
                   <tr>
-                    <td rowSpan="3" style={{ padding: '8px', borderBottom: '1px solid #e5e7eb' }}><strong>Classe 2</strong></td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #e5e7eb' }}>&lt; 40 ans</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #e5e7eb' }}>60 mois</td>
+                    <td rowSpan="3" style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}><strong>Classe 2</strong></td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>&lt; 40 ans</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>60 mois</td>
                   </tr>
                   <tr>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #e5e7eb' }}>40-50 ans</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #e5e7eb' }}>24 mois</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>40-50 ans</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>24 mois</td>
                   </tr>
                   <tr>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #e5e7eb' }}>&gt; 50 ans</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #e5e7eb' }}>12 mois</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>&gt; 50 ans</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>12 mois</td>
                   </tr>
                   
                   <tr>
@@ -1050,7 +1058,7 @@ const PilotProfile = () => {
                     <a href="https://www.easa.europa.eu/en/document-library/easy-access-rules/online-publications/easy-access-rules-medical-requirements" 
                        target="_blank" 
                        rel="noopener noreferrer"
-                       style={{ color: '#2563eb', textDecoration: 'underline' }}>
+                       style={{ color: 'var(--text-secondary)', textDecoration: 'underline' }}>
                       EASA Easy Access Rules for Medical Requirements
                     </a>
                   </li>
@@ -1058,7 +1066,7 @@ const PilotProfile = () => {
                     <a href="https://www.ecologie.gouv.fr/sites/default/files/Part_MED.pdf" 
                        target="_blank" 
                        rel="noopener noreferrer"
-                       style={{ color: '#2563eb', textDecoration: 'underline' }}>
+                       style={{ color: 'var(--text-secondary)', textDecoration: 'underline' }}>
                       Part-MED (Version française - DGAC)
                     </a>
                   </li>
@@ -1066,7 +1074,7 @@ const PilotProfile = () => {
                     <a href="https://www.easa.europa.eu/en/downloads/20016/en" 
                        target="_blank" 
                        rel="noopener noreferrer"
-                       style={{ color: '#2563eb', textDecoration: 'underline' }}>
+                       style={{ color: 'var(--text-secondary)', textDecoration: 'underline' }}>
                       AMC and GM to Part-MED
                     </a>
                   </li>
@@ -1104,7 +1112,7 @@ const PilotProfile = () => {
           onClick={() => toggleSection('certifications')}
           icon={<Award size={20} />}
           title="Licences et Qualifications"
-          color="#3b82f6"
+          color="var(--text-secondary)"
         />
       </div>
 
@@ -1121,7 +1129,7 @@ const PilotProfile = () => {
           onClick={() => toggleSection('medical')}
           icon={<Heart size={20} />}
           title="Suivi Médical"
-          color="#10b981"
+          color="var(--text-primary)"
         />
       </div>
 
@@ -1138,7 +1146,7 @@ const PilotProfile = () => {
           onClick={() => toggleSection('units')}
           icon={<Settings size={20} />}
           title="Configuration des Unités"
-          color="#8b5cf6"
+          color="var(--accent-primary)"
         />
       </div>
 
@@ -1155,7 +1163,7 @@ const PilotProfile = () => {
           onClick={() => toggleSection('personalInfo')}
           icon={<User size={20} />}
           title="Informations personnelles"
-          color="#f59e0b"
+          color="var(--accent-primary)"
         />
       </div>
 
@@ -1255,7 +1263,7 @@ const PilotProfile = () => {
         marginBottom: '24px',
         textAlign: 'center',
         padding: '20px',
-        backgroundColor: '#f3f4f6',
+        backgroundColor: 'var(--bg-overlay)',
         borderRadius: '8px',
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
       }}>
@@ -1263,7 +1271,7 @@ const PilotProfile = () => {
           onClick={handleSave}
           style={{
             padding: '12px 48px',
-            backgroundColor: '#3b82f6',
+            backgroundColor: 'var(--text-secondary)',
             color: 'white',
             border: 'none',
             borderRadius: '8px',
@@ -1277,11 +1285,11 @@ const PilotProfile = () => {
             gap: '8px'
           }}
           onMouseEnter={(e) => {
-            e.target.style.backgroundColor = '#2563eb';
+            e.target.style.backgroundColor = 'var(--text-secondary)';
             e.target.style.transform = 'scale(1.05)';
           }}
           onMouseLeave={(e) => {
-            e.target.style.backgroundColor = '#3b82f6';
+            e.target.style.backgroundColor = 'var(--text-secondary)';
             e.target.style.transform = 'scale(1)';
           }}
         >
@@ -1291,7 +1299,7 @@ const PilotProfile = () => {
         <p style={{
           marginTop: '12px',
           fontSize: '12px',
-          color: '#6b7280'
+          color: 'var(--text-secondary)'
         }}>
           Cliquez pour enregistrer toutes vos modifications (profil, licences, medical, etc.)
         </p>

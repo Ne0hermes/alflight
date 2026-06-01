@@ -163,14 +163,14 @@ const MedicalReminders = () => {
   // Style pour les inputs - contraintes fortes pour éviter le débordement sur mobile
   const inputStyle = {
     padding: '8px 12px',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
+    border: '1px solid var(--text-tertiary)',
+    borderRadius: '8px',
     fontSize: '14px',
     width: '100%',
     minWidth: 0,
     maxWidth: '100%',
     boxSizing: 'border-box',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-overlay)',
     WebkitAppearance: 'none',  // Supprime le style natif iOS
     MozAppearance: 'none',
     appearance: 'none'
@@ -185,7 +185,7 @@ const MedicalReminders = () => {
 
   const labelStyle = {
     fontSize: '12px',
-    color: '#374151',
+    color: 'var(--text-secondary)',
     fontWeight: '500',
     marginBottom: '4px',
     display: 'block'
@@ -193,15 +193,15 @@ const MedicalReminders = () => {
 
   // Vérifier les dates d'expiration
   const getExpiryColor = (expiryDate) => {
-    if (!expiryDate) return '#6b7280';
+    if (!expiryDate) return 'var(--text-secondary)';
     const today = new Date();
     const expiry = new Date(expiryDate);
     const daysUntilExpiry = Math.floor((expiry - today) / (1000 * 60 * 60 * 24));
     
-    if (daysUntilExpiry < 0) return '#dc2626';
-    if (daysUntilExpiry <= 30) return '#D85410';
-    if (daysUntilExpiry <= 90) return '#f59e0b';
-    return '#6b7280';
+    if (daysUntilExpiry < 0) return '#C04534';
+    if (daysUntilExpiry <= 30) return 'var(--accent-primary)';
+    if (daysUntilExpiry <= 90) return 'var(--accent-primary)';
+    return 'var(--text-secondary)';
   };
 
   const renderMedicalRecord = (record, index) => (
@@ -217,7 +217,7 @@ const MedicalReminders = () => {
           <p style={{ 
             fontSize: '14px', 
             fontWeight: '600',
-            color: '#111827',
+            color: 'var(--text-primary)',
             marginBottom: '4px'
           }}>
             {medicalClasses[record.type].name}
@@ -227,7 +227,7 @@ const MedicalReminders = () => {
             flexWrap: 'wrap',
             gap: '16px', 
             fontSize: '12px', 
-            color: '#6b7280',
+            color: 'var(--text-secondary)',
             marginBottom: (record.limitations || record.remarks) ? '4px' : '0'
           }}>
             {record.examDate && (
@@ -243,7 +243,7 @@ const MedicalReminders = () => {
           {record.limitations && (
             <p style={{ 
               fontSize: '12px', 
-              color: '#f59e0b',
+              color: 'var(--accent-primary)',
               marginBottom: record.remarks ? '2px' : '0'
             }}>
               Limitations: {record.limitations}
@@ -252,7 +252,7 @@ const MedicalReminders = () => {
           {record.remarks && (
             <p style={{ 
               fontSize: '12px', 
-              color: '#9ca3af', 
+              color: 'var(--text-tertiary)', 
               fontStyle: 'italic'
             }}>
               {record.remarks}
@@ -264,7 +264,7 @@ const MedicalReminders = () => {
               display: 'flex', 
               gap: '16px', 
               fontSize: '11px', 
-              color: '#9ca3af',
+              color: 'var(--text-tertiary)',
               marginTop: '4px'
             }}>
               {record.nextECG && <span>ECG: {new Date(record.nextECG).toLocaleDateString()}</span>}
@@ -281,9 +281,9 @@ const MedicalReminders = () => {
               padding: '6px', 
               backgroundColor: 'transparent',
               border: 'none', 
-              borderRadius: '4px', 
+              borderRadius: '8px', 
               cursor: 'pointer',
-              color: '#6b7280',
+              color: 'var(--text-secondary)',
               transition: 'all 0.2s'
             }}
             title="Modifier"
@@ -295,9 +295,9 @@ const MedicalReminders = () => {
             style={{ 
               padding: '6px', 
               backgroundColor: 'transparent',
-              color: '#ef4444', 
+              color: '#C04534', 
               border: 'none', 
-              borderRadius: '4px', 
+              borderRadius: '8px', 
               cursor: 'pointer',
               transition: 'all 0.2s'
             }}
@@ -311,7 +311,7 @@ const MedicalReminders = () => {
       {index < medicalRecords.length - 1 && (
         <div style={{
           height: '1px',
-          backgroundColor: '#e5e7eb',
+          backgroundColor: 'var(--border-subtle)',
           margin: '0'
         }} />
       )}
@@ -326,11 +326,16 @@ const MedicalReminders = () => {
   });
 
   return (
-    <div>
+    <div
+      style={{
+        fontFamily: "'Century Gothic', 'Questrial', 'Jost', system-ui, sans-serif",
+        color: 'var(--text-primary)',
+      }}
+    >
       {/* Formulaire d'ajout/édition */}
       {showForm && (
         <div style={{
-          backgroundColor: 'white',
+          backgroundColor: 'var(--bg-overlay)',
           padding: '20px',
           borderRadius: '8px',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
@@ -445,10 +450,10 @@ const MedicalReminders = () => {
               onClick={handleSubmit}
               style={{ 
                 padding: '8px 16px', 
-                backgroundColor: '#3b82f6', 
+                backgroundColor: 'var(--text-secondary)', 
                 color: 'white', 
                 border: 'none', 
-                borderRadius: '6px', 
+                borderRadius: '8px', 
                 fontSize: '14px', 
                 fontWeight: '500', 
                 cursor: 'pointer' 
@@ -461,10 +466,10 @@ const MedicalReminders = () => {
               onClick={resetForm}
               style={{ 
                 padding: '8px 16px', 
-                backgroundColor: '#e5e7eb', 
-                color: '#374151', 
+                backgroundColor: 'var(--border-subtle)', 
+                color: 'var(--text-secondary)', 
                 border: 'none', 
-                borderRadius: '6px', 
+                borderRadius: '8px', 
                 fontSize: '14px', 
                 fontWeight: '500', 
                 cursor: 'pointer' 
@@ -477,17 +482,17 @@ const MedicalReminders = () => {
       )}
 
       {/* Liste des certificats médicaux */}
-      <div style={{ backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '20px' }}>
+      <div style={{ backgroundColor: 'var(--bg-overlay)', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '20px' }}>
         {/* Bouton Ajouter centré */}
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <button
             onClick={() => setShowForm(!showForm)}
             style={{ 
               padding: '8px 24px', 
-              backgroundColor: showForm ? '#ef4444' : '#3b82f6', 
+              backgroundColor: showForm ? '#C04534' : 'var(--text-secondary)', 
               color: 'white', 
               border: 'none', 
-              borderRadius: '6px', 
+              borderRadius: '8px', 
               fontSize: '14px', 
               fontWeight: '500', 
               cursor: 'pointer'
@@ -499,7 +504,7 @@ const MedicalReminders = () => {
         
         <div style={{ 
           height: '2px',
-          backgroundColor: '#3b82f6',
+          backgroundColor: 'var(--text-secondary)',
           marginBottom: '20px'
         }} />
 
@@ -511,7 +516,7 @@ const MedicalReminders = () => {
               <h4 style={{ 
                 fontSize: '16px', 
                 fontWeight: '600',
-                color: '#111827'
+                color: 'var(--text-primary)'
               }}>
                 Certificats médicaux
               </h4>
@@ -525,7 +530,7 @@ const MedicalReminders = () => {
 
         {medicalRecords.length === 0 && (
           <div style={{ 
-            color: '#9ca3af',
+            color: 'var(--text-tertiary)',
             fontSize: '14px',
             fontStyle: 'italic',
             display: 'flex',
@@ -533,7 +538,7 @@ const MedicalReminders = () => {
             gap: '8px',
             padding: '12px 0'
           }}>
-            <span style={{ color: '#f59e0b', fontSize: '16px', fontWeight: 'bold' }}>!</span>
+            <span style={{ color: 'var(--accent-primary)', fontSize: '16px', fontWeight: 'bold' }}>!</span>
             Aucun certificat médical enregistré
           </div>
         )}
