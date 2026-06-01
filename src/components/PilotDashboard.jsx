@@ -568,11 +568,11 @@ export const PilotDashboard = ({ onNavigate }) => {
 
   const getStatusColor = (status) => {
     switch(status) {
-      case 'valid': return '#10b981';
-      case 'attention': return '#f59e0b';
-      case 'warning': return '#ef4444';
-      case 'expired': return '#991b1b';
-      default: return theme.colors.textSecondary;
+      case 'valid': return 'var(--text-primary)';
+      case 'attention': return 'var(--accent-primary)';
+      case 'warning': return '#C04534';
+      case 'expired': return '#C04534';
+      default: return 'var(--text-secondary)';
     }
   };
 
@@ -649,7 +649,7 @@ export const PilotDashboard = ({ onNavigate }) => {
             </div>
           </div>
           {aixmDetailsExpanded && (
-            <div style={{ fontSize: '11px', color: '#6b7280', lineHeight: '1.6', marginTop: '12px', paddingLeft: '32px' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: '1.6', marginTop: '12px', paddingLeft: '32px' }}>
               <div><strong>Fichier :</strong> {aixmDataStatus.filename}</div>
               <div><strong>Date effective :</strong> {aixmDataStatus.effectiveDate}</div>
               <div><strong>Date expiration :</strong> {aixmDataStatus.expiryDate}</div>
@@ -732,9 +732,9 @@ export const PilotDashboard = ({ onNavigate }) => {
                 style={{
                   padding: '8px',
                   backgroundColor: 'transparent',
-                  border: '1px solid rgba(139, 92, 246, 0.3)',
+                  border: '1px solid var(--accent-soft)',
                   borderRadius: '4px',
-                  color: '#8b5cf6',
+                  color: 'var(--accent-primary)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -748,7 +748,7 @@ export const PilotDashboard = ({ onNavigate }) => {
               <button
                 style={{
                   ...styles.configureButton,
-                  backgroundColor: '#8b5cf6'
+                  backgroundColor: 'var(--accent-primary)'
                 }}
                 onClick={handleResumeWizard}
               >
@@ -769,56 +769,56 @@ export const PilotDashboard = ({ onNavigate }) => {
           <div style={styles.cardContent}>
             <div style={styles.statsGrid}>
               <div style={styles.statItem}>
-                <Clock size={16} style={{ color: '#3b82f6' }} />
+                <Clock size={16} style={{ color: 'var(--text-secondary)' }} />
                 <div>
                   <div style={styles.statValue}>{flightStats.totalHours.toFixed(1)}h</div>
                   <div style={styles.statLabel}>Heures totales (auto)</div>
                 </div>
               </div>
               <div style={styles.statItem}>
-                <Award size={16} style={{ color: '#10b981' }} />
+                <Award size={16} style={{ color: 'var(--text-primary)' }} />
                 <div>
                   <div style={styles.statValue}>{flightStats.picHours.toFixed(1)}h</div>
                   <div style={styles.statLabel}>Heures P1/CDB (auto)</div>
                 </div>
               </div>
               <div style={styles.statItem}>
-                <Navigation size={16} style={{ color: '#06b6d4' }} />
+                <Navigation size={16} style={{ color: 'var(--accent-primary)' }} />
                 <div>
                   <div style={styles.statValue}>{flightStats.p2Hours.toFixed(1)}h</div>
                   <div style={styles.statLabel}>Heures P2/OPL (auto)</div>
                 </div>
               </div>
               <div style={styles.statItem}>
-                <Plane size={16} style={{ color: '#ec4899' }} />
+                <Plane size={16} style={{ color: 'var(--accent-primary)' }} />
                 <div>
                   <div style={styles.statValue}>{flightStats.totalLandings}</div>
                   <div style={styles.statLabel}>Atterrissages totaux (auto)</div>
                 </div>
               </div>
               <div style={styles.statItem}>
-                <Moon size={16} style={{ color: '#8b5cf6' }} />
+                <Moon size={16} style={{ color: 'var(--accent-primary)' }} />
                 <div>
                   <div style={styles.statValue}>{flightStats.nightHours.toFixed(1)}h</div>
                   <div style={styles.statLabel}>Heures de nuit (auto)</div>
                 </div>
               </div>
               <div style={styles.statItem}>
-                <Cloud size={16} style={{ color: '#f59e0b' }} />
+                <Cloud size={16} style={{ color: 'var(--accent-primary)' }} />
                 <div>
                   <div style={styles.statValue}>{flightStats.ifrHours.toFixed(1)}h</div>
                   <div style={styles.statLabel}>Heures IFR (auto)</div>
                 </div>
               </div>
               <div style={styles.statItem}>
-                <Sun size={16} style={{ color: '#fbbf24' }} />
+                <Sun size={16} style={{ color: 'var(--accent-primary)' }} />
                 <div>
                   <div style={styles.statValue}>{flightStats.dayHours.toFixed(1)}h</div>
                   <div style={styles.statLabel}>Heures voyage (auto)</div>
                 </div>
               </div>
               <div style={styles.statItem}>
-                <TrendingUp size={16} style={{ color: '#06b6d4' }} />
+                <TrendingUp size={16} style={{ color: 'var(--accent-primary)' }} />
                 <div>
                   <div style={styles.statValue}>{flightStats.last30Days.toFixed(1)}h</div>
                   <div style={styles.statLabel}>Heures instruction (auto)</div>
@@ -838,7 +838,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                   justifyContent: 'center',
                   gap: '8px',
                   padding: '12px 20px',
-                  backgroundColor: '#3b82f6',
+                  backgroundColor: 'var(--text-secondary)',
                   color: 'white',
                   border: 'none',
                   borderRadius: '8px',
@@ -850,12 +850,12 @@ export const PilotDashboard = ({ onNavigate }) => {
                   width: '100%'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#2563eb';
+                  e.currentTarget.style.backgroundColor = 'var(--text-secondary)';
                   e.currentTarget.style.transform = 'translateY(-1px)';
                   e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.15)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#3b82f6';
+                  e.currentTarget.style.backgroundColor = 'var(--text-secondary)';
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
                 }}
@@ -879,7 +879,7 @@ export const PilotDashboard = ({ onNavigate }) => {
               <div key={index} style={styles.currencySection}>
                 {item.type === 'none' ? (
                   <div style={styles.noQualificationMessage}>
-                    <AlertCircle size={20} style={{ color: theme.colors.textSecondary }} />
+                    <AlertCircle size={20} style={{ color: 'var(--text-secondary)' }} />
                     <div>
                       <p style={styles.noQualificationTitle}>{item.label}</p>
                       <p style={styles.noQualificationText}>{item.message}</p>
@@ -912,8 +912,8 @@ export const PilotDashboard = ({ onNavigate }) => {
                       {(item.type === 'sep_expired' || item.type === 'mep_expired') ? (
                         <div style={styles.renewalProcedure}>
                           <div style={styles.procedureTitle}>
-                            <AlertTriangle size={16} style={{ color: '#ef4444' }} />
-                            <span style={{ fontWeight: 'bold', color: '#ef4444' }}>
+                            <AlertTriangle size={16} style={{ color: '#C04534' }} />
+                            <span style={{ fontWeight: 'bold', color: '#C04534' }}>
                               {item.renewalProcedure.title}
                             </span>
                           </div>
@@ -936,7 +936,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                                 <span style={styles.sepStatLabel}>Heures totales SEP:</span>
                                 <span style={{
                                   ...styles.sepStatValue,
-                                  color: item.totalHours >= item.requiredTotalHours ? '#10b981' : '#ef4444'
+                                  color: item.totalHours >= item.requiredTotalHours ? 'var(--text-primary)' : '#C04534'
                                 }}>
                                   {item.totalHours.toFixed(1)}h/{item.requiredTotalHours}h
                                 </span>
@@ -945,7 +945,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                                 <span style={styles.sepStatLabel}>Heures P1/CDB:</span>
                                 <span style={{
                                   ...styles.sepStatValue,
-                                  color: item.picHours >= item.requiredPicHours ? '#10b981' : '#ef4444'
+                                  color: item.picHours >= item.requiredPicHours ? 'var(--text-primary)' : '#C04534'
                                 }}>
                                   {item.picHours.toFixed(1)}h/{item.requiredPicHours}h
                                 </span>
@@ -957,7 +957,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                               <span style={styles.sepStatLabel}>Décollages:</span>
                               <span style={{
                                 ...styles.sepStatValue,
-                                color: item.takeoffs >= item.requiredTakeoffs ? '#10b981' : '#ef4444'
+                                color: item.takeoffs >= item.requiredTakeoffs ? 'var(--text-primary)' : '#C04534'
                               }}>
                                 {item.takeoffs}/{item.requiredTakeoffs}
                               </span>
@@ -968,7 +968,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                               <span style={styles.sepStatLabel}>Atterrissages:</span>
                               <span style={{
                                 ...styles.sepStatValue,
-                                color: item.landings >= item.requiredLandings ? '#10b981' : '#ef4444'
+                                color: item.landings >= item.requiredLandings ? 'var(--text-primary)' : '#C04534'
                               }}>
                                 {item.landings}/{item.requiredLandings}
                               </span>
@@ -979,7 +979,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                               <span style={styles.sepStatLabel}>Vol avec FI/CRI (1h):</span>
                               <span style={{
                                 ...styles.sepStatValue,
-                                color: item.hasInstructorFlight ? '#10b981' : '#ef4444'
+                                color: item.hasInstructorFlight ? 'var(--text-primary)' : '#C04534'
                               }}>
                                 {item.hasInstructorFlight ? '✓ Effectué' : '✗ Requis'}
                               </span>
@@ -1079,7 +1079,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                       onClick={() => onNavigate && onNavigate('pilot', 'medical')}
                       style={{
                         ...styles.actionButton,
-                        backgroundColor: medicalStatus.status === 'expired' ? '#ef4444' : '#3b82f6',
+                        backgroundColor: medicalStatus.status === 'expired' ? '#C04534' : 'var(--text-secondary)',
                         marginTop: '8px'
                       }}
                     >
@@ -1097,7 +1097,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                       onClick={() => onNavigate && onNavigate('pilot', 'medical')}
                       style={{
                         ...styles.actionButton,
-                        backgroundColor: '#ef4444',
+                        backgroundColor: '#C04534',
                         marginTop: '8px'
                       }}
                     >
@@ -1120,7 +1120,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                         <span style={styles.itemLabel}>{license.name}</span>
                         <span style={{
                           ...styles.itemStatus,
-                          color: '#10b981'
+                          color: 'var(--text-primary)'
                         }}>
                           <CheckCircle size={16} />
                           <span style={{ marginLeft: '4px' }}>
@@ -1133,7 +1133,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                       onClick={() => onNavigate && onNavigate('pilot', 'certifications')}
                       style={{
                         ...styles.actionButton,
-                        backgroundColor: '#3b82f6',
+                        backgroundColor: 'var(--text-secondary)',
                         marginTop: '8px'
                       }}
                     >
@@ -1147,7 +1147,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                       onClick={() => onNavigate && onNavigate('pilot', 'certifications')}
                       style={{
                         ...styles.actionButton,
-                        backgroundColor: '#ef4444',
+                        backgroundColor: '#C04534',
                         marginTop: '8px'
                       }}
                     >
@@ -1184,7 +1184,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                       onClick={() => onNavigate && onNavigate('pilot', 'certifications')}
                       style={{
                         ...styles.actionButton,
-                        backgroundColor: qualificationStatus.some(q => q.status === 'expired') ? '#ef4444' : '#3b82f6',
+                        backgroundColor: qualificationStatus.some(q => q.status === 'expired') ? '#C04534' : 'var(--text-secondary)',
                         marginTop: '8px'
                       }}
                     >
@@ -1202,7 +1202,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                       onClick={() => onNavigate && onNavigate('pilot', 'certifications')}
                       style={{
                         ...styles.actionButton,
-                        backgroundColor: '#ef4444',
+                        backgroundColor: '#C04534',
                         marginTop: '8px'
                       }}
                     >
@@ -1245,8 +1245,8 @@ const styles = {
     display: 'none',
   },
   ageErrorAlert: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    border: '1px solid rgba(239, 68, 68, 0.3)',
+    backgroundColor: 'var(--bg-overlay)',
+    border: '1px solid var(--border-subtle)',
     borderRadius: '12px',
     padding: '16px',
     marginBottom: '20px',
@@ -1255,7 +1255,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
-    color: '#ef4444',
+    color: '#C04534',
   },
   ageErrorTitle: {
     fontSize: '14px',
@@ -1264,12 +1264,12 @@ const styles = {
   },
   ageErrorMessage: {
     fontSize: '12px',
-    color: theme.colors.textSecondary,
+    color: 'var(--text-secondary)',
     lineHeight: '1.4',
   },
   configureButton: {
-    backgroundColor: theme.colors.primary,
-    color: '#FFFFFF',
+    backgroundColor: 'var(--accent-primary)',
+    color: 'var(--bg-overlay)',
     border: 'none',
     borderRadius: '8px',
     padding: '8px 16px',
@@ -1284,24 +1284,30 @@ const styles = {
     gridTemplateColumns: '1fr',
     gap: '16px',
   },
+  // 🎨 Card dashboard — fond --bg-overlay (#1C1C1C), un cran plus clair que
+  // --bg-surface (#141414) utilisé par les boutons d'actions. Cette légère
+  // différenciation visuelle distingue le tableau de bord des actions sans
+  // rupture chromatique : la page se lit comme 2 niveaux de profondeur.
   card: {
-    backgroundColor: '#FFFFFF',
-    backdropFilter: 'blur(10px)',
-    border: `1px solid ${theme.colors.border}`,
-    borderRadius: '12px',
+    backgroundColor: 'var(--bg-overlay)',
+    border: '1px solid var(--border-subtle)',
+    borderRadius: '2px', // angles vifs cockpit (cohérent avec le reste de l'app)
     padding: '16px',
-    transition: 'all 0.3s ease',
+    transition: 'border-color 0.2s ease',
   },
+  // En-tête de card : eyebrow mono ALL CAPS letter-spacing 0.12em
+  // (pattern ALFlight identique aux eyebrows EditorialHeading partout dans l'app)
   cardHeader: {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
     marginBottom: '12px',
-    color: theme.colors.primary,
-    fontSize: '14px',
-    fontWeight: '600',
+    color: 'var(--accent-primary)',
+    fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
+    fontSize: '11px',
+    fontWeight: 600,
     textTransform: 'uppercase',
-    letterSpacing: '0.5px',
+    letterSpacing: '0.12em',
   },
   cardContent: {
     display: 'flex',
@@ -1320,7 +1326,7 @@ const styles = {
   },
   detail: {
     fontSize: '12px',
-    color: theme.colors.textSecondary,
+    color: 'var(--text-secondary)',
     marginTop: '4px',
   },
   item: {
@@ -1328,11 +1334,11 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '8px 0',
-    borderBottom: `1px solid ${theme.colors.border}20`,
+    borderBottom: '1px solid var(--border-subtle)',
   },
   itemLabel: {
     fontSize: '13px',
-    color: theme.colors.textPrimary,
+    color: 'var(--text-primary)',
   },
   itemStatus: {
     fontSize: '12px',
@@ -1343,7 +1349,7 @@ const styles = {
   },
   noData: {
     fontSize: '13px',
-    color: theme.colors.textSecondary,
+    color: 'var(--text-secondary)',
     fontStyle: 'italic',
     padding: '8px 0',
   },
@@ -1361,17 +1367,17 @@ const styles = {
   statValue: {
     fontSize: '18px',
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: 'var(--text-primary)',
   },
   statLabel: {
     fontSize: '11px',
-    color: theme.colors.textSecondary,
+    color: 'var(--text-secondary)',
     textTransform: 'uppercase',
   },
   currencySection: {
     marginBottom: '16px',
     paddingBottom: '16px',
-    borderBottom: `1px solid ${theme.colors.border}20`,
+    borderBottom: '1px solid var(--border-subtle)',
   },
   currencyHeader: {
     display: 'flex',
@@ -1382,7 +1388,7 @@ const styles = {
   currencyTitle: {
     fontSize: '14px',
     fontWeight: '600',
-    color: theme.colors.textPrimary,
+    color: 'var(--text-primary)',
   },
   currencyBadge: {
     display: 'inline-flex',
@@ -1401,7 +1407,7 @@ const styles = {
   },
   regulationText: {
     fontSize: '11px',
-    color: theme.colors.textSecondary,
+    color: 'var(--text-secondary)',
     fontStyle: 'italic',
   },
   currencyStats: {
@@ -1416,7 +1422,7 @@ const styles = {
     fontSize: '12px',
   },
   sepStatLabel: {
-    color: theme.colors.textSecondary,
+    color: 'var(--text-secondary)',
   },
   sepStatValue: {
     fontWeight: '700',
@@ -1435,7 +1441,7 @@ const styles = {
     borderRadius: '6px',
     border: '1px solid rgba(16, 185, 129, 0.3)',
     fontSize: '12px',
-    color: '#065f46',
+    color: 'var(--text-primary)',
   },
   adviceWarning: {
     display: 'flex',
@@ -1446,7 +1452,7 @@ const styles = {
     borderRadius: '6px',
     border: '1px solid rgba(245, 158, 11, 0.3)',
     fontSize: '12px',
-    color: '#92400e',
+    color: 'var(--accent-primary)',
   },
   expandableHeader: {
     display: 'flex',
@@ -1454,10 +1460,10 @@ const styles = {
     alignItems: 'center',
     padding: '16px',
     cursor: 'pointer',
-    borderBottom: `1px solid ${theme.colors.border}20`,
+    borderBottom: '1px solid var(--border-subtle)',
     transition: 'background-color 0.2s ease',
     '&:hover': {
-      backgroundColor: 'rgba(147, 22, 60, 0.05)',
+      backgroundColor: 'var(--accent-soft)',
     },
   },
   expandableTitle: {
@@ -1466,7 +1472,7 @@ const styles = {
     gap: '8px',
     fontSize: '14px',
     fontWeight: '600',
-    color: theme.colors.primary,
+    color: 'var(--accent-primary)',
     textTransform: 'uppercase',
     letterSpacing: '0.5px',
   },
@@ -1474,7 +1480,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
-    color: theme.colors.textSecondary,
+    color: 'var(--text-secondary)',
   },
   documentsSummary: {
     display: 'flex',
@@ -1496,21 +1502,21 @@ const styles = {
     alignItems: 'center',
     gap: '4px',
     padding: '4px 8px',
-    backgroundColor: 'rgba(147, 22, 60, 0.1)',
+    backgroundColor: 'var(--accent-soft)',
     borderRadius: '12px',
     fontSize: '11px',
     fontWeight: '600',
-    color: theme.colors.textSecondary,
+    color: 'var(--text-secondary)',
   },
   summaryTotal: {
     display: 'inline-flex',
     alignItems: 'center',
     padding: '4px 12px',
-    backgroundColor: 'rgba(147, 22, 60, 0.1)',
+    backgroundColor: 'var(--accent-soft)',
     borderRadius: '12px',
     fontSize: '13px',
     fontWeight: '700',
-    color: theme.colors.primary,
+    color: 'var(--accent-primary)',
   },
   expandableContent: {
     padding: '16px',
@@ -1518,7 +1524,7 @@ const styles = {
   documentSection: {
     marginBottom: '20px',
     paddingBottom: '20px',
-    borderBottom: `1px solid ${theme.colors.border}20`,
+    borderBottom: '1px solid var(--border-subtle)',
   },
   documentSectionTitle: {
     display: 'flex',
@@ -1527,7 +1533,7 @@ const styles = {
     fontSize: '13px',
     fontWeight: '600',
     marginBottom: '12px',
-    color: theme.colors.textPrimary,
+    color: 'var(--text-primary)',
     textTransform: 'uppercase',
     letterSpacing: '0.3px',
   },
@@ -1538,7 +1544,7 @@ const styles = {
     marginLeft: '22px',
   },
   renewalProcedure: {
-    backgroundColor: 'rgba(239, 68, 68, 0.05)',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '8px',
     padding: '12px',
     marginTop: '12px',
@@ -1557,17 +1563,17 @@ const styles = {
   },
   procedureStep: {
     fontSize: '13px',
-    color: theme.colors.textPrimary,
+    color: 'var(--text-primary)',
     marginBottom: '6px',
     lineHeight: '1.5',
   },
   procedureNote: {
     fontSize: '12px',
-    color: '#92400e',
-    backgroundColor: 'rgba(254, 243, 199, 0.5)',
+    color: 'var(--accent-primary)',
+    backgroundColor: 'var(--bg-overlay)',
     padding: '8px',
     borderRadius: '4px',
-    borderLeft: '3px solid #f59e0b',
+    borderLeft: '3px solid var(--accent-primary)',
   },
   actionButton: {
     display: 'inline-flex',
@@ -1598,12 +1604,12 @@ const styles = {
   noQualificationTitle: {
     fontSize: '14px',
     fontWeight: '600',
-    color: theme.colors.textPrimary,
+    color: 'var(--text-primary)',
     marginBottom: '4px',
   },
   noQualificationText: {
     fontSize: '12px',
-    color: theme.colors.textSecondary,
+    color: 'var(--text-secondary)',
   },
 };
 
