@@ -784,18 +784,6 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
 
       return (
         <Box>
-          <Alert severity="info" sx={{ mb: 2 }}>
-            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5 }}>
-              Calibration de l'axe {axis.toUpperCase()} ({cfg.title} en {cfg.unit})
-            </Typography>
-            <Typography variant="body2">
-              Tu vas cliquer sur <strong>{values.length} graduations</strong> de l'axe {axis.toUpperCase()},
-              dans l'ordre : <strong>{values.slice(0, 5).join(', ')}{values.length > 5 ? '…' : ''}</strong>{' '}
-              jusqu'à <strong>{values[values.length - 1]}</strong>.
-              Le système t'indique à chaque clic quelle graduation tu dois cliquer.
-            </Typography>
-          </Alert>
-
           {!isCalibrating && ticks.length === 0 && (
             <Button
               variant="contained"
