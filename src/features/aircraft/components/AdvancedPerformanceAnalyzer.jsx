@@ -1677,36 +1677,10 @@ Do NOT return empty tables array.`;
       {/* Résultats d'analyse */}
       {extractedTables.length > 0 && (
         <div>
-          {/* Boutons Vue groupée / Modifier les extractions */}
-          {Object.keys(groupedTables).length > 0 && (
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '12px' }}>
-              <button
-                onClick={() => setTableViewMode('grouped')}
-                style={sx.combine(
-                  sx.components.button.base,
-                  tableViewMode === 'grouped' ? sx.components.button.primary : sx.components.button.secondary,
-                  { padding: '6px 12px', fontSize: '12px' }
-                )}
-                title="Vue groupée par catégorie"
-              >
-                Vue groupée
-              </button>
-              <button
-                onClick={() => setTableViewMode('individual')}
-                style={sx.combine(
-                  sx.components.button.base,
-                  tableViewMode === 'individual' ? sx.components.button.primary : sx.components.button.secondary,
-                  { padding: '6px 12px', fontSize: '12px' }
-                )}
-                title="Modifier les extractions individuellement"
-              >
-                Modifier les extractions
-              </button>
-            </div>
-          )}
+          {/* Boutons Vue groupée / Modifier les extractions — retirés de l'interface */}
 
-          {/* Sélecteur de tableau */}
-          {extractedTables.length > 0 && (
+          {/* Sélecteur de tableau — retiré de l'interface */}
+          {false && extractedTables.length > 0 && (
             <div style={{ marginBottom: '16px' }}>
               <label style={sx.combine(sx.text.sm, sx.text.bold, { display: 'block', marginBottom: '8px' })}>
                 {tableViewMode === 'grouped' ? 'Catégorie à afficher:' : 'Tableau à afficher:'}
