@@ -48,7 +48,6 @@ import {
   Delete as DeleteIcon,
   CheckCircle as CheckCircleIcon,
   RestartAlt as ResetIcon,
-  Visibility as VisibilityIcon,
   ChevronRight as ChevronRightIcon,
   ChevronLeft as ChevronLeftIcon,
   Tune as CalibrateIcon
@@ -902,26 +901,13 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
           {regression && (() => {
             const armInfo = computeArmFromRegression(regression);
             const armUser = armInfo?.armInUserUnit;
-            // Labels adaptatifs selon massAxis
-            const massUnit = massAxis === 'x' ? axesConfig.xAxis.unit : axesConfig.yAxis.unit;
-            const momentUnit = massAxis === 'x' ? axesConfig.yAxis.unit : axesConfig.xAxis.unit;
-            // Test prédictif :
-            //   - massAxis='x' : input masse → predict moment = a·mass + b
-            //   - massAxis='y' : input masse → predict moment = (mass - b) / a
-            const testMassNum = parseFloat(testMass);
-            let predictedMoment = NaN;
-            if (Number.isFinite(testMassNum)) {
-              predictedMoment = massAxis === 'x'
-                ? regression.a * testMassNum + regression.b
-                : (testMassNum - regression.b) / regression.a;
-            }
 
             return (
             <Paper variant="outlined" sx={{ p: 2, mb: 2, bgcolor: 'transparent', borderRadius: 'var(--radius-sm)' }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
                 Régression linéaire (live){massAxis === 'y' && ' — config inversée'}
               </Typography>
-              <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+              <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap sx={{ '& .MuiChip-root': { borderRadius: 'var(--radius-sm)' } }}>
                 <Chip color="primary" label={`a (pente régression) = ${regression.a.toFixed(4)} ${axesConfig.yAxis.unit}/${axesConfig.xAxis.unit}`} />
                 <Chip label={`b (intercept) = ${regression.b.toFixed(2)} ${axesConfig.yAxis.unit}`} />
                 <Chip
@@ -942,24 +928,6 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
                   </Typography>
                 </Box>
               )}
-
-              <Box sx={{ mt: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
-                <TextField
-                  size="small"
-                  label={`Masse test (${massUnit})`}
-                  type="number"
-                  value={testMass}
-                  onChange={(e) => setTestMass(e.target.value)}
-                  sx={{ width: 180 }}
-                />
-                {Number.isFinite(predictedMoment) && (
-                  <Chip
-                    icon={<VisibilityIcon />}
-                    color="info"
-                    label={`Moment prédit = ${predictedMoment.toFixed(2)} ${momentUnit}`}
-                  />
-                )}
-              </Box>
 
               <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
                 <Button
