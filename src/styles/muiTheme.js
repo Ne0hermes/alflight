@@ -323,26 +323,44 @@ const muiTheme = createTheme({
             '&.Mui-error': { color: ALFLIGHT_COLORS.redCritical || '#C04534' },
           },
 
-          // ─── Fieldset input : centré, fond app-bg, radius 8px ─────────
+          // ─── Fieldset input : SANS bordure au repos, transparent ─────
+          // Demande utilisateur : "rendre cet élément transparent" car
+          // même avec 20% d'opacité ivoire, le fieldset crée un "léger
+          // encart gris" autour de l'input et du Select.
+          //
+          // Solution : bordure 100% TRANSPARENTE au repos. Le contraste
+          // entre le fond input (--app-bg #0A0A0A) et le fond parent
+          // (--bg-overlay #1C1C1C ou --bg-surface #141414) suffit à
+          // délimiter visuellement la zone de saisie sans bordure.
+          //
+          // Au hover : bordure subtle (10% ivoire) légère.
+          // Au focus : bordure orange (accent-primary).
           '& .MuiOutlinedInput-root': {
             backgroundColor: ALFLIGHT_COLORS.appBg,
             color: ALFLIGHT_COLORS.textPrimary,
             borderRadius: '8px',
             fontFamily: "'Century Gothic', 'Questrial', sans-serif",
             '& fieldset': {
-              borderColor: ALFLIGHT_COLORS.borderRegular,
+              borderColor: 'transparent !important',
               borderWidth: '1px',
-              // Encoche du label SUPPRIMÉE car le label n'est plus dans
-              // le fieldset (il est au-dessus).
-              '& legend': {
-                display: 'none',
+              '& > legend': {
+                display: 'none !important',
+                width: '0 !important',
+                maxWidth: '0 !important',
+                height: '0 !important',
+                padding: '0 !important',
+                visibility: 'hidden !important',
+                overflow: 'hidden !important',
+                '& > span': {
+                  display: 'none !important',
+                },
               },
             },
             '&:hover fieldset': {
-              borderColor: ALFLIGHT_COLORS.borderGhost,
+              borderColor: ALFLIGHT_COLORS.borderSubtle + ' !important',
             },
             '&.Mui-focused fieldset': {
-              borderColor: ALFLIGHT_COLORS.accent,
+              borderColor: ALFLIGHT_COLORS.accent + ' !important',
               borderWidth: '1px',
             },
             '& input, & textarea': {
@@ -374,15 +392,24 @@ const muiTheme = createTheme({
           fontFamily: "'Century Gothic', 'Questrial', sans-serif",
         },
         notchedOutline: {
-          borderColor: ALFLIGHT_COLORS.borderRegular + ' !important',
+          // Demande utilisateur : transparent au repos pour éliminer
+          // l'encart gris léger qui entoure les Select et TextField.
+          // Le hover/focus reprend une bordure visible.
+          borderColor: 'transparent !important',
           borderWidth: '1px',
-          // ⚠️ SUPPRIMER l'encoche du <legend> qui produit le rectangle
-          // chevauchant la bordure haute du fieldset.
-          '& legend': {
-            display: 'none',
+          top: '0 !important',
+          '& > legend': {
+            display: 'none !important',
             width: '0 !important',
             maxWidth: '0 !important',
+            height: '0 !important',
             padding: '0 !important',
+            visibility: 'hidden !important',
+            overflow: 'hidden !important',
+            '& > span': {
+              display: 'none !important',
+              padding: '0 !important',
+            },
           },
         },
         input: {
