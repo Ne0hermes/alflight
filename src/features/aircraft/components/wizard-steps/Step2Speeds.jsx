@@ -415,6 +415,21 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
       return (parseFloat(speed) / maxSpeed) * 100;
     };
 
+    // Couleurs AVIATION des arcs de vitesse — EXCEPTION assumée à la charte
+    // sombre : blanc / vert / jaune / rouge / violet / cyan sont les repères
+    // normalisés de l'anémomètre, ils DOIVENT rester fidèles à la réalité.
+    const SA = {
+      white: '#E8EAED',
+      whiteBorder: '#AAB2BD',
+      whiteText: '#1A1D21',
+      green: '#1FA64A',
+      yellow: '#F2C200',
+      yellowText: '#1A1D21',
+      red: '#E53935',
+      violet: '#A23CC6',
+      cyan: '#17A2B8',
+    };
+
     return (
       <Paper elevation={0} sx={{ p: 3, border: '1px solid', borderColor: 'divider' }}>
         <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -441,13 +456,13 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 width: `${getPosition(speeds.vfeLdg) - getPosition(speeds.vso)}%`,
                 height: '40%',
                 bottom: 0,
-                bgcolor: 'grey.100',
+                bgcolor: SA.white,
                 border: '2px solid',
-                borderColor: 'grey.300',
+                borderColor: SA.whiteBorder,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'text.secondary',
+                color: SA.whiteText,
                 fontSize: '0.75rem',
                 fontWeight: 'bold',
                 zIndex: 1
@@ -466,7 +481,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 width: `${getPosition(speeds.vno) - getPosition(speeds.vs1)}%`,
                 height: '60%',
                 top: 0,
-                bgcolor: 'success.main',
+                bgcolor: SA.green,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -489,11 +504,11 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 width: `${getPosition(speeds.vne) - getPosition(speeds.vno)}%`,
                 height: '60%',
                 top: 0,
-                bgcolor: 'warning.main',
+                bgcolor: SA.yellow,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'text.primary',
+                color: SA.yellowText,
                 fontSize: '0.75rem',
                 fontWeight: 'bold',
                 zIndex: 2
@@ -512,7 +527,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 width: '3px',
                 height: '60%',
                 top: 0,
-                bgcolor: 'error.main',
+                bgcolor: SA.red,
                 zIndex: 3
               }}
             />
@@ -530,7 +545,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                     width: '2px',
                     height: '40%',
                     bottom: 0,
-                    bgcolor: 'purple',
+                    bgcolor: SA.violet,
                     zIndex: 5
                   }}
                 />
@@ -542,7 +557,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                     transform: 'translateX(-50%)',
                     fontSize: '11px',
                     fontWeight: 'bold',
-                    color: 'purple',
+                    color: SA.violet,
                     px: 0.75,
                     py: 0.25,
                     borderRadius: 'var(--radius-sm)',
@@ -611,7 +626,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 transform: 'translateX(-50%)',
                 fontSize: '11px',
                 fontWeight: 'bold',
-                color: 'success.main',
+                color: SA.green,
                 px: 0.75,
                 py: 0.25,
                 borderRadius: 'var(--radius-sm)',
@@ -633,7 +648,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 transform: 'translateX(-50%)',
                 fontSize: '11px',
                 fontWeight: 'bold',
-                color: 'warning.main',
+                color: SA.yellow,
                 px: 0.75,
                 py: 0.25,
                 borderRadius: 'var(--radius-sm)',
@@ -655,7 +670,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 transform: 'translateX(-50%)',
                 fontSize: '11px',
                 fontWeight: 'bold',
-                color: 'error.main',
+                color: SA.red,
                 px: 0.75,
                 py: 0.25,
                 borderRadius: 'var(--radius-sm)',
@@ -677,7 +692,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                   width: '2px',
                   height: '60%',
                   top: 0,
-                  bgcolor: 'var(--accent-primary)',
+                  bgcolor: SA.cyan,
                   zIndex: 5
                 }}
               />
@@ -689,7 +704,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                   transform: 'translateX(-50%)',
                   fontSize: '11px',
                   fontWeight: 'bold',
-                  color: 'var(--accent-primary)',
+                  color: SA.cyan,
                   px: 0.75,
                   py: 0.25,
                   borderRadius: 'var(--radius-sm)',
@@ -707,37 +722,37 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
         <Grid container spacing={1}>
           <Grid size={{ xs: 12, sm: 6 }}>
             <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Box sx={{ width: 16, height: 16, bgcolor: 'success.main', borderRadius: 0.5 }} />
+              <Box sx={{ width: 16, height: 16, bgcolor: SA.green, borderRadius: 0.5 }} />
               Arc vert: Plage normale d'utilisation
             </Typography>
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Box sx={{ width: 16, height: 16, bgcolor: 'grey.200', border: '1px solid', borderColor: 'grey.400', borderRadius: 0.5 }} />
+              <Box sx={{ width: 16, height: 16, bgcolor: SA.white, border: '1px solid', borderColor: SA.whiteBorder, borderRadius: 0.5 }} />
               Arc blanc: Plage volets sortis
             </Typography>
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Box sx={{ width: 16, height: 16, bgcolor: 'warning.main', borderRadius: 0.5 }} />
+              <Box sx={{ width: 16, height: 16, bgcolor: SA.yellow, borderRadius: 0.5 }} />
               Arc jaune: Précaution (air calme)
             </Typography>
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Box sx={{ width: 16, height: 16, bgcolor: 'error.main', borderRadius: 0.5 }} />
+              <Box sx={{ width: 16, height: 16, bgcolor: SA.red, borderRadius: 0.5 }} />
               Trait rouge: Ne jamais dépasser
             </Typography>
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Box sx={{ width: 16, height: 16, bgcolor: 'purple', borderRadius: 0.5 }} />
+              <Box sx={{ width: 16, height: 16, bgcolor: SA.violet, borderRadius: 0.5 }} />
               Trait violet: Vitesses de manœuvre (VO)
             </Typography>
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Box sx={{ width: 16, height: 16, bgcolor: 'var(--accent-primary)', borderRadius: 0.5 }} />
+              <Box sx={{ width: 16, height: 16, bgcolor: SA.cyan, borderRadius: 0.5 }} />
               Trait cyan: VFE T/O (Volets décollage)
             </Typography>
           </Grid>
