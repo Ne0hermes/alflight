@@ -1323,74 +1323,23 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         </Typography>
       </Box>
 
-      {/* Stepper - Vue desktop */}
-      <Paper elevation={0} sx={{ 
-        p: { xs: 2, sm: 3 }, 
-        mb: 4, 
-        border: '1px solid', 
-        borderColor: 'divider',
-        overflow: 'auto',
-        display: { xs: 'none', md: 'block' }
-      }}>
-        <Stepper 
-          activeStep={currentStep} 
-          alternativeLabel
-        >
-          {steps.map((step, index) => (
-            <Step key={index}>
-              <StepLabel
-                StepIconComponent={(props) => (
-                  <Box
-                    sx={{
-                      width: { xs: 36, sm: 48 },
-                      height: { xs: 36, sm: 48 },
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      bgcolor: props.active 
-                        ? 'primary.main' 
-                        : props.completed 
-                          ? 'success.main' 
-                          : 'grey.300',
-                      color: props.active || props.completed ? 'white' : 'text.disabled',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s',
-                      fontSize: { xs: '0.9rem', sm: '1rem' }
-                    }}
-                    onClick={() => {
-                      // Permettre de naviguer vers les étapes précédentes
-                      if (index < currentStep) {
-                        setCurrentStep(index);
-                      }
-                    }}
-                  >
-                    {props.completed ? <CheckCircleIcon /> : step.icon}
-                  </Box>
-                )}
-              >
-                <Typography variant="subtitle2" fontWeight={600} sx={{ display: { xs: 'none', sm: 'block' } }}>
-                  {step.label}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', md: 'block' } }}>
-                  {step.description}
-                </Typography>
-              </StepLabel>
-            </Step>
-          ))}
-        </Stepper>
-      </Paper>
-      
-      {/* Stepper - Vue mobile (seulement l'étape en cours) */}
-      <Paper elevation={0} sx={{ 
-        p: 2, 
-        mb: 4, 
-        border: '1px solid', 
-        borderColor: 'divider',
-        display: { xs: 'block', md: 'none' }
-      }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      {/* 🎨 Stepper compact ALFlight — unifié desktop ET mobile.
+          Plus de scroll horizontal ni de liste complète. Pattern unique :
+          icône + numéro/total + nom étape + % complétion.
+          (Ancienne vue desktop "alternativeLabel" supprimée car elle
+          générait une barre de scroll horizontale gênante.) */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: 2,
+          mb: 4,
+          border: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
+            {/* Pastille icône — orange ALFlight */}
             <Box
               sx={{
                 width: 40,
@@ -1399,25 +1348,56 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                bgcolor: 'primary.main',
-                color: 'var(--text-primary)'
+                bgcolor: 'var(--accent-primary)',
+                color: 'var(--text-inverse)',
+                flexShrink: 0,
               }}
             >
               {steps[currentStep].icon}
             </Box>
-            <Box>
-              <Typography variant="subtitle2" fontWeight={600}>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography
+                sx={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '11px',
+                  fontWeight: 500,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: 'var(--text-tertiary)',
+                  lineHeight: 1.2,
+                }}
+              >
                 Étape {currentStep + 1} / {steps.length}
               </Typography>
-              <Typography variant="body2">
+              <Typography
+                sx={{
+                  fontFamily: 'var(--font-sans)',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  color: 'var(--text-primary)',
+                  lineHeight: 1.3,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
                 {steps[currentStep].label}
               </Typography>
             </Box>
           </Box>
+          {/* Chip % complétion — orange ALFlight */}
           <Chip
             label={`${Math.round(((currentStep + 1) / steps.length) * 100)}%`}
-            color="primary"
-            size="small"
+            sx={{
+              backgroundColor: 'var(--accent-soft)',
+              color: 'var(--accent-primary)',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '12px',
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              borderRadius: 'var(--radius-sm)',
+              flexShrink: 0,
+            }}
           />
         </Box>
       </Paper>
