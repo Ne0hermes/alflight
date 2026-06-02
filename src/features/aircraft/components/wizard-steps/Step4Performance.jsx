@@ -11,7 +11,7 @@ import {
 import { exportPerformanceModelsToExcel } from '../../../../utils/performanceExcelExport';
 import { importPerformanceModelsFromExcel, diffPerformanceModels } from '../../../../utils/performanceExcelImport';
 
-const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, setOnConstruireCourbes, setCurrentStep, onNext, onPrevious }) => {
+const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, setOnConstruireCourbes, setCurrentStep, onNext, onPrevious, registerStepNav }) => {
   // État local pour stocker les données de performance temporaires
   const [savedPerformanceData, setSavedPerformanceData] = useState(null);
   const [wizardStep, setWizardStep] = useState(2); // Démarrer à l'étape 2 (Step 1 retiré)
@@ -42,6 +42,27 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
       });
     }
   }, [setOnConstruireCourbes]); // Ne pas inclure abacBuilderRef dans les dépendances
+
+  // ─── Contrat de navigation en cascade (pied de page unique) ────────────────
+  // Quand on édite un tableau (vue editingTables), "Précédent"/"Suivant" du
+  // pied de page reviennent d'abord à la liste des tableaux. On ne change
+  // d'étape principale que depuis la liste/le récapitulatif.
+  useEffect(() => {
+    if (!registerStepNav) return;
+    const inEditor = !!savedPerformanceData?.editingTables;
+    const backToList = () => {
+      setSavedPerformanceData(prev => (prev ? { ...prev, editingTables: null } : prev));
+      setShowExistingData(true);
+      setForceShowSummary(true);
+    };
+    registerStepNav({
+      canGoBack: () => inEditor,
+      goBack: backToList,
+      canGoNext: () => inEditor,
+      goNext: backToList,
+    });
+    return () => registerStepNav(null);
+  }, [registerStepNav, savedPerformanceData?.editingTables]);
 
   // Restaurer les données sauvegardées au montage du composant
   useEffect(() => {
@@ -1107,6 +1128,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
         <AdvancedPerformanceAnalyzer
           aircraft={aircraft}
           initialData={wizardInitialData}
+          hideInternalNav={true}
           onRetourClick={handleRetour}
           onPerformanceUpdate={(updatedData) => {
             

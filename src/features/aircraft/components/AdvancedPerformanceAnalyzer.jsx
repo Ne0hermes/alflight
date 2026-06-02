@@ -240,7 +240,7 @@ async function analyzeImageWithSplitCheck(
  * Composant d'analyse avancée des performances aéronautiques
  * Traite images/PDFs de manuels de vol pour extraire et structurer les données
  */
-const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedImages, pageClassifications, autoExtract = false, hideUploadedImages = false, initialData, onRetourClick }) => {
+const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedImages, pageClassifications, autoExtract = false, hideUploadedImages = false, initialData, onRetourClick, hideInternalNav = false }) => {
   
   
   
@@ -2002,8 +2002,9 @@ Do NOT return empty tables array.`;
         </div>
       )}
 
-      {/* Barre de navigation - Boutons Retour et Sauvegarder */}
-      {!isAnalyzing && extractedTables.filter(t => t.table_type !== 'undetected' && t.table_type !== 'error').length > 0 && (
+      {/* Barre de navigation - Boutons Retour et Sauvegarder.
+          Masquée quand le pied de page du wizard pilote la navigation (cascade). */}
+      {!hideInternalNav && !isAnalyzing && extractedTables.filter(t => t.table_type !== 'undetected' && t.table_type !== 'error').length > 0 && (
         <div style={{
           ...sx.spacing.mt(4),
           display: 'flex',
