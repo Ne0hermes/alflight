@@ -353,7 +353,17 @@
    Modifier ces variables → propagation automatique partout.
    ============================================================================ */
 
-/* Root commun à tous les inputs MUI : largeur 100% du conteneur */
+/* Root commun à tous les inputs MUI : largeur 100% du conteneur
+   ──────────────────────────────────────────────────────────────
+   📏 HAUTEUR UNIFORME UNIVERSELLE — règle clé de la cohérence visuelle.
+   Toutes les zones de saisie de l'app (TextField, Select, Autocomplete)
+   sont forcées à la MÊME hauteur via min-height sur le wrapper extérieur.
+
+   Calcul : padding-y (16.5 * 2) + ligne (1.4375em ≈ 23px) + bordure 2px = 58px
+   Le TextField <input> et le Select <div role="combobox"> n'ont pas
+   exactement la même hauteur intrinsèque (input height: 1.4375em fixe vs
+   div min-height: 1.4375em). Forcer min-height sur le wrapper extérieur
+   est la seule façon fiable de garantir des hauteurs identiques. */
 .MuiInputBase-root.MuiOutlinedInput-root {
   width: 100% !important;
   box-sizing: border-box !important;
@@ -362,6 +372,16 @@
   font-family: var(--input-font-family) !important;
   font-size: var(--input-font-size) !important;
   color: var(--input-text) !important;
+  /* 📏 Hauteur uniforme TextField = Select = Autocomplete */
+  min-height: 58px !important;
+  display: flex !important;
+  align-items: stretch !important;
+}
+
+/* Variant size="small" : hauteur uniforme réduite */
+.MuiInputBase-root.MuiOutlinedInput-root.MuiInputBase-sizeSmall {
+  /* padding-y (8.5 * 2) + ligne (~23) + bordure 2 = 42px */
+  min-height: 42px !important;
 }
 
 /* Notched outline (fieldset autour) — bordure UNIFORME */
