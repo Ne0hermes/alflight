@@ -982,14 +982,6 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
             </Alert>
           )}
 
-          {/* Bannière de signalement quand aucun stage choisi */}
-          {!currentStageKey && (
-            <Alert severity="info" sx={{ mb: 2 }}>
-              👉 <strong>Étape 1 :</strong> Choisis le bras de levier à mesurer dans le menu
-              déroulant ci-dessous, puis clique 3-5 points sur la droite affine du mini-graphique.
-            </Alert>
-          )}
-
           <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }} flexWrap="wrap">
             <FormControl
               size="small"
