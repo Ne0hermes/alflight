@@ -68,7 +68,7 @@ export const CollapsibleSection = ({
             justifyContent: 'space-between',
             padding: '16px',
             cursor: 'pointer',
-            backgroundColor: isExpanded ? 'rgba(59, 130, 246, 0.05)' : 'white',
+            backgroundColor: isExpanded ? 'var(--bg-overlay)' : 'white',
             borderBottom: isExpanded ? `1px solid ${theme.colors.border}` : 'none',
             transition: 'all 0.2s ease'
           }}

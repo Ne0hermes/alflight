@@ -460,7 +460,7 @@ const ImageEditor = ({
             position: 'absolute',
             top: '8px',
             right: '8px',
-            backgroundColor: 'rgba(59, 130, 246, 0.9)',
+            backgroundColor: 'var(--accent-primary)',
             color: 'var(--text-primary)',
             padding: '6px',
             borderRadius: 'var(--radius-sm)',
@@ -473,8 +473,8 @@ const ImageEditor = ({
             transition: 'all 0.2s',
             zIndex: 5
           }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 1)'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.9)'}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--accent-hover)'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--accent-primary)'}
           >
             <EditIcon size={14} />
             Éditer

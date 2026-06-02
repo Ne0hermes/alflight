@@ -672,7 +672,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Masse à vide (lecture seule) */}
-          <div style={{ ...commonStyles.card, padding: '12px', backgroundColor: 'rgba(59, 130, 246, 0.05)' }}>
+          <div style={{ ...commonStyles.card, padding: '12px', backgroundColor: 'var(--bg-overlay)' }}>
             <LoadInput
               label="⚖️ Masse à vide"
               value={aircraft.emptyWeight || 0}

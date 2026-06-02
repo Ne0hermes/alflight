@@ -273,19 +273,27 @@ const muiTheme = createTheme({
       },
       styleOverrides: {
         root: {
+          // Fond input strictement identique aux <CustomSelect> (--app-bg)
+          // pour cohérence visuelle desktop entre champs MUI et React custom.
           '& .MuiOutlinedInput-root': {
-            backgroundColor: ALFLIGHT_COLORS.bgOverlay,
+            backgroundColor: ALFLIGHT_COLORS.appBg,
             color: ALFLIGHT_COLORS.textPrimary,
-            borderRadius: '2px',
+            borderRadius: '8px', // = tokens.radius.sm + var(--radius-sm)
+            fontFamily: "'Century Gothic', 'Questrial', sans-serif",
             '& fieldset': {
-              borderColor: ALFLIGHT_COLORS.borderSubtle,
+              borderColor: ALFLIGHT_COLORS.borderRegular,
+              borderWidth: '1px',
             },
             '&:hover fieldset': {
-              borderColor: ALFLIGHT_COLORS.borderRegular,
+              borderColor: ALFLIGHT_COLORS.borderGhost,
             },
             '&.Mui-focused fieldset': {
               borderColor: ALFLIGHT_COLORS.accent,
               borderWidth: '1px',
+            },
+            '& input, & textarea': {
+              color: ALFLIGHT_COLORS.textPrimary,
+              fontFamily: "'Century Gothic', 'Questrial', sans-serif",
             },
           },
           '& .MuiInputLabel-root': {
@@ -295,6 +303,16 @@ const muiTheme = createTheme({
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
             '&.Mui-focused': { color: ALFLIGHT_COLORS.accent },
+            // Patch entourant le label sur la bordure : couleur du fond
+            // de l'input (PAS du parent Paper). Évite l'effet "halo gris".
+            backgroundColor: ALFLIGHT_COLORS.appBg,
+            padding: '0 4px',
+          },
+          // Helper text (texte sous l'input)
+          '& .MuiFormHelperText-root': {
+            fontFamily: "'Century Gothic', 'Questrial', sans-serif",
+            fontSize: '11px',
+            color: ALFLIGHT_COLORS.textTertiary,
           },
         },
       },
@@ -302,11 +320,22 @@ const muiTheme = createTheme({
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
-          backgroundColor: ALFLIGHT_COLORS.bgOverlay,
+          backgroundColor: ALFLIGHT_COLORS.appBg,
           color: ALFLIGHT_COLORS.textPrimary,
+          borderRadius: '8px',
+          fontFamily: "'Century Gothic', 'Questrial', sans-serif",
         },
         notchedOutline: {
-          borderColor: ALFLIGHT_COLORS.borderSubtle,
+          // La "notched outline" est le fieldset MUI qui dessine le rectangle
+          // autour de l'input avec une encoche pour le label. C'est CETTE
+          // bordure qui créait l'"encadré gris" visible. La couleur subtle
+          // (#10% ivoire) devient ici borderRegular (#20% ivoire) pour être
+          // discrètement visible sur fond app-bg, sans halo gris.
+          borderColor: ALFLIGHT_COLORS.borderRegular + ' !important',
+          borderWidth: '1px',
+        },
+        input: {
+          color: ALFLIGHT_COLORS.textPrimary,
         },
       },
     },
@@ -315,7 +344,9 @@ const muiTheme = createTheme({
       styleOverrides: {
         root: {
           color: ALFLIGHT_COLORS.textTertiary,
-          backgroundColor: ALFLIGHT_COLORS.bgSurface, // patch sur la bordure
+          // Patch sur la bordure : MÊME couleur que le fond de l'input
+          // (--app-bg, pas --bg-surface) sinon halo gris visible.
+          backgroundColor: ALFLIGHT_COLORS.appBg,
           padding: '0 4px',
         },
       },

@@ -33,7 +33,7 @@ const reserveCardStyle = {
   marginBottom: '20px',
   borderRadius: 'var(--radius-sm)',
   border: `1px solid ${theme.colors.border}`,
-  backgroundColor: 'rgba(59, 130, 246, 0.05)',
+  backgroundColor: 'var(--bg-overlay)',
 };
 
 // Composant principal de l'étape 5 - Utilise directement le FuelModule complet
