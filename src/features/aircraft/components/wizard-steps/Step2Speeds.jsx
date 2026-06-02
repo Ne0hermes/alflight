@@ -172,9 +172,13 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
   };
 
   const updateWindLimitTemp = (index, field, value) => {
-    const newTempLimits = [...windTempLimits];
-    newTempLimits[index][field] = value;
-    setWindTempLimits(newTempLimits);
+    // Persistance dynamique (plus de bouton « Sauvegarder » par ligne).
+    const newLimits = windTempLimits.map((l, i) =>
+      i === index ? { ...l, [field]: value, saved: true } : l
+    );
+    setWindTempLimits(newLimits);
+    setWindLimits(newLimits);
+    updateData('windLimits.limits', newLimits);
   };
 
   const saveWindLimit = (index) => {
@@ -209,9 +213,15 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
   };
 
   const updateVoRangeTemp = (index, field, value) => {
-    const newTempRanges = [...voTempRanges];
-    newTempRanges[index][field] = value;
-    setVoTempRanges(newTempRanges);
+    // Persistance dynamique : plus de bouton « Sauvegarder » par ligne — chaque
+    // modification est écrite directement dans les données de l'avion (la
+    // sauvegarde globale se fait en fin de création du wizard).
+    const newRanges = voTempRanges.map((r, i) =>
+      i === index ? { ...r, [field]: value, saved: true } : r
+    );
+    setVoTempRanges(newRanges);
+    setVoRanges(newRanges);
+    updateData('speeds.voRanges', newRanges);
   };
 
   const saveVoRange = (index) => {
@@ -422,18 +432,19 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
       white: '#E8EAED',
       whiteBorder: '#AAB2BD',
       whiteText: '#1A1D21',
-      green: '#1FA64A',
-      yellow: '#F2C200',
+      // Mêmes teintes (vert/jaune/rouge/violet/cyan) mais désaturées : plus
+      // douces, moins « flash », pour mieux s'intégrer à la charte sombre.
+      green: '#5BA378',
+      yellow: '#D9C06A',
       yellowText: '#1A1D21',
-      red: '#E53935',
-      violet: '#A23CC6',
-      cyan: '#17A2B8',
+      red: '#D17268',
+      violet: '#A079B5',
+      cyan: '#5FA3AE',
     };
 
     return (
-      <Paper elevation={0} sx={{ p: 3, border: '1px solid', borderColor: 'divider' }}>
-        <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-          <SpeedIcon />
+      <Paper elevation={0} sx={{ p: 3, border: '1px solid', borderColor: 'divider', borderRadius: 'var(--radius-sm)' }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>
           Visualisation de l'arc de vitesses
         </Typography>
         
@@ -1065,26 +1076,20 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                   <Box sx={{
                     display: 'flex',
                     gap: 1.5,
-                    alignItems: 'flex-start',
-                    p: 2,
-                    bgcolor: 'background.default',
-                    borderRadius: 1,
-                    border: '1px solid',
-                    borderColor: 'divider'
+                    alignItems: 'flex-end',
                   }}>
                     <Chip
                       label={`VO${index + 1}`}
                       sx={{
                         bgcolor: 'purple',
                         color: 'var(--text-primary)',
-                        mt: 1.5,
                         fontWeight: 'bold',
                         minWidth: '50px'
                       }}
                     />
 
                     <Grid container spacing={1.5} sx={{ flex: 1 }}>
-                      <Grid size={{ xs: 12, sm: 4, md: 3 }}>
+                      <Grid size={{ xs: 12, sm: 4, md: 4 }}>
                         <StyledTextField
                           fullWidth
                           label="Masse min"
@@ -1100,7 +1105,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                         />
                       </Grid>
 
-                      <Grid size={{ xs: 12, sm: 4, md: 3 }}>
+                      <Grid size={{ xs: 12, sm: 4, md: 4 }}>
                         <StyledTextField
                           fullWidth
                           label="Masse max *"
@@ -1117,7 +1122,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                         />
                       </Grid>
 
-                      <Grid size={{ xs: 12, sm: 4, md: 3 }}>
+                      <Grid size={{ xs: 12, sm: 4, md: 4 }}>
                         <StyledTextField
                           fullWidth
                           label="Vitesse VO *"
@@ -1134,17 +1139,6 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                         />
                       </Grid>
 
-                      <Grid size={{ xs: 12, sm: 12, md: 3 }} sx={{ display: 'flex', gap: 1 }}>
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          size="small"
-                          onClick={() => saveVoRange(index)}
-                          sx={{ flex: 1 }}
-                        >
-                          Sauvegarder
-                        </Button>
-                      </Grid>
                     </Grid>
 
                     <IconButton
@@ -1152,7 +1146,6 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                       disabled={voRanges.length === 1}
                       color="error"
                       size="small"
-                      sx={{ mt: 0.5 }}
                     >
                       <DeleteIcon />
                     </IconButton>
@@ -1172,9 +1165,6 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
               </Button>
             </Box>
             
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block', textAlign: 'center' }}>
-              Définissez les vitesses de manœuvre pour différentes plages de masse
-            </Typography>
           </Box>
         </AccordionDetails>
       </Accordion>
@@ -1284,22 +1274,13 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 1.5 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2, textAlign: 'center' }}>
-              Définissez les limitations de vent selon le manuel de vol
-            </Typography>
-
             <Grid container spacing={2} justifyContent="center">
               {windTempLimits.map((limit, index) => (
                 <Grid size={12} key={index} sx={{ maxWidth: 800 }}>
                   <Box sx={{
                     display: 'flex',
                     gap: 1.5,
-                    alignItems: 'flex-start',
-                    p: 2,
-                    bgcolor: 'background.default',
-                    borderRadius: 1,
-                    border: '1px solid',
-                    borderColor: 'divider'
+                    alignItems: 'flex-end',
                   }}>
                     <Grid container spacing={1.5} sx={{ flex: 1 }}>
                       <Grid size={{ xs: 12, sm: 6 }}>
@@ -1336,17 +1317,6 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                         />
                       </Grid>
 
-                      <Grid size={{ xs: 12, sm: 2 }} sx={{ display: 'flex', gap: 1 }}>
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          size="small"
-                          onClick={() => saveWindLimit(index)}
-                          sx={{ flex: 1 }}
-                        >
-                          Sauvegarder
-                        </Button>
-                      </Grid>
                     </Grid>
 
                     <IconButton
@@ -1354,7 +1324,6 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                       disabled={windLimits.length === 0}
                       color="error"
                       size="small"
-                      sx={{ mt: 0.5 }}
                     >
                       <DeleteIcon />
                     </IconButton>
