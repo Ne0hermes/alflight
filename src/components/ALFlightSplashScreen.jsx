@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { theme } from '../styles/theme';
+import { AlflightLogo } from '@shared/components/editorial';
 
 export const ALFlightSplashScreen = ({ onComplete }) => {
   const [progress, setProgress] = useState(0);
@@ -78,6 +79,7 @@ export const ALFlightSplashScreen = ({ onComplete }) => {
     <div style={styles.container}>
       {/* Logo en haut à gauche */}
       <div style={styles.navLogo}>
+        <AlflightLogo size={48} style={{ marginBottom: '8px' }} />
         <h1 style={styles.mainLogo}>ALFLIGHT</h1>
         <div style={styles.subtitle}>DUAL SYSTEMS</div>
       </div>
