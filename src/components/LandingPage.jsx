@@ -132,8 +132,12 @@ export const LandingPage = ({ onNavigate, isProfileConfigured = true }) => {
       <header style={styles.hero}>
         <div style={styles.heroInner}>
           <AlflightLogo
-            size={isMobile ? 140 : 180}
-            style={{ marginBottom: '24px' }}
+            size={isMobile ? 120 : 150}
+            style={{
+              marginBottom: '24px',
+              marginLeft: 'auto',
+              marginRight: 'auto',
+            }}
           />
           <h1 style={styles.heroLogo}>ALFLIGHT</h1>
           <span style={styles.heroTagline}>PERITIA · PER · PRAEPARATIONEM</span>
@@ -325,7 +329,7 @@ const styles = {
   heroLogo: {
     margin: 0,
     fontFamily: tokens.fontFamily.sans,
-    fontSize: 'clamp(48px, 9vw, 96px)',
+    fontSize: 'clamp(40px, 7vw, 72px)',
     fontWeight: 700,
     lineHeight: 1.0,
     letterSpacing: '0.08em',
