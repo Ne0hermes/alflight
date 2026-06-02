@@ -166,11 +166,15 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
       });
     };
     const onUp = () => setChartResize(null);
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
+    // Pointer Events : couvrent souris + tactile + stylet (le drag fonctionne
+    // donc aussi sur écran tactile / émulation mobile, où mousemove ne part pas).
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
     return () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
     };
   }, [chartResize]);
 
@@ -735,7 +739,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
         <>
           {/* Poignée bord droit : étire horizontalement */}
           <Box
-            onMouseDown={(e) => {
+            onPointerDown={(e) => {
               e.stopPropagation();
               setChartResize({
                 kind: 'right',
@@ -747,6 +751,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
             sx={{
               position: 'absolute', right: -3, top: 40, bottom: 60, width: 8,
               cursor: 'ew-resize',
+              touchAction: 'none',
               bgcolor: chartResize?.kind === 'right' ? 'var(--text-secondary)' : 'var(--bg-overlay)',
               borderRadius: 1,
               opacity: 0.8,
@@ -755,7 +760,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
           />
           {/* Poignée bord bas : étire verticalement */}
           <Box
-            onMouseDown={(e) => {
+            onPointerDown={(e) => {
               e.stopPropagation();
               setChartResize({
                 kind: 'bottom',
@@ -767,6 +772,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
             sx={{
               position: 'absolute', bottom: -3, left: 60, right: 40, height: 8,
               cursor: 'ns-resize',
+              touchAction: 'none',
               bgcolor: chartResize?.kind === 'bottom' ? 'var(--text-secondary)' : 'var(--bg-overlay)',
               borderRadius: 1,
               opacity: 0.8,
@@ -775,7 +781,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
           />
           {/* Poignée coin bas-droit : étire en 2D */}
           <Box
-            onMouseDown={(e) => {
+            onPointerDown={(e) => {
               e.stopPropagation();
               setChartResize({
                 kind: 'corner',
@@ -787,6 +793,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
             sx={{
               position: 'absolute', right: -8, bottom: -8, width: 18, height: 18,
               cursor: 'nwse-resize',
+              touchAction: 'none',
               bgcolor: chartResize?.kind === 'corner' ? 'var(--text-secondary)' : 'var(--text-secondary)',
               border: '2px solid white',
               borderRadius: 1,

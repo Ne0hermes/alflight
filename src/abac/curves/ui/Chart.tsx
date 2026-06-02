@@ -250,7 +250,7 @@ export const Chart: React.FC<ChartProps> = ({
     };
   }, [width, height]);
 
-  const handleImageMouseDown = useCallback((e: React.MouseEvent) => {
+  const handleImageMouseDown = useCallback((e: React.PointerEvent) => {
     if (!imageAdjustMode || !backgroundImage) return;
     e.stopPropagation();
     setImgDrag({
@@ -261,7 +261,7 @@ export const Chart: React.FC<ChartProps> = ({
     });
   }, [imageAdjustMode, backgroundImage]);
 
-  const handleResizeStart = useCallback((kind: ResizeKind) => (e: React.MouseEvent) => {
+  const handleResizeStart = useCallback((kind: ResizeKind) => (e: React.PointerEvent) => {
     if (!imageAdjustMode || !backgroundImage) return;
     e.stopPropagation();
     setImgDrag({
@@ -274,7 +274,7 @@ export const Chart: React.FC<ChartProps> = ({
 
   useEffect(() => {
     if (!imgDrag || !onBackgroundImageChange) return;
-    const onMove = (e: MouseEvent) => {
+    const onMove = (e: PointerEvent) => {
       if (e.clientX !== imgDrag.startClientX || e.clientY !== imgDrag.startClientY) {
         wasDraggingRef.current = true;
       }
@@ -316,23 +316,27 @@ export const Chart: React.FC<ChartProps> = ({
       onBackgroundImageChange({ ...o, x, y, width: w, height: h });
     };
     const onUp = () => setImgDrag(null);
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
+    // Pointer Events : souris + tactile + stylet (drag fonctionnel sur écran
+    // tactile et émulation mobile, où mousemove/mouseup ne sont pas émis).
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
     return () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
     };
   }, [imgDrag, clientDeltaToVbDelta, onBackgroundImageChange]);
 
   // Anti rebond : empêche le `click` synthétique de créer un point juste après un drag
   const wasDraggingRef = useRef<boolean>(false);
 
-  const handlePointMouseDown = useCallback((e: React.MouseEvent, curveId: string, pointId: string) => {
+  const handlePointMouseDown = useCallback((e: React.PointerEvent, curveId: string, pointId: string) => {
     e.stopPropagation();
     setDraggingPoint({ curveId, pointId });
   }, []);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+  const handleMouseMove = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
     const rect = svgRef.current?.getBoundingClientRect();
     if (!rect) return;
 
@@ -551,7 +555,7 @@ export const Chart: React.FC<ChartProps> = ({
                 stroke="white"
                 strokeWidth={1.5}
                 cursor={isSelected ? "move" : "pointer"}
-                onMouseDown={(e) => isSelected && handlePointMouseDown(e, curve.id, point.id!)}
+                onPointerDown={(e) => isSelected && handlePointMouseDown(e, curve.id, point.id!)}
                 onMouseEnter={() => setHoveredPoint({ curveId: curve.id, pointId: point.id! })}
                 onMouseLeave={() => setHoveredPoint(null)}
                 onContextMenu={(e) => isSelected && handlePointContextMenu(e, curve.id, point.id!)}
@@ -601,12 +605,13 @@ export const Chart: React.FC<ChartProps> = ({
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         onClick={handleSvgClick}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={() => setDraggingPoint(null)}
+        onPointerMove={handleMouseMove}
+        onPointerUp={handleMouseUp}
+        onPointerLeave={() => setDraggingPoint(null)}
         style={{
           cursor: selectedCurveId && !draggingPoint ? 'crosshair' : 'default',
-          flex: responsive ? 1 : undefined
+          flex: responsive ? 1 : undefined,
+          touchAction: 'none'
         }}
       >
         {/* clipPath pour empêcher l'image de déborder de la zone de tracé.
@@ -643,8 +648,8 @@ export const Chart: React.FC<ChartProps> = ({
                     height={imgH}
                     opacity={backgroundImageOpacity ?? (imageAdjustMode ? 0.6 : 0.35)}
                     preserveAspectRatio="none"
-                    onMouseDown={handleImageMouseDown}
-                    style={{ cursor: imageAdjustMode ? 'move' : 'default' }}
+                    onPointerDown={handleImageMouseDown}
+                    style={{ cursor: imageAdjustMode ? 'move' : 'default', touchAction: 'none' }}
                   />
                   {/* Cadre indicateur (clippé : montre la partie visible de l'image) */}
                   {imageAdjustMode && (
@@ -691,8 +696,8 @@ export const Chart: React.FC<ChartProps> = ({
                         x={cxClamped} y={cyClamped} width={HANDLE} height={HANDLE}
                         fill={clamped ? '#f26921' : (isCorner ? '#3b82f6' : '#60a5fa')}
                         stroke="white" strokeWidth="2" rx="2"
-                        style={{ cursor: h.cursor }}
-                        onMouseDown={handleResizeStart(h.kind)}
+                        style={{ cursor: h.cursor, touchAction: 'none' }}
+                        onPointerDown={handleResizeStart(h.kind)}
                       >
                         <title>{clamped ? `${h.tooltip} (image hors zone — poignée collée au bord)` : h.tooltip}</title>
                       </rect>
