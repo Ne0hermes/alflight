@@ -1,0 +1,280 @@
+/* ============================================================================
+   🎨 ALFlight Components CSS — patterns factorisés
+   ----------------------------------------------------------------------------
+   Classes utilitaires globales pour les patterns UI récurrents :
+   - .alflight-accordion     : <details> stylé cockpit ALFlight (alternative
+                                aux MuiAccordion lourds)
+   - .alflight-dropdown-menu : liste d'options custom (alternative aux
+                                <option> natifs OS et MUI Menu)
+   - .alflight-menu-item     : option individuelle dans un dropdown
+   - .alflight-card          : card cockpit standard
+   - .alflight-input         : input texte ALFlight
+   - .alflight-button-*      : boutons (primary, ghost, danger)
+
+   Usage :
+     <details class="alflight-accordion">
+       <summary class="alflight-accordion-summary">
+         <ChevronIcon /> Mon titre
+       </summary>
+       <div class="alflight-accordion-content">...</div>
+     </details>
+
+   ⚠️ Toutes les valeurs proviennent des variables CSS définies dans index.css.
+   NE PAS ajouter de hex/rgba hardcodés ici — utiliser var(--xxx) uniquement.
+   ============================================================================ */
+
+/* ──────────────────────────────────────────────────────────────────────────
+   ACCORDÉON — <details>/<summary> natif stylé ALFlight
+   ────────────────────────────────────────────────────────────────────────── */
+.alflight-accordion {
+  margin-bottom: 16px;
+  background-color: var(--bg-overlay);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.alflight-accordion-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-primary);
+  list-style: none;
+  user-select: none;
+  transition: background-color 0.15s ease;
+}
+
+.alflight-accordion-summary::-webkit-details-marker {
+  display: none; /* retire la flèche disclosure native Chrome/Safari */
+}
+
+.alflight-accordion-summary:hover {
+  background-color: rgba(245, 242, 236, 0.02);
+}
+
+/* Chevron rotate au open/close — cible le dernier <svg> du summary */
+.alflight-accordion-summary > svg:last-child,
+.alflight-accordion-summary > .alflight-accordion-chevron {
+  margin-left: auto;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+.alflight-accordion[open] > .alflight-accordion-summary > svg:last-child,
+.alflight-accordion[open] > .alflight-accordion-summary > .alflight-accordion-chevron {
+  transform: rotate(180deg);
+}
+
+.alflight-accordion-content {
+  padding: 16px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   DROPDOWN MENU CUSTOM — pour les <CustomSelect> et menus contextuels
+   ────────────────────────────────────────────────────────────────────────── */
+.alflight-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 100;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-regular);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  max-height: 320px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.alflight-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  transition: background-color 0.1s ease;
+  outline: none;
+}
+
+.alflight-menu-item:hover {
+  background-color: rgba(245, 242, 236, 0.04);
+}
+
+.alflight-menu-item.is-selected,
+.alflight-menu-item[aria-selected="true"] {
+  background-color: var(--accent-soft);
+  color: var(--accent-primary);
+  font-weight: 600;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   CARDS — surface cockpit standard
+   ────────────────────────────────────────────────────────────────────────── */
+.alflight-card {
+  background-color: var(--bg-overlay);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.alflight-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: var(--accent-primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   INPUTS / SELECTS TRIGGER — apparence champ texte/select fermé
+   ────────────────────────────────────────────────────────────────────────── */
+.alflight-input,
+.alflight-select-trigger {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 10px 12px;
+  background-color: var(--app-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-regular);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.alflight-input:focus,
+.alflight-select-trigger:focus,
+.alflight-select-trigger.is-open {
+  border-color: var(--accent-primary);
+}
+
+.alflight-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   BOUTONS — variantes cockpit
+   ────────────────────────────────────────────────────────────────────────── */
+.alflight-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  min-height: 40px;
+  box-sizing: border-box;
+}
+
+.alflight-button-primary {
+  background-color: var(--accent-primary);
+  color: var(--text-inverse);
+}
+.alflight-button-primary:hover {
+  background-color: var(--accent-hover);
+}
+.alflight-button-primary:active {
+  background-color: var(--accent-active);
+}
+
+.alflight-button-ghost {
+  background-color: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-regular);
+}
+.alflight-button-ghost:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.alflight-button-text {
+  background-color: transparent;
+  color: var(--text-tertiary);
+}
+.alflight-button-text:hover {
+  color: var(--text-primary);
+}
+
+.alflight-button-danger {
+  background-color: var(--color-red-critical);
+  color: var(--color-white-soft);
+}
+.alflight-button-danger:hover {
+  background-color: var(--color-red-critical-dim);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   LABELS (eyebrow mono) et HEADERS (Century Gothic) — typographie unifiée
+   ────────────────────────────────────────────────────────────────────────── */
+.alflight-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.alflight-title {
+  font-family: var(--font-sans);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   BADGES / CHIPS
+   ────────────────────────────────────────────────────────────────────────── */
+.alflight-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background-color: var(--accent-soft);
+  color: var(--accent-primary);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}

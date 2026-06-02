@@ -7,6 +7,14 @@
 @import './styles/unified-styles.css';
 
 /* ============================================
+   COMPOSANTS ALFLIGHT — patterns factorisés
+   Classes utilitaires pour accordéons, dropdowns,
+   cards, inputs, boutons, badges réutilisables.
+   Usage : <details class="alflight-accordion">...
+   ============================================ */
+@import './styles/alflight-components.css';
+
+/* ============================================
    OVERRIDES SPÉCIFIQUES - DOIVENT ÊTRE APRÈS
    ============================================ */
 @import './styles/mobile-menu-overrides.css';
