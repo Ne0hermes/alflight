@@ -26,7 +26,18 @@ import { FormControl, TextField } from '@mui/material';
 
 // Alias pass-through (le thème global fait tout le travail)
 export const StyledFormControl = styled(FormControl)({});
-export const StyledTextField = styled(TextField)({});
+
+// Exception scopée au wizard avion (demande utilisateur) : pour TOUT champ
+// portant une unité de mesure (adornment de fin "gal", "kg", "kt"…), on réduit
+// la zone de saisie de 25 % sur la droite. La valeur (centrée) se décolle ainsi
+// nettement de l'unité → espacement systématique value ↔ unité sur toute la
+// création d'avion. Ne touche QUE les champs du wizard (qui passent par
+// StyledTextField), pas le reste de l'application.
+export const StyledTextField = styled(TextField)({
+  '& .MuiInputBase-adornedEnd .MuiInputBase-input': {
+    paddingRight: '25% !important',
+  },
+});
 
 // Configuration par défaut pour les FormControl (Select + Label)
 // Centré horizontalement via mx auto.
