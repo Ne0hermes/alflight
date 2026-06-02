@@ -83,13 +83,14 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange, isProfileConfig
             onClick={(e) => e.stopPropagation()}
           >
             <div style={styles.drawerHeader}>
+              {/* Logo officiel ALFlight. Le titre textuel "ALFlight"
+                  est volontairement supprimé : le logo porte déjà
+                  l'identité de marque, le doubler ferait redondance. */}
               <AlflightLogo
-                size={56}
+                size={64}
                 style={{ marginBottom: '12px', alignSelf: 'flex-start' }}
               />
-              <EditorialHeading level={3} eyebrow="MENU · NAVIGATION">
-                ALFlight
-              </EditorialHeading>
+              <span style={styles.drawerEyebrow}>MENU · NAVIGATION</span>
               <button
                 type="button"
                 style={styles.closeButton}
@@ -245,18 +246,22 @@ const styles = {
   },
   // Bouton burger central (cible principale d'interaction)
   menuButton: {
+    // Demande utilisateur : fond et bordure 100% TRANSPARENTS sur le
+    // bouton burger (juste l'icône Menu/X visible, pas de cadre).
     background: 'transparent',
-    border: '1px solid var(--border-regular)',
+    backgroundColor: 'transparent',
+    border: 'none',
     padding: '10px',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: tokens.radius?.sm || '2px',
-    transition: `border-color ${tokens.motion.fast}, color ${tokens.motion.fast}, background-color ${tokens.motion.fast}`,
+    transition: `color ${tokens.motion.fast}`,
     color: 'var(--text-primary)',
     minWidth: '44px',
     minHeight: '44px',
+    outline: 'none',
   },
   // Logo en absolute à gauche, ne perturbe pas le centrage du burger
   headerLogoAbsolute: {
@@ -304,18 +309,31 @@ const styles = {
     padding: tokens.spacing[5],
     borderBottom: '1px solid var(--border-subtle)',
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: tokens.spacing[3],
+    gap: tokens.spacing[2],
+    position: 'relative',
+  },
+  drawerEyebrow: {
+    fontFamily: tokens.fontFamily.mono,
+    fontSize: '11px',
+    fontWeight: 500,
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
+    color: 'var(--text-tertiary)',
+    lineHeight: 1.2,
   },
   closeButton: {
     background: 'transparent',
-    border: '1px solid var(--border-regular)',
+    border: 'none',
     padding: '6px',
     cursor: 'pointer',
     borderRadius: tokens.radius?.sm || '2px',
     display: 'flex',
     alignItems: 'center',
+    position: 'absolute',
+    top: tokens.spacing[5],
+    right: tokens.spacing[5],
     justifyContent: 'center',
     color: 'var(--text-secondary)',
     transition: `border-color ${tokens.motion.fast}`,
