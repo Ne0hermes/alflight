@@ -1413,6 +1413,20 @@ Do NOT return empty tables array.`;
     }
   }, [extractedTables, selectedTableIndex, tableViewMode, groupedTables, combineTablesData]);
 
+  // Liste de TOUS les tableaux à afficher à la suite (design uniquement) :
+  // même logique de regroupement/combinaison que selectedTable, mais pour
+  // tous les groupes au lieu d'un seul. Aucune interprétation de données modifiée.
+  const displayTables = useMemo(() => {
+    if (tableViewMode === 'individual') {
+      return extractedTables.filter(
+        t => t.table_type !== 'undetected' && t.table_type !== 'error'
+      );
+    }
+    return Object.values(groupedTables)
+      .map(group => combineTablesData(group))
+      .filter(Boolean);
+  }, [extractedTables, tableViewMode, groupedTables, combineTablesData]);
+
   return (
     <div>
 
@@ -1787,14 +1801,17 @@ Do NOT return empty tables array.`;
           {/* Affichage du tableau sélectionné */}
           {selectedTable && (
             <>
-              <TableDisplay
-                table={selectedTable}
-                viewMode={viewMode}
-                showMetadata={showMetadata}
-                isEditMode={tableViewMode === 'individual' ? isEditMode : false}
-                onEditModeChange={tableViewMode === 'individual' ? handleEditModeChange : undefined}
-                onTableUpdate={tableViewMode === 'individual' ? handleTableUpdate : undefined}
-              />
+              {/* Tous les tableaux affichés à la suite, chacun avec son titre.
+                  Lecture seule : pour corriger une donnée, on passe par l'export Excel. */}
+              {displayTables.map((dt, dtIndex) => (
+                <div key={dtIndex} style={dtIndex > 0 ? { marginTop: '24px' } : undefined}>
+                  <TableDisplay
+                    table={dt}
+                    viewMode={viewMode}
+                    showMetadata={showMetadata}
+                  />
+                </div>
+              ))}
               
               {/* Panneau "Test de prédiction" retiré de l'interface (bloc neutralisé) */}
               {false && selectedTable.data && selectedTable.data.length > 0 && (
