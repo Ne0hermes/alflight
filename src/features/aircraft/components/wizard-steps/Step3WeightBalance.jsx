@@ -852,33 +852,6 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
 
   return (
     <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
-      {/* Bannière mode + bouton pour basculer vers le mode graphique */}
-      <Box sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        mb: 2,
-        p: 1.5,
-        bgcolor: 'action.hover',
-        borderRadius: 1,
-        gap: 2,
-        flexWrap: 'wrap'
-      }}>
-        <Typography variant="body2" color="text.secondary">
-          <EditNoteIcon sx={{ fontSize: 16, verticalAlign: 'middle', mr: 0.5 }} />
-          Mode saisie manuelle au clavier
-        </Typography>
-        <Button
-          size="small"
-          variant="outlined"
-          color="success"
-          startIcon={<AutoGraphIcon />}
-          onClick={() => setInputMethod('graphical')}
-        >
-          Passer à la lecture graphique
-        </Button>
-      </Box>
-
       {/* Carburant */}
       <Accordion 
         expanded={expandedPanels.fuel}
@@ -938,12 +911,6 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                     color: 'text.primary',
                     WebkitTextFillColor: 'unset',
                   },
-                  '& .MuiOutlinedInput-root.Mui-disabled': {
-                    '& fieldset': {
-                      borderColor: 'success.main',
-                      borderStyle: 'dashed'
-                    }
-                  }
                 }}
               />
             </Box>
