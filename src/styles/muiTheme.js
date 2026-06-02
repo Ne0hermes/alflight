@@ -520,6 +520,7 @@ const muiTheme = createTheme({
     MuiSelect: {
       defaultProps: {
         variant: 'outlined',
+        fullWidth: true, // garantit la classe MuiInputBase-fullWidth → largeur 100%
         MenuProps: {
           // ⚠️ Le menu dropdown des <Select> MUI doit avoir EXACTEMENT
           // la largeur du select fermé (pas plus large), des angles arrondis

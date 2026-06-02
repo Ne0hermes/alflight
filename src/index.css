@@ -138,6 +138,52 @@
   --motion-base: 180ms cubic-bezier(0.4, 0, 0.2, 1);
   --motion-slow: 280ms cubic-bezier(0.4, 0, 0.2, 1);
   --motion-cinematic: 600ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ============================================================
+     🎯 SYSTÈME UNIFIÉ DES INPUTS — Single Source of Truth
+     ============================================================
+     Toutes les zones de saisie de l'app (TextField MUI, Select MUI,
+     Autocomplete MUI, CustomSelect React, inputs HTML natifs) DOIVENT
+     consommer ces variables. Aucune valeur hardcodée hors d'ici.
+
+     Modifier UNIQUEMENT ces variables pour changer l'apparence
+     globale des champs de saisie partout dans l'app.
+     ----------------------------------------------------------- */
+
+  /* Padding intérieur (espace entre la bordure et le contenu) */
+  --input-padding-y: 16.5px;        /* haut/bas, aligné MUI Outlined default */
+  --input-padding-x: 14px;          /* gauche/droite par défaut */
+  --input-padding-right-icon: 32px; /* à droite si flèche/icône absolute */
+
+  /* Hauteur de bordure */
+  --input-border-width: 1px;
+
+  /* Couleurs de bordure (3 états : repos, hover, focus) */
+  --input-border-rest: var(--border-regular);    /* 20% ivoire, contour fin visible */
+  --input-border-hover: var(--border-ghost);     /* 32% ivoire, plus marqué */
+  --input-border-focus: var(--accent-primary);   /* orange ALFlight */
+  --input-border-error: var(--color-red-critical);
+
+  /* Fond input — strictement --app-bg pour cohérence avec CustomSelect */
+  --input-bg: var(--app-bg);
+
+  /* Couleur texte input */
+  --input-text: var(--text-primary);
+  --input-text-placeholder: var(--text-tertiary);
+
+  /* Typographie input */
+  --input-font-family: var(--font-sans);
+  --input-font-size: 14px;
+  --input-text-align: center; /* aligné avec le label stacked centré */
+
+  /* Radius input — réutilise --radius-sm pour cohérence boutons/cards */
+  --input-radius: var(--radius-sm);
+
+  /* Espace entre label stacked et l'input */
+  --input-label-gap: 8px;
+
+  /* Largeur cible des inputs centrés (wizard avion, formulaires éditoriaux) */
+  --input-max-width: 350px;
 }
 
 /* ----------------------------------------------------------------------------
