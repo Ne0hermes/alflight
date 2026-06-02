@@ -216,7 +216,7 @@ export const SIAReport = () => {
     inputFocus: {
       outline: 'none',
       borderColor: 'var(--text-secondary)',
-      boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)'
+      boxShadow: '0 0 0 3px var(--bg-overlay)'
     },
     textarea: {
       width: '100%',
