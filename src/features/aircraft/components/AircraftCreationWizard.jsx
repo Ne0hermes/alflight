@@ -1475,7 +1475,9 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         sx={{
           p: 0,
           mb: 3,
-          minHeight: 400,
+          // minHeight retiré : le Paper s'adapte maintenant à la hauteur réelle
+          // de son contenu. Quand tous les accordéons sont fermés, plus
+          // d'espace vide en bas. Le minHeight reste sur le fallback Suspense.
           border: 'none',
           backgroundColor: 'transparent',
           backgroundImage: 'none',
