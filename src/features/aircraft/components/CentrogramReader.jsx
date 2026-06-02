@@ -33,7 +33,6 @@ import {
   InputLabel,
   Alert,
   Chip,
-  IconButton,
   Stepper,
   Step,
   StepLabel,
@@ -47,7 +46,6 @@ import {
   CloudUpload as UploadIcon,
   Delete as DeleteIcon,
   CheckCircle as CheckCircleIcon,
-  RestartAlt as ResetIcon,
   ChevronRight as ChevronRightIcon,
   ChevronLeft as ChevronLeftIcon,
   Tune as CalibrateIcon
@@ -917,18 +915,6 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
                 <Chip variant="outlined" label={`${regression.n} points`} />
               </Stack>
 
-              {/* Bras physique calculé (différent de la pente si massAxis='y') */}
-              {armInfo && (
-                <Box sx={{ mt: 1.5, p: 1.5, bgcolor: 'rgba(34,197,94,0.1)', borderRadius: 1 }}>
-                  <Typography variant="body2" fontWeight={700}>
-                    {massAxis === 'x'
-                      ? <>Bras de levier = pente <strong>a</strong> = {armInfo.armRaw.toFixed(4)} {armInfo.lengthUnit} = <strong>{armUser.toFixed(2)} {userArmUnit}</strong></>
-                      : <>Bras de levier = <strong>1/a</strong> (inversé) = {armInfo.armRaw.toFixed(4)} {armInfo.lengthUnit} = <strong>{armUser.toFixed(2)} {userArmUnit}</strong></>
-                    }
-                  </Typography>
-                </Box>
-              )}
-
               <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
                 <Button
                   variant="contained"
@@ -938,14 +924,14 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
                 >
                   Valider ce bras ({armUser ? armUser.toFixed(2) : '?'} {userArmUnit})
                 </Button>
-                <IconButton
+                <Button
+                  variant="outlined"
                   color="error"
                   onClick={() => setCurvePoints([])}
                   disabled={curvePoints.length === 0}
-                  title="Effacer tous les points cliqués"
                 >
-                  <ResetIcon />
-                </IconButton>
+                  Réinitialiser les points
+                </Button>
                 {resultsByStage[currentStageKey] && (
                   <Button
                     variant="contained"
