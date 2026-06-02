@@ -334,14 +334,6 @@ const ManexExtractionReview = memo(({
     }));
   };
 
-  const handleAcceptAll = () => {
-    onItemsChange(items.map(it => ({ ...it, accepted: true })));
-  };
-
-  const handleAcceptHighConfidence = () => {
-    onItemsChange(items.map(it => ({ ...it, accepted: it.confidence >= 70 })));
-  };
-
   return (
     <div style={{
       position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',
@@ -420,36 +412,6 @@ const ManexExtractionReview = memo(({
           </div>
         )}
 
-        {/* Actions rapides */}
-        {!isLoading && items.length > 0 && (
-          <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'center' }}>
-            <button onClick={handleAcceptHighConfidence} style={btnSecondary}>
-              Accepter ≥ 70%
-            </button>
-            <button onClick={handleAcceptAll} style={btnSecondary}>
-              Tout accepter
-            </button>
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button onClick={() => setFilter('all')} style={filter === 'all' ? btnTabActive : btnTab}>
-                Tous ({items.length})
-              </button>
-              <button onClick={() => setFilter('found')} style={filter === 'found' ? btnTabActive : btnTab}>
-                Extraits ({foundCount})
-              </button>
-              <button onClick={() => setFilter('missing')} style={filter === 'missing' ? btnTabActive : btnTab}
-                title="Champs non trouvés par l'IA — à remplir manuellement">
-                ⚠ Manquants ({missingCount})
-              </button>
-              <button onClick={() => setFilter('lowConfidence')} style={filter === 'lowConfidence' ? btnTabActive : btnTab}>
-                À vérifier ({lowConfidenceCount})
-              </button>
-              <button onClick={() => setFilter('accepted')} style={filter === 'accepted' ? btnTabActive : btnTab}>
-                ✓ Importables ({acceptedCount})
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Tableau */}
         {!isLoading && (
           <div style={{ flex: 1, overflow: 'auto', border: '1px solid var(--border-subtle)', borderRadius: 8 }}>
@@ -460,7 +422,7 @@ const ManexExtractionReview = memo(({
                   <th style={th}>Valeur (storage)</th>
                   <th style={th}>Unité cible</th>
                   <th style={th}>Source MANEX (brut IA)</th>
-                  <th style={{ ...th, textAlign: 'center' }} title="Numéro de page du MANEX d'origine">📄 Page</th>
+                  <th style={{ ...th, textAlign: 'center' }} title="Numéro de page du MANEX d'origine">Page</th>
                   <th style={th}>Confiance</th>
                   <th style={{ ...th, textAlign: 'center' }}>Importer</th>
                 </tr>
@@ -517,9 +479,6 @@ ManexExtractionReview.displayName = 'ManexExtractionReview';
 
 const th = { padding: '10px 12px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-subtle)' };
 const btnPrimary = { padding: '8px 16px', backgroundColor: 'var(--accent-primary)', color: 'var(--text-primary)', border: 'none', borderRadius: 6, fontSize: 14, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 };
-const btnSecondary = { padding: '6px 12px', backgroundColor: 'var(--bg-overlay)', color: 'var(--text-secondary)', border: '1px solid var(--text-tertiary)', borderRadius: 6, fontSize: 13, cursor: 'pointer' };
 const btnGhost = { padding: '8px 16px', backgroundColor: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--text-tertiary)', borderRadius: 6, fontSize: 14, cursor: 'pointer' };
-const btnTab = { padding: '4px 10px', backgroundColor: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 16, fontSize: 12, cursor: 'pointer' };
-const btnTabActive = { ...btnTab, backgroundColor: 'var(--accent-primary)', color: 'var(--text-primary)', borderColor: 'var(--accent-primary)' };
 
 export default ManexExtractionReview;
