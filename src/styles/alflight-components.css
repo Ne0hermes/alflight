@@ -560,3 +560,106 @@
   top: 50% !important;
   transform: translateY(-50%) !important;
 }
+
+/* ============================================================================
+   🎯 SUPPRESSION DES ENCAPSULATIONS VISUELLES PARASITES
+   ----------------------------------------------------------------------------
+   Demande utilisateur verbatim :
+     "Il y a un contour blanc qui encapsule les boutons de menu déroulant et
+      les sections. Il faut retirer le fond gris du... [contour] des éléments
+      encapsulés pour que visuellement ce soit plus cohérent."
+
+   Cause : MUI utilise plusieurs niveaux de Paper / Box / Adornment qui peuvent
+   afficher des fonds ou bordures résiduels même quand elevation=0 :
+     - MuiPaper.elevation0 garde parfois un background-color de fallback
+     - MuiInputAdornment (unités "gal", "gal/h" à droite des inputs) a un fond
+     - MuiAccordion.Mui-rounded ajoute des border-radius + ombre subtile
+     - MuiBox containers intermédiaires peuvent ajouter un background
+
+   Solution : forcer transparent partout sauf sur les composants qui DOIVENT
+   avoir un fond (cards, inputs eux-mêmes via --input-bg).
+   ============================================================================ */
+
+/* Paper élevation 0 = strictement transparent (utilisé partout dans le wizard) */
+.MuiPaper-root.MuiPaper-elevation0 {
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+/* Accordion Paper : même règle, surclasser la spécificité MUI */
+.MuiPaper-root.MuiAccordion-root,
+.MuiAccordion-root.MuiPaper-rounded {
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+/* Accordion expanded : pas de bordure / fond résiduel */
+.MuiAccordion-root.Mui-expanded {
+  margin: 0 !important;
+  background-color: transparent !important;
+}
+
+/* InputAdornment (les "gal", "gal/h", "kg" à droite des inputs) :
+   sortir du flow et n'avoir AUCUN fond — l'unité doit juste apparaître
+   en texte directement sur le fond de l'input. */
+.MuiInputAdornment-root,
+.MuiInputAdornment-positionEnd,
+.MuiInputAdornment-positionStart {
+  background-color: transparent !important;
+  margin: 0 !important;
+}
+
+.MuiInputAdornment-root .MuiTypography-root {
+  background-color: transparent !important;
+  color: var(--text-tertiary) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 12px !important;
+  letter-spacing: 0.06em !important;
+}
+
+/* Le wrapper input avec adornedEnd doit garder son padding-right
+   pour la place de l'unité, mais sans fond. */
+.MuiOutlinedInput-root.MuiInputBase-adornedEnd {
+  padding-right: var(--input-padding-x) !important;
+}
+
+/* Alert (MuiAlert) — souvent encapsulé dans un Paper avec fond pastel ;
+   on garde le fond explicite mais on retire le contour parasite */
+.MuiAlert-root.MuiPaper-root {
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+/* Les Box du wizard ne doivent pas avoir de fond par défaut */
+.MuiAccordionDetails-root,
+.MuiAccordionDetails-root > .MuiBox-root {
+  background-color: transparent !important;
+  background-image: none !important;
+  border: none !important;
+}
+
+/* Le Paper principal du wizard (contenu de l'étape) : transparent par défaut.
+   Si une carte spécifique doit avoir un fond, elle l'aura via sa propre classe
+   ou son sx. */
+.MuiPaper-root[class*="MuiPaper-elevation"] {
+  background-image: none !important;
+}
+
+/* Helper text non-required : ne pas afficher de fond gris résiduel */
+.MuiFormHelperText-root.MuiFormHelperText-contained,
+.MuiFormHelperText-root.MuiFormHelperText-filled {
+  background-color: transparent !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* FormControlLabel (checkbox "Asphalte (ASPH)", etc.) : sans fond */
+.MuiFormControlLabel-root {
+  background-color: transparent !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
