@@ -497,3 +497,66 @@
   padding-right: var(--input-padding-x) !important;
   text-align: var(--input-text-align) !important;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   AUTOCOMPLETE : DESTRUCTION DE L'ENCAPSULATION SUPPLÉMENTAIRE
+   -------------------------------------------------------------------------
+   L'Autocomplete MUI ajoute un wrapper .MuiAutocomplete-inputRoot
+   AUTOUR du <input>, avec son propre padding (généralement 9px) qui
+   décale l'input et crée un effet "boîte dans la boîte".
+
+   Le DOM montre :
+     <div class="MuiInputBase-root MuiOutlinedInput-root MuiAutocomplete-inputRoot">
+       ↑ wrapper avec son padding interne
+       <input class="MuiAutocomplete-input ...">
+         ↑ input avec ses propres paddings spéciaux MUI
+       <fieldset class="MuiOutlinedInput-notchedOutline">...</fieldset>
+     </div>
+
+   Solution : RESET total des paddings/marges du wrapper Autocomplete,
+   et forcer l'input intérieur à utiliser strictement les mêmes paddings
+   que les autres inputs (--input-padding-*). Plus de "double encart".
+   ───────────────────────────────────────────────────────────────────── */
+
+/* Wrapper Autocomplete : aucun padding interne. Le padding est porté
+   exclusivement par l'input à l'intérieur (cohérent avec MuiTextField). */
+.MuiAutocomplete-root .MuiInputBase-root.MuiAutocomplete-inputRoot,
+.MuiAutocomplete-root .MuiOutlinedInput-root.MuiAutocomplete-inputRoot {
+  padding: 0 !important;
+  flex-wrap: nowrap !important;
+}
+
+/* Input Autocomplete : surcharge des paddings spéciaux MUI (par défaut
+   MUI met padding: 7.5px 4px 7.5px 6px sur .MuiAutocomplete-input,
+   qui surclasse mon override .MuiOutlinedInput-input). */
+.MuiAutocomplete-root .MuiAutocomplete-input,
+.MuiAutocomplete-root input.MuiAutocomplete-input,
+.MuiAutocomplete-root .MuiInputBase-input.MuiAutocomplete-input {
+  padding-top: var(--input-padding-y) !important;
+  padding-bottom: var(--input-padding-y) !important;
+  padding-left: var(--input-padding-x) !important;
+  padding-right: var(--input-padding-x) !important;
+  font-family: var(--input-font-family) !important;
+  font-size: var(--input-font-size) !important;
+  color: var(--input-text) !important;
+  text-align: var(--input-text-align) !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Si l'Autocomplete a un endAdornment (croix Clear, flèche dropdown),
+   ajouter le padding-right-icon pour faire de la place à l'icône. */
+.MuiAutocomplete-root.MuiAutocomplete-hasClearIcon .MuiAutocomplete-input,
+.MuiAutocomplete-root.MuiAutocomplete-hasPopupIcon .MuiAutocomplete-input {
+  padding-right: var(--input-padding-right-icon) !important;
+}
+
+/* End adornment (boutons Clear / Popup) : positionnés en absolute
+   pour ne pas perturber la mise en page de l'input. */
+.MuiAutocomplete-root .MuiAutocomplete-endAdornment {
+  position: absolute !important;
+  right: 8px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
