@@ -766,7 +766,8 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
               size="small"
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  height: '40px',
+                  // height: '40px' RETIRÉ — hauteur naturelle commune pour
+                  // uniformité avec tous les champs du wizard.
                   paddingRight: '40px',
                 }
               }}
