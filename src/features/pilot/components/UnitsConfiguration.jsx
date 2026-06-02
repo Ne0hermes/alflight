@@ -17,122 +17,17 @@
 //  + gestion du click-outside et de la touche Escape.
 // ============================================================================
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Ruler as RulerIcon,
   Thermometer as ThermostatIcon,
   Fuel as FuelIcon,
   Globe as GlobeIcon,
   ChevronDown as ExpandMoreIcon,
-  Check as CheckIcon,
 } from 'lucide-react';
 import { useUnitsStore, unitsSelectors } from '@core/stores/unitsStore';
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  Composant : dropdown custom ALFlight (remplace <select>/<option> natifs)
-// ─────────────────────────────────────────────────────────────────────────────
-const CustomSelect = ({ value, options, onChange, ariaLabel }) => {
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef(null);
-
-  const current = options.find((o) => o.value === value) || options[0];
-
-  // Click-outside + Escape → close
-  useEffect(() => {
-    if (!open) return;
-    const onDocClick = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
-        setOpen(false);
-      }
-    };
-    const onKey = (e) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-    document.addEventListener('mousedown', onDocClick);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onDocClick);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [open]);
-
-  return (
-    <div ref={containerRef} style={selectStyles.container}>
-      {/* Trigger button — apparence d'un select fermé */}
-      <button
-        type="button"
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-label={ariaLabel}
-        onClick={() => setOpen((p) => !p)}
-        style={{
-          ...selectStyles.trigger,
-          borderColor: open ? 'var(--accent-primary)' : 'var(--border-regular)',
-        }}
-      >
-        <span style={selectStyles.triggerLabel}>{current.label}</span>
-        <ExpandMoreIcon
-          size={14}
-          style={{
-            color: 'var(--text-tertiary)',
-            flexShrink: 0,
-            transition: 'transform 0.2s ease',
-            transform: open ? 'rotate(180deg)' : 'rotate(0)',
-          }}
-        />
-      </button>
-
-      {/* Liste d'options custom — alignée sur trigger, jamais plus large */}
-      {open && (
-        <ul role="listbox" style={selectStyles.menu}>
-          {options.map((opt) => {
-            const isSelected = opt.value === value;
-            return (
-              <li
-                key={opt.value}
-                role="option"
-                aria-selected={isSelected}
-                tabIndex={0}
-                onClick={() => {
-                  onChange(opt.value);
-                  setOpen(false);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    onChange(opt.value);
-                    setOpen(false);
-                  }
-                }}
-                style={{
-                  ...selectStyles.option,
-                  backgroundColor: isSelected ? 'var(--accent-soft)' : 'transparent',
-                  color: isSelected ? 'var(--accent-primary)' : 'var(--text-primary)',
-                  fontWeight: isSelected ? 600 : 400,
-                }}
-                onMouseEnter={(e) => {
-                  if (!isSelected) {
-                    e.currentTarget.style.backgroundColor = 'rgba(245, 242, 236, 0.04)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isSelected) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }
-                }}
-              >
-                <span style={selectStyles.optionLabel}>{opt.label}</span>
-                {isSelected && (
-                  <CheckIcon size={14} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} />
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </div>
-  );
-};
+// Dropdown ALFlight partagé (factorisé pour réutilisation dans wizard avion, etc.)
+import { CustomSelect } from '@shared/components/editorial';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Composant principal — UnitsConfiguration
@@ -404,79 +299,6 @@ const styles = {
     color: 'var(--text-tertiary)',
   },
   fieldIcon: { color: 'var(--accent-primary)' },
-};
-
-// Styles dédiés au dropdown custom CustomSelect
-const selectStyles = {
-  container: {
-    position: 'relative',
-    width: '100%',
-    boxSizing: 'border-box',
-    minWidth: 0,
-  },
-  trigger: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: '8px',
-    width: '100%',
-    padding: '10px 12px',
-    backgroundColor: 'var(--app-bg)',
-    color: 'var(--text-primary)',
-    border: '1px solid var(--border-regular)',
-    borderRadius: 'var(--radius-sm)',
-    fontFamily: 'var(--font-sans)',
-    fontSize: '14px',
-    cursor: 'pointer',
-    outline: 'none',
-    transition: 'border-color 0.2s ease',
-    boxSizing: 'border-box',
-    textAlign: 'left',
-  },
-  triggerLabel: {
-    flex: 1,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-  menu: {
-    // 🎯 Positionnement absolu : le dropdown a la MÊME largeur que le trigger,
-    // jamais plus large (left:0 / right:0). Plus de débordement du cadre.
-    position: 'absolute',
-    top: 'calc(100% + 4px)',
-    left: 0,
-    right: 0,
-    zIndex: 100,
-    margin: 0,
-    padding: '4px',
-    listStyle: 'none',
-    backgroundColor: 'var(--bg-surface)',
-    border: '1px solid var(--border-regular)',
-    borderRadius: 'var(--radius-sm)',
-    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)',
-    maxHeight: '280px',
-    overflowY: 'auto',
-    boxSizing: 'border-box',
-  },
-  option: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: '8px',
-    padding: '10px 12px',
-    cursor: 'pointer',
-    fontFamily: 'var(--font-sans)',
-    fontSize: '14px',
-    borderRadius: 'var(--radius-sm)',
-    transition: 'background-color 0.1s ease',
-    outline: 'none',
-  },
-  optionLabel: {
-    flex: 1,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
 };
 
 // Inject CSS hint pour la rotation du chevron <details>

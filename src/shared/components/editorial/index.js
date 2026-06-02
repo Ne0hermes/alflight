@@ -25,3 +25,4 @@ export { LoadingCockpit, default as LoadingCockpitDefault } from './LoadingCockp
 export { NightModeAlert, default as NightModeAlertDefault } from './NightModeAlert';
 export { StepDial, default as StepDialDefault } from './StepDial';
 export { ModuleHero, default as ModuleHeroDefault } from './ModuleHero';
+export { CustomSelect, default as CustomSelectDefault } from './CustomSelect';
