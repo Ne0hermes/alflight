@@ -905,7 +905,19 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
                 Régression linéaire (live){massAxis === 'y' && ' — config inversée'}
               </Typography>
-              <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap sx={{ '& .MuiChip-root': { borderRadius: 'var(--radius-sm)' } }}>
+              <Stack
+                direction="row"
+                spacing={2}
+                flexWrap="wrap"
+                useFlexGap
+                sx={{
+                  justifyContent: 'space-between',
+                  '& .MuiChip-root': {
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border-subtle)',
+                  },
+                }}
+              >
                 <Chip color="primary" label={`a (pente régression) = ${regression.a.toFixed(4)} ${axesConfig.yAxis.unit}/${axesConfig.xAxis.unit}`} />
                 <Chip label={`b (intercept) = ${regression.b.toFixed(2)} ${axesConfig.yAxis.unit}`} />
                 <Chip
