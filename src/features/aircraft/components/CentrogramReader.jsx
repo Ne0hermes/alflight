@@ -714,7 +714,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
   // RENDU CHART (au centre, partagé entre toutes les étapes)
   // ════════════════════════════════════════════════════════════════════════
   const renderChart = () => (
-    <Paper variant="outlined" sx={{ mb: 2, overflow: 'auto', position: 'relative' }}>
+    <Paper variant="outlined" sx={{ mb: 2, overflow: 'auto', position: 'relative', borderRadius: 'var(--radius-sm)', bgcolor: 'transparent' }}>
       <Box sx={{ position: 'relative', display: 'inline-block' }}>
       <Chart
         axesConfig={axesConfig}
