@@ -366,7 +366,10 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
   // Convertir la valeur stockée ici provoquerait une double conversion à chaque render.
 
   return (
-    <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
+    // Demande utilisateur : aligner la largeur du Step1 sur celle du
+    // stepper / section MANEX du wizard parent. Avant : maxWidth 1000 →
+    // visuellement plus étroit. Après : 100% du Container parent (lg=1200).
+    <Box sx={{ width: '100%', mx: 'auto' }}>
 
       {/* Accordion: Identification de l'appareil */}
       <Accordion 
@@ -1363,31 +1366,36 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
         }}
       />
 
-      {/* Boutons de navigation */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-        {onPrevious && (
-          <Button
-            variant="outlined"
-            color="primary"
-            size="large"
-            onClick={onPrevious}
-            startIcon={<ChevronLeftIcon />}
-          >
-            Précédent
-          </Button>
-        )}
-        {onNext && (
-          <Button
-            variant="contained"
-            color="primary"
-            size="large"
-            onClick={onNext}
-            endIcon={<ChevronRightIcon />}
-          >
-            Suivant
-          </Button>
-        )}
-      </Box>
+      {/* Boutons de navigation — affichés UNIQUEMENT si onNext OU
+          onPrevious sont fournis. Auparavant le Box restait rendu même
+          vide (avec mt: 3 = 24px), créant un espace blanc parasite en
+          dessous du bouton "Importer le MANEX". */}
+      {(onPrevious || onNext) && (
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+          {onPrevious && (
+            <Button
+              variant="outlined"
+              color="primary"
+              size="large"
+              onClick={onPrevious}
+              startIcon={<ChevronLeftIcon />}
+            >
+              Précédent
+            </Button>
+          )}
+          {onNext && (
+            <Button
+              variant="contained"
+              color="primary"
+              size="large"
+              onClick={onNext}
+              endIcon={<ChevronRightIcon />}
+            >
+              Suivant
+            </Button>
+          )}
+        </Box>
+      )}
     </Box>
   );
 };
