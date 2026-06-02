@@ -1124,10 +1124,12 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                       borderColor: 'divider',
                       borderRadius: 1
                     }}>
-                      <table style={{ 
-                        width: '100%', 
+                      <table style={{
+                        width: '100%',
                         borderCollapse: 'collapse',
-                        fontSize: '0.875rem'
+                        fontSize: '0.875rem',
+                        fontFamily: 'var(--font-sans)',
+                        color: 'var(--text-primary)'
                       }}>
                         <thead>
                           <tr style={{ backgroundColor: 'var(--bg-overlay)' }}>
@@ -1146,8 +1148,8 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                         </thead>
                         <tbody>
                           {table.rows && table.rows.map((row, rowIndex) => (
-                            <tr key={rowIndex} style={{ 
-                              backgroundColor: rowIndex % 2 === 0 ? 'white' : 'var(--bg-overlay)' 
+                            <tr key={rowIndex} style={{
+                              backgroundColor: rowIndex % 2 === 0 ? 'transparent' : 'var(--bg-overlay)'
                             }}>
                               {row.map((cell, cellIndex) => (
                                 <td key={cellIndex} style={{ 

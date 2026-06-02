@@ -654,25 +654,18 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
         <Box sx={{ flex: 1, minWidth: 200 }}>
           <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
-            📊 Vérifier / corriger les performances dans Excel
+            Vérifier / corriger les performances dans Excel
           </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {hasAnyModel
-              ? <>Sélectionne les modèles à exporter (cases à cocher ci-dessous), puis clique « Exporter Excel ». Tu obtiendras un seul fichier .xlsx avec un onglet par modèle sélectionné. Modifie dans Excel/LibreOffice puis réimporte — round-trip garanti.</>
-              : 'Aucun modèle extrait pour le moment. Lance une extraction MANEX ci-dessous, puis reviens ici pour exporter en Excel.'}
-          </Typography>
+          {!hasAnyModel && (
+            <Typography variant="caption" color="text.secondary">
+              Aucun modèle extrait pour le moment. Lance une extraction MANEX ci-dessous, puis reviens ici pour exporter en Excel.
+            </Typography>
+          )}
           {hasAnyModel && (
             <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
               <Typography variant="caption" sx={{ fontWeight: 600 }}>
                 {selectedCount} / {totalCount} sélectionné{selectedCount > 1 ? 's' : ''}
               </Typography>
-              <Button size="small" variant="text" onClick={selectAllModels} sx={{ minWidth: 0, px: 1, fontSize: 11 }}>
-                Tout cocher
-              </Button>
-              <Typography variant="caption" sx={{ color: 'text.disabled' }}>·</Typography>
-              <Button size="small" variant="text" onClick={selectNoneModels} sx={{ minWidth: 0, px: 1, fontSize: 11 }}>
-                Tout décocher
-              </Button>
             </Box>
           )}
         </Box>

@@ -490,7 +490,9 @@ const TableDisplay = ({
           <table style={{
             width: '100%',
             borderCollapse: 'collapse',
-            fontSize: '12px'
+            fontSize: '12px',
+            fontFamily: 'var(--font-sans)',
+            color: 'var(--text-primary)'
           }}>
             <thead style={{ backgroundColor: 'var(--bg-overlay)', position: 'sticky', top: 0 }}>
               <tr>
@@ -587,8 +589,8 @@ const TableDisplay = ({
             </thead>
             <tbody>
               {editedTable.data.map((row, rowIndex) => (
-                <tr key={rowIndex} style={{ 
-                  backgroundColor: rowIndex % 2 === 0 ? 'white' : 'var(--bg-overlay)' 
+                <tr key={rowIndex} style={{
+                  backgroundColor: rowIndex % 2 === 0 ? 'transparent' : 'var(--bg-overlay)'
                 }}>
                   {/* Bouton supprimer ligne */}
                   {isEditMode && (
@@ -642,8 +644,8 @@ const TableDisplay = ({
                           }}
                         />
                       ) : (
-                        <span style={{ 
-                          fontFamily: typeof row[column] === 'number' ? 'monospace' : 'inherit' 
+                        <span style={{
+                          fontFamily: typeof row[column] === 'number' ? 'var(--font-mono)' : 'inherit'
                         }}>
                           {typeof row[column] === 'object' && row[column] !== null ? 
                             JSON.stringify(row[column]) : 
