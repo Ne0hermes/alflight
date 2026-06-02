@@ -507,7 +507,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
 
     return (
     <Paper variant="outlined" sx={{ p: 2, mb: 2, borderRadius: 'var(--radius-sm)', bgcolor: 'transparent' }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
+      <Stack direction="column" alignItems="flex-start" spacing={0.5} sx={{ mb: 1.5 }}>
         <Typography variant="subtitle2">
           Configuration des axes du mini-graphique
         </Typography>
@@ -529,24 +529,6 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
           />
         </Tooltip>
       </Stack>
-
-      <Alert severity={massAxis === 'y' ? 'warning' : 'info'} sx={{ mb: 2, py: 0.5 }}>
-        <Typography variant="caption">
-          {massAxis === 'x' ? (
-            <>
-              ✓ Configuration <strong>standard</strong> : la masse est sur l'axe X (horizontal),
-              le moment sur l'axe Y (vertical).
-              <br/>Le bras de levier est calculé directement : <strong>arm = pente (a)</strong>.
-            </>
-          ) : (
-            <>
-              ⚠ Configuration <strong>inversée</strong> : la masse est sur l'axe Y (vertical),
-              le moment sur l'axe X (horizontal).
-              <br/>Le bras de levier est calculé inversement : <strong>arm = 1 / pente (1/a)</strong>.
-            </>
-          )}
-        </Typography>
-      </Alert>
 
       <Grid container spacing={2}>
         {/* Inverser l'axe Y — déplacé en tête (demande user). Remplace le
