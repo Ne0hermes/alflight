@@ -1471,11 +1471,13 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
       <Paper
         elevation={0}
         sx={{
-          p: '10px',
+          p: 0,
           mb: 3,
           minHeight: 400,
-          border: '1px solid',
-          borderColor: 'divider'
+          border: 'none',
+          backgroundColor: 'transparent',
+          backgroundImage: 'none',
+          boxShadow: 'none',
         }}
       >
         {/* 🔧 FIX MEMORY: Suspense pour le chargement lazy des steps */}

@@ -179,7 +179,7 @@ const muiTheme = createTheme({
         root: {
           color: ALFLIGHT_COLORS.textPrimary,
           backgroundColor: 'transparent',
-          padding: '0 16px',
+          padding: 0,
           '&.Mui-expanded': {
             borderBottom: 'none',
             minHeight: '48px',
@@ -197,7 +197,7 @@ const muiTheme = createTheme({
       styleOverrides: {
         root: {
           backgroundColor: 'transparent',
-          padding: '8px 16px 16px',
+          padding: '8px 0 16px',
           borderTop: 'none',
         },
       },
