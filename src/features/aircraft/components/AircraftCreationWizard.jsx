@@ -1292,8 +1292,9 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         minHeight: '100vh',
       }}
     >
-      {/* 🎨 En-tête éditorial ALFlight */}
-      <Box sx={{ mb: 4 }}>
+      {/* 🎨 En-tête éditorial ALFlight — espacement standardisé mb: 3 (24px)
+          partout pour rythme vertical cohérent entre toutes les sections. */}
+      <Box sx={{ mb: 3 }}>
         <Box
           component="span"
           sx={{
@@ -1332,7 +1333,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         elevation={0}
         sx={{
           p: 2,
-          mb: 4,
+          mb: 3, // Standardisé sur 24px (= section MANEX + Paper Content)
           border: '1px solid',
           borderColor: 'divider',
         }}
@@ -1411,7 +1412,9 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         <Paper
           elevation={0}
           sx={{
-            mb: 2,
+            // Demande utilisateur : aligner espacement avec les autres sections.
+            // mb: 2 (16px) → mb: 3 (24px) = même rythme vertical que Paper Content.
+            mb: 3,
             p: 2,
             border: '1px solid var(--accent-primary)',
             borderLeft: '3px solid var(--accent-primary)',
