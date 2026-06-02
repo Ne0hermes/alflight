@@ -534,7 +534,19 @@ const muiTheme = createTheme({
           fontFamily: "'Century Gothic', 'Questrial', sans-serif !important",
           fontSize: '14px',
           textAlign: 'center',
-          paddingRight: '32px !important', // espace pour la flèche dropdown
+          // ⚠️ Padding SYMÉTRIQUE 32px gauche+droite : MUI met par défaut
+          // paddingRight: 32px (espace pour la flèche dropdown absolue) et
+          // paddingLeft: 14px. Cette asymétrie décale le texte centré et
+          // donne visuellement l'impression que le Select est "plus large"
+          // que le TextField voisin. Avec 32px des deux côtés, le contenu
+          // est vraiment centré et la largeur visuelle est identique aux
+          // TextField (Puissance moteur, Marque, etc.).
+          paddingLeft: '32px !important',
+          paddingRight: '32px !important',
+          // Évite que MUI applique min-width par défaut qui ferait
+          // déborder le Select du wrapper Grid 350px.
+          minWidth: 0,
+          minHeight: '1.4375em',
         },
         icon: {
           color: ALFLIGHT_COLORS.textTertiary,
@@ -605,6 +617,64 @@ const muiTheme = createTheme({
     // ─── Autocomplete (utilisé par AeroclubAutocomplete) ─────────────────────
     MuiAutocomplete: {
       styleOverrides: {
+        // ⚠️ Autocomplete a sa propre hiérarchie qui contourne les
+        // overrides MuiTextField. Sans ces règles, le TextField interne
+        // (rendu via renderInput) conserve le pattern Outlined par défaut
+        // de MUI (fieldset 20% gris + legend visible + police Roboto).
+        // → Forcer ici les mêmes overrides que MuiTextField pour cohérence
+        // visuelle stricte avec "Puissance moteur", "Catégorie", etc.
+        root: {
+          '& .MuiOutlinedInput-root': {
+            backgroundColor: ALFLIGHT_COLORS.appBg,
+            borderRadius: '8px',
+            fontFamily: "'Century Gothic', 'Questrial', sans-serif !important",
+            '& fieldset': {
+              borderColor: 'transparent !important',
+              borderWidth: '1px',
+              '& > legend': {
+                display: 'none !important',
+                width: '0 !important',
+                maxWidth: '0 !important',
+                height: '0 !important',
+                padding: '0 !important',
+                visibility: 'hidden !important',
+                overflow: 'hidden !important',
+                '& > span': {
+                  display: 'none !important',
+                },
+              },
+            },
+            '&:hover fieldset': {
+              borderColor: ALFLIGHT_COLORS.borderSubtle + ' !important',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: ALFLIGHT_COLORS.accent + ' !important',
+              borderWidth: '1px',
+            },
+          },
+          '& .MuiAutocomplete-input': {
+            color: ALFLIGHT_COLORS.textPrimary,
+            fontFamily: "'Century Gothic', 'Questrial', sans-serif !important",
+            fontSize: '14px',
+            textAlign: 'center !important',
+          },
+          '& .MuiInputLabel-root': {
+            position: 'static !important',
+            transform: 'none !important',
+            marginBottom: '8px',
+            textAlign: 'center',
+            width: '100%',
+            backgroundColor: 'transparent !important',
+            padding: '0 !important',
+            fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace !important",
+            fontSize: '11px !important',
+            fontWeight: 500,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            color: ALFLIGHT_COLORS.textTertiary,
+            whiteSpace: 'normal',
+          },
+        },
         paper: {
           backgroundColor: ALFLIGHT_COLORS.bgSurface,
           border: `1px solid ${ALFLIGHT_COLORS.borderRegular}`,
@@ -614,11 +684,13 @@ const muiTheme = createTheme({
         },
         listbox: {
           padding: '4px',
+          fontFamily: "'Century Gothic', 'Questrial', sans-serif",
         },
         option: {
           borderRadius: '6px',
           margin: '2px 0',
           minHeight: '40px',
+          fontFamily: "'Century Gothic', 'Questrial', sans-serif",
           '&[aria-selected="true"]': {
             backgroundColor: ALFLIGHT_COLORS.accentSoft,
             color: ALFLIGHT_COLORS.accent,
@@ -626,6 +698,18 @@ const muiTheme = createTheme({
           '&.Mui-focused, &:hover': {
             backgroundColor: 'rgba(245, 242, 236, 0.04)',
           },
+        },
+        // L'icône Clear (croix) du bouton aria-label="Clear" doit utiliser
+        // la couleur tertiaire ALFlight, pas le bleu par défaut MUI.
+        clearIndicator: {
+          color: ALFLIGHT_COLORS.textTertiary,
+          '&:hover': {
+            color: ALFLIGHT_COLORS.textPrimary,
+            backgroundColor: 'rgba(245, 242, 236, 0.04)',
+          },
+        },
+        popupIndicator: {
+          color: ALFLIGHT_COLORS.textTertiary,
         },
       },
     },
