@@ -570,9 +570,11 @@ const muiTheme = createTheme({
         // override la police par défaut MUI (Roboto) prend le dessus sur
         // la police ALFlight (Century Gothic).
         //
-        // 📏 Hauteur identique au TextField voisin :
-        //  - Variant medium (défaut) : padding 16.5px vertical (= TextField default)
-        //  - Variant small (size="small") : padding 8.5px vertical (= TextField sizeSmall)
+        // 📏 HAUTEUR UNIQUE PARTOUT : padding 16.5px vertical pour TOUS les
+        // Selects, y compris size="small". L'override size="small" (8.5px)
+        // a été RETIRÉ car il entrait en conflit avec la règle CSS qui force
+        // tous les champs à la hauteur de référence medium (demande user :
+        // "tout à la même taille, non pas réduit").
         //
         // Le paddingRight 32px reste pour laisser place à la flèche dropdown
         // positionnée en absolute. paddingLeft 14px = TextField standard.
@@ -587,13 +589,10 @@ const muiTheme = createTheme({
           paddingRight: '32px !important',
           minWidth: 0,
           boxSizing: 'border-box',
-          // ⚠️ Override pour size="small" — aligne sur TextField sizeSmall
-          // (padding 8.5px vertical). Sans cet override, le Select restait
-          // bloqué à 16.5px et apparaissait plus grand que les TextField
-          // voisins dans le wizard avion (Min/Max/Pas + Unité X/Y).
+          // size="small" force aussi 16.5px → hauteur identique au medium.
           '&.MuiInputBase-inputSizeSmall': {
-            paddingTop: '8.5px !important',
-            paddingBottom: '8.5px !important',
+            paddingTop: '16.5px !important',
+            paddingBottom: '16.5px !important',
           },
         },
         icon: {
