@@ -1336,6 +1336,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
           mb: 3, // Standardisé sur 24px (= section MANEX + Paper Content)
           border: '1px solid',
           borderColor: 'divider',
+          borderRadius: 'var(--radius-sm)', // Arrondi cohérent avec le reste de l'app
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
@@ -1419,6 +1420,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
             border: '1px solid var(--accent-primary)',
             borderLeft: '3px solid var(--accent-primary)',
             backgroundColor: 'var(--accent-soft)',
+            borderRadius: 'var(--radius-sm)', // Arrondi cohérent avec le reste de l'app
             display: 'flex',
             alignItems: 'center',
             gap: 2,
