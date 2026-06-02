@@ -363,10 +363,32 @@ const muiTheme = createTheme({
               borderColor: ALFLIGHT_COLORS.accent + ' !important',
               borderWidth: '1px',
             },
-            '& input, & textarea': {
+            // ⚠️ MUI Select rend son trigger en <div role="combobox"> AVEC
+            // les classes MuiSelect-select + MuiInputBase-input + MuiOutlinedInput-input
+            // PAS en <input>. Donc cibler input/textarea seul ne suffit PAS
+            // pour appliquer la police Century Gothic au texte affiché.
+            // → Cibler aussi .MuiSelect-select + .MuiInputBase-input.
+            '& input, & textarea, & .MuiSelect-select, & .MuiInputBase-input': {
               color: ALFLIGHT_COLORS.textPrimary,
-              fontFamily: "'Century Gothic', 'Questrial', sans-serif",
+              fontFamily: "'Century Gothic', 'Questrial', sans-serif !important",
+              fontSize: '14px',
               textAlign: 'center', // Texte input CENTRÉ comme le label
+            },
+            // L'<input class="MuiSelect-nativeInput"> est un input caché que
+            // MUI utilise pour le form submit + accessibilité. Il a déjà
+            // opacity:0 par défaut, mais on force pour être sûr qu'il ne
+            // déforme jamais le layout (effet "double zone de saisie").
+            '& .MuiSelect-nativeInput': {
+              opacity: 0,
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              pointerEvents: 'none',
+              border: 'none',
+              padding: 0,
+              margin: 0,
             },
           },
 
@@ -414,7 +436,20 @@ const muiTheme = createTheme({
         },
         input: {
           color: ALFLIGHT_COLORS.textPrimary,
+          fontFamily: "'Century Gothic', 'Questrial', sans-serif !important",
+          fontSize: '14px',
           textAlign: 'center', // Centre le texte input
+        },
+      },
+    },
+    // .MuiInputBase-input cible TOUS les inputs MUI (texte, select, date…)
+    // Override de la police au niveau le plus large pour cohérence absolue.
+    MuiInputBase: {
+      styleOverrides: {
+        input: {
+          fontFamily: "'Century Gothic', 'Questrial', sans-serif !important",
+          fontSize: '14px',
+          color: ALFLIGHT_COLORS.textPrimary,
         },
       },
     },
@@ -490,11 +525,25 @@ const muiTheme = createTheme({
         },
       },
       styleOverrides: {
+        // ⚠️ MuiSelect.select cible le <div role="combobox"> qui contient
+        // le texte affiché (ex. "Monomoteur", "Léger (L)"). Sans cet
+        // override la police par défaut MUI (Roboto) prend le dessus sur
+        // la police ALFlight (Century Gothic).
         select: {
           color: ALFLIGHT_COLORS.textPrimary,
+          fontFamily: "'Century Gothic', 'Questrial', sans-serif !important",
+          fontSize: '14px',
+          textAlign: 'center',
+          paddingRight: '32px !important', // espace pour la flèche dropdown
         },
         icon: {
           color: ALFLIGHT_COLORS.textTertiary,
+        },
+        nativeInput: {
+          // Force l'<input class="MuiSelect-nativeInput"> à rester
+          // strictement invisible (jamais d'effet "double zone de saisie").
+          opacity: 0,
+          pointerEvents: 'none',
         },
       },
     },
