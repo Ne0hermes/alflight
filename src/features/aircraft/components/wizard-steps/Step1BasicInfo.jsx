@@ -406,7 +406,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 1.5 }}>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
+            <Box sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledTextField
                 fullWidth
                 variant="outlined"
@@ -433,9 +433,9 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                   ) : null
                 }}
               />
-            </Grid>
+            </Box>
 
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
+            <Box sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledTextField
                 fullWidth
                 variant="outlined"
@@ -445,9 +445,9 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                 placeholder="Ex: Cessna, Robin, Diamond, Piper, Cirrus…"
                 helperText="Constructeur de l'avion (extrait du MANEX si présent)"
               />
-            </Grid>
+            </Box>
 
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
+            <Box sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledTextField
                 fullWidth
                 variant="outlined"
@@ -459,9 +459,9 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                 helperText={errors.model || "Désignation officielle du modèle (sans la marque)"}
                 required
               />
-            </Grid>
+            </Box>
 
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
+            <Box sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledFormControl fullWidth variant="outlined">
                 <InputLabel shrink id="engine-label">Type de moteur</InputLabel>
                 <Select
@@ -480,9 +480,9 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                   <MenuItem value="jet">Réacteur</MenuItem>
                 </Select>
               </StyledFormControl>
-            </Grid>
+            </Box>
 
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
+            <Box sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledTextField
                 fullWidth
                 type="number"
@@ -498,9 +498,9 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                 error={!!errors.horsepower}
                 helperText={errors.horsepower || "Puissance nominale au régime maxi continu, en chevaux (HP)"}
               />
-            </Grid>
+            </Box>
 
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
+            <Box sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledFormControl fullWidth variant="outlined">
                 <InputLabel shrink id="category-label">Catégorie</InputLabel>
                 <Select
@@ -519,13 +519,13 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                   <MenuItem value="S">Super (S)</MenuItem>
                 </Select>
               </StyledFormControl>
-            </Grid>
+            </Box>
 
             {/* Aéroclub d'attache (avec autocomplétion + ajout manuel).
                 Quand un aéroclub avec un OACI connu est sélectionné, on
                 pré-remplit automatiquement le terrain de base si celui-ci
                 est encore vide. */}
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
+            <Box sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <AeroclubAutocomplete
                 value={data.homeAeroclub || ''}
                 onChange={(newName) => updateData('homeAeroclub', newName || '')}
@@ -537,10 +537,10 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                 label="Aéroclub d'attache"
                 helperText=""
               />
-            </Grid>
+            </Box>
 
             {/* Terrain de base (code OACI) */}
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
+            <Box sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledTextField
                 fullWidth
                 variant="outlined"
@@ -557,10 +557,10 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     : "Code OACI à 4 lettres du terrain où l'avion est basé"
                 }
               />
-            </Grid>
+            </Box>
 
             {/* Photo upload section within identification */}
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, textAlign: 'center', mt: 2 }}>
+            <Box sx={{ width: '100%', maxWidth: 350, textAlign: 'center', mt: 2 }}>
               <Typography variant="body2" sx={{ mb: 2, fontWeight: 500 }}>
                 Photo de l'appareil (optionnel)
               </Typography>
@@ -615,7 +615,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                   Format: JPG, PNG (max 5MB) - Cliquez sur l'image pour éditer (zoom, repositionnement)
                 </Typography>
               </Box>
-            </Grid>
+            </Box>
           </Box>
         </AccordionDetails>
       </Accordion>
@@ -655,7 +655,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 1.5 }}>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
+            <Box sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledFormControl fullWidth variant="outlined">
                 <InputLabel shrink id="fuel-label">Type de carburant *</InputLabel>
                 <Select
@@ -675,9 +675,9 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                 </Select>
                 {errors.fuelType && <FormHelperText error>{errors.fuelType}</FormHelperText>}
               </StyledFormControl>
-            </Grid>
+            </Box>
 
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
+            <Box sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledTextField
                 fullWidth
                 variant="outlined"
@@ -702,9 +702,9 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                   endAdornment: <InputAdornment position="end">{getUnitSymbol(units.fuel)}</InputAdornment>,
                 }}
               />
-            </Grid>
+            </Box>
 
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
+            <Box sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledTextField
                 fullWidth
                 variant="outlined"
@@ -727,9 +727,9 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                   endAdornment: <InputAdornment position="end">{getUnitSymbol(units.fuel)}</InputAdornment>,
                 }}
               />
-            </Grid>
+            </Box>
 
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
+            <Box sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledTextField
                 fullWidth
                 variant="outlined"
@@ -752,7 +752,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                   endAdornment: <InputAdornment position="end">{getUnitSymbol(units.fuelConsumption)}</InputAdornment>,
                 }}
               />
-            </Grid>
+            </Box>
 
             {/* NOTE: champ "Base Factor" déplacé vers Step2Speeds avec la vitesse
                 de croisière (le baseFactor découle directement de cette vitesse). */}
