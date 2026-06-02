@@ -353,17 +353,11 @@
    Modifier ces variables → propagation automatique partout.
    ============================================================================ */
 
-/* Root commun à tous les inputs MUI : largeur 100% du conteneur
-   ──────────────────────────────────────────────────────────────
-   📏 HAUTEUR UNIFORME UNIVERSELLE — règle clé de la cohérence visuelle.
-   Toutes les zones de saisie de l'app (TextField, Select, Autocomplete)
-   sont forcées à la MÊME hauteur via min-height sur le wrapper extérieur.
-
-   Calcul : padding-y (16.5 * 2) + ligne (1.4375em ≈ 23px) + bordure 2px = 58px
-   Le TextField <input> et le Select <div role="combobox"> n'ont pas
-   exactement la même hauteur intrinsèque (input height: 1.4375em fixe vs
-   div min-height: 1.4375em). Forcer min-height sur le wrapper extérieur
-   est la seule façon fiable de garantir des hauteurs identiques. */
+/* Root commun à tous les inputs MUI : largeur 100% du conteneur.
+   Hauteur laissée NATURELLE (déterminée par le contenu) — l'utilisateur
+   a explicitement demandé que les Selects matchent la taille naturelle
+   du TextField, PAS l'inverse. Mon ancien min-height: 58px forçait le
+   TextField à grandir artificiellement → "double zone de saisie". */
 .MuiInputBase-root.MuiOutlinedInput-root {
   width: 100% !important;
   box-sizing: border-box !important;
@@ -372,16 +366,6 @@
   font-family: var(--input-font-family) !important;
   font-size: var(--input-font-size) !important;
   color: var(--input-text) !important;
-  /* 📏 Hauteur uniforme TextField = Select = Autocomplete */
-  min-height: 58px !important;
-  display: flex !important;
-  align-items: stretch !important;
-}
-
-/* Variant size="small" : hauteur uniforme réduite */
-.MuiInputBase-root.MuiOutlinedInput-root.MuiInputBase-sizeSmall {
-  /* padding-y (8.5 * 2) + ligne (~23) + bordure 2 = 42px */
-  min-height: 42px !important;
 }
 
 /* Notched outline (fieldset autour) — bordure UNIFORME */
@@ -416,7 +400,10 @@
   display: none !important;
 }
 
-/* L'INPUT proprement dit (texte tapable) — padding et typo uniformes */
+/* L'INPUT proprement dit (texte tapable) — padding et typo uniformes.
+   Hauteur LAISSÉE NATURELLE par MUI : padding-y + line-height intrinsèque
+   de l'input. Pas de min-height forcé ici → l'input garde sa taille
+   d'origine, le Select va s'aligner dessus via une règle dédiée. */
 .MuiInputBase-root .MuiOutlinedInput-input,
 .MuiInputBase-root .MuiInputBase-input {
   padding-top: var(--input-padding-y) !important;
@@ -428,15 +415,15 @@
   color: var(--input-text) !important;
   text-align: var(--input-text-align) !important;
   box-sizing: border-box !important;
-  /* Hauteur de ligne explicite pour garantir hauteur IDENTIQUE entre
-     TextField (<input>) et Select (<div role="combobox">). Sans ça, MUI
-     applique min-height: 1.4375em sur Select et height: 1.4375em sur
-     input → léger décalage perceptible. */
-  line-height: 1.4375em !important;
-  min-height: 1.4375em !important;
 }
 
-/* SELECT — le combobox <div> qui remplace l'input + espace pour la flèche */
+/* SELECT — le combobox <div> qui remplace l'input + espace pour la flèche.
+   📏 ALIGNEMENT EXACT SUR LE TEXTFIELD :
+   Le <input> de MUI a une "intrinsic height" basée sur line-height + padding.
+   Le <div role="combobox"> n'a pas la même intrinsic height — il prend juste
+   la hauteur de son texte (~14px) + padding. Pour rattraper la différence,
+   on force ici line-height: 23px (= 1.4375em à 14px) = hauteur naturelle
+   d'un <input> à 14px. */
 .MuiInputBase-root .MuiSelect-select.MuiOutlinedInput-input {
   padding-top: var(--input-padding-y) !important;
   padding-bottom: var(--input-padding-y) !important;
@@ -445,34 +432,20 @@
   text-align: var(--input-text-align) !important;
   min-width: 0 !important;
   box-sizing: border-box !important;
-  /* Force hauteur identique au TextField (cf. règle universelle ci-dessus).
-     L'utilisateur demande explicitement que les Selects aient TOUJOURS la
-     même taille que les TextField, partout dans l'app. */
-  line-height: 1.4375em !important;
-  min-height: 1.4375em !important;
+  /* Match exact hauteur input native MUI à 14px */
+  line-height: 23px !important;
+  min-height: 23px !important;
   height: auto !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
 }
 
-/* RÈGLE UNIVERSELLE — hauteur Select == hauteur TextField partout.
-   Cible le wrapper MuiInputBase-root pour les deux. Sans ça, certains
-   contextes spécifiques (ex: Step1 Catégorie, Step1 Type de moteur) avaient
-   des Selects visuellement plus grands que les TextField voisins. */
-.MuiOutlinedInput-root.MuiSelect-root,
-.MuiOutlinedInput-root:has(.MuiSelect-select) {
-  /* Aligne précisément sur la hauteur du TextField default
-     (padding 16.5 * 2 + line-height 1.4375em ≈ 56px à 14px font). */
-  min-height: 0 !important;
-}
-
-/* Variant size="small" : aligne la hauteur des Selects sur les TextField
-   sizeSmall (padding 8.5px vertical). */
+/* Variant size="small" sur Select : aligne sur TextField sizeSmall
+   (padding-y MUI default = 8.5px, line-height contenu = 23px). */
 .MuiInputBase-sizeSmall .MuiSelect-select.MuiOutlinedInput-input,
 .MuiInputBase-sizeSmall.MuiSelect-select.MuiOutlinedInput-input {
   padding-top: 8.5px !important;
   padding-bottom: 8.5px !important;
+  line-height: 23px !important;
+  min-height: 23px !important;
 }
 .MuiInputBase-sizeSmall .MuiOutlinedInput-input,
 .MuiInputBase-sizeSmall .MuiInputBase-input {
