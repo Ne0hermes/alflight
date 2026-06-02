@@ -60,11 +60,7 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange, isProfileConfig
     <>
       {/* Header mobile fixe */}
       <div style={styles.header}>
-        {/* 🧭 Header MobileNavigation — bouton menu burger CENTRÉ.
-            Le logo ALFLIGHT est positionné en absolute à gauche pour ne
-            pas perturber le centrage du bouton burger qui reste la cible
-            principale d'interaction. */}
-        <span style={styles.headerLogoAbsolute}>ALFLIGHT</span>
+        {/* 🧭 Header MobileNavigation — bouton menu burger CENTRÉ. */}
         <button
           type="button"
           style={styles.menuButton}
@@ -262,19 +258,6 @@ const styles = {
     minWidth: '44px',
     minHeight: '44px',
     outline: 'none',
-  },
-  // Logo en absolute à gauche, ne perturbe pas le centrage du burger
-  headerLogoAbsolute: {
-    position: 'absolute',
-    left: 'max(env(safe-area-inset-left), 16px)',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    fontFamily: tokens.fontFamily.sans,
-    fontSize: '15px',
-    fontWeight: 700,
-    letterSpacing: '0.12em',
-    color: 'var(--text-primary)',
-    pointerEvents: 'none', // ne capture pas les clics
   },
 
   // Drawer overlay
