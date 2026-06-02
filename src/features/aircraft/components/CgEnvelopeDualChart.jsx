@@ -240,25 +240,17 @@ const CGEnvelopeDualChart = memo(({ cgEnvelope, massUnit = 'kg', armUnit = 'mm' 
   return (
     <div
       style={{
-        backgroundColor: 'transparent',
-        padding: 16,
-        borderRadius: 'var(--radius-sm)',
+        display: 'flex',
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 16,
+        justifyContent: 'center',
+        alignItems: 'flex-start',
         marginTop: 16,
-        border: '1px solid var(--border-subtle)',
         width: '100%',
         boxSizing: 'border-box'
       }}
     >
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          gap: 16,
-          justifyContent: 'center',
-          alignItems: 'flex-start'
-        }}
-      >
         <EnvelopeSubChart
           title={`Enveloppe — base CG (bras de levier)`}
           xAxisLabel={`CG (${armUnit})`}
@@ -285,12 +277,6 @@ const CGEnvelopeDualChart = memo(({ cgEnvelope, massUnit = 'kg', armUnit = 'mm' 
           formatY={(v) => Math.round(v)}
           pointLabelSuffix={`${massUnit}·${armUnit}`}
         />
-      </div>
-
-      <div style={{ marginTop: 12, textAlign: 'center', fontSize: 11, color: 'var(--text-tertiary)' }}>
-        Les deux représentations sont équivalentes — un point valide sur l'une est valide sur l'autre.
-        La conversion est automatique : <strong>moment = masse × CG</strong>.
-      </div>
     </div>
   );
 });

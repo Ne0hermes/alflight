@@ -238,7 +238,6 @@ export const LandingPage = ({ onNavigate, isProfileConfigured = true }) => {
           >
             <Settings size={16} />
             <span style={styles.secondaryButtonText}>Configurer un avion</span>
-            <span style={styles.secondaryButtonEyebrow}>WIZARD · ASSISTANT</span>
           </button>
         </div>
       </section>

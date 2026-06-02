@@ -2023,7 +2023,7 @@ export const AircraftModule = memo(() => {
                             e.stopPropagation();
                             handleOpenWizard(aircraft);
                           }}
-                          title="Modifier avec l'assistant"
+                          title="Modifier l'avion"
                           aria-label="Modifier l'avion"
                           style={baseBtn}
                           onMouseEnter={(e) => hoverIn(e)}
