@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Box,
   Container,
@@ -766,8 +766,23 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
     return Object.keys(newErrors).length === 0;
   };
 
+  // ─── Contrat de navigation en cascade ──────────────────────────────────────
+  // La step active peut "capturer" Précédent/Suivant pour naviguer ses
+  // sous-étapes AVANT de céder la main au wizard. Ainsi une seule paire de
+  // boutons (le pied de page) pilote toute la navigation, avec remontée en
+  // cascade : on ne change d'étape principale que lorsque la step est à sa racine.
+  const stepNavRef = useRef(null);
+  const registerStepNav = useCallback((api) => { stepNavRef.current = api; }, []);
+
   // Navigation
   const handleNext = () => {
+    // Cascade : si la step active gère un "suivant" interne, on le laisse faire.
+    const api = stepNavRef.current;
+    if (api && typeof api.canGoNext === 'function' && api.canGoNext()) {
+      api.goNext();
+      return;
+    }
+
     const isValid = validateStep(currentStep);
 
     if (isValid) {
@@ -798,6 +813,13 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
   };
 
   const handlePrevious = () => {
+    // Cascade : si la step active gère un "retour" interne (sous-étape), on le
+    // laisse remonter d'abord ; sinon on recule d'une étape principale.
+    const api = stepNavRef.current;
+    if (api && typeof api.canGoBack === 'function' && api.canGoBack()) {
+      api.goBack();
+      return;
+    }
     setCurrentStep(prev => Math.max(prev - 1, 0));
   };
 
@@ -1260,11 +1282,11 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
       case 1:
         return <Step1BasicInfo data={aircraftData} updateData={updateData} errors={errors} />;
       case 2:
-        return <Step3WeightBalance data={aircraftData} updateData={updateData} errors={errors} />;
+        return <Step3WeightBalance data={aircraftData} updateData={updateData} errors={errors} registerStepNav={registerStepNav} />;
       case 3:
         return <Step2Speeds data={aircraftData} updateData={updateData} errors={errors} />;
       case 4:
-        return <Step4Performance data={aircraftData} updateData={updateData} errors={errors} />;
+        return <Step4Performance data={aircraftData} updateData={updateData} errors={errors} registerStepNav={registerStepNav} />;
       case 5:
         return <Step5Equipment data={aircraftData} updateData={updateData} errors={errors} />;
       case 6:
