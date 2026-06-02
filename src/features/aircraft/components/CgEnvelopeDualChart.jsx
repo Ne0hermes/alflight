@@ -32,7 +32,7 @@ const EnvelopeSubChart = ({
 
   return (
     <div style={{ flex: 1, minWidth: 320, padding: '0 8px' }}>
-      <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 600, marginBottom: 4, color: '#475569' }}>
+      <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 600, marginBottom: 4, color: 'var(--text-secondary)' }}>
         {title}
       </div>
       <svg
@@ -41,9 +41,9 @@ const EnvelopeSubChart = ({
           width: '100%',
           maxWidth: '500px',
           height: 'auto',
-          border: '1px solid #cbd5e1',
+          border: '1px solid var(--border-subtle)',
           borderRadius: 4,
-          backgroundColor: 'white',
+          backgroundColor: 'transparent',
           display: 'block',
           margin: '0 auto'
         }}
@@ -51,24 +51,24 @@ const EnvelopeSubChart = ({
         {/* Grille */}
         <defs>
           <pattern id={`grid-${title.replace(/\s/g, '')}`} width="25" height="25" patternUnits="userSpaceOnUse">
-            <path d="M 25 0 L 0 0 0 25" fill="none" stroke="#f1f5f9" strokeWidth="1" />
+            <path d="M 25 0 L 0 0 0 25" fill="none" stroke="var(--border-subtle)" strokeWidth="1" />
           </pattern>
         </defs>
         <rect width="500" height="300" fill={`url(#grid-${title.replace(/\s/g, '')})`} />
 
         {/* Axes */}
-        <line x1="50" y1="250" x2="450" y2="250" stroke="#374151" strokeWidth="2" />
-        <line x1="50" y1="50" x2="50" y2="250" stroke="#374151" strokeWidth="2" />
+        <line x1="50" y1="250" x2="450" y2="250" stroke="var(--text-secondary)" strokeWidth="2" />
+        <line x1="50" y1="50" x2="50" y2="250" stroke="var(--text-secondary)" strokeWidth="2" />
 
         {/* Labels axes */}
-        <text x="250" y="282" textAnchor="middle" fontSize="11" fill="#374151">
+        <text x="250" y="282" textAnchor="middle" fontSize="11" fill="var(--text-secondary)">
           {xAxisLabel}
         </text>
         <text
           x="14" y="150"
           textAnchor="middle"
           fontSize="11"
-          fill="#374151"
+          fill="var(--text-secondary)"
           transform="rotate(-90 14 150)"
         >
           {yAxisLabel}
@@ -82,8 +82,8 @@ const EnvelopeSubChart = ({
             const x = 50 + (400 * i) / 4;
             ticks.push(
               <g key={`x-${i}`}>
-                <line x1={x} y1="250" x2={x} y2="255" stroke="#374151" strokeWidth="1" />
-                <text x={x} y="268" textAnchor="middle" fontSize="9" fill="#374151">
+                <line x1={x} y1="250" x2={x} y2="255" stroke="var(--text-secondary)" strokeWidth="1" />
+                <text x={x} y="268" textAnchor="middle" fontSize="9" fill="var(--text-secondary)">
                   {formatX(xValue)}
                 </text>
               </g>
@@ -100,8 +100,8 @@ const EnvelopeSubChart = ({
             const y = 250 - (200 * i) / 4;
             ticks.push(
               <g key={`y-${i}`}>
-                <line x1="45" y1={y} x2="50" y2={y} stroke="#374151" strokeWidth="1" />
-                <text x="40" y={y + 3} textAnchor="end" fontSize="9" fill="#374151">
+                <line x1="45" y1={y} x2="50" y2={y} stroke="var(--text-secondary)" strokeWidth="1" />
+                <text x="40" y={y + 3} textAnchor="end" fontSize="9" fill="var(--text-secondary)">
                   {formatY(yValue)}
                 </text>
               </g>
@@ -136,7 +136,7 @@ const EnvelopeSubChart = ({
               y={toY(point.y) - 9}
               textAnchor="middle"
               fontSize={8}
-              fill="#374151"
+              fill="var(--text-secondary)"
               fontWeight="bold"
             >
               {point.label}
@@ -146,7 +146,7 @@ const EnvelopeSubChart = ({
               y={toY(point.y) + 18}
               textAnchor="middle"
               fontSize={7}
-              fill="#6b7280"
+              fill="var(--text-tertiary)"
             >
               {formatY(point.y)} / {formatX(point.x)}{pointLabelSuffix || ''}
             </text>
@@ -155,7 +155,7 @@ const EnvelopeSubChart = ({
 
         {/* Message si insuffisant */}
         {envelopePoints.length < 3 && (
-          <text x="250" y="150" textAnchor="middle" fontSize="13" fill="#9ca3af">
+          <text x="250" y="150" textAnchor="middle" fontSize="13" fill="var(--text-tertiary)">
             Saisissez au moins 3 points
           </text>
         )}
@@ -240,11 +240,11 @@ const CGEnvelopeDualChart = memo(({ cgEnvelope, massUnit = 'kg', armUnit = 'mm' 
   return (
     <div
       style={{
-        backgroundColor: '#f8fafc',
+        backgroundColor: 'transparent',
         padding: 16,
-        borderRadius: 8,
+        borderRadius: 'var(--radius-sm)',
         marginTop: 16,
-        border: '1px solid #e2e8f0',
+        border: '1px solid var(--border-subtle)',
         width: '100%',
         boxSizing: 'border-box'
       }}
@@ -287,8 +287,8 @@ const CGEnvelopeDualChart = memo(({ cgEnvelope, massUnit = 'kg', armUnit = 'mm' 
         />
       </div>
 
-      <div style={{ marginTop: 12, textAlign: 'center', fontSize: 11, color: '#64748b' }}>
-        💡 Les deux représentations sont équivalentes — un point valide sur l'une est valide sur l'autre.
+      <div style={{ marginTop: 12, textAlign: 'center', fontSize: 11, color: 'var(--text-tertiary)' }}>
+        Les deux représentations sont équivalentes — un point valide sur l'une est valide sur l'autre.
         La conversion est automatique : <strong>moment = masse × CG</strong>.
       </div>
     </div>
