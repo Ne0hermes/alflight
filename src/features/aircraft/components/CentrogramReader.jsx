@@ -55,7 +55,6 @@ import {
   Visibility as VisibilityIcon,
   ChevronRight as ChevronRightIcon,
   ChevronLeft as ChevronLeftIcon,
-  OpenWith as MoveIcon,
   Tune as CalibrateIcon,
   Add as AddIcon,
   Luggage as LuggageIcon,
@@ -74,7 +73,6 @@ import { unitsSelectors } from '@core/stores/unitsStore';
 
 const STEPS = [
   'Axes & image',
-  'Ajuster image',
   'Calibrer X',
   'Calibrer Y',
   'Lecture du bras'
@@ -291,7 +289,8 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
     const INNER_W = chartSize.width - 60 - 40;
     const INNER_H = chartSize.height - 40 - 60;
     setBackgroundImage({ url, x: 0, y: 0, width: INNER_W, height: INNER_H });
-    // Le mode ajustement est piloté par l'étape (voir useEffect ci-dessous).
+    // L'image remplit par défaut la zone interne du chart ; la calibration
+    // (clic des graduations) gère ensuite le mapping pixel → valeur.
   };
 
   /**
@@ -314,14 +313,6 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
     setTestMass('');
     setActiveStep(0);
   };
-
-  // Le « mode ajustement » (drag image + redimensionnement du chart) suit
-  // désormais l'étape : actif uniquement à l'étape 1 « Ajuster image ».
-  // L'ancienne checkbox manuelle a été retirée (bandeau supprimé — demande
-  // utilisateur). Couvre aussi le retour arrière vers l'étape 1.
-  useEffect(() => {
-    setImageAdjustMode(activeStep === 1 && !!imageUrl);
-  }, [activeStep, imageUrl]);
 
   // ════════════════════════════════════════════════════════════════════════
   // CALIBRATION GUIDÉE — pattern AbacBuilder
@@ -539,38 +530,33 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
       </Stack>
 
       <Grid container spacing={2}>
-        {/* Inverser l'axe Y — déplacé en tête (demande user). Remplace le
-            bouton "Y inversé" retiré de la barre image. Même design que le
-            switch "Inverser l'axe X" : couleur primary, sans gras, sans
-            marqueur ACTIVÉ. */}
+        {/* ── Axe X : titre, puis interrupteur d'inversion, puis champs ── */}
+        <Grid size={12}>
+          <Typography variant="caption" fontWeight={700} color="success.main">
+            Axe X (horizontal — {xRole})
+          </Typography>
+        </Grid>
         <Grid size={12}>
           <FormControlLabel
             control={
               <Switch
                 size="small"
-                checked={!!axesConfig.yAxis.reversed}
+                checked={!!axesConfig.xAxis.reversed}
                 onChange={(e) => {
                   setAxesConfig(c => ({
-                    ...c, yAxis: { ...c.yAxis, reversed: e.target.checked }
+                    ...c, xAxis: { ...c.xAxis, reversed: e.target.checked }
                   }));
-                  setCustomYTicks([]);  // ré-calibration nécessaire
+                  setCustomXTicks([]);  // ré-calibration nécessaire
                   setCalibrationState(null);
                 }}
               />
             }
             label={
               <Typography variant="caption">
-                Inverser l'axe Y (origine en haut) — valeurs croissantes du haut vers le bas
+                Inverser l'axe X (origine à droite) — valeurs décroissantes de gauche à droite
               </Typography>
             }
           />
-        </Grid>
-
-        {/* Axe X */}
-        <Grid size={12}>
-          <Typography variant="caption" fontWeight={700} color="success.main">
-            Axe X (horizontal — {xRole})
-          </Typography>
         </Grid>
         <Grid size={{ xs: 6, sm: 2 }}>
           <TextField
@@ -623,34 +609,34 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
             }))}
           />
         </Grid>
+
+        {/* ── Axe Y : titre, puis interrupteur d'inversion, puis champs ── */}
+        <Grid size={12}>
+          <Typography variant="caption" fontWeight={700} color="primary.main">
+            Axe Y (vertical — {yRole})
+          </Typography>
+        </Grid>
         <Grid size={12}>
           <FormControlLabel
             control={
               <Switch
                 size="small"
-                checked={!!axesConfig.xAxis.reversed}
+                checked={!!axesConfig.yAxis.reversed}
                 onChange={(e) => {
                   setAxesConfig(c => ({
-                    ...c, xAxis: { ...c.xAxis, reversed: e.target.checked }
+                    ...c, yAxis: { ...c.yAxis, reversed: e.target.checked }
                   }));
-                  setCustomXTicks([]);  // ré-calibration nécessaire
+                  setCustomYTicks([]);  // ré-calibration nécessaire
                   setCalibrationState(null);
                 }}
               />
             }
             label={
               <Typography variant="caption">
-                Inverser l'axe X (origine à droite) — valeurs décroissantes de gauche à droite
+                Inverser l'axe Y (origine en haut) — valeurs croissantes du haut vers le bas
               </Typography>
             }
           />
-        </Grid>
-
-        {/* Axe Y */}
-        <Grid size={12}>
-          <Typography variant="caption" fontWeight={700} color="primary.main">
-            Axe Y (vertical — {yRole})
-          </Typography>
         </Grid>
         <Grid size={{ xs: 6, sm: 2 }}>
           <TextField
@@ -719,9 +705,9 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
         axesConfig={axesConfig}
         curves={curves}
         selectedCurveId={selectedCurveIdForChart}
-        onPointClick={activeStep === 4 && !imageAdjustMode ? handlePointClick : undefined}
-        onPointDrag={activeStep === 4 && !imageAdjustMode ? handlePointDrag : undefined}
-        onPointDelete={activeStep === 4 && !imageAdjustMode ? handlePointDelete : undefined}
+        onPointClick={activeStep === 3 && !imageAdjustMode ? handlePointClick : undefined}
+        onPointDrag={activeStep === 3 && !imageAdjustMode ? handlePointDrag : undefined}
+        onPointDelete={activeStep === 3 && !imageAdjustMode ? handlePointDelete : undefined}
         responsive={false}
         width={chartSize.width}
         height={chartSize.height}
@@ -845,54 +831,9 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
       );
     }
 
-    // ─── ÉTAPE 1 — Ajuster image ───
-    if (activeStep === 1) {
-      return (
-        <Box>
-          <Alert severity="info" icon={<MoveIcon />} sx={{ mb: 2 }}>
-            <Typography variant="subtitle2" fontWeight={700}>
-              🎯 Ajuste l'image ET le graphique pour qu'ils collent parfaitement
-            </Typography>
-            <Typography variant="body2" sx={{ mt: 1 }} component="div">
-              À cette étape, l'image et le graphique sont directement déplaçables :
-              <ul style={{ margin: '6px 0', paddingLeft: 20 }}>
-                <li>L'image se déplace au drag (8 poignées bleues sur ses bords).</li>
-                <li>Le graphique se redimensionne via les <strong>3 poignées sur ses bords</strong>
-                    (droit, bas, coin bas-droit).</li>
-                <li>Objectif : caler les graduations <strong>0 sur 0</strong> et
-                    <strong>max sur max</strong> de chaque axe.</li>
-                <li>Clique sur <strong>« Suivant → »</strong> quand c'est bon pour passer à la calibration.</li>
-              </ul>
-            </Typography>
-          </Alert>
-          <Stack direction="row" spacing={2}>
-            <Box sx={{ flex: 1 }} />
-            <Button
-              size="small"
-              color="warning"
-              onClick={() => {
-                const INNER_W = chartSize.width - 60 - 40;
-                const INNER_H = chartSize.height - 40 - 60;
-                setBackgroundImage(b => b ? { ...b, x: 0, y: 0, width: INNER_W, height: INNER_H } : b);
-              }}
-            >
-              Reset position image
-            </Button>
-            <Button
-              size="small"
-              color="warning"
-              onClick={() => setChartSize({ width: DEFAULT_CHART_WIDTH, height: DEFAULT_CHART_HEIGHT })}
-            >
-              Reset taille chart
-            </Button>
-          </Stack>
-        </Box>
-      );
-    }
-
-    // ─── ÉTAPES 2-3 — Calibrer X / Y ───
-    if (activeStep === 2 || activeStep === 3) {
-      const axis = activeStep === 2 ? 'x' : 'y';
+    // ─── ÉTAPES 1-2 — Calibrer X / Y ───
+    if (activeStep === 1 || activeStep === 2) {
+      const axis = activeStep === 1 ? 'x' : 'y';
       const cfg = axis === 'x' ? axesConfig.xAxis : axesConfig.yAxis;
       const values = buildAxisValues(cfg.min, cfg.max, cfg.step);
       const ticks = axis === 'x' ? customXTicks : customYTicks;
@@ -982,8 +923,8 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
       );
     }
 
-    // ─── ÉTAPE 4 — Lecture du bras (clic des points + régression) ───
-    if (activeStep === 4) {
+    // ─── ÉTAPE 3 — Lecture du bras (clic des points + régression) ───
+    if (activeStep === 3) {
       return (
         <Box>
           {/* Alerte si le user clique sans avoir choisi de stage */}
@@ -1219,15 +1160,12 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
   // ════════════════════════════════════════════════════════════════════════
   const canGoNext = () => {
     if (activeStep === 0) return !!imageUrl;
-    if (activeStep === 1) return true;
-    if (activeStep === 2) return customXTicks.length >= 2;
-    if (activeStep === 3) return customYTicks.length >= 2;
+    if (activeStep === 1) return customXTicks.length >= 2;
+    if (activeStep === 2) return customYTicks.length >= 2;
     return false;
   };
 
   const handleNext = () => {
-    // Quand on passe d'ajustement image à calibration X, on désactive le mode image
-    if (activeStep === 1) setImageAdjustMode(false);
     setActiveStep(s => Math.min(STEPS.length - 1, s + 1));
   };
 
