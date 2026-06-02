@@ -408,6 +408,12 @@
   color: var(--input-text) !important;
   text-align: var(--input-text-align) !important;
   box-sizing: border-box !important;
+  /* Hauteur de ligne explicite pour garantir hauteur IDENTIQUE entre
+     TextField (<input>) et Select (<div role="combobox">). Sans ça, MUI
+     applique min-height: 1.4375em sur Select et height: 1.4375em sur
+     input → léger décalage perceptible. */
+  line-height: 1.4375em !important;
+  min-height: 1.4375em !important;
 }
 
 /* SELECT — le combobox <div> qui remplace l'input + espace pour la flèche */
@@ -419,6 +425,39 @@
   text-align: var(--input-text-align) !important;
   min-width: 0 !important;
   box-sizing: border-box !important;
+  /* Force hauteur identique au TextField (cf. règle universelle ci-dessus).
+     L'utilisateur demande explicitement que les Selects aient TOUJOURS la
+     même taille que les TextField, partout dans l'app. */
+  line-height: 1.4375em !important;
+  min-height: 1.4375em !important;
+  height: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* RÈGLE UNIVERSELLE — hauteur Select == hauteur TextField partout.
+   Cible le wrapper MuiInputBase-root pour les deux. Sans ça, certains
+   contextes spécifiques (ex: Step1 Catégorie, Step1 Type de moteur) avaient
+   des Selects visuellement plus grands que les TextField voisins. */
+.MuiOutlinedInput-root.MuiSelect-root,
+.MuiOutlinedInput-root:has(.MuiSelect-select) {
+  /* Aligne précisément sur la hauteur du TextField default
+     (padding 16.5 * 2 + line-height 1.4375em ≈ 56px à 14px font). */
+  min-height: 0 !important;
+}
+
+/* Variant size="small" : aligne la hauteur des Selects sur les TextField
+   sizeSmall (padding 8.5px vertical). */
+.MuiInputBase-sizeSmall .MuiSelect-select.MuiOutlinedInput-input,
+.MuiInputBase-sizeSmall.MuiSelect-select.MuiOutlinedInput-input {
+  padding-top: 8.5px !important;
+  padding-bottom: 8.5px !important;
+}
+.MuiInputBase-sizeSmall .MuiOutlinedInput-input,
+.MuiInputBase-sizeSmall .MuiInputBase-input {
+  padding-top: 8.5px !important;
+  padding-bottom: 8.5px !important;
 }
 
 /* Native input caché du Select — totalement invisible (pas de "double zone") */
