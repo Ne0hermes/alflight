@@ -161,10 +161,13 @@ const muiTheme = createTheme({
     MuiAccordion: {
       styleOverrides: {
         root: {
-          backgroundColor: ALFLIGHT_COLORS.bgSurface,
+          // Demande utilisateur : fond ET bordure TRANSPARENTS sur les
+          // accordéons du wizard avion (encart gris fin trop visible).
+          backgroundColor: 'transparent',
           backgroundImage: 'none',
-          border: `1px solid ${ALFLIGHT_COLORS.borderSubtle}`,
-          '&:before': { display: 'none' }, // supprime la barre du haut
+          border: 'none',
+          boxShadow: 'none',
+          '&:before': { display: 'none' }, // supprime la barre du haut MUI
           '&.Mui-expanded': {
             margin: 0,
           },
@@ -175,9 +178,27 @@ const muiTheme = createTheme({
       styleOverrides: {
         root: {
           color: ALFLIGHT_COLORS.textPrimary,
+          backgroundColor: 'transparent',
+          padding: '0 16px',
           '&.Mui-expanded': {
-            borderBottom: `1px solid ${ALFLIGHT_COLORS.borderSubtle}`,
+            borderBottom: 'none',
+            minHeight: '48px',
           },
+        },
+        content: {
+          margin: '12px 0',
+          '&.Mui-expanded': {
+            margin: '12px 0',
+          },
+        },
+      },
+    },
+    MuiAccordionDetails: {
+      styleOverrides: {
+        root: {
+          backgroundColor: 'transparent',
+          padding: '8px 16px 16px',
+          borderTop: 'none',
         },
       },
     },
@@ -341,7 +362,7 @@ const muiTheme = createTheme({
             borderRadius: '8px',
             fontFamily: "'Century Gothic', 'Questrial', sans-serif",
             '& fieldset': {
-              borderColor: 'transparent !important',
+              borderColor: ALFLIGHT_COLORS.borderSubtle + ' !important',
               borderWidth: '1px',
               '& > legend': {
                 display: 'none !important',
@@ -357,7 +378,7 @@ const muiTheme = createTheme({
               },
             },
             '&:hover fieldset': {
-              borderColor: ALFLIGHT_COLORS.borderSubtle + ' !important',
+              borderColor: ALFLIGHT_COLORS.borderRegular + ' !important',
             },
             '&.Mui-focused fieldset': {
               borderColor: ALFLIGHT_COLORS.accent + ' !important',
@@ -414,10 +435,11 @@ const muiTheme = createTheme({
           fontFamily: "'Century Gothic', 'Questrial', sans-serif",
         },
         notchedOutline: {
-          // Demande utilisateur : transparent au repos pour éliminer
-          // l'encart gris léger qui entoure les Select et TextField.
-          // Le hover/focus reprend une bordure visible.
-          borderColor: 'transparent !important',
+          // Bordure subtle visible au repos pour cohérence avec le
+          // ressenti utilisateur ("Puissance moteur a un contour fin").
+          // Trop transparent rendait les Selects invisibles vs les
+          // TextField, créant une illusion d'optique de largeur diff.
+          borderColor: ALFLIGHT_COLORS.borderSubtle + ' !important',
           borderWidth: '1px',
           top: '0 !important',
           '& > legend': {
@@ -629,7 +651,7 @@ const muiTheme = createTheme({
             borderRadius: '8px',
             fontFamily: "'Century Gothic', 'Questrial', sans-serif !important",
             '& fieldset': {
-              borderColor: 'transparent !important',
+              borderColor: ALFLIGHT_COLORS.borderSubtle + ' !important',
               borderWidth: '1px',
               '& > legend': {
                 display: 'none !important',
@@ -645,7 +667,7 @@ const muiTheme = createTheme({
               },
             },
             '&:hover fieldset': {
-              borderColor: ALFLIGHT_COLORS.borderSubtle + ' !important',
+              borderColor: ALFLIGHT_COLORS.borderRegular + ' !important',
             },
             '&.Mui-focused fieldset': {
               borderColor: ALFLIGHT_COLORS.accent + ' !important',

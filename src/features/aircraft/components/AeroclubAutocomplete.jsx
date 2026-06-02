@@ -203,12 +203,9 @@ const AeroclubAutocomplete = ({
           <TextField
             {...params}
             label={label}
-            placeholder="Tapez pour rechercher ou ajouter…"
+            placeholder="Rechercher ou ajouter…"
             error={error}
-            helperText={
-              helperText ||
-              "Sélectionnez votre aéroclub. Si absent, tapez son nom et cliquez « Ajouter »."
-            }
+            helperText={helperText}
             required={required}
             InputLabelProps={{ shrink: true }}
           />
@@ -216,6 +213,14 @@ const AeroclubAutocomplete = ({
         freeSolo
         clearOnBlur={false}
         handleHomeEndKeys
+        // Demande utilisateur : "restructurer" l'Aéroclub d'attache pour
+        // qu'il ressemble strictement aux autres champs. Le helperText
+        // long et le bouton Clear créaient un encombrement visuel et une
+        // hauteur différente. Solution :
+        //  - disableClearable retire la croix Clear par défaut
+        //  - helperText vide par défaut (passé via prop si nécessaire)
+        //  - placeholder plus court
+        disableClearable
         sx={sx}
       />
 

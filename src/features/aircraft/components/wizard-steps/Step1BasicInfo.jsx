@@ -532,7 +532,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                   }
                 }}
                 label="Aéroclub d'attache"
-                helperText="Recherchez votre club ou ajoutez-le s'il manque dans la liste"
+                helperText=""
               />
             </Grid>
 
