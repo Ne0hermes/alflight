@@ -1088,9 +1088,9 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
             }
 
             return (
-            <Paper variant="outlined" sx={{ p: 2, mb: 2, bgcolor: 'rgba(168, 85, 247, 0.08)' }}>
+            <Paper variant="outlined" sx={{ p: 2, mb: 2, bgcolor: 'transparent', borderRadius: 'var(--radius-sm)' }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                🧮 Régression linéaire (live){massAxis === 'y' && ' — config inversée'}
+                Régression linéaire (live){massAxis === 'y' && ' — config inversée'}
               </Typography>
               <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
                 <Chip color="primary" label={`a (pente régression) = ${regression.a.toFixed(4)} ${axesConfig.yAxis.unit}/${axesConfig.xAxis.unit}`} />
@@ -1107,8 +1107,8 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
                 <Box sx={{ mt: 1.5, p: 1.5, bgcolor: 'rgba(34,197,94,0.1)', borderRadius: 1 }}>
                   <Typography variant="body2" fontWeight={700}>
                     {massAxis === 'x'
-                      ? <>📏 Bras de levier = pente <strong>a</strong> = {armInfo.armRaw.toFixed(4)} {armInfo.lengthUnit} = <strong>{armUser.toFixed(2)} {userArmUnit}</strong></>
-                      : <>📏 Bras de levier = <strong>1/a</strong> (inversé) = {armInfo.armRaw.toFixed(4)} {armInfo.lengthUnit} = <strong>{armUser.toFixed(2)} {userArmUnit}</strong></>
+                      ? <>Bras de levier = pente <strong>a</strong> = {armInfo.armRaw.toFixed(4)} {armInfo.lengthUnit} = <strong>{armUser.toFixed(2)} {userArmUnit}</strong></>
+                      : <>Bras de levier = <strong>1/a</strong> (inversé) = {armInfo.armRaw.toFixed(4)} {armInfo.lengthUnit} = <strong>{armUser.toFixed(2)} {userArmUnit}</strong></>
                     }
                   </Typography>
                 </Box>
@@ -1136,11 +1136,10 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
                 <Button
                   variant="contained"
                   color="success"
-                  startIcon={<CheckCircleIcon />}
                   onClick={validateStage}
                   disabled={regression.r2 < 0.95 || !armInfo}
                 >
-                  ✓ Valider ce bras ({armUser ? armUser.toFixed(2) : '?'} {userArmUnit})
+                  Valider ce bras ({armUser ? armUser.toFixed(2) : '?'} {userArmUnit})
                 </Button>
                 {resultsByStage[currentStageKey] && (
                   <Button
