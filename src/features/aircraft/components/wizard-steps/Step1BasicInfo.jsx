@@ -565,42 +565,45 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                 Photo de l'appareil (optionnel)
               </Typography>
 
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                <ImageEditor
-                  src={photoPreview}
-                  alt="Photo de l'avion"
-                  width={200}
-                  height={150}
-                  shape="rectangle"
-                  showControls={true}
-                  onSave={(editedData) => {
-                    // Sauvegarder les données d'édition
-                    updateData('photoEditData', editedData);
-                  }}
-                  placeholder={
-                    <Box
-                      sx={{
-                        width: 200,
-                        height: 150,
-                        border: '2px dashed',
-                        borderColor: 'divider',
-                        borderRadius: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        bgcolor: 'background.paper'
-                      }}
-                    >
-                      <CameraIcon sx={{ fontSize: 40, color: 'text.disabled' }} />
-                    </Box>
-                  }
-                />
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 2, width: '100%' }}>
+                <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                  <ImageEditor
+                    src={photoPreview}
+                    alt="Photo de l'avion"
+                    width={350}
+                    height={200}
+                    shape="rectangle"
+                    showControls={true}
+                    onSave={(editedData) => {
+                      // Sauvegarder les données d'édition
+                      updateData('photoEditData', editedData);
+                    }}
+                    placeholder={
+                      <Box
+                        sx={{
+                          width: 350,
+                          height: 200,
+                          border: '2px dashed',
+                          borderColor: 'divider',
+                          borderRadius: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          bgcolor: 'background.paper'
+                        }}
+                      >
+                        <CameraIcon sx={{ fontSize: 40, color: 'text.disabled' }} />
+                      </Box>
+                    }
+                  />
+                </Box>
 
                 <Button
                   variant="contained"
                   component="label"
                   startIcon={<CameraIcon />}
                   size="small"
+                  fullWidth
                 >
                   {photoPreview ? 'Changer la photo' : 'Ajouter une photo'}
                   <input
