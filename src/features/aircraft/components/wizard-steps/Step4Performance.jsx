@@ -1148,10 +1148,23 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                 }
               });
 
-              // Navigation vers l'étape équipement
-              if (onNext) {
-                setTimeout(() => onNext(), 500); // Petit délai pour laisser la sauvegarde se terminer
-              }
+              // Retour à la liste des tableaux de performance (au lieu d'avancer
+              // automatiquement). Depuis cette vue récapitulative, l'utilisateur
+              // choisit ensuite d'avancer à l'étape suivante (bouton Suivant) ou
+              // de modifier un autre tableau.
+              setSavedPerformanceData({
+                ...savedPerformanceData,
+                advancedPerformance: {
+                  tables: updatedAllTables,
+                  extractionMetadata: {
+                    ...updatedData.advancedPerformance.extractionMetadata,
+                    totalTables: updatedAllTables.length
+                  }
+                },
+                editingTables: null
+              });
+              setShowExistingData(true);
+              setForceShowSummary(true);
             } else {
               // Mode édition normale - retour à la vue récapitulative
               // Remplacer les tableaux de cette classification par les nouveaux
