@@ -569,29 +569,32 @@ const muiTheme = createTheme({
         // le texte affiché (ex. "Monomoteur", "Léger (L)"). Sans cet
         // override la police par défaut MUI (Roboto) prend le dessus sur
         // la police ALFlight (Century Gothic).
+        //
+        // 📏 Hauteur identique au TextField voisin :
+        //  - Variant medium (défaut) : padding 16.5px vertical (= TextField default)
+        //  - Variant small (size="small") : padding 8.5px vertical (= TextField sizeSmall)
+        //
+        // Le paddingRight 32px reste pour laisser place à la flèche dropdown
+        // positionnée en absolute. paddingLeft 14px = TextField standard.
         select: {
           color: ALFLIGHT_COLORS.textPrimary,
           fontFamily: "'Century Gothic', 'Questrial', sans-serif !important",
           fontSize: '14px',
           textAlign: 'center',
-          // ⚠️ Padding ALIGNÉ sur MuiOutlinedInput.input par défaut MUI
-          // (16.5px vertical, 14px horizontal). Conservation du
-          // paddingRight 32px nécessaire pour la flèche dropdown absolue.
-          //
-          // Mon override précédent (paddingLeft 32 + paddingRight 32) créait
-          // une différence de 36px de largeur utile vs TextField → effet
-          // visuel "Select plus étroit / plus rétréci / contour plus pâle".
-          //
-          // Avec 14px à gauche et 32px à droite, le contenu textAlign:center
-          // est légèrement décalé à gauche de 9px par rapport au centre
-          // mathématique, mais reste imperceptible à l'œil. L'apparence est
-          // strictement identique au TextField voisin "Puissance moteur".
           paddingTop: '16.5px !important',
           paddingBottom: '16.5px !important',
           paddingLeft: '14px !important',
           paddingRight: '32px !important',
           minWidth: 0,
           boxSizing: 'border-box',
+          // ⚠️ Override pour size="small" — aligne sur TextField sizeSmall
+          // (padding 8.5px vertical). Sans cet override, le Select restait
+          // bloqué à 16.5px et apparaissait plus grand que les TextField
+          // voisins dans le wizard avion (Min/Max/Pas + Unité X/Y).
+          '&.MuiInputBase-inputSizeSmall': {
+            paddingTop: '8.5px !important',
+            paddingBottom: '8.5px !important',
+          },
         },
         icon: {
           color: ALFLIGHT_COLORS.textTertiary,

@@ -1340,7 +1340,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
           </Stack>
           {imageAdjustMode && (
             <Typography variant="caption" color="primary" sx={{ display: 'block', mt: 1 }}>
-              💡 Drag l'image avec ses poignées bleues. Le chart se redimensionne via les 3 poignées
+              Drag l'image avec ses poignées bleues. Le chart se redimensionne via les 3 poignées
               bleues sur ses bords (droit, bas, coin). Décoche la checkbox pour cliquer des points.
             </Typography>
           )}
