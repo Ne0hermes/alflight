@@ -314,6 +314,14 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
     setActiveStep(0);
   };
 
+  // L'ajustement (drag de l'image + redimensionnement du graphique) est
+  // disponible à l'étape 0 « Axes & image » : l'image sert de filigrane pour
+  // caler le graphique. Désactivé pendant la calibration et la lecture, où
+  // l'on clique sur le chart (graduations puis points).
+  useEffect(() => {
+    setImageAdjustMode(activeStep === 0 && !!imageUrl);
+  }, [activeStep, imageUrl]);
+
   // ════════════════════════════════════════════════════════════════════════
   // CALIBRATION GUIDÉE — pattern AbacBuilder
   // ════════════════════════════════════════════════════════════════════════
@@ -827,6 +835,38 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
               </Typography>
             )}
           </Paper>
+
+          {/* Réajustement dynamique : l'image (filigrane) et le graphique se
+              calent l'un sur l'autre. Disponible dès qu'une image est chargée. */}
+          {imageUrl && (
+            <Paper variant="outlined" sx={{ p: 2, mt: 2, borderRadius: 'var(--radius-sm)', bgcolor: 'transparent' }}>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+                Cale le filigrane : déplace et redimensionne l'image (poignées bleues sur ses bords),
+                redimensionne le graphique (3 poignées : bord droit, bord bas, coin bas-droit), pour
+                aligner les graduations 0↔0 et max↔max de chaque axe.
+              </Typography>
+              <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+                <Button
+                  size="small"
+                  color="warning"
+                  onClick={() => {
+                    const INNER_W = chartSize.width - 60 - 40;
+                    const INNER_H = chartSize.height - 40 - 60;
+                    setBackgroundImage(b => b ? { ...b, x: 0, y: 0, width: INNER_W, height: INNER_H } : b);
+                  }}
+                >
+                  Reset position image
+                </Button>
+                <Button
+                  size="small"
+                  color="warning"
+                  onClick={() => setChartSize({ width: DEFAULT_CHART_WIDTH, height: DEFAULT_CHART_HEIGHT })}
+                >
+                  Reset taille graphique
+                </Button>
+              </Stack>
+            </Paper>
+          )}
         </Box>
       );
     }
