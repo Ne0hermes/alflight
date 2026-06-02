@@ -1130,13 +1130,13 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                   <strong>Ajouté par :</strong> {existingAircraftData.addedBy}
                 </Typography>
               </Grid>
-              <Grid size={6}>
-                {existingAircraftData.verified && (
+              {existingAircraftData.verified && (
+                <Grid size={6}>
                   <Typography variant="body2" color="success.main">
                     ✓ Configuration vérifiée
                   </Typography>
-                )}
-              </Grid>
+                </Grid>
+              )}
             </Grid>
           </Paper>
 
@@ -1239,97 +1239,6 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
             </Grid>
           </Grid>
         </Paper>
-      )}
-
-      {/* Dialog pour avertir de l'existence de l'immatriculation - Désactivé */}
-      {false && (
-      <Dialog
-        open={showDuplicateDialog}
-        onClose={() => setShowDuplicateDialog(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <WarningIcon color="warning" />
-          Immatriculation déjà existante
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            L'immatriculation <strong>{data.registration}</strong> existe déjà dans notre base de données communautaire.
-          </DialogContentText>
-
-          {existingAircraftData && (
-            <Paper elevation={0} sx={{ p: 2, mt: 2, bgcolor: 'warning.50' }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Avion existant :
-              </Typography>
-              <Typography variant="body2">
-                • Modèle : {existingAircraftData.model}
-              </Typography>
-              <Typography variant="body2">
-                • Constructeur : {existingAircraftData.manufacturer}
-              </Typography>
-              <Typography variant="body2">
-                • Ajouté par : {existingAircraftData.addedBy}
-              </Typography>
-              {existingAircraftData.verified && (
-                <Typography variant="body2" color="success.main">
-                  ✓ Configuration vérifiée par la communauté
-                </Typography>
-              )}
-            </Paper>
-          )}
-
-          <Alert severity="info" sx={{ mt: 2 }}>
-            <Typography variant="body2">
-              <strong>Options disponibles :</strong>
-            </Typography>
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              • <strong>Importer les données existantes</strong> : Utiliser la configuration déjà validée par la communauté
-            </Typography>
-            <Typography variant="body2">
-              • <strong>Proposer une mise à jour</strong> : Si vous avez des informations plus récentes ou corrigées
-            </Typography>
-            <Typography variant="body2">
-              • <strong>Créer une variante</strong> : Si votre avion a des modifications spécifiques
-            </Typography>
-          </Alert>
-        </DialogContent>
-        <DialogActions sx={{ p: 2, gap: 1, flexWrap: 'wrap', justifyContent: 'space-between' }}>
-          <Button
-            onClick={() => setShowDuplicateDialog(false)}
-            variant="outlined"
-            size="small"
-          >
-            Annuler
-          </Button>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button
-              onClick={() => {
-                setShowDuplicateDialog(false);
-                setShowUpdateDialog(true);
-              }}
-              variant="outlined"
-              startIcon={<UpdateIcon />}
-              color="warning"
-            >
-              Proposer une mise à jour
-            </Button>
-            <Button
-              onClick={() => {
-                // Retourner à l'étape de recherche communautaire
-                window.location.href = '#/aircraft/wizard?step=0&search=' + data.registration;
-                setShowDuplicateDialog(false);
-              }}
-              variant="contained"
-              startIcon={<CloudIcon />}
-              color="primary"
-            >
-              Importer les données
-            </Button>
-          </Box>
-        </DialogActions>
-      </Dialog>
       )}
 
       {/* Dialog pour proposer une mise à jour */}
