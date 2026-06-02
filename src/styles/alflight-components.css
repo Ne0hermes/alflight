@@ -401,9 +401,8 @@
 }
 
 /* L'INPUT proprement dit (texte tapable) — padding et typo uniformes.
-   Hauteur LAISSÉE NATURELLE par MUI : padding-y + line-height intrinsèque
-   de l'input. Pas de min-height forcé ici → l'input garde sa taille
-   d'origine, le Select va s'aligner dessus via une règle dédiée. */
+   MUI applique height: 1.4375em sur cet <input>. On fige explicitement
+   cette même valeur pour que le Select puisse l'égaler au pixel près. */
 .MuiInputBase-root .MuiOutlinedInput-input,
 .MuiInputBase-root .MuiInputBase-input {
   padding-top: var(--input-padding-y) !important;
@@ -415,15 +414,23 @@
   color: var(--input-text) !important;
   text-align: var(--input-text-align) !important;
   box-sizing: border-box !important;
+  /* Hauteur de contenu = celle d'un <input> MUI : 1.4375em (RELATIF à la
+     police 14px → 20.125px). Surtout PAS une valeur px figée qui ne suit
+     pas la police. */
+  line-height: 1.4375em !important;
+  height: 1.4375em !important;
 }
 
-/* SELECT — le combobox <div> qui remplace l'input + espace pour la flèche.
-   📏 ALIGNEMENT EXACT SUR LE TEXTFIELD :
-   Le <input> de MUI a une "intrinsic height" basée sur line-height + padding.
-   Le <div role="combobox"> n'a pas la même intrinsic height — il prend juste
-   la hauteur de son texte (~14px) + padding. Pour rattraper la différence,
-   on force ici line-height: 23px (= 1.4375em à 14px) = hauteur naturelle
-   d'un <input> à 14px. */
+/* SELECT — le combobox <div> qui remplace l'<input>.
+   📏 ÉGALITÉ DE HAUTEUR EXACTE AVEC LE TEXTFIELD :
+   On donne au <div> les MÊMES propriétés de hauteur que l'<input> ci-dessus
+   (height + line-height: 1.4375em, padding identique, box-sizing identique,
+   font 14px identique). Deux éléments avec des règles de hauteur strictement
+   identiques rendent à la même hauteur — quel que soit le contexte parent.
+
+   Bug précédent : line-height: 23px figé (= 1.4375em à 16px). Comme la
+   police est forcée à 14px, l'<input> faisait 1.4375em×14 = 20.125px alors
+   que le Select faisait 23px → ~3px de trop. Corrigé en 1.4375em relatif. */
 .MuiInputBase-root .MuiSelect-select.MuiOutlinedInput-input {
   padding-top: var(--input-padding-y) !important;
   padding-bottom: var(--input-padding-y) !important;
@@ -432,25 +439,22 @@
   text-align: var(--input-text-align) !important;
   min-width: 0 !important;
   box-sizing: border-box !important;
-  /* Match exact hauteur input native MUI à 14px */
-  line-height: 23px !important;
-  min-height: 23px !important;
-  height: auto !important;
+  /* Identique à l'<input> → même hauteur garantie */
+  line-height: 1.4375em !important;
+  height: 1.4375em !important;
+  min-height: 1.4375em !important;
 }
 
-/* Variant size="small" sur Select : aligne sur TextField sizeSmall
-   (padding-y MUI default = 8.5px, line-height contenu = 23px). */
+/* Variant size="small" — padding réduit, hauteur de contenu inchangée
+   (1.4375em suit la police 14px partout). */
+.MuiInputBase-sizeSmall .MuiOutlinedInput-input,
+.MuiInputBase-sizeSmall .MuiInputBase-input,
 .MuiInputBase-sizeSmall .MuiSelect-select.MuiOutlinedInput-input,
 .MuiInputBase-sizeSmall.MuiSelect-select.MuiOutlinedInput-input {
   padding-top: 8.5px !important;
   padding-bottom: 8.5px !important;
-  line-height: 23px !important;
-  min-height: 23px !important;
-}
-.MuiInputBase-sizeSmall .MuiOutlinedInput-input,
-.MuiInputBase-sizeSmall .MuiInputBase-input {
-  padding-top: 8.5px !important;
-  padding-bottom: 8.5px !important;
+  line-height: 1.4375em !important;
+  height: 1.4375em !important;
 }
 
 /* Native input caché du Select — totalement invisible (pas de "double zone") */
