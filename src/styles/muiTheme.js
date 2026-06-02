@@ -324,10 +324,27 @@ const muiTheme = createTheme({
       defaultProps: {
         variant: 'outlined',
         MenuProps: {
+          // ⚠️ Le menu dropdown des <Select> MUI doit avoir EXACTEMENT
+          // la largeur du select fermé (pas plus large), des angles arrondis
+          // ALFlight et un fond cockpit dark. anchorOrigin/transformOrigin
+          // garantissent un alignement strict sous le trigger.
+          anchorOrigin: { vertical: 'bottom', horizontal: 'left' },
+          transformOrigin: { vertical: 'top', horizontal: 'left' },
           PaperProps: {
             style: {
               backgroundColor: ALFLIGHT_COLORS.bgSurface,
-              border: `1px solid ${ALFLIGHT_COLORS.borderSubtle}`,
+              border: `1px solid ${ALFLIGHT_COLORS.borderRegular}`,
+              borderRadius: '8px', // identique aux selects/boutons
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)', // ombre noire neutre (PAS BLEUE)
+              marginTop: '4px',
+              maxHeight: '320px',
+              backgroundImage: 'none',
+            },
+          },
+          MenuListProps: {
+            sx: {
+              padding: '4px',
+              backgroundColor: 'transparent',
             },
           },
         },
@@ -341,16 +358,84 @@ const muiTheme = createTheme({
         },
       },
     },
+    // ─── Popover (utilisé par Select, Menu, Autocomplete, DatePicker, etc.) ──
+    // Style identique au Paper de MuiSelect → cohérence sur TOUS les dropdowns
+    // de l'app, pas juste les <Select>.
+    MuiPopover: {
+      styleOverrides: {
+        paper: {
+          backgroundColor: ALFLIGHT_COLORS.bgSurface,
+          border: `1px solid ${ALFLIGHT_COLORS.borderRegular}`,
+          borderRadius: '8px',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)',
+          backgroundImage: 'none',
+        },
+      },
+    },
+    // ─── Menu (Popover spécialisé pour <Menu>) ───────────────────────────────
+    MuiMenu: {
+      styleOverrides: {
+        paper: {
+          backgroundColor: ALFLIGHT_COLORS.bgSurface,
+          border: `1px solid ${ALFLIGHT_COLORS.borderRegular}`,
+          borderRadius: '8px',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)',
+          backgroundImage: 'none',
+        },
+        list: {
+          padding: '4px',
+        },
+      },
+    },
     MuiMenuItem: {
       styleOverrides: {
         root: {
           color: ALFLIGHT_COLORS.textPrimary,
+          borderRadius: '6px', // léger arrondi sur les items individuels
+          margin: '2px 0',
+          fontFamily: "'Century Gothic', 'Questrial', 'Jost', system-ui, sans-serif",
+          fontSize: '14px',
+          minHeight: '40px',
           '&:hover': {
-            backgroundColor: 'rgba(245, 242, 236, 0.04)',
+            backgroundColor: 'rgba(245, 242, 236, 0.04)', // ivoire subtle (PAS bleu)
           },
           '&.Mui-selected': {
             backgroundColor: ALFLIGHT_COLORS.accentSoft,
-            '&:hover': { backgroundColor: ALFLIGHT_COLORS.accentSoft },
+            color: ALFLIGHT_COLORS.accent,
+            fontWeight: 600,
+            '&:hover': {
+              backgroundColor: ALFLIGHT_COLORS.accentSoft,
+            },
+          },
+          '&.Mui-focusVisible': {
+            backgroundColor: 'rgba(245, 242, 236, 0.06)',
+          },
+        },
+      },
+    },
+    // ─── Autocomplete (utilisé par AeroclubAutocomplete) ─────────────────────
+    MuiAutocomplete: {
+      styleOverrides: {
+        paper: {
+          backgroundColor: ALFLIGHT_COLORS.bgSurface,
+          border: `1px solid ${ALFLIGHT_COLORS.borderRegular}`,
+          borderRadius: '8px',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)',
+          backgroundImage: 'none',
+        },
+        listbox: {
+          padding: '4px',
+        },
+        option: {
+          borderRadius: '6px',
+          margin: '2px 0',
+          minHeight: '40px',
+          '&[aria-selected="true"]': {
+            backgroundColor: ALFLIGHT_COLORS.accentSoft,
+            color: ALFLIGHT_COLORS.accent,
+          },
+          '&.Mui-focused, &:hover': {
+            backgroundColor: 'rgba(245, 242, 236, 0.04)',
           },
         },
       },
