@@ -784,7 +784,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 1.5 }}>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledTextField
                 fullWidth
                 size="small"
@@ -802,7 +802,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 }}
               />
             </Grid>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledTextField
                 fullWidth
                 size="small"
@@ -856,7 +856,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 1.5 }}>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               {renderSpeedInput('vso', {
                 name: "VSO",
                 label: "VSO - Vitesse de décrochage volets atterrissage *",
@@ -866,7 +866,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 required: true
               })}
             </Grid>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               {renderSpeedInput('vsTO', {
                 name: "VS T/O",
                 label: "VS T/O - Vitesse de décrochage volets décollage",
@@ -876,7 +876,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 required: false
               })}
             </Grid>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               {renderSpeedInput('vfeLdg', {
                 name: "VFE LDG",
                 label: "VFE LDG - Vitesse max volets atterrissage *",
@@ -886,7 +886,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 required: true
               })}
             </Grid>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               {renderSpeedInput('vfeTO', {
                 name: "VFE T/O",
                 label: "VFE T/O - Vitesse max volets décollage *",
@@ -935,7 +935,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 1.5 }}>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               {renderSpeedInput('vs1', {
                 name: "VS1",
                 label: "VS1 - Vitesse de décrochage lisse *",
@@ -945,7 +945,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 required: true
               })}
             </Grid>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               {renderSpeedInput('vno', {
                 name: "VNO",
                 label: "VNO - Vitesse max en air calme *",
@@ -994,7 +994,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 1.5 }}>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               {renderSpeedInput('vne', {
                 name: "VNE",
                 label: "VNE - Vitesse à ne jamais dépasser *",
@@ -1199,16 +1199,16 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 1.5 }}>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               {renderSpeedInput('vr', optionalSpeeds.vr)}
             </Grid>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               {renderSpeedInput('vx', optionalSpeeds.vx)}
             </Grid>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               {renderSpeedInput('vy', optionalSpeeds.vy)}
             </Grid>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               {renderSpeedInput('vapp', {
                 name: "VApp",
                 label: "VApp - Vitesse d'approche",
@@ -1218,16 +1218,16 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 required: false
               })}
             </Grid>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               {renderSpeedInput('initialClimb', optionalSpeeds.initialClimb)}
             </Grid>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               {renderSpeedInput('vglide', optionalSpeeds.vglide)}
             </Grid>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               {renderSpeedInput('vle', optionalSpeeds.vle)}
             </Grid>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               {renderSpeedInput('vlo', optionalSpeeds.vlo)}
             </Grid>
           </Box>

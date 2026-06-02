@@ -403,7 +403,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 1.5 }}>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledTextField
                 fullWidth
                 variant="outlined"
@@ -432,7 +432,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               />
             </Grid>
 
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledTextField
                 fullWidth
                 variant="outlined"
@@ -444,7 +444,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               />
             </Grid>
 
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledTextField
                 fullWidth
                 variant="outlined"
@@ -458,7 +458,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               />
             </Grid>
 
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledFormControl fullWidth variant="outlined">
                 <InputLabel shrink id="engine-label">Type de moteur</InputLabel>
                 <Select
@@ -479,7 +479,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               </StyledFormControl>
             </Grid>
 
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledTextField
                 fullWidth
                 type="number"
@@ -497,7 +497,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               />
             </Grid>
 
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledFormControl fullWidth variant="outlined">
                 <InputLabel shrink id="category-label">Catégorie</InputLabel>
                 <Select
@@ -522,7 +522,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                 Quand un aéroclub avec un OACI connu est sélectionné, on
                 pré-remplit automatiquement le terrain de base si celui-ci
                 est encore vide. */}
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <AeroclubAutocomplete
                 value={data.homeAeroclub || ''}
                 onChange={(newName) => updateData('homeAeroclub', newName || '')}
@@ -537,7 +537,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
             </Grid>
 
             {/* Terrain de base (code OACI) */}
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledTextField
                 fullWidth
                 variant="outlined"
@@ -652,7 +652,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 1.5 }}>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledFormControl fullWidth variant="outlined">
                 <InputLabel shrink id="fuel-label">Type de carburant *</InputLabel>
                 <Select
@@ -674,7 +674,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               </StyledFormControl>
             </Grid>
 
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledTextField
                 fullWidth
                 variant="outlined"
@@ -701,7 +701,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               />
             </Grid>
 
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledTextField
                 fullWidth
                 variant="outlined"
@@ -726,7 +726,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               />
             </Grid>
 
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350 }}>
+            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledTextField
                 fullWidth
                 variant="outlined"

@@ -265,6 +265,22 @@ const muiTheme = createTheme({
     },
 
     // ─── Inputs ──────────────────────────────────────────────────────────────
+    // ⚠️ PATTERN GLOBAL : "Stacked Label Centered"
+    // ----------------------------------------------------------------------
+    // L'utilisateur veut que TOUS les labels MUI (TextField, Select, Auto-
+    // complete, FormControl) soient :
+    //   1) STRICTEMENT AU-DESSUS de l'input (jamais chevauchés sur la
+    //      bordure du fieldset comme le pattern "Outlined Floating Label"
+    //      de MUI par défaut).
+    //   2) CENTRÉS horizontalement (même alignement que le texte input).
+    //   3) Police UNIFORMISÉE : JetBrains Mono 11px 0.12em uppercase ivoire-dim.
+    //   4) Espace AÉRÉ entre le label et l'input (6-8px) pour la lisibilité.
+    //   5) Le <legend> de la "notched outline" est SUPPRIMÉ (display: none)
+    //      pour ne plus avoir l'encoche qui chevauche la bordure.
+    //
+    // Effet : pattern identique à un <label> stacké au-dessus d'un <input>.
+    // Cohérent avec les <CustomSelect> partagés et les natifs HTML stylés
+    // via la classe .alflight-field-stack.
     MuiTextField: {
       defaultProps: {
         variant: 'outlined',
@@ -273,16 +289,54 @@ const muiTheme = createTheme({
       },
       styleOverrides: {
         root: {
-          // Fond input strictement identique aux <CustomSelect> (--app-bg)
-          // pour cohérence visuelle desktop entre champs MUI et React custom.
+          // Container du TextField : flex column pour stacker label puis input.
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'stretch',
+
+          // ─── Label "stacked above" ────────────────────────────────────
+          '& .MuiInputLabel-root': {
+            position: 'static !important',
+            transform: 'none !important',
+            transformOrigin: 'top center !important',
+            marginBottom: '8px',
+            textAlign: 'center',
+            width: '100%',
+            // Plus d'encart noir au-dessus de la bordure : le label est
+            // hors du fieldset maintenant, donc fond TRANSPARENT.
+            backgroundColor: 'transparent !important',
+            padding: '0 !important',
+            // Typographie unifiée (eyebrow mono ALFlight)
+            fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace !important",
+            fontSize: '11px !important',
+            fontWeight: 500,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            color: ALFLIGHT_COLORS.textTertiary,
+            // Permet le wrap si label long (ex. "Marque/Constructeur")
+            whiteSpace: 'normal',
+            overflow: 'visible',
+            lineHeight: 1.4,
+            maxWidth: '100%',
+            pointerEvents: 'auto',
+            '&.Mui-focused': { color: ALFLIGHT_COLORS.accent },
+            '&.Mui-error': { color: ALFLIGHT_COLORS.redCritical || '#C04534' },
+          },
+
+          // ─── Fieldset input : centré, fond app-bg, radius 8px ─────────
           '& .MuiOutlinedInput-root': {
             backgroundColor: ALFLIGHT_COLORS.appBg,
             color: ALFLIGHT_COLORS.textPrimary,
-            borderRadius: '8px', // = tokens.radius.sm + var(--radius-sm)
+            borderRadius: '8px',
             fontFamily: "'Century Gothic', 'Questrial', sans-serif",
             '& fieldset': {
               borderColor: ALFLIGHT_COLORS.borderRegular,
               borderWidth: '1px',
+              // Encoche du label SUPPRIMÉE car le label n'est plus dans
+              // le fieldset (il est au-dessus).
+              '& legend': {
+                display: 'none',
+              },
             },
             '&:hover fieldset': {
               borderColor: ALFLIGHT_COLORS.borderGhost,
@@ -294,25 +348,19 @@ const muiTheme = createTheme({
             '& input, & textarea': {
               color: ALFLIGHT_COLORS.textPrimary,
               fontFamily: "'Century Gothic', 'Questrial', sans-serif",
+              textAlign: 'center', // Texte input CENTRÉ comme le label
             },
           },
-          '& .MuiInputLabel-root': {
-            color: ALFLIGHT_COLORS.textTertiary,
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: '11px',
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            '&.Mui-focused': { color: ALFLIGHT_COLORS.accent },
-            // Patch entourant le label sur la bordure : couleur du fond
-            // de l'input (PAS du parent Paper). Évite l'effet "halo gris".
-            backgroundColor: ALFLIGHT_COLORS.appBg,
-            padding: '0 4px',
-          },
-          // Helper text (texte sous l'input)
+
+          // Helper text sous l'input : centré aussi
           '& .MuiFormHelperText-root': {
             fontFamily: "'Century Gothic', 'Questrial', sans-serif",
             fontSize: '11px',
             color: ALFLIGHT_COLORS.textTertiary,
+            textAlign: 'center',
+            marginTop: '6px',
+            marginLeft: 0,
+            marginRight: 0,
           },
         },
       },
@@ -326,16 +374,20 @@ const muiTheme = createTheme({
           fontFamily: "'Century Gothic', 'Questrial', sans-serif",
         },
         notchedOutline: {
-          // La "notched outline" est le fieldset MUI qui dessine le rectangle
-          // autour de l'input avec une encoche pour le label. C'est CETTE
-          // bordure qui créait l'"encadré gris" visible. La couleur subtle
-          // (#10% ivoire) devient ici borderRegular (#20% ivoire) pour être
-          // discrètement visible sur fond app-bg, sans halo gris.
           borderColor: ALFLIGHT_COLORS.borderRegular + ' !important',
           borderWidth: '1px',
+          // ⚠️ SUPPRIMER l'encoche du <legend> qui produit le rectangle
+          // chevauchant la bordure haute du fieldset.
+          '& legend': {
+            display: 'none',
+            width: '0 !important',
+            maxWidth: '0 !important',
+            padding: '0 !important',
+          },
         },
         input: {
           color: ALFLIGHT_COLORS.textPrimary,
+          textAlign: 'center', // Centre le texte input
         },
       },
     },
@@ -343,11 +395,41 @@ const muiTheme = createTheme({
       defaultProps: { shrink: true },
       styleOverrides: {
         root: {
+          // Pattern stacked global (déjà détaillé dans MuiTextField mais
+          // utile pour les InputLabel isolés de FormControl avec Select).
+          position: 'static !important',
+          transform: 'none !important',
+          transformOrigin: 'top center',
+          marginBottom: '8px',
+          textAlign: 'center',
+          width: '100%',
+          backgroundColor: 'transparent !important',
+          padding: '0 !important',
+          fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace !important",
+          fontSize: '11px !important',
+          fontWeight: 500,
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
           color: ALFLIGHT_COLORS.textTertiary,
-          // Patch sur la bordure : MÊME couleur que le fond de l'input
-          // (--app-bg, pas --bg-surface) sinon halo gris visible.
-          backgroundColor: ALFLIGHT_COLORS.appBg,
-          padding: '0 4px',
+          whiteSpace: 'normal',
+          overflow: 'visible',
+          lineHeight: 1.4,
+          maxWidth: '100%',
+          '&.Mui-focused': { color: ALFLIGHT_COLORS.accent },
+        },
+      },
+    },
+    // FormControl : container du Select + InputLabel — mêmes contraintes
+    // que MuiTextField pour stacker label puis input.
+    MuiFormControl: {
+      defaultProps: {
+        fullWidth: true,
+      },
+      styleOverrides: {
+        root: {
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'stretch',
         },
       },
     },

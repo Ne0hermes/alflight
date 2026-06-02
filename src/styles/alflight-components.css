@@ -154,6 +154,59 @@
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
+   FIELD STACK — pattern label stacké au-dessus de l'input (HTML natif)
+   ----------------------------------------------------------------------
+   Pour les inputs HTML natifs (non-MUI) qui veulent matcher le pattern
+   stacked label centré du thème MUI ALFlight.
+
+   Usage :
+     <div class="alflight-field-stack">
+       <label class="alflight-field-label">Catégorie</label>
+       <input class="alflight-input" type="text" />
+     </div>
+
+   Le label est forcément AU-DESSUS de l'input, centré, en mono ALFlight
+   uniformisé. Aucun chevauchement, espace aéré de 8px.
+   ────────────────────────────────────────────────────────────────────── */
+.alflight-field-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto; /* centré horizontalement par défaut */
+  box-sizing: border-box;
+}
+
+.alflight-field-label {
+  display: block;
+  margin-bottom: 8px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+  white-space: normal;
+  background-color: transparent;
+  padding: 0;
+}
+
+.alflight-field-stack:focus-within .alflight-field-label {
+  color: var(--accent-primary);
+}
+
+.alflight-field-help {
+  margin-top: 6px;
+  text-align: center;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
    INPUTS / SELECTS TRIGGER — apparence champ texte/select fermé
    ────────────────────────────────────────────────────────────────────────── */
 .alflight-input,
