@@ -1295,21 +1295,6 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
       {/* 🎨 En-tête éditorial ALFlight — espacement standardisé mb: 3 (24px)
           partout pour rythme vertical cohérent entre toutes les sections. */}
       <Box sx={{ mb: 3 }}>
-        <Box
-          component="span"
-          sx={{
-            display: 'block',
-            fontFamily: 'var(--font-mono)',
-            fontSize: '11px',
-            fontWeight: 500,
-            letterSpacing: '0.20em',
-            textTransform: 'uppercase',
-            color: 'var(--text-tertiary)',
-            mb: 1.5,
-          }}
-        >
-          WIZARD · ASSISTANT
-        </Box>
         <Typography
           variant="h3"
           sx={{
@@ -1553,11 +1538,11 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
       >
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <WarningIcon color="warning" />
-          Quitter l'assistant de création
+          Quitter la création
         </DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Vous êtes sur le point de quitter l'assistant. La configuration de <strong>{aircraftData.registration || 'cet avion'}</strong> n'est pas terminée.
+            Vous êtes sur le point de quitter la création. La configuration de <strong>{aircraftData.registration || 'cet avion'}</strong> n'est pas terminée.
           </DialogContentText>
           <Alert severity="info" sx={{ mt: 2 }}>
             Vous pouvez sauvegarder votre progression et reprendre plus tard, ou annuler complètement cette configuration.

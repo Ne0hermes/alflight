@@ -1889,7 +1889,6 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                         }}
                         placeholder={String(data.weights?.minTakeoffWeight || '940')}
                         required
-                        helperText={!aftCG.minWeight && data.weights?.minTakeoffWeight ? "Auto: Masse min de vol" : ""}
                         InputProps={{
                           endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>
                         }}
@@ -1978,7 +1977,6 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                         }}
                         placeholder={String(data.weights?.mtow || '1310')}
                         required
-                        helperText={!aftCG.maxWeight && data.weights?.mtow ? "Auto: MTOW" : ""}
                         InputProps={{
                           endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>
                         }}
@@ -2095,7 +2093,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
             bgcolor: data.weighingReport?.hasData
               ? 'success.50'
               : (errors?.weighingReport ? 'error.50' : 'warning.50'),
-            borderRadius: 1
+            borderRadius: 'var(--radius-sm)'
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
