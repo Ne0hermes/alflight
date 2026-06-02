@@ -543,6 +543,33 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
       </Alert>
 
       <Grid container spacing={2}>
+        {/* Inverser l'axe Y — déplacé en tête (demande user). Remplace le
+            bouton "Y inversé" retiré de la barre image. Même design que le
+            switch "Inverser l'axe X" : couleur primary, sans gras, sans
+            marqueur ACTIVÉ. */}
+        <Grid size={12}>
+          <FormControlLabel
+            control={
+              <Switch
+                size="small"
+                checked={!!axesConfig.yAxis.reversed}
+                onChange={(e) => {
+                  setAxesConfig(c => ({
+                    ...c, yAxis: { ...c.yAxis, reversed: e.target.checked }
+                  }));
+                  setCustomYTicks([]);  // ré-calibration nécessaire
+                  setCalibrationState(null);
+                }}
+              />
+            }
+            label={
+              <Typography variant="caption">
+                Inverser l'axe Y (origine en haut) — valeurs croissantes du haut vers le bas
+              </Typography>
+            }
+          />
+        </Grid>
+
         {/* Axe X */}
         <Grid size={12}>
           <Typography variant="caption" fontWeight={700} color="success.main">
@@ -678,30 +705,6 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
             onChange={(e) => setAxesConfig(c => ({
               ...c, yAxis: { ...c.yAxis, title: e.target.value }
             }))}
-          />
-        </Grid>
-        <Grid size={12}>
-          <FormControlLabel
-            control={
-              <Switch
-                size="small"
-                checked={!!axesConfig.yAxis.reversed}
-                onChange={(e) => {
-                  setAxesConfig(c => ({
-                    ...c, yAxis: { ...c.yAxis, reversed: e.target.checked }
-                  }));
-                  setCustomYTicks([]);  // ré-calibration nécessaire
-                  setCalibrationState(null);
-                }}
-                color="warning"
-              />
-            }
-            label={
-              <Typography variant="caption">
-                <strong>Inverser l'axe Y (origine en haut)</strong> — valeurs croissantes du haut vers le bas
-                {axesConfig.yAxis.reversed && ' ← ACTIVÉ'}
-              </Typography>
-            }
           />
         </Grid>
       </Grid>
@@ -1317,23 +1320,8 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
               }
             />
 
-            <Tooltip title={axesConfig.yAxis.reversed ? "Y normal (origine en bas)" : "Y inversé (origine en haut)"}>
-              <Button
-                size="small"
-                variant={axesConfig.yAxis.reversed ? 'contained' : 'outlined'}
-                color="warning"
-                onClick={() => {
-                  setAxesConfig(c => ({
-                    ...c,
-                    yAxis: { ...c.yAxis, reversed: !c.yAxis.reversed }
-                  }));
-                  setCustomYTicks([]);
-                  setCalibrationState(null);
-                }}
-              >
-                {axesConfig.yAxis.reversed ? '↓ Y inversé' : '↑ Y normal'}
-              </Button>
-            </Tooltip>
+            {/* Bouton "Y inversé" RETIRÉ — c'était une redite du switch
+                "Inverser l'axe Y" déplacé en tête du formulaire des axes. */}
             <Button size="small" startIcon={<UploadIcon />} onClick={handleStartNewArm}>
               Nouvelle image
             </Button>
