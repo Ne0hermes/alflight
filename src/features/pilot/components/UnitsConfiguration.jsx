@@ -1,30 +1,142 @@
 // ============================================================================
-//  UnitsConfiguration — Refonte charte éditoriale ALFlight
+//  UnitsConfiguration — Refonte charte éditoriale ALFlight (v2)
 //  ----------------------------------------------------------------------------
-//  Remplace l'ancienne implémentation MUI (Paper / Accordion / Select /
-//  StyledFormControl) qui créait :
-//  - Une double/triple encapsulation visuelle (Paper > Accordion > FormControl
-//    > Select wrapper > input) = "rectangles encapsulés"
-//  - Un trait blanc résiduel autour de la notched outline MUI
-//  - Une typo différente du reste de l'app (MUI default)
+//  Iteration v2 : remplacement des <select> natifs par un dropdown custom
+//  React pour avoir le contrôle TOTAL du rendu de la liste d'options.
 //
-//  La nouvelle implémentation utilise :
-//  - <select> natifs stylés en charte ALFlight (1 niveau, pas d'encapsulage)
-//  - <details>/<summary> natifs pour les sections collapsibles (vs Accordion)
-//  - Couleurs et fonts via variables CSS uniquement
-//  - Bouton "Sauvegarder" cockpit orange (pas d'ombre bleue)
+//  Pourquoi : les <option> d'un <select> natif sont rendues par l'OS
+//  (Windows/macOS/Linux), donc :
+//   - Angles vifs systèmes (impossible à arrondir via CSS)
+//   - Hover/select en bleu système (pas d'orange ALFlight)
+//   - Largeur du menu déroulant > largeur du select (déborde du cadre)
+//   - Police du système (pas Century Gothic)
+//
+//  Solution : composant <CustomSelect> qui affiche un trigger button stylé
+//  ALFlight + un dropdown HTML personnalisé (positionnement absolu, fond
+//  --bg-surface, hover --accent-soft, sélectionné --accent-primary, etc.)
+//  + gestion du click-outside et de la touche Escape.
 // ============================================================================
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Ruler as RulerIcon,
   Thermometer as ThermostatIcon,
   Fuel as FuelIcon,
   Globe as GlobeIcon,
   ChevronDown as ExpandMoreIcon,
+  Check as CheckIcon,
 } from 'lucide-react';
 import { useUnitsStore, unitsSelectors } from '@core/stores/unitsStore';
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  Composant : dropdown custom ALFlight (remplace <select>/<option> natifs)
+// ─────────────────────────────────────────────────────────────────────────────
+const CustomSelect = ({ value, options, onChange, ariaLabel }) => {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  const current = options.find((o) => o.value === value) || options[0];
+
+  // Click-outside + Escape → close
+  useEffect(() => {
+    if (!open) return;
+    const onDocClick = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onDocClick);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={containerRef} style={selectStyles.container}>
+      {/* Trigger button — apparence d'un select fermé */}
+      <button
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={ariaLabel}
+        onClick={() => setOpen((p) => !p)}
+        style={{
+          ...selectStyles.trigger,
+          borderColor: open ? 'var(--accent-primary)' : 'var(--border-regular)',
+        }}
+      >
+        <span style={selectStyles.triggerLabel}>{current.label}</span>
+        <ExpandMoreIcon
+          size={14}
+          style={{
+            color: 'var(--text-tertiary)',
+            flexShrink: 0,
+            transition: 'transform 0.2s ease',
+            transform: open ? 'rotate(180deg)' : 'rotate(0)',
+          }}
+        />
+      </button>
+
+      {/* Liste d'options custom — alignée sur trigger, jamais plus large */}
+      {open && (
+        <ul role="listbox" style={selectStyles.menu}>
+          {options.map((opt) => {
+            const isSelected = opt.value === value;
+            return (
+              <li
+                key={opt.value}
+                role="option"
+                aria-selected={isSelected}
+                tabIndex={0}
+                onClick={() => {
+                  onChange(opt.value);
+                  setOpen(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onChange(opt.value);
+                    setOpen(false);
+                  }
+                }}
+                style={{
+                  ...selectStyles.option,
+                  backgroundColor: isSelected ? 'var(--accent-soft)' : 'transparent',
+                  color: isSelected ? 'var(--accent-primary)' : 'var(--text-primary)',
+                  fontWeight: isSelected ? 600 : 400,
+                }}
+                onMouseEnter={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.backgroundColor = 'rgba(245, 242, 236, 0.04)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+              >
+                <span style={selectStyles.optionLabel}>{opt.label}</span>
+                {isSelected && (
+                  <CheckIcon size={14} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} />
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Composant principal — UnitsConfiguration
+// ─────────────────────────────────────────────────────────────────────────────
 const UnitsConfiguration = () => {
   const units = unitsSelectors.useUnits();
   const { setUnit, setPreset } = unitsSelectors.useUnitsActions();
@@ -146,10 +258,10 @@ const UnitsConfiguration = () => {
   };
 
   const presets = [
-    { value: 'europe',   label: 'Europe',         description: 'Métrique (L, kg, °C)' },
-    { value: 'usa',      label: 'USA',            description: 'Impérial (gal, lbs, °F)' },
-    { value: 'aviation', label: 'Aviation OACI',  description: 'Standard (kt, ft, °C)' },
-    { value: 'metric',   label: 'Métrique pur',   description: 'Tout métrique' },
+    { value: 'europe',   label: 'Europe — Métrique (L, kg, °C)' },
+    { value: 'usa',      label: 'USA — Impérial (gal, lbs, °F)' },
+    { value: 'aviation', label: 'Aviation OACI — Standard (kt, ft, °C)' },
+    { value: 'metric',   label: 'Métrique pur — Tout métrique' },
   ];
 
   const handleUnitChange = (key, value) => {
@@ -159,35 +271,28 @@ const UnitsConfiguration = () => {
   };
 
   const handlePresetSelect = (presetValue) => {
+    setSelectedPreset(presetValue);
     setPreset(presetValue);
     localStorage.setItem('unitsConfigured', 'true');
   };
 
   return (
     <div style={styles.container}>
-      {/* ─── Préréglages régionaux (1 select natif, plus de Paper MUI) ───── */}
+      {/* ─── Préréglages régionaux ─── */}
       <div style={styles.section}>
         <label style={styles.fieldLabel}>
           <GlobeIcon size={14} style={styles.fieldIcon} />
           Préréglages régionaux
         </label>
-        <select
+        <CustomSelect
           value={selectedPreset}
-          onChange={(e) => {
-            setSelectedPreset(e.target.value);
-            handlePresetSelect(e.target.value);
-          }}
-          style={styles.select}
-        >
-          {presets.map((preset) => (
-            <option key={preset.value} value={preset.value}>
-              {preset.label} — {preset.description}
-            </option>
-          ))}
-        </select>
+          options={presets}
+          onChange={handlePresetSelect}
+          ariaLabel="Préréglages régionaux"
+        />
       </div>
 
-      {/* ─── Configuration détaillée : <details> natifs (plus d'Accordion) ─── */}
+      {/* ─── Configuration détaillée : <details> natifs ─── */}
       {Object.entries(unitsConfig).map(([categoryKey, category]) => {
         const Icon = category.Icon;
         return (
@@ -201,17 +306,12 @@ const UnitsConfiguration = () => {
               {category.units.map((unitConfig) => (
                 <div key={unitConfig.key} style={styles.field}>
                   <label style={styles.fieldLabel}>{unitConfig.label}</label>
-                  <select
+                  <CustomSelect
                     value={localUnits[unitConfig.key] || unitConfig.options[0].value}
-                    onChange={(e) => handleUnitChange(unitConfig.key, e.target.value)}
-                    style={styles.select}
-                  >
-                    {unitConfig.options.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
+                    options={unitConfig.options}
+                    onChange={(val) => handleUnitChange(unitConfig.key, val)}
+                    ariaLabel={unitConfig.label}
+                  />
                 </div>
               ))}
             </div>
@@ -223,7 +323,7 @@ const UnitsConfiguration = () => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Styles cockpit ALFlight — variables CSS uniquement
+//  Styles cockpit ALFlight — variables CSS uniquement + box-sizing: border-box
 // ─────────────────────────────────────────────────────────────────────────────
 const styles = {
   container: {
@@ -231,24 +331,25 @@ const styles = {
     margin: '0 auto',
     color: 'var(--text-primary)',
     fontFamily: 'var(--font-sans)',
+    boxSizing: 'border-box',
+    width: '100%',
   },
 
-  // Section "préréglages régionaux" — bloc simple (plus de Paper)
   section: {
     marginBottom: '16px',
     padding: '16px',
     backgroundColor: 'var(--bg-overlay)',
     border: '1px solid var(--border-subtle)',
     borderRadius: 'var(--radius-sm)',
+    boxSizing: 'border-box',
   },
 
-  // <details> natif — un seul niveau d'encadré (plus de Paper + Accordion)
   details: {
     marginBottom: '16px',
     backgroundColor: 'var(--bg-overlay)',
     border: '1px solid var(--border-subtle)',
     borderRadius: 'var(--radius-sm)',
-    overflow: 'hidden',
+    boxSizing: 'border-box',
   },
   summary: {
     display: 'flex',
@@ -262,16 +363,14 @@ const styles = {
     letterSpacing: '0.12em',
     textTransform: 'uppercase',
     color: 'var(--accent-primary)',
-    listStyle: 'none', // retire la flèche disclosure native
+    listStyle: 'none',
     userSelect: 'none',
   },
   summaryIcon: {
     color: 'var(--accent-primary)',
     flexShrink: 0,
   },
-  summaryLabel: {
-    flex: 1,
-  },
+  summaryLabel: { flex: 1 },
   summaryChevron: {
     color: 'var(--text-tertiary)',
     flexShrink: 0,
@@ -284,13 +383,14 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '12px',
+    boxSizing: 'border-box',
   },
 
-  // Champ unité — label + select
   field: {
     display: 'flex',
     flexDirection: 'column',
     gap: '6px',
+    minWidth: 0, // ← évite que les enfants flex débordent
   },
   fieldLabel: {
     display: 'flex',
@@ -303,14 +403,24 @@ const styles = {
     textTransform: 'uppercase',
     color: 'var(--text-tertiary)',
   },
-  fieldIcon: {
-    color: 'var(--accent-primary)',
-  },
+  fieldIcon: { color: 'var(--accent-primary)' },
+};
 
-  // Select natif stylé cockpit ALFlight — chevron custom + pas d'outline blanc
-  select: {
+// Styles dédiés au dropdown custom CustomSelect
+const selectStyles = {
+  container: {
+    position: 'relative',
     width: '100%',
-    padding: '10px 36px 10px 12px',
+    boxSizing: 'border-box',
+    minWidth: 0,
+  },
+  trigger: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '8px',
+    width: '100%',
+    padding: '10px 12px',
     backgroundColor: 'var(--app-bg)',
     color: 'var(--text-primary)',
     border: '1px solid var(--border-regular)',
@@ -318,32 +428,62 @@ const styles = {
     fontFamily: 'var(--font-sans)',
     fontSize: '14px',
     cursor: 'pointer',
-    appearance: 'none',
-    WebkitAppearance: 'none',
-    MozAppearance: 'none',
-    backgroundImage:
-      "url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A867E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")",
-    backgroundRepeat: 'no-repeat',
-    backgroundPosition: 'right 12px center',
-    backgroundSize: '12px',
     outline: 'none',
     transition: 'border-color 0.2s ease',
+    boxSizing: 'border-box',
+    textAlign: 'left',
+  },
+  triggerLabel: {
+    flex: 1,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  menu: {
+    // 🎯 Positionnement absolu : le dropdown a la MÊME largeur que le trigger,
+    // jamais plus large (left:0 / right:0). Plus de débordement du cadre.
+    position: 'absolute',
+    top: 'calc(100% + 4px)',
+    left: 0,
+    right: 0,
+    zIndex: 100,
+    margin: 0,
+    padding: '4px',
+    listStyle: 'none',
+    backgroundColor: 'var(--bg-surface)',
+    border: '1px solid var(--border-regular)',
+    borderRadius: 'var(--radius-sm)',
+    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)',
+    maxHeight: '280px',
+    overflowY: 'auto',
+    boxSizing: 'border-box',
+  },
+  option: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '8px',
+    padding: '10px 12px',
+    cursor: 'pointer',
+    fontFamily: 'var(--font-sans)',
+    fontSize: '14px',
+    borderRadius: 'var(--radius-sm)',
+    transition: 'background-color 0.1s ease',
+    outline: 'none',
+  },
+  optionLabel: {
+    flex: 1,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   },
 };
 
-// Au focus, le select prend une bordure orange ALFlight
-// (impossible à mettre en inline style, donc style global injecté)
-if (typeof document !== 'undefined' && !document.getElementById('units-select-focus')) {
+// Inject CSS hint pour la rotation du chevron <details>
+if (typeof document !== 'undefined' && !document.getElementById('units-details-css')) {
   const styleTag = document.createElement('style');
-  styleTag.id = 'units-select-focus';
+  styleTag.id = 'units-details-css';
   styleTag.innerHTML = `
-    /* Focus orange ALFlight */
-    select[data-alflight-units]:focus,
-    .alflight-units-section select:focus {
-      border-color: var(--accent-primary) !important;
-      outline: none !important;
-    }
-    /* Hover rotate chevron summary */
     details[open] > summary > svg:last-child {
       transform: rotate(180deg);
     }
