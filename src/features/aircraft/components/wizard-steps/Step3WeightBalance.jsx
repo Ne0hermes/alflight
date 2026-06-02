@@ -935,7 +935,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                   startIcon={<AddIcon />}
                   onClick={() => addFuelTank('main')}
                 >
-                  + Réservoir principal
+                  Réservoir principal
                 </Button>
                 <Button
                   variant="outlined"
@@ -943,7 +943,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                   startIcon={<AddIcon />}
                   onClick={() => addFuelTank('wing')}
                 >
-                  + Réservoir d'aile
+                  Réservoir d'aile
                 </Button>
                 <Button
                   variant="outlined"
@@ -951,7 +951,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                   startIcon={<AddIcon />}
                   onClick={() => addFuelTank('optional')}
                 >
-                  + Réservoir optionnel
+                  Réservoir optionnel
                 </Button>
                 <Button
                   variant="outlined"
@@ -959,7 +959,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                   startIcon={<AddIcon />}
                   onClick={() => addFuelTank('tip')}
                 >
-                  + Tip tank
+                  Tip tank
                 </Button>
                 <Button
                   variant="outlined"
@@ -967,7 +967,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                   startIcon={<AddIcon />}
                   onClick={() => addFuelTank('aux')}
                 >
-                  + Auxiliaire
+                  Auxiliaire
                 </Button>
               </Box>
 
@@ -1278,10 +1278,6 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
               ))}
             </Box>
 
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block', textAlign: 'center' }}>
-              💡 Le <strong>moment d'un siège dépend du passager</strong> qui s'y assied — il est calculé au chargement
-              (<code>moment = bras × masse_pax</code>). Seule la position (bras de levier) est figée pour l'avion.
-            </Typography>
           </Box>
         </AccordionDetails>
       </Accordion>
@@ -1603,7 +1599,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                 if (count < 2) {
                   return (
                     <Typography variant="caption" color="primary.main" sx={{ display: 'block', mt: 0.5 }}>
-                      ⏳ Saisis encore un champ pour que le 3e se calcule automatiquement.
+                      Saisis encore un champ pour que le 3e se calcule automatiquement.
                     </Typography>
                   );
                 }
@@ -1733,7 +1729,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
             {/* CG Avant (Most forward) - Liste de points */}
             <Box sx={{ mb: 4 }}>
               <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', fontSize: '14px' }}>
-                📍 Most Forward CG (Limite avant)
+                Most Forward CG (Limite avant)
               </Typography>
 
               <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
@@ -1749,13 +1745,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                 </Button>
               </Box>
 
-              {forwardCGPoints.length === 0 ? (
-                <Alert severity="info" sx={{ maxWidth: 700, mx: 'auto' }}>
-                  <Typography variant="body2">
-                    💡 Aucun point défini. Cliquez sur "Ajouter un point" pour commencer.
-                  </Typography>
-                </Alert>
-              ) : (
+              {forwardCGPoints.length === 0 ? null : (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
                   {forwardCGPoints.map((point, index) => (
                     <Box
@@ -1766,7 +1756,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                         p: 2,
                         border: '1px solid',
                         borderColor: 'divider',
-                        borderRadius: 1,
+                        borderRadius: 'var(--radius-sm)',
                         bgcolor: 'background.paper'
                       }}
                     >
@@ -1784,7 +1774,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                         </IconButton>
                       </Box>
 
-                      <Grid container spacing={1.5}>
+                      <Grid container spacing={1.5} alignItems="flex-end">
                         <Grid size={{ xs: 12, sm: 4 }}>
                           <StyledTextField
                             fullWidth
@@ -1864,18 +1854,12 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                 </Box>
               )}
 
-              <Alert severity="info" sx={{ mt: 2, maxWidth: 700, mx: 'auto' }}>
-                <Typography variant="body2">
-                  💡 <strong>Info :</strong> Pour une masse donnée, vous rentrez {isMoment ? 'un moment' : 'un bras de levier (CG)'} ({envUnit}).
-                  Vous pouvez ajouter autant de points que nécessaire pour définir la limite avant de l'enveloppe.
-                </Typography>
-              </Alert>
             </Box>
 
             {/* CG Arrière (Most rearward) — 2 POINTS INDÉPENDANTS */}
             <Box>
               <Typography variant="h6" sx={{ mb: 1, fontWeight: 'bold', fontSize: '14px' }}>
-                📍 Most Rearward CG (Limite arrière)
+                Most Rearward CG (Limite arrière)
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
                 La limite arrière peut être inclinée — chaque point (masse min et masse max) a son propre bras et son propre moment.
@@ -1884,11 +1868,11 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 2 }}>
 
                 {/* ─── POINT BAS : masse min — trio dynamique ─── */}
-                <Box sx={{ width: '100%', maxWidth: 700, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper' }}>
+                <Box sx={{ width: '100%', maxWidth: 700, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 'var(--radius-sm)', bgcolor: 'background.paper' }}>
                   <Typography variant="caption" fontWeight={700} color="primary.main" sx={{ display: 'block', mb: 1 }}>
                     Point bas (à masse min)
                   </Typography>
-                  <Grid container spacing={1.5}>
+                  <Grid container spacing={1.5} alignItems="flex-end">
                     <Grid size={{ xs: 12, sm: 4 }}>
                       <StyledTextField
                         fullWidth size="small"
@@ -1973,11 +1957,11 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                 </Box>
 
                 {/* ─── POINT HAUT : masse max — trio dynamique ─── */}
-                <Box sx={{ width: '100%', maxWidth: 700, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper' }}>
+                <Box sx={{ width: '100%', maxWidth: 700, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 'var(--radius-sm)', bgcolor: 'background.paper' }}>
                   <Typography variant="caption" fontWeight={700} color="primary.main" sx={{ display: 'block', mb: 1 }}>
                     Point haut (à masse max)
                   </Typography>
-                  <Grid container spacing={1.5}>
+                  <Grid container spacing={1.5} alignItems="flex-end">
                     <Grid size={{ xs: 12, sm: 4 }}>
                       <StyledTextField
                         fullWidth size="small"
