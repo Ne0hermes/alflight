@@ -338,3 +338,162 @@
   letter-spacing: 0.10em;
   text-transform: uppercase;
 }
+
+/* ============================================================================
+   🎯 SYSTÈME UNIFIÉ MUI INPUTS — GÉNÉRALISATION CSS
+   ----------------------------------------------------------------------------
+   Cette section force l'uniformité visuelle absolue entre tous les
+   composants MUI de saisie (TextField, Select, Autocomplete) en
+   surclassant les CSS-in-JS Emotion via :
+     1) Spécificité élevée (sélecteurs composés)
+     2) Variables CSS communes (--input-* depuis index.css)
+     3) `!important` ciblé sur les propriétés clés
+
+   Source de vérité : variables --input-* dans index.css.
+   Modifier ces variables → propagation automatique partout.
+   ============================================================================ */
+
+/* Root commun à tous les inputs MUI : largeur 100% du conteneur */
+.MuiInputBase-root.MuiOutlinedInput-root {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  background-color: var(--input-bg) !important;
+  border-radius: var(--input-radius) !important;
+  font-family: var(--input-font-family) !important;
+  font-size: var(--input-font-size) !important;
+  color: var(--input-text) !important;
+}
+
+/* Notched outline (fieldset autour) — bordure UNIFORME */
+.MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+  border-color: var(--input-border-rest) !important;
+  border-width: var(--input-border-width) !important;
+  top: 0 !important;
+  transition: border-color var(--motion-fast);
+}
+.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--input-border-hover) !important;
+}
+.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--input-border-focus) !important;
+  border-width: var(--input-border-width) !important;
+}
+.MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline {
+  border-color: var(--input-border-error) !important;
+}
+
+/* Legend (l'encoche du label flottant) — totalement masqué */
+.MuiOutlinedInput-notchedOutline > legend {
+  display: none !important;
+  width: 0 !important;
+  max-width: 0 !important;
+  height: 0 !important;
+  padding: 0 !important;
+  visibility: hidden !important;
+  overflow: hidden !important;
+}
+.MuiOutlinedInput-notchedOutline > legend > span {
+  display: none !important;
+}
+
+/* L'INPUT proprement dit (texte tapable) — padding et typo uniformes */
+.MuiInputBase-root .MuiOutlinedInput-input,
+.MuiInputBase-root .MuiInputBase-input {
+  padding-top: var(--input-padding-y) !important;
+  padding-bottom: var(--input-padding-y) !important;
+  padding-left: var(--input-padding-x) !important;
+  padding-right: var(--input-padding-x) !important;
+  font-family: var(--input-font-family) !important;
+  font-size: var(--input-font-size) !important;
+  color: var(--input-text) !important;
+  text-align: var(--input-text-align) !important;
+  box-sizing: border-box !important;
+}
+
+/* SELECT — le combobox <div> qui remplace l'input + espace pour la flèche */
+.MuiInputBase-root .MuiSelect-select.MuiOutlinedInput-input {
+  padding-top: var(--input-padding-y) !important;
+  padding-bottom: var(--input-padding-y) !important;
+  padding-left: var(--input-padding-x) !important;
+  padding-right: var(--input-padding-right-icon) !important;
+  text-align: var(--input-text-align) !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Native input caché du Select — totalement invisible (pas de "double zone") */
+.MuiSelect-nativeInput {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  position: absolute !important;
+  width: 100% !important;
+  height: 100% !important;
+  top: 0 !important;
+  left: 0 !important;
+}
+
+/* Icône Select (flèche dropdown) */
+.MuiSelect-icon {
+  color: var(--text-tertiary) !important;
+}
+
+/* Label MUI — pattern stacked above (jamais chevauché par la bordure) */
+.MuiInputLabel-root,
+.MuiFormLabel-root.MuiInputLabel-root {
+  position: static !important;
+  transform: none !important;
+  margin-bottom: var(--input-label-gap) !important;
+  text-align: center !important;
+  width: 100% !important;
+  background-color: transparent !important;
+  padding: 0 !important;
+  font-family: var(--font-mono) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  color: var(--text-tertiary) !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  line-height: 1.4 !important;
+  max-width: 100% !important;
+}
+.MuiInputLabel-root.Mui-focused {
+  color: var(--accent-primary) !important;
+}
+.MuiInputLabel-root.Mui-error {
+  color: var(--input-border-error) !important;
+}
+
+/* FormControl + TextField : layout flex column pour stacker label/input */
+.MuiFormControl-root,
+.MuiTextField-root {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Helper text sous l'input — centré, mono */
+.MuiFormHelperText-root {
+  font-family: var(--font-sans) !important;
+  font-size: 11px !important;
+  color: var(--text-tertiary) !important;
+  text-align: center !important;
+  margin-top: 6px !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Autocomplete : héritage des mêmes règles via les sélecteurs au-dessus */
+.MuiAutocomplete-root .MuiAutocomplete-input {
+  padding-top: var(--input-padding-y) !important;
+  padding-bottom: var(--input-padding-y) !important;
+  padding-left: var(--input-padding-x) !important;
+  padding-right: var(--input-padding-x) !important;
+  text-align: var(--input-text-align) !important;
+}
