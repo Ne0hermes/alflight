@@ -217,13 +217,20 @@
   padding: 10px 12px;
   background-color: var(--app-bg);
   color: var(--text-primary);
-  border: 1px solid var(--border-regular);
+  /* Bordure TRANSPARENTE au repos — cohérent avec MuiOutlinedInput
+     et CustomSelect. Le focus reprend l'orange accent-primary. */
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
   font-family: var(--font-sans);
   font-size: 14px;
   outline: none;
   transition: border-color 0.2s ease;
   box-sizing: border-box;
+}
+
+.alflight-input:hover,
+.alflight-select-trigger:hover {
+  border-color: var(--border-subtle);
 }
 
 .alflight-input:focus,

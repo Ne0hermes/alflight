@@ -77,7 +77,10 @@ export const CustomSelect = ({
         onClick={() => !disabled && setOpen((p) => !p)}
         style={{
           ...styles.trigger,
-          borderColor: open ? 'var(--accent-primary)' : 'var(--border-regular)',
+          // Bordure TRANSPARENTE au repos (cohérent avec MuiOutlinedInput
+          // ALFlight — l'utilisateur a explicitement demandé "rendre cet
+          // élément transparent"). Au open : bordure orange.
+          borderColor: open ? 'var(--accent-primary)' : 'transparent',
           opacity: disabled ? 0.5 : 1,
           cursor: disabled ? 'not-allowed' : 'pointer',
         }}
@@ -162,7 +165,7 @@ const styles = {
     padding: '10px 12px',
     backgroundColor: 'var(--app-bg)',
     color: 'var(--text-primary)',
-    border: '1px solid var(--border-regular)',
+    border: '1px solid transparent',
     borderRadius: 'var(--radius-sm)',
     fontFamily: 'var(--font-sans)',
     fontSize: '14px',
