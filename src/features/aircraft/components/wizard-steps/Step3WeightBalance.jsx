@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Fragment } from 'react';
 import {
   Box,
   Typography,
@@ -50,10 +50,39 @@ import CentrogramReader from '../CentrogramReader';
 import { getFuelDensity } from '../../utils/mbUnits';
 import { StyledTextField } from './FormFieldStyles';
 
-const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
+const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious, registerStepNav }) => {
   // ─── Sélecteur de méthode : 'manual' | 'graphical' | null (pas encore choisi) ───
   // Persistence locale UI uniquement : ne touche pas au store.
   const [inputMethod, setInputMethod] = useState(null);
+
+  // Réf vers le contrat de navigation interne du CentrogramReader (sous-étapes
+  // de calibration), relayé au pied de page du wizard pour une cascade complète.
+  const readerNavRef = useRef(null);
+  const registerReaderNav = useCallback((api) => { readerNavRef.current = api; }, []);
+
+  // Contrat de navigation en cascade exposé au wizard (pied de page unique) :
+  //  • en mode graphique, on remonte d'abord les sous-étapes de calibration ;
+  //  • puis on sort de la sous-vue (graphique/manuel) vers le choix de méthode ;
+  //  • puis seulement on recule d'une étape principale.
+  useEffect(() => {
+    if (!registerStepNav) return;
+    registerStepNav({
+      canGoBack: () => {
+        if (inputMethod === 'graphical' && readerNavRef.current?.canBack) return true;
+        return inputMethod !== null;
+      },
+      goBack: () => {
+        if (inputMethod === 'graphical' && readerNavRef.current?.canBack) {
+          readerNavRef.current.back();
+          return;
+        }
+        setInputMethod(null);
+      },
+      canGoNext: () => (inputMethod === 'graphical' && !!readerNavRef.current?.canNext),
+      goNext: () => { readerNavRef.current?.next?.(); },
+    });
+    return () => registerStepNav(null);
+  }, [registerStepNav, inputMethod]);
 
   const [expandedPanels, setExpandedPanels] = useState({
     fuel: false,
@@ -708,6 +737,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
           updateData={updateData}
           onBack={() => setInputMethod(null)}
           onExit={() => setInputMethod('manual')}
+          registerNav={registerReaderNav}
         />
       </Box>
     );

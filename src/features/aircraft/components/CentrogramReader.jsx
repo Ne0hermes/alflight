@@ -85,7 +85,7 @@ function buildAxisValues(min, max, step) {
   return values;
 }
 
-const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
+const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNav }) => {
   const [activeStep, setActiveStep] = useState(0);
 
   // Préférences d'unités utilisateur (mm par défaut pour armLength).
@@ -993,28 +993,25 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
     setActiveStep(s => Math.min(STEPS.length - 1, s + 1));
   };
 
+  // Contrat de navigation : on expose l'état de calibration au parent (Step3),
+  // qui le relaie au pied de page du wizard. Une seule paire de boutons
+  // (le pied de page) pilote ainsi les sous-étapes de calibration (cascade).
+  useEffect(() => {
+    if (!registerNav) return;
+    registerNav({
+      canBack: activeStep > 0,
+      back: () => setActiveStep(s => Math.max(0, s - 1)),
+      canNext: canGoNext() && activeStep < STEPS.length - 1,
+      next: handleNext,
+    });
+    return () => registerNav(null);
+  }, [registerNav, activeStep, imageUrl, customXTicks.length, customYTicks.length]);
+
   // ════════════════════════════════════════════════════════════════════════
   // RENDU PRINCIPAL
   // ════════════════════════════════════════════════════════════════════════
   return (
     <Box>
-      {/* En-tête */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <Button startIcon={<ChevronLeftIcon />} onClick={onBack} size="small">
-          Retour
-        </Button>
-        <Box sx={{ flex: 1 }} />
-        <Button
-          variant="contained"
-          color="success"
-          startIcon={<CheckCircleIcon />}
-          onClick={onExit}
-          disabled={Object.keys(resultsByStage).length === 0}
-        >
-          Terminer ({Object.keys(resultsByStage).length} bras validé{Object.keys(resultsByStage).length > 1 ? 's' : ''})
-        </Button>
-      </Box>
-
       <Typography variant="h6" gutterBottom>
         Lecture graphique du centrogramme
       </Typography>
@@ -1063,24 +1060,8 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
         {renderStepContent()}
       </Box>
 
-      {/* Navigation entre étapes */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Button
-          startIcon={<ChevronLeftIcon />}
-          onClick={() => setActiveStep(s => Math.max(0, s - 1))}
-          disabled={activeStep === 0}
-        >
-          Étape précédente
-        </Button>
-        <Button
-          variant="contained"
-          endIcon={<ChevronRightIcon />}
-          onClick={handleNext}
-          disabled={!canGoNext() || activeStep === STEPS.length - 1}
-        >
-          Étape suivante
-        </Button>
-      </Box>
+      {/* Navigation entre étapes de calibration : pilotée par le pied de page
+          du wizard (cascade) — plus de boutons Précédent/Suivant internes ici. */}
     </Box>
   );
 };
