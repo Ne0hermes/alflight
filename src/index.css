@@ -133,6 +133,22 @@
   --radius-lg: 16px;    /* Hero, grandes surfaces, modales */
   --radius-pill: 9999px; /* Pills/chips arrondis (à utiliser parcimonieusement) */
 
+  /* ============================================================
+     🔘 SYSTÈME UNIFIÉ DES BOUTONS — Single Source of Truth
+     ============================================================
+     Dimensions de référence pour TOUS les boutons de l'app
+     (MUI Button, boutons natifs via styleSystem, .alflight-button).
+     Référence : bouton « ← Retour » (padding 12/24, 16px, 600, r=8px).
+     Modifier UNIQUEMENT ces variables pour redimensionner tous les
+     boutons partout dans l'app.
+     ----------------------------------------------------------- */
+  --btn-padding-y: 12px;            /* haut/bas → hauteur du bouton */
+  --btn-padding-x: 24px;            /* gauche/droite → espace texte/bordure */
+  --btn-font-size: 16px;            /* taille de police de référence */
+  --btn-font-weight: 600;
+  --btn-min-height: 48px;           /* hauteur cible (= bouton Retour) */
+  --btn-radius: var(--radius-sm);   /* arrondi bouton (8px) */
+
   /* Motion */
   --motion-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);
   --motion-base: 180ms cubic-bezier(0.4, 0, 0.2, 1);

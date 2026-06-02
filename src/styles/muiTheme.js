@@ -218,12 +218,13 @@ const muiTheme = createTheme({
         root: {
           textTransform: 'uppercase',
           fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
-          fontSize: '11px',
-          fontWeight: 600,
+          // Dimensions de référence (bouton « ← Retour ») centralisées dans index.css
+          fontSize: 'var(--btn-font-size)',
+          fontWeight: 'var(--btn-font-weight)',
           letterSpacing: '0.12em',
-          borderRadius: '2px',
-          padding: '10px 20px',
-          minHeight: '40px',
+          borderRadius: 'var(--btn-radius)',
+          padding: 'var(--btn-padding-y) var(--btn-padding-x)',
+          minHeight: 'var(--btn-min-height)',
           boxShadow: 'none',
           '&:focus-visible': {
             outline: `2px solid ${ALFLIGHT_COLORS.accent}`,

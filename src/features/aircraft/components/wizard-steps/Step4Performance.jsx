@@ -669,34 +669,39 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
             </Box>
           )}
         </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<FileDownloadIcon />}
-            onClick={handleExportExcel}
-            disabled={!hasAnyModel || selectedCount === 0}
-          >
-            Exporter Excel{hasAnyModel ? ` (${selectedCount})` : ''}
-          </Button>
-          <Button
-            variant="outlined"
-            size="small"
-            color="primary"
-            startIcon={<FileUploadIcon />}
-            component="label"
-          >
-            Réimporter Excel
-            <input
-              type="file"
-              accept=".xlsx,.xls"
-              hidden
-              onChange={handleImportExcel}
-            />
-          </Button>
-        </Box>
       </Box>
     </Alert>
+  );
+
+  // Actions Excel (Exporter / Réimporter) — sorties de l'info-bulle (Alert),
+  // affichées en ligne centrée juste sous le titre.
+  const renderExcelActions = () => (
+    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', flexWrap: 'wrap', mb: 2 }}>
+      <Button
+        variant="contained"
+        size="small"
+        startIcon={<FileDownloadIcon />}
+        onClick={handleExportExcel}
+        disabled={!hasAnyModel || selectedCount === 0}
+      >
+        Exporter Excel{hasAnyModel ? ` (${selectedCount})` : ''}
+      </Button>
+      <Button
+        variant="outlined"
+        size="small"
+        color="primary"
+        startIcon={<FileUploadIcon />}
+        component="label"
+      >
+        Réimporter Excel
+        <input
+          type="file"
+          accept=".xlsx,.xls"
+          hidden
+          onChange={handleImportExcel}
+        />
+      </Button>
+    </Box>
   );
 
   if ((showExistingData || forceShowSummary) && savedPerformanceData) {
@@ -706,7 +711,10 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
           Données de Performance Configurées
         </h3>
 
-        {/* Workflow Excel — export + réimport (helper renderExcelBanner) */}
+        {/* Boutons Excel (Exporter / Réimporter) centrés, juste sous le titre */}
+        {renderExcelActions()}
+
+        {/* Workflow Excel — bandeau d'info (helper renderExcelBanner) */}
         {renderExcelBanner()}
 
         {/* Abaques de performance */}
@@ -1123,7 +1131,8 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
     };
 
     return (
-      <div style={{ padding: '10px' }}>
+      <>
+        {renderExcelActions()}
         {renderExcelBanner()}
         <AdvancedPerformanceAnalyzer
           aircraft={aircraft}
@@ -1219,7 +1228,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
             }
           }}
         />
-      </div>
+      </>
     );
   }
 
@@ -1228,6 +1237,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
   // possible si des modèles existent, sinon orientation vers l'extraction).
   return (
     <div>
+      {renderExcelActions()}
       {renderExcelBanner()}
       <PerformanceWizard
         aircraft={aircraft}

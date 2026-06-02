@@ -750,7 +750,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
           >
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 2 }}>
               <AutoGraphIcon sx={{ fontSize: 64, color: 'success.main' }} />
-              <Typography variant="h6">🖼 Lecture graphique du centrogramme</Typography>
+              <Typography variant="h6">Lecture graphique du centrogramme</Typography>
               <Typography variant="body2" color="text.secondary">
                 Charge une image du centrogramme MANEX, calibre les axes par clic,
                 puis lis chaque bras de levier (sièges, carburant, bagages) avec
@@ -792,7 +792,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
           >
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 2 }}>
               <EditNoteIcon sx={{ fontSize: 64, color: 'primary.main' }} />
-              <Typography variant="h6">✏️ Saisie manuelle</Typography>
+              <Typography variant="h6">Saisie manuelle</Typography>
               <Typography variant="body2" color="text.secondary">
                 Saisis directement au clavier les bras de levier, masses limites
                 et points de l'enveloppe à partir du rapport M&C de ton MANEX.
