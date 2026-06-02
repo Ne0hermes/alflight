@@ -14,7 +14,7 @@ import {
   Map, UserCircle, Info, Shield,
 } from 'lucide-react';
 import LogoutButton from '../../components/auth/LogoutButton';
-import { EditorialHeading, TechLabel } from './editorial';
+import { EditorialHeading, TechLabel, AlflightLogo } from './editorial';
 import { tokens } from '../styles/designSystem';
 
 const ICON_MAP = {
@@ -83,6 +83,10 @@ export const MobileNavigation = ({ tabs, activeTab, onTabChange, isProfileConfig
             onClick={(e) => e.stopPropagation()}
           >
             <div style={styles.drawerHeader}>
+              <AlflightLogo
+                size={56}
+                style={{ marginBottom: '12px', alignSelf: 'flex-start' }}
+              />
               <EditorialHeading level={3} eyebrow="MENU · NAVIGATION">
                 ALFlight
               </EditorialHeading>

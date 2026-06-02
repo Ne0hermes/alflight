@@ -17,7 +17,7 @@ import {
   Map, Book, Shield, AlertCircle,
 } from 'lucide-react';
 import { PilotDashboard } from './PilotDashboard';
-import { EditorialHeading, TechLabel } from '@shared/components/editorial';
+import { EditorialHeading, TechLabel, AlflightLogo } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
 
 export const LandingPage = ({ onNavigate, isProfileConfigured = true }) => {
@@ -131,6 +131,10 @@ export const LandingPage = ({ onNavigate, isProfileConfigured = true }) => {
       {/* ─── Hero cinematic ALFlight ─── */}
       <header style={styles.hero}>
         <div style={styles.heroInner}>
+          <AlflightLogo
+            size={isMobile ? 140 : 180}
+            style={{ marginBottom: '24px' }}
+          />
           <h1 style={styles.heroLogo}>ALFLIGHT</h1>
           <span style={styles.heroTagline}>PERITIA · PER · PRAEPARATIONEM</span>
           <div style={styles.heroDivider} aria-hidden="true" />

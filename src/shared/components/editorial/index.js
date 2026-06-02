@@ -26,3 +26,4 @@ export { NightModeAlert, default as NightModeAlertDefault } from './NightModeAle
 export { StepDial, default as StepDialDefault } from './StepDial';
 export { ModuleHero, default as ModuleHeroDefault } from './ModuleHero';
 export { CustomSelect, default as CustomSelectDefault } from './CustomSelect';
+export { AlflightLogo, default as AlflightLogoDefault } from './AlflightLogo';
