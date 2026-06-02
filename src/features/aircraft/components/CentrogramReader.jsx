@@ -34,7 +34,6 @@ import {
   Alert,
   Chip,
   IconButton,
-  Divider,
   Stepper,
   Step,
   StepLabel,
@@ -42,10 +41,7 @@ import {
   Tooltip,
   Grid,
   Switch,
-  FormControlLabel,
-  Menu,
-  ListItemIcon,
-  ListItemText
+  FormControlLabel
 } from '@mui/material';
 import {
   CloudUpload as UploadIcon,
@@ -55,11 +51,7 @@ import {
   Visibility as VisibilityIcon,
   ChevronRight as ChevronRightIcon,
   ChevronLeft as ChevronLeftIcon,
-  Tune as CalibrateIcon,
-  Add as AddIcon,
-  Luggage as LuggageIcon,
-  AirlineSeatReclineNormal as SeatIcon,
-  LocalGasStation as FuelIcon
+  Tune as CalibrateIcon
 } from '@mui/icons-material';
 import { v4 as uuidv4 } from 'uuid';
 import { Chart } from '../../../abac/curves/ui/Chart';
@@ -202,72 +194,6 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
 
   // ─── Test prédictif ─────────────────────────────────────────────────────
   const [testMass, setTestMass] = useState('');
-
-  // ─── Menu d'ajout rapide de stages ──────────────────────────────────────
-  const [addStageMenuAnchor, setAddStageMenuAnchor] = useState(null);
-
-  /**
-   * Ajoute à la volée un nouveau stage (bagage, siège, réservoir) dans
-   * aircraftData et le sélectionne immédiatement pour la mesure.
-   * Évite au pilote de revenir dans Step3 juste pour créer le slot.
-   */
-  const addStageQuick = (kind) => {
-    setAddStageMenuAnchor(null);
-    const id = Date.now() + Math.random();
-    let newStageKey = null;
-
-    if (kind === 'baggage') {
-      const existing = aircraftData?.baggageCompartments || [];
-      const newCompartment = {
-        id,
-        name: `Compartiment ${existing.length + 1}`,
-        arm: '',
-        maxWeight: ''
-      };
-      const updated = [...existing, newCompartment];
-      updateData('baggageCompartments', updated);
-      newStageKey = `baggage_${id}`;
-    } else if (kind === 'seat') {
-      const existing = aircraftData?.additionalSeats || [];
-      const newSeat = {
-        id,
-        name: `Siège additionnel ${existing.length + 1}`,
-        arm: ''
-      };
-      const updated = [...existing, newSeat];
-      updateData('additionalSeats', updated);
-      newStageKey = `seat_${id}`;
-    } else if (kind === 'fuelWing' || kind === 'fuelOptional' || kind === 'fuelTip' || kind === 'fuelAux') {
-      const existing = aircraftData?.additionalFuelTanks || [];
-      const typeMap = {
-        fuelWing:     { type: 'wing',     name: 'Réservoir aile' },
-        fuelOptional: { type: 'optional', name: 'Réservoir optionnel' },
-        fuelTip:      { type: 'tip',      name: 'Tip tank' },
-        fuelAux:      { type: 'aux',      name: 'Réservoir auxiliaire' }
-      };
-      const info = typeMap[kind];
-      const newTank = {
-        id,
-        name: `${info.name} ${existing.length + 1}`,
-        type: info.type,
-        arm: '',
-        capacity: ''
-      };
-      const updated = [...existing, newTank];
-      updateData('additionalFuelTanks', updated);
-      newStageKey = `fuelTank_${id}`;
-    }
-
-    // Auto-sélectionne le nouveau stage après un tick (le temps que stageList
-    // se reconstruise à partir du nouveau aircraftData)
-    if (newStageKey) {
-      setTimeout(() => {
-        setCurrentStageKey(newStageKey);
-        setCurvePoints([]);
-        setTestMass('');
-      }, 50);
-    }
-  };
 
   // ─── Conversion d'unités ────────────────────────────────────────────────
   const [armOutputUnit, setArmOutputUnit] = useState('cm');
@@ -1010,64 +936,6 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
                 ))}
               </Select>
             </FormControl>
-
-            {/* Bouton + Ajouter un stage à la volée */}
-            <Tooltip title="Ajouter un nouveau stage (bagages, siège, réservoir) sans repasser par Step3">
-              <Button
-                variant="outlined"
-                size="small"
-                color="secondary"
-                startIcon={<AddIcon />}
-                onClick={(e) => setAddStageMenuAnchor(e.currentTarget)}
-              >
-                Ajouter
-              </Button>
-            </Tooltip>
-            <Menu
-              anchorEl={addStageMenuAnchor}
-              open={Boolean(addStageMenuAnchor)}
-              onClose={() => setAddStageMenuAnchor(null)}
-            >
-              <MenuItem onClick={() => addStageQuick('baggage')}>
-                <ListItemIcon><LuggageIcon fontSize="small" /></ListItemIcon>
-                <ListItemText primary="Compartiment bagages" secondary="🧳 Pour un soute / compartiment" />
-              </MenuItem>
-              <MenuItem onClick={() => addStageQuick('seat')}>
-                <ListItemIcon><SeatIcon fontSize="small" /></ListItemIcon>
-                <ListItemText primary="Siège additionnel" secondary="💺 3e/4e siège, jump seat…" />
-              </MenuItem>
-              <Divider />
-              <MenuItem onClick={() => addStageQuick('fuelWing')}>
-                <ListItemIcon><FuelIcon fontSize="small" /></ListItemIcon>
-                <ListItemText primary="Réservoir d'aile" secondary="✈️ Aile gauche/droite" />
-              </MenuItem>
-              <MenuItem onClick={() => addStageQuick('fuelTip')}>
-                <ListItemIcon><FuelIcon fontSize="small" /></ListItemIcon>
-                <ListItemText primary="Tip tank" secondary="🛢️ Réservoir d'extrémité" />
-              </MenuItem>
-              <MenuItem onClick={() => addStageQuick('fuelAux')}>
-                <ListItemIcon><FuelIcon fontSize="small" /></ListItemIcon>
-                <ListItemText primary="Réservoir auxiliaire" secondary="🔧 Aux / fuselage" />
-              </MenuItem>
-              <MenuItem onClick={() => addStageQuick('fuelOptional')}>
-                <ListItemIcon><FuelIcon fontSize="small" /></ListItemIcon>
-                <ListItemText primary="Réservoir optionnel" secondary="🔋 Kit additionnel" />
-              </MenuItem>
-            </Menu>
-
-            <Chip
-              label={`${curvePoints.length} point${curvePoints.length > 1 ? 's' : ''} cliqué${curvePoints.length > 1 ? 's' : ''}`}
-              color={curvePoints.length >= 2 ? 'success' : 'default'}
-              variant={curvePoints.length >= 2 ? 'filled' : 'outlined'}
-            />
-            <IconButton
-              color="error"
-              onClick={() => setCurvePoints([])}
-              disabled={curvePoints.length === 0}
-              title="Effacer tous les points cliqués"
-            >
-              <ResetIcon />
-            </IconButton>
           </Stack>
 
           {regression && (() => {
@@ -1132,7 +1000,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
                 )}
               </Box>
 
-              <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+              <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
                 <Button
                   variant="contained"
                   color="success"
@@ -1141,6 +1009,14 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
                 >
                   Valider ce bras ({armUser ? armUser.toFixed(2) : '?'} {userArmUnit})
                 </Button>
+                <IconButton
+                  color="error"
+                  onClick={() => setCurvePoints([])}
+                  disabled={curvePoints.length === 0}
+                  title="Effacer tous les points cliqués"
+                >
+                  <ResetIcon />
+                </IconButton>
                 {resultsByStage[currentStageKey] && (
                   <Button
                     variant="contained"
