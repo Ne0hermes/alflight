@@ -1498,7 +1498,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
       <Box
         sx={{
           display: 'flex',
-          justifyContent: 'space-between',
+          justifyContent: 'center',
           alignItems: 'center',
           p: 2,
           pb: 'max(env(safe-area-inset-bottom), 16px)',
@@ -1510,41 +1510,37 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
           backgroundColor: 'var(--app-bg)',
         }}
       >
-        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
-          {/* Bouton Annuler — ghost neutre (pas rouge agressif) */}
+        {currentStep > 0 && (
           <Button
-            variant="text"
-            onClick={handleCancel}
-            sx={{
-              color: 'var(--text-tertiary)',
-              '&:hover': {
-                backgroundColor: 'rgba(245, 242, 236, 0.04)',
-                color: 'var(--text-primary)',
-              },
-            }}
+            variant="outlined"
+            onClick={handlePrevious}
           >
-            Annuler
+            ← Précédent
           </Button>
+        )}
 
-          {currentStep > 0 && (
-            <Button
-              variant="outlined"
-              onClick={handlePrevious}
-            >
-              ← Précédent
-            </Button>
-          )}
-        </Box>
+        {/* Bouton Annuler — au milieu, ghost neutre (pas rouge agressif) */}
+        <Button
+          variant="text"
+          onClick={handleCancel}
+          sx={{
+            color: 'var(--text-tertiary)',
+            '&:hover': {
+              backgroundColor: 'rgba(245, 242, 236, 0.04)',
+              color: 'var(--text-primary)',
+            },
+          }}
+        >
+          Annuler
+        </Button>
 
         {currentStep !== 0 && currentStep !== steps.length - 1 && (
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-            <Button
-              variant="contained"
-              onClick={handleNext}
-            >
-              Suivant →
-            </Button>
-          </Box>
+          <Button
+            variant="contained"
+            onClick={handleNext}
+          >
+            Suivant →
+          </Button>
         )}
       </Box>
 
