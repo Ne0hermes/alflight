@@ -475,6 +475,23 @@ const muiTheme = createTheme({
         },
       },
     },
+    // MuiInputAdornment : espace entre la valeur de saisie et l'unité affichée.
+    // Demande utilisateur : "Capacité totale carburant 42.3 gal" — le "gal"
+    // était collé au "42.3". Marge gauche pour respirer + padding-right léger
+    // sur l'input adornedEnd pour décoller le texte centré de l'adornment.
+    MuiInputAdornment: {
+      styleOverrides: {
+        positionEnd: {
+          marginLeft: '12px',
+          color: ALFLIGHT_COLORS.textTertiary,
+          '& .MuiTypography-root': {
+            fontFamily: "'Century Gothic', 'Questrial', sans-serif",
+            fontSize: '13px',
+            color: ALFLIGHT_COLORS.textTertiary,
+          },
+        },
+      },
+    },
     MuiInputLabel: {
       defaultProps: { shrink: true },
       styleOverrides: {
