@@ -1525,7 +1525,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
             {/* Masse à vide + Bras de levier + Moment à vide */}
-            <Box sx={{ width: '100%', maxWidth: 800, mb: 1.5 }}>
+            <Box sx={{ width: '100%', maxWidth: 700, mb: 1.5 }}>
               <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', flexWrap: 'wrap' }}>
                 <StyledTextField
                   sx={{ flex: 1, minWidth: 180 }}
@@ -2081,29 +2081,25 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
           document officiel qui les justifie. Fichier stocké en base64 dans
           data.weighingReport (offline-accessible avec l'avion). Le wizard
           bloque le passage à l'étape suivante tant qu'aucun PDF n'est joint. */}
-      <Box sx={{ width: '100%', maxWidth: 900, mx: 'auto', mt: 3, mb: 1 }}>
+      <Box sx={{ width: '100%', maxWidth: 700, mx: 'auto', mt: 3, mb: 1 }}>
         <Paper
           elevation={0}
           sx={{
             p: 2,
-            border: '2px solid',
-            borderColor: data.weighingReport?.hasData
-              ? 'success.main'
-              : (errors?.weighingReport ? 'error.main' : 'warning.main'),
-            bgcolor: data.weighingReport?.hasData
-              ? 'success.50'
-              : (errors?.weighingReport ? 'error.50' : 'warning.50'),
-            borderRadius: 'var(--radius-sm)'
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 'var(--radius-sm)',
+            bgcolor: 'transparent'
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
             <Box sx={{ flex: 1, minWidth: 200 }}>
               <Typography variant="subtitle2" fontWeight={700}>
-                📋 Rapport de pesée (PDF) <span style={{ color: '#C04534' }}>*</span>
+                Rapport de pesée (PDF) <span style={{ color: '#C04534' }}>*</span>
               </Typography>
               {data.weighingReport?.hasData ? (
                 <Typography variant="caption" color="text.secondary">
-                  ✅ {data.weighingReport.fileName}
+                  {data.weighingReport.fileName}
                   {' • '}
                   {data.weighingReport.fileSize
                     ? `${(data.weighingReport.fileSize / 1024 / 1024).toFixed(2)} MB`
