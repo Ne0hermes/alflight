@@ -2030,18 +2030,21 @@ Do NOT return empty tables array.`;
 
               // Afficher notification éphémère
               const notification = document.createElement('div');
-              notification.textContent = '✅ Performances sauvegardées';
+              notification.textContent = 'Performances sauvegardées';
               notification.style.cssText = `
                 position: fixed;
                 top: 20px;
                 right: 20px;
-                background: var(--text-primary);
-                color: white;
-                padding: 16px 24px;
-                border-radius: 8px;
+                background: var(--bg-overlay);
+                color: var(--text-primary);
+                border: 1px solid var(--border-subtle);
+                border-left: 3px solid var(--accent-primary);
+                padding: 14px 20px;
+                border-radius: var(--radius-sm);
+                font-family: var(--font-sans);
                 font-weight: 600;
-                font-size: 16px;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                font-size: 14px;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
                 z-index: 10000;
                 animation: slideIn 0.3s ease-out;
               `;
