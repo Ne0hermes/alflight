@@ -451,14 +451,29 @@
   justify-content: center !important;
 }
 
-/* Variant size="small" — padding réduit, hauteur de contenu inchangée
-   (1.4375em suit la police 14px partout). */
+/* 📏 HAUTEUR UNIQUE PARTOUT — size="small" forcé à la hauteur de référence.
+   ────────────────────────────────────────────────────────────────────────
+   Demande utilisateur : TOUS les champs de saisie de la création d'avion
+   doivent avoir EXACTEMENT la même hauteur (référence = TextField "Modèle",
+   taille medium). De nombreux composants utilisent size="small" en dur
+   (CentrogramReader Min/Max/Pas/Unité, etc.), ce qui créait des champs plus
+   bas → incohérence visuelle.
+
+   Plutôt que d'éditer chaque prop size="small" dans 19 fichiers (et risquer
+   de toucher des boutons/chips qui doivent rester petits), on neutralise ici
+   l'effet de size="small" sur la HAUTEUR des champs de saisie uniquement :
+   on leur applique le même padding vertical que les champs medium.
+
+   → input small et input medium ont désormais une hauteur identique partout.
+   Les Button/Chip/Switch size="small" ne sont PAS affectés (sélecteurs
+   ciblant uniquement .MuiOutlinedInput-input / .MuiSelect-select). */
 .MuiInputBase-sizeSmall .MuiOutlinedInput-input,
 .MuiInputBase-sizeSmall .MuiInputBase-input,
 .MuiInputBase-sizeSmall .MuiSelect-select.MuiOutlinedInput-input,
 .MuiInputBase-sizeSmall.MuiSelect-select.MuiOutlinedInput-input {
-  padding-top: 8.5px !important;
-  padding-bottom: 8.5px !important;
+  /* Même padding vertical que medium → même hauteur */
+  padding-top: var(--input-padding-y) !important;
+  padding-bottom: var(--input-padding-y) !important;
   line-height: 1.4375em !important;
   height: 1.4375em !important;
 }

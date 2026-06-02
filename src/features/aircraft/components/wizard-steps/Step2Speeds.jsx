@@ -388,7 +388,6 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
         required={isRequired}
         InputProps={{
           endAdornment: <InputAdornment position="end">{getUnitSymbol(units.speed)}</InputAdornment>,
-          sx: { height: '56px' }
         }}
         InputLabelProps={{
           shrink: true,
@@ -396,7 +395,8 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
         sx={{
           '& .MuiOutlinedInput-root': {
             backgroundColor: 'background.default',
-            height: '56px'
+            // height: '56px' RETIRÉ — laisse la hauteur naturelle commune
+            // (= champ de référence "Modèle") pour uniformité totale.
           }
         }}
       />
