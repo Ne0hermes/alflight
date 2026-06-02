@@ -291,7 +291,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
     const INNER_W = chartSize.width - 60 - 40;
     const INNER_H = chartSize.height - 40 - 60;
     setBackgroundImage({ url, x: 0, y: 0, width: INNER_W, height: INNER_H });
-    setImageAdjustMode(true); // active automatiquement le mode ajustement
+    // Le mode ajustement est piloté par l'étape (voir useEffect ci-dessous).
   };
 
   /**
@@ -314,6 +314,14 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
     setTestMass('');
     setActiveStep(0);
   };
+
+  // Le « mode ajustement » (drag image + redimensionnement du chart) suit
+  // désormais l'étape : actif uniquement à l'étape 1 « Ajuster image ».
+  // L'ancienne checkbox manuelle a été retirée (bandeau supprimé — demande
+  // utilisateur). Couvre aussi le retour arrière vers l'étape 1.
+  useEffect(() => {
+    setImageAdjustMode(activeStep === 1 && !!imageUrl);
+  }, [activeStep, imageUrl]);
 
   // ════════════════════════════════════════════════════════════════════════
   // CALIBRATION GUIDÉE — pattern AbacBuilder
@@ -846,14 +854,14 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
               🎯 Ajuste l'image ET le graphique pour qu'ils collent parfaitement
             </Typography>
             <Typography variant="body2" sx={{ mt: 1 }} component="div">
-              Active la checkbox <strong>"Mode ajustement"</strong> dans le bandeau au-dessus de l'image.
+              À cette étape, l'image et le graphique sont directement déplaçables :
               <ul style={{ margin: '6px 0', paddingLeft: 20 }}>
                 <li>L'image se déplace au drag (8 poignées bleues sur ses bords).</li>
                 <li>Le graphique se redimensionne via les <strong>3 poignées sur ses bords</strong>
                     (droit, bas, coin bas-droit).</li>
                 <li>Objectif : caler les graduations <strong>0 sur 0</strong> et
                     <strong>max sur max</strong> de chaque axe.</li>
-                <li>Décoche la checkbox quand c'est bon pour passer à la calibration.</li>
+                <li>Clique sur <strong>« Suivant → »</strong> quand c'est bon pour passer à la calibration.</li>
               </ul>
             </Typography>
           </Alert>
@@ -1280,46 +1288,6 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
               );
             })}
           </Stack>
-        </Paper>
-      )}
-
-      {/* Bandeau "actions image + ajustement" — visible dès qu'une image est chargée */}
-      {imageUrl && (
-        <Paper variant="outlined" sx={{ p: 1.5, mb: 2, bgcolor: 'transparent', borderColor: imageAdjustMode ? 'primary.main' : 'divider', borderWidth: imageAdjustMode ? 2 : 1, borderRadius: 'var(--radius-sm)' }}>
-          <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
-            <Typography variant="caption" sx={{ flex: 1, minWidth: 150 }}>
-              {imageFile?.name}
-            </Typography>
-
-            {/* Checkbox "Mode ajustement" — active drag image + drag chart */}
-            <FormControlLabel
-              control={
-                <Switch
-                  size="small"
-                  color="primary"
-                  checked={imageAdjustMode}
-                  onChange={(e) => setImageAdjustMode(e.target.checked)}
-                />
-              }
-              label={
-                <Typography variant="caption" fontWeight={imageAdjustMode ? 700 : 400}>
-                  Mode ajustement {imageAdjustMode && '(drag image + chart à la souris)'}
-                </Typography>
-              }
-            />
-
-            {/* Bouton "Y inversé" RETIRÉ — c'était une redite du switch
-                "Inverser l'axe Y" déplacé en tête du formulaire des axes. */}
-            <Button size="small" startIcon={<UploadIcon />} onClick={handleStartNewArm}>
-              Nouvelle image
-            </Button>
-          </Stack>
-          {imageAdjustMode && (
-            <Typography variant="caption" color="primary" sx={{ display: 'block', mt: 1 }}>
-              Drag l'image avec ses poignées bleues. Le chart se redimensionne via les 3 poignées
-              bleues sur ses bords (droit, bas, coin). Décoche la checkbox pour cliquer des points.
-            </Typography>
-          )}
         </Paper>
       )}
 
