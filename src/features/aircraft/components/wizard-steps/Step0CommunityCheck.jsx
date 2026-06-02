@@ -698,23 +698,13 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
 
       {/* En-tête */}
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <CloudIcon color="primary" />
+        <Typography variant="h5" gutterBottom sx={{ textAlign: 'center' }}>
           Recherchez votre avion dans notre base de données partagée
-          {!showExplanation && (
-            <IconButton
-              size="small"
-              onClick={() => setShowExplanation(true)}
-              sx={{ ml: 'auto' }}
-            >
-              <InfoIcon />
-            </IconButton>
-          )}
         </Typography>
       </Box>
 
-      {/* Barre de recherche */}
-      <Paper elevation={1} sx={{ p: 3, mb: 3 }}>
+      {/* Barre de recherche (sans encapsulation Paper) */}
+      <Box sx={{ mb: 3 }}>
         <Autocomplete
           value={searchValue}
           onChange={(event, newValue) => {
@@ -773,7 +763,6 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
               }}
               InputProps={{
                 ...params.InputProps,
-                startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 20 }} />,
                 endAdornment: (
                   <>
                     {isLoading ? <CircularProgress color="inherit" size={16} /> : null}
@@ -913,7 +902,7 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
             </Box>
           </Paper>
         )}
-      </Paper>
+      </Box>
 
 
       {/* Option pour créer un nouvel avion */}
@@ -940,21 +929,6 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
             style={{ display: 'none' }}
             onChange={handleManexFileSelected}
           />
-
-          {/* Bouton 2 : Saisie manuelle (sauter l'extraction MANEX).
-              Utile quand le MANEX n'est pas disponible, qu'on veut tester
-              rapidement, ou que l'extraction IA pose problème. */}
-          <Button
-            variant="outlined"
-            color="primary"
-            startIcon={<EditNoteIcon />}
-            onClick={() => {
-              if (onSkip) onSkip();
-            }}
-            sx={{ flex: { sm: 1.2 } }}
-          >
-            Saisir manuellement (sans MANEX)
-          </Button>
 
           <Button
             variant="outlined"
