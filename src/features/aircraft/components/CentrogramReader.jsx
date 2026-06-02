@@ -1070,23 +1070,6 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
             </IconButton>
           </Stack>
 
-          {currentStage && (
-            <Alert severity="success" icon={false} sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5 }}>
-                🎯 Mesure : {currentStage.label}
-              </Typography>
-              <Typography variant="body2" sx={{ mb: 0.5 }}>
-                {currentStage.helper}
-              </Typography>
-              <Typography variant="caption" component="div">
-                <strong>Clique 3 à 5 points</strong> directement sur la droite affine
-                du mini-graphique au-dessus.
-                <br/>• Clic droit sur un point pour le supprimer
-                <br/>• Glisser-déposer pour ajuster un point
-              </Typography>
-            </Alert>
-          )}
-
           {regression && (() => {
             const armInfo = computeArmFromRegression(regression);
             const armUser = armInfo?.armInUserUnit;
