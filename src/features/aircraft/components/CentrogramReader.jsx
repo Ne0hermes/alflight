@@ -512,33 +512,21 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
           Configuration des axes du mini-graphique
         </Typography>
         <Tooltip title="Inverse les rôles X ↔ Y. À utiliser si ton centrogramme a la masse sur l'axe vertical au lieu de l'horizontal.">
-          <Button
-            onClick={swapAxes}
-            disableRipple
-            startIcon={<MoveIcon sx={{ transform: 'rotate(90deg)', fontSize: '14px !important' }} />}
-            sx={{
-              textTransform: 'none',
-              fontSize: '12px',
-              fontWeight: 400,
-              lineHeight: 1.4,
-              px: 1.25,
-              py: 0.5,
-              minWidth: 0,
-              minHeight: 0,
-              borderRadius: '16px',
-              border: '1px solid',
-              borderColor: massAxis === 'y' ? 'var(--accent-primary)' : 'var(--border-subtle)',
-              color: massAxis === 'y' ? 'var(--accent-primary)' : 'var(--text-secondary)',
-              backgroundColor: 'transparent',
-              '& .MuiButton-startIcon': { mr: 0.5, ml: 0 },
-              '&:hover': {
-                backgroundColor: 'rgba(255,255,255,0.04)',
-                borderColor: massAxis === 'y' ? 'var(--accent-primary)' : 'var(--text-tertiary)',
-              },
-            }}
-          >
-            Inverse l'abscisse et l'ordonnée (XY)
-          </Button>
+          <FormControlLabel
+            sx={{ m: 0 }}
+            control={
+              <Switch
+                size="small"
+                checked={massAxis === 'y'}
+                onChange={swapAxes}
+              />
+            }
+            label={
+              <Typography variant="caption">
+                Inverser l'abscisse et l'ordonnée
+              </Typography>
+            }
+          />
         </Tooltip>
       </Stack>
 
