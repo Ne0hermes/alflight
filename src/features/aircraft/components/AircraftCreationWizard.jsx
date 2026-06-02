@@ -1532,16 +1532,16 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
           )}
         </Box>
 
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-          {currentStep !== 0 && currentStep !== steps.length - 1 && (
+        {currentStep !== 0 && currentStep !== steps.length - 1 && (
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
             <Button
               variant="contained"
               onClick={handleNext}
             >
               Suivant →
             </Button>
-          )}
-        </Box>
+          </Box>
+        )}
       </Box>
 
       {/* Dialog de confirmation d'annulation */}
