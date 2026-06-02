@@ -506,10 +506,10 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
     const yUnits = massAxis === 'y' ? ['kg', 'lbs'] : ['m·kg', 'kg·m', 'cm·kg', 'kg·cm', 'mm·kg', 'lbs·in', 'in·lbs'];
 
     return (
-    <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+    <Paper variant="outlined" sx={{ p: 2, mb: 2, borderRadius: 'var(--radius-sm)', bgcolor: 'transparent' }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
         <Typography variant="subtitle2">
-          📐 Configuration des axes du mini-graphique
+          Configuration des axes du mini-graphique
         </Typography>
         <Tooltip title="Inverse les rôles X ↔ Y. À utiliser si ton centrogramme a la masse sur l'axe vertical au lieu de l'horizontal.">
           <Button
@@ -817,9 +817,9 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
       return (
         <Box>
           {renderAxesForm()}
-          <Paper variant="outlined" sx={{ p: 2, textAlign: 'center' }}>
+          <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', borderRadius: 'var(--radius-sm)', bgcolor: 'transparent' }}>
             <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              📷 Image du mini-graphique
+              Image du mini-graphique
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
               Charge un export JPG/PNG du mini-graphique à mesurer (PLACES AVANT, CARBURANT, …).
@@ -855,7 +855,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
               🎯 Ajuste l'image ET le graphique pour qu'ils collent parfaitement
             </Typography>
             <Typography variant="body2" sx={{ mt: 1 }} component="div">
-              Active la checkbox <strong>"🎯 Mode ajustement"</strong> dans le bandeau au-dessus de l'image.
+              Active la checkbox <strong>"Mode ajustement"</strong> dans le bandeau au-dessus de l'image.
               <ul style={{ margin: '6px 0', paddingLeft: 20 }}>
                 <li>L'image se déplace au drag (8 poignées bleues sur ses bords).</li>
                 <li>Le graphique se redimensionne via les <strong>3 poignées sur ses bords</strong>
@@ -1294,10 +1294,10 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
 
       {/* Bandeau "actions image + ajustement" — visible dès qu'une image est chargée */}
       {imageUrl && (
-        <Paper variant="outlined" sx={{ p: 1.5, mb: 2, bgcolor: imageAdjustMode ? 'rgba(59,130,246,0.08)' : 'action.hover', borderColor: imageAdjustMode ? 'primary.main' : 'divider', borderWidth: imageAdjustMode ? 2 : 1 }}>
+        <Paper variant="outlined" sx={{ p: 1.5, mb: 2, bgcolor: 'transparent', borderColor: imageAdjustMode ? 'primary.main' : 'divider', borderWidth: imageAdjustMode ? 2 : 1, borderRadius: 'var(--radius-sm)' }}>
           <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
             <Typography variant="caption" sx={{ flex: 1, minWidth: 150 }}>
-              📷 {imageFile?.name}
+              {imageFile?.name}
             </Typography>
 
             {/* Checkbox "Mode ajustement" — active drag image + drag chart */}
@@ -1312,7 +1312,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
               }
               label={
                 <Typography variant="caption" fontWeight={imageAdjustMode ? 700 : 400}>
-                  🎯 Mode ajustement {imageAdjustMode && '(drag image + chart à la souris)'}
+                  Mode ajustement {imageAdjustMode && '(drag image + chart à la souris)'}
                 </Typography>
               }
             />
@@ -1350,10 +1350,12 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
       {/* Chart (visible dès qu'une image est chargée) */}
       {imageUrl && renderChart()}
 
-      {/* Contenu de l'étape */}
-      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+      {/* Contenu de l'étape — wrapper Paper retiré (demande utilisateur).
+          Les sous-blocs (Configuration des axes, Image upload, etc.) gèrent
+          eux-mêmes leur Paper outlined avec arrondis cohérents. */}
+      <Box sx={{ mb: 2 }}>
         {renderStepContent()}
-      </Paper>
+      </Box>
 
       {/* Navigation entre étapes */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
