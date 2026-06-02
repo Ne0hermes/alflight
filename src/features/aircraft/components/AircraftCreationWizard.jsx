@@ -1459,10 +1459,10 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         </Paper>
       )}
 
-      {/* Vérificateur de conversion d'unités — toutes les étapes sauf Step 0
-          (sur Step 0 — recherche communauté — il apparaît plutôt dans la
-          fenêtre modale de validation MANEX, là où il est utile). */}
-      {currentStep > 0 && <UnitConverterCard />}
+      {/* Vérificateur de conversion d'unités RETIRÉ DU WIZARD — demande
+          utilisateur. La carte UnitConverterCard apparaît encore dans la
+          modale de validation MANEX (ManexExtractionReview) là où elle
+          est utile pour vérifier les unités extraites. */}
 
       {/* Content */}
       <Paper

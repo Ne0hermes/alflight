@@ -1575,7 +1575,16 @@ export const AircraftModule = memo(() => {
                   borderRadius: tokens.radius.sm,
                   overflow: 'hidden',
                   cursor: 'pointer',
-                  transition: `border-color ${tokens.motion.base}, transform ${tokens.motion.base}`
+                  transition: `border-color ${tokens.motion.base}, transform ${tokens.motion.base}`,
+                  // Demande utilisateur : éliminer le "flash bleu" au tap
+                  // sur mobile/tablette (overlay natif WebKit/Chrome qui
+                  // s'affiche par défaut sur tap d'élément cliquable).
+                  WebkitTapHighlightColor: 'transparent',
+                  // Garantir aussi qu'aucun outline focus bleu natif ne
+                  // s'affiche (on a déjà notre indicateur orange via
+                  // border-color au hover).
+                  outline: 'none',
+                  userSelect: 'none',
                 }}
                 onMouseEnter={(e) => {
                   if (!isSelected) {
