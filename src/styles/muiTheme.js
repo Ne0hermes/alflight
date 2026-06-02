@@ -362,7 +362,7 @@ const muiTheme = createTheme({
             borderRadius: '8px',
             fontFamily: "'Century Gothic', 'Questrial', sans-serif",
             '& fieldset': {
-              borderColor: ALFLIGHT_COLORS.borderSubtle + ' !important',
+              borderColor: ALFLIGHT_COLORS.borderRegular + ' !important',
               borderWidth: '1px',
               '& > legend': {
                 display: 'none !important',
@@ -435,11 +435,11 @@ const muiTheme = createTheme({
           fontFamily: "'Century Gothic', 'Questrial', sans-serif",
         },
         notchedOutline: {
-          // Bordure subtle visible au repos pour cohérence avec le
-          // ressenti utilisateur ("Puissance moteur a un contour fin").
-          // Trop transparent rendait les Selects invisibles vs les
-          // TextField, créant une illusion d'optique de largeur diff.
-          borderColor: ALFLIGHT_COLORS.borderSubtle + ' !important',
+          // Bordure UNIFORME au repos sur tous les inputs MUI (TextField,
+          // Select, Autocomplete). borderRegular (20% ivoire) pour matcher
+          // visuellement le contour perçu par l'utilisateur sur le
+          // TextField "Puissance moteur".
+          borderColor: ALFLIGHT_COLORS.borderRegular + ' !important',
           borderWidth: '1px',
           top: '0 !important',
           '& > legend': {
@@ -556,19 +556,24 @@ const muiTheme = createTheme({
           fontFamily: "'Century Gothic', 'Questrial', sans-serif !important",
           fontSize: '14px',
           textAlign: 'center',
-          // ⚠️ Padding SYMÉTRIQUE 32px gauche+droite : MUI met par défaut
-          // paddingRight: 32px (espace pour la flèche dropdown absolue) et
-          // paddingLeft: 14px. Cette asymétrie décale le texte centré et
-          // donne visuellement l'impression que le Select est "plus large"
-          // que le TextField voisin. Avec 32px des deux côtés, le contenu
-          // est vraiment centré et la largeur visuelle est identique aux
-          // TextField (Puissance moteur, Marque, etc.).
-          paddingLeft: '32px !important',
+          // ⚠️ Padding ALIGNÉ sur MuiOutlinedInput.input par défaut MUI
+          // (16.5px vertical, 14px horizontal). Conservation du
+          // paddingRight 32px nécessaire pour la flèche dropdown absolue.
+          //
+          // Mon override précédent (paddingLeft 32 + paddingRight 32) créait
+          // une différence de 36px de largeur utile vs TextField → effet
+          // visuel "Select plus étroit / plus rétréci / contour plus pâle".
+          //
+          // Avec 14px à gauche et 32px à droite, le contenu textAlign:center
+          // est légèrement décalé à gauche de 9px par rapport au centre
+          // mathématique, mais reste imperceptible à l'œil. L'apparence est
+          // strictement identique au TextField voisin "Puissance moteur".
+          paddingTop: '16.5px !important',
+          paddingBottom: '16.5px !important',
+          paddingLeft: '14px !important',
           paddingRight: '32px !important',
-          // Évite que MUI applique min-width par défaut qui ferait
-          // déborder le Select du wrapper Grid 350px.
           minWidth: 0,
-          minHeight: '1.4375em',
+          boxSizing: 'border-box',
         },
         icon: {
           color: ALFLIGHT_COLORS.textTertiary,
@@ -651,7 +656,7 @@ const muiTheme = createTheme({
             borderRadius: '8px',
             fontFamily: "'Century Gothic', 'Questrial', sans-serif !important",
             '& fieldset': {
-              borderColor: ALFLIGHT_COLORS.borderSubtle + ' !important',
+              borderColor: ALFLIGHT_COLORS.borderRegular + ' !important',
               borderWidth: '1px',
               '& > legend': {
                 display: 'none !important',
