@@ -1822,8 +1822,8 @@ Do NOT return empty tables array.`;
                 onTableUpdate={tableViewMode === 'individual' ? handleTableUpdate : undefined}
               />
               
-              {/* Panneau de test de prédiction pour les données du tableau - Accordéon */}
-              {selectedTable.data && selectedTable.data.length > 0 && (
+              {/* Panneau "Test de prédiction" retiré de l'interface (bloc neutralisé) */}
+              {false && selectedTable.data && selectedTable.data.length > 0 && (
                 <div style={sx.combine(sx.components.card.base, sx.spacing.mt(3))}>
                   <button
                     onClick={() => setShowPredictionPanel(!showPredictionPanel)}

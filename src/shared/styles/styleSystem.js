@@ -267,15 +267,18 @@ class StyleSystem {
       },
       button: {
         base: {
-          padding: `${theme.spacing[2]} ${theme.spacing[4]}`,
-          borderRadius: theme.borderRadius.md,
-          fontSize: theme.fontSize.sm,
-          fontWeight: theme.fontWeight.medium,
+          // Dimensions de référence (bouton « ← Retour ») centralisées dans index.css
+          padding: 'var(--btn-padding-y) var(--btn-padding-x)',
+          minHeight: 'var(--btn-min-height)',
+          borderRadius: 'var(--btn-radius)',
+          fontSize: 'var(--btn-font-size)',
+          fontWeight: 'var(--btn-font-weight)',
           border: 'none',
           cursor: 'pointer',
           transition: 'all 0.2s',
           display: 'inline-flex',
           alignItems: 'center',
+          justifyContent: 'center',
           gap: theme.spacing[2]
         },
         primary: {

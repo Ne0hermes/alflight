@@ -251,17 +251,17 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 20px;
+  padding: var(--btn-padding-y) var(--btn-padding-x);
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--btn-radius);
   font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
+  font-size: var(--btn-font-size);
+  font-weight: var(--btn-font-weight);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-  min-height: 40px;
+  min-height: var(--btn-min-height);
   box-sizing: border-box;
 }
 
@@ -300,6 +300,21 @@
 }
 .alflight-button-danger:hover {
   background-color: var(--color-red-critical-dim);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   MUI Button — dimensions de référence forcées sur TOUTES les tailles
+   (small / medium / large). Le thème MUI applique le « root », mais MUI
+   réinjecte un padding/font-size propre à chaque size variant : on force
+   ici la cohérence pour que tous les boutons aient la même hauteur et le
+   même espace texte/bordure (réf. bouton « ← Retour »).
+   Non concernés : IconButton, ToggleButton (classes distinctes).
+   ────────────────────────────────────────────────────────────────────────── */
+.MuiButton-root {
+  min-height: var(--btn-min-height) !important;
+  padding: var(--btn-padding-y) var(--btn-padding-x) !important;
+  font-size: var(--btn-font-size) !important;
+  border-radius: var(--btn-radius) !important;
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
