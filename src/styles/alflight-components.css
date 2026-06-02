@@ -427,10 +427,10 @@
    Règle placée APRÈS la règle générique → gagne à spécificité/!important égaux. */
 .MuiInputBase-adornedEnd .MuiOutlinedInput-input,
 .MuiInputBase-adornedEnd .MuiInputBase-input {
-  padding-right: 2.6em !important;
+  padding-right: 3.6em !important;
 }
 .MuiInputBase-adornedEnd .MuiInputAdornment-positionEnd {
-  margin-left: 4px !important;
+  margin-left: 8px !important;
 }
 
 /* SELECT — le combobox <div> qui remplace l'<input>.
