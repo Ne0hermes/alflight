@@ -396,7 +396,7 @@ export const Chart: React.FC<ChartProps> = ({
             y1={0}
             x2={xScale(tick)}
             y2={innerHeight}
-            stroke="#e0e0e0"
+            stroke="var(--border-subtle)"
             strokeDasharray="2,2"
           />
         ))}
@@ -407,7 +407,7 @@ export const Chart: React.FC<ChartProps> = ({
             y1={yScale(tick)}
             x2={innerWidth}
             y2={yScale(tick)}
-            stroke="#e0e0e0"
+            stroke="var(--border-subtle)"
             strokeDasharray="2,2"
           />
         ))}
@@ -435,11 +435,11 @@ export const Chart: React.FC<ChartProps> = ({
     return (
       <>
         <g className="x-axis" transform={`translate(0, ${innerHeight})`}>
-          <line x1={0} y1={0} x2={innerWidth} y2={0} stroke="#333" />
+          <line x1={0} y1={0} x2={innerWidth} y2={0} stroke="var(--text-secondary)" />
           {xTicks.map(tick => (
             <g key={`x-tick-${tick}`} transform={`translate(${xScale(tick)}, 0)`}>
-              <line y1={0} y2={4} stroke="#333" />
-              <text y={14} textAnchor="middle" fontSize="9" fill="#333">
+              <line y1={0} y2={4} stroke="var(--text-secondary)" />
+              <text y={14} textAnchor="middle" fontSize="9" fill="var(--text-secondary)">
                 {tick}
               </text>
             </g>
@@ -450,7 +450,7 @@ export const Chart: React.FC<ChartProps> = ({
             textAnchor="middle"
             fontSize="11"
             fontWeight="500"
-            fill="#333"
+            fill="var(--text-secondary)"
           >
             {getAxisVariableLabel(axesConfig.xAxis.title)} {axesConfig.xAxis.unit && `(${axesConfig.xAxis.unit})`}
             {axesConfig.xAxis.reversed && ' [←]'}
@@ -458,11 +458,11 @@ export const Chart: React.FC<ChartProps> = ({
         </g>
 
         <g className="y-axis">
-          <line x1={0} y1={0} x2={0} y2={innerHeight} stroke="#333" />
+          <line x1={0} y1={0} x2={0} y2={innerHeight} stroke="var(--text-secondary)" />
           {yTicks.map(tick => (
             <g key={`y-tick-${tick}`} transform={`translate(0, ${yScale(tick)})`}>
-              <line x1={-4} x2={0} stroke="#333" />
-              <text x={-7} y={3} textAnchor="end" fontSize="9" fill="#333">
+              <line x1={-4} x2={0} stroke="var(--text-secondary)" />
+              <text x={-7} y={3} textAnchor="end" fontSize="9" fill="var(--text-secondary)">
                 {tick}
               </text>
             </g>
@@ -472,7 +472,7 @@ export const Chart: React.FC<ChartProps> = ({
             textAnchor="middle"
             fontSize="11"
             fontWeight="500"
-            fill="#333"
+            fill="var(--text-secondary)"
           >
             {getAxisVariableLabel(axesConfig.yAxis.title)} {axesConfig.yAxis.unit && `(${axesConfig.yAxis.unit})`}
             {axesConfig.yAxis.reversed && ' [↓]'}
