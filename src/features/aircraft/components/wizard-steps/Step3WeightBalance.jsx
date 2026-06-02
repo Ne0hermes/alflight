@@ -40,8 +40,7 @@ import {
   ChevronLeft as ChevronLeftIcon,
   EditNote as EditNoteIcon,
   TouchApp as TouchAppIcon,
-  AutoGraph as AutoGraphIcon,
-  CheckCircle as CheckCircleIcon
+  AutoGraph as AutoGraphIcon
 } from '@mui/icons-material';
 import { useUnitsStore, unitsSelectors } from '@core/stores/unitsStore';
 import { convertValue, getUnitSymbol } from '@utils/unitConversions';
@@ -988,7 +987,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                       {index > 0 && <Divider sx={{ mb: 2 }} />}
                       <Grid container spacing={2}>
                         <Grid size={12}>
-                          <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                          <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-end' }}>
                             <StyledTextField
                               fullWidth
                               size="small"
@@ -1014,7 +1013,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                               color="error"
                               onClick={() => removeFuelTank(tank.id)}
                               size="small"
-                              sx={{ mt: 0.5 }}
+                              sx={{ mb: 0.25 }}
                             >
                               <DeleteIcon fontSize="small" />
                             </IconButton>
@@ -1131,7 +1130,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious 
                 <Box sx={{ width: '100%', maxWidth: 700, mt: 2 }}>
                   <Alert
                     severity={isMatch ? 'success' : Math.abs(diff) < total * 0.05 ? 'info' : 'warning'}
-                    icon={isMatch ? <CheckCircleIcon /> : <WarningIcon />}
+                    icon={isMatch ? false : <WarningIcon />}
                   >
                     <Typography variant="body2" fontWeight={600}>
                       Récapitulatif des capacités

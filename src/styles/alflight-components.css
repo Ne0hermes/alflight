@@ -421,6 +421,18 @@
   height: 1.4375em !important;
 }
 
+/* Champ avec UNITÉ (adornment de fin "gal", "kg", "kt", "m"…) : on réserve
+   nettement plus d'espace à droite de l'input pour que la valeur (centrée) ne
+   soit JAMAIS collée à l'unité. Override la padding-right générique ci-dessus.
+   Règle placée APRÈS la règle générique → gagne à spécificité/!important égaux. */
+.MuiInputBase-adornedEnd .MuiOutlinedInput-input,
+.MuiInputBase-adornedEnd .MuiInputBase-input {
+  padding-right: 2.6em !important;
+}
+.MuiInputBase-adornedEnd .MuiInputAdornment-positionEnd {
+  margin-left: 4px !important;
+}
+
 /* SELECT — le combobox <div> qui remplace l'<input>.
    📏 ÉGALITÉ DE HAUTEUR EXACTE AVEC LE TEXTFIELD :
    On donne au <div> les MÊMES propriétés de hauteur que l'<input> ci-dessus
