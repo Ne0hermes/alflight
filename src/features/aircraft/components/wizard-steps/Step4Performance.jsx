@@ -648,33 +648,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
     hasAnyModel
   });
 
-  // Banner Excel — réutilisable dans toutes les vues de Step4
-  const renderExcelBanner = () => (
-    <Alert severity={hasAnyModel ? 'info' : 'warning'} sx={{ mb: 2 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-        <Box sx={{ flex: 1, minWidth: 200 }}>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
-            Vérifier / corriger les performances dans Excel
-          </Typography>
-          {!hasAnyModel && (
-            <Typography variant="caption" color="text.secondary">
-              Aucun modèle extrait pour le moment. Lance une extraction MANEX ci-dessous, puis reviens ici pour exporter en Excel.
-            </Typography>
-          )}
-          {hasAnyModel && (
-            <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-              <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                {selectedCount} / {totalCount} sélectionné{selectedCount > 1 ? 's' : ''}
-              </Typography>
-            </Box>
-          )}
-        </Box>
-      </Box>
-    </Alert>
-  );
-
-  // Actions Excel (Exporter / Réimporter) — sorties de l'info-bulle (Alert),
-  // affichées en ligne centrée juste sous le titre.
+  // Actions Excel (Exporter / Réimporter) — affichées en ligne centrée sous le titre.
   const renderExcelActions = () => (
     <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', flexWrap: 'wrap', mb: 2 }}>
       <Button
@@ -713,9 +687,6 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
 
         {/* Boutons Excel (Exporter / Réimporter) centrés, juste sous le titre */}
         {renderExcelActions()}
-
-        {/* Workflow Excel — bandeau d'info (helper renderExcelBanner) */}
-        {renderExcelBanner()}
 
         {/* Abaques de performance */}
         {savedPerformanceData.performanceModels && savedPerformanceData.performanceModels.length > 0 && (
@@ -1133,7 +1104,6 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
     return (
       <>
         {renderExcelActions()}
-        {renderExcelBanner()}
         <AdvancedPerformanceAnalyzer
           aircraft={aircraft}
           initialData={wizardInitialData}
@@ -1238,7 +1208,6 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
   return (
     <div>
       {renderExcelActions()}
-      {renderExcelBanner()}
       <PerformanceWizard
         aircraft={aircraft}
         onPerformanceUpdate={handlePerformanceUpdate}
