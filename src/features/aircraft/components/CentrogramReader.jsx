@@ -786,7 +786,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
         <Box>
           <Alert severity="info" sx={{ mb: 2 }}>
             <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5 }}>
-              📍 Calibration de l'axe {axis.toUpperCase()} ({cfg.title} en {cfg.unit})
+              Calibration de l'axe {axis.toUpperCase()} ({cfg.title} en {cfg.unit})
             </Typography>
             <Typography variant="body2">
               Tu vas cliquer sur <strong>{values.length} graduations</strong> de l'axe {axis.toUpperCase()},
@@ -809,10 +809,15 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
           )}
 
           {!isCalibrating && ticks.length > 0 && (
-            <Alert severity="success" sx={{ mb: 2 }}>
-              ✓ Axe {axis.toUpperCase()} calibré ({ticks.length} graduations).
-              Tu peux <Button size="small" onClick={() => startCalibration(axis)}>Recommencer la calibration</Button> si nécessaire.
-            </Alert>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<CalibrateIcon />}
+              onClick={() => startCalibration(axis)}
+              sx={{ mb: 2 }}
+            >
+              Recommencer la calibration
+            </Button>
           )}
 
           {isCalibrating && (
@@ -836,7 +841,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
             <Paper variant="outlined" sx={{ mt: 2 }}>
               <Box sx={{ p: 1.5, bgcolor: 'action.hover', borderBottom: '1px solid', borderColor: 'divider' }}>
                 <Typography variant="subtitle2" fontWeight={700}>
-                  📋 Graduations calibrées — axe {axis.toUpperCase()}
+                  Graduations calibrées — axe {axis.toUpperCase()}
                 </Typography>
               </Box>
               <Box sx={{ p: 1 }}>
