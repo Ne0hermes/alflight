@@ -1255,7 +1255,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack }) => {
       </Box>
 
       <Typography variant="h6" gutterBottom>
-        🧭 Lecture graphique du centrogramme
+        Lecture graphique du centrogramme
       </Typography>
       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
         Mesure les bras de levier des étapes (sièges, carburant, bagages…) par clic sur le centrogramme MANEX.
