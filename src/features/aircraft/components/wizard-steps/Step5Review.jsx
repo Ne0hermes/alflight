@@ -735,7 +735,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
       <Box
         sx={{
           p: 2,
-          bgcolor: 'grey.50',
+          bgcolor: 'var(--bg-raised)',
           display: 'flex',
           flexDirection: 'column',
           gap: 1,
@@ -1000,8 +1000,8 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           hasCGData ? (
             <Box sx={{
               p: 2,
-              bgcolor: 'grey.50',
-              borderRadius: 1,
+              bgcolor: 'var(--bg-raised)',
+              borderRadius: '8px',
               border: '1px solid',
               borderColor: 'divider'
             }}>
@@ -1029,7 +1029,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
         <Box
           sx={{
             p: 2,
-            bgcolor: 'grey.50',
+            bgcolor: 'var(--bg-raised)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -1243,7 +1243,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           <Box 
             sx={{ 
               p: 2, 
-              bgcolor: 'grey.50',
+              bgcolor: 'var(--bg-raised)',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -1332,7 +1332,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
         <Box 
           sx={{ 
             p: 2, 
-            bgcolor: 'grey.50',
+            bgcolor: 'var(--bg-raised)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -1458,7 +1458,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           <Box
             sx={{
               p: 2,
-              bgcolor: 'grey.50',
+              bgcolor: 'var(--bg-raised)',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -1703,7 +1703,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                             {variantDiffs.map((diff, index) => (
                               <TableRow key={index} sx={{
                                 '&:hover': { bgcolor: 'action.hover' },
-                                bgcolor: index % 2 === 0 ? 'grey.50' : 'white'
+                                bgcolor: index % 2 === 0 ? 'transparent' : 'var(--bg-overlay)'
                               }}>
                                 <TableCell>{diff.field}</TableCell>
                                 <TableCell sx={{ color: 'text.secondary' }}>
@@ -1723,7 +1723,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                     </>
                   )}
 
-                  <Box sx={{ mt: 2, p: 1, bgcolor: 'info.50', borderRadius: 1 }}>
+                  <Box sx={{ mt: 2, p: 1, bgcolor: 'var(--bg-overlay)', borderRadius: '8px' }}>
                     <Typography variant="caption" color="text.secondary">
                       {variantDiffs.length + (hasAbaqueChanges ? modifiedAbaques.length : 0)} modification{(variantDiffs.length + (hasAbaqueChanges ? modifiedAbaques.length : 0)) > 1 ? 's' : ''} détectée{(variantDiffs.length + (hasAbaqueChanges ? modifiedAbaques.length : 0)) > 1 ? 's' : ''} par rapport à la configuration de base
                       {hasAbaqueChanges && ` (dont ${modifiedAbaques.length} abaque${modifiedAbaques.length > 1 ? 's' : ''})`}

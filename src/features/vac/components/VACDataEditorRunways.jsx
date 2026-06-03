@@ -479,3 +479,5 @@ export const RunwaysEditor = ({ editedData, updateValue }) => {
         )}
       </div>
     </div>
+  );
+};

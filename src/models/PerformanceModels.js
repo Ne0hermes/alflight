@@ -569,7 +569,7 @@ class WeightBalanceCharts extends PerformanceChartCategory {
   static fromJSON(json) {
     return PerformanceChartCategory.fromJSON(json, WeightBalanceCharts);
   }
-);}
+}
 
 // Export des classes
 export {

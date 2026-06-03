@@ -188,7 +188,7 @@ const getAirspacesBetweenWaypoints = (waypoint1, waypoint2, airspaces) => {
         type: airspace.type || 'Polygon',
         coordinates: airspace.coordinates
       };
-    };
+    }
     if (!geometry?.coordinates) {
       // Debug: afficher les espaces sans géométrie
       if (properties.name && properties.name !== 'unknown') {

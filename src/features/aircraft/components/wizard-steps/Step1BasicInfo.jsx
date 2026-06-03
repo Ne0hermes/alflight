@@ -49,7 +49,7 @@ import ImageEditor from '../../../../components/ImageEditor';
 import { Description as DescriptionIcon, CloudUpload as CloudUploadIcon, Delete as DeleteIcon, CloudQueue as CloudQueueIcon } from '@mui/icons-material';
 import communityService from '../../../../services/communityService';
 import AeroclubAutocomplete from '../AeroclubAutocomplete';
-import { AIRPORT_NAMES } from '../../../../data/airportNames';
+import { useAirportName } from '@shared/hooks/useAirportNames';
 
 // Import de la base de données communautaire mock (en production, sera un appel API)
 const COMMUNITY_DATABASE = [
@@ -72,6 +72,9 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
   const [existingAircraftData, setExistingAircraftData] = useState(null);
+
+  // Nom usuel du terrain de base — source unique (provider GeoJSON/SIA)
+  const homeBaseName = useAirportName(data.homeBase);
 
   const handlePanelChange = (panel) => (event, isExpanded) => {
     // Si on ouvre un panneau, on ferme tous les autres
@@ -552,8 +555,8 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                 placeholder="Ex: LFPN"
                 inputProps={{ maxLength: 4, style: { textTransform: 'uppercase' } }}
                 helperText={
-                  data.homeBase && AIRPORT_NAMES[data.homeBase]
-                    ? `✈️ ${AIRPORT_NAMES[data.homeBase]}`
+                  homeBaseName
+                    ? `✈️ ${homeBaseName}`
                     : "Code OACI à 4 lettres du terrain où l'avion est basé"
                 }
               />
@@ -585,7 +588,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                           height: 200,
                           border: '2px dashed',
                           borderColor: 'divider',
-                          borderRadius: 1,
+                          borderRadius: '8px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',

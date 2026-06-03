@@ -20,9 +20,14 @@ export const DataField = memo(({
   emphasis = false
 }) => {
   const [copied, setCopied] = React.useState(false);
-  
-  // Déterminer automatiquement la source si un objet de données est fourni
-  const source = dataObject ? useDataSource(dataObject) : dataSource;
+
+  // Déterminer automatiquement la source si un objet de données est fourni.
+  // 🔧 FIX rules-of-hooks : useDataSource doit être appelé inconditionnellement
+  // (pas dans une expression ternaire). Le hook tolère déjà `null`/`undefined`
+  // (il renvoie 'static'), donc on calcule toujours la source auto puis on
+  // choisit la valeur effective selon la présence de dataObject.
+  const autoSource = useDataSource(dataObject);
+  const source = dataObject ? autoSource : dataSource;
   
   const handleCopy = async () => {
     if (!onCopy && !copyValue) return;

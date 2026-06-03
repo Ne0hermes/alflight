@@ -1,8 +1,8 @@
 // src/features/navigation/components/CommunityPointsManager.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapPin, Upload, Search, Download, Plus, Check, AlertCircle, Edit2, Trash2 } from 'lucide-react';
 import vfrPointsService from '@services/vfrPointsService';
-import { AIRPORT_NAMES } from '@data/airportNames';
+import { useAirportsList } from '@shared/hooks/useAirportNames';
 
 /**
  * Composant pour gérer les points VFR communautaires
@@ -36,12 +36,8 @@ export const CommunityPointsManager = ({ onSelectPoint, mode = 'browse' }) => {
     aeronauticalRemarks: '' // Remarques aéronautiques
   });
 
-  // Liste triée des aérodromes pour le dropdown
-  const sortedAirports = useMemo(() => {
-    return Object.entries(AIRPORT_NAMES)
-      .map(([icao, name]) => ({ icao, name }))
-      .sort((a, b) => a.name.localeCompare(b.name, 'fr'));
-  }, []);
+  // Liste triée des aérodromes pour le dropdown — source unique (provider GeoJSON/SIA)
+  const sortedAirports = useAirportsList();
 
   // Charger les points communautaires au montage
   useEffect(() => {

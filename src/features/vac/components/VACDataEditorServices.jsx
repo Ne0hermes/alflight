@@ -130,6 +130,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
                   {service.label}
                 </span>
               </div>
+            )
 
           })}
         </div>
@@ -385,3 +386,5 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
         />
       </div>
     </div>
+  );
+};

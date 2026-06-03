@@ -11,7 +11,6 @@ import { usePerformanceCalculations } from '../../shared/hooks/usePerformanceCal
 import { useActiveRunwayWind } from '../../shared/hooks/useActiveRunwayWind';
 import { groupTablesByBaseName, filterGroupsByType } from '../../services/performanceTableGrouping';
 import dataBackupManager from '../../utils/dataBackupManager';
-import airportDataService from '../../services/airportDataService';
 import { FUEL_DENSITIES } from '../../utils/constants';
 import { getWaypointIcao } from '../../shared/utils/getWaypointIcao';
 import { SAFETY_FACTOR_PRESETS, DEFAULT_SAFETY_FACTOR } from '../../utils/performanceSafetyFactor';
@@ -523,7 +522,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
       padding: 10,
       backgroundColor: 'var(--bg-overlay)',
       border: '1px solid var(--bg-overlay)',
-      borderRadius: 6,
+      borderRadius: 8,
       display: 'flex',
       alignItems: 'center',
       gap: 10,
@@ -563,7 +562,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
       padding: 10,
       backgroundColor: 'var(--bg-overlay)',
       border: '1px solid var(--accent-primary)',
-      borderRadius: 6,
+      borderRadius: 8,
       display: 'flex',
       alignItems: 'flex-start',
       gap: 10
@@ -732,7 +731,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
           )}
         </h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
-          <div style={{ backgroundColor: 'var(--bg-overlay)', borderRadius: 6, padding: 10, border: '1px solid var(--border-subtle)' }}>
+          <div style={{ backgroundColor: 'var(--bg-overlay)', borderRadius: 8, padding: 10, border: '1px solid var(--border-subtle)' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
               <Thermometer size={14} style={{ marginRight: 6, color: 'var(--accent-primary)' }} />
               <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: 0.4 }}>TEMPÉRATURE</span>
@@ -744,7 +743,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               </span>
             </p>
           </div>
-          <div style={{ backgroundColor: 'var(--bg-overlay)', borderRadius: 6, padding: 10, border: '1px solid var(--border-subtle)' }}>
+          <div style={{ backgroundColor: 'var(--bg-overlay)', borderRadius: 8, padding: 10, border: '1px solid var(--border-subtle)' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
               <MapPin size={14} style={{ marginRight: 6, color: 'var(--text-secondary)' }} />
               <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: 0.4 }}>ALT. PRESSION</span>
@@ -753,7 +752,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               {takeoffPa} ft
             </p>
           </div>
-          <div style={{ backgroundColor: 'var(--bg-overlay)', borderRadius: 6, padding: 10, border: '1px solid var(--border-subtle)' }}>
+          <div style={{ backgroundColor: 'var(--bg-overlay)', borderRadius: 8, padding: 10, border: '1px solid var(--border-subtle)' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
               <Scale size={14} style={{ marginRight: 6, color: 'var(--accent-primary)' }} />
               <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: 0.4 }}>MASSE</span>
@@ -765,7 +764,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               )}
             </p>
           </div>
-          <div style={{ backgroundColor: 'var(--bg-overlay)', borderRadius: 6, padding: 10, border: '1px solid var(--border-subtle)' }}>
+          <div style={{ backgroundColor: 'var(--bg-overlay)', borderRadius: 8, padding: 10, border: '1px solid var(--border-subtle)' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
               <Wind size={14} style={{ marginRight: 6, color: 'var(--accent-primary)' }} />
               <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: 0.4 }}>VENT</span>
@@ -830,7 +829,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
           )}
         </h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
-          <div style={{ backgroundColor: 'var(--bg-overlay)', borderRadius: 6, padding: 10, border: '1px solid var(--border-subtle)' }}>
+          <div style={{ backgroundColor: 'var(--bg-overlay)', borderRadius: 8, padding: 10, border: '1px solid var(--border-subtle)' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
               <Thermometer size={14} style={{ marginRight: 6, color: 'var(--accent-primary)' }} />
               <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: 0.4 }}>TEMPÉRATURE</span>
@@ -844,7 +843,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               </span>
             </p>
           </div>
-          <div style={{ backgroundColor: 'var(--bg-overlay)', borderRadius: 6, padding: 10, border: '1px solid var(--border-subtle)' }}>
+          <div style={{ backgroundColor: 'var(--bg-overlay)', borderRadius: 8, padding: 10, border: '1px solid var(--border-subtle)' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
               <MapPin size={14} style={{ marginRight: 6, color: 'var(--text-primary)' }} />
               <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: 0.4 }}>ALT. PRESSION</span>
@@ -853,7 +852,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               {landingPa} ft
             </p>
           </div>
-          <div style={{ backgroundColor: 'var(--bg-overlay)', borderRadius: 6, padding: 10, border: '1px solid var(--border-subtle)' }}>
+          <div style={{ backgroundColor: 'var(--bg-overlay)', borderRadius: 8, padding: 10, border: '1px solid var(--border-subtle)' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
               <Scale size={14} style={{ marginRight: 6, color: 'var(--accent-primary)' }} />
               <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: 0.4 }}>MASSE</span>
@@ -865,7 +864,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               </span>
             </p>
           </div>
-          <div style={{ backgroundColor: 'var(--bg-overlay)', borderRadius: 6, padding: 10, border: '1px solid var(--border-subtle)' }}>
+          <div style={{ backgroundColor: 'var(--bg-overlay)', borderRadius: 8, padding: 10, border: '1px solid var(--border-subtle)' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
               <Wind size={14} style={{ marginRight: 6, color: 'var(--accent-primary)' }} />
               <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: 0.4 }}>VENT</span>

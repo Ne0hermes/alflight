@@ -96,20 +96,40 @@ function calculateNextAIRACDate(currentEffectiveDate) {
 }
 
 /**
- * Récupère le statut des données AIXM depuis la configuration
+ * Statut des données AIXM — basé sur l'airac des données RÉELLEMENT chargées
+ * (provider GeoJSON/SIA), avec fallback sur le nom de fichier config.
  * @returns {Promise<Object>} Statut de validité
  */
 export async function getAIXMDataStatus() {
   try {
-    // Charger la configuration
     const { CURRENT_AIXM_FILE, AIXM_CONFIG } = await import('../data/aixm.config.js');
 
-    const effectiveDate = extractDateFromAIXMFilename(CURRENT_AIXM_FILE);
+    // SOURCE UNIQUE : l'airac des données RÉELLEMENT chargées (provider GeoJSON/SIA),
+    // au lieu d'un constant config baké en JS (qui pouvait dériver du contenu servi).
+    let effectiveDate = null;
+    let filename = CURRENT_AIXM_FILE;
+    try {
+      const { aeroDataProvider } = await import('@core/data');
+      const info = await aeroDataProvider?.getDataInfo?.();
+      if (info?.airac) {
+        effectiveDate = new Date(info.airac);
+        filename = `Cycle AIRAC ${info.airac}`;
+      }
+    } catch {
+      /* provider indisponible → fallback config ci-dessous */
+    }
+
+    // Fallback : date extraite du nom de fichier config
+    if (!effectiveDate || isNaN(effectiveDate.getTime())) {
+      effectiveDate = extractDateFromAIXMFilename(CURRENT_AIXM_FILE);
+      filename = CURRENT_AIXM_FILE;
+    }
+
     const validity = checkAIXMDataValidity(effectiveDate);
 
     return {
       ...validity,
-      filename: CURRENT_AIXM_FILE,
+      filename,
       source: AIXM_CONFIG.source,
       format: AIXM_CONFIG.format,
       downloadUrl: AIXM_CONFIG.downloadUrl

@@ -12,6 +12,7 @@ export class GeoJSONProvider extends AeroDataProvider {
   constructor() {
     super();
     this.data = null;
+    this.dataInfo = null; // { airac, source } — métadonnées du cycle RÉELLEMENT chargé
     this.isLoading = false;
   }
 
@@ -37,6 +38,12 @@ export class GeoJSONProvider extends AeroDataProvider {
         geoJSONDataService.getDesignatedPoints(),
         geoJSONDataService.getObstacles()
       ]);
+
+      // Métadonnées du cycle AIRAC RÉELLEMENT chargé (lues dans la donnée, pas un constant config)
+      this.dataInfo = {
+        airac: aerodromes.find((f) => f?.properties?.airac)?.properties?.airac || null,
+        source: aerodromes.find((f) => f?.properties?.source)?.properties?.source || 'SIA',
+      };
 
       // Convertir au format attendu par l'application
       this.data = {
@@ -90,7 +97,7 @@ export class GeoJSONProvider extends AeroDataProvider {
       elevation: feature.properties.elevation_ft || feature.properties.elevation,
       type: feature.properties.type || 'AD',
       runways: [], // Sera rempli par enrichData
-      frequencies: []
+      frequencies: feature.properties.frequencies || [] // exposé depuis la source GeoJSON (ETL)
     }));
   }
 
@@ -297,6 +304,19 @@ export class GeoJSONProvider extends AeroDataProvider {
   }
 
   /**
+   * Nom usuel d'un aérodrome par code ICAO — depuis la source GeoJSON (SIA).
+   * Remplace le hardcodé airportNames.js (source unique). Async : les données
+   * étant préchargées au démarrage (cf. épic #11), le nom est dispo à l'usage.
+   * @param {string} icao
+   * @returns {Promise<string>} nom usuel, ou le code ICAO si introuvable
+   */
+  async getAirportName(icao) {
+    await this.ensureDataLoaded();
+    const airport = this.data.airports.find(a => a.icao === icao);
+    return airport?.name || icao;
+  }
+
+  /**
    * Récupère les espaces aériens
    */
   async getAirspaces(params = {}) {
@@ -444,6 +464,16 @@ export class GeoJSONProvider extends AeroDataProvider {
               Math.sin(dLon/2) * Math.sin(dLon/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     return R * c;
+  }
+
+  /**
+   * Métadonnées du cycle de données RÉELLEMENT chargé (AIRAC, source).
+   * Source unique pour la fraîcheur des données (au lieu d'un constant config baké en JS).
+   * @returns {Promise<{airac: string|null, source: string}>}
+   */
+  async getDataInfo() {
+    await this.ensureDataLoaded();
+    return this.dataInfo || { airac: null, source: 'SIA' };
   }
 
   isAvailable() {

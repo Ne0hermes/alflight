@@ -115,7 +115,13 @@ const muiTheme = createTheme({
   },
 
   shape: {
-    borderRadius: 2, // angles vifs cockpit (au lieu de 8px arrondis SaaS)
+    // ⚠️ NE PAS mettre 8 ici. Dans MUI, `sx={{ borderRadius: N }}` est un
+    // MULTIPLICATEUR de shape.borderRadius. Passer la base à 8 multiplierait
+    // par 4 TOUS les borderRadius numériques de l'app (un borderRadius:2 → 16px).
+    // La base reste donc à 2 ; l'arrondi 8px des SURFACES est imposé via les
+    // overrides composants ci-dessous (MuiPaper, en valeur '8px' STRING, non
+    // multipliée). Résultat : surfaces unifiées à 8px sans casser les sx existants.
+    borderRadius: 2,
   },
 
   breakpoints: {
@@ -124,7 +130,7 @@ const muiTheme = createTheme({
       sm: 640,
       md: 768,
       lg: 1024,
-      xl: 1400,
+      xl: 1280, // aligné sur designSystem.js (était 1400 — divergence supprimée)
     },
   },
 
@@ -137,6 +143,10 @@ const muiTheme = createTheme({
           backgroundImage: 'none', // désactive les gradients de surface MUI
           color: ALFLIGHT_COLORS.textPrimary,
           border: `1px solid ${ALFLIGHT_COLORS.borderSubtle}`,
+          // Arrondi unifié des surfaces (Paper/Card/Dialog/Alert…) = 8px, aligné
+          // sur --radius-sm. Valeur STRING → non multipliée par shape.borderRadius.
+          // Un sx={{ borderRadius }} explicite reste prioritaire si besoin.
+          borderRadius: '8px',
         },
       },
     },
@@ -208,6 +218,7 @@ const muiTheme = createTheme({
           backgroundColor: ALFLIGHT_COLORS.bgSurface,
           backgroundImage: 'none',
           borderColor: ALFLIGHT_COLORS.borderSubtle,
+          borderRadius: 0, // tiroir collé au bord d'écran : pas d'arrondi
         },
       },
     },
@@ -865,7 +876,7 @@ const muiTheme = createTheme({
         root: {
           backgroundColor: ALFLIGHT_COLORS.bgOverlay,
           color: ALFLIGHT_COLORS.textSecondary,
-          borderRadius: '2px',
+          borderRadius: '8px', // aligné sur --radius-sm (8px partout)
           fontFamily: "'JetBrains Mono', monospace",
           fontSize: '11px',
           letterSpacing: '0.08em',

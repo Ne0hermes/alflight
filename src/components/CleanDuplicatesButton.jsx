@@ -245,6 +245,6 @@ function CleanDuplicatesButton() {
       )}
     </>
   );
-};
+}
 
 export default CleanDuplicatesButton;

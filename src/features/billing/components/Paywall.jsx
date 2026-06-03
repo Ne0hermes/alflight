@@ -142,6 +142,7 @@ export const Paywall = ({ feature = null, onClose }) => {
                         <Check size={16} style={{ color: 'var(--text-primary)' }} />
                       ) : (
                         <X size={16} style={{ color: '#C04534' }} />
+                      )
                     ) : (
                       <span>{freeValue}</span>
                     )}
@@ -154,8 +155,10 @@ export const Paywall = ({ feature = null, onClose }) => {
                           <Check size={16} style={{ color: 'var(--text-primary)' }} />
                         ) : (
                           <X size={16} style={{ color: '#C04534' }} />
+                        )
                       ) : (
                         <span style={{ fontWeight: '600' }}>{proValue}</span>
+                      )
                     })()}
                   </td>
                 </tr>
@@ -179,6 +182,8 @@ export const Paywall = ({ feature = null, onClose }) => {
         </div>
       </div>
     </div>
+  );
+};
 
 const styles = {
   overlay: {

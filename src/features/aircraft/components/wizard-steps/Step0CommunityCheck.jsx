@@ -49,6 +49,59 @@ import { extractCompleteManexData } from '../../services/manexExtractionService'
 import { mapExtractionToReviewItems, buildBulkUpdatePayload } from '../../utils/manexExtractionMapper';
 import ManexExtractionReview from '../ManexExtractionReview';
 
+/**
+ * 🛡️ ANTI-RE-TÉLÉCHARGEMENT DE L'ANNEXE (MANEX)
+ * ------------------------------------------------------------------
+ * Cherche un MANEX déjà stocké localement (IndexedDB) pour un avion équivalent,
+ * afin d'éviter de re-télécharger l'annexe (~12 MB) à CHAQUE ré-import depuis
+ * la communauté (bug récurrent signalé par l'utilisateur).
+ *
+ * Stratégie de correspondance :
+ *   1. Même preset communautaire (communityPresetId / originalCommunityId / id)
+ *   2. Sinon, même immatriculation
+ * On ne réutilise le PDF que si :
+ *   - il contient bien les données (manex.pdfData présent), ET
+ *   - quand on connaît le chemin Supabase attendu, il correspond (évite de
+ *     servir l'annexe d'une AUTRE version que celle demandée).
+ *
+ * @returns {Promise<object|null>} l'objet manex réutilisable, ou null.
+ */
+async function findLocalManex({ registration, communityPresetId, expectedPath }) {
+  const list = useAircraftStore.getState().aircraftList || [];
+  const reg = (registration || '').trim().toUpperCase();
+
+  // On NE filtre PAS sur le flag hasManex : pour un avion chargé depuis
+  // Supabase il reflète le preset distant, pas la présence réelle du PDF en
+  // local. La présence effective est vérifiée plus bas via manex.pdfData.
+  // L'immatriculation étant unique au monde, un même reg = même avion physique
+  // = même MANEX (réutilisation sûre).
+  const candidates = list.filter((a) => {
+    const samePreset = communityPresetId && (
+      a.communityPresetId === communityPresetId ||
+      a.originalCommunityId === communityPresetId ||
+      a.id === communityPresetId
+    );
+    const sameReg = reg && a.registration && a.registration.trim().toUpperCase() === reg;
+    return samePreset || sameReg;
+  });
+
+  for (const candidate of candidates) {
+    try {
+      await dataBackupManager.initPromise;
+      const full = await dataBackupManager.getAircraftData(candidate.id);
+      const manex = full?.manex;
+      if (!manex || !manex.pdfData) continue; // flag sans PDF = inutilisable hors ligne
+      if (expectedPath && manex.supabasePath && manex.supabasePath !== expectedPath) {
+        continue; // PDF d'une autre version — ne pas réutiliser
+      }
+      return manex;
+    } catch (e) {
+      console.warn('⚠️ [findLocalManex] Lecture IndexedDB échouée pour', candidate?.id, e?.message);
+    }
+  }
+  return null;
+}
+
 const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onComplete, onCancel, manexReviewTrigger }) => {
   const [searchValue, setSearchValue] = useState(data.searchRegistration || '');
   const [isLoading, setIsLoading] = useState(false);
@@ -526,40 +579,62 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
 
     console.log('✅ Import groupé terminé - 1 seule mise à jour au lieu de 50+');
 
-    // 📥 Télécharger le MANEX IMMÉDIATEMENT si disponible (pour accès hors ligne)
+    // 📥 MANEX (annexe) : disponible côté communauté ?
     if (communityData.hasManex && communityData.manexAvailableInSupabase?.filePath) {
-      console.log('📥 Démarrage téléchargement MANEX immédiat...');
+      const expectedPath = communityData.manexAvailableInSupabase.filePath;
 
-      setDownloadStatus('Téléchargement du manuel de vol (11.82 MB)...');
-      setDownloadProgress(95);
-
+      // 🛡️ ANTI-RE-TÉLÉCHARGEMENT : si l'utilisateur possède DÉJÀ cet avion en
+      // local avec son MANEX (même preset communautaire / même immatriculation),
+      // on réutilise le PDF stocké dans IndexedDB au lieu de re-télécharger
+      // ~12 MB depuis Supabase. Corrige le bug « obligé de retélécharger
+      // l'annexe » à chaque ré-import.
+      let reusedManex = null;
       try {
-        const manexData = await communityService.downloadManexLazy(
-          communityData.manexAvailableInSupabase.filePath
-        );
+        reusedManex = await findLocalManex({
+          registration: communityData.registration,
+          communityPresetId: communityData.communityPresetId,
+          expectedPath,
+        });
+      } catch (lookupError) {
+        console.warn('⚠️ Recherche MANEX local échouée (on téléchargera):', lookupError?.message);
+      }
 
-        // Ajouter le MANEX aux données de l'avion
-        const manexObject = {
-          fileName: communityData.manexAvailableInSupabase.fileName,
-          fileSize: communityData.manexAvailableInSupabase.fileSize,
-          pdfData: manexData.pdfData,
-          uploadDate: new Date().toISOString(),
-          uploadedToSupabase: true,
-          supabasePath: communityData.manexAvailableInSupabase.filePath,
-          hasData: true
-        };
-
-        // Mettre à jour avec le MANEX téléchargé
-        updateData('manex', manexObject);
-
-        console.log('✅ MANEX téléchargé et disponible hors ligne');
-        setDownloadStatus('✅ Manuel de vol disponible hors ligne !');
+      if (reusedManex) {
+        console.log('♻️ MANEX déjà présent en local — réutilisation (aucun re-téléchargement)');
+        updateData('manex', reusedManex);
+        setDownloadStatus('✅ Manuel de vol déjà présent (réutilisé hors ligne)');
         setDownloadProgress(100);
-      } catch (error) {
-        console.error('❌ Erreur téléchargement MANEX:', error);
-        setDownloadStatus('⚠️ Échec téléchargement manuel - L\'avion sera importé sans MANEX');
-        setDownloadProgress(100);
-        // Continuer même en cas d'erreur - l'avion sera importé sans MANEX
+      } else {
+        console.log('📥 Démarrage téléchargement MANEX immédiat...');
+        setDownloadStatus('Téléchargement du manuel de vol...');
+        setDownloadProgress(95);
+
+        try {
+          const manexData = await communityService.downloadManexLazy(expectedPath);
+
+          // Ajouter le MANEX aux données de l'avion
+          const manexObject = {
+            fileName: communityData.manexAvailableInSupabase.fileName,
+            fileSize: communityData.manexAvailableInSupabase.fileSize,
+            pdfData: manexData.pdfData,
+            uploadDate: new Date().toISOString(),
+            uploadedToSupabase: true,
+            supabasePath: expectedPath,
+            hasData: true
+          };
+
+          // Mettre à jour avec le MANEX téléchargé
+          updateData('manex', manexObject);
+
+          console.log('✅ MANEX téléchargé et disponible hors ligne');
+          setDownloadStatus('✅ Manuel de vol disponible hors ligne !');
+          setDownloadProgress(100);
+        } catch (error) {
+          console.error('❌ Erreur téléchargement MANEX:', error);
+          setDownloadStatus('⚠️ Échec téléchargement manuel - L\'avion sera importé sans MANEX');
+          setDownloadProgress(100);
+          // Continuer même en cas d'erreur - l'avion sera importé sans MANEX
+        }
       }
     }
 
@@ -635,14 +710,13 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
           sx={{
             p: 3,
             mb: 3,
-            bgcolor: 'info.50',
-            border: '2px solid',
-            borderColor: 'info.200',
-            borderRadius: 2
+            bgcolor: 'var(--bg-overlay)',
+            border: '1px solid',
+            borderColor: 'var(--border-subtle)',
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'info.800' }}>
+            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.primary' }}>
               <VoteIcon />
               Comment fonctionne la validation communautaire ?
             </Typography>
@@ -650,10 +724,10 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
               size="small"
               onClick={() => setShowExplanation(false)}
               sx={{
-                bgcolor: 'grey.200',
-                color: 'grey.700',
+                bgcolor: 'var(--bg-raised)',
+                color: 'var(--text-secondary)',
                 '&:hover': {
-                  bgcolor: 'grey.300'
+                  bgcolor: 'var(--bg-overlay)'
                 }
               }}
             >
@@ -663,7 +737,7 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
 
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
             <Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1, color: 'info.800' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1, color: 'text.primary' }}>
                 <GroupIcon sx={{ fontSize: 16, verticalAlign: 'middle', mr: 0.5 }} />
                 Contribution collaborative
               </Typography>
@@ -679,7 +753,7 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
             </Box>
 
             <Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1, color: 'info.800' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1, color: 'text.primary' }}>
                 <ThumbUpIcon sx={{ fontSize: 16, verticalAlign: 'middle', mr: 0.5 }} />
                 Système de validation
               </Typography>
@@ -776,7 +850,7 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
 
         {/* Informations sur l'avion sélectionné */}
         {selectedAircraft && (
-          <Paper elevation={0} sx={{ p: 2, bgcolor: 'primary.50', border: '1px solid', borderColor: 'primary.200' }}>
+          <Paper elevation={0} sx={{ p: 2, bgcolor: 'action.selected', border: '1px solid', borderColor: 'primary.main' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
               <Typography variant="h6">
                 {selectedAircraft.registration}
@@ -872,13 +946,13 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
                 elevation={0}
                 sx={{
                   p: 2,
-                  bgcolor: 'info.50',
+                  bgcolor: 'var(--bg-overlay)',
                   border: '1px solid',
-                  borderColor: 'info.200',
+                  borderColor: 'var(--border-subtle)',
                   cursor: 'pointer',
                   transition: 'all 0.3s',
                   '&:hover': {
-                    bgcolor: 'info.100',
+                    bgcolor: 'action.selected',
                     transform: 'translateY(-1px)',
                     boxShadow: 1
                   }
@@ -958,8 +1032,7 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
               p: 2,
               border: '2px dashed',
               borderColor: 'success.main',
-              bgcolor: 'success.50',
-              borderRadius: 2
+              bgcolor: 'action.selected',
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
@@ -1037,7 +1110,7 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
         fullWidth
         disableEscapeKeyDown
       >
-        <DialogTitle sx={{ textAlign: 'center', pb: 1 }}>
+        <DialogTitle sx={{ textAlign: 'center', pt: 3, pb: 1 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <CloudIcon sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
             <span style={{ fontSize: '1.25rem', fontWeight: 500 }}>
@@ -1045,7 +1118,7 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
             </span>
           </Box>
         </DialogTitle>
-        <DialogContent sx={{ pt: 2, pb: 4 }}>
+        <DialogContent sx={{ pt: 2, pb: 3 }}>
           <Box sx={{ mb: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
               <Typography variant="body2" color="text.secondary">
@@ -1061,7 +1134,7 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
               sx={{
                 height: 8,
                 borderRadius: 4,
-                backgroundColor: 'grey.200',
+                backgroundColor: 'var(--bg-raised)',
                 '& .MuiLinearProgress-bar': {
                   borderRadius: 4
                 }

@@ -315,7 +315,7 @@ export const SIAReportEnhanced = () => {
       // Essayer le format standard avec séparateurs
       const standardPattern = /(\d{1,3})[°\s]+(\d{1,2})['\s]+(\d{1,2})(?:\.(\d+))?["'\s]*([NSEW])/i;
       match = dmsString.match(standardPattern);
-    };
+    }
     if (!match) return null;
     
     const degrees = parseInt(match[1]);
@@ -891,18 +891,18 @@ export const SIAReportEnhanced = () => {
             fontWeight: '600',
             textDecoration: 'none',
             cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(147, 22, 60, 0.3)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
             transition: 'all 0.2s ease'
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = '#FF7E36';
             e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 6px 16px rgba(147, 22, 60, 0.4)';
+            e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.4)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.backgroundColor = '#f26921';
             e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(147, 22, 60, 0.3)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
           }}
         >
           Télécharger les VAC officielles (SIA)

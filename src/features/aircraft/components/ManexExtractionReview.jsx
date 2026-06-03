@@ -94,7 +94,7 @@ const Row = memo(({ item, onChange, onSelectIcao }) => {
           */
           <div style={{
             border: isMissing ? '1px dashed #f26921' : '1px solid var(--text-tertiary)',
-            borderRadius: 4,
+            borderRadius: 8,
             padding: 2,
             backgroundColor: 'var(--bg-overlay)'
           }}>
@@ -119,7 +119,7 @@ const Row = memo(({ item, onChange, onSelectIcao }) => {
             gap: 4,
             padding: '4px 6px',
             border: isMissing ? '1px dashed #f26921' : '1px solid var(--text-tertiary)',
-            borderRadius: 4,
+            borderRadius: 8,
             backgroundColor: 'var(--bg-overlay)',
             maxHeight: 120,
             overflowY: 'auto'
@@ -153,7 +153,7 @@ const Row = memo(({ item, onChange, onSelectIcao }) => {
               width: '100%',
               padding: '4px 8px',
               border: isMissing ? '1px dashed #f26921' : '1px solid var(--text-tertiary)',
-              borderRadius: 4,
+              borderRadius: 8,
               fontSize: 13,
               backgroundColor: 'var(--bg-overlay)',
               cursor: 'pointer'
@@ -215,7 +215,7 @@ const Row = memo(({ item, onChange, onSelectIcao }) => {
               width: '100%',
               padding: '4px 8px',
               border: isMissing ? '1px dashed #f26921' : '1px solid var(--text-tertiary)',
-              borderRadius: 4,
+              borderRadius: 8,
               fontSize: 13,
               backgroundColor: 'var(--bg-overlay)'
             }}
@@ -340,7 +340,7 @@ const ManexExtractionReview = memo(({
       display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100
     }}>
       <div style={{
-        backgroundColor: 'var(--bg-overlay)', borderRadius: 12, padding: 24,
+        backgroundColor: 'var(--bg-overlay)', borderRadius: 8, padding: 24,
         maxWidth: 1100, width: '95%', maxHeight: '92vh',
         display: 'flex', flexDirection: 'column'
       }}>
@@ -478,7 +478,7 @@ const ManexExtractionReview = memo(({
 ManexExtractionReview.displayName = 'ManexExtractionReview';
 
 const th = { padding: '10px 12px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-subtle)' };
-const btnPrimary = { padding: '8px 16px', backgroundColor: 'var(--accent-primary)', color: 'var(--text-primary)', border: 'none', borderRadius: 6, fontSize: 14, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 };
-const btnGhost = { padding: '8px 16px', backgroundColor: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--text-tertiary)', borderRadius: 6, fontSize: 14, cursor: 'pointer' };
+const btnPrimary = { padding: '8px 16px', backgroundColor: 'var(--accent-primary)', color: 'var(--text-primary)', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 };
+const btnGhost = { padding: '8px 16px', backgroundColor: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--text-tertiary)', borderRadius: 8, fontSize: 14, cursor: 'pointer' };
 
 export default ManexExtractionReview;

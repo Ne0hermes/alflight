@@ -61,10 +61,10 @@ const Step7Remarks = ({ data, updateData, errors = {}, onNext, onPrevious }) => 
           <Box sx={{
             mt: 3,
             p: 2.5,
-            bgcolor: 'grey.50',
-            borderRadius: 1,
+            bgcolor: 'var(--bg-raised)',
+            borderRadius: '8px',
             border: '1px solid',
-            borderColor: 'grey.300'
+            borderColor: 'var(--border-subtle)'
           }}>
             <Typography variant="body2" sx={{ 
               fontSize: '13px', 

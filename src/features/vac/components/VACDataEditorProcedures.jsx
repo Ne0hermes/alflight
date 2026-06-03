@@ -411,9 +411,13 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
           </div>
         )}
       </div>
+    );
+  };
 
   return (
     <div>
       {renderProcedureSection('departure')}
       {renderProcedureSection('arrival')}
     </div>
+  );
+};

@@ -5,6 +5,7 @@ import { SIAReportEnhanced } from './components/SIAReportEnhanced';
 // 🎨 Charte éditoriale ALFlight
 import { ModuleHero } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
+import { sx } from '@shared/styles/styleSystem'; // helper de styles centralisé (sx.combine/flex/text/…)
 
 export const VACModule = memo(({ wizardMode = false, config = {} }) => {
   const [showWizardReturn, setShowWizardReturn] = useState(false);

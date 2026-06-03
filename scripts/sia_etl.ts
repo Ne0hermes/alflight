@@ -35,11 +35,31 @@ import type { FeatureCollection, Point, Polygon, MultiPolygon, LineString } from
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DATA_DIR = path.join(__dirname, '..', 'src', 'data');
+// Source XML : public/data — emplacement UNIQUE (servi au runtime ET lu par l'ETL).
+// Les XML ne sont plus dupliqués dans src/data.
+const INPUT_DIR = path.join(__dirname, '..', 'public', 'data');
 const OUTPUT_DIR = path.join(DATA_DIR, 'derived', 'geojson');
 
 // Ensure output directory exists
 if (!fs.existsSync(OUTPUT_DIR)) {
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+}
+
+/**
+ * Texte d'un élément ENFANT DIRECT (et non descendant) du parent.
+ * ⚠️ Évite le piège de getElementsByTagName('txtName')[0] qui, sur un <Ahp>,
+ * renvoie le <txtName> de <OrgUid> ('FRANCE') au lieu du nom de l'aérodrome.
+ */
+function directChildText(parent: any, tagName: string): string | undefined {
+  const children = parent?.childNodes;
+  if (!children) return undefined;
+  for (let i = 0; i < children.length; i++) {
+    const node = children[i];
+    if (node && node.nodeType === 1 && node.nodeName === tagName) {
+      return node.textContent || undefined;
+    }
+  }
+  return undefined;
 }
 
 /**
@@ -69,6 +89,8 @@ class SIAETL {
 
   // Index aérodromes mid → ICAO (rempli en parseAerodromes, utilisé par les autres parsers)
   private aerodromeMidToIcao = new Map<string, string>();
+  // Index ICAO → fréquences (rempli depuis les <Fqy>, lu par parseFrequencies)
+  private frequenciesByIcao = new Map<string, any[]>();
   // Index obstacle mid → coords (rempli en parseObstacles)
   private obstacleMidToCoords = new Map<string, { lat: number; lon: number }>();
   
@@ -119,13 +141,13 @@ class SIAETL {
    * Charge les fichiers AIXM
    */
   private async loadAIXMFiles(): Promise<void> {
-    console.log('📂 Recherche des fichiers SIA dans:', DATA_DIR);
-    
-    const files = fs.readdirSync(DATA_DIR);
+    console.log('📂 Recherche des fichiers SIA dans:', INPUT_DIR);
+
+    const files = fs.readdirSync(INPUT_DIR);
     const aixmFile = files.find(f => f.startsWith('AIXM4.5_') && f.endsWith('.xml'));
-    
+
     if (!aixmFile) {
-      throw new Error('Aucun fichier AIXM trouvé dans ' + DATA_DIR);
+      throw new Error('Aucun fichier AIXM trouvé dans ' + INPUT_DIR);
     }
     
     // Extraire la date AIRAC du nom de fichier
@@ -134,7 +156,7 @@ class SIAETL {
     
     console.log(`📄 Chargement: ${aixmFile} (AIRAC: ${this.airacDate})`);
     
-    const xmlContent = fs.readFileSync(path.join(DATA_DIR, aixmFile), 'utf-8');
+    const xmlContent = fs.readFileSync(path.join(INPUT_DIR, aixmFile), 'utf-8');
     const parser = new DOMParser();
     this.aixmDoc = parser.parseFromString(xmlContent, 'text/xml');
     
@@ -150,7 +172,10 @@ class SIAETL {
    */
   private async parseAerodromes(): Promise<void> {
     if (!this.aixmDoc) throw new Error('Document AIXM non chargé');
-    
+
+    // Construire l'index des fréquences AVANT la boucle (lu par parseFrequencies)
+    this.buildFrequencyIndex();
+
     const ahpElements = this.aixmDoc.getElementsByTagName('Ahp');
     console.log(`🛬 Parsing ${ahpElements.length} aérodromes...`);
     
@@ -185,7 +210,7 @@ class SIAETL {
           id: `AD_${codeId}`,
           icao: ahp.getElementsByTagName('codeIcao')[0]?.textContent || undefined,
           iata: ahp.getElementsByTagName('codeIata')[0]?.textContent || undefined,
-          name: ahp.getElementsByTagName('txtName')[0]?.textContent || codeId,
+          name: directChildText(ahp, 'txtName') || codeId,
           city: ahp.getElementsByTagName('txtNameCitySer')[0]?.textContent || undefined,
           latitude: lat,
           longitude: lon,
@@ -193,7 +218,7 @@ class SIAETL {
           type: this.mapAerodromeType(ahp.getElementsByTagName('codeType')[0]?.textContent),
           magnetic_variation: this.parseNumber(ahp.getElementsByTagName('valMagVar')[0]?.textContent),
           transition_altitude: this.parseNumber(ahp.getElementsByTagName('valTransitionAlt')[0]?.textContent),
-          frequencies: this.parseFrequencies(ahp),
+          frequencies: this.parseFrequencies(codeId),
           hours_code: hoursCode,
           hours_text: hoursText,
           source: 'SIA',
@@ -1379,10 +1404,41 @@ class SIAETL {
     }
   }
   
-  private parseFrequencies(ahp: Element): any[] {
-    const frequencies = [];
-    // TODO: Parser les fréquences depuis les éléments Fqy associés
-    return frequencies;
+  /**
+   * Construit l'index ICAO → fréquences depuis les éléments <Fqy>.
+   * Lien aérodrome : <Fqy><FqyUid><SerUid><UniUid><txtName> commence par le code ICAO
+   * (ex. "LFMT MONTPELLIER" → "LFMT"). Type : <SerUid><codeType> (TWR/ATIS/AFIS/APP/GND/VDF…).
+   * Valeur : <valFreqTrans> (émission) ou <valFreq>.
+   */
+  private buildFrequencyIndex(): void {
+    this.frequenciesByIcao = new Map();
+    if (!this.aixmDoc) return;
+    const fqyElements = this.aixmDoc.getElementsByTagName('Fqy');
+    for (let i = 0; i < fqyElements.length; i++) {
+      const fqy = fqyElements[i];
+      const serUid = fqy.getElementsByTagName('SerUid')[0];
+      if (!serUid) continue;
+      const uniName = serUid.getElementsByTagName('UniUid')[0]?.getElementsByTagName('txtName')[0]?.textContent || '';
+      const icao = uniName.trim().split(/\s+/)[0];
+      if (!/^[A-Z]{4}$/.test(icao)) continue; // ne garder que les vrais codes ICAO (4 lettres)
+      const type = serUid.getElementsByTagName('codeType')[0]?.textContent || 'OTHER';
+      const value = fqy.getElementsByTagName('valFreqTrans')[0]?.textContent
+                 || fqy.getElementsByTagName('valFreq')[0]?.textContent;
+      if (!value || parseFloat(value) <= 0) continue; // ignorer les fréquences placeholder (0)
+      const callsign = fqy.getElementsByTagName('Cdl')[0]?.getElementsByTagName('txtCallSign')[0]?.textContent || undefined;
+      const ftt = fqy.getElementsByTagName('Ftt')[0];
+      const schedule = ftt?.getElementsByTagName('codeWorkHr')[0]?.textContent || undefined; // ex. H24, HO
+      const remarks = ftt?.getElementsByTagName('txtRmkWorkHr')[0]?.textContent || undefined;
+      if (!this.frequenciesByIcao.has(icao)) this.frequenciesByIcao.set(icao, []);
+      this.frequenciesByIcao.get(icao)!.push({ type, frequency: value, callsign, schedule, remarks });
+    }
+    const total = Array.from(this.frequenciesByIcao.values()).reduce((n, arr) => n + arr.length, 0);
+    console.log(`📻 Index fréquences : ${total} fréquences sur ${this.frequenciesByIcao.size} aérodromes`);
+  }
+
+  /** Fréquences d'un aérodrome, depuis l'index <Fqy> (clé = code ICAO). */
+  private parseFrequencies(icao: string): any[] {
+    return this.frequenciesByIcao.get(icao) || [];
   }
   
   private parseAirspaceGeometry(ase: Element): Polygon | MultiPolygon | null {

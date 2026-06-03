@@ -3,8 +3,9 @@ import { GeoJSONProvider } from './providers/GeoJSONProvider';
 let _aeroDataProvider = null;
 
 function createAeroDataProvider() {
-  // ✅ Utiliser le provider GeoJSON optimisé (10 MB, rapide, fonctionne sur Vercel)
-  // Note: SIACompleteProvider (42 MB XML) n'est plus importé car il charge les XML au moment de l'import
+  // ✅ Provider unique : GeoJSON dérivé du SIA (rapide, Vercel-friendly).
+  // Les providers alternatifs inutilisés (SIACompleteProvider/XML 42 Mo, SIADataProvider,
+  // NotImplementedProvider) ont été supprimés — le GeoJSON est la source unique.
   return new GeoJSONProvider();
 }
 

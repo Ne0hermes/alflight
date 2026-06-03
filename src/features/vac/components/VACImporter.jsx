@@ -48,6 +48,7 @@ export const VACImporter = memo(({
       '❌ Erreur lors de l\'extraction de la carte VAC',
       'error',
       5000
+    );
   };
 
   const handleSave = async () => {
@@ -593,6 +594,7 @@ export const VACImporter = memo(({
         `}</style>
       </div>
     </>
+  );
 
 });
 

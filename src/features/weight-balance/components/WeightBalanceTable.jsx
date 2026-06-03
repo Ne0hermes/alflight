@@ -3,23 +3,15 @@ import React, { memo, useMemo } from 'react';
 import { sx } from '@shared/styles/styleSystem';
 
 export const WeightBalanceTable = memo(({ aircraft, loads, calculations }) => {
-  // ⚠️ PROTECTION: Vérifier que weightBalance existe
-  if (!aircraft || !aircraft.weightBalance) {
-    console.error('❌ [WeightBalanceTable] aircraft.weightBalance is undefined');
-    return (
-      <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning)}>
-        <p>⚠️ Données de masse et centrage non disponibles pour cet avion</p>
-      </div>
-    );
-  }
-
-  const wb = aircraft.weightBalance;
-
-  console.log('WeightBalanceTable - Current loads:', loads);
-  console.log('WeightBalanceTable - Current calculations:', calculations);
+  // 🔧 FIX rules-of-hooks : tous les hooks (useMemo) sont déclarés AVANT le
+  // garde-fou d'UI (déplacé plus bas), pour que leur ordre d'appel reste
+  // identique à chaque rendu. `wb` est lu en null-safe et les corps de hooks
+  // tolèrent l'absence de données.
+  const wb = aircraft?.weightBalance;
 
   // Données du tableau mémorisées
   const tableData = useMemo(() => {
+    if (!wb) return [];
     const items = [];
     
     // Masse à vide
@@ -114,7 +106,20 @@ export const WeightBalanceTable = memo(({ aircraft, loads, calculations }) => {
     totalMoment: typeof calculations?.totalMoment === 'number' ? calculations.totalMoment.toFixed(1) : '—',
     cg:          typeof calculations?.cg === 'number'          ? calculations.cg.toFixed(3)          : '—'
   }), [calculations]);
-  
+
+  // ⚠️ PROTECTION (garde-fou d'UI APRÈS les hooks) : weightBalance doit exister.
+  if (!aircraft || !aircraft.weightBalance) {
+    console.error('❌ [WeightBalanceTable] aircraft.weightBalance is undefined');
+    return (
+      <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning)}>
+        <p>⚠️ Données de masse et centrage non disponibles pour cet avion</p>
+      </div>
+    );
+  }
+
+  console.log('WeightBalanceTable - Current loads:', loads);
+  console.log('WeightBalanceTable - Current calculations:', calculations);
+
   return (
     <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
       <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(3))}>

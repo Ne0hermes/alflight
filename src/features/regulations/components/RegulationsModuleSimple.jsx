@@ -33,7 +33,7 @@ const RegulationsModuleSimple = () => {
         </ul>
       </div>
     </div>
-
+  );
 };
 
 export default RegulationsModuleSimple;
