@@ -321,3 +321,5 @@ export const VFREditor = ({ editedData, updateValue }) => {
         )}
       </div>
     </div>
+  );
+};

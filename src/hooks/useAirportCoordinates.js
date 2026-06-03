@@ -1,6 +1,6 @@
 // src/hooks/useAirportCoordinates.js
 import { useVACStore } from '@core/stores/vacStore';
-import airportDataService from '@services/airportDataService';
+import { getAirportInfoSync } from '@shared/hooks/useAirportNames';
 
 export const useAirportCoordinates = () => {
   // Récupérer les cartes VAC depuis le store
@@ -11,7 +11,7 @@ export const useAirportCoordinates = () => {
     const u = icao.toUpperCase();
     
     // Vérifier d'abord dans le service de données aéroport
-    const airportInfo = airportDataService.getAirportInfo(u);
+    const airportInfo = getAirportInfoSync(u);
     if (airportInfo) {
       return {
         lat: airportInfo.latitude,

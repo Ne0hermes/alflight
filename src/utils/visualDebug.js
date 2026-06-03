@@ -26,8 +26,8 @@ export const enableVisualDebug = () => {
     /* Grille de référence */
     .debug-grid {
       background-image: 
-        repeating-linear-gradient(0deg, rgba(139, 21, 56, 0.1) 0px, transparent 1px, transparent 20px, rgba(139, 21, 56, 0.1) 21px),
-        repeating-linear-gradient(90deg, rgba(139, 21, 56, 0.1) 0px, transparent 1px, transparent 20px, rgba(139, 21, 56, 0.1) 21px);
+        repeating-linear-gradient(0deg, var(--accent-soft) 0px, transparent 1px, transparent 20px, var(--accent-soft) 21px),
+        repeating-linear-gradient(90deg, var(--accent-soft) 0px, transparent 1px, transparent 20px, var(--accent-soft) 21px);
     }
     
     /* Zones problématiques */

@@ -4,7 +4,7 @@
  */
 
 import { normalizeElevationToFeet } from '../utils/elevationUtils';
-import { CURRENT_AIXM_FILE } from '../data/aixm.config.js';
+import { CURRENT_AIXM_FILE, AIXM_FILE_CANDIDATES } from '../data/aixm.config.js';
 
 // Fonction pour obtenir le store VAC (import dynamique pour éviter les imports circulaires)
 let getVACStore = null;
@@ -78,28 +78,78 @@ class AIXMParser {
 
       // Créer la promesse de chargement
       this.loadPromise = (async () => {
-        // Charger les deux fichiers XML
-        console.log(`🔍 Tentative de chargement AIXM depuis: ${this.aixmPath}`);
-        console.log(`🔍 Tentative de chargement SIA depuis: ${this.siaPath}`);
+        // Charger les deux fichiers XML.
+        // 🛡️ ANTI-404 : on essaie chaque candidat de AIXM_FILE_CANDIDATES
+        // (plus récent → plus ancien) et on garde le PREMIER qui répond avec
+        // du XML (status OK + ne commence pas par du HTML). Cela évite l'erreur
+        // « le serveur a renvoyé du HTML » quand la config pointe sur un
+        // fichier daté en avance qui n'existe pas encore dans public/data/.
+        const candidates = (Array.isArray(AIXM_FILE_CANDIDATES) && AIXM_FILE_CANDIDATES.length)
+          ? AIXM_FILE_CANDIDATES
+          : [CURRENT_AIXM_FILE];
 
-        const [aixmResponse, siaResponse] = await Promise.all([
-          fetch(this.aixmPath),
-          fetch(this.siaPath)
-        ]);
+        const startsWithHtml = (text) => {
+          const t = (text || '').trim().toLowerCase();
+          return t.startsWith('<!doctype html') || t.startsWith('<html');
+        };
 
-        console.log(`📡 Réponse AIXM: ${aixmResponse.status} ${aixmResponse.statusText}`);
-        console.log(`📡 Réponse SIA: ${siaResponse.status} ${siaResponse.statusText}`);
+        let aixmText = null;
+        let siaText = null;
+        let chosenFile = null;
+        let lastFailure = null;
 
-        if (!aixmResponse.ok) {
-          console.error(`❌ Erreur chargement AIXM: ${aixmResponse.status} ${aixmResponse.statusText}`);
+        for (const candidate of candidates) {
+          const aixmPath = `/data/${candidate}`;
+          const siaPath = `/data/${candidate.replace('AIXM4.5_all_FR_OM_', 'XML_SIA_')}`;
+          console.log(`🔍 Tentative de chargement AIXM/SIA: ${candidate}`);
+
+          try {
+            const [aixmResponse, siaResponse] = await Promise.all([
+              fetch(aixmPath),
+              fetch(siaPath)
+            ]);
+
+            console.log(`📡 Réponse AIXM: ${aixmResponse.status} | SIA: ${siaResponse.status} (${candidate})`);
+
+            if (!aixmResponse.ok || !siaResponse.ok) {
+              lastFailure = `HTTP AIXM ${aixmResponse.status} / SIA ${siaResponse.status} pour ${candidate}`;
+              console.warn(`⚠️ ${lastFailure} — essai du candidat suivant`);
+              continue;
+            }
+
+            const aText = await aixmResponse.text();
+            const sText = await siaResponse.text();
+
+            if (startsWithHtml(aText) || startsWithHtml(sText)) {
+              lastFailure = `Réponse HTML (404 probable) pour ${candidate}`;
+              console.warn(`⚠️ ${lastFailure} — essai du candidat suivant`);
+              continue;
+            }
+
+            // ✅ Candidat valide : on le retient et on met à jour les chemins/date.
+            aixmText = aText;
+            siaText = sText;
+            chosenFile = candidate;
+            this.aixmPath = aixmPath;
+            this.siaPath = siaPath;
+            this.dataDate = this.extractDateFromPath();
+            console.log(`✅ Fichier AIXM retenu: ${candidate} (${this.dataDate})`);
+            break;
+          } catch (fetchError) {
+            lastFailure = `${candidate}: ${fetchError.message}`;
+            console.warn(`⚠️ Échec fetch ${lastFailure} — essai du candidat suivant`);
+            continue;
+          }
         }
-        if (!siaResponse.ok) {
-          console.error(`❌ Erreur chargement SIA: ${siaResponse.status} ${siaResponse.statusText}`);
+
+        if (!chosenFile) {
+          throw new Error(
+            `Aucun fichier AIXM valide trouvé dans /public/data/. ` +
+            `Candidats testés: ${candidates.join(', ')}. ` +
+            `Dernière erreur: ${lastFailure || 'inconnue'}. ` +
+            `Vérifiez que les fichiers AIXM4.5_*.xml et XML_SIA_*.xml sont présents et listés dans src/data/aixm.config.js.`
+          );
         }
-
-
-        const aixmText = await aixmResponse.text();
-        const siaText = await siaResponse.text();
 
         console.log(`📄 Taille AIXM: ${aixmText.length} caractères`);
         console.log(`📄 Taille SIA: ${siaText.length} caractères`);

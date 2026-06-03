@@ -346,7 +346,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
           </label>
         </div>
 
-        <div style={{ ...styles.card, backgroundColor: 'rgba(147, 22, 60, 0.05)' }}>
+        <div style={{ ...styles.card, backgroundColor: 'var(--accent-soft)' }}>
           <h4 style={{ fontSize: '16px', color: theme.colors.primary, marginBottom: '16px' }}>
             Résumé de la préparation
           </h4>

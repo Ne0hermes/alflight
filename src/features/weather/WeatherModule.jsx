@@ -462,7 +462,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
         </div>
       </div>
     );
-  };
+  }
   if (error) {
     return (
       <div style={sx.combine(sx.components.card.base, sx.components.alert.danger)}>

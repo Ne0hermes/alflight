@@ -42,7 +42,7 @@ const EnvelopeSubChart = ({
           maxWidth: '500px',
           height: 'auto',
           border: '1px solid var(--border-subtle)',
-          borderRadius: 4,
+          borderRadius: 8,
           backgroundColor: 'transparent',
           display: 'block',
           margin: '0 auto'

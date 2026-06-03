@@ -114,12 +114,14 @@ export const VACPdfExtractor = ({ file, onExtracted, onError }) => {
             `✅ Carte VAC extraite avec succès (${extractedInfo.runways.length} piste(s), ${Object.keys(extractedInfo.frequencies).length} fréquence(s))`,
             'success',
             5000
+          );
         } else {
           extractedInfo.dataSource = 'PDF VAC stocké - Extraction limitée';
           showNotification(
             '⚠️ Extraction partielle du PDF VAC. Certaines données devront être entrées manuellement.',
             'warning',
             6000
+          );
         }
         
         onExtracted(extractedInfo);
@@ -137,6 +139,7 @@ export const VACPdfExtractor = ({ file, onExtracted, onError }) => {
         `❌ Erreur lors de l'extraction VAC: ${err.message}`,
         'error',
         5000
+      );
       
       if (onError) {
         onError(err.message);

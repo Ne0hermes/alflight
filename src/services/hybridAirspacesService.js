@@ -108,43 +108,33 @@ class HybridAirspacesService {
     }
 
     try {
-      // Charger les aérodromes AIXM
-      const { aixmParser } = await import('./aixmParser.js');
-      const aerodromes = await aixmParser.loadAndParse();
+      // SOURCE UNIQUE : le provider (GeoJSON dérivé du SIA) — plus de parsing XML runtime.
+      // Les fréquences y sont désormais un ARRAY [{type, frequency, callsign, schedule, remarks}].
+      const { aeroDataProvider } = await import('@core/data');
+      const airports = await aeroDataProvider.getAirfields({ country: 'FR' });
 
-      // Extraire les fréquences par code ICAO
-      aerodromes.forEach(aerodrome => {
+      // Types de fréquences pertinents pour CTR/TMA
+      const relevantTypes = ['twr', 'app', 'afis', 'info', 'atis', 'fis'];
+
+      airports.forEach(aerodrome => {
         const icao = aerodrome.icao;
-        const frequenciesObj = aerodrome.frequencies || {}; // C'est un objet, pas un array !
+        if (!icao || !Array.isArray(aerodrome.frequencies)) return;
 
-        if (icao && Object.keys(frequenciesObj).length > 0) {
-          // Convertir l'objet de fréquences en array avec types
-          const relevantFreqs = [];
+        const relevantFreqs = aerodrome.frequencies
+          .filter(f => relevantTypes.includes((f.type || '').toLowerCase()))
+          .map(f => ({
+            type: (f.type || '').toUpperCase(),
+            frequency: f.frequency,
+            schedule: f.schedule,
+            remarks: f.remarks
+          }));
 
-          // Types de fréquences pertinents pour CTR/TMA
-          const relevantTypes = ['twr', 'app', 'afis', 'info', 'atis'];
-
-          for (const [type, freqArray] of Object.entries(frequenciesObj)) {
-            if (relevantTypes.includes(type.toLowerCase())) {
-              // Chaque type peut avoir plusieurs fréquences
-              freqArray.forEach(freqData => {
-                relevantFreqs.push({
-                  type: type.toUpperCase(),
-                  frequency: freqData.frequency,
-                  schedule: freqData.schedule,
-                  remarks: freqData.remarks
-                });
-              });
-            }
-          }
-
-          if (relevantFreqs.length > 0) {
-            this.aerodromeFrequencies.set(icao, relevantFreqs);
-          }
+        if (relevantFreqs.length > 0) {
+          this.aerodromeFrequencies.set(icao, relevantFreqs);
         }
       });
 
-      console.log(`✅ Chargé ${this.aerodromeFrequencies.size} aérodromes avec fréquences`);
+      console.log(`✅ ${this.aerodromeFrequencies.size} aérodromes avec fréquences (depuis le provider, source unique)`);
 
     } catch (error) {
       console.error('Erreur chargement fréquences aérodromes:', error);

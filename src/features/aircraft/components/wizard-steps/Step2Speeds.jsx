@@ -454,7 +454,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
           bgcolor: 'background.paper',
           border: '1px solid',
           borderColor: 'divider',
-          borderRadius: 1,
+          borderRadius: '8px',
           overflow: 'visible',
           mb: 2
         }}>

@@ -411,3 +411,5 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
         )}
       </div>
     </div>
+  );
+};

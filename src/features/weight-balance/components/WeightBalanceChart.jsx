@@ -4,16 +4,11 @@ import React, { memo, useMemo } from 'react';
 import { sx } from '@shared/styles/styleSystem';
 
 export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) => {
-  if (!aircraft || !scenarios || !calculations) {
-    return (
-      <div style={sx.combine(sx.flex.center, sx.spacing.p(8), sx.bg.gray)}>
-        <p style={sx.text.secondary}>Sélectionnez un avion pour afficher le graphique</p>
-      </div>
-    );
-  }
-
   // Utiliser UNIQUEMENT les données de l'onglet "Gestion des avions" (cgEnvelope)
-  const cgEnvelope = aircraft.cgEnvelope;
+  // 🔧 FIX rules-of-hooks : accès null-safe. Les hooks (useMemo) ci-dessous sont
+  // déclarés AVANT les garde-fous d'UI (déplacés après les hooks), donc `aircraft`
+  // peut être absent ici — d'où l'optional chaining + les gardes internes des hooks.
+  const cgEnvelope = aircraft?.cgEnvelope;
   
   // Debug: afficher ce que contient l'aircraft
   console.log('🛩️ Aircraft reçu dans WeightBalanceChart:', aircraft);
@@ -31,37 +26,17 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
     cgEnvelope.forwardPoints.length > 0 &&
     cgEnvelope.aftCG;
 
-  // Afficher une erreur si les données manquent
-  if (!hasCgEnvelopeData) {
-    return (
-      <div style={sx.spacing.mt(8)}>
-        <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4))}>
-          📈 Enveloppe de centrage
-        </h3>
-        
-        <div style={sx.combine(
-          sx.components.alert.base,
-          sx.components.alert.danger,
-          sx.spacing.mb(4)
-        )}>
-          <p style={sx.combine(sx.text.lg, sx.text.bold)}>
-            ❌ Données d'enveloppe de centrage manquantes
-          </p>
-          <p style={sx.combine(sx.text.sm, sx.spacing.mt(2))}>
-            Veuillez configurer l'enveloppe de centrage dans l'onglet <strong>"Gestion des avions"</strong> → 
-            Section <strong>"CENTER OF GRAVITY - Enveloppe de centrage"</strong>
-          </p>
-          <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
-            <li>Ajoutez au moins un point CG avant (Most Forward CG)</li>
-            <li>Définissez les limites CG arrière (Most Rearward CG)</li>
-          </ul>
-        </div>
-      </div>
-    );
-  }
-  
+  // 🔧 FIX rules-of-hooks : le garde-fou « données d'enveloppe manquantes »
+  // (early-return sur hasCgEnvelopeData) a été déplacé APRÈS la déclaration de
+  // TOUS les hooks — voir plus bas, juste avant le rendu du graphique.
+
   // Calcul des échelles avec les données cgEnvelope
   const scales = useMemo(() => {
+    // 🔧 FIX rules-of-hooks : tolérer l'absence de données (hook exécuté avant
+    // les garde-fous d'UI). Valeurs neutres — jamais utilisées au rendu réel.
+    if (!aircraft || !cgEnvelope?.forwardPoints) {
+      return { cgMin: 0, cgMax: 1, weightMin: 0, weightMax: 1 };
+    }
     // 🔧 FIX CRITIQUE: Convertir les valeurs CG en nombres pour éviter comparaison lexicographique
     const forwardCGs = cgEnvelope.forwardPoints
       .map(p => parseFloat(p.cg))
@@ -123,6 +98,9 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
 
   // Fonction pour vérifier si un point est dans l'enveloppe (utilise cgEnvelope uniquement)
   const isPointWithinEnvelope = (weight, cg) => {
+    // 🔧 FIX rules-of-hooks : tolérer l'absence de cgEnvelope (appelée depuis des
+    // useMemo exécutés avant les garde-fous d'UI).
+    if (!cgEnvelope?.forwardPoints) return false;
     // Le CG est déjà en mètres, pas besoin de conversion
     const cgInMeters = cg;
 
@@ -219,6 +197,9 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
 
   // Création des points de l'enveloppe avec cgEnvelope
   const envelopeData = useMemo(() => {
+    // 🔧 FIX rules-of-hooks : tolérer l'absence de cgEnvelope (hook exécuté avant
+    // les garde-fous d'UI).
+    if (!cgEnvelope?.forwardPoints) return [];
     const sortedForwardPoints = [...cgEnvelope.forwardPoints]
       .filter(p => p.weight && p.cg && !isNaN(parseFloat(p.weight)) && !isNaN(parseFloat(p.cg)))
       .map(p => ({ weight: parseFloat(p.weight), cg: parseFloat(p.cg) }))
@@ -242,13 +223,53 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
     
     if (!isNaN(aftMaxWeight) && aftMaxWeight > 0 && !isNaN(aftCG)) {
       points.push({ w: aftMaxWeight, cg: aftCG, label: 'Aft Max' });
-    };
+    }
     if (!isNaN(aftMinWeight) && aftMinWeight > 0 && !isNaN(aftCG) && aftMinWeight !== aftMaxWeight) {
       points.push({ w: aftMinWeight, cg: aftCG, label: 'Aft Min' });
     }
     
     return points;
   }, [aircraft, cgEnvelope]);
+
+  // ─── Garde-fous d'UI APRÈS la déclaration de TOUS les hooks ───
+  // 🔧 FIX rules-of-hooks : ces early-returns étaient placés AVANT les hooks
+  // ci-dessus, ce qui rendait l'ordre d'appel des hooks instable selon les
+  // données reçues. Déplacés ici, l'ordre des hooks est identique à chaque rendu.
+  if (!aircraft || !scenarios || !calculations) {
+    return (
+      <div style={sx.combine(sx.flex.center, sx.spacing.p(8), sx.bg.gray)}>
+        <p style={sx.text.secondary}>Sélectionnez un avion pour afficher le graphique</p>
+      </div>
+    );
+  }
+
+  if (!hasCgEnvelopeData) {
+    return (
+      <div style={sx.spacing.mt(8)}>
+        <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4))}>
+          📈 Enveloppe de centrage
+        </h3>
+
+        <div style={sx.combine(
+          sx.components.alert.base,
+          sx.components.alert.danger,
+          sx.spacing.mb(4)
+        )}>
+          <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+            ❌ Données d'enveloppe de centrage manquantes
+          </p>
+          <p style={sx.combine(sx.text.sm, sx.spacing.mt(2))}>
+            Veuillez configurer l'enveloppe de centrage dans l'onglet <strong>"Gestion des avions"</strong> →
+            Section <strong>"CENTER OF GRAVITY - Enveloppe de centrage"</strong>
+          </p>
+          <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
+            <li>Ajoutez au moins un point CG avant (Most Forward CG)</li>
+            <li>Définissez les limites CG arrière (Most Rearward CG)</li>
+          </ul>
+        </div>
+      </div>
+    );
+  }
 
   const createEnvelopePoints = () => {
     return envelopeData.map(p => `${toSvgX(p.cg)},${toSvgY(p.w)}`).join(' ');

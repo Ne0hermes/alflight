@@ -259,7 +259,7 @@ const UnitConverterCard = () => {
             alignItems: 'center',
             bgcolor: 'background.paper',
             p: 1.5,
-            borderRadius: 1,
+            borderRadius: '8px',
             border: '1px solid',
             borderColor: 'divider'
           }}
