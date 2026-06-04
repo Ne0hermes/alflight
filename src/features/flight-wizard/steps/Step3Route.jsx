@@ -12,10 +12,7 @@ import { vfrPointsExtractor } from '@services/vfrPointsExtractor';
 // Styles communs
 const commonStyles = {
   container: {
-    padding: '24px',
-    backgroundColor: 'var(--bg-surface)',
-    borderRadius: 'var(--radius-sm)',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+    padding: 0
   },
   label: {
     fontSize: 'var(--fs-title)',
@@ -30,13 +27,7 @@ const commonStyles = {
     marginBottom: '24px'
   },
   mapSection: {
-    marginBottom: '32px',
-    padding: '16px',
-    backgroundColor: 'var(--bg-overlay)',
-    borderRadius: 'var(--radius-sm)',
-    borderWidth: '1px',
-    borderStyle: 'solid',
-    borderColor: 'var(--border-subtle)'
+    marginBottom: '32px'
   },
   mapLabel: {
     fontSize: 'var(--fs-body)',
@@ -372,7 +363,6 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
       {/* Carte interactive */}
       <div style={commonStyles.mapSection}>
         <div style={commonStyles.mapLabel}>
-          <Map size={18} />
           Carte du trajet
         </div>
         <RouteMapView
@@ -400,11 +390,10 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
         padding: '16px',
         backgroundColor: 'var(--bg-overlay)',
         borderRadius: 'var(--radius-sm)',
-        borderLeft: '4px solid #f26921',
+        borderLeft: '4px solid var(--accent-primary)',
         marginTop: '20px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-          <Info size={18} color="#f26921" />
           <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Sélection des déroutements</span>
         </div>
         <p style={{ margin: 0, fontSize: 'var(--fs-body)', color: 'var(--text-tertiary)' }}>
