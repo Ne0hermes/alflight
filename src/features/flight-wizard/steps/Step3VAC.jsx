@@ -479,52 +479,27 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
 
                     {/* Onglets de sections */}
                     <div style={styles.sectionTabs}>
-                    <button
-                      onClick={() => toggleSection(aerodrome.icao, 'general')}
-                      style={{
-                        ...styles.sectionTab,
-                        ...(currentSection === 'general' ? styles.sectionTabActive : {})
-                      }}
-                    >
-                      <MapPin size={14} /> Général
-                    </button>
-                    <button
-                      onClick={() => toggleSection(aerodrome.icao, 'runways')}
-                      style={{
-                        ...styles.sectionTab,
-                        ...(currentSection === 'runways' ? styles.sectionTabActive : {})
-                      }}
-                    >
-                      <Plane size={14} /> Pistes
-                    </button>
-                    <button
-                      onClick={() => toggleSection(aerodrome.icao, 'frequencies')}
-                      style={{
-                        ...styles.sectionTab,
-                        ...(currentSection === 'frequencies' ? styles.sectionTabActive : {})
-                      }}
-                    >
-                      <Radio size={14} /> Fréquences
-                    </button>
-                    <button
-                      onClick={() => toggleSection(aerodrome.icao, 'vfr')}
-                      style={{
-                        ...styles.sectionTab,
-                        ...(currentSection === 'vfr' ? styles.sectionTabActive : {})
-                      }}
-                    >
-                      <Navigation size={14} /> VFR
-                    </button>
-                    <button
-                      onClick={() => toggleSection(aerodrome.icao, 'services')}
-                      style={{
-                        ...styles.sectionTab,
-                        ...(currentSection === 'services' ? styles.sectionTabActive : {})
-                      }}
-                    >
-                      <Settings size={14} /> Services
-                    </button>
-                  </div>
+                      {/* Menu déroulant des rubriques (remplace les onglets-boutons) :
+                          le contenu de la rubrique choisie s'affiche en dessous. */}
+                      <select
+                        value={currentSection || ''}
+                        onChange={(e) =>
+                          setExpandedSection(prev => ({
+                            ...prev,
+                            [aerodrome.icao]: e.target.value || null
+                          }))
+                        }
+                        style={styles.sectionSelect}
+                        aria-label="Rubrique d'information terrain"
+                      >
+                        <option value="">Sélectionner une rubrique…</option>
+                        <option value="general">Général</option>
+                        <option value="runways">Pistes</option>
+                        <option value="frequencies">Fréquences</option>
+                        <option value="vfr">VFR</option>
+                        <option value="services">Services</option>
+                      </select>
+                    </div>
 
                   {/* Contenu des sections */}
                   <div style={styles.sectionContent}>
@@ -652,16 +627,10 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
                       <div style={styles.section}>
                         {aerodrome.frequencies && Object.keys(aerodrome.frequencies).length > 0 ? (
                           Object.entries(aerodrome.frequencies).map(([service, freqs]) => {
-                            const serviceIcons = {
-                              TWR: '🗼', GND: '🚖', APP: '📡', ATIS: '📻',
-                              AFIS: '📢', INFO: 'ℹ️', CTAF: '🔊'
-                            };
-                            const icon = serviceIcons[service.toUpperCase()] || '📻';
-
                             return (
                               <div key={service} style={styles.frequencyItem}>
                                 <span style={styles.frequencyService}>
-                                  {icon} {service.toUpperCase()}
+                                  {service.toUpperCase()}
                                 </span>
                                 <span style={styles.frequencyValue}>
                                   {Array.isArray(freqs)
@@ -708,23 +677,22 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
                       <div style={styles.section}>
                         {aerodrome.adminInfo?.telephone && (
                           <div style={styles.contactInfo}>
-                            <span style={styles.contactLabel}>☎️ Téléphone:</span>
+                            <span style={styles.contactLabel}>Téléphone:</span>
                             <span style={styles.contactValue}>{aerodrome.adminInfo.telephone}</span>
                           </div>
                         )}
 
                         <div style={styles.servicesGrid}>
                           {[
-                            { key: 'fuel', label: 'Carburant', icon: '⛽' },
-                            { key: 'avgas100LL', label: 'AVGAS 100LL', icon: '🛢️' },
-                            { key: 'maintenance', label: 'Maintenance', icon: '🔧' },
-                            { key: 'restaurant', label: 'Restaurant', icon: '🍽️' },
-                            { key: 'hotel', label: 'Hôtel', icon: '🏨' },
-                            { key: 'parking', label: 'Parking', icon: '🅿️' }
+                            { key: 'fuel', label: 'Carburant' },
+                            { key: 'avgas100LL', label: 'AVGAS 100LL' },
+                            { key: 'maintenance', label: 'Maintenance' },
+                            { key: 'restaurant', label: 'Restaurant' },
+                            { key: 'hotel', label: 'Hôtel' },
+                            { key: 'parking', label: 'Parking' }
                           ].map(service => (
                             aerodrome.services?.[service.key] && (
                               <div key={service.key} style={styles.serviceItem}>
-                                <span>{service.icon}</span>
                                 <span>{service.label}</span>
                               </div>
                             )
@@ -784,10 +752,12 @@ const styles = {
     lineHeight: '1.6'
   },
   weatherBlock: {
-    padding: '16px',
-    backgroundColor: 'var(--bg-overlay)',
-    borderRadius: 'var(--radius-sm)',
-    border: '1px solid var(--border-subtle)'
+    /* Section encadrante retirée : le METAR/TAF n'est plus enfermé dans une
+       boîte (double encadrement). Seul le bloc de texte garde son cadre — la
+       zone respire davantage. */
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px'
   },
   weatherTitle: {
     margin: '0 0 12px 0',
@@ -1123,6 +1093,18 @@ const styles = {
     color: 'var(--bg-surface)',
     backgroundColor: 'var(--text-secondary)',
     borderColor: 'var(--text-secondary)'
+  },
+  sectionSelect: {
+    width: '100%',
+    padding: '10px 16px',
+    backgroundColor: 'var(--bg-surface)',
+    border: '1px solid var(--border-subtle)',
+    borderRadius: 'var(--radius-sm)',
+    color: 'var(--text-primary)',
+    fontSize: 'var(--fs-body)',
+    fontWeight: '500',
+    cursor: 'pointer',
+    boxSizing: 'border-box'
   },
   sectionContent: {
     padding: '16px'
