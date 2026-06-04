@@ -283,7 +283,7 @@ const sheetsService = new GoogleSheetsService();
 // Exposer globalement pour debug
 if (typeof window !== 'undefined') {
   window.sheetsService = sheetsService;
-);}
+}
 
 // Exports
 export const configureSheetsService = (credentials) => {

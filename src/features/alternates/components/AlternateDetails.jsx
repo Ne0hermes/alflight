@@ -1,9 +1,9 @@
 // src/features/alternates/components/AlternateDetails.jsx
 import React, { memo, useState } from 'react';
-import { Info, Fuel, Wind, Radio, Download, MapPin, Ruler, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Fuel, Wind, Radio, Download, MapPin, Ruler, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useVACStore, vacSelectors } from '@core/stores/vacStore';
-import { useWeatherStore, weatherSelectors } from '@core/stores/weatherStore';
+import { weatherSelectors } from '@core/stores/weatherStore';
 import { coordinateConversions } from '@utils/unitConversions';
 import { useAircraft } from '@core/contexts';
 
@@ -57,7 +57,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '14px',
+              fontSize: 'var(--fs-body)',
               fontWeight: 'bold'
             }}>
               {index + 1}
@@ -97,11 +97,11 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
         sx.spacing.mb(3),
         weather?.metar ?
           { backgroundColor: 'var(--bg-overlay)', borderLeft: '4px solid var(--text-secondary)' } :
-          { backgroundColor: 'var(--bg-overlay)', borderLeft: '4px solid #C04534' }
+          { backgroundColor: 'var(--bg-overlay)', borderLeft: '4px solid var(--color-red-critical)' }
       )}>
         <h5 style={sx.combine(
           sx.text.sm, sx.text.bold, sx.spacing.mb(2),
-          { color: weather?.metar ? 'var(--text-secondary)' : '#C04534' }
+          { color: weather?.metar ? 'var(--text-secondary)' : 'var(--color-red-critical)' }
         )}>
           📡 METAR
         </h5>
@@ -133,7 +133,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
             )}
           </>
         ) : (
-          <div style={sx.combine(sx.text.sm, { color: '#C04534' })}>
+          <div style={sx.combine(sx.text.sm, { color: 'var(--color-red-critical)' })}>
             <p>⚠️ METAR non disponible pour cet aérodrome</p>
             <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
               L'aérodrome {alternate.icao} pourrait être un aérodrome privé ou les données météo ne sont pas disponibles.
@@ -426,7 +426,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
               style={sx.combine(
                 sx.components.button.base,
                 sx.components.button.primary,
-                { fontSize: '13px', padding: '6px 12px' },
+                { fontSize: 'var(--fs-body)', padding: '6px 12px' },
                 isVacDownloading && { opacity: 0.5 }
               )}
             >
@@ -446,7 +446,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
       {/* Facteurs de score */}
       {alternate.scoreFactors && (
         <details style={sx.spacing.mt(3)}>
-          <summary style={{ cursor: 'pointer', fontSize: '13px', color: 'var(--text-secondary)' }}>
+          <summary style={{ cursor: 'pointer', fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
             Voir le détail du score
           </summary>
           <div style={sx.combine(sx.spacing.mt(2), sx.spacing.p(2), sx.bg.gray, sx.rounded.md)}>
@@ -479,7 +479,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
 const ServiceIndicator = memo(({ available, label, icon }) => (
   <div style={sx.combine(sx.flex.start, sx.spacing.gap(1), sx.spacing.mb(1))}>
     {typeof icon === 'string' ? <span>{icon}</span> : icon}
-    <span style={{ color: available ? 'var(--text-primary)' : '#C04534' }}>
+    <span style={{ color: available ? 'var(--text-primary)' : 'var(--color-red-critical)' }}>
       {available ? '✓' : '✗'}
     </span>
     <span>{label}</span>
@@ -526,7 +526,7 @@ const getAlternateColor = (index) => {
 const getScoreColor = (score) => {
   if (score >= 0.8) return 'var(--text-primary)';
   if (score >= 0.6) return 'var(--accent-primary)';
-  return '#C04534';
+  return 'var(--color-red-critical)';
 };
 
 const getFactorLabel = (factor) => {

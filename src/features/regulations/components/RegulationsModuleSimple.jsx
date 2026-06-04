@@ -8,7 +8,7 @@ const RegulationsModuleSimple = () => {
 
   return (
     <div style={{ padding: '20px' }}>
-      <h1 style={{ fontSize: '24px', marginBottom: '20px' }}>
+      <h1 style={{ fontSize: 'var(--fs-title)', marginBottom: '20px' }}>
         <Book size={24} style={{ marginRight: '8px', display: 'inline' }} />
         Module Réglementations - Test
       </h1>
@@ -33,7 +33,7 @@ const RegulationsModuleSimple = () => {
         </ul>
       </div>
     </div>
-
+  );
 };
 
 export default RegulationsModuleSimple;

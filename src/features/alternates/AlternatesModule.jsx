@@ -4,12 +4,11 @@
 // LOG DE VÉRIFICATION
 
 import React, { memo, useEffect, useState } from 'react';
-import { Navigation2, AlertTriangle, Fuel, Wind, Plane, Info, MapPin, RefreshCw } from 'lucide-react';
+import { AlertTriangle, Plane, Info, MapPin, RefreshCw } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useAdvancedAlternateSelection } from './hooks/useAdvancedAlternateSelection';
 import { AlternateSelectorUnified } from './components/AlternateSelectorUnified';
 import { AlternatesMapView } from './components/AlternatesMapView';
-import { useNavigationResults } from './hooks/useNavigationResults';
 import { WeatherRateLimitIndicator } from '@components/WeatherRateLimitIndicator';
 import { useAlternatesStore } from '@core/stores/alternatesStore';
 import { DataSourceBadge, DataField } from '@shared/components';
@@ -516,7 +515,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
                 📍 Visualisation de la route et des déroutements
               </h4>
               <div style={{
-                fontSize: '13px',
+                fontSize: 'var(--fs-body)',
                 color: 'var(--text-secondary)',
                 marginBottom: '16px',
                 marginTop: '0',
@@ -528,7 +527,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
                 <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: 'var(--text-primary)' }}>
                   🛩️ Zone de recherche : {Math.ceil(dynamicRadius || 25)} NM de rayon
                 </p>
-                <p style={{ margin: '0', fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                <p style={{ margin: '0', fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                   Le rayon correspond à un temps de déroutement de 20-30 min selon l'autonomie de l'avion.
                   Cela représente la zone où vous pourriez rejoindre un aérodrome de déroutement en cas de besoin.
                 </p>
@@ -600,7 +599,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
                 <AerodromeDetailsCard
                   airport={manualSelection.departure}
                   side="departure"
-                  sideColor="#C04534"
+                  sideColor="var(--color-red-critical)"
                   sideEmoji="🔴"
                   sideLabel="Déroutement côté départ"
                   distanceLabel="NM depuis le départ"

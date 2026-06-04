@@ -1,13 +1,13 @@
 // src/features/weather/WeatherModule.jsx
 import React, { memo, useState, useEffect, useRef } from 'react';
-import { Cloud, Search, RefreshCw, AlertTriangle, Wind, Eye, Thermometer, Gauge, Clock, Plane, Navigation2, Info, ChevronDown, ChevronUp, Map, ExternalLink, Download } from 'lucide-react';
+import { Cloud, Search, RefreshCw, AlertTriangle, Clock, Plane, Info, Map } from 'lucide-react';
 import { useWeatherStore, weatherSelectors } from '@core/stores/weatherStore';
 import AccordionButton from '@shared/components/AccordionButton';
 import { useNavigation } from '@core/contexts';
 import { useAlternatesStore } from '@core/stores/alternatesStore';
 import { sx } from '@shared/styles/styleSystem';
 // RunwaySuggestionEnhanced déplacé vers le module Performance
-import { DataSourceBadge, DataField, DataFieldGroup } from '@shared/components';
+import { DataSourceBadge, DataField } from '@shared/components';
 import { useUnits } from '@hooks/useUnits';
 import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
 // 🎨 Charte éditoriale ALFlight
@@ -224,9 +224,9 @@ export const WeatherModule = memo(({ wizardMode = false, config = {} }) => {
                       onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <strong style={{ fontSize: '14px' }}>{airport.icao}</strong>
+                        <strong style={{ fontSize: 'var(--fs-body)' }}>{airport.icao}</strong>
                         <span style={{ 
-                          fontSize: '11px', 
+                          fontSize: 'var(--fs-caption)', 
                           padding: '2px 6px', 
                           backgroundColor: 'var(--border-subtle)',
                           borderRadius: 'var(--radius-sm)'
@@ -235,7 +235,7 @@ export const WeatherModule = memo(({ wizardMode = false, config = {} }) => {
                            airport.type === 'medium_airport' ? 'Moyen' : 'Petit'}
                         </span>
                       </div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                      <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginTop: '2px' }}>
                         {airport.name}
                       </div>
                     </div>
@@ -270,7 +270,7 @@ export const WeatherModule = memo(({ wizardMode = false, config = {} }) => {
                 style={sx.combine(
                   sx.components.button.base,
                   sx.components.button.secondary,
-                  { padding: '4px 12px', fontSize: '13px' }
+                  { padding: '4px 12px', fontSize: 'var(--fs-body)' }
                 )}
               >
                 {icao}
@@ -462,7 +462,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
         </div>
       </div>
     );
-  };
+  }
   if (error) {
     return (
       <div style={sx.combine(sx.components.card.base, sx.components.alert.danger)}>
@@ -515,7 +515,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
                 borderRadius: 'var(--radius-sm)',
                 backgroundColor: customBgColor,
                 color: customTextColor,
-                fontSize: '10px'
+                fontSize: 'var(--fs-caption)'
               }
             )}>
               {label}
@@ -525,7 +525,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
             onClick={() => fetchWeather(icao)}
             style={{ 
               padding: '2px 4px', 
-              fontSize: '10px',
+              fontSize: 'var(--fs-caption)',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
@@ -538,20 +538,20 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
         </div>
         
         {additionalInfo && (
-          <div style={sx.combine(sx.text.xs, sx.text.secondary, { fontSize: '10px' })}>
+          <div style={sx.combine(sx.text.xs, sx.text.secondary, { fontSize: 'var(--fs-caption)' })}>
             {additionalInfo}
           </div>
         )}
         
         {metar && (
-          <div style={{ fontSize: '11px', marginTop: '4px', lineHeight: '1.4' }}>
+          <div style={{ fontSize: 'var(--fs-caption)', marginTop: '4px', lineHeight: '1.4' }}>
             <div>💨 {metar.wind.direction === 'Calme' ? 'Calme' : `${metar.wind.direction}°/${format(metar.wind.speed, 'windSpeed', 0)}`}</div>
             <div>👁 {metar.visibility === 'CAVOK' ? 'CAVOK' : format(metar.visibility, 'visibility', 0)} | 🌡 {format(metar.temperature, 'temperature', 0)} | 📊 {format(metar.pressure, 'pressure', 0)}</div>
           </div>
         )}
         
         {!metar && (
-          <div style={sx.combine(sx.text.xs, sx.text.secondary, { fontSize: '10px' })}>
+          <div style={sx.combine(sx.text.xs, sx.text.secondary, { fontSize: 'var(--fs-caption)' })}>
             Pas de données météo
           </div>
         )}
@@ -622,7 +622,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
         <div style={sx.combine(sx.spacing.mt(3))}>
           <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>METAR :</p>
           <div style={{ 
-            fontSize: '13px', 
+            fontSize: 'var(--fs-body)', 
             backgroundColor: 'var(--bg-overlay)', 
             padding: '12px', 
             borderRadius: 'var(--radius-sm)',
@@ -641,7 +641,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
         <div style={sx.spacing.mt(3)}>
           <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>TAF :</p>
           <div style={{ 
-            fontSize: '13px', 
+            fontSize: 'var(--fs-body)', 
             backgroundColor: 'var(--bg-overlay)', 
             padding: '12px', 
             borderRadius: 'var(--radius-sm)',
@@ -664,7 +664,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
               onClick={() => setShowDecoded(!showDecoded)}
               title="Données décodées"
               variant="minimal"
-              style={{ justifyContent: 'flex-start', fontSize: '14px', fontWeight: '600' }}
+              style={{ justifyContent: 'flex-start', fontSize: 'var(--fs-body)', fontWeight: '600' }}
             />
           </div>
           
@@ -724,7 +724,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
                         padding: '2px 8px',
                         backgroundColor: 'var(--border-subtle)',
                         borderRadius: 'var(--radius-sm)',
-                        fontSize: '12px'
+                        fontSize: 'var(--fs-body)'
                       })}>
                         {cloud.type} {format(cloud.altitude, 'altitude', 0)}
                       </span>

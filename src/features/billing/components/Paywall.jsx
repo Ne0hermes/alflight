@@ -141,7 +141,8 @@ export const Paywall = ({ feature = null, onClose }) => {
                       freeValue ? (
                         <Check size={16} style={{ color: 'var(--text-primary)' }} />
                       ) : (
-                        <X size={16} style={{ color: '#C04534' }} />
+                        <X size={16} style={{ color: 'var(--color-red-critical)' }} />
+                      )
                     ) : (
                       <span>{freeValue}</span>
                     )}
@@ -153,9 +154,11 @@ export const Paywall = ({ feature = null, onClose }) => {
                         proValue ? (
                           <Check size={16} style={{ color: 'var(--text-primary)' }} />
                         ) : (
-                          <X size={16} style={{ color: '#C04534' }} />
+                          <X size={16} style={{ color: 'var(--color-red-critical)' }} />
+                        )
                       ) : (
                         <span style={{ fontWeight: '600' }}>{proValue}</span>
+                      )
                     })()}
                   </td>
                 </tr>
@@ -179,6 +182,8 @@ export const Paywall = ({ feature = null, onClose }) => {
         </div>
       </div>
     </div>
+  );
+};
 
 const styles = {
   overlay: {
@@ -223,13 +228,13 @@ const styles = {
     padding: '40px 20px 20px',
   },
   title: {
-    fontSize: '28px',
+    fontSize: 'var(--fs-heading)',
     fontWeight: '700',
     margin: '16px 0 8px',
   },
   featureBlocked: {
     color: 'var(--text-secondary)',
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     margin: '8px 0',
   },
   plans: {
@@ -263,7 +268,7 @@ const styles = {
     color: 'var(--app-bg)',
     padding: '4px 12px',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     display: 'flex',
     alignItems: 'center',
@@ -277,7 +282,7 @@ const styles = {
     marginTop: '4px',
   },
   planName: {
-    fontSize: '18px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     margin: '0 0 8px',
   },
@@ -287,12 +292,12 @@ const styles = {
     gap: '4px',
   },
   priceAmount: {
-    fontSize: '24px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '700',
   },
   priceInterval: {
     color: 'var(--text-secondary)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
   },
   savings: {
     marginTop: '8px',
@@ -300,7 +305,7 @@ const styles = {
     backgroundColor: 'var(--text-primary)',
     color: 'var(--bg-overlay)',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     display: 'inline-block',
   },
@@ -308,7 +313,7 @@ const styles = {
     padding: '0 40px 32px',
   },
   featuresTitle: {
-    fontSize: '18px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     marginBottom: '16px',
   },
@@ -324,7 +329,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
   },
   comparison: {
     padding: '0 40px 32px',
@@ -337,7 +342,7 @@ const styles = {
     textAlign: 'left',
     padding: '12px',
     borderBottom: '2px solid var(--border-subtle)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
   },
   comparisonHeaderPro: {
@@ -346,7 +351,7 @@ const styles = {
   comparisonCell: {
     padding: '12px',
     borderBottom: '1px solid var(--bg-overlay)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
   },
   cta: {
     padding: '32px 40px',
@@ -360,14 +365,14 @@ const styles = {
     border: 'none',
     borderRadius: 'var(--radius-sm)',
     padding: '14px 32px',
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'background-color 0.2s',
   },
   ctaNote: {
     marginTop: '12px',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
   },
 };

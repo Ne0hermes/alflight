@@ -1,8 +1,7 @@
 import React, { memo, useState, useEffect } from 'react';
-import { Navigation2, MapPin, Plus, Trash2, Info, CheckCircle, Download, FileText, AlertTriangle } from 'lucide-react';
+import { Navigation2, Plus, Trash2, Info, CheckCircle, Download, FileText, AlertTriangle } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
-import { aeroDataProvider } from '@core/data';
-import { useVACStore, vacSelectors } from '@core/stores/vacStore';
+import { vacSelectors } from '@core/stores/vacStore';
 import { coordinateConversions } from '@utils/unitConversions';
 
 // PAS DE POINTS PRÉDÉFINIS - Les points VFR doivent venir exclusivement des fichiers SIA/AIXM locaux
@@ -231,7 +230,7 @@ export const ReportingPointsSelector = memo(({
                         {
                           backgroundColor: point.mandatory ? 'rgba(242, 105, 33, 0.10)' : 'var(--border-subtle)',
                           color: point.mandatory ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                          fontSize: '12px'
+                          fontSize: 'var(--fs-body)'
                         }
                       )}>
                         {point.code}
@@ -250,7 +249,7 @@ export const ReportingPointsSelector = memo(({
                         </p>
                         <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
                           📍 {point.coordinates.lat.toFixed(4)}°, {point.coordinates.lon.toFixed(4)}°<br />
-                          <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>
+                          <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)' }}>
                             {coordinateConversions.coordinatesToDMS(point.coordinates.lat, point.coordinates.lon).formatted}
                           </span>
                         </p>
@@ -288,7 +287,7 @@ export const ReportingPointsSelector = memo(({
                   <p style={sx.text.bold}>{point.name}</p>
                   <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
                     📍 {point.coordinates.lat.toFixed(4)}°, {point.coordinates.lon.toFixed(4)}°<br />
-                    <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>
+                    <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)' }}>
                       {coordinateConversions.coordinatesToDMS(point.coordinates.lat, point.coordinates.lon).formatted}
                     </span>
                   </p>

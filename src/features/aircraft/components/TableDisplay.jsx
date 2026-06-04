@@ -1,8 +1,7 @@
 // src/features/aircraft/components/TableDisplay.jsx
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { 
-  Edit3, Save, X, Plus, Minus, Copy, RotateCcw, AlertTriangle,
-  Info, ChevronRight, ChevronDown, FileText, Table as TableIcon
+  Edit3, Save, X, Plus, Minus, Copy, AlertTriangle, ChevronRight, ChevronDown, FileText, Table as TableIcon
 } from 'lucide-react';
 import { sx } from '../../../shared/styles/styleSystem';
 
@@ -262,7 +261,7 @@ const TableDisplay = ({
           backgroundColor: 'var(--bg-overlay)',
           padding: '16px',
           borderRadius: 'var(--radius-sm)',
-          fontSize: '12px',
+          fontSize: 'var(--fs-body)',
           overflow: 'auto',
           maxHeight: '400px',
           border: '1px solid var(--border-subtle)'
@@ -289,7 +288,7 @@ const TableDisplay = ({
                   border: '1px solid var(--text-tertiary)',
                   borderRadius: 'var(--radius-sm)',
                   padding: '2px 6px',
-                  fontSize: '14px',
+                  fontSize: 'var(--fs-body)',
                   fontWeight: 'bold'
                 }}
                 placeholder="Nom du tableau"
@@ -313,7 +312,7 @@ const TableDisplay = ({
                     border: '1px solid var(--text-tertiary)',
                     borderRadius: 'var(--radius-sm)',
                     padding: '2px 6px',
-                    fontSize: '12px',
+                    fontSize: 'var(--fs-body)',
                     minWidth: '200px'
                   }}
                   placeholder="Conditions d'application"
@@ -490,7 +489,7 @@ const TableDisplay = ({
           <table style={{
             width: '100%',
             borderCollapse: 'collapse',
-            fontSize: '12px',
+            fontSize: 'var(--fs-body)',
             fontFamily: 'var(--font-sans)',
             color: 'var(--text-primary)'
           }}>
@@ -515,7 +514,7 @@ const TableDisplay = ({
                             border: '1px solid var(--text-tertiary)',
                             borderRadius: 'var(--radius-sm)',
                             padding: '2px 4px',
-                            fontSize: '11px',
+                            fontSize: 'var(--fs-caption)',
                             fontWeight: 'bold'
                           }}
                         />
@@ -536,7 +535,7 @@ const TableDisplay = ({
                               border: '1px solid var(--text-tertiary)',
                               borderRadius: 'var(--radius-sm)',
                               padding: '1px 3px',
-                              fontSize: '10px',
+                              fontSize: 'var(--fs-caption)',
                               width: '50px'
                             }}
                             placeholder="unité"
@@ -544,7 +543,7 @@ const TableDisplay = ({
                         ) : (
                           editedTable.units?.[column] && (
                             <span style={{
-                              fontSize: '10px',
+                              fontSize: 'var(--fs-caption)',
                               color: 'var(--text-secondary)',
                               backgroundColor: 'var(--bg-overlay)',
                               padding: '1px 4px',
@@ -565,7 +564,7 @@ const TableDisplay = ({
                               removeColumn(column);
                             }}
                             style={{
-                              background: '#C04534',
+                              background: 'var(--color-red-critical)',
                               color: 'var(--text-primary)',
                               border: 'none',
                               borderRadius: 'var(--radius-sm)',
@@ -575,7 +574,7 @@ const TableDisplay = ({
                               alignItems: 'center',
                               justifyContent: 'center',
                               cursor: 'pointer',
-                              fontSize: '10px'
+                              fontSize: 'var(--fs-caption)'
                             }}
                           >
                             <X size={10} />
@@ -606,7 +605,7 @@ const TableDisplay = ({
                         }}
                         disabled={editedTable.data.length <= 1}
                         style={{
-                          background: editedTable.data.length <= 1 ? 'var(--text-tertiary)' : '#C04534',
+                          background: editedTable.data.length <= 1 ? 'var(--text-tertiary)' : 'var(--color-red-critical)',
                           color: 'var(--text-primary)',
                           border: 'none',
                           borderRadius: 'var(--radius-sm)',
@@ -616,7 +615,7 @@ const TableDisplay = ({
                           alignItems: 'center',
                           justifyContent: 'center',
                           cursor: editedTable.data.length <= 1 ? 'not-allowed' : 'pointer',
-                          fontSize: '10px'
+                          fontSize: 'var(--fs-caption)'
                         }}
                       >
                         <Minus size={10} />
@@ -639,7 +638,7 @@ const TableDisplay = ({
                             border: '1px solid var(--text-tertiary)',
                             borderRadius: 'var(--radius-sm)',
                             padding: '2px 4px',
-                            fontSize: '11px',
+                            fontSize: 'var(--fs-caption)',
                             width: '100%'
                           }}
                         />
@@ -671,7 +670,7 @@ const TableDisplay = ({
         <div style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(3))}>
           {editedTable.data.length} ligne(s) × {columns.length} colonne(s)
           {editedTable.validation?.isValid === false && (
-            <span style={{ color: '#C04534', marginLeft: '8px' }}>
+            <span style={{ color: 'var(--color-red-critical)', marginLeft: '8px' }}>
               ⚠️ Erreurs de validation détectées
             </span>
           )}

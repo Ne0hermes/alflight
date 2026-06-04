@@ -1,0 +1,36 @@
+name: charte-tokens
+
+# Garde-fou charte (design tokens) en CI — AUDIT NON BLOQUANT (gouvernance G.3 :
+# « suivre la courbe de dette »). Lint des fichiers source modifiés par la PR
+# (.js/.jsx via ESLint + .ts/.tsx via scan regex) ; rapport informatif, NE FAIT
+# PAS échouer la PR (continue-on-error). Le whole-file lint affiche aussi le legacy
+# des fichiers touchés — c'est attendu. Le vrai garde-fou par commit = pre-commit
+# Husky (staged). Passer en bloquant (retirer continue-on-error) quand dette = 0 (G.4).
+on:
+  pull_request:
+
+jobs:
+  lint-tokens:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      # Le runner lint:tokens n'a besoin que d'ESLint (eslint.tokens.cjs n'utilise
+      # aucun plugin ; le scan .ts/.tsx est dep-free). Install léger pour la vitesse.
+      - run: npm install --no-save --no-audit --no-fund eslint@^8.57.0
+      - name: lint:tokens (audit non bloquant — fichiers modifiés par la PR)
+        continue-on-error: true
+        run: |
+          BASE="origin/${{ github.base_ref }}"
+          FILES=$(git diff --name-only "$BASE"...HEAD -- 'src/**/*.js' 'src/**/*.jsx' 'src/**/*.ts' 'src/**/*.tsx')
+          if [ -z "$FILES" ]; then
+            echo "Aucun fichier source modifié à vérifier."
+            exit 0
+          fi
+          echo "Fichiers vérifiés :"
+          echo "$FILES"
+          node scripts/lint-tokens.mjs $FILES

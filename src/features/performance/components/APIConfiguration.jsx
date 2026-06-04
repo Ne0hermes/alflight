@@ -1,6 +1,6 @@
 // src/features/performance/components/APIConfiguration.jsx
 import React, { useState, useEffect } from 'react';
-import { Key, Save, Eye, EyeOff, AlertTriangle, CheckCircle, Info } from 'lucide-react';
+import { Save, Eye, EyeOff, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import { sx } from '../../../shared/styles/styleSystem';
 import apiKeyManager from '../../../utils/apiKeyManager';
 

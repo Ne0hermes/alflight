@@ -1,6 +1,6 @@
 // src/features/alternates/components/AlternateSelector.jsx
 import React, { memo, useState } from 'react';
-import { Plus, X, CheckCircle, AlertTriangle, Plane } from 'lucide-react';
+import { Plus, X, CheckCircle } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useAlternatesStore } from '@core/stores/alternatesStore';
 
@@ -112,7 +112,7 @@ const SelectedAlternateItem = memo(({ alternate, index, onRemove }) => (
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: '12px',
+        fontSize: 'var(--fs-body)',
         fontWeight: 'bold',
         marginRight: '12px'
       }}>
@@ -190,7 +190,7 @@ const CandidateItem = memo(({ candidate, isSelected, onAdd, disabled }) => (
 
 // Composant pour afficher le score
 const ScoreBadge = memo(({ score }) => {
-  const color = score >= 0.8 ? 'var(--text-primary)' : score >= 0.6 ? 'var(--accent-primary)' : '#C04534';
+  const color = score >= 0.8 ? 'var(--text-primary)' : score >= 0.6 ? 'var(--accent-primary)' : 'var(--color-red-critical)';
   
   return (
     <span style={{
@@ -198,7 +198,7 @@ const ScoreBadge = memo(({ score }) => {
       backgroundColor: color + '20',
       color: color,
       borderRadius: 'var(--radius-sm)',
-      fontSize: '11px',
+      fontSize: 'var(--fs-caption)',
       fontWeight: 'bold'
     }}>
       {(score * 100).toFixed(0)}%

@@ -258,7 +258,6 @@ const PilotCertifications = () => {
         if (confirmClean) {
           // Forcer un nettoyage complet
           const result = manualCleanStorage();
-          updateStorageInfo();
 
           // Revérifier après nettoyage
           const newSize = parseFloat(getLocalStorageSize());
@@ -342,7 +341,7 @@ const PilotCertifications = () => {
 
           // Proposer le nettoyage
           if (confirm('Voulez-vous nettoyer le stockage maintenant ?')) {
-            handleCleanStorage();
+            manualCleanStorage();
           }
           return;
         } else if (resultSizeMB > 1) {
@@ -453,7 +452,7 @@ const PilotCertifications = () => {
     padding: '8px 12px',
     border: '1px solid var(--text-tertiary)',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     width: '100%',
     minWidth: 0,
     maxWidth: '100%',
@@ -472,7 +471,7 @@ const PilotCertifications = () => {
   };
 
   const labelStyle = {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     fontWeight: '500',
     marginBottom: '4px',
@@ -489,7 +488,7 @@ const PilotCertifications = () => {
     const expiry = new Date(expiryDate);
     const daysUntilExpiry = Math.floor((expiry - today) / (1000 * 60 * 60 * 24));
     
-    if (daysUntilExpiry < 0) return '#C04534';
+    if (daysUntilExpiry < 0) return 'var(--color-red-critical)';
     if (daysUntilExpiry <= 30) return 'var(--accent-primary)';
     if (daysUntilExpiry <= 90) return 'var(--accent-primary)';
     return 'var(--text-secondary)';
@@ -505,7 +504,7 @@ const PilotCertifications = () => {
     }}>
       <div style={{ flex: 1 }}>
         <p style={{ 
-          fontSize: '14px', 
+          fontSize: 'var(--fs-body)', 
           fontWeight: '600',
           color: 'var(--text-primary)',
           marginBottom: '4px'
@@ -516,7 +515,7 @@ const PilotCertifications = () => {
           display: 'flex', 
           flexWrap: 'wrap',
           gap: '16px', 
-          fontSize: '12px', 
+          fontSize: 'var(--fs-body)', 
           color: 'var(--text-secondary)',
           marginBottom: item.remarks ? '4px' : '0'
         }}>
@@ -533,7 +532,7 @@ const PilotCertifications = () => {
         </div>
         {item.remarks && (
           <p style={{ 
-            fontSize: '12px', 
+            fontSize: 'var(--fs-body)', 
             color: 'var(--text-tertiary)', 
             fontStyle: 'italic'
           }}>
@@ -580,7 +579,7 @@ const PilotCertifications = () => {
           style={{ 
             padding: '6px', 
             backgroundColor: 'transparent',
-            color: '#C04534', 
+            color: 'var(--color-red-critical)', 
             border: 'none', 
             borderRadius: 'var(--radius-sm)', 
             cursor: 'pointer',
@@ -613,7 +612,7 @@ const PilotCertifications = () => {
           maxWidth: '100%',
           boxSizing: 'border-box'
         }}>
-          <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '16px' }}>
+          <h4 style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', marginBottom: '16px' }}>
             {editingItem ? 'Modifier la certification' : 'Nouvelle certification'}
           </h4>
 
@@ -698,7 +697,7 @@ const PilotCertifications = () => {
                 color: 'var(--text-secondary)', 
                 border: 'none', 
                 borderRadius: 'var(--radius-sm)', 
-                fontSize: '14px', 
+                fontSize: 'var(--fs-body)', 
                 fontWeight: '500', 
                 cursor: 'pointer', 
                 display: 'flex', 
@@ -715,7 +714,7 @@ const PilotCertifications = () => {
                 />
               </label>
               {formData.documentName && (
-                <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                <span style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                   <FileText size={14} style={{ display: 'inline', marginRight: '4px' }} />
                   {formData.documentName}
                 </span>
@@ -733,7 +732,7 @@ const PilotCertifications = () => {
                 color: 'var(--text-primary)', 
                 border: 'none', 
                 borderRadius: 'var(--radius-sm)', 
-                fontSize: '14px', 
+                fontSize: 'var(--fs-body)', 
                 fontWeight: '500', 
                 cursor: 'pointer' 
               }}
@@ -749,7 +748,7 @@ const PilotCertifications = () => {
                 color: 'var(--text-secondary)', 
                 border: 'none', 
                 borderRadius: 'var(--radius-sm)', 
-                fontSize: '14px', 
+                fontSize: 'var(--fs-body)', 
                 fontWeight: '500', 
                 cursor: 'pointer' 
               }}
@@ -768,11 +767,11 @@ const PilotCertifications = () => {
             onClick={() => setShowForm(!showForm)}
             style={{ 
               padding: '8px 24px', 
-              backgroundColor: showForm ? '#C04534' : 'var(--text-secondary)', 
+              backgroundColor: showForm ? 'var(--color-red-critical)' : 'var(--text-secondary)', 
               color: 'var(--text-primary)', 
               border: 'none', 
               borderRadius: 'var(--radius-sm)', 
-              fontSize: '14px', 
+              fontSize: 'var(--fs-body)', 
               fontWeight: '500', 
               cursor: 'pointer'
             }}
@@ -799,7 +798,7 @@ const PilotCertifications = () => {
                   marginBottom: '8px'
                 }}>
                   <h4 style={{ 
-                    fontSize: '16px', 
+                    fontSize: 'var(--fs-title)', 
                     fontWeight: '600',
                     color: 'var(--text-primary)'
                   }}>
@@ -828,10 +827,10 @@ const PilotCertifications = () => {
             color: 'var(--text-tertiary)'
           }}>
             <AlertCircle size={48} style={{ color: 'var(--border-subtle)', marginBottom: '16px' }} />
-            <p style={{ fontSize: '16px', fontWeight: '500', marginBottom: '8px' }}>
+            <p style={{ fontSize: 'var(--fs-title)', fontWeight: '500', marginBottom: '8px' }}>
               Aucune certification enregistrée
             </p>
-            <p style={{ fontSize: '14px' }}>
+            <p style={{ fontSize: 'var(--fs-body)' }}>
               Cliquez sur "Ajouter" pour enregistrer vos licences et qualifications
             </p>
           </div>

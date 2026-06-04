@@ -15,10 +15,17 @@
     "build": "vite build",
     "compress-photos": "node scripts/compress-hero-photos.mjs",
     "preview": "vite preview",
-    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
+    "lint:tokens": "node scripts/lint-tokens.mjs",
+    "lint:tokens:staged": "node scripts/lint-tokens.mjs --staged",
+    "lint:tokens:all": "node scripts/lint-tokens.mjs --all",
+    "prepare": "husky || true",
     "proxy": "node start-openaip-proxy.js",
     "dev:full": "concurrently \"npm run proxy\" \"npm run dev:old\"",
-    "sia:etl": "node scripts/sia_etl.js",
+    "sia:etl": "tsx scripts/sia_etl.ts",
+    "sia:validate": "node scripts/validate-geojson.mjs",
+    "sia:sync": "node scripts/sync-geojson.mjs",
+    "sia:build": "npm run sia:etl && npm run sia:validate && npm run sia:sync",
     "build:mobile": "vite build && npx cap sync",
     "android": "npx cap add android && npx cap open android",
     "ios": "npx cap add ios && npx cap open ios",
@@ -87,8 +94,6 @@
     "zustand": "^4.5.7"
   },
   "devDependencies": {
-    "2": "^3.0.0",
-    "@rollup/rollup-linux-x64-gnu": "^4.30.1",
     "@types/react": "^18.3.24",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^4.2.1",
@@ -99,10 +104,16 @@
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "eslint-plugin-unused-imports": "^3.2.0",
+    "husky": "^9.1.7",
     "jsdom": "^26.1.0",
     "sharp": "^0.34.5",
+    "tsx": "^4.22.4",
     "typescript": "^5.9.2",
     "vite": "^7.0.6",
     "vite-plugin-pwa": "^1.0.2"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.30.1"
   }
 }

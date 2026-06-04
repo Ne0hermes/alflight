@@ -14,7 +14,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { generatePerformanceState, ResultStatus } from '../../../services/operationResolver';
-import { OPERATION_CATALOG, getOperation } from '../../../abac/curves/core/operationCatalog';
+import { OPERATION_CATALOG } from '../../../abac/curves/core/operationCatalog';
 import { applySafetyFactor, isDistanceOperation, DEFAULT_SAFETY_FACTOR } from '../../../utils/performanceSafetyFactor';
 
 const PHASE_ICONS = {
@@ -39,12 +39,12 @@ const STATUS_VISUAL = {
     badge: '⚠ Input manquant', badgeBg: 'var(--accent-primary)'
   },
   AMBIGUOUS: {
-    bg: 'var(--bg-overlay)', border: '#C04534', text: '#C04534',
-    badge: '⚠ Ambigu', badgeBg: '#C04534'
+    bg: 'var(--bg-overlay)', border: 'var(--color-red-critical)', text: 'var(--color-red-critical)',
+    badge: '⚠ Ambigu', badgeBg: 'var(--color-red-critical)'
   },
   ERROR: {
-    bg: 'var(--border-subtle)', border: '#C04534', text: '#C04534',
-    badge: '✕ Erreur', badgeBg: '#C04534'
+    bg: 'var(--border-subtle)', border: 'var(--color-red-critical)', text: 'var(--color-red-critical)',
+    badge: '✕ Erreur', badgeBg: 'var(--color-red-critical)'
   }
 };
 
@@ -86,7 +86,7 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
     return { total: filteredOps.length, computed, notImplemented, missingInput, ambiguous, error };
   }, [state, filteredOps]);
   const coverageRatio = coverage.total > 0 ? (coverage.computed / coverage.total) : 0;
-  const coverageColor = coverageRatio >= 0.8 ? 'var(--text-primary)' : coverageRatio >= 0.5 ? 'var(--accent-primary)' : '#C04534';
+  const coverageColor = coverageRatio >= 0.8 ? 'var(--text-primary)' : coverageRatio >= 0.5 ? 'var(--accent-primary)' : 'var(--color-red-critical)';
 
   return (
     <div style={{
@@ -136,8 +136,8 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
           <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: 11, flexWrap: 'wrap' }}>
             {coverage.notImplemented > 0 && <span style={{ color: 'var(--accent-primary)' }}>⚠ {coverage.notImplemented} non implémenté{coverage.notImplemented > 1 ? 's' : ''}</span>}
             {coverage.missingInput > 0 && <span style={{ color: 'var(--accent-primary)' }}>⚠ {coverage.missingInput} input manquant</span>}
-            {coverage.ambiguous > 0 && <span style={{ color: '#C04534' }}>⚠ {coverage.ambiguous} ambigu{coverage.ambiguous > 1 ? 's' : ''}</span>}
-            {coverage.error > 0 && <span style={{ color: '#C04534' }}>✕ {coverage.error} erreur{coverage.error > 1 ? 's' : ''}</span>}
+            {coverage.ambiguous > 0 && <span style={{ color: 'var(--color-red-critical)' }}>⚠ {coverage.ambiguous} ambigu{coverage.ambiguous > 1 ? 's' : ''}</span>}
+            {coverage.error > 0 && <span style={{ color: 'var(--color-red-critical)' }}>✕ {coverage.error} erreur{coverage.error > 1 ? 's' : ''}</span>}
           </div>
         )}
       </div>
@@ -299,7 +299,7 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
                             step.used === 'bracket'      ? 'var(--text-primary)' :
                             step.used === 'slope-follow' ? 'var(--accent-primary)' :
                             step.used === 'trilinear'    ? '#0891b2' :
-                            step.used === 'idw'          ? 'var(--accent-primary)' : '#C04534';
+                            step.used === 'idw'          ? 'var(--accent-primary)' : 'var(--color-red-critical)';
                           const usedLabel =
                             step.used === 'bracket'      ? 'BRACKET' :
                             step.used === 'slope-follow' ? 'SLOPE-FOLLOW' :
@@ -353,18 +353,18 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
                             </div>
                             {/* En mode strict (déclaré) et échec : afficher l'erreur de l'étape */}
                             {step.modeDeclared && step.used === null && step.error && (
-                              <div style={{ fontSize: 10, color: '#C04534', backgroundColor: 'var(--bg-overlay)', padding: '4px 6px', marginTop: 4, borderRadius: 3, fontWeight: 600 }}>
+                              <div style={{ fontSize: 10, color: 'var(--color-red-critical)', backgroundColor: 'var(--bg-overlay)', padding: '4px 6px', marginTop: 4, borderRadius: 3, fontWeight: 600 }}>
                                 ❌ Échec mode déclaré « {step.mode} » : {step.error}
                               </div>
                             )}
                             {/* En mode auto, on peut afficher les méthodes tentées mais échouées (legacy debug) */}
                             {!step.modeDeclared && step.slopeResult?.error && step.used !== 'slope-follow' && (
-                              <div style={{ fontSize: 10, color: '#C04534', marginTop: 2 }}>
+                              <div style={{ fontSize: 10, color: 'var(--color-red-critical)', marginTop: 2 }}>
                                 ❌ Slope-follow tenté en auto : {step.slopeResult.error}
                               </div>
                             )}
                             {!step.modeDeclared && step.bracketResult?.error && step.used !== 'bracket' && (
-                              <div style={{ fontSize: 10, color: '#C04534', marginTop: 2 }}>
+                              <div style={{ fontSize: 10, color: 'var(--color-red-critical)', marginTop: 2 }}>
                                 ❌ Bracket tenté en auto : {step.bracketResult.error}
                               </div>
                             )}

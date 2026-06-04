@@ -25,7 +25,7 @@ import {
   Globe as GlobeIcon,
   ChevronDown as ExpandMoreIcon,
 } from 'lucide-react';
-import { useUnitsStore, unitsSelectors } from '@core/stores/unitsStore';
+import { unitsSelectors } from '@core/stores/unitsStore';
 // Dropdown ALFlight partagé (factorisé pour réutilisation dans wizard avion, etc.)
 import { CustomSelect } from '@shared/components/editorial';
 
@@ -253,7 +253,7 @@ const styles = {
     padding: '14px 16px',
     cursor: 'pointer',
     fontFamily: 'var(--font-mono)',
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: 600,
     letterSpacing: '0.12em',
     textTransform: 'uppercase',
@@ -292,7 +292,7 @@ const styles = {
     alignItems: 'center',
     gap: '6px',
     fontFamily: 'var(--font-mono)',
-    fontSize: '10px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: 500,
     letterSpacing: '0.10em',
     textTransform: 'uppercase',

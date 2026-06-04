@@ -6,7 +6,6 @@
  */
 
 import { useState, useEffect } from 'react';
-import { openAIPAirspacesService } from '../../../services/openAIPAirspacesService.js';
 import { hybridAirspacesService } from '../../../services/hybridAirspacesService.js';
 
 /**
@@ -140,8 +139,8 @@ export function useAirspaceAnalysis(waypoints, segmentAltitudes = {}, plannedAlt
         // Calculer la bbox englobant toute la route
         const bbox = calculateRouteBbox(waypoints);
 
-        // Charger les espaces aériens depuis OpenAIP
-        const data = await openAIPAirspacesService.getFrenchAirspaces(bbox);
+        // Charger les espaces aériens (service hybride unique : OpenAIP + corrections AIXM)
+        const data = await hybridAirspacesService.getFrenchAirspaces(bbox);
 
         if (isMounted) {
           console.log(`🗺️ ${data.length} espaces aériens OpenAIP chargés`);

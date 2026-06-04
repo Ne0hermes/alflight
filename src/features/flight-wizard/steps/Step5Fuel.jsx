@@ -1,6 +1,5 @@
 import React, { memo, useEffect } from 'react';
 import FuelModule from '@features/fuel/FuelModule';
-import { Fuel } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import { useFuel } from '@core/contexts';
 import { convertValue } from '@utils/unitConversions';
@@ -14,7 +13,7 @@ const commonStyles = {
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
   },
   label: {
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     color: theme.colors.textPrimary,
     display: 'flex',

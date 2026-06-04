@@ -114,9 +114,41 @@
   --accent-active: var(--color-orange-dim);
   --accent-soft: var(--color-orange-soft);
 
+  /* ============================================================
+     🚦 STATUT — palette sémantique centralisée (mode nuit)
+     ============================================================
+     Source UNIQUE pour succès / avertissement / info / erreur.
+     Modifier ICI change toutes les alertes & états de statut de
+     l'app. Erreur = rouge NO-GO de la charte (--color-red-critical).
+     ----------------------------------------------------------- */
+  /* Charte : UN SEUL accent orange. Succès & avertissement = orange ;
+     info = ivoire neutre ; erreur = rouge NO-GO. Aligné sur muiTheme.js
+     (était vert #10b981 / jaune #fbbf24 / bleu #3b82f6 — familles interdites). */
+  --status-success: var(--accent-primary);
+  --status-warning: var(--accent-primary);
+  --status-info: var(--text-secondary);
+  --status-error: var(--color-red-critical);
+  --status-success-bg: var(--accent-soft);
+  --status-warning-bg: var(--accent-soft);
+  --status-info-bg: rgba(245, 242, 236, 0.08);
+  --status-error-bg: rgba(192, 69, 52, 0.14);
+
   /* Polices */
   --font-sans: 'Century Gothic', 'URW Gothic', 'Questrial', 'Jost', 'Avant Garde', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'SF Mono', Menlo, Consolas, monospace;
+
+  /* ============================================================
+     🔠 ÉCHELLE TYPOGRAPHIQUE RATIONALISÉE — 4 paliers UI (migration charte V7)
+     ============================================================
+     Consolide les 21 tailles inline historiques (8→32px) en 4 paliers.
+     Le tier éditorial (landing/splash : 40/48/56/96/120px) est conservé
+     en px tel quel (rare, identité cinématique). Modifier ICI pour
+     redimensionner toute la typo UI de l'app.
+     ----------------------------------------------------------- */
+  --fs-caption: 11px;  /* labels, eyebrows, data mono, légendes (absorbe 8-11) */
+  --fs-body: 14px;     /* corps de texte, inputs, défaut (absorbe 12-15) */
+  --fs-title: 20px;    /* titres de carte/section, sous-titres (absorbe 16-24) */
+  --fs-heading: 28px;  /* titres d'écran/page (absorbe 28-32) */
 
   /* ============================================================
      📐 RAYONS DE BORDURE — Canonical source of truth
@@ -217,6 +249,25 @@ body,
 html {
   /* Couvre la zone d'overscroll (rubber band) et le bandeau de zoom */
   background-color: var(--app-bg) !important;
+}
+
+/* ----------------------------------------------------------------------------
+   🚫 AUTOFILL — neutralise le fond BLEU imposé par le navigateur (Chrome/Safari)
+   sur les champs auto-remplis (email, mot de passe). Le seul moyen de surclasser
+   le style autofill du navigateur est le box-shadow inset (le background normal
+   est ignoré). Fond charte + texte ivoire + caret ivoire.
+   ---------------------------------------------------------------------------- */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--app-bg) inset !important;
+  box-shadow: 0 0 0 1000px var(--app-bg) inset !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+  caret-color: var(--text-primary);
+  transition: background-color 9999s ease-in-out 0s;
 }
 
 /* iOS Safari / Chrome — couvre la barre de status hors viewport */

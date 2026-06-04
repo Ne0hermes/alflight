@@ -12,6 +12,7 @@ export class GeoJSONProvider extends AeroDataProvider {
   constructor() {
     super();
     this.data = null;
+    this.dataInfo = null; // { airac, source } — métadonnées du cycle RÉELLEMENT chargé
     this.isLoading = false;
   }
 
@@ -37,6 +38,12 @@ export class GeoJSONProvider extends AeroDataProvider {
         geoJSONDataService.getDesignatedPoints(),
         geoJSONDataService.getObstacles()
       ]);
+
+      // Métadonnées du cycle AIRAC RÉELLEMENT chargé (lues dans la donnée, pas un constant config)
+      this.dataInfo = {
+        airac: aerodromes.find((f) => f?.properties?.airac)?.properties?.airac || null,
+        source: aerodromes.find((f) => f?.properties?.source)?.properties?.source || 'SIA',
+      };
 
       // Convertir au format attendu par l'application
       this.data = {
@@ -90,7 +97,7 @@ export class GeoJSONProvider extends AeroDataProvider {
       elevation: feature.properties.elevation_ft || feature.properties.elevation,
       type: feature.properties.type || 'AD',
       runways: [], // Sera rempli par enrichData
-      frequencies: []
+      frequencies: feature.properties.frequencies || [] // exposé depuis la source GeoJSON (ETL)
     }));
   }
 
@@ -297,6 +304,19 @@ export class GeoJSONProvider extends AeroDataProvider {
   }
 
   /**
+   * Nom usuel d'un aérodrome par code ICAO — depuis la source GeoJSON (SIA).
+   * Remplace le hardcodé airportNames.js (source unique). Async : les données
+   * étant préchargées au démarrage (cf. épic #11), le nom est dispo à l'usage.
+   * @param {string} icao
+   * @returns {Promise<string>} nom usuel, ou le code ICAO si introuvable
+   */
+  async getAirportName(icao) {
+    await this.ensureDataLoaded();
+    const airport = this.data.airports.find(a => a.icao === icao);
+    return airport?.name || icao;
+  }
+
+  /**
    * Récupère les espaces aériens
    */
   async getAirspaces(params = {}) {
@@ -444,6 +464,329 @@ export class GeoJSONProvider extends AeroDataProvider {
               Math.sin(dLon/2) * Math.sin(dLon/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     return R * c;
+  }
+
+  /**
+   * Métadonnées du cycle de données RÉELLEMENT chargé (AIRAC, source).
+   * Source unique pour la fraîcheur des données (au lieu d'un constant config baké en JS).
+   * @returns {Promise<{airac: string|null, source: string}>}
+   */
+  async getDataInfo() {
+    await this.ensureDataLoaded();
+    return this.dataInfo || { airac: null, source: 'SIA' };
+  }
+
+  /**
+   * Détail VAC complet d'un aérodrome, dans la forme attendue par les modules VAC
+   * (compatible avec l'ancienne sortie `aixmParser.loadAndParse()` par aérodrome).
+   *
+   * Source : GeoJSON dérivé VERSIONNÉ (`/data/geojson/`) au lieu du parse runtime du
+   * XML AIXM 42 Mo — ce dernier est gitignore (cf. .gitignore `public/data/*.xml`) donc
+   * ABSENT en production (Vercel) → l'ancien chemin renvoyait un 404 et cassait tout le
+   * module VAC en prod. Ce provider, lui, lit des fichiers committés → marche partout.
+   *
+   * Champs NON extraits par l'ETL actuel (surface piste, TORA/TODA/ASDA/LDA, ILS, VASIS,
+   * obstacles par AD, procédures) → laissés `null`/`[]` : le commandant de bord les
+   * complète manuellement (cf. disclaimer SIAReportEnhanced). Une future passe d'ETL
+   * pourra les renseigner sans changer ce contrat.
+   *
+   * NB : circuitAltitude / integrationAltitude / circuitRemarks NE viennent PAS d'ici
+   * (non dérivables de l'AIXM) → ils restent fournis par le vacStore côté consommateur.
+   *
+   * @param {string} icao — code OACI (ex: 'LFST')
+   * @returns {Promise<Object|null>} objet aérodrome enrichi, ou null si introuvable
+   */
+  async getVACDetail(icao) {
+    if (!icao || typeof icao !== 'string') return null;
+    await this.ensureDataLoaded();
+    const code = icao.toUpperCase();
+
+    // Features brutes (cache géré par geoJSONDataService, déjà chaud après loadData) :
+    // on lit les propriétés complètes — les convert*() du provider sont volontairement
+    // « lossy » (perdent iata / magnetic_variation / transition_altitude, aplatissent
+    // elevation) ; ici on a besoin de la fidélité maximale.
+    const adFeatures = await geoJSONDataService.getAerodromes();
+    const feature = adFeatures.find(
+      f => (f.properties?.icao || '').toUpperCase() === code
+    );
+    if (!feature) return null;
+
+    // ILS (indexés par id de piste) + services (mappés en flags) de cet AD.
+    const ilsByRunway = this.indexILSByRunway(
+      (await geoJSONDataService.getILS()).filter(
+        f => (f.properties?.aerodrome_icao || '').toUpperCase() === code
+      )
+    );
+    const serviceFlags = this.mapServicesToFlags(
+      (await geoJSONDataService.getAerodromeServices()).filter(
+        s => (s?.aerodrome_icao || '').toUpperCase() === code
+      )
+    );
+
+    // Pistes de cet AD, remises à la forme attendue par le module VAC.
+    const rwyFeatures = await geoJSONDataService.getRunways();
+    const runways = rwyFeatures
+      .filter(r => (r.properties?.aerodrome_icao || '').toUpperCase() === code)
+      .map(r => this.buildVACRunway(r.properties || {}, ilsByRunway));
+
+    // Points de report VFR proches (best-effort, ne doit jamais casser le détail).
+    let vfrPoints = [];
+    try {
+      vfrPoints = await this.getReportingPoints(code);
+    } catch (e) {
+      vfrPoints = [];
+    }
+
+    return this.buildVACAerodrome(feature, runways, vfrPoints, serviceFlags);
+  }
+
+  /**
+   * Liste VAC de TOUS les aérodromes (vrais AD avec ICAO), même forme que getVACDetail.
+   * Remplace le chargement complet `aixmParser.loadAndParse()` des écrans liste/recherche
+   * (SIAReportEnhanced). Les points VFR par AD (filtre géo 15 km) sont DIFFÉRÉS ici pour
+   * la perf (→ `[]`) ; ils restent disponibles par AD via getVACDetail(icao) (utilisé par
+   * le wizard Step3VAC). NB : la liste VAC affiche déjà un disclaimer « VFR à consulter
+   * séparément », donc l'absence de VFR en vue liste est cohérente avec l'UI.
+   * @returns {Promise<Object[]>}
+   */
+  async getVACList() {
+    await this.ensureDataLoaded();
+    const adFeatures = await geoJSONDataService.getAerodromes();
+    const rwyFeatures = await geoJSONDataService.getRunways();
+    // Index ILS (par id de piste) + services (par ICAO), construits une seule fois.
+    const ilsByRunway = this.indexILSByRunway(await geoJSONDataService.getILS());
+    const servicesByIcao = this.indexServicesByIcao(await geoJSONDataService.getAerodromeServices());
+
+    // Index des pistes par ICAO (une seule passe au lieu d'un filter par AD).
+    const rwyByIcao = new Map();
+    for (const r of rwyFeatures) {
+      const code = (r.properties?.aerodrome_icao || '').toUpperCase();
+      if (!code) continue;
+      if (!rwyByIcao.has(code)) rwyByIcao.set(code, []);
+      rwyByIcao.get(code).push(this.buildVACRunway(r.properties || {}, ilsByRunway));
+    }
+
+    return adFeatures
+      .filter(f => f.properties?.icao) // exclut les stubs sans OACI (LS fermés sans code)
+      .map(f => {
+        const code = f.properties.icao.toUpperCase();
+        return this.buildVACAerodrome(
+          f,
+          rwyByIcao.get(code) || [],
+          [],
+          this.mapServicesToFlags(servicesByIcao.get(code) || [])
+        );
+      });
+  }
+
+  /**
+   * Assemble un objet aérodrome VAC à la forme attendue par les consommateurs
+   * (compatible ancienne sortie aixmParser). Partagé par getVACDetail / getVACList.
+   * Points de forme IMPORTANTS (contrat consommateur) :
+   *  - elevation : OBJET { value, valueFt, unit } (Step3VAC lit valueFt ?? value)
+   *  - magneticVariation : OBJET { value, date } (signé : E>0, W<0)
+   *  - frequencies : OBJET groupé par type { TWR:[{frequency,callsign,schedule}], … }
+   *  - services : OBJET de booléens (clés fuel/avgas100LL/jetA1/…)
+   * @param {Object} feature — feature GeoJSON aérodrome (propriétés brutes)
+   * @param {Object[]} runways — pistes déjà construites (buildVACRunway)
+   * @param {Object[]} vfrPoints — points de report VFR (ou [])
+   * @returns {Object}
+   */
+  buildVACAerodrome(feature, runways = [], vfrPoints = [], services = null) {
+    const p = feature.properties || {};
+    const geom = feature.geometry?.coordinates || [];
+    const lon = geom[0] ?? p.longitude ?? null;
+    const lat = geom[1] ?? p.latitude ?? null;
+    const isClosed = /\(closed\)|ferm[ée]/i.test(p.name || '');
+
+    return {
+      icao: p.icao,
+      iata: p.iata || null,
+      name: p.name || '',
+      city: p.city || '',
+      type: p.type || 'AD',
+      coordinates: { lat, lon },
+      // OBJET (consommateurs : elevation.value et elevation.valueFt) — ne pas aplatir.
+      elevation: { value: p.elevation_ft ?? null, valueFt: p.elevation_ft ?? null, unit: 'FT' },
+      // OBJET { value, date } attendu par SIAReportEnhanced / Step3VAC.
+      magneticVariation: { value: p.magnetic_variation ?? null, date: null },
+      transitionAltitude: p.transition_altitude ?? null,
+      // OBJET groupé par type (consommateurs : Object.entries(frequencies)).
+      frequencies: this.groupFrequenciesByType(p.frequencies),
+      runways,
+      vfrPoints,
+      // Flags mappés depuis aerodrome_services.json (SIA) ; défauts sûrs si absent.
+      services: services || {
+        fuel: false, avgas100LL: false, jetA1: false, maintenance: false,
+        customs: false, handling: false, restaurant: false, hotel: false,
+        parking: false, hangar: false
+      },
+      obstacles: [],
+      procedures: { departure: [], arrival: [] },
+      remarks: isClosed ? 'AD CLOSED' : '',
+      specialInstructions: '',
+      source: 'GeoJSON (SIA dérivé)',
+      airac: this.dataInfo?.airac || null
+    };
+  }
+
+  /**
+   * Regroupe un tableau de fréquences GeoJSON [{type,frequency,callsign,schedule}] en
+   * OBJET indexé par type { TWR:[{frequency,callsign,schedule}], APP:[…] } — la forme
+   * attendue par les écrans VAC (qui font Object.entries(frequencies)).
+   * @param {Array} list
+   * @returns {Object}
+   */
+  groupFrequenciesByType(list) {
+    const grouped = {};
+    if (!Array.isArray(list)) return grouped;
+    for (const f of list) {
+      const type = (f?.type || 'AUTRE').toUpperCase();
+      if (!grouped[type]) grouped[type] = [];
+      grouped[type].push({
+        frequency: f?.frequency ?? '',
+        callsign: f?.callsign ?? '',
+        schedule: f?.schedule ?? ''
+      });
+    }
+    return grouped;
+  }
+
+  /**
+   * Indexe les features ILS par id de piste (runway_id) → [features].
+   * @param {Array} features
+   * @returns {Map<string, Array>}
+   */
+  indexILSByRunway(features = []) {
+    const map = new Map();
+    for (const f of features) {
+      const rid = f?.properties?.runway_id;
+      if (!rid) continue;
+      if (!map.has(rid)) map.set(rid, []);
+      map.get(rid).push(f);
+    }
+    return map;
+  }
+
+  /**
+   * Indexe les items de service par ICAO d'aérodrome → [items].
+   * @param {Array} items
+   * @returns {Map<string, Array>}
+   */
+  indexServicesByIcao(items = []) {
+    const map = new Map();
+    for (const it of items) {
+      const code = (it?.aerodrome_icao || '').toUpperCase();
+      if (!code) continue;
+      if (!map.has(code)) map.set(code, []);
+      map.get(code).push(it);
+    }
+    return map;
+  }
+
+  /**
+   * Mappe une feature ILS GeoJSON vers la forme attendue par les écrans VAC
+   * (runway.ils.category / .frequency).
+   * @param {Object} feature
+   * @returns {Object}
+   */
+  mapILS(feature) {
+    const p = feature?.properties || {};
+    return {
+      category: p.category || null,          // I / II / III
+      frequency: p.loc_frequency_mhz ?? null,
+      ident: p.loc_ident || null,
+      direction: p.runway_direction || null,
+      glidePathSlope: p.gp_slope_deg ?? null,
+      dme: p.dme_ident || null
+    };
+  }
+
+  /**
+   * Mappe les items de service SIA (codes FUEL/CUST/REPAIR/HAND/HANGAR…) vers les flags
+   * booléens attendus par les écrans VAC. Les codes sans flag consommateur correspondant
+   * (FIRE/SAN/SECUR/CLEAR/DEICE/OTHER) sont ignorés. Le grade carburant (AVGAS/JET) n'est
+   * PAS renseigné par le SIA (category vide) → avgas100LL/jetA1 restent false (pas de
+   * fausse donnée).
+   * @param {Array} items
+   * @returns {Object}
+   */
+  mapServicesToFlags(items = []) {
+    const flags = {
+      fuel: false, avgas100LL: false, jetA1: false, maintenance: false,
+      customs: false, handling: false, restaurant: false, hotel: false,
+      parking: false, hangar: false
+    };
+    for (const it of items) {
+      switch ((it?.type || '').toUpperCase()) {
+        case 'FUEL': flags.fuel = true; break;
+        case 'CUST': flags.customs = true; break;
+        case 'REPAIR': flags.maintenance = true; break;
+        case 'HAND': flags.handling = true; break;
+        case 'HANGAR': flags.hangar = true; break;
+        default: break;
+      }
+    }
+    return flags;
+  }
+
+  /**
+   * Construit une piste au format module VAC depuis les propriétés GeoJSON brutes.
+   * Calcule le QFU depuis la désignation (ex: "05/23" → 50), attache les ILS (si index
+   * fourni), la surface, le PCN et les distances déclarées (Rdd) par direction.
+   * @param {Object} props — propriétés de la feature runway
+   * @param {Map<string,Array>|null} ilsByRunway — index ILS par runway_id
+   * @returns {Object}
+   */
+  buildVACRunway(props = {}, ilsByRunway = null) {
+    const designation = props.designation || '';
+    let qfu = null;
+    let le_ident = null;
+    let he_ident = null;
+    if (designation.includes('/')) {
+      const [le, he] = designation.split('/');
+      le_ident = le.trim();
+      he_ident = he.trim();
+      const n = parseInt(le_ident.replace(/[LRC]/i, ''), 10);
+      if (!Number.isNaN(n)) qfu = (n * 10) % 360;
+    }
+    // ILS éventuels de cette piste (un par direction équipée), via l'index runway_id.
+    const ilsList = (ilsByRunway && props.id)
+      ? (ilsByRunway.get(props.id) || []).map(f => this.mapILS(f))
+      : [];
+    // Distances déclarées (Rdd) par direction ; on expose aussi la direction primaire
+    // (le_ident) à plat pour les écrans qui lisent runway.tora/toda/asda/lda.
+    const declaredDistances = props.declared_distances || null;
+    const primary = declaredDistances
+      ? (declaredDistances[le_ident] || Object.values(declaredDistances)[0] || null)
+      : null;
+    return {
+      designation,
+      identifier: designation,
+      le_ident,
+      he_ident,
+      length: props.length_m ?? props.length ?? null,
+      width: props.width_m ?? props.width ?? null,
+      dimensions: {
+        length: props.length_m ?? props.length ?? 0,
+        width: props.width_m ?? props.width ?? 0
+      },
+      surface: props.surface || null,
+      pcn: props.pcn || null,
+      qfu,
+      magneticBearing: qfu,
+      // ILS depuis ils.geojson (SIA) : le 1er alimente le badge, ilsList expose tous les seuils.
+      ils: ilsList[0] || null,
+      ilsList,
+      // Distances déclarées (m, Rdd AIXM) : plat = direction primaire ; objet = par direction.
+      tora: primary?.TORA ?? null,
+      toda: primary?.TODA ?? null,
+      asda: primary?.ASDA ?? null,
+      lda: primary?.LDA ?? null,
+      declaredDistances,
+      // Non extrait par l'ETL → complété manuellement côté VAC.
+      vasis: null
+    };
   }
 
   isAvailable() {

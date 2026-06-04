@@ -1,6 +1,6 @@
 // src/features/alternates/components/AlternateSelectorDual.jsx
-import React, { memo, useMemo, useState } from 'react';
-import { MapPin, Plane, Navigation, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { memo, useMemo } from 'react';
+import { MapPin, Navigation } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { calculateDistance } from '@utils/navigationCalculations';
 import { DataSourceBadge } from '@shared/components';
@@ -168,7 +168,7 @@ export const AlternateSelectorDual = memo(({
                       color: 'var(--text-primary)',
                       padding: '4px 12px',
                       borderBottomLeftRadius: '8px',
-                      fontSize: '11px',
+                      fontSize: 'var(--fs-caption)',
                       fontWeight: 'bold'
                     }}>
                       ✓ SÉLECTIONNÉ
@@ -188,7 +188,7 @@ export const AlternateSelectorDual = memo(({
                           borderRadius: '50%',
                           backgroundColor: isSelected ? sideColor : `${sideColor}20`,
                           color: isSelected ? 'white' : sideColor,
-                          fontSize: '11px',
+                          fontSize: 'var(--fs-caption)',
                           fontWeight: 'bold',
                           marginRight: '6px',
                           borderWidth: isSelected ? '0' : '1px',
@@ -236,7 +236,7 @@ export const AlternateSelectorDual = memo(({
                           color: getScoreColor(airport.score),
                           borderRadius: 'var(--radius-sm)',
                           fontWeight: 'bold',
-                          fontSize: '10px'
+                          fontSize: 'var(--fs-caption)'
                         }}>
                           {((airport.score || 0) * 100).toFixed(0)}%
                         </span>
@@ -262,7 +262,7 @@ export const AlternateSelectorDual = memo(({
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontSize: '16px',
+                          fontSize: 'var(--fs-title)',
                           fontWeight: 'bold'
                         }}
                       >
@@ -291,7 +291,7 @@ export const AlternateSelectorDual = memo(({
           onSelect={handleSelect}
           side="departure"
           referencePoint={searchZone.departure}
-          sideColor="#C04534"
+          sideColor="var(--color-red-critical)"
         />
 
         {/* Côté arrivée */}
@@ -314,7 +314,7 @@ const getScoreColor = (score) => {
   if (!score) return 'var(--text-secondary)';
   if (score >= 0.8) return 'var(--text-primary)';
   if (score >= 0.6) return 'var(--accent-primary)';
-  return '#C04534';
+  return 'var(--color-red-critical)';
 };
 
 AlternateSelectorDual.displayName = 'AlternateSelectorDual';

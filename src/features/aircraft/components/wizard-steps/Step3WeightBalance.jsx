@@ -2,19 +2,12 @@ import React, { useState, useEffect, useRef, useCallback, Fragment } from 'react
 import {
   Box,
   Typography,
-  TextField,
   Grid,
   Paper,
   Alert,
   Button,
   IconButton,
   InputAdornment,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Divider,
   Accordion,
   AccordionSummary,
@@ -25,7 +18,6 @@ import {
   InputLabel
 } from '@mui/material';
 import {
-  Scale as ScaleIcon,
   Add as AddIcon,
   Delete as DeleteIcon,
   Warning as WarningIcon,
@@ -42,9 +34,8 @@ import {
   TouchApp as TouchAppIcon,
   AutoGraph as AutoGraphIcon
 } from '@mui/icons-material';
-import { useUnitsStore, unitsSelectors } from '@core/stores/unitsStore';
+import { unitsSelectors } from '@core/stores/unitsStore';
 import { convertValue, getUnitSymbol } from '@utils/unitConversions';
-import CGEnvelopeChart from '../CgEnvelopeChart';
 import CGEnvelopeDualChart from '../CgEnvelopeDualChart';
 import CentrogramReader from '../CentrogramReader';
 import { getFuelDensity } from '../../utils/mbUnits';
@@ -766,7 +757,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
               p: 4,
               border: '2px solid',
               borderColor: 'divider',
-              borderRadius: 2,
+              borderRadius: '8px',
               cursor: 'pointer',
               transition: 'all 0.2s',
               '&:hover': {
@@ -808,7 +799,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
               p: 4,
               border: '2px solid',
               borderColor: 'divider',
-              borderRadius: 2,
+              borderRadius: '8px',
               cursor: 'pointer',
               transition: 'all 0.2s',
               '&:hover': {
@@ -910,7 +901,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
           }}
         >
           <FuelIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Capacité utilisable
           </Typography>
         </AccordionSummary>
@@ -1175,7 +1166,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                       <Divider sx={{ my: 0.5 }} />
                       <div>
                         <strong>Somme calculée :</strong>{' '}
-                        <strong style={{ color: isMatch ? 'var(--text-primary)' : '#C04534' }}>
+                        <strong style={{ color: isMatch ? 'var(--text-primary)' : 'var(--color-red-critical)' }}>
                           {toDisp(computed).toFixed(1)} {getUnitSymbol(units.fuel)}
                         </strong>
                       </div>
@@ -1184,7 +1175,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                         <strong>{toDisp(total).toFixed(1)} {getUnitSymbol(units.fuel)}</strong>
                       </div>
                       {!isMatch && (
-                        <div style={{ marginTop: 6, color: Math.abs(diff) < total * 0.05 ? 'var(--text-secondary)' : '#C04534' }}>
+                        <div style={{ marginTop: 6, color: Math.abs(diff) < total * 0.05 ? 'var(--text-secondary)' : 'var(--color-red-critical)' }}>
                           Écart : <strong>{diff > 0 ? '+' : ''}{diff.toFixed(1)} {getUnitSymbol(units.fuel)}</strong>
                           {' '}({((diff / total) * 100).toFixed(1)}%)
                         </div>
@@ -1227,7 +1218,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
           }}
         >
           <SeatIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Sièges (bras de levier)
           </Typography>
         </AccordionSummary>
@@ -1340,7 +1331,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
           }}
         >
           <LuggageIcon color="warning" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Compartiments bagages
           </Typography>
         </AccordionSummary>
@@ -1548,7 +1539,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
           }}
         >
           <WeightIcon color="error" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Masses limites
           </Typography>
         </AccordionSummary>
@@ -1749,7 +1740,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
           }}
         >
           <CenterIcon color="error" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600, color: 'error.main' }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'error.main' }}>
             Enveloppe de centrage — base {isMoment ? 'moment' : 'CG (bras de levier)'}
           </Typography>
         </AccordionSummary>
@@ -1757,7 +1748,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
           <Box sx={{ width: '100%' }}>
             {/* CG Avant (Most forward) - Liste de points */}
             <Box sx={{ mb: 4 }}>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', fontSize: '14px' }}>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', fontSize: 'var(--fs-body)' }}>
                 Most Forward CG (Limite avant)
               </Typography>
 
@@ -1790,7 +1781,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                       }}
                     >
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', fontSize: '13px' }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', fontSize: 'var(--fs-body)' }}>
                           Point Forward #{index + 1}
                         </Typography>
                         <IconButton
@@ -1887,7 +1878,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
 
             {/* CG Arrière (Most rearward) — 2 POINTS INDÉPENDANTS */}
             <Box>
-              <Typography variant="h6" sx={{ mb: 1, fontWeight: 'bold', fontSize: '14px' }}>
+              <Typography variant="h6" sx={{ mb: 1, fontWeight: 'bold', fontSize: 'var(--fs-body)' }}>
                 Most Rearward CG (Limite arrière)
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
@@ -2125,7 +2116,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
             <Box sx={{ flex: 1, minWidth: 200 }}>
               <Typography variant="subtitle2" fontWeight={700}>
-                Rapport de pesée (PDF) <span style={{ color: '#C04534' }}>*</span>
+                Rapport de pesée (PDF) <span style={{ color: 'var(--color-red-critical)' }}>*</span>
               </Typography>
               {data.weighingReport?.hasData ? (
                 <Typography variant="caption" color="text.secondary">

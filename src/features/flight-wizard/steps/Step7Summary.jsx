@@ -1,10 +1,9 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { FileText, CheckCircle, Fuel, Navigation, Table, Scale, Radio, MapPin, Plane } from 'lucide-react';
+import { FileText, Plane } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import RouteMapView from '../components/RouteMapView';
 import { useNavigation, useAircraft, useWeightBalance } from '@core/contexts';
 import AirspacesSummaryTable from '../../navigation/components/AirspacesSummaryTable';
-import VFRNavigationTable from '@features/navigation/components/VFRNavigationTable';
 import { useNavigationResults } from '@features/navigation/hooks/useNavigationResults';
 import { useUnits } from '@hooks/useUnits';
 import { useFuelStore } from '@core/stores/fuelStore';
@@ -15,7 +14,7 @@ import { WeightBalanceChart } from '@features/weight-balance/components/WeightBa
 import { ScenarioCards } from '@features/weight-balance/components/ScenarioCards';
 import { FUEL_DENSITIES } from '@utils/constants';
 import { useVACStore } from '@core/stores/vacStore';
-import { aixmParser } from '@services/aixmParser';
+import { aeroDataProvider } from '@core/data';
 // REMOVED: import { getCircuitAltitudes } from '@data/circuitAltitudesComplete'; - File deleted, data must come from official XML
 import { CollapsibleSection } from './components/CollapsibleSection';
 import { FlightRecapTable } from '../components/FlightRecapTable';
@@ -134,10 +133,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
           });
         }
 
-        // Charger les données AIXM pour ces aérodromes
-        const aixmData = await aixmParser.loadAndParse();
-        const filteredData = aixmData
-          .filter(ad => ad && ad.icao && aerodromeIcaos.includes(ad.icao));
+        // Charger les données VAC (provider GeoJSON) pour ces aérodromes uniquement.
+        const filteredData = (await Promise.all(
+          aerodromeIcaos.map(ic => aeroDataProvider.getVACDetail(ic))
+        )).filter(Boolean);
 
         // ENRICHIR les données AIXM avec les données du vacStore (circuitAltitude, integrationAltitude)
         const enrichedData = filteredData.map(ad => getEnrichedAerodrome(ad));
@@ -346,15 +345,15 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
           </label>
         </div>
 
-        <div style={{ ...styles.card, backgroundColor: 'rgba(147, 22, 60, 0.05)' }}>
-          <h4 style={{ fontSize: '16px', color: theme.colors.primary, marginBottom: '16px' }}>
+        <div style={{ ...styles.card, backgroundColor: 'var(--accent-soft)' }}>
+          <h4 style={{ fontSize: 'var(--fs-title)', color: theme.colors.primary, marginBottom: '16px' }}>
             Résumé de la préparation
           </h4>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {/* Date, Pilote, Aéronef, Vol */}
             <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
-              <div style={{ fontSize: '14px', fontWeight: '500' }}>
+              <div style={{ fontSize: 'var(--fs-body)', fontWeight: '500' }}>
                 <strong style={{ fontWeight: '600' }}>
                   {new Date(flightPlan.generalInfo.date).toLocaleDateString('fr-FR', {
                     day: 'numeric',
@@ -371,7 +370,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
             {/* Route détaillée avec tous les waypoints */}
             <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
-              <div style={{ fontSize: '14px' }}>
+              <div style={{ fontSize: 'var(--fs-body)' }}>
                 <span style={{ color: theme.colors.textSecondary }}>Trajet complet: </span>
                 {/* Afficher tous les waypoints */}
                 {waypoints.length > 0 ? (
@@ -380,7 +379,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                       {waypoints.map((wp, index) => (
                         <span key={index}>
                           <span style={{
-                            color: wp.type === 'departure' ? 'var(--text-primary)' : wp.type === 'arrival' ? '#C04534' : theme.colors.textPrimary,
+                            color: wp.type === 'departure' ? 'var(--text-primary)' : wp.type === 'arrival' ? 'var(--color-red-critical)' : theme.colors.textPrimary,
                             fontWeight: wp.type === 'departure' || wp.type === 'arrival' ? '600' : '500'
                           }}>
                             {wp.name || wp.icao}
@@ -394,7 +393,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                     {navigationResults?.totalDistance > 0 && (
                       <span style={{
                         marginLeft: '8px',
-                        fontSize: '13px',
+                        fontSize: 'var(--fs-body)',
                         color: 'var(--accent-primary)',
                         fontWeight: '600'
                       }}>
@@ -409,7 +408,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                 )}
                 {flightPlan.alternates.length > 0 && (
                   <span style={{
-                    fontSize: '13px',
+                    fontSize: 'var(--fs-body)',
                     color: theme.colors.textMuted,
                     marginLeft: '8px',
                     fontStyle: 'italic'
@@ -432,10 +431,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             {/* Équipements SAR */}
             <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                <span style={{ fontSize: 'var(--fs-body)', color: theme.colors.textSecondary }}>
                   Équipements SAR:
                 </span>
-                <div style={{ fontSize: '14px', textAlign: 'right', flex: '1 1 auto', minWidth: '200px' }}>
+                <div style={{ fontSize: 'var(--fs-body)', textAlign: 'right', flex: '1 1 auto', minWidth: '200px' }}>
                   {(() => {
                     // Lire les équipements SAR depuis aircraft.approvedOperations
                     const ops = flightPlan.aircraft.approvedOperations || {};
@@ -514,10 +513,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             {selectedAircraft?.cruiseSpeedKt && (
               <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                  <span style={{ fontSize: 'var(--fs-body)', color: theme.colors.textSecondary }}>
                     Vitesse de croisière:
                   </span>
-                  <strong style={{ fontSize: '15px' }}>
+                  <strong style={{ fontSize: 'var(--fs-body)' }}>
                     {format(selectedAircraft.cruiseSpeedKt, 'speed', 0)}
                   </strong>
                 </div>
@@ -528,10 +527,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             {selectedAircraft?.baseFactor && (
               <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                  <span style={{ fontSize: 'var(--fs-body)', color: theme.colors.textSecondary }}>
                     Facteur de base:
                   </span>
-                  <strong style={{ fontSize: '15px' }}>
+                  <strong style={{ fontSize: 'var(--fs-body)' }}>
                     {parseFloat(selectedAircraft.baseFactor).toFixed(3)}
                   </strong>
                 </div>
@@ -544,10 +543,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             {selectedAircraft?.fuelCapacity && (
               <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                  <span style={{ fontSize: 'var(--fs-body)', color: theme.colors.textSecondary }}>
                     Volume réservoir:
                   </span>
-                  <strong style={{ fontSize: '15px' }}>
+                  <strong style={{ fontSize: 'var(--fs-body)' }}>
                     {format(selectedAircraft.fuelCapacity, 'fuel', 1)}
                   </strong>
                 </div>
@@ -558,10 +557,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             {selectedAircraft?.fuelConsumption && (
               <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                  <span style={{ fontSize: 'var(--fs-body)', color: theme.colors.textSecondary }}>
                     Consommation moyenne:
                   </span>
-                  <strong style={{ fontSize: '15px' }}>
+                  <strong style={{ fontSize: 'var(--fs-body)' }}>
                     {format(selectedAircraft.fuelConsumption, 'fuelConsumption', 1)}
                   </strong>
                 </div>
@@ -578,10 +577,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
               return (
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                    <span style={{ fontSize: 'var(--fs-body)', color: theme.colors.textSecondary }}>
                       Type de carburant:
                     </span>
-                    <strong style={{ fontSize: '15px' }}>
+                    <strong style={{ fontSize: 'var(--fs-body)' }}>
                       {selectedAircraft.fuelType} ({fuelDensity} kg/L)
                     </strong>
                   </div>
@@ -650,15 +649,15 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                 {/* METAR Départ */}
                 {departureIcao && weatherData[departureIcao]?.metar?.raw && (
                   <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
-                    <div style={{ fontSize: '14px', marginBottom: '8px' }}>
-                      <strong style={{ color: 'var(--text-primary)', fontSize: '15px' }}>{departureIcao}</strong>
-                      <span style={{ marginLeft: '8px', color: theme.colors.textSecondary, fontSize: '13px' }}>
+                    <div style={{ fontSize: 'var(--fs-body)', marginBottom: '8px' }}>
+                      <strong style={{ color: 'var(--text-primary)', fontSize: 'var(--fs-body)' }}>{departureIcao}</strong>
+                      <span style={{ marginLeft: '8px', color: theme.colors.textSecondary, fontSize: 'var(--fs-body)' }}>
                         {departureIcao === arrivalIcao ? '(Départ/Arrivée)' : '(Départ)'}
                       </span>
                     </div>
                     <div style={{
                       fontFamily: 'monospace',
-                      fontSize: '13px',
+                      fontSize: 'var(--fs-body)',
                       backgroundColor: 'var(--bg-overlay)',
                       padding: '12px',
                       borderRadius: 'var(--radius-sm)',
@@ -674,15 +673,15 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                 {/* METAR Arrivée (si différent du départ) */}
                 {arrivalIcao && arrivalIcao !== departureIcao && weatherData[arrivalIcao]?.metar?.raw && (
                   <div>
-                    <div style={{ fontSize: '14px', marginBottom: '8px' }}>
-                      <strong style={{ color: '#C04534', fontSize: '15px' }}>{arrivalIcao}</strong>
-                      <span style={{ marginLeft: '8px', color: theme.colors.textSecondary, fontSize: '13px' }}>
+                    <div style={{ fontSize: 'var(--fs-body)', marginBottom: '8px' }}>
+                      <strong style={{ color: 'var(--color-red-critical)', fontSize: 'var(--fs-body)' }}>{arrivalIcao}</strong>
+                      <span style={{ marginLeft: '8px', color: theme.colors.textSecondary, fontSize: 'var(--fs-body)' }}>
                         (Arrivée)
                       </span>
                     </div>
                     <div style={{
                       fontFamily: 'monospace',
-                      fontSize: '13px',
+                      fontSize: 'var(--fs-body)',
                       backgroundColor: 'var(--bg-overlay)',
                       padding: '12px',
                       borderRadius: 'var(--radius-sm)',
@@ -710,7 +709,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             {flightPlan.performance.departure?.takeoff && (
               <div style={{ marginBottom: '20px' }}>
                 <div style={{
-                  fontSize: '13px',
+                  fontSize: 'var(--fs-body)',
                   fontWeight: '700',
                   color: 'var(--text-secondary)',
                   marginBottom: '12px',
@@ -729,7 +728,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                   border: `2px solid ${theme.colors.border}`
                 }}>
                   <div style={{
-                    fontSize: '14px',
+                    fontSize: 'var(--fs-body)',
                     fontWeight: '700',
                     color: 'var(--text-secondary)',
                     marginBottom: '12px',
@@ -738,7 +737,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                   }}>
                     ✈️ Décollage - Take-Off Distance
                   </div>
-                  <div style={{ fontSize: '11px', color: theme.colors.textSecondary, marginBottom: '8px', fontStyle: 'italic' }}>
+                  <div style={{ fontSize: 'var(--fs-caption)', color: theme.colors.textSecondary, marginBottom: '8px', fontStyle: 'italic' }}>
                     Normal Procedure
                   </div>
 
@@ -752,16 +751,16 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                           borderRadius: 'var(--radius-sm)',
                           border: '1px solid var(--border-subtle)'
                         }}>
-                          <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                          <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>
                             {abaque.name}
                           </div>
-                          <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-secondary)' }}>
+                          <div style={{ fontSize: 'var(--fs-title)', fontWeight: '700', color: 'var(--text-secondary)' }}>
                             {Math.round(abaque.distance)} {abaque.unit || 'm'}
                           </div>
                         </div>
                       ))}
                       {flightPlan.performance.departure.takeoff.conditions && (
-                        <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginTop: '8px', fontStyle: 'italic' }}>
+                        <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginTop: '8px', fontStyle: 'italic' }}>
                           Conditions: {flightPlan.performance.departure.takeoff.conditions.temperature?.toFixed(1)}°C,
                           {' '}{flightPlan.performance.departure.takeoff.conditions.altitude} ft,
                           {' '}{flightPlan.performance.departure.takeoff.conditions.mass?.toFixed(0)} kg,
@@ -774,10 +773,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                       {/* Distance de roulage */}
                       <div>
-                        <div style={{ fontSize: '10px', color: theme.colors.textSecondary, marginBottom: '4px' }}>
+                        <div style={{ fontSize: 'var(--fs-caption)', color: theme.colors.textSecondary, marginBottom: '4px' }}>
                           Distance de roulage (Ground Roll)
                         </div>
-                        <div style={{ fontSize: '16px', fontWeight: '700', color: theme.colors.textPrimary }}>
+                        <div style={{ fontSize: 'var(--fs-title)', fontWeight: '700', color: theme.colors.textPrimary }}>
                           {flightPlan.performance.departure.takeoff.groundRoll
                             ? `${Math.round(flightPlan.performance.departure.takeoff.groundRoll)} m`
                             : '—'}
@@ -786,10 +785,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
                       {/* Distance passage 50ft */}
                       <div>
-                        <div style={{ fontSize: '10px', color: theme.colors.textSecondary, marginBottom: '4px' }}>
+                        <div style={{ fontSize: 'var(--fs-caption)', color: theme.colors.textSecondary, marginBottom: '4px' }}>
                           Distance passage 50ft
                         </div>
-                        <div style={{ fontSize: '15px', fontWeight: '600', color: theme.colors.textPrimary }}>
+                        <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: theme.colors.textPrimary }}>
                           {flightPlan.performance.departure.takeoff.toda50ft
                             ? `${Math.round(flightPlan.performance.departure.takeoff.toda50ft)} m`
                             : '—'}
@@ -798,10 +797,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
                       {/* Distance passage 15m */}
                       <div>
-                        <div style={{ fontSize: '10px', color: theme.colors.textSecondary, marginBottom: '4px' }}>
+                        <div style={{ fontSize: 'var(--fs-caption)', color: theme.colors.textSecondary, marginBottom: '4px' }}>
                           Distance passage 15m
                         </div>
-                        <div style={{ fontSize: '15px', fontWeight: '600', color: theme.colors.textPrimary }}>
+                        <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: theme.colors.textPrimary }}>
                           {flightPlan.performance.departure.takeoff.toda15m
                             ? `${Math.round(flightPlan.performance.departure.takeoff.toda15m)} m`
                             : '—'}
@@ -817,7 +816,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             {flightPlan.performance.arrival?.landing && (
               <div>
                 <div style={{
-                  fontSize: '13px',
+                  fontSize: 'var(--fs-body)',
                   fontWeight: '700',
                   color: 'var(--text-secondary)',
                   marginBottom: '12px',
@@ -836,7 +835,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                   border: `2px solid ${theme.colors.border}`
                 }}>
                   <div style={{
-                    fontSize: '14px',
+                    fontSize: 'var(--fs-body)',
                     fontWeight: '700',
                     color: 'var(--text-primary)',
                     marginBottom: '12px',
@@ -845,7 +844,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                   }}>
                     🛬 Atterrissage - Landing Distance
                   </div>
-                  <div style={{ fontSize: '11px', color: theme.colors.textSecondary, marginBottom: '8px', fontStyle: 'italic' }}>
+                  <div style={{ fontSize: 'var(--fs-caption)', color: theme.colors.textSecondary, marginBottom: '8px', fontStyle: 'italic' }}>
                     Flaps LDG
                   </div>
 
@@ -859,16 +858,16 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                           borderRadius: 'var(--radius-sm)',
                           border: '1px solid var(--bg-overlay)'
                         }}>
-                          <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>
+                          <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>
                             {abaque.name}
                           </div>
-                          <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                          <div style={{ fontSize: 'var(--fs-title)', fontWeight: '700', color: 'var(--text-primary)' }}>
                             {Math.round(abaque.distance)} {abaque.unit || 'm'}
                           </div>
                         </div>
                       ))}
                       {flightPlan.performance.arrival.landing.conditions && (
-                        <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginTop: '8px', fontStyle: 'italic' }}>
+                        <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginTop: '8px', fontStyle: 'italic' }}>
                           Conditions: {flightPlan.performance.arrival.landing.conditions.temperature?.toFixed(1)}°C,
                           {' '}{flightPlan.performance.arrival.landing.conditions.altitude} ft,
                           {' '}{flightPlan.performance.arrival.landing.conditions.mass?.toFixed(0)} kg,
@@ -879,10 +878,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                   ) : flightPlan.performance.arrival.landing.conditions ? (
                     /* Affichage conditions seules si pas d'abaques */
                     <div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px', fontStyle: 'italic' }}>
+                      <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '12px', fontStyle: 'italic' }}>
                         Aucun abaque d'atterrissage disponible pour cet avion
                       </div>
-                      <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>
+                      <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>
                         Conditions: {flightPlan.performance.arrival.landing.conditions.temperature?.toFixed(1)}°C,
                         {' '}{flightPlan.performance.arrival.landing.conditions.altitude} ft,
                         {' '}{flightPlan.performance.arrival.landing.conditions.mass?.toFixed(0)} kg,
@@ -894,10 +893,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                       {/* Distance de roulage */}
                       <div>
-                        <div style={{ fontSize: '10px', color: theme.colors.textSecondary, marginBottom: '4px' }}>
+                        <div style={{ fontSize: 'var(--fs-caption)', color: theme.colors.textSecondary, marginBottom: '4px' }}>
                           Distance de roulage (Ground Roll)
                         </div>
-                        <div style={{ fontSize: '16px', fontWeight: '700', color: theme.colors.textPrimary }}>
+                        <div style={{ fontSize: 'var(--fs-title)', fontWeight: '700', color: theme.colors.textPrimary }}>
                           {flightPlan.performance.arrival.landing.groundRoll
                             ? `${Math.round(flightPlan.performance.arrival.landing.groundRoll)} m`
                             : '—'}
@@ -906,10 +905,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
                       {/* Distance passage 50ft */}
                       <div>
-                        <div style={{ fontSize: '10px', color: theme.colors.textSecondary, marginBottom: '4px' }}>
+                        <div style={{ fontSize: 'var(--fs-caption)', color: theme.colors.textSecondary, marginBottom: '4px' }}>
                           Distance passage 50ft
                         </div>
-                        <div style={{ fontSize: '15px', fontWeight: '600', color: theme.colors.textPrimary }}>
+                        <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: theme.colors.textPrimary }}>
                           {flightPlan.performance.arrival.landing.lda50ft
                             ? `${Math.round(flightPlan.performance.arrival.landing.lda50ft)} m`
                             : '—'}
@@ -918,10 +917,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
                       {/* Distance passage 15m */}
                       <div>
-                        <div style={{ fontSize: '10px', color: theme.colors.textSecondary, marginBottom: '4px' }}>
+                        <div style={{ fontSize: 'var(--fs-caption)', color: theme.colors.textSecondary, marginBottom: '4px' }}>
                           Distance passage 15m
                         </div>
-                        <div style={{ fontSize: '15px', fontWeight: '600', color: theme.colors.textPrimary }}>
+                        <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: theme.colors.textPrimary }}>
                           {flightPlan.performance.arrival.landing.lda15m
                             ? `${Math.round(flightPlan.performance.arrival.landing.lda15m)} m`
                             : '—'}
@@ -945,10 +944,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             {/* Carburant requis */}
             <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                <span style={{ fontSize: 'var(--fs-body)', color: theme.colors.textSecondary }}>
                   Carburant total requis:
                 </span>
-                <strong style={{ fontSize: '15px', color: 'var(--accent-primary)' }}>
+                <strong style={{ fontSize: 'var(--fs-body)', color: 'var(--accent-primary)' }}>
                   {format(fuelInfo.required, 'fuel', 1)}
                 </strong>
               </div>
@@ -957,12 +956,12 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             {/* Carburant confirmé (FOB) */}
             <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                <span style={{ fontSize: 'var(--fs-body)', color: theme.colors.textSecondary }}>
                   Carburant à bord (FOB):
                 </span>
                 <strong style={{
-                  fontSize: '15px',
-                  color: fuelInfo.confirmed >= fuelInfo.required ? 'var(--text-primary)' : '#C04534'
+                  fontSize: 'var(--fs-body)',
+                  color: fuelInfo.confirmed >= fuelInfo.required ? 'var(--text-primary)' : 'var(--color-red-critical)'
                 }}>
                   {format(fuelInfo.confirmed, 'fuel', 1)}
                 </strong>
@@ -974,7 +973,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
               backgroundColor: 'var(--bg-overlay)',
               padding: '12px',
               borderRadius: 'var(--radius-sm)',
-              fontSize: '13px'
+              fontSize: 'var(--fs-body)'
             }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {/* Carburant trajet */}
@@ -1039,10 +1038,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             <div style={{
               padding: '10px 12px',
               borderRadius: 'var(--radius-sm)',
-              backgroundColor: fuelInfo.confirmed >= fuelInfo.required ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
-              border: `1px solid ${fuelInfo.confirmed >= fuelInfo.required ? 'var(--text-primary)' : '#C04534'}`
+              backgroundColor: fuelInfo.confirmed >= fuelInfo.required ? 'var(--bg-overlay)' : 'var(--status-error-bg)',
+              border: `1px solid ${fuelInfo.confirmed >= fuelInfo.required ? 'var(--border-subtle)' : 'var(--color-red-critical)'}`
             }}>
-              <div style={{ fontSize: '14px', fontWeight: '600', textAlign: 'center', color: fuelInfo.confirmed >= fuelInfo.required ? 'var(--text-primary)' : '#C04534' }}>
+              <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', textAlign: 'center', color: fuelInfo.confirmed >= fuelInfo.required ? 'var(--text-primary)' : 'var(--color-red-critical)' }}>
                 {fuelInfo.confirmed >= fuelInfo.required ?
                   `✓ Carburant suffisant (+${format(fuelInfo.confirmed - fuelInfo.required, 'fuel', 1)} de marge)` :
                   `✗ Carburant insuffisant (${format(fuelInfo.required - fuelInfo.confirmed, 'fuel', 1)} manquant)`
@@ -1056,14 +1055,14 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                 {/* Carburant pour le vol */}
                 <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                    <span style={{ fontSize: 'var(--fs-body)', color: theme.colors.textSecondary }}>
                       Carburant pour le vol:
                     </span>
                     <div style={{ textAlign: 'right' }}>
-                      <strong style={{ fontSize: '15px' }}>
+                      <strong style={{ fontSize: 'var(--fs-body)' }}>
                         {format(actionRadii.fuelForRange, 'fuel', 1)}
                       </strong>
-                      <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
+                      <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginTop: '2px' }}>
                         (hors roulage/contingence)
                       </div>
                     </div>
@@ -1073,10 +1072,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                 {/* Autonomie */}
                 <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                    <span style={{ fontSize: 'var(--fs-body)', color: theme.colors.textSecondary }}>
                       Autonomie:
                     </span>
-                    <strong style={{ fontSize: '15px' }}>
+                    <strong style={{ fontSize: 'var(--fs-body)' }}>
                       {(actionRadii.endurance * 60).toFixed(0)} min ({actionRadii.endurance.toFixed(1)}h)
                     </strong>
                   </div>
@@ -1085,10 +1084,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                 {/* Distance maximale aller simple */}
                 <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                    <span style={{ fontSize: 'var(--fs-body)', color: theme.colors.textSecondary }}>
                       Distance maximale (aller simple):
                     </span>
-                    <strong style={{ fontSize: '15px', color: 'var(--text-primary)' }}>
+                    <strong style={{ fontSize: 'var(--fs-body)', color: 'var(--text-primary)' }}>
                       {format(actionRadii.maxRadiusNM, 'distance', 0)}
                     </strong>
                   </div>
@@ -1097,10 +1096,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                 {/* Distance maximale aller-retour */}
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '14px', color: theme.colors.textSecondary }}>
+                    <span style={{ fontSize: 'var(--fs-body)', color: theme.colors.textSecondary }}>
                       Distance maximale (aller-retour):
                     </span>
-                    <strong style={{ fontSize: '15px', color: 'var(--text-primary)' }}>
+                    <strong style={{ fontSize: 'var(--fs-body)', color: 'var(--text-primary)' }}>
                       {format(actionRadii.roundTripRadiusNM, 'distance', 0)}
                     </strong>
                   </div>
@@ -1175,7 +1174,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingBottom: '12px', borderBottom: '2px solid var(--border-subtle)' }}>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                          <span style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                          <span style={{ fontSize: 'var(--fs-title)', fontWeight: '700', color: 'var(--text-primary)' }}>
                             {aerodrome.icao}
                           </span>
                           {hasVAC ? (
@@ -1184,7 +1183,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                               backgroundColor: 'var(--bg-overlay)',
                               border: '1px solid var(--text-primary)',
                               borderRadius: 'var(--radius-sm)',
-                              fontSize: '10px',
+                              fontSize: 'var(--fs-caption)',
                               fontWeight: '600',
                               color: 'var(--text-primary)'
                             }}>
@@ -1194,21 +1193,21 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                             <div style={{
                               padding: '2px 8px',
                               backgroundColor: 'var(--bg-overlay)',
-                              border: '1px solid #C04534',
+                              border: '1px solid var(--color-red-critical)',
                               borderRadius: 'var(--radius-sm)',
-                              fontSize: '10px',
+                              fontSize: 'var(--fs-caption)',
                               fontWeight: '600',
-                              color: '#C04534'
+                              color: 'var(--color-red-critical)'
                             }}>
                               ✗ VAC
                             </div>
                           )}
                         </div>
-                        <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                        <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                           {aerodrome.name}
                         </div>
                         {hasVAC && charts[aerodrome.icao]?.vacNumber && (
-                          <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
+                          <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginTop: '2px' }}>
                             N° VAC: {charts[aerodrome.icao].vacNumber}
                           </div>
                         )}
@@ -1228,8 +1227,8 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                       {/* Altitude terrain */}
                       {aerodrome.elevation && (
                         <div>
-                          <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginBottom: '2px' }}>Altitude</div>
-                          <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                          <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginBottom: '2px' }}>Altitude</div>
+                          <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: 'var(--text-primary)' }}>
                             {normalizeElevationToFeet(aerodrome.elevation, { context: `${aerodrome.icao} (display)` })} ft
                           </div>
                         </div>
@@ -1238,8 +1237,8 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                       {/* Altitude TdP (Tour de Piste / Circuit) */}
                       {aerodrome.circuitAltitude && (
                         <div>
-                          <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginBottom: '2px' }}>Altitude TdP</div>
-                          <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                          <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginBottom: '2px' }}>Altitude TdP</div>
+                          <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: 'var(--text-primary)' }}>
                             {(() => {
                               const elevation = normalizeElevationToFeet(aerodrome.elevation, { context: `${aerodrome.icao} (Summary)` });
                               const circuitAAL = typeof aerodrome.circuitAltitude === 'object' ? aerodrome.circuitAltitude.value : aerodrome.circuitAltitude;
@@ -1254,8 +1253,8 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                       {/* Alt + 300 QNH */}
                       {altPlusQNH && (
                         <div>
-                          <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginBottom: '2px' }}>Alt + 300 QNH</div>
-                          <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                          <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginBottom: '2px' }}>Alt + 300 QNH</div>
+                          <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: 'var(--text-primary)' }}>
                             {altPlusQNH} ft
                           </div>
                         </div>
@@ -1264,8 +1263,8 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                       {/* Altitude VT (Vol de Tour / Integration) */}
                       {aerodrome.integrationAltitude && (
                         <div>
-                          <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginBottom: '2px' }}>Altitude VT</div>
-                          <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                          <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginBottom: '2px' }}>Altitude VT</div>
+                          <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: 'var(--text-primary)' }}>
                             {(() => {
                               const elevation = normalizeElevationToFeet(aerodrome.elevation, { context: `${aerodrome.icao} (Summary)` });
                               const integrationAAL = typeof aerodrome.integrationAltitude === 'object' ? aerodrome.integrationAltitude.value : aerodrome.integrationAltitude;
@@ -1280,8 +1279,8 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                       {/* Position GPS */}
                       {aerodrome.coordinates && (
                         <div style={{ gridColumn: 'span 2' }}>
-                          <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginBottom: '2px' }}>Position GPS</div>
-                          <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                          <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginBottom: '2px' }}>Position GPS</div>
+                          <div style={{ fontSize: 'var(--fs-caption)', fontWeight: '600', color: 'var(--text-primary)' }}>
                             {typeof aerodrome.coordinates.lat === 'number' ? aerodrome.coordinates.lat.toFixed(4) : aerodrome.coordinates.lat}° / {' '}
                             {typeof aerodrome.coordinates.lon === 'number' ? aerodrome.coordinates.lon.toFixed(4) : aerodrome.coordinates.lon}°
                           </div>
@@ -1340,12 +1339,12 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                           borderRadius: 'var(--radius-sm)',
                           border: '1px solid var(--border-subtle)'
                         }}>
-                          <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px' }}>
+                          <div style={{ fontSize: 'var(--fs-caption)', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px' }}>
                             📡 Fréquences Utiles
                           </div>
 
                           {hasFreqs ? (
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px', fontSize: '11px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px', fontSize: 'var(--fs-caption)' }}>
                               {freqs.map((f, idx) => (
                                 <div key={idx} style={{ display: 'flex', justifyContent: 'space-between' }}>
                                   <span style={{ color: 'var(--text-secondary)' }}>{f.label}:</span>
@@ -1354,7 +1353,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                               ))}
                             </div>
                           ) : (
-                            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>
+                            <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>
                               Aucune fréquence disponible dans les données AIXM
                             </div>
                           )}
@@ -1362,7 +1361,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                           {/* Téléphone Tour */}
                           {hasPhone && (
                             <div style={{ marginTop: hasFreqs ? '8px' : '0', paddingTop: hasFreqs ? '8px' : '0', borderTop: hasFreqs ? '1px solid var(--border-subtle)' : 'none' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--fs-caption)' }}>
                                 <span style={{ color: 'var(--text-secondary)' }}>📞 Téléphone Tour:</span>
                                 <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{aerodrome.phone}</span>
                               </div>
@@ -1380,7 +1379,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                         backgroundColor: 'rgba(242, 105, 33, 0.10)',
                         border: '1px solid var(--accent-primary)',
                         borderRadius: 'var(--radius-sm)',
-                        fontSize: '11px',
+                        fontSize: 'var(--fs-caption)',
                         color: 'var(--accent-primary)'
                       }}>
                         ℹ️ {aerodrome.circuitRemarks}
@@ -1439,7 +1438,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
                       return (
                         <div style={{ marginTop: '12px' }}>
-                          <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '10px' }}>
+                          <div style={{ fontSize: 'var(--fs-body)', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '10px' }}>
                             🛬 Informations de Pistes
                           </div>
 
@@ -1542,7 +1541,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                                   borderBottom: '1px solid var(--text-tertiary)'
                                 }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                                    <span style={{ fontSize: 'var(--fs-body)', fontWeight: '700', color: 'var(--text-primary)' }}>
                                       Piste {identifier}
                                     </span>
                                     <span style={{
@@ -1550,14 +1549,14 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                                       backgroundColor: surface.includes('ASPH') || surface.includes('CONC') ? 'var(--bg-overlay)' : 'rgba(242, 105, 33, 0.10)',
                                       color: surface.includes('ASPH') || surface.includes('CONC') ? 'var(--text-primary)' : 'var(--accent-primary)',
                                       borderRadius: 'var(--radius-sm)',
-                                      fontSize: '10px',
+                                      fontSize: 'var(--fs-caption)',
                                       fontWeight: '600'
                                     }}>
                                       {surface}
                                     </span>
                                   </div>
                                   {width && (
-                                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                                    <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
                                       Largeur: {width}m
                                     </span>
                                   )}
@@ -1572,10 +1571,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                                     borderRadius: 'var(--radius-sm)',
                                     border: '1px solid var(--border-subtle)'
                                   }}>
-                                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                                    <div style={{ fontSize: 'var(--fs-caption)', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '6px' }}>
                                       QFU {qfu1_display}
                                     </div>
-                                    <div style={{ fontSize: '10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <div style={{ fontSize: 'var(--fs-caption)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                         <span style={{ color: 'var(--text-secondary)' }}>ILS:</span>
                                         <span style={{ fontWeight: '600', color: ils1_display === 'N/A' ? 'var(--text-tertiary)' : 'var(--text-primary)' }}>{ils1_display}</span>
@@ -1615,13 +1614,13 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                                             paddingTop: '8px',
                                             borderTop: '1px solid var(--border-subtle)'
                                           }}>
-                                            <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px' }}>
+                                            <div style={{ fontSize: 'var(--fs-caption)', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px' }}>
                                               📊 {isDeparture ? 'Décollage' : 'Atterrissage'}
                                             </div>
                                             {perfData.abaques.map((abaque, aIdx) => (
                                               <div key={aIdx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                                                <span style={{ color: 'var(--text-secondary)', fontSize: '10px' }}>{abaque.name}:</span>
-                                                <span style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: '10px' }}>
+                                                <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-caption)' }}>{abaque.name}:</span>
+                                                <span style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: 'var(--fs-caption)' }}>
                                                   {Math.round(abaque.distance)}m
                                                 </span>
                                               </div>
@@ -1640,10 +1639,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                                       borderRadius: 'var(--radius-sm)',
                                       border: '1px solid var(--border-subtle)'
                                     }}>
-                                      <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                                      <div style={{ fontSize: 'var(--fs-caption)', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '6px' }}>
                                         QFU {qfu2_display}
                                       </div>
-                                      <div style={{ fontSize: '10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                      <div style={{ fontSize: 'var(--fs-caption)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                           <span style={{ color: 'var(--text-secondary)' }}>ILS:</span>
                                           <span style={{ fontWeight: '600', color: ils2_display === 'N/A' ? 'var(--text-tertiary)' : 'var(--text-primary)' }}>{ils2_display}</span>
@@ -1683,13 +1682,13 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                                               paddingTop: '8px',
                                               borderTop: '1px solid var(--border-subtle)'
                                             }}>
-                                              <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px' }}>
+                                              <div style={{ fontSize: 'var(--fs-caption)', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px' }}>
                                                 📊 {isDeparture ? 'Décollage' : 'Atterrissage'}
                                               </div>
                                               {perfData.abaques.map((abaque, aIdx) => (
                                                 <div key={aIdx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                                                  <span style={{ color: 'var(--text-secondary)', fontSize: '10px' }}>{abaque.name}:</span>
-                                                  <span style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: '10px' }}>
+                                                  <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-caption)' }}>{abaque.name}:</span>
+                                                  <span style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: 'var(--fs-caption)' }}>
                                                     {Math.round(abaque.distance)}m
                                                   </span>
                                                 </div>
@@ -1755,7 +1754,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
           }}
         >
           <div style={{
-            fontSize: '24px',
+            fontSize: 'var(--fs-title)',
             fontWeight: '700',
             color: 'var(--text-primary)',
             marginBottom: '40px',
@@ -1779,14 +1778,14 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
               borderRadius: 'var(--radius-sm)',
               padding: '20px 24px',
               marginBottom: '20px',
-              fontSize: '16px',
+              fontSize: 'var(--fs-title)',
               fontWeight: '600',
               color: 'var(--text-secondary)',
               display: 'flex',
               alignItems: 'center',
               gap: '12px'
             }}>
-              <span style={{ fontSize: '24px', flexShrink: 0 }}>🗺️</span>
+              <span style={{ fontSize: 'var(--fs-title)', flexShrink: 0 }}>🗺️</span>
               <span>Ajouter les cartes VAC des aérodromes de la nav</span>
             </li>
             <li style={{
@@ -1795,14 +1794,14 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
               borderRadius: 'var(--radius-sm)',
               padding: '20px 24px',
               marginBottom: '20px',
-              fontSize: '16px',
+              fontSize: 'var(--fs-title)',
               fontWeight: '600',
               color: 'var(--text-secondary)',
               display: 'flex',
               alignItems: 'center',
               gap: '12px'
             }}>
-              <span style={{ fontSize: '24px', flexShrink: 0 }}>☁️</span>
+              <span style={{ fontSize: 'var(--fs-title)', flexShrink: 0 }}>☁️</span>
               <span>Ajouter les cartes météo Wind Temp et TEMSI du SIA</span>
             </li>
           </ul>
@@ -1824,7 +1823,7 @@ const styles = {
     gap: '12px',
   },
   label: {
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     color: theme.colors.textPrimary,
     display: 'flex',

@@ -26,54 +26,54 @@ const styles = {
     gap: '12px',
     marginBottom: '12px',
     padding: '8px',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '6px'
   },
   colorIndicator: {
     width: '24px',
     height: '24px',
     borderRadius: '4px',
-    border: '2px solid #fff',
+    border: '2px solid var(--bg-overlay)',
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)'
   },
   title: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: 600,
-    color: '#333',
+    color: 'var(--text-primary)',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     flex: 1
   },
   pointCount: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     fontWeight: 'normal' as const,
-    color: '#666'
+    color: 'var(--text-secondary)'
   },
   table: {
     width: '100%',
     borderCollapse: 'collapse' as const,
-    fontSize: '13px'
+    fontSize: 'var(--fs-body)'
   },
   th: {
     padding: '4px 6px',
     textAlign: 'left' as const,
-    borderBottom: '2px solid #ddd',
+    borderBottom: '2px solid var(--border-subtle)',
     fontWeight: 600,
-    color: '#555',
-    backgroundColor: 'white',
+    color: 'var(--text-secondary)',
+    backgroundColor: 'var(--bg-overlay)',
     whiteSpace: 'nowrap' as const,
-    fontSize: '12px'
+    fontSize: 'var(--fs-body)'
   },
   td: {
     padding: '6px 8px',
-    borderBottom: '1px solid #eee'
+    borderBottom: '1px solid var(--border-subtle)'
   },
   input: {
     padding: '4px 6px',
-    border: '1px solid #ddd',
+    border: '1px solid var(--border-subtle)',
     borderRadius: '3px',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     width: '80px'
   },
   actions: {
@@ -82,33 +82,33 @@ const styles = {
   },
   button: {
     padding: '4px 8px',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     border: 'none',
     borderRadius: '3px',
     cursor: 'pointer',
     transition: 'background-color 0.2s'
   },
   editButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: 'var(--accent-primary)',
     color: 'white'
   },
   saveButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: 'var(--accent-primary)',
     color: 'white'
   },
   cancelButton: {
-    backgroundColor: '#f44336',
+    backgroundColor: 'var(--color-red-critical)',
     color: 'white'
   },
   deleteButton: {
-    backgroundColor: '#ff5722',
+    backgroundColor: 'var(--accent-primary)',
     color: 'white'
   },
   emptyState: {
     textAlign: 'center' as const,
     padding: '24px',
-    color: '#999',
-    fontSize: '13px'
+    color: 'var(--text-tertiary)',
+    fontSize: 'var(--fs-body)'
   }
 };
 
@@ -221,7 +221,7 @@ export const PointsTable: React.FC<PointsTableProps> = ({
     return (
       <div style={styles.container}>
         <div style={styles.emptyState}>
-          <div style={{ fontSize: '16px', marginBottom: '8px' }}>📊</div>
+          <div style={{ fontSize: 'var(--fs-title)', marginBottom: '8px' }}>📊</div>
           {curves.length === 0
             ? "Créez d'abord une courbe dans le gestionnaire"
             : "Sélectionnez une courbe pour voir et éditer ses points"}
@@ -250,7 +250,7 @@ export const PointsTable: React.FC<PointsTableProps> = ({
 
       {selectedCurve.points.length === 0 ? (
         <div style={styles.emptyState}>
-          <div style={{ fontSize: '14px', marginBottom: '8px' }}>💡</div>
+          <div style={{ fontSize: 'var(--fs-body)', marginBottom: '8px' }}>💡</div>
           Aucun point dans cette courbe.
         </div>
       ) : null}
@@ -261,7 +261,7 @@ export const PointsTable: React.FC<PointsTableProps> = ({
           <button
             style={{
               ...styles.button,
-              backgroundColor: '#4CAF50',
+              backgroundColor: 'var(--accent-primary)',
               color: 'white',
               padding: '6px 12px'
             }}
@@ -290,7 +290,7 @@ export const PointsTable: React.FC<PointsTableProps> = ({
         <tbody>
           {/* Ligne pour ajouter un nouveau point */}
           {showAddRow && (
-            <tr style={{ backgroundColor: '#f0f8ff' }}>
+            <tr style={{ backgroundColor: 'var(--bg-overlay)' }}>
               <td style={styles.td}>+</td>
               <td style={styles.td}>
                 <input

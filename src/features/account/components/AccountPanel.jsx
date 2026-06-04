@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, LogOut, Trash2, Crown, Wifi, WifiOff } from 'lucide-react';
+import { User, LogOut, Trash2, Crown, WifiOff } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { GoogleSignIn } from './GoogleSignIn';
 import { AppleSignIn } from './AppleSignIn';
@@ -194,7 +194,7 @@ const styles = {
     marginBottom: '24px',
   },
   title: {
-    fontSize: '24px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     margin: 0,
   },
@@ -227,7 +227,7 @@ const styles = {
     backgroundColor: 'var(--bg-overlay)',
     padding: '0 16px',
     color: '#999',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
   },
   offlineBar: {
     display: 'flex',
@@ -238,7 +238,7 @@ const styles = {
     color: '#856404',
     borderRadius: 'var(--radius-sm)',
     marginBottom: '16px',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
   },
   userSection: {
     display: 'flex',
@@ -265,12 +265,12 @@ const styles = {
     flex: 1,
   },
   userName: {
-    fontSize: '18px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     margin: '0 0 4px 0',
   },
   userEmail: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     margin: '0 0 8px 0',
   },
@@ -282,7 +282,7 @@ const styles = {
     backgroundColor: 'var(--accent-primary)',
     color: 'var(--app-bg)',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
   },
   section: {
@@ -290,7 +290,7 @@ const styles = {
     borderBottom: '1px solid var(--border-subtle)',
   },
   sectionTitle: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: 'var(--text-secondary)',
     marginBottom: '12px',
@@ -299,7 +299,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     marginBottom: '12px',
   },
@@ -325,7 +325,7 @@ const styles = {
     color: 'var(--text-secondary)',
     border: 'none',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '500',
     cursor: 'pointer',
     transition: 'background-color 0.2s',
@@ -336,6 +336,6 @@ const styles = {
   },
   dangerButton: {
     backgroundColor: 'var(--bg-overlay)',
-    color: '#C04534',
+    color: 'var(--color-red-critical)',
   },
 };

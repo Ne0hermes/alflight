@@ -13,16 +13,10 @@ import {
   FormControlLabel,
   Checkbox,
   InputAdornment,
-  Avatar,
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions
+  CircularProgress
 } from '@mui/material';
 import { StyledTextField, StyledFormControl } from './FormFieldStyles';
 import {
@@ -30,7 +24,6 @@ import {
   Info as InfoIcon,
   Flight as FlightIcon,
   LocalGasStation as FuelIcon,
-  Speed as SpeedIcon,
   ExpandMore as ExpandMoreIcon,
   Terrain as TerrainIcon,
   Warning as WarningIcon,
@@ -40,16 +33,16 @@ import {
   ChevronLeft as ChevronLeftIcon
 } from '@mui/icons-material';
 import FormHelperText from '@mui/material/FormHelperText';
-import { useUnitsStore, unitsSelectors } from '@core/stores/unitsStore';
-import { convertValue, getUnitSymbol, fuelConsumptionConversions } from '@utils/unitConversions';
+import { unitsSelectors } from '@core/stores/unitsStore';
+import { convertValue, getUnitSymbol } from '@utils/unitConversions';
 import { formatCanonical } from '@utils/unitsDisplay';
 import UpdateAircraftDialog from '../UpdateAircraftDialog';
 import aircraftVersioningService from '../../services/aircraftVersioningService';
 import ImageEditor from '../../../../components/ImageEditor';
-import { Description as DescriptionIcon, CloudUpload as CloudUploadIcon, Delete as DeleteIcon, CloudQueue as CloudQueueIcon } from '@mui/icons-material';
+import { Description as DescriptionIcon, CloudUpload as CloudUploadIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import communityService from '../../../../services/communityService';
 import AeroclubAutocomplete from '../AeroclubAutocomplete';
-import { AIRPORT_NAMES } from '../../../../data/airportNames';
+import { useAirportName } from '@shared/hooks/useAirportNames';
 
 // Import de la base de données communautaire mock (en production, sera un appel API)
 const COMMUNITY_DATABASE = [
@@ -72,6 +65,9 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
   const [existingAircraftData, setExistingAircraftData] = useState(null);
+
+  // Nom usuel du terrain de base — source unique (provider GeoJSON/SIA)
+  const homeBaseName = useAirportName(data.homeBase);
 
   const handlePanelChange = (panel) => (event, isExpanded) => {
     // Si on ouvre un panneau, on ferme tous les autres
@@ -400,7 +396,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
           }}
         >
           <FlightIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Identification de l'appareil
           </Typography>
         </AccordionSummary>
@@ -552,8 +548,8 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                 placeholder="Ex: LFPN"
                 inputProps={{ maxLength: 4, style: { textTransform: 'uppercase' } }}
                 helperText={
-                  data.homeBase && AIRPORT_NAMES[data.homeBase]
-                    ? `✈️ ${AIRPORT_NAMES[data.homeBase]}`
+                  homeBaseName
+                    ? `✈️ ${homeBaseName}`
                     : "Code OACI à 4 lettres du terrain où l'avion est basé"
                 }
               />
@@ -585,7 +581,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                           height: 200,
                           border: '2px dashed',
                           borderColor: 'divider',
-                          borderRadius: 1,
+                          borderRadius: '8px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -652,7 +648,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
           }}
         >
           <FuelIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Carburant et performances
           </Typography>
         </AccordionSummary>
@@ -792,7 +788,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
           }}
         >
           <TerrainIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Surfaces compatibles
           </Typography>
         </AccordionSummary>
@@ -905,7 +901,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
           }}
         >
           <DescriptionIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Manuel d'exploitation (MANEX)
           </Typography>
         </AccordionSummary>

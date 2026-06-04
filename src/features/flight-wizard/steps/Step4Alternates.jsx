@@ -17,7 +17,7 @@ const commonStyles = {
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
   },
   label: {
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     color: theme.colors.textPrimary,
     display: 'flex',
@@ -31,7 +31,7 @@ const commonStyles = {
     borderRadius: 'var(--radius-sm)',
     borderLeft: '4px solid #f26921',
     marginBottom: '20px',
-    fontSize: '14px'
+    fontSize: 'var(--fs-body)'
   },
   infoRow: {
     display: 'flex',

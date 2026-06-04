@@ -27,7 +27,7 @@ export const TechLabel = ({
       className={className}
       style={{
         fontFamily: tokens.fontFamily.mono,
-        fontSize: '11px',
+        fontSize: 'var(--fs-caption)',
         lineHeight: 1.2,
         letterSpacing: '0.10em',
         textTransform: 'uppercase',

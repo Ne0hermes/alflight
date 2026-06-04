@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
-  AlertTriangle, CheckCircle, Calendar, Heart, Activity,
+  AlertTriangle, CheckCircle, Heart, Activity,
   Clock, TrendingUp, AlertCircle, Shield, Award, Plane,
   Moon, Sun, Cloud, Navigation, ChevronDown, ChevronUp, Eye, RefreshCw, Wand2, X, Database
 } from 'lucide-react';
-import { theme } from '../styles/theme';
 import { getAIXMDataStatus, formatAIXMAlert } from '../utils/aixmDataValidator';
 // 🎨 Charte éditoriale ALFlight — alignement avec le titre "Démarrer" de la home
 import { EditorialHeading } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
+import { Button } from '@shared/components/Button';
 
 export const PilotDashboard = ({ onNavigate }) => {
   const [medicalStatus, setMedicalStatus] = useState(null);
@@ -570,8 +570,8 @@ export const PilotDashboard = ({ onNavigate }) => {
     switch(status) {
       case 'valid': return 'var(--text-primary)';
       case 'attention': return 'var(--accent-primary)';
-      case 'warning': return '#C04534';
-      case 'expired': return '#C04534';
+      case 'warning': return 'var(--color-red-critical)';
+      case 'expired': return 'var(--color-red-critical)';
       default: return 'var(--text-secondary)';
     }
   };
@@ -610,12 +610,13 @@ export const PilotDashboard = ({ onNavigate }) => {
               </p>
             </div>
           </div>
-          <button
-            style={{ ...styles.configureButton, width: '100%', marginTop: '12px' }}
+          <Button
+            variant="primary"
             onClick={() => onNavigate && onNavigate('pilot')}
+            sx={{ width: '100%', mt: '12px' }}
           >
             Configurer mon profil
-          </button>
+          </Button>
         </div>
       )}
 
@@ -660,7 +661,7 @@ export const PilotDashboard = ({ onNavigate }) => {
           {aixmDetailsExpanded && (
             <div style={{
               fontFamily: 'var(--font-mono)',
-              fontSize: '11px',
+              fontSize: 'var(--fs-caption)',
               color: 'var(--text-secondary)',
               lineHeight: 1.7,
               marginTop: '12px',
@@ -687,49 +688,27 @@ export const PilotDashboard = ({ onNavigate }) => {
             </div>
           )}
           <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-            <button
+            <Button
+              variant="secondary"
+              size="small"
               onClick={() => setAixmDetailsExpanded(!aixmDetailsExpanded)}
-              style={{
-                ...styles.configureButton,
-                // Bouton détails : style ghost (outline accent), pas plein
-                backgroundColor: 'transparent',
-                color: 'var(--text-primary)',
-                border: '1px solid var(--border-regular)',
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-              }}
+              endIcon={aixmDetailsExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              sx={{ flex: 1 }}
             >
-              {aixmDetailsExpanded ? (
-                <>
-                  Masquer <ChevronUp size={14} />
-                </>
-              ) : (
-                <>
-                  Détails <ChevronDown size={14} />
-                </>
-              )}
-            </button>
+              {aixmDetailsExpanded ? 'Masquer' : 'Détails'}
+            </Button>
             {(aixmDataStatus.status === 'expired' || aixmDataStatus.status === 'warning' || aixmDataStatus.status === 'expiring-today') && (
-              <a
+              <Button
+                variant="primary"
+                size="small"
+                component="a"
                 href={aixmDataStatus.downloadUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  ...styles.configureButton,
-                  // Bouton télécharger : plein orange ALFlight (action primaire)
-                  textDecoration: 'none',
-                  flex: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                }}
+                sx={{ flex: 1 }}
               >
                 Télécharger
-              </a>
+              </Button>
             )}
           </div>
         </div>
@@ -755,7 +734,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                 Vous avez une configuration d'avion non terminée{wizardDraft.aircraftData?.registration ? ` (${wizardDraft.aircraftData.registration})` : ''}.
                 Reprenez là où vous vous êtes arrêté à l'étape {wizardDraft.currentStep + 1}.
               </p>
-              <p style={{ ...styles.ageErrorMessage, fontSize: '11px', marginTop: '4px', opacity: 0.7 }}>
+              <p style={{ ...styles.ageErrorMessage, fontSize: 'var(--fs-caption)', marginTop: '4px', opacity: 0.7 }}>
                 Sauvegardé le {new Date(wizardDraft.timestamp).toLocaleString('fr-FR')}
               </p>
             </div>
@@ -777,15 +756,13 @@ export const PilotDashboard = ({ onNavigate }) => {
               >
                 <X size={16} />
               </button>
-              <button
-                style={{
-                  ...styles.configureButton,
-                  backgroundColor: 'var(--accent-primary)'
-                }}
+              <Button
+                variant="primary"
+                size="small"
                 onClick={handleResumeWizard}
               >
                 Reprendre la configuration
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -874,7 +851,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                   color: 'var(--text-primary)',
                   border: 'none',
                   borderRadius: 'var(--radius-sm)',
-                  fontSize: '14px',
+                  fontSize: 'var(--fs-body)',
                   fontWeight: '600',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
@@ -944,8 +921,8 @@ export const PilotDashboard = ({ onNavigate }) => {
                       {(item.type === 'sep_expired' || item.type === 'mep_expired') ? (
                         <div style={styles.renewalProcedure}>
                           <div style={styles.procedureTitle}>
-                            <AlertTriangle size={16} style={{ color: '#C04534' }} />
-                            <span style={{ fontWeight: 'bold', color: '#C04534' }}>
+                            <AlertTriangle size={16} style={{ color: 'var(--color-red-critical)' }} />
+                            <span style={{ fontWeight: 'bold', color: 'var(--color-red-critical)' }}>
                               {item.renewalProcedure.title}
                             </span>
                           </div>
@@ -968,7 +945,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                                 <span style={styles.sepStatLabel}>Heures totales SEP:</span>
                                 <span style={{
                                   ...styles.sepStatValue,
-                                  color: item.totalHours >= item.requiredTotalHours ? 'var(--text-primary)' : '#C04534'
+                                  color: item.totalHours >= item.requiredTotalHours ? 'var(--text-primary)' : 'var(--color-red-critical)'
                                 }}>
                                   {item.totalHours.toFixed(1)}h/{item.requiredTotalHours}h
                                 </span>
@@ -977,7 +954,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                                 <span style={styles.sepStatLabel}>Heures P1/CDB:</span>
                                 <span style={{
                                   ...styles.sepStatValue,
-                                  color: item.picHours >= item.requiredPicHours ? 'var(--text-primary)' : '#C04534'
+                                  color: item.picHours >= item.requiredPicHours ? 'var(--text-primary)' : 'var(--color-red-critical)'
                                 }}>
                                   {item.picHours.toFixed(1)}h/{item.requiredPicHours}h
                                 </span>
@@ -989,7 +966,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                               <span style={styles.sepStatLabel}>Décollages:</span>
                               <span style={{
                                 ...styles.sepStatValue,
-                                color: item.takeoffs >= item.requiredTakeoffs ? 'var(--text-primary)' : '#C04534'
+                                color: item.takeoffs >= item.requiredTakeoffs ? 'var(--text-primary)' : 'var(--color-red-critical)'
                               }}>
                                 {item.takeoffs}/{item.requiredTakeoffs}
                               </span>
@@ -1000,7 +977,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                               <span style={styles.sepStatLabel}>Atterrissages:</span>
                               <span style={{
                                 ...styles.sepStatValue,
-                                color: item.landings >= item.requiredLandings ? 'var(--text-primary)' : '#C04534'
+                                color: item.landings >= item.requiredLandings ? 'var(--text-primary)' : 'var(--color-red-critical)'
                               }}>
                                 {item.landings}/{item.requiredLandings}
                               </span>
@@ -1011,7 +988,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                               <span style={styles.sepStatLabel}>Vol avec FI/CRI (1h):</span>
                               <span style={{
                                 ...styles.sepStatValue,
-                                color: item.hasInstructorFlight ? 'var(--text-primary)' : '#C04534'
+                                color: item.hasInstructorFlight ? 'var(--text-primary)' : 'var(--color-red-critical)'
                               }}>
                                 {item.hasInstructorFlight ? '✓ Effectué' : '✗ Requis'}
                               </span>
@@ -1111,7 +1088,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                       onClick={() => onNavigate && onNavigate('pilot', 'medical')}
                       style={{
                         ...styles.actionButton,
-                        backgroundColor: medicalStatus.status === 'expired' ? '#C04534' : 'var(--text-secondary)',
+                        backgroundColor: medicalStatus.status === 'expired' ? 'var(--color-red-critical)' : 'var(--text-secondary)',
                         marginTop: '8px'
                       }}
                     >
@@ -1129,7 +1106,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                       onClick={() => onNavigate && onNavigate('pilot', 'medical')}
                       style={{
                         ...styles.actionButton,
-                        backgroundColor: '#C04534',
+                        backgroundColor: 'var(--color-red-critical)',
                         marginTop: '8px'
                       }}
                     >
@@ -1179,7 +1156,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                       onClick={() => onNavigate && onNavigate('pilot', 'certifications')}
                       style={{
                         ...styles.actionButton,
-                        backgroundColor: '#C04534',
+                        backgroundColor: 'var(--color-red-critical)',
                         marginTop: '8px'
                       }}
                     >
@@ -1216,7 +1193,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                       onClick={() => onNavigate && onNavigate('pilot', 'certifications')}
                       style={{
                         ...styles.actionButton,
-                        backgroundColor: qualificationStatus.some(q => q.status === 'expired') ? '#C04534' : 'var(--text-secondary)',
+                        backgroundColor: qualificationStatus.some(q => q.status === 'expired') ? 'var(--color-red-critical)' : 'var(--text-secondary)',
                         marginTop: '8px'
                       }}
                     >
@@ -1234,7 +1211,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                       onClick={() => onNavigate && onNavigate('pilot', 'certifications')}
                       style={{
                         ...styles.actionButton,
-                        backgroundColor: '#C04534',
+                        backgroundColor: 'var(--color-red-critical)',
                         marginTop: '8px'
                       }}
                     >
@@ -1297,7 +1274,7 @@ const styles = {
   // Titre du bloc alerte — Century Gothic, taille modérée, cockpit
   ageErrorTitle: {
     fontFamily: 'var(--font-sans)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: 600,
     letterSpacing: '-0.01em',
     color: 'var(--text-primary)',
@@ -1305,25 +1282,9 @@ const styles = {
   },
   ageErrorMessage: {
     fontFamily: 'var(--font-sans)',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     lineHeight: 1.5,
-  },
-  // Bouton d'action dans alerte — mono ALL CAPS cockpit, orange ALFlight
-  configureButton: {
-    backgroundColor: 'var(--accent-primary)',
-    color: 'var(--text-inverse)',
-    border: 'none',
-    borderRadius: 'var(--radius-sm)',
-    padding: '10px 16px',
-    fontFamily: 'var(--font-mono)',
-    fontSize: '11px',
-    fontWeight: 600,
-    letterSpacing: '0.12em',
-    textTransform: 'uppercase',
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
-    transition: 'background-color 0.2s ease',
   },
   grid: {
     display: 'grid',
@@ -1350,7 +1311,7 @@ const styles = {
     marginBottom: '12px',
     color: 'var(--accent-primary)',
     fontFamily: 'var(--font-mono)',
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: 600,
     textTransform: 'uppercase',
     letterSpacing: '0.12em',
@@ -1367,11 +1328,11 @@ const styles = {
     padding: '6px 12px',
     borderRadius: 'var(--radius-sm)',
     border: '1px solid',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
   },
   detail: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     marginTop: '4px',
   },
@@ -1383,18 +1344,18 @@ const styles = {
     borderBottom: '1px solid var(--border-subtle)',
   },
   itemLabel: {
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-primary)',
   },
   itemStatus: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     display: 'flex',
     alignItems: 'center',
     gap: '4px',
   },
   noData: {
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     fontStyle: 'italic',
     padding: '8px 0',
@@ -1411,12 +1372,12 @@ const styles = {
     gap: '8px',
   },
   statValue: {
-    fontSize: '18px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '700',
     color: 'var(--text-primary)',
   },
   statLabel: {
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     color: 'var(--text-secondary)',
     textTransform: 'uppercase',
   },
@@ -1432,7 +1393,7 @@ const styles = {
     marginBottom: '12px',
   },
   currencyTitle: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: 'var(--text-primary)',
   },
@@ -1442,7 +1403,7 @@ const styles = {
     padding: '4px 8px',
     borderRadius: 'var(--radius-sm)',
     border: '1px solid',
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: '600',
   },
   currencyDetails: {
@@ -1452,7 +1413,7 @@ const styles = {
     marginBottom: '8px',
   },
   regulationText: {
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     color: 'var(--text-secondary)',
     fontStyle: 'italic',
   },
@@ -1465,7 +1426,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
   },
   sepStatLabel: {
     color: 'var(--text-secondary)',
@@ -1486,7 +1447,7 @@ const styles = {
     backgroundColor: 'rgba(16, 185, 129, 0.1)',
     borderRadius: 'var(--radius-sm)',
     border: '1px solid rgba(16, 185, 129, 0.3)',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-primary)',
   },
   adviceWarning: {
@@ -1497,7 +1458,7 @@ const styles = {
     backgroundColor: 'rgba(245, 158, 11, 0.1)',
     borderRadius: 'var(--radius-sm)',
     border: '1px solid rgba(245, 158, 11, 0.3)',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--accent-primary)',
   },
   expandableHeader: {
@@ -1516,7 +1477,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: 'var(--accent-primary)',
     textTransform: 'uppercase',
@@ -1540,7 +1501,7 @@ const styles = {
     padding: '4px 8px',
     borderRadius: 'var(--radius-sm)',
     border: '1px solid',
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: '600',
   },
   summaryCount: {
@@ -1550,7 +1511,7 @@ const styles = {
     padding: '4px 8px',
     backgroundColor: 'var(--accent-soft)',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: '600',
     color: 'var(--text-secondary)',
   },
@@ -1560,7 +1521,7 @@ const styles = {
     padding: '4px 12px',
     backgroundColor: 'var(--accent-soft)',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '700',
     color: 'var(--accent-primary)',
   },
@@ -1576,7 +1537,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     marginBottom: '12px',
     color: 'var(--text-primary)',
@@ -1600,7 +1561,7 @@ const styles = {
     alignItems: 'center',
     gap: '8px',
     marginBottom: '12px',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
   },
   procedureSteps: {
@@ -1608,13 +1569,13 @@ const styles = {
     marginBottom: '12px',
   },
   procedureStep: {
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-primary)',
     marginBottom: '6px',
     lineHeight: '1.5',
   },
   procedureNote: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--accent-primary)',
     backgroundColor: 'var(--bg-overlay)',
     padding: '8px',
@@ -1629,7 +1590,7 @@ const styles = {
     borderRadius: 'var(--radius-sm)',
     border: 'none',
     color: 'var(--text-primary)',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'transform 0.2s, opacity 0.2s',
@@ -1648,13 +1609,13 @@ const styles = {
     border: '1px solid rgba(245, 158, 11, 0.3)',
   },
   noQualificationTitle: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: 'var(--text-primary)',
     marginBottom: '4px',
   },
   noQualificationText: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
   },
 };

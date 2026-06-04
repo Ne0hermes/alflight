@@ -5,7 +5,6 @@ import { subscribeWithSelector } from 'zustand/middleware';
 import communityService from '@services/communityService';
 import { createModuleLogger } from '@utils/logger';
 import { validateAndRepairAircraft } from '@utils/aircraftValidation';
-import { prepareAircraftExport } from '@utils/aircraftNormalizer';
 import { useUnitsStore } from '@core/stores/unitsStore';
 import { supabase } from '../../lib/supabaseClient';
 import { recordSupabaseError } from '../../lib/persistentErrorLog';

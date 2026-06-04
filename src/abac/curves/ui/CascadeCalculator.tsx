@@ -24,7 +24,7 @@ interface CascadeCalculatorProps {
 const styles = {
   container: {
     padding: '20px',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '8px',
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
     maxWidth: '800px',
@@ -32,18 +32,18 @@ const styles = {
   },
   header: {
     marginBottom: '20px',
-    borderBottom: '2px solid #e0e0e0',
+    borderBottom: '2px solid var(--bg-overlay)',
     paddingBottom: '10px'
   },
   title: {
-    fontSize: '18px',
+    fontSize: 'var(--fs-title)',
     fontWeight: 600,
-    color: '#333'
+    color: 'var(--text-primary)'
   },
   inputSection: {
     marginBottom: '20px',
     padding: '15px',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '6px'
   },
   inputGroup: {
@@ -51,40 +51,40 @@ const styles = {
   },
   label: {
     display: 'block',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     fontWeight: 500,
-    color: '#666',
+    color: 'var(--text-secondary)',
     marginBottom: '5px'
   },
   select: {
     width: '100%',
     padding: '8px 12px',
-    border: '1px solid #ddd',
+    border: '1px solid var(--border-subtle)',
     borderRadius: '4px',
-    fontSize: '14px',
-    backgroundColor: 'white'
+    fontSize: 'var(--fs-body)',
+    backgroundColor: 'var(--bg-overlay)'
   },
   input: {
     width: '100%',
     padding: '8px 12px',
-    border: '1px solid #ddd',
+    border: '1px solid var(--border-subtle)',
     borderRadius: '4px',
-    fontSize: '14px'
+    fontSize: 'var(--fs-body)'
   },
   chainDisplay: {
     padding: '10px',
-    backgroundColor: '#e3f2fd',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '4px',
     marginTop: '10px',
-    fontSize: '13px'
+    fontSize: 'var(--fs-body)'
   },
   calculateButton: {
     padding: '10px 20px',
-    backgroundColor: '#4CAF50',
+    backgroundColor: 'var(--accent-primary)',
     color: 'white',
     border: 'none',
     borderRadius: '4px',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: 500,
     cursor: 'pointer',
     marginTop: '10px'
@@ -92,33 +92,33 @@ const styles = {
   resultsSection: {
     marginTop: '20px',
     padding: '15px',
-    backgroundColor: '#f9f9f9',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '6px'
   },
   stepCard: {
     padding: '12px',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '4px',
     marginBottom: '10px',
-    border: '1px solid #e0e0e0'
+    border: '1px solid var(--bg-overlay)'
   },
   stepNumber: {
     display: 'inline-block',
     width: '24px',
     height: '24px',
     borderRadius: '50%',
-    backgroundColor: '#2196F3',
+    backgroundColor: 'var(--accent-primary)',
     color: 'white',
     textAlign: 'center' as const,
     lineHeight: '24px',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     fontWeight: 'bold',
     marginRight: '10px'
   },
   stepName: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: 500,
-    color: '#333',
+    color: 'var(--text-primary)',
     marginBottom: '8px'
   },
   stepDetails: {
@@ -129,43 +129,43 @@ const styles = {
     paddingLeft: '34px'
   },
   detailItem: {
-    fontSize: '12px',
-    color: '#666'
+    fontSize: 'var(--fs-body)',
+    color: 'var(--text-secondary)'
   },
   detailValue: {
     fontWeight: 500,
-    color: '#333'
+    color: 'var(--text-primary)'
   },
   finalResult: {
     marginTop: '20px',
     padding: '15px',
-    backgroundColor: '#4CAF50',
+    backgroundColor: 'var(--accent-primary)',
     color: 'white',
     borderRadius: '6px',
     textAlign: 'center' as const
   },
   finalValue: {
-    fontSize: '24px',
+    fontSize: 'var(--fs-title)',
     fontWeight: 'bold',
     marginTop: '5px'
   },
   errorBox: {
     padding: '12px',
-    backgroundColor: '#ffebee',
-    border: '1px solid #ffcdd2',
+    backgroundColor: 'var(--status-error-bg)',
+    border: '1px solid var(--status-error-bg)',
     borderRadius: '4px',
-    color: '#c62828',
-    fontSize: '13px',
+    color: 'var(--color-red-critical)',
+    fontSize: 'var(--fs-body)',
     marginTop: '10px'
   },
   validationWarning: {
     padding: '10px',
-    backgroundColor: '#fff3e0',
-    border: '1px solid #ffcc80',
+    backgroundColor: 'var(--accent-soft)',
+    border: '1px solid var(--accent-soft)',
     borderRadius: '4px',
     marginTop: '10px',
-    fontSize: '12px',
-    color: '#e65100'
+    fontSize: 'var(--fs-body)',
+    color: 'var(--accent-primary)'
   }
 };
 
@@ -412,7 +412,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
           marginTop: '15px',
           marginBottom: '15px',
           padding: '10px',
-          backgroundColor: '#f8f9fa',
+          backgroundColor: 'var(--bg-overlay)',
           borderRadius: '4px',
           position: 'relative'
         }}>
@@ -425,15 +425,15 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                 return graph.curves.map(c => {
                   const isLower = c.name === step.referenceCurves.lowerCurveName;
                   const isUpper = c.name === step.referenceCurves.upperCurveName;
-                  if (isLower) return { ...c, color: '#4CAF50' }; // Vert pour courbe inférieure
-                  if (isUpper) return { ...c, color: '#2196F3' }; // Bleu pour courbe supérieure
-                  return { ...c, color: '#ddd' }; // Gris pour les autres
+                  if (isLower) return { ...c, color: 'var(--accent-primary)' }; // Vert pour courbe inférieure
+                  if (isUpper) return { ...c, color: 'var(--accent-primary)' }; // Bleu pour courbe supérieure
+                  return { ...c, color: 'var(--border-subtle)' }; // Gris pour les autres
                 });
               } else if (step.curveUsed) {
                 // Sinon, utiliser l'ancienne méthode
                 return graph.curves.map(c => {
                   const isUsed = c.name === step.curveUsed || step.curveUsed.includes(c.name);
-                  return { ...c, color: isUsed ? '#ff4444' : '#ddd' };
+                  return { ...c, color: isUsed ? 'var(--color-red-critical)' : 'var(--border-subtle)' };
                 });
               }
               return graph.curves;
@@ -534,7 +534,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                     y1="0"
                     x2={xScale(step.inputValue)}
                     y2={innerHeight}
-                    stroke="#2196F3"
+                    stroke="var(--accent-primary)"
                     strokeWidth="2"
                     strokeDasharray="5,5"
                     opacity="0.7"
@@ -543,7 +543,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                     x={xScale(step.inputValue) - 10}
                     y={innerHeight + 15}
                     fontSize="10"
-                    fill="#2196F3"
+                    fill="var(--accent-primary)"
                   >
                     X={step.inputValue.toFixed(0)}
                   </text>
@@ -556,7 +556,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                         x="5"
                         y="-10"
                         fontSize="11"
-                        fill="#ff9800"
+                        fill="var(--accent-primary)"
                         fontWeight="bold"
                       >
                         Alt: {step.parameter.toFixed(0)} ft
@@ -567,7 +567,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                         cx={xScale(step.inputValue)}
                         cy={yScale(step.outputValue)}
                         r="6"
-                        fill="#ff4444"
+                        fill="var(--color-red-critical)"
                         stroke="white"
                         strokeWidth="2"
                       />
@@ -577,7 +577,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                         x={xScale(step.inputValue) + 10}
                         y={yScale(step.outputValue) - 5}
                         fontSize="10"
-                        fill="#ff4444"
+                        fill="var(--color-red-critical)"
                         fontWeight="bold"
                       >
                         Y={step.outputValue.toFixed(0)}
@@ -591,7 +591,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                       cx={xScale(step.inputValue)}
                       cy={yScale(step.outputValue)}
                       r="6"
-                      fill="#4CAF50"
+                      fill="var(--accent-primary)"
                       stroke="white"
                       strokeWidth="2"
                     />
@@ -608,7 +608,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                     y1={yScale(step.inputValue)}
                     x2={innerWidth}
                     y2={yScale(step.inputValue)}
-                    stroke="#2196F3"
+                    stroke="var(--accent-primary)"
                     strokeWidth="2"
                     strokeDasharray="5,5"
                     opacity="0.7"
@@ -617,7 +617,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                     x="-35"
                     y={yScale(step.inputValue) + 3}
                     fontSize="10"
-                    fill="#2196F3"
+                    fill="var(--accent-primary)"
                   >
                     Y={step.inputValue.toFixed(0)}
                   </text>
@@ -630,7 +630,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                         y1="0"
                         x2={xScale(step.parameter)}
                         y2={innerHeight}
-                        stroke="#ff9800"
+                        stroke="var(--accent-primary)"
                         strokeWidth="1.5"
                         strokeDasharray="3,3"
                         opacity="0.7"
@@ -639,7 +639,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                         x={xScale(step.parameter) - 10}
                         y={innerHeight + 15}
                         fontSize="10"
-                        fill="#ff9800"
+                        fill="var(--accent-primary)"
                       >
                         X={step.parameter.toFixed(0)}
                       </text>
@@ -653,7 +653,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                               cx={xScale(step.parameter)}
                               cy={yScale(step.valuesAtCrossing.lowerValue)}
                               r="4"
-                              fill="#4CAF50"
+                              fill="var(--accent-primary)"
                               stroke="white"
                               strokeWidth="1.5"
                             />
@@ -665,7 +665,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                               cx={xScale(step.parameter)}
                               cy={yScale(step.valuesAtCrossing.upperValue)}
                               r="4"
-                              fill="#2196F3"
+                              fill="var(--accent-primary)"
                               stroke="white"
                               strokeWidth="1.5"
                             />
@@ -678,7 +678,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                               y1={yScale(step.valuesAtCrossing.lowerValue)}
                               x2={xScale(step.parameter)}
                               y2={yScale(step.valuesAtCrossing.upperValue)}
-                              stroke="#9C27B0"
+                              stroke="var(--accent-primary)"
                               strokeWidth="3"
                               opacity="0.3"
                             />
@@ -691,7 +691,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                         cx={xScale(step.parameter)}
                         cy={yScale(step.outputValue)}
                         r="6"
-                        fill="#ff4444"
+                        fill="var(--color-red-critical)"
                         stroke="white"
                         strokeWidth="2"
                       />
@@ -700,13 +700,13 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                       <g transform={`translate(${xScale(step.parameter) + 15}, ${yScale(step.outputValue)})`}>
                         <path
                           d="M 0,0 L 10,-3 L 10,3 Z"
-                          fill="#ff4444"
+                          fill="var(--color-red-critical)"
                         />
                         <text
                           x="15"
                           y="3"
                           fontSize="10"
-                          fill="#ff4444"
+                          fill="var(--color-red-critical)"
                           fontWeight="bold"
                         >
                           Y={step.outputValue.toFixed(0)}
@@ -744,11 +744,11 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
             <div style={styles.detailItem}>
               Entrée (Y):
               <span style={styles.detailValue}> {step.inputValue.toFixed(2)}</span>
-              <span style={{ fontSize: '10px', color: '#2196F3', marginLeft: '4px' }}>
+              <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--accent-primary)', marginLeft: '4px' }}>
                 (valeur précédente)
               </span>
               {step.referenceCurves && (
-                <div style={{ fontSize: '10px', color: '#666', marginTop: '2px', marginLeft: '10px' }}>
+                <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginTop: '2px', marginLeft: '10px' }}>
                   Position entre courbes:
                   <br />• {step.referenceCurves.lowerCurveName} (Y={step.referenceCurves.lowerYAtRef?.toFixed(2)})
                   <br />• {step.referenceCurves.upperCurveName} (Y={step.referenceCurves.upperYAtRef?.toFixed(2)})
@@ -783,7 +783,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
         )}
         {step.valuesAtCrossing && (
           <div style={styles.detailItem}>
-            <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
+            <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginTop: '4px' }}>
               <strong>Croisements verticaux à X={step.parameter?.toFixed(2)}:</strong>
               <div style={{ marginLeft: '10px', marginTop: '2px' }}>
                 • Courbe inférieure: Y={step.valuesAtCrossing.lowerValue?.toFixed(2) || 'N/A'}<br />
@@ -794,9 +794,9 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
         )}
         {step.interpolated && (
           <div style={styles.detailItem}>
-            <span style={{ color: '#ff9800' }}>⚠ Valeur interpolée</span>
+            <span style={{ color: 'var(--accent-primary)' }}>⚠ Valeur interpolée</span>
             {step.valuesAtCrossing && (
-              <div style={{ fontSize: '10px', color: '#666', marginTop: '2px' }}>
+              <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginTop: '2px' }}>
                 Calcul: {step.valuesAtCrossing.lowerValue?.toFixed(2)} +
                 {' '}{step.offset?.toFixed(2)} ×
                 ({step.valuesAtCrossing.upperValue?.toFixed(2)} - {step.valuesAtCrossing.lowerValue?.toFixed(2)})
@@ -812,7 +812,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
     <div style={styles.container}>
       <div style={styles.header}>
         <h2 style={styles.title}>🔄 Calculateur en Cascade</h2>
-        <p style={{ fontSize: '13px', color: '#666', margin: '5px 0 0 0' }}>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', margin: '5px 0 0 0' }}>
           Propagez une valeur à travers une chaîne de graphiques liés
         </p>
       </div>
@@ -837,7 +837,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
               ))}
             </select>
             {startGraph && startGraph.axes && (
-              <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+              <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginTop: '4px' }}>
                 Point de départ: {startGraph.axes.xAxis.title}
                 {startGraph.axes.xAxis.unit && ` (${startGraph.axes.xAxis.unit})`}
               </div>
@@ -846,15 +846,15 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
         ) : (
           <div style={{
             padding: '12px',
-            backgroundColor: '#ffebee',
+            backgroundColor: 'var(--status-error-bg)',
             borderRadius: '6px',
             marginBottom: '16px',
-            border: '1px solid #f44336'
+            border: '1px solid var(--color-red-critical)'
           }}>
-            <div style={{ fontSize: '14px', color: '#c62828' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--color-red-critical)' }}>
               ⚠ Aucun système d'abaques configuré
             </div>
-            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginTop: '4px' }}>
               Veuillez configurer vos graphiques dans l'étape 1
             </div>
           </div>
@@ -869,7 +869,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                   {i > 0 && ' → '}
                   <strong>{g.name}</strong>
                   {g.axes && (
-                    <span style={{ fontSize: '11px', color: '#666' }}>
+                    <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
                       {' '}({g.axes.xAxis.title} → {g.axes.yAxis.title})
                     </span>
                   )}
@@ -917,7 +917,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                   {index === 0 ? (
                     <>
                       Altitude pression pour {graph.name}
-                      <span style={{ fontWeight: 'normal', color: '#d32f2f' }}>
+                      <span style={{ fontWeight: 'normal', color: 'var(--color-red-critical)' }}>
                         {' '}(obligatoire)
                       </span>
                     </>
@@ -936,7 +936,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                   type="number"
                   style={{
                     ...styles.input,
-                    borderColor: parameterWarnings[graph.id] ? '#ff9800' : '#ddd'
+                    borderColor: parameterWarnings[graph.id] ? 'var(--accent-primary)' : 'var(--border-subtle)'
                   }}
                   value={parameters[graph.id] || ''}
                   onChange={(e) => handleParameterChange(graph.id, e.target.value)}
@@ -948,19 +948,19 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                 />
                 {parameterWarnings[graph.id] && (
                   <div style={{
-                    fontSize: '11px',
-                    color: '#ff6b00',
+                    fontSize: 'var(--fs-caption)',
+                    color: 'var(--accent-primary)',
                     marginTop: '4px',
                     padding: '4px 8px',
-                    backgroundColor: '#fff3e0',
+                    backgroundColor: 'var(--accent-soft)',
                     borderRadius: '3px',
-                    border: '1px solid #ffcc80'
+                    border: '1px solid var(--accent-soft)'
                   }}>
                     {parameterWarnings[graph.id]}
                   </div>
                 )}
                 {graph.curves && graph.curves.length > 0 && (
-                  <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
+                  <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginTop: '4px' }}>
                     {index === 0 ? 'Courbes d\'altitude: ' : 'Courbes disponibles: '}
                     {graph.curves.map(c => c.name).join(', ')}
                   </div>
@@ -980,12 +980,12 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                     style={{
                       flex: 1,
                       padding: '8px',
-                      backgroundColor: windDirection === 'headwind' ? '#4CAF50' : '#f5f5f5',
-                      color: windDirection === 'headwind' ? 'white' : '#333',
-                      border: '1px solid ' + (windDirection === 'headwind' ? '#4CAF50' : '#ddd'),
+                      backgroundColor: windDirection === 'headwind' ? 'var(--accent-primary)' : 'var(--bg-overlay)',
+                      color: windDirection === 'headwind' ? 'white' : 'var(--text-primary)',
+                      border: '1px solid ' + (windDirection === 'headwind' ? 'var(--accent-primary)' : 'var(--border-subtle)'),
                       borderRadius: '4px',
                       cursor: 'pointer',
-                      fontSize: '13px',
+                      fontSize: 'var(--fs-body)',
                       fontWeight: windDirection === 'headwind' ? 'bold' : 'normal'
                     }}
                   >
@@ -996,12 +996,12 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                     style={{
                       flex: 1,
                       padding: '8px',
-                      backgroundColor: windDirection === 'tailwind' ? '#FF9800' : '#f5f5f5',
-                      color: windDirection === 'tailwind' ? 'white' : '#333',
-                      border: '1px solid ' + (windDirection === 'tailwind' ? '#FF9800' : '#ddd'),
+                      backgroundColor: windDirection === 'tailwind' ? 'var(--accent-primary)' : 'var(--bg-overlay)',
+                      color: windDirection === 'tailwind' ? 'white' : 'var(--text-primary)',
+                      border: '1px solid ' + (windDirection === 'tailwind' ? 'var(--accent-primary)' : 'var(--border-subtle)'),
                       borderRadius: '4px',
                       cursor: 'pointer',
-                      fontSize: '13px',
+                      fontSize: 'var(--fs-body)',
                       fontWeight: windDirection === 'tailwind' ? 'bold' : 'normal'
                     }}
                   >
@@ -1009,7 +1009,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                   </button>
                 </div>
                 {windDirection !== 'all' && (
-                  <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
+                  <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginTop: '4px' }}>
                     Seules les courbes {windDirection === 'headwind' ? 'vent de face' : 'vent arrière'} seront utilisées
                   </div>
                 )}
@@ -1046,7 +1046,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
 
       {result && result.success && (
         <div style={styles.resultsSection}>
-          <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#333' }}>
+          <h3 style={{ fontSize: 'var(--fs-title)', marginBottom: '15px', color: 'var(--text-primary)' }}>
             📊 Résultats du calcul
           </h3>
 
@@ -1059,7 +1059,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
             </div>
             {graphChain.length > 0 &&
              graphChain[graphChain.length - 1].axes && (
-              <div style={{ fontSize: '12px', marginTop: '5px' }}>
+              <div style={{ fontSize: 'var(--fs-body)', marginTop: '5px' }}>
                 {graphChain[graphChain.length - 1].axes.yAxis.title}
                 {graphChain[graphChain.length - 1].axes.yAxis.unit &&
                  ` (${graphChain[graphChain.length - 1].axes.yAxis.unit})`}

@@ -1,8 +1,9 @@
 // src/features/navigation/components/AirportSelector.jsx
 import React, { memo, useState, useRef, useEffect } from 'react';
-import { Search, MapPin, Download, AlertTriangle, CheckCircle, Info } from 'lucide-react';
+import { Search, MapPin, Download, AlertTriangle, Info } from 'lucide-react';
 import { aeroDataProvider } from '@core/data';
 import { useVACStore } from '@core/stores/vacStore';
+import { useOpenAIPStore } from '@core/stores/openAIPStore';
 import { sx } from '@shared/styles/styleSystem';
 
 export const AirportSelector = memo(({ 
@@ -256,7 +257,7 @@ const DiscrepancyDetails = memo(({ airportIcao }) => {
           <div style={sx.text.xs}>
             <div>OpenAIP: {disc.openAipCoords.lat.toFixed(6)}°, {disc.openAipCoords.lon.toFixed(6)}°</div>
             <div>VAC: {disc.vacCoords.lat.toFixed(6)}°, {disc.vacCoords.lon.toFixed(6)}°</div>
-            <div style={{ color: '#C04534' }}>
+            <div style={{ color: 'var(--color-red-critical)' }}>
               Écart: {disc.distance.toFixed(0)}m
             </div>
           </div>
@@ -311,7 +312,7 @@ const styles = {
     flex: 1,
     border: 'none',
     outline: 'none',
-    fontSize: '14px'
+    fontSize: 'var(--fs-body)'
   },
   airportList: {
     flex: 1,
@@ -343,7 +344,7 @@ const styles = {
     gap: '8px'
   },
   statusIcon: {
-    fontSize: '18px'
+    fontSize: 'var(--fs-title)'
   },
   downloadButton: {
     padding: '4px 8px',
@@ -383,7 +384,7 @@ const styles = {
     borderTop: '1px solid var(--border-subtle)',
     display: 'flex',
     gap: '16px',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)'
   },
   legendItem: {

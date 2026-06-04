@@ -22,7 +22,7 @@ const styles = {
     borderBottom: `2px solid ${theme.colors.primary[100]}`
   },
   title: {
-    fontSize: '24px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '700',
     color: theme.colors.textPrimary,
     margin: 0
@@ -32,7 +32,7 @@ const styles = {
   },
   label: {
     display: 'block',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: theme.colors.textPrimary,
     marginBottom: '8px'
@@ -40,7 +40,7 @@ const styles = {
   select: {
     width: '100%',
     padding: '12px',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     border: `1px solid ${theme.colors.border}`,
     borderRadius: 'var(--radius-sm)',
     backgroundColor: 'var(--bg-overlay)',
@@ -54,7 +54,7 @@ const styles = {
   input: {
     width: '100%',
     padding: '12px',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     border: `1px solid ${theme.colors.border}`,
     borderRadius: 'var(--radius-sm)',
     outline: 'none',
@@ -68,7 +68,7 @@ const styles = {
   },
   button: {
     padding: '12px 24px',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     borderRadius: 'var(--radius-sm)',
     border: 'none',
@@ -94,7 +94,7 @@ const styles = {
   alert: {
     padding: '12px 16px',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
@@ -123,7 +123,7 @@ const styles = {
     marginTop: '16px'
   },
   sourceInfoTitle: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: theme.colors.primary[700],
     marginBottom: '8px'
@@ -132,7 +132,7 @@ const styles = {
     display: 'grid',
     gridTemplateColumns: 'repeat(2, 1fr)',
     gap: '8px',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     color: theme.colors.textSecondary
   }
 };
@@ -262,7 +262,7 @@ export const AircraftDuplicator = ({ onSuccess }) => {
         <Copy size={28} color={theme.colors.primary[500]} />
         <div>
           <h2 style={styles.title}>Dupliquer un Avion</h2>
-          <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: theme.colors.textSecondary }}>
+          <p style={{ margin: '4px 0 0 0', fontSize: 'var(--fs-body)', color: theme.colors.textSecondary }}>
             Créer un nouvel avion à partir d'un avion existant
           </p>
         </div>
@@ -410,7 +410,7 @@ export const AircraftDuplicator = ({ onSuccess }) => {
             <span>{isLoading ? 'Duplication en cours...' : 'Dupliquer l\'avion'}</span>
           </button>
 
-          <div style={{ marginTop: '16px', fontSize: '13px', color: theme.colors.textSecondary }}>
+          <div style={{ marginTop: '16px', fontSize: 'var(--fs-body)', color: theme.colors.textSecondary }}>
             ℹ️ <strong>Note:</strong> Toutes les données de l'avion source (masse, centrage, performances, etc.)
             seront copiées. Vous pourrez les modifier après la création dans l'éditeur d'avion.
           </div>

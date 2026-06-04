@@ -1,5 +1,5 @@
-import React, { memo, useState, useEffect, useMemo } from 'react';
-import { Trash2, Navigation2, ChevronDown, ChevronUp, ArrowUp, ArrowDown } from 'lucide-react';
+import React, { memo, useState, useEffect } from 'react';
+import { Trash2, ChevronDown, ChevronUp, ArrowUp, ArrowDown } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { aeroDataProvider } from '@core/data';
 import { useAircraft, useNavigation } from '@core/contexts';
@@ -258,9 +258,9 @@ export const WaypointCardWithRunways = memo(({
 
       {/* Label Aérodrome + info départ/arrivée sur la même ligne */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-        <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-secondary)' }}>Aérodrome</span>
+        <span style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: 'var(--text-secondary)' }}>Aérodrome</span>
         <span style={{
-          fontSize: '12px',
+          fontSize: 'var(--fs-body)',
           fontWeight: '600',
           color: label.color,
           backgroundColor: label.color + '20',
@@ -464,7 +464,7 @@ export const WaypointCardWithRunways = memo(({
                             backgroundColor: 'var(--text-secondary)',
                             color: 'var(--text-primary)',
                             borderRadius: 'var(--radius-sm)',
-                            fontSize: '10px',
+                            fontSize: 'var(--fs-caption)',
                             fontWeight: 'bold'
                           }}>
                             PRINCIPALE
@@ -499,7 +499,7 @@ export const WaypointCardWithRunways = memo(({
                         <span style={sx.text.secondary}>Revêtement: {surfaceType}</span>
                         {selectedAircraft && selectedAircraft.distances && (
                           <span style={{
-                            fontSize: '10px',
+                            fontSize: 'var(--fs-caption)',
                             fontWeight: 'bold',
                             padding: '2px 6px',
                             borderRadius: 'var(--radius-sm)',
@@ -508,7 +508,7 @@ export const WaypointCardWithRunways = memo(({
                               color: 'var(--text-primary)'
                             } : {
                               backgroundColor: 'var(--bg-overlay)',
-                              color: '#C04534'
+                              color: 'var(--color-red-critical)'
                             })
                           }}>
                             {isCompatible && surfaceCompatible ? '✓ Compatible' : '✗ Incompatible'}
@@ -607,7 +607,7 @@ export const WaypointCardWithRunways = memo(({
               borderBottom: '1px solid var(--border-subtle)'
             }}>
               <h5 style={{
-                fontSize: '13px',
+                fontSize: 'var(--fs-body)',
                 fontWeight: '700',
                 color: 'var(--text-primary)',
                 margin: 0,
@@ -617,7 +617,7 @@ export const WaypointCardWithRunways = memo(({
               }}>
                 📍 Points VFR liés
                 <span style={{
-                  fontSize: '11px',
+                  fontSize: 'var(--fs-caption)',
                   fontWeight: '600',
                   color: 'var(--text-secondary)',
                   backgroundColor: 'var(--bg-overlay)',
@@ -643,7 +643,7 @@ export const WaypointCardWithRunways = memo(({
                     background: 'var(--bg-overlay)',
                     borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--border-subtle)',
-                    fontSize: '12px'
+                    fontSize: 'var(--fs-body)'
                   }}
                 >
                   <div style={{ display: 'flex', gap: '10px', flex: 1, alignItems: 'center' }}>
@@ -651,12 +651,12 @@ export const WaypointCardWithRunways = memo(({
                       fontWeight: '700',
                       color: 'var(--text-secondary)',
                       minWidth: '60px',
-                      fontSize: '13px'
+                      fontSize: 'var(--fs-body)'
                     }}>
                       {vfrPoint.name}
                     </div>
                     {vfrPoint.lat && vfrPoint.lon && (
-                      <div style={{ color: 'var(--text-tertiary)', fontSize: '11px' }}>
+                      <div style={{ color: 'var(--text-tertiary)', fontSize: 'var(--fs-caption)' }}>
                         📍 {vfrPoint.lat.toFixed(2)}°, {vfrPoint.lon.toFixed(2)}°
                       </div>
                     )}
@@ -678,14 +678,14 @@ export const WaypointCardWithRunways = memo(({
                       padding: '4px 6px',
                       border: 'none',
                       background: 'var(--bg-overlay)',
-                      color: '#C04534',
+                      color: 'var(--color-red-critical)',
                       borderRadius: 'var(--radius-sm)',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       transition: 'all 0.2s',
-                      fontSize: '11px'
+                      fontSize: 'var(--fs-caption)'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.background = 'var(--bg-overlay)';
@@ -727,7 +727,7 @@ export const WaypointCardWithRunways = memo(({
             />
           </div>
         ) : (
-          <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontStyle: 'italic', marginBottom: '10px' }}>
+          <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', fontStyle: 'italic', marginBottom: '10px' }}>
             (Pas de fonction d'insertion disponible)
           </div>
         )}

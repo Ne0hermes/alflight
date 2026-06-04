@@ -135,7 +135,7 @@ export const StepDial = ({
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontFamily: tokens.fontFamily.mono,
-                fontSize: '12px',
+                fontSize: 'var(--fs-body)',
                 fontWeight: 600,
                 cursor: isClickable ? 'pointer' : 'default',
                 padding: 0,
@@ -148,7 +148,7 @@ export const StepDial = ({
             <span
               style={{
                 fontFamily: tokens.fontFamily.mono,
-                fontSize: '10px',
+                fontSize: 'var(--fs-caption)',
                 letterSpacing: '0.15em',
                 textTransform: 'uppercase',
                 color: isCurrent

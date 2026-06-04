@@ -15,7 +15,7 @@ const UnitsModule = () => {
         marginBottom: '20px' 
       }}>
         <h2 style={{ 
-          fontSize: '24px', 
+          fontSize: 'var(--fs-title)', 
           fontWeight: 'bold', 
           marginBottom: '8px',
           display: 'flex',
@@ -25,7 +25,7 @@ const UnitsModule = () => {
           <Settings size={28} />
           Système d'Unités
         </h2>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-body)' }}>
           Configuration des unités de mesure pour l'ensemble de l'application
         </p>
       </div>
@@ -48,8 +48,8 @@ const UnitsModule = () => {
         }}>
           <Ruler size={20} color="var(--text-secondary)" />
           <div>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Distance</p>
-            <p style={{ fontSize: '14px', fontWeight: 'bold' }}>NM / km</p>
+            <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>Distance</p>
+            <p style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold' }}>NM / km</p>
           </div>
         </div>
 
@@ -64,8 +64,8 @@ const UnitsModule = () => {
         }}>
           <Gauge size={20} color="var(--text-primary)" />
           <div>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Altitude</p>
-            <p style={{ fontSize: '14px', fontWeight: 'bold' }}>ft / m</p>
+            <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>Altitude</p>
+            <p style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold' }}>ft / m</p>
           </div>
         </div>
 
@@ -80,8 +80,8 @@ const UnitsModule = () => {
         }}>
           <Scale size={20} color="var(--accent-primary)" />
           <div>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Poids</p>
-            <p style={{ fontSize: '14px', fontWeight: 'bold' }}>kg / lbs</p>
+            <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>Poids</p>
+            <p style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold' }}>kg / lbs</p>
           </div>
         </div>
 
@@ -94,10 +94,10 @@ const UnitsModule = () => {
           alignItems: 'center',
           gap: '8px'
         }}>
-          <Thermometer size={20} color="#C04534" />
+          <Thermometer size={20} color="var(--color-red-critical)" />
           <div>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Température</p>
-            <p style={{ fontSize: '14px', fontWeight: 'bold' }}>°C / °F</p>
+            <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>Température</p>
+            <p style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold' }}>°C / °F</p>
           </div>
         </div>
       </div>
@@ -112,7 +112,7 @@ const UnitsModule = () => {
         <UnitsPreferences />
       </div>
     </div>
-
+  );
 };
 
 export default UnitsModule;

@@ -1,6 +1,5 @@
 import React, { memo } from 'react';
 import { FileText, Globe, Edit3, AlertTriangle, CheckCircle } from 'lucide-react';
-import { sx } from '@shared/styles/styleSystem';
 
 /**
  * Badge pour indiquer la source et la fiabilité des données
@@ -40,7 +39,7 @@ export const DataSourceBadge = memo(({
       icon: Edit3,
       label: 'Modifié',
       fullLabel: 'Modifié manuellement',
-      color: '#C04534',
+      color: 'var(--color-red-critical)',
       backgroundColor: 'var(--bg-overlay)',
       description: modificationDate 
         ? `Modifié le ${new Date(modificationDate).toLocaleDateString('fr-FR')}`
@@ -68,10 +67,10 @@ export const DataSourceBadge = memo(({
   const Icon = config.icon;
 
   const sizes = {
-    xs: { fontSize: '10px', padding: '1px 4px', iconSize: 10 },
-    sm: { fontSize: '12px', padding: '2px 6px', iconSize: 12 },
-    md: { fontSize: '14px', padding: '4px 8px', iconSize: 14 },
-    lg: { fontSize: '16px', padding: '6px 12px', iconSize: 16 }
+    xs: { fontSize: 'var(--fs-caption)', padding: '1px 4px', iconSize: 10 },
+    sm: { fontSize: 'var(--fs-body)', padding: '2px 6px', iconSize: 12 },
+    md: { fontSize: 'var(--fs-body)', padding: '4px 8px', iconSize: 14 },
+    lg: { fontSize: 'var(--fs-title)', padding: '6px 12px', iconSize: 16 }
   };
 
   const sizeConfig = sizes[size] || sizes.sm;

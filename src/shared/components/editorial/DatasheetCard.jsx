@@ -116,7 +116,7 @@ export const DatasheetCard = ({
         <div
           style={{
             fontFamily: tokens.fontFamily.mono,
-            fontSize: '11px',
+            fontSize: 'var(--fs-caption)',
             letterSpacing: '0.15em',
             textTransform: 'uppercase',
             color: 'var(--text-tertiary)',
@@ -128,7 +128,7 @@ export const DatasheetCard = ({
         <div
           style={{
             fontFamily: tokens.fontFamily.mono,
-            fontSize: '11px',
+            fontSize: 'var(--fs-caption)',
             letterSpacing: '0.15em',
             textTransform: 'uppercase',
             color: 'var(--text-tertiary)',

@@ -42,7 +42,7 @@ const EnvelopeSubChart = ({
           maxWidth: '500px',
           height: 'auto',
           border: '1px solid var(--border-subtle)',
-          borderRadius: 4,
+          borderRadius: 8,
           backgroundColor: 'transparent',
           display: 'block',
           margin: '0 auto'
@@ -115,7 +115,7 @@ const EnvelopeSubChart = ({
           <polygon
             points={envelopePoints.map(p => `${toX(p.x)},${toY(p.y)}`).join(' ')}
             fill="rgba(34, 197, 94, 0.2)"
-            stroke="#22c55e"
+            stroke="var(--accent-primary)"
             strokeWidth="2"
           />
         )}
@@ -127,7 +127,7 @@ const EnvelopeSubChart = ({
               cx={toX(point.x)}
               cy={toY(point.y)}
               r={4}
-              fill={point.isForward ? '#22c55e' : '#dc2626'}
+              fill={point.isForward ? 'var(--accent-primary)' : 'var(--color-red-critical)'}
               stroke="white"
               strokeWidth={2}
             />

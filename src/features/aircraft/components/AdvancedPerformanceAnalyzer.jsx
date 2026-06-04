@@ -1,9 +1,6 @@
 // src/features/aircraft/components/AdvancedPerformanceAnalyzer.jsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-  Upload, Loader, CheckCircle, AlertTriangle, Info, X, Brain,
-  Download, Edit3, Plus, Minus, Save, FileText, Table, BarChart3,
-  Eye, EyeOff, Copy, Trash2, RefreshCw, ChevronDown, ChevronUp
+import { CheckCircle, AlertTriangle, Info, X, Plus, FileText, Trash2, RefreshCw, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { sx } from '../../../shared/styles/styleSystem';
 import unifiedPerformanceService from '../../../features/performance/services/unifiedPerformanceService';
@@ -974,7 +971,7 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
       setAnalysisProgress(100);
 
       // Grouper les tableaux par classification après extraction
-      groupTablesByClassification(shouldMerge ? mergedTables : validatedResults);
+      groupTablesByClassification(shouldMerge ? [...extractedTables, ...validatedResults] : validatedResults);
       
       // Message de fin avec résumé
       if (analysisSummary.failedDocuments > 0 || analysisSummary.undetectedDocuments > 0) {
@@ -1449,7 +1446,7 @@ Do NOT return empty tables array.`;
                         color: 'var(--text-primary)',
                         padding: '2px 6px',
                         borderRadius: 'var(--radius-sm)',
-                        fontSize: '10px',
+                        fontSize: 'var(--fs-caption)',
                         fontWeight: 'bold',
                         zIndex: 1
                       }}>
@@ -1467,7 +1464,7 @@ Do NOT return empty tables array.`;
                         color: 'var(--text-primary)',
                         padding: '2px 6px',
                         borderRadius: 'var(--radius-sm)',
-                        fontSize: '10px',
+                        fontSize: 'var(--fs-caption)',
                         fontWeight: 'bold',
                         zIndex: 1
                       }}>
@@ -1491,7 +1488,7 @@ Do NOT return empty tables array.`;
                         position: 'absolute',
                         top: '4px',
                         right: '4px',
-                        backgroundColor: '#C04534',
+                        backgroundColor: 'var(--color-red-critical)',
                         color: 'var(--text-primary)',
                         border: 'none',
                         borderRadius: '50%',
@@ -1501,7 +1498,7 @@ Do NOT return empty tables array.`;
                         alignItems: 'center',
                         justifyContent: 'center',
                         cursor: 'pointer',
-                        fontSize: '12px'
+                        fontSize: 'var(--fs-body)'
                       }}
                     >
                       <X size={12} />
@@ -1645,7 +1642,7 @@ Do NOT return empty tables array.`;
                     setExtractedTables(newTables);
                   }}
                   style={sx.combine(sx.components.button.base, {
-                    backgroundColor: '#C04534',
+                    backgroundColor: 'var(--color-red-critical)',
                     color: 'var(--text-primary)',
                     padding: '4px 12px'
                   })}
@@ -1676,7 +1673,7 @@ Do NOT return empty tables array.`;
                   setExtractedTables(newTables);
                 }}
                 style={sx.combine(sx.components.button.base, {
-                  backgroundColor: '#C04534',
+                  backgroundColor: 'var(--color-red-critical)',
                   color: 'var(--text-primary)',
                   padding: '4px 12px'
                 })}
@@ -1707,7 +1704,7 @@ Do NOT return empty tables array.`;
                     padding: '8px 12px',
                     border: '1px solid var(--text-tertiary)',
                     borderRadius: 'var(--radius-sm)',
-                    fontSize: '14px',
+                    fontSize: 'var(--fs-body)',
                     flex: 1
                   }}
                 >
@@ -1778,7 +1775,7 @@ Do NOT return empty tables array.`;
                     style={sx.combine(
                     sx.components.button.base,
                     { 
-                      backgroundColor: '#C04534',
+                      backgroundColor: 'var(--color-red-critical)',
                       color: 'var(--text-primary)',
                       padding: '8px 12px',
                       display: 'flex',
@@ -1827,7 +1824,7 @@ Do NOT return empty tables array.`;
                       background: 'transparent',
                       border: 'none',
                       cursor: 'pointer',
-                      fontSize: '16px',
+                      fontSize: 'var(--fs-title)',
                       fontWeight: 'bold'
                     }}
                   >
@@ -1875,7 +1872,7 @@ Do NOT return empty tables array.`;
                             padding: '6px 8px',
                             border: '1px solid var(--text-tertiary)',
                             borderRadius: 'var(--radius-sm)',
-                            fontSize: '14px'
+                            fontSize: 'var(--fs-body)'
                           }}
                           placeholder="Valeur"
                         />
@@ -1958,12 +1955,12 @@ Do NOT return empty tables array.`;
                         }
                         
                         resultDiv.innerHTML = `
-                          <div style="padding: 12px; background: ${result.method === 'no_result_column' ? 'var(--bg-overlay)' : 'var(--bg-overlay)'}; border: 1px solid ${result.method === 'no_result_column' ? '#C04534' : 'var(--text-secondary)'}; border-radius: 6px; margin-top: 12px;">
+                          <div style="padding: 12px; background: ${result.method === 'no_result_column' ? 'var(--bg-overlay)' : 'var(--bg-overlay)'}; border: 1px solid ${result.method === 'no_result_column' ? 'var(--color-red-critical)' : 'var(--text-secondary)'}; border-radius: 6px; margin-top: 12px;">
                             <strong style="font-size: 16px;">📊 Résultat de la prédiction</strong><br/>
                             ${result.method !== 'no_result_column' ? `
                               <div style="margin-top: 12px;">
                                 <div style="background: white; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
-                                  ${distancesHtml || '<span style="color: #C04534;">Aucune distance calculée</span>'}
+                                  ${distancesHtml || '<span style="color: var(--color-red-critical);">Aucune distance calculée</span>'}
                                 </div>
                                 <div style="border-top: 1px solid var(--border-subtle); padding-top: 8px; margin-top: 8px;">
                                   <span style="color: var(--text-tertiary); font-size: 12px;">
@@ -1976,7 +1973,7 @@ Do NOT return empty tables array.`;
                               </div>
                             ` : `
                               <div style="margin-top: 8px;">
-                                <span style="color: #C04534;">${methodText}</span><br/>
+                                <span style="color: var(--color-red-critical);">${methodText}</span><br/>
                                 <span style="color: var(--text-tertiary); font-size: 12px;">
                                   <strong>Colonnes disponibles:</strong><br/>
                                   ${Object.keys(selectedTable.data[0] || {}).join(', ')}
@@ -2022,7 +2019,7 @@ Do NOT return empty tables array.`;
                 color: 'var(--text-secondary)',
                 border: 'none',
                 borderRadius: 'var(--radius-sm)',
-                fontSize: '16px',
+                fontSize: 'var(--fs-title)',
                 cursor: 'pointer',
                 fontWeight: '600',
                 display: 'flex',
@@ -2096,7 +2093,7 @@ Do NOT return empty tables array.`;
               sx.components.button.primary,
               {
                 padding: '14px 24px',
-                fontSize: '16px',
+                fontSize: 'var(--fs-title)',
                 fontWeight: '600',
                 display: 'flex',
                 alignItems: 'center',
@@ -2243,7 +2240,7 @@ Do NOT return empty tables array.`;
                         color: 'var(--text-primary)',
                         padding: '2px 6px',
                         borderRadius: 'var(--radius-sm)',
-                        fontSize: '10px',
+                        fontSize: 'var(--fs-caption)',
                         fontWeight: 'bold'
                       }}>
                         AUTO
@@ -2251,7 +2248,7 @@ Do NOT return empty tables array.`;
                     )}
                     
                     <div style={{
-                      fontSize: '12px',
+                      fontSize: 'var(--fs-body)',
                       fontWeight: 'bold',
                       marginBottom: '4px',
                       color: isSelected ? 'var(--text-secondary)' : 'var(--text-secondary)'
@@ -2282,7 +2279,7 @@ Do NOT return empty tables array.`;
                     </div>
                     
                     <div style={{
-                      fontSize: '10px',
+                      fontSize: 'var(--fs-caption)',
                       color: 'var(--text-tertiary)',
                       marginTop: '4px'
                     }}>

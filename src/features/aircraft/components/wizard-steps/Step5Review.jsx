@@ -7,10 +7,6 @@ import {
   Alert,
   Button,
   Chip,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -32,23 +28,16 @@ import {
   Scale as ScaleIcon,
   TrendingUp as TrendingUpIcon,
   Timeline as TimelineIcon,
-  Balance as BalanceIcon,
   Assignment as AssignmentIcon,
-  CloudUpload as CloudUploadIcon,
   Save as SaveIcon,
   Difference as DifferenceIcon,
-  Warning as WarningIcon,
-  Sync as SyncIcon,
-  Description as DescriptionIcon,
-  CloudQueue as CloudQueueIcon,
   ThumbUp as ThumbUpIcon,
   ThumbDown as ThumbDownIcon
 } from '@mui/icons-material';
-import CGEnvelopeChart from '../CgEnvelopeChart';
 import CGEnvelopeDualChart from '../CgEnvelopeDualChart';
 import SpeedLimitationChart from '../SpeedLimitationChart';
 import communityService from '../../../../services/communityService';
-import { getCurrentUserId, getCurrentUserIdOrThrow } from '../../../../lib/supabaseAuth';
+import { getCurrentUserIdOrThrow } from '../../../../lib/supabaseAuth';
 import { trackingActions } from '../../../../utils/autoTracking';
 import { useUnitsStore } from '@core/stores/unitsStore';
 import { getUnitSymbol } from '@utils/unitConversions';
@@ -735,7 +724,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
       <Box
         sx={{
           p: 2,
-          bgcolor: 'grey.50',
+          bgcolor: 'var(--bg-raised)',
           display: 'flex',
           flexDirection: 'column',
           gap: 1,
@@ -1000,8 +989,8 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           hasCGData ? (
             <Box sx={{
               p: 2,
-              bgcolor: 'grey.50',
-              borderRadius: 1,
+              bgcolor: 'var(--bg-raised)',
+              borderRadius: '8px',
               border: '1px solid',
               borderColor: 'divider'
             }}>
@@ -1029,7 +1018,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
         <Box
           sx={{
             p: 2,
-            bgcolor: 'grey.50',
+            bgcolor: 'var(--bg-raised)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -1081,24 +1070,24 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                           border: '2px solid var(--text-secondary)'
                         }}
                       >
-                        <Typography sx={{ fontWeight: 500, mb: 1, fontSize: '15px' }}>
+                        <Typography sx={{ fontWeight: 500, mb: 1, fontSize: 'var(--fs-body)' }}>
                           {model.name || `Abaque ${index + 1}`}
                         </Typography>
-                        <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                        <Typography sx={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                           Type: {model.type || 'abaque'}
                         </Typography>
                         {model.data?.graphs && (
                           <>
-                            <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)', mt: 0.5 }}>
+                            <Typography sx={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', mt: 0.5 }}>
                               📊 {model.data.graphs.length} graphique(s)
                             </Typography>
                             {totalCurves > 0 && (
-                              <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)', mt: 0.5 }}>
+                              <Typography sx={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', mt: 0.5 }}>
                                 📈 {totalCurves} courbe(s)
                               </Typography>
                             )}
                             {totalPoints > 0 && (
-                              <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)', mt: 0.5 }}>
+                              <Typography sx={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', mt: 0.5 }}>
                                 📍 {totalPoints} point(s) de données
                               </Typography>
                             )}
@@ -1243,7 +1232,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           <Box 
             sx={{ 
               p: 2, 
-              bgcolor: 'grey.50',
+              bgcolor: 'var(--bg-raised)',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -1332,7 +1321,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
         <Box 
           sx={{ 
             p: 2, 
-            bgcolor: 'grey.50',
+            bgcolor: 'var(--bg-raised)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -1458,7 +1447,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           <Box
             sx={{
               p: 2,
-              bgcolor: 'grey.50',
+              bgcolor: 'var(--bg-raised)',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -1655,24 +1644,24 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                               border: '2px solid var(--text-secondary)'
                             }}
                           >
-                            <Typography sx={{ fontWeight: 500, mb: 1, fontSize: '15px' }}>
+                            <Typography sx={{ fontWeight: 500, mb: 1, fontSize: 'var(--fs-body)' }}>
                               {model.name || `Abaque ${index + 1}`}
                             </Typography>
-                            <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                            <Typography sx={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                               Type: {model.type || 'abaque'}
                             </Typography>
                             {model.data?.graphs && (
                               <>
-                                <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)', mt: 0.5 }}>
+                                <Typography sx={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', mt: 0.5 }}>
                                   📊 {model.data.graphs.length} graphique(s)
                                 </Typography>
                                 {totalCurves > 0 && (
-                                  <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)', mt: 0.5 }}>
+                                  <Typography sx={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', mt: 0.5 }}>
                                     📈 {totalCurves} courbe(s)
                                   </Typography>
                                 )}
                                 {totalPoints > 0 && (
-                                  <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)', mt: 0.5 }}>
+                                  <Typography sx={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', mt: 0.5 }}>
                                     📍 {totalPoints} point(s) de données
                                   </Typography>
                                 )}
@@ -1703,7 +1692,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                             {variantDiffs.map((diff, index) => (
                               <TableRow key={index} sx={{
                                 '&:hover': { bgcolor: 'action.hover' },
-                                bgcolor: index % 2 === 0 ? 'grey.50' : 'white'
+                                bgcolor: index % 2 === 0 ? 'transparent' : 'var(--bg-overlay)'
                               }}>
                                 <TableCell>{diff.field}</TableCell>
                                 <TableCell sx={{ color: 'text.secondary' }}>
@@ -1723,7 +1712,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                     </>
                   )}
 
-                  <Box sx={{ mt: 2, p: 1, bgcolor: 'info.50', borderRadius: 1 }}>
+                  <Box sx={{ mt: 2, p: 1, bgcolor: 'var(--bg-overlay)', borderRadius: '8px' }}>
                     <Typography variant="caption" color="text.secondary">
                       {variantDiffs.length + (hasAbaqueChanges ? modifiedAbaques.length : 0)} modification{(variantDiffs.length + (hasAbaqueChanges ? modifiedAbaques.length : 0)) > 1 ? 's' : ''} détectée{(variantDiffs.length + (hasAbaqueChanges ? modifiedAbaques.length : 0)) > 1 ? 's' : ''} par rapport à la configuration de base
                       {hasAbaqueChanges && ` (dont ${modifiedAbaques.length} abaque${modifiedAbaques.length > 1 ? 's' : ''})`}

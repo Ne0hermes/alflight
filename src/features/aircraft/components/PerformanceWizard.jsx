@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, FileText, Table, LineChart, ChevronRight, AlertCircle, Check, X } from 'lucide-react';
-import unifiedPerformanceService from '../../performance/services/unifiedPerformanceService';
+import { FileText, Table, LineChart, AlertCircle, Check } from 'lucide-react';
 import pdfToImageConverterOptimized from '../../../services/pdfToImageConverterOptimized';
 import AdvancedPerformanceAnalyzer from './AdvancedPerformanceAnalyzer';
 import { AbacBuilder } from '../../../abac/curves/ui/AbacBuilder';
@@ -41,7 +40,7 @@ const styles = {
   button: {
     padding: '10px',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '500',
     border: 'none',
     cursor: 'pointer',
@@ -51,8 +50,8 @@ const styles = {
     gap: '8px'
   },
   buttonPrimary: {
-    backgroundColor: 'var(--text-primary)',
-    color: 'var(--text-primary)'
+    backgroundColor: 'var(--accent-primary)',
+    color: 'var(--text-inverse)'
   },
   buttonSecondary: {
     backgroundColor: 'var(--border-subtle)',
@@ -69,22 +68,22 @@ const styles = {
   alertSuccess: {
     backgroundColor: 'var(--bg-overlay)',
     color: 'var(--text-primary)',
-    border: '1px solid var(--bg-overlay)'
+    border: '1px solid var(--accent-primary)'
   },
   alertWarning: {
     backgroundColor: 'rgba(242, 105, 33, 0.10)',
     color: 'var(--accent-primary)',
-    border: '1px solid var(--bg-overlay)'
+    border: '1px solid var(--accent-primary)'
   },
   alertError: {
     backgroundColor: 'var(--bg-overlay)',
-    color: '#C04534',
-    border: '1px solid var(--bg-overlay)'
+    color: 'var(--color-red-critical)',
+    border: '1px solid var(--color-red-critical)'
   },
   text: {
-    sm: { fontSize: '14px' },
-    md: { fontSize: '16px' },
-    lg: { fontSize: '18px' },
+    sm: { fontSize: 'var(--fs-body)' },
+    md: { fontSize: 'var(--fs-title)' },
+    lg: { fontSize: 'var(--fs-title)' },
     bold: { fontWeight: 'bold' },
     muted: { color: 'var(--text-secondary)' }
   }
@@ -513,7 +512,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                   <AlertCircle size={16} />
                   <div>
                     <strong>Téléchargement du MANEX en cours...</strong>
-                    <p style={{ margin: '4px 0 0 0', fontSize: '13px' }}>
+                    <p style={{ margin: '4px 0 0 0', fontSize: 'var(--fs-body)' }}>
                       Le MANEX est disponible dans Supabase ({hasManexInSupabase.fileName}). Rechargez la page (F5) pour réessayer le téléchargement.
                     </p>
                   </div>
@@ -526,7 +525,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                   <AlertCircle size={16} />
                   <div>
                     <strong>MANEX requis</strong>
-                    <p style={{ margin: '4px 0 0 0', fontSize: '13px' }}>
+                    <p style={{ margin: '4px 0 0 0', fontSize: 'var(--fs-body)' }}>
                       Vous devez d'abord ajouter un manuel de vol (MANEX) dans l'étape "Informations générales"
                       avant de pouvoir extraire des données de performance.
                     </p>
@@ -769,7 +768,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                   }} />
                   <div>
                     <strong>Extraction en cours...</strong>
-                    <p style={{ margin: '4px 0 0 0', fontSize: '13px' }}>
+                    <p style={{ margin: '4px 0 0 0', fontSize: 'var(--fs-body)' }}>
                       {loadingMessage || 'Extraction des pages du MANEX...'}
                     </p>
                   </div>
@@ -890,11 +889,11 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                       position: 'absolute',
                       top: '8px',
                       right: '8px',
-                      backgroundColor: selectedPages.includes(index) ? 'var(--text-primary)' : 'rgba(0,0,0,0.5)',
-                      color: 'var(--text-primary)',
+                      backgroundColor: selectedPages.includes(index) ? 'var(--accent-primary)' : 'rgba(0,0,0,0.5)',
+                      color: selectedPages.includes(index) ? 'var(--text-inverse)' : 'var(--text-primary)',
                       borderRadius: 'var(--radius-sm)',
                       padding: '2px 6px',
-                      fontSize: '12px'
+                      fontSize: 'var(--fs-body)'
                     }}>
                       Page {page.pageNumber}
                     </div>
@@ -909,7 +908,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                             left: '4px',
                             right: '4px',
                             padding: '8px 6px',
-                            fontSize: '12px',
+                            fontSize: 'var(--fs-body)',
                             borderRadius: 'var(--radius-sm)',
                             border: '2px solid var(--text-primary)',
                             backgroundColor: 'var(--bg-overlay)',
@@ -947,11 +946,11 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                             position: 'absolute',
                             top: '8px',
                             left: '8px',
-                            backgroundColor: '#C04534',
+                            backgroundColor: 'var(--color-red-critical)',
                             color: 'var(--text-primary)',
                             padding: '3px 8px',
                             borderRadius: 'var(--radius-sm)',
-                            fontSize: '10px',
+                            fontSize: 'var(--fs-caption)',
                             fontWeight: 'bold',
                             whiteSpace: 'nowrap'
                           }}>
@@ -966,8 +965,8 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                               position: 'absolute',
                               top: '8px',
                               right: '8px',
-                              backgroundColor: 'var(--text-primary)',
-                              color: 'var(--text-primary)',
+                              backgroundColor: 'var(--accent-primary)',
+                              color: 'var(--text-inverse)',
                               borderRadius: '50%',
                               padding: '2px'
                             }}

@@ -36,7 +36,7 @@ export const theme = {
     // ─── États sémantiques ───
     success: 'var(--accent-primary)',         // pas de vert SaaS — accent ALFlight
     warning: 'var(--accent-primary)',         // pas de jaune fluo — accent ALFlight
-    error: '#C04534',                          // red-critical ALFlight (NO-GO)
+    error: 'var(--color-red-critical)',        // red-critical ALFlight (NO-GO)
     info: 'var(--text-secondary)',            // pas de bleu SaaS — neutre cockpit
   },
 
@@ -105,7 +105,7 @@ export const createButtonStyle = (variant = 'primary') => {
     border: 'none',
     borderRadius: '8px',
     fontWeight: 600,
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     cursor: 'pointer',
     transition: 'background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease',
     textTransform: 'uppercase',

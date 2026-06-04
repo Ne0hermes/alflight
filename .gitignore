@@ -57,4 +57,11 @@ ExportOptions.plist
 logs/
 *.csv
 tracking_local.json
+
+# Données XML AIXM/SIA brutes (source réglementaire, ~68 Mo) — NON versionnées.
+# Emplacement UNIQUE : public/data/ (servi au runtime ET lu par l'ETL).
+# Pour régénérer : déposer le cycle AIRAC du SIA (DGAC) dans public/data/,
+# puis  npm run sia:etl && npm run sia:sync  (le GeoJSON dérivé, lui, est versionné).
+src/data/*.xml
+public/data/*.xml
 .vercel

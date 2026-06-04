@@ -100,6 +100,8 @@ export const ProGate = ({
         />
       )}
     </>
+  );
+};
 
 const styles = {
   loading: {
@@ -147,7 +149,7 @@ const styles = {
     maxWidth: '400px',
   },
   lockTitle: {
-    fontSize: '20px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     margin: '16px 0 8px',
   },
@@ -161,7 +163,7 @@ const styles = {
     border: 'none',
     borderRadius: 'var(--radius-sm)',
     padding: '12px 24px',
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'background-color 0.2s',
@@ -182,13 +184,13 @@ const styles = {
     maxWidth: '500px',
   },
   lockedTitle: {
-    fontSize: '24px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     margin: '24px 0 12px',
     color: 'var(--text-secondary)',
   },
   lockedDescription: {
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     color: 'var(--text-secondary)',
     marginBottom: '32px',
     lineHeight: '1.5',
@@ -199,7 +201,7 @@ const styles = {
     border: 'none',
     borderRadius: 'var(--radius-sm)',
     padding: '14px 28px',
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'background-color 0.2s',
