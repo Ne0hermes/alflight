@@ -8,6 +8,7 @@ import { getAIXMDataStatus, formatAIXMAlert } from '../utils/aixmDataValidator';
 // 🎨 Charte éditoriale ALFlight — alignement avec le titre "Démarrer" de la home
 import { EditorialHeading } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
+import { Button } from '@shared/components/Button';
 
 export const PilotDashboard = ({ onNavigate }) => {
   const [medicalStatus, setMedicalStatus] = useState(null);
@@ -609,12 +610,13 @@ export const PilotDashboard = ({ onNavigate }) => {
               </p>
             </div>
           </div>
-          <button
-            style={{ ...styles.configureButton, width: '100%', marginTop: '12px' }}
+          <Button
+            variant="primary"
             onClick={() => onNavigate && onNavigate('pilot')}
+            sx={{ width: '100%', mt: '12px' }}
           >
             Configurer mon profil
-          </button>
+          </Button>
         </div>
       )}
 
@@ -686,49 +688,27 @@ export const PilotDashboard = ({ onNavigate }) => {
             </div>
           )}
           <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-            <button
+            <Button
+              variant="secondary"
+              size="small"
               onClick={() => setAixmDetailsExpanded(!aixmDetailsExpanded)}
-              style={{
-                ...styles.configureButton,
-                // Bouton détails : style ghost (outline accent), pas plein
-                backgroundColor: 'transparent',
-                color: 'var(--accent-primary)',
-                border: '1px solid var(--accent-primary)',
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-              }}
+              endIcon={aixmDetailsExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              sx={{ flex: 1 }}
             >
-              {aixmDetailsExpanded ? (
-                <>
-                  Masquer <ChevronUp size={14} />
-                </>
-              ) : (
-                <>
-                  Détails <ChevronDown size={14} />
-                </>
-              )}
-            </button>
+              {aixmDetailsExpanded ? 'Masquer' : 'Détails'}
+            </Button>
             {(aixmDataStatus.status === 'expired' || aixmDataStatus.status === 'warning' || aixmDataStatus.status === 'expiring-today') && (
-              <a
+              <Button
+                variant="primary"
+                size="small"
+                component="a"
                 href={aixmDataStatus.downloadUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  ...styles.configureButton,
-                  // Bouton télécharger : plein orange ALFlight (action primaire)
-                  textDecoration: 'none',
-                  flex: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                }}
+                sx={{ flex: 1 }}
               >
                 Télécharger
-              </a>
+              </Button>
             )}
           </div>
         </div>
@@ -776,15 +756,13 @@ export const PilotDashboard = ({ onNavigate }) => {
               >
                 <X size={16} />
               </button>
-              <button
-                style={{
-                  ...styles.configureButton,
-                  backgroundColor: 'var(--accent-primary)'
-                }}
+              <Button
+                variant="primary"
+                size="small"
                 onClick={handleResumeWizard}
               >
                 Reprendre la configuration
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1307,21 +1285,6 @@ const styles = {
     fontSize: '12px',
     color: 'var(--text-secondary)',
     lineHeight: 1.5,
-  },
-  // Bouton d'action dans alerte — aligné sur le système de boutons de la charte :
-  // police sans (Century Gothic via --font-sans), casse normale, accent orange.
-  configureButton: {
-    backgroundColor: 'var(--accent-primary)',
-    color: 'var(--text-inverse)',
-    border: 'none',
-    borderRadius: 'var(--radius-sm)',
-    padding: '10px 16px',
-    fontFamily: 'var(--font-sans)',
-    fontSize: '14px',
-    fontWeight: 600,
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
-    transition: 'background-color 0.2s ease',
   },
   grid: {
     display: 'grid',
