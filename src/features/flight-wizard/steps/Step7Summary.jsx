@@ -1038,10 +1038,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             <div style={{
               padding: '10px 12px',
               borderRadius: 'var(--radius-sm)',
-              backgroundColor: fuelInfo.confirmed >= fuelInfo.required ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
-              border: `1px solid ${fuelInfo.confirmed >= fuelInfo.required ? 'var(--text-primary)' : '#C04534'}`
+              backgroundColor: fuelInfo.confirmed >= fuelInfo.required ? 'var(--bg-overlay)' : 'var(--status-error-bg)',
+              border: `1px solid ${fuelInfo.confirmed >= fuelInfo.required ? 'var(--border-subtle)' : 'var(--color-red-critical)'}`
             }}>
-              <div style={{ fontSize: '14px', fontWeight: '600', textAlign: 'center', color: fuelInfo.confirmed >= fuelInfo.required ? 'var(--text-primary)' : '#C04534' }}>
+              <div style={{ fontSize: '14px', fontWeight: '600', textAlign: 'center', color: fuelInfo.confirmed >= fuelInfo.required ? 'var(--text-primary)' : 'var(--color-red-critical)' }}>
                 {fuelInfo.confirmed >= fuelInfo.required ?
                   `✓ Carburant suffisant (+${format(fuelInfo.confirmed - fuelInfo.required, 'fuel', 1)} de marge)` :
                   `✗ Carburant insuffisant (${format(fuelInfo.required - fuelInfo.confirmed, 'fuel', 1)} manquant)`

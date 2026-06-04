@@ -452,8 +452,8 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
                 onClick={handleDownloadPdf}
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: 'var(--text-secondary)',
-                  color: 'var(--text-primary)',
+                  backgroundColor: 'var(--accent-primary)',
+                  color: 'var(--text-inverse)',
                   border: 'none',
                   borderRadius: 'var(--radius-sm)',
                   fontSize: '14px',
@@ -472,7 +472,7 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
               onClick={handleExportData}
               style={{
                 padding: '8px 16px',
-                backgroundColor: 'var(--text-primary)',
+                backgroundColor: 'var(--bg-overlay)',
                 color: 'var(--text-primary)',
                 border: 'none',
                 borderRadius: 'var(--radius-sm)',
