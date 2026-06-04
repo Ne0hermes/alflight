@@ -994,8 +994,8 @@ const VACModuleOld = memo(() => {
                                   fontSize: '9px', 
                                   padding: '1px 4px', 
                                   borderRadius: 'var(--radius-sm)',
-                                  backgroundColor: props.source === 'AIXM' ? '#e3f2fd' : '#fff3e0',
-                                  color: props.source === 'AIXM' ? '#1976d2' : '#f57c00'
+                                  backgroundColor: props.source === 'AIXM' ? 'var(--status-info-bg)' : 'var(--accent-soft)',
+                                  color: props.source === 'AIXM' ? 'var(--status-info)' : 'var(--accent-primary)'
                                 }}>
                                   {props.source}
                                 </span>
