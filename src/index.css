@@ -37,7 +37,7 @@
 
 /* Polices web libres (fallbacks de Century Gothic) */
 @import url('https://fonts.googleapis.com/css2?family=Questrial&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+/* JetBrains Mono retiré — police unique Century Gothic (--font-mono aliasé sur --font-sans). */
 
 /* ----------------------------------------------------------------------------
    Variables CSS — Mode nuit (par défaut)
@@ -141,7 +141,9 @@
 
   /* Polices */
   --font-sans: 'Century Gothic', 'URW Gothic', 'Questrial', 'Jost', 'Avant Garde', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'SF Mono', Menlo, Consolas, monospace;
+  /* --font-mono neutralisé : aliasé sur --font-sans → toute valeur "mono" rend en
+     Century Gothic (police UNIQUE). L'alignement des chiffres passe par tabular-nums. */
+  --font-mono: var(--font-sans);
 
   /* ============================================================
      🔠 ÉCHELLE TYPOGRAPHIQUE RATIONALISÉE — 4 paliers UI (migration charte V7)
@@ -180,11 +182,11 @@
      Modifier UNIQUEMENT ces variables pour redimensionner tous les
      boutons partout dans l'app.
      ----------------------------------------------------------- */
-  --btn-padding-y: 12px;            /* haut/bas → hauteur du bouton */
-  --btn-padding-x: 24px;            /* gauche/droite → espace texte/bordure */
-  --btn-font-size: 16px;            /* taille de police de référence */
+  --btn-padding-y: 8px;             /* haut/bas → hauteur du bouton (réduit 12→8) */
+  --btn-padding-x: 20px;            /* gauche/droite → espace texte/bordure (24→20) */
+  --btn-font-size: var(--fs-body);  /* 14px, aligné sur l'échelle (était 16px) */
   --btn-font-weight: 600;
-  --btn-min-height: 48px;           /* hauteur cible (= bouton Retour) */
+  --btn-min-height: 40px;           /* hauteur cible — boutons moins épais (48→40) */
   --btn-radius: var(--radius-sm);   /* arrondi bouton (8px) */
 
   /* Motion */
