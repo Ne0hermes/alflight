@@ -20,7 +20,7 @@
 // Le composant est autonome ; l'export final passe par onSave(abacJsonV2).
 
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ImageIcon, Plus, Hand, Save, X, Trash2, Upload, Move, ZoomIn, ZoomOut } from 'lucide-react';
+import { Plus, Hand, Save, X, Trash2, Upload, Move } from 'lucide-react';
 import {
   buildCalibration,
   dataToPixel,
@@ -291,7 +291,7 @@ const BezierAbacEditor = memo(({
         curves: [{
           id: `c-${Date.now()}`,
           name: 'Courbe 1',
-          color: '#8b5cf6',
+          color: 'var(--accent-primary)',
           points,
           fitted: { method: 'bezier', bezierSegments: segments }
         }]
@@ -401,7 +401,7 @@ const BezierAbacEditor = memo(({
           style={{
             width: '100%', height: '100%',
             cursor: mode === 'addPoints' ? 'crosshair' : 'default',
-            userSelect: 'none', backgroundColor: 'white'
+            userSelect: 'none', backgroundColor: 'var(--bg-overlay)'
           }}
         >
           {/* Image en filigrane (sous les axes) */}
@@ -422,25 +422,25 @@ const BezierAbacEditor = memo(({
           {xTicks.map((t, i) => {
             const px = dataToPixel(calibration, t, 0).px;
             return <line key={`gx-${i}`} x1={px} y1={PLOT.top} x2={px} y2={PLOT.bottom}
-              stroke="#e5e7eb" strokeWidth="0.5" strokeDasharray="2,3" pointerEvents="none" />;
+              stroke="var(--border-subtle)" strokeWidth="0.5" strokeDasharray="2,3" pointerEvents="none" />;
           })}
           {yTicks.map((t, i) => {
             const py = dataToPixel(calibration, 0, t).py;
             return <line key={`gy-${i}`} x1={PLOT.left} y1={py} x2={PLOT.right} y2={py}
-              stroke="#e5e7eb" strokeWidth="0.5" strokeDasharray="2,3" pointerEvents="none" />;
+              stroke="var(--border-subtle)" strokeWidth="0.5" strokeDasharray="2,3" pointerEvents="none" />;
           })}
 
           {/* Axes principaux */}
-          <line x1={PLOT.left} y1={PLOT.bottom} x2={PLOT.right} y2={PLOT.bottom} stroke="#374151" strokeWidth="1.5" pointerEvents="none" />
-          <line x1={PLOT.left} y1={PLOT.top} x2={PLOT.left} y2={PLOT.bottom} stroke="#374151" strokeWidth="1.5" pointerEvents="none" />
+          <line x1={PLOT.left} y1={PLOT.bottom} x2={PLOT.right} y2={PLOT.bottom} stroke="var(--text-secondary)" strokeWidth="1.5" pointerEvents="none" />
+          <line x1={PLOT.left} y1={PLOT.top} x2={PLOT.left} y2={PLOT.bottom} stroke="var(--text-secondary)" strokeWidth="1.5" pointerEvents="none" />
 
           {/* Ticks X + labels */}
           {xTicks.map((t, i) => {
             const px = dataToPixel(calibration, t, 0).px;
             return (
               <g key={`tx-${i}`} pointerEvents="none">
-                <line x1={px} y1={PLOT.bottom} x2={px} y2={PLOT.bottom + 5} stroke="#374151" strokeWidth="1" />
-                <text x={px} y={PLOT.bottom + 18} fontSize="11" fill="#374151" textAnchor="middle">{t}</text>
+                <line x1={px} y1={PLOT.bottom} x2={px} y2={PLOT.bottom + 5} stroke="var(--text-secondary)" strokeWidth="1" />
+                <text x={px} y={PLOT.bottom + 18} fontSize="11" fill="var(--text-secondary)" textAnchor="middle">{t}</text>
               </g>
             );
           })}
@@ -450,19 +450,19 @@ const BezierAbacEditor = memo(({
             const py = dataToPixel(calibration, 0, t).py;
             return (
               <g key={`ty-${i}`} pointerEvents="none">
-                <line x1={PLOT.left - 5} y1={py} x2={PLOT.left} y2={py} stroke="#374151" strokeWidth="1" />
-                <text x={PLOT.left - 8} y={py + 4} fontSize="11" fill="#374151" textAnchor="end">{t}</text>
+                <line x1={PLOT.left - 5} y1={py} x2={PLOT.left} y2={py} stroke="var(--text-secondary)" strokeWidth="1" />
+                <text x={PLOT.left - 8} y={py + 4} fontSize="11" fill="var(--text-secondary)" textAnchor="end">{t}</text>
               </g>
             );
           })}
 
           {/* Titres axes */}
-          <text x={PLOT.left + PLOT.width / 2} y={VIEWBOX_H - 20} fontSize="13" fill="#111827" fontWeight="500" textAnchor="middle" pointerEvents="none">
+          <text x={PLOT.left + PLOT.width / 2} y={VIEWBOX_H - 20} fontSize="13" fill="var(--text-primary)" fontWeight="500" textAnchor="middle" pointerEvents="none">
             {xTitle}{xUnit}
           </text>
           <text
             x={20} y={PLOT.top + PLOT.height / 2}
-            fontSize="13" fill="#111827" fontWeight="500" textAnchor="middle"
+            fontSize="13" fill="var(--text-primary)" fontWeight="500" textAnchor="middle"
             transform={`rotate(-90, 20, ${PLOT.top + PLOT.height / 2})`}
             pointerEvents="none"
           >
@@ -475,7 +475,7 @@ const BezierAbacEditor = memo(({
               x={imgTransform.x + imgTransform.width - 8}
               y={imgTransform.y + imgTransform.height - 8}
               width="16" height="16"
-              fill="#3b82f6" stroke="white" strokeWidth="2"
+              fill="var(--accent-primary)" stroke="white" strokeWidth="2"
               style={{ cursor: 'nwse-resize' }}
               onMouseDown={handleResizeMouseDown('br')}
             />
@@ -483,14 +483,14 @@ const BezierAbacEditor = memo(({
 
           {/* Courbe Bézier */}
           {svgPath && (
-            <path d={svgPath} fill="none" stroke="#8b5cf6" strokeWidth="3" strokeLinecap="round" pointerEvents="none" />
+            <path d={svgPath} fill="none" stroke="var(--accent-primary)" strokeWidth="3" strokeLinecap="round" pointerEvents="none" />
           )}
 
           {/* Points cliqués */}
           {pixelPoints.map((p, i) => (
             <g key={p.id} pointerEvents="none">
-              <circle cx={p.px} cy={p.py} r="5" fill="#8b5cf6" stroke="white" strokeWidth="2" />
-              <text x={p.px + 8} y={p.py - 8} fontSize="10" fill="#4b5563">
+              <circle cx={p.px} cy={p.py} r="5" fill="var(--accent-primary)" stroke="white" strokeWidth="2" />
+              <text x={p.px + 8} y={p.py - 8} fontSize="10" fill="var(--text-secondary)">
                 {i + 1}
               </text>
             </g>
@@ -499,17 +499,17 @@ const BezierAbacEditor = memo(({
           {/* Control points (mode editHandles) */}
           {mode === 'editHandles' && pixelSegments.map((s, idx) => (
             <g key={`handle-${idx}`}>
-              <line x1={s.p0.px} y1={s.p0.py} x2={s.cp1.px} y2={s.cp1.py} stroke="#22c55e" strokeWidth="1" strokeDasharray="3,2" pointerEvents="none" />
-              <line x1={s.p1.px} y1={s.p1.py} x2={s.cp2.px} y2={s.cp2.py} stroke="#22c55e" strokeWidth="1" strokeDasharray="3,2" pointerEvents="none" />
+              <line x1={s.p0.px} y1={s.p0.py} x2={s.cp1.px} y2={s.cp1.py} stroke="var(--accent-primary)" strokeWidth="1" strokeDasharray="3,2" pointerEvents="none" />
+              <line x1={s.p1.px} y1={s.p1.py} x2={s.cp2.px} y2={s.cp2.py} stroke="var(--accent-primary)" strokeWidth="1" strokeDasharray="3,2" pointerEvents="none" />
               <circle
                 cx={s.cp1.px} cy={s.cp1.py} r="6"
-                fill="#22c55e" stroke="white" strokeWidth="2"
+                fill="var(--accent-primary)" stroke="white" strokeWidth="2"
                 style={{ cursor: 'grab' }}
                 onMouseDown={handleHandleMouseDown(idx, 'cp1')}
               />
               <circle
                 cx={s.cp2.px} cy={s.cp2.py} r="6"
-                fill="#22c55e" stroke="white" strokeWidth="2"
+                fill="var(--accent-primary)" stroke="white" strokeWidth="2"
                 style={{ cursor: 'grab' }}
                 onMouseDown={handleHandleMouseDown(idx, 'cp2')}
               />
@@ -530,16 +530,16 @@ const BezierAbacEditor = memo(({
 BezierAbacEditor.displayName = 'BezierAbacEditor';
 
 const styles = {
-  root: { display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#fff' },
-  toolbar: { display: 'flex', gap: 8, padding: 12, borderBottom: '1px solid #e5e7eb', flexWrap: 'wrap', alignItems: 'center' },
-  banner: { display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', backgroundColor: 'rgba(242, 105, 33, 0.10)', color: '#92400e', fontSize: 13, borderBottom: '1px solid #fde68a' },
-  canvasWrap: { flex: 1, overflow: 'hidden', backgroundColor: '#f9fafb', display: 'flex' },
-  statsBar: { padding: '8px 16px', borderTop: '1px solid #e5e7eb', fontSize: 12, color: '#6b7280', backgroundColor: '#f9fafb' },
-  btn: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 13, cursor: 'pointer' },
-  btnActive: { backgroundColor: '#ede9fe', color: '#5b21b6', borderColor: '#a78bfa' },
-  btnSecondary: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 13, cursor: 'pointer' },
-  btnPrimary: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', backgroundColor: '#8b5cf6', color: 'white', border: 'none', borderRadius: 6, fontSize: 14, fontWeight: 500, cursor: 'pointer' },
-  btnGhost: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', backgroundColor: 'transparent', color: '#6b7280', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 13, cursor: 'pointer' }
+  root: { display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: 'var(--bg-overlay)' },
+  toolbar: { display: 'flex', gap: 8, padding: 12, borderBottom: '1px solid var(--border-subtle)', flexWrap: 'wrap', alignItems: 'center' },
+  banner: { display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', backgroundColor: 'rgba(242, 105, 33, 0.10)', color: 'var(--accent-primary)', fontSize: 13, borderBottom: '1px solid var(--accent-primary)' },
+  canvasWrap: { flex: 1, overflow: 'hidden', backgroundColor: 'var(--bg-overlay)', display: 'flex' },
+  statsBar: { padding: '8px 16px', borderTop: '1px solid var(--border-subtle)', fontSize: 12, color: 'var(--text-secondary)', backgroundColor: 'var(--bg-overlay)' },
+  btn: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', backgroundColor: 'var(--bg-overlay)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 6, fontSize: 13, cursor: 'pointer' },
+  btnActive: { backgroundColor: 'var(--accent-soft)', color: 'var(--accent-active)', borderColor: 'var(--accent-primary)' },
+  btnSecondary: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', backgroundColor: 'var(--bg-overlay)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 6, fontSize: 13, cursor: 'pointer' },
+  btnPrimary: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', backgroundColor: 'var(--accent-primary)', color: 'var(--text-inverse)', border: 'none', borderRadius: 6, fontSize: 14, fontWeight: 500, cursor: 'pointer' },
+  btnGhost: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', backgroundColor: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 6, fontSize: 13, cursor: 'pointer' }
 };
 
 export default BezierAbacEditor;

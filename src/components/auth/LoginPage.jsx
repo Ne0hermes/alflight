@@ -81,7 +81,7 @@ const LoginPage = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary) 100%)',
+        background: 'linear-gradient(135deg, var(--app-bg) 0%, var(--bg-surface) 100%)',
         padding: 2
       }}
     >
@@ -96,7 +96,7 @@ const LoginPage = () => {
       >
         {/* Logo et Titre */}
         <Box sx={{ textAlign: 'center', mb: 3 }}>
-          <FlightIcon sx={{ fontSize: 48, color: '#f26921', mb: 1 }} />
+          <FlightIcon sx={{ fontSize: 48, color: 'var(--accent-primary)', mb: 1 }} />
           <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 700 }}>
             ALFlight
           </Typography>

@@ -15,7 +15,6 @@ import {
   ListItem,
   ListItemText,
   ListItemIcon,
-  Divider,
   Radio,
   RadioGroup,
   FormControlLabel,
@@ -31,10 +30,8 @@ import {
   History as HistoryIcon,
   Merge as MergeIcon,
   Add as AddIcon,
-  CloudUpload as UploadIcon,
   Info as InfoIcon,
-  CheckCircle as CheckIcon,
-  Warning as WarningIcon
+  CheckCircle as CheckIcon
 } from '@mui/icons-material';
 
 const UpdateAircraftDialog = ({

@@ -72,7 +72,7 @@ const PilotModule = () => {
                   : '2px solid transparent',
                 marginBottom: '-1px',
                 fontFamily: tokens.fontFamily.mono,
-                fontSize: '11px',
+                fontSize: 'var(--fs-caption)',
                 fontWeight: isActive ? 600 : 500,
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',

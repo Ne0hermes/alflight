@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Check, Plane, X, AlertTriangle } from 'lucide-react';
+import { Check, AlertTriangle } from 'lucide-react';
 import { theme } from '../../styles/theme';
 import { FlightPlanData } from './models/FlightPlanData';
 import { WizardConfigProvider } from './contexts/WizardConfigContext';
@@ -704,7 +704,7 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
             <div style={{ marginTop: tokens.spacing[3] }}>
               <span style={{
                 fontFamily: tokens.fontFamily.mono,
-                fontSize: '11px',
+                fontSize: 'var(--fs-caption)',
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
                 fontWeight: 600,
@@ -905,7 +905,7 @@ const styles = {
     padding: '24px 20px 16px',
   },
   title: {
-    fontSize: '28px',
+    fontSize: 'var(--fs-heading)',
     fontWeight: 600,
     color: 'var(--text-primary)',
     marginBottom: '8px',
@@ -956,13 +956,13 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     fontFamily: MONO,
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     fontWeight: 600,
     color: 'var(--accent-primary)',
   },
   progressLabel: {
     fontFamily: MONO,
-    fontSize: '10px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: 500,
     letterSpacing: '0.10em',
     textTransform: 'uppercase',
@@ -987,7 +987,7 @@ const styles = {
   },
   stepTitle: {
     fontFamily: SANS,
-    fontSize: '24px',
+    fontSize: 'var(--fs-title)',
     fontWeight: 600,
     color: 'var(--text-primary)',
     marginBottom: '8px',
@@ -995,7 +995,7 @@ const styles = {
   },
   stepDescription: {
     fontFamily: SANS,
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
   },
   // Barre de navigation footer
@@ -1022,7 +1022,7 @@ const styles = {
     background: 'var(--accent-primary)',
     color: 'var(--text-inverse)',
     fontFamily: MONO,
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: 600,
     letterSpacing: '0.12em',
     textTransform: 'uppercase',
@@ -1042,7 +1042,7 @@ const styles = {
   },
   stepIndicator: {
     fontFamily: MONO,
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: 600,
     letterSpacing: '0.12em',
     textTransform: 'uppercase',
@@ -1063,7 +1063,7 @@ const styles = {
     background: 'transparent',
     color: 'var(--text-tertiary)',
     fontFamily: MONO,
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: 500,
     letterSpacing: '0.12em',
     textTransform: 'uppercase',
@@ -1105,7 +1105,7 @@ const styles = {
   },
   dialogTitle: {
     fontFamily: SANS,
-    fontSize: '20px',
+    fontSize: 'var(--fs-title)',
     fontWeight: 600,
     color: 'var(--text-primary)',
     margin: 0,
@@ -1113,14 +1113,14 @@ const styles = {
   },
   dialogText: {
     fontFamily: SANS,
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-primary)',
     marginBottom: '12px',
     lineHeight: 1.55,
   },
   dialogInfo: {
     fontFamily: SANS,
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     marginBottom: '24px',
     padding: '12px',
@@ -1144,7 +1144,7 @@ const styles = {
     background: 'transparent',
     color: 'var(--text-primary)',
     fontFamily: MONO,
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: 600,
     letterSpacing: '0.12em',
     textTransform: 'uppercase',
@@ -1159,7 +1159,7 @@ const styles = {
     background: 'transparent',
     color: 'var(--text-tertiary)',
     fontFamily: MONO,
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: 500,
     letterSpacing: '0.12em',
     textTransform: 'uppercase',
@@ -1174,7 +1174,7 @@ const styles = {
     background: 'var(--accent-primary)',
     color: 'var(--text-inverse)',
     fontFamily: MONO,
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: 600,
     letterSpacing: '0.12em',
     textTransform: 'uppercase',

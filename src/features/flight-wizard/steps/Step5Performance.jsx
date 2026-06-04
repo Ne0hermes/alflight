@@ -1,7 +1,6 @@
 // src/features/flight-wizard/steps/Step5Performance.jsx
 import React, { memo } from 'react';
 import PerformanceModule from '@features/performance/PerformanceModule';
-import { Gauge } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 
 // Styles communs
@@ -13,7 +12,7 @@ const commonStyles = {
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
   },
   label: {
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     color: theme.colors.textPrimary,
     display: 'flex',

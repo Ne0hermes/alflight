@@ -14,13 +14,10 @@ import {
   AlertTriangle,
   Clock,
   RotateCcw,
-  FileText,
-  Settings,
   X
 } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useChecklistStore } from '@core/stores/checklistStore';
-import AccordionButton from '@shared/components/AccordionButton';
 // 🎨 Charte éditoriale ALFlight
 import { ModuleHero } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
@@ -192,7 +189,7 @@ export const ChecklistModule = memo(({ wizardMode = false, config = {} }) => {
                   {
                     padding: '8px 12px',
                     flex: '1',
-                    fontSize: '14px',
+                    fontSize: 'var(--fs-body)',
                     cursor: 'pointer'
                   }
                 )}
@@ -456,7 +453,7 @@ const ActiveChecklistView = memo(({
                 <span style={sx.combine(sx.text.xs, {
                   padding: '2px 8px',
                   backgroundColor: 'var(--bg-overlay)',
-                  color: '#C04534',
+                  color: 'var(--color-red-critical)',
                   borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--bg-overlay)'
                 })}>

@@ -2,7 +2,7 @@
 import React, { memo, useState, useEffect, useMemo } from 'react';
 import NavigationModule from '@features/navigation/NavigationModule';
 // SUPPRIMÉ: AlternatesModule - déplacé à l'étape 7 (après bilan carburant)
-import { Navigation, Map, Info } from 'lucide-react';
+import { Map, Info } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import RouteMapView from '../components/RouteMapView';
 import { useNavigation, useAircraft } from '@core/contexts';
@@ -18,7 +18,7 @@ const commonStyles = {
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
   },
   label: {
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     color: theme.colors.textPrimary,
     display: 'flex',
@@ -39,7 +39,7 @@ const commonStyles = {
     borderColor: 'var(--border-subtle)'
   },
   mapLabel: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: theme.colors.textPrimary,
     display: 'flex',
@@ -48,7 +48,7 @@ const commonStyles = {
     marginBottom: '12px'
   },
   infoText: {
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     marginBottom: '12px',
     fontStyle: 'italic'
@@ -65,7 +65,7 @@ const commonStyles = {
     marginBottom: '24px',
   },
   alternatesTitle: {
-    fontSize: '20px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '700',
     color: theme.colors.textPrimary,
     margin: 0,
@@ -407,7 +407,7 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
           <Info size={18} color="#f26921" />
           <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Sélection des déroutements</span>
         </div>
-        <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-tertiary)' }}>
+        <p style={{ margin: 0, fontSize: 'var(--fs-body)', color: 'var(--text-tertiary)' }}>
           La sélection des aérodromes de déroutement se fait à l'<strong>étape 7</strong>, après le bilan carburant.
           Cela permet d'utiliser le <strong>FOB (Fuel On Board)</strong> pour calculer une zone de recherche
           en forme de cône, plus précise et adaptée à votre autonomie réelle.

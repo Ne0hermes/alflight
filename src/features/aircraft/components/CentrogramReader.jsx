@@ -20,7 +20,7 @@
 //   8. Valider → bras stocké, possibilité de recommencer avec une nouvelle
 //      image pour un autre bras
 
-import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -44,17 +44,13 @@ import {
 } from '@mui/material';
 import {
   CloudUpload as UploadIcon,
-  Delete as DeleteIcon,
   CheckCircle as CheckCircleIcon,
-  ChevronRight as ChevronRightIcon,
-  ChevronLeft as ChevronLeftIcon,
   Tune as CalibrateIcon
 } from '@mui/icons-material';
 import { v4 as uuidv4 } from 'uuid';
 import { Chart } from '../../../abac/curves/ui/Chart';
 import {
   linearRegression,
-  predictMoment,
   convertArmUnit,
   buildStageList
 } from '../utils/centrogramMath';
@@ -423,7 +419,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
   const curves = useMemo(() => [{
     id: CURVE_ID,
     name: currentStage?.label || 'Courbe en cours',
-    color: '#C04534',
+    color: 'var(--color-red-critical)',
     points: curvePoints
   }], [curvePoints, currentStage]);
 

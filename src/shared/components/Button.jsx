@@ -3,7 +3,7 @@ import { Button as MuiButton } from '@mui/material';
 
 /**
  * Composant Button unifié pour l'application ALFlight
- * Utilise le thème bordeaux et garantit la cohérence visuelle
+ * Utilise les tokens charte ALFlight (accent orange unique) et garantit la cohérence visuelle
  *
  * @param {string} variant - Type de bouton: 'primary', 'secondary', 'outlined', 'text'
  * @param {string} size - Taille: 'small', 'medium', 'large'
@@ -38,18 +38,20 @@ export const Button = ({
     if (variant === 'primary') {
       return {
         ...baseStyles,
-        background: 'linear-gradient(135deg, var(--accent-primary), #FF7E36)',
-        boxShadow: '0 2px 8px rgba(147, 22, 60, 0.3)',
+        background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-hover))',
+        // Charte cockpit : pas de boxShadow (le fond suffit). L'ancienne ombre
+        // noire rgba(0,0,0,.3) virait « bordeaux » sur les fonds orange (login).
+        boxShadow: 'none',
         '&:hover': {
           background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-primary))',
-          boxShadow: '0 4px 12px rgba(147, 22, 60, 0.4)',
+          boxShadow: 'none',
           transform: 'translateY(-1px)',
         },
         '&:active': {
           transform: 'translateY(0)',
         },
         '&:focus-visible': {
-          outline: '3px solid #f26921',
+          outline: '3px solid var(--accent-primary)',
           outlineOffset: '2px',
         },
       };
@@ -59,15 +61,15 @@ export const Button = ({
       return {
         ...baseStyles,
         backgroundColor: 'transparent',
-        color: '#f26921',
-        border: '2px solid #f26921',
+        color: 'var(--accent-primary)',
+        border: '2px solid var(--accent-primary)',
         '&:hover': {
-          backgroundColor: 'rgba(147, 22, 60, 0.05)',
+          backgroundColor: 'var(--accent-soft)',
           borderColor: 'var(--accent-primary)',
           color: 'var(--accent-primary)',
         },
         '&:focus-visible': {
-          outline: '3px solid #f26921',
+          outline: '3px solid var(--accent-primary)',
           outlineOffset: '2px',
         },
       };
@@ -76,11 +78,11 @@ export const Button = ({
     if (variant === 'outlined') {
       return {
         ...baseStyles,
-        borderColor: '#f26921',
-        color: '#f26921',
+        borderColor: 'var(--accent-primary)',
+        color: 'var(--accent-primary)',
         '&:hover': {
           borderColor: 'var(--accent-primary)',
-          backgroundColor: 'rgba(147, 22, 60, 0.05)',
+          backgroundColor: 'var(--accent-soft)',
         },
       };
     }
@@ -88,9 +90,9 @@ export const Button = ({
     if (variant === 'text') {
       return {
         ...baseStyles,
-        color: '#f26921',
+        color: 'var(--accent-primary)',
         '&:hover': {
-          backgroundColor: 'rgba(147, 22, 60, 0.05)',
+          backgroundColor: 'var(--accent-soft)',
         },
       };
     }
@@ -101,12 +103,12 @@ export const Button = ({
   // Tailles de padding
   const getSizeStyles = () => {
     if (size === 'small') {
-      return { padding: '8px 16px', fontSize: '14px' };
+      return { padding: '8px 16px', fontSize: 'var(--fs-body)' };
     }
     if (size === 'large') {
-      return { padding: '16px 32px', fontSize: '16px' };
+      return { padding: '16px 32px', fontSize: 'var(--fs-title)' };
     }
-    return { padding: '12px 24px', fontSize: '15px' };
+    return { padding: '12px 24px', fontSize: 'var(--fs-body)' };
   };
 
   return (

@@ -20,13 +20,13 @@ const commonStyles = {
     borderBottom: `2px solid ${theme.colors.primary[100]}`
   },
   title: {
-    fontSize: '24px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '700',
     color: theme.colors.textPrimary,
     margin: 0
   },
   description: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: theme.colors.textSecondary,
     marginTop: '8px'
   }
@@ -67,7 +67,7 @@ export const Step4Weather = memo(({ flightPlan, onUpdate }) => {
       }}>
         <p style={{
           margin: 0,
-          fontSize: '14px',
+          fontSize: 'var(--fs-body)',
           color: theme.colors.info[900]
         }}>
           <strong>ℹ️ Information :</strong> Les données météorologiques sont chargées automatiquement

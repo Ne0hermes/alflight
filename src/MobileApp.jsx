@@ -4,12 +4,10 @@ import CssBaseline from '@mui/material/CssBaseline';
 import muiTheme from './styles/muiTheme';
 import { FlightSystemProviders } from './core/contexts';
 import { MobileNavigation } from './shared/components/MobileNavigation';
-import { TabNavigation } from './shared/components/TabNavigation';
 import ErrorBoundary from './shared/components/ErrorBoundary';
 // 🔧 FIX OUT OF MEMORY: Imports désactivés temporairement pour tester
 // import { autoMigrateIfNeeded } from './utils/manexMigration';
 import { NotificationContainer } from './shared/components/Notification';
-import { useAuthStore } from './features/account/stores/authStore';
 // import dataBackupManager from './utils/dataBackupManager';
 import { LandingPage } from './components/LandingPage';
 import { ALFlightSplashScreen } from './components/ALFlightSplashScreen';
@@ -218,7 +216,7 @@ const MobileApp = () => {
               }}>
                 <ErrorBoundary>
                   <React.Suspense fallback={
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', fontSize: '18px', color: 'var(--text-secondary)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', fontSize: 'var(--fs-title)', color: 'var(--text-secondary)' }}>
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ marginBottom: '16px' }}>⏳</div>
                         <div>Chargement...</div>
@@ -307,7 +305,7 @@ const MobileApp = () => {
                 height: '100%',
                 minHeight: '200px',
                 fontFamily: 'var(--font-mono)',
-                fontSize: '11px',
+                fontSize: 'var(--fs-caption)',
                 fontWeight: 500,
                 letterSpacing: '0.18em',
                 textTransform: 'uppercase',
@@ -353,23 +351,23 @@ const styles = {
     top: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#8b1538',
+    backgroundColor: 'var(--accent-primary)',
     color: '#FFFFFF',
     padding: '16px 20px',
     paddingTop: 'max(env(safe-area-inset-top), 16px)',
     zIndex: 1000,
     textAlign: 'center',
-    boxShadow: '0 2px 10px rgba(139, 21, 56, 0.3)',
+    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.3)',
   },
   profileRequiredTitle: {
     margin: 0,
-    fontSize: '18px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '700',
     marginBottom: '4px',
   },
   profileRequiredText: {
     margin: 0,
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     opacity: 0.9,
   },
   desktopNav: {

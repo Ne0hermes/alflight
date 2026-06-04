@@ -41,7 +41,7 @@ const LogoutButton = ({ variant = 'text', size = 'small', fullWidth = false, sx 
           disabled={loading}
           className={className}
           sx={{
-            color: variant === 'text' ? '#C04534' : undefined,
+            color: variant === 'text' ? 'var(--color-red-critical)' : undefined,
             '&:hover': {
               backgroundColor: variant === 'text' ? 'rgba(220, 38, 38, 0.1)' : undefined,
             },

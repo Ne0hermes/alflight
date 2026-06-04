@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Popup, Polyline, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-polylinedecorator';
@@ -419,7 +419,7 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
         justifyContent: 'center',
         backgroundColor: 'var(--bg-overlay)',
         color: 'var(--text-secondary)',
-        fontSize: '14px'
+        fontSize: 'var(--fs-body)'
       }}>
         🗺️ Chargement de la carte...
       </div>
@@ -441,7 +441,7 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
         justifyContent: 'center',
         backgroundColor: 'var(--bg-overlay)',
         color: 'var(--text-secondary)',
-        fontSize: '14px',
+        fontSize: 'var(--fs-body)',
         fontStyle: 'italic'
       }}>
         📍 Ajoutez des aérodromes de départ et d'arrivée dans le module de navigation ci-dessous
@@ -572,7 +572,7 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
           >
             <Popup>
               <div style={{ padding: '4px' }}>
-                <strong style={{ fontSize: '13px' }}>🛫 {departure.icao || departure.name || 'Départ'}</strong>
+                <strong style={{ fontSize: 'var(--fs-body)' }}>🛫 {departure.icao || departure.name || 'Départ'}</strong>
               </div>
             </Popup>
           </CircleMarker>
@@ -592,7 +592,7 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
           >
             <Popup>
               <div style={{ padding: '4px' }}>
-                <strong style={{ fontSize: '13px' }}>🛬 {arrival.icao || arrival.name || 'Arrivée'}</strong>
+                <strong style={{ fontSize: 'var(--fs-body)' }}>🛬 {arrival.icao || arrival.name || 'Arrivée'}</strong>
               </div>
             </Popup>
           </CircleMarker>
@@ -613,7 +613,7 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
           >
             <Popup>
               <div style={{ padding: '4px' }}>
-                <strong style={{ fontSize: '13px' }}>
+                <strong style={{ fontSize: 'var(--fs-body)' }}>
                   {waypoint.type === 'vfr' ? '📍' : '⚓'} {waypoint.icao || waypoint.name || `WP${index + 1}`}
                 </strong>
               </div>
@@ -635,10 +635,10 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
           >
             <Popup>
               <div style={{ padding: '8px', minWidth: '200px' }}>
-                <strong style={{ fontSize: '14px', color: 'var(--accent-primary)', display: 'block', marginBottom: '6px' }}>
+                <strong style={{ fontSize: 'var(--fs-body)', color: 'var(--accent-primary)', display: 'block', marginBottom: '6px' }}>
                   ⬇️ Top of Descent (TOD)
                 </strong>
-                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
                   <div style={{ marginBottom: '4px' }}>
                     <strong>Arrivée :</strong> {todPoint.arrivalName}
                   </div>

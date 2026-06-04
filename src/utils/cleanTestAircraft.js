@@ -42,7 +42,7 @@ export async function cleanLocalStorageTestAircraft() {
           if (data.state?.aircraftList) {
             const originalLength = data.state.aircraftList.length;
             data.state.aircraftList = data.state.aircraftList.filter(
-              aircraft => !TEST_REGISTRATIONS.includes(aircraft.registration?.toUpperCase());
+              aircraft => !TEST_REGISTRATIONS.includes(aircraft.registration?.toUpperCase()));
 
   const removed = originalLength - data.state.aircraftList.length;
             if (removed > 0) {
@@ -55,7 +55,7 @@ export async function cleanLocalStorageTestAircraft() {
           else if (Array.isArray(data)) {
             const originalLength = data.length;
             const cleaned = data.filter(
-              aircraft => !TEST_REGISTRATIONS.includes(aircraft.registration?.toUpperCase());
+              aircraft => !TEST_REGISTRATIONS.includes(aircraft.registration?.toUpperCase()));
 
   const removed = originalLength - cleaned.length;
             if (removed > 0) {
@@ -200,6 +200,7 @@ export async function hasTestAircraft() {
         if (Array.isArray(aircraftList)) {
           const hasTest = aircraftList.some(
             aircraft => TEST_REGISTRATIONS.includes(aircraft.registration?.toUpperCase())
+          );
 
           if (hasTest) return true;
         }

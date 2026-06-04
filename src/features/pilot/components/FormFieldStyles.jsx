@@ -1,5 +1,5 @@
 import { styled } from '@mui/material/styles';
-import { FormControl, TextField, InputLabel } from '@mui/material';
+import { FormControl, TextField } from '@mui/material';
 
 // Style uniforme pour tous les FormControl du wizard
 export const StyledFormControl = styled(FormControl)(({ theme }) => ({

@@ -2,13 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { AlertCircle, Radio, ChevronDown, ChevronUp, Plane, AlertTriangle, Info } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { aeroDataProvider } from '@core/data';
-import { calculateDistance } from '@utils/navigationCalculations';
 
 // Types d'espaces aériens avec leurs caractéristiques
 const AIRSPACE_TYPES = {
   'CTR': {
     name: 'Control Zone',
-    color: '#C04534',
+    color: 'var(--color-red-critical)',
     priority: 1,
     description: 'Zone de contrôle d\'aérodrome'
   },
@@ -26,13 +25,13 @@ const AIRSPACE_TYPES = {
   },
   'D': {
     name: 'Zone Dangereuse',
-    color: '#C04534',
+    color: 'var(--color-red-critical)',
     priority: 4,
     description: 'Zone dangereuse'
   },
   'P': {
     name: 'Zone Interdite',
-    color: '#C04534',
+    color: 'var(--color-red-critical)',
     priority: 1,
     description: 'Zone interdite (Prohibited)'
   },
@@ -188,7 +187,7 @@ const getAirspacesBetweenWaypoints = (waypoint1, waypoint2, airspaces) => {
         type: airspace.type || 'Polygon',
         coordinates: airspace.coordinates
       };
-    };
+    }
     if (!geometry?.coordinates) {
       // Debug: afficher les espaces sans géométrie
       if (properties.name && properties.name !== 'unknown') {
@@ -605,7 +604,7 @@ export const AirspaceAnalyzer = ({ waypoints, plannedAltitude, onAltitudeChange,
                     </div>
                     {conflict === 'inside' && (
                       <div style={sx.spacing.ml(3)}>
-                        <AlertTriangle size={16} color="#C04534" />
+                        <AlertTriangle size={16} color="var(--color-red-critical)" />
                       </div>
                     )}
                   </div>

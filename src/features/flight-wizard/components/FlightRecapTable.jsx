@@ -1,8 +1,24 @@
 import React from 'react';
-import { Plane, MapPin, Navigation as NavigationIcon, Radio, Phone, Clock } from 'lucide-react';
+import { Plane, Navigation as NavigationIcon, Clock } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import VFRNavigationTable from '@features/navigation/components/VFRNavigationTable';
 import { normalizeElevationToFeet } from '@utils/elevationUtils';
+
+/* eslint-disable no-restricted-syntax -- ARTEFACT D'IMPRESSION (PDF).
+   Ce composant est la SOURCE du PDF de plan de vol : il est capturé À L'ÉCRAN
+   par html2canvas (FlightPlanWizard), donc le rendu doit rester CLAIR
+   (fond blanc, texte sombre) INDÉPENDAMMENT du thème sombre de l'app.
+   var(--text-*) donnerait de l'ivoire invisible sur blanc → les couleurs
+   d'impression sont volontairement hardcodées et centralisées dans PRINT.
+   Charte respectée : accent = orange ALFlight, rouge = #C04534 (NO-GO). */
+
+// Palette d'IMPRESSION (feuille PDF) — source unique des couleurs de ce composant.
+const PRINT = {
+  accent: '#f26921',   // accent ALFlight — remplace les bleu/vert/violet/ambre décoratifs
+  accentBg: '#fff3ec', // tint orange clair — remplace les fonds pastel bleu/vert/violet
+  ok: '#059669',       // vert OK FONCTIONNEL (adéquation piste/perf) — sécurité, conservé
+  nogo: '#c04534',     // rouge NO-GO / dépassement de limite (charte) — hardcodé (artefact PDF)
+};
 
 /**
  * Tableau récapitulatif pour le PDF
@@ -79,9 +95,9 @@ export const FlightRecapTable = ({
       type === 'arrival' ? 'ARRIVÉE' :
         'DÉROUTEMENT';
 
-    const titleColor = type === 'departure' ? '#10b981' :
-      type === 'arrival' ? '#ef4444' :
-        '#f59e0b';
+    const titleColor = type === 'departure' ? PRINT.accent :
+      type === 'arrival' ? PRINT.accent :
+        PRINT.accent;
 
     // Extraire les fréquences
     const atisFreq = aerodrome.frequencies ? extractFrequency(aerodrome.frequencies.atis) : null;
@@ -312,10 +328,10 @@ export const FlightRecapTable = ({
                               marginTop: '4px',
                               paddingTop: '4px',
                               paddingLeft: '8px',
-                              borderLeft: '3px solid #3b82f6',
-                              backgroundColor: '#eff6ff'
+                              borderLeft: `3px solid ${PRINT.accent}`,
+                              backgroundColor: PRINT.accentBg
                             }}>
-                              <div style={{ fontSize: '8px', fontWeight: '700', color: '#3b82f6', marginBottom: '2px' }}>
+                              <div style={{ fontSize: '8px', fontWeight: '700', color: PRINT.accent, marginBottom: '2px' }}>
                                 📊 Décollage
                               </div>
                               {performanceData.takeoff.abaques.map((abaque, aIdx) => (
@@ -323,7 +339,7 @@ export const FlightRecapTable = ({
                                   <span style={{ color: '#6b7280', fontSize: '8px' }}>{abaque.name}:</span>
                                   <span style={{
                                     fontWeight: '700',
-                                    color: tora >= abaque.distance ? '#059669' : '#dc2626',
+                                    color: tora >= abaque.distance ? PRINT.ok : PRINT.nogo,
                                     fontSize: '8px'
                                   }}>
                                     {Math.round(abaque.distance)}m
@@ -339,10 +355,10 @@ export const FlightRecapTable = ({
                               marginTop: '4px',
                               paddingTop: '4px',
                               paddingLeft: '8px',
-                              borderLeft: '3px solid #3b82f6',
-                              backgroundColor: '#eff6ff'
+                              borderLeft: `3px solid ${PRINT.accent}`,
+                              backgroundColor: PRINT.accentBg
                             }}>
-                              <div style={{ fontSize: '8px', fontWeight: '700', color: '#3b82f6', marginBottom: '2px' }}>
+                              <div style={{ fontSize: '8px', fontWeight: '700', color: PRINT.accent, marginBottom: '2px' }}>
                                 📊 Calculé
                               </div>
                               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
@@ -355,7 +371,7 @@ export const FlightRecapTable = ({
                                 <span style={{ color: '#6b7280', fontSize: '8px' }}>Passage 50ft:</span>
                                 <span style={{
                                   fontWeight: '700',
-                                  color: tora >= performanceData.takeoff.toda50ft ? '#059669' : '#dc2626',
+                                  color: tora >= performanceData.takeoff.toda50ft ? PRINT.ok : PRINT.nogo,
                                   fontSize: '8px'
                                 }}>
                                   {Math.round(performanceData.takeoff.toda50ft)}m
@@ -384,10 +400,10 @@ export const FlightRecapTable = ({
                               marginTop: '4px',
                               paddingTop: '4px',
                               paddingLeft: '8px',
-                              borderLeft: '3px solid #10b981',
-                              backgroundColor: '#f0fdf4'
+                              borderLeft: `3px solid ${PRINT.accent}`,
+                              backgroundColor: PRINT.accentBg
                             }}>
-                              <div style={{ fontSize: '8px', fontWeight: '700', color: '#10b981', marginBottom: '2px' }}>
+                              <div style={{ fontSize: '8px', fontWeight: '700', color: PRINT.accent, marginBottom: '2px' }}>
                                 📊 Atterrissage
                               </div>
                               {performanceData.landing.abaques.map((abaque, aIdx) => (
@@ -395,7 +411,7 @@ export const FlightRecapTable = ({
                                   <span style={{ color: '#6b7280', fontSize: '8px' }}>{abaque.name}:</span>
                                   <span style={{
                                     fontWeight: '700',
-                                    color: lda >= abaque.distance ? '#059669' : '#dc2626',
+                                    color: lda >= abaque.distance ? PRINT.ok : PRINT.nogo,
                                     fontSize: '8px'
                                   }}>
                                     {Math.round(abaque.distance)}m
@@ -411,10 +427,10 @@ export const FlightRecapTable = ({
                               marginTop: '4px',
                               paddingTop: '4px',
                               paddingLeft: '8px',
-                              borderLeft: '3px solid #10b981',
-                              backgroundColor: '#f0fdf4'
+                              borderLeft: `3px solid ${PRINT.accent}`,
+                              backgroundColor: PRINT.accentBg
                             }}>
-                              <div style={{ fontSize: '8px', fontWeight: '700', color: '#10b981', marginBottom: '2px' }}>
+                              <div style={{ fontSize: '8px', fontWeight: '700', color: PRINT.accent, marginBottom: '2px' }}>
                                 📊 Calculé
                               </div>
                               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
@@ -427,7 +443,7 @@ export const FlightRecapTable = ({
                                 <span style={{ color: '#6b7280', fontSize: '8px' }}>Passage 50ft:</span>
                                 <span style={{
                                   fontWeight: '700',
-                                  color: lda >= performanceData.landing.lda50ft ? '#059669' : '#dc2626',
+                                  color: lda >= performanceData.landing.lda50ft ? PRINT.ok : PRINT.nogo,
                                   fontSize: '8px'
                                 }}>
                                   {Math.round(performanceData.landing.lda50ft)}m
@@ -468,7 +484,7 @@ export const FlightRecapTable = ({
       }}>
         {/* En-tête tableau navigation - style identique aux aérodromes */}
         <div style={{
-          backgroundColor: '#3b82f6',
+          backgroundColor: PRINT.accent,
           color: 'white',
           padding: '6px 10px',
           fontWeight: '700',
@@ -511,7 +527,7 @@ export const FlightRecapTable = ({
               background-color: white !important;
             }
             .vfr-table-pdf-style .total-row {
-              background-color: #dbeafe !important;
+              background-color: ${PRINT.accentBg} !important;
               font-weight: 700 !important;
             }
           `}</style>
@@ -650,13 +666,13 @@ export const FlightRecapTable = ({
             <div style={{
               marginBottom: '12px',
               pageBreakInside: 'avoid',
-              border: '2px solid #3b82f6',
+              border: `2px solid ${PRINT.accent}`,
               borderRadius: '8px',
               overflow: 'hidden',
               backgroundColor: 'white'
             }}>
               <div style={{
-                backgroundColor: '#3b82f6',
+                backgroundColor: PRINT.accent,
                 color: 'white',
                 padding: '6px 10px',
                 fontWeight: '700',
@@ -688,7 +704,7 @@ export const FlightRecapTable = ({
                       onChange={(e) => setDepartureTimeTheoretical && setDepartureTimeTheoretical(e.target.value)}
                       style={{
                         padding: '3px 5px',
-                        border: '1px solid #3b82f6',
+                        border: `1px solid ${PRINT.accent}`,
                         borderRadius: '3px',
                         fontSize: '9px',
                         fontWeight: '600',
@@ -708,7 +724,7 @@ export const FlightRecapTable = ({
                       backgroundColor: 'rgba(242, 105, 33, 0.10)',
                       padding: '3px 8px',
                       borderRadius: '3px',
-                      border: '1px solid #f59e0b',
+                      border: `1px solid ${PRINT.accent}`,
                       whiteSpace: 'nowrap'
                     }}>
                       <span style={{ whiteSpace: 'nowrap' }}>
@@ -741,7 +757,7 @@ export const FlightRecapTable = ({
               }}>
                 {/* En-tête TOD */}
                 <div style={{
-                  backgroundColor: '#f26921',
+                  backgroundColor: PRINT.accent,
                   color: 'white',
                   padding: '6px 10px',
                   fontWeight: '700',
@@ -841,17 +857,17 @@ export const FlightRecapTable = ({
               <div style={{
                 fontSize: '11px',
                 fontWeight: '700',
-                color: '#8b5cf6',
+                color: PRINT.accent,
                 marginBottom: '6px'
               }}>
                 ✈️ BRIEFINGS
               </div>
 
               <div style={{
-                border: '2px solid #8b5cf6',
+                border: `2px solid ${PRINT.accent}`,
                 borderRadius: '6px',
                 padding: '6px 8px',
-                backgroundColor: '#f5f3ff',
+                backgroundColor: PRINT.accentBg,
                 fontSize: '9px',
                 display: 'flex',
                 alignItems: 'center',
@@ -881,7 +897,7 @@ export const FlightRecapTable = ({
               <div style={{
                 fontSize: '11px',
                 fontWeight: '700',
-                color: '#6366f1',
+                color: PRINT.accent,
                 marginBottom: '6px'
               }}>
                 ✍️ NOTES DU PILOTE
@@ -899,11 +915,11 @@ export const FlightRecapTable = ({
                   minHeight: '80px',
                   padding: '8px',
                   fontSize: '9px',
-                  border: '2px solid #6366f1',
+                  border: `2px solid ${PRINT.accent}`,
                   borderRadius: '6px',
                   fontFamily: 'inherit',
                   resize: 'vertical',
-                  backgroundColor: '#eff6ff',
+                  backgroundColor: PRINT.accentBg,
                   color: '#1e293b',
                   lineHeight: '1.5'
                 }}

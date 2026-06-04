@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import PerformanceWizard from '../PerformanceWizard';
 import AdvancedPerformanceAnalyzer from '../AdvancedPerformanceAnalyzer';
-import { Button, Box, Alert, Typography, Checkbox, FormControlLabel } from '@mui/material';
+import { Button, Box, Checkbox } from '@mui/material';
 import {
   ChevronRight as ChevronRightIcon,
   ChevronLeft as ChevronLeftIcon,
@@ -702,7 +702,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
   if ((showExistingData || forceShowSummary) && savedPerformanceData) {
     return (
       <div>
-        <h3 style={{ marginBottom: '12px', fontSize: '16px', fontWeight: 'bold' }}>
+        <h3 style={{ marginBottom: '12px', fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>
           Données de Performance Configurées
         </h3>
 
@@ -712,7 +712,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
         {/* Abaques de performance */}
         {savedPerformanceData.performanceModels && savedPerformanceData.performanceModels.length > 0 && (
           <div style={{ marginBottom: '12px' }}>
-            <h4 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+            <h4 style={{ fontSize: 'var(--fs-body)', fontWeight: '600', marginBottom: '8px' }}>
               Abaques de Performance ({savedPerformanceData.performanceModels.length})
             </h4>
             {savedPerformanceData.performanceModels.map((model, index) => {
@@ -752,7 +752,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                       {model.classification || model.name || `Abaque ${index + 1}`}
                     </div>
                     {model.data?.graphs && (
-                      <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                      <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                         {model.data.graphs.length} graphique(s) configuré(s)
                       </div>
                     )}
@@ -795,7 +795,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                       backgroundColor: 'var(--bg-overlay)',
                       border: '1px solid var(--text-secondary)',
                       borderRadius: 'var(--radius-sm)',
-                      fontSize: '12px',
+                      fontSize: 'var(--fs-body)',
                       cursor: 'pointer',
                       color: 'var(--text-secondary)',
                       fontWeight: '500'
@@ -826,9 +826,9 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                       backgroundColor: 'var(--bg-overlay)',
                       border: 'none',
                       borderRadius: 'var(--radius-sm)',
-                      fontSize: '12px',
+                      fontSize: 'var(--fs-body)',
                       cursor: 'pointer',
-                      color: '#C04534',
+                      color: 'var(--color-red-critical)',
                       fontWeight: '500'
                     }}
                   >
@@ -857,7 +857,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
 
           return (
             <div style={{ marginBottom: '12px' }}>
-              <h4 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+              <h4 style={{ fontSize: 'var(--fs-body)', fontWeight: '600', marginBottom: '8px' }}>
                 Tableaux de performance ({classificationsCount})
               </h4>
               {Object.entries(groupedByClassification).map(([classification, tables], index) => {
@@ -903,10 +903,10 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                         title="Inclure ces tableaux dans l'export Excel"
                       />
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: '600', marginBottom: '4px', fontSize: '15px' }}>
+                        <div style={{ fontWeight: '600', marginBottom: '4px', fontSize: 'var(--fs-body)' }}>
                           {mainTableName}
                         </div>
-                        <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                        <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                           {tables.length} tableau(x) extrait(s)
                         </div>
                       </div>
@@ -943,7 +943,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                           backgroundColor: 'var(--bg-overlay)',
                           border: '1px solid var(--text-secondary)',
                           borderRadius: 'var(--radius-sm)',
-                          fontSize: '12px',
+                          fontSize: 'var(--fs-body)',
                           cursor: 'pointer',
                           color: 'var(--text-secondary)',
                           fontWeight: '500'
@@ -998,9 +998,9 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                           backgroundColor: 'var(--bg-overlay)',
                           border: 'none',
                           borderRadius: 'var(--radius-sm)',
-                          fontSize: '12px',
+                          fontSize: 'var(--fs-body)',
                           cursor: 'pointer',
-                          color: '#C04534',
+                          color: 'var(--color-red-critical)',
                           fontWeight: '500'
                         }}
                       >
@@ -1017,7 +1017,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
         {/* Tables de performance */}
         {savedPerformanceData.performanceTables && (
           <div style={{ marginBottom: '20px' }}>
-            <h4 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px' }}>
+            <h4 style={{ fontSize: 'var(--fs-title)', fontWeight: '600', marginBottom: '12px' }}>
               Tables de Performance
             </h4>
             <div style={{
@@ -1044,7 +1044,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
             color: 'var(--text-primary)',
             border: 'none',
             borderRadius: 'var(--radius-sm)',
-            fontSize: '12px',
+            fontSize: 'var(--fs-body)',
             cursor: 'pointer',
             fontWeight: '500',
             width: '100%'

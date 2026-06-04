@@ -20,12 +20,12 @@ export const theme = {
       100: 'var(--bg-overlay)',
       200: 'var(--bg-overlay)',
       300: 'var(--bg-overlay)',
-      400: '#4ade80',
+      400: 'var(--status-success)',
       500: 'var(--text-primary)',
       600: 'var(--text-primary)',
       700: 'var(--text-primary)',
       800: 'var(--text-primary)',
-      900: '#14532d'
+      900: 'var(--status-success)'
     },
     warning: {
       50: 'rgba(242, 105, 33, 0.06)',
@@ -44,12 +44,12 @@ export const theme = {
       100: 'var(--bg-overlay)',
       200: 'var(--border-subtle)',
       300: 'var(--bg-overlay)',
-      400: '#C04534',
-      500: '#C04534',
-      600: '#C04534',
-      700: '#C04534',
-      800: '#C04534',
-      900: '#C04534'
+      400: 'var(--color-red-critical)',
+      500: 'var(--color-red-critical)',
+      600: 'var(--color-red-critical)',
+      700: 'var(--color-red-critical)',
+      800: 'var(--color-red-critical)',
+      900: 'var(--color-red-critical)'
     },
     gray: {
       50: 'var(--bg-overlay)',
@@ -283,7 +283,7 @@ class StyleSystem {
         },
         primary: {
           backgroundColor: theme.colors.primary[600],
-          color: '#ffffff',
+          color: 'var(--color-white-pure)',
           '&:hover': {
             backgroundColor: theme.colors.primary[700]
           }
@@ -297,7 +297,7 @@ class StyleSystem {
         },
         danger: {
           backgroundColor: theme.colors.danger[600],
-          color: '#ffffff',
+          color: 'var(--color-white-pure)',
           '&:hover': {
             backgroundColor: theme.colors.danger[700]
           }

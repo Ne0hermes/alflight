@@ -241,7 +241,7 @@ export const RunwayAnalyzer = ({ icao }) => {
                   sx.spacing.p(3),
                   {
                     borderLeft: analysis 
-                      ? `4px solid ${analysis.compatible ? 'var(--text-primary)' : '#C04534'}`
+                      ? `4px solid ${analysis.compatible ? 'var(--text-primary)' : 'var(--color-red-critical)'}`
                       : '4px solid var(--text-secondary)'
                   }
                 )}
@@ -266,7 +266,7 @@ export const RunwayAnalyzer = ({ icao }) => {
                         {analysis.compatible ? (
                           <CheckCircle size={20} color="var(--text-primary)" />
                         ) : (
-                          <AlertTriangle size={20} color="#C04534" />
+                          <AlertTriangle size={20} color="var(--color-red-critical)" />
                         )}
                       </div>
                     )}
@@ -367,7 +367,7 @@ export const RunwayAnalyzer = ({ icao }) => {
                           <p>Éclairage: {runway.lighting}</p>
                         )}
                         {runway.closed && (
-                          <p style={{ color: '#C04534' }}>⚠️ PISTE FERMÉE</p>
+                          <p style={{ color: 'var(--color-red-critical)' }}>⚠️ PISTE FERMÉE</p>
                         )}
                       </div>
                     </div>

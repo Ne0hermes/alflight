@@ -188,7 +188,7 @@ export const RouteStaticMapSnapshot = ({ waypoints }) => {
       // Déterminer la couleur selon le type
       let color = 'var(--text-secondary)'; // Par défaut bleu
       if (wp.type === 'departure') color = 'var(--text-primary)'; // Vert pour départ
-      if (wp.type === 'arrival') color = '#C04534'; // Rouge pour arrivée
+      if (wp.type === 'arrival') color = 'var(--color-red-critical)'; // Rouge pour arrivée
 
       // Dessiner le point
       ctx.fillStyle = color;
@@ -264,7 +264,7 @@ export const RouteStaticMapSnapshot = ({ waypoints }) => {
     ctx.fillText('Route', margin + 92, legendY + 1);
 
     // Arrivée
-    ctx.fillStyle = '#C04534';
+    ctx.fillStyle = 'var(--color-red-critical)';
     ctx.beginPath();
     ctx.arc(margin + 145, legendY, 5, 0, 2 * Math.PI);
     ctx.fill();
@@ -301,7 +301,7 @@ export const RouteStaticMapSnapshot = ({ waypoints }) => {
         color: 'var(--text-secondary)'
       }}>
         <MapIcon size={48} style={{ marginBottom: '12px', opacity: 0.5 }} />
-        <p style={{ fontSize: '14px' }}>Aucun waypoint défini pour afficher la carte</p>
+        <p style={{ fontSize: 'var(--fs-body)' }}>Aucun waypoint défini pour afficher la carte</p>
       </div>
     );
   }
@@ -337,7 +337,7 @@ export const RouteStaticMapSnapshot = ({ waypoints }) => {
         }}
       />
       <p style={{
-        fontSize: '12px',
+        fontSize: 'var(--fs-body)',
         color: 'var(--text-secondary)',
         marginTop: '8px',
         textAlign: 'center',

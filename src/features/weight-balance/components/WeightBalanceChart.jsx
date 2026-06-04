@@ -4,16 +4,11 @@ import React, { memo, useMemo } from 'react';
 import { sx } from '@shared/styles/styleSystem';
 
 export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) => {
-  if (!aircraft || !scenarios || !calculations) {
-    return (
-      <div style={sx.combine(sx.flex.center, sx.spacing.p(8), sx.bg.gray)}>
-        <p style={sx.text.secondary}>Sélectionnez un avion pour afficher le graphique</p>
-      </div>
-    );
-  }
-
   // Utiliser UNIQUEMENT les données de l'onglet "Gestion des avions" (cgEnvelope)
-  const cgEnvelope = aircraft.cgEnvelope;
+  // 🔧 FIX rules-of-hooks : accès null-safe. Les hooks (useMemo) ci-dessous sont
+  // déclarés AVANT les garde-fous d'UI (déplacés après les hooks), donc `aircraft`
+  // peut être absent ici — d'où l'optional chaining + les gardes internes des hooks.
+  const cgEnvelope = aircraft?.cgEnvelope;
   
   // Debug: afficher ce que contient l'aircraft
   console.log('🛩️ Aircraft reçu dans WeightBalanceChart:', aircraft);
@@ -31,37 +26,17 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
     cgEnvelope.forwardPoints.length > 0 &&
     cgEnvelope.aftCG;
 
-  // Afficher une erreur si les données manquent
-  if (!hasCgEnvelopeData) {
-    return (
-      <div style={sx.spacing.mt(8)}>
-        <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4))}>
-          📈 Enveloppe de centrage
-        </h3>
-        
-        <div style={sx.combine(
-          sx.components.alert.base,
-          sx.components.alert.danger,
-          sx.spacing.mb(4)
-        )}>
-          <p style={sx.combine(sx.text.lg, sx.text.bold)}>
-            ❌ Données d'enveloppe de centrage manquantes
-          </p>
-          <p style={sx.combine(sx.text.sm, sx.spacing.mt(2))}>
-            Veuillez configurer l'enveloppe de centrage dans l'onglet <strong>"Gestion des avions"</strong> → 
-            Section <strong>"CENTER OF GRAVITY - Enveloppe de centrage"</strong>
-          </p>
-          <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
-            <li>Ajoutez au moins un point CG avant (Most Forward CG)</li>
-            <li>Définissez les limites CG arrière (Most Rearward CG)</li>
-          </ul>
-        </div>
-      </div>
-    );
-  }
-  
+  // 🔧 FIX rules-of-hooks : le garde-fou « données d'enveloppe manquantes »
+  // (early-return sur hasCgEnvelopeData) a été déplacé APRÈS la déclaration de
+  // TOUS les hooks — voir plus bas, juste avant le rendu du graphique.
+
   // Calcul des échelles avec les données cgEnvelope
   const scales = useMemo(() => {
+    // 🔧 FIX rules-of-hooks : tolérer l'absence de données (hook exécuté avant
+    // les garde-fous d'UI). Valeurs neutres — jamais utilisées au rendu réel.
+    if (!aircraft || !cgEnvelope?.forwardPoints) {
+      return { cgMin: 0, cgMax: 1, weightMin: 0, weightMax: 1 };
+    }
     // 🔧 FIX CRITIQUE: Convertir les valeurs CG en nombres pour éviter comparaison lexicographique
     const forwardCGs = cgEnvelope.forwardPoints
       .map(p => parseFloat(p.cg))
@@ -123,6 +98,9 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
 
   // Fonction pour vérifier si un point est dans l'enveloppe (utilise cgEnvelope uniquement)
   const isPointWithinEnvelope = (weight, cg) => {
+    // 🔧 FIX rules-of-hooks : tolérer l'absence de cgEnvelope (appelée depuis des
+    // useMemo exécutés avant les garde-fous d'UI).
+    if (!cgEnvelope?.forwardPoints) return false;
     // Le CG est déjà en mètres, pas besoin de conversion
     const cgInMeters = cg;
 
@@ -219,6 +197,9 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
 
   // Création des points de l'enveloppe avec cgEnvelope
   const envelopeData = useMemo(() => {
+    // 🔧 FIX rules-of-hooks : tolérer l'absence de cgEnvelope (hook exécuté avant
+    // les garde-fous d'UI).
+    if (!cgEnvelope?.forwardPoints) return [];
     const sortedForwardPoints = [...cgEnvelope.forwardPoints]
       .filter(p => p.weight && p.cg && !isNaN(parseFloat(p.weight)) && !isNaN(parseFloat(p.cg)))
       .map(p => ({ weight: parseFloat(p.weight), cg: parseFloat(p.cg) }))
@@ -242,7 +223,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
     
     if (!isNaN(aftMaxWeight) && aftMaxWeight > 0 && !isNaN(aftCG)) {
       points.push({ w: aftMaxWeight, cg: aftCG, label: 'Aft Max' });
-    };
+    }
     if (!isNaN(aftMinWeight) && aftMinWeight > 0 && !isNaN(aftCG) && aftMinWeight !== aftMaxWeight) {
       points.push({ w: aftMinWeight, cg: aftCG, label: 'Aft Min' });
     }
@@ -250,16 +231,58 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
     return points;
   }, [aircraft, cgEnvelope]);
 
+  // ─── Garde-fous d'UI APRÈS la déclaration de TOUS les hooks ───
+  // 🔧 FIX rules-of-hooks : ces early-returns étaient placés AVANT les hooks
+  // ci-dessus, ce qui rendait l'ordre d'appel des hooks instable selon les
+  // données reçues. Déplacés ici, l'ordre des hooks est identique à chaque rendu.
+  if (!aircraft || !scenarios || !calculations) {
+    return (
+      <div style={sx.combine(sx.flex.center, sx.spacing.p(8), sx.bg.gray)}>
+        <p style={sx.text.secondary}>Sélectionnez un avion pour afficher le graphique</p>
+      </div>
+    );
+  }
+
+  if (!hasCgEnvelopeData) {
+    return (
+      <div style={sx.spacing.mt(8)}>
+        <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4))}>
+          📈 Enveloppe de centrage
+        </h3>
+
+        <div style={sx.combine(
+          sx.components.alert.base,
+          sx.components.alert.danger,
+          sx.spacing.mb(4)
+        )}>
+          <p style={sx.combine(sx.text.lg, sx.text.bold)}>
+            ❌ Données d'enveloppe de centrage manquantes
+          </p>
+          <p style={sx.combine(sx.text.sm, sx.spacing.mt(2))}>
+            Veuillez configurer l'enveloppe de centrage dans l'onglet <strong>"Gestion des avions"</strong> →
+            Section <strong>"CENTER OF GRAVITY - Enveloppe de centrage"</strong>
+          </p>
+          <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
+            <li>Ajoutez au moins un point CG avant (Most Forward CG)</li>
+            <li>Définissez les limites CG arrière (Most Rearward CG)</li>
+          </ul>
+        </div>
+      </div>
+    );
+  }
+
   const createEnvelopePoints = () => {
     return envelopeData.map(p => `${toSvgX(p.cg)},${toSvgY(p.w)}`).join(' ');
   };
 
-  // Configuration des scénarios avec les nouveaux libellés
+  // Configuration des scénarios — palette de SÉRIES (data-viz) re-tonée cockpit
+  // (orange de marque + cyan/ambre/ivoire sourds, distinguables). PAS de rouge ici :
+  // le rouge NO-GO (var(--color-red-critical)) est réservé aux points HORS-LIMITE (plus bas).
   const scenarioConfig = [
-    { key: 'fulltank', label: 'Réservoirs pleins', color: '#3b82f6' },
-    { key: 'toCrm', label: 'Masse au décollage (FOB)', color: '#10b981' },
-    { key: 'landing', label: 'Masse à l\'atterrissage', color: '#f59e0b' },
-    { key: 'zfw', label: 'Masse sans carburant (ZFW)', color: '#ef4444' }
+    { key: 'fulltank', label: 'Réservoirs pleins', color: '#f26921' },
+    { key: 'toCrm', label: 'Masse au décollage (FOB)', color: '#4FC3D9' },
+    { key: 'landing', label: 'Masse à l\'atterrissage', color: '#E0A33E' },
+    { key: 'zfw', label: 'Masse sans carburant (ZFW)', color: '#C9C5BD' }
   ];
 
   // Créer le chemin reliant les points
@@ -315,7 +338,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
           {/* Grille */}
           <defs>
             <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-              <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#e5e7eb" strokeWidth="1"/>
+              <path d="M 50 0 L 0 0 0 50" fill="none" stroke="var(--border-subtle)" strokeWidth="1"/>
             </pattern>
           </defs>
           <rect width="600" height="420" fill="url(#grid)" />
@@ -327,22 +350,22 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
             for (let i = 1; i < 6; i++) {
               const x = 50 + (500 * i) / 6;
               gridLines.push(
-                <line key={`vgrid-${i}`} x1={x} y1="50" x2={x} y2="350" stroke="#e5e7eb" strokeWidth="0.5" strokeDasharray="2,2" />
+                <line key={`vgrid-${i}`} x1={x} y1="50" x2={x} y2="350" stroke="var(--border-subtle)" strokeWidth="0.5" strokeDasharray="2,2" />
               );
             }
             // Lignes horizontales
             for (let i = 1; i < 6; i++) {
               const y = 350 - (300 * i) / 6;
               gridLines.push(
-                <line key={`hgrid-${i}`} x1="50" y1={y} x2="550" y2={y} stroke="#e5e7eb" strokeWidth="0.5" strokeDasharray="2,2" />
+                <line key={`hgrid-${i}`} x1="50" y1={y} x2="550" y2={y} stroke="var(--border-subtle)" strokeWidth="0.5" strokeDasharray="2,2" />
               );
             }
             return gridLines;
           })()}
           
           {/* Axes */}
-          <line x1="50" y1="350" x2="550" y2="350" stroke="#374151" strokeWidth="2" />
-          <line x1="50" y1="50" x2="50" y2="350" stroke="#374151" strokeWidth="2" />
+          <line x1="50" y1="350" x2="550" y2="350" stroke="var(--text-secondary)" strokeWidth="2" />
+          <line x1="50" y1="50" x2="50" y2="350" stroke="var(--text-secondary)" strokeWidth="2" />
           
           {/* Graduations et valeurs axe X (Centre de gravité) */}
           {(() => {
@@ -353,8 +376,8 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
               const x = 50 + (500 * i) / numTicksX;
               ticksX.push(
                 <g key={`x-tick-${i}`}>
-                  <line x1={x} y1="350" x2={x} y2="355" stroke="#374151" strokeWidth="1" />
-                  <text x={x} y="365" textAnchor="middle" fontSize="8" fill="#374151">
+                  <line x1={x} y1="350" x2={x} y2="355" stroke="var(--text-secondary)" strokeWidth="1" />
+                  <text x={x} y="365" textAnchor="middle" fontSize="8" fill="var(--text-secondary)">
                     {Math.round(cgValue)}
                   </text>
                 </g>
@@ -364,7 +387,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
           })()}
           
           {/* Unité axe X */}
-          <text x="520" y="365" textAnchor="middle" fontSize="8" fill="#6b7280" fontStyle="italic">(mm)</text>
+          <text x="520" y="365" textAnchor="middle" fontSize="8" fill="var(--text-tertiary)" fontStyle="italic">(mm)</text>
           
           {/* Graduations et valeurs axe Y (Masse) */}
           {(() => {
@@ -375,8 +398,8 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
               const y = 350 - (300 * i) / numTicksY;
               ticksY.push(
                 <g key={`y-tick-${i}`}>
-                  <line x1="45" y1={y} x2="50" y2={y} stroke="#374151" strokeWidth="1" />
-                  <text x="40" y={y + 3} textAnchor="end" fontSize="8" fill="#374151">
+                  <line x1="45" y1={y} x2="50" y2={y} stroke="var(--text-secondary)" strokeWidth="1" />
+                  <text x="40" y={y + 3} textAnchor="end" fontSize="8" fill="var(--text-secondary)">
                     {Math.round(weightValue)}
                   </text>
                 </g>
@@ -386,11 +409,11 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
           })()}
           
           {/* Unité axe Y */}
-          <text x="40" y="60" textAnchor="end" fontSize="8" fill="#6b7280" fontStyle="italic">(kg)</text>
+          <text x="40" y="60" textAnchor="end" fontSize="8" fill="var(--text-tertiary)" fontStyle="italic">(kg)</text>
           
           {/* Labels axes (taille réduite) */}
-          <text x="300" y="385" textAnchor="middle" fontSize="10" fill="#374151">Centre de Gravité (mm)</text>
-          <text x="15" y="200" textAnchor="middle" fontSize="10" fill="#374151" transform="rotate(-90 15 200)">Masse (kg)</text>
+          <text x="300" y="385" textAnchor="middle" fontSize="10" fill="var(--text-secondary)">Centre de Gravité (mm)</text>
+          <text x="15" y="200" textAnchor="middle" fontSize="10" fill="var(--text-secondary)" transform="rotate(-90 15 200)">Masse (kg)</text>
 
           {/* 🔧 LIGNES DE LIMITES OPÉRATIONNELLES */}
           {(() => {
@@ -454,7 +477,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
                     y1={y}
                     x2="550"
                     y2={y}
-                    stroke="#dc2626"
+                    stroke="var(--color-red-critical)"
                     strokeWidth="2"
                     strokeDasharray="8,4"
                   />
@@ -462,7 +485,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
                     x="555"
                     y={y + 4}
                     fontSize="9"
-                    fill="#dc2626"
+                    fill="var(--color-red-critical)"
                     fontWeight="600"
                   >
                     Masse min: {minTakeoffWeight} kg
@@ -481,7 +504,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
                     y1={y}
                     x2="550"
                     y2={y}
-                    stroke="#dc2626"
+                    stroke="var(--color-red-critical)"
                     strokeWidth="2"
                     strokeDasharray="8,4"
                   />
@@ -489,7 +512,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
                     x="555"
                     y={y + 4}
                     fontSize="9"
-                    fill="#dc2626"
+                    fill="var(--color-red-critical)"
                     fontWeight="600"
                   >
                     MTOW: {maxTakeoffWeight} kg
@@ -508,7 +531,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
                     y1={y}
                     x2="550"
                     y2={y}
-                    stroke="#f59e0b"
+                    stroke="var(--accent-primary)"
                     strokeWidth="2"
                     strokeDasharray="4,4"
                   />
@@ -516,7 +539,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
                     x="555"
                     y={y + 4}
                     fontSize="9"
-                    fill="#f59e0b"
+                    fill="var(--accent-primary)"
                     fontWeight="600"
                   >
                     MLW: {maxLandingWeight} kg
@@ -529,7 +552,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
           })()}
 
           {/* Enveloppe */}
-          <polygon points={createEnvelopePoints()} fill="#dbeafe" fillOpacity="0.5" stroke="#3b82f6" strokeWidth="2" />
+          <polygon points={createEnvelopePoints()} fill="var(--accent-soft)" fillOpacity="0.5" stroke="var(--accent-primary)" strokeWidth="2" />
           
           {/* Labels des limites de l'enveloppe */}
           {envelopeData.map((point, index) => {
@@ -554,7 +577,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
                   x={xAdjust} 
                   y={yAdjust} 
                   fontSize="8" 
-                  fill="#6b7280" 
+                  fill="var(--text-tertiary)" 
                   textAnchor="middle"
                   fontStyle="italic"
                 >
@@ -569,7 +592,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
             <path 
               d={createScenarioPath()} 
               fill="none" 
-              stroke="#9ca3af" 
+              stroke="var(--text-tertiary)" 
               strokeWidth="1.5" 
               strokeDasharray="5,5"
             />
@@ -648,7 +671,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
                   y1={y} 
                   x2={labelX} 
                   y2={labelY} 
-                  stroke={isInLimits ? color : '#ef4444'} 
+                  stroke={isInLimits ? color : 'var(--color-red-critical)'} 
                   strokeWidth="1" 
                   opacity="0.5"
                 />
@@ -660,7 +683,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
                     cy={y} 
                     r="9" 
                     fill="none"
-                    stroke="#ef4444" 
+                    stroke="var(--color-red-critical)" 
                     strokeWidth="2"
                     strokeDasharray="3,2"
                   >
@@ -673,9 +696,9 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
                   cx={x} 
                   cy={y} 
                   r="5" 
-                  fill={isInLimits ? color : '#ef4444'} 
+                  fill={isInLimits ? color : 'var(--color-red-critical)'} 
                   fillOpacity="0.8"
-                  stroke={isInLimits ? color : '#ef4444'} 
+                  stroke={isInLimits ? color : 'var(--color-red-critical)'} 
                   strokeWidth="2" 
                 />
                 
@@ -688,20 +711,20 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
                     height={isInLimits ? "48" : "56"}
                     fill="white"
                     fillOpacity="0.95"
-                    stroke={isInLimits ? color : '#ef4444'}
+                    stroke={isInLimits ? color : 'var(--color-red-critical)'}
                     strokeWidth={isInLimits ? "1.5" : "2"}
                     rx="4"
                   />
-                  <text textAnchor="middle" fontSize="9" fill={isInLimits ? color : '#ef4444'} fontWeight="700">
+                  <text textAnchor="middle" fontSize="9" fill={isInLimits ? color : 'var(--color-red-critical)'} fontWeight="700">
                     <tspan x="0" y="-8">{label}</tspan>
                   </text>
-                  <text textAnchor="middle" fontSize="7.5" fill="#374151" fontWeight="500">
+                  <text textAnchor="middle" fontSize="7.5" fill="var(--text-secondary)" fontWeight="500">
                     <tspan x="0" y="2">Masse: {scenario.w.toFixed(1)} kg</tspan>
                     <tspan x="0" y="11">Moment: {(scenario.w * scenario.cg).toFixed(1)} kg.m</tspan>
                     <tspan x="0" y="20">CG: {scenario.cg.toFixed(3)} m ({(scenario.cg * 1000).toFixed(0)} mm)</tspan>
                   </text>
                   {!isInLimits && (
-                    <text x="0" y="32" textAnchor="middle" fontSize="7" fill="#ef4444" fontWeight="700">
+                    <text x="0" y="32" textAnchor="middle" fontSize="7" fill="var(--color-red-critical)" fontWeight="700">
                       ⚠️ HORS LIMITES
                     </text>
                   )}
@@ -712,10 +735,10 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
         })()}
           
           {/* Titre (taille réduite) */}
-          <text x="300" y="25" textAnchor="middle" fontSize="12" fontWeight="600" fill="#1f2937">
+          <text x="300" y="25" textAnchor="middle" fontSize="12" fontWeight="600" fill="var(--text-primary)">
             Diagramme de Masse et Centrage
           </text>
-          <text x="300" y="40" textAnchor="middle" fontSize="10" fill="#6b7280">
+          <text x="300" y="40" textAnchor="middle" fontSize="10" fill="var(--text-tertiary)">
             {aircraft.registration} - {aircraft.model}
           </text>
         </svg>

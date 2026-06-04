@@ -1,6 +1,6 @@
 // src/features/navigation/components/WindAnalysis.jsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { Wind, AlertTriangle, Navigation, Clock, Compass, TrendingUp, Info, Loader } from 'lucide-react';
+import { Wind, AlertTriangle, Compass, Info, Loader } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useWeatherStore } from '@core/stores/weatherStore';
 import { useUnits } from '@hooks/useUnits';
@@ -277,7 +277,7 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
   };
   
   const getWindImpactColor = (difference) => {
-    if (difference > 10) return '#C04534'; // Rouge - retard important
+    if (difference > 10) return 'var(--color-red-critical)'; // Rouge - retard important
     if (difference > 5) return '#f26921'; // Orange - retard modéré
     if (difference > -5) return 'var(--text-primary)'; // Vert - impact faible
     return 'var(--text-secondary)'; // Bleu - gain de temps

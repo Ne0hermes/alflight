@@ -12,7 +12,7 @@ export const PremiumButton = ({ children, onClick, style, disabled, ...props }) 
         border: 'none',
         background: 'linear-gradient(135deg, #f26921, #FF7E36)',
         color: 'var(--text-primary)',
-        fontSize: '14px',
+        fontSize: 'var(--fs-body)',
         fontWeight: '600',
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.6 : 1,
@@ -35,7 +35,7 @@ export const PremiumCard = ({ children, style, ...props }) => {
         borderRadius: 'var(--radius-sm)',
         padding: '20px',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        border: '1px solid rgba(147, 22, 60, 0.1)',
+        border: '1px solid var(--accent-soft)',
         ...style
       }}
       {...props}
@@ -49,7 +49,7 @@ export const PremiumCard = ({ children, style, ...props }) => {
 export const PremiumBadge = ({ children, variant = 'default', style, ...props }) => {
   const variants = {
     default: {
-      background: 'rgba(147, 22, 60, 0.1)',
+      background: 'var(--accent-soft)',
       color: '#f26921'
     },
     success: {
@@ -62,7 +62,7 @@ export const PremiumBadge = ({ children, variant = 'default', style, ...props })
     },
     error: {
       background: 'rgba(239, 68, 68, 0.1)',
-      color: '#C04534'
+      color: 'var(--color-red-critical)'
     }
   };
 
@@ -73,7 +73,7 @@ export const PremiumBadge = ({ children, variant = 'default', style, ...props })
         alignItems: 'center',
         padding: '4px 12px',
         borderRadius: 'var(--radius-sm)',
-        fontSize: '12px',
+        fontSize: 'var(--fs-body)',
         fontWeight: '600',
         ...variants[variant],
         ...style
@@ -92,7 +92,7 @@ export const PremiumSpinner = ({ size = 24, style, ...props }) => {
       style={{
         width: size,
         height: size,
-        border: `3px solid rgba(147, 22, 60, 0.2)`,
+        border: `3px solid var(--accent-soft)`,
         borderTopColor: '#f26921',
         borderRadius: '50%',
         animation: 'spin 1s linear infinite',

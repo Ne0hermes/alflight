@@ -5,7 +5,6 @@ import { LoadInput } from '@features/weight-balance/components/LoadInput';
 import { WeightBalanceChart } from '@features/weight-balance/components/WeightBalanceChart';
 import { ScenarioCards } from '@features/weight-balance/components/ScenarioCards';
 import { calculateScenarios } from '@features/weight-balance/utils/calculations';
-import { Scale } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import { DENSITIES } from '@utils/unitConversions';
 import { useUnits } from '@hooks/useUnits';
@@ -28,7 +27,7 @@ const commonStyles = {
     marginBottom: '16px'
   },
   label: {
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     color: theme.colors.textPrimary,
     display: 'flex',
@@ -469,7 +468,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
         return (
           <div style={commonStyles.container}>
             <div style={{ textAlign: 'center', padding: '40px' }}>
-              <p style={{ fontSize: '16px', color: theme.colors.textSecondary }}>
+              <p style={{ fontSize: 'var(--fs-title)', color: theme.colors.textSecondary }}>
                 Aucun avion sélectionné. Veuillez sélectionner un avion à l'étape 1.
               </p>
             </div>
@@ -481,7 +480,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
         return (
           <div style={commonStyles.container}>
             <div style={{ textAlign: 'center', padding: '40px' }}>
-              <p style={{ fontSize: '16px', color: theme.colors.textSecondary, marginBottom: '12px' }}>
+              <p style={{ fontSize: 'var(--fs-title)', color: theme.colors.textSecondary, marginBottom: '12px' }}>
                 ⏳ Chargement des données de masse et centrage...
               </p>
 
@@ -506,7 +505,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
               gap: '12px',
               flexWrap: 'wrap'
             }}>
-              <span style={{ fontSize: '15px', fontWeight: 700 }}>
+              <span style={{ fontSize: 'var(--fs-body)', fontWeight: 700 }}>
                 Catégorie d'opération :
               </span>
               <div style={{ display: 'flex', gap: '8px' }}>
@@ -520,7 +519,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                     color: operationCategory === 'N' ? 'white' : 'var(--text-secondary)',
                     fontWeight: 700,
                     cursor: 'pointer',
-                    fontSize: '14px'
+                    fontSize: 'var(--fs-body)'
                   }}
                 >
                   Normale (N)
@@ -535,13 +534,13 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                     color: operationCategory === 'U' ? 'white' : 'var(--text-secondary)',
                     fontWeight: 700,
                     cursor: 'pointer',
-                    fontSize: '14px'
+                    fontSize: 'var(--fs-body)'
                   }}
                 >
                   Utilitaire (U)
                 </button>
               </div>
-              <span style={{ fontSize: '12px', color: theme.colors.textSecondary, flex: '1 1 100%' }}>
+              <span style={{ fontSize: 'var(--fs-body)', color: theme.colors.textSecondary, flex: '1 1 100%' }}>
                 {operationCategory === 'U'
                   ? `🟠 MTOW réduit (${aircraft.utilityCategory.mtow || '—'} kg) et domaine CG plus restreint. Facteurs de charge +4,4g/−1,76g.`
                   : `🟢 MTOW standard. Pas d'acrobatie. Facteurs +3,8g/−1,5g.`}
@@ -556,7 +555,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                 padding: '16px 20px',
                 marginBottom: '16px',
                 backgroundColor: violation.type === 'critical' ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
-                border: `2px solid ${violation.type === 'critical' ? '#C04534' : 'var(--accent-primary)'}`,
+                border: `2px solid ${violation.type === 'critical' ? 'var(--color-red-critical)' : 'var(--accent-primary)'}`,
                 borderRadius: 'var(--radius-sm)',
                 display: 'flex',
                 flexDirection: 'column',
@@ -564,19 +563,19 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '24px' }}>{violation.icon}</span>
+                <span style={{ fontSize: 'var(--fs-title)' }}>{violation.icon}</span>
                 <div style={{ flex: 1 }}>
                   <div style={{
-                    fontSize: '16px',
+                    fontSize: 'var(--fs-title)',
                     fontWeight: '700',
-                    color: violation.type === 'critical' ? '#C04534' : 'var(--accent-primary)',
+                    color: violation.type === 'critical' ? 'var(--color-red-critical)' : 'var(--accent-primary)',
                     marginBottom: '4px'
                   }}>
                     {violation.message}
                   </div>
                   <div style={{
-                    fontSize: '14px',
-                    color: violation.type === 'critical' ? '#C04534' : 'var(--accent-primary)',
+                    fontSize: 'var(--fs-body)',
+                    color: violation.type === 'critical' ? 'var(--color-red-critical)' : 'var(--accent-primary)',
                     lineHeight: '1.5'
                   }}>
                     {violation.detail}
@@ -666,7 +665,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
 
     return (
       <section style={{ ...commonStyles.card, marginBottom: '24px' }}>
-        <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px' }}>
+        <h3 style={{ fontSize: 'var(--fs-title)', fontWeight: '600', marginBottom: '16px' }}>
           ⚖️ Chargement et Moments
         </h3>
 
@@ -685,7 +684,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
               gridTemplateColumns: '1fr 1fr',
               gap: '8px',
               marginTop: '8px',
-              fontSize: '12px',
+              fontSize: 'var(--fs-body)',
               color: theme.colors.textSecondary
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -693,7 +692,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                 {arms.empty !== null ? (
                   <span style={{ color: theme.colors.textPrimary }}>{arms.empty.toFixed(2)} m</span>
                 ) : (
-                  <span style={{ color: '#C04534', fontWeight: '600' }}>⚠️ MANQUANT</span>
+                  <span style={{ color: 'var(--color-red-critical)', fontWeight: '600' }}>⚠️ MANQUANT</span>
                 )}
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -703,7 +702,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                     {((aircraft.emptyWeight || 0) * arms.empty).toFixed(1)} kg.m
                   </span>
                 ) : (
-                  <span style={{ color: '#C04534', fontWeight: '600' }}>⚠️ N/A</span>
+                  <span style={{ color: 'var(--color-red-critical)', fontWeight: '600' }}>⚠️ N/A</span>
                 )}
               </div>
             </div>
@@ -784,7 +783,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
           {/* Section Carburant - Différents scénarios */}
           <div style={{ ...commonStyles.card, padding: '16px', backgroundColor: 'rgba(16, 185, 129, 0.05)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h4 style={{ fontSize: '14px', fontWeight: '600', margin: 0, color: 'var(--text-primary)' }}>
+              <h4 style={{ fontSize: 'var(--fs-body)', fontWeight: '600', margin: 0, color: 'var(--text-primary)' }}>
                 ⛽ Scénarios de carburant
               </h4>
 
@@ -792,7 +791,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
               <div style={{
                 display: 'flex',
                 gap: '12px',
-                fontSize: '11px',
+                fontSize: 'var(--fs-caption)',
                 color: 'var(--text-secondary)',
                 backgroundColor: 'var(--bg-overlay)',
                 padding: '6px 12px',
@@ -817,12 +816,12 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
               return (
                 <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--bg-overlay)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '600' }}>Full Tank</span>
-                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                    <span style={{ fontSize: 'var(--fs-body)', fontWeight: '600' }}>Full Tank</span>
+                    <span style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                       {fullTankInUserUnit.toFixed(1)} {fuelUnitSymbol} ({fullTankKg.toFixed(1)} kg)
                     </span>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px', color: 'var(--text-secondary)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>📏 Bras:</span>
                       <span>{arms.fuel !== null ? `${arms.fuel.toFixed(2)} m` : '⚠️ N/A'}</span>
@@ -840,18 +839,18 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
             {fuelLitres > 0 && (
               <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--bg-overlay)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: '600' }}>FOB T/O (Décollage)</span>
-                  <span style={{ fontSize: '13px', color: 'var(--text-primary)' }}>
+                  <span style={{ fontSize: 'var(--fs-body)', fontWeight: '600' }}>FOB T/O (Décollage)</span>
+                  <span style={{ fontSize: 'var(--fs-body)', color: 'var(--text-primary)' }}>
                     {fuelInUserUnit.toFixed(1)} {fuelUnitSymbol} ({fuelWeightKg.toFixed(1)} kg)
                   </span>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px', color: 'var(--text-secondary)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>📏 Bras:</span>
                     {arms.fuel !== null ? (
                       <span style={{ color: theme.colors.textPrimary }}>{arms.fuel.toFixed(2)} m</span>
                     ) : (
-                      <span style={{ color: '#C04534', fontWeight: '600' }}>⚠️ MANQUANT</span>
+                      <span style={{ color: 'var(--color-red-critical)', fontWeight: '600' }}>⚠️ MANQUANT</span>
                     )}
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -861,7 +860,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                         {fuelMoment.toFixed(1)} kg.m
                       </span>
                     ) : (
-                      <span style={{ color: '#C04534', fontWeight: '600' }}>⚠️ N/A</span>
+                      <span style={{ color: 'var(--color-red-critical)', fontWeight: '600' }}>⚠️ N/A</span>
                     )}
                   </div>
                 </div>
@@ -879,12 +878,12 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
               return landingFuelKg > 0 ? (
                 <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--bg-overlay)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '600' }}>FOB Landing (Atterrissage)</span>
-                    <span style={{ fontSize: '13px', color: 'var(--accent-primary)' }}>
+                    <span style={{ fontSize: 'var(--fs-body)', fontWeight: '600' }}>FOB Landing (Atterrissage)</span>
+                    <span style={{ fontSize: 'var(--fs-body)', color: 'var(--accent-primary)' }}>
                       {landingFuelInUserUnit.toFixed(1)} {fuelUnitSymbol} ({landingFuelKg.toFixed(1)} kg)
                     </span>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px', color: 'var(--text-secondary)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>📏 Bras:</span>
                       <span>{arms.fuel !== null ? `${arms.fuel.toFixed(2)} m` : '⚠️ N/A'}</span>
@@ -916,13 +915,13 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
               return alternateFuelKg > 0 ? (
                 <div style={{ marginBottom: '0' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '600' }}>FOB Alternate (Déroutement)</span>
-                    <span style={{ fontSize: '13px', color: theme.colors.textPrimary }}>
+                    <span style={{ fontSize: 'var(--fs-body)', fontWeight: '600' }}>FOB Alternate (Déroutement)</span>
+                    <span style={{ fontSize: 'var(--fs-body)', color: theme.colors.textPrimary }}>
                       {alternateFuelInUserUnit.toFixed(1)} {fuelUnitSymbol} ({alternateFuelKg.toFixed(1)} kg)
                     </span>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px', color: 'var(--text-secondary)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>📏 Bras:</span>
                       <span>{arms.fuel !== null ? `${arms.fuel.toFixed(2)} m` : '⚠️ N/A'}</span>
@@ -963,7 +962,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
               })}
             </div>
           ) : (
-            <div style={{ ...commonStyles.card, padding: '16px', textAlign: 'center', color: theme.colors.textSecondary, fontSize: '13px' }}>
+            <div style={{ ...commonStyles.card, padding: '16px', textAlign: 'center', color: theme.colors.textSecondary, fontSize: 'var(--fs-body)' }}>
               Aucun compartiment bagage configuré pour cet avion.
             </div>
           )}
@@ -989,7 +988,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
           gridTemplateColumns: '1fr 1fr',
           gap: '8px',
           marginTop: '8px',
-          fontSize: '12px',
+          fontSize: 'var(--fs-body)',
           color: theme.colors.textSecondary
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -997,7 +996,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
             {arm !== null ? (
               <span style={{ color: theme.colors.textPrimary }}>{arm.toFixed(2)} m</span>
             ) : (
-              <span style={{ color: '#C04534', fontWeight: '600' }}>⚠️ MANQUANT</span>
+              <span style={{ color: 'var(--color-red-critical)', fontWeight: '600' }}>⚠️ MANQUANT</span>
             )}
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -1007,7 +1006,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                 {moment.toFixed(1)} kg.m
               </span>
             ) : (
-              <span style={{ color: '#C04534', fontWeight: '600' }}>⚠️ N/A</span>
+              <span style={{ color: 'var(--color-red-critical)', fontWeight: '600' }}>⚠️ N/A</span>
             )}
           </div>
         </div>

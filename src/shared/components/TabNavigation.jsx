@@ -97,7 +97,7 @@ const styles = {
     border: 'none',
     borderRadius: 0,
     fontFamily: tokens.fontFamily.mono,
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: 500,
     letterSpacing: '0.12em',
     textTransform: 'uppercase',

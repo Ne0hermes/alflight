@@ -75,9 +75,9 @@ export const Notification = ({
       borderLeft: '4px solid var(--text-primary)'
     },
     error: {
-      backgroundColor: '#C04534',
+      backgroundColor: 'var(--color-red-critical)',
       color: 'var(--text-primary)',
-      borderLeft: '4px solid #C04534'
+      borderLeft: '4px solid var(--color-red-critical)'
     },
     warning: {
       backgroundColor: 'var(--accent-primary)',
@@ -121,7 +121,7 @@ export const Notification = ({
     >
       {icons[type]}
       <div style={{ flex: 1 }}>
-        <p style={{ margin: 0, fontSize: '14px', fontWeight: '500' }}>{message}</p>
+        <p style={{ margin: 0, fontSize: 'var(--fs-body)', fontWeight: '500' }}>{message}</p>
       </div>
       <button
         onClick={handleClose}

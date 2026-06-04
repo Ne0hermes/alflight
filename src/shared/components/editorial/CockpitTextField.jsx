@@ -97,7 +97,7 @@ export const CockpitTextField = ({
             outline: 'none',
             padding: `${tokens.spacing[3]} ${tokens.spacing[4]}`,
             fontFamily: tokens.fontFamily.sans,
-            fontSize: '15px',
+            fontSize: 'var(--fs-body)',
             lineHeight: 1.4,
             color: 'var(--text-primary)',
             caretColor: 'var(--accent-primary)',
@@ -112,7 +112,7 @@ export const CockpitTextField = ({
               alignItems: 'center',
               padding: `0 ${tokens.spacing[4]}`,
               fontFamily: tokens.fontFamily.mono,
-              fontSize: '12px',
+              fontSize: 'var(--fs-body)',
               letterSpacing: '0.10em',
               textTransform: 'uppercase',
               color: 'var(--text-tertiary)',
@@ -130,7 +130,7 @@ export const CockpitTextField = ({
           id={`${id}-helper`}
           style={{
             fontFamily: tokens.fontFamily.sans,
-            fontSize: '12px',
+            fontSize: 'var(--fs-body)',
             color: error ? 'var(--color-red-critical)' : 'var(--text-tertiary)',
             lineHeight: 1.4,
           }}

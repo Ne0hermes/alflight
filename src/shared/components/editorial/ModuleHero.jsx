@@ -117,7 +117,7 @@ export const ModuleHero = ({
               style={{
                 marginTop: tokens.spacing[3],
                 fontFamily: tokens.fontFamily.mono,
-                fontSize: '11px',
+                fontSize: 'var(--fs-caption)',
                 letterSpacing: '0.30em',
                 textTransform: 'uppercase',
                 color: 'var(--text-tertiary)',

@@ -1,20 +1,27 @@
 /**
- * Service pour extraire les points VFR depuis le fichier AIXM
+ * Source des points de report VFR (VRP) pour l'app.
+ *
+ * ⚠️ Historiquement, ce module parsait le XML AIXM 42 Mo au runtime (DOMParser) pour
+ * extraire les <Dpn> VFR et les associer à un aérodrome. Or ce XML est gitignore
+ * (public/data/*.xml) → ABSENT en prod (Vercel) → 404 → 0 point VFR. Cf. #11.
+ *
+ * Désormais il lit le GeoJSON dérivé VERSIONNÉ (/data/geojson/designated_points.geojson),
+ * produit par l'ETL (scripts/sia_etl.ts) qui classe les points VFR (type VFR-*) et
+ * renseigne aerodrome_icao (depuis AhpUidAssoc). SOURCE UNIQUE, comme le reste des
+ * données SIA. L'API publique (loadVFRPoints / toGeoJSON / clearCache) est conservée.
  */
+
+const DESIGNATED_POINTS_URL = '/data/geojson/designated_points.geojson';
 
 class VFRPointsExtractor {
   constructor() {
     this.vfrPoints = [];
     this.loading = false;
-
-
-
-    
     this.loaded = false;
   }
 
   /**
-   * Charge et parse les points VFR depuis le fichier AIXM
+   * Charge les points VFR depuis le GeoJSON dérivé.
    */
   async loadVFRPoints() {
     if (this.loaded) return this.vfrPoints;
@@ -34,34 +41,39 @@ class VFRPointsExtractor {
     this.loading = true;
 
     try {
-      // Charger le fichier AIXM depuis la configuration
-      const { CURRENT_AIXM_FILE } = await import('../data/aixm.config.js');
-      console.log('🔧 vfrPointsExtractor - Chargement du fichier AIXM:', CURRENT_AIXM_FILE);
-
-      // ✅ FIX: Charger depuis /data/ au lieu de localhost:3001/api
-      // Le fichier est servi statiquement depuis /public/data/
-      const aixmUrl = `/data/${CURRENT_AIXM_FILE}`;
-      console.log('🔧 Chargement depuis:', aixmUrl);
-
-      const response = await fetch(aixmUrl);
+      const response = await fetch(DESIGNATED_POINTS_URL);
       if (!response.ok) {
-        throw new Error(`Erreur chargement AIXM: ${response.status} ${response.statusText}`);
+        throw new Error(`Erreur chargement designated_points: ${response.status}`);
       }
+      const fc = await response.json();
 
-      const xmlText = await response.text();
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(xmlText, 'text/xml');
-
-      // Extraire les points VFR
-      this.vfrPoints = this.extractVFRPointsFromAIXM(doc);
-
+      // Ne garder que les points de report VFR : ceux associés à un aérodrome
+      // (aerodrome_icao, depuis AhpUidAssoc) ou typés VFR-* par l'ETL.
+      this.vfrPoints = (fc.features || [])
+        .filter(f => {
+          const p = f?.properties || {};
+          return p.aerodrome_icao || (typeof p.type === 'string' && p.type.startsWith('VFR'));
+        })
+        .map(f => {
+          const p = f.properties || {};
+          const coords = f.geometry?.coordinates || [];
+          return {
+            id: p.id || p.code,
+            name: p.name || p.code,
+            description: p.name || undefined,
+            type: 'VRP',
+            coordinates: { lat: coords[1], lon: coords[0] },
+            aerodrome: p.aerodrome_icao || null,
+            reference: p.type
+          };
+        })
+        .filter(pt => pt.coordinates.lat != null && pt.coordinates.lon != null);
 
       this.loaded = true;
-
       return this.vfrPoints;
 
     } catch (error) {
-      console.error('❌ Erreur extraction points VFR:', error);
+      console.error('❌ Erreur chargement points VFR (GeoJSON):', error);
       return [];
     } finally {
       this.loading = false;
@@ -69,154 +81,20 @@ class VFRPointsExtractor {
   }
 
   /**
-   * Extrait les points VFR du document AIXM
+   * Points VFR groupés par aérodrome associé.
    */
-  extractVFRPointsFromAIXM(doc) {
-    const vfrPoints = [];
-    const vfrPointsByAerodrome = new Map();
-
-    // Rechercher tous les points désignés
-    const dpns = doc.querySelectorAll('Dpn');
-
-
-
-    for (const dpn of dpns) {
-      const txtRmk = this.getTextContent(dpn, 'txtRmk');
-      const txtName = this.getTextContent(dpn, 'txtName');
-      const dpnUid = dpn.querySelector('DpnUid');
-      const codeType = this.getTextContent(dpnUid, 'codeType');
-      const codeId = this.getTextContent(dpnUid, 'codeId');
-
-      // Extraire l'aérodrome associé s'il existe
-      const ahpUidAssoc = dpn.querySelector('AhpUidAssoc');
-      const associatedAirport = ahpUidAssoc ? this.getTextContent(ahpUidAssoc, 'codeId') : null;
-
-      // Vérifier si c'est un point utilisable pour la navigation VFR
-      // Être plus restrictif pour éviter d'inclure les points IFR
-      const isVFR = (txtRmk && (
-        txtRmk.includes('VRP') ||
-        txtRmk.includes('VFR') ||
-        txtRmk.includes('visual') ||
-        txtRmk.includes('VISUAL') ||
-        txtRmk.includes('report') ||
-        txtRmk.includes('Visual')
-      )) ||
-        (codeType && (codeType === 'VFR-RP' || codeType === 'VRP')) ||
-        // Exclure les points avec des codes simples comme S, N, E, W sauf s'ils ont une remarque VFR explicite
-        (associatedAirport && codeId && codeId.length >= 2 && (
-          codeId.match(/^[A-Z]{2,}$/) && // Au moins 2 lettres
-          !codeId.match(/^[NSEW]$/) && // Exclure les points cardinaux simples
-          (txtRmk?.includes('VFR') || txtRmk?.includes('VRP') || txtRmk?.includes('visual'))
-        ));
-
-      if (isVFR) {
-        // Extraire les coordonnées
-        const geoLat = this.getTextContent(dpn, 'geoLat');
-        const geoLong = this.getTextContent(dpn, 'geoLong');
-
-        if (geoLat && geoLong) {
-          const coords = this.parseCoordinates(geoLat, geoLong);
-
-          // Utiliser l'aérodrome associé directement depuis l'élément AhpUidAssoc
-          let aerodromeId = associatedAirport;
-
-          // Si pas trouvé, essayer d'extraire depuis la remarque
-          if (!aerodromeId) {
-            const aerodromeMatch = txtRmk?.match(/\b(LF[A-Z]{2})\b/);
-            if (aerodromeMatch) {
-              aerodromeId = aerodromeMatch[1];
-            }
-          }
-
-          // Si pas trouvé, essayer depuis le code ID (ex: "LFST-S")
-          if (!aerodromeId && codeId) {
-            const codeMatch = codeId.match(/^(LF[A-Z]{2})/);
-            if (codeMatch) {
-              aerodromeId = codeMatch[1];
-            }
-          }
-
-          const vfrPoint = {
-            id: codeId || `VFR-${coords.lat}-${coords.lon}`,
-            name: txtName || codeId,
-            description: txtRmk,
-            type: 'VRP',
-            coordinates: coords,
-            aerodrome: aerodromeId,
-            reference: codeType
-          };
-
-          vfrPoints.push(vfrPoint);
-
-          // Log pour debug
-          if (aerodromeId === 'LFST') {
-            console.log(`VFR Point found: ${codeId} at ${coords.lat.toFixed(4)}, ${coords.lon.toFixed(4)}`);
-          }
-
-          // Grouper par aérodrome si possible
-          if (aerodromeId) {
-            if (!vfrPointsByAerodrome.has(aerodromeId)) {
-              vfrPointsByAerodrome.set(aerodromeId, []);
-            }
-            vfrPointsByAerodrome.get(aerodromeId).push(vfrPoint);
-          }
-        }
-      }
+  getVFRPointsByAerodrome() {
+    const byAerodrome = new Map();
+    for (const point of this.vfrPoints) {
+      if (!point.aerodrome) continue;
+      if (!byAerodrome.has(point.aerodrome)) byAerodrome.set(point.aerodrome, []);
+      byAerodrome.get(point.aerodrome).push(point);
     }
-
-    // Log des points VFR par aérodrome
-    for (const [aerodrome, points] of vfrPointsByAerodrome) {
-
-    }
-
-    return vfrPoints;
+    return byAerodrome;
   }
 
   /**
-   * Parse les coordonnées depuis le format AIXM
-   */
-  parseCoordinates(latStr, lonStr) {
-    // Format: DDMMSS.SSN ou DDDMMSS.SSE
-    const parseCoord = (str, isLon) => {
-      const match = str.match(/(\d+)(\d{2})(\d{2}(?:\.\d+)?)[NSEW]/);
-      if (!match) return null;
-
-      const degrees = parseInt(match[1]);
-      const minutes = parseInt(match[2]);
-      const seconds = parseFloat(match[3]);
-      const direction = str.slice(-1);
-
-      let decimal = degrees + minutes / 60 + seconds / 3600;
-
-      if (direction === 'S' || direction === 'W') {
-        decimal = -decimal;
-      }
-
-      return decimal;
-    };
-
-    const lat = parseCoord(latStr, false);
-    const lon = parseCoord(lonStr, true);
-
-    return { lat, lon };
-  }
-
-  /**
-   * Récupère le contenu texte d'un élément
-   */
-  getTextContent(element, tagName) {
-    if (!element) return null;
-
-    if (tagName) {
-      const child = element.querySelector(tagName);
-      return child ? child.textContent : null;
-    }
-
-    return element.textContent;
-  }
-
-  /**
-   * Convertit les points VFR en features GeoJSON
+   * Convertit les points VFR en features GeoJSON (forme historique pour les consommateurs).
    */
   toGeoJSON() {
     return this.vfrPoints.map(point => ({
@@ -238,13 +116,12 @@ class VFRPointsExtractor {
   }
 
   /**
-   * Réinitialise le cache pour forcer le rechargement
+   * Réinitialise le cache pour forcer le rechargement.
    */
   clearCache() {
     this.vfrPoints = [];
     this.loaded = false;
     this.loading = false;
-    console.log('✅ Cache VFR points cleared - will reload on next request');
   }
 }
 

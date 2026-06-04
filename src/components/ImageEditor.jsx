@@ -283,7 +283,7 @@ const ImageEditor = ({
     minWidth: '36px',
     height: '36px',
     transition: 'all 0.2s',
-    fontSize: '14px'
+    fontSize: 'var(--fs-body)'
   };
 
   const infoStyle = {
@@ -294,7 +294,7 @@ const ImageEditor = ({
     padding: '8px 16px',
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     fontWeight: '500'
   };
@@ -355,7 +355,7 @@ const ImageEditor = ({
                 top: '-25px',
                 left: '50%',
                 transform: 'translateX(-50%)',
-                fontSize: '12px',
+                fontSize: 'var(--fs-body)',
                 color: 'var(--text-secondary)',
                 backgroundColor: 'var(--bg-overlay)',
                 padding: '2px 8px',
@@ -405,7 +405,7 @@ const ImageEditor = ({
 
             <button
               onClick={handleCancel}
-              style={{ ...buttonStyle, backgroundColor: '#C04534' }}
+              style={{ ...buttonStyle, backgroundColor: 'var(--color-red-critical)' }}
               title="Annuler"
             >
               <CloseIcon size={18} />
@@ -428,7 +428,7 @@ const ImageEditor = ({
           backgroundColor: 'rgba(255, 255, 255, 0.1)',
           borderRadius: 'var(--radius-sm)',
           color: 'var(--text-primary)',
-          fontSize: '13px',
+          fontSize: 'var(--fs-body)',
           textAlign: 'center'
         }}>
           <MoveIcon size={16} style={{ display: 'inline', marginRight: '8px' }} />
@@ -468,7 +468,7 @@ const ImageEditor = ({
             display: 'flex',
             alignItems: 'center',
             gap: '4px',
-            fontSize: '12px',
+            fontSize: 'var(--fs-body)',
             fontWeight: '500',
             transition: 'all 0.2s',
             zIndex: 5

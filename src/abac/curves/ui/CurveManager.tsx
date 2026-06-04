@@ -28,19 +28,25 @@ interface CurveManagerProps {
   xAxisReversed?: boolean;
 }
 
+// Palette de COURBES (data-viz) — EXCEPTION charte documentée : un éditeur de
+// courbes a besoin de séries DISTINGUABLES (impossible avec une seule teinte
+// orange). Palette re-tonée « cockpit » : orange de marque en tête + ivoire +
+// tons sourds/désaturés harmonisés au canvas sombre, au lieu de l'arc-en-ciel
+// Material d'origine. 12 entrées conservées (préserve le mapping d'index des
+// courbes déjà sauvegardées). Ajuster les valeurs ici si besoin.
 const DEFAULT_COLORS = [
-  { value: '#4CAF50', label: 'Vert' },
-  { value: '#2196F3', label: 'Bleu' },
-  { value: '#FF9800', label: 'Orange' },
-  { value: '#9C27B0', label: 'Violet' },
-  { value: '#F44336', label: 'Rouge' },
-  { value: '#00BCD4', label: 'Cyan' },
-  { value: '#8BC34A', label: 'Vert clair' },
-  { value: '#FFC107', label: 'Jaune' },
-  { value: '#E91E63', label: 'Rose' },
-  { value: '#3F51B5', label: 'Indigo' },
-  { value: '#009688', label: 'Sarcelle' },
-  { value: '#FF5722', label: 'Orange foncé' }
+  { value: '#F26921', label: 'Orange' },
+  { value: '#F5F2EC', label: 'Ivoire' },
+  { value: '#4FC3D9', label: 'Cyan' },
+  { value: '#E0A33E', label: 'Ambre' },
+  { value: '#C77B9E', label: 'Rose' },
+  { value: '#8FB573', label: 'Vert' },
+  { value: '#6E8BB5', label: 'Bleu' },
+  { value: '#A78BBE', label: 'Violet' },
+  { value: '#FF7E36', label: 'Orange clair' },
+  { value: '#5BA89E', label: 'Sarcelle' },
+  { value: '#C9C5BD', label: 'Gris' },
+  { value: '#D85410', label: 'Orange foncé' }
 ];
 
 export const CurveManager: React.FC<CurveManagerProps> = ({
@@ -125,9 +131,9 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
           }}
           style={{
             padding: '8px 16px',
-            fontSize: '13px',
+            fontSize: 'var(--fs-body)',
             fontWeight: 500,
-            backgroundColor: '#3b82f6',
+            backgroundColor: 'var(--accent-primary)',
             color: 'white',
             border: 'none',
             borderRadius: '4px',
@@ -149,7 +155,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
             style={{ marginBottom: '8px' }}
           />
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            <label style={{ fontSize: '14px', color: '#666' }}>Couleur:</label>
+            <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>Couleur:</label>
             <select
               value={newCurveColor}
               onChange={(e) => setNewCurveColor(e.target.value)}
@@ -157,9 +163,9 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                 flex: 1,
                 padding: '6px 8px',
                 borderRadius: '4px',
-                border: '1px solid #ddd',
-                fontSize: '14px',
-                backgroundColor: 'white'
+                border: '1px solid var(--border-subtle)',
+                fontSize: 'var(--fs-body)',
+                backgroundColor: 'var(--bg-overlay)'
               }}
             >
               {DEFAULT_COLORS.map((color) => (
@@ -174,14 +180,14 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                 height: '30px',
                 backgroundColor: newCurveColor,
                 borderRadius: '4px',
-                border: '1px solid #ddd'
+                border: '1px solid var(--border-subtle)'
               }}
               title="Aperçu de la couleur"
             />
           </div>
           {isWindRelated && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-              <label style={{ fontSize: '14px', color: '#666' }}>Direction du vent (Wind direction) :</label>
+              <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>Direction du vent (Wind direction) :</label>
               <select
                 value={newCurveWindDirection}
                 onChange={(e) => setNewCurveWindDirection(e.target.value as WindDirection)}
@@ -189,9 +195,9 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                   flex: 1,
                   padding: '6px 8px',
                   borderRadius: '4px',
-                  border: '1px solid #ddd',
-                  fontSize: '14px',
-                  backgroundColor: 'white'
+                  border: '1px solid var(--border-subtle)',
+                  fontSize: 'var(--fs-body)',
+                  backgroundColor: 'var(--bg-overlay)'
                 }}
               >
                 <option value="none">Sans vent / No wind</option>
@@ -256,14 +262,14 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                       padding: '2px 6px',
                       borderRadius: '3px',
                       // Bordure visuelle quand la courbe est sélectionnée pour édition des points
-                      backgroundColor: selectedCurveId === curve.id ? '#dcfce7' : 'transparent',
-                      border: selectedCurveId === curve.id ? '1px solid #16a34a' : '1px solid transparent'
+                      backgroundColor: selectedCurveId === curve.id ? 'var(--accent-soft)' : 'transparent',
+                      border: selectedCurveId === curve.id ? '1px solid var(--accent-primary)' : '1px solid transparent'
                     }}
                     title={selectedCurveId === curve.id
                       ? '✓ Courbe sélectionnée — tu peux maintenant glisser ses points sur le graphique'
                       : 'Clique pour sélectionner cette courbe et modifier ses points sur le graphique'}
                   >
-                    <span className={styles.curveName} style={{ fontWeight: selectedCurveId === curve.id ? 600 : 500, color: selectedCurveId === curve.id ? '#065f46' : 'inherit' }}>
+                    <span className={styles.curveName} style={{ fontWeight: selectedCurveId === curve.id ? 600 : 500, color: selectedCurveId === curve.id ? 'var(--accent-primary)' : 'inherit' }}>
                       {selectedCurveId === curve.id && '✓ '}{curve.name}
                     </span>
                     {curve.windDirection && curve.windDirection !== 'none' && (
@@ -273,18 +279,18 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                         style={{
                           padding: '1px 4px',
                           borderRadius: '2px',
-                          fontSize: '10px',
-                          backgroundColor: curve.windDirection === 'headwind' ? '#e3f2fd' : '#fff3e0',
-                          color: curve.windDirection === 'headwind' ? '#1976d2' : '#f57c00'
+                          fontSize: 'var(--fs-caption)',
+                          backgroundColor: curve.windDirection === 'headwind' ? 'var(--bg-overlay)' : 'var(--accent-soft)',
+                          color: curve.windDirection === 'headwind' ? 'var(--accent-primary)' : 'var(--accent-primary)'
                         }}>
                         {curve.windDirection === 'headwind' ? '↑' : '↓'}
                       </span>
                     )}
-                    <span className={styles.curvePoints} style={{ fontSize: '11px', color: '#666', marginLeft: 'auto' }}>
+                    <span className={styles.curvePoints} style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginLeft: 'auto' }}>
                       {curve.points.length} pt{curve.points.length !== 1 ? 's' : ''}
                     </span>
                     {curve.fitted && (
-                      <span className={styles.curveFitted} style={{ fontSize: '10px', color: '#4CAF50' }} title={`RMSE: ${curve.fitted.rmse.toFixed(3)}`}>
+                      <span className={styles.curveFitted} style={{ fontSize: 'var(--fs-caption)', color: 'var(--accent-primary)' }} title={`RMSE: ${curve.fitted.rmse.toFixed(3)}`}>
                         ✓
                       </span>
                     )}
@@ -297,13 +303,13 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 6,
                   padding: '4px 8px',
-                  backgroundColor: typeof curve.familyValue === 'number' ? '#dcfce7' : 'rgba(242, 105, 33, 0.10)',
+                  backgroundColor: typeof curve.familyValue === 'number' ? 'var(--accent-soft)' : 'rgba(242, 105, 33, 0.10)',
                   borderRadius: 3,
                   fontSize: 11
                 }}
                 onClick={(e) => e.stopPropagation()}
                 >
-                  <span style={{ fontWeight: 600, color: '#374151' }}>
+                  <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>
                     🔀 {familyAxisLabel || familyAxisVariable} :
                   </span>
                   <input
@@ -320,12 +326,12 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                       flex: 1,
                       padding: '2px 6px',
                       fontSize: 11,
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-subtle)',
                       borderRadius: 3
                     }}
                   />
                   {typeof curve.familyValue !== 'number' && (
-                    <span style={{ fontSize: 10, color: '#dc2626' }}>⚠ requis</span>
+                    <span style={{ fontSize: 10, color: 'var(--color-red-critical)' }}>⚠ requis</span>
                   )}
                 </div>
               )}
@@ -353,7 +359,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                   <div style={{
                     display: 'flex', alignItems: 'center', gap: 6,
                     padding: '4px 8px',
-                    backgroundColor: hasOverride ? '#ede9fe' : '#f1f5f9',
+                    backgroundColor: hasOverride ? 'var(--accent-soft)' : 'var(--bg-overlay)',
                     borderRadius: 3,
                     fontSize: 11,
                     marginTop: 4
@@ -365,7 +371,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                       ? `Auto : Y du premier point (à X=${autoX}). Effacer pour laisser auto, saisir pour forcer une autre valeur.`
                       : "Aucun point placé — placez au moins un point pour activer le calcul automatique."}
                   >
-                    <span style={{ fontWeight: 600, color: '#374151' }}>
+                    <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>
                       🚀 Y bord gauche{yAxisUnit ? ` (${yAxisUnit})` : ''} :
                     </span>
                     <input
@@ -383,10 +389,10 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                         flex: 1,
                         padding: '2px 6px',
                         fontSize: 11,
-                        border: '1px solid #d1d5db',
+                        border: '1px solid var(--border-subtle)',
                         borderRadius: 3,
                         fontStyle: hasOverride ? 'normal' : 'italic',
-                        color: hasOverride ? '#111827' : '#6b7280'
+                        color: hasOverride ? 'var(--text-primary)' : 'var(--text-secondary)'
                       }}
                     />
                     {hasOverride ? (
@@ -399,7 +405,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                         style={{
                           padding: '1px 6px',
                           fontSize: 10,
-                          backgroundColor: '#7c3aed',
+                          backgroundColor: 'var(--accent-primary)',
                           color: 'white',
                           border: 'none',
                           borderRadius: 3,
@@ -410,9 +416,9 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                         override
                       </button>
                     ) : autoValue !== null ? (
-                      <span style={{ fontSize: 10, color: '#475569', fontWeight: 600 }}>auto</span>
+                      <span style={{ fontSize: 10, color: 'var(--text-secondary)', fontWeight: 600 }}>auto</span>
                     ) : (
-                      <span style={{ fontSize: 10, color: '#dc2626' }}>—</span>
+                      <span style={{ fontSize: 10, color: 'var(--color-red-critical)' }}>—</span>
                     )}
                   </div>
                 );
@@ -432,9 +438,9 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                         style={{
                           padding: '2px 4px',
                           borderRadius: '3px',
-                          border: '1px solid #ddd',
-                          fontSize: '10px',
-                          backgroundColor: 'white',
+                          border: '1px solid var(--border-subtle)',
+                          fontSize: 'var(--fs-caption)',
+                          backgroundColor: 'var(--bg-overlay)',
                           cursor: 'pointer',
                           height: '22px',
                           minWidth: 140
@@ -451,7 +457,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '1px',
-                        backgroundColor: '#f0f0f0',
+                        backgroundColor: 'var(--bg-overlay)',
                         borderRadius: '3px',
                         padding: '1px'
                       }}>
@@ -465,7 +471,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                             opacity: index === 0 ? 0.3 : 1,
                             padding: '0 4px',
                             height: '14px',
-                            fontSize: '10px',
+                            fontSize: 'var(--fs-caption)',
                             lineHeight: '10px',
                             border: 'none',
                             backgroundColor: 'transparent',
@@ -485,7 +491,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                             opacity: index === curves.length - 1 ? 0.3 : 1,
                             padding: '0 4px',
                             height: '14px',
-                            fontSize: '10px',
+                            fontSize: 'var(--fs-caption)',
                             lineHeight: '10px',
                             border: 'none',
                             backgroundColor: 'transparent',
@@ -500,7 +506,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                     <div style={{
                       display: 'flex',
                       gap: '2px',
-                      backgroundColor: '#f0f0f0',
+                      backgroundColor: 'var(--bg-overlay)',
                       borderRadius: '3px',
                       padding: '2px'
                     }}>
@@ -516,7 +522,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                         }}
                         style={{
                           padding: '2px 4px',
-                          fontSize: '12px',
+                          fontSize: 'var(--fs-body)',
                           border: 'none',
                           backgroundColor: 'transparent',
                           cursor: 'pointer',
@@ -533,12 +539,12 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                         }}
                         style={{
                           padding: '2px 4px',
-                          fontSize: '12px',
+                          fontSize: 'var(--fs-body)',
                           border: 'none',
                           backgroundColor: 'transparent',
                           cursor: 'pointer',
                           borderRadius: '2px',
-                          color: '#d32f2f'
+                          color: 'var(--color-red-critical)'
                         }}
                         title="Supprimer"
                       >

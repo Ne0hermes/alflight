@@ -1,6 +1,6 @@
 // src/features/pilot/components/PilotProfile.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { User, MapPin, Save, Camera, Award, Heart, Settings, Download, Upload } from 'lucide-react';
+import { User, Save, Camera, Award, Heart, Settings, Download, Upload } from 'lucide-react';
 import { sx } from '../../../shared/styles/styleSystem';
 import FlightCurrencyTracker from './FlightCurrencyTracker';
 import PilotCertifications from './PilotCertifications';
@@ -8,7 +8,7 @@ import MedicalReminders from './MedicalReminders';
 import UnitsConfiguration from './UnitsConfiguration';
 import { exportPilotData, importData, loadFullPilotProfile, savePilotProfile } from '../utils/exportUtils';
 import ImageEditor from '../../../components/ImageEditor';
-import { useUnitsStore, unitsSelectors } from '@core/stores/unitsStore';
+import { unitsSelectors } from '@core/stores/unitsStore';
 import AccordionButton from '../../../shared/components/AccordionButton';
 import {
   addCompleteTestData,
@@ -406,7 +406,7 @@ const PilotProfile = () => {
   const getMedicalStatusBadge = () => {
     const status = getMedicalStatus();
     const styles = {
-      expired: { backgroundColor: '#C04534', color: 'var(--text-primary)' },
+      expired: { backgroundColor: 'var(--color-red-critical)', color: 'var(--text-primary)' },
       urgent: { backgroundColor: 'var(--accent-primary)', color: 'var(--text-primary)' },
       warning: { backgroundColor: 'var(--accent-primary)', color: 'var(--text-primary)' },
       valid: { backgroundColor: 'var(--text-primary)', color: 'var(--text-primary)' },
@@ -426,7 +426,7 @@ const PilotProfile = () => {
         ...styles[status.status],
         padding: '8px 12px',
         borderRadius: 'var(--radius-sm)',
-        fontSize: '16px',
+        fontSize: 'var(--fs-title)',
         fontWeight: 'bold',
         display: 'inline-block'
       }}>
@@ -439,7 +439,7 @@ const PilotProfile = () => {
     const status = getMedicalStatus();
     if (status.status === 'none') {
       return 'Non renseigné';
-    };
+    }
     if (status.status === 'expired') {
       return `Expiré depuis ${Math.abs(status.daysRemaining)} jours`;
     }
@@ -608,7 +608,7 @@ const PilotProfile = () => {
     padding: '8px 12px',
     border: '1px solid var(--text-tertiary)',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     width: '100%',
     minWidth: 0,
     maxWidth: '100%',
@@ -629,7 +629,7 @@ const PilotProfile = () => {
   };
 
   const labelStyle = {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     fontWeight: '500',
     marginBottom: '4px',
@@ -760,7 +760,7 @@ const PilotProfile = () => {
                   color: 'var(--text-primary)',
                   border: 'none',
                   borderRadius: 'var(--radius-sm)',
-                  fontSize: '13px',
+                  fontSize: 'var(--fs-body)',
                   fontWeight: '500',
                   cursor: 'pointer',
                   display: 'flex',
@@ -783,7 +783,7 @@ const PilotProfile = () => {
                   color: 'var(--text-primary)',
                   border: 'none',
                   borderRadius: 'var(--radius-sm)',
-                  fontSize: '13px',
+                  fontSize: 'var(--fs-body)',
                   fontWeight: '500',
                   cursor: 'pointer',
                   display: 'flex',
@@ -810,7 +810,7 @@ const PilotProfile = () => {
         padding: '20px'
       }}>
         <h4 style={{
-          fontSize: '16px',
+          fontSize: 'var(--fs-title)',
           fontWeight: 'bold',
           marginBottom: '16px',
           display: 'flex',
@@ -828,85 +828,85 @@ const PilotProfile = () => {
           gap: '16px'
         }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Distance</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Distance</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.distance?.toUpperCase() || 'NM'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Altitude</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Altitude</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.altitude?.toUpperCase() || 'FT'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Vitesse</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Vitesse</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.speed?.toUpperCase() || 'KT'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Température</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Température</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               °{units?.temperature?.toUpperCase() || 'C'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Pression</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Pression</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.pressure || 'hPa'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Carburant</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Carburant</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.fuel?.toUpperCase() === 'LTR' ? 'L' : units?.fuel?.toUpperCase() || 'GAL'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Masse</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Masse</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.weight?.toUpperCase() || 'KG'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Piste</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Piste</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.runway?.toUpperCase() || 'M'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Vent</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Vent</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.windSpeed?.toUpperCase() || 'KT'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Bras de levier</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Bras de levier</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.armLength?.toUpperCase() || 'MM'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Visibilité</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Visibilité</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.visibility?.toUpperCase() || 'KM'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Coordonnées</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Coordonnées</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.coordinates?.toUpperCase() || 'DMS'}
             </div>
           </div>
@@ -914,196 +914,6 @@ const PilotProfile = () => {
       </div>
 
 
-      {/* Section des notifications retirée */}
-      {false && (
-        <div style={sx.combine(sx.components.card.base, sx.spacing.mb(4))}>
-          <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
-            <Heart size={16} style={{ display: 'inline', marginRight: '8px' }} />
-            Suivi médical aéronautique
-          </h4>
-          
-          <div style={{
-            padding: '12px',
-            borderRadius: 'var(--radius-sm)',
-            border: '1px solid',
-            borderColor: medicalReminder.priority === 'critical' ? 'var(--border-subtle)' :
-                        medicalReminder.priority === 'high' ? '#f26921' :
-                        medicalReminder.priority === 'medium' ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
-            backgroundColor: medicalReminder.priority === 'critical' ? 'var(--bg-overlay)' :
-                            medicalReminder.priority === 'high' ? 'var(--bg-overlay)' :
-                            medicalReminder.priority === 'medium' ? 'rgba(242, 105, 33, 0.10)' : 'var(--bg-overlay)',
-            marginBottom: '16px'
-          }}>
-            <p style={sx.combine(sx.text.sm, sx.text.bold)}>
-              {medicalReminder.priority === 'critical' && '🚨'}
-              {medicalReminder.priority === 'high' && '⚠️'}
-              {medicalReminder.priority === 'medium' && '📅'}
-              {medicalReminder.priority === 'low' && '✅'}
-              {' '}{medicalReminder.message}
-            </p>
-            {medicalReminder.age && (
-              <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
-                Âge actuel: {medicalReminder.age} ans - {medicalReminder.periodicityInfo}
-              </p>
-            )}
-            {medicalReminder.nextRenewalRecommendation && (
-              <p style={sx.combine(sx.text.xs, sx.spacing.mt(1))}>
-                💡 {medicalReminder.nextRenewalRecommendation}
-              </p>
-            )}
-          </div>
-
-          {/* Méthode de relance détaillée */}
-          <div style={{
-            backgroundColor: 'var(--bg-overlay)',
-            padding: '16px',
-            borderRadius: 'var(--radius-sm)',
-            marginBottom: '16px'
-          }}>
-            <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-              📋 Méthode de relance automatique
-            </h5>
-            <ul style={sx.combine(sx.text.xs, { marginLeft: '20px', lineHeight: '1.6' })}>
-              <li><strong>60 jours avant:</strong> Premier rappel informatif</li>
-              <li><strong>45 jours avant:</strong> Rappel de prise de RDV (Classe 1 &gt;40 ans)</li>
-              <li><strong>30 jours avant:</strong> Rappel urgent - Action requise</li>
-              <li><strong>15 jours avant:</strong> Alerte critique</li>
-              <li><strong>Après expiration:</strong> Blocage avec alerte permanente</li>
-            </ul>
-            <p style={sx.combine(sx.text.xs, sx.spacing.mt(2))}>
-              Les rappels sont calculés automatiquement selon votre âge ({medicalReminder?.age || '?'} ans) 
-              et le type de certificat médical.
-            </p>
-          </div>
-
-          {/* Réglementation EASA */}
-          <div style={{
-            backgroundColor: 'var(--bg-overlay)',
-            padding: '16px',
-            borderRadius: 'var(--radius-sm)',
-            border: '1px solid var(--bg-overlay)'
-          }}>
-            <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-              📚 Réglementation EASA Part-MED
-            </h5>
-            
-            <div style={sx.combine(sx.text.xs, { lineHeight: '1.8' })}>
-              <p style={sx.spacing.mb(2)}>
-                <strong>Périodicité selon l'âge et la classe:</strong>
-              </p>
-              
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ backgroundColor: 'var(--bg-overlay)' }}>
-                    <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid var(--border-subtle)' }}>Classe</th>
-                    <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid var(--border-subtle)' }}>Âge</th>
-                    <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid var(--border-subtle)' }}>Validité</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td rowSpan="3" style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}><strong>Classe 1</strong></td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>&lt; 40 ans</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>12 mois</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>40-60 ans</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>6 mois</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>&gt; 60 ans</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>6 mois</td>
-                  </tr>
-                  
-                  <tr>
-                    <td rowSpan="3" style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}><strong>Classe 2</strong></td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>&lt; 40 ans</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>60 mois</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>40-50 ans</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>24 mois</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>&gt; 50 ans</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>12 mois</td>
-                  </tr>
-                  
-                  <tr>
-                    <td rowSpan="2" style={{ padding: '8px' }}><strong>LAPL</strong></td>
-                    <td style={{ padding: '8px' }}>&lt; 40 ans</td>
-                    <td style={{ padding: '8px' }}>60 mois</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '8px' }}>&gt; 40 ans</td>
-                    <td style={{ padding: '8px' }}>24 mois</td>
-                  </tr>
-                </tbody>
-              </table>
-              
-              <p style={sx.spacing.mt(3)}>
-                <strong>Examens complémentaires requis:</strong>
-              </p>
-              <ul style={{ marginLeft: '20px', marginTop: '8px' }}>
-                <li><strong>ECG au repos:</strong> Initial à 40 ans, puis selon AME</li>
-                <li><strong>Audiométrie:</strong> Initial à 40 ans, puis tous les 5 ans</li>
-                <li><strong>Ophtalmologie:</strong> Selon limitations ou à partir de 40 ans</li>
-                <li><strong>ECG d'effort:</strong> Classe 1 à partir de 65 ans</li>
-              </ul>
-              
-              <div style={sx.spacing.mt(3)}>
-                <p style={sx.text.bold}>📖 Liens officiels:</p>
-                <ul style={{ marginLeft: '20px', marginTop: '8px' }}>
-                  <li>
-                    <a href="https://www.easa.europa.eu/en/document-library/easy-access-rules/online-publications/easy-access-rules-medical-requirements" 
-                       target="_blank" 
-                       rel="noopener noreferrer"
-                       style={{ color: 'var(--text-secondary)', textDecoration: 'underline' }}>
-                      EASA Easy Access Rules for Medical Requirements
-                    </a>
-                  </li>
-                  <li>
-                    <a href="https://www.ecologie.gouv.fr/sites/default/files/Part_MED.pdf" 
-                       target="_blank" 
-                       rel="noopener noreferrer"
-                       style={{ color: 'var(--text-secondary)', textDecoration: 'underline' }}>
-                      Part-MED (Version française - DGAC)
-                    </a>
-                  </li>
-                  <li>
-                    <a href="https://www.easa.europa.eu/en/downloads/20016/en" 
-                       target="_blank" 
-                       rel="noopener noreferrer"
-                       style={{ color: 'var(--text-secondary)', textDecoration: 'underline' }}>
-                      AMC and GM to Part-MED
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          
-          <div style={sx.spacing.mt(3)}>
-            <button
-              onClick={() => {
-                // Basculer vers l'onglet Suivi Médical
-                if (window.setActiveTab) {
-                  window.setActiveTab('pilot');
-                  // Attendre un peu puis changer l'onglet interne
-                  setTimeout(() => {
-                    const medicalTab = document.querySelector('[data-tab-id="medical"]');
-                    if (medicalTab) medicalTab.click();
-                  }, 100);
-                }
-              }}
-              style={sx.combine(sx.components.button.base, sx.components.button.secondary)}
-            >
-              <Calendar size={16} />
-              Gérer mes certificats médicaux
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Section Licences et Qualifications intégrée */}
       <div style={{ marginBottom: '24px' }}>
@@ -1277,7 +1087,7 @@ const PilotProfile = () => {
             border: 'none',
             borderRadius: 'var(--radius-sm)',
             fontFamily: 'var(--font-mono)',
-            fontSize: '11px',
+            fontSize: 'var(--fs-caption)',
             fontWeight: 600,
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
@@ -1301,7 +1111,7 @@ const PilotProfile = () => {
         <p style={{
           marginTop: '12px',
           fontFamily: 'var(--font-sans)',
-          fontSize: '12px',
+          fontSize: 'var(--fs-body)',
           color: 'var(--text-secondary)',
         }}>
           Cliquez pour enregistrer toutes vos modifications (profil, licences, medical, etc.)

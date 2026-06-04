@@ -299,7 +299,7 @@ const styles = {
   },
   drawerEyebrow: {
     fontFamily: tokens.fontFamily.mono,
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: 500,
     letterSpacing: '0.12em',
     textTransform: 'uppercase',
@@ -347,7 +347,7 @@ const styles = {
   },
   navItemLabel: {
     fontFamily: tokens.fontFamily.mono,
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: 500,
     letterSpacing: '0.12em',
     textTransform: 'uppercase',
@@ -400,7 +400,7 @@ const styles = {
   },
   aboutText: {
     fontFamily: tokens.fontFamily.sans,
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     marginTop: tokens.spacing[4],
     marginBottom: tokens.spacing[5],
@@ -418,7 +418,7 @@ const styles = {
     borderRadius: tokens.radius?.sm || '2px',
     padding: '6px 10px',
     fontFamily: tokens.fontFamily.mono,
-    fontSize: '10px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: 500,
     letterSpacing: '0.10em',
     textTransform: 'uppercase',
@@ -431,7 +431,7 @@ const styles = {
   },
   aboutDisclaimer: {
     fontFamily: tokens.fontFamily.sans,
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     color: 'var(--text-tertiary)',
     fontStyle: 'italic',
     lineHeight: 1.5,

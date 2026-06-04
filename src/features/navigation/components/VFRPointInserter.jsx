@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { MapPin, Plus, Navigation2, Search, X } from 'lucide-react';
+import { Navigation2, Search, X } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { geoJSONDataService } from '../services/GeoJSONDataService';
 import { useCustomVFRStore } from '@core/stores/customVFRStore';
@@ -207,7 +207,7 @@ export const VFRPointInserter = ({
             justifyContent: fullWidth ? 'center' : 'flex-start',
             gap: '6px',
             padding: '8px 12px',
-            fontSize: '13px',
+            fontSize: 'var(--fs-body)',
             width: fullWidth ? '100%' : 'auto'
           }
         )}
@@ -262,7 +262,7 @@ export const VFRPointInserter = ({
                   padding: '6px 8px 6px 28px',
                   border: '1px solid var(--text-tertiary)',
                   borderRadius: 'var(--radius-sm)',
-                  fontSize: '13px'
+                  fontSize: 'var(--fs-body)'
                 }}
                 autoFocus
               />
@@ -294,7 +294,7 @@ export const VFRPointInserter = ({
                 padding: '12px',
                 textAlign: 'center',
                 color: 'var(--text-tertiary)',
-                fontSize: '13px'
+                fontSize: 'var(--fs-body)'
               }}>
                 {airportsInRoute.size === 0 
                   ? "Ajoutez d'abord des aérodromes à votre navigation pour voir leurs points VFR"
@@ -306,7 +306,7 @@ export const VFRPointInserter = ({
                 {filteredPoints.custom.length > 0 && (
                   <div>
                     <div style={{
-                      fontSize: '11px',
+                      fontSize: 'var(--fs-caption)',
                       fontWeight: '600',
                       color: 'var(--accent-primary)',
                       marginBottom: '6px',
@@ -341,15 +341,15 @@ export const VFRPointInserter = ({
                         >
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                             <div style={{ flex: 1 }}>
-                              <div style={{ fontWeight: '600', fontSize: '13px', marginBottom: '2px' }}>
+                              <div style={{ fontWeight: '600', fontSize: 'var(--fs-body)', marginBottom: '2px' }}>
                                 {point.displayName}
                               </div>
                               {point.description && (
-                                <div style={{ fontSize: '11px', color: 'var(--accent-primary)', marginBottom: '2px' }}>
+                                <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--accent-primary)', marginBottom: '2px' }}>
                                   {point.description}
                                 </div>
                               )}
-                              <div style={{ fontSize: '10px', color: 'var(--accent-primary)' }}>
+                              <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--accent-primary)' }}>
                                 📍 {point.lat?.toFixed(4)}°, {point.lon?.toFixed(4)}°
                               </div>
                             </div>
@@ -364,7 +364,7 @@ export const VFRPointInserter = ({
                 {filteredPoints.routeVFR.length > 0 && (
                   <div>
                     <div style={{
-                      fontSize: '11px',
+                      fontSize: 'var(--fs-caption)',
                       fontWeight: '600',
                       color: 'var(--text-primary)',
                       marginBottom: '6px',
@@ -399,15 +399,15 @@ export const VFRPointInserter = ({
                         >
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                             <div style={{ flex: 1 }}>
-                              <div style={{ fontWeight: '600', fontSize: '13px', marginBottom: '2px' }}>
+                              <div style={{ fontWeight: '600', fontSize: 'var(--fs-body)', marginBottom: '2px' }}>
                                 {point.displayName}
                               </div>
                               {point.description && (
-                                <div style={{ fontSize: '11px', color: 'var(--text-primary)', marginBottom: '2px' }}>
+                                <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-primary)', marginBottom: '2px' }}>
                                   {point.description}
                                 </div>
                               )}
-                              <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
+                              <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
                                 📍 {point.lat?.toFixed(4)}°, {point.lon?.toFixed(4)}°
                               </div>
                             </div>
@@ -417,7 +417,7 @@ export const VFRPointInserter = ({
                                 background: 'var(--bg-overlay)',
                                 color: 'var(--text-primary)',
                                 borderRadius: 'var(--radius-sm)',
-                                fontSize: '10px',
+                                fontSize: 'var(--fs-caption)',
                                 fontWeight: '600',
                                 marginLeft: '8px'
                               }}>
@@ -440,7 +440,7 @@ export const VFRPointInserter = ({
             padding: '8px',
             background: 'var(--bg-overlay)',
             borderRadius: 'var(--radius-sm)',
-            fontSize: '11px',
+            fontSize: 'var(--fs-caption)',
             color: 'var(--text-secondary)'
           }}>
             💡 Affichage limité aux points VFR des aérodromes présents dans votre navigation. Les points peuvent être réutilisés.

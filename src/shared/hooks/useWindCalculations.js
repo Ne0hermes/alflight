@@ -1,5 +1,5 @@
 // src/shared/hooks/useWindCalculations.js
-import { useMemo, useCallback } from 'react';
+import { useCallback } from 'react';
 
 /**
  * Hook pour les calculs de vent et navigation
@@ -44,7 +44,7 @@ export const useWindCalculations = (trueCourse, trueAirspeed) => {
     const groundSpeed = Math.sqrt(
       Math.pow(trueAirspeed * Math.cos(driftRad) - headwind, 2) +
       Math.pow(trueAirspeed * Math.sin(driftRad), 2)
-    
+    );
     return Math.round(groundSpeed);
   }, [trueAirspeed, calculateDrift, calculateWindComponents]);
   

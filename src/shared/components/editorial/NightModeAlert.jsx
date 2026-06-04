@@ -10,7 +10,7 @@ import TechLabel from './TechLabel';
  * Severities :
  *   • info     → bordure gauche #F5F2EC (soft)
  *   • warn     → bordure gauche #f26921 (orange)
- *   • critical → bordure gauche #C04534 (rouge)
+ *   • critical → bordure gauche var(--color-red-critical) (rouge)
  *   • success  → bordure gauche #f26921 transparent (signal positif sobre)
  *
  * Usage :
@@ -122,7 +122,7 @@ export const NightModeAlert = ({
             border: `${tokens.border.thin} solid ${config.borderColor}`,
             color: config.borderColor,
             fontFamily: tokens.fontFamily.mono,
-            fontSize: '14px',
+            fontSize: 'var(--fs-body)',
             fontWeight: 600,
             lineHeight: 1,
           }}
@@ -138,7 +138,7 @@ export const NightModeAlert = ({
             <div
               style={{
                 fontFamily: tokens.fontFamily.sans,
-                fontSize: '15px',
+                fontSize: 'var(--fs-body)',
                 fontWeight: 600,
                 color: 'var(--text-primary)',
                 lineHeight: 1.3,
@@ -152,7 +152,7 @@ export const NightModeAlert = ({
             <div
               style={{
                 fontFamily: tokens.fontFamily.sans,
-                fontSize: '13px',
+                fontSize: 'var(--fs-body)',
                 color: 'var(--text-secondary)',
                 lineHeight: 1.5,
               }}
@@ -184,7 +184,7 @@ export const NightModeAlert = ({
               border: 'none',
               color: 'var(--text-tertiary)',
               fontFamily: tokens.fontFamily.mono,
-              fontSize: '16px',
+              fontSize: 'var(--fs-title)',
               cursor: 'pointer',
               padding: 0,
               lineHeight: 1,

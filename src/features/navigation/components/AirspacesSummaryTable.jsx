@@ -88,7 +88,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
   const tableStyle = {
     width: '100%',
     borderCollapse: 'collapse',
-    fontSize: '13px'
+    fontSize: 'var(--fs-body)'
   };
 
   const thStyle = {
@@ -110,7 +110,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
     display: 'inline-block',
     padding: '2px 8px',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: '600',
     backgroundColor: color,
     color: 'var(--text-primary)',
@@ -121,7 +121,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: 'var(--text-primary)',
     marginBottom: '12px',
@@ -138,10 +138,10 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
 
   // Fonction pour obtenir la couleur selon le type de zone
   const getTypeColor = (type, airspaceClass) => {
-    if (['R', 'RESTRICTED'].includes(type)) return '#C04534'; // Rouge
+    if (['R', 'RESTRICTED'].includes(type)) return 'var(--color-red-critical)'; // Rouge
     if (['P', 'PROHIBITED'].includes(type)) return 'var(--accent-primary)'; // Violet
     if (['D', 'DANGER'].includes(type)) return 'var(--accent-primary)'; // Orange
-    if (['A', 'B'].includes(airspaceClass)) return '#C04534'; // Rouge
+    if (['A', 'B'].includes(airspaceClass)) return 'var(--color-red-critical)'; // Rouge
     if (['C', 'D'].includes(airspaceClass)) return 'var(--text-secondary)'; // Bleu
     if (airspaceClass === 'E') return 'var(--text-primary)'; // Vert
     return 'var(--text-secondary)'; // Gris
@@ -194,7 +194,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
       }}>
         <Shield size={24} style={{ marginBottom: '8px' }} />
         <p style={{ fontWeight: '500' }}>Aucun espace aérien spécifique détecté à {plannedAltitude} ft</p>
-        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginTop: '4px' }}>
           La route est en espace aérien non contrôlé (classe G)
         </p>
       </div>
@@ -224,8 +224,8 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
       {aggregatedData.restrictedZones.length > 0 && (
         <>
           <div style={sectionTitleStyle}>
-            <AlertTriangle size={18} color="#C04534" />
-            <span style={{ color: '#C04534' }}>Zones Réglementées / Dangereuses ({aggregatedData.restrictedZones.length})</span>
+            <AlertTriangle size={18} color="var(--color-red-critical)" />
+            <span style={{ color: 'var(--color-red-critical)' }}>Zones Réglementées / Dangereuses ({aggregatedData.restrictedZones.length})</span>
           </div>
           <table style={tableStyle}>
             <thead>
@@ -248,7 +248,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
                   <td style={tdStyle}>
                     {formatAltitude(zone.floor, zone.ceiling, zone.floor_raw, zone.ceiling_raw)}
                   </td>
-                  <td style={{ ...tdStyle, fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  <td style={{ ...tdStyle, fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                     {zone.activity || zone.schedule || zone.remarks || '-'}
                   </td>
                 </tr>
@@ -288,7 +288,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
                   <td style={tdStyle}>
                     {formatAltitude(airspace.floor, airspace.ceiling, airspace.floor_raw, airspace.ceiling_raw)}
                   </td>
-                  <td style={{ ...tdStyle, fontSize: '12px' }}>
+                  <td style={{ ...tdStyle, fontSize: 'var(--fs-body)' }}>
                     {airspace.frequencies && airspace.frequencies.length > 0 ? (
                       airspace.frequencies.map((f, i) => (
                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -363,12 +363,12 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
           marginBottom: '8px'
         }}>
           <FileText size={18} color="var(--accent-primary)" />
-          <span style={{ fontWeight: '600', color: 'var(--accent-primary)', fontSize: '14px' }}>
+          <span style={{ fontWeight: '600', color: 'var(--accent-primary)', fontSize: 'var(--fs-body)' }}>
             Compléments aux cartes (SUP AIP)
           </span>
         </div>
         <p style={{
-          fontSize: '13px',
+          fontSize: 'var(--fs-body)',
           color: 'var(--accent-primary)',
           margin: 0,
           fontStyle: 'italic'
@@ -376,7 +376,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
           Compléments aux cartes indisponible, API à ajouter
         </p>
         <p style={{
-          fontSize: '11px',
+          fontSize: 'var(--fs-caption)',
           color: 'var(--accent-primary)',
           margin: '6px 0 0 0'
         }}>
@@ -390,12 +390,12 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
         padding: '12px',
         backgroundColor: 'var(--bg-overlay)',
         borderRadius: 'var(--radius-sm)',
-        fontSize: '11px',
+        fontSize: 'var(--fs-caption)',
         color: 'var(--text-secondary)'
       }}>
         <strong>Légende :</strong>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '8px' }}>
-          <span><span style={badgeStyle('#C04534')}>R</span> Zone Réglementée</span>
+          <span><span style={badgeStyle('var(--color-red-critical)')}>R</span> Zone Réglementée</span>
           <span><span style={badgeStyle('var(--accent-primary)')}>P</span> Zone Interdite</span>
           <span><span style={badgeStyle('var(--accent-primary)')}>D</span> Zone Dangereuse</span>
           <span><span style={badgeStyle('var(--text-secondary)')}>C/D</span> Espace Contrôlé</span>

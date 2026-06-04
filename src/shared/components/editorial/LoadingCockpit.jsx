@@ -78,7 +78,7 @@ export const LoadingCockpit = ({
         <span
           style={{
             fontFamily: tokens.fontFamily.mono,
-            fontSize: '10px',
+            fontSize: 'var(--fs-caption)',
             letterSpacing: '0.20em',
             textTransform: 'uppercase',
             color: 'var(--text-tertiary)',

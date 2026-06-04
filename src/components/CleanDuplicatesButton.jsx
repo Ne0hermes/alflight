@@ -7,7 +7,6 @@ import {
   DialogActions,
   DialogContentText,
   Alert,
-  Box,
   Typography,
   List,
   ListItem,
@@ -245,6 +244,6 @@ function CleanDuplicatesButton() {
       )}
     </>
   );
-};
+}
 
 export default CleanDuplicatesButton;

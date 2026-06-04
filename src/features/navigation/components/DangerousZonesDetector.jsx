@@ -149,7 +149,7 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
       borderRadius: 'var(--radius-sm)',
       boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
     }}>
-      <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px', display: 'flex', alignItems: 'center' }}>
+      <h3 style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', marginBottom: '16px', display: 'flex', alignItems: 'center' }}>
         <AlertTriangle size={20} style={{ marginRight: '8px' }} />
         Analyse des zones dangereuses
       </h3>
@@ -166,7 +166,7 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
       }}>
         <Info size={16} />
         <div>
-          <p style={{ fontSize: '14px' }}>
+          <p style={{ fontSize: 'var(--fs-body)' }}>
             Détection automatique basée sur votre route. Vous pouvez ajuster manuellement si nécessaire.
           </p>
         </div>
@@ -183,11 +183,11 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
             <div style={{ display: 'flex', alignItems: 'center' }}>
               {zones.maritime ? <CheckSquare size={20} /> : <Square size={20} />}
               <div style={{ marginLeft: '12px' }}>
-                <div style={{ fontSize: '14px', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
+                <div style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
                   <Waves size={16} style={{ marginRight: '6px' }} />
                   Survol maritime
                 </div>
-                <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                   Vol au-dessus de l'eau à plus de 50 NM des côtes ou temps de vol {'>'} 30 min
                   {detectedZones.maritime && !manualOverride.maritime && 
                     <span style={{ color: 'var(--text-primary)' }}> (Détecté automatiquement)</span>
@@ -216,11 +216,11 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
             <div style={{ display: 'flex', alignItems: 'center' }}>
               {zones.mountain ? <CheckSquare size={20} /> : <Square size={20} />}
               <div style={{ marginLeft: '12px' }}>
-                <div style={{ fontSize: '14px', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
+                <div style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
                   <Mountain size={16} style={{ marginRight: '6px' }} />
                   Survol montagneux
                 </div>
-                <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                   Vol au-dessus de reliefs {'>'} 1500m ou zones difficiles d'accès
                   {detectedZones.mountain && !manualOverride.mountain && 
                     <span style={{ color: 'var(--text-primary)' }}> (Détecté automatiquement)</span>
@@ -249,11 +249,11 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
             <div style={{ display: 'flex', alignItems: 'center' }}>
               {zones.hostile ? <CheckSquare size={20} /> : <Square size={20} />}
               <div style={{ marginLeft: '12px' }}>
-                <div style={{ fontSize: '14px', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
+                <div style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
                   <MapPin size={16} style={{ marginRight: '6px' }} />
                   Région hostile/inhabitée
                 </div>
-                <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                   Désert, arctique, jungle ou zone sans infrastructure de secours
                   {manualOverride.hostile !== null && 
                     <span style={{ color: 'var(--text-secondary)' }}> (Sélection manuelle)</span>
@@ -268,7 +268,7 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
       {/* Équipements requis selon les zones */}
       {requiredEquipment.length > 0 && (
         <div style={{ marginTop: '16px' }}>
-          <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
+          <h4 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
             <Shield size={16} style={{ marginRight: '6px' }} />
             Équipements SAR obligatoires pour ces zones
           </h4>
@@ -281,15 +281,15 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--bg-overlay)'
             }}>
-              <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>
+              <h5 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', marginBottom: '8px' }}>
                 {category.category}
               </h5>
-              <ul style={{ fontSize: '12px', marginLeft: '20px' }}>
+              <ul style={{ fontSize: 'var(--fs-body)', marginLeft: '20px' }}>
                 {category.items.map((item, itemIdx) => (
                   <li key={itemIdx} style={{ marginBottom: '4px' }}>{item}</li>
                 ))}
               </ul>
-              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px' }}>
+              <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginTop: '8px' }}>
                 📋 Référence: {category.regulation}
               </p>
             </div>
@@ -304,7 +304,7 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
             border: '1px solid #f26921'
           }}>
             <AlertTriangle size={16} />
-            <p style={{ fontSize: '14px' }}>
+            <p style={{ fontSize: 'var(--fs-body)' }}>
               Ces équipements seront automatiquement marqués comme requis dans votre checklist SAR.
               Vérifiez leur présence avant le vol.
             </p>
@@ -320,7 +320,7 @@ const DangerousZonesDetector = ({ waypoints, onZonesChange }) => {
         borderRadius: 'var(--radius-sm)',
         border: '1px solid var(--border-subtle)'
       }}>
-        <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
           <strong>Pour le plan de vol (case 19) :</strong><br/>
           {zones.maritime && 'J (Gilets) '}
           {zones.maritime && zones.maritimeDistance > 50 && 'D (Canots) '}

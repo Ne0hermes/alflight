@@ -50,7 +50,7 @@ export default defineConfig(({ mode }) => ({
         cleanupOutdatedCaches: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         // Exclure les fichiers volumineux du précaching
-        globIgnores: ['**/*.geojson', '**/data/**/*.geojson', '**/data/**/*.xml', '**/*.pdf'],
+        globIgnores: ['**/*.geojson', '**/data/**/*.geojson', '**/data/**/*.xml', '**/*.pdf', '**/_originals/**'],
         // Augmenter la limite pour les autres assets
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
         // Ne pas cacher les fichiers data en navigateFallback

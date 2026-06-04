@@ -151,7 +151,7 @@ export function IndexedDBChecker({ children }) {
             padding: '15px',
             borderRadius: 'var(--radius-sm)',
             marginBottom: '20px',
-            fontSize: '14px',
+            fontSize: 'var(--fs-body)',
             color: 'var(--accent-primary)'
           }}>
             {!diagnosis.supported && (
@@ -189,7 +189,7 @@ export function IndexedDBChecker({ children }) {
                 color: 'var(--text-primary)',
                 border: 'none',
                 borderRadius: 'var(--radius-sm)',
-                fontSize: '16px',
+                fontSize: 'var(--fs-title)',
                 fontWeight: '600',
                 cursor: 'pointer',
                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
@@ -206,7 +206,7 @@ export function IndexedDBChecker({ children }) {
                 color: 'var(--text-secondary)',
                 border: 'none',
                 borderRadius: 'var(--radius-sm)',
-                fontSize: '16px',
+                fontSize: 'var(--fs-title)',
                 fontWeight: '600',
                 cursor: 'pointer'
               }}
@@ -217,7 +217,7 @@ export function IndexedDBChecker({ children }) {
 
           <p style={{
             marginTop: '20px',
-            fontSize: '12px',
+            fontSize: 'var(--fs-body)',
             color: 'var(--text-secondary)',
             textAlign: 'center'
           }}>

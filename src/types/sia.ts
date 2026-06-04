@@ -303,9 +303,14 @@ export interface Runway {
   width_ft?: number;
   
   // Caractéristiques
-  surface?: string;                     // ASPH, GRASS, CONC, etc.
+  surface?: string;                     // ASPH, GRASS, CONC, etc. (codeComposition AIXM)
   strength?: string;                     // PCN/résistance
-  
+  pcn?: string;                          // Note PCN brute (txtPcnNote AIXM), ex: "40 R/B/W/T"
+
+  // Distances déclarées par direction (Rdd AIXM), en mètres :
+  // { "30L": { TORA, TODA, ASDA, LDA }, "12R": { … } }
+  declared_distances?: Record<string, { TORA?: number; TODA?: number; ASDA?: number; LDA?: number }>;
+
   // Orientation
   magnetic_bearing?: number;             // QFU magnétique
   true_bearing?: number;                 // QFU vrai

@@ -213,12 +213,12 @@ export const AlternateSelectorUnified = memo(({
 
             // Déterminer le côté pour l'affichage (badge suggéré)
             const side = airport.side;
-            const sideColor = side === 'departure' ? '#C04534' : 'var(--text-primary)';
+            const sideColor = side === 'departure' ? 'var(--color-red-critical)' : 'var(--text-primary)';
             const sideEmoji = side === 'departure' ? '🔴' : '🟢';
             const sideLabel = side === 'departure' ? 'Départ' : 'Arrivée';
 
             // Déterminer la couleur selon la sélection RÉELLE (pas le côté suggéré)
-            const selectionColor = isSelectedDeparture ? '#C04534' : (isSelectedArrival ? 'var(--text-primary)' : sideColor);
+            const selectionColor = isSelectedDeparture ? 'var(--color-red-critical)' : (isSelectedArrival ? 'var(--text-primary)' : sideColor);
             const selectionBgColor = isSelectedDeparture ? 'var(--bg-overlay)' : (isSelectedArrival ? 'var(--bg-overlay)' : '#ffffff');
 
             const distanceFromRef = side === 'departure'
@@ -256,7 +256,7 @@ export const AlternateSelectorUnified = memo(({
                     color: 'var(--text-primary)',
                     padding: '2px 8px',
                     borderBottomRightRadius: '6px',
-                    fontSize: '10px',
+                    fontSize: 'var(--fs-caption)',
                     fontWeight: '600'
                   }}>
                     FILTRÉ
@@ -273,7 +273,7 @@ export const AlternateSelectorUnified = memo(({
                     color: 'var(--text-primary)',
                     padding: '4px 12px',
                     borderBottomLeftRadius: '8px',
-                    fontSize: '11px',
+                    fontSize: 'var(--fs-caption)',
                     fontWeight: 'bold'
                   }}>
                     ✓ SÉLECTIONNÉ
@@ -294,7 +294,7 @@ export const AlternateSelectorUnified = memo(({
                         borderRadius: '50%',
                         backgroundColor: (isSelectedDeparture || isSelectedArrival) ? sideColor : `${sideColor}20`,
                         color: (isSelectedDeparture || isSelectedArrival) ? 'white' : sideColor,
-                        fontSize: '12px',
+                        fontSize: 'var(--fs-body)',
                         fontWeight: 'bold',
                         marginRight: '8px',
                         flexShrink: 0
@@ -311,7 +311,7 @@ export const AlternateSelectorUnified = memo(({
                         backgroundColor: `${sideColor}15`,
                         color: sideColor,
                         borderRadius: 'var(--radius-sm)',
-                        fontSize: '11px',
+                        fontSize: 'var(--fs-caption)',
                         fontWeight: 'bold'
                       }}>
                         {sideEmoji} {sideLabel}
@@ -361,7 +361,7 @@ export const AlternateSelectorUnified = memo(({
                         color: getScoreColor(airport.score),
                         borderRadius: 'var(--radius-sm)',
                         fontWeight: 'bold',
-                        fontSize: '11px'
+                        fontSize: 'var(--fs-caption)'
                       }}>
                         Score: {((airport.score || 0) * 100).toFixed(0)}%
                       </span>
@@ -379,12 +379,12 @@ export const AlternateSelectorUnified = memo(({
                         padding: '8px 16px',
                         borderWidth: '2px',
                         borderStyle: 'solid',
-                        borderColor: (isSelectedDeparture || isSelectedArrival) ? (isSelectedDeparture ? '#C04534' : 'var(--text-primary)') : 'var(--text-secondary)',
+                        borderColor: (isSelectedDeparture || isSelectedArrival) ? (isSelectedDeparture ? 'var(--color-red-critical)' : 'var(--text-primary)') : 'var(--text-secondary)',
                         borderRadius: 'var(--radius-sm)',
-                        backgroundColor: (isSelectedDeparture || isSelectedArrival) ? (isSelectedDeparture ? '#C04534' : 'var(--text-primary)') : '#ffffff',
+                        backgroundColor: (isSelectedDeparture || isSelectedArrival) ? (isSelectedDeparture ? 'var(--color-red-critical)' : 'var(--text-primary)') : '#ffffff',
                         color: (isSelectedDeparture || isSelectedArrival) ? '#ffffff' : 'var(--text-secondary)',
                         cursor: 'pointer',
-                        fontSize: '13px',
+                        fontSize: 'var(--fs-body)',
                         fontWeight: 'bold',
                         transition: 'all 0.2s',
                         display: 'flex',
@@ -431,9 +431,9 @@ export const AlternateSelectorUnified = memo(({
                             padding: '10px 16px',
                             border: 'none',
                             backgroundColor: isSelectedDeparture ? 'var(--bg-overlay)' : '#ffffff',
-                            color: '#C04534',
+                            color: 'var(--color-red-critical)',
                             cursor: 'pointer',
-                            fontSize: '13px',
+                            fontSize: 'var(--fs-body)',
                             fontWeight: isSelectedDeparture ? 'bold' : 'normal',
                             textAlign: 'left',
                             display: 'flex',
@@ -459,7 +459,7 @@ export const AlternateSelectorUnified = memo(({
                             backgroundColor: isSelectedArrival ? 'var(--bg-overlay)' : '#ffffff',
                             color: 'var(--text-primary)',
                             cursor: 'pointer',
-                            fontSize: '13px',
+                            fontSize: 'var(--fs-body)',
                             fontWeight: isSelectedArrival ? 'bold' : 'normal',
                             textAlign: 'left',
                             display: 'flex',
@@ -490,7 +490,7 @@ const getScoreColor = (score) => {
   if (!score) return 'var(--text-secondary)';
   if (score >= 0.8) return 'var(--text-primary)';
   if (score >= 0.6) return 'var(--accent-primary)';
-  return '#C04534';
+  return 'var(--color-red-critical)';
 };
 
 AlternateSelectorUnified.displayName = 'AlternateSelectorUnified';

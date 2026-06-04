@@ -1,5 +1,5 @@
 import React, { memo, useState, useEffect } from 'react';
-import { Plane, Wind, CheckCircle, AlertTriangle, Info, ChevronDown, ChevronUp, FileText, TrendingUp, TrendingDown, Navigation } from 'lucide-react';
+import { Wind, CheckCircle, AlertTriangle, Info, Navigation } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { aeroDataProvider } from '@core/data';
 import { useVACStore } from '@core/stores/vacStore';
@@ -485,7 +485,7 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
         </h6>
 
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--fs-caption)' }}>
             <thead>
               <tr style={{ backgroundColor: 'var(--bg-overlay)' }}>
                 <th style={{ padding: '6px', textAlign: 'left', borderBottom: '2px solid var(--text-tertiary)' }}>
@@ -538,7 +538,7 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
                   <td style={{ padding: '6px', textAlign: 'center' }}>
                     {analysis.heading}°
                   </td>
-                  <td style={{ padding: '6px', textAlign: 'center', fontSize: '10px' }}>
+                  <td style={{ padding: '6px', textAlign: 'center', fontSize: 'var(--fs-caption)' }}>
                     {analysis.runway?.surface?.type || analysis.runway?.surface || 'N/A'}
                   </td>
                   <td style={{ padding: '6px', textAlign: 'center' }}>
@@ -555,7 +555,7 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
                       color:
                         analysis.isOptimal ? 'var(--text-primary)' :
                         analysis.isGood ? 'var(--accent-primary)' :
-                        analysis.isAcceptable ? '#D85410' : '#C04534'
+                        analysis.isAcceptable ? '#D85410' : 'var(--color-red-critical)'
                     }}>
                       {analysis.angleDiff}°
                     </span>
@@ -563,14 +563,14 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
                   <td style={{ 
                     padding: '6px', 
                     textAlign: 'center',
-                    color: analysis.headwind < 0 ? '#C04534' : 'var(--text-primary)'
+                    color: analysis.headwind < 0 ? 'var(--color-red-critical)' : 'var(--text-primary)'
                   }}>
                     {analysis.headwind > 0 ? '+' : ''}{analysis.headwind}kt
                   </td>
                   <td style={{ 
                     padding: '6px', 
                     textAlign: 'center',
-                    color: analysis.crosswind > 15 ? '#C04534' : 
+                    color: analysis.crosswind > 15 ? 'var(--color-red-critical)' : 
                            analysis.crosswind > 10 ? 'var(--accent-primary)' : 'var(--text-secondary)'
                   }}>
                     {analysis.crosswind}kt
@@ -590,7 +590,7 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
                         ~ Acceptable
                       </span>
                     ) : (
-                      <span style={{ color: '#C04534' }}>
+                      <span style={{ color: 'var(--color-red-critical)' }}>
                         <AlertTriangle size={14} style={{ display: 'inline' }} /> Déconseillé
                       </span>
                     )}
