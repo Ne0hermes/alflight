@@ -50,8 +50,8 @@ const styles = {
     gap: '8px'
   },
   buttonPrimary: {
-    backgroundColor: 'var(--text-primary)',
-    color: 'var(--text-primary)'
+    backgroundColor: 'var(--accent-primary)',
+    color: 'var(--text-inverse)'
   },
   buttonSecondary: {
     backgroundColor: 'var(--border-subtle)',
@@ -68,17 +68,17 @@ const styles = {
   alertSuccess: {
     backgroundColor: 'var(--bg-overlay)',
     color: 'var(--text-primary)',
-    border: '1px solid var(--bg-overlay)'
+    border: '1px solid var(--accent-primary)'
   },
   alertWarning: {
     backgroundColor: 'rgba(242, 105, 33, 0.10)',
     color: 'var(--accent-primary)',
-    border: '1px solid var(--bg-overlay)'
+    border: '1px solid var(--accent-primary)'
   },
   alertError: {
     backgroundColor: 'var(--bg-overlay)',
-    color: '#C04534',
-    border: '1px solid var(--bg-overlay)'
+    color: 'var(--color-red-critical)',
+    border: '1px solid var(--color-red-critical)'
   },
   text: {
     sm: { fontSize: '14px' },
@@ -889,8 +889,8 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                       position: 'absolute',
                       top: '8px',
                       right: '8px',
-                      backgroundColor: selectedPages.includes(index) ? 'var(--text-primary)' : 'rgba(0,0,0,0.5)',
-                      color: 'var(--text-primary)',
+                      backgroundColor: selectedPages.includes(index) ? 'var(--accent-primary)' : 'rgba(0,0,0,0.5)',
+                      color: selectedPages.includes(index) ? 'var(--text-inverse)' : 'var(--text-primary)',
                       borderRadius: 'var(--radius-sm)',
                       padding: '2px 6px',
                       fontSize: '12px'
@@ -965,8 +965,8 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                               position: 'absolute',
                               top: '8px',
                               right: '8px',
-                              backgroundColor: 'var(--text-primary)',
-                              color: 'var(--text-primary)',
+                              backgroundColor: 'var(--accent-primary)',
+                              color: 'var(--text-inverse)',
                               borderRadius: '50%',
                               padding: '2px'
                             }}
