@@ -7,10 +7,7 @@ import { convertValue } from '@utils/unitConversions';
 // Styles communs
 const commonStyles = {
   container: {
-    padding: '0',
-    backgroundColor: 'var(--bg-surface)',
-    borderRadius: 'var(--radius-sm)',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+    padding: '0'
   },
   label: {
     fontSize: 'var(--fs-title)',
@@ -127,8 +124,9 @@ export const Step5Fuel = memo(({ flightPlan, onUpdate }) => {
 
   return (
     <div style={commonStyles.container}>
-      {/* Module de carburant complet - le titre est affiché par le module */}
-      <FuelModule />
+      {/* Module carburant en mode wizard : son héro interne est masqué
+          (le wizard fournit deja la photo d'etape) -> plus de doublon. */}
+      <FuelModule wizardMode={true} />
     </div>
   );
 });

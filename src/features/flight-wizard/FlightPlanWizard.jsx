@@ -4,7 +4,7 @@ import { theme } from '../../styles/theme';
 import { FlightPlanData } from './models/FlightPlanData';
 import { WizardConfigProvider } from './contexts/WizardConfigContext';
 // 🎨 Charte éditoriale ALFlight
-import { EditorialHeading } from '@shared/components/editorial';
+import { EditorialHeading, ModuleHero } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
 import { useAircraft, useNavigation, useFuel, useWeather } from '@core/contexts';
 import { aircraftSelectors } from '../../core/stores/aircraftStore';
@@ -23,6 +23,19 @@ import { Step5Performance } from './steps/Step5Performance';
 import { Step6WeightBalance } from './steps/Step6WeightBalance';
 import { Step7Alternates } from './steps/Step7Alternates';  // NOUVEAU: Étape déroutements après W&B
 import { Step7Summary } from './steps/Step7Summary';
+
+// Photo de présentation + intitulé par étape (cohérence avec les modules type
+// « Mes avions »). Images : public/assets/photos/. Le contenu de l'étape suit.
+const STEP_HERO = {
+  1: { image: '/assets/photos/hero-pilot.jpg', eyebrow: 'ÉTAPE 1 · PRÉPARATION' },
+  2: { image: '/assets/photos/hero-navigation.jpg', eyebrow: 'ÉTAPE 2 · NAVIGATION' },
+  3: { image: '/assets/photos/hero-weather.jpg', eyebrow: 'ÉTAPE 3 · TERRAINS & MÉTÉO' },
+  4: { image: '/assets/photos/hero-fuel.jpg', eyebrow: 'ÉTAPE 4 · CARBURANT' },
+  5: { image: '/assets/photos/hero-weight-balance.jpg', eyebrow: 'ÉTAPE 5 · MASSE & CENTRAGE' },
+  6: { image: '/assets/photos/hero-performance.jpg', eyebrow: 'ÉTAPE 6 · PERFORMANCES' },
+  7: { image: '/assets/photos/hero-alternates.jpg', eyebrow: 'ÉTAPE 7 · DÉROUTEMENTS' },
+  8: { image: '/assets/photos/hero-logbook.jpg', eyebrow: 'ÉTAPE 8 · SYNTHÈSE' },
+};
 
 /**
  * Composant principal du wizard de préparation de vol
@@ -721,70 +734,19 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
         </div>
 
         {/* Barre de progression — étapes cliquables (style déjà défini, on rend ici) */}
-        <div
-          className="wizard-progress"
-          style={{ ...styles.progressContainer, padding: '0 20px', marginTop: '8px' }}
-          role="navigation"
-          aria-label="Progression du wizard"
-        >
-          {steps.map((step) => {
-            const isCurrent = step.number === currentStep;
-            const isCompleted = completedSteps.has(step.number);
-            // Une étape est cliquable si elle est complétée OU c'est l'étape suivante de la courante
-            const isReachable = isCompleted || isCurrent || step.number === currentStep + 1;
-            const stepStyle = {
-              ...styles.progressStep,
-              ...(isCurrent ? styles.progressStepActive : {}),
-              ...(isCompleted && !isCurrent ? styles.progressStepCompleted : {}),
-              cursor: isReachable ? 'pointer' : 'not-allowed',
-              opacity: isReachable ? 1 : 0.45,
-              flex: '1 1 0',
-              minWidth: '70px',
-              borderWidth: 0,
-              borderStyle: 'none',
-              borderColor: 'transparent',
-              fontFamily: 'inherit'
-            };
-            const numberStyle = {
-              ...styles.progressNumber,
-              ...(isCurrent
-                ? { background: theme.colors.primary, color: 'var(--bg-overlay)', borderColor: theme.colors.primary }
-                : {}),
-              ...(isCompleted && !isCurrent
-                ? { background: theme.colors.success, color: 'var(--bg-overlay)', borderColor: theme.colors.success }
-                : {})
-            };
-            return (
-              <button
-                key={step.number}
-                type="button"
-                onClick={() => isReachable && handleStepClick(step.number)}
-                disabled={!isReachable}
-                style={stepStyle}
-                aria-current={isCurrent ? 'step' : undefined}
-                title={`Étape ${step.number} : ${step.title}`}
-              >
-                <div style={numberStyle}>
-                  {isCompleted && !isCurrent ? '✓' : step.number}
-                </div>
-                <div style={styles.progressLabel}>{step.title}</div>
-              </button>
-            );
-          })}
-        </div>
-
       {/* Contenu de l'étape courante */}
       <div
         id={currentStep === 8 ? 'flight-plan-summary' : undefined}
         style={styles.content}
       >
-        <div className="wizard-step-header" style={styles.stepHeader}>
-          <h2 style={styles.stepTitle}>
-            Étape {currentStep} : {currentStepConfig.title}
-          </h2>
-          <p style={styles.stepDescription}>
-            {currentStepConfig.description}
-          </p>
+        <div className="wizard-step-header">
+          <ModuleHero
+            image={STEP_HERO[currentStep]?.image}
+            eyebrow={STEP_HERO[currentStep]?.eyebrow || `ÉTAPE ${currentStep}`}
+            title={currentStepConfig.title}
+            tagline={currentStepConfig.description || ''}
+            level={2}
+          />
         </div>
 
         {console.log('🔧 Rendering step:', currentStep, 'Component:', currentStepConfig.title, 'StepComponent:', StepComponent.name || StepComponent.displayName)}
@@ -976,11 +938,9 @@ const styles = {
   // Wrapper de contenu du step actif
   content: {
     flex: 1,
-    padding: '24px',
-    background: 'var(--bg-surface)',
-    borderRadius: 'var(--radius-sm)',
-    margin: '20px',
-    border: '1px solid var(--border-subtle)',
+    // Encapsulation retirée : plus de bloc (fond/bordure/arrondi/marge) autour
+    // de l'étape. L'en-tête photo (ModuleHero) et le contenu respirent direct.
+    padding: '0 12px 24px',
   },
   stepHeader: {
     marginBottom: '24px',
