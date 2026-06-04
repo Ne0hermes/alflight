@@ -262,8 +262,8 @@ export const WaypointCardWithRunways = memo(({
         <span style={{
           fontSize: 'var(--fs-body)',
           fontWeight: '600',
-          color: label.color,
-          backgroundColor: label.color + '20',
+          color: 'var(--text-inverse)',
+          backgroundColor: label.color,
           padding: '4px 12px',
           borderRadius: 'var(--radius-sm)'
         }}>
@@ -313,20 +313,20 @@ export const WaypointCardWithRunways = memo(({
                   { minWidth: '140px', fontWeight: '600' },
                   compatibility.compatible > 0 ? sx.text.success : sx.text.danger
                 )}>
-                  ✈️ {compatibility.compatible}/{compatibility.total} compatible{compatibility.compatible > 1 ? 's' : ''}
+                  {compatibility.compatible}/{compatibility.total} compatible{compatibility.compatible > 1 ? 's' : ''}
                 </div>
               )}
 
               {/* Altitude - toujours affichée */}
               {(waypoint.elevation || vacData?.elevation) && (
                 <div style={{ minWidth: '70px' }}>
-                  ⛰️ {vacData?.elevation || waypoint.elevation} ft
+                  {vacData?.elevation || waypoint.elevation} ft
                 </div>
               )}
 
               {/* Coordonnées - toujours affichées */}
               <div style={{ minWidth: '110px' }}>
-                📍 {waypoint.lat.toFixed(2)}°, {waypoint.lon.toFixed(2)}°
+                {waypoint.lat.toFixed(2)}°, {waypoint.lon.toFixed(2)}°
               </div>
             </div>
             {/* Chevron */}
@@ -353,14 +353,14 @@ export const WaypointCardWithRunways = memo(({
                 border: '1px solid var(--border-subtle)'
               }
             )}>
-              ✅ Données issues de la carte VAC officielle
+              Données issues de la carte VAC officielle
             </div>
           )}
 
           {/* Coordonnées détaillées */}
           <div style={sx.spacing.mb(3)}>
             <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-              📍 Coordonnées complètes
+              Coordonnées complètes
             </h5>
             <div style={sx.text.sm}>
               {waypoint.lat.toFixed(4)}°, {waypoint.lon.toFixed(4)}°
@@ -374,7 +374,7 @@ export const WaypointCardWithRunways = memo(({
           {(waypoint.elevation || vacData?.elevation) && (
             <div style={sx.spacing.mb(3)}>
               <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-                ⛰️ Altitude terrain
+                Altitude terrain
               </h5>
               <div style={sx.text.sm}>
                 {vacData?.elevation || waypoint.elevation} ft
@@ -386,7 +386,7 @@ export const WaypointCardWithRunways = memo(({
           {runways.length > 0 && (
             <div>
               <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
-                ✈️ Détails des pistes (par direction)
+                Détails des pistes (par direction)
               </h5>
               <div style={sx.spacing.mb(2)}>
                 {runwayDirections.map((runway, idx) => {
@@ -591,9 +591,9 @@ export const WaypointCardWithRunways = memo(({
               sx.spacing.p(3),
               sx.rounded.md,
               {
-                background: 'linear-gradient(135deg, var(--bg-overlay) 0%, var(--bg-overlay) 100%)',
-                border: '2px solid var(--text-secondary)',
-                boxShadow: '0 2px 8px rgba(14, 165, 233, 0.1)'
+                background: 'var(--bg-overlay)',
+                border: '1px solid var(--border-subtle)',
+                boxShadow: 'none'
               }
             )}
           >
@@ -615,7 +615,7 @@ export const WaypointCardWithRunways = memo(({
                 alignItems: 'center',
                 gap: '6px'
               }}>
-                📍 Points VFR liés
+                Points VFR liés
                 <span style={{
                   fontSize: 'var(--fs-caption)',
                   fontWeight: '600',
@@ -657,7 +657,7 @@ export const WaypointCardWithRunways = memo(({
                     </div>
                     {vfrPoint.lat && vfrPoint.lon && (
                       <div style={{ color: 'var(--text-tertiary)', fontSize: 'var(--fs-caption)' }}>
-                        📍 {vfrPoint.lat.toFixed(2)}°, {vfrPoint.lon.toFixed(2)}°
+                        {vfrPoint.lat.toFixed(2)}°, {vfrPoint.lon.toFixed(2)}°
                       </div>
                     )}
                   </div>
