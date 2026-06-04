@@ -734,56 +734,83 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
         </div>
 
         {/* Barre de progression — étapes cliquables (style déjà défini, on rend ici) */}
+        {/* Stepper compact (même pattern que « Je configure mon avion ») :
+            pastille n° d'étape + « Étape N / total » + titre + chip de complétion.
+            Remplace l'ancienne barre de puces (une par étape). */}
         <div
           className="wizard-progress"
-          style={{ ...styles.progressContainer, padding: '0 20px', marginTop: '8px' }}
           role="navigation"
           aria-label="Progression du wizard"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '16px',
+            margin: '8px 20px 0',
+            padding: '12px 16px',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: 'var(--radius-sm)',
+            background: 'var(--bg-overlay)',
+          }}
         >
-          {steps.map((step) => {
-            const isCurrent = step.number === currentStep;
-            const isCompleted = completedSteps.has(step.number);
-            // Une étape est cliquable si elle est complétée OU c'est l'étape suivante de la courante
-            const isReachable = isCompleted || isCurrent || step.number === currentStep + 1;
-            const stepStyle = {
-              ...styles.progressStep,
-              ...(isCurrent ? styles.progressStepActive : {}),
-              ...(isCompleted && !isCurrent ? styles.progressStepCompleted : {}),
-              cursor: isReachable ? 'pointer' : 'not-allowed',
-              opacity: isReachable ? 1 : 0.45,
-              flex: '1 1 0',
-              minWidth: '70px',
-              borderWidth: 0,
-              borderStyle: 'none',
-              borderColor: 'transparent',
-              fontFamily: 'inherit'
-            };
-            const numberStyle = {
-              ...styles.progressNumber,
-              ...(isCurrent
-                ? { background: theme.colors.primary, color: 'var(--bg-overlay)', borderColor: theme.colors.primary }
-                : {}),
-              ...(isCompleted && !isCurrent
-                ? { background: theme.colors.success, color: 'var(--bg-overlay)', borderColor: theme.colors.success }
-                : {})
-            };
-            return (
-              <button
-                key={step.number}
-                type="button"
-                onClick={() => isReachable && handleStepClick(step.number)}
-                disabled={!isReachable}
-                style={stepStyle}
-                aria-current={isCurrent ? 'step' : undefined}
-                title={`Étape ${step.number} : ${step.title}`}
-              >
-                <div style={numberStyle}>
-                  {isCompleted && !isCurrent ? '✓' : step.number}
-                </div>
-                <div style={styles.progressLabel}>{step.title}</div>
-              </button>
-            );
-          })}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+            {/* Pastille numéro — orange */}
+            <div style={{
+              width: 40,
+              height: 40,
+              borderRadius: '50%',
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'var(--accent-primary)',
+              color: 'var(--text-inverse)',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 'var(--fs-body)',
+              fontWeight: 700,
+            }}>
+              {currentStep}
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--fs-caption)',
+                fontWeight: 500,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: 'var(--text-tertiary)',
+                lineHeight: 1.2,
+              }}>
+                Étape {currentStep} / {steps.length}
+              </div>
+              <div style={{
+                fontFamily: 'var(--font-sans)',
+                fontSize: 'var(--fs-title)',
+                fontWeight: 600,
+                color: 'var(--text-primary)',
+                lineHeight: 1.3,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}>
+                {currentStepConfig.title}
+              </div>
+            </div>
+          </div>
+          {/* Chip % complétion — orange */}
+          <div style={{
+            flexShrink: 0,
+            background: 'var(--accent-soft)',
+            color: 'var(--accent-primary)',
+            fontFamily: 'var(--font-mono)',
+            fontSize: 'var(--fs-body)',
+            fontWeight: 700,
+            letterSpacing: '0.08em',
+            borderRadius: 'var(--radius-sm)',
+            padding: '6px 12px',
+          }}>
+            {Math.round((currentStep / steps.length) * 100)}%
+          </div>
         </div>
 
       {/* Contenu de l'étape courante */}
