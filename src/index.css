@@ -110,6 +110,12 @@
   --border-accent: var(--color-orange-primary);
 
   --accent-primary: var(--color-orange-primary);
+  /* Masse & centrage — 4 scénarios (data-viz catégorielle, lisibles sur fond sombre).
+     Source unique partagée cartes ↔ graphe (cf. weight-balance/scenarioColors.js). */
+  --scenario-zfw: #9FB2C9;       /* bleu-gris acier — masse sans carburant */
+  --scenario-takeoff: #4FC3D9;   /* cyan — masse au décollage (FOB) */
+  --scenario-landing: #E0A33E;   /* ambre — masse à l'atterrissage */
+  --scenario-fulltank: var(--color-orange-primary); /* orange — réservoirs pleins */
   --accent-hover: var(--color-orange-bright);
   --accent-active: var(--color-orange-dim);
   --accent-soft: var(--color-orange-soft);
@@ -302,6 +308,11 @@ select:-webkit-autofill {
   --border-accent: var(--color-orange-dim);
 
   --accent-primary: var(--color-orange-dim);
+  /* Masse & centrage — scénarios (variantes plus sombres pour fond clair) */
+  --scenario-zfw: #3A6E96;
+  --scenario-takeoff: #1E8FA6;
+  --scenario-landing: #B57A1E;
+  --scenario-fulltank: var(--color-orange-dim);
   --accent-hover: var(--color-orange-primary);
   --accent-active: #A8420C;
   --accent-soft: rgba(242, 105, 33, 0.12);
