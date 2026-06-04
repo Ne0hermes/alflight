@@ -732,8 +732,8 @@ export class GeoJSONProvider extends AeroDataProvider {
 
   /**
    * Construit une piste au format module VAC depuis les propriétés GeoJSON brutes.
-   * Calcule le QFU depuis la désignation (ex: "05/23" → 50) et attache les ILS (si index
-   * fourni). Les champs absents du GeoJSON dérivé (surface, distances déclarées) restent null.
+   * Calcule le QFU depuis la désignation (ex: "05/23" → 50), attache les ILS (si index
+   * fourni), la surface, le PCN et les distances déclarées (Rdd) par direction.
    * @param {Object} props — propriétés de la feature runway
    * @param {Map<string,Array>|null} ilsByRunway — index ILS par runway_id
    * @returns {Object}
@@ -754,6 +754,12 @@ export class GeoJSONProvider extends AeroDataProvider {
     const ilsList = (ilsByRunway && props.id)
       ? (ilsByRunway.get(props.id) || []).map(f => this.mapILS(f))
       : [];
+    // Distances déclarées (Rdd) par direction ; on expose aussi la direction primaire
+    // (le_ident) à plat pour les écrans qui lisent runway.tora/toda/asda/lda.
+    const declaredDistances = props.declared_distances || null;
+    const primary = declaredDistances
+      ? (declaredDistances[le_ident] || Object.values(declaredDistances)[0] || null)
+      : null;
     return {
       designation,
       identifier: designation,
@@ -766,17 +772,20 @@ export class GeoJSONProvider extends AeroDataProvider {
         width: props.width_m ?? props.width ?? 0
       },
       surface: props.surface || null,
+      pcn: props.pcn || null,
       qfu,
       magneticBearing: qfu,
       // ILS depuis ils.geojson (SIA) : le 1er alimente le badge, ilsList expose tous les seuils.
       ils: ilsList[0] || null,
       ilsList,
-      // Champs non extraits par l'ETL actuel → complétés manuellement côté VAC.
-      vasis: null,
-      tora: null,
-      toda: null,
-      asda: null,
-      lda: null
+      // Distances déclarées (m, Rdd AIXM) : plat = direction primaire ; objet = par direction.
+      tora: primary?.TORA ?? null,
+      toda: primary?.TODA ?? null,
+      asda: primary?.ASDA ?? null,
+      lda: primary?.LDA ?? null,
+      declaredDistances,
+      // Non extrait par l'ETL → complété manuellement côté VAC.
+      vasis: null
     };
   }
 

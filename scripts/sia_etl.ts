@@ -110,6 +110,7 @@ class SIAETL {
       await this.parseNavaids();
       await this.parseDesignatedPoints();
       await this.parseRunways();
+      await this.parseDeclaredDistances();
       await this.parseObstacles();
       await this.parseOrganizations();
       await this.parseATCUnits();
@@ -488,8 +489,9 @@ class SIAETL {
           designation: designation,
           length_m: this.parseNumber(rwy.getElementsByTagName('valLen')[0]?.textContent),
           width_m: this.parseNumber(rwy.getElementsByTagName('valWid')[0]?.textContent),
-          surface: rwy.getElementsByTagName('codeSfc')[0]?.textContent || undefined,
+          surface: rwy.getElementsByTagName('codeComposition')[0]?.textContent || undefined,
           strength: rwy.getElementsByTagName('codeStrength')[0]?.textContent || undefined,
+          pcn: rwy.getElementsByTagName('txtPcnNote')[0]?.textContent || undefined,
           magnetic_bearing: this.parseNumber(rwy.getElementsByTagName('valBrgMag')[0]?.textContent),
           true_bearing: this.parseNumber(rwy.getElementsByTagName('valBrgTrue')[0]?.textContent),
           threshold_elevation_ft: this.parseNumber(rwy.getElementsByTagName('valElevThr')[0]?.textContent),
@@ -514,7 +516,61 @@ class SIAETL {
       }
     }
   }
-  
+
+  /**
+   * Parse les distances déclarées (Rdd AIXM) et les attache aux pistes.
+   * Chaque Rdd vaut pour UNE direction (ex: "30L" de la piste "12R/30L") et un type
+   * (TORA/TODA/ASDA/LDA). On regroupe par piste → direction → { type: distance_m }.
+   */
+  private async parseDeclaredDistances(): Promise<void> {
+    if (!this.aixmDoc) throw new Error('Document AIXM non chargé');
+
+    const rddElements = this.aixmDoc.getElementsByTagName('Rdd');
+    console.log(`📏 Parsing ${rddElements.length} distances déclarées (Rdd)...`);
+
+    // runwayId → { direction → { TORA?, TODA?, ASDA?, LDA? } } en mètres
+    const byRunway = new Map<string, Record<string, Record<string, number>>>();
+
+    for (let i = 0; i < rddElements.length; i++) {
+      const rdd = rddElements[i];
+      try {
+        const rddUid = rdd.getElementsByTagName('RddUid')[0];
+        const rdnUid = rddUid?.getElementsByTagName('RdnUid')[0];
+        const rwyUid = rdnUid?.getElementsByTagName('RwyUid')[0];
+        const ahpUid = rwyUid?.getElementsByTagName('AhpUid')[0];
+
+        const icao = this.directChildText(ahpUid, 'codeId');
+        const rwyDesig = this.directChildText(rwyUid, 'txtDesig');
+        const rdnDesig = this.directChildText(rdnUid, 'txtDesig'); // direction (ex: "30L")
+        const codeType = this.directChildText(rddUid, 'codeType'); // TORA/TODA/ASDA/LDA
+        let dist = this.parseNumber(rdd.getElementsByTagName('valDist')[0]?.textContent);
+        const unit = rdd.getElementsByTagName('uomDist')[0]?.textContent;
+
+        if (!icao || !rwyDesig || !rdnDesig || !codeType || dist == null) continue;
+        if (unit === 'FT') dist = Math.round(dist * 0.3048);
+
+        const rwyId = `RWY_${icao}_${rwyDesig}`;
+        const dirs = byRunway.get(rwyId) || {};
+        byRunway.set(rwyId, dirs);
+        if (!dirs[rdnDesig]) dirs[rdnDesig] = {};
+        dirs[rdnDesig][codeType] = dist;
+      } catch (error) {
+        console.warn(`⚠️ Erreur parsing distance déclarée ${i}:`, error);
+      }
+    }
+
+    // Attacher aux pistes déjà parsées (match par id RWY_<icao>_<désignation>).
+    let attached = 0;
+    for (const rwy of this.runways) {
+      const dd = byRunway.get(rwy.id);
+      if (dd) {
+        rwy.declared_distances = dd as Runway['declared_distances'];
+        attached++;
+      }
+    }
+    console.log(`  → distances déclarées attachées à ${attached}/${this.runways.length} pistes`);
+  }
+
   /**
    * Parse les obstacles
    */
