@@ -446,8 +446,32 @@ class SIAETL {
         }
         
         const codeType = dpn.getElementsByTagName('codeType')[0]?.textContent;
-        const type = this.parseDesignatedPointType(codeType);
-        
+        const txtRmk = dpn.getElementsByTagName('txtRmk')[0]?.textContent || undefined;
+
+        // Aérodrome associé (AhpUidAssoc) → marque un point de report VFR. Fallbacks :
+        // code OACI dans la remarque, ou préfixe du code (ex "LFST-S").
+        const ahpAssoc = dpn.getElementsByTagName('AhpUidAssoc')[0];
+        let aerodromeIcao = ahpAssoc ? this.directChildText(ahpAssoc, 'codeId') : null;
+        if (!aerodromeIcao && txtRmk) {
+          const m = txtRmk.match(/\b(LF[A-Z]{2})\b/);
+          if (m) aerodromeIcao = m[1];
+        }
+        if (!aerodromeIcao && codeId) {
+          const m = codeId.match(/^(LF[A-Z]{2})[-_ ]/);
+          if (m) aerodromeIcao = m[1];
+        }
+
+        const mandatory = codeType === 'COMPULSORY-REP' || codeType === 'VFR-MRP'
+          || /COMPULSORY|MRP/i.test(txtRmk || '');
+        // VFR si associé à un AD, ou si le codeType/la remarque l'indiquent.
+        const isVFR = !!aerodromeIcao
+          || /VFR|VRP|VISUAL|REPORT/i.test(txtRmk || '')
+          || /VFR|VRP/i.test(codeType || '');
+        let type = this.parseDesignatedPointType(codeType);
+        if (isVFR && type === 'OTHER') {
+          type = mandatory ? 'VFR-COMPULSORY' : 'VFR-RP';
+        }
+
         this.designatedPoints.push({
           id: `DPN_${codeId}`,
           type: type,
@@ -455,7 +479,8 @@ class SIAETL {
           name: dpn.getElementsByTagName('txtName')[0]?.textContent || codeId,
           latitude: lat,
           longitude: lon,
-          mandatory: codeType === 'COMPULSORY-REP' || codeType === 'VFR-MRP',
+          aerodrome_icao: aerodromeIcao || undefined,
+          mandatory,
           source: 'SIA',
           airac: this.airacDate,
           sia_uid: dpn.getAttribute('mid') || undefined
