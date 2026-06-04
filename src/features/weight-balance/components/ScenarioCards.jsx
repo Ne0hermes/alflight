@@ -199,10 +199,10 @@ const ScenarioCard = memo(({ color, title, data, description }) => {
                 marginTop: '8px',
                 padding: '6px 8px',
                 backgroundColor: 'var(--bg-overlay)',
-                borderLeft: '3px solid #C04534',
+                borderLeft: '3px solid var(--color-red-critical)',
                 borderRadius: 'var(--radius-sm)',
                 fontSize: '10px',
-                color: '#C04534'
+                color: 'var(--color-red-critical)'
               }}>
                 <strong>⚠️ MZFW DÉPASSÉ</strong>
                 <br />

@@ -580,7 +580,7 @@ export const VACImporter = memo(({
               alignItems: 'center', 
               marginTop: '16px' 
             }}>
-              <AlertTriangle size={20} style={{ color: '#C04534' }} />
+              <AlertTriangle size={20} style={{ color: 'var(--color-red-critical)' }} />
               <p style={{ fontSize: '14px' }}>{error}</p>
             </div>
           )}

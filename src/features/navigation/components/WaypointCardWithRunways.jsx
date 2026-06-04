@@ -508,7 +508,7 @@ export const WaypointCardWithRunways = memo(({
                               color: 'var(--text-primary)'
                             } : {
                               backgroundColor: 'var(--bg-overlay)',
-                              color: '#C04534'
+                              color: 'var(--color-red-critical)'
                             })
                           }}>
                             {isCompatible && surfaceCompatible ? '✓ Compatible' : '✗ Incompatible'}
@@ -678,7 +678,7 @@ export const WaypointCardWithRunways = memo(({
                       padding: '4px 6px',
                       border: 'none',
                       background: 'var(--bg-overlay)',
-                      color: '#C04534',
+                      color: 'var(--color-red-critical)',
                       borderRadius: 'var(--radius-sm)',
                       cursor: 'pointer',
                       display: 'flex',

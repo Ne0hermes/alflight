@@ -828,7 +828,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                       borderRadius: 'var(--radius-sm)',
                       fontSize: '12px',
                       cursor: 'pointer',
-                      color: '#C04534',
+                      color: 'var(--color-red-critical)',
                       fontWeight: '500'
                     }}
                   >
@@ -1000,7 +1000,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                           borderRadius: 'var(--radius-sm)',
                           fontSize: '12px',
                           cursor: 'pointer',
-                          color: '#C04534',
+                          color: 'var(--color-red-critical)',
                           fontWeight: '500'
                         }}
                       >

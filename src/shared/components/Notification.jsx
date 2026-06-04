@@ -75,9 +75,9 @@ export const Notification = ({
       borderLeft: '4px solid var(--text-primary)'
     },
     error: {
-      backgroundColor: '#C04534',
+      backgroundColor: 'var(--color-red-critical)',
       color: 'var(--text-primary)',
-      borderLeft: '4px solid #C04534'
+      borderLeft: '4px solid var(--color-red-critical)'
     },
     warning: {
       backgroundColor: 'var(--accent-primary)',

@@ -192,7 +192,7 @@ const GlobalVFRPointsManager = () => {
 
   const vfrTypeColors = {
     'Entry': 'var(--text-primary)',
-    'Exit': '#C04534',
+    'Exit': 'var(--color-red-critical)',
     'Transit': 'var(--text-secondary)',
     'VRP': 'var(--accent-primary)',
     'Custom': 'var(--accent-primary)'
@@ -732,7 +732,7 @@ const GlobalVFRPointsManager = () => {
                             backgroundColor: 'transparent',
                             border: 'none',
                             cursor: 'pointer',
-                            color: '#C04534'
+                            color: 'var(--color-red-critical)'
                           }}
                           title="Supprimer"
                         >

@@ -599,7 +599,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
                 <AerodromeDetailsCard
                   airport={manualSelection.departure}
                   side="departure"
-                  sideColor="#C04534"
+                  sideColor="var(--color-red-critical)"
                   sideEmoji="🔴"
                   sideLabel="Déroutement côté départ"
                   distanceLabel="NM depuis le départ"

@@ -135,7 +135,7 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
             <Icon size={18} />
             {title}
             {procedures.length === 0 && (
-              <span style={{ color: '#C04534', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
+              <span style={{ color: 'var(--color-red-critical)', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
                 ⚠️ Aucune procédure définie
               </span>
             )}
@@ -197,7 +197,7 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
                     onClick={() => removeProcedure(type, idx)}
                     style={{
                       padding: '4px 8px',
-                      backgroundColor: '#C04534',
+                      backgroundColor: 'var(--color-red-critical)',
                       color: 'var(--text-primary)',
                       border: 'none',
                       borderRadius: 'var(--radius-sm)',
@@ -351,7 +351,7 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
                             onClick={() => removeWaypoint(type, idx, wpIdx)}
                             style={{
                               padding: '2px 6px',
-                              backgroundColor: '#C04534',
+                              backgroundColor: 'var(--color-red-critical)',
                               color: 'var(--text-primary)',
                               border: 'none',
                               borderRadius: 'var(--radius-sm)',

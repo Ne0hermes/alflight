@@ -62,7 +62,7 @@ export const PremiumBadge = ({ children, variant = 'default', style, ...props })
     },
     error: {
       background: 'rgba(239, 68, 68, 0.1)',
-      color: '#C04534'
+      color: 'var(--color-red-critical)'
     }
   };
 

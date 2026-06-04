@@ -138,10 +138,10 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
 
   // Fonction pour obtenir la couleur selon le type de zone
   const getTypeColor = (type, airspaceClass) => {
-    if (['R', 'RESTRICTED'].includes(type)) return '#C04534'; // Rouge
+    if (['R', 'RESTRICTED'].includes(type)) return 'var(--color-red-critical)'; // Rouge
     if (['P', 'PROHIBITED'].includes(type)) return 'var(--accent-primary)'; // Violet
     if (['D', 'DANGER'].includes(type)) return 'var(--accent-primary)'; // Orange
-    if (['A', 'B'].includes(airspaceClass)) return '#C04534'; // Rouge
+    if (['A', 'B'].includes(airspaceClass)) return 'var(--color-red-critical)'; // Rouge
     if (['C', 'D'].includes(airspaceClass)) return 'var(--text-secondary)'; // Bleu
     if (airspaceClass === 'E') return 'var(--text-primary)'; // Vert
     return 'var(--text-secondary)'; // Gris
@@ -224,8 +224,8 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
       {aggregatedData.restrictedZones.length > 0 && (
         <>
           <div style={sectionTitleStyle}>
-            <AlertTriangle size={18} color="#C04534" />
-            <span style={{ color: '#C04534' }}>Zones Réglementées / Dangereuses ({aggregatedData.restrictedZones.length})</span>
+            <AlertTriangle size={18} color="var(--color-red-critical)" />
+            <span style={{ color: 'var(--color-red-critical)' }}>Zones Réglementées / Dangereuses ({aggregatedData.restrictedZones.length})</span>
           </div>
           <table style={tableStyle}>
             <thead>
@@ -395,7 +395,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
       }}>
         <strong>Légende :</strong>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '8px' }}>
-          <span><span style={badgeStyle('#C04534')}>R</span> Zone Réglementée</span>
+          <span><span style={badgeStyle('var(--color-red-critical)')}>R</span> Zone Réglementée</span>
           <span><span style={badgeStyle('var(--accent-primary)')}>P</span> Zone Interdite</span>
           <span><span style={badgeStyle('var(--accent-primary)')}>D</span> Zone Dangereuse</span>
           <span><span style={badgeStyle('var(--text-secondary)')}>C/D</span> Espace Contrôlé</span>

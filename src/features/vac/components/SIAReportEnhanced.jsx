@@ -386,7 +386,7 @@ export const SIAReportEnhanced = () => {
     return {
       ...styles.input,
       backgroundColor: hasValue ? 'white' : (isRequired ? 'var(--bg-overlay)' : 'rgba(242, 105, 33, 0.10)'),
-      borderColor: hasValue ? 'var(--text-tertiary)' : (isRequired ? '#C04534' : 'var(--accent-primary)'),
+      borderColor: hasValue ? 'var(--text-tertiary)' : (isRequired ? 'var(--color-red-critical)' : 'var(--accent-primary)'),
       cursor: 'text'
     };
   };
@@ -948,7 +948,7 @@ export const SIAReportEnhanced = () => {
             onClick={() => setHideClosedAirports(!hideClosedAirports)}
             style={{
               ...styles.tab,
-              ...(hideClosedAirports ? { backgroundColor: '#C04534', color: 'var(--text-primary)' } : {})
+              ...(hideClosedAirports ? { backgroundColor: 'var(--color-red-critical)', color: 'var(--text-primary)' } : {})
             }}
             title={hideClosedAirports ? "Afficher les aérodromes fermés" : "Masquer les aérodromes fermés"}
           >
@@ -1089,7 +1089,7 @@ export const SIAReportEnhanced = () => {
                     {isClosed && (
                       <span style={{ 
                         ...styles.badge, 
-                        backgroundColor: '#C04534', 
+                        backgroundColor: 'var(--color-red-critical)', 
                         color: 'var(--text-primary)' 
                       }}>
                         FERMÉ
@@ -1150,7 +1150,7 @@ export const SIAReportEnhanced = () => {
                     title={editMode[aerodrome.icao] ? 'Verrouiller les modifications' : 'Éditer les données'}
                   >
                     {editMode[aerodrome.icao] ? (
-                      <Lock size={20} color="#C04534" />
+                      <Lock size={20} color="var(--color-red-critical)" />
                     ) : (
                       <Edit2 size={20} color="var(--text-secondary)" />
                     )}
@@ -1321,7 +1321,7 @@ export const SIAReportEnhanced = () => {
                             style={{
                               ...styles.input,
                               backgroundColor: data.coordinates?.lat ? 'white' : 'var(--bg-overlay)',
-                              borderColor: data.coordinates?.lat ? 'var(--text-tertiary)' : '#C04534'
+                              borderColor: data.coordinates?.lat ? 'var(--text-tertiary)' : 'var(--color-red-critical)'
                             }}
                           />
                         </div>
@@ -1336,7 +1336,7 @@ export const SIAReportEnhanced = () => {
                             style={{
                               ...styles.input,
                               backgroundColor: data.coordinates?.lon ? 'white' : 'var(--bg-overlay)',
-                              borderColor: data.coordinates?.lon ? 'var(--text-tertiary)' : '#C04534'
+                              borderColor: data.coordinates?.lon ? 'var(--text-tertiary)' : 'var(--color-red-critical)'
                             }}
                           />
                         </div>
@@ -1481,7 +1481,7 @@ export const SIAReportEnhanced = () => {
                                         padding: '2px 4px', 
                                         fontSize: '11px',
                                         backgroundColor: rwy.tora ? 'white' : 'var(--bg-overlay)',
-                                        borderColor: rwy.tora ? 'var(--text-tertiary)' : '#C04534'
+                                        borderColor: rwy.tora ? 'var(--text-tertiary)' : 'var(--color-red-critical)'
                                       }}
                                     />
                                   </div>
@@ -1497,7 +1497,7 @@ export const SIAReportEnhanced = () => {
                                         padding: '2px 4px', 
                                         fontSize: '11px',
                                         backgroundColor: rwy.toda ? 'white' : 'var(--bg-overlay)',
-                                        borderColor: rwy.toda ? 'var(--text-tertiary)' : '#C04534'
+                                        borderColor: rwy.toda ? 'var(--text-tertiary)' : 'var(--color-red-critical)'
                                       }}
                                     />
                                   </div>
@@ -1513,7 +1513,7 @@ export const SIAReportEnhanced = () => {
                                         padding: '2px 4px', 
                                         fontSize: '11px',
                                         backgroundColor: rwy.asda ? 'white' : 'var(--bg-overlay)',
-                                        borderColor: rwy.asda ? 'var(--text-tertiary)' : '#C04534'
+                                        borderColor: rwy.asda ? 'var(--text-tertiary)' : 'var(--color-red-critical)'
                                       }}
                                     />
                                   </div>
@@ -1529,7 +1529,7 @@ export const SIAReportEnhanced = () => {
                                         padding: '2px 4px', 
                                         fontSize: '11px',
                                         backgroundColor: rwy.lda ? 'white' : 'var(--bg-overlay)',
-                                        borderColor: rwy.lda ? 'var(--text-tertiary)' : '#C04534'
+                                        borderColor: rwy.lda ? 'var(--text-tertiary)' : 'var(--color-red-critical)'
                                       }}
                                     />
                                   </div>
@@ -1547,7 +1547,7 @@ export const SIAReportEnhanced = () => {
                                         padding: '2px 4px', 
                                         fontSize: '11px',
                                         backgroundColor: rwy.surface ? 'white' : 'var(--bg-overlay)',
-                                        borderColor: rwy.surface ? 'var(--text-tertiary)' : '#C04534'
+                                        borderColor: rwy.surface ? 'var(--text-tertiary)' : 'var(--color-red-critical)'
                                       }}
                                     />
                                   </div>
@@ -1564,7 +1564,7 @@ export const SIAReportEnhanced = () => {
                                         padding: '2px 4px', 
                                         fontSize: '11px',
                                         backgroundColor: (rwy.qfu || rwy.magneticBearing) ? 'white' : 'var(--bg-overlay)',
-                                        borderColor: (rwy.qfu || rwy.magneticBearing) ? 'var(--text-tertiary)' : '#C04534'
+                                        borderColor: (rwy.qfu || rwy.magneticBearing) ? 'var(--text-tertiary)' : 'var(--color-red-critical)'
                                       }}
                                     />
                                   </div>
@@ -1585,7 +1585,7 @@ export const SIAReportEnhanced = () => {
                                         fontSize: '11px',
                                         flex: '0 0 80px',
                                         backgroundColor: rwy.ils ? 'white' : 'var(--bg-overlay)',
-                                        borderColor: rwy.ils ? 'var(--text-tertiary)' : '#C04534'
+                                        borderColor: rwy.ils ? 'var(--text-tertiary)' : 'var(--color-red-critical)'
                                       }}
                                     >
                                       <option value="">Aucun</option>
@@ -1671,7 +1671,7 @@ export const SIAReportEnhanced = () => {
                             marginBottom: '12px',
                             padding: '10px',
                             backgroundColor: 'var(--bg-overlay)',
-                            border: '2px solid #C04534',
+                            border: '2px solid var(--color-red-critical)',
                             borderRadius: 'var(--radius-sm)'
                           }}>
                             <div style={{
@@ -1684,7 +1684,7 @@ export const SIAReportEnhanced = () => {
                                 <div style={{
                                   fontSize: '11px',
                                   fontWeight: '600',
-                                  color: '#C04534',
+                                  color: 'var(--color-red-critical)',
                                   marginBottom: '2px'
                                 }}>
                                   URGENCE - Téléphone aérodrome
@@ -1692,13 +1692,13 @@ export const SIAReportEnhanced = () => {
                                 <div style={{
                                   fontSize: '14px',
                                   fontWeight: '700',
-                                  color: '#C04534'
+                                  color: 'var(--color-red-critical)'
                                 }}>
                                   {data.adminInfo.telephone}
                                 </div>
                                 <div style={{
                                   fontSize: '10px',
-                                  color: '#C04534',
+                                  color: 'var(--color-red-critical)',
                                   marginTop: '2px',
                                   fontStyle: 'italic'
                                 }}>
@@ -1713,7 +1713,7 @@ export const SIAReportEnhanced = () => {
                           Object.entries(data.frequencies).map(([service, freqs]) => {
                             // Définir les styles et icônes selon le type de service
                             const serviceConfig = {
-                              'TWR': { icon: '🗼', color: '#C04534', label: 'Tour (TWR)' },
+                              'TWR': { icon: '🗼', color: 'var(--color-red-critical)', label: 'Tour (TWR)' },
                               'GND': { icon: '🚖', color: 'var(--accent-primary)', label: 'Sol (GND)' },
                               'APP': { icon: '📡', color: 'var(--text-secondary)', label: 'Approche (APP)' },
                               'DEP': { icon: '✈️', color: 'var(--accent-primary)', label: 'Départ (DEP)' },
@@ -1897,7 +1897,7 @@ export const SIAReportEnhanced = () => {
                                         style={{
                                           padding: '2px',
                                           fontSize: '10px',
-                                          backgroundColor: '#C04534',
+                                          backgroundColor: 'var(--color-red-critical)',
                                           color: 'var(--text-primary)',
                                           border: 'none',
                                           borderRadius: 'var(--radius-sm)',

@@ -760,7 +760,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
             <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--app-bg)', margin: 0 }}>
               {Number(takeoffMass).toFixed(1)} kg
               {calculations?.isWithinLimits === false && (
-                <span style={{ fontSize: 11, color: '#C04534', marginLeft: 6, fontWeight: 600 }}>⚠ Hors limites</span>
+                <span style={{ fontSize: 11, color: 'var(--color-red-critical)', marginLeft: 6, fontWeight: 600 }}>⚠ Hors limites</span>
               )}
             </p>
           </div>
@@ -780,7 +780,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
             {departureRunwayWind.bestRunway && (
               <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: '4px 0 0 0' }}>
                 ➤ Piste <strong>{departureRunwayWind.bestRunway.ident}</strong> :{' '}
-                <span style={{ color: takeoffWindComponent >= 0 ? 'var(--text-primary)' : '#C04534', fontWeight: 700 }}>
+                <span style={{ color: takeoffWindComponent >= 0 ? 'var(--text-primary)' : 'var(--color-red-critical)', fontWeight: 700 }}>
                   {takeoffWindComponent >= 0 ? '↑ face' : '↓ arrière'} {Math.abs(takeoffWindComponent).toFixed(1)} kt
                 </span>
                 {departureRunwayWind.crosswindComponent > 0 && (
@@ -880,7 +880,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
             {arrivalRunwayWind.bestRunway && (
               <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: '4px 0 0 0' }}>
                 ➤ Piste <strong>{arrivalRunwayWind.bestRunway.ident}</strong> :{' '}
-                <span style={{ color: landingWindComponent >= 0 ? 'var(--text-primary)' : '#C04534', fontWeight: 700 }}>
+                <span style={{ color: landingWindComponent >= 0 ? 'var(--text-primary)' : 'var(--color-red-critical)', fontWeight: 700 }}>
                   {landingWindComponent >= 0 ? '↑ face' : '↓ arrière'} {Math.abs(landingWindComponent).toFixed(1)} kt
                 </span>
                 {arrivalRunwayWind.crosswindComponent > 0 && (
@@ -970,7 +970,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
                     borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--border-subtle)',
                     fontSize: '13px',
-                    color: '#C04534'
+                    color: 'var(--color-red-critical)'
                   }}>
                     ⚠️ Météo non disponible - impossible d'analyser les pistes
                   </div>

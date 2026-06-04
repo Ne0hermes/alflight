@@ -1003,7 +1003,7 @@ const styles = {
     gap: '4px',
     padding: '4px 8px',
     backgroundColor: 'var(--bg-overlay)',
-    color: '#C04534',
+    color: 'var(--color-red-critical)',
     borderRadius: 'var(--radius-sm)',
     fontSize: '11px',
     fontWeight: '600'
@@ -1268,19 +1268,19 @@ const styles = {
     gap: '8px',
     padding: '12px',
     backgroundColor: 'var(--bg-overlay)',
-    border: '2px solid #C04534',
+    border: '2px solid var(--color-red-critical)',
     borderRadius: 'var(--radius-sm)',
     marginBottom: '16px'
   },
   contactLabel: {
     fontSize: '13px',
     fontWeight: '600',
-    color: '#C04534'
+    color: 'var(--color-red-critical)'
   },
   contactValue: {
     fontSize: '14px',
     fontWeight: '700',
-    color: '#C04534',
+    color: 'var(--color-red-critical)',
     fontFamily: 'monospace'
   },
   servicesGrid: {

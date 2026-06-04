@@ -309,8 +309,8 @@ export const AlternatesMapView = memo(({
             center={[searchZone.departure.lat, searchZone.departure.lon]}
             radius={dynamicRadius * 1852}
             pathOptions={{
-              color: '#C04534',
-              fillColor: '#C04534',
+              color: 'var(--color-red-critical)',
+              fillColor: 'var(--color-red-critical)',
               fillOpacity: 0.1,
               weight: 2,
               dashArray: '5, 10'
@@ -335,7 +335,7 @@ export const AlternatesMapView = memo(({
         {routeLine.length > 0 && (
           <Polyline
             positions={routeLine}
-            color="#C04534"
+            color="var(--color-red-critical)"
             weight={3}
             opacity={0.8}
           />
@@ -421,10 +421,10 @@ export const AlternatesMapView = memo(({
                         padding: '6px 12px',
                         borderWidth: currentSelection.departure?.icao === marker.icao ? '0' : '1px',
                         borderStyle: 'solid',
-                        borderColor: '#C04534',
+                        borderColor: 'var(--color-red-critical)',
                         borderRadius: 'var(--radius-sm)',
-                        backgroundColor: currentSelection.departure?.icao === marker.icao ? '#C04534' : '#ffffff',
-                        color: currentSelection.departure?.icao === marker.icao ? '#ffffff' : '#C04534',
+                        backgroundColor: currentSelection.departure?.icao === marker.icao ? 'var(--color-red-critical)' : '#ffffff',
+                        color: currentSelection.departure?.icao === marker.icao ? '#ffffff' : 'var(--color-red-critical)',
                         cursor: 'pointer',
                         fontSize: '11px',
                         fontWeight: 'bold',
@@ -466,7 +466,7 @@ export const AlternatesMapView = memo(({
         {/* Marqueurs pour les aérodromes de déroutement sélectionnés */}
         {selectedMarkers.map((marker, index) => {
           // Couleur selon le type de déroutement : rouge pour départ, vert pour arrivée
-          const markerColor = marker.selectionType === 'departure' ? '#C04534' : 'var(--text-primary)';
+          const markerColor = marker.selectionType === 'departure' ? 'var(--color-red-critical)' : 'var(--text-primary)';
 
           return (
             <CircleMarker
@@ -491,7 +491,7 @@ export const AlternatesMapView = memo(({
                 <div style={{
                   fontSize: '11px',
                   color: 'var(--text-primary)',
-                  backgroundColor: marker.selectionType === 'departure' ? '#C04534' : 'var(--text-primary)',
+                  backgroundColor: marker.selectionType === 'departure' ? 'var(--color-red-critical)' : 'var(--text-primary)',
                   padding: '2px 6px',
                   borderRadius: 'var(--radius-sm)',
                   display: 'inline-block'
@@ -513,7 +513,7 @@ export const AlternatesMapView = memo(({
                       padding: '6px 12px',
                       border: 'none',
                       borderRadius: 'var(--radius-sm)',
-                      backgroundColor: '#C04534',
+                      backgroundColor: 'var(--color-red-critical)',
                       color: '#ffffff',
                       cursor: 'pointer',
                       fontSize: '11px',

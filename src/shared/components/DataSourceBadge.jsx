@@ -39,7 +39,7 @@ export const DataSourceBadge = memo(({
       icon: Edit3,
       label: 'Modifié',
       fullLabel: 'Modifié manuellement',
-      color: '#C04534',
+      color: 'var(--color-red-critical)',
       backgroundColor: 'var(--bg-overlay)',
       description: modificationDate 
         ? `Modifié le ${new Date(modificationDate).toLocaleDateString('fr-FR')}`

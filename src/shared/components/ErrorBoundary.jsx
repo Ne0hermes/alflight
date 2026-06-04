@@ -22,7 +22,7 @@ class ErrorBoundary extends React.Component {
       return (
         <div style={sx.combine(sx.flex.center, sx.spacing.p(8))}>
           <div style={sx.text.center}>
-            <AlertTriangle size={48} color="#C04534" />
+            <AlertTriangle size={48} color="var(--color-red-critical)" />
             <h2 style={sx.combine(sx.text.xl, sx.text.bold, sx.spacing.mt(4))}>
               Une erreur est survenue
             </h2>

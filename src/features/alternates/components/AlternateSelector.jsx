@@ -190,7 +190,7 @@ const CandidateItem = memo(({ candidate, isSelected, onAdd, disabled }) => (
 
 // Composant pour afficher le score
 const ScoreBadge = memo(({ score }) => {
-  const color = score >= 0.8 ? 'var(--text-primary)' : score >= 0.6 ? 'var(--accent-primary)' : '#C04534';
+  const color = score >= 0.8 ? 'var(--text-primary)' : score >= 0.6 ? 'var(--accent-primary)' : 'var(--color-red-critical)';
   
   return (
     <span style={{

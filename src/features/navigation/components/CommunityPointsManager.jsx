@@ -970,7 +970,7 @@ const styles = {
     fontWeight: '500'
   },
   deleteButton: {
-    color: '#C04534',
+    color: 'var(--color-red-critical)',
     borderColor: 'var(--bg-overlay)'
   },
   createMode: {
@@ -1063,7 +1063,7 @@ const styles = {
     top: '8px',
     right: '8px',
     padding: '4px 8px',
-    backgroundColor: '#C04534',
+    backgroundColor: 'var(--color-red-critical)',
     color: 'var(--text-primary)',
     border: 'none',
     borderRadius: 'var(--radius-sm)',
@@ -1129,9 +1129,9 @@ const styles = {
   errorMessage: {
     padding: '12px',
     backgroundColor: 'var(--bg-overlay)',
-    border: '1px solid #C04534',
+    border: '1px solid var(--color-red-critical)',
     borderRadius: 'var(--radius-sm)',
-    color: '#C04534',
+    color: 'var(--color-red-critical)',
     fontSize: '13px',
     display: 'flex',
     alignItems: 'center',
