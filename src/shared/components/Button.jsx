@@ -39,10 +39,12 @@ export const Button = ({
       return {
         ...baseStyles,
         background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-hover))',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+        // Charte cockpit : pas de boxShadow (le fond suffit). L'ancienne ombre
+        // noire rgba(0,0,0,.3) virait « bordeaux » sur les fonds orange (login).
+        boxShadow: 'none',
         '&:hover': {
           background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-primary))',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
+          boxShadow: 'none',
           transform: 'translateY(-1px)',
         },
         '&:active': {

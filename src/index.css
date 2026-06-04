@@ -251,6 +251,25 @@ html {
   background-color: var(--app-bg) !important;
 }
 
+/* ----------------------------------------------------------------------------
+   🚫 AUTOFILL — neutralise le fond BLEU imposé par le navigateur (Chrome/Safari)
+   sur les champs auto-remplis (email, mot de passe). Le seul moyen de surclasser
+   le style autofill du navigateur est le box-shadow inset (le background normal
+   est ignoré). Fond charte + texte ivoire + caret ivoire.
+   ---------------------------------------------------------------------------- */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--app-bg) inset !important;
+  box-shadow: 0 0 0 1000px var(--app-bg) inset !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+  caret-color: var(--text-primary);
+  transition: background-color 9999s ease-in-out 0s;
+}
+
 /* iOS Safari / Chrome — couvre la barre de status hors viewport */
 @supports (-webkit-touch-callout: none) {
   html,
