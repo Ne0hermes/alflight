@@ -254,10 +254,10 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
   return (
     <div
       style={{
-        backgroundColor: 'var(--bg-canvas)',
+        backgroundColor: wizardMode ? 'transparent' : 'var(--bg-canvas)',
         color: 'var(--text-primary)',
         fontFamily: tokens.fontFamily.sans,
-        minHeight: '100vh',
+        minHeight: wizardMode ? 'auto' : '100vh',
         padding: wizardMode
           ? 0
           : `clamp(${tokens.spacing[6]}, 4vw, ${tokens.spacing[9]}) clamp(${tokens.spacing[5]}, 3vw, ${tokens.spacing[8]})`,
@@ -364,7 +364,7 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
           {!wizardMode && (
             <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
               <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4))}>
-                ✈️ Type de vol
+                Type de vol
               </h3>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
@@ -425,7 +425,7 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
           {!wizardMode && selectedAircraft && navigationResults && (
             <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
               <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4))}>
-                📊 Résultats de navigation
+                Résultats de navigation
               </h3>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
@@ -505,12 +505,12 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
           )}
 
           {/* Section Points de navigation et Gestion du trajet */}
-          <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
-            <div style={sx.combine(sx.components.card.base, sx.spacing.p(4))}>
+          <section style={sx.combine(sx.spacing.mb(6))}>
+            <div>
               {/* En-tête avec titre */}
               <div style={sx.spacing.mb(4)}>
                 <h3 style={sx.combine(sx.text.xl, sx.text.bold)}>
-                  📍 Points de navigation
+                  Points de navigation
                 </h3>
               </div>
 
@@ -534,9 +534,9 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
                       style={{
                         padding: '12px 24px',
                         borderRadius: 'var(--radius-sm)',
-                        border: '2px solid var(--text-secondary)',
-                        background: 'var(--text-secondary)',
-                        color: 'var(--text-primary)',
+                        border: 'none',
+                        background: 'var(--accent-primary)',
+                        color: 'var(--text-inverse)',
                         fontSize: 'var(--fs-title)',
                         fontWeight: '600',
                         cursor: 'pointer',
