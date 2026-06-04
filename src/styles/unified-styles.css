@@ -129,12 +129,16 @@ a:not(.MuiButtonBase-root):hover {
 /* ============================================
    4. BOUTONS - STYLE UNIFIÉ
    ============================================ */
-button,
+/* NB : on EXCLUT les boutons MUI (.MuiButtonBase-root) de cette règle globale —
+   sinon ce background/border !important écrase les variantes du thème (un bouton
+   « outlined » se retrouvait peint en orange plein comme un « contained »).
+   muiTheme.js gère désormais contained / outlined / text à la charte. */
+button:not(.MuiButtonBase-root),
 .btn,
-[type="button"],
-[type="submit"],
-[type="reset"],
-[role="button"],
+[type="button"]:not(.MuiButtonBase-root),
+[type="submit"]:not(.MuiButtonBase-root),
+[type="reset"]:not(.MuiButtonBase-root),
+[role="button"]:not(.MuiButtonBase-root),
 input[type="button"] {
   background: var(--button-bg) !important;
   background-color: var(--button-bg) !important;
