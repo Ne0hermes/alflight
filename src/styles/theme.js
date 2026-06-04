@@ -36,7 +36,7 @@ export const theme = {
     // ─── États sémantiques ───
     success: 'var(--accent-primary)',         // pas de vert SaaS — accent ALFlight
     warning: 'var(--accent-primary)',         // pas de jaune fluo — accent ALFlight
-    error: '#C04534',                          // red-critical ALFlight (NO-GO)
+    error: 'var(--color-red-critical)',        // red-critical ALFlight (NO-GO)
     info: 'var(--text-secondary)',            // pas de bleu SaaS — neutre cockpit
   },
 
