@@ -1123,7 +1123,7 @@ const styles = {
     gap: '4px'
   },
   infoLabel: {
-    fontSize: 'var(--fs-caption)',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: 'var(--text-secondary)',
     textTransform: 'uppercase',
@@ -1135,7 +1135,7 @@ const styles = {
     color: theme.colors.textPrimary
   },
   infoValueSecondary: {
-    fontSize: 'var(--fs-caption)',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-tertiary)',
     fontStyle: 'italic'
   },
@@ -1153,7 +1153,7 @@ const styles = {
     marginBottom: '8px'
   },
   runwayDesignation: {
-    fontSize: 'var(--fs-title)',
+    fontSize: 'var(--fs-body)',
     fontWeight: '700',
     color: theme.colors.textPrimary
   },
@@ -1225,7 +1225,7 @@ const styles = {
     color: theme.colors.textPrimary
   },
   vfrPointType: {
-    fontSize: 'var(--fs-caption)',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: 'var(--text-secondary)',
     backgroundColor: 'var(--border-subtle)',
@@ -1238,7 +1238,7 @@ const styles = {
     margin: '4px 0'
   },
   vfrPointCoords: {
-    fontSize: 'var(--fs-caption)',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-tertiary)',
     fontFamily: 'monospace',
     margin: '4px 0 0'
