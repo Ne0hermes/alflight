@@ -110,6 +110,7 @@ class SIAETL {
       await this.parseNavaids();
       await this.parseDesignatedPoints();
       await this.parseRunways();
+      await this.parseDeclaredDistances();
       await this.parseObstacles();
       await this.parseOrganizations();
       await this.parseATCUnits();
@@ -250,19 +251,25 @@ class SIAETL {
     
     const aseElements = this.aixmDoc.getElementsByTagName('Ase');
     console.log(`🗺️ Parsing ${aseElements.length} espaces aériens...`);
-    
+
+    // En AIXM, la géométrie (Abd→Avx) n'est PAS dans l'Ase : les Abd (frontières) sont des
+    // éléments SÉPARÉS qui référencent leur Ase via AbdUid→AseUid(@mid). On indexe d'abord
+    // les Abd par mid d'AseUid pour pouvoir retrouver la géométrie de chaque espace.
+    const abdByAse = this.indexAbdByAse();
+
     for (let i = 0; i < aseElements.length; i++) {
       const ase = aseElements[i];
-      
+
       try {
         const uid = ase.getElementsByTagName('AseUid')[0];
+        const aseMid = uid?.getAttribute('mid');
         const codeId = uid?.getElementsByTagName('codeId')[0]?.textContent;
         const codeType = uid?.getElementsByTagName('codeType')[0]?.textContent;
-        
+
         if (!codeId) continue;
-        
+
         // Géométrie obligatoire sauf pour certains types
-        const geometry = this.parseAirspaceGeometry(ase);
+        const geometry = this.parseAirspaceGeometry(aseMid ? (abdByAse.get(aseMid) || []) : []);
         if (!geometry) {
           // Certains espaces (comme FIR/UIR) peuvent ne pas avoir de géométrie dans l'AIXM
           console.warn(`⚠️ Géométrie manquante pour l'espace ${codeId} (type: ${codeType})`);
@@ -439,8 +446,32 @@ class SIAETL {
         }
         
         const codeType = dpn.getElementsByTagName('codeType')[0]?.textContent;
-        const type = this.parseDesignatedPointType(codeType);
-        
+        const txtRmk = dpn.getElementsByTagName('txtRmk')[0]?.textContent || undefined;
+
+        // Aérodrome associé (AhpUidAssoc) → marque un point de report VFR. Fallbacks :
+        // code OACI dans la remarque, ou préfixe du code (ex "LFST-S").
+        const ahpAssoc = dpn.getElementsByTagName('AhpUidAssoc')[0];
+        let aerodromeIcao = ahpAssoc ? this.directChildText(ahpAssoc, 'codeId') : null;
+        if (!aerodromeIcao && txtRmk) {
+          const m = txtRmk.match(/\b(LF[A-Z]{2})\b/);
+          if (m) aerodromeIcao = m[1];
+        }
+        if (!aerodromeIcao && codeId) {
+          const m = codeId.match(/^(LF[A-Z]{2})[-_ ]/);
+          if (m) aerodromeIcao = m[1];
+        }
+
+        const mandatory = codeType === 'COMPULSORY-REP' || codeType === 'VFR-MRP'
+          || /COMPULSORY|MRP/i.test(txtRmk || '');
+        // VFR si associé à un AD, ou si le codeType/la remarque l'indiquent.
+        const isVFR = !!aerodromeIcao
+          || /VFR|VRP|VISUAL|REPORT/i.test(txtRmk || '')
+          || /VFR|VRP/i.test(codeType || '');
+        let type = this.parseDesignatedPointType(codeType);
+        if (isVFR && type === 'OTHER') {
+          type = mandatory ? 'VFR-COMPULSORY' : 'VFR-RP';
+        }
+
         this.designatedPoints.push({
           id: `DPN_${codeId}`,
           type: type,
@@ -448,7 +479,8 @@ class SIAETL {
           name: dpn.getElementsByTagName('txtName')[0]?.textContent || codeId,
           latitude: lat,
           longitude: lon,
-          mandatory: codeType === 'COMPULSORY-REP' || codeType === 'VFR-MRP',
+          aerodrome_icao: aerodromeIcao || undefined,
+          mandatory,
           source: 'SIA',
           airac: this.airacDate,
           sia_uid: dpn.getAttribute('mid') || undefined
@@ -488,8 +520,9 @@ class SIAETL {
           designation: designation,
           length_m: this.parseNumber(rwy.getElementsByTagName('valLen')[0]?.textContent),
           width_m: this.parseNumber(rwy.getElementsByTagName('valWid')[0]?.textContent),
-          surface: rwy.getElementsByTagName('codeSfc')[0]?.textContent || undefined,
+          surface: rwy.getElementsByTagName('codeComposition')[0]?.textContent || undefined,
           strength: rwy.getElementsByTagName('codeStrength')[0]?.textContent || undefined,
+          pcn: rwy.getElementsByTagName('txtPcnNote')[0]?.textContent || undefined,
           magnetic_bearing: this.parseNumber(rwy.getElementsByTagName('valBrgMag')[0]?.textContent),
           true_bearing: this.parseNumber(rwy.getElementsByTagName('valBrgTrue')[0]?.textContent),
           threshold_elevation_ft: this.parseNumber(rwy.getElementsByTagName('valElevThr')[0]?.textContent),
@@ -514,7 +547,61 @@ class SIAETL {
       }
     }
   }
-  
+
+  /**
+   * Parse les distances déclarées (Rdd AIXM) et les attache aux pistes.
+   * Chaque Rdd vaut pour UNE direction (ex: "30L" de la piste "12R/30L") et un type
+   * (TORA/TODA/ASDA/LDA). On regroupe par piste → direction → { type: distance_m }.
+   */
+  private async parseDeclaredDistances(): Promise<void> {
+    if (!this.aixmDoc) throw new Error('Document AIXM non chargé');
+
+    const rddElements = this.aixmDoc.getElementsByTagName('Rdd');
+    console.log(`📏 Parsing ${rddElements.length} distances déclarées (Rdd)...`);
+
+    // runwayId → { direction → { TORA?, TODA?, ASDA?, LDA? } } en mètres
+    const byRunway = new Map<string, Record<string, Record<string, number>>>();
+
+    for (let i = 0; i < rddElements.length; i++) {
+      const rdd = rddElements[i];
+      try {
+        const rddUid = rdd.getElementsByTagName('RddUid')[0];
+        const rdnUid = rddUid?.getElementsByTagName('RdnUid')[0];
+        const rwyUid = rdnUid?.getElementsByTagName('RwyUid')[0];
+        const ahpUid = rwyUid?.getElementsByTagName('AhpUid')[0];
+
+        const icao = this.directChildText(ahpUid, 'codeId');
+        const rwyDesig = this.directChildText(rwyUid, 'txtDesig');
+        const rdnDesig = this.directChildText(rdnUid, 'txtDesig'); // direction (ex: "30L")
+        const codeType = this.directChildText(rddUid, 'codeType'); // TORA/TODA/ASDA/LDA
+        let dist = this.parseNumber(rdd.getElementsByTagName('valDist')[0]?.textContent);
+        const unit = rdd.getElementsByTagName('uomDist')[0]?.textContent;
+
+        if (!icao || !rwyDesig || !rdnDesig || !codeType || dist == null) continue;
+        if (unit === 'FT') dist = Math.round(dist * 0.3048);
+
+        const rwyId = `RWY_${icao}_${rwyDesig}`;
+        const dirs = byRunway.get(rwyId) || {};
+        byRunway.set(rwyId, dirs);
+        if (!dirs[rdnDesig]) dirs[rdnDesig] = {};
+        dirs[rdnDesig][codeType] = dist;
+      } catch (error) {
+        console.warn(`⚠️ Erreur parsing distance déclarée ${i}:`, error);
+      }
+    }
+
+    // Attacher aux pistes déjà parsées (match par id RWY_<icao>_<désignation>).
+    let attached = 0;
+    for (const rwy of this.runways) {
+      const dd = byRunway.get(rwy.id);
+      if (dd) {
+        rwy.declared_distances = dd as Runway['declared_distances'];
+        attached++;
+      }
+    }
+    console.log(`  → distances déclarées attachées à ${attached}/${this.runways.length} pistes`);
+  }
+
   /**
    * Parse les obstacles
    */
@@ -1441,12 +1528,37 @@ class SIAETL {
     return this.frequenciesByIcao.get(icao) || [];
   }
   
-  private parseAirspaceGeometry(ase: Element): Polygon | MultiPolygon | null {
+  /**
+   * Indexe les frontières d'espace aérien (Abd) par le mid de leur AseUid, pour relier
+   * chaque Ase à sa (ou ses) frontière(s) — celles-ci étant des éléments séparés en AIXM.
+   */
+  private indexAbdByAse(): Map<string, Element[]> {
+    const map = new Map<string, Element[]>();
+    if (!this.aixmDoc) return map;
+    const abdElements = this.aixmDoc.getElementsByTagName('Abd');
+    for (let i = 0; i < abdElements.length; i++) {
+      const abd = abdElements[i];
+      const abdUid = abd.getElementsByTagName('AbdUid')[0];
+      const aseUid = abdUid?.getElementsByTagName('AseUid')[0];
+      const aseMid = aseUid?.getAttribute('mid');
+      if (!aseMid) continue;
+      const arr = map.get(aseMid) || [];
+      arr.push(abd);
+      map.set(aseMid, arr);
+    }
+    return map;
+  }
+
+  /**
+   * Reconstruit la géométrie d'un espace à partir de ses frontières Abd (→ Avx).
+   * Approximation : chaque Avx est traité comme un sommet (segments droits) ; les arcs
+   * (codeType CWA/CCA) et cercles ne sont pas interpolés — suffisant pour l'affichage/
+   * détection de pénétration, à raffiner si besoin.
+   */
+  private parseAirspaceGeometry(abdElements: Element[]): Polygon | MultiPolygon | null {
     const coordinates: number[][][] = [];
-    
+
     try {
-      const abdElements = ase.getElementsByTagName('Abd');
-      
       for (let i = 0; i < abdElements.length; i++) {
         const abd = abdElements[i];
         const ring: number[][] = [];

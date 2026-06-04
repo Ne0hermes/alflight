@@ -5,7 +5,7 @@ import {
   Upload, Star, Plus, Edit2, Lock,
   MapPin, Radio, Plane, Settings, FileText, Navigation, AlertTriangle
 } from 'lucide-react';
-import { aixmParser } from '@services/aixmParser';
+import { aeroDataProvider } from '@core/data';
 import { useVACStore } from '@core/stores/vacStore';
 import { useCustomVFRStore } from '@core/stores/customVFRStore';
 import { vacPdfStorage } from '@services/vacPdfStorage';
@@ -180,8 +180,8 @@ export const SIAReportEnhanced = () => {
   const loadAllAerodromes = async () => {
     setLoading(true);
     try {
-      console.log('📊 Chargement des données SIA/AIXM...');
-      const data = await aixmParser.loadAndParse();
+      console.log('📊 Chargement des données VAC (provider GeoJSON)...');
+      const data = await aeroDataProvider.getVACList();
       console.log(`✅ ${data.length} aérodromes chargés`);
 
       // Debug: vérifier si LFST et LFGA sont dans les données
@@ -190,9 +190,9 @@ export const SIAReportEnhanced = () => {
       console.log('🔍 LFST dans les données chargées:', lfst ? 'OUI' : 'NON', lfst);
       console.log('🔍 LFGA dans les données chargées:', lfga ? 'OUI' : 'NON', lfga);
 
-      // Récupérer la date des données
-      const date = aixmParser.getDataDate();
-      setDataDate(date);
+      // Récupérer la date des données (cycle AIRAC réellement chargé)
+      const { airac } = await aeroDataProvider.getDataInfo();
+      setDataDate(airac || '');
       
       // Enrichir les données avec les points VFR et services
       const enrichedData = data.map(ad => {

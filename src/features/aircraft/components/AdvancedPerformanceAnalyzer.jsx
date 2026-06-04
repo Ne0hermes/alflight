@@ -971,7 +971,7 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
       setAnalysisProgress(100);
 
       // Grouper les tableaux par classification après extraction
-      groupTablesByClassification(shouldMerge ? mergedTables : validatedResults);
+      groupTablesByClassification(shouldMerge ? [...extractedTables, ...validatedResults] : validatedResults);
       
       // Message de fin avec résumé
       if (analysisSummary.failedDocuments > 0 || analysisSummary.undetectedDocuments > 0) {

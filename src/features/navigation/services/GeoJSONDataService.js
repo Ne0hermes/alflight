@@ -90,6 +90,46 @@ class GeoJSONDataService {
   }
 
   /**
+   * Charge tous les ILS (un par seuil/direction de piste équipée)
+   */
+  async getILS() {
+    const data = await this.loadLayer('ils');
+    return data.features || [];
+  }
+
+  /**
+   * Charge un side-car JSON (non-GeoJSON) publié dans /data/geojson/.
+   * @param {string} fileName - ex: 'aerodrome_services.json'
+   * @returns {Promise<Object|null>}
+   */
+  async loadJsonFile(fileName) {
+    const cacheKey = `__json__${fileName}`;
+    if (this.cache.has(cacheKey)) {
+      return this.cache.get(cacheKey);
+    }
+    try {
+      const response = await fetch(`${this.basePath}${fileName}`);
+      if (!response.ok) {
+        throw new Error(`Erreur chargement ${fileName}: ${response.status}`);
+      }
+      const data = await response.json();
+      this.cache.set(cacheKey, data);
+      return data;
+    } catch (error) {
+      console.error(`❌ Erreur chargement ${fileName}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Services aérodrome (carburant, douanes, maintenance…) — items bruts SIA.
+   */
+  async getAerodromeServices() {
+    const data = await this.loadJsonFile('aerodrome_services.json');
+    return data?.items || [];
+  }
+
+  /**
    * Recherche d'aérodromes par texte
    * @param {string} query - Recherche (code ICAO, nom, ville)
    * @returns {Promise<Array>} Aérodromes correspondants
