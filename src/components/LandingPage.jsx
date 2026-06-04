@@ -217,7 +217,6 @@ export const LandingPage = ({ onNavigate, isProfileConfigured = true }) => {
           >
             <Plane size={16} />
             <span style={styles.primaryButtonText}>Je prépare mon vol</span>
-            <span style={styles.primaryButtonEyebrow}>BRIEFING · WIZARD</span>
           </button>
 
           {/* Bouton secondary — wizard avion (outline orange) */}
