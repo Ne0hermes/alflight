@@ -7,7 +7,7 @@ import {
 import { theme } from '../../../styles/theme';
 import { useNavigation, useWeather } from '@core/contexts';
 import { useVACStore } from '@core/stores/vacStore';
-import { aixmParser } from '@services/aixmParser';
+import { aeroDataProvider } from '@core/data';
 // REMOVED: import { getCircuitAltitudes } from '@data/circuitAltitudesComplete'; - File deleted, data must come from official XML
 
 /**
@@ -114,12 +114,11 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
 
         console.log('🔍 [Step3VAC] Final aerodromeIcaos array:', aerodromeIcaos);
 
-        // Charger les données AIXM pour ces aérodromes
-        const aixmData = await aixmParser.loadAndParse();
-        console.log('🔍 [Step3VAC] Total AIXM aerodromes:', aixmData.length);
-
-        const filteredData = aixmData
-          .filter(ad => ad && ad.icao && aerodromeIcaos.includes(ad.icao));
+        // Charger les données VAC (provider GeoJSON) pour ces aérodromes uniquement.
+        const filteredData = (await Promise.all(
+          aerodromeIcaos.map(ic => aeroDataProvider.getVACDetail(ic))
+        )).filter(Boolean);
+        console.log('🔍 [Step3VAC] Aérodromes chargés:', filteredData.length);
         // TODO: circuitAltitude must be extracted from official AIXM XML files
         // For now, it will be undefined
 

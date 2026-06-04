@@ -14,7 +14,7 @@ import { WeightBalanceChart } from '@features/weight-balance/components/WeightBa
 import { ScenarioCards } from '@features/weight-balance/components/ScenarioCards';
 import { FUEL_DENSITIES } from '@utils/constants';
 import { useVACStore } from '@core/stores/vacStore';
-import { aixmParser } from '@services/aixmParser';
+import { aeroDataProvider } from '@core/data';
 // REMOVED: import { getCircuitAltitudes } from '@data/circuitAltitudesComplete'; - File deleted, data must come from official XML
 import { CollapsibleSection } from './components/CollapsibleSection';
 import { FlightRecapTable } from '../components/FlightRecapTable';
@@ -133,10 +133,10 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
           });
         }
 
-        // Charger les données AIXM pour ces aérodromes
-        const aixmData = await aixmParser.loadAndParse();
-        const filteredData = aixmData
-          .filter(ad => ad && ad.icao && aerodromeIcaos.includes(ad.icao));
+        // Charger les données VAC (provider GeoJSON) pour ces aérodromes uniquement.
+        const filteredData = (await Promise.all(
+          aerodromeIcaos.map(ic => aeroDataProvider.getVACDetail(ic))
+        )).filter(Boolean);
 
         // ENRICHIR les données AIXM avec les données du vacStore (circuitAltitude, integrationAltitude)
         const enrichedData = filteredData.map(ad => getEnrichedAerodrome(ad));

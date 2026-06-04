@@ -1,7 +1,7 @@
 // Rapport unique pour tous les aérodromes avec données SIA/AIXM
 import React, { useState, useEffect } from 'react';
 import { Search, Printer, Save, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
-import { aixmParser } from '@services/aixmParser';
+import { aeroDataProvider } from '@core/data';
 import { normalizeElevationToFeet } from '@utils/elevationUtils';
 
 export const SIAReport = () => {
@@ -22,8 +22,8 @@ export const SIAReport = () => {
     setLoading(true);
     try {
       
-      const data = await aixmParser.loadAndParse();
-      
+      const data = await aeroDataProvider.getVACList();
+
       setAerodromes(data);
       
       // Initialiser les données éditables

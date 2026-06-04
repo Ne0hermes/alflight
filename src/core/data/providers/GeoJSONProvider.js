@@ -511,11 +511,6 @@ export class GeoJSONProvider extends AeroDataProvider {
     );
     if (!feature) return null;
 
-    const p = feature.properties || {};
-    const geom = feature.geometry?.coordinates || [];
-    const lon = geom[0] ?? p.longitude ?? null;
-    const lat = geom[1] ?? p.latitude ?? null;
-
     // Pistes de cet AD, remises à la forme attendue par le module VAC.
     const rwyFeatures = await geoJSONDataService.getRunways();
     const runways = rwyFeatures
@@ -530,6 +525,59 @@ export class GeoJSONProvider extends AeroDataProvider {
       vfrPoints = [];
     }
 
+    return this.buildVACAerodrome(feature, runways, vfrPoints);
+  }
+
+  /**
+   * Liste VAC de TOUS les aérodromes (vrais AD avec ICAO), même forme que getVACDetail.
+   * Remplace le chargement complet `aixmParser.loadAndParse()` des écrans liste/recherche
+   * (SIAReportEnhanced). Les points VFR par AD (filtre géo 15 km) sont DIFFÉRÉS ici pour
+   * la perf (→ `[]`) ; ils restent disponibles par AD via getVACDetail(icao) (utilisé par
+   * le wizard Step3VAC). NB : la liste VAC affiche déjà un disclaimer « VFR à consulter
+   * séparément », donc l'absence de VFR en vue liste est cohérente avec l'UI.
+   * @returns {Promise<Object[]>}
+   */
+  async getVACList() {
+    await this.ensureDataLoaded();
+    const adFeatures = await geoJSONDataService.getAerodromes();
+    const rwyFeatures = await geoJSONDataService.getRunways();
+
+    // Index des pistes par ICAO (une seule passe au lieu d'un filter par AD).
+    const rwyByIcao = new Map();
+    for (const r of rwyFeatures) {
+      const code = (r.properties?.aerodrome_icao || '').toUpperCase();
+      if (!code) continue;
+      if (!rwyByIcao.has(code)) rwyByIcao.set(code, []);
+      rwyByIcao.get(code).push(this.buildVACRunway(r.properties || {}));
+    }
+
+    return adFeatures
+      .filter(f => f.properties?.icao) // exclut les stubs sans OACI (LS fermés sans code)
+      .map(f => this.buildVACAerodrome(
+        f,
+        rwyByIcao.get(f.properties.icao.toUpperCase()) || [],
+        []
+      ));
+  }
+
+  /**
+   * Assemble un objet aérodrome VAC à la forme attendue par les consommateurs
+   * (compatible ancienne sortie aixmParser). Partagé par getVACDetail / getVACList.
+   * Points de forme IMPORTANTS (contrat consommateur) :
+   *  - elevation : OBJET { value, valueFt, unit } (Step3VAC lit valueFt ?? value)
+   *  - magneticVariation : OBJET { value, date } (signé : E>0, W<0)
+   *  - frequencies : OBJET groupé par type { TWR:[{frequency,callsign,schedule}], … }
+   *  - services : OBJET de booléens (clés fuel/avgas100LL/jetA1/…)
+   * @param {Object} feature — feature GeoJSON aérodrome (propriétés brutes)
+   * @param {Object[]} runways — pistes déjà construites (buildVACRunway)
+   * @param {Object[]} vfrPoints — points de report VFR (ou [])
+   * @returns {Object}
+   */
+  buildVACAerodrome(feature, runways = [], vfrPoints = []) {
+    const p = feature.properties || {};
+    const geom = feature.geometry?.coordinates || [];
+    const lon = geom[0] ?? p.longitude ?? null;
+    const lat = geom[1] ?? p.latitude ?? null;
     const isClosed = /\(closed\)|ferm[ée]/i.test(p.name || '');
 
     return {
@@ -539,12 +587,13 @@ export class GeoJSONProvider extends AeroDataProvider {
       city: p.city || '',
       type: p.type || 'AD',
       coordinates: { lat, lon },
-      // elevation est un OBJET côté consommateur (`elevation?.value`) — ne pas aplatir.
-      elevation: { value: p.elevation_ft ?? null, unit: 'FT' },
-      magneticVariation: p.magnetic_variation ?? null,
+      // OBJET (consommateurs : elevation.value et elevation.valueFt) — ne pas aplatir.
+      elevation: { value: p.elevation_ft ?? null, valueFt: p.elevation_ft ?? null, unit: 'FT' },
+      // OBJET { value, date } attendu par SIAReportEnhanced / Step3VAC.
+      magneticVariation: { value: p.magnetic_variation ?? null, date: null },
       transitionAltitude: p.transition_altitude ?? null,
-      // Déjà à la bonne forme dans le GeoJSON : { type, frequency, callsign, schedule }
-      frequencies: Array.isArray(p.frequencies) ? p.frequencies : [],
+      // OBJET groupé par type (consommateurs : Object.entries(frequencies)).
+      frequencies: this.groupFrequenciesByType(p.frequencies),
       runways,
       vfrPoints,
       // Non extrait par l'ETL (codes SIA non mappés en flags) → défauts sûrs.
@@ -560,6 +609,28 @@ export class GeoJSONProvider extends AeroDataProvider {
       source: 'GeoJSON (SIA dérivé)',
       airac: this.dataInfo?.airac || null
     };
+  }
+
+  /**
+   * Regroupe un tableau de fréquences GeoJSON [{type,frequency,callsign,schedule}] en
+   * OBJET indexé par type { TWR:[{frequency,callsign,schedule}], APP:[…] } — la forme
+   * attendue par les écrans VAC (qui font Object.entries(frequencies)).
+   * @param {Array} list
+   * @returns {Object}
+   */
+  groupFrequenciesByType(list) {
+    const grouped = {};
+    if (!Array.isArray(list)) return grouped;
+    for (const f of list) {
+      const type = (f?.type || 'AUTRE').toUpperCase();
+      if (!grouped[type]) grouped[type] = [];
+      grouped[type].push({
+        frequency: f?.frequency ?? '',
+        callsign: f?.callsign ?? '',
+        schedule: f?.schedule ?? ''
+      });
+    }
+    return grouped;
   }
 
   /**
