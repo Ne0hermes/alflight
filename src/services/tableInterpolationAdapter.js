@@ -21,7 +21,7 @@
 // ║   Hors plage altitude/température : clamp aux bornes + warning.      ║
 // ╚══════════════════════════════════════════════════════════════════════╝
 
-import { OPERATION_CATALOG, getOperation, isValidOperationId } from '../abac/curves/core/operationCatalog';
+import { getOperation, isValidOperationId } from '../abac/curves/core/operationCatalog';
 import {
   groupTablesByOperationId,
   buildLookupForOperation

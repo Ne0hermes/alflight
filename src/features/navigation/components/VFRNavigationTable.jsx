@@ -1,6 +1,6 @@
 // src/features/navigation/components/VFRNavigationTable.jsx
 import React, { useState, useMemo, useEffect } from 'react';
-import { Table, RefreshCw, Navigation2, Clock, Radio, Map, AlertTriangle, Sun, Sunset, Moon } from 'lucide-react';
+import { Table, AlertTriangle, Sun, Sunset, Moon } from 'lucide-react';
 import { useWeatherStore } from '@core/stores/weatherStore';
 import { useVACStore } from '@core/stores/vacStore';
 import { useUnits } from '@hooks/useUnits';

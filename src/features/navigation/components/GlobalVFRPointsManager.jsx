@@ -2,7 +2,7 @@
  * Gestionnaire des points VFR globaux (non liés à un aérodrome spécifique)
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { MapPin, Plus, Trash2, Edit2, Navigation, Search, Cloud, CloudOff, Upload, Download, RefreshCw } from 'lucide-react';
 import { useCustomVFRStore } from '@core/stores/customVFRStore';
 import vfrPointsService from '../../../services/vfrPointsService';

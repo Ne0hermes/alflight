@@ -1,6 +1,6 @@
 // src/features/alternates/components/AlternateSelectorDual.jsx
-import React, { memo, useMemo, useState } from 'react';
-import { MapPin, Plane, Navigation, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { memo, useMemo } from 'react';
+import { MapPin, Navigation } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { calculateDistance } from '@utils/navigationCalculations';
 import { DataSourceBadge } from '@shared/components';

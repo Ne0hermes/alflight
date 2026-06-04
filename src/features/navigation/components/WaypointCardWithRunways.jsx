@@ -1,5 +1,5 @@
-import React, { memo, useState, useEffect, useMemo } from 'react';
-import { Trash2, Navigation2, ChevronDown, ChevronUp, ArrowUp, ArrowDown } from 'lucide-react';
+import React, { memo, useState, useEffect } from 'react';
+import { Trash2, ChevronDown, ChevronUp, ArrowUp, ArrowDown } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { aeroDataProvider } from '@core/data';
 import { useAircraft, useNavigation } from '@core/contexts';

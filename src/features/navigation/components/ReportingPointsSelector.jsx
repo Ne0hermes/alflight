@@ -1,8 +1,7 @@
 import React, { memo, useState, useEffect } from 'react';
-import { Navigation2, MapPin, Plus, Trash2, Info, CheckCircle, Download, FileText, AlertTriangle } from 'lucide-react';
+import { Navigation2, Plus, Trash2, Info, CheckCircle, Download, FileText, AlertTriangle } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
-import { aeroDataProvider } from '@core/data';
-import { useVACStore, vacSelectors } from '@core/stores/vacStore';
+import { vacSelectors } from '@core/stores/vacStore';
 import { coordinateConversions } from '@utils/unitConversions';
 
 // PAS DE POINTS PRÉDÉFINIS - Les points VFR doivent venir exclusivement des fichiers SIA/AIXM locaux

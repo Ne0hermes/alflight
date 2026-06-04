@@ -1,7 +1,7 @@
 // src/features/pilot/components/PilotLogbook.jsx
 // Restructuré selon le format du carnet de vol français
 import React, { useState, useEffect, useRef } from 'react';
-import { FileText, Plus, Download, Upload, Trash2, Edit2, Plane, Clock, MapPin, Moon, Sun, Search } from 'lucide-react';
+import { Download, Upload, Trash2, Edit2, Plane, Clock, Moon, Search } from 'lucide-react';
 // Style system removed - using inline styles
 import { useAircraftStore } from '../../../core/stores/aircraftStore';
 import { logToGoogleSheets } from '../../../utils/googleSheetsLogger';

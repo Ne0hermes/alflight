@@ -3,19 +3,12 @@ import {
   Box,
   Container,
   Typography,
-  Stepper,
-  Step,
-  StepLabel,
   StepIcon,
   Button,
   Paper,
   CircularProgress,
   Alert,
   styled,
-  FormControlLabel,
-  Checkbox,
-  useMediaQuery,
-  useTheme,
   Chip,
   Snackbar,
   Dialog,
@@ -30,22 +23,15 @@ import {
   Scale as ScaleIcon,
   TrendingUp as TrendingUpIcon,
   CheckCircle as CheckCircleIcon,
-  Save as SaveIcon,
-  Settings as SettingsIcon,
   Build as BuildIcon,
-  FlightTakeoff as TakeoffIcon,
   Notes as NotesIcon,
-  Close as CloseIcon,
   Warning as WarningIcon,
   CloudUpload as CloudUploadIcon,
-  Refresh as RefreshIcon,
-  VerifiedUser as VerifiedIcon,
   Error as ErrorIcon,
   HourglassEmpty as PendingIcon
 } from '@mui/icons-material';
 import { useAircraft } from '../../../core/contexts';
 import { useAircraftStore } from '../../../core/stores/aircraftStore';
-import UnitConverterCard from './UnitConverterCard';
 
 // 🔧 FIX MEMORY: Import LAZY des étapes pour éviter de charger tous les composants en mémoire d'un coup
 // Avant : tous les steps chargés au démarrage du wizard (7 composants volumineux)

@@ -1,7 +1,6 @@
 // src/features/navigation/components/WaypointSelectorModal.jsx
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { X, MapPin, Users, Search, Loader, Plane, ChevronDown, ChevronUp, Navigation2, Ruler, Wind, Image, Info, Layers } from 'lucide-react';
-import { sx } from '@shared/styles/styleSystem';
+import { X, MapPin, Search, Loader, Plane, ChevronDown, ChevronUp, Navigation2, Ruler, Wind, Info, Layers } from 'lucide-react';
 import { aeroDataProvider } from '@core/data';
 import vfrPointsService from '@services/vfrPointsService';
 

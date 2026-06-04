@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plane, MapPin, Navigation as NavigationIcon, Radio, Phone, Clock } from 'lucide-react';
+import { Plane, Navigation as NavigationIcon, Clock } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import VFRNavigationTable from '@features/navigation/components/VFRNavigationTable';
 import { normalizeElevationToFeet } from '@utils/elevationUtils';

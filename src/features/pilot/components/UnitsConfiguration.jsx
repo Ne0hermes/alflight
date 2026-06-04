@@ -25,7 +25,7 @@ import {
   Globe as GlobeIcon,
   ChevronDown as ExpandMoreIcon,
 } from 'lucide-react';
-import { useUnitsStore, unitsSelectors } from '@core/stores/unitsStore';
+import { unitsSelectors } from '@core/stores/unitsStore';
 // Dropdown ALFlight partagé (factorisé pour réutilisation dans wizard avion, etc.)
 import { CustomSelect } from '@shared/components/editorial';
 

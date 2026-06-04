@@ -4,12 +4,10 @@ import CssBaseline from '@mui/material/CssBaseline';
 import muiTheme from './styles/muiTheme';
 import { FlightSystemProviders } from './core/contexts';
 import { MobileNavigation } from './shared/components/MobileNavigation';
-import { TabNavigation } from './shared/components/TabNavigation';
 import ErrorBoundary from './shared/components/ErrorBoundary';
 // 🔧 FIX OUT OF MEMORY: Imports désactivés temporairement pour tester
 // import { autoMigrateIfNeeded } from './utils/manexMigration';
 import { NotificationContainer } from './shared/components/Notification';
-import { useAuthStore } from './features/account/stores/authStore';
 // import dataBackupManager from './utils/dataBackupManager';
 import { LandingPage } from './components/LandingPage';
 import { ALFlightSplashScreen } from './components/ALFlightSplashScreen';

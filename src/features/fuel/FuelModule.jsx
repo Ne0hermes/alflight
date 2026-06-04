@@ -2,14 +2,13 @@
 
 import React, { memo, useEffect } from 'react';
 import { useFuel, useAircraft, useNavigation } from '@core/contexts';
-import { Fuel, AlertTriangle, CheckCircle, Info } from 'lucide-react';
+import { AlertTriangle, CheckCircle } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useAlternatesForFuel } from '@features/alternates';
 import { useFuelSync } from '@hooks/useFuelSync';
-import { DataField } from '@shared/components';
 import { useUnits } from '@hooks/useUnits';
 import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
-import { toUserUnit, formatCanonical } from '@utils/unitsDisplay';
+import { toUserUnit } from '@utils/unitsDisplay';
 // 🎨 Charte éditoriale ALFlight
 import { ModuleHero } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';

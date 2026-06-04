@@ -1,5 +1,5 @@
 import React, { memo, useState, useEffect } from 'react';
-import { Plane, Wind, CheckCircle, AlertTriangle, Info, ChevronDown, ChevronUp, FileText, TrendingUp, TrendingDown, Navigation } from 'lucide-react';
+import { Wind, CheckCircle, AlertTriangle, Info, Navigation } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { aeroDataProvider } from '@core/data';
 import { useVACStore } from '@core/stores/vacStore';

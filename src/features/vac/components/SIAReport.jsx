@@ -1,6 +1,6 @@
 // Rapport unique pour tous les aérodromes avec données SIA/AIXM
 import React, { useState, useEffect } from 'react';
-import { Search, Download, Printer, Save, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Printer, Save, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { aixmParser } from '@services/aixmParser';
 import { normalizeElevationToFeet } from '@utils/elevationUtils';
 

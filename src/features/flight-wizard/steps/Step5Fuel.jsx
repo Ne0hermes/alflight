@@ -1,6 +1,5 @@
 import React, { memo, useEffect } from 'react';
 import FuelModule from '@features/fuel/FuelModule';
-import { Fuel } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import { useFuel } from '@core/contexts';
 import { convertValue } from '@utils/unitConversions';

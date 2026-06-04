@@ -2,7 +2,7 @@
 import React, { memo, useState, useEffect } from 'react';
 import {
   FileText, CheckCircle, XCircle, Download, ChevronDown, ChevronUp,
-  MapPin, Radio, Plane, Navigation, Settings, AlertCircle, Cloud, ExternalLink
+  MapPin, Radio, Plane, Navigation, Settings, AlertCircle, Cloud
 } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import { useNavigation, useWeather } from '@core/contexts';

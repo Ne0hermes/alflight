@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, LogOut, Trash2, Crown, Wifi, WifiOff } from 'lucide-react';
+import { User, LogOut, Trash2, Crown, WifiOff } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { GoogleSignIn } from './GoogleSignIn';
 import { AppleSignIn } from './AppleSignIn';

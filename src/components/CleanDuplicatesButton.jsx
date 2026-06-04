@@ -7,7 +7,6 @@ import {
   DialogActions,
   DialogContentText,
   Alert,
-  Box,
   Typography,
   List,
   ListItem,

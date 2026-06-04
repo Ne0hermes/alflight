@@ -2,19 +2,12 @@ import React, { useState, useEffect, useRef, useCallback, Fragment } from 'react
 import {
   Box,
   Typography,
-  TextField,
   Grid,
   Paper,
   Alert,
   Button,
   IconButton,
   InputAdornment,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Divider,
   Accordion,
   AccordionSummary,
@@ -25,7 +18,6 @@ import {
   InputLabel
 } from '@mui/material';
 import {
-  Scale as ScaleIcon,
   Add as AddIcon,
   Delete as DeleteIcon,
   Warning as WarningIcon,
@@ -42,9 +34,8 @@ import {
   TouchApp as TouchAppIcon,
   AutoGraph as AutoGraphIcon
 } from '@mui/icons-material';
-import { useUnitsStore, unitsSelectors } from '@core/stores/unitsStore';
+import { unitsSelectors } from '@core/stores/unitsStore';
 import { convertValue, getUnitSymbol } from '@utils/unitConversions';
-import CGEnvelopeChart from '../CgEnvelopeChart';
 import CGEnvelopeDualChart from '../CgEnvelopeDualChart';
 import CentrogramReader from '../CentrogramReader';
 import { getFuelDensity } from '../../utils/mbUnits';

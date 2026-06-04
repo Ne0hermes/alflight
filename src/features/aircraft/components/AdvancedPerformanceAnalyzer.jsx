@@ -1,9 +1,6 @@
 // src/features/aircraft/components/AdvancedPerformanceAnalyzer.jsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-  Upload, Loader, CheckCircle, AlertTriangle, Info, X, Brain,
-  Download, Edit3, Plus, Minus, Save, FileText, Table, BarChart3,
-  Eye, EyeOff, Copy, Trash2, RefreshCw, ChevronDown, ChevronUp
+import { CheckCircle, AlertTriangle, Info, X, Plus, FileText, Trash2, RefreshCw, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { sx } from '../../../shared/styles/styleSystem';
 import unifiedPerformanceService from '../../../features/performance/services/unifiedPerformanceService';

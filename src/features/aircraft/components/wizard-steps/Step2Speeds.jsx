@@ -2,23 +2,12 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  TextField,
   Grid,
   Paper,
-  Alert,
   Button,
   InputAdornment,
-  Divider,
   Chip,
   IconButton,
-  FormControlLabel,
-  Checkbox,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -29,8 +18,6 @@ import {
 } from '@mui/material';
 import {
   Speed as SpeedIcon,
-  Warning as WarningIcon,
-  Info as InfoIcon,
   Air as WindIcon,
   ExpandMore as ExpandMoreIcon,
   PriorityHigh as CriticalIcon,
@@ -40,7 +27,7 @@ import {
   ChevronRight as ChevronRightIcon,
   ChevronLeft as ChevronLeftIcon
 } from '@mui/icons-material';
-import { useUnitsStore, unitsSelectors } from '@core/stores/unitsStore';
+import { unitsSelectors } from '@core/stores/unitsStore';
 import { getUnitSymbol } from '@utils/unitConversions';
 import { StyledTextField } from './FormFieldStyles';
 

@@ -1,6 +1,6 @@
 // src/features/navigation/components/WindAnalysis.jsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { Wind, AlertTriangle, Navigation, Clock, Compass, TrendingUp, Info, Loader } from 'lucide-react';
+import { Wind, AlertTriangle, Compass, Info, Loader } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useWeatherStore } from '@core/stores/weatherStore';
 import { useUnits } from '@hooks/useUnits';

@@ -1,6 +1,6 @@
 // src/features/aircraft/components/ManexViewer.jsx
 import React, { memo, useState, useEffect } from 'react';
-import { FileText, Download, X, Eye, Calendar, Database, BarChart3, AlertTriangle } from 'lucide-react';
+import { FileText, Download, X, Eye, Database, BarChart3, AlertTriangle } from 'lucide-react';
 import { getManexWithPdf } from '../../../core/stores/manexStore';
 import dataBackupManager from '../../../utils/dataBackupManager';
 import { showNotification } from '../../../shared/components/Notification';

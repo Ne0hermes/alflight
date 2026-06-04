@@ -1,7 +1,6 @@
 // src/features/pilot/components/MedicalReminders.jsx
 import React, { useState, useEffect } from 'react';
-import { Edit2, Trash2, AlertCircle } from 'lucide-react';
-import { sx } from '../../../shared/styles/styleSystem';
+import { Edit2, Trash2 } from 'lucide-react';
 
 const MedicalReminders = () => {
   const [medicalRecords, setMedicalRecords] = useState([]);

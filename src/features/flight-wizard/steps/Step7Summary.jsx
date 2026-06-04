@@ -1,10 +1,9 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { FileText, CheckCircle, Fuel, Navigation, Table, Scale, Radio, MapPin, Plane } from 'lucide-react';
+import { FileText, Plane } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import RouteMapView from '../components/RouteMapView';
 import { useNavigation, useAircraft, useWeightBalance } from '@core/contexts';
 import AirspacesSummaryTable from '../../navigation/components/AirspacesSummaryTable';
-import VFRNavigationTable from '@features/navigation/components/VFRNavigationTable';
 import { useNavigationResults } from '@features/navigation/hooks/useNavigationResults';
 import { useUnits } from '@hooks/useUnits';
 import { useFuelStore } from '@core/stores/fuelStore';

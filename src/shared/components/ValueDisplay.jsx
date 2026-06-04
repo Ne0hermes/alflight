@@ -1,7 +1,6 @@
 // src/shared/components/ValueDisplay.jsx
 import React from 'react';
 import { useUnits } from '@hooks/useUnits';
-import { sx } from '@shared/styles/styleSystem';
 
 /**
  * Composant pour afficher une valeur avec conversion automatique d'unités

@@ -1,8 +1,7 @@
 // src/features/aircraft/components/TableDisplay.jsx
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { 
-  Edit3, Save, X, Plus, Minus, Copy, RotateCcw, AlertTriangle,
-  Info, ChevronRight, ChevronDown, FileText, Table as TableIcon
+  Edit3, Save, X, Plus, Minus, Copy, AlertTriangle, ChevronRight, ChevronDown, FileText, Table as TableIcon
 } from 'lucide-react';
 import { sx } from '../../../shared/styles/styleSystem';
 

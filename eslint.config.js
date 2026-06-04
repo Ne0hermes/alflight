@@ -21,6 +21,8 @@ import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
+import react from 'eslint-plugin-react'
+import unusedImports from 'eslint-plugin-unused-imports'
 
 export default [
   {
@@ -59,6 +61,8 @@ export default [
     plugins: {
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
+      'react': react,
+      'unused-imports': unusedImports,
     },
     rules: {
       // react-hooks (inline — équivaut à configs.recommended de la v4.6.x)
@@ -66,8 +70,19 @@ export default [
       'react-hooks/exhaustive-deps': 'warn',
       // react-refresh (HMR Vite)
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
-      // conservé de la config d'origine
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // ⚠️ SÉCURITÉ : marque les identifiants utilisés EN JSX comme « utilisés »
+      // pour que unused-imports NE SUPPRIME PAS les composants employés via <X/>.
+      'react/jsx-uses-vars': 'error',
+      'react/jsx-uses-react': 'error',
+      // Imports inutilisés : AUTO-supprimables via `eslint --fix` (remplace no-unused-vars).
+      'no-unused-vars': 'off',
+      'unused-imports/no-unused-imports': 'error',
+      'unused-imports/no-unused-vars': ['warn', {
+        vars: 'all',
+        varsIgnorePattern: '^[A-Z_]',
+        args: 'after-used',
+        argsIgnorePattern: '^_',
+      }],
     },
   },
 ]

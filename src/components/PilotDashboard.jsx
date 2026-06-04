@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-  AlertTriangle, CheckCircle, Calendar, Heart, Activity,
+  AlertTriangle, CheckCircle, Heart, Activity,
   Clock, TrendingUp, AlertCircle, Shield, Award, Plane,
   Moon, Sun, Cloud, Navigation, ChevronDown, ChevronUp, Eye, RefreshCw, Wand2, X, Database
 } from 'lucide-react';
-import { theme } from '../styles/theme';
 import { getAIXMDataStatus, formatAIXMAlert } from '../utils/aixmDataValidator';
 // 🎨 Charte éditoriale ALFlight — alignement avec le titre "Démarrer" de la home
 import { EditorialHeading } from '@shared/components/editorial';

@@ -1,6 +1,6 @@
 // src/features/vac/components/VACImporter.jsx
 import React, { memo, useState, useRef } from 'react';
-import { Upload, FileText, CheckCircle, AlertTriangle, X, Map, Radio, Plane, Navigation } from 'lucide-react';
+import { Upload, CheckCircle, AlertTriangle, X, Map, Radio, Plane, Navigation } from 'lucide-react';
 import VACPdfExtractor from './VACPdfExtractor';
 import { showNotification } from '../../../shared/components/Notification';
 import { useVACStore } from '../../../core/stores/vacStore';

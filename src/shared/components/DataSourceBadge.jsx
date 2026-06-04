@@ -1,6 +1,5 @@
 import React, { memo } from 'react';
 import { FileText, Globe, Edit3, AlertTriangle, CheckCircle } from 'lucide-react';
-import { sx } from '@shared/styles/styleSystem';
 
 /**
  * Badge pour indiquer la source et la fiabilité des données

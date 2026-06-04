@@ -1,6 +1,6 @@
 // src/features/alternates/components/AlternatesMapView.jsx
 import React, { memo, useMemo } from 'react';
-import { MapContainer, TileLayer, Polyline, Marker, Popup, Circle, CircleMarker, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Polyline, Popup, Circle, CircleMarker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { calculateDistance } from '@utils/navigationCalculations';
