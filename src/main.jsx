@@ -1,9 +1,5 @@
 import { createRoot } from 'react-dom/client';
-import './index.css';  // Contient maintenant uniquement l'import du fichier unifié
-// Tous les styles sont maintenant dans unified-styles.css importé via index.css
-// import './styles/global-overrides.css';  // DÉSACTIVÉ - dans unified-styles.css
-// import './styles/button-rounded.css';    // DÉSACTIVÉ - dans unified-styles.css
-// import './styles/aircraft-fixes.css';    // DÉSACTIVÉ - dans unified-styles.css
+import './index.css';  // tous les styles globaux (charte) sont importés via index.css
 import MobileApp from './MobileApp.jsx';
 import { AuthProvider } from './core/contexts/AuthContext';
 import apiKeyManager from './utils/apiKeyManager';
