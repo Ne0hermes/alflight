@@ -19,7 +19,7 @@
     "lint:tokens": "node scripts/lint-tokens.mjs",
     "lint:tokens:staged": "node scripts/lint-tokens.mjs --staged",
     "lint:tokens:all": "node scripts/lint-tokens.mjs --all",
-    "prepare": "husky",
+    "prepare": "husky || true",
     "proxy": "node start-openaip-proxy.js",
     "dev:full": "concurrently \"npm run proxy\" \"npm run dev:old\"",
     "sia:etl": "tsx scripts/sia_etl.ts",
