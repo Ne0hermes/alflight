@@ -1,0 +1,5 @@
+# Garde-fou charte design-tokens — bloque les NOUVELLES valeurs en dur
+# (couleurs hex/rgba, noms de couleurs, px d'espacement/typo, fontWeight,
+# fontFamily) sur les fichiers en cours de commit. Legacy non vérifié (boy-scout).
+# Exception ponctuelle : // eslint-disable-next-line no-restricted-syntax
+npm run lint:tokens:staged
