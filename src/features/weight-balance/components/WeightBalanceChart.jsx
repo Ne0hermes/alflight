@@ -2,6 +2,7 @@
 // ========================================
 import React, { memo, useMemo } from 'react';
 import { sx } from '@shared/styles/styleSystem';
+import { SCENARIO_COLORS } from '../scenarioColors';
 
 export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) => {
   // Utiliser UNIQUEMENT les données de l'onglet "Gestion des avions" (cgEnvelope)
@@ -247,7 +248,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
     return (
       <div style={sx.spacing.mt(8)}>
         <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4))}>
-          📈 Enveloppe de centrage
+          Enveloppe de centrage
         </h3>
 
         <div style={sx.combine(
@@ -256,7 +257,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
           sx.spacing.mb(4)
         )}>
           <p style={sx.combine(sx.text.lg, sx.text.bold)}>
-            ❌ Données d'enveloppe de centrage manquantes
+            Données d'enveloppe de centrage manquantes
           </p>
           <p style={sx.combine(sx.text.sm, sx.spacing.mt(2))}>
             Veuillez configurer l'enveloppe de centrage dans l'onglet <strong>"Gestion des avions"</strong> →
@@ -275,14 +276,16 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
     return envelopeData.map(p => `${toSvgX(p.cg)},${toSvgY(p.w)}`).join(' ');
   };
 
-  // Configuration des scénarios — palette de SÉRIES (data-viz) re-tonée cockpit
-  // (orange de marque + cyan/ambre/ivoire sourds, distinguables). PAS de rouge ici :
-  // le rouge NO-GO (var(--color-red-critical)) est réservé aux points HORS-LIMITE (plus bas).
+  // Configuration des scénarios — couleurs issues de la SOURCE UNIQUE partagée
+  // avec les cartes (scenarioColors.js → tokens --scenario-*). Garantit qu'un
+  // scénario a la MÊME couleur sur sa carte et sur son point/cartouche du graphe.
+  // PAS de rouge ici : le rouge NO-GO (var(--color-red-critical)) est réservé
+  // aux points HORS-LIMITE (plus bas).
   const scenarioConfig = [
-    { key: 'fulltank', label: 'Réservoirs pleins', color: '#f26921' },
-    { key: 'toCrm', label: 'Masse au décollage (FOB)', color: '#4FC3D9' },
-    { key: 'landing', label: 'Masse à l\'atterrissage', color: '#E0A33E' },
-    { key: 'zfw', label: 'Masse sans carburant (ZFW)', color: '#C9C5BD' }
+    { key: 'fulltank', label: 'Réservoirs pleins', color: SCENARIO_COLORS.fulltank },
+    { key: 'toCrm', label: 'Masse au décollage (FOB)', color: SCENARIO_COLORS.toCrm },
+    { key: 'landing', label: 'Masse à l\'atterrissage', color: SCENARIO_COLORS.landing },
+    { key: 'zfw', label: 'Masse sans carburant (ZFW)', color: SCENARIO_COLORS.zfw }
   ];
 
   // Créer le chemin reliant les points
@@ -297,7 +300,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
   return (
     <div style={sx.spacing.mt(8)}>
       <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(4))}>
-        📈 Enveloppe de centrage
+        Enveloppe de centrage
       </h3>
       
       <div
@@ -317,9 +320,9 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
         <p style={sx.combine(sx.text.lg, sx.text.bold)}>
           {criticalScenariosWithinLimits
             ? (hasNonCriticalWarnings
-                ? '⚠️ Scénarios critiques OK - Avertissements non-bloquants'
-                : '✅ Tous les scénarios dans les limites')
-            : '❌ Un ou plusieurs scénarios critiques hors limites'}
+                ? 'Scénarios critiques OK - Avertissements non-bloquants'
+                : 'Tous les scénarios dans les limites')
+            : 'Un ou plusieurs scénarios critiques hors limites'}
         </p>
         {!criticalScenariosWithinLimits && (
           <p style={sx.combine(sx.text.sm, sx.spacing.mt(2))}>
@@ -709,7 +712,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
                     y="-20"
                     width="120"
                     height={isInLimits ? "48" : "56"}
-                    fill="white"
+                    fill="var(--bg-overlay)"
                     fillOpacity="0.95"
                     stroke={isInLimits ? color : 'var(--color-red-critical)'}
                     strokeWidth={isInLimits ? "1.5" : "2"}
@@ -725,7 +728,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
                   </text>
                   {!isInLimits && (
                     <text x="0" y="32" textAnchor="middle" fontSize="7" fill="var(--color-red-critical)" fontWeight="700">
-                      ⚠️ HORS LIMITES
+                      HORS LIMITES
                     </text>
                   )}
                 </g>

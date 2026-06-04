@@ -2,6 +2,7 @@
 import React, { memo, useMemo } from 'react';
 import { sx } from '@shared/styles/styleSystem';
 import { FUEL_DENSITIES } from '@utils/constants';
+import { SCENARIO_COLORS } from '../scenarioColors';
 
 // Helper pour extraire les litres de fobFuel (peut être un nombre ou un objet {gal, ltr})
 const getFuelLiters = (fobFuel) => {
@@ -79,7 +80,7 @@ export const ScenarioCards = memo(({ scenarios, fobFuel, fuelData, aircraft }) =
     <section style={sx.spacing.mb(6)}>
       <div style={sx.combine(sx.flex.between, sx.flex.alignCenter, sx.spacing.mb(3))}>
         <h3 style={sx.combine(sx.text.lg, sx.text.bold)}>
-          🔄 Scénarios de centrage
+          Scénarios de centrage
         </h3>
 
         {/* Informations avion */}
@@ -94,92 +95,103 @@ export const ScenarioCards = memo(({ scenarios, fobFuel, fuelData, aircraft }) =
             borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--border-subtle)'
           }}>
-            {aircraft.equipment && <span>📦 Équipements SAR: {aircraft.equipment}</span>}
-            {aircraft.cruiseSpeed && <span>⚡ Vitesse de croisière: {aircraft.cruiseSpeed} kt</span>}
+            {aircraft.equipment && <span>Équipements SAR: {aircraft.equipment}</span>}
+            {aircraft.cruiseSpeed && <span>Vitesse de croisière: {aircraft.cruiseSpeed} kt</span>}
           </div>
         )}
       </div>
 
       <div style={scenarioStyles.grid}>
         {cards.map(card => (
-          <ScenarioCard key={card.key} {...card} />
+          <ScenarioCard key={card.key} colorKey={card.key} {...card} />
         ))}
       </div>
     </section>
   );
 });
 
-// Carte de scénario individuelle
-const ScenarioCard = memo(({ color, title, data, description }) => {
-  const colorTheme = sx.theme.colors[color];
-  
-  const cardStyle = useMemo(() => ({
-    ...sx.components.card.base,
-    backgroundColor: colorTheme[50],
-    borderColor: colorTheme[500],
-    borderWidth: '2px'
-  }), [colorTheme]);
-  
-  const dotStyle = useMemo(() => ({
+// Carte de scénario individuelle. La couleur du scénario (SCENARIO_COLORS,
+// source unique partagée avec le graphe) ne sert qu'à DIFFÉRENCIER : pastille
+// + bordure + titre. Les données du tableau restent en ivoire/gris lisibles
+// (contraste) — fini le tableau entièrement coloré rouge/vert.
+const ScenarioCard = memo(({ colorKey, title, data, description }) => {
+  const color = SCENARIO_COLORS[colorKey] || 'var(--accent-primary)';
+
+  const cardStyle = {
+    backgroundColor: 'var(--bg-overlay)',
+    border: `2px solid ${color}`,
+    borderRadius: 'var(--radius-sm)',
+    padding: '1rem'
+  };
+
+  const dotStyle = {
     width: '12px',
     height: '12px',
-    backgroundColor: colorTheme[500],
-    borderRadius: '50%'
-  }), [colorTheme]);
-  
-  const textStyle = useMemo(() => ({
-    color: colorTheme[900]
-  }), [colorTheme]);
-  
+    backgroundColor: color,
+    borderRadius: '50%',
+    flexShrink: 0
+  };
+
+  const titleStyle = {
+    fontSize: 'var(--fs-caption)',
+    fontWeight: 700,
+    marginBottom: '0.5rem',
+    display: 'flex',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    gap: '0.5rem',
+    color
+  };
+
   // Vérification des données avant affichage
   if (!data || typeof data.w !== 'number' || typeof data.cg !== 'number' || typeof data.fuel !== 'number') {
     return (
       <div style={cardStyle}>
-        <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2), sx.flex.start, sx.spacing.gap(2), textStyle)}>
+        <h5 style={titleStyle}>
           <div style={dotStyle}></div>
           {title}
         </h5>
-        <div style={sx.combine(sx.text.xs, textStyle)}>
-          <p>Données en cours de calcul...</p>
+        <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
+          <p>Données en cours de calcul…</p>
         </div>
       </div>
     );
   }
-  
+
   return (
     <div style={cardStyle}>
-      <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2), sx.flex.start, sx.spacing.gap(2), textStyle)}>
+      <h5 style={titleStyle}>
         <div style={dotStyle}></div>
         {title}
       </h5>
-      <div style={sx.combine(sx.text.xs, textStyle)}>
+      <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
         {/* Tableau détaillé des masses avec bras et moments */}
         {data.items && data.items.length > 0 && (
-          <div style={{ borderTop: `1px solid ${colorTheme[200]}`, paddingTop: '8px', marginTop: '0' }}>
+          <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '8px', marginTop: '0' }}>
             <table style={{ width: '100%', fontSize: 'var(--fs-caption)', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
               <thead>
-                <tr style={{ borderBottom: `1px solid ${colorTheme[300]}` }}>
-                  <th style={{ textAlign: 'left', padding: '4px 2px', fontWeight: '600', width: '40%', whiteSpace: 'nowrap' }}>Élément</th>
-                  <th style={{ textAlign: 'right', padding: '4px 2px', fontWeight: '600', width: '20%', whiteSpace: 'nowrap' }}>Masse</th>
-                  <th style={{ textAlign: 'right', padding: '4px 2px', fontWeight: '600', width: '20%', whiteSpace: 'nowrap' }}>Bras</th>
-                  <th style={{ textAlign: 'right', padding: '4px 2px', fontWeight: '600', width: '20%', whiteSpace: 'nowrap' }}>Moment</th>
+                <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                  <th style={{ textAlign: 'left', padding: '4px 2px', fontWeight: '600', width: '40%', whiteSpace: 'nowrap', color: 'var(--text-secondary)' }}>Élément</th>
+                  <th style={{ textAlign: 'right', padding: '4px 2px', fontWeight: '600', width: '20%', whiteSpace: 'nowrap', color: 'var(--text-secondary)' }}>Masse</th>
+                  <th style={{ textAlign: 'right', padding: '4px 2px', fontWeight: '600', width: '20%', whiteSpace: 'nowrap', color: 'var(--text-secondary)' }}>Bras</th>
+                  <th style={{ textAlign: 'right', padding: '4px 2px', fontWeight: '600', width: '20%', whiteSpace: 'nowrap', color: 'var(--text-secondary)' }}>Moment</th>
                 </tr>
               </thead>
               <tbody>
                 {data.items.map((item, index) => (
-                  <tr key={index} style={{ borderBottom: index === data.items.length - 1 ? `1px solid ${colorTheme[400]}` : 'none' }}>
-                    <td style={{ padding: '3px 2px', textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.label}>{item.label}</td>
-                    <td style={{ padding: '3px 2px', textAlign: 'right', fontWeight: '600', whiteSpace: 'nowrap' }}>{parseFloat(item.value || 0).toFixed(1)} kg</td>
-                    <td style={{ padding: '3px 2px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                  <tr key={index} style={{ borderBottom: index === data.items.length - 1 ? `1px solid ${color}` : 'none' }}>
+                    <td style={{ padding: '3px 2px', textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text-secondary)' }} title={item.label}>{item.label}</td>
+                    <td style={{ padding: '3px 2px', textAlign: 'right', fontWeight: '600', whiteSpace: 'nowrap', color: 'var(--text-primary)' }}>{parseFloat(item.value || 0).toFixed(1)} kg</td>
+                    <td style={{ padding: '3px 2px', textAlign: 'right', whiteSpace: 'nowrap', color: 'var(--text-secondary)' }}>
                       {item.arm !== null && item.arm !== undefined ? `${parseFloat(item.arm).toFixed(2)} m` : 'N/A'}
                     </td>
-                    <td style={{ padding: '3px 2px', textAlign: 'right', fontWeight: '600', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '3px 2px', textAlign: 'right', fontWeight: '600', whiteSpace: 'nowrap', color: 'var(--text-primary)' }}>
                       {item.moment !== null && item.moment !== undefined ? `${parseFloat(item.moment).toFixed(1)}` : 'N/A'}
                     </td>
                   </tr>
                 ))}
                 {/* Ligne de total */}
-                <tr style={{ fontWeight: '700', backgroundColor: colorTheme[100] }}>
+                <tr style={{ fontWeight: '700', backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)' }}>
                   <td style={{ padding: '4px 2px', textAlign: 'left', whiteSpace: 'nowrap' }}>TOTAL</td>
                   <td style={{ padding: '4px 2px', textAlign: 'right', whiteSpace: 'nowrap' }}>{parseFloat(data.w || 0).toFixed(1)} kg</td>
                   <td style={{ padding: '4px 2px', textAlign: 'right', whiteSpace: 'nowrap' }}>-</td>
@@ -189,8 +201,8 @@ const ScenarioCard = memo(({ color, title, data, description }) => {
                 </tr>
               </tbody>
             </table>
-            <p style={{ marginTop: '6px', fontSize: 'var(--fs-caption)', fontStyle: 'italic' }}>
-              CG = {data.items.reduce((sum, item) => sum + parseFloat(item.moment || 0), 0).toFixed(1)} ÷ {parseFloat(data.w || 0).toFixed(1)} = <strong>{parseFloat(data.cg || 0).toFixed(3)} m</strong>
+            <p style={{ marginTop: '6px', fontSize: 'var(--fs-caption)', fontStyle: 'italic', color: 'var(--text-tertiary)' }}>
+              CG = {data.items.reduce((sum, item) => sum + parseFloat(item.moment || 0), 0).toFixed(1)} ÷ {parseFloat(data.w || 0).toFixed(1)} = <strong style={{ color: 'var(--text-primary)' }}>{parseFloat(data.cg || 0).toFixed(3)} m</strong>
             </p>
 
             {/* Alerte MZFW dépassé */}
@@ -198,13 +210,13 @@ const ScenarioCard = memo(({ color, title, data, description }) => {
               <div style={{
                 marginTop: '8px',
                 padding: '6px 8px',
-                backgroundColor: 'var(--bg-overlay)',
+                backgroundColor: 'var(--bg-surface)',
                 borderLeft: '3px solid var(--color-red-critical)',
                 borderRadius: 'var(--radius-sm)',
                 fontSize: 'var(--fs-caption)',
                 color: 'var(--color-red-critical)'
               }}>
-                <strong>⚠️ MZFW DÉPASSÉ</strong>
+                <strong>MZFW DÉPASSÉ</strong>
                 <br />
                 Masse sans carburant : {parseFloat(data.w || 0).toFixed(1)} kg
                 <br />
