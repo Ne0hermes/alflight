@@ -258,7 +258,6 @@ const PilotCertifications = () => {
         if (confirmClean) {
           // Forcer un nettoyage complet
           const result = manualCleanStorage();
-          updateStorageInfo();
 
           // Revérifier après nettoyage
           const newSize = parseFloat(getLocalStorageSize());
@@ -342,7 +341,7 @@ const PilotCertifications = () => {
 
           // Proposer le nettoyage
           if (confirm('Voulez-vous nettoyer le stockage maintenant ?')) {
-            handleCleanStorage();
+            manualCleanStorage();
           }
           return;
         } else if (resultSizeMB > 1) {
