@@ -118,6 +118,16 @@ export class AeroDataProvider {
   }
 
   /**
+   * Détail VAC complet d'un aérodrome (base + pistes + fréquences + VFR…),
+   * dans la forme attendue par les modules VAC.
+   * @param {string} icao
+   * @returns {Promise<Object|null>}
+   */
+  async getVACDetail(icao) {
+    throw new Error('getVACDetail must be implemented');
+  }
+
+  /**
    * Vérifie si le provider est disponible
    * @returns {boolean}
    */

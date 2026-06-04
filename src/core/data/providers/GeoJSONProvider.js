@@ -476,6 +476,135 @@ export class GeoJSONProvider extends AeroDataProvider {
     return this.dataInfo || { airac: null, source: 'SIA' };
   }
 
+  /**
+   * Détail VAC complet d'un aérodrome, dans la forme attendue par les modules VAC
+   * (compatible avec l'ancienne sortie `aixmParser.loadAndParse()` par aérodrome).
+   *
+   * Source : GeoJSON dérivé VERSIONNÉ (`/data/geojson/`) au lieu du parse runtime du
+   * XML AIXM 42 Mo — ce dernier est gitignore (cf. .gitignore `public/data/*.xml`) donc
+   * ABSENT en production (Vercel) → l'ancien chemin renvoyait un 404 et cassait tout le
+   * module VAC en prod. Ce provider, lui, lit des fichiers committés → marche partout.
+   *
+   * Champs NON extraits par l'ETL actuel (surface piste, TORA/TODA/ASDA/LDA, ILS, VASIS,
+   * obstacles par AD, procédures) → laissés `null`/`[]` : le commandant de bord les
+   * complète manuellement (cf. disclaimer SIAReportEnhanced). Une future passe d'ETL
+   * pourra les renseigner sans changer ce contrat.
+   *
+   * NB : circuitAltitude / integrationAltitude / circuitRemarks NE viennent PAS d'ici
+   * (non dérivables de l'AIXM) → ils restent fournis par le vacStore côté consommateur.
+   *
+   * @param {string} icao — code OACI (ex: 'LFST')
+   * @returns {Promise<Object|null>} objet aérodrome enrichi, ou null si introuvable
+   */
+  async getVACDetail(icao) {
+    if (!icao || typeof icao !== 'string') return null;
+    await this.ensureDataLoaded();
+    const code = icao.toUpperCase();
+
+    // Features brutes (cache géré par geoJSONDataService, déjà chaud après loadData) :
+    // on lit les propriétés complètes — les convert*() du provider sont volontairement
+    // « lossy » (perdent iata / magnetic_variation / transition_altitude, aplatissent
+    // elevation) ; ici on a besoin de la fidélité maximale.
+    const adFeatures = await geoJSONDataService.getAerodromes();
+    const feature = adFeatures.find(
+      f => (f.properties?.icao || '').toUpperCase() === code
+    );
+    if (!feature) return null;
+
+    const p = feature.properties || {};
+    const geom = feature.geometry?.coordinates || [];
+    const lon = geom[0] ?? p.longitude ?? null;
+    const lat = geom[1] ?? p.latitude ?? null;
+
+    // Pistes de cet AD, remises à la forme attendue par le module VAC.
+    const rwyFeatures = await geoJSONDataService.getRunways();
+    const runways = rwyFeatures
+      .filter(r => (r.properties?.aerodrome_icao || '').toUpperCase() === code)
+      .map(r => this.buildVACRunway(r.properties || {}));
+
+    // Points de report VFR proches (best-effort, ne doit jamais casser le détail).
+    let vfrPoints = [];
+    try {
+      vfrPoints = await this.getReportingPoints(code);
+    } catch (e) {
+      vfrPoints = [];
+    }
+
+    const isClosed = /\(closed\)|ferm[ée]/i.test(p.name || '');
+
+    return {
+      icao: p.icao,
+      iata: p.iata || null,
+      name: p.name || '',
+      city: p.city || '',
+      type: p.type || 'AD',
+      coordinates: { lat, lon },
+      // elevation est un OBJET côté consommateur (`elevation?.value`) — ne pas aplatir.
+      elevation: { value: p.elevation_ft ?? null, unit: 'FT' },
+      magneticVariation: p.magnetic_variation ?? null,
+      transitionAltitude: p.transition_altitude ?? null,
+      // Déjà à la bonne forme dans le GeoJSON : { type, frequency, callsign, schedule }
+      frequencies: Array.isArray(p.frequencies) ? p.frequencies : [],
+      runways,
+      vfrPoints,
+      // Non extrait par l'ETL (codes SIA non mappés en flags) → défauts sûrs.
+      services: {
+        fuel: false, avgas100LL: false, jetA1: false, maintenance: false,
+        customs: false, handling: false, restaurant: false, hotel: false,
+        parking: false, hangar: false
+      },
+      obstacles: [],
+      procedures: { departure: [], arrival: [] },
+      remarks: isClosed ? 'AD CLOSED' : '',
+      specialInstructions: '',
+      source: 'GeoJSON (SIA dérivé)',
+      airac: this.dataInfo?.airac || null
+    };
+  }
+
+  /**
+   * Construit une piste au format module VAC depuis les propriétés GeoJSON brutes.
+   * Calcule le QFU à partir de la désignation (ex: "05/23" → 50). Les champs absents
+   * du GeoJSON dérivé (surface, distances déclarées, ILS…) sont laissés à null.
+   * @param {Object} props — propriétés de la feature runway
+   * @returns {Object}
+   */
+  buildVACRunway(props = {}) {
+    const designation = props.designation || '';
+    let qfu = null;
+    let le_ident = null;
+    let he_ident = null;
+    if (designation.includes('/')) {
+      const [le, he] = designation.split('/');
+      le_ident = le.trim();
+      he_ident = he.trim();
+      const n = parseInt(le_ident.replace(/[LRC]/i, ''), 10);
+      if (!Number.isNaN(n)) qfu = (n * 10) % 360;
+    }
+    return {
+      designation,
+      identifier: designation,
+      le_ident,
+      he_ident,
+      length: props.length_m ?? props.length ?? null,
+      width: props.width_m ?? props.width ?? null,
+      dimensions: {
+        length: props.length_m ?? props.length ?? 0,
+        width: props.width_m ?? props.width ?? 0
+      },
+      surface: props.surface || null,
+      qfu,
+      magneticBearing: qfu,
+      // Champs non extraits par l'ETL actuel → complétés manuellement côté VAC.
+      ils: null,
+      vasis: null,
+      tora: null,
+      toda: null,
+      asda: null,
+      lda: null
+    };
+  }
+
   isAvailable() {
     return true;
   }
