@@ -1,0 +1,6 @@
+# Hooks Husky + scripts shell : exécutés par `sh`, donc LF OBLIGATOIRE.
+# Sans ça, avec core.autocrlf=true, le checkout Windows produit du CRLF et le
+# `\r` casse le hook (« command not found »). Périmètre minimal (pas de
+# renormalisation globale) pour éviter un diff de fins de ligne sur tout le repo.
+.husky/**   text eol=lf
+*.sh        text eol=lf
