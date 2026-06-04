@@ -7,10 +7,6 @@ import {
   Alert,
   Button,
   Chip,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -32,23 +28,16 @@ import {
   Scale as ScaleIcon,
   TrendingUp as TrendingUpIcon,
   Timeline as TimelineIcon,
-  Balance as BalanceIcon,
   Assignment as AssignmentIcon,
-  CloudUpload as CloudUploadIcon,
   Save as SaveIcon,
   Difference as DifferenceIcon,
-  Warning as WarningIcon,
-  Sync as SyncIcon,
-  Description as DescriptionIcon,
-  CloudQueue as CloudQueueIcon,
   ThumbUp as ThumbUpIcon,
   ThumbDown as ThumbDownIcon
 } from '@mui/icons-material';
-import CGEnvelopeChart from '../CgEnvelopeChart';
 import CGEnvelopeDualChart from '../CgEnvelopeDualChart';
 import SpeedLimitationChart from '../SpeedLimitationChart';
 import communityService from '../../../../services/communityService';
-import { getCurrentUserId, getCurrentUserIdOrThrow } from '../../../../lib/supabaseAuth';
+import { getCurrentUserIdOrThrow } from '../../../../lib/supabaseAuth';
 import { trackingActions } from '../../../../utils/autoTracking';
 import { useUnitsStore } from '@core/stores/unitsStore';
 import { getUnitSymbol } from '@utils/unitConversions';

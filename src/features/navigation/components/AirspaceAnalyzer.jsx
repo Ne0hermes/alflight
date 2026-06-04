@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { AlertCircle, Radio, ChevronDown, ChevronUp, Plane, AlertTriangle, Info } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { aeroDataProvider } from '@core/data';
-import { calculateDistance } from '@utils/navigationCalculations';
 
 // Types d'espaces aériens avec leurs caractéristiques
 const AIRSPACE_TYPES = {

@@ -1,5 +1,5 @@
 // src/features/vac/components/VACPdfExtractor.jsx
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { showNotification } from '../../../shared/components/Notification';
 

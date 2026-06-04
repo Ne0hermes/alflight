@@ -1,7 +1,6 @@
 // src/features/flight-wizard/steps/Step5Performance.jsx
 import React, { memo } from 'react';
 import PerformanceModule from '@features/performance/PerformanceModule';
-import { Gauge } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 
 // Styles communs

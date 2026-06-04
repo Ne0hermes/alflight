@@ -14,7 +14,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { generatePerformanceState, ResultStatus } from '../../../services/operationResolver';
-import { OPERATION_CATALOG, getOperation } from '../../../abac/curves/core/operationCatalog';
+import { OPERATION_CATALOG } from '../../../abac/curves/core/operationCatalog';
 import { applySafetyFactor, isDistanceOperation, DEFAULT_SAFETY_FACTOR } from '../../../utils/performanceSafetyFactor';
 
 const PHASE_ICONS = {

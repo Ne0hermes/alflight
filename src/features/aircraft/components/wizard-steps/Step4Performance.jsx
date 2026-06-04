@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import PerformanceWizard from '../PerformanceWizard';
 import AdvancedPerformanceAnalyzer from '../AdvancedPerformanceAnalyzer';
-import { Button, Box, Alert, Typography, Checkbox, FormControlLabel } from '@mui/material';
+import { Button, Box, Checkbox } from '@mui/material';
 import {
   ChevronRight as ChevronRightIcon,
   ChevronLeft as ChevronLeftIcon,

@@ -1,11 +1,10 @@
 // src/features/aircraft/components/ManexImporter.jsx
 import React, { memo, useState, useRef, useEffect } from 'react';
-import { Upload, FileText, X, Download, Trash2, Eye, Cloud } from 'lucide-react';
+import { FileText, X, Download, Eye } from 'lucide-react';
 import { showNotification } from '../../../shared/components/Notification';
 import { getManexWithPdf } from '../../../core/stores/manexStore';
 import dataBackupManager from '../../../utils/dataBackupManager';
 import communityService from '../../../services/communityService';
-import SupabaseUpdater from './SupabaseUpdater';
 
 export const ManexImporter = memo(({
   aircraft,

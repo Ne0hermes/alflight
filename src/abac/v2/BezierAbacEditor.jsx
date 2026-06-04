@@ -20,7 +20,7 @@
 // Le composant est autonome ; l'export final passe par onSave(abacJsonV2).
 
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ImageIcon, Plus, Hand, Save, X, Trash2, Upload, Move, ZoomIn, ZoomOut } from 'lucide-react';
+import { Plus, Hand, Save, X, Trash2, Upload, Move } from 'lucide-react';
 import {
   buildCalibration,
   dataToPixel,

@@ -1,7 +1,6 @@
 // src/shared/components/PlaceholderDev.jsx
 import React from 'react';
 import { AlertCircle, Construction, Info } from 'lucide-react';
-import { sx } from '@shared/styles/styleSystem';
 
 /**
  * Composant placeholder pour indiquer les fonctionnalités en cours de développement

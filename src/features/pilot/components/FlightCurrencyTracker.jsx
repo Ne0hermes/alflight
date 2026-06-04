@@ -1,6 +1,6 @@
 // src/features/pilot/components/FlightCurrencyTracker.jsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { AlertTriangle, CheckCircle, Clock, Calendar, TrendingUp, Info, AlertCircle, Activity } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
   const [currentDate] = useState(new Date());

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Table, ChevronDown, ChevronUp, Database } from 'lucide-react';
+import { ChevronDown, ChevronUp, Database } from 'lucide-react';
 
 const PerformanceDataDebugger = ({ tables }) => {
     const [isOpen, setIsOpen] = useState(false);

@@ -1,13 +1,13 @@
 // src/features/weather/WeatherModule.jsx
 import React, { memo, useState, useEffect, useRef } from 'react';
-import { Cloud, Search, RefreshCw, AlertTriangle, Wind, Eye, Thermometer, Gauge, Clock, Plane, Navigation2, Info, ChevronDown, ChevronUp, Map, ExternalLink, Download } from 'lucide-react';
+import { Cloud, Search, RefreshCw, AlertTriangle, Clock, Plane, Info, Map } from 'lucide-react';
 import { useWeatherStore, weatherSelectors } from '@core/stores/weatherStore';
 import AccordionButton from '@shared/components/AccordionButton';
 import { useNavigation } from '@core/contexts';
 import { useAlternatesStore } from '@core/stores/alternatesStore';
 import { sx } from '@shared/styles/styleSystem';
 // RunwaySuggestionEnhanced déplacé vers le module Performance
-import { DataSourceBadge, DataField, DataFieldGroup } from '@shared/components';
+import { DataSourceBadge, DataField } from '@shared/components';
 import { useUnits } from '@hooks/useUnits';
 import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
 // 🎨 Charte éditoriale ALFlight

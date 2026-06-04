@@ -30,8 +30,8 @@ import {
   getOperation,
   isValidOperationId
 } from '../abac/curves/core/operationCatalog';
-import { interpolateAbac, inspectAbacByGraph, bracketInterpolateGraph, evaluateAbacCascade, inputsToConditions, InterpolationStatus } from './abacInterpolation';
-import { findTablesForOperation, resolveOperationFromTables } from './tableInterpolationAdapter';
+import { inspectAbacByGraph, evaluateAbacCascade, inputsToConditions } from './abacInterpolation';
+import { resolveOperationFromTables } from './tableInterpolationAdapter';
 
 /** Statuts possibles d'un résultat d'opération. */
 export const ResultStatus = Object.freeze({

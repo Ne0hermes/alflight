@@ -5,7 +5,6 @@ import { LoadInput } from '@features/weight-balance/components/LoadInput';
 import { WeightBalanceChart } from '@features/weight-balance/components/WeightBalanceChart';
 import { ScenarioCards } from '@features/weight-balance/components/ScenarioCards';
 import { calculateScenarios } from '@features/weight-balance/utils/calculations';
-import { Scale } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import { DENSITIES } from '@utils/unitConversions';
 import { useUnits } from '@hooks/useUnits';

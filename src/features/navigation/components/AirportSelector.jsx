@@ -1,6 +1,6 @@
 // src/features/navigation/components/AirportSelector.jsx
 import React, { memo, useState, useRef, useEffect } from 'react';
-import { Search, MapPin, Download, AlertTriangle, CheckCircle, Info } from 'lucide-react';
+import { Search, MapPin, Download, AlertTriangle, Info } from 'lucide-react';
 import { aeroDataProvider } from '@core/data';
 import { useVACStore } from '@core/stores/vacStore';
 import { sx } from '@shared/styles/styleSystem';

@@ -4,7 +4,7 @@
 
 import React, { memo, useMemo, useEffect, useState } from 'react';
 import AlternatesModule from '@features/alternates/AlternatesModule';
-import { AlertTriangle, Fuel, Navigation, Info, MapPin, Plane, Filter, ChevronDown, ChevronUp } from 'lucide-react';
+import { AlertTriangle, Info, Filter, ChevronDown, ChevronUp } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import { useNavigation, useAircraft, useFuel } from '@core/contexts';
 import { useUnits } from '@hooks/useUnits';

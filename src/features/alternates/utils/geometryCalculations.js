@@ -9,9 +9,7 @@ import {
   calculateDistanceToSegment,
   calculatePerpendicular,
   getSideOfPerpendicular,
-  isPointInPolygon,
-  toRad,
-  toDeg
+  toRad
 } from '@utils/navigationCalculations';
 
 // Ces fonctions sont maintenant importées du module centralisé

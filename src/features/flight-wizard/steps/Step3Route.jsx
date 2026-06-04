@@ -2,7 +2,7 @@
 import React, { memo, useState, useEffect, useMemo } from 'react';
 import NavigationModule from '@features/navigation/NavigationModule';
 // SUPPRIMÉ: AlternatesModule - déplacé à l'étape 7 (après bilan carburant)
-import { Navigation, Map, Info } from 'lucide-react';
+import { Map, Info } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import RouteMapView from '../components/RouteMapView';
 import { useNavigation, useAircraft } from '@core/contexts';

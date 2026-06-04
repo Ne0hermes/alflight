@@ -1,6 +1,6 @@
 // src/features/alternates/components/AlternateSelector.jsx
 import React, { memo, useState } from 'react';
-import { Plus, X, CheckCircle, AlertTriangle, Plane } from 'lucide-react';
+import { Plus, X, CheckCircle } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useAlternatesStore } from '@core/stores/alternatesStore';
 

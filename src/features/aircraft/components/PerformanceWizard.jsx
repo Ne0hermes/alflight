@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, FileText, Table, LineChart, ChevronRight, AlertCircle, Check, X } from 'lucide-react';
-import unifiedPerformanceService from '../../performance/services/unifiedPerformanceService';
+import { FileText, Table, LineChart, AlertCircle, Check } from 'lucide-react';
 import pdfToImageConverterOptimized from '../../../services/pdfToImageConverterOptimized';
 import AdvancedPerformanceAnalyzer from './AdvancedPerformanceAnalyzer';
 import { AbacBuilder } from '../../../abac/curves/ui/AbacBuilder';

@@ -1,9 +1,9 @@
 // src/features/alternates/components/AlternateDetails.jsx
 import React, { memo, useState } from 'react';
-import { Info, Fuel, Wind, Radio, Download, MapPin, Ruler, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Fuel, Wind, Radio, Download, MapPin, Ruler, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useVACStore, vacSelectors } from '@core/stores/vacStore';
-import { useWeatherStore, weatherSelectors } from '@core/stores/weatherStore';
+import { weatherSelectors } from '@core/stores/weatherStore';
 import { coordinateConversions } from '@utils/unitConversions';
 import { useAircraft } from '@core/contexts';
 

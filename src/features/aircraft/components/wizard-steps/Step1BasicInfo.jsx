@@ -13,16 +13,10 @@ import {
   FormControlLabel,
   Checkbox,
   InputAdornment,
-  Avatar,
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions
+  CircularProgress
 } from '@mui/material';
 import { StyledTextField, StyledFormControl } from './FormFieldStyles';
 import {
@@ -30,7 +24,6 @@ import {
   Info as InfoIcon,
   Flight as FlightIcon,
   LocalGasStation as FuelIcon,
-  Speed as SpeedIcon,
   ExpandMore as ExpandMoreIcon,
   Terrain as TerrainIcon,
   Warning as WarningIcon,
@@ -40,13 +33,13 @@ import {
   ChevronLeft as ChevronLeftIcon
 } from '@mui/icons-material';
 import FormHelperText from '@mui/material/FormHelperText';
-import { useUnitsStore, unitsSelectors } from '@core/stores/unitsStore';
-import { convertValue, getUnitSymbol, fuelConsumptionConversions } from '@utils/unitConversions';
+import { unitsSelectors } from '@core/stores/unitsStore';
+import { convertValue, getUnitSymbol } from '@utils/unitConversions';
 import { formatCanonical } from '@utils/unitsDisplay';
 import UpdateAircraftDialog from '../UpdateAircraftDialog';
 import aircraftVersioningService from '../../services/aircraftVersioningService';
 import ImageEditor from '../../../../components/ImageEditor';
-import { Description as DescriptionIcon, CloudUpload as CloudUploadIcon, Delete as DeleteIcon, CloudQueue as CloudQueueIcon } from '@mui/icons-material';
+import { Description as DescriptionIcon, CloudUpload as CloudUploadIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import communityService from '../../../../services/communityService';
 import AeroclubAutocomplete from '../AeroclubAutocomplete';
 import { useAirportName } from '@shared/hooks/useAirportNames';

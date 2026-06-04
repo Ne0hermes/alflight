@@ -8,12 +8,6 @@ import {
   Autocomplete,
   Button,
   Paper,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  ListItemIcon,
-  Divider,
   Chip,
   Collapse,
   IconButton,
@@ -24,27 +18,22 @@ import {
   DialogTitle
 } from '@mui/material';
 import {
-  Search as SearchIcon,
   CloudDownload as CloudIcon,
   CheckCircle as CheckIcon,
-  Flight as FlightIcon,
   Info as InfoIcon,
   Add as AddIcon,
   ThumbUp as ThumbUpIcon,
-  ThumbDown as ThumbDownIcon,
   ExpandMore as ExpandMoreIcon,
   HowToVote as VoteIcon,
   Group as GroupIcon,
   MenuBook as ManualIcon,
-  VerifiedUser as AdminIcon,
-  Update as UpdateIcon
+  VerifiedUser as AdminIcon
 } from '@mui/icons-material';
 import { useAircraftStore } from '@core/stores/aircraftStore';
 import communityService from '../../../../services/communityService';
 import { getCurrentUserId } from '../../../../lib/supabaseAuth';
 import dataBackupManager from '../../../../utils/dataBackupManager';
-import CleanDuplicatesButton from '../../../../components/CleanDuplicatesButton';
-import { AutoAwesome as AutoAwesomeIcon, EditNote as EditNoteIcon } from '@mui/icons-material';
+import { AutoAwesome as AutoAwesomeIcon } from '@mui/icons-material';
 import { extractCompleteManexData } from '../../services/manexExtractionService';
 import { mapExtractionToReviewItems, buildBulkUpdatePayload } from '../../utils/manexExtractionMapper';
 import ManexExtractionReview from '../ManexExtractionReview';

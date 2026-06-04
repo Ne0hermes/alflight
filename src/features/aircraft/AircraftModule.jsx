@@ -2,14 +2,13 @@
 import React, { memo, useState, useEffect, useMemo } from 'react';
 import { useAircraft } from '@core/contexts';
 import { useAircraftStore } from '@core/stores/aircraftStore';
-import { Plus, Edit2, Trash2, Info, AlertTriangle, FileText, Eye, X, ChevronDown, ChevronUp, Wand2, FileDown, Plane, BookOpen, Scale, Download } from 'lucide-react';
+import { Plus, Edit2, Trash2, Info, AlertTriangle, X, Plane, BookOpen, Scale, Download } from 'lucide-react';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { sx } from '@shared/styles/styleSystem';
 import { tokens } from '@shared/styles/designSystem';
 import {
   EditorialHeading,
   EditorialButton,
-  DatasheetCard,
   DataReadout,
   TechLabel,
   CockpitTextField,
@@ -25,10 +24,7 @@ import { useUnits } from '@hooks/useUnits';
 import performanceDataManager from '../../utils/performanceDataManager';
 import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
 import dataBackupManager from '@utils/dataBackupManager';
-import indexedDBStorage from '@utils/indexedDBStorage';
-import { formatCanonical } from '@utils/unitsDisplay';
-import { useUnitsStore } from '@core/stores/unitsStore';
-import { evaluateAircraft, getCompletionColor, getSeverityColor } from './utils/aircraftCompleteness';
+import { evaluateAircraft } from './utils/aircraftCompleteness';
 // 🔧 FIX persistance bras-de-levier : la liste store ne contient PAS aircraft_data
 // (optim mémoire de getAllPresets). On hydrate depuis Supabase au moment de l'édition
 // pour récupérer arms, weightBalance, cgEnvelope, armLengths, etc.

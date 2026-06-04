@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Check, Plane, X, AlertTriangle } from 'lucide-react';
+import { Check, AlertTriangle } from 'lucide-react';
 import { theme } from '../../styles/theme';
 import { FlightPlanData } from './models/FlightPlanData';
 import { WizardConfigProvider } from './contexts/WizardConfigContext';

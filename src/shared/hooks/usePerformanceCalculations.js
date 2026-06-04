@@ -1,5 +1,5 @@
 // src/shared/hooks/usePerformanceCalculations.js
-import { useMemo, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useAircraft } from '@core/contexts';
 
 /**

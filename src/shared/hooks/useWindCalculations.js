@@ -1,5 +1,5 @@
 // src/shared/hooks/useWindCalculations.js
-import { useMemo, useCallback } from 'react';
+import { useCallback } from 'react';
 
 /**
  * Hook pour les calculs de vent et navigation

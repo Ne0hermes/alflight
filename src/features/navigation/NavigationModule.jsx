@@ -1,17 +1,15 @@
 // src/features/navigation/NavigationModule.jsx
-import React, { memo, useState, useCallback, useEffect, Fragment } from 'react';
-import { MapPin, Plus, Trash2, Navigation2, Home, Sun, Moon, List, Loader, AlertCircle, AlertTriangle, Wind, Plane, Shield } from 'lucide-react';
+import React, { useState, useCallback, useEffect, Fragment } from 'react';
+import { Plus, Navigation2, Home, Sun, Moon, Loader, AlertCircle, Plane, Shield } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useUnits } from '@hooks/useUnits';
-import { ValueWithUnit, ValueGrid } from '@shared/components/ValueWithUnit';
+import { ValueWithUnit } from '@shared/components/ValueWithUnit';
 // 🎨 Charte éditoriale ALFlight (Phase 3.5)
 import { ModuleHero } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
 
 // Import des contextes et hooks
 import { useNavigation, useAircraft } from '@core/contexts';
-import { useNavigationStore } from '@core/stores/navigationStore';
-import { useWeatherStore, weatherSelectors } from '@core/stores/weatherStore';
 
 // Import du vrai hook useNavigationResults
 import { useNavigationResults } from './hooks/useNavigationResults';
@@ -20,8 +18,6 @@ import { useNavigationResults } from './hooks/useNavigationResults';
 import { SimpleAirportSelector } from './components/SimpleAirportSelector';
 const AirportSelector = SimpleAirportSelector;
 import { WaypointCardWithRunways } from './components/WaypointCardWithRunways';
-import { ReportingPointsSelector } from './components/ReportingPointsSelector';
-import { default as RunwayAnalyzer } from './components/RunwayAnalyzer';
 import WindAnalysis from './components/WindAnalysis';
 import AlternatesModule from '../alternates/AlternatesModule';
 import WaypointSelectorModal from './components/WaypointSelectorModal';

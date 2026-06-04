@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { MapPin, Plus, Navigation2, Search, X } from 'lucide-react';
+import { Navigation2, Search, X } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { geoJSONDataService } from '../services/GeoJSONDataService';
 import { useCustomVFRStore } from '@core/stores/customVFRStore';

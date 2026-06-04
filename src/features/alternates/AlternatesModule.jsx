@@ -4,12 +4,11 @@
 // LOG DE VÉRIFICATION
 
 import React, { memo, useEffect, useState } from 'react';
-import { Navigation2, AlertTriangle, Fuel, Wind, Plane, Info, MapPin, RefreshCw } from 'lucide-react';
+import { AlertTriangle, Plane, Info, MapPin, RefreshCw } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useAdvancedAlternateSelection } from './hooks/useAdvancedAlternateSelection';
 import { AlternateSelectorUnified } from './components/AlternateSelectorUnified';
 import { AlternatesMapView } from './components/AlternatesMapView';
-import { useNavigationResults } from './hooks/useNavigationResults';
 import { WeatherRateLimitIndicator } from '@components/WeatherRateLimitIndicator';
 import { useAlternatesStore } from '@core/stores/alternatesStore';
 import { DataSourceBadge, DataField } from '@shared/components';

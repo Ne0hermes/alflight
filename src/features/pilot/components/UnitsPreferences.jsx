@@ -1,8 +1,8 @@
 // src/features/pilot/components/UnitsPreferences.jsx
 import React, { useState, useEffect } from 'react';
-import { Settings, Globe, Ruler, Thermometer, Gauge, Clock, MapPin, Save, Check, AlertCircle } from 'lucide-react';
+import { Settings, Ruler, Thermometer, Gauge, MapPin, Save, Check, AlertCircle } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
-import { useUnitsStore, unitsSelectors } from '@core/stores/unitsStore';
+import { unitsSelectors } from '@core/stores/unitsStore';
 
 const UnitsPreferences = () => {
   const units = unitsSelectors.useUnits();

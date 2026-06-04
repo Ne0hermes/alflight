@@ -1,6 +1,6 @@
 // src/features/pilot/components/PilotProfile.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { User, MapPin, Save, Camera, Award, Heart, Settings, Download, Upload } from 'lucide-react';
+import { User, Save, Camera, Award, Heart, Settings, Download, Upload } from 'lucide-react';
 import { sx } from '../../../shared/styles/styleSystem';
 import FlightCurrencyTracker from './FlightCurrencyTracker';
 import PilotCertifications from './PilotCertifications';
@@ -8,7 +8,7 @@ import MedicalReminders from './MedicalReminders';
 import UnitsConfiguration from './UnitsConfiguration';
 import { exportPilotData, importData, loadFullPilotProfile, savePilotProfile } from '../utils/exportUtils';
 import ImageEditor from '../../../components/ImageEditor';
-import { useUnitsStore, unitsSelectors } from '@core/stores/unitsStore';
+import { unitsSelectors } from '@core/stores/unitsStore';
 import AccordionButton from '../../../shared/components/AccordionButton';
 import {
   addCompleteTestData,

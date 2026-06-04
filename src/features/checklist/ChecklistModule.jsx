@@ -14,13 +14,10 @@ import {
   AlertTriangle,
   Clock,
   RotateCcw,
-  FileText,
-  Settings,
   X
 } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useChecklistStore } from '@core/stores/checklistStore';
-import AccordionButton from '@shared/components/AccordionButton';
 // 🎨 Charte éditoriale ALFlight
 import { ModuleHero } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
