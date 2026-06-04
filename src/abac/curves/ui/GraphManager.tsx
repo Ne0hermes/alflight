@@ -16,9 +16,9 @@ interface GraphManagerProps {
 const styles = {
   container: {
     padding: '12px',
-    backgroundColor: '#e3f2fd',
+    backgroundColor: 'var(--bg-overlay)',
     borderRadius: '6px',
-    border: '1px solid #2196F3'
+    border: '1px solid var(--accent-primary)'
   },
   graphList: {
     display: 'flex',
@@ -27,7 +27,7 @@ const styles = {
   },
   graphItem: {
     padding: '12px',
-    border: '1px solid #ddd',
+    border: '1px solid var(--border-subtle)',
     borderRadius: '6px',
     cursor: 'pointer',
     transition: 'all 0.2s',
@@ -36,8 +36,8 @@ const styles = {
     gap: '6px'
   },
   graphItemSelected: {
-    border: '1px solid #4CAF50',
-    backgroundColor: '#f0f8f0'
+    border: '1px solid var(--accent-primary)',
+    backgroundColor: 'var(--accent-soft)'
   },
   graphInfo: {
     flex: 1
@@ -50,7 +50,7 @@ const styles = {
   },
   deleteButton: {
     padding: '4px 8px',
-    backgroundColor: '#f44336',
+    backgroundColor: 'var(--color-red-critical)',
     color: 'white',
     border: 'none',
     borderRadius: '3px',
@@ -60,15 +60,15 @@ const styles = {
   select: {
     width: '100%',
     padding: '6px 8px',
-    border: '1px solid #ddd',
+    border: '1px solid var(--border-subtle)',
     borderRadius: '4px',
     fontSize: '13px',
-    backgroundColor: 'white'
+    backgroundColor: 'var(--bg-overlay)'
   },
   emptyState: {
     textAlign: 'center' as const,
     padding: '24px',
-    color: '#999',
+    color: 'var(--text-tertiary)',
     fontSize: '13px'
   }
 };
@@ -116,8 +116,8 @@ export const GraphManager: React.FC<GraphManagerProps> = ({
                   <span style={{
                     marginLeft: '8px',
                     padding: '2px 6px',
-                    backgroundColor: '#e3f2fd',
-                    color: '#1976d2',
+                    backgroundColor: 'var(--bg-overlay)',
+                    color: 'var(--accent-primary)',
                     borderRadius: '3px',
                     fontSize: '11px',
                     fontWeight: 'normal'
@@ -133,20 +133,20 @@ export const GraphManager: React.FC<GraphManagerProps> = ({
 
       {graphs.length > 1 && (
         <>
-          <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#f0f4f8', borderRadius: '6px' }}>
+          <div style={{ marginTop: '16px', padding: '12px', backgroundColor: 'var(--bg-overlay)', borderRadius: '6px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <div>
-                <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
                   🔗 <strong>Liaisons entre graphiques</strong>
                 </div>
-                <div style={{ fontSize: '11px', color: '#888' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
                   Liez les graphiques pour créer des chaînes de calcul
                 </div>
               </div>
               <button
                 style={{
                   padding: '4px 10px',
-                  backgroundColor: '#2196F3',
+                  backgroundColor: 'var(--accent-primary)',
                   color: 'white',
                   border: 'none',
                   borderRadius: '4px',
@@ -160,9 +160,9 @@ export const GraphManager: React.FC<GraphManagerProps> = ({
             </div>
 
             {showLinkForm && (
-              <div style={{ marginTop: '12px', padding: '10px', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #ddd' }}>
+              <div style={{ marginTop: '12px', padding: '10px', backgroundColor: 'var(--bg-overlay)', borderRadius: '4px', border: '1px solid var(--border-subtle)' }}>
                 <div style={{ marginBottom: '8px' }}>
-                  <label style={{ display: 'block', fontSize: '11px', color: '#666', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
                     Graphique source (sortie Y)
                   </label>
                   <select
@@ -180,7 +180,7 @@ export const GraphManager: React.FC<GraphManagerProps> = ({
                 </div>
 
                 <div style={{ marginBottom: '8px' }}>
-                  <label style={{ display: 'block', fontSize: '11px', color: '#666', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
                     Graphique cible (entrée X)
                   </label>
                   <select
@@ -212,7 +212,7 @@ export const GraphManager: React.FC<GraphManagerProps> = ({
                     disabled={!linkFromId || !linkToId}
                     style={{
                       padding: '3px 8px',
-                      backgroundColor: linkFromId && linkToId ? '#2196F3' : '#ccc',
+                      backgroundColor: linkFromId && linkToId ? 'var(--accent-primary)' : 'var(--border-subtle)',
                       color: 'white',
                       border: 'none',
                       borderRadius: '4px',
@@ -229,14 +229,14 @@ export const GraphManager: React.FC<GraphManagerProps> = ({
             {/* Affichage des liaisons existantes */}
             {graphs.some(g => g.linkedTo && g.linkedTo.length > 0) && (
               <div style={{ marginTop: '12px' }}>
-                <div style={{ fontSize: '11px', color: '#666', marginBottom: '6px', fontWeight: 'bold' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 'bold' }}>
                   Liaisons actives :
                 </div>
                 {graphs.filter(g => g.linkedTo && g.linkedTo.length > 0).map(fromGraph => (
                   <div key={fromGraph.id} style={{
                     fontSize: '11px',
                     padding: '6px',
-                    backgroundColor: '#e3f2fd',
+                    backgroundColor: 'var(--bg-overlay)',
                     borderRadius: '3px',
                     marginBottom: '4px',
                     display: 'flex',
@@ -259,7 +259,7 @@ export const GraphManager: React.FC<GraphManagerProps> = ({
                         style={{
                           fontSize: '10px',
                           padding: '2px 6px',
-                          backgroundColor: '#f44336',
+                          backgroundColor: 'var(--color-red-critical)',
                           color: 'white',
                           border: 'none',
                           borderRadius: '2px',
