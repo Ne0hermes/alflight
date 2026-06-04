@@ -259,7 +259,7 @@ export const WaypointSelectorModal = ({ isOpen, onClose, onSelect }) => {
                         <div style={{
                           padding: '2px 8px',
                           borderRadius: 'var(--radius-sm)',
-                          fontSize: '10px',
+                          fontSize: 'var(--fs-caption)',
                           fontWeight: '600',
                           color: catBadge.color,
                           backgroundColor: catBadge.bg,
@@ -633,7 +633,7 @@ const styles = {
     borderBottom: '1px solid var(--bg-overlay)'
   },
   title: {
-    fontSize: '20px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '700',
     color: 'var(--text-primary)',
     margin: 0
@@ -667,7 +667,7 @@ const styles = {
   input: {
     width: '100%',
     padding: '14px 16px 14px 48px',
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     border: '1px solid var(--border-subtle)',
     borderRadius: 'var(--radius-sm)',
     outline: 'none',
@@ -698,7 +698,7 @@ const styles = {
     padding: '14px 16px',
     border: 'none',
     cursor: 'pointer',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     transition: 'all 0.2s',
     borderBottom: '3px solid transparent',
@@ -722,7 +722,7 @@ const styles = {
   tabBadge: {
     padding: '2px 8px',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: '700',
     color: 'var(--text-primary)',
     minWidth: '20px',
@@ -745,12 +745,12 @@ const styles = {
     textAlign: 'center'
   },
   emptyText: {
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '500',
     marginBottom: '8px'
   },
   emptySubText: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-tertiary)'
   },
   cardWrapper: {
@@ -789,21 +789,21 @@ const styles = {
     flexWrap: 'wrap'
   },
   itemLabel: {
-    fontSize: '15px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '700',
     color: 'var(--text-primary)'
   },
   itemLabelSeparator: {
     color: 'var(--text-tertiary)',
-    fontSize: '14px'
+    fontSize: 'var(--fs-body)'
   },
   itemLabelName: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '500',
     color: 'var(--text-secondary)'
   },
   itemSubLabel: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     marginTop: '2px'
   },
@@ -833,7 +833,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     fontWeight: 'bold',
-    fontSize: '18px',
+    fontSize: 'var(--fs-title)',
     cursor: 'pointer'
   },
 
@@ -842,7 +842,7 @@ const styles = {
     display: 'inline-block',
     padding: '1px 6px',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '10px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: '600',
     backgroundColor: 'var(--bg-overlay)',
     color: 'var(--text-primary)',
@@ -852,7 +852,7 @@ const styles = {
     display: 'inline-block',
     padding: '1px 6px',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '10px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: '600',
     backgroundColor: 'var(--bg-overlay)',
     color: 'var(--text-primary)',
@@ -890,14 +890,14 @@ const styles = {
     flexShrink: 0
   },
   detailCardLabel: {
-    fontSize: '10px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: '600',
     color: 'var(--text-secondary)',
     textTransform: 'uppercase',
     letterSpacing: '0.05em'
   },
   detailCardValue: {
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: 'var(--text-primary)',
     marginTop: '2px'
@@ -911,7 +911,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '700',
     color: 'var(--text-secondary)',
     marginBottom: '8px',
@@ -933,7 +933,7 @@ const styles = {
     border: '1px solid var(--border-subtle)'
   },
   runwayDesignation: {
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '700',
     color: 'var(--text-primary)',
     minWidth: '60px'
@@ -945,16 +945,16 @@ const styles = {
     flex: 1
   },
   runwayDimension: {
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: 'var(--text-secondary)'
   },
   runwaySurface: {
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     color: 'var(--text-secondary)'
   },
   runwayQFU: {
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     color: 'var(--accent-primary)',
     fontWeight: '600',
     padding: '2px 8px',
@@ -964,7 +964,7 @@ const styles = {
   noRunwaysMsg: {
     padding: '12px',
     textAlign: 'center',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-tertiary)',
     fontStyle: 'italic'
   },
@@ -985,7 +985,7 @@ const styles = {
     objectFit: 'cover'
   },
   poiDescription: {
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     padding: '8px 12px',
     backgroundColor: 'var(--bg-overlay)',
@@ -1000,7 +1000,7 @@ const styles = {
     gap: '6px'
   },
   poiMetaItem: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     padding: '4px 8px',
     backgroundColor: 'var(--bg-overlay)',
     borderRadius: 'var(--radius-sm)',

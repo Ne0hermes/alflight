@@ -322,7 +322,7 @@ const styles = {
     flex: 1,
   },
   label: {
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     color: theme.colors.textPrimary,
     display: 'flex',
@@ -334,7 +334,7 @@ const styles = {
   },
   input: {
     padding: '14px 16px',
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     borderRadius: 'var(--radius-sm)',
     border: `1px solid ${theme.colors.border}`,
     backgroundColor: 'var(--app-bg-alpha-80)',
@@ -344,7 +344,7 @@ const styles = {
   },
   select: {
     padding: '14px 16px',
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     borderRadius: 'var(--radius-sm)',
     border: `1px solid ${theme.colors.border}`,
     backgroundColor: 'var(--app-bg-alpha-80)',
@@ -355,7 +355,7 @@ const styles = {
     minHeight: '48px',
   },
   hint: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: theme.colors.textMuted,
     fontStyle: 'italic',
   },
@@ -399,25 +399,25 @@ const styles = {
     flexShrink: 0,
   },
   radioText: {
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     color: theme.colors.textPrimary,
     whiteSpace: 'nowrap',
   },
   radioTextDisabled: {
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     color: 'rgba(255, 255, 255, 0.4)',
     whiteSpace: 'nowrap',
   },
   radioDescription: {
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     color: theme.colors.textSecondary,
     marginLeft: 'auto',
     whiteSpace: 'nowrap',
   },
   badge: {
-    fontSize: '10px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: '600',
     color: 'var(--bg-surface)',
     backgroundColor: 'var(--accent-primary)',

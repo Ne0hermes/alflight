@@ -1354,7 +1354,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
               <Typography
                 sx={{
                   fontFamily: 'var(--font-mono)',
-                  fontSize: '11px',
+                  fontSize: 'var(--fs-caption)',
                   fontWeight: 500,
                   letterSpacing: '0.12em',
                   textTransform: 'uppercase',
@@ -1367,7 +1367,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
               <Typography
                 sx={{
                   fontFamily: 'var(--font-sans)',
-                  fontSize: '16px',
+                  fontSize: 'var(--fs-title)',
                   fontWeight: 600,
                   color: 'var(--text-primary)',
                   lineHeight: 1.3,
@@ -1387,7 +1387,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
               backgroundColor: 'var(--accent-soft)',
               color: 'var(--accent-primary)',
               fontFamily: 'var(--font-mono)',
-              fontSize: '12px',
+              fontSize: 'var(--fs-body)',
               fontWeight: 700,
               letterSpacing: '0.08em',
               borderRadius: 'var(--radius-sm)',
@@ -1426,7 +1426,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
               sx={{
                 display: 'block',
                 fontFamily: 'var(--font-mono)',
-                fontSize: '10px',
+                fontSize: 'var(--fs-caption)',
                 fontWeight: 600,
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
@@ -1438,7 +1438,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
             </Box>
             <Typography
               variant="body2"
-              sx={{ color: 'var(--text-primary)', fontSize: '13px' }}
+              sx={{ color: 'var(--text-primary)', fontSize: 'var(--fs-body)' }}
             >
               {aircraftData.manexExtraction.fileName || 'fichier'} ·{' '}
               {aircraftData.manexExtraction.items.length} champs
@@ -1608,7 +1608,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
             overflow: 'auto'
           }}>
             {Object.entries(pendingBypassErrors).map(([key, msg]) => (
-              <Box key={key} sx={{ display: 'flex', gap: 1, mb: 0.5, fontSize: '14px', color: 'var(--text-primary)' }}>
+              <Box key={key} sx={{ display: 'flex', gap: 1, mb: 0.5, fontSize: 'var(--fs-body)', color: 'var(--text-primary)' }}>
                 <span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>•</span>
                 <span><strong>{key}</strong> — {msg}</span>
               </Box>

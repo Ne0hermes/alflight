@@ -793,7 +793,7 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
               width: '28px',
               height: '28px',
               '& .MuiSvgIcon-root': {
-                fontSize: '20px',
+                fontSize: 'var(--fs-title)',
               },
               '& .MuiTouchRipple-root': {
                 width: '28px',

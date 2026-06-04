@@ -37,7 +37,7 @@ const styles = {
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)'
   },
   title: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: 600,
     color: 'var(--text-primary)',
     display: 'flex',
@@ -46,14 +46,14 @@ const styles = {
     flex: 1
   },
   pointCount: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     fontWeight: 'normal' as const,
     color: 'var(--text-secondary)'
   },
   table: {
     width: '100%',
     borderCollapse: 'collapse' as const,
-    fontSize: '13px'
+    fontSize: 'var(--fs-body)'
   },
   th: {
     padding: '4px 6px',
@@ -63,7 +63,7 @@ const styles = {
     color: 'var(--text-secondary)',
     backgroundColor: 'var(--bg-overlay)',
     whiteSpace: 'nowrap' as const,
-    fontSize: '12px'
+    fontSize: 'var(--fs-body)'
   },
   td: {
     padding: '6px 8px',
@@ -73,7 +73,7 @@ const styles = {
     padding: '4px 6px',
     border: '1px solid var(--border-subtle)',
     borderRadius: '3px',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     width: '80px'
   },
   actions: {
@@ -82,7 +82,7 @@ const styles = {
   },
   button: {
     padding: '4px 8px',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     border: 'none',
     borderRadius: '3px',
     cursor: 'pointer',
@@ -108,7 +108,7 @@ const styles = {
     textAlign: 'center' as const,
     padding: '24px',
     color: 'var(--text-tertiary)',
-    fontSize: '13px'
+    fontSize: 'var(--fs-body)'
   }
 };
 
@@ -221,7 +221,7 @@ export const PointsTable: React.FC<PointsTableProps> = ({
     return (
       <div style={styles.container}>
         <div style={styles.emptyState}>
-          <div style={{ fontSize: '16px', marginBottom: '8px' }}>📊</div>
+          <div style={{ fontSize: 'var(--fs-title)', marginBottom: '8px' }}>📊</div>
           {curves.length === 0
             ? "Créez d'abord une courbe dans le gestionnaire"
             : "Sélectionnez une courbe pour voir et éditer ses points"}
@@ -250,7 +250,7 @@ export const PointsTable: React.FC<PointsTableProps> = ({
 
       {selectedCurve.points.length === 0 ? (
         <div style={styles.emptyState}>
-          <div style={{ fontSize: '14px', marginBottom: '8px' }}>💡</div>
+          <div style={{ fontSize: 'var(--fs-body)', marginBottom: '8px' }}>💡</div>
           Aucun point dans cette courbe.
         </div>
       ) : null}

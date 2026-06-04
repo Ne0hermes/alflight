@@ -661,7 +661,7 @@ export const PilotDashboard = ({ onNavigate }) => {
           {aixmDetailsExpanded && (
             <div style={{
               fontFamily: 'var(--font-mono)',
-              fontSize: '11px',
+              fontSize: 'var(--fs-caption)',
               color: 'var(--text-secondary)',
               lineHeight: 1.7,
               marginTop: '12px',
@@ -734,7 +734,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                 Vous avez une configuration d'avion non terminée{wizardDraft.aircraftData?.registration ? ` (${wizardDraft.aircraftData.registration})` : ''}.
                 Reprenez là où vous vous êtes arrêté à l'étape {wizardDraft.currentStep + 1}.
               </p>
-              <p style={{ ...styles.ageErrorMessage, fontSize: '11px', marginTop: '4px', opacity: 0.7 }}>
+              <p style={{ ...styles.ageErrorMessage, fontSize: 'var(--fs-caption)', marginTop: '4px', opacity: 0.7 }}>
                 Sauvegardé le {new Date(wizardDraft.timestamp).toLocaleString('fr-FR')}
               </p>
             </div>
@@ -851,7 +851,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                   color: 'var(--text-primary)',
                   border: 'none',
                   borderRadius: 'var(--radius-sm)',
-                  fontSize: '14px',
+                  fontSize: 'var(--fs-body)',
                   fontWeight: '600',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
@@ -1274,7 +1274,7 @@ const styles = {
   // Titre du bloc alerte — Century Gothic, taille modérée, cockpit
   ageErrorTitle: {
     fontFamily: 'var(--font-sans)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: 600,
     letterSpacing: '-0.01em',
     color: 'var(--text-primary)',
@@ -1282,7 +1282,7 @@ const styles = {
   },
   ageErrorMessage: {
     fontFamily: 'var(--font-sans)',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     lineHeight: 1.5,
   },
@@ -1311,7 +1311,7 @@ const styles = {
     marginBottom: '12px',
     color: 'var(--accent-primary)',
     fontFamily: 'var(--font-mono)',
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: 600,
     textTransform: 'uppercase',
     letterSpacing: '0.12em',
@@ -1328,11 +1328,11 @@ const styles = {
     padding: '6px 12px',
     borderRadius: 'var(--radius-sm)',
     border: '1px solid',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
   },
   detail: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     marginTop: '4px',
   },
@@ -1344,18 +1344,18 @@ const styles = {
     borderBottom: '1px solid var(--border-subtle)',
   },
   itemLabel: {
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-primary)',
   },
   itemStatus: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     display: 'flex',
     alignItems: 'center',
     gap: '4px',
   },
   noData: {
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     fontStyle: 'italic',
     padding: '8px 0',
@@ -1372,12 +1372,12 @@ const styles = {
     gap: '8px',
   },
   statValue: {
-    fontSize: '18px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '700',
     color: 'var(--text-primary)',
   },
   statLabel: {
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     color: 'var(--text-secondary)',
     textTransform: 'uppercase',
   },
@@ -1393,7 +1393,7 @@ const styles = {
     marginBottom: '12px',
   },
   currencyTitle: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: 'var(--text-primary)',
   },
@@ -1403,7 +1403,7 @@ const styles = {
     padding: '4px 8px',
     borderRadius: 'var(--radius-sm)',
     border: '1px solid',
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: '600',
   },
   currencyDetails: {
@@ -1413,7 +1413,7 @@ const styles = {
     marginBottom: '8px',
   },
   regulationText: {
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     color: 'var(--text-secondary)',
     fontStyle: 'italic',
   },
@@ -1426,7 +1426,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
   },
   sepStatLabel: {
     color: 'var(--text-secondary)',
@@ -1447,7 +1447,7 @@ const styles = {
     backgroundColor: 'rgba(16, 185, 129, 0.1)',
     borderRadius: 'var(--radius-sm)',
     border: '1px solid rgba(16, 185, 129, 0.3)',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-primary)',
   },
   adviceWarning: {
@@ -1458,7 +1458,7 @@ const styles = {
     backgroundColor: 'rgba(245, 158, 11, 0.1)',
     borderRadius: 'var(--radius-sm)',
     border: '1px solid rgba(245, 158, 11, 0.3)',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--accent-primary)',
   },
   expandableHeader: {
@@ -1477,7 +1477,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: 'var(--accent-primary)',
     textTransform: 'uppercase',
@@ -1501,7 +1501,7 @@ const styles = {
     padding: '4px 8px',
     borderRadius: 'var(--radius-sm)',
     border: '1px solid',
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: '600',
   },
   summaryCount: {
@@ -1511,7 +1511,7 @@ const styles = {
     padding: '4px 8px',
     backgroundColor: 'var(--accent-soft)',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: '600',
     color: 'var(--text-secondary)',
   },
@@ -1521,7 +1521,7 @@ const styles = {
     padding: '4px 12px',
     backgroundColor: 'var(--accent-soft)',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '700',
     color: 'var(--accent-primary)',
   },
@@ -1537,7 +1537,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     marginBottom: '12px',
     color: 'var(--text-primary)',
@@ -1561,7 +1561,7 @@ const styles = {
     alignItems: 'center',
     gap: '8px',
     marginBottom: '12px',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
   },
   procedureSteps: {
@@ -1569,13 +1569,13 @@ const styles = {
     marginBottom: '12px',
   },
   procedureStep: {
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-primary)',
     marginBottom: '6px',
     lineHeight: '1.5',
   },
   procedureNote: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--accent-primary)',
     backgroundColor: 'var(--bg-overlay)',
     padding: '8px',
@@ -1590,7 +1590,7 @@ const styles = {
     borderRadius: 'var(--radius-sm)',
     border: 'none',
     color: 'var(--text-primary)',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'transform 0.2s, opacity 0.2s',
@@ -1609,13 +1609,13 @@ const styles = {
     border: '1px solid rgba(245, 158, 11, 0.3)',
   },
   noQualificationTitle: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: 'var(--text-primary)',
     marginBottom: '4px',
   },
   noQualificationText: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
   },
 };

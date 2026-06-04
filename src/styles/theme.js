@@ -105,7 +105,7 @@ export const createButtonStyle = (variant = 'primary') => {
     border: 'none',
     borderRadius: '8px',
     fontWeight: 600,
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     cursor: 'pointer',
     transition: 'background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease',
     textTransform: 'uppercase',

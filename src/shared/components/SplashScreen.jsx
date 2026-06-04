@@ -138,7 +138,7 @@ export const SplashScreen = ({ onComplete, minDuration = 1800 }) => {
           style={{
             margin: `${tokens.spacing[5]} 0 0 0`,
             fontFamily: tokens.fontFamily.mono,
-            fontSize: '12px',
+            fontSize: 'var(--fs-body)',
             lineHeight: 1.4,
             letterSpacing: '0.30em',
             textTransform: 'uppercase',
@@ -182,7 +182,7 @@ export const SplashScreen = ({ onComplete, minDuration = 1800 }) => {
           marginTop: tokens.spacing[4],
           minHeight: '14px',
           fontFamily: tokens.fontFamily.mono,
-          fontSize: '11px',
+          fontSize: 'var(--fs-caption)',
           lineHeight: 1.3,
           letterSpacing: '0.15em',
           textTransform: 'uppercase',

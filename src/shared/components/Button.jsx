@@ -101,12 +101,12 @@ export const Button = ({
   // Tailles de padding
   const getSizeStyles = () => {
     if (size === 'small') {
-      return { padding: '8px 16px', fontSize: '14px' };
+      return { padding: '8px 16px', fontSize: 'var(--fs-body)' };
     }
     if (size === 'large') {
-      return { padding: '16px 32px', fontSize: '16px' };
+      return { padding: '16px 32px', fontSize: 'var(--fs-title)' };
     }
-    return { padding: '12px 24px', fontSize: '15px' };
+    return { padding: '12px 24px', fontSize: 'var(--fs-body)' };
   };
 
   return (

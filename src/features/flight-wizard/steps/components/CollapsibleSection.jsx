@@ -74,7 +74,7 @@ export const CollapsibleSection = ({
           }}
         >
           <h4 style={{
-            fontSize: '16px',
+            fontSize: 'var(--fs-title)',
             color: titleColor,
             margin: 0,
             fontWeight: '600'

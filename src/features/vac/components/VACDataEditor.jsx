@@ -228,7 +228,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                fontSize: '14px',
+                fontSize: 'var(--fs-body)',
                 fontWeight: activeTab === tab.id ? 'bold' : 'normal'
               }}
             >

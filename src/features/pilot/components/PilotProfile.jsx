@@ -426,7 +426,7 @@ const PilotProfile = () => {
         ...styles[status.status],
         padding: '8px 12px',
         borderRadius: 'var(--radius-sm)',
-        fontSize: '16px',
+        fontSize: 'var(--fs-title)',
         fontWeight: 'bold',
         display: 'inline-block'
       }}>
@@ -608,7 +608,7 @@ const PilotProfile = () => {
     padding: '8px 12px',
     border: '1px solid var(--text-tertiary)',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     width: '100%',
     minWidth: 0,
     maxWidth: '100%',
@@ -629,7 +629,7 @@ const PilotProfile = () => {
   };
 
   const labelStyle = {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     fontWeight: '500',
     marginBottom: '4px',
@@ -760,7 +760,7 @@ const PilotProfile = () => {
                   color: 'var(--text-primary)',
                   border: 'none',
                   borderRadius: 'var(--radius-sm)',
-                  fontSize: '13px',
+                  fontSize: 'var(--fs-body)',
                   fontWeight: '500',
                   cursor: 'pointer',
                   display: 'flex',
@@ -783,7 +783,7 @@ const PilotProfile = () => {
                   color: 'var(--text-primary)',
                   border: 'none',
                   borderRadius: 'var(--radius-sm)',
-                  fontSize: '13px',
+                  fontSize: 'var(--fs-body)',
                   fontWeight: '500',
                   cursor: 'pointer',
                   display: 'flex',
@@ -810,7 +810,7 @@ const PilotProfile = () => {
         padding: '20px'
       }}>
         <h4 style={{
-          fontSize: '16px',
+          fontSize: 'var(--fs-title)',
           fontWeight: 'bold',
           marginBottom: '16px',
           display: 'flex',
@@ -828,85 +828,85 @@ const PilotProfile = () => {
           gap: '16px'
         }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Distance</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Distance</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.distance?.toUpperCase() || 'NM'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Altitude</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Altitude</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.altitude?.toUpperCase() || 'FT'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Vitesse</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Vitesse</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.speed?.toUpperCase() || 'KT'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Température</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Température</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               °{units?.temperature?.toUpperCase() || 'C'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Pression</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Pression</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.pressure || 'hPa'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Carburant</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Carburant</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.fuel?.toUpperCase() === 'LTR' ? 'L' : units?.fuel?.toUpperCase() || 'GAL'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Masse</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Masse</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.weight?.toUpperCase() || 'KG'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Piste</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Piste</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.runway?.toUpperCase() || 'M'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Vent</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Vent</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.windSpeed?.toUpperCase() || 'KT'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Bras de levier</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Bras de levier</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.armLength?.toUpperCase() || 'MM'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Visibilité</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Visibilité</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.visibility?.toUpperCase() || 'KM'}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Coordonnées</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>Coordonnées</div>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {units?.coordinates?.toUpperCase() || 'DMS'}
             </div>
           </div>
@@ -1277,7 +1277,7 @@ const PilotProfile = () => {
             border: 'none',
             borderRadius: 'var(--radius-sm)',
             fontFamily: 'var(--font-mono)',
-            fontSize: '11px',
+            fontSize: 'var(--fs-caption)',
             fontWeight: 600,
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
@@ -1301,7 +1301,7 @@ const PilotProfile = () => {
         <p style={{
           marginTop: '12px',
           fontFamily: 'var(--font-sans)',
-          fontSize: '12px',
+          fontSize: 'var(--fs-body)',
           color: 'var(--text-secondary)',
         }}>
           Cliquez pour enregistrer toutes vos modifications (profil, licences, medical, etc.)

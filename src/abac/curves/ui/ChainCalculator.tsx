@@ -253,7 +253,7 @@ export const ChainCalculator: React.FC<ChainCalculatorProps> = ({ graphs }) => {
                         <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
                           {step.graphName}
                         </div>
-                        <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                        <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                           <div>
                             Entrée ({graph?.axes?.xAxis?.title}):
                             <span style={{ fontWeight: 'bold', marginLeft: '8px' }}>
@@ -273,7 +273,7 @@ export const ChainCalculator: React.FC<ChainCalculatorProps> = ({ graphs }) => {
                             </span>
                           </div>
                           {step.curveUsed && (
-                            <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+                            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-tertiary)', marginTop: '4px' }}>
                               Courbe utilisée : {step.curveUsed}
                             </div>
                           )}
@@ -304,7 +304,7 @@ export const ChainCalculator: React.FC<ChainCalculatorProps> = ({ graphs }) => {
                       <div style={{ fontWeight: 'bold', color: 'var(--accent-primary)' }}>
                         Résultat final :
                       </div>
-                      <div style={{ fontSize: '18px', marginTop: '8px' }}>
+                      <div style={{ fontSize: 'var(--fs-title)', marginTop: '8px' }}>
                         {chainResults[chainResults.length - 1].outputValue?.toFixed(2)}{' '}
                         {graphs.find(g => g.id === chainResults[chainResults.length - 1].graphId)?.axes?.yAxis?.unit}
                       </div>

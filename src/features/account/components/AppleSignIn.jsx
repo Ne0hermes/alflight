@@ -110,7 +110,7 @@ export const AppleSignIn = ({ onSuccess, onError }) => {
           border: '1px solid var(--app-bg)',
           borderRadius: 'var(--radius-sm)',
           padding: '8px 24px',
-          fontSize: '16px',
+          fontSize: 'var(--fs-title)',
           fontWeight: '500',
           width: '280px',
           height: '40px',

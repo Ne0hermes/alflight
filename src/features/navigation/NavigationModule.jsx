@@ -327,7 +327,7 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
                       : '2px solid transparent',
                     marginBottom: '-1px',
                     fontFamily: tokens.fontFamily.mono,
-                    fontSize: '11px',
+                    fontSize: 'var(--fs-caption)',
                     fontWeight: isActive ? 600 : 500,
                     letterSpacing: '0.12em',
                     textTransform: 'uppercase',
@@ -559,7 +559,7 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
                         border: '2px solid var(--text-secondary)',
                         background: 'var(--text-secondary)',
                         color: 'var(--text-primary)',
-                        fontSize: '16px',
+                        fontSize: 'var(--fs-title)',
                         fontWeight: '600',
                         cursor: 'pointer',
                         display: 'inline-flex',
@@ -633,7 +633,7 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
                       border: '2px dashed var(--border-subtle)',
                       background: 'var(--bg-overlay)',
                       color: 'var(--text-secondary)',
-                      fontSize: '16px',
+                      fontSize: 'var(--fs-title)',
                       fontWeight: '600',
                       cursor: 'pointer',
                       display: 'flex',
@@ -666,7 +666,7 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
           {waypoints.length >= 2 && (
             <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
               <h3 style={{
-                fontSize: '16px',
+                fontSize: 'var(--fs-title)',
                 fontWeight: '600',
                 color: 'var(--text-primary)',
                 marginBottom: '16px',

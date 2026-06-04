@@ -196,7 +196,7 @@ const CustomChartViewer = memo(({ chart, zoom, rotation }) => {
             backgroundColor: 'rgba(0, 0, 0, 0.7)',
             color: 'var(--text-primary)',
             borderRadius: 'var(--radius-sm)',
-            fontSize: '14px'
+            fontSize: 'var(--fs-body)'
           }}>
             Si le PDF ne s'affiche pas, 
             <a 
@@ -231,7 +231,7 @@ const CustomChartViewer = memo(({ chart, zoom, rotation }) => {
         backgroundColor: 'var(--accent-primary)',
         color: 'var(--text-primary)',
         borderRadius: 'var(--radius-sm)',
-        fontSize: '12px',
+        fontSize: 'var(--fs-body)',
         fontWeight: 'bold',
         boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)'
       }}>
@@ -273,20 +273,20 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
           borderBottom: '2px solid var(--text-primary)',
           paddingBottom: '20px'
         }}>
-          <h1 style={{ fontSize: '32px', fontWeight: 'bold', margin: '0 0 10px 0' }}>
+          <h1 style={{ fontSize: 'var(--fs-heading)', fontWeight: 'bold', margin: '0 0 10px 0' }}>
             {chart.icao}
           </h1>
-          <h2 style={{ fontSize: '24px', color: 'var(--text-secondary)', margin: 0 }}>
+          <h2 style={{ fontSize: 'var(--fs-title)', color: 'var(--text-secondary)', margin: 0 }}>
             {chart.name}
           </h2>
         </div>
         
         {/* Informations terrain */}
         <div style={{ marginBottom: '30px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px' }}>
+          <h3 style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', marginBottom: '10px' }}>
             INFORMATIONS TERRAIN
           </h3>
-          <table style={{ width: '100%', fontSize: '14px' }}>
+          <table style={{ width: '100%', fontSize: 'var(--fs-body)' }}>
             <tbody>
               <tr>
                 <td style={styles.tableCell}>Code ICAO :</td>
@@ -364,10 +364,10 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
         {/* Caractéristiques des pistes */}
         {data?.runways && Array.isArray(data.runways) && data.runways.length > 0 && (
           <div style={{ marginBottom: '30px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px' }}>
+            <h3 style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', marginBottom: '10px' }}>
               CARACTÉRISTIQUES DES PISTES
             </h3>
-            <table style={{ width: '100%', fontSize: '14px', borderCollapse: 'collapse' }}>
+            <table style={{ width: '100%', fontSize: 'var(--fs-body)', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ backgroundColor: 'var(--bg-overlay)' }}>
                   <th style={styles.tableHeader}>Piste</th>
@@ -398,7 +398,7 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
                     <td style={styles.tableCell}>{rwy.pcn || '-'}</td>
                     <td style={styles.tableCell}>
                       {rwy.ils ? (
-                        <div style={{ fontSize: '11px' }}>
+                        <div style={{ fontSize: 'var(--fs-caption)' }}>
                           <div><strong>{rwy.ils.identifier || ''}</strong></div>
                           <div>{rwy.ils.frequency ? `${rwy.ils.frequency} MHz` : ''}</div>
                           <div>{rwy.ils.category ? `Cat ${rwy.ils.category}` : ''}</div>
@@ -411,7 +411,7 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
               </tbody>
             </table>
             {/* Légende des distances */}
-            <div style={{ marginTop: '10px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+            <div style={{ marginTop: '10px', fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
               <p><strong>TORA</strong>: Take-Off Run Available (Distance de roulement au décollage)</p>
               <p><strong>TODA</strong>: Take-Off Distance Available (Distance utilisable au décollage)</p>
               <p><strong>ASDA</strong>: Accelerate-Stop Distance Available (Distance accélération-arrêt)</p>
@@ -426,15 +426,15 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
             {/* Détails des équipements de piste */}
             {data.runways.length > 0 && (
               <div style={{ marginTop: '20px', padding: '15px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
-                <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '10px' }}>
+                <h4 style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', marginBottom: '10px' }}>
                   ÉQUIPEMENTS ET AIDES VISUELLES
                 </h4>
                 {data.runways.map((rwy, idx) => (
                   <div key={idx} style={{ marginBottom: '15px' }}>
-                    <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '5px' }}>
+                    <h5 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', marginBottom: '5px' }}>
                       Piste {rwy.designation || rwy.identifier}
                     </h5>
-                    <div style={{ fontSize: '13px', paddingLeft: '15px' }}>
+                    <div style={{ fontSize: 'var(--fs-body)', paddingLeft: '15px' }}>
                       {rwy.vasis && (
                         <div>
                           <strong>VASIS/PAPI:</strong> {rwy.vasis.type || 'PAPI'} 
@@ -471,10 +471,10 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
         {/* Fréquences */}
         {data?.frequencies && Object.keys(data.frequencies).length > 0 && (
           <div style={{ marginBottom: '30px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px' }}>
+            <h3 style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', marginBottom: '10px' }}>
               FRÉQUENCES RADIO
             </h3>
-            <table style={{ width: '100%', fontSize: '14px' }}>
+            <table style={{ width: '100%', fontSize: 'var(--fs-body)' }}>
               <tbody>
                 {Object.entries(data.frequencies)
                   .filter(([type, freqData]) => freqData && (Array.isArray(freqData) ? freqData.length > 0 : freqData !== ''))
@@ -485,12 +485,12 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
                         <tr key={`${type}_${idx}`}>
                           <td style={styles.tableCell}>
                             {type.toUpperCase()}
-                            {freq.remarks && <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}> ({freq.remarks})</span>}
+                            {freq.remarks && <span style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}> ({freq.remarks})</span>}
                             :
                           </td>
                           <td style={styles.tableCell}>
                             <strong>{freq.frequency} MHz</strong>
-                            {freq.schedule && <span style={{ marginLeft: '10px', fontSize: '12px' }}>({freq.schedule})</span>}
+                            {freq.schedule && <span style={{ marginLeft: '10px', fontSize: 'var(--fs-body)' }}>({freq.schedule})</span>}
                           </td>
                         </tr>
                       ));
@@ -512,10 +512,10 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
         {/* Aides à la navigation */}
         {data?.navaids && data.navaids.length > 0 && (
           <div style={{ marginBottom: '30px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px' }}>
+            <h3 style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', marginBottom: '10px' }}>
               AIDES À LA NAVIGATION
             </h3>
-            <table style={{ width: '100%', fontSize: '14px', borderCollapse: 'collapse' }}>
+            <table style={{ width: '100%', fontSize: 'var(--fs-body)', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ backgroundColor: 'var(--bg-overlay)' }}>
                   <th style={styles.tableHeader}>Type</th>
@@ -548,10 +548,10 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
         {/* Espaces aériens */}
         {data?.airspaces && Object.keys(data.airspaces).length > 0 && (
           <div style={{ marginBottom: '30px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px' }}>
+            <h3 style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', marginBottom: '10px' }}>
               ESPACES AÉRIENS ASSOCIÉS
             </h3>
-            <table style={{ width: '100%', fontSize: '14px' }}>
+            <table style={{ width: '100%', fontSize: 'var(--fs-body)' }}>
               <tbody>
                 {Object.entries(data.airspaces).map(([type, space]) => (
                   <tr key={type}>
@@ -573,10 +573,10 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
         {/* Services et équipements */}
         {(data?.operatingHours || data?.fuel || data?.customs || data?.handling) && (
           <div style={{ marginBottom: '30px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px' }}>
+            <h3 style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', marginBottom: '10px' }}>
               SERVICES ET ÉQUIPEMENTS
             </h3>
-            <table style={{ width: '100%', fontSize: '14px' }}>
+            <table style={{ width: '100%', fontSize: 'var(--fs-body)' }}>
               <tbody>
                 {data?.operatingHours && (
                   <tr>
@@ -627,7 +627,7 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
           borderRadius: 'var(--radius-sm)',
           textAlign: 'center'
         }}>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-body)' }}>
             [Schéma de l'aérodrome]
           </p>
           <div style={{
@@ -652,7 +652,7 @@ const DemoVACChart = memo(({ chart, zoom, rotation }) => {
           padding: '15px',
           backgroundColor: 'rgba(242, 105, 33, 0.10)',
           borderRadius: 'var(--radius-sm)',
-          fontSize: '12px',
+          fontSize: 'var(--fs-body)',
           color: 'var(--accent-primary)',
           textAlign: 'center'
         }}>
@@ -724,7 +724,7 @@ const styles = {
     backgroundColor: 'var(--bg-overlay)',
     border: '1px solid var(--border-subtle)',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '500'
   },
   pdfContainer: {

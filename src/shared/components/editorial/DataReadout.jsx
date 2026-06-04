@@ -49,7 +49,7 @@ export const DataReadout = ({
     if (size === 'sm') {
       return {
         ...tokens.typography.data,
-        fontSize: '13px',
+        fontSize: 'var(--fs-body)',
       };
     }
     return tokens.typography.data;

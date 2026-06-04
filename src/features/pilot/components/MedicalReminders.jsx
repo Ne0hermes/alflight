@@ -164,7 +164,7 @@ const MedicalReminders = () => {
     padding: '8px 12px',
     border: '1px solid var(--text-tertiary)',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     width: '100%',
     minWidth: 0,
     maxWidth: '100%',
@@ -183,7 +183,7 @@ const MedicalReminders = () => {
   };
 
   const labelStyle = {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     fontWeight: '500',
     marginBottom: '4px',
@@ -214,7 +214,7 @@ const MedicalReminders = () => {
       }}>
         <div style={{ flex: 1 }}>
           <p style={{ 
-            fontSize: '14px', 
+            fontSize: 'var(--fs-body)', 
             fontWeight: '600',
             color: 'var(--text-primary)',
             marginBottom: '4px'
@@ -225,7 +225,7 @@ const MedicalReminders = () => {
             display: 'flex', 
             flexWrap: 'wrap',
             gap: '16px', 
-            fontSize: '12px', 
+            fontSize: 'var(--fs-body)', 
             color: 'var(--text-secondary)',
             marginBottom: (record.limitations || record.remarks) ? '4px' : '0'
           }}>
@@ -241,7 +241,7 @@ const MedicalReminders = () => {
           </div>
           {record.limitations && (
             <p style={{ 
-              fontSize: '12px', 
+              fontSize: 'var(--fs-body)', 
               color: 'var(--accent-primary)',
               marginBottom: record.remarks ? '2px' : '0'
             }}>
@@ -250,7 +250,7 @@ const MedicalReminders = () => {
           )}
           {record.remarks && (
             <p style={{ 
-              fontSize: '12px', 
+              fontSize: 'var(--fs-body)', 
               color: 'var(--text-tertiary)', 
               fontStyle: 'italic'
             }}>
@@ -262,7 +262,7 @@ const MedicalReminders = () => {
             <div style={{ 
               display: 'flex', 
               gap: '16px', 
-              fontSize: '11px', 
+              fontSize: 'var(--fs-caption)', 
               color: 'var(--text-tertiary)',
               marginTop: '4px'
             }}>
@@ -343,7 +343,7 @@ const MedicalReminders = () => {
           maxWidth: '100%',
           boxSizing: 'border-box'
         }}>
-          <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '16px' }}>
+          <h4 style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', marginBottom: '16px' }}>
             {editingRecord ? 'Modifier le certificat médical' : 'Nouveau certificat médical'}
           </h4>
 
@@ -398,7 +398,7 @@ const MedicalReminders = () => {
             />
           </div>
 
-          <h5 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>
+          <h5 style={{ fontSize: 'var(--fs-body)', fontWeight: '600', marginBottom: '12px' }}>
             Examens complémentaires programmés
           </h5>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '20px', minWidth: 0 }}>
@@ -453,7 +453,7 @@ const MedicalReminders = () => {
                 color: 'var(--text-primary)', 
                 border: 'none', 
                 borderRadius: 'var(--radius-sm)', 
-                fontSize: '14px', 
+                fontSize: 'var(--fs-body)', 
                 fontWeight: '500', 
                 cursor: 'pointer' 
               }}
@@ -469,7 +469,7 @@ const MedicalReminders = () => {
                 color: 'var(--text-secondary)', 
                 border: 'none', 
                 borderRadius: 'var(--radius-sm)', 
-                fontSize: '14px', 
+                fontSize: 'var(--fs-body)', 
                 fontWeight: '500', 
                 cursor: 'pointer' 
               }}
@@ -492,7 +492,7 @@ const MedicalReminders = () => {
               color: 'var(--text-primary)', 
               border: 'none', 
               borderRadius: 'var(--radius-sm)', 
-              fontSize: '14px', 
+              fontSize: 'var(--fs-body)', 
               fontWeight: '500', 
               cursor: 'pointer'
             }}
@@ -513,7 +513,7 @@ const MedicalReminders = () => {
               marginBottom: '8px'
             }}>
               <h4 style={{ 
-                fontSize: '16px', 
+                fontSize: 'var(--fs-title)', 
                 fontWeight: '600',
                 color: 'var(--text-primary)'
               }}>
@@ -530,14 +530,14 @@ const MedicalReminders = () => {
         {medicalRecords.length === 0 && (
           <div style={{ 
             color: 'var(--text-tertiary)',
-            fontSize: '14px',
+            fontSize: 'var(--fs-body)',
             fontStyle: 'italic',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
             padding: '12px 0'
           }}>
-            <span style={{ color: 'var(--accent-primary)', fontSize: '16px', fontWeight: 'bold' }}>!</span>
+            <span style={{ color: 'var(--accent-primary)', fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>!</span>
             Aucun certificat médical enregistré
           </div>
         )}

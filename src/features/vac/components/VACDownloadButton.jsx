@@ -22,15 +22,15 @@ export const VACDownloadButton = memo(({ icao, size = 'normal' }) => {
   const buttonStyles = {
     small: {
       padding: '6px 12px',
-      fontSize: '13px'
+      fontSize: 'var(--fs-body)'
     },
     normal: {
       padding: '8px 16px',
-      fontSize: '14px'
+      fontSize: 'var(--fs-body)'
     },
     large: {
       padding: '12px 24px',
-      fontSize: '16px'
+      fontSize: 'var(--fs-title)'
     }
   };
 
@@ -143,7 +143,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     transition: 'background-color 0.2s',
     ':hover': {
       backgroundColor: 'var(--bg-overlay)'

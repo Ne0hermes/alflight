@@ -33,7 +33,7 @@ export const VACUploader = memo(({ icao }) => {
         marginTop: '16px'
       }}>
         <h4 style={{
-          fontSize: '16px',
+          fontSize: 'var(--fs-title)',
           fontWeight: 'bold',
           marginBottom: '12px',
           display: 'flex',
@@ -69,10 +69,10 @@ export const VACUploader = memo(({ icao }) => {
           }}
         >
           <Upload size={40} style={{ color: 'var(--text-secondary)' }} />
-          <p style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+          <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
             Cliquez pour importer une carte VAC
           </p>
-          <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+          <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
             Extraction automatique des données (fréquences, pistes, procédures...)
           </p>
         </button>
@@ -91,8 +91,8 @@ export const VACUploader = memo(({ icao }) => {
             }}>
               <CheckCircle size={20} style={{ color: 'var(--text-primary)' }} />
               <div>
-                <p style={{ fontSize: '14px', fontWeight: 'bold' }}>Carte VAC importée avec succès!</p>
-                <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                <p style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold' }}>Carte VAC importée avec succès!</p>
+                <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                   {extractedData.runways?.length || 0} piste(s) • 
                   {Object.keys(extractedData.frequencies || {}).length} fréquence(s) • 
                   {extractedData.navaids?.length || 0} aide(s) à la navigation
@@ -102,11 +102,11 @@ export const VACUploader = memo(({ icao }) => {
             
             {/* Aperçu des données */}
             <details style={{ marginTop: '12px' }}>
-              <summary style={{ cursor: 'pointer', fontSize: '14px', color: 'var(--text-secondary)' }}>
+              <summary style={{ cursor: 'pointer', fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                 Voir les données extraites
               </summary>
               <pre style={{
-                fontSize: '12px',
+                fontSize: 'var(--fs-body)',
                 backgroundColor: 'var(--bg-overlay)',
                 padding: '12px',
                 borderRadius: 'var(--radius-sm)',

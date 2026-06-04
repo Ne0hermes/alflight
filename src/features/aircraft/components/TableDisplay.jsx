@@ -261,7 +261,7 @@ const TableDisplay = ({
           backgroundColor: 'var(--bg-overlay)',
           padding: '16px',
           borderRadius: 'var(--radius-sm)',
-          fontSize: '12px',
+          fontSize: 'var(--fs-body)',
           overflow: 'auto',
           maxHeight: '400px',
           border: '1px solid var(--border-subtle)'
@@ -288,7 +288,7 @@ const TableDisplay = ({
                   border: '1px solid var(--text-tertiary)',
                   borderRadius: 'var(--radius-sm)',
                   padding: '2px 6px',
-                  fontSize: '14px',
+                  fontSize: 'var(--fs-body)',
                   fontWeight: 'bold'
                 }}
                 placeholder="Nom du tableau"
@@ -312,7 +312,7 @@ const TableDisplay = ({
                     border: '1px solid var(--text-tertiary)',
                     borderRadius: 'var(--radius-sm)',
                     padding: '2px 6px',
-                    fontSize: '12px',
+                    fontSize: 'var(--fs-body)',
                     minWidth: '200px'
                   }}
                   placeholder="Conditions d'application"
@@ -489,7 +489,7 @@ const TableDisplay = ({
           <table style={{
             width: '100%',
             borderCollapse: 'collapse',
-            fontSize: '12px',
+            fontSize: 'var(--fs-body)',
             fontFamily: 'var(--font-sans)',
             color: 'var(--text-primary)'
           }}>
@@ -514,7 +514,7 @@ const TableDisplay = ({
                             border: '1px solid var(--text-tertiary)',
                             borderRadius: 'var(--radius-sm)',
                             padding: '2px 4px',
-                            fontSize: '11px',
+                            fontSize: 'var(--fs-caption)',
                             fontWeight: 'bold'
                           }}
                         />
@@ -535,7 +535,7 @@ const TableDisplay = ({
                               border: '1px solid var(--text-tertiary)',
                               borderRadius: 'var(--radius-sm)',
                               padding: '1px 3px',
-                              fontSize: '10px',
+                              fontSize: 'var(--fs-caption)',
                               width: '50px'
                             }}
                             placeholder="unité"
@@ -543,7 +543,7 @@ const TableDisplay = ({
                         ) : (
                           editedTable.units?.[column] && (
                             <span style={{
-                              fontSize: '10px',
+                              fontSize: 'var(--fs-caption)',
                               color: 'var(--text-secondary)',
                               backgroundColor: 'var(--bg-overlay)',
                               padding: '1px 4px',
@@ -574,7 +574,7 @@ const TableDisplay = ({
                               alignItems: 'center',
                               justifyContent: 'center',
                               cursor: 'pointer',
-                              fontSize: '10px'
+                              fontSize: 'var(--fs-caption)'
                             }}
                           >
                             <X size={10} />
@@ -615,7 +615,7 @@ const TableDisplay = ({
                           alignItems: 'center',
                           justifyContent: 'center',
                           cursor: editedTable.data.length <= 1 ? 'not-allowed' : 'pointer',
-                          fontSize: '10px'
+                          fontSize: 'var(--fs-caption)'
                         }}
                       >
                         <Minus size={10} />
@@ -638,7 +638,7 @@ const TableDisplay = ({
                             border: '1px solid var(--text-tertiary)',
                             borderRadius: 'var(--radius-sm)',
                             padding: '2px 4px',
-                            fontSize: '11px',
+                            fontSize: 'var(--fs-caption)',
                             width: '100%'
                           }}
                         />

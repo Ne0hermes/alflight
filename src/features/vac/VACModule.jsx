@@ -62,7 +62,7 @@ export const VACModule = memo(({ wizardMode = false, config = {} }) => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span style={{
               fontFamily: tokens.fontFamily.mono,
-              fontSize: '11px',
+              fontSize: 'var(--fs-caption)',
               fontWeight: 600,
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
@@ -70,10 +70,10 @@ export const VACModule = memo(({ wizardMode = false, config = {} }) => {
               EN VOL
             </span>
             <div>
-              <div style={{ fontWeight: 600, fontSize: '15px' }}>
+              <div style={{ fontWeight: 600, fontSize: 'var(--fs-body)' }}>
                 Préparation de vol en cours
               </div>
-              <div style={{ fontSize: '13px', opacity: 0.9 }}>
+              <div style={{ fontSize: 'var(--fs-body)', opacity: 0.9 }}>
                 Après avoir mis à jour vos VAC, cliquez sur le bouton pour continuer votre préparation
               </div>
             </div>
@@ -90,7 +90,7 @@ export const VACModule = memo(({ wizardMode = false, config = {} }) => {
               border: '1px solid var(--border-regular)',
               borderRadius: tokens.radius?.sm || '2px',
               fontFamily: tokens.fontFamily.mono,
-              fontSize: '11px',
+              fontSize: 'var(--fs-caption)',
               fontWeight: 600,
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
@@ -841,7 +841,7 @@ const VACModuleOld = memo(() => {
                   }}
                   style={{
                     marginLeft: '12px',
-                    fontSize: '12px',
+                    fontSize: 'var(--fs-body)',
                     color: 'var(--color-red-critical)',
                     textDecoration: 'underline',
                     background: 'none',
@@ -950,7 +950,7 @@ const VACModuleOld = memo(() => {
                 />
               </div>
               
-              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+              <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '12px' }}>
                 {filteredSIAAerodromes.length} aérodrome(s) trouvé(s) dans la base SIA
               </div>
               
@@ -987,11 +987,11 @@ const VACModuleOld = memo(() => {
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                           <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{ fontWeight: 'bold', fontSize: 'var(--fs-body)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                               {props.icao}
                               {props.source && (
                                 <span style={{ 
-                                  fontSize: '9px', 
+                                  fontSize: 'var(--fs-caption)', 
                                   padding: '1px 4px', 
                                   borderRadius: 'var(--radius-sm)',
                                   backgroundColor: props.source === 'AIXM' ? 'var(--status-info-bg)' : 'var(--accent-soft)',
@@ -1001,16 +1001,16 @@ const VACModuleOld = memo(() => {
                                 </span>
                               )}
                             </div>
-                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                               {props.name || 'Sans nom'}
                             </div>
                             {props.city && (
-                              <div style={{ fontSize: '11px', color: '#999' }}>
+                              <div style={{ fontSize: 'var(--fs-caption)', color: '#999' }}>
                                 {props.city}
                               </div>
                             )}
                             {props.elevation_ft > 0 && (
-                              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                              <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginTop: '2px' }}>
                                 Alt: {props.elevation_ft}ft
                               </div>
                             )}
@@ -1020,7 +1020,7 @@ const VACModuleOld = memo(() => {
                           )}
                         </div>
                         {(props.frequencies?.twr || props.frequencies?.info) && (
-                          <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                          <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginTop: '2px' }}>
                             {props.frequencies.twr && `TWR: ${props.frequencies.twr}`}
                             {props.frequencies.twr && props.frequencies.info && ' • '}
                             {props.frequencies.info && `INFO: ${props.frequencies.info}`}
@@ -1031,7 +1031,7 @@ const VACModuleOld = memo(() => {
                   })}
                 </div>
                 {filteredSIAAerodromes.length > 50 && (
-                  <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  <div style={{ textAlign: 'center', marginTop: '12px', fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                     Affichage limité aux 50 premiers résultats. Affinez votre recherche.
                   </div>
                 )}

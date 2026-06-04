@@ -976,13 +976,13 @@ const PilotLogbook = ({ showFormProp }) => {
     padding: '8px 12px',
     border: '1px solid var(--text-tertiary)',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     width: '100%',
     backgroundColor: 'var(--bg-overlay)'
   };
 
   const labelStyle = {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     fontWeight: '500',
     marginBottom: '4px',
@@ -1010,11 +1010,11 @@ const PilotLogbook = ({ showFormProp }) => {
       {/* Statistiques globales - Afficher seulement si on n'est pas dans le formulaire */}
       {!isFormVisible && (
         <div style={{ backgroundColor: 'var(--bg-overlay)', padding: '20px', borderRadius: 'var(--radius-sm)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '16px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '12px' }}>Statistiques de vol</h3>
+          <h3 style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', marginBottom: '12px' }}>Statistiques de vol</h3>
           <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
             <button
               onClick={handleImport}
-              style={{ padding: '8px 16px', backgroundColor: '#f26921', color: 'var(--text-primary)', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: '14px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+              style={{ padding: '8px 16px', backgroundColor: '#f26921', color: 'var(--text-primary)', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 'var(--fs-body)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
             >
               <Upload size={16} />
               Importer
@@ -1022,7 +1022,7 @@ const PilotLogbook = ({ showFormProp }) => {
             {entries.length > 0 && (
               <button
                 onClick={handleExport}
-                style={{ padding: '8px 16px', backgroundColor: 'var(--border-subtle)', color: 'var(--text-secondary)', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: '14px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                style={{ padding: '8px 16px', backgroundColor: 'var(--border-subtle)', color: 'var(--text-secondary)', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 'var(--fs-body)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
               >
                 <Download size={16} />
                 Exporter
@@ -1041,58 +1041,58 @@ const PilotLogbook = ({ showFormProp }) => {
           }}>
             {/* Total général - Plus important */}
             <div style={{ borderLeft: '3px solid var(--text-secondary)', paddingLeft: '12px' }}>
-              <p style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Total général</p>
-              <p style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--app-bg)' }}>{totals.totalHours.toFixed(1)}h</p>
+              <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Total général</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--app-bg)' }}>{totals.totalHours.toFixed(1)}h</p>
             </div>
 
             {/* Fonction à bord */}
             <div>
-              <p style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>CDB</p>
-              <p style={{ fontSize: '20px', fontWeight: 'bold' }}>{totals.picHours.toFixed(1)}h</p>
+              <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>CDB</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>{totals.picHours.toFixed(1)}h</p>
             </div>
             <div>
-              <p style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Copilote</p>
-              <p style={{ fontSize: '20px', fontWeight: 'bold' }}>{totals.copilotHours.toFixed(1)}h</p>
+              <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Copilote</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>{totals.copilotHours.toFixed(1)}h</p>
             </div>
             <div>
-              <p style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Double commande</p>
-              <p style={{ fontSize: '20px', fontWeight: 'bold' }}>{totals.dualCommandHours.toFixed(1)}h</p>
+              <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Double commande</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>{totals.dualCommandHours.toFixed(1)}h</p>
             </div>
             <div>
-              <p style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Instructeur</p>
-              <p style={{ fontSize: '20px', fontWeight: 'bold' }}>{totals.instructorHours.toFixed(1)}h</p>
+              <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Instructeur</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>{totals.instructorHours.toFixed(1)}h</p>
             </div>
 
             {/* Conditions de vol */}
             <div>
-              <p style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Jour</p>
-              <p style={{ fontSize: '20px', fontWeight: 'bold' }}>{(totals.totalHours - totals.nightHours).toFixed(1)}h</p>
+              <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Jour</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>{(totals.totalHours - totals.nightHours).toFixed(1)}h</p>
             </div>
             <div>
-              <p style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Nuit</p>
-              <p style={{ fontSize: '20px', fontWeight: 'bold' }}>{totals.nightHours.toFixed(1)}h</p>
+              <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Nuit</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>{totals.nightHours.toFixed(1)}h</p>
             </div>
             <div>
-              <p style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>IFR</p>
-              <p style={{ fontSize: '20px', fontWeight: 'bold' }}>{totals.ifrHours.toFixed(1)}h</p>
+              <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>IFR</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>{totals.ifrHours.toFixed(1)}h</p>
             </div>
             <div>
-              <p style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Voyage</p>
-              <p style={{ fontSize: '20px', fontWeight: 'bold' }}>{totals.crossCountryHours.toFixed(1)}h</p>
+              <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Voyage</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>{totals.crossCountryHours.toFixed(1)}h</p>
             </div>
 
             {/* Atterrissages et approches */}
             <div>
-              <p style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Att. jour</p>
-              <p style={{ fontSize: '20px', fontWeight: 'bold' }}>{totals.dayLandings}</p>
+              <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Att. jour</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>{totals.dayLandings}</p>
             </div>
             <div>
-              <p style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Att. nuit</p>
-              <p style={{ fontSize: '20px', fontWeight: 'bold' }}>{totals.nightLandings}</p>
+              <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Att. nuit</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>{totals.nightLandings}</p>
             </div>
             <div>
-              <p style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Approches</p>
-              <p style={{ fontSize: '20px', fontWeight: 'bold' }}>{totals.approaches}</p>
+              <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Approches</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>{totals.approaches}</p>
             </div>
           </div>
         </div>
@@ -1108,7 +1108,7 @@ const PilotLogbook = ({ showFormProp }) => {
             borderRadius: 'var(--radius-sm)', 
             padding: '10px 12px', 
             marginBottom: '20px',
-            fontSize: '12px',
+            fontSize: 'var(--fs-body)',
             color: 'var(--accent-primary)'
           }}>
             <strong>Rappel :</strong> Ces informations ne remplacent pas votre carnet de vol officiel qui doit être tenu à jour conformément à la réglementation en vigueur.
@@ -1116,7 +1116,7 @@ const PilotLogbook = ({ showFormProp }) => {
 
           {/* Section 1: Date */}
           <div style={{ marginBottom: '24px' }}>
-            <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'rgb(0, 0, 0)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
+            <div style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'rgb(0, 0, 0)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
               <span style={{ color: 'rgb(0, 0, 0)' }}>1. DATE</span>
             </div>
             <div style={{ width: '250px' }}>
@@ -1133,7 +1133,7 @@ const PilotLogbook = ({ showFormProp }) => {
 
           {/* Section 2: Départ */}
           <div style={{ marginBottom: '24px' }}>
-            <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'rgb(0, 0, 0)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
+            <div style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'rgb(0, 0, 0)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
               <span style={{ color: 'rgb(0, 0, 0)' }}>2. DÉPART</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
@@ -1173,7 +1173,7 @@ const PilotLogbook = ({ showFormProp }) => {
 
           {/* Section 3: Arrivée */}
           <div style={{ marginBottom: '24px' }}>
-            <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'rgb(0, 0, 0)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
+            <div style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'rgb(0, 0, 0)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
               <span style={{ color: 'rgb(0, 0, 0)' }}>3. ARRIVÉE</span>
             </div>
             
@@ -1221,7 +1221,7 @@ const PilotLogbook = ({ showFormProp }) => {
                 padding: '8px 12px',
                 marginTop: '12px',
                 color: 'var(--color-red-critical)',
-                fontSize: '13px',
+                fontSize: 'var(--fs-body)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px'
@@ -1235,7 +1235,7 @@ const PilotLogbook = ({ showFormProp }) => {
           {/* Section 3 BIS: SEGMENTS DE VOL - Nouvelle section combinée */}
           <div style={{ marginBottom: '24px' }}>
             <div style={{
-              fontSize: '14px',
+              fontSize: 'var(--fs-body)',
               fontWeight: 'bold',
               color: 'rgb(0, 0, 0)',
               backgroundColor: 'transparent',
@@ -1274,7 +1274,7 @@ const PilotLogbook = ({ showFormProp }) => {
                 required
               />
               {formData.blockOff && formData.blockOn && (
-                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginTop: '4px' }}>
                   <div>
                     Bloc à bloc : {decimalToHHMM((new Date(`1970-01-01T${formData.blockOn}`) - new Date(`1970-01-01T${formData.blockOff}`)) / (1000 * 60 * 60))}
                   </div>
@@ -1299,7 +1299,7 @@ const PilotLogbook = ({ showFormProp }) => {
                 {/* Première ligne : Temps + Type de vol + Boutons */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 80px', gap: '12px', alignItems: 'end', marginBottom: '12px' }}>
                   <div>
-                    <label style={{...labelStyle, fontSize: '11px'}}>Temps</label>
+                    <label style={{...labelStyle, fontSize: 'var(--fs-caption)'}}>Temps</label>
                     <input
                       type="text"
                       value={segment.rawTime !== undefined ? segment.rawTime : (segment.time ? decimalToHHMM(parseFloat(segment.time)) : '')}
@@ -1351,7 +1351,7 @@ const PilotLogbook = ({ showFormProp }) => {
                       placeholder="--:--"
                       style={{
                         ...inputStyle,
-                        fontSize: '13px',
+                        fontSize: 'var(--fs-body)',
                         fontFamily: 'monospace',
                         textAlign: 'center',
                         letterSpacing: '1px'
@@ -1360,7 +1360,7 @@ const PilotLogbook = ({ showFormProp }) => {
                   </div>
 
                   <div>
-                    <label style={{...labelStyle, fontSize: '11px'}}>Type de vol</label>
+                    <label style={{...labelStyle, fontSize: 'var(--fs-caption)'}}>Type de vol</label>
                     <select
                       value={segment.flightType}
                       onChange={(e) => {
@@ -1372,7 +1372,7 @@ const PilotLogbook = ({ showFormProp }) => {
                           handleChange('flightType', e.target.value);
                         }
                       }}
-                      style={{...inputStyle, fontSize: '13px'}}
+                      style={{...inputStyle, fontSize: 'var(--fs-body)'}}
                     >
                       <option value="">Sélectionner...</option>
                       <option value="vfr-day">VFR Jour</option>
@@ -1398,7 +1398,7 @@ const PilotLogbook = ({ showFormProp }) => {
                           border: 'none',
                           borderRadius: 'var(--radius-sm)',
                           cursor: 'pointer',
-                          fontSize: '12px'
+                          fontSize: 'var(--fs-body)'
                         }}
                       >
                         ✕
@@ -1423,7 +1423,7 @@ const PilotLogbook = ({ showFormProp }) => {
                           border: 'none',
                           borderRadius: 'var(--radius-sm)',
                           cursor: 'pointer',
-                          fontSize: '12px'
+                          fontSize: 'var(--fs-body)'
                         }}
                       >
                         +
@@ -1435,7 +1435,7 @@ const PilotLogbook = ({ showFormProp }) => {
                 {/* Deuxième ligne : Fonction + Nom CDB */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', alignItems: 'end' }}>
                   <div>
-                    <label style={{...labelStyle, fontSize: '11px'}}>Fonction</label>
+                    <label style={{...labelStyle, fontSize: 'var(--fs-caption)'}}>Fonction</label>
                     <select
                       value={segment.functionOnBoard}
                       onChange={(e) => {
@@ -1483,7 +1483,7 @@ const PilotLogbook = ({ showFormProp }) => {
                           }
                         }
                       }}
-                      style={{...inputStyle, fontSize: '13px'}}
+                      style={{...inputStyle, fontSize: 'var(--fs-body)'}}
                     >
                       <option value="">Sélectionner...</option>
                       <option value="pic">CDB - Commandant</option>
@@ -1497,7 +1497,7 @@ const PilotLogbook = ({ showFormProp }) => {
                   </div>
 
                   <div>
-                    <label style={{...labelStyle, fontSize: '11px'}}>Nom CDB</label>
+                    <label style={{...labelStyle, fontSize: 'var(--fs-caption)'}}>Nom CDB</label>
                     <input
                       type="text"
                       value={segment.pilotInCommand}
@@ -1511,7 +1511,7 @@ const PilotLogbook = ({ showFormProp }) => {
                         }
                       }}
                       placeholder="Nom du CDB"
-                      style={{...inputStyle, fontSize: '13px'}}
+                      style={{...inputStyle, fontSize: 'var(--fs-body)'}}
                     />
                   </div>
                 </div>
@@ -1525,7 +1525,7 @@ const PilotLogbook = ({ showFormProp }) => {
                 padding: '8px',
                 backgroundColor: 'var(--bg-overlay)',
                 borderRadius: 'var(--radius-sm)',
-                fontSize: '12px',
+                fontSize: 'var(--fs-body)',
                 color: 'var(--text-secondary)'
               }}>
                 <strong>Total segments :</strong> {
@@ -1542,7 +1542,7 @@ const PilotLogbook = ({ showFormProp }) => {
 
           {/* Section 4: Avion */}
           <div style={{ marginBottom: '24px' }}>
-            <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'rgb(0, 0, 0)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
+            <div style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'rgb(0, 0, 0)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
               <span style={{ color: 'rgb(0, 0, 0)' }}>4. AVION</span>
             </div>
             {/* Première ligne : Immatriculation */}
@@ -1579,7 +1579,7 @@ const PilotLogbook = ({ showFormProp }) => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', alignItems: 'end' }}>
               <div>
                 <label style={labelStyle}>
-                  Type <span style={{ fontSize: '10px', color: 'var(--text-primary)' }}>(auto)</span>
+                  Type <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-primary)' }}>(auto)</span>
                 </label>
                 <input
                   type="text"
@@ -1599,7 +1599,7 @@ const PilotLogbook = ({ showFormProp }) => {
 
               <div>
                 <label style={labelStyle}>
-                  Groupe * <span style={{ fontSize: '10px', color: 'var(--text-primary)' }}>(auto)</span>
+                  Groupe * <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-primary)' }}>(auto)</span>
                 </label>
                 <input
                   type="text"
@@ -1614,7 +1614,7 @@ const PilotLogbook = ({ showFormProp }) => {
                     padding: '8px 12px',
                     borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--text-tertiary)',
-                    fontSize: '14px',
+                    fontSize: 'var(--fs-body)',
                     width: '100%',
                     backgroundColor: 'var(--bg-overlay)',
                     cursor: 'not-allowed',
@@ -1630,7 +1630,7 @@ const PilotLogbook = ({ showFormProp }) => {
 
           {/* Section 5: Atterrissages */}
           <div style={{ marginBottom: '24px' }}>
-            <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'rgb(0, 0, 0)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
+            <div style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'rgb(0, 0, 0)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
               <span style={{ color: 'rgb(0, 0, 0)' }}>5. ATTERRISSAGES</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', alignItems: 'end' }}>
@@ -1658,7 +1658,7 @@ const PilotLogbook = ({ showFormProp }) => {
 
               <div>
                 <label style={labelStyle}>
-                  Approches IFR <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>(TBD)</span>
+                  Approches IFR <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)' }}>(TBD)</span>
                 </label>
                 <input
                   type="number"
@@ -1681,7 +1681,7 @@ const PilotLogbook = ({ showFormProp }) => {
 
           {/* Section 6: Observations */}
           <div style={{ marginBottom: '24px' }}>
-            <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'rgb(0, 0, 0)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
+            <div style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'rgb(0, 0, 0)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
               <span style={{ color: 'rgb(0, 0, 0)' }}>6. OBSERVATIONS</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
@@ -1702,7 +1702,7 @@ const PilotLogbook = ({ showFormProp }) => {
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
               onClick={handleSubmit}
-              style={{ padding: '8px 16px', backgroundColor: 'var(--text-secondary)', color: 'var(--text-primary)', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}
+              style={{ padding: '8px 16px', backgroundColor: 'var(--text-secondary)', color: 'var(--text-primary)', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 'var(--fs-body)', fontWeight: '500', cursor: 'pointer' }}
             >
               {editingEntry ? 'Modifier' : 'Enregistrer'}
             </button>
@@ -1711,7 +1711,7 @@ const PilotLogbook = ({ showFormProp }) => {
             {showFormProp === undefined && (
               <button
                 onClick={resetForm}
-                style={{ padding: '8px 16px', backgroundColor: 'var(--border-subtle)', color: 'var(--text-secondary)', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}
+                style={{ padding: '8px 16px', backgroundColor: 'var(--border-subtle)', color: 'var(--text-secondary)', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 'var(--fs-body)', fontWeight: '500', cursor: 'pointer' }}
               >
                 Annuler
               </button>
@@ -1760,15 +1760,15 @@ const PilotLogbook = ({ showFormProp }) => {
             <div key={entry.id} style={{ backgroundColor: 'var(--bg-overlay)', padding: '12px', borderRadius: 'var(--radius-sm)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
                 <strong style={{ marginRight: '12px' }}>{entry.date}</strong>
-                <span style={{ fontSize: '16px', marginRight: '12px' }}>
+                <span style={{ fontSize: 'var(--fs-title)', marginRight: '12px' }}>
                   {entry.departure} → {entry.arrival}
                 </span>
-                <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+                <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-body)' }}>
                   {entry.aircraft} ({entry.aircraftType})
                 </span>
               </div>
               
-              <div style={{ fontSize: '14px', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+              <div style={{ fontSize: 'var(--fs-body)', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                 <span>
                   <Clock size={12} style={{ display: 'inline', marginRight: '4px' }} />
                   {entry.totalTime}
@@ -1817,7 +1817,7 @@ const PilotLogbook = ({ showFormProp }) => {
               </div>
               
               {entry.remarks && (
-                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginTop: '4px' }}>
                   💬 {entry.remarks}
                 </p>
               )}
@@ -1845,8 +1845,8 @@ const PilotLogbook = ({ showFormProp }) => {
       ) : !isFormVisible ? (
         <div style={{ backgroundColor: 'var(--bg-overlay)', textAlign: 'center', padding: '32px', borderRadius: 'var(--radius-sm)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
           <Plane size={48} style={{ margin: '0 auto 16px', color: 'var(--text-tertiary)' }} />
-          <p style={{ fontSize: '16px' }}>Aucun vol enregistré</p>
-          <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '8px' }}>
+          <p style={{ fontSize: 'var(--fs-title)' }}>Aucun vol enregistré</p>
+          <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginTop: '8px' }}>
             Commencez à remplir votre carnet de vol
           </p>
         </div>

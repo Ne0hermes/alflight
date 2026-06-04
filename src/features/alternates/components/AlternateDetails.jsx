@@ -57,7 +57,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '14px',
+              fontSize: 'var(--fs-body)',
               fontWeight: 'bold'
             }}>
               {index + 1}
@@ -426,7 +426,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
               style={sx.combine(
                 sx.components.button.base,
                 sx.components.button.primary,
-                { fontSize: '13px', padding: '6px 12px' },
+                { fontSize: 'var(--fs-body)', padding: '6px 12px' },
                 isVacDownloading && { opacity: 0.5 }
               )}
             >
@@ -446,7 +446,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
       {/* Facteurs de score */}
       {alternate.scoreFactors && (
         <details style={sx.spacing.mt(3)}>
-          <summary style={{ cursor: 'pointer', fontSize: '13px', color: 'var(--text-secondary)' }}>
+          <summary style={{ cursor: 'pointer', fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
             Voir le détail du score
           </summary>
           <div style={sx.combine(sx.spacing.mt(2), sx.spacing.p(2), sx.bg.gray, sx.rounded.md)}>

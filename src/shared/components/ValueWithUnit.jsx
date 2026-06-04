@@ -138,34 +138,34 @@ export const ValueWithUnit = ({
   // Styles selon la taille
   const sizeStyles = {
     xs: { 
-      main: { fontSize: '12px', lineHeight: '16px' },
-      alt: { fontSize: '10px', lineHeight: '14px' },
-      label: { fontSize: '10px' }
+      main: { fontSize: 'var(--fs-body)', lineHeight: '16px' },
+      alt: { fontSize: 'var(--fs-caption)', lineHeight: '14px' },
+      label: { fontSize: 'var(--fs-caption)' }
     },
     sm: { 
-      main: { fontSize: '14px', lineHeight: '20px' },
-      alt: { fontSize: '11px', lineHeight: '16px' },
-      label: { fontSize: '11px' }
+      main: { fontSize: 'var(--fs-body)', lineHeight: '20px' },
+      alt: { fontSize: 'var(--fs-caption)', lineHeight: '16px' },
+      label: { fontSize: 'var(--fs-caption)' }
     },
     md: { 
-      main: { fontSize: '16px', lineHeight: '24px' },
-      alt: { fontSize: '12px', lineHeight: '18px' },
-      label: { fontSize: '12px' }
+      main: { fontSize: 'var(--fs-title)', lineHeight: '24px' },
+      alt: { fontSize: 'var(--fs-body)', lineHeight: '18px' },
+      label: { fontSize: 'var(--fs-body)' }
     },
     lg: { 
-      main: { fontSize: '20px', lineHeight: '28px' },
-      alt: { fontSize: '14px', lineHeight: '20px' },
-      label: { fontSize: '13px' }
+      main: { fontSize: 'var(--fs-title)', lineHeight: '28px' },
+      alt: { fontSize: 'var(--fs-body)', lineHeight: '20px' },
+      label: { fontSize: 'var(--fs-body)' }
     },
     xl: { 
-      main: { fontSize: '24px', lineHeight: '32px' },
-      alt: { fontSize: '16px', lineHeight: '24px' },
-      label: { fontSize: '14px' }
+      main: { fontSize: 'var(--fs-title)', lineHeight: '32px' },
+      alt: { fontSize: 'var(--fs-title)', lineHeight: '24px' },
+      label: { fontSize: 'var(--fs-body)' }
     },
     '2xl': { 
-      main: { fontSize: '30px', lineHeight: '36px' },
-      alt: { fontSize: '18px', lineHeight: '28px' },
-      label: { fontSize: '15px' }
+      main: { fontSize: 'var(--fs-heading)', lineHeight: '36px' },
+      alt: { fontSize: 'var(--fs-title)', lineHeight: '28px' },
+      label: { fontSize: 'var(--fs-body)' }
     }
   };
   

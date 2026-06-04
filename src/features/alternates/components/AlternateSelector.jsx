@@ -112,7 +112,7 @@ const SelectedAlternateItem = memo(({ alternate, index, onRemove }) => (
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: '12px',
+        fontSize: 'var(--fs-body)',
         fontWeight: 'bold',
         marginRight: '12px'
       }}>
@@ -198,7 +198,7 @@ const ScoreBadge = memo(({ score }) => {
       backgroundColor: color + '20',
       color: color,
       borderRadius: 'var(--radius-sm)',
-      fontSize: '11px',
+      fontSize: 'var(--fs-caption)',
       fontWeight: 'bold'
     }}>
       {(score * 100).toFixed(0)}%

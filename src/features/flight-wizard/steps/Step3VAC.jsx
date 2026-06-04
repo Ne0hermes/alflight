@@ -292,14 +292,14 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
             <AlertCircle size={22} color="var(--accent-primary)" />
             <span style={{
               fontWeight: 'bold',
-              fontSize: '16px',
+              fontSize: 'var(--fs-title)',
               color: 'var(--accent-primary)'
             }}>
               {missingVACs.length} carte(s) VAC manquante(s)
             </span>
           </div>
           <div style={{
-            fontSize: '14px',
+            fontSize: 'var(--fs-body)',
             color: 'var(--accent-primary)',
             lineHeight: '1.6'
           }}>
@@ -307,7 +307,7 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
               <strong>Aérodromes concernés :</strong> {missingVACs.join(', ')}
             </p>
             <p style={{ margin: '0', display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
-              <span style={{ fontSize: '16px', marginTop: '2px' }}>ℹ️</span>
+              <span style={{ fontSize: 'var(--fs-title)', marginTop: '2px' }}>ℹ️</span>
               <span>
                 Veuillez télécharger les cartes VAC manquantes via le module <strong>"Cartes VAC"</strong> (menu de gauche) avant de générer le PDF final.
               </span>
@@ -349,7 +349,7 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
                       backgroundColor: aerodromeRole.color,
                       color: 'var(--bg-surface)',
                       borderRadius: 'var(--radius-sm)',
-                      fontSize: '11px',
+                      fontSize: 'var(--fs-caption)',
                       fontWeight: '600',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px'
@@ -766,7 +766,7 @@ const styles = {
     color: theme.colors.primary
   },
   title: {
-    fontSize: '18px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     color: theme.colors.textPrimary,
     margin: 0
@@ -780,7 +780,7 @@ const styles = {
   },
   infoText: {
     margin: 0,
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-primary)',
     lineHeight: '1.6'
   },
@@ -792,7 +792,7 @@ const styles = {
   },
   weatherTitle: {
     margin: '0 0 12px 0',
-    fontSize: '15px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: theme.colors.textPrimary,
     display: 'flex',
@@ -805,7 +805,7 @@ const styles = {
   },
   weatherText: {
     margin: 0,
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     fontFamily: 'monospace',
     color: 'var(--text-secondary)',
     backgroundColor: 'var(--bg-surface)',
@@ -818,7 +818,7 @@ const styles = {
   },
   weatherMeta: {
     margin: 0,
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     fontStyle: 'italic'
   },
@@ -844,7 +844,7 @@ const styles = {
   },
   meteoHeaderTitle: {
     margin: 0,
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     color: theme.colors.textPrimary
   },
@@ -862,7 +862,7 @@ const styles = {
   },
   meteoEmptyText: {
     margin: 0,
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-tertiary)',
     fontStyle: 'italic'
   },
@@ -881,12 +881,12 @@ const styles = {
   },
   terrainHeaderTitle: {
     margin: 0,
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     color: theme.colors.textPrimary
   },
   description: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     marginBottom: '24px',
     lineHeight: '1.5'
@@ -904,7 +904,7 @@ const styles = {
     alignItems: 'center'
   },
   emptyText: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     margin: 0
   },
@@ -941,12 +941,12 @@ const styles = {
     flexWrap: 'wrap'
   },
   aerodromeIcao: {
-    fontSize: '18px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '700',
     color: theme.colors.textPrimary
   },
   aerodromeNameLine: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     fontWeight: '500'
   },
@@ -969,11 +969,11 @@ const styles = {
     flex: 1
   },
   aerodromeName: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)'
   },
   aerodromeElevation: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-tertiary)',
     fontStyle: 'italic'
   },
@@ -994,7 +994,7 @@ const styles = {
     backgroundColor: 'var(--bg-overlay)',
     color: 'var(--text-primary)',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: '600'
   },
   statusMissing: {
@@ -1005,7 +1005,7 @@ const styles = {
     backgroundColor: 'var(--bg-overlay)',
     color: 'var(--color-red-critical)',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: '600'
   },
   aerodromeActions: {
@@ -1022,7 +1022,7 @@ const styles = {
     color: 'var(--text-primary)',
     border: 'none',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '500',
     cursor: 'pointer',
     transition: 'background-color 0.2s'
@@ -1036,7 +1036,7 @@ const styles = {
     color: 'var(--text-primary)',
     border: 'none',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '500',
     cursor: 'pointer',
     transition: 'background-color 0.2s'
@@ -1050,7 +1050,7 @@ const styles = {
     color: theme.colors.primary,
     border: `1px solid ${theme.colors.border}`,
     borderRadius: 'var(--radius-sm)',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '500',
     cursor: 'pointer',
     textDecoration: 'none',
@@ -1067,7 +1067,7 @@ const styles = {
     color: 'var(--text-primary)',
     border: 'none',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '500',
     cursor: 'pointer',
     transition: 'background-color 0.2s',
@@ -1084,7 +1084,7 @@ const styles = {
     color: theme.colors.primary,
     border: `1px solid ${theme.colors.border}`,
     borderRadius: 'var(--radius-sm)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '500',
     cursor: 'pointer',
     textDecoration: 'none',
@@ -1114,7 +1114,7 @@ const styles = {
     border: '1px solid var(--border-subtle)',
     borderRadius: 'var(--radius-sm)',
     cursor: 'pointer',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '500',
     color: 'var(--text-secondary)',
     transition: 'all 0.2s',
@@ -1129,7 +1129,7 @@ const styles = {
     padding: '16px'
   },
   section: {
-    fontSize: '13px'
+    fontSize: 'var(--fs-body)'
   },
   infoGrid: {
     display: 'grid',
@@ -1142,19 +1142,19 @@ const styles = {
     gap: '4px'
   },
   infoLabel: {
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: '600',
     color: 'var(--text-secondary)',
     textTransform: 'uppercase',
     letterSpacing: '0.05em'
   },
   infoValue: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: theme.colors.textPrimary
   },
   infoValueSecondary: {
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     color: 'var(--text-tertiary)',
     fontStyle: 'italic'
   },
@@ -1172,12 +1172,12 @@ const styles = {
     marginBottom: '8px'
   },
   runwayDesignation: {
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '700',
     color: theme.colors.textPrimary
   },
   runwayDimensions: {
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     fontWeight: '500'
   },
@@ -1191,11 +1191,11 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '2px',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)'
   },
   runwayInfo: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     display: 'flex',
     gap: '8px',
@@ -1212,7 +1212,7 @@ const styles = {
     border: '1px solid var(--border-subtle)'
   },
   frequencyService: {
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: theme.colors.textPrimary,
     display: 'flex',
@@ -1220,7 +1220,7 @@ const styles = {
     gap: '6px'
   },
   frequencyValue: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '700',
     color: 'var(--text-secondary)',
     fontFamily: 'monospace'
@@ -1239,12 +1239,12 @@ const styles = {
     marginBottom: '4px'
   },
   vfrPointName: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: theme.colors.textPrimary
   },
   vfrPointType: {
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: '600',
     color: 'var(--text-secondary)',
     backgroundColor: 'var(--border-subtle)',
@@ -1252,12 +1252,12 @@ const styles = {
     borderRadius: 'var(--radius-sm)'
   },
   vfrPointDescription: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     margin: '4px 0'
   },
   vfrPointCoords: {
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     color: 'var(--text-tertiary)',
     fontFamily: 'monospace',
     margin: '4px 0 0'
@@ -1273,12 +1273,12 @@ const styles = {
     marginBottom: '16px'
   },
   contactLabel: {
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: 'var(--color-red-critical)'
   },
   contactValue: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '700',
     color: 'var(--color-red-critical)',
     fontFamily: 'monospace'
@@ -1296,7 +1296,7 @@ const styles = {
     backgroundColor: 'var(--bg-overlay)',
     border: '1px solid var(--bg-overlay)',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '500',
     color: 'var(--text-primary)'
   },
@@ -1304,7 +1304,7 @@ const styles = {
     textAlign: 'center',
     padding: '20px',
     color: 'var(--text-tertiary)',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     fontStyle: 'italic'
   }
 };

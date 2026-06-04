@@ -173,7 +173,7 @@ const RegulationsModule = () => {
               color: 'var(--text-primary)',
               border: 'none',
               borderRadius: 'var(--radius-sm)',
-              fontSize: '14px',
+              fontSize: 'var(--fs-body)',
               fontWeight: '600',
               cursor: 'pointer',
               transition: 'opacity 0.2s',
@@ -505,7 +505,7 @@ const RegulationsModule = () => {
                   onChange={(e) => setSuggestionForm({ ...suggestionForm, contact: e.target.value })}
                   style={styles.formInput}
                 />
-                <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+                <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-tertiary)', marginTop: '4px' }}>
                   Si vous souhaitez être informé de la prise en compte de votre suggestion
                 </p>
               </div>
@@ -519,7 +519,7 @@ const RegulationsModule = () => {
                     color: 'var(--text-secondary)',
                     border: 'none',
                     borderRadius: 'var(--radius-sm)',
-                    fontSize: '14px',
+                    fontSize: 'var(--fs-body)',
                     fontWeight: '600',
                     cursor: 'pointer'
                   }}
@@ -538,7 +538,7 @@ const RegulationsModule = () => {
                     color: 'var(--text-primary)',
                     border: 'none',
                     borderRadius: 'var(--radius-sm)',
-                    fontSize: '14px',
+                    fontSize: 'var(--fs-body)',
                     fontWeight: '600',
                     cursor: suggestionForm.description ? 'pointer' : 'not-allowed'
                   }}
@@ -571,7 +571,7 @@ const styles = {
     margin: '0 auto',
   },
   title: {
-    fontSize: '28px',
+    fontSize: 'var(--fs-heading)',
     fontWeight: '700',
     color: theme.colors.textPrimary,
     display: 'flex',
@@ -579,7 +579,7 @@ const styles = {
     marginBottom: '8px',
   },
   subtitle: {
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     color: 'var(--text-secondary)',
   },
   controlsBar: {
@@ -606,7 +606,7 @@ const styles = {
     padding: '12px 12px 12px 44px',
     borderRadius: 'var(--radius-sm)',
     border: '1px solid var(--text-tertiary)',
-    fontSize: '15px',
+    fontSize: 'var(--fs-body)',
     outline: 'none',
     transition: 'border-color 0.2s',
   },
@@ -622,7 +622,7 @@ const styles = {
   filterSelect: {
     border: 'none',
     outline: 'none',
-    fontSize: '15px',
+    fontSize: 'var(--fs-body)',
     backgroundColor: 'transparent',
     cursor: 'pointer',
   },
@@ -642,12 +642,12 @@ const styles = {
     border: '1px solid var(--border-subtle)',
   },
   statLabel: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-tertiary)',
     marginBottom: '4px',
   },
   statValue: {
-    fontSize: '20px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     color: theme.colors.textPrimary,
   },
@@ -678,13 +678,13 @@ const styles = {
     backgroundColor: 'var(--bg-overlay)',
   },
   moduleTitle: {
-    fontSize: '20px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     color: theme.colors.textPrimary,
     marginBottom: '4px',
   },
   moduleDescription: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
   },
   sectionsContainer: {
@@ -706,13 +706,13 @@ const styles = {
   },
   sectionTitle: {
     flex: 1,
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     color: theme.colors.textPrimary,
     marginLeft: '8px',
   },
   sectionCount: {
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     backgroundColor: 'var(--bg-overlay)',
     padding: '2px 8px',
@@ -737,7 +737,7 @@ const styles = {
     transition: 'background-color 0.2s',
   },
   regulationRef: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: theme.colors.primary,
     marginRight: '12px',
@@ -747,7 +747,7 @@ const styles = {
   },
   regulationTitle: {
     flex: 1,
-    fontSize: '15px',
+    fontSize: 'var(--fs-body)',
     color: theme.colors.textPrimary,
   },
   detailButton: {
@@ -765,14 +765,14 @@ const styles = {
     borderTop: '1px solid var(--border-subtle)',
   },
   regulationDescription: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     marginBottom: '12px',
     lineHeight: '1.6',
   },
   requirementsList: {
     marginLeft: '20px',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     lineHeight: '1.8',
   },
@@ -786,7 +786,7 @@ const styles = {
   table: {
     width: '100%',
     borderCollapse: 'collapse',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
   },
   tableHeader: {
     padding: '10px',
@@ -833,7 +833,7 @@ const styles = {
     borderBottom: '1px solid var(--border-subtle)',
   },
   modalTitle: {
-    fontSize: '20px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     color: theme.colors.textPrimary,
   },
@@ -855,7 +855,7 @@ const styles = {
     alignItems: 'center',
     gap: '8px',
     marginBottom: '20px',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
   },
   modalModule: {
     color: theme.colors.primary,
@@ -868,7 +868,7 @@ const styles = {
     color: 'var(--text-secondary)',
   },
   modalDescription: {
-    fontSize: '15px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     lineHeight: '1.6',
     marginBottom: '20px',
@@ -877,14 +877,14 @@ const styles = {
     marginBottom: '24px',
   },
   modalSubtitle: {
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     color: theme.colors.textPrimary,
     marginBottom: '12px',
   },
   modalList: {
     marginLeft: '20px',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     lineHeight: '1.8',
   },
@@ -899,13 +899,13 @@ const styles = {
   modalNote: {
     display: 'flex',
     alignItems: 'center',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     fontStyle: 'italic',
   },
   formLabel: {
     display: 'block',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     marginBottom: '8px',
     color: 'var(--text-secondary)',
@@ -915,7 +915,7 @@ const styles = {
     padding: '10px 12px',
     borderRadius: 'var(--radius-sm)',
     border: '1px solid var(--text-tertiary)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     outline: 'none',
     transition: 'border-color 0.2s',
   },
@@ -924,7 +924,7 @@ const styles = {
     padding: '10px 12px',
     borderRadius: 'var(--radius-sm)',
     border: '1px solid var(--text-tertiary)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     outline: 'none',
     backgroundColor: 'var(--bg-overlay)',
     cursor: 'pointer',

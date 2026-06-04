@@ -12,7 +12,7 @@ export const PremiumButton = ({ children, onClick, style, disabled, ...props }) 
         border: 'none',
         background: 'linear-gradient(135deg, #f26921, #FF7E36)',
         color: 'var(--text-primary)',
-        fontSize: '14px',
+        fontSize: 'var(--fs-body)',
         fontWeight: '600',
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.6 : 1,
@@ -73,7 +73,7 @@ export const PremiumBadge = ({ children, variant = 'default', style, ...props })
         alignItems: 'center',
         padding: '4px 12px',
         borderRadius: 'var(--radius-sm)',
-        fontSize: '12px',
+        fontSize: 'var(--fs-body)',
         fontWeight: '600',
         ...variants[variant],
         ...style

@@ -553,7 +553,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                     left: `${getPosition(range.speed)}%`,
                     bottom: '-25px',
                     transform: 'translateX(-50%)',
-                    fontSize: '11px',
+                    fontSize: 'var(--fs-caption)',
                     fontWeight: 'bold',
                     color: SA.violet,
                     px: 0.75,
@@ -578,7 +578,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 left: `${getPosition(speeds.vso)}%`,
                 top: '-25px',
                 transform: 'translateX(-50%)',
-                fontSize: '11px',
+                fontSize: 'var(--fs-caption)',
                 fontWeight: 'bold',
                 color: 'var(--text-secondary)',
                 px: 0.75,
@@ -600,7 +600,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 left: `${getPosition(speeds.vfeLdg)}%`,
                 top: '-25px',
                 transform: 'translateX(-50%)',
-                fontSize: '11px',
+                fontSize: 'var(--fs-caption)',
                 fontWeight: 'bold',
                 color: 'var(--text-secondary)',
                 px: 0.75,
@@ -622,7 +622,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 left: `${getPosition(speeds.vs1)}%`,
                 top: '-25px',
                 transform: 'translateX(-50%)',
-                fontSize: '11px',
+                fontSize: 'var(--fs-caption)',
                 fontWeight: 'bold',
                 color: SA.green,
                 px: 0.75,
@@ -644,7 +644,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 left: `${getPosition(speeds.vno)}%`,
                 top: '-25px',
                 transform: 'translateX(-50%)',
-                fontSize: '11px',
+                fontSize: 'var(--fs-caption)',
                 fontWeight: 'bold',
                 color: SA.yellow,
                 px: 0.75,
@@ -666,7 +666,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 left: `${getPosition(speeds.vne)}%`,
                 top: '-25px',
                 transform: 'translateX(-50%)',
-                fontSize: '11px',
+                fontSize: 'var(--fs-caption)',
                 fontWeight: 'bold',
                 color: SA.red,
                 px: 0.75,
@@ -700,7 +700,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                   left: `${getPosition(speeds.vfeTO)}%`,
                   top: '-25px',
                   transform: 'translateX(-50%)',
-                  fontSize: '11px',
+                  fontSize: 'var(--fs-caption)',
                   fontWeight: 'bold',
                   color: SA.cyan,
                   px: 0.75,
@@ -791,7 +791,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
           }}
         >
           <SpeedIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Vitesse de croisière (obligatoire)
           </Typography>
         </AccordionSummary>
@@ -863,7 +863,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
           }}
         >
           <CriticalIcon color="error" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Configuration volets sortis (obligatoire)
           </Typography>
         </AccordionSummary>
@@ -942,7 +942,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
           }}
         >
           <CriticalIcon color="error" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Configuration lisse (obligatoire)
           </Typography>
         </AccordionSummary>
@@ -1001,7 +1001,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
           }}
         >
           <CriticalIcon color="error" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             VNE (obligatoire)
           </Typography>
         </AccordionSummary>
@@ -1050,7 +1050,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
           }}
         >
           <CriticalIcon color="error" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             VO - Vitesses de manœuvre
           </Typography>
         </AccordionSummary>
@@ -1185,7 +1185,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
           }}
         >
           <OptionalIcon color="success" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Autres vitesses (facultatif)
           </Typography>
         </AccordionSummary>
@@ -1255,7 +1255,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
           }}
         >
           <WindIcon color="warning" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Limitations de vent
           </Typography>
         </AccordionSummary>

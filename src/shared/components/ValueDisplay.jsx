@@ -50,11 +50,11 @@ export const ValueDisplay = ({
   
   // Styles selon la taille
   const sizeStyles = {
-    xs: { fontSize: '11px', padding: '2px 4px' },
-    sm: { fontSize: '13px', padding: '4px 6px' },
-    md: { fontSize: '14px', padding: '6px 8px' },
-    lg: { fontSize: '16px', padding: '8px 12px' },
-    xl: { fontSize: '20px', padding: '10px 14px' }
+    xs: { fontSize: 'var(--fs-caption)', padding: '2px 4px' },
+    sm: { fontSize: 'var(--fs-body)', padding: '4px 6px' },
+    md: { fontSize: 'var(--fs-body)', padding: '6px 8px' },
+    lg: { fontSize: 'var(--fs-title)', padding: '8px 12px' },
+    xl: { fontSize: 'var(--fs-title)', padding: '10px 14px' }
   };
   
   const containerStyle = {

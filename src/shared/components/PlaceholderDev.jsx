@@ -128,7 +128,7 @@ export const DevOverlay = ({ children, message = "Cette section est en cours de 
     padding: '12px 24px',
     borderRadius: 'var(--radius-sm)',
     fontWeight: 600,
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     zIndex: 1000,
     textAlign: 'center',
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
@@ -154,7 +154,7 @@ export const DevInlineMessage = ({ text = "Données non disponibles", icon = tru
     alignItems: 'center',
     gap: '4px',
     color: 'var(--accent-primary)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontStyle: 'italic'
   };
 
