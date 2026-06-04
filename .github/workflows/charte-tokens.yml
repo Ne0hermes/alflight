@@ -1,0 +1,33 @@
+name: charte-tokens
+
+# Garde-fou charte (design tokens) en CI — mode « boy-scout » : vérifie UNIQUEMENT
+# les fichiers source modifiés par la PR (le legacy n'est pas bloqué). Échoue si
+# du NOUVEAU code introduit des valeurs de design en dur (hex/rgba/noms de
+# couleurs/px/fontWeight/fontFamily). Couvre .js/.jsx (ESLint) + .ts/.tsx (scan regex).
+on:
+  pull_request:
+
+jobs:
+  lint-tokens:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      # Le runner lint:tokens n'a besoin que d'ESLint (eslint.tokens.cjs n'utilise
+      # aucun plugin ; le scan .ts/.tsx est dep-free). Install léger pour la vitesse.
+      - run: npm install --no-save --no-audit --no-fund eslint@^8.57.0
+      - name: lint:tokens (fichiers modifiés par la PR)
+        run: |
+          BASE="origin/${{ github.base_ref }}"
+          FILES=$(git diff --name-only "$BASE"...HEAD -- 'src/**/*.js' 'src/**/*.jsx' 'src/**/*.ts' 'src/**/*.tsx')
+          if [ -z "$FILES" ]; then
+            echo "Aucun fichier source modifié à vérifier."
+            exit 0
+          fi
+          echo "Fichiers vérifiés :"
+          echo "$FILES"
+          node scripts/lint-tokens.mjs $FILES
