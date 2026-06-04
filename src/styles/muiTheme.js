@@ -106,11 +106,10 @@ const muiTheme = createTheme({
     h5: { fontWeight: 500 },
     h6: { fontWeight: 500 },
     button: {
-      fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
+      // Police charte : Century Gothic (héritée de typography.fontFamily),
+      // casse normale. Plus de JetBrains Mono UPPERCASE sur les boutons.
       fontWeight: 600,
-      fontSize: '11px',
-      letterSpacing: '0.12em',
-      textTransform: 'uppercase',
+      textTransform: 'none',
     },
   },
 
@@ -227,12 +226,13 @@ const muiTheme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          textTransform: 'uppercase',
-          fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
+          // Boutons à la charte : Century Gothic (héritée), casse normale.
+          // (Avant : JetBrains Mono UPPERCASE 0.12em — c'était LA cause de la
+          //  police "cockpit" sur tous les boutons MUI de l'app.)
+          textTransform: 'none',
           // Dimensions de référence (bouton « ← Retour ») centralisées dans index.css
           fontSize: 'var(--btn-font-size)',
           fontWeight: 'var(--btn-font-weight)',
-          letterSpacing: '0.12em',
           borderRadius: 'var(--btn-radius)',
           padding: 'var(--btn-padding-y) var(--btn-padding-x)',
           minHeight: 'var(--btn-min-height)',
