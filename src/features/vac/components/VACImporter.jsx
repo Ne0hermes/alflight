@@ -117,7 +117,7 @@ export const VACImporter = memo(({
         );
 
         if (onImportComplete) {
-          onImportComplete(targetIcao, dataWithPdfRef);
+          onImportComplete(targetIcao, chartData);
         }
 
         if (onClose) {
