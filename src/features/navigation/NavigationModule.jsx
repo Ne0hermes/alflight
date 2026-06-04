@@ -35,7 +35,6 @@ const useAlternatesForNavigation = () => {
 
 const NavigationModule = ({ wizardMode = false, config = {} }) => {
   const { selectedAircraft } = useAircraft(); // Keep useAircraft for selectedAircraft
-  const { format, convert, getSymbol, getUnit, toStorage } = useUnits();
 
   // Debug: Afficher l'unité actuelle
   const {
@@ -48,33 +47,28 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
     addWaypoint: addWaypointToStore,
     removeWaypoint: removeWaypointFromStore,
     updateWaypoint: updateWaypointInStore,
-    updateWaypoint,
     segmentAltitudes,
-    setSegmentAltitude,
-    getSegmentAltitude,
     moveWaypointUp,
     moveWaypointDown
   } = useNavigation();
   // Passer les paramètres au hook
   const navigationResults = useNavigationResults(waypoints, flightType, selectedAircraft);
-  const { alternates, hasAlternates, addAlternateAsWaypoint } = useAlternatesForNavigation();
 
   // OpenAIP Store - Supprimé
   // const { loadAirports } = useOpenAIPStore();
   const loading = false;
   const errors = [];
 
-  const [showReportingPoints, setShowReportingPoints] = useState(false);
-  const [selectedWaypointId, setSelectedWaypointId] = useState(null);
+  const [, setShowReportingPoints] = useState(false);
+  const [, setSelectedWaypointId] = useState(null);
   // Synchroniser l'altitude locale avec le store global quand elle change
-  const [plannedAltitude, setPlannedAltitude] = useState(flightParams.altitude || 3000); // Altitude par défaut en pieds
+  const [plannedAltitude] = useState(flightParams.altitude || 3000); // Altitude par défaut en pieds
   useEffect(() => {
     if (plannedAltitude !== flightParams.altitude) {
       setFlightParams(prev => ({ ...prev, altitude: plannedAltitude }));
     }
   }, [plannedAltitude, flightParams.altitude, setFlightParams]);
-  const [selectedVFRPoints, setSelectedVFRPoints] = useState({}); // Points VFR par waypoint
-  const [dangerousZones, setDangerousZones] = useState({});
+  const [, setDangerousZones] = useState({});
   const [activeTab, setActiveTab] = useState('navigation'); // Nouvel état pour les onglets
   const [showWaypointModal, setShowWaypointModal] = useState(false);
   const [waypointInsertIndex, setWaypointInsertIndex] = useState(null);
@@ -113,10 +107,6 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
       });
     }
   }, [handleWaypointUpdate]);
-
-  const addWaypoint = useCallback(() => {
-    addWaypointToStore();
-  }, [addWaypointToStore]);
 
   const removeWaypoint = useCallback((id, index) => {
     if (id) {
@@ -256,22 +246,10 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
     };
   };
 
-  // Handler pour l'altitude
-  const handleAltitudeChange = (value) => {
-    // Accepter uniquement les nombres
-    const numValue = parseInt(value);
-    if (!isNaN(numValue) && numValue >= 0 && numValue <= 45000) {
-      setFlightParams(prev => ({ ...prev, altitude: numValue }));
-    } else if (value === '') {
-      setFlightParams(prev => ({ ...prev, altitude: 0 }));
-    }
-  };
-
   const reserveInfo = getReserveInfo();
 
   // Obtenir l'aérodrome d'arrivée
   const arrivalAirport = waypoints.length > 0 ? waypoints[waypoints.length - 1] : null;
-  const arrivalIcao = arrivalAirport?.name && arrivalAirport.name.match(/^[A-Z]{4}$/) ? arrivalAirport.name : null;
 
   return (
     <div
