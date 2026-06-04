@@ -246,8 +246,9 @@ class TakeoffPerformanceCharts extends PerformanceChartCategory {
   /**
    * Interpolation spécifique au décollage
    */
-  interpolate(chart, conditions) {
+  interpolate(_chart, conditions) {
     // Logique d'interpolation pour les abaques de décollage
+    // TODO impl : ces entrées seront utilisées par l'interpolation des abaques
     const { temperature, pressureAltitude, mass, wind, flaps } = conditions;
     
     // Trouver les points les plus proches
@@ -344,7 +345,7 @@ class LandingPerformanceCharts extends PerformanceChartCategory {
     return this.interpolate(chart, conditions);
   }
 
-  interpolate(chart, conditions) {
+  interpolate(_chart, _conditions) {
     // Réutiliser la logique de TakeoffPerformanceCharts
     // mais avec des ajustements pour l'atterrissage
     const takeoffCharts = new TakeoffPerformanceCharts();
@@ -390,17 +391,17 @@ class ClimbPerformanceCharts extends PerformanceChartCategory {
     };
   }
 
-  interpolateRate(chart, conditions) {
+  interpolateRate(_chart, _conditions) {
     // Logique spécifique pour le taux de montée
     return 500; // ft/min - placeholder
   }
 
-  calculateTimeToAltitude(chart, conditions) {
+  calculateTimeToAltitude(_chart, _conditions) {
     // Calcul du temps pour atteindre une altitude
     return 10; // minutes - placeholder
   }
 
-  calculateFuelUsed(chart, conditions) {
+  calculateFuelUsed(_chart, _conditions) {
     // Calcul du carburant utilisé en montée
     return 5; // litres - placeholder
   }
@@ -437,22 +438,22 @@ class CruisePerformanceCharts extends PerformanceChartCategory {
     };
   }
 
-  calculateTAS(chart, conditions) {
+  calculateTAS(_chart, _conditions) {
     // Calcul de la vitesse vraie
     return 120; // knots - placeholder
   }
 
-  calculateFuelFlow(chart, conditions) {
+  calculateFuelFlow(_chart, _conditions) {
     // Calcul de la consommation
     return 25; // L/h - placeholder
   }
 
-  calculateRange(chart, conditions) {
+  calculateRange(_chart, _conditions) {
     // Calcul de la distance franchissable
     return 500; // nm - placeholder
   }
 
-  calculateEndurance(chart, conditions) {
+  calculateEndurance(_chart, _conditions) {
     // Calcul de l'autonomie
     return 4; // hours - placeholder
   }
@@ -489,19 +490,19 @@ class FuelPerformanceCharts extends PerformanceChartCategory {
     };
   }
 
-  calculateTaxiFuel(chart, profile) {
+  calculateTaxiFuel(_chart, _profile) {
     return 2; // litres - placeholder
   }
 
-  calculateTripFuel(chart, profile) {
+  calculateTripFuel(_chart, _profile) {
     return 50; // litres - placeholder
   }
 
-  calculateReserveFuel(chart, profile) {
+  calculateReserveFuel(_chart, _profile) {
     return 15; // litres - placeholder
   }
 
-  calculateAlternateFuel(chart, profile) {
+  calculateAlternateFuel(_chart, _profile) {
     return 20; // litres - placeholder
   }
 
@@ -555,10 +556,7 @@ class WeightBalanceCharts extends PerformanceChartCategory {
     }, 0);
   }
 
-  checkLimits(loadingData, chart) {
-    const cg = this.calculateCG(loadingData);
-    const weight = this.calculateTotalWeight(loadingData);
-    
+  checkLimits(loadingData, _chart) {
     // Vérifier contre les limites du chart
     return {
       cgInLimits: true, // placeholder
