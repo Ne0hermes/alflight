@@ -693,8 +693,8 @@ export const PilotDashboard = ({ onNavigate }) => {
                 ...styles.configureButton,
                 // Bouton détails : style ghost (outline accent), pas plein
                 backgroundColor: 'transparent',
-                color: 'var(--text-primary)',
-                border: '1px solid var(--border-regular)',
+                color: 'var(--accent-primary)',
+                border: '1px solid var(--accent-primary)',
                 flex: 1,
                 display: 'flex',
                 alignItems: 'center',
@@ -1309,18 +1309,17 @@ const styles = {
     color: 'var(--text-secondary)',
     lineHeight: 1.5,
   },
-  // Bouton d'action dans alerte — mono ALL CAPS cockpit, orange ALFlight
+  // Bouton d'action dans alerte — aligné sur le système de boutons de la charte :
+  // police sans (Century Gothic via --font-sans), casse normale, accent orange.
   configureButton: {
     backgroundColor: 'var(--accent-primary)',
     color: 'var(--text-inverse)',
     border: 'none',
     borderRadius: 'var(--radius-sm)',
     padding: '10px 16px',
-    fontFamily: 'var(--font-mono)',
-    fontSize: '11px',
+    fontFamily: 'var(--font-sans)',
+    fontSize: '14px',
     fontWeight: 600,
-    letterSpacing: '0.12em',
-    textTransform: 'uppercase',
     cursor: 'pointer',
     whiteSpace: 'nowrap',
     transition: 'background-color 0.2s ease',
