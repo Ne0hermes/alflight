@@ -251,19 +251,25 @@ class SIAETL {
     
     const aseElements = this.aixmDoc.getElementsByTagName('Ase');
     console.log(`🗺️ Parsing ${aseElements.length} espaces aériens...`);
-    
+
+    // En AIXM, la géométrie (Abd→Avx) n'est PAS dans l'Ase : les Abd (frontières) sont des
+    // éléments SÉPARÉS qui référencent leur Ase via AbdUid→AseUid(@mid). On indexe d'abord
+    // les Abd par mid d'AseUid pour pouvoir retrouver la géométrie de chaque espace.
+    const abdByAse = this.indexAbdByAse();
+
     for (let i = 0; i < aseElements.length; i++) {
       const ase = aseElements[i];
-      
+
       try {
         const uid = ase.getElementsByTagName('AseUid')[0];
+        const aseMid = uid?.getAttribute('mid');
         const codeId = uid?.getElementsByTagName('codeId')[0]?.textContent;
         const codeType = uid?.getElementsByTagName('codeType')[0]?.textContent;
-        
+
         if (!codeId) continue;
-        
+
         // Géométrie obligatoire sauf pour certains types
-        const geometry = this.parseAirspaceGeometry(ase);
+        const geometry = this.parseAirspaceGeometry(aseMid ? (abdByAse.get(aseMid) || []) : []);
         if (!geometry) {
           // Certains espaces (comme FIR/UIR) peuvent ne pas avoir de géométrie dans l'AIXM
           console.warn(`⚠️ Géométrie manquante pour l'espace ${codeId} (type: ${codeType})`);
@@ -1497,12 +1503,37 @@ class SIAETL {
     return this.frequenciesByIcao.get(icao) || [];
   }
   
-  private parseAirspaceGeometry(ase: Element): Polygon | MultiPolygon | null {
+  /**
+   * Indexe les frontières d'espace aérien (Abd) par le mid de leur AseUid, pour relier
+   * chaque Ase à sa (ou ses) frontière(s) — celles-ci étant des éléments séparés en AIXM.
+   */
+  private indexAbdByAse(): Map<string, Element[]> {
+    const map = new Map<string, Element[]>();
+    if (!this.aixmDoc) return map;
+    const abdElements = this.aixmDoc.getElementsByTagName('Abd');
+    for (let i = 0; i < abdElements.length; i++) {
+      const abd = abdElements[i];
+      const abdUid = abd.getElementsByTagName('AbdUid')[0];
+      const aseUid = abdUid?.getElementsByTagName('AseUid')[0];
+      const aseMid = aseUid?.getAttribute('mid');
+      if (!aseMid) continue;
+      const arr = map.get(aseMid) || [];
+      arr.push(abd);
+      map.set(aseMid, arr);
+    }
+    return map;
+  }
+
+  /**
+   * Reconstruit la géométrie d'un espace à partir de ses frontières Abd (→ Avx).
+   * Approximation : chaque Avx est traité comme un sommet (segments droits) ; les arcs
+   * (codeType CWA/CCA) et cercles ne sont pas interpolés — suffisant pour l'affichage/
+   * détection de pénétration, à raffiner si besoin.
+   */
+  private parseAirspaceGeometry(abdElements: Element[]): Polygon | MultiPolygon | null {
     const coordinates: number[][][] = [];
-    
+
     try {
-      const abdElements = ase.getElementsByTagName('Abd');
-      
       for (let i = 0; i < abdElements.length; i++) {
         const abd = abdElements[i];
         const ring: number[][] = [];
