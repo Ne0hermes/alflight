@@ -82,10 +82,17 @@
 
 ## 🛡️ GOUVERNANCE — empêcher la régression
 
-- [ ] **G.1** — `eslint.tokens.cjs` : ajouter règles `fontFamily` ≠ `var(--font-*)` + interdiction des **noms de couleurs** (`'white'`/`'black'`/`'red'`…).
-- [ ] **G.2** — Brancher `lint:tokens:staged` en **pre-commit** (Husky).
-- [ ] **G.3** — `lint:tokens:all` en CI (non bloquant) → suivre la courbe de dette.
-- [ ] **G.4** — Quand `lint:tokens:all` = 0 erreur → le rendre **bloquant**.
+- [x] **G.1** — `eslint.tokens.cjs` : règles ajoutées — **noms de couleurs CSS** (`'white'`/`'black'`/`'red'`…) interdits dans les props de couleur + **`fontFamily`** en dur interdit (≠ `var(--font-*)`/`'inherit'`). Testé OK.
+- [x] **G.1b** — `lint:tokens` étendu aux **`.ts/.tsx`** : faute de `@typescript-eslint/parser` (non installé → `npm i` éviterait de toucher le `node_modules` partagé), `scripts/lint-tokens.mjs` ajoute un **scan regex dep-free** (hex/rgba) sur `.ts/.tsx`. Comble le gap (l'éditeur ABAC `.tsx` échappait au garde-fou). Testé OK.
+- [ ] **G.2** — Pre-commit (⚠️ à brancher au **MERGE** — PAS auto-installé : `.git` (`git rev-parse --git-common-dir` = repo principal) et `node_modules` partagés avec la session parallèle) :
+  ```bash
+  npm i -D husky && npx husky init
+  printf 'npm run lint:tokens:staged\n' > .husky/pre-commit
+  ```
+- [ ] **G.3** — CI : job `npm run lint:tokens:all` (non bloquant d'abord) → suivre la courbe de dette (~6000 → 0).
+- [ ] **G.4** — Quand `lint:tokens:all` = 0 erreur → rendre pre-commit + CI **bloquants**.
+
+> 📌 Exceptions déjà documentées dans le code (→ `// eslint-disable-next-line no-restricted-syntax` quand on les édite) : arcs anémomètre `SpeedLimitationChart`, palette courbes `CurveManager.DEFAULT_COLORS`, `FlightRecapTable`/`PRINT` (artefact PDF, `eslint-disable` fichier déjà posé).
 
 ---
 

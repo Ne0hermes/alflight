@@ -3,8 +3,10 @@
  *  ALFlight — Garde-fou Design Tokens (config ESLint AUTONOME)
  * ============================================================================
  *  Objectif : GELER L'ENTROPIE. Interdire toute NOUVELLE valeur de design
- *  écrite en dur (couleurs hex, rgb/rgba, px d'espacement/typo, poids de
- *  police numériques) dans le code JS/JSX.
+ *  écrite en dur (couleurs hex, rgb/rgba, NOMS de couleurs CSS, px d'espace-
+ *  ment/typo, poids de police numériques, fontFamily) dans le code JS/JSX.
+ *  Les .ts/.tsx sont couverts par un scan regex (hex/rgba) dans le runner,
+ *  faute de @typescript-eslint/parser installé.
  *
  *  Cette config est VOLONTAIREMENT INDÉPENDANTE de eslint.config.js :
  *  - elle ne contient QUE les règles tokens (aucun bruit react/hooks),
@@ -29,6 +31,10 @@ const PX_MESSAGE =
   'Valeur px en dur sur une propriété d’espacement/typo. Utiliser tokens.spacing[n] / tokens.radius.* / tokens.typography.* ou la variable CSS correspondante.';
 const FONTWEIGHT_MESSAGE =
   'Poids de police numérique en dur. Utiliser tokens.typography.*.fontWeight (400/500/600/700 centralisés).';
+const NAMEDCOLOR_MESSAGE =
+  'Nom de couleur CSS en dur (white/black/red/green/blue…). Utiliser var(--text-* | --bg-* | --accent-* | --color-red-critical).';
+const FONTFAMILY_MESSAGE =
+  'fontFamily en dur. Utiliser var(--font-sans) (Century Gothic) ou var(--font-mono) (JetBrains Mono).';
 
 module.exports = {
   root: true,
@@ -72,6 +78,18 @@ module.exports = {
         // fontWeight numérique en dur (ex. fontWeight: 700)
         selector: "Property[key.name='fontWeight'] > Literal[value=/^[0-9]+$/]",
         message: FONTWEIGHT_MESSAGE,
+      },
+      {
+        // Nom de couleur CSS en dur dans une propriété de couleur
+        selector:
+          "Property[key.name=/^(color|backgroundColor|background|borderColor|borderTopColor|borderRightColor|borderBottomColor|borderLeftColor|outlineColor|fill|stroke)$/] > Literal[value=/^(white|black|red|green|blue|gray|grey|orange|yellow|gold|silver|purple|violet|pink|cyan|magenta|brown|navy|teal|lime|olive|maroon|indigo)$/i]",
+        message: NAMEDCOLOR_MESSAGE,
+      },
+      {
+        // fontFamily en dur (≠ var(--font-*) et ≠ 'inherit')
+        selector:
+          "Property[key.name='fontFamily'] > Literal[value=/^(?!var\\()(?!inherit$).+/]",
+        message: FONTFAMILY_MESSAGE,
       },
     ],
   },
