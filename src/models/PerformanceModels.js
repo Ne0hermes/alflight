@@ -246,7 +246,7 @@ class TakeoffPerformanceCharts extends PerformanceChartCategory {
   /**
    * Interpolation spécifique au décollage
    */
-  interpolate(_chart, conditions) {
+  interpolate(chart, conditions) {
     // Logique d'interpolation pour les abaques de décollage
     // TODO impl : ces entrées seront utilisées par l'interpolation des abaques
     const { temperature, pressureAltitude, mass, wind, flaps } = conditions;
@@ -345,7 +345,7 @@ class LandingPerformanceCharts extends PerformanceChartCategory {
     return this.interpolate(chart, conditions);
   }
 
-  interpolate(_chart, _conditions) {
+  interpolate(chart, conditions) {
     // Réutiliser la logique de TakeoffPerformanceCharts
     // mais avec des ajustements pour l'atterrissage
     const takeoffCharts = new TakeoffPerformanceCharts();
