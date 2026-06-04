@@ -256,7 +256,7 @@ export const AlternateSelectorUnified = memo(({
                     color: 'var(--text-primary)',
                     padding: '2px 8px',
                     borderBottomRightRadius: '6px',
-                    fontSize: '10px',
+                    fontSize: 'var(--fs-caption)',
                     fontWeight: '600'
                   }}>
                     FILTRÉ
@@ -273,7 +273,7 @@ export const AlternateSelectorUnified = memo(({
                     color: 'var(--text-primary)',
                     padding: '4px 12px',
                     borderBottomLeftRadius: '8px',
-                    fontSize: '11px',
+                    fontSize: 'var(--fs-caption)',
                     fontWeight: 'bold'
                   }}>
                     ✓ SÉLECTIONNÉ
@@ -294,7 +294,7 @@ export const AlternateSelectorUnified = memo(({
                         borderRadius: '50%',
                         backgroundColor: (isSelectedDeparture || isSelectedArrival) ? sideColor : `${sideColor}20`,
                         color: (isSelectedDeparture || isSelectedArrival) ? 'white' : sideColor,
-                        fontSize: '12px',
+                        fontSize: 'var(--fs-body)',
                         fontWeight: 'bold',
                         marginRight: '8px',
                         flexShrink: 0
@@ -311,7 +311,7 @@ export const AlternateSelectorUnified = memo(({
                         backgroundColor: `${sideColor}15`,
                         color: sideColor,
                         borderRadius: 'var(--radius-sm)',
-                        fontSize: '11px',
+                        fontSize: 'var(--fs-caption)',
                         fontWeight: 'bold'
                       }}>
                         {sideEmoji} {sideLabel}
@@ -361,7 +361,7 @@ export const AlternateSelectorUnified = memo(({
                         color: getScoreColor(airport.score),
                         borderRadius: 'var(--radius-sm)',
                         fontWeight: 'bold',
-                        fontSize: '11px'
+                        fontSize: 'var(--fs-caption)'
                       }}>
                         Score: {((airport.score || 0) * 100).toFixed(0)}%
                       </span>
@@ -384,7 +384,7 @@ export const AlternateSelectorUnified = memo(({
                         backgroundColor: (isSelectedDeparture || isSelectedArrival) ? (isSelectedDeparture ? 'var(--color-red-critical)' : 'var(--text-primary)') : '#ffffff',
                         color: (isSelectedDeparture || isSelectedArrival) ? '#ffffff' : 'var(--text-secondary)',
                         cursor: 'pointer',
-                        fontSize: '13px',
+                        fontSize: 'var(--fs-body)',
                         fontWeight: 'bold',
                         transition: 'all 0.2s',
                         display: 'flex',
@@ -433,7 +433,7 @@ export const AlternateSelectorUnified = memo(({
                             backgroundColor: isSelectedDeparture ? 'var(--bg-overlay)' : '#ffffff',
                             color: 'var(--color-red-critical)',
                             cursor: 'pointer',
-                            fontSize: '13px',
+                            fontSize: 'var(--fs-body)',
                             fontWeight: isSelectedDeparture ? 'bold' : 'normal',
                             textAlign: 'left',
                             display: 'flex',
@@ -459,7 +459,7 @@ export const AlternateSelectorUnified = memo(({
                             backgroundColor: isSelectedArrival ? 'var(--bg-overlay)' : '#ffffff',
                             color: 'var(--text-primary)',
                             cursor: 'pointer',
-                            fontSize: '13px',
+                            fontSize: 'var(--fs-body)',
                             fontWeight: isSelectedArrival ? 'bold' : 'normal',
                             textAlign: 'left',
                             display: 'flex',

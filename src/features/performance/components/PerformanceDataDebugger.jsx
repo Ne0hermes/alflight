@@ -30,7 +30,7 @@ const PerformanceDataDebugger = ({ tables }) => {
             >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Database size={16} color="var(--text-secondary)" />
-                    <span style={{ fontWeight: '600', color: 'var(--text-secondary)', fontSize: '14px' }}>
+                    <span style={{ fontWeight: '600', color: 'var(--text-secondary)', fontSize: 'var(--fs-body)' }}>
                         Données brutes extraites ({tables.length} tableaux)
                     </span>
                 </div>
@@ -42,7 +42,7 @@ const PerformanceDataDebugger = ({ tables }) => {
                     {tables.map((table, idx) => (
                         <div key={idx} style={{ marginBottom: '24px' }}>
                             <h4 style={{
-                                fontSize: '13px',
+                                fontSize: 'var(--fs-body)',
                                 fontWeight: '700',
                                 marginBottom: '8px',
                                 color: 'var(--text-primary)',
@@ -57,7 +57,7 @@ const PerformanceDataDebugger = ({ tables }) => {
                                 color: 'var(--text-primary)',
                                 padding: '12px',
                                 borderRadius: 'var(--radius-sm)',
-                                fontSize: '11px',
+                                fontSize: 'var(--fs-caption)',
                                 fontFamily: 'monospace',
                                 whiteSpace: 'pre-wrap',
                                 maxHeight: '300px',

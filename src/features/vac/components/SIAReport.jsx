@@ -100,7 +100,7 @@ export const SIAReport = () => {
       boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
     },
     title: {
-      fontSize: '28px',
+      fontSize: 'var(--fs-heading)',
       fontWeight: 'bold',
       color: 'var(--text-primary)',
       marginBottom: '16px'
@@ -117,13 +117,13 @@ export const SIAReport = () => {
       padding: '10px 16px',
       border: '1px solid var(--text-tertiary)',
       borderRadius: 'var(--radius-sm)',
-      fontSize: '14px'
+      fontSize: 'var(--fs-body)'
     },
     button: {
       padding: '10px 20px',
       borderRadius: 'var(--radius-sm)',
       border: 'none',
-      fontSize: '14px',
+      fontSize: 'var(--fs-body)',
       fontWeight: '500',
       cursor: 'pointer',
       display: 'flex',
@@ -158,12 +158,12 @@ export const SIAReport = () => {
       cursor: 'pointer'
     },
     aerodromeTitle: {
-      fontSize: '20px',
+      fontSize: 'var(--fs-title)',
       fontWeight: 'bold',
       marginBottom: '4px'
     },
     aerodromeSubtitle: {
-      fontSize: '14px',
+      fontSize: 'var(--fs-body)',
       opacity: '0.9'
     },
     aerodromeContent: {
@@ -185,7 +185,7 @@ export const SIAReport = () => {
       backgroundColor: 'var(--bg-overlay)'
     },
     sectionTitle: {
-      fontSize: '16px',
+      fontSize: 'var(--fs-title)',
       fontWeight: '600',
       color: 'var(--text-secondary)'
     },
@@ -198,7 +198,7 @@ export const SIAReport = () => {
       marginBottom: '12px'
     },
     label: {
-      fontSize: '12px',
+      fontSize: 'var(--fs-body)',
       fontWeight: '500',
       color: 'var(--text-secondary)',
       marginBottom: '4px',
@@ -209,7 +209,7 @@ export const SIAReport = () => {
       padding: '8px 12px',
       border: '1px solid var(--text-tertiary)',
       borderRadius: 'var(--radius-sm)',
-      fontSize: '14px',
+      fontSize: 'var(--fs-body)',
       backgroundColor: 'var(--bg-overlay)',
       transition: 'border-color 0.2s'
     },
@@ -223,7 +223,7 @@ export const SIAReport = () => {
       padding: '8px 12px',
       border: '1px solid var(--text-tertiary)',
       borderRadius: 'var(--radius-sm)',
-      fontSize: '14px',
+      fontSize: 'var(--fs-body)',
       minHeight: '80px',
       resize: 'vertical',
       fontFamily: 'inherit'
@@ -237,7 +237,7 @@ export const SIAReport = () => {
       padding: '8px',
       backgroundColor: 'var(--bg-overlay)',
       borderBottom: '1px solid var(--border-subtle)',
-      fontSize: '12px',
+      fontSize: 'var(--fs-body)',
       fontWeight: '600',
       color: 'var(--text-secondary)'
     },
@@ -249,7 +249,7 @@ export const SIAReport = () => {
       display: 'inline-block',
       padding: '2px 8px',
       borderRadius: 'var(--radius-sm)',
-      fontSize: '11px',
+      fontSize: 'var(--fs-caption)',
       fontWeight: '600'
     },
     badgeBlue: {
@@ -321,7 +321,7 @@ export const SIAReport = () => {
             </button>
           )}
         </div>
-        <div style={{ marginTop: '12px', fontSize: '14px', color: 'var(--text-secondary)' }}>
+        <div style={{ marginTop: '12px', fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
           {filteredAerodromes.length} aérodrome(s) affiché(s) sur {aerodromes.length}
         </div>
       </div>
@@ -517,7 +517,7 @@ export const SIAReport = () => {
                                     type="number"
                                     value={runway.length || 0}
                                     onChange={(e) => updateValue(aerodrome.icao, `runways.${idx}.length`, parseInt(e.target.value) || 0)}
-                                    style={{ ...styles.input, padding: '4px', width: '60px', fontSize: '12px' }}
+                                    style={{ ...styles.input, padding: '4px', width: '60px', fontSize: 'var(--fs-body)' }}
                                     placeholder="L"
                                   />
                                   <span>×</span>
@@ -525,7 +525,7 @@ export const SIAReport = () => {
                                     type="number"
                                     value={runway.width || 0}
                                     onChange={(e) => updateValue(aerodrome.icao, `runways.${idx}.width`, parseInt(e.target.value) || 0)}
-                                    style={{ ...styles.input, padding: '4px', width: '50px', fontSize: '12px' }}
+                                    style={{ ...styles.input, padding: '4px', width: '50px', fontSize: 'var(--fs-body)' }}
                                     placeholder="W"
                                   />
                                   <span>m</span>
@@ -540,7 +540,7 @@ export const SIAReport = () => {
                                 />
                               </td>
                               <td style={styles.td}>
-                                <div style={{ fontSize: '12px' }}>
+                                <div style={{ fontSize: 'var(--fs-body)' }}>
                                   {runway.tora || runway.length || 0}/
                                   {runway.toda || runway.length || 0}/
                                   {runway.asda || runway.length || 0}/
@@ -561,7 +561,7 @@ export const SIAReport = () => {
                                   type="text"
                                   value={runway.pcn || ''}
                                   onChange={(e) => updateValue(aerodrome.icao, `runways.${idx}.pcn`, e.target.value)}
-                                  style={{ ...styles.input, padding: '4px 8px', fontSize: '12px' }}
+                                  style={{ ...styles.input, padding: '4px 8px', fontSize: 'var(--fs-body)' }}
                                 />
                               </td>
                             </tr>
@@ -604,7 +604,7 @@ export const SIAReport = () => {
                                     style={{ ...styles.input, marginBottom: '2px' }}
                                   />
                                   {freq.schedule && freq.schedule !== 'H24' && (
-                                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)', marginLeft: '8px' }}>
+                                    <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginLeft: '8px' }}>
                                       {freq.schedule}
                                     </span>
                                   )}
@@ -713,7 +713,7 @@ export const SIAReport = () => {
           <Search size={48} style={{ opacity: 0.3, marginBottom: '16px' }} />
           <p>Aucun aérodrome trouvé</p>
           {searchTerm && (
-            <p style={{ fontSize: '14px', marginTop: '8px' }}>
+            <p style={{ fontSize: 'var(--fs-body)', marginTop: '8px' }}>
               Essayez avec un autre terme de recherche
             </p>
           )}

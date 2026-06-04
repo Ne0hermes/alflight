@@ -120,7 +120,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
           }}
         >
           <RadioIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Équipements COM (Communication)
           </Typography>
         </AccordionSummary>
@@ -137,7 +137,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       VHF COM 1
                     </Typography>
                   }
@@ -151,7 +151,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       VHF COM 2
                     </Typography>
                   }
@@ -165,7 +165,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       HF (Haute fréquence)
                     </Typography>
                   }
@@ -179,7 +179,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       SATCOM
                     </Typography>
                   }
@@ -193,7 +193,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       ACARS
                     </Typography>
                   }
@@ -207,7 +207,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       CPDLC (Datalink)
                     </Typography>
 
@@ -249,7 +249,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
           }}
         >
           <NavigationIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Équipements NAV (Navigation)
           </Typography>
         </AccordionSummary>
@@ -266,7 +266,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       VOR
                     </Typography>
                   }
@@ -280,7 +280,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       DME
                     </Typography>
                   }
@@ -294,7 +294,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       ADF/NDB
                     </Typography>
                   }
@@ -308,7 +308,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       GNSS/GPS
                     </Typography>
                   }
@@ -322,7 +322,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       ILS
                     </Typography>
                   }
@@ -336,7 +336,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       MLS
                     </Typography>
                   }
@@ -350,7 +350,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       GBAS
                     </Typography>
                   }
@@ -364,7 +364,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       LPV (approche GPS)
                     </Typography>
                   }
@@ -373,7 +373,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
 
               {/* Nouveaux équipements Nav */}
               <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-                <Typography variant="body2" sx={{ fontSize: '14px', fontWeight: 500, mb: 2 }}>
+                <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)', fontWeight: 500, mb: 2 }}>
                   Systèmes avancés
                 </Typography>
                 <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
@@ -386,7 +386,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                       />
                     }
                     label={
-                      <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                      <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                         AHRS (Attitude & Heading)
                       </Typography>
                     }
@@ -400,7 +400,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                       />
                     }
                     label={
-                      <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                      <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                         ADC (Air Data Computer)
                       </Typography>
                     }
@@ -421,7 +421,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                         />
                       }
                       label={
-                        <Typography variant="body2" sx={{ fontSize: '14px', fontWeight: 500 }}>
+                        <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)', fontWeight: 500 }}>
                           Capacité RNAV
                         </Typography>
                       }
@@ -447,7 +447,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                         />
                       }
                       label={
-                        <Typography variant="body2" sx={{ fontSize: '14px', fontWeight: 500 }}>
+                        <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)', fontWeight: 500 }}>
                           Capacité RNP
                         </Typography>
                       }
@@ -499,7 +499,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
           }}
         >
           <RadarIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Équipements de Surveillance
           </Typography>
         </AccordionSummary>
@@ -516,7 +516,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       ADS-B Out
                     </Typography>
                   }
@@ -530,7 +530,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       ADS-C
                     </Typography>
                   }
@@ -544,7 +544,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       TCAS
                     </Typography>
                   }
@@ -558,7 +558,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       ACAS II
                     </Typography>
                   }
@@ -572,7 +572,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       TAWS/GPWS
                     </Typography>
                   }
@@ -586,7 +586,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       CVR
                     </Typography>
                   }
@@ -600,7 +600,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       FDR
                     </Typography>
                   }
@@ -614,7 +614,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Radar météo
                     </Typography>
                   }
@@ -623,7 +623,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
 
               {/* Mode transpondeur - Sélection multiple */}
               <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-                <Typography variant="body2" sx={{ fontSize: '14px', fontWeight: 500, mb: 1 }}>
+                <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)', fontWeight: 500, mb: 1 }}>
                   Mode transpondeur (sélection multiple)
                 </Typography>
                 <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2 }}>
@@ -647,7 +647,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                           />
                         }
                         label={
-                          <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                          <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                             {mode}
                           </Typography>
                         }
@@ -667,7 +667,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                       />
                     }
                     label={
-                      <Typography variant="body2" sx={{ fontSize: '14px', fontWeight: 500 }}>
+                      <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)', fontWeight: 500 }}>
                         ADS-B Out (1090 MHz)
                       </Typography>
                     }
@@ -708,7 +708,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
           }}
         >
           <SpecialIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Capacités spéciales
           </Typography>
         </AccordionSummary>
@@ -725,7 +725,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       PBN (Performance Based Navigation)
                     </Typography>
                   }
@@ -739,7 +739,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       LVTO (Low Visibility Take-Off)
                     </Typography>
                   }
@@ -753,7 +753,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       CAT II
                     </Typography>
                   }
@@ -767,7 +767,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       CAT IIIa
                     </Typography>
                   }
@@ -781,7 +781,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       CAT IIIb
                     </Typography>
                   }
@@ -795,7 +795,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       CAT IIIc
                     </Typography>
                   }
@@ -809,7 +809,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       ETOPS
                     </Typography>
                   }
@@ -823,7 +823,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       RVSM
                     </Typography>
                   }
@@ -837,7 +837,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       MNPS
                     </Typography>
                   }
@@ -851,7 +851,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Dégivrage/Antigivrage
                     </Typography>
                   }
@@ -893,7 +893,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
           }}
         >
           <SunIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Règles de vol
           </Typography>
         </AccordionSummary>
@@ -910,7 +910,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       VFR Jour
                     </Typography>
                   }
@@ -924,7 +924,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       VFR Nuit
                     </Typography>
                   }
@@ -938,7 +938,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       IFR Jour
                     </Typography>
                   }
@@ -952,7 +952,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       IFR Nuit
                     </Typography>
                   }
@@ -966,7 +966,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       VFR Spécial (SVFR)
                     </Typography>
                   }
@@ -1007,7 +1007,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
           }}
         >
           <StarsIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Opérations spéciales
           </Typography>
         </AccordionSummary>
@@ -1024,7 +1024,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Vol en formation
                     </Typography>
                   }
@@ -1038,7 +1038,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Voltige aérienne
                     </Typography>
                   }
@@ -1052,7 +1052,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Remorquage bannière
                     </Typography>
                   }
@@ -1066,7 +1066,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Remorquage planeur
                     </Typography>
                   }
@@ -1080,7 +1080,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Largage parachutistes
                     </Typography>
                   }
@@ -1094,7 +1094,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Épandage agricole
                     </Typography>
                   }
@@ -1108,7 +1108,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Photo/Surveillance
                     </Typography>
                   }
@@ -1149,7 +1149,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
           }}
         >
           <TerrainIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Environnement et usage
           </Typography>
         </AccordionSummary>
@@ -1166,7 +1166,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       École de pilotage
                     </Typography>
                   }
@@ -1180,7 +1180,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Transport public
                     </Typography>
                   }
@@ -1194,7 +1194,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Vol en montagne
                     </Typography>
                   }
@@ -1208,7 +1208,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Hydravion
                     </Typography>
                   }
@@ -1222,7 +1222,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Avion sur skis
                     </Typography>
                   }
@@ -1236,7 +1236,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Conditions givrantes
                     </Typography>
                   }
@@ -1276,7 +1276,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
           }}
         >
           <SearchRescueIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Search and Rescue (Équipements de sauvetage)
           </Typography>
         </AccordionSummary>
@@ -1293,7 +1293,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       ELT 121.5/406 MHz
                     </Typography>
                   }
@@ -1307,7 +1307,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Gilets de sauvetage
                     </Typography>
                   }
@@ -1321,7 +1321,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Extincteur Halon (BCF)
                     </Typography>
                   }
@@ -1335,7 +1335,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Extincteur H2O (Eau)
                     </Typography>
                   }
@@ -1349,7 +1349,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Extincteur Poudre/CO2
                     </Typography>
                   }
@@ -1363,7 +1363,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Réserve d'oxygène (bouteilles)
                     </Typography>
                   }
@@ -1377,7 +1377,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Radeau de survie
                     </Typography>
                   }
@@ -1391,7 +1391,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Trousse de survie
                     </Typography>
                   }
@@ -1405,7 +1405,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Balise PLB
                     </Typography>
                   }
@@ -1419,7 +1419,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Miroir de signalisation
                     </Typography>
                   }
@@ -1433,7 +1433,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Fusées de détresse
                     </Typography>
                   }
@@ -1447,7 +1447,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Radio de survie
                     </Typography>
                   }
@@ -1461,7 +1461,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Kit de premiers secours
                     </Typography>
                   }
@@ -1475,7 +1475,7 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Vêtements de survie
                     </Typography>
                   }

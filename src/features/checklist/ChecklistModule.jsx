@@ -189,7 +189,7 @@ export const ChecklistModule = memo(({ wizardMode = false, config = {} }) => {
                   {
                     padding: '8px 12px',
                     flex: '1',
-                    fontSize: '14px',
+                    fontSize: 'var(--fs-body)',
                     cursor: 'pointer'
                   }
                 )}

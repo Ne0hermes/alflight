@@ -1070,24 +1070,24 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                           border: '2px solid var(--text-secondary)'
                         }}
                       >
-                        <Typography sx={{ fontWeight: 500, mb: 1, fontSize: '15px' }}>
+                        <Typography sx={{ fontWeight: 500, mb: 1, fontSize: 'var(--fs-body)' }}>
                           {model.name || `Abaque ${index + 1}`}
                         </Typography>
-                        <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                        <Typography sx={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                           Type: {model.type || 'abaque'}
                         </Typography>
                         {model.data?.graphs && (
                           <>
-                            <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)', mt: 0.5 }}>
+                            <Typography sx={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', mt: 0.5 }}>
                               📊 {model.data.graphs.length} graphique(s)
                             </Typography>
                             {totalCurves > 0 && (
-                              <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)', mt: 0.5 }}>
+                              <Typography sx={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', mt: 0.5 }}>
                                 📈 {totalCurves} courbe(s)
                               </Typography>
                             )}
                             {totalPoints > 0 && (
-                              <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)', mt: 0.5 }}>
+                              <Typography sx={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', mt: 0.5 }}>
                                 📍 {totalPoints} point(s) de données
                               </Typography>
                             )}
@@ -1644,24 +1644,24 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                               border: '2px solid var(--text-secondary)'
                             }}
                           >
-                            <Typography sx={{ fontWeight: 500, mb: 1, fontSize: '15px' }}>
+                            <Typography sx={{ fontWeight: 500, mb: 1, fontSize: 'var(--fs-body)' }}>
                               {model.name || `Abaque ${index + 1}`}
                             </Typography>
-                            <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                            <Typography sx={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                               Type: {model.type || 'abaque'}
                             </Typography>
                             {model.data?.graphs && (
                               <>
-                                <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)', mt: 0.5 }}>
+                                <Typography sx={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', mt: 0.5 }}>
                                   📊 {model.data.graphs.length} graphique(s)
                                 </Typography>
                                 {totalCurves > 0 && (
-                                  <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)', mt: 0.5 }}>
+                                  <Typography sx={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', mt: 0.5 }}>
                                     📈 {totalCurves} courbe(s)
                                   </Typography>
                                 )}
                                 {totalPoints > 0 && (
-                                  <Typography sx={{ fontSize: '14px', color: 'var(--text-secondary)', mt: 0.5 }}>
+                                  <Typography sx={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', mt: 0.5 }}>
                                     📍 {totalPoints} point(s) de données
                                   </Typography>
                                 )}

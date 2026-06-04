@@ -87,7 +87,7 @@ export const ScenarioCards = memo(({ scenarios, fobFuel, fuelData, aircraft }) =
           <div style={{
             display: 'flex',
             gap: '16px',
-            fontSize: '11px',
+            fontSize: 'var(--fs-caption)',
             color: 'var(--text-secondary)',
             backgroundColor: 'var(--bg-overlay)',
             padding: '8px 16px',
@@ -156,7 +156,7 @@ const ScenarioCard = memo(({ color, title, data, description }) => {
         {/* Tableau détaillé des masses avec bras et moments */}
         {data.items && data.items.length > 0 && (
           <div style={{ borderTop: `1px solid ${colorTheme[200]}`, paddingTop: '8px', marginTop: '0' }}>
-            <table style={{ width: '100%', fontSize: '9px', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+            <table style={{ width: '100%', fontSize: 'var(--fs-caption)', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
               <thead>
                 <tr style={{ borderBottom: `1px solid ${colorTheme[300]}` }}>
                   <th style={{ textAlign: 'left', padding: '4px 2px', fontWeight: '600', width: '40%', whiteSpace: 'nowrap' }}>Élément</th>
@@ -189,7 +189,7 @@ const ScenarioCard = memo(({ color, title, data, description }) => {
                 </tr>
               </tbody>
             </table>
-            <p style={{ marginTop: '6px', fontSize: '9px', fontStyle: 'italic' }}>
+            <p style={{ marginTop: '6px', fontSize: 'var(--fs-caption)', fontStyle: 'italic' }}>
               CG = {data.items.reduce((sum, item) => sum + parseFloat(item.moment || 0), 0).toFixed(1)} ÷ {parseFloat(data.w || 0).toFixed(1)} = <strong>{parseFloat(data.cg || 0).toFixed(3)} m</strong>
             </p>
 
@@ -201,7 +201,7 @@ const ScenarioCard = memo(({ color, title, data, description }) => {
                 backgroundColor: 'var(--bg-overlay)',
                 borderLeft: '3px solid var(--color-red-critical)',
                 borderRadius: 'var(--radius-sm)',
-                fontSize: '10px',
+                fontSize: 'var(--fs-caption)',
                 color: 'var(--color-red-critical)'
               }}>
                 <strong>⚠️ MZFW DÉPASSÉ</strong>
@@ -210,7 +210,7 @@ const ScenarioCard = memo(({ color, title, data, description }) => {
                 <br />
                 Limite MZFW : {parseFloat(data.maxZfm || 0).toFixed(1)} kg
                 <br />
-                <span style={{ fontSize: '9px', fontStyle: 'italic' }}>
+                <span style={{ fontSize: 'var(--fs-caption)', fontStyle: 'italic' }}>
                   Surcharge : +{(parseFloat(data.w || 0) - parseFloat(data.maxZfm || 0)).toFixed(1)} kg
                 </span>
               </div>

@@ -136,7 +136,7 @@ const styles = {
   sectionTitle: {
     marginBottom: '12px',
     color: 'var(--text-primary)',
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     fontWeight: 600
   },
   grid: {
@@ -156,7 +156,7 @@ const styles = {
   },
   label: {
     marginBottom: '4px',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     fontWeight: 500,
     color: 'var(--text-secondary)'
   },
@@ -164,7 +164,7 @@ const styles = {
     padding: '8px 10px',
     border: '1px solid var(--border-subtle)',
     borderRadius: '4px',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     transition: 'border-color 0.2s',
     width: '100%',
     boxSizing: 'border-box' as const
@@ -173,7 +173,7 @@ const styles = {
     padding: '8px 10px',
     border: '1px solid var(--border-subtle)',
     borderRadius: '4px',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     transition: 'border-color 0.2s',
     backgroundColor: 'var(--bg-overlay)',
     cursor: 'pointer',
@@ -184,14 +184,14 @@ const styles = {
     padding: '8px 10px',
     border: '1px solid var(--color-red-critical)',
     borderRadius: '4px',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     transition: 'border-color 0.2s',
     width: '100%',
     boxSizing: 'border-box' as const
   },
   errorMessage: {
     color: 'var(--color-red-critical)',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     marginTop: '4px'
   },
   actions: {
@@ -203,7 +203,7 @@ const styles = {
     padding: '10px 20px',
     border: 'none',
     borderRadius: '4px',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: 500,
     cursor: 'pointer',
     backgroundColor: 'var(--accent-primary)',
@@ -211,13 +211,13 @@ const styles = {
     transition: 'background-color 0.2s'
   },
   helperText: {
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     color: 'var(--text-secondary)',
     marginTop: '4px',
     fontStyle: 'italic'
   },
   formTitle: {
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     fontWeight: 600,
     color: 'var(--accent-primary)',
     marginBottom: '12px',
@@ -483,7 +483,7 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
       {/* Titre du graphique avec bouton de suppression */}
       {graphNumber && (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingBottom: '8px', borderBottom: '2px solid var(--bg-overlay)' }}>
-          <h2 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--accent-primary)', margin: 0 }}>
+          <h2 style={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--accent-primary)', margin: 0 }}>
             Graphique {graphNumber} - {AXIS_OPTIONS[xAxisType]?.label || config.xAxis.title} / {AXIS_OPTIONS[yAxisType]?.label || config.yAxis.title}
           </h2>
           {onDelete && (
@@ -501,7 +501,7 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
                 border: 'none',
                 borderRadius: '4px',
                 cursor: 'pointer',
-                fontSize: '20px',
+                fontSize: 'var(--fs-title)',
                 fontWeight: 'bold',
                 lineHeight: '1',
                 width: '32px',
@@ -530,7 +530,7 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
           onClick={() => setXAxisExpanded(!xAxisExpanded)}
         >
           <span>Configuration Axe X</span>
-          <span style={{ fontSize: '16px' }}>{xAxisExpanded ? '▼' : '▶'}</span>
+          <span style={{ fontSize: 'var(--fs-title)' }}>{xAxisExpanded ? '▼' : '▶'}</span>
         </h3>
         {xAxisExpanded && (
         <div style={styles.grid}>
@@ -589,7 +589,7 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
                   onChange={() => handleChange('xAxis', 'reversed', false)}
                   style={{ marginRight: '6px' }}
                 />
-                <span style={{ fontSize: '13px' }}>Croissant (→)</span>
+                <span style={{ fontSize: 'var(--fs-body)' }}>Croissant (→)</span>
               </label>
               <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
                 <input
@@ -599,7 +599,7 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
                   onChange={() => handleChange('xAxis', 'reversed', true)}
                   style={{ marginRight: '6px' }}
                 />
-                <span style={{ fontSize: '13px' }}>Décroissant (←)</span>
+                <span style={{ fontSize: 'var(--fs-body)' }}>Décroissant (←)</span>
               </label>
             </div>
           </div>
@@ -630,7 +630,7 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
           onClick={() => setYAxisExpanded(!yAxisExpanded)}
         >
           <span>Configuration Axe Y</span>
-          <span style={{ fontSize: '16px' }}>{yAxisExpanded ? '▼' : '▶'}</span>
+          <span style={{ fontSize: 'var(--fs-title)' }}>{yAxisExpanded ? '▼' : '▶'}</span>
         </h3>
         {yAxisExpanded && (
         <div style={styles.grid}>
@@ -689,7 +689,7 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
                   onChange={() => handleChange('yAxis', 'reversed', false)}
                   style={{ marginRight: '6px' }}
                 />
-                <span style={{ fontSize: '13px' }}>Croissant (↑)</span>
+                <span style={{ fontSize: 'var(--fs-body)' }}>Croissant (↑)</span>
               </label>
               <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
                 <input
@@ -699,7 +699,7 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
                   onChange={() => handleChange('yAxis', 'reversed', true)}
                   style={{ marginRight: '6px' }}
                 />
-                <span style={{ fontSize: '13px' }}>Décroissant (↓)</span>
+                <span style={{ fontSize: 'var(--fs-body)' }}>Décroissant (↓)</span>
               </label>
             </div>
           </div>
@@ -729,7 +729,7 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
             <div style={{ fontWeight: 600, color: 'var(--accent-primary)', marginBottom: '4px' }}>
               💨 Mode vent activé automatiquement
             </div>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
               Ce graphique a été détecté comme lié au vent. Vous pourrez spécifier la direction du vent (vent de face/arrière) pour chaque courbe.
             </div>
           </div>

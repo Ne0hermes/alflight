@@ -216,7 +216,7 @@ const GlobalVFRPointsManager = () => {
       }}>
         <div>
           <h2 style={{
-            fontSize: '18px',
+            fontSize: 'var(--fs-title)',
             fontWeight: '600',
             display: 'flex',
             alignItems: 'center',
@@ -228,7 +228,7 @@ const GlobalVFRPointsManager = () => {
           </h2>
           {lastSyncTime && (
             <p style={{
-              fontSize: '11px',
+              fontSize: 'var(--fs-caption)',
               color: 'var(--text-secondary)',
               margin: 0,
               display: 'flex',
@@ -251,7 +251,7 @@ const GlobalVFRPointsManager = () => {
               color: 'var(--text-primary)',
               border: 'none',
               borderRadius: 'var(--radius-sm)',
-              fontSize: '14px',
+              fontSize: 'var(--fs-body)',
               cursor: isSyncing ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -272,7 +272,7 @@ const GlobalVFRPointsManager = () => {
               color: 'var(--text-primary)',
               border: 'none',
               borderRadius: 'var(--radius-sm)',
-              fontSize: '14px',
+              fontSize: 'var(--fs-body)',
               cursor: isUploading || localGlobalPoints.length === 0 ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -292,7 +292,7 @@ const GlobalVFRPointsManager = () => {
               color: 'var(--text-primary)',
               border: 'none',
               borderRadius: 'var(--radius-sm)',
-              fontSize: '14px',
+              fontSize: 'var(--fs-body)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -327,7 +327,7 @@ const GlobalVFRPointsManager = () => {
             padding: '8px 8px 8px 36px',
             border: '1px solid var(--text-tertiary)',
             borderRadius: 'var(--radius-sm)',
-            fontSize: '14px'
+            fontSize: 'var(--fs-body)'
           }}
         />
       </div>
@@ -341,7 +341,7 @@ const GlobalVFRPointsManager = () => {
           borderRadius: 'var(--radius-sm)',
           border: '2px solid var(--text-secondary)'
         }}>
-          <h3 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>
+          <h3 style={{ fontSize: 'var(--fs-body)', fontWeight: '600', marginBottom: '12px' }}>
             Nouveau point VFR global
           </h3>
           
@@ -355,7 +355,7 @@ const GlobalVFRPointsManager = () => {
                 padding: '8px',
                 border: '1px solid var(--text-tertiary)',
                 borderRadius: 'var(--radius-sm)',
-                fontSize: '14px'
+                fontSize: 'var(--fs-body)'
               }}
             />
             
@@ -366,7 +366,7 @@ const GlobalVFRPointsManager = () => {
                 padding: '8px',
                 border: '1px solid var(--text-tertiary)',
                 borderRadius: 'var(--radius-sm)',
-                fontSize: '14px'
+                fontSize: 'var(--fs-body)'
               }}
             >
               <option value="VRP">VRP - Point de report</option>
@@ -386,7 +386,7 @@ const GlobalVFRPointsManager = () => {
                 padding: '8px',
                 border: '1px solid var(--text-tertiary)',
                 borderRadius: 'var(--radius-sm)',
-                fontSize: '14px'
+                fontSize: 'var(--fs-body)'
               }}
             />
             
@@ -400,7 +400,7 @@ const GlobalVFRPointsManager = () => {
                 padding: '8px',
                 border: '1px solid var(--text-tertiary)',
                 borderRadius: 'var(--radius-sm)',
-                fontSize: '14px'
+                fontSize: 'var(--fs-body)'
               }}
             />
             
@@ -413,7 +413,7 @@ const GlobalVFRPointsManager = () => {
                 padding: '8px',
                 border: '1px solid var(--text-tertiary)',
                 borderRadius: 'var(--radius-sm)',
-                fontSize: '14px'
+                fontSize: 'var(--fs-body)'
               }}
             />
             
@@ -426,7 +426,7 @@ const GlobalVFRPointsManager = () => {
                 padding: '8px',
                 border: '1px solid var(--text-tertiary)',
                 borderRadius: 'var(--radius-sm)',
-                fontSize: '14px'
+                fontSize: 'var(--fs-body)'
               }}
             />
           </div>
@@ -444,7 +444,7 @@ const GlobalVFRPointsManager = () => {
                 color: 'var(--text-primary)',
                 border: 'none',
                 borderRadius: 'var(--radius-sm)',
-                fontSize: '14px',
+                fontSize: 'var(--fs-body)',
                 cursor: 'pointer'
               }}
             >
@@ -468,7 +468,7 @@ const GlobalVFRPointsManager = () => {
                 color: 'var(--text-primary)',
                 border: 'none',
                 borderRadius: 'var(--radius-sm)',
-                fontSize: '14px',
+                fontSize: 'var(--fs-body)',
                 cursor: 'pointer'
               }}
             >
@@ -506,7 +506,7 @@ const GlobalVFRPointsManager = () => {
                       padding: '6px',
                       border: '1px solid var(--text-tertiary)',
                       borderRadius: 'var(--radius-sm)',
-                      fontSize: '12px'
+                      fontSize: 'var(--fs-body)'
                     }}
                   />
                   
@@ -517,7 +517,7 @@ const GlobalVFRPointsManager = () => {
                       padding: '6px',
                       border: '1px solid var(--text-tertiary)',
                       borderRadius: 'var(--radius-sm)',
-                      fontSize: '12px'
+                      fontSize: 'var(--fs-body)'
                     }}
                   >
                     <option value="VRP">VRP</option>
@@ -537,7 +537,7 @@ const GlobalVFRPointsManager = () => {
                       padding: '6px',
                       border: '1px solid var(--text-tertiary)',
                       borderRadius: 'var(--radius-sm)',
-                      fontSize: '12px'
+                      fontSize: 'var(--fs-body)'
                     }}
                   />
                   
@@ -551,7 +551,7 @@ const GlobalVFRPointsManager = () => {
                       padding: '6px',
                       border: '1px solid var(--text-tertiary)',
                       borderRadius: 'var(--radius-sm)',
-                      fontSize: '12px'
+                      fontSize: 'var(--fs-body)'
                     }}
                   />
                   
@@ -564,7 +564,7 @@ const GlobalVFRPointsManager = () => {
                       padding: '6px',
                       border: '1px solid var(--text-tertiary)',
                       borderRadius: 'var(--radius-sm)',
-                      fontSize: '12px'
+                      fontSize: 'var(--fs-body)'
                     }}
                   />
                   
@@ -577,7 +577,7 @@ const GlobalVFRPointsManager = () => {
                       padding: '6px',
                       border: '1px solid var(--text-tertiary)',
                       borderRadius: 'var(--radius-sm)',
-                      fontSize: '12px'
+                      fontSize: 'var(--fs-body)'
                     }}
                   />
                   
@@ -590,7 +590,7 @@ const GlobalVFRPointsManager = () => {
                         color: 'var(--text-primary)',
                         border: 'none',
                         borderRadius: 'var(--radius-sm)',
-                        fontSize: '12px',
+                        fontSize: 'var(--fs-body)',
                         cursor: 'pointer'
                       }}
                     >
@@ -604,7 +604,7 @@ const GlobalVFRPointsManager = () => {
                         color: 'var(--text-primary)',
                         border: 'none',
                         borderRadius: 'var(--radius-sm)',
-                        fontSize: '12px',
+                        fontSize: 'var(--fs-body)',
                         cursor: 'pointer'
                       }}
                     >
@@ -629,13 +629,13 @@ const GlobalVFRPointsManager = () => {
                     }}>
                       <MapPin size={16} style={{ color: vfrTypeColors[point.type] || 'var(--text-secondary)' }} />
                       <span style={{
-                        fontSize: '14px',
+                        fontSize: 'var(--fs-body)',
                         fontWeight: '600'
                       }}>
                         {point.name}
                       </span>
                       <span style={{
-                        fontSize: '11px',
+                        fontSize: 'var(--fs-caption)',
                         padding: '2px 6px',
                         backgroundColor: vfrTypeColors[point.type] || 'var(--text-secondary)',
                         color: 'var(--text-primary)',
@@ -645,7 +645,7 @@ const GlobalVFRPointsManager = () => {
                       </span>
                       {point.fromSupabase ? (
                         <span style={{
-                          fontSize: '10px',
+                          fontSize: 'var(--fs-caption)',
                           padding: '2px 6px',
                           backgroundColor: 'var(--text-primary)',
                           color: 'var(--text-primary)',
@@ -659,7 +659,7 @@ const GlobalVFRPointsManager = () => {
                         </span>
                       ) : (
                         <span style={{
-                          fontSize: '10px',
+                          fontSize: 'var(--fs-caption)',
                           padding: '2px 6px',
                           backgroundColor: 'var(--text-secondary)',
                           color: 'var(--text-primary)',
@@ -675,7 +675,7 @@ const GlobalVFRPointsManager = () => {
                     </div>
                     
                     <div style={{
-                      fontSize: '12px',
+                      fontSize: 'var(--fs-body)',
                       color: 'var(--text-secondary)',
                       marginBottom: '2px'
                     }}>
@@ -684,7 +684,7 @@ const GlobalVFRPointsManager = () => {
                     
                     {point.altitude && (
                       <div style={{
-                        fontSize: '12px',
+                        fontSize: 'var(--fs-body)',
                         color: 'var(--text-secondary)'
                       }}>
                         Altitude: {point.altitude} ft
@@ -693,7 +693,7 @@ const GlobalVFRPointsManager = () => {
                     
                     {point.description && (
                       <div style={{
-                        fontSize: '12px',
+                        fontSize: 'var(--fs-body)',
                         color: 'var(--text-secondary)',
                         marginTop: '4px'
                       }}>
@@ -743,7 +743,7 @@ const GlobalVFRPointsManager = () => {
                     {point.fromSupabase && point.downloads_count !== undefined && (
                       <div style={{
                         padding: '4px 8px',
-                        fontSize: '11px',
+                        fontSize: 'var(--fs-caption)',
                         color: 'var(--text-secondary)',
                         display: 'flex',
                         alignItems: 'center',
@@ -766,10 +766,10 @@ const GlobalVFRPointsManager = () => {
             color: 'var(--text-tertiary)'
           }}>
             <MapPin size={48} style={{ opacity: 0.3, margin: '0 auto 16px' }} />
-            <p style={{ fontSize: '14px' }}>
+            <p style={{ fontSize: 'var(--fs-body)' }}>
               {searchTerm ? 'Aucun point trouvé' : 'Aucun point VFR global défini'}
             </p>
-            <p style={{ fontSize: '12px', marginTop: '8px' }}>
+            <p style={{ fontSize: 'var(--fs-body)', marginTop: '8px' }}>
               Les points globaux sont visibles sur toutes les cartes
             </p>
           </div>
@@ -784,7 +784,7 @@ const GlobalVFRPointsManager = () => {
           backgroundColor: 'var(--bg-overlay)',
           borderRadius: 'var(--radius-sm)',
           border: '1px solid var(--text-secondary)',
-          fontSize: '12px',
+          fontSize: 'var(--fs-body)',
           color: 'var(--text-primary)'
         }}>
           <div style={{ marginBottom: '8px' }}>
@@ -794,7 +794,7 @@ const GlobalVFRPointsManager = () => {
             {' • '}
             <strong>{uniqueSupabasePoints.length}</strong> depuis Supabase
           </div>
-          <div style={{ fontSize: '11px', opacity: 0.8 }}>
+          <div style={{ fontSize: 'var(--fs-caption)', opacity: 0.8 }}>
             {Object.entries(
               globalPoints.reduce((acc, p) => {
                 acc[p.type] = (acc[p.type] || 0) + 1;

@@ -23,9 +23,9 @@ import { tokens } from '@shared/styles/designSystem';
  *   <EditorialButton as="a" href="/docs">Documentation</EditorialButton>
  */
 const SIZE_MAP = {
-  sm: { padding: '8px 14px', fontSize: '12px', minHeight: '32px' },
-  md: { padding: '12px 20px', fontSize: '13px', minHeight: '40px' },
-  lg: { padding: '16px 28px', fontSize: '14px', minHeight: '48px' },
+  sm: { padding: '8px 14px', fontSize: 'var(--fs-body)', minHeight: '32px' },
+  md: { padding: '12px 20px', fontSize: 'var(--fs-body)', minHeight: '40px' },
+  lg: { padding: '16px 28px', fontSize: 'var(--fs-body)', minHeight: '48px' },
 };
 
 const getVariantStyles = (variant, hovered, disabled) => {

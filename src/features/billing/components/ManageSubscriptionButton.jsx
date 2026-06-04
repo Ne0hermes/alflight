@@ -56,7 +56,7 @@ const styles = {
     color: 'var(--bg-overlay)',
     border: 'none',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '500',
     cursor: 'pointer',
     transition: 'background-color 0.2s',

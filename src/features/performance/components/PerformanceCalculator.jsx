@@ -172,13 +172,13 @@ export const PerformanceCalculator = memo(() => {
     padding: '8px 12px',
     border: '1px solid var(--text-tertiary)',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     width: '100%',
     backgroundColor: 'var(--bg-overlay)'
   };
 
   const labelStyle = {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     fontWeight: '500',
     marginBottom: '4px',

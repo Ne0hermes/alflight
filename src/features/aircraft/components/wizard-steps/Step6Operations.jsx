@@ -87,7 +87,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
           }}
         >
           <SunIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Règles de vol
           </Typography>
         </AccordionSummary>
@@ -104,7 +104,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       VFR Jour
                     </Typography>
                   }
@@ -118,7 +118,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       VFR Nuit
                     </Typography>
                   }
@@ -132,7 +132,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       IFR Jour
                     </Typography>
                   }
@@ -146,7 +146,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       IFR Nuit
                     </Typography>
                   }
@@ -160,7 +160,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       VFR Spécial (SVFR)
                     </Typography>
 
@@ -202,7 +202,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
           }}
         >
           <StarsIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Opérations spéciales
           </Typography>
         </AccordionSummary>
@@ -219,7 +219,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Vol en formation
                     </Typography>
                   }
@@ -233,7 +233,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Voltige aérienne
                     </Typography>
                   }
@@ -247,7 +247,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Remorquage bannière
                     </Typography>
                   }
@@ -261,7 +261,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Remorquage planeur
                     </Typography>
                   }
@@ -275,7 +275,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Largage parachutistes
                     </Typography>
                   }
@@ -289,7 +289,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Épandage agricole
                     </Typography>
                   }
@@ -303,7 +303,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Photo/Surveillance
                     </Typography>
 
@@ -345,7 +345,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
           }}
         >
           <SearchRescueIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Search and Rescue (Équipements de sauvetage)
           </Typography>
         </AccordionSummary>
@@ -362,7 +362,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       ELT 121.5/406 MHz
                     </Typography>
                   }
@@ -376,7 +376,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Gilets de sauvetage
                     </Typography>
                   }
@@ -390,7 +390,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Radeau de survie
                     </Typography>
                   }
@@ -404,7 +404,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Trousse de survie
                     </Typography>
                   }
@@ -418,7 +418,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Balise PLB
                     </Typography>
                   }
@@ -432,7 +432,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Miroir de signalisation
                     </Typography>
                   }
@@ -446,7 +446,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Fusées de détresse
                     </Typography>
                   }
@@ -460,7 +460,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Radio de survie
                     </Typography>
                   }
@@ -474,7 +474,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Kit de premiers secours
                     </Typography>
                   }
@@ -488,7 +488,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Vêtements de survie
                     </Typography>
                   }
@@ -528,7 +528,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
           }}
         >
           <TerrainIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Environnement et usage
           </Typography>
         </AccordionSummary>
@@ -545,7 +545,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       École de pilotage
                     </Typography>
                   }
@@ -559,7 +559,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Transport public
                     </Typography>
                   }
@@ -573,7 +573,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Vol en montagne
                     </Typography>
                   }
@@ -587,7 +587,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Hydravion
                     </Typography>
                   }
@@ -601,7 +601,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Avion sur skis
                     </Typography>
                   }
@@ -615,7 +615,7 @@ const Step6Operations = ({ data, updateData, errors = {}, onNext, onPrevious }) 
                     />
                   }
                   label={
-                    <Typography variant="body2" sx={{ fontSize: '14px' }}>
+                    <Typography variant="body2" sx={{ fontSize: 'var(--fs-body)' }}>
                       Conditions givrantes
                     </Typography>
                   }

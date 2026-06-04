@@ -1299,8 +1299,8 @@ const renderStepContent = () => {
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <span style={{ fontSize: '18px' }}>{isExpanded ? '▼' : '▶'}</span>
-                        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>
+                        <span style={{ fontSize: 'var(--fs-title)' }}>{isExpanded ? '▼' : '▶'}</span>
+                        <h3 style={{ margin: 0, fontSize: 'var(--fs-title)', fontWeight: 600 }}>
                           {graph.name} - {xAxisTitle} / {yAxisTitle}
                         </h3>
                       </div>
@@ -1339,7 +1339,7 @@ const renderStepContent = () => {
                     border: 'none',
                     borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: '14px',
+                    fontSize: 'var(--fs-body)',
                     fontWeight: 600,
                     width: '100%'
                   }}
@@ -1375,7 +1375,7 @@ const renderStepContent = () => {
                       border: 'none',
                       borderRadius: '6px',
                       cursor: 'pointer',
-                      fontSize: '14px',
+                      fontSize: 'var(--fs-body)',
                       fontWeight: 600,
                       display: 'flex',
                       alignItems: 'center',
@@ -1385,7 +1385,7 @@ const renderStepContent = () => {
                     onClick={onBack}
                     title="Retourner à la sélection du type de données de performance"
                   >
-                    <span style={{ fontSize: '16px' }}>←</span>
+                    <span style={{ fontSize: 'var(--fs-title)' }}>←</span>
                     Précédent
                   </button>
 
@@ -1398,7 +1398,7 @@ const renderStepContent = () => {
                       border: 'none',
                       borderRadius: '6px',
                       cursor: canProceed() ? 'pointer' : 'not-allowed',
-                      fontSize: '14px',
+                      fontSize: 'var(--fs-body)',
                       fontWeight: 600,
                       display: 'flex',
                       alignItems: 'center',
@@ -1415,7 +1415,7 @@ const renderStepContent = () => {
                     title={canProceed() ? "Passer à l'étape suivante" : "Configurez au moins un graphique avec ses axes pour continuer"}
                   >
                     Suivant
-                    <span style={{ fontSize: '16px' }}>→</span>
+                    <span style={{ fontSize: 'var(--fs-title)' }}>→</span>
                   </button>
                 </div>
               </div>
@@ -1579,7 +1579,7 @@ const renderStepContent = () => {
                     border: 'none',
                     borderRadius: '4px',
                     cursor: 'pointer',
-                    fontSize: '13px',
+                    fontSize: 'var(--fs-body)',
                     fontWeight: 500
                   }}
                   title="Ajuste automatiquement les axes en fonction des points saisis"
@@ -1601,7 +1601,7 @@ const renderStepContent = () => {
                   }}
                   style={{
                     padding: '6px 10px',
-                    fontSize: '11px',
+                    fontSize: 'var(--fs-caption)',
                     backgroundColor: 'var(--color-red-critical)',
                     color: 'var(--text-inverse)',
                     border: 'none',
@@ -1621,7 +1621,7 @@ const renderStepContent = () => {
                 backgroundColor: 'var(--accent-primary)',
                 color: 'var(--text-inverse)',
                 borderRadius: '4px',
-                fontSize: '12px',
+                fontSize: 'var(--fs-body)',
                 textAlign: 'center'
               }}>
                 ✅ Itération importée avec succès !
@@ -1744,20 +1744,20 @@ const renderStepContent = () => {
                     }}>
                       <div>
                         <div style={{
-                          fontSize: '14px',
+                          fontSize: 'var(--fs-body)',
                           fontWeight: 600,
                           color: selectedGraphId === graph.id ? 'var(--accent-primary)' : 'var(--text-primary)'
                         }}>
                           {graph.name}
                         </div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                        <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
                           {graph.curves.length} courbe{graph.curves.length !== 1 ? 's' : ''}
                         </div>
                         {/* Affichage des liaisons */}
                         {(graph.linkedFrom?.length > 0 || graph.linkedTo?.length > 0) && (
                           <div style={{
                             marginTop: '4px',
-                            fontSize: '10px'
+                            fontSize: 'var(--fs-caption)'
                           }}>
                             {graph.linkedFrom?.map(fromId => {
                               const fromGraph = graphs.find(g => g.id === fromId);
@@ -2123,10 +2123,10 @@ const renderStepContent = () => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         color: 'var(--text-tertiary)',
-                        fontSize: '13px'
+                        fontSize: 'var(--fs-body)'
                       }}>
                         <div style={{ textAlign: 'center' }}>
-                          <div style={{ fontSize: '24px', marginBottom: '8px' }}>⚠️</div>
+                          <div style={{ fontSize: 'var(--fs-title)', marginBottom: '8px' }}>⚠️</div>
                           Axes non configurés
                         </div>
                       </div>
@@ -2164,7 +2164,7 @@ const renderStepContent = () => {
                   border: 'none',
                   borderRadius: '6px',
                   cursor: 'pointer',
-                  fontSize: '14px',
+                  fontSize: 'var(--fs-body)',
                   fontWeight: 600,
                   display: 'flex',
                   alignItems: 'center',
@@ -2178,7 +2178,7 @@ const renderStepContent = () => {
                 }}
                 title={subStepGraphIndex > 0 ? 'Revenir au graphique précédent' : 'Retourner à la configuration des axes'}
               >
-                <span style={{ fontSize: '16px' }}>←</span>
+                <span style={{ fontSize: 'var(--fs-title)' }}>←</span>
                 {subStepGraphIndex > 0 && graphs.length > 1
                   ? `Graphique précédent (${subStepGraphIndex}/${graphs.length})`
                   : 'Précédent (axes)'}
@@ -2196,7 +2196,7 @@ const renderStepContent = () => {
                     border: 'none',
                     borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: '14px',
+                    fontSize: 'var(--fs-body)',
                     fontWeight: 600,
                     display: 'flex',
                     alignItems: 'center',
@@ -2222,7 +2222,7 @@ const renderStepContent = () => {
                     border: 'none',
                     borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: '14px',
+                    fontSize: 'var(--fs-body)',
                     fontWeight: 600,
                     display: 'flex',
                     alignItems: 'center',
@@ -2235,7 +2235,7 @@ const renderStepContent = () => {
                   title="Valider ce graphique et passer au suivant"
                 >
                   Graphique suivant ({subStepGraphIndex + 2}/{graphs.length})
-                  <span style={{ fontSize: '16px' }}>→</span>
+                  <span style={{ fontSize: 'var(--fs-title)' }}>→</span>
                 </button>
               ) : (
                 <button
@@ -2246,7 +2246,7 @@ const renderStepContent = () => {
                     border: 'none',
                     borderRadius: '6px',
                     cursor: canProceed() ? 'pointer' : 'not-allowed',
-                    fontSize: '14px',
+                    fontSize: 'var(--fs-body)',
                     fontWeight: 600,
                     display: 'flex',
                     alignItems: 'center',
@@ -2262,7 +2262,7 @@ const renderStepContent = () => {
                   title={canProceed() ? "Passer à l'étape de validation" : 'Ajoutez au moins 2 points à une courbe pour continuer'}
                 >
                   Suivant (Validation)
-                  <span style={{ fontSize: '16px' }}>→</span>
+                  <span style={{ fontSize: 'var(--fs-title)' }}>→</span>
                 </button>
               )}
             </div>
@@ -2293,7 +2293,7 @@ const renderStepContent = () => {
                 </div>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                   <div>
-                    <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                    <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                       Méthode d'interpolation
                     </label>
                     <select
@@ -2307,7 +2307,7 @@ const renderStepContent = () => {
                         padding: '6px 10px',
                         borderRadius: '4px',
                         border: '1px solid var(--border-subtle)',
-                        fontSize: '13px',
+                        fontSize: 'var(--fs-body)',
                         minWidth: '150px'
                       }}
                     >
@@ -2318,7 +2318,7 @@ const renderStepContent = () => {
                     </select>
                   </div>
                   <div>
-                    <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                    <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                       Nombre de points
                     </label>
                     <input
@@ -2333,7 +2333,7 @@ const renderStepContent = () => {
                         padding: '6px 10px',
                         borderRadius: '4px',
                         border: '1px solid var(--border-subtle)',
-                        fontSize: '13px',
+                        fontSize: 'var(--fs-body)',
                         width: '80px'
                       }}
                       min="50"
@@ -2345,16 +2345,16 @@ const renderStepContent = () => {
                 {/* Contrôles pour les courbes intermédiaires */}
                 <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)' }}>
                   <div style={{ marginBottom: '12px' }}>
-                    <h4 style={{ fontSize: '14px', marginBottom: '8px', color: 'var(--text-secondary)' }}>
+                    <h4 style={{ fontSize: 'var(--fs-body)', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                       🔄 Courbes intermédiaires
                     </h4>
-                    <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '8px' }}>
+                    <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-tertiary)', marginBottom: '8px' }}>
                       Générez des courbes interpolées entre vos courbes de référence pour améliorer la précision
                     </p>
                   </div>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Nombre de courbes intermédiaires
                       </label>
                       <input
@@ -2365,13 +2365,13 @@ const renderStepContent = () => {
                           padding: '6px 10px',
                           borderRadius: '4px',
                           border: '1px solid var(--border-subtle)',
-                          fontSize: '13px',
+                          fontSize: 'var(--fs-body)',
                           width: '60px'
                         }}
                         min="1"
                         max="5"
                       />
-                      <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                      <span style={{ marginLeft: '8px', fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)' }}>
                         (entre chaque paire)
                       </span>
                     </div>
@@ -2380,7 +2380,7 @@ const renderStepContent = () => {
                       onClick={handleGenerateIntermediateCurves}
                       style={{
                         padding: '6px 12px',
-                        fontSize: '12px',
+                        fontSize: 'var(--fs-body)',
                         backgroundColor: 'var(--accent-primary)',
                         color: 'var(--text-inverse)',
                         border: 'none',
@@ -2422,7 +2422,7 @@ const renderStepContent = () => {
                         }}
                         style={{
                           padding: '6px 12px',
-                          fontSize: '12px',
+                          fontSize: 'var(--fs-body)',
                           backgroundColor: 'var(--color-red-critical)',
                           color: 'var(--text-inverse)',
                           border: 'none',
@@ -2435,7 +2435,7 @@ const renderStepContent = () => {
                     )}
                   </div>
                   {currentGraph && currentGraph.curves.length > 0 && (
-                    <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                    <div style={{ marginTop: '8px', fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)' }}>
                       <span>
                         {currentGraph.curves.filter(c => !c.name.includes('(interpolé)')).length} courbes de référence,
                         {' '}{currentGraph.curves.filter(c => c.name.includes('(interpolé)')).length} courbes interpolées
@@ -2472,7 +2472,7 @@ const renderStepContent = () => {
                       />
                       <div style={{
                         marginTop: '12px',
-                        fontSize: '12px',
+                        fontSize: 'var(--fs-body)',
                         color: 'var(--text-secondary)'
                       }}>
                         {graph.curves.map(curve => (
@@ -2542,11 +2542,11 @@ const renderStepContent = () => {
                 <h3 style={{ margin: '0 0 12px 0', color: 'var(--accent-primary)' }}>
                   Configuration du système
                 </h3>
-                <div style={{ fontSize: '14px', lineHeight: '1.6' }}>
+                <div style={{ fontSize: 'var(--fs-body)', lineHeight: '1.6' }}>
                   <div><strong>Type de système :</strong> {SYSTEM_TYPES.find(t => t.value === systemType)?.label}</div>
                   <div><strong>Modèle d'avion :</strong> {aircraftModel || modelNameInput || 'Non spécifié'}</div>
                   <div><strong>Identifiant système :</strong> <code>{systemType}</code></div>
-                  <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  <div style={{ marginTop: '8px', fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                     Cet identifiant sera utilisé pour référencer ce système dans l'application
                   </div>
                 </div>
@@ -2574,7 +2574,7 @@ const renderStepContent = () => {
                         onClick={() => setWindFilter('all')}
                         style={{
                           padding: '8px 16px',
-                          fontSize: '14px',
+                          fontSize: 'var(--fs-body)',
                           backgroundColor: windFilter === 'all' ? 'var(--accent-primary)' : 'var(--bg-overlay)',
                           color: windFilter === 'all' ? 'var(--bg-overlay)' : 'var(--accent-primary)',
                           border: '2px solid var(--accent-primary)',
@@ -2590,7 +2590,7 @@ const renderStepContent = () => {
                         onClick={() => setWindFilter('headwind')}
                         style={{
                           padding: '8px 16px',
-                          fontSize: '14px',
+                          fontSize: 'var(--fs-body)',
                           backgroundColor: windFilter === 'headwind' ? 'var(--accent-primary)' : 'var(--bg-overlay)',
                           color: windFilter === 'headwind' ? 'var(--bg-overlay)' : 'var(--accent-primary)',
                           border: '2px solid var(--accent-primary)',
@@ -2606,7 +2606,7 @@ const renderStepContent = () => {
                         onClick={() => setWindFilter('tailwind')}
                         style={{
                           padding: '8px 16px',
-                          fontSize: '14px',
+                          fontSize: 'var(--fs-body)',
                           backgroundColor: windFilter === 'tailwind' ? 'var(--accent-primary)' : 'var(--bg-overlay)',
                           color: windFilter === 'tailwind' ? 'var(--bg-overlay)' : 'var(--accent-primary)',
                           border: '2px solid var(--accent-primary)',
@@ -2621,7 +2621,7 @@ const renderStepContent = () => {
                     </div>
                   </div>
                   <div style={{
-                    fontSize: '13px',
+                    fontSize: 'var(--fs-body)',
                     color: 'var(--text-secondary)',
                     backgroundColor: 'var(--bg-overlay)',
                     padding: '8px',
@@ -2680,11 +2680,11 @@ const renderStepContent = () => {
 
                   return (
                     <div key={graph.id} style={{ border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '8px', overflow: 'hidden' }}>
-                      <h3 style={{ marginBottom: '8px', fontSize: '14px' }}>
+                      <h3 style={{ marginBottom: '8px', fontSize: 'var(--fs-body)' }}>
                         {graph.name}
                         {graph.isWindRelated && (
                           <span style={{
-                            fontSize: '10px',
+                            fontSize: 'var(--fs-caption)',
                             color: 'var(--accent-primary)',
                             marginLeft: '6px',
                             backgroundColor: 'var(--bg-overlay)',
@@ -2695,12 +2695,12 @@ const renderStepContent = () => {
                           </span>
                         )}
                         {graph.linkedFrom && graph.linkedFrom.length > 0 && (
-                          <span style={{ fontSize: '10px', color: 'var(--accent-primary)', marginLeft: '6px' }}>
+                          <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--accent-primary)', marginLeft: '6px' }}>
                             ←
                           </span>
                         )}
                         {graph.linkedTo && graph.linkedTo.length > 0 && (
-                          <span style={{ fontSize: '10px', color: 'var(--accent-primary)', marginLeft: '6px' }}>
+                          <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--accent-primary)', marginLeft: '6px' }}>
                             →
                           </span>
                         )}
@@ -2741,7 +2741,7 @@ const renderStepContent = () => {
                   backgroundColor: 'var(--accent-primary)',
                   color: 'var(--text-inverse)',
                   borderRadius: '4px',
-                  fontSize: '12px',
+                  fontSize: 'var(--fs-body)',
                   textAlign: 'center'
                 }}>
                   ✅ Fichier importé avec succès !
@@ -2775,7 +2775,7 @@ const renderStepContent = () => {
                     border: 'none',
                     borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: '14px',
+                    fontSize: 'var(--fs-body)',
                     fontWeight: 600,
                     display: 'flex',
                     alignItems: 'center',
@@ -2785,7 +2785,7 @@ const renderStepContent = () => {
                   onClick={() => setCurrentStep('points')}
                   title="Retourner à l'étape de construction et interpolation"
                 >
-                  <span style={{ fontSize: '16px' }}>←</span>
+                  <span style={{ fontSize: 'var(--fs-title)' }}>←</span>
                   Précédent
                 </button>
 
@@ -2798,7 +2798,7 @@ const renderStepContent = () => {
                     border: 'none',
                     borderRadius: '6px',
                     cursor: modelNameInput ? 'pointer' : 'not-allowed',
-                    fontSize: '14px',
+                    fontSize: 'var(--fs-body)',
                     fontWeight: 600,
                     display: 'flex',
                     alignItems: 'center',
@@ -2811,7 +2811,7 @@ const renderStepContent = () => {
                   title="Sauvegarder et passer à l'étape suivante"
                 >
                   Suivant
-                  <span style={{ fontSize: '16px' }}>→</span>
+                  <span style={{ fontSize: 'var(--fs-title)' }}>→</span>
                 </button>
               </div>
             </div>

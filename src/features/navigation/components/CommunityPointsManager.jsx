@@ -736,7 +736,7 @@ export const CommunityPointsManager = ({ onSelectPoint, mode = 'browse' }) => {
                 <div>
                   <strong>Erreur lors de la création</strong>
                   {errorMessage && (
-                    <div style={{ marginTop: '4px', fontSize: '12px' }}>
+                    <div style={{ marginTop: '4px', fontSize: 'var(--fs-body)' }}>
                       {errorMessage}
                     </div>
                   )}
@@ -802,7 +802,7 @@ const styles = {
     border: 'none',
     borderRadius: 'var(--radius-sm)',
     color: 'var(--text-primary)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '500',
     cursor: 'pointer',
     transition: 'all 0.2s',
@@ -817,7 +817,7 @@ const styles = {
     border: '1px solid var(--text-tertiary)',
     borderRadius: 'var(--radius-sm)',
     color: 'var(--text-secondary)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '500',
     cursor: 'pointer',
     transition: 'all 0.2s',
@@ -842,7 +842,7 @@ const styles = {
     flex: 1,
     border: 'none',
     outline: 'none',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-primary)'
   },
   loadingState: {
@@ -852,7 +852,7 @@ const styles = {
     justifyContent: 'center',
     padding: '40px 20px',
     color: 'var(--text-secondary)',
-    fontSize: '14px'
+    fontSize: 'var(--fs-body)'
   },
   spinner: {
     width: '32px',
@@ -908,13 +908,13 @@ const styles = {
     flex: 1
   },
   pointName: {
-    fontSize: '15px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: 'var(--text-primary)',
     margin: '0 0 4px 0'
   },
   pointType: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     margin: 0
   },
@@ -925,23 +925,23 @@ const styles = {
     paddingLeft: '32px'
   },
   pointCoords: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     margin: 0
   },
   pointAltitude: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     margin: 0
   },
   pointDescription: {
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     margin: '4px 0 0 0',
     fontStyle: 'italic'
   },
   pointMeta: {
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     color: 'var(--text-tertiary)',
     margin: '8px 0 0 0',
     display: 'flex',
@@ -966,7 +966,7 @@ const styles = {
     alignItems: 'center',
     gap: '6px',
     color: 'var(--text-secondary)',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '500'
   },
   deleteButton: {
@@ -978,7 +978,7 @@ const styles = {
     overflowY: 'auto'
   },
   createDescription: {
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     marginBottom: '20px'
   },
@@ -998,7 +998,7 @@ const styles = {
     gap: '12px'
   },
   label: {
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '500',
     color: 'var(--text-secondary)'
   },
@@ -1006,7 +1006,7 @@ const styles = {
     padding: '10px 12px',
     border: '1px solid var(--text-tertiary)',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-primary)',
     outline: 'none',
     transition: 'border-color 0.2s'
@@ -1015,7 +1015,7 @@ const styles = {
     padding: '10px 12px',
     border: '1px solid var(--text-tertiary)',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-primary)',
     outline: 'none',
     backgroundColor: 'var(--bg-overlay)',
@@ -1025,7 +1025,7 @@ const styles = {
     padding: '10px 12px',
     border: '1px solid var(--text-tertiary)',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-primary)',
     outline: 'none',
     resize: 'vertical',
@@ -1035,14 +1035,14 @@ const styles = {
     padding: '10px 12px',
     border: '1px solid var(--text-tertiary)',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-primary)',
     outline: 'none',
     backgroundColor: 'var(--bg-overlay)',
     cursor: 'pointer'
   },
   fileInputHint: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     margin: '4px 0 0 0',
     fontStyle: 'italic'
@@ -1068,7 +1068,7 @@ const styles = {
     border: 'none',
     borderRadius: 'var(--radius-sm)',
     cursor: 'pointer',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600'
   },
   createButton: {
@@ -1078,7 +1078,7 @@ const styles = {
     border: 'none',
     borderRadius: 'var(--radius-sm)',
     color: 'var(--text-primary)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '500',
     cursor: 'pointer',
     transition: 'all 0.2s',
@@ -1101,7 +1101,7 @@ const styles = {
     border: '1px solid var(--text-tertiary)',
     borderRadius: 'var(--radius-sm)',
     color: 'var(--text-secondary)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '500',
     cursor: 'pointer',
     transition: 'all 0.2s'
@@ -1121,7 +1121,7 @@ const styles = {
     border: '1px solid var(--text-primary)',
     borderRadius: 'var(--radius-sm)',
     color: 'var(--text-primary)',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     display: 'flex',
     alignItems: 'center',
     gap: '8px'
@@ -1132,7 +1132,7 @@ const styles = {
     border: '1px solid var(--color-red-critical)',
     borderRadius: 'var(--radius-sm)',
     color: 'var(--color-red-critical)',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     display: 'flex',
     alignItems: 'center',
     gap: '8px'
@@ -1146,13 +1146,13 @@ const styles = {
     margin: '20px 0'
   },
   setupTitle: {
-    fontSize: '18px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     color: 'var(--accent-primary)',
     margin: '0 0 12px 0'
   },
   setupDescription: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--accent-primary)',
     marginBottom: '20px',
     lineHeight: '1.5'
@@ -1166,7 +1166,7 @@ const styles = {
     border: '1px solid var(--accent-primary)'
   },
   setupStep: {
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     margin: '8px 0',
     lineHeight: '1.6'
@@ -1177,7 +1177,7 @@ const styles = {
     fontWeight: '500'
   },
   setupFooter: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--accent-primary)',
     marginBottom: '16px',
     fontStyle: 'italic'
@@ -1188,7 +1188,7 @@ const styles = {
     border: 'none',
     borderRadius: 'var(--radius-sm)',
     color: 'var(--text-primary)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '500',
     cursor: 'pointer',
     transition: 'all 0.2s'

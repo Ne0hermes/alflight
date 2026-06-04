@@ -20,7 +20,7 @@ const commonStyles = {
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
   },
   label: {
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     color: theme.colors.textPrimary,
     display: 'flex',
@@ -34,7 +34,7 @@ const commonStyles = {
     borderRadius: 'var(--radius-sm)',
     borderLeft: '4px solid #f26921',
     marginBottom: '20px',
-    fontSize: '14px'
+    fontSize: 'var(--fs-body)'
   },
   infoBoxWarning: {
     padding: '16px',
@@ -42,7 +42,7 @@ const commonStyles = {
     borderRadius: 'var(--radius-sm)',
     borderLeft: '4px solid var(--accent-primary)',
     marginBottom: '20px',
-    fontSize: '14px'
+    fontSize: 'var(--fs-body)'
   },
   infoRow: {
     display: 'flex',
@@ -72,19 +72,19 @@ const commonStyles = {
     border: '1px solid var(--border-subtle)'
   },
   coneInfoTitle: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-tertiary)',
     marginBottom: '4px',
     textTransform: 'uppercase',
     letterSpacing: '0.05em'
   },
   coneInfoValueLarge: {
-    fontSize: '24px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '700',
     color: 'var(--text-primary)'
   },
   coneInfoValueSmall: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-tertiary)'
   }
 };
@@ -350,7 +350,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
             <Info size={18} color="#f26921" />
             <span style={{ fontWeight: '600' }}>Zone de recherche en forme de cône</span>
           </div>
-          <p style={{ margin: '8px 0 12px 26px', color: 'var(--text-secondary)', fontSize: '13px' }}>
+          <p style={{ margin: '8px 0 12px 26px', color: 'var(--text-secondary)', fontSize: 'var(--fs-body)' }}>
             La zone de déroutement est calculée en fonction du carburant restant théorique le long de la route.
             Elle est plus large au départ (plus de carburant) et plus étroite à l'arrivée.
           </p>
@@ -365,7 +365,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
               <div style={commonStyles.coneInfoValueSmall}>
                 Autonomie: {searchRadius.enduranceAtDep?.toFixed(1)}h
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+              <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginTop: '4px' }}>
                 = {convert(searchRadius.fobLiters || 0, 'fuel', 'ltr').toFixed(0)} {getSymbol('fuel')} / {(selectedAircraft?.fuelConsumption || 40).toFixed(0)} {getSymbol('fuelConsumption')} × {selectedAircraft?.cruiseSpeedKt || selectedAircraft?.cruiseSpeed || 120} kt × 0.5
               </div>
             </div>
@@ -378,7 +378,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
               <div style={commonStyles.coneInfoValueSmall}>
                 Autonomie: {searchRadius.enduranceAtArr?.toFixed(1)}h
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+              <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginTop: '4px' }}>
                 = ({convert(searchRadius.fobLiters || 0, 'fuel', 'ltr').toFixed(0)} - {convert(searchRadius.tripFuel || 0, 'fuel', 'ltr').toFixed(0)}) {getSymbol('fuel')} / {(selectedAircraft?.fuelConsumption || 40).toFixed(0)} {getSymbol('fuelConsumption')} × {selectedAircraft?.cruiseSpeedKt || selectedAircraft?.cruiseSpeed || 120} kt × 0.5
               </div>
             </div>
@@ -402,7 +402,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                 <div style={commonStyles.coneInfoValueSmall}>
                   Dép: {performanceBasedLDA.departureLandingDistance} m | Arr: {performanceBasedLDA.arrivalLandingDistance} m
                 </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+                <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginTop: '4px' }}>
                   = ({performanceBasedLDA.departureLandingDistance} + {performanceBasedLDA.arrivalLandingDistance}) / 2 × 1.43
                 </div>
               </div>
@@ -417,7 +417,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                 <div style={commonStyles.coneInfoValueSmall}>
                   Départ: {performanceBasedLDA.departureLandingDistance} m
                 </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+                <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginTop: '4px' }}>
                   = {performanceBasedLDA.departureLandingDistance} × 1.43 (arrivée N/A)
                 </div>
               </div>
@@ -432,7 +432,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                 <div style={commonStyles.coneInfoValueSmall}>
                   Arrivée: {performanceBasedLDA.arrivalLandingDistance} m
                 </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+                <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginTop: '4px' }}>
                   = {performanceBasedLDA.arrivalLandingDistance} × 1.43 (départ N/A)
                 </div>
               </div>
@@ -457,7 +457,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
               padding: '10px 12px',
               backgroundColor: 'rgba(242, 105, 33, 0.10)',
               borderRadius: 'var(--radius-sm)',
-              fontSize: '12px',
+              fontSize: 'var(--fs-body)',
               color: 'var(--accent-primary)',
               marginTop: '12px'
             }}>
@@ -489,7 +489,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
             backgroundColor: 'transparent',
             border: 'none',
             cursor: 'pointer',
-            fontSize: '14px',
+            fontSize: 'var(--fs-body)',
             fontWeight: '600',
             color: 'var(--text-secondary)'
           }}
@@ -503,7 +503,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                 backgroundColor: 'var(--accent-primary)',
                 color: 'var(--text-primary)',
                 borderRadius: 'var(--radius-sm)',
-                fontSize: '11px'
+                fontSize: 'var(--fs-caption)'
               }}>
                 {[filters.hideShortRunways, filters.hideIncompatibleSurface, filters.hideIncompatibleType].filter(Boolean).length} actif(s)
               </span>
@@ -534,10 +534,10 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                   style={{ width: '18px', height: '18px', accentColor: 'var(--accent-primary)' }}
                 />
                 <div>
-                  <div style={{ fontWeight: '500', fontSize: '13px', color: 'var(--text-primary)' }}>
+                  <div style={{ fontWeight: '500', fontSize: 'var(--fs-body)', color: 'var(--text-primary)' }}>
                     Masquer les pistes trop courtes
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                  <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
                     Piste minimale requise: {performanceBasedLDA?.minRunwayRequired ? `${performanceBasedLDA.minRunwayRequired} m` : 'N/A (données Performance requises)'}
                   </div>
                 </div>
@@ -561,10 +561,10 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                   style={{ width: '18px', height: '18px', accentColor: 'var(--accent-primary)' }}
                 />
                 <div>
-                  <div style={{ fontWeight: '500', fontSize: '13px', color: 'var(--text-primary)' }}>
+                  <div style={{ fontWeight: '500', fontSize: 'var(--fs-body)', color: 'var(--text-primary)' }}>
                     Masquer les revêtements incompatibles
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                  <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
                     Surfaces compatibles: {aircraftCompatibleSurfaces.slice(0, 3).join(', ')}{aircraftCompatibleSurfaces.length > 3 ? '...' : ''}
                   </div>
                 </div>
@@ -588,10 +588,10 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                   style={{ width: '18px', height: '18px', accentColor: 'var(--accent-primary)' }}
                 />
                 <div>
-                  <div style={{ fontWeight: '500', fontSize: '13px', color: 'var(--text-primary)' }}>
+                  <div style={{ fontWeight: '500', fontSize: 'var(--fs-body)', color: 'var(--text-primary)' }}>
                     Masquer les types d'aérodromes incompatibles
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                  <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
                     Type avion: {aircraftType === 'airplane' ? 'Avion (exclure héliports, ULM...)' : aircraftType}
                   </div>
                 </div>

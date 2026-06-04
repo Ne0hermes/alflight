@@ -168,7 +168,7 @@ export const AlternateSelectorDual = memo(({
                       color: 'var(--text-primary)',
                       padding: '4px 12px',
                       borderBottomLeftRadius: '8px',
-                      fontSize: '11px',
+                      fontSize: 'var(--fs-caption)',
                       fontWeight: 'bold'
                     }}>
                       ✓ SÉLECTIONNÉ
@@ -188,7 +188,7 @@ export const AlternateSelectorDual = memo(({
                           borderRadius: '50%',
                           backgroundColor: isSelected ? sideColor : `${sideColor}20`,
                           color: isSelected ? 'white' : sideColor,
-                          fontSize: '11px',
+                          fontSize: 'var(--fs-caption)',
                           fontWeight: 'bold',
                           marginRight: '6px',
                           borderWidth: isSelected ? '0' : '1px',
@@ -236,7 +236,7 @@ export const AlternateSelectorDual = memo(({
                           color: getScoreColor(airport.score),
                           borderRadius: 'var(--radius-sm)',
                           fontWeight: 'bold',
-                          fontSize: '10px'
+                          fontSize: 'var(--fs-caption)'
                         }}>
                           {((airport.score || 0) * 100).toFixed(0)}%
                         </span>
@@ -262,7 +262,7 @@ export const AlternateSelectorDual = memo(({
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontSize: '16px',
+                          fontSize: 'var(--fs-title)',
                           fontWeight: 'bold'
                         }}
                       >

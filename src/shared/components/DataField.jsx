@@ -44,10 +44,10 @@ export const DataField = memo(({
   };
 
   const sizes = {
-    xs: { fontSize: '11px', padding: '4px 8px' },
-    sm: { fontSize: '12px', padding: '6px 10px' },
-    base: { fontSize: '14px', padding: '8px 12px' },
-    lg: { fontSize: '16px', padding: '10px 16px' }
+    xs: { fontSize: 'var(--fs-caption)', padding: '4px 8px' },
+    sm: { fontSize: 'var(--fs-body)', padding: '6px 10px' },
+    base: { fontSize: 'var(--fs-body)', padding: '8px 12px' },
+    lg: { fontSize: 'var(--fs-title)', padding: '10px 16px' }
   };
 
   const sizeConfig = sizes[size] || sizes.base;

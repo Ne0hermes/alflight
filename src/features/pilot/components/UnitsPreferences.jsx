@@ -241,7 +241,7 @@ const UnitsPreferences = () => {
               }}
             >
               <Icon size={16} />
-              <span style={{ fontSize: '14px' }}>{config.title}</span>
+              <span style={{ fontSize: 'var(--fs-body)' }}>{config.title}</span>
             </button>
           )
 
@@ -284,7 +284,7 @@ const UnitsPreferences = () => {
                     onChange={(e) => setUnit(unitConfig.key, e.target.value)}
                     style={{ display: 'none' }}
                   />
-                  <span style={{ fontSize: '14px' }}>{option.label}</span>
+                  <span style={{ fontSize: 'var(--fs-body)' }}>{option.label}</span>
                 </label>
               ))}
             </div>
@@ -307,7 +307,7 @@ const UnitsPreferences = () => {
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
           gap: '8px',
-          fontSize: '12px'
+          fontSize: 'var(--fs-body)'
         }}>
           <div>Distance: <strong>{units.distance.toUpperCase()}</strong></div>
           <div>Altitude: <strong>{units.altitude.toUpperCase()}</strong></div>
@@ -332,7 +332,7 @@ const UnitsPreferences = () => {
             gap: '8px'
           }}>
             <AlertCircle size={16} style={{ color: 'var(--accent-primary)' }} />
-            <span style={{ fontSize: '14px', color: 'var(--accent-primary)' }}>
+            <span style={{ fontSize: 'var(--fs-body)', color: 'var(--accent-primary)' }}>
               Des modifications non sauvegardées sont en attente
             </span>
           </div>
@@ -350,7 +350,7 @@ const UnitsPreferences = () => {
             gap: '8px'
           }}>
             <Check size={16} style={{ color: 'var(--text-primary)' }} />
-            <span style={{ fontSize: '14px', color: 'var(--text-primary)' }}>
+            <span style={{ fontSize: 'var(--fs-body)', color: 'var(--text-primary)' }}>
               Préférences sauvegardées et appliquées dans toute l'application !
             </span>
           </div>
@@ -368,7 +368,7 @@ const UnitsPreferences = () => {
             alignItems: 'center',
             justifyContent: 'center',
             gap: '8px',
-            fontSize: '16px',
+            fontSize: 'var(--fs-title)',
             fontWeight: '600',
             opacity: (!hasChanges || saved) ? 0.5 : 1,
             cursor: (!hasChanges || saved) ? 'not-allowed' : 'pointer',
@@ -395,7 +395,7 @@ const UnitsPreferences = () => {
         padding: '12px',
         backgroundColor: 'rgba(242, 105, 33, 0.10)',
         borderRadius: 'var(--radius-sm)',
-        fontSize: '13px',
+        fontSize: 'var(--fs-body)',
         color: 'var(--accent-primary)'
       }}>
         <strong>Note :</strong> Les changements d'unités s'appliquent immédiatement à toute l'application. 

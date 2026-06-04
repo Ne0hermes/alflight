@@ -311,7 +311,7 @@ const styles = {
     flex: 1,
     border: 'none',
     outline: 'none',
-    fontSize: '14px'
+    fontSize: 'var(--fs-body)'
   },
   airportList: {
     flex: 1,
@@ -343,7 +343,7 @@ const styles = {
     gap: '8px'
   },
   statusIcon: {
-    fontSize: '18px'
+    fontSize: 'var(--fs-title)'
   },
   downloadButton: {
     padding: '4px 8px',
@@ -383,7 +383,7 @@ const styles = {
     borderTop: '1px solid var(--border-subtle)',
     display: 'flex',
     gap: '16px',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)'
   },
   legendItem: {

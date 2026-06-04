@@ -85,7 +85,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
     <div>
       {/* Services de base */}
       <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
-        <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '16px' }}>
+        <h5 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '16px' }}>
           Services disponibles sur l'aérodrome
         </h5>
         
@@ -123,7 +123,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
                 />
                 <Icon size={16} style={{ color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)' }} />
                 <span style={{
-                  fontSize: '13px',
+                  fontSize: 'var(--fs-body)',
                   color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
                   fontWeight: isActive ? 'bold' : 'normal'
                 }}>
@@ -138,13 +138,13 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
       
       {/* Horaires d'ouverture */}
       <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'rgba(242, 105, 33, 0.10)', borderRadius: 'var(--radius-sm)' }}>
-        <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--accent-primary)', marginBottom: '16px' }}>
+        <h5 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'var(--accent-primary)', marginBottom: '16px' }}>
           Horaires d'ouverture
         </h5>
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
           <div>
-            <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+            <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
               Aérodrome
             </label>
             <input
@@ -156,7 +156,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
             />
           </div>
           <div>
-            <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+            <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
               Tour de contrôle
             </label>
             <input
@@ -168,7 +168,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
             />
           </div>
           <div>
-            <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+            <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
               Avitaillement
             </label>
             <input
@@ -180,7 +180,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
             />
           </div>
           <div>
-            <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+            <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
               Douanes
             </label>
             <input
@@ -194,7 +194,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
         </div>
         
         <div style={{ marginTop: '12px' }}>
-          <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+          <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
             Remarques sur les horaires
           </label>
           <textarea
@@ -214,7 +214,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
       
       {/* Contacts */}
       <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
-        <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '16px' }}>
+        <h5 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '16px' }}>
           <Phone size={16} style={{ display: 'inline', marginRight: '4px' }} />
           Contacts
         </h5>
@@ -227,7 +227,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--bg-overlay)'
             }}>
-              <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>
+              <h6 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>
                 {contactType === 'operations' ? 'Opérations' :
                  contactType === 'fuel' ? 'Avitaillement' :
                  contactType === 'maintenance' ? 'Maintenance' :
@@ -239,21 +239,21 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
                   value={editedData.contacts?.[contactType]?.phone || ''}
                   onChange={(e) => updateContact(contactType, 'phone', e.target.value)}
                   placeholder="Téléphone"
-                  style={{ ...sx.components.input.base, fontSize: '12px' }}
+                  style={{ ...sx.components.input.base, fontSize: 'var(--fs-body)' }}
                 />
                 <input
                   type="email"
                   value={editedData.contacts?.[contactType]?.email || ''}
                   onChange={(e) => updateContact(contactType, 'email', e.target.value)}
                   placeholder="Email"
-                  style={{ ...sx.components.input.base, fontSize: '12px' }}
+                  style={{ ...sx.components.input.base, fontSize: 'var(--fs-body)' }}
                 />
                 <input
                   type="text"
                   value={editedData.contacts?.[contactType]?.frequency || ''}
                   onChange={(e) => updateContact(contactType, 'frequency', e.target.value)}
                   placeholder="Fréquence MHz"
-                  style={{ ...sx.components.input.base, fontSize: '12px' }}
+                  style={{ ...sx.components.input.base, fontSize: 'var(--fs-body)' }}
                 />
               </div>
             </div>
@@ -264,14 +264,14 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
       {/* Services personnalisés */}
       <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
+          <h5 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
             Services additionnels / Remarques
           </h5>
           <button
             onClick={addCustomService}
             style={{
               padding: '6px 12px',
-              fontSize: '13px',
+              fontSize: 'var(--fs-body)',
               backgroundColor: 'var(--text-secondary)',
               color: 'var(--text-primary)',
               border: 'none',
@@ -301,7 +301,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
                     value={service.name || ''}
                     onChange={(e) => updateCustomServiceField(idx, 'name', e.target.value)}
                     placeholder="Nom du service"
-                    style={{ ...sx.components.input.base, fontSize: '13px', fontWeight: 'bold' }}
+                    style={{ ...sx.components.input.base, fontSize: 'var(--fs-body)', fontWeight: 'bold' }}
                   />
                   <button
                     onClick={() => removeCustomService(idx)}
@@ -312,7 +312,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
                       border: 'none',
                       borderRadius: 'var(--radius-sm)',
                       cursor: 'pointer',
-                      fontSize: '12px'
+                      fontSize: 'var(--fs-body)'
                     }}
                   >
                     <Trash2 size={12} />
@@ -325,21 +325,21 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
                     value={service.schedule || ''}
                     onChange={(e) => updateCustomServiceField(idx, 'schedule', e.target.value)}
                     placeholder="Horaires"
-                    style={{ ...sx.components.input.base, fontSize: '12px' }}
+                    style={{ ...sx.components.input.base, fontSize: 'var(--fs-body)' }}
                   />
                   <input
                     type="text"
                     value={service.phone || ''}
                     onChange={(e) => updateCustomServiceField(idx, 'phone', e.target.value)}
                     placeholder="Téléphone"
-                    style={{ ...sx.components.input.base, fontSize: '12px' }}
+                    style={{ ...sx.components.input.base, fontSize: 'var(--fs-body)' }}
                   />
                   <input
                     type="email"
                     value={service.email || ''}
                     onChange={(e) => updateCustomServiceField(idx, 'email', e.target.value)}
                     placeholder="Email"
-                    style={{ ...sx.components.input.base, fontSize: '12px' }}
+                    style={{ ...sx.components.input.base, fontSize: 'var(--fs-body)' }}
                   />
                 </div>
                 
@@ -353,7 +353,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
                     width: '100%',
                     resize: 'vertical',
                     fontFamily: 'inherit',
-                    fontSize: '12px'
+                    fontSize: 'var(--fs-body)'
                   }}
                 />
               </div>
@@ -362,14 +362,14 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
         ) : (
           <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-secondary)' }}>
             <Settings size={32} style={{ marginBottom: '8px', opacity: 0.5 }} />
-            <p style={{ fontSize: '13px' }}>Aucun service additionnel défini.</p>
+            <p style={{ fontSize: 'var(--fs-body)' }}>Aucun service additionnel défini.</p>
           </div>
         )}
       </div>
       
       {/* Notes générales */}
       <div style={{ padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
-        <label style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>
+        <label style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>
           Notes et informations complémentaires
         </label>
         <textarea

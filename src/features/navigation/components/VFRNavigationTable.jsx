@@ -313,7 +313,7 @@ const VFRNavigationTable = ({
       }}>
         {!hideTitle && (
           <h3 style={{
-            fontSize: '18px',
+            fontSize: 'var(--fs-title)',
             fontWeight: 'bold',
             display: 'flex',
             alignItems: 'center',
@@ -334,7 +334,7 @@ const VFRNavigationTable = ({
               border: 'none',
               borderRadius: 'var(--radius-sm)',
               cursor: 'pointer',
-              fontSize: '14px',
+              fontSize: 'var(--fs-body)',
               fontWeight: '500',
               display: 'flex',
               alignItems: 'center',
@@ -365,11 +365,11 @@ const VFRNavigationTable = ({
                 marginBottom: '8px'
               }}>
                 <Sunset size={18} color="var(--accent-primary)" />
-                <span style={{ fontWeight: 'bold', color: 'var(--accent-primary)', fontSize: '14px' }}>
+                <span style={{ fontWeight: 'bold', color: 'var(--accent-primary)', fontSize: 'var(--fs-body)' }}>
                   ⚠️ ALERTE JOUR/NUIT : Une partie du vol se déroulera au crépuscule ou de nuit
                 </span>
               </div>
-              <div style={{ fontSize: '12px', color: 'var(--accent-primary)', lineHeight: '1.5' }}>
+              <div style={{ fontSize: 'var(--fs-body)', color: 'var(--accent-primary)', lineHeight: '1.5' }}>
                 <div><strong>Coucher du soleil :</strong> {formatSunTime(dayNightAnalysis.sunTimes.sunset)}</div>
                 <div><strong>Début nuit aéronautique :</strong> {formatSunTime(dayNightAnalysis.sunTimes.nightStart)} (coucher + 30min)</div>
                 <div><strong>Lever du soleil :</strong> {formatSunTime(dayNightAnalysis.sunTimes.sunrise)}</div>
@@ -385,7 +385,7 @@ const VFRNavigationTable = ({
             <table style={{
               width: '100%',
               borderCollapse: 'collapse',
-              fontSize: '12px'
+              fontSize: 'var(--fs-body)'
             }}>
               <thead>
                 <tr style={{ backgroundColor: 'var(--bg-overlay)' }}>
@@ -435,7 +435,7 @@ const VFRNavigationTable = ({
                           border: '1px solid var(--text-tertiary)',
                           borderRadius: 'var(--radius-sm)',
                           textAlign: 'center',
-                          fontSize: '12px',
+                          fontSize: 'var(--fs-body)',
                           fontWeight: 'bold',
                           backgroundColor: 'rgba(242, 105, 33, 0.10)'
                         }}
@@ -481,21 +481,21 @@ const VFRNavigationTable = ({
                           return (
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                               <Sun size={14} color="var(--accent-primary)" />
-                              <span style={{ fontSize: '11px', color: 'var(--accent-primary)' }}>Jour</span>
+                              <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--accent-primary)' }}>Jour</span>
                             </div>
                           );
                         } else if (status === 'twilight') {
                           return (
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                               <Sunset size={14} color="var(--accent-primary)" />
-                              <span style={{ fontSize: '11px', color: 'var(--accent-primary)', fontWeight: 'bold' }}>Crépuscule</span>
+                              <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--accent-primary)', fontWeight: 'bold' }}>Crépuscule</span>
                             </div>
                           );
                         } else if (status === 'night') {
                           return (
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                               <Moon size={14} color="var(--accent-primary)" />
-                              <span style={{ fontSize: '11px', color: 'var(--accent-primary)', fontWeight: 'bold' }}>Nuit</span>
+                              <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--accent-primary)', fontWeight: 'bold' }}>Nuit</span>
                             </div>
                           );
                         }
@@ -525,7 +525,7 @@ const VFRNavigationTable = ({
                     <td style={{
                       padding: '6px',
                       border: '1px solid var(--border-subtle)',
-                      fontSize: '11px',
+                      fontSize: 'var(--fs-caption)',
                       backgroundColor: 'var(--bg-overlay)',
                       maxWidth: '200px'
                     }}>
@@ -545,7 +545,7 @@ const VFRNavigationTable = ({
                             marginBottom: '4px',
                             color: 'var(--text-secondary)',
                             fontWeight: 'bold',
-                            fontSize: '12px'
+                            fontSize: 'var(--fs-body)'
                           }}>
                             <AlertTriangle size={16} />
                             <span>🚫 ZONE RÉGLEMENTÉE</span>
@@ -568,13 +568,13 @@ const VFRNavigationTable = ({
                               </strong>
                               {' '}{zone.name}
                               <br />
-                              <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
+                              <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
                                 {zone.floor_raw} - {zone.ceiling_raw}
                               </span>
                               {zone.activity && (
                                 <>
                                   <br />
-                                  <span style={{ fontSize: '9px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                                  <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
                                     Activité: {zone.activity}
                                   </span>
                                 </>
@@ -582,7 +582,7 @@ const VFRNavigationTable = ({
                               {zone.schedule && (
                                 <>
                                   <br />
-                                  <span style={{ fontSize: '9px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                                  <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
                                     Horaires: {zone.schedule}
                                   </span>
                                 </>
@@ -606,7 +606,7 @@ const VFRNavigationTable = ({
                               <div style={{ marginBottom: '2px' }}>
                                 <strong>{airspace.type}</strong> {airspace.name}
                                 <br />
-                                <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
+                                <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
                                   Classe {airspace.class} | {airspace.floor_raw} ({airspace.floor}ft) - {airspace.ceiling_raw} ({airspace.ceiling}ft)
                                 </span>
                               </div>
@@ -619,14 +619,14 @@ const VFRNavigationTable = ({
                                 }}>
                                   {airspace.frequencies.map((freq, fIdx) => (
                                     <div key={fIdx} style={{
-                                      fontSize: '10px',
+                                      fontSize: 'var(--fs-caption)',
                                       fontWeight: 'bold',
                                       color: 'var(--text-primary)',
                                       marginBottom: '1px'
                                     }}>
                                       📻 {freq.frequency} ({freq.type})
                                       {freq.schedule && (
-                                        <span style={{ fontSize: '9px', fontWeight: 'normal', color: 'var(--text-tertiary)', marginLeft: '4px' }}>
+                                        <span style={{ fontSize: 'var(--fs-caption)', fontWeight: 'normal', color: 'var(--text-tertiary)', marginLeft: '4px' }}>
                                           {freq.schedule}
                                         </span>
                                       )}
@@ -655,7 +655,7 @@ const VFRNavigationTable = ({
                               <div style={{ marginBottom: '2px' }}>
                                 <strong>{airspace.type}</strong> {airspace.name}
                                 <br />
-                                <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
+                                <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
                                   Classe {airspace.class} | {airspace.floor_raw} ({airspace.floor}ft) - {airspace.ceiling_raw} ({airspace.ceiling}ft)
                                 </span>
                               </div>
@@ -668,14 +668,14 @@ const VFRNavigationTable = ({
                                 }}>
                                   {airspace.frequencies.map((freq, fIdx) => (
                                     <div key={fIdx} style={{
-                                      fontSize: '10px',
+                                      fontSize: 'var(--fs-caption)',
                                       fontWeight: 'bold',
                                       color: 'var(--text-secondary)',
                                       marginBottom: '1px'
                                     }}>
                                       📻 {freq.frequency} ({freq.type})
                                       {freq.schedule && (
-                                        <span style={{ fontSize: '9px', fontWeight: 'normal', color: 'var(--text-tertiary)', marginLeft: '4px' }}>
+                                        <span style={{ fontSize: 'var(--fs-caption)', fontWeight: 'normal', color: 'var(--text-tertiary)', marginLeft: '4px' }}>
                                           {freq.schedule}
                                         </span>
                                       )}
@@ -725,7 +725,7 @@ const VFRNavigationTable = ({
                   marginBottom: '10px'
                 }}>
                   <AlertTriangle size={20} color="var(--color-red-critical)" />
-                  <span style={{ color: 'var(--color-red-critical)', fontWeight: 'bold', fontSize: '14px' }}>
+                  <span style={{ color: 'var(--color-red-critical)', fontWeight: 'bold', fontSize: 'var(--fs-body)' }}>
                     🚫 ALERTE CRITIQUE : Votre route traverse des zones RÉGLEMENTÉES, INTERDITES ou DANGEREUSES !
                   </span>
                 </div>
@@ -757,7 +757,7 @@ const VFRNavigationTable = ({
                     // 🔍 Si aucun segment avec zones trouvé, afficher message debug
                     if (segmentsWithZones.length === 0) {
                       return (
-                        <div style={{ color: 'var(--color-red-critical)', fontSize: '11px', padding: '8px' }}>
+                        <div style={{ color: 'var(--color-red-critical)', fontSize: 'var(--fs-caption)', padding: '8px' }}>
                           🔍 DEBUG: Aucun segment avec zones trouvé dans navigationData
                           <br />
                           <strong>Total segments:</strong> {navigationData.length}
@@ -784,7 +784,7 @@ const VFRNavigationTable = ({
                         <div style={{
                           fontWeight: 'bold',
                           color: 'var(--color-red-critical)',
-                          fontSize: '12px',
+                          fontSize: 'var(--fs-body)',
                           marginBottom: '6px',
                           display: 'flex',
                           alignItems: 'center',
@@ -795,12 +795,12 @@ const VFRNavigationTable = ({
                             color: 'var(--text-primary)',
                             padding: '2px 6px',
                             borderRadius: 'var(--radius-sm)',
-                            fontSize: '11px'
+                            fontSize: 'var(--fs-caption)'
                           }}>
                             Segment {seg.index + 1}
                           </span>
                           <span>{seg.from} → {seg.to}</span>
-                          <span style={{ fontSize: '11px', fontWeight: 'normal', color: 'var(--color-red-critical)' }}>
+                          <span style={{ fontSize: 'var(--fs-caption)', fontWeight: 'normal', color: 'var(--color-red-critical)' }}>
                             (Alt: {seg.altitude} ft)
                           </span>
                         </div>
@@ -817,7 +817,7 @@ const VFRNavigationTable = ({
                           }}>
                             {/* Type et nom de la zone */}
                             <div style={{
-                              fontSize: '11px',
+                              fontSize: 'var(--fs-caption)',
                               fontWeight: 'bold',
                               color: 'var(--color-red-critical)',
                               marginBottom: '4px'
@@ -832,7 +832,7 @@ const VFRNavigationTable = ({
                             </div>
 
                             {/* Détails de la zone */}
-                            <div style={{ fontSize: '10px', color: 'var(--color-red-critical)', lineHeight: '1.4' }}>
+                            <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-red-critical)', lineHeight: '1.4' }}>
                               <div>
                                 <strong>Altitudes:</strong> {zone.floor_raw} ({zone.floor}ft) - {zone.ceiling_raw} ({zone.ceiling}ft)
                               </div>
@@ -860,7 +860,7 @@ const VFRNavigationTable = ({
                   padding: '8px',
                   backgroundColor: 'var(--bg-overlay)',
                   borderRadius: 'var(--radius-sm)',
-                  fontSize: '11px',
+                  fontSize: 'var(--fs-caption)',
                   color: 'var(--color-red-critical)',
                   fontWeight: '500'
                 }}>

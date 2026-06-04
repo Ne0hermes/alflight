@@ -453,7 +453,7 @@ const PilotCertifications = () => {
     padding: '8px 12px',
     border: '1px solid var(--text-tertiary)',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     width: '100%',
     minWidth: 0,
     maxWidth: '100%',
@@ -472,7 +472,7 @@ const PilotCertifications = () => {
   };
 
   const labelStyle = {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-secondary)',
     fontWeight: '500',
     marginBottom: '4px',
@@ -505,7 +505,7 @@ const PilotCertifications = () => {
     }}>
       <div style={{ flex: 1 }}>
         <p style={{ 
-          fontSize: '14px', 
+          fontSize: 'var(--fs-body)', 
           fontWeight: '600',
           color: 'var(--text-primary)',
           marginBottom: '4px'
@@ -516,7 +516,7 @@ const PilotCertifications = () => {
           display: 'flex', 
           flexWrap: 'wrap',
           gap: '16px', 
-          fontSize: '12px', 
+          fontSize: 'var(--fs-body)', 
           color: 'var(--text-secondary)',
           marginBottom: item.remarks ? '4px' : '0'
         }}>
@@ -533,7 +533,7 @@ const PilotCertifications = () => {
         </div>
         {item.remarks && (
           <p style={{ 
-            fontSize: '12px', 
+            fontSize: 'var(--fs-body)', 
             color: 'var(--text-tertiary)', 
             fontStyle: 'italic'
           }}>
@@ -613,7 +613,7 @@ const PilotCertifications = () => {
           maxWidth: '100%',
           boxSizing: 'border-box'
         }}>
-          <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '16px' }}>
+          <h4 style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', marginBottom: '16px' }}>
             {editingItem ? 'Modifier la certification' : 'Nouvelle certification'}
           </h4>
 
@@ -698,7 +698,7 @@ const PilotCertifications = () => {
                 color: 'var(--text-secondary)', 
                 border: 'none', 
                 borderRadius: 'var(--radius-sm)', 
-                fontSize: '14px', 
+                fontSize: 'var(--fs-body)', 
                 fontWeight: '500', 
                 cursor: 'pointer', 
                 display: 'flex', 
@@ -715,7 +715,7 @@ const PilotCertifications = () => {
                 />
               </label>
               {formData.documentName && (
-                <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                <span style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                   <FileText size={14} style={{ display: 'inline', marginRight: '4px' }} />
                   {formData.documentName}
                 </span>
@@ -733,7 +733,7 @@ const PilotCertifications = () => {
                 color: 'var(--text-primary)', 
                 border: 'none', 
                 borderRadius: 'var(--radius-sm)', 
-                fontSize: '14px', 
+                fontSize: 'var(--fs-body)', 
                 fontWeight: '500', 
                 cursor: 'pointer' 
               }}
@@ -749,7 +749,7 @@ const PilotCertifications = () => {
                 color: 'var(--text-secondary)', 
                 border: 'none', 
                 borderRadius: 'var(--radius-sm)', 
-                fontSize: '14px', 
+                fontSize: 'var(--fs-body)', 
                 fontWeight: '500', 
                 cursor: 'pointer' 
               }}
@@ -772,7 +772,7 @@ const PilotCertifications = () => {
               color: 'var(--text-primary)', 
               border: 'none', 
               borderRadius: 'var(--radius-sm)', 
-              fontSize: '14px', 
+              fontSize: 'var(--fs-body)', 
               fontWeight: '500', 
               cursor: 'pointer'
             }}
@@ -799,7 +799,7 @@ const PilotCertifications = () => {
                   marginBottom: '8px'
                 }}>
                   <h4 style={{ 
-                    fontSize: '16px', 
+                    fontSize: 'var(--fs-title)', 
                     fontWeight: '600',
                     color: 'var(--text-primary)'
                   }}>
@@ -828,10 +828,10 @@ const PilotCertifications = () => {
             color: 'var(--text-tertiary)'
           }}>
             <AlertCircle size={48} style={{ color: 'var(--border-subtle)', marginBottom: '16px' }} />
-            <p style={{ fontSize: '16px', fontWeight: '500', marginBottom: '8px' }}>
+            <p style={{ fontSize: 'var(--fs-title)', fontWeight: '500', marginBottom: '8px' }}>
               Aucune certification enregistrée
             </p>
-            <p style={{ fontSize: '14px' }}>
+            <p style={{ fontSize: 'var(--fs-body)' }}>
               Cliquez sur "Ajouter" pour enregistrer vos licences et qualifications
             </p>
           </div>

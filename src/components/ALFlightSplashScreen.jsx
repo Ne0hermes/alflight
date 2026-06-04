@@ -152,7 +152,7 @@ const styles = {
     margin: 0,
   },
   subtitle: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: theme.colors.textMuted,
     letterSpacing: '0.3em',
     marginTop: '0.5rem',
@@ -185,7 +185,7 @@ const styles = {
   },
   aircraftTitle: {
     color: theme.colors.primary,
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: '0.1em',
@@ -199,7 +199,7 @@ const styles = {
     gap: '0.5rem',
   },
   codeLine: {
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     color: theme.colors.textSecondary,
     fontFamily: theme.fonts.mono,
     animation: 'fadeIn 0.5s ease-in',

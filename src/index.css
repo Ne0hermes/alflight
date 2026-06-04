@@ -138,6 +138,19 @@
   --font-mono: 'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'SF Mono', Menlo, Consolas, monospace;
 
   /* ============================================================
+     🔠 ÉCHELLE TYPOGRAPHIQUE RATIONALISÉE — 4 paliers UI (migration charte V7)
+     ============================================================
+     Consolide les 21 tailles inline historiques (8→32px) en 4 paliers.
+     Le tier éditorial (landing/splash : 40/48/56/96/120px) est conservé
+     en px tel quel (rare, identité cinématique). Modifier ICI pour
+     redimensionner toute la typo UI de l'app.
+     ----------------------------------------------------------- */
+  --fs-caption: 11px;  /* labels, eyebrows, data mono, légendes (absorbe 8-11) */
+  --fs-body: 14px;     /* corps de texte, inputs, défaut (absorbe 12-15) */
+  --fs-title: 20px;    /* titres de carte/section, sous-titres (absorbe 16-24) */
+  --fs-heading: 28px;  /* titres d'écran/page (absorbe 28-32) */
+
+  /* ============================================================
      📐 RAYONS DE BORDURE — Canonical source of truth
      ============================================================
      Tous les borderRadius de l'app DOIVENT référencer ces variables.

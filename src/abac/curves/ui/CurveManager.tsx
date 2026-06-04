@@ -131,7 +131,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
           }}
           style={{
             padding: '8px 16px',
-            fontSize: '13px',
+            fontSize: 'var(--fs-body)',
             fontWeight: 500,
             backgroundColor: 'var(--accent-primary)',
             color: 'white',
@@ -155,7 +155,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
             style={{ marginBottom: '8px' }}
           />
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Couleur:</label>
+            <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>Couleur:</label>
             <select
               value={newCurveColor}
               onChange={(e) => setNewCurveColor(e.target.value)}
@@ -164,7 +164,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                 padding: '6px 8px',
                 borderRadius: '4px',
                 border: '1px solid var(--border-subtle)',
-                fontSize: '14px',
+                fontSize: 'var(--fs-body)',
                 backgroundColor: 'var(--bg-overlay)'
               }}
             >
@@ -187,7 +187,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
           </div>
           {isWindRelated && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-              <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Direction du vent (Wind direction) :</label>
+              <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>Direction du vent (Wind direction) :</label>
               <select
                 value={newCurveWindDirection}
                 onChange={(e) => setNewCurveWindDirection(e.target.value as WindDirection)}
@@ -196,7 +196,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                   padding: '6px 8px',
                   borderRadius: '4px',
                   border: '1px solid var(--border-subtle)',
-                  fontSize: '14px',
+                  fontSize: 'var(--fs-body)',
                   backgroundColor: 'var(--bg-overlay)'
                 }}
               >
@@ -279,18 +279,18 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                         style={{
                           padding: '1px 4px',
                           borderRadius: '2px',
-                          fontSize: '10px',
+                          fontSize: 'var(--fs-caption)',
                           backgroundColor: curve.windDirection === 'headwind' ? 'var(--bg-overlay)' : 'var(--accent-soft)',
                           color: curve.windDirection === 'headwind' ? 'var(--accent-primary)' : 'var(--accent-primary)'
                         }}>
                         {curve.windDirection === 'headwind' ? '↑' : '↓'}
                       </span>
                     )}
-                    <span className={styles.curvePoints} style={{ fontSize: '11px', color: 'var(--text-secondary)', marginLeft: 'auto' }}>
+                    <span className={styles.curvePoints} style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginLeft: 'auto' }}>
                       {curve.points.length} pt{curve.points.length !== 1 ? 's' : ''}
                     </span>
                     {curve.fitted && (
-                      <span className={styles.curveFitted} style={{ fontSize: '10px', color: 'var(--accent-primary)' }} title={`RMSE: ${curve.fitted.rmse.toFixed(3)}`}>
+                      <span className={styles.curveFitted} style={{ fontSize: 'var(--fs-caption)', color: 'var(--accent-primary)' }} title={`RMSE: ${curve.fitted.rmse.toFixed(3)}`}>
                         ✓
                       </span>
                     )}
@@ -439,7 +439,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                           padding: '2px 4px',
                           borderRadius: '3px',
                           border: '1px solid var(--border-subtle)',
-                          fontSize: '10px',
+                          fontSize: 'var(--fs-caption)',
                           backgroundColor: 'var(--bg-overlay)',
                           cursor: 'pointer',
                           height: '22px',
@@ -471,7 +471,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                             opacity: index === 0 ? 0.3 : 1,
                             padding: '0 4px',
                             height: '14px',
-                            fontSize: '10px',
+                            fontSize: 'var(--fs-caption)',
                             lineHeight: '10px',
                             border: 'none',
                             backgroundColor: 'transparent',
@@ -491,7 +491,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                             opacity: index === curves.length - 1 ? 0.3 : 1,
                             padding: '0 4px',
                             height: '14px',
-                            fontSize: '10px',
+                            fontSize: 'var(--fs-caption)',
                             lineHeight: '10px',
                             border: 'none',
                             backgroundColor: 'transparent',
@@ -522,7 +522,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                         }}
                         style={{
                           padding: '2px 4px',
-                          fontSize: '12px',
+                          fontSize: 'var(--fs-body)',
                           border: 'none',
                           backgroundColor: 'transparent',
                           cursor: 'pointer',
@@ -539,7 +539,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                         }}
                         style={{
                           padding: '2px 4px',
-                          fontSize: '12px',
+                          fontSize: 'var(--fs-body)',
                           border: 'none',
                           backgroundColor: 'transparent',
                           cursor: 'pointer',

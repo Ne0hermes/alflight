@@ -301,7 +301,7 @@ export const RouteStaticMapSnapshot = ({ waypoints }) => {
         color: 'var(--text-secondary)'
       }}>
         <MapIcon size={48} style={{ marginBottom: '12px', opacity: 0.5 }} />
-        <p style={{ fontSize: '14px' }}>Aucun waypoint défini pour afficher la carte</p>
+        <p style={{ fontSize: 'var(--fs-body)' }}>Aucun waypoint défini pour afficher la carte</p>
       </div>
     );
   }
@@ -337,7 +337,7 @@ export const RouteStaticMapSnapshot = ({ waypoints }) => {
         }}
       />
       <p style={{
-        fontSize: '12px',
+        fontSize: 'var(--fs-body)',
         color: 'var(--text-secondary)',
         marginTop: '8px',
         textAlign: 'center',

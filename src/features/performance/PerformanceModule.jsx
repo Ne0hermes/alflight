@@ -663,7 +663,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
             <p style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
               💡 Pour ajouter des performances :
             </p>
-            <ol style={{ marginLeft: '20px', fontSize: '13px', lineHeight: '1.8' }}>
+            <ol style={{ marginLeft: '20px', fontSize: 'var(--fs-body)', lineHeight: '1.8' }}>
               <li>Allez dans l'onglet <strong>"Gestion Avions"</strong></li>
               <li>Sélectionnez votre avion ({selectedAircraft.registration})</li>
               <li>Cliquez sur <strong>"Modifier"</strong></li>
@@ -933,7 +933,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
                   marginBottom: '12px'
                 }}>
                   <h4 style={{
-                    fontSize: '16px',
+                    fontSize: 'var(--fs-title)',
                     fontWeight: '700',
                     color: 'var(--text-primary)',
                     marginBottom: '6px'
@@ -941,7 +941,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
                     {alternate.name || alternate.icao} ({alternate.icao})
                   </h4>
                   <div style={{
-                    fontSize: '12px',
+                    fontSize: 'var(--fs-body)',
                     color: 'var(--text-secondary)',
                     display: 'flex',
                     gap: '16px'
@@ -969,7 +969,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
                     backgroundColor: 'var(--bg-overlay)',
                     borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--border-subtle)',
-                    fontSize: '13px',
+                    fontSize: 'var(--fs-body)',
                     color: 'var(--color-red-critical)'
                   }}>
                     ⚠️ Météo non disponible - impossible d'analyser les pistes

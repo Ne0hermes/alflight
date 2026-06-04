@@ -95,10 +95,10 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
     <div>
       <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--color-red-critical)' }}>
+          <h5 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'var(--color-red-critical)' }}>
             Obstacles remarquables
             {(!editedData.obstacles || editedData.obstacles.length === 0) && (
-              <span style={{ color: 'var(--color-red-critical)', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
+              <span style={{ color: 'var(--color-red-critical)', fontSize: 'var(--fs-body)', fontWeight: 'normal', marginLeft: '12px' }}>
                 ⚠️ Aucun obstacle défini
               </span>
             )}
@@ -107,7 +107,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
             onClick={addObstacle}
             style={{
               padding: '6px 12px',
-              fontSize: '13px',
+              fontSize: 'var(--fs-body)',
               backgroundColor: 'var(--color-red-critical)',
               color: 'var(--text-primary)',
               border: 'none',
@@ -142,12 +142,12 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <AlertTriangle size={18} style={{ color: 'var(--color-red-critical)' }} />
-                    <h6 style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                    <h6 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
                       {obstacle.name || `Obstacle #${idx + 1}`}
                     </h6>
                     {obstacle.type && (
                       <span style={{ 
-                        fontSize: '12px', 
+                        fontSize: 'var(--fs-body)', 
                         padding: '2px 6px', 
                         backgroundColor: 'var(--bg-overlay)', 
                         color: 'var(--color-red-critical)',
@@ -159,7 +159,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                     )}
                     {obstacle.totalHeight > 500 && (
                       <span style={{ 
-                        fontSize: '11px', 
+                        fontSize: 'var(--fs-caption)', 
                         padding: '2px 6px', 
                         backgroundColor: 'var(--color-red-critical)', 
                         color: 'var(--text-primary)',
@@ -187,12 +187,12 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                 
                 {/* Type et identification */}
                 <div style={{ marginBottom: '16px' }}>
-                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
+                  <h6 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                     Type et identification
                   </h6>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Type d'obstacle
                       </label>
                       <select
@@ -208,7 +208,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                       </select>
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Nom / Description
                       </label>
                       <input
@@ -224,12 +224,12 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                 
                 {/* Hauteurs */}
                 <div style={{ marginBottom: '16px' }}>
-                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
+                  <h6 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                     Dimensions
                   </h6>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Hauteur structure (ft)
                       </label>
                       <input
@@ -241,7 +241,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Élévation sol (ft)
                       </label>
                       <input
@@ -253,7 +253,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Altitude totale (ft AMSL)
                       </label>
                       <input
@@ -273,12 +273,12 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                 
                 {/* Position */}
                 <div style={{ marginBottom: '16px' }}>
-                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
+                  <h6 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                     Position géographique
                   </h6>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Latitude
                       </label>
                       <input
@@ -291,7 +291,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Longitude
                       </label>
                       <input
@@ -308,12 +308,12 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                 
                 {/* Position relative à l'aérodrome */}
                 <div style={{ marginBottom: '16px' }}>
-                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
+                  <h6 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                     Position relative à l'aérodrome
                   </h6>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Distance (NM)
                       </label>
                       <input
@@ -326,7 +326,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Relèvement (°)
                       </label>
                       <input
@@ -344,12 +344,12 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                 
                 {/* Balisage */}
                 <div style={{ marginBottom: '16px' }}>
-                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
+                  <h6 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                     Balisage et signalisation
                   </h6>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Balisage lumineux
                       </label>
                       <select
@@ -365,7 +365,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                       </select>
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Marques diurnes
                       </label>
                       <div style={{ display: 'flex', alignItems: 'center', height: '32px' }}>
@@ -375,7 +375,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                           onChange={(e) => updateObstacleField(idx, 'markings', e.target.checked)}
                           style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                         />
-                        <span style={{ marginLeft: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                        <span style={{ marginLeft: '8px', fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                           {obstacle.markings ? 'Bandes rouges/blanches' : 'Non balisé'}
                         </span>
                       </div>
@@ -385,7 +385,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                 
                 {/* Remarques */}
                 <div>
-                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                  <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                     Remarques / Informations complémentaires
                   </label>
                   <textarea

@@ -271,7 +271,7 @@ export const AlternatesMapView = memo(({
         borderColor: 'var(--text-tertiary)',
         ...style
       }}>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-body)' }}>
           Aucune route définie
         </p>
       </div>
@@ -355,10 +355,10 @@ export const AlternatesMapView = memo(({
           >
             <Popup>
               <div style={{ padding: '4px' }}>
-                <strong style={{ fontSize: '12px' }}>
+                <strong style={{ fontSize: 'var(--fs-body)' }}>
                   Distance perpendiculaire
                 </strong>
-                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginTop: '4px' }}>
                   {line.icao}: {line.distance.toFixed(1)} NM
                 </div>
               </div>
@@ -381,22 +381,22 @@ export const AlternatesMapView = memo(({
           >
             <Popup>
               <div style={{ padding: '4px' }}>
-                <strong style={{ fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+                <strong style={{ fontSize: 'var(--fs-body)', display: 'block', marginBottom: '4px' }}>
                   ✈️ {marker.icao}
                 </strong>
-                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>
                   {marker.name}
                 </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '8px' }}>
+                <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginTop: '8px' }}>
                   Score: {((marker.score || 0) * 100).toFixed(0)}%
                 </div>
                 {marker.distanceToDeparture && (
-                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                  <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
                     Départ: {marker.distanceToDeparture.toFixed(1)} NM
                   </div>
                 )}
                 {marker.distanceToArrival && (
-                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                  <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
                     Arrivée: {marker.distanceToArrival.toFixed(1)} NM
                   </div>
                 )}
@@ -426,7 +426,7 @@ export const AlternatesMapView = memo(({
                         backgroundColor: currentSelection.departure?.icao === marker.icao ? 'var(--color-red-critical)' : '#ffffff',
                         color: currentSelection.departure?.icao === marker.icao ? '#ffffff' : 'var(--color-red-critical)',
                         cursor: 'pointer',
-                        fontSize: '11px',
+                        fontSize: 'var(--fs-caption)',
                         fontWeight: 'bold',
                         transition: 'all 0.2s'
                       }}
@@ -449,7 +449,7 @@ export const AlternatesMapView = memo(({
                         backgroundColor: currentSelection.arrival?.icao === marker.icao ? 'var(--text-primary)' : '#ffffff',
                         color: currentSelection.arrival?.icao === marker.icao ? '#ffffff' : 'var(--text-primary)',
                         cursor: 'pointer',
-                        fontSize: '11px',
+                        fontSize: 'var(--fs-caption)',
                         fontWeight: 'bold',
                         transition: 'all 0.2s'
                       }}
@@ -482,14 +482,14 @@ export const AlternatesMapView = memo(({
             >
             <Popup>
               <div style={{ padding: '4px' }}>
-                <strong style={{ fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+                <strong style={{ fontSize: 'var(--fs-body)', display: 'block', marginBottom: '4px' }}>
                   {marker.selectionType === 'departure' ? '🔴' : '🟢'} {marker.icao}
                 </strong>
-                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>
                   {marker.name}
                 </div>
                 <div style={{
-                  fontSize: '11px',
+                  fontSize: 'var(--fs-caption)',
                   color: 'var(--text-primary)',
                   backgroundColor: marker.selectionType === 'departure' ? 'var(--color-red-critical)' : 'var(--text-primary)',
                   padding: '2px 6px',
@@ -516,7 +516,7 @@ export const AlternatesMapView = memo(({
                       backgroundColor: 'var(--color-red-critical)',
                       color: '#ffffff',
                       cursor: 'pointer',
-                      fontSize: '11px',
+                      fontSize: 'var(--fs-caption)',
                       fontWeight: 'bold',
                       transition: 'all 0.2s'
                     }}
@@ -546,10 +546,10 @@ export const AlternatesMapView = memo(({
             marginBottom: selectedMarkers.length === 2 ? '8px' : '0'
           }}>
             <div>
-              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', marginRight: '8px' }}>
+              <span style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginRight: '8px' }}>
                 Distance de route:
               </span>
-              <strong style={{ fontSize: '14px', color: '#f26921' }}>
+              <strong style={{ fontSize: 'var(--fs-body)', color: '#f26921' }}>
                 {routeDistance.toFixed(1)} NM
               </strong>
             </div>
@@ -557,20 +557,20 @@ export const AlternatesMapView = memo(({
             <div style={{ display: 'flex', gap: '16px' }}>
               {suggestedMarkers.length > 0 && (
                 <div>
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', marginRight: '8px' }}>
+                  <span style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginRight: '8px' }}>
                     Aérodromes suggérés:
                   </span>
-                  <strong style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                  <strong style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                     {suggestedMarkers.length}
                   </strong>
                 </div>
               )}
               {selectedMarkers.length > 0 && (
                 <div>
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', marginRight: '8px' }}>
+                  <span style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginRight: '8px' }}>
                     Sélectionnés:
                   </span>
-                  <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>
+                  <strong style={{ fontSize: 'var(--fs-body)', color: 'var(--text-primary)' }}>
                     {selectedMarkers.length}
                   </strong>
                 </div>
@@ -599,18 +599,18 @@ export const AlternatesMapView = memo(({
                   gap: '12px'
                 }}>
                   <div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '2px' }}>
+                    <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginBottom: '2px' }}>
                       Distance entre déroutements:
                     </div>
-                    <div style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
+                    <div style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
                       {distanceBetweenAlternates.toFixed(1)} NM
                     </div>
                   </div>
                   <div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '2px' }}>
+                    <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginBottom: '2px' }}>
                       Trajet:
                     </div>
-                    <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                    <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: 'var(--text-secondary)' }}>
                       {departureAlternate.icao} → {arrivalAlternate.icao}
                     </div>
                   </div>

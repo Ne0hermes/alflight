@@ -40,7 +40,7 @@ const styles = {
   button: {
     padding: '10px',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '500',
     border: 'none',
     cursor: 'pointer',
@@ -81,9 +81,9 @@ const styles = {
     border: '1px solid var(--color-red-critical)'
   },
   text: {
-    sm: { fontSize: '14px' },
-    md: { fontSize: '16px' },
-    lg: { fontSize: '18px' },
+    sm: { fontSize: 'var(--fs-body)' },
+    md: { fontSize: 'var(--fs-title)' },
+    lg: { fontSize: 'var(--fs-title)' },
     bold: { fontWeight: 'bold' },
     muted: { color: 'var(--text-secondary)' }
   }
@@ -512,7 +512,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                   <AlertCircle size={16} />
                   <div>
                     <strong>Téléchargement du MANEX en cours...</strong>
-                    <p style={{ margin: '4px 0 0 0', fontSize: '13px' }}>
+                    <p style={{ margin: '4px 0 0 0', fontSize: 'var(--fs-body)' }}>
                       Le MANEX est disponible dans Supabase ({hasManexInSupabase.fileName}). Rechargez la page (F5) pour réessayer le téléchargement.
                     </p>
                   </div>
@@ -525,7 +525,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                   <AlertCircle size={16} />
                   <div>
                     <strong>MANEX requis</strong>
-                    <p style={{ margin: '4px 0 0 0', fontSize: '13px' }}>
+                    <p style={{ margin: '4px 0 0 0', fontSize: 'var(--fs-body)' }}>
                       Vous devez d'abord ajouter un manuel de vol (MANEX) dans l'étape "Informations générales"
                       avant de pouvoir extraire des données de performance.
                     </p>
@@ -768,7 +768,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                   }} />
                   <div>
                     <strong>Extraction en cours...</strong>
-                    <p style={{ margin: '4px 0 0 0', fontSize: '13px' }}>
+                    <p style={{ margin: '4px 0 0 0', fontSize: 'var(--fs-body)' }}>
                       {loadingMessage || 'Extraction des pages du MANEX...'}
                     </p>
                   </div>
@@ -893,7 +893,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                       color: selectedPages.includes(index) ? 'var(--text-inverse)' : 'var(--text-primary)',
                       borderRadius: 'var(--radius-sm)',
                       padding: '2px 6px',
-                      fontSize: '12px'
+                      fontSize: 'var(--fs-body)'
                     }}>
                       Page {page.pageNumber}
                     </div>
@@ -908,7 +908,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                             left: '4px',
                             right: '4px',
                             padding: '8px 6px',
-                            fontSize: '12px',
+                            fontSize: 'var(--fs-body)',
                             borderRadius: 'var(--radius-sm)',
                             border: '2px solid var(--text-primary)',
                             backgroundColor: 'var(--bg-overlay)',
@@ -950,7 +950,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                             color: 'var(--text-primary)',
                             padding: '3px 8px',
                             borderRadius: 'var(--radius-sm)',
-                            fontSize: '10px',
+                            fontSize: 'var(--fs-caption)',
                             fontWeight: 'bold',
                             whiteSpace: 'nowrap'
                           }}>

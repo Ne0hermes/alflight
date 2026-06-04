@@ -485,7 +485,7 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
         </h6>
 
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--fs-caption)' }}>
             <thead>
               <tr style={{ backgroundColor: 'var(--bg-overlay)' }}>
                 <th style={{ padding: '6px', textAlign: 'left', borderBottom: '2px solid var(--text-tertiary)' }}>
@@ -538,7 +538,7 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
                   <td style={{ padding: '6px', textAlign: 'center' }}>
                     {analysis.heading}°
                   </td>
-                  <td style={{ padding: '6px', textAlign: 'center', fontSize: '10px' }}>
+                  <td style={{ padding: '6px', textAlign: 'center', fontSize: 'var(--fs-caption)' }}>
                     {analysis.runway?.surface?.type || analysis.runway?.surface || 'N/A'}
                   </td>
                   <td style={{ padding: '6px', textAlign: 'center' }}>

@@ -240,7 +240,7 @@ const UnitConverterCard = () => {
         }}
       >
         <CalculateIcon color="primary" />
-        <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+        <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
           Vérificateur de conversion d'unités
         </Typography>
         <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>

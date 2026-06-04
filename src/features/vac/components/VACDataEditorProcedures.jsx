@@ -131,11 +131,11 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
     return (
       <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: bgColor, borderRadius: 'var(--radius-sm)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h5 style={{ fontSize: '14px', fontWeight: 'bold', color, display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h5 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color, display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Icon size={18} />
             {title}
             {procedures.length === 0 && (
-              <span style={{ color: 'var(--color-red-critical)', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
+              <span style={{ color: 'var(--color-red-critical)', fontSize: 'var(--fs-body)', fontWeight: 'normal', marginLeft: '12px' }}>
                 ⚠️ Aucune procédure définie
               </span>
             )}
@@ -144,7 +144,7 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
             onClick={() => addProcedure(type)}
             style={{
               padding: '6px 12px',
-              fontSize: '13px',
+              fontSize: 'var(--fs-body)',
               backgroundColor: color,
               color: 'var(--text-primary)',
               border: 'none',
@@ -178,12 +178,12 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
                   borderBottom: '1px solid var(--border-subtle)'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <h6 style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                    <h6 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
                       {procedure.name || `Procédure ${type === 'departure' ? 'départ' : 'arrivée'} #${idx + 1}`}
                     </h6>
                     {procedure.runway && (
                       <span style={{ 
-                        fontSize: '12px', 
+                        fontSize: 'var(--fs-body)', 
                         padding: '2px 6px', 
                         backgroundColor: 'var(--bg-overlay)', 
                         color: 'var(--text-primary)',
@@ -210,12 +210,12 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
                 
                 {/* Informations générales */}
                 <div style={{ marginBottom: '16px' }}>
-                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
+                  <h6 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                     Informations générales
                   </h6>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Nom de la procédure
                       </label>
                       <input
@@ -227,7 +227,7 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Piste associée
                       </label>
                       <input
@@ -243,12 +243,12 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
                 
                 {/* Altitudes */}
                 <div style={{ marginBottom: '16px' }}>
-                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
+                  <h6 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                     Altitudes
                   </h6>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Altitude minimale (ft)
                       </label>
                       <input
@@ -260,7 +260,7 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Altitude maximale (ft)
                       </label>
                       <input
@@ -277,14 +277,14 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
                 {/* Waypoints */}
                 <div style={{ marginBottom: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <h6 style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
+                    <h6 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
                       Points de cheminement
                     </h6>
                     <button
                       onClick={() => addWaypoint(type, idx)}
                       style={{
                         padding: '4px 8px',
-                        fontSize: '12px',
+                        fontSize: 'var(--fs-body)',
                         backgroundColor: 'var(--text-secondary)',
                         color: 'var(--text-primary)',
                         border: 'none',
@@ -313,7 +313,7 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
                             value={waypoint.name || ''}
                             onChange={(e) => updateWaypointField(type, idx, wpIdx, 'name', e.target.value.toUpperCase())}
                             placeholder="POINT"
-                            style={{ ...sx.components.input.base, fontSize: '12px' }}
+                            style={{ ...sx.components.input.base, fontSize: 'var(--fs-body)' }}
                           />
                           <input
                             type="number"
@@ -321,7 +321,7 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
                             onChange={(e) => updateWaypointField(type, idx, wpIdx, 'coordinates.lat', parseFloat(e.target.value) || 0)}
                             placeholder="Lat"
                             step="0.0001"
-                            style={{ ...sx.components.input.base, fontSize: '12px' }}
+                            style={{ ...sx.components.input.base, fontSize: 'var(--fs-body)' }}
                           />
                           <input
                             type="number"
@@ -329,14 +329,14 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
                             onChange={(e) => updateWaypointField(type, idx, wpIdx, 'coordinates.lon', parseFloat(e.target.value) || 0)}
                             placeholder="Lon"
                             step="0.0001"
-                            style={{ ...sx.components.input.base, fontSize: '12px' }}
+                            style={{ ...sx.components.input.base, fontSize: 'var(--fs-body)' }}
                           />
                           <input
                             type="number"
                             value={waypoint.altitude || 0}
                             onChange={(e) => updateWaypointField(type, idx, wpIdx, 'altitude', parseInt(e.target.value) || 0)}
                             placeholder="Alt"
-                            style={{ ...sx.components.input.base, fontSize: '12px' }}
+                            style={{ ...sx.components.input.base, fontSize: 'var(--fs-body)' }}
                           />
                           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                             <input
@@ -345,7 +345,7 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
                               onChange={(e) => updateWaypointField(type, idx, wpIdx, 'flyover', e.target.checked)}
                               style={{ width: '14px', height: '14px' }}
                             />
-                            <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>FO</span>
+                            <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>FO</span>
                           </div>
                           <button
                             onClick={() => removeWaypoint(type, idx, wpIdx)}
@@ -356,7 +356,7 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
                               border: 'none',
                               borderRadius: 'var(--radius-sm)',
                               cursor: 'pointer',
-                              fontSize: '11px'
+                              fontSize: 'var(--fs-caption)'
                             }}
                           >
                             ✕
@@ -365,7 +365,7 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
                       ))}
                     </div>
                   ) : (
-                    <div style={{ padding: '12px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>
+                    <div style={{ padding: '12px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)', textAlign: 'center', color: 'var(--text-secondary)', fontSize: 'var(--fs-body)' }}>
                       Aucun waypoint défini
                     </div>
                   )}
@@ -373,7 +373,7 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
                 
                 {/* Description et restrictions */}
                 <div style={{ marginBottom: '12px' }}>
-                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                  <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                     Description de la procédure
                   </label>
                   <textarea
@@ -390,7 +390,7 @@ export const ProceduresEditor = ({ editedData, updateValue }) => {
                 </div>
                 
                 <div>
-                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                  <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                     Restrictions / Notes
                   </label>
                   <input

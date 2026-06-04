@@ -240,7 +240,7 @@ export const VACDataExtractor = memo(() => {
           <p style={sx.combine(sx.text.sm, sx.text.bold)}>
             Fonctionnalités de cette section :
           </p>
-          <ul style={{ paddingLeft: '20px', fontSize: '13px', marginTop: '8px' }}>
+          <ul style={{ paddingLeft: '20px', fontSize: 'var(--fs-body)', marginTop: '8px' }}>
             <li>Visualiser les données extraites des cartes VAC téléchargées</li>
             <li><strong>Modifier</strong> les données existantes (altitude, pistes, fréquences, etc.)</li>
             <li><strong>Ajouter</strong> de nouvelles pistes, points VFR et fréquences</li>
@@ -538,13 +538,13 @@ export const VACDataExtractor = memo(() => {
                 <div style={sx.spacing.mt(2)}>
                   <button
                     onClick={() => addFrequency('afis')}
-                    style={sx.combine(sx.components.button.base, sx.components.button.secondary, { padding: '6px 12px', fontSize: '13px', marginRight: '8px' })}
+                    style={sx.combine(sx.components.button.base, sx.components.button.secondary, { padding: '6px 12px', fontSize: 'var(--fs-body)', marginRight: '8px' })}
                   >
                     + AFIS
                   </button>
                   <button
                     onClick={() => addFrequency('atis')}
-                    style={sx.combine(sx.components.button.base, sx.components.button.secondary, { padding: '6px 12px', fontSize: '13px' })}
+                    style={sx.combine(sx.components.button.base, sx.components.button.secondary, { padding: '6px 12px', fontSize: 'var(--fs-body)' })}
                   >
                     + ATIS
                   </button>
@@ -645,7 +645,7 @@ export const VACDataExtractor = memo(() => {
               <p style={sx.combine(sx.text.sm, sx.text.bold)}>
                 💡 Utilisation des données extraites
               </p>
-              <ul style={{ paddingLeft: '20px', fontSize: '13px', marginTop: '8px' }}>
+              <ul style={{ paddingLeft: '20px', fontSize: 'var(--fs-body)', marginTop: '8px' }}>
                 <li>Cliquez sur <Copy size={12} style={{ display: 'inline' }} /> pour copier une valeur individuelle</li>
                 <li>Utilisez "Copier tout" pour obtenir l'ensemble des données en JSON</li>
                 <li>Exportez en JSON pour une intégration dans d'autres applications</li>

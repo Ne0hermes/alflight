@@ -146,7 +146,7 @@ export const FlightHistory = ({ pilotName, callsign }) => {
               {isMobile ? (
                 <>
                   <span style={styles.badgeSmall}>{flight.flight_number || 'N/A'}</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--fs-body)', color: 'var(--text-tertiary)' }}>
                     <Calendar size={14} style={styles.iconInline} />
                     {formatDate(flight.flight_date)}
                   </div>
@@ -233,7 +233,7 @@ const styles = {
     backgroundColor: 'var(--bg-overlay)',
     borderBottom: '2px solid var(--border-subtle)',
     fontWeight: '600',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-tertiary)',
     textTransform: 'uppercase',
     letterSpacing: '0.5px'
@@ -258,14 +258,14 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-tertiary)'
   },
   colAircraft: {
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-primary)',
     fontWeight: '500'
   },
@@ -273,7 +273,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-primary)',
     flexWrap: 'wrap'
   },
@@ -288,7 +288,7 @@ const styles = {
     color: 'var(--text-primary)',
     padding: '3px 10px',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     whiteSpace: 'nowrap'
   },
@@ -298,13 +298,13 @@ const styles = {
   },
   aircraftType: {
     color: 'var(--text-tertiary)',
-    fontSize: '12px',
+    fontSize: 'var(--fs-body)',
     marginLeft: '4px'
   },
   routeText: {
     color: 'var(--text-primary)',
     fontWeight: '500',
-    fontSize: '13px'
+    fontSize: 'var(--fs-body)'
   },
   tagsInline: {
     display: 'flex',
@@ -316,7 +316,7 @@ const styles = {
     color: 'var(--text-tertiary)',
     padding: '2px 6px',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: '500',
     whiteSpace: 'nowrap'
   },
@@ -330,7 +330,7 @@ const styles = {
     border: 'none',
     borderRadius: 'var(--radius-sm)',
     cursor: 'pointer',
-    fontSize: '13px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '500',
     transition: 'background-color 0.2s',
     whiteSpace: 'nowrap',
@@ -342,7 +342,7 @@ const styles = {
     opacity: 0.7
   },
   fileSizeSmall: {
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     color: 'var(--text-tertiary)',
     whiteSpace: 'nowrap'
   },
@@ -364,7 +364,7 @@ const styles = {
   },
   loadingText: {
     color: 'var(--text-tertiary)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     margin: 0
   },
   errorContainer: {
@@ -376,7 +376,7 @@ const styles = {
   },
   errorText: {
     color: 'var(--color-red-critical)',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     margin: 0
   },
   retryButton: {
@@ -386,7 +386,7 @@ const styles = {
     border: 'none',
     borderRadius: 'var(--radius-sm)',
     cursor: 'pointer',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '500'
   },
   emptyContainer: {
@@ -397,13 +397,13 @@ const styles = {
     gap: '12px'
   },
   emptyText: {
-    fontSize: '16px',
+    fontSize: 'var(--fs-title)',
     fontWeight: '600',
     color: 'var(--text-tertiary)',
     margin: '8px 0 0 0'
   },
   emptySubtext: {
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     color: 'var(--text-tertiary)',
     margin: 0,
     textAlign: 'left'

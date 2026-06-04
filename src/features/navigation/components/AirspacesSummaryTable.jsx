@@ -88,7 +88,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
   const tableStyle = {
     width: '100%',
     borderCollapse: 'collapse',
-    fontSize: '13px'
+    fontSize: 'var(--fs-body)'
   };
 
   const thStyle = {
@@ -110,7 +110,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
     display: 'inline-block',
     padding: '2px 8px',
     borderRadius: 'var(--radius-sm)',
-    fontSize: '11px',
+    fontSize: 'var(--fs-caption)',
     fontWeight: '600',
     backgroundColor: color,
     color: 'var(--text-primary)',
@@ -121,7 +121,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    fontSize: '14px',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: 'var(--text-primary)',
     marginBottom: '12px',
@@ -194,7 +194,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
       }}>
         <Shield size={24} style={{ marginBottom: '8px' }} />
         <p style={{ fontWeight: '500' }}>Aucun espace aérien spécifique détecté à {plannedAltitude} ft</p>
-        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginTop: '4px' }}>
           La route est en espace aérien non contrôlé (classe G)
         </p>
       </div>
@@ -248,7 +248,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
                   <td style={tdStyle}>
                     {formatAltitude(zone.floor, zone.ceiling, zone.floor_raw, zone.ceiling_raw)}
                   </td>
-                  <td style={{ ...tdStyle, fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  <td style={{ ...tdStyle, fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                     {zone.activity || zone.schedule || zone.remarks || '-'}
                   </td>
                 </tr>
@@ -288,7 +288,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
                   <td style={tdStyle}>
                     {formatAltitude(airspace.floor, airspace.ceiling, airspace.floor_raw, airspace.ceiling_raw)}
                   </td>
-                  <td style={{ ...tdStyle, fontSize: '12px' }}>
+                  <td style={{ ...tdStyle, fontSize: 'var(--fs-body)' }}>
                     {airspace.frequencies && airspace.frequencies.length > 0 ? (
                       airspace.frequencies.map((f, i) => (
                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -363,12 +363,12 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
           marginBottom: '8px'
         }}>
           <FileText size={18} color="var(--accent-primary)" />
-          <span style={{ fontWeight: '600', color: 'var(--accent-primary)', fontSize: '14px' }}>
+          <span style={{ fontWeight: '600', color: 'var(--accent-primary)', fontSize: 'var(--fs-body)' }}>
             Compléments aux cartes (SUP AIP)
           </span>
         </div>
         <p style={{
-          fontSize: '13px',
+          fontSize: 'var(--fs-body)',
           color: 'var(--accent-primary)',
           margin: 0,
           fontStyle: 'italic'
@@ -376,7 +376,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
           Compléments aux cartes indisponible, API à ajouter
         </p>
         <p style={{
-          fontSize: '11px',
+          fontSize: 'var(--fs-caption)',
           color: 'var(--accent-primary)',
           margin: '6px 0 0 0'
         }}>
@@ -390,7 +390,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
         padding: '12px',
         backgroundColor: 'var(--bg-overlay)',
         borderRadius: 'var(--radius-sm)',
-        fontSize: '11px',
+        fontSize: 'var(--fs-caption)',
         color: 'var(--text-secondary)'
       }}>
         <strong>Légende :</strong>

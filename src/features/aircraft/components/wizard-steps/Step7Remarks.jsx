@@ -17,7 +17,7 @@ const Step7Remarks = ({ data, updateData, errors = {}, onNext, onPrevious }) => 
             variant="body2" 
             sx={{ 
               mb: 1,
-              fontSize: '14px',
+              fontSize: 'var(--fs-body)',
               fontWeight: 500,
               color: errors.remarks ? 'error.main' : 'text.primary'
             }}
@@ -36,7 +36,7 @@ const Step7Remarks = ({ data, updateData, errors = {}, onNext, onPrevious }) => 
               minHeight: '240px',
               maxHeight: '400px',
               padding: '14px',
-              fontSize: '14px',
+              fontSize: 'var(--fs-body)',
               fontFamily: 'system-ui, -apple-system, sans-serif',
               lineHeight: 1.6,
               border: errors.remarks ? '2px solid' : '1px solid',
@@ -67,7 +67,7 @@ const Step7Remarks = ({ data, updateData, errors = {}, onNext, onPrevious }) => 
             borderColor: 'var(--border-subtle)'
           }}>
             <Typography variant="body2" sx={{ 
-              fontSize: '13px', 
+              fontSize: 'var(--fs-body)', 
               color: 'text.secondary',
               fontWeight: 500,
               mb: 1.5
@@ -78,7 +78,7 @@ const Step7Remarks = ({ data, updateData, errors = {}, onNext, onPrevious }) => 
               m: 0, 
               pl: 2.5,
               '& li': {
-                fontSize: '12px',
+                fontSize: 'var(--fs-body)',
                 color: 'text.secondary',
                 lineHeight: 1.8,
                 mb: 0.5

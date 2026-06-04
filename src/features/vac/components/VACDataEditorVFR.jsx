@@ -68,10 +68,10 @@ export const VFREditor = ({ editedData, updateValue }) => {
     <div>
       <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
+          <h5 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
             Points de report VFR
             {(!editedData.vfrPoints || editedData.vfrPoints.length === 0) && (
-              <span style={{ color: 'var(--color-red-critical)', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
+              <span style={{ color: 'var(--color-red-critical)', fontSize: 'var(--fs-body)', fontWeight: 'normal', marginLeft: '12px' }}>
                 ⚠️ Aucun point VFR défini
               </span>
             )}
@@ -80,7 +80,7 @@ export const VFREditor = ({ editedData, updateValue }) => {
             onClick={addVFRPoint}
             style={{
               padding: '6px 12px',
-              fontSize: '13px',
+              fontSize: 'var(--fs-body)',
               backgroundColor: 'var(--text-primary)',
               color: 'var(--text-primary)',
               border: 'none',
@@ -115,12 +115,12 @@ export const VFREditor = ({ editedData, updateValue }) => {
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <MapPin size={18} style={{ color: 'var(--text-secondary)' }} />
-                    <h6 style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                    <h6 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
                       {point.name || `Point VFR #${idx + 1}`}
                     </h6>
                     {point.type && (
                       <span style={{ 
-                        fontSize: '12px', 
+                        fontSize: 'var(--fs-body)', 
                         padding: '2px 6px', 
                         backgroundColor: 'var(--bg-overlay)', 
                         color: 'var(--text-primary)',
@@ -132,7 +132,7 @@ export const VFREditor = ({ editedData, updateValue }) => {
                     )}
                     {point.mandatory && (
                       <span style={{ 
-                        fontSize: '11px', 
+                        fontSize: 'var(--fs-caption)', 
                         padding: '2px 6px', 
                         backgroundColor: 'var(--bg-overlay)', 
                         color: 'var(--color-red-critical)',
@@ -159,12 +159,12 @@ export const VFREditor = ({ editedData, updateValue }) => {
                 
                 {/* Identification */}
                 <div style={{ marginBottom: '16px' }}>
-                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
+                  <h6 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                     Identification
                   </h6>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Nom du point
                       </label>
                       <input
@@ -176,7 +176,7 @@ export const VFREditor = ({ editedData, updateValue }) => {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Type
                       </label>
                       <select
@@ -192,7 +192,7 @@ export const VFREditor = ({ editedData, updateValue }) => {
                       </select>
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Point obligatoire
                       </label>
                       <div style={{ display: 'flex', alignItems: 'center', height: '32px' }}>
@@ -202,7 +202,7 @@ export const VFREditor = ({ editedData, updateValue }) => {
                           onChange={(e) => updatePointField(idx, 'mandatory', e.target.checked)}
                           style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                         />
-                        <span style={{ marginLeft: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                        <span style={{ marginLeft: '8px', fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                           {point.mandatory ? 'Oui' : 'Non'}
                         </span>
                       </div>
@@ -212,12 +212,12 @@ export const VFREditor = ({ editedData, updateValue }) => {
                 
                 {/* Position et altitude */}
                 <div style={{ marginBottom: '16px' }}>
-                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
+                  <h6 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                     Position et altitude
                   </h6>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Latitude
                       </label>
                       <input
@@ -230,7 +230,7 @@ export const VFREditor = ({ editedData, updateValue }) => {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Longitude
                       </label>
                       <input
@@ -243,7 +243,7 @@ export const VFREditor = ({ editedData, updateValue }) => {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Altitude (ft)
                       </label>
                       <input
@@ -259,12 +259,12 @@ export const VFREditor = ({ editedData, updateValue }) => {
                 
                 {/* Position relative à l'aérodrome */}
                 <div style={{ marginBottom: '16px' }}>
-                  <h6 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
+                  <h6 style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                     Position relative à l'aérodrome
                   </h6>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Distance (NM)
                       </label>
                       <input
@@ -277,7 +277,7 @@ export const VFREditor = ({ editedData, updateValue }) => {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                         Relèvement (°)
                       </label>
                       <input
@@ -295,7 +295,7 @@ export const VFREditor = ({ editedData, updateValue }) => {
                 
                 {/* Description */}
                 <div>
-                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                  <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                     Description / Remarques
                   </label>
                   <textarea

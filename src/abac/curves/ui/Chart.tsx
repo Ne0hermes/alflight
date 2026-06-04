@@ -766,10 +766,10 @@ export const Chart: React.FC<ChartProps> = ({
                 borderRadius: '2px',
                 marginRight: '6px'
               }} />
-              <div style={{ fontSize: '12px', color: 'var(--text-primary)' }}>
+              <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-primary)' }}>
                 {curve.name}
                 {curve.fitted && (
-                  <span style={{ fontSize: '10px', color: 'var(--text-secondary)', marginLeft: '4px' }}>
+                  <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginLeft: '4px' }}>
                     (RMSE: {curve.fitted.rmse.toFixed(3)})
                   </span>
                 )}

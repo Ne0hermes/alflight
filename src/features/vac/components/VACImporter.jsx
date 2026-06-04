@@ -196,7 +196,7 @@ export const VACImporter = memo(({
             marginBottom: '20px' 
           }}>
             <h3 style={{ 
-              fontSize: '20px', 
+              fontSize: 'var(--fs-title)', 
               fontWeight: 'bold', 
               display: 'flex', 
               alignItems: 'center',
@@ -227,7 +227,7 @@ export const VACImporter = memo(({
               marginBottom: '20px',
               border: '1px solid var(--border-subtle)'
             }}>
-              <p style={{ fontSize: '14px' }}>
+              <p style={{ fontSize: 'var(--fs-body)' }}>
                 <strong>Aéroport:</strong> {icao}
               </p>
             </div>
@@ -265,13 +265,13 @@ export const VACImporter = memo(({
                 }}
               >
                 <Upload size={48} style={{ margin: '0 auto 16px', color: 'var(--text-tertiary)' }} />
-                <p style={{ fontSize: '16px', marginBottom: '8px' }}>
+                <p style={{ fontSize: 'var(--fs-title)', marginBottom: '8px' }}>
                   Cliquez pour sélectionner une carte VAC PDF
                 </p>
-                <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                   ou glissez-déposez le fichier ici
                 </p>
-                <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '12px' }}>
+                <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-tertiary)', marginTop: '12px' }}>
                   Formats supportés: Cartes VAC SIA, Jeppesen, autres PDF aéronautiques
                 </p>
               </div>
@@ -289,7 +289,7 @@ export const VACImporter = memo(({
                     color: 'var(--text-secondary)',
                     border: 'none',
                     borderRadius: 'var(--radius-sm)',
-                    fontSize: '14px',
+                    fontSize: 'var(--fs-body)',
                     cursor: 'pointer'
                   }}
                 >
@@ -311,8 +311,8 @@ export const VACImporter = memo(({
                 margin: '0 auto 16px',
                 animation: 'spin 1s linear infinite'
               }} />
-              <p style={{ fontSize: '16px' }}>Extraction des données VAC en cours...</p>
-              <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '8px' }}>
+              <p style={{ fontSize: 'var(--fs-title)' }}>Extraction des données VAC en cours...</p>
+              <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginTop: '8px' }}>
                 Analyse des fréquences, pistes, procédures...
               </p>
             </div>
@@ -334,10 +334,10 @@ export const VACImporter = memo(({
               }}>
                 <CheckCircle size={20} style={{ color: 'var(--text-primary)' }} />
                 <div>
-                  <p style={{ fontSize: '14px', fontWeight: 'bold' }}>
+                  <p style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold' }}>
                     Carte VAC traitée avec succès!
                   </p>
-                  <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                     {extractedData.pageCount} pages analysées • {extractedData.dataSource}
                   </p>
                 </div>
@@ -351,32 +351,32 @@ export const VACImporter = memo(({
                   borderRadius: 'var(--radius-sm)', 
                   marginBottom: '16px' 
                 }}>
-                  <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px' }}>
+                  <h4 style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', marginBottom: '12px' }}>
                     Informations Aéroport
                   </h4>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                     {extractedData.icao && (
                       <div>
-                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Code ICAO</span>
-                        <p style={{ fontSize: '14px', fontWeight: 'bold' }}>{extractedData.icao}</p>
+                        <span style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>Code ICAO</span>
+                        <p style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold' }}>{extractedData.icao}</p>
                       </div>
                     )}
                     {extractedData.airportName && (
                       <div>
-                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Nom</span>
-                        <p style={{ fontSize: '14px', fontWeight: 'bold' }}>{extractedData.airportName}</p>
+                        <span style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>Nom</span>
+                        <p style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold' }}>{extractedData.airportName}</p>
                       </div>
                     )}
                     {extractedData.elevation && (
                       <div>
-                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Élévation</span>
-                        <p style={{ fontSize: '14px', fontWeight: 'bold' }}>{extractedData.elevation} ft</p>
+                        <span style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>Élévation</span>
+                        <p style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold' }}>{extractedData.elevation} ft</p>
                       </div>
                     )}
                     {extractedData.coordinates && (
                       <div>
-                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Coordonnées</span>
-                        <p style={{ fontSize: '14px', fontWeight: 'bold' }}>{extractedData.coordinates.formatted}</p>
+                        <span style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>Coordonnées</span>
+                        <p style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold' }}>{extractedData.coordinates.formatted}</p>
                       </div>
                     )}
                   </div>
@@ -393,7 +393,7 @@ export const VACImporter = memo(({
                   border: '1px solid var(--border-subtle)'
                 }}>
                   <h4 style={{ 
-                    fontSize: '16px', 
+                    fontSize: 'var(--fs-title)', 
                     fontWeight: 'bold', 
                     marginBottom: '12px',
                     display: 'flex',
@@ -409,7 +409,7 @@ export const VACImporter = memo(({
                         backgroundColor: 'var(--bg-overlay)', 
                         padding: '8px', 
                         borderRadius: 'var(--radius-sm)',
-                        fontSize: '13px'
+                        fontSize: 'var(--fs-body)'
                       }}>
                         <strong>{runway.designation}</strong>
                         {runway.length && <span> • {runway.length}m</span>}
@@ -430,7 +430,7 @@ export const VACImporter = memo(({
                   border: '1px solid var(--bg-overlay)'
                 }}>
                   <h4 style={{ 
-                    fontSize: '16px', 
+                    fontSize: 'var(--fs-title)', 
                     fontWeight: 'bold', 
                     marginBottom: '12px',
                     display: 'flex',
@@ -446,7 +446,7 @@ export const VACImporter = memo(({
                     gap: '8px' 
                   }}>
                     {Object.entries(extractedData.frequencies).map(([service, freqs]) => (
-                      <div key={service} style={{ fontSize: '13px' }}>
+                      <div key={service} style={{ fontSize: 'var(--fs-body)' }}>
                         <strong>{service}:</strong> {Array.isArray(freqs) ? freqs.join(', ') : freqs}
                       </div>
                     ))}
@@ -464,7 +464,7 @@ export const VACImporter = memo(({
                   border: '1px solid #e9d5ff'
                 }}>
                   <h4 style={{ 
-                    fontSize: '16px', 
+                    fontSize: 'var(--fs-title)', 
                     fontWeight: 'bold', 
                     marginBottom: '12px',
                     display: 'flex',
@@ -474,7 +474,7 @@ export const VACImporter = memo(({
                     <Navigation size={16} />
                     Aides à la Navigation
                   </h4>
-                  <div style={{ fontSize: '13px' }}>
+                  <div style={{ fontSize: 'var(--fs-body)' }}>
                     {extractedData.navaids.map((navaid, idx) => (
                       <div key={idx} style={{ marginBottom: '4px' }}>
                         • {navaid.type} {navaid.identifier || navaid.runway} - {navaid.frequency}
@@ -492,10 +492,10 @@ export const VACImporter = memo(({
                   borderRadius: 'var(--radius-sm)', 
                   marginBottom: '16px' 
                 }}>
-                  <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px' }}>
+                  <h4 style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', marginBottom: '12px' }}>
                     Procédures
                   </h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', fontSize: '13px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', fontSize: 'var(--fs-body)' }}>
                     {extractedData.procedures.arrival.length > 0 && (
                       <div>
                         <strong>Arrivées (STAR):</strong>
@@ -538,7 +538,7 @@ export const VACImporter = memo(({
                     color: 'var(--text-secondary)', 
                     border: 'none', 
                     borderRadius: 'var(--radius-sm)', 
-                    fontSize: '14px', 
+                    fontSize: 'var(--fs-body)', 
                     fontWeight: '500', 
                     cursor: 'pointer' 
                   }}
@@ -553,7 +553,7 @@ export const VACImporter = memo(({
                     color: 'var(--text-primary)', 
                     border: 'none', 
                     borderRadius: 'var(--radius-sm)', 
-                    fontSize: '14px', 
+                    fontSize: 'var(--fs-body)', 
                     fontWeight: '500', 
                     cursor: 'pointer', 
                     display: 'flex', 
@@ -581,7 +581,7 @@ export const VACImporter = memo(({
               marginTop: '16px' 
             }}>
               <AlertTriangle size={20} style={{ color: 'var(--color-red-critical)' }} />
-              <p style={{ fontSize: '14px' }}>{error}</p>
+              <p style={{ fontSize: 'var(--fs-body)' }}>{error}</p>
             </div>
           )}
         </div>

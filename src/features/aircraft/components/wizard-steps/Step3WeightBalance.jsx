@@ -901,7 +901,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
           }}
         >
           <FuelIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Capacité utilisable
           </Typography>
         </AccordionSummary>
@@ -1218,7 +1218,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
           }}
         >
           <SeatIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Sièges (bras de levier)
           </Typography>
         </AccordionSummary>
@@ -1331,7 +1331,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
           }}
         >
           <LuggageIcon color="warning" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Compartiments bagages
           </Typography>
         </AccordionSummary>
@@ -1539,7 +1539,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
           }}
         >
           <WeightIcon color="error" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
             Masses limites
           </Typography>
         </AccordionSummary>
@@ -1740,7 +1740,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
           }}
         >
           <CenterIcon color="error" />
-          <Typography variant="subtitle1" sx={{ fontSize: '15px', fontWeight: 600, color: 'error.main' }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'error.main' }}>
             Enveloppe de centrage — base {isMoment ? 'moment' : 'CG (bras de levier)'}
           </Typography>
         </AccordionSummary>
@@ -1748,7 +1748,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
           <Box sx={{ width: '100%' }}>
             {/* CG Avant (Most forward) - Liste de points */}
             <Box sx={{ mb: 4 }}>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', fontSize: '14px' }}>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', fontSize: 'var(--fs-body)' }}>
                 Most Forward CG (Limite avant)
               </Typography>
 
@@ -1781,7 +1781,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                       }}
                     >
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', fontSize: '13px' }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', fontSize: 'var(--fs-body)' }}>
                           Point Forward #{index + 1}
                         </Typography>
                         <IconButton
@@ -1878,7 +1878,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
 
             {/* CG Arrière (Most rearward) — 2 POINTS INDÉPENDANTS */}
             <Box>
-              <Typography variant="h6" sx={{ mb: 1, fontWeight: 'bold', fontSize: '14px' }}>
+              <Typography variant="h6" sx={{ mb: 1, fontWeight: 'bold', fontSize: 'var(--fs-body)' }}>
                 Most Rearward CG (Limite arrière)
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>

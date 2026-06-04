@@ -34,7 +34,7 @@ const SpeedLimitationChart = memo(({ speeds }) => {
       marginBottom: '16px'
     }}>
       <h6 style={{ 
-        fontSize: '13px', 
+        fontSize: 'var(--fs-body)', 
         fontWeight: 'bold', 
         marginBottom: '12px', 
         color: '#ffffff' 
@@ -172,7 +172,7 @@ const SpeedLimitationChart = memo(({ speeds }) => {
                 left: `${vso * scale}%`,
                 bottom: '50px',
                 transform: 'translateX(-50%)',
-                fontSize: '10px',
+                fontSize: 'var(--fs-caption)',
                 fontWeight: 'bold',
                 color: '#ffffff',
                 backgroundColor: 'rgba(0,0,0,0.7)',
@@ -194,7 +194,7 @@ const SpeedLimitationChart = memo(({ speeds }) => {
                 left: `${vfeLdg * scale}%`,
                 bottom: '50px',
                 transform: 'translateX(-50%)',
-                fontSize: '10px',
+                fontSize: 'var(--fs-caption)',
                 fontWeight: 'bold',
                 color: '#ffffff',
                 backgroundColor: 'rgba(0,0,0,0.7)',
@@ -216,7 +216,7 @@ const SpeedLimitationChart = memo(({ speeds }) => {
                 left: `${vs1 * scale}%`,
                 bottom: '75px',
                 transform: 'translateX(-50%)',
-                fontSize: '10px',
+                fontSize: 'var(--fs-caption)',
                 fontWeight: 'bold',
                 color: '#10b981',
                 backgroundColor: 'rgba(0,0,0,0.7)',
@@ -238,7 +238,7 @@ const SpeedLimitationChart = memo(({ speeds }) => {
                 left: `${vno * scale}%`,
                 bottom: '75px',
                 transform: 'translateX(-50%)',
-                fontSize: '10px',
+                fontSize: 'var(--fs-caption)',
                 fontWeight: 'bold',
                 color: '#fbbf24',
                 backgroundColor: 'rgba(0,0,0,0.7)',
@@ -260,7 +260,7 @@ const SpeedLimitationChart = memo(({ speeds }) => {
                 left: `${vne * scale}%`,
                 bottom: '75px',
                 transform: 'translateX(-50%)',
-                fontSize: '10px',
+                fontSize: 'var(--fs-caption)',
                 fontWeight: 'bold',
                 color: '#dc2626',
                 backgroundColor: 'rgba(0,0,0,0.7)',
@@ -282,7 +282,7 @@ const SpeedLimitationChart = memo(({ speeds }) => {
                 left: `${vfeTO * scale}%`,
                 bottom: '50px',
                 transform: 'translateX(-50%)',
-                fontSize: '9px',
+                fontSize: 'var(--fs-caption)',
                 fontWeight: 'bold',
                 color: 'var(--text-secondary)',
                 backgroundColor: 'rgba(0,0,0,0.7)',
@@ -304,7 +304,7 @@ const SpeedLimitationChart = memo(({ speeds }) => {
                 left: `${vo * scale}%`,
                 bottom: '50px',
                 transform: 'translateX(-50%)',
-                fontSize: '9px',
+                fontSize: 'var(--fs-caption)',
                 fontWeight: 'bold',
                 color: 'var(--text-secondary)',
                 backgroundColor: 'rgba(0,0,0,0.7)',
@@ -327,7 +327,7 @@ const SpeedLimitationChart = memo(({ speeds }) => {
           right: '20px',
           display: 'flex',
           justifyContent: 'space-between',
-          fontSize: '10px',
+          fontSize: 'var(--fs-caption)',
           color: 'var(--text-tertiary)'
         }}>
           <span>0</span>
@@ -343,7 +343,7 @@ const SpeedLimitationChart = memo(({ speeds }) => {
         display: 'grid',
         gridTemplateColumns: 'repeat(2, 1fr)',
         gap: '8px',
-        fontSize: '11px',
+        fontSize: 'var(--fs-caption)',
         color: 'var(--text-tertiary)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
