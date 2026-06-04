@@ -22,14 +22,21 @@
 - [ ] **0.9** — Supprimer les **7 CSS morts** (après `git grep` de confirmation) : `global-overrides.css`, `button-rounded.css`, `aircraft-fixes.css`, `unified-button-style.css`, `mobile.css`, `AirportSelectorSIA.css`, `designs/figma/example-background.css`.
 - [ ] **0.10** — ✅ Vérifier au rendu (preview) : boutons (orange ?), en-têtes tableaux (plus de bordeaux ?), scrollbar, alertes, police corps de texte.
 
-## 🔥 VAGUE 1 — `FlightRecapTable.jsx` *(1 j · le pire fichier, ~130 écarts)*
+## ✅ VAGUE 1 — `FlightRecapTable.jsx` — FAIT (brand-align, PAS darkify)
 
-- [ ] **1.1** — `:82` feu tricolore `#10b981`/`#ef4444`/`#f59e0b` → `isNoGo ? var(--color-red-critical) : var(--accent-primary)`.
-- [ ] **1.2** — `backgroundColor:'white'` (l.117…) → `var(--bg-surface)`.
-- [ ] **1.3** — Gris Tailwind (`#6b7280`, `#111827`, `#9ca3af`, `#d1d5db`, `#e5e7eb`, `#f9fafb`) → `var(--text-*)` / `var(--border-*)`.
-- [ ] **1.4** — Bleu `#3b82f6`/`#eff6ff` (l.315), violet `#8b5cf6` (l.844), indigo `#6366f1` (l.884) → accent/neutre charte.
-- [ ] **1.5** — `fontSize` px → `tokens.typography.*` / classes (`.text-eyebrow`, etc.).
-- [ ] **1.6** — ✅ Vérifier rendu écran + impression PDF.
+> ⚠️ **Prémisse corrigée** : ce fichier n'est PAS de l'UI écran à « darkifier ». C'est la
+> **SOURCE du PDF** de plan de vol, capturée à l'écran via `html2canvas` (FlightPlanWizard).
+> Le fond blanc + texte sombre sont **indispensables à l'impression**. Décision retenue :
+> **brand-align** — garder le blanc, remplacer les teintes décoratives par l'orange charte.
+
+- [x] **1.1** — En-têtes de section (départ/arrivée/déroutement) + nav + horaires + TOD → `PRINT.accent` (orange ; distinction par le label, pas par la couleur).
+- [x] **1.2** — Bleu `#3b82f6`, vert déco `#10b981`, violet `#8b5cf6`, indigo `#6366f1`, ambre `#f59e0b` + tints `#eff6ff/#f0fdf4/#f5f3ff/#dbeafe` → `PRINT.accent` / `PRINT.accentBg`.
+- [x] **1.3** — GO/NO-GO **fonctionnel** : `#dc2626` → `PRINT.nogo` (#C04534) ; vert OK `#059669` conservé (`PRINT.ok`, sécurité).
+- [x] **1.4** — Palette `PRINT` locale centralisée + en-tête `eslint-disable no-restricted-syntax` documentant l'exception print.
+- [x] **1.5** — Gris neutres (texte/bordures/blanc) **conservés** (corrects pour l'impression). 0 teinte hors-charte restante, fichier parse OK.
+- [ ] **1.6** — ⏳ Vérif visuelle écran + **génération PDF réelle** (à faire quand le dev server parallèle est libre).
+
+> 📌 Audit à mettre à jour : reclasser `FlightRecapTable.jsx` en **artefact d'impression brand-aligné** (exception médium), non plus « pire offenseur à darkifier ».
 
 ## 🎛️ VAGUE 2 — Éditeurs ABAC *(2-3 j · UI hors-charte, pas data-viz)*
 
