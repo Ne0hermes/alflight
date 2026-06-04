@@ -148,7 +148,7 @@ if (typeof window !== 'undefined') {
   window.buttonSectionStyle = {
     width: '100%',
     padding: '12px',
-    backgroundColor: 'rgba(55, 65, 81, 0.35)',
+    backgroundColor: 'var(--bg-overlay)',
     color: 'var(--text-primary)',
     border: '1px solid rgba(0, 0, 0, 0.7)',
     borderRadius: 'var(--radius-sm)',
@@ -160,7 +160,7 @@ if (typeof window !== 'undefined') {
     justifyContent: 'center',
     gap: '8px',
     transition: 'all 0.2s',
-    background: 'rgba(55, 65, 81, 0.35)',
+    background: 'var(--bg-overlay)',
     textTransform: 'none',
     letterSpacing: 'normal'
   };
@@ -1745,7 +1745,7 @@ export const AircraftModule = memo(() => {
 
                   {/* Indicateurs MANEX / PESÉE — sobres : titre gris, statut en vert si chargé */}
                   {(() => {
-                    const okColor = '#4FAE7F'; // vert sapin sémantique (chargé)
+                    const okColor = 'var(--accent-primary)'; // vert sapin sémantique (chargé)
                     return (
                       <div
                         style={{
@@ -3544,7 +3544,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
   const buttonSectionStyle = {
     width: '100%',
     padding: '12px !important',
-    backgroundColor: 'rgba(55, 65, 81, 0.35) !important',
+    backgroundColor: 'var(--bg-overlay) !important',
     color: 'white !important',
     border: '1px solid rgba(0, 0, 0, 0.7) !important',
     borderRadius: '8px !important',
@@ -3556,7 +3556,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
     justifyContent: 'center',
     gap: '8px',
     transition: 'all 0.2s !important',
-    background: 'rgba(55, 65, 81, 0.35) !important',
+    background: 'var(--bg-overlay) !important',
     textTransform: 'none !important',
     letterSpacing: 'normal !important'
   };
@@ -3606,7 +3606,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                           position: 'absolute',
                           top: '5px',
                           right: '5px',
-                          backgroundColor: 'rgba(239, 68, 68, 0.9)',
+                          backgroundColor: 'var(--color-red-critical)',
                           color: 'var(--text-primary)',
                           border: 'none',
                           borderRadius: '50%',
@@ -4017,7 +4017,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                               left: `${vne * scale}%`,
                               width: '3px',
                               height: '40px',
-                              backgroundColor: '#C04534',
+                              backgroundColor: 'var(--color-red-critical)',
                               bottom: '15px',
                               borderRadius: 'var(--radius-sm)',
                               boxShadow: '0 2px 4px rgba(0,0,0,0.5)'
@@ -4103,7 +4103,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                             position: 'absolute',
                             left: `${vne * scale}%`,
                             transform: 'translateX(-50%)',
-                            color: '#C04534',
+                            color: 'var(--color-red-critical)',
                             fontWeight: 'bold'
                           }}>
                             {vne}
@@ -4163,7 +4163,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                   <div style={{
                     width: '30px',
                     height: '8px',
-                    backgroundColor: '#C04534',
+                    backgroundColor: 'var(--color-red-critical)',
                     borderRadius: 'var(--radius-sm)'
                   }} />
                   <span style={{ color: 'var(--text-tertiary)' }}>
@@ -4201,7 +4201,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
               {/* Avertissement si des vitesses manquent */}
               {(!formData.speeds.vso || !formData.speeds.vs1 || !formData.speeds.vno || !formData.speeds.vne) && (
                 <div style={{
-                  backgroundColor: '#C04534',
+                  backgroundColor: 'var(--color-red-critical)',
                   padding: '10px',
                   borderRadius: 'var(--radius-sm)',
                   marginTop: '12px'
@@ -4339,7 +4339,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             
             {/* VO - Operating manoeuvring speed (variable selon la masse) */}
             <div style={{
-              backgroundColor: 'rgba(242, 105, 33, 0.10)',
+              backgroundColor: 'var(--accent-soft)',
               padding: '10px',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--bg-overlay)'
@@ -4738,7 +4738,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
 
           {/* Sièges et leurs bras de levier */}
           <div style={{ 
-            backgroundColor: '#fef3f2', 
+            backgroundColor: 'var(--bg-overlay)', 
             padding: '12px', 
             borderRadius: 'var(--radius-sm)', 
             marginBottom: '16px',
@@ -4890,7 +4890,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                       onClick={() => removeAdditionalSeat(seat.id)}
                       style={{
                         padding: '4px',
-                        backgroundColor: '#C04534',
+                        backgroundColor: 'var(--color-red-critical)',
                         color: 'var(--text-primary)',
                         border: 'none',
                         borderRadius: 'var(--radius-sm)',
@@ -4917,7 +4917,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             padding: '12px', 
             borderRadius: 'var(--radius-sm)', 
             marginBottom: '16px',
-            border: '1px solid #f26921'
+            border: '1px solid var(--accent-primary)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', margin: 0 }}>
@@ -5011,7 +5011,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                           type="button"
                           onClick={() => removeBaggageCompartment(compartment.id)}
                           style={{
-                            backgroundColor: '#C04534',
+                            backgroundColor: 'var(--color-red-critical)',
                             color: 'var(--text-primary)',
                             border: 'none',
                             borderRadius: 'var(--radius-sm)',
@@ -5105,7 +5105,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             padding: '16px', 
             borderRadius: 'var(--radius-sm)', 
             marginBottom: '16px',
-            border: '2px solid #C04534',
+            border: '2px solid var(--color-red-critical)',
             marginTop: '24px'
           }}>
             <h5 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--text-primary)' }}>
@@ -5194,7 +5194,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                           type="button"
                           onClick={() => removeForwardPoint(point.id)}
                           style={{
-                            backgroundColor: '#C04534',
+                            backgroundColor: 'var(--color-red-critical)',
                             color: 'var(--text-primary)',
                             border: 'none',
                             borderRadius: 'var(--radius-sm)',
@@ -5380,7 +5380,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                       {/* Grille */}
                       <defs>
                         <pattern id="cgGrid" width="25" height="25" patternUnits="userSpaceOnUse">
-                          <path d="M 25 0 L 0 0 0 25" fill="none" stroke="#f1f5f9" strokeWidth="1"/>
+                          <path d="M 25 0 L 0 0 0 25" fill="none" stroke="var(--border-subtle)" strokeWidth="1"/>
                         </pattern>
                       </defs>
                       <rect width="500" height="300" fill="url(#cgGrid)" />
@@ -5433,7 +5433,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                       {envelopePoints.length >= 3 && (
                         <polygon 
                           points={envelopePoints.map(p => `${toSvgX(p.cg)},${toSvgY(p.w)}`).join(' ')}
-                          fill="rgba(34, 197, 94, 0.2)" 
+                          fill="var(--accent-soft)" 
                           stroke="var(--text-primary)" 
                           strokeWidth="2"
                         />
@@ -5446,7 +5446,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                             cx={toSvgX(point.cg)} 
                             cy={toSvgY(point.w)} 
                             r="4" 
-                            fill="#C04534" 
+                            fill="var(--color-red-critical)" 
                             stroke="white" 
                             strokeWidth="2"
                           />
@@ -5592,10 +5592,10 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                 display: 'grid', 
                 gridTemplateColumns: 'repeat(2, 1fr)', 
                 gap: '12px',
-                backgroundColor: '#F0F9FF',
+                backgroundColor: 'var(--bg-overlay)',
                 padding: '16px',
                 borderRadius: 'var(--radius-sm)',
-                border: '1px solid #BAE6FD',
+                border: '1px solid var(--border-subtle)',
                 marginBottom: '16px'
               }}>
                 <label style={sx.flex.start}>
@@ -5757,10 +5757,10 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                 display: 'grid', 
                 gridTemplateColumns: 'repeat(2, 1fr)', 
                 gap: '12px',
-                backgroundColor: '#FFF7ED',
+                backgroundColor: 'var(--bg-overlay)',
                 padding: '16px',
                 borderRadius: 'var(--radius-sm)',
-                border: '1px solid #FED7AA'
+                border: '1px solid var(--border-subtle)'
               }}>
                 <label style={sx.flex.start}>
                   <input
@@ -5861,7 +5861,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
                 backgroundColor: 'var(--bg-overlay)',
                 padding: '16px',
                 borderRadius: 'var(--radius-sm)',
-                border: '1px solid #86EFAC',
+                border: '1px solid var(--border-subtle)',
                 marginBottom: '16px'
               }}>
                 <label style={sx.flex.start}>
