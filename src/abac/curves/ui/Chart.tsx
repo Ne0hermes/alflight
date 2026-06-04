@@ -655,7 +655,7 @@ export const Chart: React.FC<ChartProps> = ({
                   {imageAdjustMode && (
                     <rect
                       x={imgX} y={imgY} width={imgW} height={imgH}
-                      fill="none" stroke="#3b82f6" strokeWidth="1" strokeDasharray="4,3"
+                      fill="none" stroke="var(--accent-primary)" strokeWidth="1" strokeDasharray="4,3"
                       pointerEvents="none"
                     />
                   )}
@@ -694,7 +694,7 @@ export const Chart: React.FC<ChartProps> = ({
                       <rect
                         key={h.kind}
                         x={cxClamped} y={cyClamped} width={HANDLE} height={HANDLE}
-                        fill={clamped ? '#f26921' : (isCorner ? '#3b82f6' : '#60a5fa')}
+                        fill={clamped ? '#f26921' : (isCorner ? 'var(--accent-primary)' : 'var(--accent-primary)')}
                         stroke="white" strokeWidth="2" rx="2"
                         style={{ cursor: h.cursor, touchAction: 'none' }}
                         onPointerDown={handleResizeStart(h.kind)}
@@ -718,7 +718,7 @@ export const Chart: React.FC<ChartProps> = ({
                 y1={0}
                 x2={mousePos.x}
                 y2={innerHeight}
-                stroke="#666"
+                stroke="var(--text-secondary)"
                 strokeDasharray="2,2"
                 opacity={0.5}
               />
@@ -727,7 +727,7 @@ export const Chart: React.FC<ChartProps> = ({
                 y1={mousePos.y}
                 x2={innerWidth}
                 y2={mousePos.y}
-                stroke="#666"
+                stroke="var(--text-secondary)"
                 strokeDasharray="2,2"
                 opacity={0.5}
               />
@@ -735,7 +735,7 @@ export const Chart: React.FC<ChartProps> = ({
                 x={mousePos.x + 5}
                 y={mousePos.y - 5}
                 fontSize="11"
-                fill="#666"
+                fill="var(--text-secondary)"
               >
                 ({xScale.invert(mousePos.x).toFixed(1)}, {yScale.invert(mousePos.y).toFixed(1)})
               </text>
@@ -745,8 +745,8 @@ export const Chart: React.FC<ChartProps> = ({
       </svg>
       {showLegend && curves.length > 0 && (
         <div style={{
-          backgroundColor: '#f5f5f5',
-          border: '1px solid #ddd',
+          backgroundColor: 'var(--bg-overlay)',
+          border: '1px solid var(--border-subtle)',
           borderRadius: '4px',
           padding: '8px',
           display: 'flex',
@@ -766,10 +766,10 @@ export const Chart: React.FC<ChartProps> = ({
                 borderRadius: '2px',
                 marginRight: '6px'
               }} />
-              <div style={{ fontSize: '12px', color: '#333' }}>
+              <div style={{ fontSize: '12px', color: 'var(--text-primary)' }}>
                 {curve.name}
                 {curve.fitted && (
-                  <span style={{ fontSize: '10px', color: '#666', marginLeft: '4px' }}>
+                  <span style={{ fontSize: '10px', color: 'var(--text-secondary)', marginLeft: '4px' }}>
                     (RMSE: {curve.fitted.rmse.toFixed(3)})
                   </span>
                 )}

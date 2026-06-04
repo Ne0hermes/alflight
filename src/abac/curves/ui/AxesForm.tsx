@@ -135,7 +135,7 @@ const styles = {
   },
   sectionTitle: {
     marginBottom: '12px',
-    color: '#333',
+    color: 'var(--text-primary)',
     fontSize: '16px',
     fontWeight: 600
   },
@@ -158,11 +158,11 @@ const styles = {
     marginBottom: '4px',
     fontSize: '13px',
     fontWeight: 500,
-    color: '#555'
+    color: 'var(--text-secondary)'
   },
   input: {
     padding: '8px 10px',
-    border: '1px solid #ddd',
+    border: '1px solid var(--border-subtle)',
     borderRadius: '4px',
     fontSize: '14px',
     transition: 'border-color 0.2s',
@@ -171,18 +171,18 @@ const styles = {
   },
   select: {
     padding: '8px 10px',
-    border: '1px solid #ddd',
+    border: '1px solid var(--border-subtle)',
     borderRadius: '4px',
     fontSize: '14px',
     transition: 'border-color 0.2s',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--bg-overlay)',
     cursor: 'pointer',
     width: '100%',
     boxSizing: 'border-box' as const
   },
   inputError: {
     padding: '8px 10px',
-    border: '1px solid #f44336',
+    border: '1px solid var(--color-red-critical)',
     borderRadius: '4px',
     fontSize: '14px',
     transition: 'border-color 0.2s',
@@ -190,7 +190,7 @@ const styles = {
     boxSizing: 'border-box' as const
   },
   errorMessage: {
-    color: '#f44336',
+    color: 'var(--color-red-critical)',
     fontSize: '12px',
     marginTop: '4px'
   },
@@ -206,23 +206,23 @@ const styles = {
     fontSize: '14px',
     fontWeight: 500,
     cursor: 'pointer',
-    backgroundColor: '#4CAF50',
+    backgroundColor: 'var(--accent-primary)',
     color: 'white',
     transition: 'background-color 0.2s'
   },
   helperText: {
     fontSize: '11px',
-    color: '#666',
+    color: 'var(--text-secondary)',
     marginTop: '4px',
     fontStyle: 'italic'
   },
   formTitle: {
     fontSize: '16px',
     fontWeight: 600,
-    color: '#1976d2',
+    color: 'var(--accent-primary)',
     marginBottom: '12px',
     paddingBottom: '8px',
-    borderBottom: '2px solid #e0e0e0'
+    borderBottom: '2px solid var(--bg-overlay)'
   }
 };
 
@@ -482,8 +482,8 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
     <div style={styles.form}>
       {/* Titre du graphique avec bouton de suppression */}
       {graphNumber && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingBottom: '8px', borderBottom: '2px solid #e0e0e0' }}>
-          <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#1976d2', margin: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingBottom: '8px', borderBottom: '2px solid var(--bg-overlay)' }}>
+          <h2 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--accent-primary)', margin: 0 }}>
             Graphique {graphNumber} - {AXIS_OPTIONS[xAxisType]?.label || config.xAxis.title} / {AXIS_OPTIONS[yAxisType]?.label || config.yAxis.title}
           </h2>
           {onDelete && (
@@ -496,7 +496,7 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
               }}
               style={{
                 padding: '6px 10px',
-                backgroundColor: '#f44336',
+                backgroundColor: 'var(--color-red-critical)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '4px',
@@ -607,7 +607,7 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
         )}
         {xAxisExpanded && (
         <div style={styles.helperText}>
-          <strong>Variable système:</strong> <code style={{ backgroundColor: '#f5f5f5', padding: '2px 6px', borderRadius: '3px', fontFamily: 'monospace' }}>{xAxisType}</code>
+          <strong>Variable système:</strong> <code style={{ backgroundColor: 'var(--bg-overlay)', padding: '2px 6px', borderRadius: '3px', fontFamily: 'monospace' }}>{xAxisType}</code>
           {xAxisType !== 'custom' && (
             <span style={{ marginLeft: '12px' }}>
               <strong>Titre affiché:</strong> {config.xAxis.title}
@@ -707,7 +707,7 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
         )}
         {yAxisExpanded && (
         <div style={styles.helperText}>
-          <strong>Variable système:</strong> <code style={{ backgroundColor: '#f5f5f5', padding: '2px 6px', borderRadius: '3px', fontFamily: 'monospace' }}>{yAxisType}</code>
+          <strong>Variable système:</strong> <code style={{ backgroundColor: 'var(--bg-overlay)', padding: '2px 6px', borderRadius: '3px', fontFamily: 'monospace' }}>{yAxisType}</code>
           {yAxisType !== 'custom' && (
             <span style={{ marginLeft: '12px' }}>
               <strong>Titre affiché:</strong> {config.yAxis.title}
@@ -722,14 +722,14 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
         <div style={styles.section}>
           <div style={{
             padding: '12px',
-            backgroundColor: '#e3f2fd',
+            backgroundColor: 'var(--bg-overlay)',
             borderRadius: '6px',
-            border: '1px solid #2196F3'
+            border: '1px solid var(--accent-primary)'
           }}>
-            <div style={{ fontWeight: 600, color: '#1976d2', marginBottom: '4px' }}>
+            <div style={{ fontWeight: 600, color: 'var(--accent-primary)', marginBottom: '4px' }}>
               💨 Mode vent activé automatiquement
             </div>
-            <div style={{ fontSize: '12px', color: '#666' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
               Ce graphique a été détecté comme lié au vent. Vous pourrez spécifier la direction du vent (vent de face/arrière) pour chaque courbe.
             </div>
           </div>
