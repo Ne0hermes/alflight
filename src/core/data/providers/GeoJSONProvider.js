@@ -511,11 +511,23 @@ export class GeoJSONProvider extends AeroDataProvider {
     );
     if (!feature) return null;
 
+    // ILS (indexés par id de piste) + services (mappés en flags) de cet AD.
+    const ilsByRunway = this.indexILSByRunway(
+      (await geoJSONDataService.getILS()).filter(
+        f => (f.properties?.aerodrome_icao || '').toUpperCase() === code
+      )
+    );
+    const serviceFlags = this.mapServicesToFlags(
+      (await geoJSONDataService.getAerodromeServices()).filter(
+        s => (s?.aerodrome_icao || '').toUpperCase() === code
+      )
+    );
+
     // Pistes de cet AD, remises à la forme attendue par le module VAC.
     const rwyFeatures = await geoJSONDataService.getRunways();
     const runways = rwyFeatures
       .filter(r => (r.properties?.aerodrome_icao || '').toUpperCase() === code)
-      .map(r => this.buildVACRunway(r.properties || {}));
+      .map(r => this.buildVACRunway(r.properties || {}, ilsByRunway));
 
     // Points de report VFR proches (best-effort, ne doit jamais casser le détail).
     let vfrPoints = [];
@@ -525,7 +537,7 @@ export class GeoJSONProvider extends AeroDataProvider {
       vfrPoints = [];
     }
 
-    return this.buildVACAerodrome(feature, runways, vfrPoints);
+    return this.buildVACAerodrome(feature, runways, vfrPoints, serviceFlags);
   }
 
   /**
@@ -541,6 +553,9 @@ export class GeoJSONProvider extends AeroDataProvider {
     await this.ensureDataLoaded();
     const adFeatures = await geoJSONDataService.getAerodromes();
     const rwyFeatures = await geoJSONDataService.getRunways();
+    // Index ILS (par id de piste) + services (par ICAO), construits une seule fois.
+    const ilsByRunway = this.indexILSByRunway(await geoJSONDataService.getILS());
+    const servicesByIcao = this.indexServicesByIcao(await geoJSONDataService.getAerodromeServices());
 
     // Index des pistes par ICAO (une seule passe au lieu d'un filter par AD).
     const rwyByIcao = new Map();
@@ -548,16 +563,20 @@ export class GeoJSONProvider extends AeroDataProvider {
       const code = (r.properties?.aerodrome_icao || '').toUpperCase();
       if (!code) continue;
       if (!rwyByIcao.has(code)) rwyByIcao.set(code, []);
-      rwyByIcao.get(code).push(this.buildVACRunway(r.properties || {}));
+      rwyByIcao.get(code).push(this.buildVACRunway(r.properties || {}, ilsByRunway));
     }
 
     return adFeatures
       .filter(f => f.properties?.icao) // exclut les stubs sans OACI (LS fermés sans code)
-      .map(f => this.buildVACAerodrome(
-        f,
-        rwyByIcao.get(f.properties.icao.toUpperCase()) || [],
-        []
-      ));
+      .map(f => {
+        const code = f.properties.icao.toUpperCase();
+        return this.buildVACAerodrome(
+          f,
+          rwyByIcao.get(code) || [],
+          [],
+          this.mapServicesToFlags(servicesByIcao.get(code) || [])
+        );
+      });
   }
 
   /**
@@ -573,7 +592,7 @@ export class GeoJSONProvider extends AeroDataProvider {
    * @param {Object[]} vfrPoints — points de report VFR (ou [])
    * @returns {Object}
    */
-  buildVACAerodrome(feature, runways = [], vfrPoints = []) {
+  buildVACAerodrome(feature, runways = [], vfrPoints = [], services = null) {
     const p = feature.properties || {};
     const geom = feature.geometry?.coordinates || [];
     const lon = geom[0] ?? p.longitude ?? null;
@@ -596,8 +615,8 @@ export class GeoJSONProvider extends AeroDataProvider {
       frequencies: this.groupFrequenciesByType(p.frequencies),
       runways,
       vfrPoints,
-      // Non extrait par l'ETL (codes SIA non mappés en flags) → défauts sûrs.
-      services: {
+      // Flags mappés depuis aerodrome_services.json (SIA) ; défauts sûrs si absent.
+      services: services || {
         fuel: false, avgas100LL: false, jetA1: false, maintenance: false,
         customs: false, handling: false, restaurant: false, hotel: false,
         parking: false, hangar: false
@@ -634,13 +653,92 @@ export class GeoJSONProvider extends AeroDataProvider {
   }
 
   /**
-   * Construit une piste au format module VAC depuis les propriétés GeoJSON brutes.
-   * Calcule le QFU à partir de la désignation (ex: "05/23" → 50). Les champs absents
-   * du GeoJSON dérivé (surface, distances déclarées, ILS…) sont laissés à null.
-   * @param {Object} props — propriétés de la feature runway
+   * Indexe les features ILS par id de piste (runway_id) → [features].
+   * @param {Array} features
+   * @returns {Map<string, Array>}
+   */
+  indexILSByRunway(features = []) {
+    const map = new Map();
+    for (const f of features) {
+      const rid = f?.properties?.runway_id;
+      if (!rid) continue;
+      if (!map.has(rid)) map.set(rid, []);
+      map.get(rid).push(f);
+    }
+    return map;
+  }
+
+  /**
+   * Indexe les items de service par ICAO d'aérodrome → [items].
+   * @param {Array} items
+   * @returns {Map<string, Array>}
+   */
+  indexServicesByIcao(items = []) {
+    const map = new Map();
+    for (const it of items) {
+      const code = (it?.aerodrome_icao || '').toUpperCase();
+      if (!code) continue;
+      if (!map.has(code)) map.set(code, []);
+      map.get(code).push(it);
+    }
+    return map;
+  }
+
+  /**
+   * Mappe une feature ILS GeoJSON vers la forme attendue par les écrans VAC
+   * (runway.ils.category / .frequency).
+   * @param {Object} feature
    * @returns {Object}
    */
-  buildVACRunway(props = {}) {
+  mapILS(feature) {
+    const p = feature?.properties || {};
+    return {
+      category: p.category || null,          // I / II / III
+      frequency: p.loc_frequency_mhz ?? null,
+      ident: p.loc_ident || null,
+      direction: p.runway_direction || null,
+      glidePathSlope: p.gp_slope_deg ?? null,
+      dme: p.dme_ident || null
+    };
+  }
+
+  /**
+   * Mappe les items de service SIA (codes FUEL/CUST/REPAIR/HAND/HANGAR…) vers les flags
+   * booléens attendus par les écrans VAC. Les codes sans flag consommateur correspondant
+   * (FIRE/SAN/SECUR/CLEAR/DEICE/OTHER) sont ignorés. Le grade carburant (AVGAS/JET) n'est
+   * PAS renseigné par le SIA (category vide) → avgas100LL/jetA1 restent false (pas de
+   * fausse donnée).
+   * @param {Array} items
+   * @returns {Object}
+   */
+  mapServicesToFlags(items = []) {
+    const flags = {
+      fuel: false, avgas100LL: false, jetA1: false, maintenance: false,
+      customs: false, handling: false, restaurant: false, hotel: false,
+      parking: false, hangar: false
+    };
+    for (const it of items) {
+      switch ((it?.type || '').toUpperCase()) {
+        case 'FUEL': flags.fuel = true; break;
+        case 'CUST': flags.customs = true; break;
+        case 'REPAIR': flags.maintenance = true; break;
+        case 'HAND': flags.handling = true; break;
+        case 'HANGAR': flags.hangar = true; break;
+        default: break;
+      }
+    }
+    return flags;
+  }
+
+  /**
+   * Construit une piste au format module VAC depuis les propriétés GeoJSON brutes.
+   * Calcule le QFU depuis la désignation (ex: "05/23" → 50) et attache les ILS (si index
+   * fourni). Les champs absents du GeoJSON dérivé (surface, distances déclarées) restent null.
+   * @param {Object} props — propriétés de la feature runway
+   * @param {Map<string,Array>|null} ilsByRunway — index ILS par runway_id
+   * @returns {Object}
+   */
+  buildVACRunway(props = {}, ilsByRunway = null) {
     const designation = props.designation || '';
     let qfu = null;
     let le_ident = null;
@@ -652,6 +750,10 @@ export class GeoJSONProvider extends AeroDataProvider {
       const n = parseInt(le_ident.replace(/[LRC]/i, ''), 10);
       if (!Number.isNaN(n)) qfu = (n * 10) % 360;
     }
+    // ILS éventuels de cette piste (un par direction équipée), via l'index runway_id.
+    const ilsList = (ilsByRunway && props.id)
+      ? (ilsByRunway.get(props.id) || []).map(f => this.mapILS(f))
+      : [];
     return {
       designation,
       identifier: designation,
@@ -666,8 +768,10 @@ export class GeoJSONProvider extends AeroDataProvider {
       surface: props.surface || null,
       qfu,
       magneticBearing: qfu,
+      // ILS depuis ils.geojson (SIA) : le 1er alimente le badge, ilsList expose tous les seuils.
+      ils: ilsList[0] || null,
+      ilsList,
       // Champs non extraits par l'ETL actuel → complétés manuellement côté VAC.
-      ils: null,
       vasis: null,
       tora: null,
       toda: null,
