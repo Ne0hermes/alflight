@@ -250,30 +250,30 @@ div[class*="loading"] {
 .notification,
 .alert,
 div[role="alert"] {
-  background: rgba(255, 255, 255, 0.95) !important;
-  border-left: 4px solid #f26921 !important;
-  color: #111827 !important;
+  background: var(--bg-overlay) !important;
+  border-left: 4px solid var(--accent-primary) !important;
+  color: var(--text-primary) !important;
 }
 
 /* Success states */
 .success,
 [class*="success"] {
-  border-color: #10b981 !important;
-  color: #10b981 !important;
+  border-color: var(--status-success) !important;
+  color: var(--status-success) !important;
 }
 
 /* Warning states */
 .warning,
 [class*="warning"] {
-  border-color: #fbbf24 !important;
-  color: #fbbf24 !important;
+  border-color: var(--status-warning) !important;
+  color: var(--status-warning) !important;
 }
 
 /* Error states */
 .error,
 [class*="error"] {
-  border-color: #ef4444 !important;
-  color: #ef4444 !important;
+  border-color: var(--status-error) !important;
+  color: var(--status-error) !important;
 }
 
 /* Charts and graphs - MODIFIÉ POUR FOND BLANC */

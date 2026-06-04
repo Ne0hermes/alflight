@@ -394,29 +394,29 @@ div[role="alert"] {
   border-left: 4px solid var(--color-primary);
 }
 
-.alert-success { 
-  border-left-color: #10b981;
-  background: #f0fdf4 !important;
-  color: #166534 !important;
+.alert-success {
+  border-left-color: var(--status-success);
+  background: var(--status-success-bg) !important;
+  color: var(--text-primary) !important;
 }
 
-.alert-warning { 
-  border-left-color: #fbbf24;
-  background: rgba(242, 105, 33, 0.06) !important;
-  color: #92400e !important;
+.alert-warning {
+  border-left-color: var(--status-warning);
+  background: var(--status-warning-bg) !important;
+  color: var(--text-primary) !important;
 }
 
 .alert-error,
-.alert-danger { 
-  border-left-color: #ef4444;
-  background: #fef2f2 !important;
-  color: #991b1b !important;
+.alert-danger {
+  border-left-color: var(--status-error);
+  background: var(--status-error-bg) !important;
+  color: var(--text-primary) !important;
 }
 
 .alert-info {
-  border-left-color: #3b82f6;
-  background: #eff6ff !important;
-  color: #075985 !important;
+  border-left-color: var(--status-info);
+  background: var(--status-info-bg) !important;
+  color: var(--text-primary) !important;
 }
 
 /* ============================================

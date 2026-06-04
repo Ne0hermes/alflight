@@ -114,6 +114,22 @@
   --accent-active: var(--color-orange-dim);
   --accent-soft: var(--color-orange-soft);
 
+  /* ============================================================
+     🚦 STATUT — palette sémantique centralisée (mode nuit)
+     ============================================================
+     Source UNIQUE pour succès / avertissement / info / erreur.
+     Modifier ICI change toutes les alertes & états de statut de
+     l'app. Erreur = rouge NO-GO de la charte (--color-red-critical).
+     ----------------------------------------------------------- */
+  --status-success: #10b981;
+  --status-warning: #fbbf24;
+  --status-info: #3b82f6;
+  --status-error: var(--color-red-critical);
+  --status-success-bg: rgba(16, 185, 129, 0.12);
+  --status-warning-bg: rgba(251, 191, 36, 0.12);
+  --status-info-bg: rgba(59, 130, 246, 0.12);
+  --status-error-bg: rgba(192, 69, 52, 0.14);
+
   /* Polices */
   --font-sans: 'Century Gothic', 'URW Gothic', 'Questrial', 'Jost', 'Avant Garde', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'SF Mono', Menlo, Consolas, monospace;

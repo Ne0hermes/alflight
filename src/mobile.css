@@ -140,10 +140,10 @@ body {
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background: #3b82f6;
+    background: var(--accent-primary);
     color: white;
     border: none;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 4px 12px var(--app-bg-alpha-40);
     z-index: 1000;
     display: flex;
     align-items: center;

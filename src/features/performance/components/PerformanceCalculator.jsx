@@ -533,10 +533,10 @@ export const PerformanceCalculator = memo(() => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             {/* Performances au décollage */}
             <div style={{
-              backgroundColor: '#DBEAFE',
+              backgroundColor: 'var(--bg-overlay)',
               padding: '16px',
               borderRadius: 'var(--radius-sm)',
-              border: '1px solid #93C5FD'
+              border: '1px solid var(--border-regular)'
             }}>
               <h5 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(2))}>
                 Décollage
@@ -607,10 +607,10 @@ export const PerformanceCalculator = memo(() => {
           {/* Taux de montée */}
           {calculatePerformances.climbRate && (
             <div style={sx.combine(sx.spacing.mt(3), {
-              backgroundColor: '#E0E7FF',
+              backgroundColor: 'var(--bg-overlay)',
               padding: '12px',
               borderRadius: 'var(--radius-sm)',
-              border: '1px solid #A5B4FC'
+              border: '1px solid var(--border-regular)'
             })}>
               <p style={sx.text.sm}>
                 <strong>Taux de montée:</strong> {calculatePerformances.climbRate} fpm
