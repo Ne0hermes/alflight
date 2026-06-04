@@ -1,9 +1,11 @@
 name: charte-tokens
 
-# Garde-fou charte (design tokens) en CI — mode « boy-scout » : vérifie UNIQUEMENT
-# les fichiers source modifiés par la PR (le legacy n'est pas bloqué). Échoue si
-# du NOUVEAU code introduit des valeurs de design en dur (hex/rgba/noms de
-# couleurs/px/fontWeight/fontFamily). Couvre .js/.jsx (ESLint) + .ts/.tsx (scan regex).
+# Garde-fou charte (design tokens) en CI — AUDIT NON BLOQUANT (gouvernance G.3 :
+# « suivre la courbe de dette »). Lint des fichiers source modifiés par la PR
+# (.js/.jsx via ESLint + .ts/.tsx via scan regex) ; rapport informatif, NE FAIT
+# PAS échouer la PR (continue-on-error). Le whole-file lint affiche aussi le legacy
+# des fichiers touchés — c'est attendu. Le vrai garde-fou par commit = pre-commit
+# Husky (staged). Passer en bloquant (retirer continue-on-error) quand dette = 0 (G.4).
 on:
   pull_request:
 
@@ -20,7 +22,8 @@ jobs:
       # Le runner lint:tokens n'a besoin que d'ESLint (eslint.tokens.cjs n'utilise
       # aucun plugin ; le scan .ts/.tsx est dep-free). Install léger pour la vitesse.
       - run: npm install --no-save --no-audit --no-fund eslint@^8.57.0
-      - name: lint:tokens (fichiers modifiés par la PR)
+      - name: lint:tokens (audit non bloquant — fichiers modifiés par la PR)
+        continue-on-error: true
         run: |
           BASE="origin/${{ github.base_ref }}"
           FILES=$(git diff --name-only "$BASE"...HEAD -- 'src/**/*.js' 'src/**/*.jsx' 'src/**/*.ts' 'src/**/*.tsx')
