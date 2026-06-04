@@ -277,7 +277,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
 
   // Configuration des scénarios — palette de SÉRIES (data-viz) re-tonée cockpit
   // (orange de marque + cyan/ambre/ivoire sourds, distinguables). PAS de rouge ici :
-  // le rouge NO-GO (#C04534) est réservé aux points HORS-LIMITE (plus bas).
+  // le rouge NO-GO (var(--color-red-critical)) est réservé aux points HORS-LIMITE (plus bas).
   const scenarioConfig = [
     { key: 'fulltank', label: 'Réservoirs pleins', color: '#f26921' },
     { key: 'toCrm', label: 'Masse au décollage (FOB)', color: '#4FC3D9' },

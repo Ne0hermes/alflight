@@ -419,7 +419,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
   const curves = useMemo(() => [{
     id: CURVE_ID,
     name: currentStage?.label || 'Courbe en cours',
-    color: '#C04534',
+    color: 'var(--color-red-critical)',
     points: curvePoints
   }], [curvePoints, currentStage]);
 

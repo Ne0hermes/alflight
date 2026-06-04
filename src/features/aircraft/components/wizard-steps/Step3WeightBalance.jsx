@@ -1166,7 +1166,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                       <Divider sx={{ my: 0.5 }} />
                       <div>
                         <strong>Somme calculée :</strong>{' '}
-                        <strong style={{ color: isMatch ? 'var(--text-primary)' : '#C04534' }}>
+                        <strong style={{ color: isMatch ? 'var(--text-primary)' : 'var(--color-red-critical)' }}>
                           {toDisp(computed).toFixed(1)} {getUnitSymbol(units.fuel)}
                         </strong>
                       </div>
@@ -1175,7 +1175,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                         <strong>{toDisp(total).toFixed(1)} {getUnitSymbol(units.fuel)}</strong>
                       </div>
                       {!isMatch && (
-                        <div style={{ marginTop: 6, color: Math.abs(diff) < total * 0.05 ? 'var(--text-secondary)' : '#C04534' }}>
+                        <div style={{ marginTop: 6, color: Math.abs(diff) < total * 0.05 ? 'var(--text-secondary)' : 'var(--color-red-critical)' }}>
                           Écart : <strong>{diff > 0 ? '+' : ''}{diff.toFixed(1)} {getUnitSymbol(units.fuel)}</strong>
                           {' '}({((diff / total) * 100).toFixed(1)}%)
                         </div>
@@ -2116,7 +2116,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
             <Box sx={{ flex: 1, minWidth: 200 }}>
               <Typography variant="subtitle2" fontWeight={700}>
-                Rapport de pesée (PDF) <span style={{ color: '#C04534' }}>*</span>
+                Rapport de pesée (PDF) <span style={{ color: 'var(--color-red-critical)' }}>*</span>
               </Typography>
               {data.weighingReport?.hasData ? (
                 <Typography variant="caption" color="text.secondary">

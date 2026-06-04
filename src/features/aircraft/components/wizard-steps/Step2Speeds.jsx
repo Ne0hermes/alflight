@@ -291,7 +291,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
       name: "VNE",
       label: "Vitesse à ne jamais dépasser",
       description: "",
-      color: "#C04534",
+      color: "var(--color-red-critical)",
       category: "critical",
       required: true
     }
@@ -1012,7 +1012,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 name: "VNE",
                 label: "VNE - Vitesse à ne jamais dépasser *",
                 description: "Vitesse maximale absolue de l'avion",
-                color: "#C04534",
+                color: "var(--color-red-critical)",
                 category: "critical",
                 required: true
               })}

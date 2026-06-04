@@ -10,7 +10,7 @@ import TechLabel from './TechLabel';
  * Severities :
  *   • info     → bordure gauche #F5F2EC (soft)
  *   • warn     → bordure gauche #f26921 (orange)
- *   • critical → bordure gauche #C04534 (rouge)
+ *   • critical → bordure gauche var(--color-red-critical) (rouge)
  *   • success  → bordure gauche #f26921 transparent (signal positif sobre)
  *
  * Usage :

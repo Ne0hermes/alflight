@@ -737,10 +737,10 @@ const VACModuleOld = memo(() => {
             <div style={sx.combine(
               sx.components.card.base,
               sx.spacing.p(6),
-              { borderColor: '#C04534', borderWidth: '2px' }
+              { borderColor: 'var(--color-red-critical)', borderWidth: '2px' }
             )}>
               <div style={sx.combine(sx.flex.center, sx.spacing.mb(4))}>
-                <AlertTriangle size={48} color="#C04534" />
+                <AlertTriangle size={48} color="var(--color-red-critical)" />
               </div>
               
               <h3 style={sx.combine(sx.text.xl, sx.text.bold, sx.text.left, sx.spacing.mb(4))}>
@@ -806,8 +806,8 @@ const VACModuleOld = memo(() => {
                     sx.components.button.base,
                     sx.components.button.primary,
                     { 
-                      backgroundColor: '#C04534',
-                      '&:hover': { backgroundColor: '#C04534' }
+                      backgroundColor: 'var(--color-red-critical)',
+                      '&:hover': { backgroundColor: 'var(--color-red-critical)' }
                     }
                   )}
                 >
@@ -842,7 +842,7 @@ const VACModuleOld = memo(() => {
                   style={{
                     marginLeft: '12px',
                     fontSize: '12px',
-                    color: '#C04534',
+                    color: 'var(--color-red-critical)',
                     textDecoration: 'underline',
                     background: 'none',
                     border: 'none',
@@ -1230,7 +1230,7 @@ const StatCard = memo(({ icon: Icon, value, total, label, color }) => {
     primary: 'var(--text-secondary)',
     success: 'var(--text-primary)',
     warning: 'var(--accent-primary)',
-    danger: '#C04534',
+    danger: 'var(--color-red-critical)',
     secondary: 'var(--text-secondary)'
   };
   
@@ -1362,7 +1362,7 @@ const ChartCard = memo(({ chart, isInNavigation, onDelete, onView, onImportManua
                   <span style={sx.combine(
                     sx.flex.start, 
                     sx.spacing.gap(1),
-                    isOutdated && { color: '#C04534', fontWeight: 'bold' }
+                    isOutdated && { color: 'var(--color-red-critical)', fontWeight: 'bold' }
                   )}>
                     <Clock size={12} />
                     Carte: {formatPublicationDate()}

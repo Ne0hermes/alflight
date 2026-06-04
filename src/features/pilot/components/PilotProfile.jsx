@@ -406,7 +406,7 @@ const PilotProfile = () => {
   const getMedicalStatusBadge = () => {
     const status = getMedicalStatus();
     const styles = {
-      expired: { backgroundColor: '#C04534', color: 'var(--text-primary)' },
+      expired: { backgroundColor: 'var(--color-red-critical)', color: 'var(--text-primary)' },
       urgent: { backgroundColor: 'var(--accent-primary)', color: 'var(--text-primary)' },
       warning: { backgroundColor: 'var(--accent-primary)', color: 'var(--text-primary)' },
       valid: { backgroundColor: 'var(--text-primary)', color: 'var(--text-primary)' },

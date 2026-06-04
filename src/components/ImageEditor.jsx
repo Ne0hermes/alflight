@@ -405,7 +405,7 @@ const ImageEditor = ({
 
             <button
               onClick={handleCancel}
-              style={{ ...buttonStyle, backgroundColor: '#C04534' }}
+              style={{ ...buttonStyle, backgroundColor: 'var(--color-red-critical)' }}
               title="Annuler"
             >
               <CloseIcon size={18} />

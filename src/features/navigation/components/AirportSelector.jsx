@@ -256,7 +256,7 @@ const DiscrepancyDetails = memo(({ airportIcao }) => {
           <div style={sx.text.xs}>
             <div>OpenAIP: {disc.openAipCoords.lat.toFixed(6)}°, {disc.openAipCoords.lon.toFixed(6)}°</div>
             <div>VAC: {disc.vacCoords.lat.toFixed(6)}°, {disc.vacCoords.lon.toFixed(6)}°</div>
-            <div style={{ color: '#C04534' }}>
+            <div style={{ color: 'var(--color-red-critical)' }}>
               Écart: {disc.distance.toFixed(0)}m
             </div>
           </div>

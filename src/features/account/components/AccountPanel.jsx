@@ -336,6 +336,6 @@ const styles = {
   },
   dangerButton: {
     backgroundColor: 'var(--bg-overlay)',
-    color: '#C04534',
+    color: 'var(--color-red-critical)',
   },
 };

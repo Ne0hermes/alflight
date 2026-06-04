@@ -453,7 +453,7 @@ const ActiveChecklistView = memo(({
                 <span style={sx.combine(sx.text.xs, {
                   padding: '2px 8px',
                   backgroundColor: 'var(--bg-overlay)',
-                  color: '#C04534',
+                  color: 'var(--color-red-critical)',
                   borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--bg-overlay)'
                 })}>

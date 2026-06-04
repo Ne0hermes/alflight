@@ -141,7 +141,7 @@ export const Paywall = ({ feature = null, onClose }) => {
                       freeValue ? (
                         <Check size={16} style={{ color: 'var(--text-primary)' }} />
                       ) : (
-                        <X size={16} style={{ color: '#C04534' }} />
+                        <X size={16} style={{ color: 'var(--color-red-critical)' }} />
                       )
                     ) : (
                       <span>{freeValue}</span>
@@ -154,7 +154,7 @@ export const Paywall = ({ feature = null, onClose }) => {
                         proValue ? (
                           <Check size={16} style={{ color: 'var(--text-primary)' }} />
                         ) : (
-                          <X size={16} style={{ color: '#C04534' }} />
+                          <X size={16} style={{ color: 'var(--color-red-critical)' }} />
                         )
                       ) : (
                         <span style={{ fontWeight: '600' }}>{proValue}</span>

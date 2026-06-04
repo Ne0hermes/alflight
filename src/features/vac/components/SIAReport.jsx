@@ -262,7 +262,7 @@ export const SIAReport = () => {
     },
     badgeRed: {
       backgroundColor: 'var(--bg-overlay)',
-      color: '#C04534'
+      color: 'var(--color-red-critical)'
     },
     emptyState: {
       textAlign: 'center',

@@ -564,7 +564,7 @@ const TableDisplay = ({
                               removeColumn(column);
                             }}
                             style={{
-                              background: '#C04534',
+                              background: 'var(--color-red-critical)',
                               color: 'var(--text-primary)',
                               border: 'none',
                               borderRadius: 'var(--radius-sm)',
@@ -605,7 +605,7 @@ const TableDisplay = ({
                         }}
                         disabled={editedTable.data.length <= 1}
                         style={{
-                          background: editedTable.data.length <= 1 ? 'var(--text-tertiary)' : '#C04534',
+                          background: editedTable.data.length <= 1 ? 'var(--text-tertiary)' : 'var(--color-red-critical)',
                           color: 'var(--text-primary)',
                           border: 'none',
                           borderRadius: 'var(--radius-sm)',
@@ -670,7 +670,7 @@ const TableDisplay = ({
         <div style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(3))}>
           {editedTable.data.length} ligne(s) × {columns.length} colonne(s)
           {editedTable.validation?.isValid === false && (
-            <span style={{ color: '#C04534', marginLeft: '8px' }}>
+            <span style={{ color: 'var(--color-red-critical)', marginLeft: '8px' }}>
               ⚠️ Erreurs de validation détectées
             </span>
           )}

@@ -946,7 +946,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                             position: 'absolute',
                             top: '8px',
                             left: '8px',
-                            backgroundColor: '#C04534',
+                            backgroundColor: 'var(--color-red-critical)',
                             color: 'var(--text-primary)',
                             padding: '3px 8px',
                             borderRadius: 'var(--radius-sm)',

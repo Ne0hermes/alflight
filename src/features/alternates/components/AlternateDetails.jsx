@@ -97,11 +97,11 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
         sx.spacing.mb(3),
         weather?.metar ?
           { backgroundColor: 'var(--bg-overlay)', borderLeft: '4px solid var(--text-secondary)' } :
-          { backgroundColor: 'var(--bg-overlay)', borderLeft: '4px solid #C04534' }
+          { backgroundColor: 'var(--bg-overlay)', borderLeft: '4px solid var(--color-red-critical)' }
       )}>
         <h5 style={sx.combine(
           sx.text.sm, sx.text.bold, sx.spacing.mb(2),
-          { color: weather?.metar ? 'var(--text-secondary)' : '#C04534' }
+          { color: weather?.metar ? 'var(--text-secondary)' : 'var(--color-red-critical)' }
         )}>
           📡 METAR
         </h5>
@@ -133,7 +133,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
             )}
           </>
         ) : (
-          <div style={sx.combine(sx.text.sm, { color: '#C04534' })}>
+          <div style={sx.combine(sx.text.sm, { color: 'var(--color-red-critical)' })}>
             <p>⚠️ METAR non disponible pour cet aérodrome</p>
             <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
               L'aérodrome {alternate.icao} pourrait être un aérodrome privé ou les données météo ne sont pas disponibles.
@@ -479,7 +479,7 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
 const ServiceIndicator = memo(({ available, label, icon }) => (
   <div style={sx.combine(sx.flex.start, sx.spacing.gap(1), sx.spacing.mb(1))}>
     {typeof icon === 'string' ? <span>{icon}</span> : icon}
-    <span style={{ color: available ? 'var(--text-primary)' : '#C04534' }}>
+    <span style={{ color: available ? 'var(--text-primary)' : 'var(--color-red-critical)' }}>
       {available ? '✓' : '✗'}
     </span>
     <span>{label}</span>
@@ -526,7 +526,7 @@ const getAlternateColor = (index) => {
 const getScoreColor = (score) => {
   if (score >= 0.8) return 'var(--text-primary)';
   if (score >= 0.6) return 'var(--accent-primary)';
-  return '#C04534';
+  return 'var(--color-red-critical)';
 };
 
 const getFactorLabel = (factor) => {

@@ -489,7 +489,7 @@ const PilotCertifications = () => {
     const expiry = new Date(expiryDate);
     const daysUntilExpiry = Math.floor((expiry - today) / (1000 * 60 * 60 * 24));
     
-    if (daysUntilExpiry < 0) return '#C04534';
+    if (daysUntilExpiry < 0) return 'var(--color-red-critical)';
     if (daysUntilExpiry <= 30) return 'var(--accent-primary)';
     if (daysUntilExpiry <= 90) return 'var(--accent-primary)';
     return 'var(--text-secondary)';
@@ -580,7 +580,7 @@ const PilotCertifications = () => {
           style={{ 
             padding: '6px', 
             backgroundColor: 'transparent',
-            color: '#C04534', 
+            color: 'var(--color-red-critical)', 
             border: 'none', 
             borderRadius: 'var(--radius-sm)', 
             cursor: 'pointer',
@@ -768,7 +768,7 @@ const PilotCertifications = () => {
             onClick={() => setShowForm(!showForm)}
             style={{ 
               padding: '8px 24px', 
-              backgroundColor: showForm ? '#C04534' : 'var(--text-secondary)', 
+              backgroundColor: showForm ? 'var(--color-red-critical)' : 'var(--text-secondary)', 
               color: 'var(--text-primary)', 
               border: 'none', 
               borderRadius: 'var(--radius-sm)', 

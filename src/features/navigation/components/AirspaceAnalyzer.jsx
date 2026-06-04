@@ -7,7 +7,7 @@ import { aeroDataProvider } from '@core/data';
 const AIRSPACE_TYPES = {
   'CTR': {
     name: 'Control Zone',
-    color: '#C04534',
+    color: 'var(--color-red-critical)',
     priority: 1,
     description: 'Zone de contrôle d\'aérodrome'
   },
@@ -25,13 +25,13 @@ const AIRSPACE_TYPES = {
   },
   'D': {
     name: 'Zone Dangereuse',
-    color: '#C04534',
+    color: 'var(--color-red-critical)',
     priority: 4,
     description: 'Zone dangereuse'
   },
   'P': {
     name: 'Zone Interdite',
-    color: '#C04534',
+    color: 'var(--color-red-critical)',
     priority: 1,
     description: 'Zone interdite (Prohibited)'
   },
@@ -604,7 +604,7 @@ export const AirspaceAnalyzer = ({ waypoints, plannedAltitude, onAltitudeChange,
                     </div>
                     {conflict === 'inside' && (
                       <div style={sx.spacing.ml(3)}>
-                        <AlertTriangle size={16} color="#C04534" />
+                        <AlertTriangle size={16} color="var(--color-red-critical)" />
                       </div>
                     )}
                   </div>

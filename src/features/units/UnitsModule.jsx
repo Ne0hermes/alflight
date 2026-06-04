@@ -94,7 +94,7 @@ const UnitsModule = () => {
           alignItems: 'center',
           gap: '8px'
         }}>
-          <Thermometer size={20} color="#C04534" />
+          <Thermometer size={20} color="var(--color-red-critical)" />
           <div>
             <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Température</p>
             <p style={{ fontSize: '14px', fontWeight: 'bold' }}>°C / °F</p>

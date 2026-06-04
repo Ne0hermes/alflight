@@ -375,7 +375,7 @@ const styles = {
     gap: '16px'
   },
   errorText: {
-    color: '#C04534',
+    color: 'var(--color-red-critical)',
     fontSize: '14px',
     margin: 0
   },

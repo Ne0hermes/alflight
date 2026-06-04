@@ -379,7 +379,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                       {waypoints.map((wp, index) => (
                         <span key={index}>
                           <span style={{
-                            color: wp.type === 'departure' ? 'var(--text-primary)' : wp.type === 'arrival' ? '#C04534' : theme.colors.textPrimary,
+                            color: wp.type === 'departure' ? 'var(--text-primary)' : wp.type === 'arrival' ? 'var(--color-red-critical)' : theme.colors.textPrimary,
                             fontWeight: wp.type === 'departure' || wp.type === 'arrival' ? '600' : '500'
                           }}>
                             {wp.name || wp.icao}
@@ -674,7 +674,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                 {arrivalIcao && arrivalIcao !== departureIcao && weatherData[arrivalIcao]?.metar?.raw && (
                   <div>
                     <div style={{ fontSize: '14px', marginBottom: '8px' }}>
-                      <strong style={{ color: '#C04534', fontSize: '15px' }}>{arrivalIcao}</strong>
+                      <strong style={{ color: 'var(--color-red-critical)', fontSize: '15px' }}>{arrivalIcao}</strong>
                       <span style={{ marginLeft: '8px', color: theme.colors.textSecondary, fontSize: '13px' }}>
                         (Arrivée)
                       </span>
@@ -961,7 +961,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                 </span>
                 <strong style={{
                   fontSize: '15px',
-                  color: fuelInfo.confirmed >= fuelInfo.required ? 'var(--text-primary)' : '#C04534'
+                  color: fuelInfo.confirmed >= fuelInfo.required ? 'var(--text-primary)' : 'var(--color-red-critical)'
                 }}>
                   {format(fuelInfo.confirmed, 'fuel', 1)}
                 </strong>
@@ -1193,11 +1193,11 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                             <div style={{
                               padding: '2px 8px',
                               backgroundColor: 'var(--bg-overlay)',
-                              border: '1px solid #C04534',
+                              border: '1px solid var(--color-red-critical)',
                               borderRadius: 'var(--radius-sm)',
                               fontSize: '10px',
                               fontWeight: '600',
-                              color: '#C04534'
+                              color: 'var(--color-red-critical)'
                             }}>
                               ✗ VAC
                             </div>

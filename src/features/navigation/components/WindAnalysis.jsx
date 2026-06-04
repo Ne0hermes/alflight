@@ -277,7 +277,7 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
   };
   
   const getWindImpactColor = (difference) => {
-    if (difference > 10) return '#C04534'; // Rouge - retard important
+    if (difference > 10) return 'var(--color-red-critical)'; // Rouge - retard important
     if (difference > 5) return '#f26921'; // Orange - retard modéré
     if (difference > -5) return 'var(--text-primary)'; // Vert - impact faible
     return 'var(--text-secondary)'; // Bleu - gain de temps

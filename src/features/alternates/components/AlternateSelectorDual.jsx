@@ -291,7 +291,7 @@ export const AlternateSelectorDual = memo(({
           onSelect={handleSelect}
           side="departure"
           referencePoint={searchZone.departure}
-          sideColor="#C04534"
+          sideColor="var(--color-red-critical)"
         />
 
         {/* Côté arrivée */}
@@ -314,7 +314,7 @@ const getScoreColor = (score) => {
   if (!score) return 'var(--text-secondary)';
   if (score >= 0.8) return 'var(--text-primary)';
   if (score >= 0.6) return 'var(--accent-primary)';
-  return '#C04534';
+  return 'var(--color-red-critical)';
 };
 
 AlternateSelectorDual.displayName = 'AlternateSelectorDual';

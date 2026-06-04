@@ -1220,7 +1220,7 @@ const PilotLogbook = ({ showFormProp }) => {
                 borderRadius: 'var(--radius-sm)',
                 padding: '8px 12px',
                 marginTop: '12px',
-                color: '#C04534',
+                color: 'var(--color-red-critical)',
                 fontSize: '13px',
                 display: 'flex',
                 alignItems: 'center',
@@ -1393,7 +1393,7 @@ const PilotLogbook = ({ showFormProp }) => {
                         }}
                         style={{
                           padding: '12px',
-                          backgroundColor: '#C04534',
+                          backgroundColor: 'var(--color-red-critical)',
                           color: 'var(--text-primary)',
                           border: 'none',
                           borderRadius: 'var(--radius-sm)',
@@ -1532,7 +1532,7 @@ const PilotLogbook = ({ showFormProp }) => {
                   decimalToHHMM(flightSegments.reduce((sum, seg) => sum + parseFloat(seg.time || 0), 0))
                 } sur {formData.totalTime || '0:00'}
                 {flightSegments.reduce((sum, seg) => sum + parseFloat(seg.time || 0), 0) > HHMMToDecimal(formData.totalTime || '0:00') && (
-                  <span style={{ color: '#C04534', marginLeft: '8px' }}>
+                  <span style={{ color: 'var(--color-red-critical)', marginLeft: '8px' }}>
                     ⚠️ Dépassement !
                   </span>
                 )}
@@ -1809,7 +1809,7 @@ const PilotLogbook = ({ showFormProp }) => {
                 )}
                 
                 {/* Formation */}
-                {entry.dualReceived > 0 && <span style={{ color: '#C04534' }}>Formation {entry.dualReceived}h</span>}
+                {entry.dualReceived > 0 && <span style={{ color: 'var(--color-red-critical)' }}>Formation {entry.dualReceived}h</span>}
                 {entry.dualGiven > 0 && <span style={{ color: 'var(--text-primary)' }}>Instruction {entry.dualGiven}h</span>}
                 
                 {/* Voyage */}
@@ -1834,7 +1834,7 @@ const PilotLogbook = ({ showFormProp }) => {
                 </button>
                 <button
                   onClick={() => handleDelete(entry.id)}
-                  style={{ padding: '4px 8px', backgroundColor: 'var(--bg-overlay)', color: '#C04534', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}
+                  style={{ padding: '4px 8px', backgroundColor: 'var(--bg-overlay)', color: 'var(--color-red-critical)', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}
                 >
                   <Trash2 size={14} />
                 </button>

@@ -13,7 +13,7 @@ const confidenceColor = (c) => {
   if (c >= 85) return 'var(--text-primary)';
   if (c >= 70) return 'var(--accent-primary)';
   if (c >= 50) return '#f26921';
-  return '#C04534';
+  return 'var(--color-red-critical)';
 };
 
 // Helper : détermine si une valeur "courante" est considérée comme "saisie"

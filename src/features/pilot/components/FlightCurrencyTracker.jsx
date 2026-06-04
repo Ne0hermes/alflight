@@ -805,7 +805,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
             📄 LICENCES ({statusSummary.licenses.total})
           </h4>
           {statusSummary.licenses.expired > 0 && (
-            <p style={{ fontSize: '11px', color: '#C04534', fontWeight: 'bold' }}>
+            <p style={{ fontSize: '11px', color: 'var(--color-red-critical)', fontWeight: 'bold' }}>
               ⛔ {statusSummary.licenses.expired} expirée{statusSummary.licenses.expired > 1 ? 's' : ''}
             </p>
           )}
@@ -839,7 +839,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
             🎓 QUALIFICATIONS ({statusSummary.qualifications.total})
           </h4>
           {statusSummary.qualifications.expired > 0 && (
-            <p style={{ fontSize: '11px', color: '#C04534', fontWeight: 'bold' }}>
+            <p style={{ fontSize: '11px', color: 'var(--color-red-critical)', fontWeight: 'bold' }}>
               ⛔ {statusSummary.qualifications.expired} expirée{statusSummary.qualifications.expired > 1 ? 's' : ''}
             </p>
           )}
@@ -875,12 +875,12 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
             🏥 CERTIFICAT MÉDICAL
           </h4>
           {statusSummary.medical.status === 'expired' && (
-            <p style={{ fontSize: '11px', color: '#C04534', fontWeight: 'bold' }}>
+            <p style={{ fontSize: '11px', color: 'var(--color-red-critical)', fontWeight: 'bold' }}>
               ⛔ Expiré {statusSummary.medical.daysRemaining && `(${Math.abs(statusSummary.medical.daysRemaining)}j)`}
             </p>
           )}
           {statusSummary.medical.status === 'urgent' && (
-            <p style={{ fontSize: '11px', color: '#C04534', fontWeight: 'bold' }}>
+            <p style={{ fontSize: '11px', color: 'var(--color-red-critical)', fontWeight: 'bold' }}>
               ⚠️ Expire dans {statusSummary.medical.daysRemaining}j
             </p>
           )}
@@ -1007,11 +1007,11 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
               backgroundColor: urgency === 'expired' ? 'var(--bg-overlay)' :
                              urgency === 'critical' ? 'var(--bg-overlay)' :
                              urgency === 'warning' ? 'var(--bg-overlay)' : 'rgba(242, 105, 33, 0.10)',
-              border: `1px solid ${urgency === 'expired' ? '#C04534' :
+              border: `1px solid ${urgency === 'expired' ? 'var(--color-red-critical)' :
                                   urgency === 'critical' ? 'var(--bg-overlay)' :
                                   urgency === 'warning' ? '#f26921' : 'var(--bg-overlay)'}`
             }}>
-              <AlertTriangle size={16} color={urgency === 'expired' ? '#C04534' : 'var(--accent-primary)'} />
+              <AlertTriangle size={16} color={urgency === 'expired' ? 'var(--color-red-critical)' : 'var(--accent-primary)'} />
               <div style={{ flex: 1 }}>
                 <p style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>
                   {urgency === 'expired' ? '⛔ Licences/Qualifications EXPIRÉES' :
@@ -1024,7 +1024,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
                     <li key={idx}>
                       <strong>{item.name}</strong> - 
                       {item.daysUntil < 0 ? 
-                        <span style={{ color: '#C04534', fontWeight: 'bold' }}> EXPIRÉ depuis {Math.abs(item.daysUntil)} jours</span> :
+                        <span style={{ color: 'var(--color-red-critical)', fontWeight: 'bold' }}> EXPIRÉ depuis {Math.abs(item.daysUntil)} jours</span> :
                         <span> expire dans <strong>{item.daysUntil} jours</strong> ({item.expiryDate.toLocaleDateString()})</span>
                       }
                     </li>
@@ -1051,16 +1051,16 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
               padding: '20px',
               backgroundColor: 'var(--bg-overlay)',
               borderRadius: 'var(--radius-sm)',
-              border: '2px solid #C04534',
+              border: '2px solid var(--color-red-critical)',
               marginBottom: '16px'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ fontSize: '24px' }}>⛔</div>
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#C04534', marginBottom: '4px' }}>
+                  <p style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--color-red-critical)', marginBottom: '4px' }}>
                     AUCUNE LICENCE ENREGISTRÉE
                   </p>
-                  <p style={{ fontSize: '14px', color: '#C04534' }}>
+                  <p style={{ fontSize: '14px', color: 'var(--color-red-critical)' }}>
                     Vous devez enregistrer au moins une licence de pilote pour voler légalement.
                   </p>
                 </div>
@@ -1072,7 +1072,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
                   }}
                   style={{
                     padding: '10px 20px',
-                    backgroundColor: '#C04534',
+                    backgroundColor: 'var(--color-red-critical)',
                     color: 'var(--text-primary)',
                     borderRadius: 'var(--radius-sm)',
                     border: 'none',
@@ -1126,7 +1126,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
               {/* Certificat médical */}
               {grouped.medical.length > 0 && (
                 <div>
-                  <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: grouped.medical[0].isExpired ? '#C04534' : 'var(--accent-primary)' }}>
+                  <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: grouped.medical[0].isExpired ? 'var(--color-red-critical)' : 'var(--accent-primary)' }}>
                     🏥 CERTIFICAT MÉDICAL
                   </h4>
                   <div style={{ display: 'grid', gap: '8px' }}>
@@ -1137,8 +1137,8 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
                         backgroundColor: status.isMissing ? 'var(--bg-overlay)' :
                                        status.isExpired ? 'var(--bg-overlay)' : 
                                        status.needsAction ? 'var(--bg-overlay)' : 'rgba(242, 105, 33, 0.10)',
-                        border: `2px solid ${status.isMissing ? '#C04534' :
-                                           status.isExpired ? '#C04534' : 
+                        border: `2px solid ${status.isMissing ? 'var(--color-red-critical)' :
+                                           status.isExpired ? 'var(--color-red-critical)' : 
                                            status.needsAction ? 'var(--accent-primary)' : 'var(--bg-overlay)'}`
                       }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1146,13 +1146,13 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
                             <p style={{ 
                               fontSize: '14px', 
                               fontWeight: 'bold', 
-                              color: status.isMissing ? '#C04534' :
-                                    status.isExpired ? '#C04534' : 
+                              color: status.isMissing ? 'var(--color-red-critical)' :
+                                    status.isExpired ? 'var(--color-red-critical)' : 
                                     status.needsAction ? 'var(--accent-primary)' : 'var(--text-primary)'
                             }}>
                               {status.description.replace('⛔ ', '').replace('⚠️ ', '').replace('✅ ', '')}
                             </p>
-                            <p style={{ fontSize: '12px', color: status.isMissing || status.isExpired ? '#C04534' : 'var(--text-secondary)' }}>
+                            <p style={{ fontSize: '12px', color: status.isMissing || status.isExpired ? 'var(--color-red-critical)' : 'var(--text-secondary)' }}>
                               {status.periodText} • {status.regulation}
                             </p>
                           </div>
@@ -1165,7 +1165,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
                               }}
                               style={{
                                 padding: '6px 12px',
-                                backgroundColor: status.isExpired ? '#C04534' : 'var(--accent-primary)',
+                                backgroundColor: status.isExpired ? 'var(--color-red-critical)' : 'var(--accent-primary)',
                                 color: 'var(--text-primary)',
                                 border: 'none',
                                 borderRadius: 'var(--radius-sm)',
@@ -1187,7 +1187,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
               {/* Licences/Qualifications expirées */}
               {grouped.expired.length > 0 && (
                 <div>
-                  <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#C04534' }}>
+                  <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--color-red-critical)' }}>
                     🚫 Licences/Qualifications EXPIRÉES
                   </h4>
                   <div style={{ display: 'grid', gap: '8px' }}>
@@ -1196,14 +1196,14 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
                         padding: '12px',
                         borderRadius: 'var(--radius-sm)',
                         backgroundColor: 'var(--bg-overlay)',
-                        border: '2px solid #C04534'
+                        border: '2px solid var(--color-red-critical)'
                       }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <div>
-                            <p style={{ fontSize: '14px', fontWeight: 'bold', color: '#C04534' }}>
+                            <p style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--color-red-critical)' }}>
                               {status.description.replace('⛔ ', '')}
                             </p>
-                            <p style={{ fontSize: '12px', color: '#C04534' }}>
+                            <p style={{ fontSize: '12px', color: 'var(--color-red-critical)' }}>
                               {status.periodText} • Expirée le {status.expiryDate}
                             </p>
                           </div>
@@ -1215,7 +1215,7 @@ const FlightCurrencyTracker = ({ pilotData = {}, flightLog = [] }) => {
                             }}
                             style={{
                               padding: '6px 12px',
-                              backgroundColor: '#C04534',
+                              backgroundColor: 'var(--color-red-critical)',
                               color: 'var(--text-primary)',
                               border: 'none',
                               borderRadius: 'var(--radius-sm)',

@@ -570,8 +570,8 @@ export const PilotDashboard = ({ onNavigate }) => {
     switch(status) {
       case 'valid': return 'var(--text-primary)';
       case 'attention': return 'var(--accent-primary)';
-      case 'warning': return '#C04534';
-      case 'expired': return '#C04534';
+      case 'warning': return 'var(--color-red-critical)';
+      case 'expired': return 'var(--color-red-critical)';
       default: return 'var(--text-secondary)';
     }
   };
@@ -921,8 +921,8 @@ export const PilotDashboard = ({ onNavigate }) => {
                       {(item.type === 'sep_expired' || item.type === 'mep_expired') ? (
                         <div style={styles.renewalProcedure}>
                           <div style={styles.procedureTitle}>
-                            <AlertTriangle size={16} style={{ color: '#C04534' }} />
-                            <span style={{ fontWeight: 'bold', color: '#C04534' }}>
+                            <AlertTriangle size={16} style={{ color: 'var(--color-red-critical)' }} />
+                            <span style={{ fontWeight: 'bold', color: 'var(--color-red-critical)' }}>
                               {item.renewalProcedure.title}
                             </span>
                           </div>
@@ -945,7 +945,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                                 <span style={styles.sepStatLabel}>Heures totales SEP:</span>
                                 <span style={{
                                   ...styles.sepStatValue,
-                                  color: item.totalHours >= item.requiredTotalHours ? 'var(--text-primary)' : '#C04534'
+                                  color: item.totalHours >= item.requiredTotalHours ? 'var(--text-primary)' : 'var(--color-red-critical)'
                                 }}>
                                   {item.totalHours.toFixed(1)}h/{item.requiredTotalHours}h
                                 </span>
@@ -954,7 +954,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                                 <span style={styles.sepStatLabel}>Heures P1/CDB:</span>
                                 <span style={{
                                   ...styles.sepStatValue,
-                                  color: item.picHours >= item.requiredPicHours ? 'var(--text-primary)' : '#C04534'
+                                  color: item.picHours >= item.requiredPicHours ? 'var(--text-primary)' : 'var(--color-red-critical)'
                                 }}>
                                   {item.picHours.toFixed(1)}h/{item.requiredPicHours}h
                                 </span>
@@ -966,7 +966,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                               <span style={styles.sepStatLabel}>Décollages:</span>
                               <span style={{
                                 ...styles.sepStatValue,
-                                color: item.takeoffs >= item.requiredTakeoffs ? 'var(--text-primary)' : '#C04534'
+                                color: item.takeoffs >= item.requiredTakeoffs ? 'var(--text-primary)' : 'var(--color-red-critical)'
                               }}>
                                 {item.takeoffs}/{item.requiredTakeoffs}
                               </span>
@@ -977,7 +977,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                               <span style={styles.sepStatLabel}>Atterrissages:</span>
                               <span style={{
                                 ...styles.sepStatValue,
-                                color: item.landings >= item.requiredLandings ? 'var(--text-primary)' : '#C04534'
+                                color: item.landings >= item.requiredLandings ? 'var(--text-primary)' : 'var(--color-red-critical)'
                               }}>
                                 {item.landings}/{item.requiredLandings}
                               </span>
@@ -988,7 +988,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                               <span style={styles.sepStatLabel}>Vol avec FI/CRI (1h):</span>
                               <span style={{
                                 ...styles.sepStatValue,
-                                color: item.hasInstructorFlight ? 'var(--text-primary)' : '#C04534'
+                                color: item.hasInstructorFlight ? 'var(--text-primary)' : 'var(--color-red-critical)'
                               }}>
                                 {item.hasInstructorFlight ? '✓ Effectué' : '✗ Requis'}
                               </span>
@@ -1088,7 +1088,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                       onClick={() => onNavigate && onNavigate('pilot', 'medical')}
                       style={{
                         ...styles.actionButton,
-                        backgroundColor: medicalStatus.status === 'expired' ? '#C04534' : 'var(--text-secondary)',
+                        backgroundColor: medicalStatus.status === 'expired' ? 'var(--color-red-critical)' : 'var(--text-secondary)',
                         marginTop: '8px'
                       }}
                     >
@@ -1106,7 +1106,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                       onClick={() => onNavigate && onNavigate('pilot', 'medical')}
                       style={{
                         ...styles.actionButton,
-                        backgroundColor: '#C04534',
+                        backgroundColor: 'var(--color-red-critical)',
                         marginTop: '8px'
                       }}
                     >
@@ -1156,7 +1156,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                       onClick={() => onNavigate && onNavigate('pilot', 'certifications')}
                       style={{
                         ...styles.actionButton,
-                        backgroundColor: '#C04534',
+                        backgroundColor: 'var(--color-red-critical)',
                         marginTop: '8px'
                       }}
                     >
@@ -1193,7 +1193,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                       onClick={() => onNavigate && onNavigate('pilot', 'certifications')}
                       style={{
                         ...styles.actionButton,
-                        backgroundColor: qualificationStatus.some(q => q.status === 'expired') ? '#C04534' : 'var(--text-secondary)',
+                        backgroundColor: qualificationStatus.some(q => q.status === 'expired') ? 'var(--color-red-critical)' : 'var(--text-secondary)',
                         marginTop: '8px'
                       }}
                     >
@@ -1211,7 +1211,7 @@ export const PilotDashboard = ({ onNavigate }) => {
                       onClick={() => onNavigate && onNavigate('pilot', 'certifications')}
                       style={{
                         ...styles.actionButton,
-                        backgroundColor: '#C04534',
+                        backgroundColor: 'var(--color-red-critical)',
                         marginTop: '8px'
                       }}
                     >

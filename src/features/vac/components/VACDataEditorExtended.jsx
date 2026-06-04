@@ -254,7 +254,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
               <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
                 Informations générales
                 {isMissingData(editedData.airportName) && (
-                  <span style={{ color: '#C04534', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
+                  <span style={{ color: 'var(--color-red-critical)', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
                     ⚠️ Certaines données sont manquantes
                   </span>
                 )}
@@ -299,7 +299,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                   <label style={sx.components.label.base}>
                     Nom de l'aérodrome
                     {isMissingData(editedData.airportName) && (
-                      <span style={{ color: '#C04534', marginLeft: '8px', fontSize: '12px' }}>
+                      <span style={{ color: 'var(--color-red-critical)', marginLeft: '8px', fontSize: '12px' }}>
                         ⚠️ Requis
                       </span>
                     )}
@@ -348,7 +348,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                     const isOutdated = publicationDate < oneYearAgo;
                     
                     return isOutdated ? (
-                      <p style={sx.combine(sx.text.xs, { color: '#C04534' }, sx.spacing.mt(1))}>
+                      <p style={sx.combine(sx.text.xs, { color: 'var(--color-red-critical)' }, sx.spacing.mt(1))}>
                         ⚠️ Cette carte date de plus d'un an
                       </p>
                     ) : (
@@ -362,7 +362,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                   <label style={sx.components.label.base}>
                     Altitude terrain (ft)
                     {isMissingData(editedData.airportElevation) && (
-                      <span style={{ color: '#C04534', marginLeft: '8px', fontSize: '12px' }}>
+                      <span style={{ color: 'var(--color-red-critical)', marginLeft: '8px', fontSize: '12px' }}>
                         ⚠️ Donnée manquante
                       </span>
                     )}
@@ -382,7 +382,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                   <label style={sx.components.label.base}>
                     Tour de piste (ft)
                     {isMissingData(editedData.circuitAltitude) && (
-                      <span style={{ color: '#C04534', marginLeft: '8px', fontSize: '12px' }}>
+                      <span style={{ color: 'var(--color-red-critical)', marginLeft: '8px', fontSize: '12px' }}>
                         ⚠️ Donnée manquante
                       </span>
                     )}
@@ -522,7 +522,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
             <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
               Fréquences radio (MHz)
               {(!editedData.frequencies || Object.keys(editedData.frequencies).length === 0) && (
-                <span style={{ color: '#C04534', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
+                <span style={{ color: 'var(--color-red-critical)', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
                   ⚠️ Aucune fréquence définie
                 </span>
               )}
@@ -533,7 +533,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
               <h5 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--text-secondary)' }}>
                 Fréquences radio (MHz)
                 {(!editedData.frequencies || Object.keys(editedData.frequencies).length === 0) && (
-                  <span style={{ color: '#C04534', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
+                  <span style={{ color: 'var(--color-red-critical)', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
                     ⚠️ Aucune fréquence définie
                   </span>
                 )}
@@ -640,7 +640,7 @@ export const VACDataEditor = memo(({ chart, onClose }) => {
                                 }}
                                 style={{
                                   padding: '6px',
-                                  backgroundColor: '#C04534',
+                                  backgroundColor: 'var(--color-red-critical)',
                                   color: 'var(--text-primary)',
                                   border: 'none',
                                   borderRadius: 'var(--radius-sm)',

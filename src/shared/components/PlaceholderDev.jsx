@@ -31,10 +31,10 @@ export const PlaceholderDev = ({
     },
     error: {
       bg: 'var(--bg-overlay)',
-      border: '#C04534',
-      text: '#C04534',
+      border: 'var(--color-red-critical)',
+      text: 'var(--color-red-critical)',
       icon: AlertCircle,
-      iconColor: '#C04534'
+      iconColor: 'var(--color-red-critical)'
     }
   };
 

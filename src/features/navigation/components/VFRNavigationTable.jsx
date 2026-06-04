@@ -714,8 +714,8 @@ const VFRNavigationTable = ({
               marginTop: '16px',
               padding: '12px',
               backgroundColor: 'var(--bg-overlay)',
-              border: '2px solid #C04534',
-              borderLeft: '6px solid #C04534',
+              border: '2px solid var(--color-red-critical)',
+              borderLeft: '6px solid var(--color-red-critical)',
               borderRadius: 'var(--radius-sm)'
             }}>
                 <div style={{
@@ -724,8 +724,8 @@ const VFRNavigationTable = ({
                   gap: '8px',
                   marginBottom: '10px'
                 }}>
-                  <AlertTriangle size={20} color="#C04534" />
-                  <span style={{ color: '#C04534', fontWeight: 'bold', fontSize: '14px' }}>
+                  <AlertTriangle size={20} color="var(--color-red-critical)" />
+                  <span style={{ color: 'var(--color-red-critical)', fontWeight: 'bold', fontSize: '14px' }}>
                     🚫 ALERTE CRITIQUE : Votre route traverse des zones RÉGLEMENTÉES, INTERDITES ou DANGEREUSES !
                   </span>
                 </div>
@@ -757,7 +757,7 @@ const VFRNavigationTable = ({
                     // 🔍 Si aucun segment avec zones trouvé, afficher message debug
                     if (segmentsWithZones.length === 0) {
                       return (
-                        <div style={{ color: '#C04534', fontSize: '11px', padding: '8px' }}>
+                        <div style={{ color: 'var(--color-red-critical)', fontSize: '11px', padding: '8px' }}>
                           🔍 DEBUG: Aucun segment avec zones trouvé dans navigationData
                           <br />
                           <strong>Total segments:</strong> {navigationData.length}
@@ -783,7 +783,7 @@ const VFRNavigationTable = ({
                         {/* En-tête du segment */}
                         <div style={{
                           fontWeight: 'bold',
-                          color: '#C04534',
+                          color: 'var(--color-red-critical)',
                           fontSize: '12px',
                           marginBottom: '6px',
                           display: 'flex',
@@ -791,7 +791,7 @@ const VFRNavigationTable = ({
                           gap: '6px'
                         }}>
                           <span style={{
-                            backgroundColor: '#C04534',
+                            backgroundColor: 'var(--color-red-critical)',
                             color: 'var(--text-primary)',
                             padding: '2px 6px',
                             borderRadius: 'var(--radius-sm)',
@@ -800,7 +800,7 @@ const VFRNavigationTable = ({
                             Segment {seg.index + 1}
                           </span>
                           <span>{seg.from} → {seg.to}</span>
-                          <span style={{ fontSize: '11px', fontWeight: 'normal', color: '#C04534' }}>
+                          <span style={{ fontSize: '11px', fontWeight: 'normal', color: 'var(--color-red-critical)' }}>
                             (Alt: {seg.altitude} ft)
                           </span>
                         </div>
@@ -819,7 +819,7 @@ const VFRNavigationTable = ({
                             <div style={{
                               fontSize: '11px',
                               fontWeight: 'bold',
-                              color: '#C04534',
+                              color: 'var(--color-red-critical)',
                               marginBottom: '4px'
                             }}>
                               {zone.type === 'P' && '🚫 ZONE INTERDITE (P)'}
@@ -832,7 +832,7 @@ const VFRNavigationTable = ({
                             </div>
 
                             {/* Détails de la zone */}
-                            <div style={{ fontSize: '10px', color: '#C04534', lineHeight: '1.4' }}>
+                            <div style={{ fontSize: '10px', color: 'var(--color-red-critical)', lineHeight: '1.4' }}>
                               <div>
                                 <strong>Altitudes:</strong> {zone.floor_raw} ({zone.floor}ft) - {zone.ceiling_raw} ({zone.ceiling}ft)
                               </div>
@@ -861,7 +861,7 @@ const VFRNavigationTable = ({
                   backgroundColor: 'var(--bg-overlay)',
                   borderRadius: 'var(--radius-sm)',
                   fontSize: '11px',
-                  color: '#C04534',
+                  color: 'var(--color-red-critical)',
                   fontWeight: '500'
                 }}>
                   ⚠️ <strong>ACTION REQUISE:</strong> Vérifiez les horaires d'activation, obtenez les autorisations nécessaires (clairances) ou modifiez votre route pour contourner ces zones avant le vol.

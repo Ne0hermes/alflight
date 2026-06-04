@@ -213,12 +213,12 @@ export const AlternateSelectorUnified = memo(({
 
             // Déterminer le côté pour l'affichage (badge suggéré)
             const side = airport.side;
-            const sideColor = side === 'departure' ? '#C04534' : 'var(--text-primary)';
+            const sideColor = side === 'departure' ? 'var(--color-red-critical)' : 'var(--text-primary)';
             const sideEmoji = side === 'departure' ? '🔴' : '🟢';
             const sideLabel = side === 'departure' ? 'Départ' : 'Arrivée';
 
             // Déterminer la couleur selon la sélection RÉELLE (pas le côté suggéré)
-            const selectionColor = isSelectedDeparture ? '#C04534' : (isSelectedArrival ? 'var(--text-primary)' : sideColor);
+            const selectionColor = isSelectedDeparture ? 'var(--color-red-critical)' : (isSelectedArrival ? 'var(--text-primary)' : sideColor);
             const selectionBgColor = isSelectedDeparture ? 'var(--bg-overlay)' : (isSelectedArrival ? 'var(--bg-overlay)' : '#ffffff');
 
             const distanceFromRef = side === 'departure'
@@ -379,9 +379,9 @@ export const AlternateSelectorUnified = memo(({
                         padding: '8px 16px',
                         borderWidth: '2px',
                         borderStyle: 'solid',
-                        borderColor: (isSelectedDeparture || isSelectedArrival) ? (isSelectedDeparture ? '#C04534' : 'var(--text-primary)') : 'var(--text-secondary)',
+                        borderColor: (isSelectedDeparture || isSelectedArrival) ? (isSelectedDeparture ? 'var(--color-red-critical)' : 'var(--text-primary)') : 'var(--text-secondary)',
                         borderRadius: 'var(--radius-sm)',
-                        backgroundColor: (isSelectedDeparture || isSelectedArrival) ? (isSelectedDeparture ? '#C04534' : 'var(--text-primary)') : '#ffffff',
+                        backgroundColor: (isSelectedDeparture || isSelectedArrival) ? (isSelectedDeparture ? 'var(--color-red-critical)' : 'var(--text-primary)') : '#ffffff',
                         color: (isSelectedDeparture || isSelectedArrival) ? '#ffffff' : 'var(--text-secondary)',
                         cursor: 'pointer',
                         fontSize: '13px',
@@ -431,7 +431,7 @@ export const AlternateSelectorUnified = memo(({
                             padding: '10px 16px',
                             border: 'none',
                             backgroundColor: isSelectedDeparture ? 'var(--bg-overlay)' : '#ffffff',
-                            color: '#C04534',
+                            color: 'var(--color-red-critical)',
                             cursor: 'pointer',
                             fontSize: '13px',
                             fontWeight: isSelectedDeparture ? 'bold' : 'normal',
@@ -490,7 +490,7 @@ const getScoreColor = (score) => {
   if (!score) return 'var(--text-secondary)';
   if (score >= 0.8) return 'var(--text-primary)';
   if (score >= 0.6) return 'var(--accent-primary)';
-  return '#C04534';
+  return 'var(--color-red-critical)';
 };
 
 AlternateSelectorUnified.displayName = 'AlternateSelectorUnified';

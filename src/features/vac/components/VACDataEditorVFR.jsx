@@ -71,7 +71,7 @@ export const VFREditor = ({ editedData, updateValue }) => {
           <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
             Points de report VFR
             {(!editedData.vfrPoints || editedData.vfrPoints.length === 0) && (
-              <span style={{ color: '#C04534', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
+              <span style={{ color: 'var(--color-red-critical)', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
                 ⚠️ Aucun point VFR défini
               </span>
             )}
@@ -135,7 +135,7 @@ export const VFREditor = ({ editedData, updateValue }) => {
                         fontSize: '11px', 
                         padding: '2px 6px', 
                         backgroundColor: 'var(--bg-overlay)', 
-                        color: '#C04534',
+                        color: 'var(--color-red-critical)',
                         borderRadius: 'var(--radius-sm)'
                       }}>
                         OBLIGATOIRE
@@ -146,7 +146,7 @@ export const VFREditor = ({ editedData, updateValue }) => {
                     onClick={() => removeVFRPoint(idx)}
                     style={{
                       padding: '4px 8px',
-                      backgroundColor: '#C04534',
+                      backgroundColor: 'var(--color-red-critical)',
                       color: 'var(--text-primary)',
                       border: 'none',
                       borderRadius: 'var(--radius-sm)',

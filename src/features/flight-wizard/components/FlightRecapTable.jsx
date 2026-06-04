@@ -17,7 +17,7 @@ const PRINT = {
   accent: '#f26921',   // accent ALFlight — remplace les bleu/vert/violet/ambre décoratifs
   accentBg: '#fff3ec', // tint orange clair — remplace les fonds pastel bleu/vert/violet
   ok: '#059669',       // vert OK FONCTIONNEL (adéquation piste/perf) — sécurité, conservé
-  nogo: '#c04534',     // rouge NO-GO / dépassement de limite (charte)
+  nogo: '#c04534',     // rouge NO-GO / dépassement de limite (charte) — hardcodé (artefact PDF)
 };
 
 /**

@@ -307,7 +307,7 @@ export const ServicesEditor = ({ editedData, updateValue }) => {
                     onClick={() => removeCustomService(idx)}
                     style={{
                       padding: '4px 8px',
-                      backgroundColor: '#C04534',
+                      backgroundColor: 'var(--color-red-critical)',
                       color: 'var(--text-primary)',
                       border: 'none',
                       borderRadius: 'var(--radius-sm)',

@@ -95,10 +95,10 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
     <div>
       <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: '#C04534' }}>
+          <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--color-red-critical)' }}>
             Obstacles remarquables
             {(!editedData.obstacles || editedData.obstacles.length === 0) && (
-              <span style={{ color: '#C04534', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
+              <span style={{ color: 'var(--color-red-critical)', fontSize: '12px', fontWeight: 'normal', marginLeft: '12px' }}>
                 ⚠️ Aucun obstacle défini
               </span>
             )}
@@ -108,7 +108,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
             style={{
               padding: '6px 12px',
               fontSize: '13px',
-              backgroundColor: '#C04534',
+              backgroundColor: 'var(--color-red-critical)',
               color: 'var(--text-primary)',
               border: 'none',
               borderRadius: 'var(--radius-sm)',
@@ -141,7 +141,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                   borderBottom: '1px solid var(--border-subtle)'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <AlertTriangle size={18} style={{ color: '#C04534' }} />
+                    <AlertTriangle size={18} style={{ color: 'var(--color-red-critical)' }} />
                     <h6 style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
                       {obstacle.name || `Obstacle #${idx + 1}`}
                     </h6>
@@ -150,7 +150,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                         fontSize: '12px', 
                         padding: '2px 6px', 
                         backgroundColor: 'var(--bg-overlay)', 
-                        color: '#C04534',
+                        color: 'var(--color-red-critical)',
                         borderRadius: 'var(--radius-sm)',
                         fontWeight: 'bold'
                       }}>
@@ -161,7 +161,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                       <span style={{ 
                         fontSize: '11px', 
                         padding: '2px 6px', 
-                        backgroundColor: '#C04534', 
+                        backgroundColor: 'var(--color-red-critical)', 
                         color: 'var(--text-primary)',
                         borderRadius: 'var(--radius-sm)',
                         fontWeight: 'bold'
@@ -174,7 +174,7 @@ export const ObstaclesEditor = ({ editedData, updateValue }) => {
                     onClick={() => removeObstacle(idx)}
                     style={{
                       padding: '4px 8px',
-                      backgroundColor: '#C04534',
+                      backgroundColor: 'var(--color-red-critical)',
                       color: 'var(--text-primary)',
                       border: 'none',
                       borderRadius: 'var(--radius-sm)',
