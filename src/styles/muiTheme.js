@@ -106,11 +106,10 @@ const muiTheme = createTheme({
     h5: { fontWeight: 500 },
     h6: { fontWeight: 500 },
     button: {
-      fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
+      // Police charte : Century Gothic (héritée de typography.fontFamily),
+      // casse normale. Plus de JetBrains Mono UPPERCASE sur les boutons.
       fontWeight: 600,
-      fontSize: 'var(--fs-caption)',
-      letterSpacing: '0.12em',
-      textTransform: 'uppercase',
+      textTransform: 'none',
     },
   },
 
@@ -227,12 +226,13 @@ const muiTheme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          textTransform: 'uppercase',
-          fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
+          // Boutons à la charte : Century Gothic (héritée), casse normale.
+          // (Avant : JetBrains Mono UPPERCASE 0.12em — c'était LA cause de la
+          //  police "cockpit" sur tous les boutons MUI de l'app.)
+          textTransform: 'none',
           // Dimensions de référence (bouton « ← Retour ») centralisées dans index.css
           fontSize: 'var(--btn-font-size)',
           fontWeight: 'var(--btn-font-weight)',
-          letterSpacing: '0.12em',
           borderRadius: 'var(--btn-radius)',
           padding: 'var(--btn-padding-y) var(--btn-padding-x)',
           minHeight: 'var(--btn-min-height)',
@@ -404,7 +404,7 @@ const muiTheme = createTheme({
             '& input, & textarea, & .MuiSelect-select, & .MuiInputBase-input': {
               color: ALFLIGHT_COLORS.textPrimary,
               fontFamily: "'Century Gothic', 'Questrial', sans-serif !important",
-              fontSize: 'var(--fs-body)',
+              fontSize: '14px',
               textAlign: 'center', // Texte input CENTRÉ comme le label
             },
             // L'<input class="MuiSelect-nativeInput"> est un input caché que
@@ -428,7 +428,7 @@ const muiTheme = createTheme({
           // Helper text sous l'input : centré aussi
           '& .MuiFormHelperText-root': {
             fontFamily: "'Century Gothic', 'Questrial', sans-serif",
-            fontSize: 'var(--fs-caption)',
+            fontSize: '11px',
             color: ALFLIGHT_COLORS.textTertiary,
             textAlign: 'center',
             marginTop: '6px',
@@ -471,7 +471,7 @@ const muiTheme = createTheme({
         input: {
           color: ALFLIGHT_COLORS.textPrimary,
           fontFamily: "'Century Gothic', 'Questrial', sans-serif !important",
-          fontSize: 'var(--fs-body)',
+          fontSize: '14px',
           textAlign: 'center', // Centre le texte input
         },
       },
@@ -482,7 +482,7 @@ const muiTheme = createTheme({
       styleOverrides: {
         input: {
           fontFamily: "'Century Gothic', 'Questrial', sans-serif !important",
-          fontSize: 'var(--fs-body)',
+          fontSize: '14px',
           color: ALFLIGHT_COLORS.textPrimary,
         },
       },
@@ -498,7 +498,7 @@ const muiTheme = createTheme({
           color: ALFLIGHT_COLORS.textTertiary,
           '& .MuiTypography-root': {
             fontFamily: "'Century Gothic', 'Questrial', sans-serif",
-            fontSize: 'var(--fs-body)',
+            fontSize: '13px',
             color: ALFLIGHT_COLORS.textTertiary,
           },
         },
@@ -593,7 +593,7 @@ const muiTheme = createTheme({
         select: {
           color: ALFLIGHT_COLORS.textPrimary,
           fontFamily: "'Century Gothic', 'Questrial', sans-serif !important",
-          fontSize: 'var(--fs-body)',
+          fontSize: '14px',
           textAlign: 'center',
           paddingTop: '16.5px !important',
           paddingBottom: '16.5px !important',
@@ -654,7 +654,7 @@ const muiTheme = createTheme({
           borderRadius: '6px', // léger arrondi sur les items individuels
           margin: '2px 0',
           fontFamily: "'Century Gothic', 'Questrial', 'Jost', system-ui, sans-serif",
-          fontSize: 'var(--fs-body)',
+          fontSize: '14px',
           minHeight: '40px',
           '&:hover': {
             backgroundColor: 'rgba(245, 242, 236, 0.04)', // ivoire subtle (PAS bleu)
@@ -714,7 +714,7 @@ const muiTheme = createTheme({
           '& .MuiAutocomplete-input': {
             color: ALFLIGHT_COLORS.textPrimary,
             fontFamily: "'Century Gothic', 'Questrial', sans-serif !important",
-            fontSize: 'var(--fs-body)',
+            fontSize: '14px',
             textAlign: 'center !important',
           },
           '& .MuiInputLabel-root': {
@@ -808,7 +808,7 @@ const muiTheme = createTheme({
         label: {
           color: ALFLIGHT_COLORS.textTertiary,
           fontFamily: "'JetBrains Mono', monospace",
-          fontSize: 'var(--fs-caption)',
+          fontSize: '11px',
           letterSpacing: '0.12em',
           textTransform: 'uppercase',
           '&.Mui-active': { color: ALFLIGHT_COLORS.accent },
@@ -855,7 +855,7 @@ const muiTheme = createTheme({
           backgroundColor: ALFLIGHT_COLORS.bgRaised,
           color: ALFLIGHT_COLORS.textPrimary,
           fontFamily: "'JetBrains Mono', monospace",
-          fontSize: 'var(--fs-caption)',
+          fontSize: '11px',
           letterSpacing: '0.06em',
           border: `1px solid ${ALFLIGHT_COLORS.borderSubtle}`,
         },
@@ -878,7 +878,7 @@ const muiTheme = createTheme({
           color: ALFLIGHT_COLORS.textSecondary,
           borderRadius: '8px', // aligné sur --radius-sm (8px partout)
           fontFamily: "'JetBrains Mono', monospace",
-          fontSize: 'var(--fs-caption)',
+          fontSize: '11px',
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
         },
@@ -899,7 +899,7 @@ const muiTheme = createTheme({
         head: {
           color: ALFLIGHT_COLORS.textTertiary,
           fontFamily: "'JetBrains Mono', monospace",
-          fontSize: 'var(--fs-caption)',
+          fontSize: '11px',
           letterSpacing: '0.12em',
           textTransform: 'uppercase',
           fontWeight: 500,

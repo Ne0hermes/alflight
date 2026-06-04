@@ -2,6 +2,7 @@
 // Store exclusivement basé sur Supabase, sans persistance localStorage
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
+import { useEffect } from 'react';
 import communityService from '@services/communityService';
 import { getCurrentUserId } from '../../lib/supabaseAuth';
 import { createModuleLogger } from '@utils/logger';
@@ -163,7 +164,7 @@ export const useInitSupabaseAircraft = () => {
   const error = useSupabaseAircraftStore(state => state.error);
 
   // Charger au premier montage si la liste est vide
-  React.useEffect(() => {
+  useEffect(() => {
     if (aircraftList.length === 0 && !error) {
       loadAircraft().catch(err => {
         console.error('❌ Échec du chargement initial:', err);

@@ -26,9 +26,20 @@ if (!existsSync(SRC)) {
 }
 if (!existsSync(DEST)) mkdirSync(DEST, { recursive: true });
 
-const files = readdirSync(SRC).filter((f) => f.endsWith('.geojson'));
+// Couches GeoJSON + side-cars JSON réellement consommés par l'app (détail VAC).
+// (On ne publie PAS tous les .json dérivés — ats_routes, organizations… sont inutiles
+//  côté app et alourdiraient le precache PWA.)
+const JSON_SIDECARS = ['aerodrome_services.json'];
+// Couches générées par l'ETL mais NON consommées par l'app → non publiées (precache lean,
+// cf. #18). À retirer de cette liste le jour où une feature les consomme.
+const UNUSED_LAYERS = ['atc_units.geojson', 'ats_services.geojson'];
+const files = readdirSync(SRC).filter(
+  (f) =>
+    (f.endsWith('.geojson') || JSON_SIDECARS.includes(f)) &&
+    !UNUSED_LAYERS.includes(f)
+);
 if (!files.length) {
-  console.log('Aucun fichier .geojson à publier.');
+  console.log('Aucun fichier à publier.');
   process.exit(0);
 }
 
