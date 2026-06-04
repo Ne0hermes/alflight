@@ -112,13 +112,16 @@ label {
   margin-bottom: var(--spacing-xs);
 }
 
-a {
+/* Liens — exclure les boutons MUI rendus en <a> (component="a"). Sinon ce
+   color:!important ecrase la couleur de contraste du bouton (ex. bouton
+   « Telecharger » containedPrimary : texte orange sur fond orange = illisible). */
+a:not(.MuiButtonBase-root) {
   color: var(--color-primary) !important;
   text-decoration: none;
   transition: all 0.2s;
 }
 
-a:hover {
+a:not(.MuiButtonBase-root):hover {
   color: var(--color-primary-hover) !important;
   text-decoration: underline;
 }
