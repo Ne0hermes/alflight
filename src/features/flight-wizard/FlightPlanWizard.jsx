@@ -990,11 +990,9 @@ const styles = {
   // Wrapper de contenu du step actif
   content: {
     flex: 1,
-    padding: '24px',
-    background: 'var(--bg-surface)',
-    borderRadius: 'var(--radius-sm)',
-    margin: '20px',
-    border: '1px solid var(--border-subtle)',
+    // Encapsulation retirée : plus de bloc (fond/bordure/arrondi/marge) autour
+    // de l'étape. L'en-tête photo (ModuleHero) et le contenu respirent direct.
+    padding: '0 12px 24px',
   },
   stepHeader: {
     marginBottom: '24px',
