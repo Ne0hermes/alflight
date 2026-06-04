@@ -121,13 +121,16 @@
      Modifier ICI change toutes les alertes & états de statut de
      l'app. Erreur = rouge NO-GO de la charte (--color-red-critical).
      ----------------------------------------------------------- */
-  --status-success: #10b981;
-  --status-warning: #fbbf24;
-  --status-info: #3b82f6;
+  /* Charte : UN SEUL accent orange. Succès & avertissement = orange ;
+     info = ivoire neutre ; erreur = rouge NO-GO. Aligné sur muiTheme.js
+     (était vert #10b981 / jaune #fbbf24 / bleu #3b82f6 — familles interdites). */
+  --status-success: var(--accent-primary);
+  --status-warning: var(--accent-primary);
+  --status-info: var(--text-secondary);
   --status-error: var(--color-red-critical);
-  --status-success-bg: rgba(16, 185, 129, 0.12);
-  --status-warning-bg: rgba(251, 191, 36, 0.12);
-  --status-info-bg: rgba(59, 130, 246, 0.12);
+  --status-success-bg: var(--accent-soft);
+  --status-warning-bg: var(--accent-soft);
+  --status-info-bg: rgba(245, 242, 236, 0.08);
   --status-error-bg: rgba(192, 69, 52, 0.14);
 
   /* Polices */
