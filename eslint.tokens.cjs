@@ -54,6 +54,7 @@ module.exports = {
     'src/styles/muiTheme.js',
     'eslint.tokens.cjs',
     'scripts/**',
+    'src/abac/v2/**', // démos/POC ABAC (BezierAbacEditor, AbacEditorDemoPage) — non shippés
   ],
   rules: {
     'no-restricted-syntax': [
