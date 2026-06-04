@@ -424,13 +424,17 @@ const styles = {
     fontWeight: 500,
     letterSpacing: '0.14em',
     textTransform: 'uppercase',
-    color: 'var(--text-tertiary)',
+    // text-secondary (≈10:1) plutôt que text-tertiary (≈4.8:1, limite) : lisible
+    // au repos, y compris sur mobile sans survol. Reste subordonné au titre.
+    color: 'var(--text-secondary)',
   },
   actionTitle: {
     fontFamily: tokens.fontFamily.sans,
     fontSize: 'var(--fs-body)',
     fontWeight: 500,
-    color: 'inherit',
+    // text-primary explicite (ivoire vif) : le label principal est net au repos
+    // (le survol ne l'éclaircit plus — inutile, et absent sur mobile tactile).
+    color: 'var(--text-primary)',
     letterSpacing: '0.01em',
   },
   actionDot: {
