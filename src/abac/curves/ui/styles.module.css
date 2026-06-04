@@ -16,7 +16,7 @@
 .curveManagerHeader h3 {
   margin: 0;
   font-size: 18px;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .btn {
@@ -29,39 +29,39 @@
 }
 
 .btnAdd {
-  background: #f5f5f5;
-  color: #333;
+  background: var(--bg-overlay);
+  color: var(--text-primary);
 }
 
 .btnAdd:hover {
-  background: #e0e0e0;
+  background: var(--bg-overlay);
 }
 
 .btnPrimary {
-  background: #4CAF50;
+  background: var(--accent-primary);
   color: white;
 }
 
 .btnPrimary:hover {
-  background: #45a049;
+  background: var(--accent-primary);
 }
 
 .btnSecondary {
-  background: #f5f5f5;
-  color: #333;
+  background: var(--bg-overlay);
+  color: var(--text-primary);
 }
 
 .btnSecondary:hover:not(:disabled) {
-  background: #e0e0e0;
+  background: var(--bg-overlay);
 }
 
 .btnDanger {
-  background: #f44336;
+  background: var(--color-red-critical);
   color: white;
 }
 
 .btnDanger:hover:not(:disabled) {
-  background: #da190b;
+  background: var(--color-red-critical);
 }
 
 .btn:disabled {
@@ -71,7 +71,7 @@
 
 .addCurveForm {
   padding: 10px;
-  background: #f9f9f9;
+  background: var(--bg-overlay);
   border-radius: 4px;
   margin-bottom: 16px;
 }
@@ -79,7 +79,7 @@
 .addCurveForm input {
   width: 100%;
   padding: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-subtle);
   border-radius: 4px;
   margin-bottom: 12px;
 }
@@ -105,8 +105,8 @@
 }
 
 .colorOptionSelected {
-  border-color: #333;
-  box-shadow: 0 0 0 2px white, 0 0 0 4px #333;
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 2px white, 0 0 0 4px var(--text-primary);
 }
 
 .curvesList {
@@ -117,7 +117,7 @@
 
 .emptyState {
   text-align: center;
-  color: #999;
+  color: var(--text-tertiary);
   padding: 10px;
   font-size: 14px;
 }
@@ -126,7 +126,7 @@
   display: flex;
   align-items: center;
   padding: 10px;
-  background: #f9f9f9;
+  background: var(--bg-overlay);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s;
@@ -134,12 +134,12 @@
 }
 
 .curveItem:hover {
-  background: #f0f0f0;
+  background: var(--bg-overlay);
 }
 
 .curveItemSelected {
-  background: #e8f5e9;
-  border-color: #4CAF50;
+  background: var(--accent-soft);
+  border-color: var(--accent-primary);
 }
 
 .curveColor {
@@ -159,17 +159,17 @@
 
 .curveName {
   font-weight: 500;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .curvePoints {
   font-size: 12px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .curveFitted {
   font-size: 12px;
-  color: #4CAF50;
+  color: var(--accent-primary);
   font-weight: 500;
 }
 
@@ -195,7 +195,7 @@
 .curveItem input {
   flex: 1;
   padding: 4px 8px;
-  border: 1px solid #4CAF50;
+  border: 1px solid var(--accent-primary);
   border-radius: 4px;
   font-size: 14px;
 }
@@ -218,7 +218,7 @@
 .editorSection {
   margin-bottom: 24px;
   padding-bottom: 24px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--bg-overlay);
 }
 
 .editorSection:last-child {
@@ -230,7 +230,7 @@
 .editorSection h3 {
   margin: 0 0 16px 0;
   font-size: 18px;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .fitOptions {
@@ -248,7 +248,7 @@
 
 .optionGroup label {
   font-size: 14px;
-  color: #555;
+  color: var(--text-secondary);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -272,7 +272,7 @@
 }
 
 .pointsInfo {
-  background: #f9f9f9;
+  background: var(--bg-overlay);
   padding: 10px;
   border-radius: 4px;
   margin-bottom: 16px;
@@ -286,14 +286,14 @@
 .importSection {
   margin-top: 16px;
   padding: 10px;
-  background: #f9f9f9;
+  background: var(--bg-overlay);
   border-radius: 4px;
 }
 
 .importSection textarea {
   width: 100%;
   padding: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-subtle);
   border-radius: 4px;
   font-family: monospace;
   font-size: 13px;
@@ -307,13 +307,13 @@
 .pointsList h4 {
   margin: 0 0 8px 0;
   font-size: 14px;
-  color: #555;
+  color: var(--text-secondary);
 }
 
 .pointsScroll {
   max-height: 200px;
   overflow-y: auto;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--bg-overlay);
   border-radius: 4px;
   padding: 8px;
 }
@@ -324,7 +324,7 @@
   padding: 4px 8px;
   font-size: 13px;
   font-family: monospace;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--bg-overlay);
 }
 
 .pointItem:last-child {
@@ -332,15 +332,15 @@
 }
 
 .warningsSection {
-  background: #fff3cd;
+  background: var(--accent-soft);
   padding: 10px;
   border-radius: 4px;
-  border: 1px solid #ffc107;
+  border: 1px solid var(--accent-primary);
 }
 
 .warningsSection h3 {
   margin: 0 0 12px 0;
-  color: #856404;
+  color: var(--accent-primary);
 }
 
 .warningGroup {
@@ -354,7 +354,7 @@
 }
 
 .errorMessage {
-  color: #f44336;
+  color: var(--color-red-critical);
   font-size: 13px;
   margin-top: 4px;
 }
@@ -364,7 +364,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #f5f5f5;
+  background: var(--bg-overlay);
 }
 
 .stepper {
@@ -390,19 +390,19 @@
   right: -20px;
   width: 40px;
   height: 2px;
-  background: #ddd;
+  background: var(--border-subtle);
   z-index: 0;
 }
 
 .stepCompleted:not(:last-child)::after {
-  background: #4CAF50;
+  background: var(--accent-primary);
 }
 
 .stepNumber {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #ddd;
+  background: var(--border-subtle);
   color: white;
   display: flex;
   align-items: center;
@@ -413,20 +413,20 @@
 }
 
 .stepActive .stepNumber {
-  background: #2196F3;
+  background: var(--accent-primary);
 }
 
 .stepCompleted .stepNumber {
-  background: #4CAF50;
+  background: var(--accent-primary);
 }
 
 .stepLabel {
   font-size: 14px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .stepActive .stepLabel {
-  color: #333;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
@@ -445,11 +445,11 @@
 
 .stepContent h2 {
   margin: 0 0 24px 0;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .stepInstructions {
-  background: #f9f9f9;
+  background: var(--bg-overlay);
   padding: 10px;
   border-radius: 4px;
   margin-bottom: 24px;
@@ -458,7 +458,7 @@
 .stepInstructions p {
   margin: 8px 0;
   font-size: 14px;
-  color: #555;
+  color: var(--text-secondary);
 }
 
 .workspace {
@@ -491,15 +491,15 @@
 }
 
 .finalWarnings {
-  background: #fff3cd;
+  background: var(--accent-soft);
   padding: 10px;
   border-radius: 4px;
-  border: 1px solid #ffc107;
+  border: 1px solid var(--accent-primary);
 }
 
 .finalWarnings h3 {
   margin: 0 0 12px 0;
-  color: #856404;
+  color: var(--accent-primary);
 }
 
 .navigation {
@@ -516,7 +516,7 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f5f5f5;
+  background: var(--bg-overlay);
 }
 
 .demoHeader {
@@ -528,12 +528,12 @@
 
 .demoHeader h1 {
   margin: 0 0 8px 0;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .demoHeader p {
   margin: 0;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .demoContainer {
@@ -545,7 +545,7 @@
   position: fixed;
   bottom: 20px;
   right: 20px;
-  background: #4CAF50;
+  background: var(--accent-primary);
   color: white;
   padding: 12px 20px;
   border-radius: 4px;
