@@ -1,4 +1,10 @@
 // src/features/aircraft/components/SpeedLimitationChart.jsx
+//
+// EXCEPTION CHARTE (data-viz réglementaire) : les arcs de l'anémomètre — blanc
+// (#ffffff, plage volets), vert (#10b981, Vs1–Vno), jaune (#fbbf24, Vno–Vne)
+// et rouge (#dc2626, Vne) — sont des MARQUAGES NORMALISÉS OACI/EASA et ne
+// doivent PAS être « orangifiés ». Seul le chrome (fonds/texte gris) est migré
+// vers les tokens charte var(--*).
 import React, { memo } from 'react';
 
 const SpeedLimitationChart = memo(({ speeds }) => {
@@ -22,7 +28,7 @@ const SpeedLimitationChart = memo(({ speeds }) => {
 
   return (
     <div style={{
-      backgroundColor: '#1f2937',
+      backgroundColor: 'var(--bg-surface)',
       padding: '16px',
       borderRadius: '8px',
       marginBottom: '16px'
@@ -38,7 +44,7 @@ const SpeedLimitationChart = memo(({ speeds }) => {
       
       {/* Indicateur visuel des arcs */}
       <div style={{
-        backgroundColor: '#374151',
+        backgroundColor: 'var(--bg-overlay)',
         padding: '20px',
         borderRadius: '8px',
         marginBottom: '16px',
@@ -52,7 +58,7 @@ const SpeedLimitationChart = memo(({ speeds }) => {
           left: '20px',
           right: '20px',
           height: '4px',
-          backgroundColor: '#4b5563',
+          backgroundColor: 'var(--bg-raised)',
           borderRadius: '2px'
         }}>
           {/* Arc blanc - Volets sortis (Vso à VfeLdg) */}
@@ -278,7 +284,7 @@ const SpeedLimitationChart = memo(({ speeds }) => {
                 transform: 'translateX(-50%)',
                 fontSize: '9px',
                 fontWeight: 'bold',
-                color: '#d1d5db',
+                color: 'var(--text-secondary)',
                 backgroundColor: 'rgba(0,0,0,0.7)',
                 padding: '2px 4px',
                 borderRadius: '3px',
@@ -300,7 +306,7 @@ const SpeedLimitationChart = memo(({ speeds }) => {
                 transform: 'translateX(-50%)',
                 fontSize: '9px',
                 fontWeight: 'bold',
-                color: '#d1d5db',
+                color: 'var(--text-secondary)',
                 backgroundColor: 'rgba(0,0,0,0.7)',
                 padding: '2px 4px',
                 borderRadius: '3px',
@@ -322,7 +328,7 @@ const SpeedLimitationChart = memo(({ speeds }) => {
           display: 'flex',
           justifyContent: 'space-between',
           fontSize: '10px',
-          color: '#9ca3af'
+          color: 'var(--text-tertiary)'
         }}>
           <span>0</span>
           <span>{Math.round(maxSpeed * 0.25)}</span>
@@ -338,7 +344,7 @@ const SpeedLimitationChart = memo(({ speeds }) => {
         gridTemplateColumns: 'repeat(2, 1fr)',
         gap: '8px',
         fontSize: '11px',
-        color: '#9ca3af'
+        color: 'var(--text-tertiary)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{
@@ -347,7 +353,7 @@ const SpeedLimitationChart = memo(({ speeds }) => {
             backgroundColor: 'white',
             borderRadius: '2px'
           }} />
-          <span style={{ color: '#d1d5db' }}>
+          <span style={{ color: 'var(--text-secondary)' }}>
             <strong>Arc blanc:</strong> VSO-VFE (Volets)
           </span>
         </div>
@@ -359,7 +365,7 @@ const SpeedLimitationChart = memo(({ speeds }) => {
             backgroundColor: '#10b981',
             borderRadius: '2px'
           }} />
-          <span style={{ color: '#d1d5db' }}>
+          <span style={{ color: 'var(--text-secondary)' }}>
             <strong>Arc vert:</strong> VS1-VNO (Normal)
           </span>
         </div>
@@ -371,7 +377,7 @@ const SpeedLimitationChart = memo(({ speeds }) => {
             backgroundColor: '#fbbf24',
             borderRadius: '2px'
           }} />
-          <span style={{ color: '#d1d5db' }}>
+          <span style={{ color: 'var(--text-secondary)' }}>
             <strong>Arc jaune:</strong> VNO-VNE (Précaution)
           </span>
         </div>
@@ -383,7 +389,7 @@ const SpeedLimitationChart = memo(({ speeds }) => {
             backgroundColor: '#dc2626',
             borderRadius: '2px'
           }} />
-          <span style={{ color: '#d1d5db' }}>
+          <span style={{ color: 'var(--text-secondary)' }}>
             <strong>Trait rouge:</strong> VNE (Ne jamais dépasser)
           </span>
         </div>
